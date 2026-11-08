@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=02a98d58850b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=02a98d58850b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=02a98d58850b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=02a98d58850b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=02a98d58850b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1e97bba11e91">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=02a98d58850b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2179,7 +2179,7 @@
 <h1 id="reading-the-bwts-runs-off-bzip2s-move-to-front-codes">Reading the BWT's runs off bzip2's move-to-front codes<a class="headerlink" href="#reading-the-bwts-runs-off-bzip2s-move-to-front-codes" title="Permanent link">&para;</a></h1>
 <p class="post-dek">bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs
 could be listed without writing the column. It is not built.</p>
-<p class="post-meta">8 November 2026 · 11 min read · <a href="#6-where-does-this-stand">Open question</a></p>
+<p class="post-meta">8 November 2026 · 13 min read · <a href="#6-where-does-this-stand">Open question</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -2197,8 +2197,9 @@ step from row to row without a search. To build one, a decoder needs the runs.</
 <p><strong>This post's observation is that bzip2's codes already list the runs.</strong> A code that names a
 byte other than the last one starts a run; a repeat count extends it. Apart from the block's
 first byte (section 2), nothing else starts or ends a run. So the runs, and from them a move structure, could be built from the codes
-directly, without writing the <span class="arithmatex">\(n\)</span>-byte column and scanning it again. By our own, unproven estimate, building them
-would take time and memory that grow with the number of codes and runs rather than with <span class="arithmatex">\(n\)</span>.
+directly, without writing the <span class="arithmatex">\(n\)</span>-byte column and scanning it again. By our own accounting,
+building them would take time and memory that grow with the number of codes and runs rather
+than with <span class="arithmatex">\(n\)</span>, and the number of codes is itself bounded by the runs (section 4).
 The inversion that follows still takes time proportional to <span class="arithmatex">\(n\)</span>, as any inversion must, and
 that bound is already published.</p>
 <p>That observation is not new to mibz2: it was recorded in
@@ -2208,8 +2209,8 @@ a loss that a run list handed over for free would not have changed (section 5). 
 experiment did not time a builder fused with MTF. What this post
 adds is the mechanism worked through, its edge cases, what it would cost in theory, and a
 search for prior work. <strong>Nothing here has been built or timed, and it changes nothing in the
-decoder.</strong> The costs in section 4 are our own, unproven. This is a draft for a researcher's
-review, which is to follow.</p>
+decoder.</strong> The costs in section 4 are our own accounting, which an independent review has
+since checked (section 6).</p>
 <p><a href="#1-how-does-bzip2-write-banana">Section 1</a> decodes the codes of <code>banana</code> by hand.
 <a href="#2-why-does-every-literal-start-a-run">Section 2</a> proves that the codes give every run, and
 section 3 turns the runs into a move structure. <a href="#4-what-would-it-cost-in-theory">Section 4</a>
@@ -2381,19 +2382,20 @@ keep one record per maximal run, merging a literal with the count after it (and 
 one run it was made to cut), together with a count per byte value. At the block's end it
 computes each <span class="arithmatex">\(C(c)\)</span>, gives each record its row start <span class="arithmatex">\(a=C(c)+k\)</span>, and builds a run-bounded move
 structure from the records. The <span class="arithmatex">\(n\)</span>-byte column is never written or scanned. What follows is
-our own candidate accounting of what that would cost. It is not a published result, and the
-review is to check it.</p>
+our own accounting of what that would cost. It is not a published result.</p>
 <p>Write <span class="arithmatex">\(m\)</span> for the number of symbols in a block and <span class="arithmatex">\(\sigma\)</span> for the number of byte values it
 uses, at most 256. On a word RAM, the usual model in which one machine word is read or written
-in one step, with each symbol handled in constant time:</p>
+in one step, with each symbol handled in constant time (and with blocks of any length: bzip2
+caps a block at 900,000 bytes, so the asymptotics are about that generalised model):</p>
 <ol>
 <li><strong>Building the records</strong> would take <span class="arithmatex">\(O(m+r+\sigma)\)</span> time: one pass over the symbols, a
    counting sort of the <span class="arithmatex">\(r\)</span> records by byte, and the counts. It would hold <span class="arithmatex">\(O(r+\sigma)\)</span> words
    of working memory: the records and a count per byte value.</li>
-<li><strong>Composed with Brown and Langmead,</strong> whose preparation takes <span class="arithmatex">\(O(r)\)</span> time and space and whose
-   inversion takes <span class="arithmatex">\(O(n)\)</span> time from a run-length BWT
-   (<a href="https://arxiv.org/abs/2602.11029">SEA 2026, Lemma 6 and Theorem 9</a>), the inverse BWT would
-   take <span class="arithmatex">\(O(m+n+r+\sigma)\)</span> time and <span class="arithmatex">\(O(r+\sigma)\)</span> extra working memory.</li>
+<li><strong>Composed with a move structure built in <span class="arithmatex">\(O(r)\)</span> time and space,</strong> and walked in <span class="arithmatex">\(O(n)\)</span>
+   time, the inverse BWT would take <span class="arithmatex">\(O(m+n+r+\sigma)\)</span> time and <span class="arithmatex">\(O(r+\sigma)\)</span> extra working
+   memory. Brown and Langmead give such a route from a run-length BWT
+   (<a href="https://arxiv.org/abs/2602.11029">SEA 2026, Lemma 6 and Theorem 9</a>), for a text with an
+   end marker; condition 3 below gives one for bzip2's BWT, which has none.</li>
 </ol>
 <p>That memory figure leaves out the compressed input, the <span class="arithmatex">\(n\)</span> output bytes, the block's Huffman
 tables and other metadata, and the decoder's other buffers. It is not a memory bound for a
@@ -2407,30 +2409,65 @@ between MTF and the move structure.</p>
 <li><strong>A fixed alphabet.</strong> Moving a byte to the front of the list costs up to <span class="arithmatex">\(\sigma\)</span> steps. For
    bytes that is a constant, and mibz2 does most moves with a few vector shuffles; for a large
    alphabet it would not be.</li>
-<li><strong>The symbols streamed.</strong> mibz2 decodes a block's Huffman codes into an array of symbols
-   first, which is <span class="arithmatex">\(O(m)\)</span> memory, before MTF reads it
-   (<a href="https://github.com/lmmx/mibz2/blob/68d934b/src/block.rs#L23-L34"><code>Symbols</code></a>). The
-   <span class="arithmatex">\(O(r+\sigma)\)</span> figure needs Huffman decoding and MTF fused, or the array counted.</li>
+<li><strong>The symbols streamed.</strong> The bounds assume a stream of decoded symbols. mibz2 decodes a
+   block's Huffman codes into an array of symbols first, which is <span class="arithmatex">\(O(m)\)</span> memory, before MTF
+   reads it (<a href="https://github.com/lmmx/mibz2/blob/68d934b/src/block.rs#L23-L34"><code>Symbols</code></a>).
+   The <span class="arithmatex">\(O(r+\sigma)\)</span> figure needs Huffman decoding and MTF fused, or the array counted. Even
+   fused, the block's Huffman <em>selectors</em> stay: one per group of 50 symbols, naming the table
+   that group uses, all stored ahead of the symbols, so about <span class="arithmatex">\(m/50\)</span> entries, which is <span class="arithmatex">\(O(m)\)</span>
+   state too. So an <span class="arithmatex">\(O(r)\)</span> memory bound for the whole decompressor would have to account for
+   them as well.</li>
 <li><strong>No end marker.</strong> Brown and Langmead's text ends in a unique terminator, <code>$</code>. bzip2's BWT
    sorts rotations with no terminator and stores the start row instead. A periodic block's
    map then has several cycles
-   (<a href="../2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces">the appendix, section 6</a>),
-   and their bound on the average step assumes one. This needs checking before their theorems
-   are applied to bzip2.</li>
+   (<a href="../2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces">the appendix, section 6</a>).
+   Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle,
+   so that proof does not transfer unchanged. A later paper gives a route that needs neither.
+   Brown, Sanaullah, Zhang and Langmead
+   (<a href="https://arxiv.org/abs/2603.22147"><em>Optimal-Time Move Structure Construction</em>, Theorem 3.9</a>) build a
+   <em>balanced</em> move structure, in which every step takes constant time in the worst case, for
+   any permutation, in <span class="arithmatex">\(O(r)\)</span> time and space. Its inputs are each interval's start, the start
+   of its image, and the order of the images. For <span class="arithmatex">\(\Psi\)</span> built from the records, these are the
+   row starts in <span class="arithmatex">\(F\)</span> order, the records' starts in <span class="arithmatex">\(L\)</span>, and each record's place in <span class="arithmatex">\(L\)</span> order,
+   all of which section 3's counting sort already gives. Nothing in that theorem assumes one
+   cycle or a terminator. The inversion then starts at bzip2's stored start row, finds its
+   interval in <span class="arithmatex">\(O(r)\)</span> steps, and takes <span class="arithmatex">\(n\)</span> steps of <span class="arithmatex">\(\Psi\)</span>, writing each row's byte. A
+   periodic block's cycle is shorter than <span class="arithmatex">\(n\)</span>, so the walk goes round it more than once,
+   which writes the period the right number of times. A script that models this walk
+   reproduced every string of up to eight letters over three letters, the 135 periodic ones
+   among them. Applying that theorem to bzip2's <span class="arithmatex">\(\Psi\)</span> is our composition, not a result of
+   the paper.</li>
 </ol>
-<p><strong>A sharper bound on building the records, still to be proved.</strong> A run of length <span class="arithmatex">\(\ell\)</span> costs
-one literal and about <span class="arithmatex">\(\log_2\ell\)</span> count digits, since each digit doubles the place value.
-Summed over the runs, and since the logarithm grows ever more slowly, the total would be largest
-when all runs have the same length, which suggests</p>
+<p><strong>The number of symbols is bounded by the runs.</strong> This is an elementary lemma, not a new
+result, and its proof is short. Let the maximal runs of <span class="arithmatex">\(L\)</span> have lengths
+<span class="arithmatex">\(\ell_1,\dots,\ell_r\)</span>, which add up to <span class="arithmatex">\(n\)</span>, and count <span class="arithmatex">\(m\)</span> with the end-of-block symbol, as in
+section 1.</p>
+<p>First, a stretch of <span class="arithmatex">\(q\ge1\)</span> zeros takes exactly <span class="arithmatex">\(\lfloor\log_2(q+1)\rfloor\)</span> count digits.
+With <span class="arithmatex">\(t\)</span> digits, each worth 1 or 2 times its place value <span class="arithmatex">\(1,2,4,\dots\)</span>, the totals run from
+<span class="arithmatex">\(2^t-1\)</span> (every digit <code>RUNA</code>) to <span class="arithmatex">\(2^{t+1}-2\)</span> (every digit <code>RUNB</code>), and every count in between
+is reached. A run of length <span class="arithmatex">\(\ell\)</span> that starts with a literal is that literal and <span class="arithmatex">\(\ell-1\)</span>
+zeros, so it costs <span class="arithmatex">\(1+\lfloor\log_2\ell\rfloor\)</span> symbols. The one exception of section 2,
+a first run of the block's smallest byte, has no literal and <span class="arithmatex">\(\ell_1\)</span> zeros, so it costs
+<span class="arithmatex">\(\lfloor\log_2(\ell_1+1)\rfloor\)</span>. No other run starts with a count (section 2). Adding the end-of-block
+symbol,</p>
 <div class="arithmatex">\[
-m\le r\left(1+\log_2\frac nr\right)+1,
+m = 1+\sum_{j=1}^{r}\bigl(1+\lfloor\log_2\ell_j\rfloor\bigr),
 \]</div>
-<p>with the <span class="arithmatex">\(+1\)</span> for the end-of-block symbol. The script of section 2 found no case that breaks
-it, but this is a sketch, not a checked proof: bzip2's exact symbol grammar, the first and last
-runs, and merged runs all have to be accounted for. If it holds, building the records takes
-time sublinear in <span class="arithmatex">\(n\)</span> on blocks with long runs. That is not sublinear inversion, which writes
-<span class="arithmatex">\(n\)</span> bytes regardless, and it may not be new: it follows from the input having coded the runs
-already.</p>
+<p>with the first run's term replaced by <span class="arithmatex">\(\lfloor\log_2(\ell_1+1)\rfloor\)</span> in the exception. For
+<code>banana</code>'s runs of 2, 1 and 3, that is <span class="arithmatex">\(1+2+1+2=6\)</span>, the six symbols of section 1. Since
+<span class="arithmatex">\(\log_2(\ell+1)\le1+\log_2\ell\)</span>, both cases give <span class="arithmatex">\(m\le1+r+\sum_j\log_2\ell_j\)</span>. The
+logarithm is concave, so by Jensen's inequality the sum is largest when every run has length
+<span class="arithmatex">\(n/r\)</span>:</p>
+<div class="arithmatex">\[
+m\le r\left(1+\log_2\frac nr\right)+1.
+\]</div>
+<p>Cutting a run at a checkpoint changes the records, not the symbols, so it doesn't change <span class="arithmatex">\(m\)</span>.
+A second script checked the exact count, not only the bound, on every word of up to twelve
+letters over two letters and up to eight over three, and on the columns of 3,000 random and
+periodic strings.</p>
+<p>So building the records takes time sublinear in <span class="arithmatex">\(n\)</span> on blocks with long runs. That is not
+sublinear inversion, which writes <span class="arithmatex">\(n\)</span> bytes regardless, and it is not new: it follows from the
+input having coded the runs already.</p>
 <h2 id="5-what-has-mibz2-measured">5. What has mibz2 measured?<a class="headerlink" href="#5-what-has-mibz2-measured" title="Permanent link">&para;</a></h2>
 <p><strong>How small is <span class="arithmatex">\(r\)</span>?</strong> It has been counted once. In October, an uncommitted scratch counter ran
 over the bench's Wikidata corpus, <code>wikidata.bz2</code> (SHA-256 <code>82f65ace…</code>), and checked its map
@@ -2499,7 +2536,7 @@ the plain text in space bounded by <span class="arithmatex">\(r\)</span>
 (<a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99">Nishimoto, Kanda and Tabei, ICALP 2022</a>),
 from an LZ77 parse
 (<a href="https://arxiv.org/abs/1910.10631">Kempa and Kociumaka, FOCS 2020</a>), and a move structure
-for any permutation in <span class="arithmatex">\(O(r)\)</span> time
+for any permutation, from its intervals, in <span class="arithmatex">\(O(r)\)</span> time
 (<a href="https://arxiv.org/abs/2603.22147">Brown, Sanaullah, Zhang and Langmead, 2026 preprint</a>).</p>
 <p><strong>What is open</strong> is the speculative question: does bzip2's coded form give a stronger
 algorithm or bound than a generic run-length BWT does? One point bears on it. The symbols and
@@ -2513,23 +2550,28 @@ is whether, for a carefully defined model of access to the coded input, there is
 construction guarantee, a lower bound or a streaming constraint that doesn't already follow
 from known run-length BWT and move-structure results.</p>
 <p><strong>How sure are we?</strong> Fairly sure of the run-listing argument, which section 2 proves and a
-script checked on a model of bzip2's rules. Sure of the costs in section 4 only under their
-conditions, which need the review. Not sure at all that any of it is new, beyond what the
-format already implies.</p>
-<p><strong>What a review should check:</strong> the run argument and its edge cases (the first byte, each
-change of byte, the end of the block), a proof or refutation of the bound on <span class="arithmatex">\(m\)</span>, the input
-model and memory accounting of section 4, whether Brown and Langmead's results hold for a BWT
-without a terminator, the prior-art search, and which result, if any, would be new.</p>
-<p>A researcher's review of this post is to follow. Until then it is a draft argument, not a
-validated result.</p>
+script checked on a model of bzip2's rules, and of the bound on <span class="arithmatex">\(m\)</span>, which section 4 proves.
+Sure of the costs in section 4 under their conditions: a stream of decoded symbols, with the
+selectors and any stored symbols counted separately, and no claim for the whole decompressor.
+Not sure at all that any of it is new, beyond what the format already implies.</p>
+<p><strong>What did the review find?</strong> An independent review, in the method of the project's
+researcher role and relayed from the maintainer through ChatGPT, read the published post on
+8 November (<a href="https://github.com/lmmx/mibz2/pull/145#issuecomment-6723926266">the review</a>). It found the substance sound. It gave the proof
+of the bound on <span class="arithmatex">\(m\)</span> that section 4 now carries, and the route without an end marker in
+condition 3, which we checked against the paper before adopting it. It asked that the memory
+model and the novelty question stay as narrow as they were. It was not a fresh-reader test:
+the reviewer knew the code and the papers. A test with a reader who knows neither is still
+to be done.</p>
 <h2 id="7-the-argument-in-brief">7. The argument in brief<a class="headerlink" href="#7-the-argument-in-brief" title="Permanent link">&para;</a></h2>
 <p>bzip2's MTF codes write a literal exactly where a run of the BWT's last column starts, and a
 count of repeats for the rest of it, so the runs can be listed from the codes, with one
 exception at the block's start. Each run's byte, start, length and earlier count, with the
 block's byte counts, give its interval of the next-row map, and a merge gives the anchors a
-move structure needs. In our unproven accounting, the records take <span class="arithmatex">\(O(m+r+\sigma)\)</span> time and
-<span class="arithmatex">\(O(r+\sigma)\)</span> words, without the <span class="arithmatex">\(n\)</span>-byte column, and perhaps time sublinear in <span class="arithmatex">\(n\)</span> on long
-runs; the inversion stays <span class="arithmatex">\(O(n)\)</span>, as Brown and Langmead already have it. In the one setting mibz2 has measured, it would not have rescued the move
+move structure needs. In our accounting, the records take <span class="arithmatex">\(O(m+r+\sigma)\)</span> time and
+<span class="arithmatex">\(O(r+\sigma)\)</span> words, without the <span class="arithmatex">\(n\)</span>-byte column, and since <span class="arithmatex">\(m\)</span> is at most
+<span class="arithmatex">\(r(1+\log_2(n/r))+1\)</span>, that time is sublinear in <span class="arithmatex">\(n\)</span> on long runs. The inversion stays <span class="arithmatex">\(O(n)\)</span>,
+as Brown and Langmead already have it, and a balanced move structure gives it without an end
+marker. In the one setting mibz2 has measured, it would not have rescued the move
 structure tried there, whose interleaved walk alone cost more than today's whole build and
 walk.</p>
 <p>The general point is that a stage's input is often already in the form a later stage wants,
@@ -2550,7 +2592,7 @@ column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-interval
 <li><a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Nathaniel K. Brown and Ben Langmead, <em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em></a>,
   SEA 2026, LIPIcs 371, paper 9 (<a href="https://arxiv.org/abs/2602.11029">arXiv:2602.11029</a>).</li>
 <li><a href="https://arxiv.org/abs/2603.22147">Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, <em>Optimal-Time Move Structure Construction</em></a>,
-  arXiv:2603.22147 (2026).</li>
+  arXiv:2603.22147 (2026; revised 22 October 2026), Theorem 3.9.</li>
 <li><a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99">Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, <em>An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space</em></a>,
   ICALP 2022, LIPIcs 229, 99:1–99:20.</li>
 <li><a href="https://arxiv.org/abs/1910.10631">Dominik Kempa and Tomasz Kociumaka, <em>Resolution of the Burrows–Wheeler Transform Conjecture</em></a>,
@@ -2719,19 +2761,19 @@ column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-interval
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/bench.js?v=02a98d58850b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/couriers.js?v=02a98d58850b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/blog.js?v=02a98d58850b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/frontier.js?v=02a98d58850b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/observatory.js?v=02a98d58850b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=1e97bba11e91"></script>
+        <script src="../../assets/javascripts/katex.js?v=02a98d58850b"></script>
       
     
   </body>
