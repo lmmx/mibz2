@@ -72,16 +72,17 @@ six rotations, sorts them, and keeps two things: the last column of the sorted l
 the number of the row holding the original word, here 3. The first column, $F$, is the same
 bytes in sorted order. The last column of the table, the next row, is explained below it.
 
-| Row | Rotation | F | L | Next |
-| ---: | --- | --- | --- | ---: |
-| 0 | `abanan` | a | n | 3 |
-| 1 | `anaban` | a | n | 4 |
-| 2 | `ananab` | a | b | 5 |
-| 3 | `banana` | b | a | 2 |
-| 4 | `nabana` | n | a | 0 |
-| 5 | `nanaba` | n | a | 1 |
+| Row | Rotation | Next row |
+| ---: | --- | ---: |
+| 0 | `abanan` | 3 |
+| 1 | `anaban` | 4 |
+| 2 | `ananab` | 5 |
+| 3 | `banana` | 2 |
+| 4 | `nabana` | 0 |
+| 5 | `nanaba` | 1 |
 
-So $L=\texttt{nnbaaa}$ and $F=\texttt{aaabnn}$. The next row of row $i$, written $\Psi(i)$,
+Reading down the rotations' last letters gives $L=\texttt{nnbaaa}$, and their first letters
+give $F=\texttt{aaabnn}$. The next row of row $i$, written $\Psi(i)$,
 is the row whose rotation is row $i$'s rotation with its first byte moved to the end. Row 3,
 `banana`, becomes `ananab`, which is row 2. To decode, start at row 3, emit $F[3]$, move to
 $\Psi(3)$, and repeat. The rows visited are
@@ -127,8 +128,8 @@ the row. Each interval also records where its destinations begin: interval A's b
 
 <figure class="bf-fig">
 <p class="bf-title">The banana walk, carrying its interval as well as its row</p>
-<svg viewBox="0 0 720 150" role="img" aria-label="The walk carries a pair, row and interval: row 3 in B, row 2 in A, row 5 in N, row 1 in A, row 4 in N, row 0 in A, emitting banana."><rect x="0.0" y="8" width="104" height="78" rx="8" class="bf-card"/><text x="52.0" y="32" class="bf-t-strong" text-anchor="middle">row 3</text><text x="52.0" y="52" class="bf-tm" text-anchor="middle">in interval B</text><text x="52.0" y="74" class="bf-t" text-anchor="middle">emits b</text><path d="M107.0 47H120.2M114.2 42L120.2 47L114.2 52" class="bf-arrow"/><rect x="123.2" y="8" width="104" height="78" rx="8" class="bf-card"/><text x="175.2" y="32" class="bf-t-strong" text-anchor="middle">row 2</text><text x="175.2" y="52" class="bf-tm" text-anchor="middle">in interval A</text><text x="175.2" y="74" class="bf-t" text-anchor="middle">emits a</text><path d="M230.2 47H243.4M237.4 42L243.4 47L237.4 52" class="bf-arrow"/><rect x="246.4" y="8" width="104" height="78" rx="8" class="bf-card"/><text x="298.4" y="32" class="bf-t-strong" text-anchor="middle">row 5</text><text x="298.4" y="52" class="bf-tm" text-anchor="middle">in interval N</text><text x="298.4" y="74" class="bf-t" text-anchor="middle">emits n</text><path d="M353.4 47H366.6M360.6 42L366.6 47L360.6 52" class="bf-arrow"/><rect x="369.6" y="8" width="104" height="78" rx="8" class="bf-card-hi"/><text x="421.6" y="32" class="bf-t-strong" text-anchor="middle">row 1</text><text x="421.6" y="52" class="bf-tm" text-anchor="middle">in interval A</text><text x="421.6" y="74" class="bf-t" text-anchor="middle">emits a</text><path d="M476.6 47H489.8M483.8 42L489.8 47L483.8 52" class="bf-arrow"/><rect x="492.8" y="8" width="104" height="78" rx="8" class="bf-card"/><text x="544.8" y="32" class="bf-t-strong" text-anchor="middle">row 4</text><text x="544.8" y="52" class="bf-tm" text-anchor="middle">in interval N</text><text x="544.8" y="74" class="bf-t" text-anchor="middle">emits n</text><path d="M599.8 47H613.0M607.0 42L613.0 47L607.0 52" class="bf-arrow"/><rect x="616.0" y="8" width="104" height="78" rx="8" class="bf-card"/><text x="668.0" y="32" class="bf-t-strong" text-anchor="middle">row 0</text><text x="668.0" y="52" class="bf-tm" text-anchor="middle">in interval A</text><text x="668.0" y="74" class="bf-t" text-anchor="middle">emits a</text><path d="M0 100.5H720" class="bf-rule"/><text x="0" y="122" class="bf-t">From row 1 in A: next row = 3 + (1 − 0) = 4. A’s destinations begin in B, at row 3.</text><text x="0" y="142" class="bf-t">Row 4 is past B’s end, so the walk steps forward one interval, to N. No search.</text></svg>
-<figcaption>Each card is one step of the walk: the row, the interval it lies in, and the byte emitted. The highlighted step is worked in the text beneath the cards. Conceptual.</figcaption>
+<svg viewBox="0 0 720 168" role="img" aria-label="The walk carries a pair, row and interval: row 3 in B, row 2 in A, row 5 in N, row 1 in A, row 4 in N, row 0 in A, emitting banana."><rect x="0.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="14.0" y="32" class="bf-tm">step 1</text><text x="14.0" y="58" class="bf-ts">row 3, interval B</text><text x="198.0" y="58" class="bf-t-green" text-anchor="end">b</text><path d="M216.0 43.0H250.0M244.0 38.0L250.0 43.0L244.0 48.0" class="bf-arrow"/><rect x="254.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="32" class="bf-tm">step 2</text><text x="268.0" y="58" class="bf-ts">row 2, interval A</text><text x="452.0" y="58" class="bf-t-green" text-anchor="end">a</text><path d="M470.0 43.0H504.0M498.0 38.0L504.0 43.0L498.0 48.0" class="bf-arrow"/><rect x="508.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="32" class="bf-tm">step 3</text><text x="522.0" y="58" class="bf-ts">row 5, interval N</text><text x="706.0" y="58" class="bf-t-green" text-anchor="end">n</text><rect x="0.0" y="98" width="212" height="70" rx="8" class="bf-card-hi"/><text x="14.0" y="122" class="bf-tm">step 4</text><text x="14.0" y="148" class="bf-ts">row 1, interval A</text><text x="198.0" y="148" class="bf-t-green" text-anchor="end">a</text><path d="M216.0 133.0H250.0M244.0 128.0L250.0 133.0L244.0 138.0" class="bf-arrow"/><rect x="254.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="122" class="bf-tm">step 5</text><text x="268.0" y="148" class="bf-ts">row 4, interval N</text><text x="452.0" y="148" class="bf-t-green" text-anchor="end">n</text><path d="M470.0 133.0H504.0M498.0 128.0L504.0 133.0L498.0 138.0" class="bf-arrow"/><rect x="508.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="122" class="bf-tm">step 6</text><text x="522.0" y="148" class="bf-ts">row 0, interval A</text><text x="706.0" y="148" class="bf-t-green" text-anchor="end">a</text></svg>
+<figcaption>Each card is one step of the walk, read left to right and then the second line: the row, the interval it lies in, and, on the right, the byte emitted. The highlighted step 4 is worked in the text below. Conceptual.</figcaption>
 </figure>
 
 From row 1 in interval A, the next row is A's first destination plus the offset within A:
