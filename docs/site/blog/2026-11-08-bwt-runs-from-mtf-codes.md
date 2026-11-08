@@ -26,20 +26,30 @@ could be listed without writing the column. It is not built.
 
 </div>
 
-Before a bzip2 decoder can undo the Burrows–Wheeler transform (BWT), it has to rebuild the
-transform's output: a column of bytes, $L$, one byte for each of the block's $n$ rows, up to
-900,000 of them. bzip2 stores that column in coded form. Its *move-to-front* (MTF) stage
-writes each byte as a small number, its position in a list of recently used bytes, and it
-writes repeats of the last byte as a separate count. mibz2, our bzip2 decoder, turns those
-codes back into all $n$ bytes of $L$, then reads $L$ again to build its table for the inverse
-BWT, the T-vector, at four bytes a row.
+bzip2's codes already say where the BWT's runs of repeated bytes are. Today mibz2 expands
+those codes into an array of every byte, then reads that array again to build the table it
+navigates the BWT with. It could instead keep the runs as it decodes the codes, and build a
+smaller navigation structure straight from them, without the big intermediate array.
 
-Take the word `banana`. Its column is $L=\texttt{nnbaaa}$: three *runs*, stretches of one
-repeated byte, `nn`, `b` and `aaa`. bzip2's codes for it say, in effect: change to `n`,
-repeat it once; change to `b`; change to `a`, repeat it twice. A decoder could write all six
-bytes and then scan them to find the three runs. But the codes have already said where each
-run starts and how long it is, so three run records, (`n`, 2), (`b`, 1) and (`a`, 3), could
-be built while the codes are decoded, and the six-byte column never written.
+Take the word `banana`. After the BWT its bytes are $L=\texttt{nnbaaa}$, and bzip2's codes for
+them say, in effect: change to `n`, repeat it once; change to `b`; change to `a`, repeat it
+twice. That is already the three groups `nn | b | aaa`, as three run records: (`n`, 2),
+(`b`, 1) and (`a`, 3). The navigation structure can be built from those three records, and
+the six bytes never written out and scanned again.
+
+**What is proved, and what isn't.** That the codes give the runs, and the bound on how many
+codes there are, are mathematical results (sections 2 and 4). The inversion still has to
+write every byte, so it is not faster in principle, and the one such structure mibz2 has
+tried navigated more slowly than today's table (section 5). Nothing here has been built or
+timed.
+
+Some background, for what follows. Before a decoder can undo the Burrows–Wheeler transform
+(BWT), it rebuilds the transform's output: a column of bytes, $L$, one for each of the block's
+$n$ rows, up to 900,000 of them. bzip2 stores that column in coded form. Its *move-to-front*
+(MTF) stage writes each byte as a small number, its position in a list of recently used
+bytes, and it writes repeats of the last byte as a separate count. mibz2, our bzip2 decoder,
+turns those codes back into all $n$ bytes of $L$, then reads $L$ again to build its table for
+the inverse BWT, the T-vector, at four bytes a row.
 
 Why would a decoder want the runs? [The previous post](2026-11-08-inverse-bwt-navigation.md)
 showed that the inverse BWT's next-row map needs only one record per run of $L$, rather than
@@ -62,8 +72,7 @@ The same issue then built and timed a move structure for mibz2's walk, and it lo
 a loss that a run list handed over for free would not have changed (section 5). That
 experiment did not time a builder fused with MTF. What this post
 adds is the mechanism worked through, its edge cases, what it would cost in theory, and a
-search for prior work. **Nothing here has been built or timed, and it changes nothing in the
-decoder.** The costs in section 4 are our own accounting, which an independent review has
+search for prior work. It changes nothing in the decoder. The costs in section 4 are our own accounting, which an independent review has
 since checked (section 6).
 
 [Section 1](#1-how-does-bzip2-write-banana) decodes the codes of `banana` by hand.
