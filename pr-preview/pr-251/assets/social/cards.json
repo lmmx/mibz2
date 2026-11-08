@@ -53,6 +53,12 @@
     "section": " · Research blog",
     "title": "Huffman decoding in mibz2: keeping the bit buffer in a register"
   },
+  "assets/social/blog-2026-11-07-pipelined-teams.png": {
+    "description": "While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.",
+    "foot": "lmmx.github.io/mibz2 · 7 November 2026",
+    "section": " · Research blog",
+    "title": "Pipelined teams: how mibz2 0.2.6 decodes 7% faster on ten cores"
+  },
   "assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png": {
     "description": "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.",
     "foot": "lmmx.github.io/mibz2 · 7 November 2026",

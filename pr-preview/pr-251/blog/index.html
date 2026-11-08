@@ -24,7 +24,7 @@
         <link rel="prev" href="../background/behind-the-scenes/">
       
       
-        <link rel="next" href="./2026-11-07-why-mibz2-stops-scaling/">
+        <link rel="next" href="./2026-11-07-pipelined-teams/">
       
       
         
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=ebfe20a2ef49">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=ebfe20a2ef49">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=ebfe20a2ef49">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=ebfe20a2ef49">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=ebfe20a2ef49">
     
-      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=fdaccdede49f">
+      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=ebfe20a2ef49">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1080,6 +1080,8 @@
       
         
       
+        
+      
     
     
     
@@ -1126,6 +1128,33 @@
             </label>
             <ul class="md-nav__list" data-md-scrollfix>
               
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
                 
               
                 
@@ -1230,10 +1259,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_6" >
         
           
-          <label class="md-nav__link" for="__nav_7_5" id="__nav_7_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_6" id="__nav_7_6_label" tabindex="0">
             
   
   
@@ -1251,8 +1280,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_5_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_5">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_6">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1372,10 +1401,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
         
           
-          <label class="md-nav__link" for="__nav_7_7" id="__nav_7_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
             
   
   
@@ -1393,8 +1422,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_7_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_7">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_8">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1786,6 +1815,7 @@
 <p>What mibz2's experiments are finding, and where they go next. The evidence behind each
 post is in the <a href="../background/journals/">journals</a> and the pull requests they link.</p>
 <div class="post-list">
+<a class="post-card" href="2026-11-07-pipelined-teams/"><img src="../assets/social/blog-2026-11-07-pipelined-teams.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">7 November 2026 · Research result</span><span class="post-card-title">Pipelined teams: how mibz2 0.2.6 decodes 7% faster on ten cores</span><span class="post-card-dek">While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.</span></span></a>
 <a class="post-card" href="2026-11-07-why-mibz2-stops-scaling/"><img src="../assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">7 November 2026 · Research in progress</span><span class="post-card-title">Why mibz2 stops scaling at eight threads, and why three teams help</span><span class="post-card-dek">Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.</span></span></a>
 <a class="post-card" href="2026-11-05-huffman-bit-buffer/"><img src="../assets/social/blog-2026-11-05-huffman-bit-buffer.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">5 November 2026 · Research result</span><span class="post-card-title">Huffman decoding in mibz2: keeping the bit buffer in a register</span><span class="post-card-dek">The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.</span></span></a>
 <a class="post-card" href="2026-11-04-autonomous-agent-team/"><img src="../assets/social/blog-2026-11-04-autonomous-agent-team.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">4 November 2026 · Meta</span><span class="post-card-title">Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm</span><span class="post-card-dek">Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.</span></span></a>
@@ -1856,13 +1886,13 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
         
         
           
-          <a href="./2026-11-07-why-mibz2-stops-scaling/" class="md-footer__link md-footer__link--next" aria-label="Next: Why mibz2 stops scaling at eight threads">
+          <a href="./2026-11-07-pipelined-teams/" class="md-footer__link md-footer__link--next" aria-label="Next: Pipelined teams in mibz2 0.2.6">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Why mibz2 stops scaling at eight threads
+                Pipelined teams in mibz2 0.2.6
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1957,19 +1987,19 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/bench.js?v=ebfe20a2ef49"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/couriers.js?v=ebfe20a2ef49"></script>
       
-        <script src="../assets/javascripts/blog.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/blog.js?v=ebfe20a2ef49"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/frontier.js?v=ebfe20a2ef49"></script>
       
-        <script src="../assets/javascripts/observatory.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/observatory.js?v=ebfe20a2ef49"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=fdaccdede49f"></script>
+        <script src="../assets/javascripts/katex.js?v=ebfe20a2ef49"></script>
       
     
   </body>
