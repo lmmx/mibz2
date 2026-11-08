@@ -96,12 +96,12 @@ Coding $L=\texttt{nnbaaa}$ this way gives five symbols, `3 RUNA 3 3 RUNB`, then 
 end-of-block symbol. The table gives each step's MTF indices and the bzip2 symbols actually
 written for them:
 
-| Bytes | List before | MTF indices | bzip2 symbols | List after |
-| --- | --- | --- | --- | --- |
-| `n` | `a b n` | 2 | 3 | `n a b` |
-| `n` | `n a b` | 0 | `RUNA` | `n a b` |
-| `b` | `n a b` | 2 | 3 | `b n a` |
-| `aaa` | `b n a` | 2 0 0 | 3 `RUNB` | `a b n` |
+| Bytes | List before | MTF indices | bzip2 symbols |
+| --- | --- | --- | --- |
+| `n` | `a b n` | 2 | 3 |
+| `n` | `n a b` | 0 | `RUNA` |
+| `b` | `n a b` | 2 | 3 |
+| `aaa` | `b n a` | 2 0 0 | 3 `RUNB` |
 
 The `RUNA` is one zero, one more `n`; the `RUNB` is two zeros, two more `a`s.
 
@@ -215,7 +215,7 @@ they appear in $L$, without overlapping, and $k$ says where each run's share beg
 it, both `a` runs would claim row 0.
 
 <figure class="bf-fig">
-<p class="bf-title">Two runs of one byte share its rows in <code>F</code></p>
+<p class="bf-title">Two runs of one byte share its rows in <em>F</em></p>
 <div class="bf-frames bf-frames-pair">
 <div class="bf-frame">
 <svg viewBox="0 0 196 264" role="img" aria-label="L, b a b a a a, split into four runs: b, a, b, and a times 3. The run records: b, start 0, length 1, k 0, row 4; a, start 1, length 1, k 0, row 0; b, start 2, length 1, k 1, row 5; a, start 3, length 3, k 1, rows 1 to 3. Rows start at C of c plus k, with C of a 0 and C of b 4."><text x="38" y="18" class="bf-ix" text-anchor="middle">0</text><text x="38" y="42" class="bf-ch" text-anchor="middle">b</text><text x="64" y="18" class="bf-ix" text-anchor="middle">1</text><text x="64" y="42" class="bf-ch" text-anchor="middle">a</text><text x="90" y="18" class="bf-ix" text-anchor="middle">2</text><text x="90" y="42" class="bf-ch" text-anchor="middle">b</text><text x="116" y="18" class="bf-ix" text-anchor="middle">3</text><text x="116" y="42" class="bf-ch" text-anchor="middle">a</text><text x="142" y="18" class="bf-ix" text-anchor="middle">4</text><text x="142" y="42" class="bf-ch" text-anchor="middle">a</text><text x="168" y="18" class="bf-ix" text-anchor="middle">5</text><text x="168" y="42" class="bf-ch" text-anchor="middle">a</text><path d="M28 52V56H48V52" class="bf-seg-on"/><text x="38" y="72" class="bf-segl-on" text-anchor="middle">b</text><path d="M54 52V56H74V52" class="bf-seg-on"/><text x="64" y="72" class="bf-segl-on" text-anchor="middle">a</text><path d="M80 52V56H100V52" class="bf-seg-on"/><text x="90" y="72" class="bf-segl-on" text-anchor="middle">b</text><path d="M106 52V56H178V52" class="bf-seg-a-on"/><text x="142" y="72" class="bf-segl-on" text-anchor="middle">a × 3</text><path d="M4 86H192" class="bf-rule"/><text x="4" y="104" class="bf-cap">run records</text><text x="22" y="124" class="bf-ix" text-anchor="middle">byte</text><text x="60" y="124" class="bf-ix" text-anchor="middle">start</text><text x="98" y="124" class="bf-ix" text-anchor="middle">length</text><text x="136" y="124" class="bf-ix" text-anchor="middle">k</text><text x="174" y="124" class="bf-ix" text-anchor="middle">rows</text><text x="22" y="146" class="bf-eq-l" text-anchor="middle">b</text><text x="60" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="98" y="146" class="bf-eq-l" text-anchor="middle">1</text><text x="136" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="174" y="146" class="bf-eq-l" text-anchor="middle">4</text><text x="22" y="168" class="bf-eq-l" text-anchor="middle">a</text><text x="60" y="168" class="bf-eq-l" text-anchor="middle">1</text><text x="98" y="168" class="bf-eq-l" text-anchor="middle">1</text><text x="136" y="168" class="bf-eq-l" text-anchor="middle">0</text><text x="174" y="168" class="bf-eq-l" text-anchor="middle">0</text><text x="22" y="190" class="bf-eq-l" text-anchor="middle">b</text><text x="60" y="190" class="bf-eq-l" text-anchor="middle">2</text><text x="98" y="190" class="bf-eq-l" text-anchor="middle">1</text><text x="136" y="190" class="bf-eq-l" text-anchor="middle">1</text><text x="174" y="190" class="bf-eq-l" text-anchor="middle">5</text><rect x="4" y="196" width="188" height="22" rx="6" class="bf-cell-hi"/><text x="22" y="212" class="bf-eq-l" text-anchor="middle">a</text><text x="60" y="212" class="bf-eq-l" text-anchor="middle">3</text><text x="98" y="212" class="bf-eq-l" text-anchor="middle">3</text><text x="136" y="212" class="bf-eq-l" text-anchor="middle">1</text><text x="174" y="212" class="bf-eq-l" text-anchor="middle">1–3</text><text x="4" y="240" class="bf-ix">rows start at C(c) + k,</text><text x="4" y="256" class="bf-ix">with C(a) 0 and C(b) 4</text></svg>
