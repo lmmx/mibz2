@@ -54,6 +54,11 @@
 //!   and `mibz2-svc1-t2` (teams of 2: 3 x 2 + 1); each in the teamK arms' window
 //!   (SLOTS_PER_THREAD a team); and `mibz2-team3-twin`, `mibz2-team3` under another name
 //!   (the same decoder twice in one run: the service core's noise control);
+//! - `mibz2-team2x3` and `mibz2-pipe2x3` (research: two teams of three whatever THREADS,
+//!   in the teamK arms' window: the plain `Plan::Teams { teams: 2, k: 3 }`, and the
+//!   default's pipelined team with park and small, `parallel::PIPELINED_LEVERS`; what
+//!   `mibz2-team3` and `mibz2-pipe3-both` run at 6 to 8 threads), the service core's
+//!   2 x 3 controls;
 //! - `mibz2-pipe2-park`, `-pipe3-park`, `-pipe4-park`, and the same with `-spin2k`,
 //!   `-small` and `-both` (research: a pipeK arm with its levers,
 //!   `BzReader::parallel_pipelined_levers`: `park`, its waits for the build's end parking
@@ -642,6 +647,35 @@ fn decode(
                 last,
             )
         }
+        // two teams of three, whatever THREADS (research: the service core's 2 x 3 controls,
+        // docs/journal/2026-11-08-service-2x3-registration.md), in the teamK arms' window
+        // (SLOTS_PER_THREAD a team, as `mibz2-svc2` keeps it at 10 threads), so they run
+        // beside the other arms at one budget: `mibz2-team2x3`, the plain
+        // `Plan::Teams { teams: 2, k: 3 }` (what `mibz2-team3` plans at 6 to 8 threads), and
+        // `mibz2-pipe2x3`, the default's pipelined team with its levers (park and small,
+        // `PIPELINED_LEVERS`) at two teams (what `mibz2-pipe3-both` runs at 6 to 8 threads)
+        "mibz2-team2x3" => drain(
+            mibz2::BzReader::parallel_planned(
+                open()?,
+                mibz2::parallel::Plan::Teams { teams: 2, k: 3 },
+                mibz2::parallel::SLOTS_PER_THREAD * 2,
+                mibz2::Kernels::detect(),
+            ),
+            h,
+            last,
+        ),
+        "mibz2-pipe2x3" => drain(
+            mibz2::BzReader::parallel_pipelined_levers(
+                open()?,
+                2,
+                3,
+                mibz2::parallel::SLOTS_PER_THREAD * 2,
+                mibz2::Kernels::detect(),
+                mibz2::parallel::PIPELINED_LEVERS,
+            ),
+            h,
+            last,
+        ),
         "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h, last),
         "pbz2" => drain(
             pbz2::ParallelDecoder::with_threads(open()?, threads),
