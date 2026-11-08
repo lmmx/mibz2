@@ -17,7 +17,7 @@ bzip2's move-to-front codes mark where each run of the BWT's last column starts,
 could be listed without writing the column. It is not built.
 {: .post-dek }
 
-8 November 2026 · 11 min read · [Open question](#6-where-does-this-stand)
+8 November 2026 · 13 min read · [Open question](#6-where-does-this-stand)
 {: .post-meta }
 
 </div>
@@ -42,8 +42,9 @@ step from row to row without a search. To build one, a decoder needs the runs.
 **This post's observation is that bzip2's codes already list the runs.** A code that names a
 byte other than the last one starts a run; a repeat count extends it. Apart from the block's
 first byte (section 2), nothing else starts or ends a run. So the runs, and from them a move structure, could be built from the codes
-directly, without writing the $n$-byte column and scanning it again. By our own, unproven estimate, building them
-would take time and memory that grow with the number of codes and runs rather than with $n$.
+directly, without writing the $n$-byte column and scanning it again. By our own accounting,
+building them would take time and memory that grow with the number of codes and runs rather
+than with $n$, and the number of codes is itself bounded by the runs (section 4).
 The inversion that follows still takes time proportional to $n$, as any inversion must, and
 that bound is already published.
 
@@ -54,8 +55,8 @@ a loss that a run list handed over for free would not have changed (section 5). 
 experiment did not time a builder fused with MTF. What this post
 adds is the mechanism worked through, its edge cases, what it would cost in theory, and a
 search for prior work. **Nothing here has been built or timed, and it changes nothing in the
-decoder.** The costs in section 4 are our own, unproven. This is a draft for a researcher's
-review, which is to follow.
+decoder.** The costs in section 4 are our own accounting, which an independent review has
+since checked (section 6).
 
 [Section 1](#1-how-does-bzip2-write-banana) decodes the codes of `banana` by hand.
 [Section 2](#2-why-does-every-literal-start-a-run) proves that the codes give every run, and
@@ -220,20 +221,21 @@ keep one record per maximal run, merging a literal with the count after it (and 
 one run it was made to cut), together with a count per byte value. At the block's end it
 computes each $C(c)$, gives each record its row start $a=C(c)+k$, and builds a run-bounded move
 structure from the records. The $n$-byte column is never written or scanned. What follows is
-our own candidate accounting of what that would cost. It is not a published result, and the
-review is to check it.
+our own accounting of what that would cost. It is not a published result.
 
 Write $m$ for the number of symbols in a block and $\sigma$ for the number of byte values it
 uses, at most 256. On a word RAM, the usual model in which one machine word is read or written
-in one step, with each symbol handled in constant time:
+in one step, with each symbol handled in constant time (and with blocks of any length: bzip2
+caps a block at 900,000 bytes, so the asymptotics are about that generalised model):
 
 1. **Building the records** would take $O(m+r+\sigma)$ time: one pass over the symbols, a
    counting sort of the $r$ records by byte, and the counts. It would hold $O(r+\sigma)$ words
    of working memory: the records and a count per byte value.
-2. **Composed with Brown and Langmead,** whose preparation takes $O(r)$ time and space and whose
-   inversion takes $O(n)$ time from a run-length BWT
-   ([SEA 2026, Lemma 6 and Theorem 9](https://arxiv.org/abs/2602.11029)), the inverse BWT would
-   take $O(m+n+r+\sigma)$ time and $O(r+\sigma)$ extra working memory.
+2. **Composed with a move structure built in $O(r)$ time and space,** and walked in $O(n)$
+   time, the inverse BWT would take $O(m+n+r+\sigma)$ time and $O(r+\sigma)$ extra working
+   memory. Brown and Langmead give such a route from a run-length BWT
+   ([SEA 2026, Lemma 6 and Theorem 9](https://arxiv.org/abs/2602.11029)), for a text with an
+   end marker; condition 3 below gives one for bzip2's BWT, which has none.
 
 That memory figure leaves out the compressed input, the $n$ output bytes, the block's Huffman
 tables and other metadata, and the decoder's other buffers. It is not a memory bound for a
@@ -248,32 +250,69 @@ Each of those statements has conditions:
 1. **A fixed alphabet.** Moving a byte to the front of the list costs up to $\sigma$ steps. For
    bytes that is a constant, and mibz2 does most moves with a few vector shuffles; for a large
    alphabet it would not be.
-2. **The symbols streamed.** mibz2 decodes a block's Huffman codes into an array of symbols
-   first, which is $O(m)$ memory, before MTF reads it
-   ([`Symbols`](https://github.com/lmmx/mibz2/blob/68d934b/src/block.rs#L23-L34)). The
-   $O(r+\sigma)$ figure needs Huffman decoding and MTF fused, or the array counted.
+2. **The symbols streamed.** The bounds assume a stream of decoded symbols. mibz2 decodes a
+   block's Huffman codes into an array of symbols first, which is $O(m)$ memory, before MTF
+   reads it ([`Symbols`](https://github.com/lmmx/mibz2/blob/68d934b/src/block.rs#L23-L34)).
+   The $O(r+\sigma)$ figure needs Huffman decoding and MTF fused, or the array counted. Even
+   fused, the block's Huffman *selectors* stay: one per group of 50 symbols, naming the table
+   that group uses, all stored ahead of the symbols, so about $m/50$ entries, which is $O(m)$
+   state too. So an $O(r)$ memory bound for the whole decompressor would have to account for
+   them as well.
 3. **No end marker.** Brown and Langmead's text ends in a unique terminator, `$`. bzip2's BWT
    sorts rotations with no terminator and stores the start row instead. A periodic block's
    map then has several cycles
-   ([the appendix, section 6](2026-11-08-inverse-bwt-navigation-notes.md#6-cycle-structure-and-necklaces)),
-   and their bound on the average step assumes one. This needs checking before their theorems
-   are applied to bzip2.
+   ([the appendix, section 6](2026-11-08-inverse-bwt-navigation-notes.md#6-cycle-structure-and-necklaces)).
+   Their Theorem 9 bounds the walk's steps on average over one traversal of a single cycle,
+   so that proof does not transfer unchanged. A later paper gives a route that needs neither.
+   Brown, Sanaullah, Zhang and Langmead
+   ([*Optimal-Time Move Structure Construction*, Theorem 3.9](https://arxiv.org/abs/2603.22147)) build a
+   *balanced* move structure, in which every step takes constant time in the worst case, for
+   any permutation, in $O(r)$ time and space. Its inputs are each interval's start, the start
+   of its image, and the order of the images. For $\Psi$ built from the records, these are the
+   row starts in $F$ order, the records' starts in $L$, and each record's place in $L$ order,
+   all of which section 3's counting sort already gives. Nothing in that theorem assumes one
+   cycle or a terminator. The inversion then starts at bzip2's stored start row, finds its
+   interval in $O(r)$ steps, and takes $n$ steps of $\Psi$, writing each row's byte. A
+   periodic block's cycle is shorter than $n$, so the walk goes round it more than once,
+   which writes the period the right number of times. A script that models this walk
+   reproduced every string of up to eight letters over three letters, the 135 periodic ones
+   among them. Applying that theorem to bzip2's $\Psi$ is our composition, not a result of
+   the paper.
 
-**A sharper bound on building the records, still to be proved.** A run of length $\ell$ costs
-one literal and about $\log_2\ell$ count digits, since each digit doubles the place value.
-Summed over the runs, and since the logarithm grows ever more slowly, the total would be largest
-when all runs have the same length, which suggests
+**The number of symbols is bounded by the runs.** This is an elementary lemma, not a new
+result, and its proof is short. Let the maximal runs of $L$ have lengths
+$\ell_1,\dots,\ell_r$, which add up to $n$, and count $m$ with the end-of-block symbol, as in
+section 1.
+
+First, a stretch of $q\ge1$ zeros takes exactly $\lfloor\log_2(q+1)\rfloor$ count digits.
+With $t$ digits, each worth 1 or 2 times its place value $1,2,4,\dots$, the totals run from
+$2^t-1$ (every digit `RUNA`) to $2^{t+1}-2$ (every digit `RUNB`), and every count in between
+is reached. A run of length $\ell$ that starts with a literal is that literal and $\ell-1$
+zeros, so it costs $1+\lfloor\log_2\ell\rfloor$ symbols. The one exception of section 2,
+a first run of the block's smallest byte, has no literal and $\ell_1$ zeros, so it costs
+$\lfloor\log_2(\ell_1+1)\rfloor$. No other run starts with a count (section 2). Adding the end-of-block
+symbol,
 
 $$
-m\le r\left(1+\log_2\frac nr\right)+1,
+m = 1+\sum_{j=1}^{r}\bigl(1+\lfloor\log_2\ell_j\rfloor\bigr),
 $$
 
-with the $+1$ for the end-of-block symbol. The script of section 2 found no case that breaks
-it, but this is a sketch, not a checked proof: bzip2's exact symbol grammar, the first and last
-runs, and merged runs all have to be accounted for. If it holds, building the records takes
-time sublinear in $n$ on blocks with long runs. That is not sublinear inversion, which writes
-$n$ bytes regardless, and it may not be new: it follows from the input having coded the runs
-already.
+with the first run's term replaced by $\lfloor\log_2(\ell_1+1)\rfloor$ in the exception. For
+`banana`'s runs of 2, 1 and 3, that is $1+2+1+2=6$, the six symbols of section 1. Since
+$\log_2(\ell+1)\le1+\log_2\ell$, both cases give $m\le1+r+\sum_j\log_2\ell_j$. The
+logarithm is concave, so by Jensen's inequality the sum is largest when every run has length
+$n/r$:
+
+$$
+m\le r\left(1+\log_2\frac nr\right)+1.
+$$
+
+Cutting a run at a checkpoint changes the records, not the symbols, so it doesn't change $m$.
+A second script checked the exact count, not only the bound, on every word of up to twelve
+letters over two letters and up to eight over three, and on the columns of 3,000 random and
+periodic strings. So building the records takes time sublinear in $n$ on blocks with long
+runs. That is not sublinear inversion, which writes $n$ bytes regardless, and it adds no
+information: it follows from the input having coded the runs already.
 
 ## 5. What has mibz2 measured?
 
@@ -347,17 +386,19 @@ construction guarantee, a lower bound or a streaming constraint that doesn't alr
 from known run-length BWT and move-structure results.
 
 **How sure are we?** Fairly sure of the run-listing argument, which section 2 proves and a
-script checked on a model of bzip2's rules. Sure of the costs in section 4 only under their
-conditions, which need the review. Not sure at all that any of it is new, beyond what the
-format already implies.
+script checked on a model of bzip2's rules, and of the bound on $m$, which section 4 proves.
+Sure of the costs in section 4 under their conditions: a stream of decoded symbols, with the
+selectors and any stored symbols counted separately, and no claim for the whole decompressor.
+Not sure at all that any of it is new, beyond what the format already implies.
 
-**What a review should check:** the run argument and its edge cases (the first byte, each
-change of byte, the end of the block), a proof or refutation of the bound on $m$, the input
-model and memory accounting of section 4, whether Brown and Langmead's results hold for a BWT
-without a terminator, the prior-art search, and which result, if any, would be new.
-
-A researcher's review of this post is to follow. Until then it is a draft argument, not a
-validated result.
+**What did the review find?** An independent review, in the method of the project's
+researcher role and relayed from the maintainer through ChatGPT, read the published post on
+8 November ([the review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6723926266)). It found the substance sound. It gave the proof
+of the bound on $m$ that section 4 now carries, and the route without an end marker in
+condition 3, which we checked against the paper before adopting it. It asked that the memory
+model and the novelty question stay as narrow as they were. It was not a fresh-reader test:
+the reviewer knew the code and the papers. A test with a reader who knows neither is still
+to be done.
 
 ## 7. The argument in brief
 
@@ -365,9 +406,11 @@ bzip2's MTF codes write a literal exactly where a run of the BWT's last column s
 count of repeats for the rest of it, so the runs can be listed from the codes, with one
 exception at the block's start. Each run's byte, start, length and earlier count, with the
 block's byte counts, give its interval of the next-row map, and a merge gives the anchors a
-move structure needs. In our unproven accounting, the records take $O(m+r+\sigma)$ time and
-$O(r+\sigma)$ words, without the $n$-byte column, and perhaps time sublinear in $n$ on long
-runs; the inversion stays $O(n)$, as Brown and Langmead already have it. In the one setting mibz2 has measured, it would not have rescued the move
+move structure needs. In our accounting, the records take $O(m+r+\sigma)$ time and
+$O(r+\sigma)$ words, without the $n$-byte column, and since $m$ is at most
+$r(1+\log_2(n/r))+1$, that time is sublinear in $n$ on long runs. The inversion stays $O(n)$,
+as Brown and Langmead already have it, and a balanced move structure gives it without an end
+marker. In the one setting mibz2 has measured, it would not have rescued the move
 structure tried there, whose interleaved walk alone cost more than today's whole build and
 walk.
 
@@ -391,7 +434,7 @@ column ([the appendix, section 4](2026-11-08-inverse-bwt-navigation-notes.md#4-w
 - [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html),
   SEA 2026, LIPIcs 371, paper 9 ([arXiv:2602.11029](https://arxiv.org/abs/2602.11029)).
 - [Nathaniel K. Brown, Ahsan Sanaullah, Shaojie Zhang and Ben Langmead, *Optimal-Time Move Structure Construction*](https://arxiv.org/abs/2603.22147),
-  arXiv:2603.22147 (2026).
+  arXiv:2603.22147 (2026; revised 22 October 2026), Theorem 3.9.
 - [Takaaki Nishimoto, Shunsuke Kanda and Yasuo Tabei, *An Optimal-Time RLBWT Construction in BWT-Runs Bounded Space*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99),
   ICALP 2022, LIPIcs 229, 99:1–99:20.
 - [Dominik Kempa and Tomasz Kociumaka, *Resolution of the Burrows–Wheeler Transform Conjecture*](https://arxiv.org/abs/1910.10631),
