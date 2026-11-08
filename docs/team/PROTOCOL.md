@@ -213,6 +213,15 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - `--no-suspend` keeps the machine on.
   - `--hours N` waits up to N hours for entries not yet ready.
   - A single entry can still be run on its own with `just submit-when-ready <recipe> <branch>`.
+- **Adding work while the queue runs.** After each pass, the runner reads the queue and the tags
+  from origin again. It runs every entry whose `ready` tag points at a commit not yet run on that
+  machine, and suspends only after a pass that finds nothing new (at most 10 passes).
+  - A rerun or a new entry, prepared as above while the queue runs, is picked up without a
+    second command.
+  - A rerun needs a new commit, since a commit runs at most once per machine. A journal note
+    outside the measured inputs, registering the rerun, is that commit.
+  - The tag must be moved before the running pass ends. A runner that has already suspended
+    needs `just workstation-queue` again.
 - **Withdrawing an entry:** the Coordinator sets `hold/<recipe>` through the same workflow, then
   removes the line.
 - **After a run:** the Coordinator reads the bundle, removes the entry, and clears its tags.
