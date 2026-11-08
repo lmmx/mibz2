@@ -70,9 +70,9 @@ what would settle it. Secondary results are in a
 Suppose you want to compress the word `banana` with bzip2. The BWT writes down each of its
 six rotations, sorts them, and keeps two things: the last column of the sorted list, $L$, and
 the number of the row holding the original word, here 3. The first column, $F$, is the same
-bytes in sorted order. The column $\Psi(i)$, the next row, is explained below the table.
+bytes in sorted order. The last column of the table, the next row, is explained below it.
 
-| Row $i$ | Rotation | $F[i]$ | $L[i]$ | $\Psi(i)$ |
+| Row | Rotation | F | L | Next |
 | ---: | --- | --- | --- | ---: |
 | 0 | `abanan` | a | n | 3 |
 | 1 | `anaban` | a | n | 4 |
@@ -295,7 +295,8 @@ The interval-exchange permutation of section 2 is precisely the sort of permutat
 $O(1)$-time move queries with $O(r)$ words of space after balancing represented intervals.
 
 An ordinary query is $i\mapsto\Psi(i)$. An interval representation must locate the interval
-containing $i$, potentially requiring an expensive predecessor search. Instead retain the pair
+containing $i$, potentially requiring an expensive predecessor search: finding the last
+interval start at or before $i$. Instead retain the pair
 $(i,t)$, where $t$ identifies the interval. The next row follows directly:
 
 $$
@@ -312,7 +313,8 @@ $$
 \boxed{(i,t)\xrightarrow{O(1)}(\Psi(i),t')}\tag{5}
 $$
 
-using $O(r)$ words in the word-RAM model. Carrying $t$ is essential. This is not
+using $O(r)$ words in the word-RAM model, the standard model in which reading one machine
+word is one step. Carrying $t$ is essential. This is not
 one-memory-access arbitrary-row lookup. The theorem shows that compact representation does not
 imply logarithmic lookup time. That removes a theoretical objection, not the hardware concern
 about several serial descriptor loads: an $O(1)$ bound in the RAM model is not a claim of one
@@ -374,7 +376,8 @@ and output buffer are accounted for separately. This does not make the entire de
 $O(r)$ total memory. Linear asymptotic construction does not mean lower constant cost than
 mibz2's fused counting-sort builder.
 
-The single-cycle amortisation argument applies directly to primitive strings. Periodic cyclic
+The single-cycle amortisation argument applies directly to primitive strings, those that
+are not a repetition of a shorter string. Periodic cyclic
 BWTs may have several cycles
 ([appendix section 6](2026-11-08-inverse-bwt-navigation-notes.md#6-cycle-structure-and-necklaces));
 mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021
