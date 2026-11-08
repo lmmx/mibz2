@@ -654,20 +654,48 @@
   .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
 }
 
-/* Frames (the inverse-BWT post): a figure told in numbered steps, each a narrow SVG with its
-   narration beneath. Two frames a row on a wide screen, one on a phone, so each SVG is drawn
-   near its own size at either width. */
-.bf-fig .bf-cell-amber { fill: var(--bf-amber-tint); }
-.bf-fig .bf-cell-steel { fill: var(--bf-steel-tint); }
-.bf-fig .bf-band-amber { fill: var(--bf-amber-tint); fill-opacity: 0.75; stroke: var(--bf-amber); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.bf-fig .bf-band-steel { fill: var(--bf-steel-tint); fill-opacity: 0.75; stroke: var(--bf-steel); stroke-width: 1.5; stroke-dasharray: 5 4; }
-.bf-fig .bf-outline { fill: none; stroke: var(--bf-green); stroke-width: 2; }
-.bf-fig .bf-mono { fill: var(--bf-ink); font-family: var(--md-code-font-family); font-size: 14px; }
-.md-typeset .bf-frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.2rem; margin: 0; }
+/* Frames (the inverse-BWT post): one art-directed sequence of small static frames, each drawn
+   on the same 230-unit width so every figure has the same scale. Typeset rails of letters, small
+   indices, smooth connectors with small heads; green marks the one run being matched, ink the
+   active interval, everything else is quiet. Three across on a wide screen, stacked on a phone. */
+.bf-fig .bf-ch { fill: var(--bf-ink); font-size: 18px; font-weight: 600; }
+.bf-fig .bf-ch-dim { fill: var(--bf-muted); font-size: 18px; }
+.bf-fig .bf-sub { fill: var(--bf-green-ink); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-ix { fill: var(--bf-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-lab { fill: var(--bf-muted); font-size: 14px; font-style: italic; font-weight: 600; }
+.bf-fig .bf-cap { fill: var(--bf-muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.bf-fig .bf-eq { fill: var(--bf-ink); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-eq-l { fill: var(--bf-ink); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-val { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-state { fill: var(--bf-ink); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-note { fill: var(--bf-ink); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-halo { paint-order: stroke; stroke: var(--md-default-bg-color); stroke-width: 5px; stroke-linejoin: round; }
+.bf-fig .bf-tint { fill: var(--bf-green-tint); }
+.bf-fig .bf-act { fill: none; stroke: var(--bf-green); stroke-width: 2; stroke-linecap: round; }
+.bf-fig .bf-quiet { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; stroke-linecap: round; opacity: 0.5; }
+.bf-fig .bf-quiet-ink { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.bf-fig .bf-head { fill: var(--bf-green); }
+.bf-fig .bf-head-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-head-ink { fill: var(--bf-ink); }
+.bf-fig .bf-pin { fill: var(--bf-green); }
+.bf-fig .bf-pin-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-ribbon { fill: var(--bf-green); fill-opacity: 0.2; stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-seg { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; opacity: 0.7; }
+.bf-fig .bf-seg-a { fill: none; stroke: var(--bf-green); stroke-width: 1.5; }
+.bf-fig .bf-seg-on { fill: none; stroke: var(--bf-ink); stroke-width: 2.2; }
+.bf-fig .bf-seg-a-on { fill: none; stroke: var(--bf-green); stroke-width: 2.4; }
+.bf-fig .bf-segl { fill: var(--bf-muted); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-segl-on { fill: var(--bf-ink); font-size: 13.5px; font-weight: 700; }
+.bf-fig .bf-ring { fill: none; stroke: var(--bf-ink); stroke-width: 1.6; }
+.bf-fig .bf-ring-a { fill: none; stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-tick { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.md-typeset .bf-frames { display: grid; gap: 1.4rem 1.6rem; margin: 0.2rem 0 0; }
+.md-typeset .bf-frames-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.md-typeset .bf-frames-pair { grid-template-columns: repeat(2, minmax(0, calc((100% - 3.2rem) / 3))); justify-content: center; }
 .md-typeset .bf-frame { min-width: 0; margin: 0; }
-.md-typeset .bf-frame svg { max-width: 22rem; margin: 0 auto; }
-.md-typeset .bf-frame .bf-step { margin: 0.45rem 0 0; color: var(--bf-ink); font-size: 0.68rem; line-height: 1.5; }
+.md-typeset .bf-frame svg { max-width: 13rem; margin: 0 auto; }
+.md-typeset .bf-frame .bf-step { margin: 0.5rem 0 0; color: var(--bf-ink); font-size: 0.68rem; line-height: 1.5; }
 .md-typeset .bf-frame .bf-step code { font-size: 0.92em; }
 @media screen and (max-width: 44.9375em) {
-  .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); }
+  .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
 }
