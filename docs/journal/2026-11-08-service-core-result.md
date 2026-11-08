@@ -76,3 +76,16 @@ from running two teams rather than three. The run has no plain 2 × 3 cell at 10
   with CI's paired bench (C3).
 - **The service core is a prototype on research/service-core (#251).** It is not wired into the
   default.
+
+## svc2@12: not selected for production
+
+The registered architecture reading at 12 threads is A TRADE (C4): 1.058 [1.035, 1.081] faster
+than today's default, at 0.901 [0.888, 0.914] of its CPU. Its gain is not shown beyond its extra
+threads: 11 decode threads against the default's 9, and the extra-thread rule needs a lower
+bound above 1.222. A gain bought with more threads, at a CPU cost, is no reason to change the
+default. svc2@12 is therefore not selected (research direction, RULES A5).
+
+The line followed instead is svc2@10. It runs fewer threads than the default (8 against 9), and
+its reported cell is faster, cheaper in CPU and smaller in memory. Its registered comparison,
+with plain and pipelined 2 × 3 controls, is `bench-service-2x3` (#258). Until that run, the
+reported figures are not a verdict.
