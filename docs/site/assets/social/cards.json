@@ -65,6 +65,12 @@
     "section": " · Research blog",
     "title": "Why mibz2 stops scaling at eight threads, and why three teams help"
   },
+  "assets/social/blog-2026-11-08-bwt-runs-from-mtf-codes.png": {
+    "description": "bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built.",
+    "foot": "lmmx.github.io/mibz2 · 8 November 2026",
+    "section": " · Research blog",
+    "title": "Reading the BWT's runs off bzip2's move-to-front codes"
+  },
   "assets/social/blog-2026-11-08-inverse-bwt-navigation.png": {
     "description": "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.",
     "foot": "lmmx.github.io/mibz2 · 8 November 2026",

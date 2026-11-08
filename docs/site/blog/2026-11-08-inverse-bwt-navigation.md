@@ -53,8 +53,8 @@ run-length BWT representation.
 **What is not proved** is that any of them beats mibz2's 32-lane, four-byte-per-row
 implementation in elapsed CPU cycles. Everything in this post is mathematics and published
 theory: nothing in it has been built or measured in mibz2, and it changes nothing in the
-decoder. Nor has $r$ been counted on mibz2's blocks; [section 3](#3-when-do-the-shifts-save-nothing)
-derives an upper bound from an earlier measurement.
+decoder. $r$ has been counted on one corpus, in a scratch run;
+[section 3](#3-when-do-the-shifts-save-nothing) gives that count, and an upper bound on another.
 
 [Section 1](#1-what-does-the-next-row-map-look-like-for-banana) shows both ideas on `banana`,
 and [section 2](#2-why-does-every-run-give-one-shift) proves the first in general.
@@ -324,8 +324,14 @@ count itself has a precise meaning: exactly $n-r$ pairs of adjacent rows within 
 block have consecutive next rows
 ([appendix section 2](2026-11-08-inverse-bwt-navigation-notes.md#2-consecutive-entries-and-sparse-corrections)).
 
-**How small is $r$ on mibz2's blocks?** It has not been counted. One earlier figure bounds it.
-On the main Wikidata corpus, 207,006,515 rows in 434 blocks, the builder of compact30, our
+**How small is $r$ on mibz2's blocks?** It has been counted once, in October, by an
+uncommitted scratch counter on the bench's Wikidata corpus, `wikidata.bz2`. Over its 233 blocks
+of at least 65,536 rows, 99.996% of its rows, $r/n=0.0722$, and block by block it ran from 0.053
+to 0.200, with a median of 0.062
+([the journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md),
+[issue #42](https://github.com/lmmx/mibz2/issues/42)). That was one local run on one corpus.
+On the main Wikidata corpus, which the rest of this section uses, $r$ has not been counted, but
+an earlier figure bounds it. On that corpus, 207,006,515 rows in 434 blocks, the builder of compact30, our
 research table that packs thirty rows into each 64-byte record, wrote 74.3% of rows through its bulk emitter, as 5,127,300 complete 30-row records, each covered by one
 run of $L$ ([the 4 November post, section 6](2026-11-04-compact30-constructor.md#6-most-rows-never-take-the-per-row-path)).
 Each of those runs holds at least one such record, so there are at most 5,127,300 of them.
@@ -416,7 +422,9 @@ This is a complexity theorem for inversion, not merely compressibility.
 
 **How directly does it apply to bzip2?** The theorem starts from run-length BWT. mibz2
 reconstructs the byte sequence $L$ after MTF (undoing bzip2's move-to-front coding, the stage
-before the inverse BWT), so discovering the runs involves examining $n$ bytes. Given $L$ and
+before the inverse BWT), so discovering the runs involves examining $n$ bytes. bzip2's MTF codes
+already mark where each run starts, so the runs could instead be listed while decoding
+([a follow-up post](2026-11-08-bwt-runs-from-mtf-codes.md)). Given $L$ and
 its counts, the runs can be enumerated in $O(n)$ time, and the capped structure built from them
 in $O(r)$, giving an $O(n+r)=O(n)$ path with $O(r)$ navigation storage, when the input sequence
 and output buffer are accounted for separately. This does not make the entire decompressor
@@ -469,9 +477,15 @@ permutation, while preserving high memory-level parallelism across simultaneous 
 Two measurements would settle whether it is worth building. The first is the run count of each
 block on mibz2's corpora, and so the size of the descriptors, block by block, against the
 T-vector's. The second, only if those are small, is a 32-lane walk over a move structure, timed
-against the T-vector walk with the cost of building each counted. Neither has been done. The
-most consequential result to investigate further is the move structure, especially Brown and
-Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to
+against the T-vector walk with the cost of building each counted. Both have been done once,
+locally. The run count is the one in section 3. And in
+[issue #42](https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621), a length-capped
+move structure's build and 32-lane walk cost 90–108% more than the T-vector's, at one thread,
+because each interleaved step took more instructions
+([the write-up](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md)).
+The issue is closed, with a condition for reopening it: a setting bound by memory rather than
+instructions, such as several workers sharing the cache. The most consequential result to investigate further is the move
+structure, especially Brown and Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to
 the problem mibz2 solves.
 
 ## 7. The argument in brief
