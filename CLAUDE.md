@@ -22,6 +22,15 @@ Researcher, #222 Observer): route every message with `.github/coordination/coord
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is
   merged, at exactly that head. A merge call that returned success is not a checked merge.
 
+## A red CI check
+
+Follow [`docs/team/CI-INCIDENTS.md`](docs/team/CI-INCIDENTS.md):
+- **Classify each failed job from its log:** A, the change failed; B, setup failed before the
+  project ran; C, flaky; D, unexplained.
+- **Re-run only the failed job,** paced to the outage. A setup failure blocks only that PR's
+  merge, never other work.
+- **The green-head gate in `docs/STEWARDSHIP.md` holds.**
+
 ## Releases: the coordinator drives them
 
 The coordinator releases mibz2 itself, without asking first, whenever merged work is worth

@@ -219,6 +219,16 @@ with one command whenever suits him. Nothing about a queued run is left to decid
 - **Order:** the queue's order is the run order. An entry that depends on another's result is
   not queued until that result has been read.
 
+## 10. CI incidents
+
+A red CI check on a PR is handled by `docs/team/CI-INCIDENTS.md`:
+- classify each failed job from its log;
+- re-run only that job, paced to the outage;
+- record which checks did not run;
+- keep all other work moving.
+
+The Coordinator owns this for every PR the team drives.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:
