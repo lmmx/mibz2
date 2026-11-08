@@ -160,7 +160,7 @@ re-run. Louis can review any exception from its record.
 | PR | missing job and cause | needed verification, and what covered it | verdict |
 |---|---|---|---|
 | #255: `bench/run-queue.sh` and PROTOCOL.md | x86_64 Linux wheel; *Install maturin* returned a 92-byte non-archive | Nothing in the diff is built into a wheel. The wheel build verifies packaging of unchanged code, and the other wheel builds, tests, typing and the bench passed. The script itself was tested in a scratch repo, recorded on the PR. | PROCEED (no material gap) |
-| #256: README.md and CHANGELOG.md | x86_64 and aarch64 wheels, sdist; maturin download 504 / non-archive | Docs only. The README is the package's long description, so the sdist carries it, but its rendering is checked by nothing in those jobs. | PROCEED, once any docs check that does run is green |
+| #256: README.md and CHANGELOG.md | x86_64 and aarch64 wheels, sdist; maturin download 504 / non-archive | The README is the package's long description, carried in the sdist and the wheels' metadata. The missing jobs would have built those artefacts with the changed text; no job that ran verified that. | HOLD, until a build that ran on the same head (another platform's wheel, or the sdist) has carried the changed README, or the README's change is shown not to reach the package metadata |
 | A change to `src/` (a kernel) | x86_64 Linux wheel; the same download failure | The tests and bench ran on x86_64 Linux, so the code is verified there. The manylinux wheel's packaging is what's missing: its glibc symbol versions and its auditwheel repair, which a code change can affect. | HOLD (material gap) |
 | A change to `.github/workflows/` or `pyproject.toml` | any setup step | The diff can reach setup, so the cause can't be shown to be external. | HOLD |
 | A release PR | any job | Release artefacts are verified themselves. | HOLD |
@@ -187,6 +187,6 @@ re-run. Louis can review any exception from its record.
 - **What happened first:** the job was re-run once, failed the same way, and was left with a
   note. Two things were wrong there: a fixed count of one, and no paced recovery.
 - **Under this runbook:** the job alone is re-run on the same head, backing off, while recovery
-  is plausible. The PR merges once the job passes. Under §4's exception, if approved, it would
-  merge with the job's absence recorded.
+  is plausible. The PR merges once the job passes. Under §4's exception, if approved, #255 would
+  merge with the job's absence recorded; #256 would hold (its README reaches the package).
 - **#256,** a docs-only PR, hit the same incident at the same time.
