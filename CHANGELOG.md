@@ -86,6 +86,15 @@ there. CI's paired bench is therefore only the no-regression check of every othe
 - **A frozen confirmation run** against 0.2.5 is registered before release
   (`docs/journal/2026-11-07-pipelined-default-registration.md`). Its result is recorded there.
 
+**Known issue, measured after release (8 November 2026, `plan-levels/20261108T094232Z`):** on
+the ten-core topology, at 10 and 20 threads, 0.2.6's default is slower than 0.2.4's on files
+compressed at bzip2 levels 1 and 2:
+- 0.763 (0.752–0.775) at level 1, and 0.776 (0.759–0.794) at level 2, both at 10 threads;
+- forced to 4 × 2, 0.2.6 matches 0.2.4 (1.007–1.009), so all of the loss is the plan;
+- at level 3, the default is 1.047 (1.015–1.081) against 0.2.4.
+
+Passing `Plan::Teams { teams: 4, k: 2 }` avoids it. A fix is being registered.
+
 **The lower-CPU path stays available.** The plain three teams of three are
 `StreamDecoder::planned(Plan::Teams { teams: 3, k: 3 }, slots, kernels)`, or
 `BzReader::parallel_planned` with the same plan. The default's window is 12 blocks.
