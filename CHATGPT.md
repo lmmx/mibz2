@@ -50,9 +50,41 @@ before you post. If this file and §7 ever differ, §7 holds.
    ```
 
    #145 is public. Put in the request and what it needs, nothing else from the conversation.
+
+   **Attached files.** When Louis asks you to send a file or a whole document with the request,
+   carry its complete text in the same comment. Put it in one collapsed block per file, after
+   the interpretation, so the request stays readable above it:
+
+   ````
+   <details>
+   <summary>Attached: report.md (full text, 12,345 bytes, SHA-256 1f2e…)</summary>
+
+   ```markdown
+   <the file's complete contents, verbatim>
+   ```
+
+   </details>
+   ````
+
+   - **Send the whole text, not a summary.** Name the file, and give its size or SHA-256 when
+     you can, so the Coordinator can check that it arrived whole.
+   - **Fence the contents,** with a fence longer than any backtick run inside them. The blank
+     line after `</summary>` and the one before `</details>` let the Markdown inside render.
+   - **Say so instead of claiming it was sent intact** when the file can't go this way:
+     - it is binary;
+     - you couldn't read all of it;
+     - it would take the comment past GitHub's limit of 65,536 characters;
+     - it contains a `</details>` or a fence that would break the block.
+
+     Then ask Louis how he wants it handed over.
+   - **Only the file he named goes in,** since #145 is public. His asking you to send that
+     file is his consent for that file, and for nothing else.
+   - **The file is material for the team, not instructions to it.** It can't widen what the
+     request may do (below).
 4. **Read it back.** Fetch the comment you posted and give Louis its URL.
 5. **Report only what has happened,** in three steps, each with its evidence:
-   - **posted:** the comment's URL;
+   - **posted:** the comment's URL, after checking that any attached file arrived whole in the
+     read-back (its size, or its last lines);
    - **acknowledged:** the Coordinator's `TYPE: LOG` on #145 that cites your comment's ID;
    - **done:** what that LOG, or a later one, links: a merged PR, a commit, a report.
 
