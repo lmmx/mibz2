@@ -148,11 +148,15 @@ def look(browser, url, out, viewport, theme):
     page = context.new_page()
     problems = []
     # A failed load is reported once, from its response; the theme's repository widget
-    # calls api.github.com, which rate-limits and is not the page.
+    # calls api.github.com, which rate-limits and is not the page. A rate-limited call can
+    # also come back without CORS headers, so it shows only as a console error and a failed
+    # request: those are not the page either.
     page.on("console", lambda m: m.type == "error" and not m.text.startswith("Failed to load resource")
+            and "api.github.com" not in m.text
             and problems.append(f"console error: {m.text[:200]}"))
     page.on("pageerror", lambda e: problems.append(f"uncaught exception: {str(e)[:200]}"))
-    page.on("requestfailed", lambda r: problems.append(f"request failed: {r.url} ({r.failure})"))
+    page.on("requestfailed", lambda r: "api.github.com" not in r.url
+            and problems.append(f"request failed: {r.url} ({r.failure})"))
     page.on("response", lambda r: r.status >= 400 and "api.github.com" not in r.url
             and problems.append(f"HTTP {r.status}: {r.url}"))
     page.goto(url, wait_until="networkidle")
