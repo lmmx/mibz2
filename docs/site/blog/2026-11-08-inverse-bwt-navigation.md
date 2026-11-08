@@ -17,7 +17,7 @@ The inverse BWT's next-row map is one shift per run of equal bytes, so it can be
 run rather than per row. Whether that beats mibz2's table is unproven.
 {: .post-dek }
 
-8 November 2026 · 24 min read · [Open question](#13-final-assessment)
+8 November 2026 · 14 min read · [Open question](#6-what-would-it-cost-mibz2-and-what-would-settle-it)
 {: .post-meta }
 
 </div>
@@ -28,70 +28,126 @@ run rather than per row. Whether that beats mibz2's table is unproven.
 
 To undo the [Burrows–Wheeler transform](https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform)
 (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's
-sorted matrix to the next, emitting one byte at each step. The inverse Burrows–Wheeler
-transform in mibz2, our bzip2 decoder, is conventionally implemented using a table containing
-one navigation entry per BWT row, which we call the T-vector. Each entry is four bytes,
-holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes,
-the conventional four-byte T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
+sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores
+that chain as a table with one navigation entry per row, which we call the T-vector. Each
+entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block
+size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
 decoding a block, because each step's address comes from the entry just read; mibz2 walks
 many such chains at once so that their memory reads overlap.
 [An earlier post](2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md) works the
 transform through on a small example.
 
-This post asks what kind of map that table encodes. The navigation function is not an
-arbitrary permutation. It has three layers of mathematical structure:
-
-1. It is a stable-sort permutation, equivalently a collection of monotone occurrence-position
-   sequences.
-2. It is a *piecewise translation* with at most $r$ pieces, where $r$ is the number of
-   equal-character runs in the BWT last column.
-3. For a genuine cyclic BWT, its cycle decomposition is constrained by the periodicity of the
-   original string.
-
-These properties establish substantially more than nomenclature. They lead to exact
-representation formulas, space bounds, algorithms for arbitrary successor queries, and
-constructive results about multiple navigation steps.
-
-Most importantly, **there is already a published theory of data structures for precisely this
-kind of permutation**.
-
+**The entries of that table are not independent.** When the transformed word `banana` is
+decoded, the three rows that emit `a` have next rows 3, 4 and 5. One starting row and a
+length describe all three. Every run of equal bytes in the BWT's output works the same way,
+so the whole table can be described by one shift per run, $r$ of them, instead of one entry
+per row, $n$ of them. **A walk can follow those shifts without searching for the right one
+at each step,** by remembering which run it is in. Data structures that do this, *move
+structures*, are published, with proofs:
 [Nishimoto and Tabei (2021)](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101)
-established constant-time navigation using $O(r)$ machine words for *move structures*,
-provided the current interval identifier is maintained. More recently,
+gave constant-time steps in $O(r)$ machine words, and
 [Brown and Langmead (2026)](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html)
-established $O(n)$-time BWT inversion with $O(r)$ additional working space from a run-length
-BWT representation. Those are genuine algorithmic results, not performance conjectures. They
-provide a direct theoretical alternative to mibz2's $O(n)$-entry T-vector.
+inverted a whole BWT in $O(n)$ time with $O(r)$ additional working space, starting from a
+run-length BWT representation.
 
 **What is not proved** is that any of them beats mibz2's 32-lane, four-byte-per-row
 implementation in elapsed CPU cycles. Everything in this post is mathematics and published
 theory: nothing in it has been built or measured in mibz2, and it changes nothing in the
-decoder.
+decoder. Nor has $r$ been counted on mibz2's blocks; [section 3](#3-when-do-the-shifts-save-nothing)
+derives an upper bound from an earlier measurement.
 
-The post derives the consequences for mibz2, including what the theory tells us about
-compact30 (our research table, which packs thirty rows into each 64-byte record), which approaches have provable guarantees, how multi-character traversal can
-exploit the same structure, and which combinatorial identities do not materially help.
-[Section 1](#1-establishing-the-exact-object) defines the map and works it on `banana`.
-Sections [2](#2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem)
-to [4](#4-third-consequence-rigorous-succinct-space-bounds) derive its structure: a select
-problem, $r$ translated intervals, and the space bounds that follow.
-[Section 5](#5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem)
-is the published theory of move structures, and
-[section 6](#6-fifth-consequence-compact30s-representability-can-be-characterised-exactly)
-applies the interval view to compact30.
-[Section 7](#7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation)
-covers several steps at once, [section 8](#8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images)
-the cycle structure, and [section 9](#9-what-does-the-original-permutree-thesis-contribute)
-what the permutree thesis this question started from contributes.
-Sections [10](#10-stronger-correctness-guarantees-and-proof-obligations) to
-[13](#13-final-assessment) turn the results into checks, a map of the design space, and an
-assessment.
+[Section 1](#1-what-does-the-next-row-map-look-like-for-banana) shows both ideas on `banana`,
+and [section 2](#2-why-does-every-run-give-one-shift) proves the first in general.
+[Section 3](#3-when-do-the-shifts-save-nothing) shows when it saves nothing. Sections
+[4](#4-how-does-a-walk-move-between-intervals-in-constant-time) and
+[5](#5-can-a-whole-block-be-inverted-this-way) give the published theory, and
+[section 6](#6-what-would-it-cost-mibz2-and-what-would-settle-it) what it would cost mibz2 and
+what would settle it. Secondary results are in a
+[technical appendix](2026-11-08-inverse-bwt-navigation-notes.md).
 
-## 1. Establishing the exact object
+## 1. What does the next-row map look like for `banana`?
 
-### 1.1 Definitions and orientation
+Suppose you want to compress the word `banana` with bzip2. The BWT writes down each of its
+six rotations, sorts them, and keeps two things: the last column of the sorted list, $L$, and
+the number of the row holding the original word, here 3. The first column, $F$, is the same
+bytes in sorted order. The last column of the table, the next row, is explained below it.
 
-Let
+| Row | Rotation | Next row |
+| ---: | --- | ---: |
+| 0 | `abanan` | 3 |
+| 1 | `anaban` | 4 |
+| 2 | `ananab` | 5 |
+| 3 | `banana` | 2 |
+| 4 | `nabana` | 0 |
+| 5 | `nanaba` | 1 |
+
+Reading down the rotations' last letters gives $L=\texttt{nnbaaa}$, and their first letters
+give $F=\texttt{aaabnn}$. The next row of row $i$, written $\Psi(i)$,
+is the row whose rotation is row $i$'s rotation with its first byte moved to the end. Row 3,
+`banana`, becomes `ananab`, which is row 2. To decode, start at row 3, emit $F[3]$, move to
+$\Psi(3)$, and repeat. The rows visited are
+
+$$
+3\to2\to5\to1\to4\to0,
+$$
+
+and the bytes emitted are `banana`. mibz2's T-vector stores exactly this: for each row, $F[i]$
+and $\Psi(i)$.
+
+Moving a rotation's first byte to its end puts that byte last, so $\Psi(i)$ is always a row
+whose $L$ byte is $F[i]$. The three `a` rows of $F$ go to the three `a` positions of $L$, and
+they go in order. Rows with the same first byte are sorted by the rest of their rotation,
+and moving the first byte to the end keeps that order. The next figure draws every row's arrow.
+
+<figure class="bf-fig">
+<p class="bf-title">The next-row map of banana: parallel arrows, one bundle per run of L</p>
+<svg viewBox="0 0 720 292" role="img" aria-label="Rows 0 to 2 of the first column, all a, go to rows 3 to 5, shifted by 3; row 3, b, goes to row 2; rows 4 and 5, n, go to rows 0 and 1, shifted by minus 4. Each group of parallel arrows is one run of the last column, nnbaaa."><text x="190" y="18" class="bf-tm" text-anchor="middle">row i, first column F</text><text x="510" y="18" class="bf-tm" text-anchor="middle">next row Ψ(i), last column L</text><rect x="146" y="42" width="88" height="118" rx="6" class="bf-cell-hi"/><text x="0" y="98" class="bf-ts">interval A</text><text x="0" y="115" class="bf-tm">rows 0–2, shift +3</text><rect x="146" y="162" width="88" height="38" rx="6" class="bf-cell"/><text x="0" y="178" class="bf-ts">interval B</text><text x="0" y="195" class="bf-tm">row 3, shift −1</text><rect x="146" y="202" width="88" height="78" rx="6" class="bf-cell"/><text x="0" y="238" class="bf-ts">interval N</text><text x="0" y="255" class="bf-tm">rows 4–5, shift −4</text><rect x="466" y="42" width="88" height="78" rx="6" class="bf-cell"/><text x="720" y="78" class="bf-ts" text-anchor="end">run nn</text><text x="720" y="95" class="bf-tm" text-anchor="end">rows 0–1 of L</text><rect x="466" y="122" width="88" height="38" rx="6" class="bf-cell"/><text x="720" y="138" class="bf-ts" text-anchor="end">run b</text><text x="720" y="155" class="bf-tm" text-anchor="end">row 2 of L</text><rect x="466" y="162" width="88" height="118" rx="6" class="bf-cell-hi"/><text x="720" y="218" class="bf-ts" text-anchor="end">run aaa</text><text x="720" y="235" class="bf-tm" text-anchor="end">rows 3–5 of L</text><text x="168" y="66" class="bf-tm" text-anchor="middle">0</text><text x="210" y="66" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="66" class="bf-t-strong" text-anchor="middle">n</text><text x="532" y="66" class="bf-tm" text-anchor="middle">0</text><text x="168" y="106" class="bf-tm" text-anchor="middle">1</text><text x="210" y="106" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="106" class="bf-t-strong" text-anchor="middle">n</text><text x="532" y="106" class="bf-tm" text-anchor="middle">1</text><text x="168" y="146" class="bf-tm" text-anchor="middle">2</text><text x="210" y="146" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="146" class="bf-t-strong" text-anchor="middle">b</text><text x="532" y="146" class="bf-tm" text-anchor="middle">2</text><text x="168" y="186" class="bf-tm" text-anchor="middle">3</text><text x="210" y="186" class="bf-t-strong" text-anchor="middle">b</text><text x="490" y="186" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="186" class="bf-tm" text-anchor="middle">3</text><text x="168" y="226" class="bf-tm" text-anchor="middle">4</text><text x="210" y="226" class="bf-t-strong" text-anchor="middle">n</text><text x="490" y="226" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="226" class="bf-tm" text-anchor="middle">4</text><text x="168" y="266" class="bf-tm" text-anchor="middle">5</text><text x="210" y="266" class="bf-t-strong" text-anchor="middle">n</text><text x="490" y="266" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="266" class="bf-tm" text-anchor="middle">5</text><path d="M238 61.0L462 181.0M453.0 180.6L462 181.0L456.7 173.7" class="bf-icon-green"/><path d="M238 101.0L462 221.0M453.0 220.6L462 221.0L456.7 213.7" class="bf-icon-green"/><path d="M238 141.0L462 261.0M453.0 260.6L462 261.0L456.7 253.7" class="bf-icon-green"/><path d="M238 181.0L462 141.0M454.7 146.3L462 141.0L453.3 138.6" class="bf-arrow"/><path d="M238 221.0L462 61.0M457.7 68.9L462 61.0L453.1 62.5" class="bf-arrow"/><path d="M238 261.0L462 101.0M457.7 108.9L462 101.0L453.1 102.5" class="bf-arrow"/></svg>
+<figcaption>Each arrow goes from row i, on the left, to its next row Ψ(i), on the right. Arrows from one interval are parallel: they all shift by the same amount. Conceptual, worked by hand from the table above.</figcaption>
+</figure>
+
+Rows 0, 1 and 2 go to 3, 4 and 5: each moves down by three. Row 3 moves up by one, and rows 4
+and 5 move up by four. Written out,
+
+$$
+\Psi(i)=\begin{cases}i+3,&0\le i<3,\\i-1,&i=3,\\i-4,&4\le i<6.\end{cases}
+$$
+
+**Three row entries become one start and a length.** Six table entries become three
+descriptors, each a starting row, a length and a shift, and each emits one byte. The three
+pieces are not special to `banana`: they are the three runs of $L$, `nn`, `b` and `aaa`. That
+is the first result of this post. **The next-row map is a set of shifted intervals, one for
+each run of the last column.**
+
+### 1.1 Walking the intervals without a search
+
+Storing intervals instead of rows raises a question. To find the next row of row $i$, a
+decoder would first have to find which interval holds $i$, which is a search among the $r$
+starting rows. A walk doesn't need it, because it can carry the interval's name along with
+the row. Each interval also records where its destinations begin: interval A's begin at row
+3, which lies in interval B.
+
+<figure class="bf-fig">
+<p class="bf-title">The banana walk, carrying its interval as well as its row</p>
+<svg viewBox="0 0 720 168" role="img" aria-label="The walk carries a pair, row and interval: row 3 in B, row 2 in A, row 5 in N, row 1 in A, row 4 in N, row 0 in A, emitting banana."><rect x="0.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="14.0" y="32" class="bf-tm">step 1</text><text x="14.0" y="58" class="bf-ts">row 3, interval B</text><text x="198.0" y="58" class="bf-t-green" text-anchor="end">b</text><path d="M216.0 43.0H250.0M244.0 38.0L250.0 43.0L244.0 48.0" class="bf-arrow"/><rect x="254.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="32" class="bf-tm">step 2</text><text x="268.0" y="58" class="bf-ts">row 2, interval A</text><text x="452.0" y="58" class="bf-t-green" text-anchor="end">a</text><path d="M470.0 43.0H504.0M498.0 38.0L504.0 43.0L498.0 48.0" class="bf-arrow"/><rect x="508.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="32" class="bf-tm">step 3</text><text x="522.0" y="58" class="bf-ts">row 5, interval N</text><text x="706.0" y="58" class="bf-t-green" text-anchor="end">n</text><rect x="0.0" y="98" width="212" height="70" rx="8" class="bf-card-hi"/><text x="14.0" y="122" class="bf-tm">step 4</text><text x="14.0" y="148" class="bf-ts">row 1, interval A</text><text x="198.0" y="148" class="bf-t-green" text-anchor="end">a</text><path d="M216.0 133.0H250.0M244.0 128.0L250.0 133.0L244.0 138.0" class="bf-arrow"/><rect x="254.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="122" class="bf-tm">step 5</text><text x="268.0" y="148" class="bf-ts">row 4, interval N</text><text x="452.0" y="148" class="bf-t-green" text-anchor="end">n</text><path d="M470.0 133.0H504.0M498.0 128.0L504.0 133.0L498.0 138.0" class="bf-arrow"/><rect x="508.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="122" class="bf-tm">step 6</text><text x="522.0" y="148" class="bf-ts">row 0, interval A</text><text x="706.0" y="148" class="bf-t-green" text-anchor="end">a</text></svg>
+<figcaption>Each card is one step of the walk, read left to right and then the second line: the row, the interval it lies in, and, on the right, the byte emitted. The highlighted step 4 is worked in the text below. Conceptual.</figcaption>
+</figure>
+
+From row 1 in interval A, the next row is A's first destination plus the offset within A:
+$3+(1-0)=4$. The walk knows that A's destinations begin in interval B, so it checks only
+whether row 4 is still in B. It isn't, since B is row 3 alone, so the walk steps forward one
+interval, to N. **Carrying the interval as traversal state turns each step into arithmetic
+and a short forward step, with no search.** This is the idea behind move structures
+([section 4](#4-how-does-a-walk-move-between-intervals-in-constant-time)).
+
+The difference is between *random row access*, where any row can be asked for at any time,
+and *stateful successor navigation*, where each question follows from the last answer. mibz2
+needs mostly the second. Every lane of its walk follows a path and keeps state, which is why
+move structures are relevant to it.
+
+## 2. Why does every run give one shift?
+
+The `banana` table follows from two facts: $\Psi(i)$ lands on a copy of $F[i]$ in $L$, and
+equal bytes keep their order. Let
 
 $$
 L=L[0]L[1]\cdots L[n-1]
@@ -103,13 +159,9 @@ $$
 \Sigma=\{c_1<c_2<\cdots<c_\sigma\}
 $$
 
-be its distinct characters, ordered by byte value. Write $n_c$ for the frequency of character $c$, and define
-
-$$
-C(c)=\sum_{d<c}n_d.
-$$
-
-The first column of the conceptual sorted BWT matrix is
+be its distinct characters, ordered by byte value. Write $n_c$ for the frequency of character
+$c$, and define $C(c)=\sum_{d<c}n_d$, the number of bytes smaller than $c$: the row where
+$c$'s block of rows in $F$ begins. The first column is
 
 $$
 F=c_1^{n_{c_1}}c_2^{n_{c_2}}\cdots c_\sigma^{n_{c_\sigma}}.
@@ -145,798 +197,265 @@ $$
 \boxed{\Psi(C(c)+k)=\operatorname{select}_c(L,k).}\tag{1}
 $$
 
-For each row $i$, mibz2 needs to recover the next row $\Psi(i)$ and emit the byte $F[i]$, while preserving the bookkeeping required by its segmented traversal: mibz2 cuts each block's walk into segments that start at known rows, walks them in parallel and joins them. That is the mathematical operation being optimised.
+In words: the $(k+1)$st $c$ of $F$ goes to the $(k+1)$st $c$ of $L$. That is the stable-sort
+identity the `banana` table showed. For each row $i$, mibz2 needs to recover the next row
+$\Psi(i)$ and emit the byte $F[i]$, while preserving the bookkeeping required by its segmented
+traversal: mibz2 cuts each block's walk into segments that start at known rows, walks them in
+parallel and joins them. That is the mathematical operation being optimised. The byte $F[i]$
+needs no storage per row, since the histogram fixes it
+([appendix section 1](2026-11-08-inverse-bwt-navigation-notes.md#1-navigation-as-a-select-problem)).
 
-mibz2 currently uses 32 interleaved traversal lanes, each following one segment, so that 32 independent memory reads can be in flight at once ([32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md)), and it supports parallel work across blocks. Its compact30 research ([Building a smaller bzip2 decoding table](2026-11-04-compact30-constructor.md)) stores thirty rows per 64-byte record, hence the name, with exceptional RAW records that hold full entries, and attempts to reduce the working set without sacrificing memory-level parallelism.
-
-### 1.2 Example: banana
-
-For the cyclic BWT of banana:
-
-$$
-L=\texttt{nnbaaa},\qquad F=\texttt{aaabnn}.
-$$
-
-The navigation permutation is
-
-$$
-\Psi=\begin{pmatrix}0&1&2&3&4&5\\3&4&5&2&0&1\end{pmatrix}.
-$$
-
-| Character | Domain of $\Psi$ | Destinations |
-|---|---|---|
-| a | $0,1,2$ | $3,4,5$ |
-| b | $3$ | $2$ |
-| n | $4,5$ | $0,1$ |
-
-The original row is $I=3$. Emitting $F[i]$ and following $\Psi$ produces the rows
-
-$$
-3\to2\to5\to1\to4\to0
-$$
-
-and the output banana. The six successor values are determined by three simple translations:
-
-$$
-\Psi(i)=\begin{cases}i+3,&0\le i<3,\\i-1,&i=3,\\i-4,&4\le i<6.\end{cases}
-$$
-
-This example has only three runs in $L$, and three translated intervals in $\Psi$. That correspondence generalises exactly.
-
-## 2. First consequence: this is a select problem, not a general permutation problem
-
-Equation (1) gives a data-structure reduction:
-
-$$
-\boxed{\text{arbitrary }\Psi\text{-query}\longrightarrow\text{character-bucket identification}+\text{select query}.}
-$$
-
-Given a row $i$, determine the unique character $c$ satisfying
-
-$$
-C(c)\le i<C(c)+n_c.
-$$
-
-Then compute
-
-$$
-\Psi(i)=\operatorname{select}_c(L,i-C(c)).
-$$
-
-This decomposes the problem into familiar operations on indexed sequences. It means mibz2 can, in principle, represent navigation without storing an explicit successor for every row.
-
-### 2.1 The output character is already known
-
-A T-vector entry conventionally combines the navigation destination and a character. But the character associated with row $i$ is simply $F[i]$, which is determined entirely by the histogram:
-
-$$
-\boxed{F[i]=c\quad\text{whenever}\quad C(c)\le i<C(c)+n_c.}\tag{2}
-$$
-
-For a byte alphabet, the character sequence in table order has at most 256 constant intervals and at most 255 changes.
-
-This is an unconditional property of the inverse-BWT table, regardless of whether $L$ is repetitive. **Consequence for mibz2:** the character field does not need to be independently stored in every navigation entry. It may be amortised over groups of rows, or recovered from a bucket directory. This is an important distinction from run-based compression: character sharing remains useful even for highly irregular BWT input.
-
-### 2.2 An exact bound on mixed-character records
-
-Suppose we divide table rows into fixed groups of $g$ consecutive positions. Because $F$ contains only $\sigma$ character buckets, there are at most $\sigma-1$ bucket boundaries. Every group containing more than one output character must contain at least one of those boundaries. Thus
-
-$$
-\boxed{N_{\mathrm{mixed}}\le \sigma-1.}\tag{3}
-$$
-
-For compact30, $g=30$ and $\sigma\le256$, so $N_{\mathrm{mixed}}\le255$. At maximum block size,
-
-$$
-N_{\mathrm{groups}}=\frac{900{,}000}{30}=30{,}000.
-$$
-
-Hence at most 255 groups can require exceptional handling *solely because their output characters differ*: at most 0.85% of groups, affecting at most 7,650 rows.
-
-This does not limit the number of RAW groups caused by widely separated navigation destinations, but proves that character-bucket crossings are a small, alphabet-bounded issue. **Practical gain:** output-character sharing can be designed around a strict worst-case bound; it does not depend on how repetitive the source text is.
-
-## 3. Second consequence: the permutation consists of exactly $r$ translated intervals
-
-Let $r$ be the number of maximal equal-character runs in $L$, and $r_c$ the number of runs containing character $c$:
-
-$$
-r=\sum_{c\in\Sigma}r_c.
-$$
-
-### 3.1 The interval theorem
-
-Consider a run of character $c$ beginning at position $p$, with length $m$:
+Now let $r$ be the number of maximal equal-character runs in $L$, and $r_c$ the number of runs
+containing character $c$, so that $r=\sum_{c\in\Sigma}r_c$. Consider a run of character $c$
+beginning at position $p$, with length $m$:
 
 $$
 L[p:p+m]=c^m.
 $$
 
-Let
+Let $k=\operatorname{rank}_c(L,p)$ be the number of earlier occurrences of $c$. The run
+corresponds to the interval of rows in $F$ starting at $a=C(c)+k$. By equation (1), for every
+$0\le t<m$, $\Psi(a+t)=p+t$. Therefore
 
 $$
-k=\operatorname{rank}_c(L,p)
+\boxed{\Psi(i)=i+(p-a),\qquad a\le i<a+m.}\tag{2}
 $$
 
-be the number of earlier occurrences of $c$. The run corresponds to the following interval of rows in $F$:
+The entire run is represented by one constant displacement. Every character occurrence belongs
+to exactly one run. Their corresponding intervals partition the domain of $\Psi$:
 
 $$
-a=C(c)+k.
+\boxed{\begin{gathered}\Psi\text{ admits a partition into }r\text{ intervals,}\\\text{on each of which it is a translation.}\end{gathered}}\tag{3}
 $$
 
-By the stable-sort identity, for every $0\le t<m$,
+In `banana`, the run `aaa` starts at $p=3$, and the `a` rows start at $a=0$: the shift is
+$+3$, as the figure showed. In combinatorics, such a map is a *discrete interval-exchange
+permutation*. This identification is more operationally useful than membership in a
+weak-order lattice, because it tells us exactly how to evaluate the permutation.
+
+**The $r$ pieces are an upper bound, not always the fewest.** For the valid cyclic BWT of
+`abc`, $L=\texttt{cab}$, $F=\texttt{abc}$ and $r=3$, but $\Psi=(1,2,0)$ has just two maximal
+translated intervals: rows $[0,2)$ have displacement $+1$, and row $[2,3)$ has displacement
+$-2$. The partition of equation (3) is the one the runs induce. Adjacent pieces can share a
+shift.
+
+### 2.1 What the intervals cost to store
+
+For each interval $t$, store its starting position $a_t$ and first destination $p_t$. Order
+the intervals by their starting positions, $0=a_0<a_1<\cdots<a_r=n$. Then
 
 $$
-\Psi(a+t)=p+t.
+\boxed{\Psi(i)=p_t+(i-a_t)\quad\text{for}\quad a_t\le i<a_{t+1}.}\tag{4}
 $$
 
-Therefore
-
-$$
-\boxed{\Psi(i)=i+(p-a),\qquad a\le i<a+m.}\tag{4}
-$$
-
-The entire run is represented by one constant displacement. Every character occurrence belongs to exactly one run. Their corresponding intervals partition the domain of $\Psi$:
-
-$$
-\boxed{\Psi\text{ admits a partition into }r\text{ intervals, on each of which it is a translation.}}\tag{5}
-$$
-
-In combinatorics, this is a *discrete interval-exchange permutation*. This identification is more operationally useful than membership in a weak-order lattice, because it tells us exactly how to evaluate the permutation.
-
-### 3.2 A constructive representation
-
-For each interval $t$, store its starting position $a_t$ and first destination $p_t$. Order the intervals by their starting positions:
-
-$$
-0=a_0<a_1<\cdots<a_r=n.
-$$
-
-Then
-
-$$
-\boxed{\Psi(i)=p_t+(i-a_t)\quad\text{for}\quad a_t\le i<a_{t+1}.}\tag{6}
-$$
-
-No per-row destination array is required.
-
-For $n\le900{,}000$, each position fits in 20 bits. The basic representation uses approximately
-
-$$
-B_{\mathrm{interval}}\approx40r\text{ bits}
-$$
-
-for two 20-bit values per interval, plus indexing and metadata. Compare this with
-
-$$
-B_{\mathrm{T}}=32n\text{ bits}.
-$$
-
-Ignoring indexing overhead, the interval representation is smaller whenever $40r<32n$, or
+No per-row destination array is required. For $n\le900{,}000$, each position fits in 20 bits,
+so the basic representation uses approximately $B_{\mathrm{interval}}\approx40r$ bits, two
+20-bit values per interval, plus indexing and metadata. The T-vector uses
+$B_{\mathrm{T}}=32n$ bits. Ignoring indexing overhead, the interval representation is smaller
+whenever $40r<32n$, or
 
 $$
 \boxed{\frac rn<0.8.}
 $$
 
-This is only a storage comparison for basic descriptors, not a complete performance or working-memory bound. A practical move structure needs additional information to locate the next interval. Nevertheless, it proves there is a potentially much smaller, exact representation whenever the BWT contains sufficiently long runs.
+This is only a storage comparison for basic descriptors, not a complete performance or
+working-memory bound. A practical move structure needs additional information to locate the
+next interval. Nevertheless, it proves there is a potentially much smaller, exact
+representation whenever the BWT contains sufficiently long runs.
 
-### 3.3 The exact count of consecutive navigation entries
+## 3. When do the shifts save nothing?
 
-Inside any character bucket, define
+When the runs are short. The valid cyclic BWT of `abba` is $L=\texttt{baba}$: four rows and
+four runs, $r=n=4$. Its descriptors take $40r=160$ bits, more than the T-vector's $32n=128$
+bits, before any index is added. So run-based storage is not guaranteed to be smaller. The
+comparison is of descriptors alone. A practical move structure stores more than this, so its
+break-even point lies below $r/n=0.8$, by an amount nobody has measured for mibz2.
 
-$$
-\Delta(i)=\Psi(i+1)-\Psi(i).
-$$
+Nor does a block that compresses well necessarily have few runs. The two simplest measures, the zero-order entropy
+$H_0(L)$ of the byte frequencies and $r$, answer different questions: a block can have low
+entropy and many short runs, or high entropy and few long runs
+([appendix section 3](2026-11-08-inverse-bwt-navigation-notes.md#3-space-bounds)). The run
+count itself has a precise meaning: exactly $n-r$ pairs of adjacent rows within a character's
+block have consecutive next rows
+([appendix section 2](2026-11-08-inverse-bwt-navigation-notes.md#2-consecutive-entries-and-sparse-corrections)).
 
-Because the bucket represents increasing occurrence positions, $\Delta(i)\ge1$. Moreover, $\Delta(i)=1$ if and only if the two corresponding occurrences of that character are adjacent in $L$. A run of length $m$ contributes $m-1$ such pairs, giving
+**How small is $r$ on mibz2's blocks?** It has not been counted. One earlier figure bounds it.
+On the main Wikidata corpus, 207,006,515 rows in 434 blocks, the builder of compact30, our
+research table that packs thirty rows into each 64-byte record, wrote 74.3% of rows through its bulk emitter, as 5,127,300 complete 30-row records, each covered by one
+run of $L$ ([the 4 November post, section 6](2026-11-04-compact30-constructor.md#6-most-rows-never-take-the-per-row-path)).
+Each of those runs holds at least one such record, so there are at most 5,127,300 of them.
+The remaining 53.2 million rows can lie in at most 53.2 million further runs. So, across the
+corpus, $r\le58.3$ million and $r/n\le0.28$. This is derived, not measured, and it is an
+aggregate: it says nothing about the spread from block to block, and the true $r$ may be much
+smaller.
 
-$$
-\boxed{\#\{i:\ i,i+1\text{ lie in the same character bucket},\ \Psi(i+1)=\Psi(i)+1\}=n-r.}\tag{7}
-$$
+## 4. How does a walk move between intervals in constant time?
 
-This is an equality, not an average-case statement. There are $n-\sigma$ adjacent pairs within buckets, so the exact fraction with consecutive destinations is
+The interval-exchange permutation of section 2 is precisely the sort of permutation handled by
+*move structures*, introduced by Nishimoto and Tabei. Their 2021 result establishes
+$O(1)$-time move queries with $O(r)$ words of space after balancing represented intervals.
 
-$$
-\boxed{f_{\mathrm{consecutive}}=\frac{n-r}{n-\sigma}.}\tag{8}
-$$
-
-This gives the BWT run count a precise interpretation as a measure of local navigation irregularity.
-
-Two concepts must not be conflated:
-
-- The number of *descents* of $\Psi$ (positions where $\Psi(i)>\Psi(i+1)$) is at most $\sigma-1$.
-- The number of failures of consecutive translation **within buckets** is exactly $r-\sigma$.
-
-The second quantity is relevant for run-based navigation compression.
-
-### 3.4 A sparse-correction representation
-
-Let the positions of character $c$ in $L$ be
-
-$$
-x_{c,0}<x_{c,1}<\cdots<x_{c,n_c-1}.
-$$
-
-Define excess gaps
-
-$$
-g_{c,j}=x_{c,j}-x_{c,j-1}-1,\qquad j\ge1.
-$$
-
-Then
-
-$$
-\boxed{\Psi(C(c)+k)=x_{c,0}+k+\sum_{j=1}^{k}g_{c,j}.}\tag{9}
-$$
-
-Within runs, excess gaps are zero. A positive excess gap occurs exactly when consecutive occurrences of $c$ belong to different runs. The number of positive gaps is
-
-$$
-\boxed{\sum_c\#\{j:g_{c,j}>0\}=r-\sigma.}\tag{10}
-$$
-
-Thus the navigation map can be described by one starting destination per character, the positions of $r-\sigma$ nonzero corrections, their magnitudes, and bucket boundaries.
-
-The query becomes predecessor or prefix-sum over sparse corrections. This is mathematically equivalent to the interval representation, but suggests sparse bitvectors, indexed delta streams, or two-level directories.
-
-**What we have gained:** an exact structural complexity parameter for the map. The important variable is principally $r$, the number of BWT runs, rather than $n$, descents, or Coxeter length (the inversion count, section 9).
-
-## 4. Third consequence: rigorous succinct-space bounds
-
-### 4.1 Entropy of the stable-sort permutation
-
-Fix the histogram $(n_1,\ldots,n_\sigma)$. The number of possible last-column sequences is
-
-$$
-M=\frac{n!}{\prod_c n_c!}.
-$$
-
-There is a bijection between those sequences and permutations increasing within corresponding character buckets. An arbitrary member of the family requires at least
-
-$$
-\boxed{B_{\min}=\left\lceil\log_2\frac{n!}{\prod_c n_c!}\right\rceil}\tag{11}
-$$
-
-bits in a fixed-length representation. Stirling's approximation gives the leading term
-
-$$
-\log_2 M\approx nH_0(L),
-\qquad
-H_0(L)=-\sum_c\frac{n_c}{n}\log_2\frac{n_c}{n}.
-$$
-
-For a byte alphabet $H_0(L)\le8$. Thus the stable-sort permutation with fixed histogram contains at most approximately eight bits per row, generally less.
-
-**This bounds representation information, not access latency.** A four-byte T-vector stores redundancy deliberately for cheap successor retrieval.
-
-### 4.2 Elias–Fano gives a constructive representation
-
-Every character bucket contains a strictly increasing sequence of positions. Elias–Fano encoding is designed for such sequences.
-
-For character $c$, a standard Elias–Fano representation uses approximately
-
-$$
-n_c\left\lceil\log_2\frac{n}{n_c}\right\rceil+2n_c
-$$
-
-bits before indexing overhead. Summed over all characters,
-
-$$
-\boxed{B_{\mathrm{EF}}\lesssim2n+\sum_c n_c\left\lceil\log_2\frac{n}{n_c}\right\rceil.}\tag{12}
-$$
-
-For an approximately uniform byte distribution this is about $10n$ bits, or approximately 1.125 MB for a 900,000-byte block, versus 3.6 MB for the T-vector.
-
-Elias–Fano supports indexed access to elements without decoding all predecessors; theoretical constant-time access depends on suitable select indexing. It provides a formal alternative even when $r$ is large. It does not exploit long runs as aggressively as a run-based representation, since its general bound depends on symbol frequencies.
-
-### 4.3 A separate information bound from run count
-
-Count length-$n$ words over an alphabet of size $\sigma$ with exactly $r$ runs. Choose positive run lengths in $\binom{n-1}{r-1}$ ways, the first character in $\sigma$ ways, and each subsequent character in $\sigma-1$ ways:
-
-$$
-\boxed{N(n,r,\sigma)=\sigma(\sigma-1)^{r-1}\binom{n-1}{r-1}.}\tag{13}
-$$
-
-The bits required to enumerate this broader family are
-
-$$
-\boxed{B_{\mathrm{run}}=
-\left\lceil\log_2\sigma+(r-1)\log_2(\sigma-1)+\log_2\binom{n-1}{r-1}\right\rceil.}\tag{14}
-$$
-
-For $r\ll n$, this is $O(r\log(n/r)+r\log\sigma)$.
-
-This counts all words with specified run count, not only valid BWT images or fixed-histogram words. It is an achievable representation-size benchmark for the larger family, not a tight bound for bzip2 blocks.
-
-### 4.4 Two independent measures of compressibility
-
-The two measures
-
-$$
-\boxed{H_0(L)}\qquad\text{and}\qquad\boxed{r}
-$$
-
-answer different questions. Low entropy means concentrated character frequency; low $r$ means few constant BWT runs. A block can have low entropy and many short runs, or high entropy and few long runs.
-
-| Property | Mathematical implication | Relevant structure |
-|---|---|---|
-| Low $H_0(L)$ | Fewer stable-sort arrangements | Entropy-based sequence encodings |
-| Low $r$ | Few translated navigation intervals | Run descriptors and move structures |
-| Small gaps between occurrences | Narrow destination spans | Base-plus-offset records |
-| Small $\sigma$ | Few output-byte bucket boundaries | Shared-character headers |
-
-There need not be one universally optimal compact representation.
-
-## 5. Fourth consequence: move structures already solve the theoretical navigation problem
-
-The interval-exchange permutation in Section 3 is precisely the sort of permutation handled by *move structures*, introduced by Nishimoto and Tabei. Their 2021 result establishes $O(1)$-time move queries with $O(r)$ words of space after balancing represented intervals.
-
-### 5.1 Carry the interval identifier
-
-An ordinary query is $i\mapsto\Psi(i)$. An interval representation must locate the interval containing $i$, potentially requiring an expensive predecessor search. Instead retain
-
-$$
-\boxed{(i,t)}
-$$
-
-where $t$ identifies the interval. The next row follows directly:
+An ordinary query is $i\mapsto\Psi(i)$. An interval representation must locate the interval
+containing $i$, potentially requiring an expensive predecessor search: finding the last
+interval start at or before $i$. Instead retain the pair
+$(i,t)$, where $t$ identifies the interval. The next row follows directly:
 
 $$
 j=p_t+(i-a_t).
 $$
 
-We then need the interval $t'$ containing $j$. A move structure stores information about the destination interval of each image's beginning and advances through descriptors to locate $j$. Unbalanced intervals may require multiple advances. The crucial theorem is that intervals can be split into $O(r)$ balanced pieces, guaranteeing a constant number of advances:
+We then need the interval $t'$ containing $j$. A move structure stores information about the
+destination interval of each image's beginning and advances through descriptors to locate $j$,
+as the `banana` walk stepped from B to N. Unbalanced intervals may require multiple advances.
+The crucial theorem is that intervals can be split into $O(r)$ balanced pieces, guaranteeing a
+constant number of advances:
 
 $$
-\boxed{(i,t)\xrightarrow{O(1)}(\Psi(i),t')}\tag{15}
+\boxed{(i,t)\xrightarrow{O(1)}(\Psi(i),t')}\tag{5}
 $$
 
-using $O(r)$ words in the word-RAM model.
+using $O(r)$ words in the word-RAM model, the standard model in which reading one machine
+word is one step. Carrying $t$ is essential. This is not
+one-memory-access arbitrary-row lookup. The theorem shows that compact representation does not
+imply logarithmic lookup time. That removes a theoretical objection, not the hardware concern
+about several serial descriptor loads: an $O(1)$ bound in the RAM model is not a claim of one
+load, or of fewer cycles.
 
-Carrying $t$ is essential. This is not one-memory-access arbitrary-row lookup.
-
-### 5.2 Why it matters to mibz2
-
-mibz2 already maintains per-lane state. A move structure adds a run/interval identifier to each lane, giving state
+mibz2 already maintains per-lane state. It walks 32 interleaved lanes, each following one
+segment, so that 32 independent memory reads can be in flight at once
+([32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md)), and it supports parallel work
+across blocks. A move structure adds a run/interval
+identifier to each lane, giving state
 
 $$
 (\text{row},\text{interval},\text{segment state}).
 $$
 
-A fresh segment start may require predecessor search once. For $P$ segment starts initialised with binary search, seeding costs $O(P\log r)$; later transitions maintain interval state. The structure therefore removes general predecessor queries from the hot path.
+A fresh segment start may require predecessor search once. For $P$ segment starts initialised
+with binary search, seeding costs $O(P\log r)$; later transitions maintain interval state. The
+structure therefore removes general predecessor queries from the hot path. It does not remove
+memory dependencies: a move query may load several descriptors. It does change the algorithmic
+problem from repeated searches to constant-time state transitions.
 
-It does not remove memory dependencies: a move query may load several descriptors. It does change the algorithmic problem from repeated searches to constant-time state transitions.
+## 5. Can a whole block be inverted this way?
 
-### 5.3 The 2026 result: linear-time inversion in run-bounded space
-
-Brown and Langmead's *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations* (SEA 2026) studies *length capping*. (RLBWT is the run-length BWT: the last column $L$ stored as its $r$ runs, each a character and a length.) Set the average interval length to $n/r$; for constant $c$, split until every interval is of length at most
-
-$$
-\boxed{L_{\max}=c\frac nr.}\tag{16}
-$$
-
-The number of additional intervals is approximately at most $r/c$, so $r'\le r+r/c$, up to rounding.
-
-Their Theorem 2 bounds aggregate work over all $n$ distinct positions, not strict worst-case cost per query. The number of interval advances is bounded by a constant multiple of $n$:
+Brown and Langmead's *Bounding the Average Move Structure Query for Faster and Smaller RLBWT
+Permutations* (SEA 2026) studies *length capping*. (RLBWT is the run-length BWT: the last
+column $L$ stored as its $r$ runs, each a character and a length.) Set the average interval
+length to $n/r$; for constant $c$, split until every interval is of length at most
 
 $$
-\boxed{T_{\mathrm{all\ moves}}=O(n).}\tag{17}
+\boxed{L_{\max}=c\frac nr.}\tag{6}
 $$
 
-For a single-cycle permutation, full traversal visits every position once. They also show $O(r)$-time/space construction of a capped structure for LF or its inverse from RLBWT. Their Theorem 9 establishes
+The number of additional intervals is approximately at most $r/c$, so $r'\le r+r/c$, up to
+rounding. Their Theorem 2 bounds aggregate work over all $n$ distinct positions, not strict
+worst-case cost per query. The number of interval advances is bounded by a constant multiple
+of $n$:
 
 $$
-\boxed{\text{BWT inversion time}=O(n),\qquad\text{additional working space}=O(r).}\tag{18}
+\boxed{T_{\mathrm{all\ moves}}=O(n).}\tag{7}
+$$
+
+For a single-cycle permutation, full traversal visits every position once. The mathematical
+argument can be set-based, not necessarily requiring one serial traversal order. They also show
+$O(r)$-time/space construction of a capped structure for LF or its inverse from RLBWT. Their
+Theorem 9 establishes
+
+$$
+\boxed{\begin{gathered}\text{BWT inversion time}=O(n),\\\text{additional working space}=O(r).\end{gathered}}\tag{8}
 $$
 
 This is a complexity theorem for inversion, not merely compressibility.
 
-### 5.4 How directly does it apply to bzip2?
-
-The theorem starts from run-length BWT. mibz2 reconstructs the byte sequence $L$ after MTF (undoing bzip2's move-to-front coding, the stage before the inverse BWT), so discovering the runs involves examining $n$ bytes. From the decoded sequence the construction-plus-inversion asymptotic cost is $O(n)$ with $O(r)$ navigation storage, when the input sequence and output buffer are accounted for separately. This does not make the entire decompressor $O(r)$ total memory.
-
-The single-cycle amortisation argument applies directly to primitive strings. Periodic cyclic BWTs may have several cycles; segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity.
-
-### 5.5 Established result
-
-There exists a mathematically established family of navigation structures whose storage scales with BWT runs rather than rows and that supports efficient repeated successor traversal without a fresh general predecessor search on each step.
-
-The relevant works are [Nishimoto and Tabei (2021)](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101) and [Brown and Langmead (2026)](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html). Brown and Langmead's [Orbit library](https://github.com/drnatebrown/orbit) implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.
-
-## 6. Fifth consequence: compact30's representability can be characterised exactly
-
-### 6.1 The ordinary-record condition
-
-compact30 groups thirty consecutive rows into 64-byte records and uses a label transform
-
-$$
-\varphi(i)=32\left\lfloor\frac i{30}\right\rfloor+(i\bmod30)
-$$
-
-or
-
-$$
-\boxed{\varphi(i)=i+2\left\lfloor\frac i{30}\right\rfloor.}\tag{19}
-$$
-
-Two unused labels per group correspond to the record header. For a complete group $G=[a,a+30)$, ordinary-record conditions are a shared output character and labelled successor offsets fitting in 16 bits. Since $\Psi$ and $\varphi$ increase within a bucket, the endpoints suffice.
-
-Ignoring special padding and sentinel cases:
-
-$$
-\boxed{F[a]=F[a+29]}
-$$
-
-and
-
-$$
-\boxed{\varphi(\Psi(a+29))-\varphi(\Psi(a))\le65{,}533.}\tag{20}
-$$
-
-This bounds *encoded successor-label span*, not necessarily raw row-index difference. It captures monotonicity used by the existing builder.
-
-### 6.2 Gap-based interpretation
-
-Suppose the group lies entirely in bucket $c$, with first destination $x$ and last destination $y$. Between the thirty occurrences,
-
-$$
-y-x=29+\#\{j:x<j<y,\ L[j]\neq c\}.
-$$
-
-Therefore
-
-$$
-\boxed{\Psi(a+29)-\Psi(a)=29+h,}\tag{21}
-$$
-
-where $h$ is the count of intervening non-$c$ characters. The labelled span is
-
-$$
-\begin{aligned}
-W={}&29+h\\
-&+2\left(\left\lfloor\frac y{30}\right\rfloor-\left\lfloor\frac x{30}\right\rfloor\right).
-\end{aligned}\tag{22}
-$$
-
-Apart from bucket crossings, compact30 RAW groups arise from too many intervening characters among thirty occurrences. It is occurrence-gap arrangement, not absolute destination position, that matters.
-
-### 6.3 Guaranteed ordinary groups
-
-If a complete 30-row group lies inside one translation interval,
-
-$$
-\Psi(a+t)=p+t,\qquad0\le t<30.
-$$
-
-The raw span is exactly 29, and the labelled span at most 31. The group is guaranteed to fit an ordinary compact30 record. Its offsets form a precomputable pattern, precisely the bulk-emission case in the existing constructor, where the builder writes a whole record from a precomputed pattern because one run of $L$ fills the group.
-
-### 6.4 Exact formula for pure groups
-
-Let translation intervals be $I_t=[a_t,b_t)$. For group width $g$, the number of complete aligned groups contained in interval $I_t$ is
-
-$$
-G_t=\max\left(0,\left\lfloor\frac{b_t}{g}\right\rfloor-\left\lceil\frac{a_t}{g}\right\rceil\right).
-$$
-
-Therefore
-
-$$
-\boxed{G_{\mathrm{pure}}=\sum_{t=1}^{r}G_t.}\tag{23}
-$$
-
-For compact30,
-
-$$
-\boxed{R_{\mathrm{pure}}=30G_{\mathrm{pure}}.}\tag{24}
-$$
-
-This is computable from BWT run boundaries and character ranks without building the entire navigation table.
-
-Every complete group not inside one translation interval crosses a boundary. There are at most $r-1$ such boundaries, each inside at most one aligned group:
-
-$$
-\boxed{N_{\mathrm{nonpure}}\le r-1.}\tag{25}
-$$
-
-The bound may be loose and non-pure groups can still be ordinary records. But when $r\ll n/g$, almost all complete groups are guaranteed pure.
-
-### 6.5 Consequence for construction
-
-BWT runs determine destination intervals. Record boundaries can be enumerated in row order, with endpoint spans found by sequential sweeps through run descriptors. Once runs are known, group classification can take
-
-$$
-\boxed{O\left(r+\frac ng+\sigma\right)}
-$$
-
-time without materialising every successor. A scan of $L$ can then scatter final entries into classified records. This gives an $O(n+r+n/g)$-time construction strategy with appropriate run, record and cursor storage.
-
-It **does not prove** lower instruction count or fewer writes than the fused builder. It proves that record classification need not be interleaved with every per-row scatter: structure permits classification at the interval and group level.
-
-## 7. Sixth consequence: multiple BWT steps admit a small interval representation
-
-### 7.1 Powers of the navigation permutation
-
-Conventional traversal visits $i,\Psi(i),\Psi^2(i),\ldots$. A multi-step transition computes $\Psi^k(i)$ while emitting the $k$ intermediate characters:
-
-$$
-W_k(i)=F[i]F[\Psi(i)]\cdots F[\Psi^{k-1}(i)].
-$$
-
-The desired operation is
-
-$$
-\boxed{i\longmapsto\left(W_k(i),\Psi^k(i)\right).}\tag{26}
-$$
-
-For a general permutation this could need $n$ stored entries; an interval-exchange permutation gives a better bound.
-
-### 7.2 Bound on pieces of $\Psi^k$
-
-Start with a partition $P$ into $r$ translated intervals, each with constant output byte; there are $r-1$ boundaries. Refine it so that two successive steps follow fixed source intervals. Splits occur at preimages of original boundaries. Since $\Psi$ is bijective and translates each existing piece, images of the pieces are disjoint intervals partitioning the destination domain. Each original boundary introduces at most one new split across the whole refined partition. Each further step adds at most $r-1$ boundaries. Thus
-
-$$
-\boxed{N_k\le\min\{n,\ 1+k(r-1)\}.}\tag{27}
-$$
-
-On every refined interval, $\Psi^k$ is a translation and $W_k$ is constant.
-
-For two and four steps respectively:
-
-$$
-\boxed{N_2\le2r-1,\qquad N_4\le4r-3.}
-$$
-
-This bound becomes uninformative when $k(r-1)$ approaches $n$.
-
-### 7.3 Multi-character transition table
-
-Each interval stores its starting row, displacement to $\Psi^k(i)$, and the emitted $k$-character word. With interval identifier, output retrieval and destination computation are straightforward. An explicit representation uses
-
-$$
-\boxed{O\left(kr(\log n+k\log\sigma)\right)}\tag{28}
-$$
-
-bits when $k(r-1)\ll n$. For fixed small $k$, that is $O(kr\log n)$.
-
-This proves a compact representation for the *function*, not constant-latency arbitrary interval lookup. Multi-character navigation need not inherently require an $n$-entry jump table.
-
-### 7.4 Implication for mibz2
-
-Kärkkäinen, Kempa and Puglisi's 2012 work studied reducing cache misses through multi-character BWT navigation, including two characters per lookup. mibz2 cites it as [prior art](../concepts/prior-work.md). mibz2 has also built such a table: the pair walk of [PR #34](https://github.com/lmmx/mibz2/pull/34), whose entries hold the row two steps on, was measured and dropped, because each step cost about twice as much and the table took about three times as long to build ([Why 32 couriers beat one](../concepts/couriers.md)). The interval view suggests representing $k$-step transitions by run-sensitive translated intervals instead of a complete super-alphabet table.
-
-The number of intervals increases at most linearly with $kr$. For repetitive blocks it can be substantially below $n$, though it may become large for run-rich blocks. Interval identification, segment boundaries and output ordering remain essential. A mathematical $k$-step operation does not imply one cache miss or CPU instruction.
-
-## 8. Seventh consequence: cycle structure distinguishes actual BWT images
-
-### 8.1 Cycle count
-
-Let $\operatorname{cycles}(\Psi_L)$ be the number of permutation cycles, and $m_1,\ldots,m_r$ the maximal run lengths in $L$. A characterisation due to Likhomanov and Shur, reported in a survey of the bijective BWT, states
-
-$$
-\boxed{L\text{ is a valid cyclic BWT image}\iff\operatorname{cycles}(\Psi_L)=\gcd(m_1,\ldots,m_r).}\tag{29}
-$$
-
-For primitive input, the permutation is one cycle. Periodic inputs may have several. We must not assume every bzip2 traversal visits all distinct rows in one cycle.
-
-### 8.2 Necklaces and exact enumeration
-
-The BWT identifies cyclic rotations, so its images correspond naturally to *necklaces*. With counts $n_1,\ldots,n_\sigma$ and $g=\gcd(n_1,\ldots,n_\sigma)$, Burnside's lemma gives
-
-$$
-\boxed{N_{\mathrm{BWT}}=\frac1n\sum_{d\mid g}\phi(d)\frac{(n/d)!}{\prod_c(n_c/d)!}.}\tag{30}
-$$
-
-The number of primitive necklaces is
-
-$$
-\boxed{N_{\mathrm{primitive}}=\frac1n\sum_{d\mid g}\mu(d)\frac{(n/d)!}{\prod_c(n_c/d)!}.}\tag{31}
-$$
-
-Here $\phi$ is Euler's totient and $\mu$ the Möbius function.
-
-### 8.3 Coprime-frequency simplification
-
-When $g=1$, all source strings with that histogram are primitive:
-
-$$
-\boxed{N_{\mathrm{BWT}}=\frac1n\frac{n!}{\prod_c n_c!}.}\tag{32}
-$$
-
-The BWT restriction reduces the stable-sort family by a factor of exactly $n$; the information saving is
-
-$$
-\boxed{\log_2n\text{ bits}.}\tag{33}
-$$
-
-At $n=900{,}000$, this is approximately 19.78 bits for the entire block. Identifying the original rotation requires a primary index with roughly the same amount of information.
-
-Cycle structure is useful for validity checks, periodicity, testing and traversal assumptions, but it is not a promising independent source of major storage savings. The stable-sort restriction accounts for most of the representational reduction.
-
-## 9. What does the original permutree thesis contribute?
-
-Tamayo Jiménez studies weak-order lattices, permutree congruences, pattern-avoiding permutations, and related geometry. The inverse-BWT permutation belongs to a classical parabolic quotient of the symmetric group.
-
-Let
-
-$$
-J=\{s_i:\ i,i+1\text{ lie in the same character bucket}\}.
-$$
-
-Then
-
-$$
-\boxed{\Psi\in W^J},
-$$
-
-where $W^J$ consists of permutations with no right descents at positions in $J$.
-
-### 9.1 Weak-order inversion statistic
-
-The Coxeter length is
-
-$$
-\ell(\Psi)=\#\{(i,j):i<j,\ \Psi(i)>\Psi(j)\}.
-$$
-
-Stable sorting implies
-
-$$
-\boxed{\ell(\Psi)=\#\{(i,j):i<j,\ L[i]>L[j]\}.}\tag{34}
-$$
-
-This gives an exact algebraic rank, but it should not be confused with BWT run count.
-
-### 9.2 Large inversion count can coexist with easy navigation
-
-For $L=b^ma^m$, $a<b$,
-
-$$
-\Psi(i)=\begin{cases}i+m,&0\le i<m,\\i-m,&m\le i<2m.\end{cases}
-$$
-
-There are just $r=2$ runs but
-
-$$
-\boxed{\ell(\Psi)=m^2}.
-$$
-
-Thus quadratic Coxeter length coexists with two translated intervals. This is a valid cyclic BWT image of an alternating periodic word.
-
-Weak-order geometry measures distance from identity under adjacent transpositions; it does not measure cost of successor queries.
-
-### 9.3 Meets and joins
-
-The parabolic-quotient family has weak-order meets and joins, but mibz2 evaluates one fixed permutation rather than optimising over permutations. Meets and joins need not preserve valid BWT images. The permutree thesis does not directly imply a faster decoder; its relevance is the algebraic setting, while useful data structures come from stable sorting, succinct sequences and run-bounded interval permutations.
-
-## 10. Stronger correctness guarantees and proof obligations
-
-The mathematical properties support independent invariants:
-
-| Invariant | Exact property | What it checks |
-|---|---|---|
-| Permutation | $\Psi$ bijective on $[0,n)$ | No missing or duplicated destinations |
-| Stable-sort identity | Equation (1) | Correct correspondence with $L$ |
-| Bucket monotonicity | $\Psi(i+1)>\Psi(i)$ within buckets | Counting-sort ordering |
-| Run structure | Exactly $n-r$ within-bucket adjacent pairs advance by one | Correct run correspondence |
-| Interval translation | Equation (4) on every run | Correct interval descriptors |
-| compact30 classification | Equation (20) | Ordinary/RAW representation decisions |
-| BWT cycle validity | Equation (29) | Valid cyclic-BWT structure |
-| Multi-step navigation | Equation (26) | Correct jump destinations and emitted words |
-
-These diagnose internal errors more precisely than end-to-end decoded-output comparison.
-
-### 10.1 Independent oracle
-
-Given $L$ and its histogram, construct the reference mapping through (1). For every row $i$ verify
-
-$$
-\Psi_{\mathrm{candidate}}(i)=\operatorname{select}_{F[i]}(L,i-C(F[i])).
-$$
-
-This is a complete equivalence check, stronger than traversal from the primary index alone (which need not visit all distinct rows for periodic blocks). For $k$-step representations verify
-
-$$
-\Psi_{\mathrm{candidate}}^{(k)}(i)=\Psi^k(i)
-$$
-
-and
-
-$$
-W_{k,\mathrm{candidate}}(i)=W_k(i).
-$$
-
-These are development oracles, not obligatory checks in production decoding.
-
-## 11. How the results constrain the design space
-
-| Representation | Space for navigation | Access complexity | Main consideration |
-|---|---|---|---|
-| Conventional T-vector | $32n$ bits | One direct lookup | High footprint |
-| Packed destinations | About $20n$ bits, plus symbols/metadata | Direct addressing | Bit extraction |
-| Per-character Elias–Fano | About $nH_0(L)+O(n)$ bits | Indexed select | More dependencies |
-| Simple run descriptors | $O(r\log n)$ bits | $O(\log r)$ predecessor | Repeated searches |
-| Balanced move structure | $O(r)$ words | $O(1)$ with interval state | Interval transitions |
-| Length-capped move structure | $O(r)$ words | Amortised $O(1)$ over distinct full-cycle visits | Coverage assumptions |
-| $k$-step intervals | $O(kr(\log n+k\log\sigma))$ bits | Interval-dependent | Multi-character operation |
-
-The key distinction is *random row access* versus *stateful successor navigation*. mibz2 predominantly needs the latter. Every lane follows a path and maintains state, making move structures relevant.
-
-### 11.1 Constant-time transitions
-
-The 2021 theorem establishes that compact representation does not imply logarithmic lookup time: $O(r)$-space stateful navigation can have $O(1)$ worst-case move time. That removes a theoretical objection, not the hardware concern about several serial descriptor loads.
-
-### 11.2 Amortised guarantees
-
-The 2026 result bounds cumulative descriptor advances by $O(n)$ for visits to distinct rows, rather than requiring each move to be worst-case constant. The mathematical argument can be set-based, not necessarily requiring one serial traversal order. mibz2's exact segmented and periodic-block behaviour still needs to meet the proof assumptions.
-
-### 11.3 Construction
-
-Given $L$ and counts, its runs can be enumerated in $O(n)$ time. Navigation intervals arise directly from runs; a full pointer array is unnecessary. The length-capped structure can then be built in $O(r)$ time from RLBWT, giving an $O(n+r)=O(n)$ path starting from decoded $L$. Linear asymptotic construction does not mean lower constant cost than mibz2's fused counting-sort builder.
-
-### 11.4 Memory versus critical-path latency
-
-mibz2's compact30 work reduced footprint and benefited concurrent traversal, but direct construction remained expensive; the [4 November post](2026-11-04-compact30-constructor.md) says bulk emission covered 74.3% of rows on the main Wikidata corpus. The [7 November pipelining work](2026-11-07-pipelined-teams.md) overlaps a block's construction and traversal with other stages of neighbouring blocks: a team's leader runs the next block's MTF and finishes the previous block while its helpers build and walk the current one. Three resources remain separate:
-
-$$
-\boxed{\text{navigation storage},\quad\text{construction work},\quad\text{critical-path memory dependencies}.}
-$$
-
-A representation may improve one and worsen another. The mathematical space/time bounds do not equate them.
-
-## 12. What this means for the direction of mibz2 research
-
-### 12.1 Run-based navigation is a real alternative algorithm family
-
-mibz2 need not choose only between the complete T-vector and packed per-row T-vectors. Move structures store interval transitions and support repeated navigation. When $r$ is small they offer a theoretical reduction in live navigation storage, with established constructions and query guarantees.
-
-### 12.2 Compact30 exceptions can be bounded and predicted
-
-Character crossings are bounded by 255 groups; pure-run groups can be counted from (23); ordinary eligibility is expressed by (20). This enables interval/group-level classification and verification rather than opaque per-row heuristics.
-
-### 12.3 Multi-step navigation has a run-sensitive bound
-
-The pair $(\Psi^k,W_k)$ has at most $1+k(r-1)$ translated, constant-output intervals. This establishes a compact *theoretical* representation of multi-character decoding transitions when $kr\ll n$, without guaranteeing CPU speedup.
-
-### 12.4 Cycle structure is mainly for correctness
-
-The restriction to valid BWT permutations adds characterisations and tests but removes little representation information beyond stable-sort structure in coprime-frequency cases. It should not be expected to supply major independent memory savings.
-
-### 12.5 Weak-order geometry provides context, not the central optimisation
-
-Parabolic quotients explain increasing buckets and inversion structure, but the objects the decoder actually evaluates are
-
-$$
-\boxed{\operatorname{select}_c(L,k),\quad\text{translated intervals},\quad\text{move queries},\quad\Psi^k.}
-$$
-
-These admit operational data structures and meaningful complexity bounds.
-
-## 13. Final assessment
-
-| Gain | Established mathematical result | Value to mibz2 |
-|---|---|---|
-| Stable-sort representation | $\Psi$ is a collection of character-select sequences | Succinct sequence structures |
-| Run-bounded representation | $\Psi$ has $r$ translated intervals | Space scaling with $r$ |
-| Move structures | $O(1)$ stateful moves in $O(r)$ words | Alternative to full T-vector |
-| Linear-time inversion | $O(n)$ time and $O(r)$ additional RLBWT working space under assumptions | End-to-end theoretical feasibility |
-| Fixed-record identities | Exact character crossings, spans and pure-group bounds | Formal compact30 analysis |
-| Multi-step interval bound | At most $1+k(r-1)$ pieces for $k$-step navigation | Compact multi-character transitions |
-
-The permutree thesis identifies a legitimate algebraic neighbourhood, but the directly applicable algorithmic theorems come from succinct data structures and run-length BWT.
-
-**What is proved:** the inverse-BWT navigation problem supports representations and algorithms with run-bounded space, efficient repeated traversal, and (in the RLBWT model) asymptotically optimal inversion time.
-
-**What is not proved for mibz2:** that these beat its 32-lane, four-byte-per-row implementation in elapsed CPU cycles once table construction, segmented starts, emitted characters and shared-cache behaviour are counted.
-
-The central research question changes from *how much can we compress the existing navigation table?* to:
-
-**What is the least expensive stateful navigation representation for a BWT interval-exchange permutation, while preserving high memory-level parallelism across simultaneous traversals?**
-
-The most consequential result to investigate further is the move structure, especially Brown and Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to the problem mibz2 solves.
+**How directly does it apply to bzip2?** The theorem starts from run-length BWT. mibz2
+reconstructs the byte sequence $L$ after MTF (undoing bzip2's move-to-front coding, the stage
+before the inverse BWT), so discovering the runs involves examining $n$ bytes. Given $L$ and
+its counts, the runs can be enumerated in $O(n)$ time, and the capped structure built from them
+in $O(r)$, giving an $O(n+r)=O(n)$ path with $O(r)$ navigation storage, when the input sequence
+and output buffer are accounted for separately. This does not make the entire decompressor
+$O(r)$ total memory. Linear asymptotic construction does not mean lower constant cost than
+mibz2's fused counting-sort builder.
+
+The single-cycle amortisation argument applies directly to primitive strings, those that
+are not a repetition of a shorter string. Periodic cyclic
+BWTs may have several cycles
+([appendix section 6](2026-11-08-inverse-bwt-navigation-notes.md#6-cycle-structure-and-necklaces));
+mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021
+structure gives a per-move guarantee independent of single-cycle amortisation, at additional
+construction complexity. Brown and Langmead's [Orbit library](https://github.com/drnatebrown/orbit)
+implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust
+T-vector.
+
+So there exists a mathematically established family of navigation structures whose storage
+scales with BWT runs rather than rows, and that supports efficient repeated successor traversal
+without a fresh general predecessor search on each step.
+
+## 6. What would it cost mibz2, and what would settle it?
+
+A smaller table helps mibz2 only through a chain of costs. Fewer bytes mean less of the cache
+taken by each block's walk. But each step then reads one or more descriptors instead of one
+entry, and the builder must find the runs and write the descriptors before the walk begins.
+What the 32 lanes need is many independent reads in flight at once, and a step that reads two
+descriptors in turn can have two waits on its path, not one. Three resources stay separate:
+
+$$
+\boxed{\begin{gathered}\text{navigation storage},\\\text{construction work},\\\text{critical-path memory dependencies}.\end{gathered}}
+$$
+
+A representation may improve one and worsen another. The mathematical space/time bounds do not
+equate them. The representations the theory offers, and what each costs, are compared in
+[appendix section 9](2026-11-08-inverse-bwt-navigation-notes.md#9-the-design-space-and-the-results).
+
+The same intervals bear on mibz2's other work. In compact30, every 30-row group lying inside
+one interval is guaranteed an ordinary record, and these groups can be counted from the runs
+without building the table
+([appendix section 4](2026-11-08-inverse-bwt-navigation-notes.md#4-what-the-intervals-say-about-compact30)).
+Taking $k$ steps at once needs at most $1+k(r-1)$ intervals
+([appendix section 5](2026-11-08-inverse-bwt-navigation-notes.md#5-several-steps-at-once)).
+
+The central research question changes from *how much can we compress the existing navigation
+table?* to:
+
+**What is the least expensive stateful navigation representation for a BWT interval-exchange
+permutation, while preserving high memory-level parallelism across simultaneous traversals?**
+
+Two measurements would settle whether it is worth building. The first is the run count of each
+block on mibz2's corpora, and so the size of the descriptors, block by block, against the
+T-vector's. The second, only if those are small, is a 32-lane walk over a move structure, timed
+against the T-vector walk with the cost of building each counted. Neither has been done. The
+most consequential result to investigate further is the move structure, especially Brown and
+Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to
+the problem mibz2 solves.
+
+## 7. The argument in brief
+
+The next-row map sends the $k$th copy of each byte in $F$ to its $k$th copy in $L$, so each
+run of $L$ is one shifted interval, and the map is at most $r$ of them. A walk that carries its
+interval needs no search to take its next step, and move structures make that step take
+constant time in $O(r)$ words. Brown and Langmead turn this into a linear-time inversion with
+run-bounded working space.
+
+**What is proved:** the inverse-BWT navigation problem supports representations and algorithms
+with run-bounded space, efficient repeated traversal, and (in the RLBWT model) asymptotically
+optimal inversion time.
+
+**What is not proved for mibz2:** that these beat its 32-lane, four-byte-per-row implementation
+in elapsed CPU cycles once table construction, segmented starts, emitted characters and
+shared-cache behaviour are counted. The permutree thesis identifies a legitimate algebraic
+neighbourhood, but the directly applicable algorithmic theorems come from succinct data
+structures and run-length BWT
+([appendix section 7](2026-11-08-inverse-bwt-navigation-notes.md#7-what-does-the-permutree-thesis-contribute)).
+
+The general lesson is that a table walked in order can often be replaced by less data plus
+state carried by the walker, since each step already knows where the last one was.
 
 ---
 
 **Sources:**
 
+- [Technical appendix](2026-11-08-inverse-bwt-navigation-notes.md): the secondary derivations,
+  bounds and checks, with their equations.
 - [Daniel Tamayo Jiménez, *Combinatorics of Permutreehedra and Geometry of s-Permutahedra*](https://arxiv.org/abs/2310.19732),
   PhD thesis (2023): weak order and parabolic quotients.
 - [Takaaki Nishimoto and Yasuo Tabei, *Optimal-Time Queries on BWT-runs Compressed Indexes*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101),
