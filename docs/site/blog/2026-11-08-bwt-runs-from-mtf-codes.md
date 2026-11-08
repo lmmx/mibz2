@@ -40,9 +40,9 @@ than one entry per row. Published structures built from those records, *move str
 step from row to row without a search. To build one, a decoder needs the runs.
 
 **This post's observation is that bzip2's codes already list the runs.** A code that names a
-byte other than the last one starts a run; a repeat count extends it. Nothing else starts or
-ends a run. So the runs, and from them a move structure, could be built from the codes
-directly, without writing the $n$-byte column and scanning it again. In theory, building them
+byte other than the last one starts a run; a repeat count extends it. Apart from the block's
+first byte (section 2), nothing else starts or ends a run. So the runs, and from them a move structure, could be built from the codes
+directly, without writing the $n$-byte column and scanning it again. By our own, unproven estimate, building them
 would take time and memory that grow with the number of codes and runs rather than with $n$.
 The inversion that follows still takes time proportional to $n$, as any inversion must, and
 that bound is already published.
@@ -71,7 +71,7 @@ gives the cost in theory and [section 5](#5-what-has-mibz2-measured) what mibz2 
 <p class="bf-step"><strong>1.</strong> A decoder that wants a move structure would write all <em>n</em> bytes of <em>L</em>, then scan them to find the runs.</p>
 </div>
 <div class="bf-frame">
-<svg viewBox="0 0 196 266" role="img" aria-label="The proposed route: symbols, then the runs of L read off the symbols, then a move structure. L is never written."><text x="8" y="14" class="bf-cap">proposed</text><rect x="8" y="24" width="180" height="44" rx="10" class="bf-card"/><text x="98" y="43" class="bf-t-strong" text-anchor="middle">Symbols</text><text x="98" y="59" class="bf-tm" text-anchor="middle">decoded from Huffman codes</text><path d="M98 68V82" class="bf-quiet-ink"/><path d="M95.3 82.1L98.0 88.0L100.7 82.1Z" class="bf-head-ink"/><rect x="8" y="88" width="180" height="44" rx="10" class="bf-card-hi"/><text x="98" y="107" class="bf-t-strong" text-anchor="middle">The runs of L</text><text x="98" y="123" class="bf-tm" text-anchor="middle">read off the symbols</text><path d="M98 132V146" class="bf-quiet-ink"/><path d="M95.3 146.1L98.0 152.0L100.7 146.1Z" class="bf-head-ink"/><rect x="8" y="152" width="180" height="44" rx="10" class="bf-card"/><text x="98" y="171" class="bf-t-strong" text-anchor="middle">A move structure</text><text x="98" y="187" class="bf-tm" text-anchor="middle">built from the runs</text></svg>
+<svg viewBox="0 0 196 202" role="img" aria-label="The proposed route: symbols, then the runs of L read off the symbols, then a move structure. L is never written."><text x="8" y="14" class="bf-cap">proposed</text><rect x="8" y="24" width="180" height="44" rx="10" class="bf-card"/><text x="98" y="43" class="bf-t-strong" text-anchor="middle">Symbols</text><text x="98" y="59" class="bf-tm" text-anchor="middle">decoded from Huffman codes</text><path d="M98 68V82" class="bf-quiet-ink"/><path d="M95.3 82.1L98.0 88.0L100.7 82.1Z" class="bf-head-ink"/><rect x="8" y="88" width="180" height="44" rx="10" class="bf-card-hi"/><text x="98" y="107" class="bf-t-strong" text-anchor="middle">The runs of L</text><text x="98" y="123" class="bf-tm" text-anchor="middle">read off the symbols</text><path d="M98 132V146" class="bf-quiet-ink"/><path d="M95.3 146.1L98.0 152.0L100.7 146.1Z" class="bf-head-ink"/><rect x="8" y="152" width="180" height="44" rx="10" class="bf-card"/><text x="98" y="171" class="bf-t-strong" text-anchor="middle">A move structure</text><text x="98" y="187" class="bf-tm" text-anchor="middle">built from the runs</text></svg>
 <p class="bf-step"><strong>2.</strong> The symbols already mark where each run starts, so the runs could be listed directly and <em>L</em> never written.</p>
 </div>
 </div>
@@ -98,14 +98,16 @@ stretch of zeros and writes the count in two symbols, `RUNA` and `RUNB`. They ar
 we call *literals*. (In the file, every symbol is stored one higher, to make room for
 `RUNA` and `RUNB` at 0 and 1.)
 
-Coding all of `nnbaaa` this way gives five symbols, followed by an end-of-block symbol:
+Coding $L=\texttt{nnbaaa}$ this way gives five symbols, then an end-of-block symbol:
 
-| Byte of $L$ | List before | Symbol | List after |
+| Bytes | List before | Symbols | List after |
 | --- | --- | --- | --- |
 | `n` | `a b n` | 2 | `n a b` |
-| `n` | `n a b` | `RUNA` (one zero) | `n a b` |
+| `n` | `n a b` | `RUNA` | `n a b` |
 | `b` | `n a b` | 2 | `b n a` |
-| `a`, `a`, `a` | `b n a` | 2, then `RUNB` (two zeros) | `a b n` |
+| `aaa` | `b n a` | 2 `RUNB` | `a b n` |
+
+The `RUNA` is one zero, one more `n`; the `RUNB` is two zeros, two more `a`s.
 
 The decoder does the same in reverse: a literal $j$ takes the byte at position $j$, writes
 it, and moves it to the front; a count of zeros writes that many copies of the front byte.
@@ -116,11 +118,11 @@ forty lines long, and it writes every byte into $L$ and counts each byte value a
 <p class="bf-title">From <code>banana</code>'s symbols to its runs, and to the next-row map</p>
 <div class="bf-frames bf-frames-3">
 <div class="bf-frame">
-<svg viewBox="0 0 196 180" role="img" aria-label="The symbols 2, RUNA, 2, 2, RUNB. Each literal 2, in green, writes one new byte of L: n at 0, b at 2, a at 3. RUNA repeats n once, at 1; RUNB repeats a twice, at 4 and 5."><text x="4" y="14" class="bf-cap">symbols</text><rect x="5" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="22" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="43" y="24" width="34" height="26" rx="8" class="bf-pill"/><text x="60" y="41" class="bf-tm" text-anchor="middle">RUNA</text><rect x="81" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="98" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="119" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="136" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="157" y="24" width="34" height="26" rx="8" class="bf-pill"/><text x="174" y="41" class="bf-tm" text-anchor="middle">RUNB</text><text x="4" y="122" class="bf-cap">last column L</text><path d="M22 54C22 91.0 33 91.0 33 128" class="bf-act"/><path d="M30.3 128.1L33.0 134.0L35.7 128.1Z" class="bf-head"/><path d="M60 54C60 91.0 59 91.0 59 128" class="bf-quiet"/><path d="M56.3 128.1L59.0 134.0L61.7 128.1Z" class="bf-head-q"/><path d="M98 54C98 91.0 85 91.0 85 128" class="bf-act"/><path d="M82.3 128.1L85.0 134.0L87.7 128.1Z" class="bf-head"/><path d="M136 54C136 91.0 111 91.0 111 128" class="bf-act"/><path d="M108.3 128.1L111.0 134.0L113.7 128.1Z" class="bf-head"/><path d="M174 54C174 91.0 137 91.0 137 128" class="bf-quiet"/><path d="M134.3 128.1L137.0 134.0L139.7 128.1Z" class="bf-head-q"/><path d="M174 54C174 91.0 163 91.0 163 128" class="bf-quiet"/><path d="M160.3 128.1L163.0 134.0L165.7 128.1Z" class="bf-head-q"/><text x="33" y="154" class="bf-ch" text-anchor="middle">n</text><text x="33" y="174" class="bf-ix" text-anchor="middle">0</text><text x="59" y="154" class="bf-ch-dim" text-anchor="middle">n</text><text x="59" y="174" class="bf-ix" text-anchor="middle">1</text><text x="85" y="154" class="bf-ch" text-anchor="middle">b</text><text x="85" y="174" class="bf-ix" text-anchor="middle">2</text><text x="111" y="154" class="bf-ch" text-anchor="middle">a</text><text x="111" y="174" class="bf-ix" text-anchor="middle">3</text><text x="137" y="154" class="bf-ch-dim" text-anchor="middle">a</text><text x="137" y="174" class="bf-ix" text-anchor="middle">4</text><text x="163" y="154" class="bf-ch-dim" text-anchor="middle">a</text><text x="163" y="174" class="bf-ix" text-anchor="middle">5</text></svg>
+<svg viewBox="0 0 196 180" role="img" aria-label="The symbols 2, RUNA, 2, 2, RUNB. Each literal 2, in green, writes one new byte of L: n at 0, b at 2, a at 3. RUNA repeats n once, at 1; RUNB repeats a twice, at 4 and 5."><text x="4" y="14" class="bf-cap">symbols</text><rect x="5" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="22" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="43" y="24" width="34" height="26" rx="8" class="bf-pill"/><text x="60" y="41" class="bf-tm" text-anchor="middle">RUNA</text><rect x="81" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="98" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="119" y="24" width="34" height="26" rx="8" class="bf-pill-hi"/><text x="136" y="41" class="bf-t-strong" text-anchor="middle">2</text><rect x="157" y="24" width="34" height="26" rx="8" class="bf-pill"/><text x="174" y="41" class="bf-tm" text-anchor="middle">RUNB</text><text x="4" y="154" class="bf-lab">L</text><path d="M22 54C22 91.0 38 91.0 38 128" class="bf-act"/><path d="M35.3 128.1L38.0 134.0L40.7 128.1Z" class="bf-head"/><path d="M60 54C60 91.0 64 91.0 64 128" class="bf-quiet"/><path d="M61.3 128.1L64.0 134.0L66.7 128.1Z" class="bf-head-q"/><path d="M98 54C98 91.0 90 91.0 90 128" class="bf-act"/><path d="M87.3 128.1L90.0 134.0L92.7 128.1Z" class="bf-head"/><path d="M136 54C136 91.0 116 91.0 116 128" class="bf-act"/><path d="M113.3 128.1L116.0 134.0L118.7 128.1Z" class="bf-head"/><path d="M174 54C174 91.0 142 91.0 142 128" class="bf-quiet"/><path d="M139.3 128.1L142.0 134.0L144.7 128.1Z" class="bf-head-q"/><path d="M174 54C174 91.0 168 91.0 168 128" class="bf-quiet"/><path d="M165.3 128.1L168.0 134.0L170.7 128.1Z" class="bf-head-q"/><text x="38" y="154" class="bf-ch" text-anchor="middle">n</text><text x="38" y="174" class="bf-ix" text-anchor="middle">0</text><text x="64" y="154" class="bf-ch-dim" text-anchor="middle">n</text><text x="64" y="174" class="bf-ix" text-anchor="middle">1</text><text x="90" y="154" class="bf-ch" text-anchor="middle">b</text><text x="90" y="174" class="bf-ix" text-anchor="middle">2</text><text x="116" y="154" class="bf-ch" text-anchor="middle">a</text><text x="116" y="174" class="bf-ix" text-anchor="middle">3</text><text x="142" y="154" class="bf-ch-dim" text-anchor="middle">a</text><text x="142" y="174" class="bf-ix" text-anchor="middle">4</text><text x="168" y="154" class="bf-ch-dim" text-anchor="middle">a</text><text x="168" y="174" class="bf-ix" text-anchor="middle">5</text></svg>
 <p class="bf-step"><strong>1.</strong> Each green literal writes a byte that differs from the one before, so it starts a run. <code>RUNA</code> and <code>RUNB</code> repeat the last byte: one copy and two.</p>
 </div>
 <div class="bf-frame">
-<svg viewBox="0 0 196 196" role="img" aria-label="L, n n b a a a, split into its runs: n times 2, b times 1, a times 3. Below, the run records: byte n, start 0, length 2, k 0; byte b, start 2, length 1, k 0; byte a, start 3, length 3, k 0."><text x="33" y="18" class="bf-ix" text-anchor="middle">0</text><text x="33" y="42" class="bf-ch" text-anchor="middle">n</text><text x="59" y="18" class="bf-ix" text-anchor="middle">1</text><text x="59" y="42" class="bf-ch" text-anchor="middle">n</text><text x="85" y="18" class="bf-ix" text-anchor="middle">2</text><text x="85" y="42" class="bf-ch" text-anchor="middle">b</text><text x="111" y="18" class="bf-ix" text-anchor="middle">3</text><text x="111" y="42" class="bf-ch" text-anchor="middle">a</text><text x="137" y="18" class="bf-ix" text-anchor="middle">4</text><text x="137" y="42" class="bf-ch" text-anchor="middle">a</text><text x="163" y="18" class="bf-ix" text-anchor="middle">5</text><text x="163" y="42" class="bf-ch" text-anchor="middle">a</text><path d="M23 52V56H69V52" class="bf-seg-on"/><text x="46" y="72" class="bf-segl-on" text-anchor="middle">n × 2</text><path d="M75 52V56H95V52" class="bf-seg-on"/><text x="85" y="72" class="bf-segl-on" text-anchor="middle">b × 1</text><path d="M101 52V56H173V52" class="bf-seg-on"/><text x="137" y="72" class="bf-segl-on" text-anchor="middle">a × 3</text><path d="M4 86H192" class="bf-rule"/><text x="4" y="104" class="bf-cap">run records</text><text x="26" y="124" class="bf-ix" text-anchor="middle">byte</text><text x="74" y="124" class="bf-ix" text-anchor="middle">start</text><text x="122" y="124" class="bf-ix" text-anchor="middle">length</text><text x="170" y="124" class="bf-ix" text-anchor="middle">k</text><text x="26" y="146" class="bf-eq-l" text-anchor="middle">n</text><text x="74" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="122" y="146" class="bf-eq-l" text-anchor="middle">2</text><text x="170" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="26" y="168" class="bf-eq-l" text-anchor="middle">b</text><text x="74" y="168" class="bf-eq-l" text-anchor="middle">2</text><text x="122" y="168" class="bf-eq-l" text-anchor="middle">1</text><text x="170" y="168" class="bf-eq-l" text-anchor="middle">0</text><text x="26" y="190" class="bf-eq-l" text-anchor="middle">a</text><text x="74" y="190" class="bf-eq-l" text-anchor="middle">3</text><text x="122" y="190" class="bf-eq-l" text-anchor="middle">3</text><text x="170" y="190" class="bf-eq-l" text-anchor="middle">0</text></svg>
+<svg viewBox="0 0 196 196" role="img" aria-label="L, n n b a a a, split into its runs: n times 2, b times 1, a times 3. Below, the run records: byte n, start 0, length 2, k 0; byte b, start 2, length 1, k 0; byte a, start 3, length 3, k 0."><text x="38" y="18" class="bf-ix" text-anchor="middle">0</text><text x="38" y="42" class="bf-ch" text-anchor="middle">n</text><text x="64" y="18" class="bf-ix" text-anchor="middle">1</text><text x="64" y="42" class="bf-ch" text-anchor="middle">n</text><text x="90" y="18" class="bf-ix" text-anchor="middle">2</text><text x="90" y="42" class="bf-ch" text-anchor="middle">b</text><text x="116" y="18" class="bf-ix" text-anchor="middle">3</text><text x="116" y="42" class="bf-ch" text-anchor="middle">a</text><text x="142" y="18" class="bf-ix" text-anchor="middle">4</text><text x="142" y="42" class="bf-ch" text-anchor="middle">a</text><text x="168" y="18" class="bf-ix" text-anchor="middle">5</text><text x="168" y="42" class="bf-ch" text-anchor="middle">a</text><path d="M28 52V56H74V52" class="bf-seg-on"/><text x="51" y="72" class="bf-segl-on" text-anchor="middle">n × 2</text><path d="M80 52V56H100V52" class="bf-seg-on"/><text x="90" y="72" class="bf-segl-on" text-anchor="middle">b × 1</text><path d="M106 52V56H178V52" class="bf-seg-on"/><text x="142" y="72" class="bf-segl-on" text-anchor="middle">a × 3</text><path d="M4 86H192" class="bf-rule"/><text x="4" y="104" class="bf-cap">run records</text><text x="26" y="124" class="bf-ix" text-anchor="middle">byte</text><text x="74" y="124" class="bf-ix" text-anchor="middle">start</text><text x="122" y="124" class="bf-ix" text-anchor="middle">length</text><text x="170" y="124" class="bf-ix" text-anchor="middle">k</text><text x="26" y="146" class="bf-eq-l" text-anchor="middle">n</text><text x="74" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="122" y="146" class="bf-eq-l" text-anchor="middle">2</text><text x="170" y="146" class="bf-eq-l" text-anchor="middle">0</text><text x="26" y="168" class="bf-eq-l" text-anchor="middle">b</text><text x="74" y="168" class="bf-eq-l" text-anchor="middle">2</text><text x="122" y="168" class="bf-eq-l" text-anchor="middle">1</text><text x="170" y="168" class="bf-eq-l" text-anchor="middle">0</text><text x="26" y="190" class="bf-eq-l" text-anchor="middle">a</text><text x="74" y="190" class="bf-eq-l" text-anchor="middle">3</text><text x="122" y="190" class="bf-eq-l" text-anchor="middle">3</text><text x="170" y="190" class="bf-eq-l" text-anchor="middle">0</text></svg>
 <p class="bf-step"><strong>2.</strong> So the symbols give one record per run: its byte, where it starts, its length, and <em>k</em>, the copies of that byte before it.</p>
 </div>
 <div class="bf-frame">
@@ -181,7 +183,7 @@ $$
 \Psi(a+t)=p+t,\qquad 0\le t<\ell.
 $$
 
-There is one wait. $C(c)$ depends on the counts of every smaller byte, so it is known only at
+One value has to wait. $C(c)$ depends on the counts of every smaller byte, so it is known only at
 the end of the block. The records can be written while decoding, with $k$, and given their
 rows once the counts are final. In `banana` the counts are `a` 3, `b` 1, `n` 2, so the `a`
 rows begin at 0, `b` at 3 and `n` at 4: the record (`a`, start 3, length 3, $k$ 0) becomes
@@ -295,22 +297,25 @@ describe, and timed it, locally on a shared four-core virtual machine, at one th
 ([the write-up](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-move-structure-walk.md),
 [the result](https://github.com/lmmx/mibz2/issues/42#issuecomment-6452138621)). Walked as one
 chain, it took about 60% less time than the T-vector's chain. Walked as mibz2 walks, 32 chains
-interleaved so that their memory reads overlap, it lost:
+interleaved so that their memory reads overlap, it lost. In cycles per decoded byte, locally:
 
-| Cycles per byte, local (run 1 / run 2) | Cost |
+| Step | Cycles a byte |
 | --- | ---: |
-| T-vector: build + 32-lane walk | 12.03 / 11.97 |
-| Move structure: the scan of $L$ for runs | 0.94 / 0.94 |
-| Move structure: build from the runs | 6.7–8.1 |
-| Move structure: the best interleaved walk alone | 13.5–17.1 |
-| Move structure: build + walk, as if MTF handed over the runs | +80% to +99% against the T-vector |
+| T-vector build + walk | 12.0 |
+| Scan of $L$ for runs | 0.9 |
+| Build from runs | 6.7–8.1 |
+| Move walk alone | 13.5–17.1 |
+
+Each figure covers both runs, and the ranges cover the three interval-length caps tried. Built from a run list
+handed over for free, as if by MTF, the move structure's build and walk together cost 80–99%
+more than the T-vector's.
 
 The scratch runs were about twice CI's figures, so they are indicative only. **The walk alone
 cost more than the T-vector's build and walk together**, because each step ran about 41
-instructions against 16. So reading the runs off the codes cannot rescue that design: the row
-"as if MTF handed over the runs" is that case, and it still lost. It would save the scan, under
+instructions against 16. So reading the runs off the codes cannot rescue that design: the free run list is
+that case, and it still lost. It would save the scan, under
 one cycle a byte, and the writes of $L$, which nobody has timed separately. No builder fused
-with MTF was timed: that measured row removes the scan, nothing more. The result is for that
+with MTF was timed: the free run list only removes the scan from the timing. The result is for that
 one structure and that walk, on one machine and one corpus.
 
 ## 6. Where does this stand?
@@ -362,13 +367,14 @@ exception at the block's start. Each run's byte, start, length and earlier count
 block's byte counts, give its interval of the next-row map, and a merge gives the anchors a
 move structure needs. In our unproven accounting, the records take $O(m+r+\sigma)$ time and
 $O(r+\sigma)$ words, without the $n$-byte column, and perhaps time sublinear in $n$ on long
-runs; the inversion stays $O(n)$, as Brown and Langmead already have it. In mibz2's measured setting it would not help, since
-the interleaved walk over a move structure already costs more than today's whole build and
+runs; the inversion stays $O(n)$, as Brown and Langmead already have it. In the one setting mibz2 has measured, it would not have rescued the move
+structure tried there, whose interleaved walk alone cost more than today's whole build and
 walk.
 
 The general point is that a stage's input is often already in the form a later stage wants,
 and the cheapest conversion is the one never done; whether it pays depends on what the later
-stage costs.
+stage costs. The same runs could, for example, count compact30's pure-run groups without the
+column ([the appendix, section 4](2026-11-08-inverse-bwt-navigation-notes.md#4-what-the-intervals-say-about-compact30)).
 
 ---
 
