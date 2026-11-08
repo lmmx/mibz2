@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=48dfc3a74efd">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=48dfc3a74efd">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=48dfc3a74efd">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=48dfc3a74efd">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=48dfc3a74efd">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=85dcae52bcac">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=48dfc3a74efd">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2348,7 +2348,8 @@ undid the transform from the runs alone. Every case matched, the first-run excep
 included.</p>
 <h2 id="3-how-do-the-runs-become-a-move-structure">3. How do the runs become a move structure?<a class="headerlink" href="#3-how-do-the-runs-become-a-move-structure" title="Permanent link">&para;</a></h2>
 <p>From each run, the decoder needs four numbers: its byte <span class="arithmatex">\(c\)</span>, its start <span class="arithmatex">\(p\)</span> in <span class="arithmatex">\(L\)</span>, its length
-<span class="arithmatex">\(\ell\)</span>, and <span class="arithmatex">\(k\)</span>, the number of copies of <span class="arithmatex">\(c\)</span> written before it. The MTF decoder already counts
+<span class="arithmatex">\(\ell\)</span>, and <span class="arithmatex">\(k\)</span>, the number of copies of <span class="arithmatex">\(c\)</span> written before it: copies, not earlier runs, so
+an earlier run <code>aa</code> adds 2. The MTF decoder already counts
 each byte value as it writes, so <span class="arithmatex">\(k\)</span> is that count at the run's start. In <code>banana</code> every run is
 its byte's first, so every <span class="arithmatex">\(k\)</span> is 0; in <code>aababa</code>, below, two runs share a byte and <span class="arithmatex">\(k\)</span> is
 not 0.</p>
@@ -2803,19 +2804,19 @@ column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-interval
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/bench.js?v=48dfc3a74efd"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/couriers.js?v=48dfc3a74efd"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/blog.js?v=48dfc3a74efd"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/frontier.js?v=48dfc3a74efd"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/observatory.js?v=48dfc3a74efd"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=85dcae52bcac"></script>
+        <script src="../../assets/javascripts/katex.js?v=48dfc3a74efd"></script>
       
     
   </body>

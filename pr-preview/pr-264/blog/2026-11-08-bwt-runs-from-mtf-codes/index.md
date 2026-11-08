@@ -73,7 +73,7 @@ We checked the argument with a short script that models bzip2's MTF and `RUNA`/`
 
 ## 3\. How do the runs become a move structure?
 
-From each run, the decoder needs four numbers: its byte \\(c\\), its start \\(p\\) in \\(L\\), its length \\(\\ell\\), and \\(k\\), the number of copies of \\(c\\) written before it. The MTF decoder already counts each byte value as it writes, so \\(k\\) is that count at the run's start. In `banana` every run is its byte's first, so every \\(k\\) is 0; in `aababa`, below, two runs share a byte and \\(k\\) is not 0.
+From each run, the decoder needs four numbers: its byte \\(c\\), its start \\(p\\) in \\(L\\), its length \\(\\ell\\), and \\(k\\), the number of copies of \\(c\\) written before it: copies, not earlier runs, so an earlier run `aa` adds 2. The MTF decoder already counts each byte value as it writes, so \\(k\\) is that count at the run's start. In `banana` every run is its byte's first, so every \\(k\\) is 0; in `aababa`, below, two runs share a byte and \\(k\\) is not 0.
 
 The previous post showed which rows a run takes over ([its section 2](<https://lmmx.github.io/mibz2/pr-preview/pr-264/blog/2026-11-08-inverse-bwt-navigation/#2-why-does-every-run-give-one-shift>)). Write \\(C(c)\\) for the number of bytes in the block smaller than \\(c\\): the row where \\(c\\)'s rows begin in \\(F\\), the sorted first column. Then the run's rows begin at \\(a=C(c)+k\\), and the next-row map \\(\\Psi\\) sends each of them to the matching position of the run:
 
