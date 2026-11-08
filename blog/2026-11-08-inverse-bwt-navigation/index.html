@@ -24,7 +24,7 @@
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../2026-11-07-pipelined-teams/">
+        <link rel="next" href="../2026-11-08-inverse-bwt-navigation-notes/">
       
       
         
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=05f28031de49">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=05f28031de49">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=05f28031de49">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=05f28031de49">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=05f28031de49">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=a18f350c4327">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=05f28031de49">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1140,6 +1140,60 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+    
+  
+  
+  
     <li class="md-nav__item md-nav__item--active">
       
       
@@ -1155,7 +1209,7 @@
   <span class="md-ellipsis">
     
   
-  Inverse-BWT navigation: the mathematics
+  One shift per run
 
     
   </span>
@@ -1172,7 +1226,7 @@
   <span class="md-ellipsis">
     
   
-  Inverse-BWT navigation: the mathematics
+  One shift per run
 
     
   </span>
@@ -1198,33 +1252,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-establishing-the-exact-object" class="md-nav__link">
+  <a href="#1-what-does-the-next-row-map-look-like-for-banana" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Establishing the exact object
+        1. What does the next-row map look like for <code>banana</code>?
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Establishing the exact object">
+    <nav class="md-nav" aria-label="1. What does the next-row map look like for banana?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#11-definitions-and-orientation" class="md-nav__link">
+  <a href="#11-walking-the-intervals-without-a-search" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1.1 Definitions and orientation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#12-example-banana" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1.2 Example: banana
+        1.1 Walking the intervals without a search
       </span>
     </span>
   </a>
@@ -1237,33 +1280,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem" class="md-nav__link">
+  <a href="#2-why-does-every-run-give-one-shift" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. First consequence: this is a select problem, not a general permutation problem
+        2. Why does every run give one shift?
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. First consequence: this is a select problem, not a general permutation problem">
+    <nav class="md-nav" aria-label="2. Why does every run give one shift?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#21-the-output-character-is-already-known" class="md-nav__link">
+  <a href="#21-what-the-intervals-cost-to-store" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2.1 The output character is already known
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-an-exact-bound-on-mixed-character-records" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2.2 An exact bound on mixed-character records
+        2.1 What the intervals cost to store
       </span>
     </span>
   </a>
@@ -1276,598 +1308,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-second-consequence-the-permutation-consists-of-exactly-r-translated-intervals" class="md-nav__link">
+  <a href="#3-when-do-the-shifts-save-nothing" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Second consequence: the permutation consists of exactly <span class="arithmatex">\(r\)</span> translated intervals
+        3. When do the shifts save nothing?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Second consequence: the permutation consists of exactly \(r\) translated intervals">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-the-interval-theorem" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.1 The interval theorem
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-a-constructive-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.2 A constructive representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-the-exact-count-of-consecutive-navigation-entries" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.3 The exact count of consecutive navigation entries
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#34-a-sparse-correction-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.4 A sparse-correction representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-third-consequence-rigorous-succinct-space-bounds" class="md-nav__link">
+  <a href="#4-how-does-a-walk-move-between-intervals-in-constant-time" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Third consequence: rigorous succinct-space bounds
+        4. How does a walk move between intervals in constant time?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Third consequence: rigorous succinct-space bounds">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-entropy-of-the-stable-sort-permutation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.1 Entropy of the stable-sort permutation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-eliasfano-gives-a-constructive-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.2 Elias–Fano gives a constructive representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-a-separate-information-bound-from-run-count" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.3 A separate information bound from run count
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#44-two-independent-measures-of-compressibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.4 Two independent measures of compressibility
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem" class="md-nav__link">
+  <a href="#5-can-a-whole-block-be-inverted-this-way" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Fourth consequence: move structures already solve the theoretical navigation problem
+        5. Can a whole block be inverted this way?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="5. Fourth consequence: move structures already solve the theoretical navigation problem">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-carry-the-interval-identifier" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.1 Carry the interval identifier
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-why-it-matters-to-mibz2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.2 Why it matters to mibz2
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-the-2026-result-linear-time-inversion-in-run-bounded-space" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.3 The 2026 result: linear-time inversion in run-bounded space
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-how-directly-does-it-apply-to-bzip2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.4 How directly does it apply to bzip2?
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#55-established-result" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.5 Established result
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-fifth-consequence-compact30s-representability-can-be-characterised-exactly" class="md-nav__link">
+  <a href="#6-what-would-it-cost-mibz2-and-what-would-settle-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Fifth consequence: compact30's representability can be characterised exactly
+        6. What would it cost mibz2, and what would settle it?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="6. Fifth consequence: compact30&#x27;s representability can be characterised exactly">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-the-ordinary-record-condition" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.1 The ordinary-record condition
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-gap-based-interpretation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.2 Gap-based interpretation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#63-guaranteed-ordinary-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.3 Guaranteed ordinary groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#64-exact-formula-for-pure-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.4 Exact formula for pure groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#65-consequence-for-construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.5 Consequence for construction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation" class="md-nav__link">
+  <a href="#7-the-argument-in-brief" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. Sixth consequence: multiple BWT steps admit a small interval representation
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Sixth consequence: multiple BWT steps admit a small interval representation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#71-powers-of-the-navigation-permutation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.1 Powers of the navigation permutation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#72-bound-on-pieces-of-psik" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.2 Bound on pieces of <span class="arithmatex">\(\Psi^k\)</span>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#73-multi-character-transition-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.3 Multi-character transition table
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#74-implication-for-mibz2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.4 Implication for mibz2
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8. Seventh consequence: cycle structure distinguishes actual BWT images
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. Seventh consequence: cycle structure distinguishes actual BWT images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-cycle-count" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.1 Cycle count
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-necklaces-and-exact-enumeration" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.2 Necklaces and exact enumeration
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-coprime-frequency-simplification" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.3 Coprime-frequency simplification
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-what-does-the-original-permutree-thesis-contribute" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9. What does the original permutree thesis contribute?
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. What does the original permutree thesis contribute?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#91-weak-order-inversion-statistic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.1 Weak-order inversion statistic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#92-large-inversion-count-can-coexist-with-easy-navigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.2 Large inversion count can coexist with easy navigation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#93-meets-and-joins" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.3 Meets and joins
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-stronger-correctness-guarantees-and-proof-obligations" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10. Stronger correctness guarantees and proof obligations
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. Stronger correctness guarantees and proof obligations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#101-independent-oracle" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10.1 Independent oracle
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-how-the-results-constrain-the-design-space" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11. How the results constrain the design space
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11. How the results constrain the design space">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-constant-time-transitions" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.1 Constant-time transitions
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-amortised-guarantees" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.2 Amortised guarantees
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#113-construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.3 Construction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#114-memory-versus-critical-path-latency" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.4 Memory versus critical-path latency
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-what-this-means-for-the-direction-of-mibz2-research" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12. What this means for the direction of mibz2 research
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="12. What this means for the direction of mibz2 research">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#121-run-based-navigation-is-a-real-alternative-algorithm-family" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.1 Run-based navigation is a real alternative algorithm family
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#122-compact30-exceptions-can-be-bounded-and-predicted" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.2 Compact30 exceptions can be bounded and predicted
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#123-multi-step-navigation-has-a-run-sensitive-bound" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.3 Multi-step navigation has a run-sensitive bound
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#124-cycle-structure-is-mainly-for-correctness" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.4 Cycle structure is mainly for correctness
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#125-weak-order-geometry-provides-context-not-the-central-optimisation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.5 Weak-order geometry provides context, not the central optimisation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-final-assessment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        13. Final assessment
+        7. The argument in brief
       </span>
     </span>
   </a>
@@ -1877,6 +1365,42 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
       
     </li>
   
@@ -2548,33 +2072,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-establishing-the-exact-object" class="md-nav__link">
+  <a href="#1-what-does-the-next-row-map-look-like-for-banana" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. Establishing the exact object
+        1. What does the next-row map look like for <code>banana</code>?
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. Establishing the exact object">
+    <nav class="md-nav" aria-label="1. What does the next-row map look like for banana?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#11-definitions-and-orientation" class="md-nav__link">
+  <a href="#11-walking-the-intervals-without-a-search" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1.1 Definitions and orientation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#12-example-banana" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        1.2 Example: banana
+        1.1 Walking the intervals without a search
       </span>
     </span>
   </a>
@@ -2587,33 +2100,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem" class="md-nav__link">
+  <a href="#2-why-does-every-run-give-one-shift" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. First consequence: this is a select problem, not a general permutation problem
+        2. Why does every run give one shift?
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. First consequence: this is a select problem, not a general permutation problem">
+    <nav class="md-nav" aria-label="2. Why does every run give one shift?">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#21-the-output-character-is-already-known" class="md-nav__link">
+  <a href="#21-what-the-intervals-cost-to-store" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2.1 The output character is already known
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#22-an-exact-bound-on-mixed-character-records" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        2.2 An exact bound on mixed-character records
+        2.1 What the intervals cost to store
       </span>
     </span>
   </a>
@@ -2626,598 +2128,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-second-consequence-the-permutation-consists-of-exactly-r-translated-intervals" class="md-nav__link">
+  <a href="#3-when-do-the-shifts-save-nothing" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Second consequence: the permutation consists of exactly <span class="arithmatex">\(r\)</span> translated intervals
+        3. When do the shifts save nothing?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="3. Second consequence: the permutation consists of exactly \(r\) translated intervals">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#31-the-interval-theorem" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.1 The interval theorem
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#32-a-constructive-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.2 A constructive representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#33-the-exact-count-of-consecutive-navigation-entries" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.3 The exact count of consecutive navigation entries
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#34-a-sparse-correction-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        3.4 A sparse-correction representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-third-consequence-rigorous-succinct-space-bounds" class="md-nav__link">
+  <a href="#4-how-does-a-walk-move-between-intervals-in-constant-time" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Third consequence: rigorous succinct-space bounds
+        4. How does a walk move between intervals in constant time?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="4. Third consequence: rigorous succinct-space bounds">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#41-entropy-of-the-stable-sort-permutation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.1 Entropy of the stable-sort permutation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#42-eliasfano-gives-a-constructive-representation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.2 Elias–Fano gives a constructive representation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#43-a-separate-information-bound-from-run-count" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.3 A separate information bound from run count
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#44-two-independent-measures-of-compressibility" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        4.4 Two independent measures of compressibility
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem" class="md-nav__link">
+  <a href="#5-can-a-whole-block-be-inverted-this-way" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Fourth consequence: move structures already solve the theoretical navigation problem
+        5. Can a whole block be inverted this way?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="5. Fourth consequence: move structures already solve the theoretical navigation problem">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#51-carry-the-interval-identifier" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.1 Carry the interval identifier
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#52-why-it-matters-to-mibz2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.2 Why it matters to mibz2
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#53-the-2026-result-linear-time-inversion-in-run-bounded-space" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.3 The 2026 result: linear-time inversion in run-bounded space
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#54-how-directly-does-it-apply-to-bzip2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.4 How directly does it apply to bzip2?
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#55-established-result" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5.5 Established result
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-fifth-consequence-compact30s-representability-can-be-characterised-exactly" class="md-nav__link">
+  <a href="#6-what-would-it-cost-mibz2-and-what-would-settle-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Fifth consequence: compact30's representability can be characterised exactly
+        6. What would it cost mibz2, and what would settle it?
       </span>
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="6. Fifth consequence: compact30&#x27;s representability can be characterised exactly">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#61-the-ordinary-record-condition" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.1 The ordinary-record condition
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#62-gap-based-interpretation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.2 Gap-based interpretation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#63-guaranteed-ordinary-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.3 Guaranteed ordinary groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#64-exact-formula-for-pure-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.4 Exact formula for pure groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#65-consequence-for-construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6.5 Consequence for construction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation" class="md-nav__link">
+  <a href="#7-the-argument-in-brief" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. Sixth consequence: multiple BWT steps admit a small interval representation
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Sixth consequence: multiple BWT steps admit a small interval representation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#71-powers-of-the-navigation-permutation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.1 Powers of the navigation permutation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#72-bound-on-pieces-of-psik" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.2 Bound on pieces of <span class="arithmatex">\(\Psi^k\)</span>
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#73-multi-character-transition-table" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.3 Multi-character transition table
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#74-implication-for-mibz2" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7.4 Implication for mibz2
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8. Seventh consequence: cycle structure distinguishes actual BWT images
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. Seventh consequence: cycle structure distinguishes actual BWT images">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#81-cycle-count" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.1 Cycle count
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#82-necklaces-and-exact-enumeration" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.2 Necklaces and exact enumeration
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#83-coprime-frequency-simplification" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8.3 Coprime-frequency simplification
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-what-does-the-original-permutree-thesis-contribute" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9. What does the original permutree thesis contribute?
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. What does the original permutree thesis contribute?">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#91-weak-order-inversion-statistic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.1 Weak-order inversion statistic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#92-large-inversion-count-can-coexist-with-easy-navigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.2 Large inversion count can coexist with easy navigation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#93-meets-and-joins" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9.3 Meets and joins
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-stronger-correctness-guarantees-and-proof-obligations" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10. Stronger correctness guarantees and proof obligations
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. Stronger correctness guarantees and proof obligations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#101-independent-oracle" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10.1 Independent oracle
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-how-the-results-constrain-the-design-space" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11. How the results constrain the design space
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="11. How the results constrain the design space">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#111-constant-time-transitions" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.1 Constant-time transitions
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#112-amortised-guarantees" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.2 Amortised guarantees
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#113-construction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.3 Construction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#114-memory-versus-critical-path-latency" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11.4 Memory versus critical-path latency
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-what-this-means-for-the-direction-of-mibz2-research" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12. What this means for the direction of mibz2 research
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="12. What this means for the direction of mibz2 research">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#121-run-based-navigation-is-a-real-alternative-algorithm-family" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.1 Run-based navigation is a real alternative algorithm family
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#122-compact30-exceptions-can-be-bounded-and-predicted" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.2 Compact30 exceptions can be bounded and predicted
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#123-multi-step-navigation-has-a-run-sensitive-bound" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.3 Multi-step navigation has a run-sensitive bound
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#124-cycle-structure-is-mainly-for-correctness" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.4 Cycle structure is mainly for correctness
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#125-weak-order-geometry-provides-context-not-the-central-optimisation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12.5 Weak-order geometry provides context, not the central optimisation
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#13-final-assessment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        13. Final assessment
+        7. The argument in brief
       </span>
     </span>
   </a>
@@ -3260,68 +2218,146 @@
 <h1 id="the-mathematical-structure-of-inverse-bwt-navigation">The mathematical structure of inverse-BWT navigation<a class="headerlink" href="#the-mathematical-structure-of-inverse-bwt-navigation" title="Permanent link">&para;</a></h1>
 <p class="post-dek">The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per
 run rather than per row. Whether that beats mibz2's table is unproven.</p>
-<p class="post-meta">8 November 2026 · 24 min read · <a href="#13-final-assessment">Open question</a></p>
+<p class="post-meta">8 November 2026 · 14 min read · <a href="#6-what-would-it-cost-mibz2-and-what-would-settle-it">Open question</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
 <p>To undo the <a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">Burrows–Wheeler transform</a>
 (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's
-sorted matrix to the next, emitting one byte at each step. The inverse Burrows–Wheeler
-transform in mibz2, our bzip2 decoder, is conventionally implemented using a table containing
-one navigation entry per BWT row, which we call the T-vector. Each entry is four bytes,
-holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes,
-the conventional four-byte T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
+sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores
+that chain as a table with one navigation entry per row, which we call the T-vector. Each
+entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block
+size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of
 decoding a block, because each step's address comes from the entry just read; mibz2 walks
 many such chains at once so that their memory reads overlap.
 <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/">An earlier post</a> works the
 transform through on a small example.</p>
-<p>This post asks what kind of map that table encodes. The navigation function is not an
-arbitrary permutation. It has three layers of mathematical structure:</p>
-<ol>
-<li>It is a stable-sort permutation, equivalently a collection of monotone occurrence-position
-   sequences.</li>
-<li>It is a <em>piecewise translation</em> with at most <span class="arithmatex">\(r\)</span> pieces, where <span class="arithmatex">\(r\)</span> is the number of
-   equal-character runs in the BWT last column.</li>
-<li>For a genuine cyclic BWT, its cycle decomposition is constrained by the periodicity of the
-   original string.</li>
-</ol>
-<p>These properties establish substantially more than nomenclature. They lead to exact
-representation formulas, space bounds, algorithms for arbitrary successor queries, and
-constructive results about multiple navigation steps.</p>
-<p>Most importantly, <strong>there is already a published theory of data structures for precisely this
-kind of permutation</strong>.</p>
-<p><a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Nishimoto and Tabei (2021)</a>
-established constant-time navigation using <span class="arithmatex">\(O(r)\)</span> machine words for <em>move structures</em>,
-provided the current interval identifier is maintained. More recently,
+<p><strong>The entries of that table are not independent.</strong> When the transformed word <code>banana</code> is
+decoded, the three rows that emit <code>a</code> have next rows 3, 4 and 5. One starting row and a
+length describe all three. Every run of equal bytes in the BWT's output works the same way,
+so the whole table can be described by one shift per run, <span class="arithmatex">\(r\)</span> of them, instead of one entry
+per row, <span class="arithmatex">\(n\)</span> of them. <strong>A walk can follow those shifts without searching for the right one
+at each step,</strong> by remembering which run it is in. Data structures that do this, <em>move
+structures</em>, are published, with proofs:
+<a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Nishimoto and Tabei (2021)</a>
+gave constant-time steps in <span class="arithmatex">\(O(r)\)</span> machine words, and
 <a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Brown and Langmead (2026)</a>
-established <span class="arithmatex">\(O(n)\)</span>-time BWT inversion with <span class="arithmatex">\(O(r)\)</span> additional working space from a run-length
-BWT representation. Those are genuine algorithmic results, not performance conjectures. They
-provide a direct theoretical alternative to mibz2's <span class="arithmatex">\(O(n)\)</span>-entry T-vector.</p>
+inverted a whole BWT in <span class="arithmatex">\(O(n)\)</span> time with <span class="arithmatex">\(O(r)\)</span> additional working space, starting from a
+run-length BWT representation.</p>
 <p><strong>What is not proved</strong> is that any of them beats mibz2's 32-lane, four-byte-per-row
 implementation in elapsed CPU cycles. Everything in this post is mathematics and published
 theory: nothing in it has been built or measured in mibz2, and it changes nothing in the
-decoder.</p>
-<p>The post derives the consequences for mibz2, including what the theory tells us about
-compact30 (our research table, which packs thirty rows into each 64-byte record), which approaches have provable guarantees, how multi-character traversal can
-exploit the same structure, and which combinatorial identities do not materially help.
-<a href="#1-establishing-the-exact-object">Section 1</a> defines the map and works it on <code>banana</code>.
-Sections <a href="#2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem">2</a>
-to <a href="#4-third-consequence-rigorous-succinct-space-bounds">4</a> derive its structure: a select
-problem, <span class="arithmatex">\(r\)</span> translated intervals, and the space bounds that follow.
-<a href="#5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem">Section 5</a>
-is the published theory of move structures, and
-<a href="#6-fifth-consequence-compact30s-representability-can-be-characterised-exactly">section 6</a>
-applies the interval view to compact30.
-<a href="#7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation">Section 7</a>
-covers several steps at once, <a href="#8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images">section 8</a>
-the cycle structure, and <a href="#9-what-does-the-original-permutree-thesis-contribute">section 9</a>
-what the permutree thesis this question started from contributes.
-Sections <a href="#10-stronger-correctness-guarantees-and-proof-obligations">10</a> to
-<a href="#13-final-assessment">13</a> turn the results into checks, a map of the design space, and an
-assessment.</p>
-<h2 id="1-establishing-the-exact-object">1. Establishing the exact object<a class="headerlink" href="#1-establishing-the-exact-object" title="Permanent link">&para;</a></h2>
-<h3 id="11-definitions-and-orientation">1.1 Definitions and orientation<a class="headerlink" href="#11-definitions-and-orientation" title="Permanent link">&para;</a></h3>
-<p>Let</p>
+decoder. Nor has <span class="arithmatex">\(r\)</span> been counted on mibz2's blocks; <a href="#3-when-do-the-shifts-save-nothing">section 3</a>
+derives an upper bound from an earlier measurement.</p>
+<p><a href="#1-what-does-the-next-row-map-look-like-for-banana">Section 1</a> shows both ideas on <code>banana</code>,
+and <a href="#2-why-does-every-run-give-one-shift">section 2</a> proves the first in general.
+<a href="#3-when-do-the-shifts-save-nothing">Section 3</a> shows when it saves nothing. Sections
+<a href="#4-how-does-a-walk-move-between-intervals-in-constant-time">4</a> and
+<a href="#5-can-a-whole-block-be-inverted-this-way">5</a> give the published theory, and
+<a href="#6-what-would-it-cost-mibz2-and-what-would-settle-it">section 6</a> what it would cost mibz2 and
+what would settle it. Secondary results are in a
+<a href="../2026-11-08-inverse-bwt-navigation-notes/">technical appendix</a>.</p>
+<h2 id="1-what-does-the-next-row-map-look-like-for-banana">1. What does the next-row map look like for <code>banana</code>?<a class="headerlink" href="#1-what-does-the-next-row-map-look-like-for-banana" title="Permanent link">&para;</a></h2>
+<p>Suppose you want to compress the word <code>banana</code> with bzip2. The BWT writes down each of its
+six rotations, sorts them, and keeps two things: the last column of the sorted list, <span class="arithmatex">\(L\)</span>, and
+the number of the row holding the original word, here 3. The first column, <span class="arithmatex">\(F\)</span>, is the same
+bytes in sorted order. The last column of the table, the next row, is explained below it.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Row</th>
+<th>Rotation</th>
+<th style="text-align: right;">Next row</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td><code>abanan</code></td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>anaban</code></td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td><code>ananab</code></td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td><code>banana</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td><code>nabana</code></td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td><code>nanaba</code></td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>Reading down the rotations' last letters gives <span class="arithmatex">\(L=\texttt{nnbaaa}\)</span>, and their first letters
+give <span class="arithmatex">\(F=\texttt{aaabnn}\)</span>. The next row of row <span class="arithmatex">\(i\)</span>, written <span class="arithmatex">\(\Psi(i)\)</span>,
+is the row whose rotation is row <span class="arithmatex">\(i\)</span>'s rotation with its first byte moved to the end. Row 3,
+<code>banana</code>, becomes <code>ananab</code>, which is row 2. To decode, start at row 3, emit <span class="arithmatex">\(F[3]\)</span>, move to
+<span class="arithmatex">\(\Psi(3)\)</span>, and repeat. The rows visited are</p>
+<div class="arithmatex">\[
+3\to2\to5\to1\to4\to0,
+\]</div>
+<p>and the bytes emitted are <code>banana</code>. mibz2's T-vector stores exactly this: for each row, <span class="arithmatex">\(F[i]\)</span>
+and <span class="arithmatex">\(\Psi(i)\)</span>.</p>
+<p>Moving a rotation's first byte to its end puts that byte last, so <span class="arithmatex">\(\Psi(i)\)</span> is always a row
+whose <span class="arithmatex">\(L\)</span> byte is <span class="arithmatex">\(F[i]\)</span>. The three <code>a</code> rows of <span class="arithmatex">\(F\)</span> go to the three <code>a</code> positions of <span class="arithmatex">\(L\)</span>, and
+they go in order. Rows with the same first byte are sorted by the rest of their rotation,
+and moving the first byte to the end keeps that order. The next figure draws every row's arrow.</p>
+<figure class="bf-fig">
+<p class="bf-title">The next-row map of banana: parallel arrows, one bundle per run of L</p>
+<svg viewBox="0 0 720 292" role="img" aria-label="Rows 0 to 2 of the first column, all a, go to rows 3 to 5, shifted by 3; row 3, b, goes to row 2; rows 4 and 5, n, go to rows 0 and 1, shifted by minus 4. Each group of parallel arrows is one run of the last column, nnbaaa."><text x="190" y="18" class="bf-tm" text-anchor="middle">row i, first column F</text><text x="510" y="18" class="bf-tm" text-anchor="middle">next row Ψ(i), last column L</text><rect x="146" y="42" width="88" height="118" rx="6" class="bf-cell-hi"/><text x="0" y="98" class="bf-ts">interval A</text><text x="0" y="115" class="bf-tm">rows 0–2, shift +3</text><rect x="146" y="162" width="88" height="38" rx="6" class="bf-cell"/><text x="0" y="178" class="bf-ts">interval B</text><text x="0" y="195" class="bf-tm">row 3, shift −1</text><rect x="146" y="202" width="88" height="78" rx="6" class="bf-cell"/><text x="0" y="238" class="bf-ts">interval N</text><text x="0" y="255" class="bf-tm">rows 4–5, shift −4</text><rect x="466" y="42" width="88" height="78" rx="6" class="bf-cell"/><text x="720" y="78" class="bf-ts" text-anchor="end">run nn</text><text x="720" y="95" class="bf-tm" text-anchor="end">rows 0–1 of L</text><rect x="466" y="122" width="88" height="38" rx="6" class="bf-cell"/><text x="720" y="138" class="bf-ts" text-anchor="end">run b</text><text x="720" y="155" class="bf-tm" text-anchor="end">row 2 of L</text><rect x="466" y="162" width="88" height="118" rx="6" class="bf-cell-hi"/><text x="720" y="218" class="bf-ts" text-anchor="end">run aaa</text><text x="720" y="235" class="bf-tm" text-anchor="end">rows 3–5 of L</text><text x="168" y="66" class="bf-tm" text-anchor="middle">0</text><text x="210" y="66" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="66" class="bf-t-strong" text-anchor="middle">n</text><text x="532" y="66" class="bf-tm" text-anchor="middle">0</text><text x="168" y="106" class="bf-tm" text-anchor="middle">1</text><text x="210" y="106" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="106" class="bf-t-strong" text-anchor="middle">n</text><text x="532" y="106" class="bf-tm" text-anchor="middle">1</text><text x="168" y="146" class="bf-tm" text-anchor="middle">2</text><text x="210" y="146" class="bf-t-strong" text-anchor="middle">a</text><text x="490" y="146" class="bf-t-strong" text-anchor="middle">b</text><text x="532" y="146" class="bf-tm" text-anchor="middle">2</text><text x="168" y="186" class="bf-tm" text-anchor="middle">3</text><text x="210" y="186" class="bf-t-strong" text-anchor="middle">b</text><text x="490" y="186" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="186" class="bf-tm" text-anchor="middle">3</text><text x="168" y="226" class="bf-tm" text-anchor="middle">4</text><text x="210" y="226" class="bf-t-strong" text-anchor="middle">n</text><text x="490" y="226" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="226" class="bf-tm" text-anchor="middle">4</text><text x="168" y="266" class="bf-tm" text-anchor="middle">5</text><text x="210" y="266" class="bf-t-strong" text-anchor="middle">n</text><text x="490" y="266" class="bf-t-strong" text-anchor="middle">a</text><text x="532" y="266" class="bf-tm" text-anchor="middle">5</text><path d="M238 61.0L462 181.0M453.0 180.6L462 181.0L456.7 173.7" class="bf-icon-green"/><path d="M238 101.0L462 221.0M453.0 220.6L462 221.0L456.7 213.7" class="bf-icon-green"/><path d="M238 141.0L462 261.0M453.0 260.6L462 261.0L456.7 253.7" class="bf-icon-green"/><path d="M238 181.0L462 141.0M454.7 146.3L462 141.0L453.3 138.6" class="bf-arrow"/><path d="M238 221.0L462 61.0M457.7 68.9L462 61.0L453.1 62.5" class="bf-arrow"/><path d="M238 261.0L462 101.0M457.7 108.9L462 101.0L453.1 102.5" class="bf-arrow"/></svg>
+<figcaption>Each arrow goes from row i, on the left, to its next row Ψ(i), on the right. Arrows from one interval are parallel: they all shift by the same amount. Conceptual, worked by hand from the table above.</figcaption>
+</figure>
+
+<p>Rows 0, 1 and 2 go to 3, 4 and 5: each moves down by three. Row 3 moves up by one, and rows 4
+and 5 move up by four. Written out,</p>
+<div class="arithmatex">\[
+\Psi(i)=\begin{cases}i+3,&amp;0\le i&lt;3,\\i-1,&amp;i=3,\\i-4,&amp;4\le i&lt;6.\end{cases}
+\]</div>
+<p><strong>Three row entries become one start and a length.</strong> Six table entries become three
+descriptors, each a starting row, a length and a shift, and each emits one byte. The three
+pieces are not special to <code>banana</code>: they are the three runs of <span class="arithmatex">\(L\)</span>, <code>nn</code>, <code>b</code> and <code>aaa</code>. That
+is the first result of this post. <strong>The next-row map is a set of shifted intervals, one for
+each run of the last column.</strong></p>
+<h3 id="11-walking-the-intervals-without-a-search">1.1 Walking the intervals without a search<a class="headerlink" href="#11-walking-the-intervals-without-a-search" title="Permanent link">&para;</a></h3>
+<p>Storing intervals instead of rows raises a question. To find the next row of row <span class="arithmatex">\(i\)</span>, a
+decoder would first have to find which interval holds <span class="arithmatex">\(i\)</span>, which is a search among the <span class="arithmatex">\(r\)</span>
+starting rows. A walk doesn't need it, because it can carry the interval's name along with
+the row. Each interval also records where its destinations begin: interval A's begin at row
+3, which lies in interval B.</p>
+<figure class="bf-fig">
+<p class="bf-title">The banana walk, carrying its interval as well as its row</p>
+<svg viewBox="0 0 720 168" role="img" aria-label="The walk carries a pair, row and interval: row 3 in B, row 2 in A, row 5 in N, row 1 in A, row 4 in N, row 0 in A, emitting banana."><rect x="0.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="14.0" y="32" class="bf-tm">step 1</text><text x="14.0" y="58" class="bf-ts">row 3, interval B</text><text x="198.0" y="58" class="bf-t-green" text-anchor="end">b</text><path d="M216.0 43.0H250.0M244.0 38.0L250.0 43.0L244.0 48.0" class="bf-arrow"/><rect x="254.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="32" class="bf-tm">step 2</text><text x="268.0" y="58" class="bf-ts">row 2, interval A</text><text x="452.0" y="58" class="bf-t-green" text-anchor="end">a</text><path d="M470.0 43.0H504.0M498.0 38.0L504.0 43.0L498.0 48.0" class="bf-arrow"/><rect x="508.0" y="8" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="32" class="bf-tm">step 3</text><text x="522.0" y="58" class="bf-ts">row 5, interval N</text><text x="706.0" y="58" class="bf-t-green" text-anchor="end">n</text><rect x="0.0" y="98" width="212" height="70" rx="8" class="bf-card-hi"/><text x="14.0" y="122" class="bf-tm">step 4</text><text x="14.0" y="148" class="bf-ts">row 1, interval A</text><text x="198.0" y="148" class="bf-t-green" text-anchor="end">a</text><path d="M216.0 133.0H250.0M244.0 128.0L250.0 133.0L244.0 138.0" class="bf-arrow"/><rect x="254.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="268.0" y="122" class="bf-tm">step 5</text><text x="268.0" y="148" class="bf-ts">row 4, interval N</text><text x="452.0" y="148" class="bf-t-green" text-anchor="end">n</text><path d="M470.0 133.0H504.0M498.0 128.0L504.0 133.0L498.0 138.0" class="bf-arrow"/><rect x="508.0" y="98" width="212" height="70" rx="8" class="bf-card"/><text x="522.0" y="122" class="bf-tm">step 6</text><text x="522.0" y="148" class="bf-ts">row 0, interval A</text><text x="706.0" y="148" class="bf-t-green" text-anchor="end">a</text></svg>
+<figcaption>Each card is one step of the walk, read left to right and then the second line: the row, the interval it lies in, and, on the right, the byte emitted. The highlighted step 4 is worked in the text below. Conceptual.</figcaption>
+</figure>
+
+<p>From row 1 in interval A, the next row is A's first destination plus the offset within A:
+<span class="arithmatex">\(3+(1-0)=4\)</span>. The walk knows that A's destinations begin in interval B, so it checks only
+whether row 4 is still in B. It isn't, since B is row 3 alone, so the walk steps forward one
+interval, to N. <strong>Carrying the interval as traversal state turns each step into arithmetic
+and a short forward step, with no search.</strong> This is the idea behind move structures
+(<a href="#4-how-does-a-walk-move-between-intervals-in-constant-time">section 4</a>).</p>
+<p>The difference is between <em>random row access</em>, where any row can be asked for at any time,
+and <em>stateful successor navigation</em>, where each question follows from the last answer. mibz2
+needs mostly the second. Every lane of its walk follows a path and keeps state, which is why
+move structures are relevant to it.</p>
+<h2 id="2-why-does-every-run-give-one-shift">2. Why does every run give one shift?<a class="headerlink" href="#2-why-does-every-run-give-one-shift" title="Permanent link">&para;</a></h2>
+<p>The <code>banana</code> table follows from two facts: <span class="arithmatex">\(\Psi(i)\)</span> lands on a copy of <span class="arithmatex">\(F[i]\)</span> in <span class="arithmatex">\(L\)</span>, and
+equal bytes keep their order. Let</p>
 <div class="arithmatex">\[
 L=L[0]L[1]\cdots L[n-1]
 \]</div>
@@ -3329,11 +2365,9 @@ L=L[0]L[1]\cdots L[n-1]
 <div class="arithmatex">\[
 \Sigma=\{c_1&lt;c_2&lt;\cdots&lt;c_\sigma\}
 \]</div>
-<p>be its distinct characters, ordered by byte value. Write <span class="arithmatex">\(n_c\)</span> for the frequency of character <span class="arithmatex">\(c\)</span>, and define</p>
-<div class="arithmatex">\[
-C(c)=\sum_{d&lt;c}n_d.
-\]</div>
-<p>The first column of the conceptual sorted BWT matrix is</p>
+<p>be its distinct characters, ordered by byte value. Write <span class="arithmatex">\(n_c\)</span> for the frequency of character
+<span class="arithmatex">\(c\)</span>, and define <span class="arithmatex">\(C(c)=\sum_{d&lt;c}n_d\)</span>, the number of bytes smaller than <span class="arithmatex">\(c\)</span>: the row where
+<span class="arithmatex">\(c\)</span>'s block of rows in <span class="arithmatex">\(F\)</span> begins. The first column is</p>
 <div class="arithmatex">\[
 F=c_1^{n_{c_1}}c_2^{n_{c_2}}\cdots c_\sigma^{n_{c_\sigma}}.
 \]</div>
@@ -3357,668 +2391,211 @@ F=c_1^{n_{c_1}}c_2^{n_{c_2}}\cdots c_\sigma^{n_{c_\sigma}}.
 <div class="arithmatex">\[
 \boxed{\Psi(C(c)+k)=\operatorname{select}_c(L,k).}\tag{1}
 \]</div>
-<p>For each row <span class="arithmatex">\(i\)</span>, mibz2 needs to recover the next row <span class="arithmatex">\(\Psi(i)\)</span> and emit the byte <span class="arithmatex">\(F[i]\)</span>, while preserving the bookkeeping required by its segmented traversal: mibz2 cuts each block's walk into segments that start at known rows, walks them in parallel and joins them. That is the mathematical operation being optimised.</p>
-<p>mibz2 currently uses 32 interleaved traversal lanes, each following one segment, so that 32 independent memory reads can be in flight at once (<a href="../2026-10-31-room-walk-overlap/">32 lanes, 8.6 chains</a>), and it supports parallel work across blocks. Its compact30 research (<a href="../2026-11-04-compact30-constructor/">Building a smaller bzip2 decoding table</a>) stores thirty rows per 64-byte record, hence the name, with exceptional RAW records that hold full entries, and attempts to reduce the working set without sacrificing memory-level parallelism.</p>
-<h3 id="12-example-banana">1.2 Example: banana<a class="headerlink" href="#12-example-banana" title="Permanent link">&para;</a></h3>
-<p>For the cyclic BWT of banana:</p>
-<div class="arithmatex">\[
-L=\texttt{nnbaaa},\qquad F=\texttt{aaabnn}.
-\]</div>
-<p>The navigation permutation is</p>
-<div class="arithmatex">\[
-\Psi=\begin{pmatrix}0&amp;1&amp;2&amp;3&amp;4&amp;5\\3&amp;4&amp;5&amp;2&amp;0&amp;1\end{pmatrix}.
-\]</div>
-<table>
-<thead>
-<tr>
-<th>Character</th>
-<th>Domain of <span class="arithmatex">\(\Psi\)</span></th>
-<th>Destinations</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td><span class="arithmatex">\(0,1,2\)</span></td>
-<td><span class="arithmatex">\(3,4,5\)</span></td>
-</tr>
-<tr>
-<td>b</td>
-<td><span class="arithmatex">\(3\)</span></td>
-<td><span class="arithmatex">\(2\)</span></td>
-</tr>
-<tr>
-<td>n</td>
-<td><span class="arithmatex">\(4,5\)</span></td>
-<td><span class="arithmatex">\(0,1\)</span></td>
-</tr>
-</tbody>
-</table>
-<p>The original row is <span class="arithmatex">\(I=3\)</span>. Emitting <span class="arithmatex">\(F[i]\)</span> and following <span class="arithmatex">\(\Psi\)</span> produces the rows</p>
-<div class="arithmatex">\[
-3\to2\to5\to1\to4\to0
-\]</div>
-<p>and the output banana. The six successor values are determined by three simple translations:</p>
-<div class="arithmatex">\[
-\Psi(i)=\begin{cases}i+3,&amp;0\le i&lt;3,\\i-1,&amp;i=3,\\i-4,&amp;4\le i&lt;6.\end{cases}
-\]</div>
-<p>This example has only three runs in <span class="arithmatex">\(L\)</span>, and three translated intervals in <span class="arithmatex">\(\Psi\)</span>. That correspondence generalises exactly.</p>
-<h2 id="2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem">2. First consequence: this is a select problem, not a general permutation problem<a class="headerlink" href="#2-first-consequence-this-is-a-select-problem-not-a-general-permutation-problem" title="Permanent link">&para;</a></h2>
-<p>Equation (1) gives a data-structure reduction:</p>
-<div class="arithmatex">\[
-\boxed{\text{arbitrary }\Psi\text{-query}\longrightarrow\text{character-bucket identification}+\text{select query}.}
-\]</div>
-<p>Given a row <span class="arithmatex">\(i\)</span>, determine the unique character <span class="arithmatex">\(c\)</span> satisfying</p>
-<div class="arithmatex">\[
-C(c)\le i&lt;C(c)+n_c.
-\]</div>
-<p>Then compute</p>
-<div class="arithmatex">\[
-\Psi(i)=\operatorname{select}_c(L,i-C(c)).
-\]</div>
-<p>This decomposes the problem into familiar operations on indexed sequences. It means mibz2 can, in principle, represent navigation without storing an explicit successor for every row.</p>
-<h3 id="21-the-output-character-is-already-known">2.1 The output character is already known<a class="headerlink" href="#21-the-output-character-is-already-known" title="Permanent link">&para;</a></h3>
-<p>A T-vector entry conventionally combines the navigation destination and a character. But the character associated with row <span class="arithmatex">\(i\)</span> is simply <span class="arithmatex">\(F[i]\)</span>, which is determined entirely by the histogram:</p>
-<div class="arithmatex">\[
-\boxed{F[i]=c\quad\text{whenever}\quad C(c)\le i&lt;C(c)+n_c.}\tag{2}
-\]</div>
-<p>For a byte alphabet, the character sequence in table order has at most 256 constant intervals and at most 255 changes.</p>
-<p>This is an unconditional property of the inverse-BWT table, regardless of whether <span class="arithmatex">\(L\)</span> is repetitive. <strong>Consequence for mibz2:</strong> the character field does not need to be independently stored in every navigation entry. It may be amortised over groups of rows, or recovered from a bucket directory. This is an important distinction from run-based compression: character sharing remains useful even for highly irregular BWT input.</p>
-<h3 id="22-an-exact-bound-on-mixed-character-records">2.2 An exact bound on mixed-character records<a class="headerlink" href="#22-an-exact-bound-on-mixed-character-records" title="Permanent link">&para;</a></h3>
-<p>Suppose we divide table rows into fixed groups of <span class="arithmatex">\(g\)</span> consecutive positions. Because <span class="arithmatex">\(F\)</span> contains only <span class="arithmatex">\(\sigma\)</span> character buckets, there are at most <span class="arithmatex">\(\sigma-1\)</span> bucket boundaries. Every group containing more than one output character must contain at least one of those boundaries. Thus</p>
-<div class="arithmatex">\[
-\boxed{N_{\mathrm{mixed}}\le \sigma-1.}\tag{3}
-\]</div>
-<p>For compact30, <span class="arithmatex">\(g=30\)</span> and <span class="arithmatex">\(\sigma\le256\)</span>, so <span class="arithmatex">\(N_{\mathrm{mixed}}\le255\)</span>. At maximum block size,</p>
-<div class="arithmatex">\[
-N_{\mathrm{groups}}=\frac{900{,}000}{30}=30{,}000.
-\]</div>
-<p>Hence at most 255 groups can require exceptional handling <em>solely because their output characters differ</em>: at most 0.85% of groups, affecting at most 7,650 rows.</p>
-<p>This does not limit the number of RAW groups caused by widely separated navigation destinations, but proves that character-bucket crossings are a small, alphabet-bounded issue. <strong>Practical gain:</strong> output-character sharing can be designed around a strict worst-case bound; it does not depend on how repetitive the source text is.</p>
-<h2 id="3-second-consequence-the-permutation-consists-of-exactly-r-translated-intervals">3. Second consequence: the permutation consists of exactly <span class="arithmatex">\(r\)</span> translated intervals<a class="headerlink" href="#3-second-consequence-the-permutation-consists-of-exactly-r-translated-intervals" title="Permanent link">&para;</a></h2>
-<p>Let <span class="arithmatex">\(r\)</span> be the number of maximal equal-character runs in <span class="arithmatex">\(L\)</span>, and <span class="arithmatex">\(r_c\)</span> the number of runs containing character <span class="arithmatex">\(c\)</span>:</p>
-<div class="arithmatex">\[
-r=\sum_{c\in\Sigma}r_c.
-\]</div>
-<h3 id="31-the-interval-theorem">3.1 The interval theorem<a class="headerlink" href="#31-the-interval-theorem" title="Permanent link">&para;</a></h3>
-<p>Consider a run of character <span class="arithmatex">\(c\)</span> beginning at position <span class="arithmatex">\(p\)</span>, with length <span class="arithmatex">\(m\)</span>:</p>
+<p>In words: the <span class="arithmatex">\((k+1)\)</span>st <span class="arithmatex">\(c\)</span> of <span class="arithmatex">\(F\)</span> goes to the <span class="arithmatex">\((k+1)\)</span>st <span class="arithmatex">\(c\)</span> of <span class="arithmatex">\(L\)</span>. That is the stable-sort
+identity the <code>banana</code> table showed. For each row <span class="arithmatex">\(i\)</span>, mibz2 needs to recover the next row
+<span class="arithmatex">\(\Psi(i)\)</span> and emit the byte <span class="arithmatex">\(F[i]\)</span>, while preserving the bookkeeping required by its segmented
+traversal: mibz2 cuts each block's walk into segments that start at known rows, walks them in
+parallel and joins them. That is the mathematical operation being optimised. The byte <span class="arithmatex">\(F[i]\)</span>
+needs no storage per row, since the histogram fixes it
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#1-navigation-as-a-select-problem">appendix section 1</a>).</p>
+<p>Now let <span class="arithmatex">\(r\)</span> be the number of maximal equal-character runs in <span class="arithmatex">\(L\)</span>, and <span class="arithmatex">\(r_c\)</span> the number of runs
+containing character <span class="arithmatex">\(c\)</span>, so that <span class="arithmatex">\(r=\sum_{c\in\Sigma}r_c\)</span>. Consider a run of character <span class="arithmatex">\(c\)</span>
+beginning at position <span class="arithmatex">\(p\)</span>, with length <span class="arithmatex">\(m\)</span>:</p>
 <div class="arithmatex">\[
 L[p:p+m]=c^m.
 \]</div>
-<p>Let</p>
+<p>Let <span class="arithmatex">\(k=\operatorname{rank}_c(L,p)\)</span> be the number of earlier occurrences of <span class="arithmatex">\(c\)</span>. The run
+corresponds to the interval of rows in <span class="arithmatex">\(F\)</span> starting at <span class="arithmatex">\(a=C(c)+k\)</span>. By equation (1), for every
+<span class="arithmatex">\(0\le t&lt;m\)</span>, <span class="arithmatex">\(\Psi(a+t)=p+t\)</span>. Therefore</p>
 <div class="arithmatex">\[
-k=\operatorname{rank}_c(L,p)
+\boxed{\Psi(i)=i+(p-a),\qquad a\le i&lt;a+m.}\tag{2}
 \]</div>
-<p>be the number of earlier occurrences of <span class="arithmatex">\(c\)</span>. The run corresponds to the following interval of rows in <span class="arithmatex">\(F\)</span>:</p>
+<p>The entire run is represented by one constant displacement. Every character occurrence belongs
+to exactly one run. Their corresponding intervals partition the domain of <span class="arithmatex">\(\Psi\)</span>:</p>
 <div class="arithmatex">\[
-a=C(c)+k.
+\boxed{\begin{gathered}\Psi\text{ admits a partition into }r\text{ intervals,}\\\text{on each of which it is a translation.}\end{gathered}}\tag{3}
 \]</div>
-<p>By the stable-sort identity, for every <span class="arithmatex">\(0\le t&lt;m\)</span>,</p>
+<p>In <code>banana</code>, the run <code>aaa</code> starts at <span class="arithmatex">\(p=3\)</span>, and the <code>a</code> rows start at <span class="arithmatex">\(a=0\)</span>: the shift is
+<span class="arithmatex">\(+3\)</span>, as the figure showed. In combinatorics, such a map is a <em>discrete interval-exchange
+permutation</em>. This identification is more operationally useful than membership in a
+weak-order lattice, because it tells us exactly how to evaluate the permutation.</p>
+<p><strong>The <span class="arithmatex">\(r\)</span> pieces are an upper bound, not always the fewest.</strong> For the valid cyclic BWT of
+<code>abc</code>, <span class="arithmatex">\(L=\texttt{cab}\)</span>, <span class="arithmatex">\(F=\texttt{abc}\)</span> and <span class="arithmatex">\(r=3\)</span>, but <span class="arithmatex">\(\Psi=(1,2,0)\)</span> has just two maximal
+translated intervals: rows <span class="arithmatex">\([0,2)\)</span> have displacement <span class="arithmatex">\(+1\)</span>, and row <span class="arithmatex">\([2,3)\)</span> has displacement
+<span class="arithmatex">\(-2\)</span>. The partition of equation (3) is the one the runs induce. Adjacent pieces can share a
+shift.</p>
+<h3 id="21-what-the-intervals-cost-to-store">2.1 What the intervals cost to store<a class="headerlink" href="#21-what-the-intervals-cost-to-store" title="Permanent link">&para;</a></h3>
+<p>For each interval <span class="arithmatex">\(t\)</span>, store its starting position <span class="arithmatex">\(a_t\)</span> and first destination <span class="arithmatex">\(p_t\)</span>. Order
+the intervals by their starting positions, <span class="arithmatex">\(0=a_0&lt;a_1&lt;\cdots&lt;a_r=n\)</span>. Then</p>
 <div class="arithmatex">\[
-\Psi(a+t)=p+t.
+\boxed{\Psi(i)=p_t+(i-a_t)\quad\text{for}\quad a_t\le i&lt;a_{t+1}.}\tag{4}
 \]</div>
-<p>Therefore</p>
-<div class="arithmatex">\[
-\boxed{\Psi(i)=i+(p-a),\qquad a\le i&lt;a+m.}\tag{4}
-\]</div>
-<p>The entire run is represented by one constant displacement. Every character occurrence belongs to exactly one run. Their corresponding intervals partition the domain of <span class="arithmatex">\(\Psi\)</span>:</p>
-<div class="arithmatex">\[
-\boxed{\Psi\text{ admits a partition into }r\text{ intervals, on each of which it is a translation.}}\tag{5}
-\]</div>
-<p>In combinatorics, this is a <em>discrete interval-exchange permutation</em>. This identification is more operationally useful than membership in a weak-order lattice, because it tells us exactly how to evaluate the permutation.</p>
-<h3 id="32-a-constructive-representation">3.2 A constructive representation<a class="headerlink" href="#32-a-constructive-representation" title="Permanent link">&para;</a></h3>
-<p>For each interval <span class="arithmatex">\(t\)</span>, store its starting position <span class="arithmatex">\(a_t\)</span> and first destination <span class="arithmatex">\(p_t\)</span>. Order the intervals by their starting positions:</p>
-<div class="arithmatex">\[
-0=a_0&lt;a_1&lt;\cdots&lt;a_r=n.
-\]</div>
-<p>Then</p>
-<div class="arithmatex">\[
-\boxed{\Psi(i)=p_t+(i-a_t)\quad\text{for}\quad a_t\le i&lt;a_{t+1}.}\tag{6}
-\]</div>
-<p>No per-row destination array is required.</p>
-<p>For <span class="arithmatex">\(n\le900{,}000\)</span>, each position fits in 20 bits. The basic representation uses approximately</p>
-<div class="arithmatex">\[
-B_{\mathrm{interval}}\approx40r\text{ bits}
-\]</div>
-<p>for two 20-bit values per interval, plus indexing and metadata. Compare this with</p>
-<div class="arithmatex">\[
-B_{\mathrm{T}}=32n\text{ bits}.
-\]</div>
-<p>Ignoring indexing overhead, the interval representation is smaller whenever <span class="arithmatex">\(40r&lt;32n\)</span>, or</p>
+<p>No per-row destination array is required. For <span class="arithmatex">\(n\le900{,}000\)</span>, each position fits in 20 bits,
+so the basic representation uses approximately <span class="arithmatex">\(B_{\mathrm{interval}}\approx40r\)</span> bits, two
+20-bit values per interval, plus indexing and metadata. The T-vector uses
+<span class="arithmatex">\(B_{\mathrm{T}}=32n\)</span> bits. Ignoring indexing overhead, the interval representation is smaller
+whenever <span class="arithmatex">\(40r&lt;32n\)</span>, or</p>
 <div class="arithmatex">\[
 \boxed{\frac rn&lt;0.8.}
 \]</div>
-<p>This is only a storage comparison for basic descriptors, not a complete performance or working-memory bound. A practical move structure needs additional information to locate the next interval. Nevertheless, it proves there is a potentially much smaller, exact representation whenever the BWT contains sufficiently long runs.</p>
-<h3 id="33-the-exact-count-of-consecutive-navigation-entries">3.3 The exact count of consecutive navigation entries<a class="headerlink" href="#33-the-exact-count-of-consecutive-navigation-entries" title="Permanent link">&para;</a></h3>
-<p>Inside any character bucket, define</p>
-<div class="arithmatex">\[
-\Delta(i)=\Psi(i+1)-\Psi(i).
-\]</div>
-<p>Because the bucket represents increasing occurrence positions, <span class="arithmatex">\(\Delta(i)\ge1\)</span>. Moreover, <span class="arithmatex">\(\Delta(i)=1\)</span> if and only if the two corresponding occurrences of that character are adjacent in <span class="arithmatex">\(L\)</span>. A run of length <span class="arithmatex">\(m\)</span> contributes <span class="arithmatex">\(m-1\)</span> such pairs, giving</p>
-<div class="arithmatex">\[
-\boxed{\#\{i:\ i,i+1\text{ lie in the same character bucket},\ \Psi(i+1)=\Psi(i)+1\}=n-r.}\tag{7}
-\]</div>
-<p>This is an equality, not an average-case statement. There are <span class="arithmatex">\(n-\sigma\)</span> adjacent pairs within buckets, so the exact fraction with consecutive destinations is</p>
-<div class="arithmatex">\[
-\boxed{f_{\mathrm{consecutive}}=\frac{n-r}{n-\sigma}.}\tag{8}
-\]</div>
-<p>This gives the BWT run count a precise interpretation as a measure of local navigation irregularity.</p>
-<p>Two concepts must not be conflated:</p>
-<ul>
-<li>The number of <em>descents</em> of <span class="arithmatex">\(\Psi\)</span> (positions where <span class="arithmatex">\(\Psi(i)&gt;\Psi(i+1)\)</span>) is at most <span class="arithmatex">\(\sigma-1\)</span>.</li>
-<li>The number of failures of consecutive translation <strong>within buckets</strong> is exactly <span class="arithmatex">\(r-\sigma\)</span>.</li>
-</ul>
-<p>The second quantity is relevant for run-based navigation compression.</p>
-<h3 id="34-a-sparse-correction-representation">3.4 A sparse-correction representation<a class="headerlink" href="#34-a-sparse-correction-representation" title="Permanent link">&para;</a></h3>
-<p>Let the positions of character <span class="arithmatex">\(c\)</span> in <span class="arithmatex">\(L\)</span> be</p>
-<div class="arithmatex">\[
-x_{c,0}&lt;x_{c,1}&lt;\cdots&lt;x_{c,n_c-1}.
-\]</div>
-<p>Define excess gaps</p>
-<div class="arithmatex">\[
-g_{c,j}=x_{c,j}-x_{c,j-1}-1,\qquad j\ge1.
-\]</div>
-<p>Then</p>
-<div class="arithmatex">\[
-\boxed{\Psi(C(c)+k)=x_{c,0}+k+\sum_{j=1}^{k}g_{c,j}.}\tag{9}
-\]</div>
-<p>Within runs, excess gaps are zero. A positive excess gap occurs exactly when consecutive occurrences of <span class="arithmatex">\(c\)</span> belong to different runs. The number of positive gaps is</p>
-<div class="arithmatex">\[
-\boxed{\sum_c\#\{j:g_{c,j}&gt;0\}=r-\sigma.}\tag{10}
-\]</div>
-<p>Thus the navigation map can be described by one starting destination per character, the positions of <span class="arithmatex">\(r-\sigma\)</span> nonzero corrections, their magnitudes, and bucket boundaries.</p>
-<p>The query becomes predecessor or prefix-sum over sparse corrections. This is mathematically equivalent to the interval representation, but suggests sparse bitvectors, indexed delta streams, or two-level directories.</p>
-<p><strong>What we have gained:</strong> an exact structural complexity parameter for the map. The important variable is principally <span class="arithmatex">\(r\)</span>, the number of BWT runs, rather than <span class="arithmatex">\(n\)</span>, descents, or Coxeter length (the inversion count, section 9).</p>
-<h2 id="4-third-consequence-rigorous-succinct-space-bounds">4. Third consequence: rigorous succinct-space bounds<a class="headerlink" href="#4-third-consequence-rigorous-succinct-space-bounds" title="Permanent link">&para;</a></h2>
-<h3 id="41-entropy-of-the-stable-sort-permutation">4.1 Entropy of the stable-sort permutation<a class="headerlink" href="#41-entropy-of-the-stable-sort-permutation" title="Permanent link">&para;</a></h3>
-<p>Fix the histogram <span class="arithmatex">\((n_1,\ldots,n_\sigma)\)</span>. The number of possible last-column sequences is</p>
-<div class="arithmatex">\[
-M=\frac{n!}{\prod_c n_c!}.
-\]</div>
-<p>There is a bijection between those sequences and permutations increasing within corresponding character buckets. An arbitrary member of the family requires at least</p>
-<div class="arithmatex">\[
-\boxed{B_{\min}=\left\lceil\log_2\frac{n!}{\prod_c n_c!}\right\rceil}\tag{11}
-\]</div>
-<p>bits in a fixed-length representation. Stirling's approximation gives the leading term</p>
-<div class="arithmatex">\[
-\log_2 M\approx nH_0(L),
-\qquad
-H_0(L)=-\sum_c\frac{n_c}{n}\log_2\frac{n_c}{n}.
-\]</div>
-<p>For a byte alphabet <span class="arithmatex">\(H_0(L)\le8\)</span>. Thus the stable-sort permutation with fixed histogram contains at most approximately eight bits per row, generally less.</p>
-<p><strong>This bounds representation information, not access latency.</strong> A four-byte T-vector stores redundancy deliberately for cheap successor retrieval.</p>
-<h3 id="42-eliasfano-gives-a-constructive-representation">4.2 Elias–Fano gives a constructive representation<a class="headerlink" href="#42-eliasfano-gives-a-constructive-representation" title="Permanent link">&para;</a></h3>
-<p>Every character bucket contains a strictly increasing sequence of positions. Elias–Fano encoding is designed for such sequences.</p>
-<p>For character <span class="arithmatex">\(c\)</span>, a standard Elias–Fano representation uses approximately</p>
-<div class="arithmatex">\[
-n_c\left\lceil\log_2\frac{n}{n_c}\right\rceil+2n_c
-\]</div>
-<p>bits before indexing overhead. Summed over all characters,</p>
-<div class="arithmatex">\[
-\boxed{B_{\mathrm{EF}}\lesssim2n+\sum_c n_c\left\lceil\log_2\frac{n}{n_c}\right\rceil.}\tag{12}
-\]</div>
-<p>For an approximately uniform byte distribution this is about <span class="arithmatex">\(10n\)</span> bits, or approximately 1.125 MB for a 900,000-byte block, versus 3.6 MB for the T-vector.</p>
-<p>Elias–Fano supports indexed access to elements without decoding all predecessors; theoretical constant-time access depends on suitable select indexing. It provides a formal alternative even when <span class="arithmatex">\(r\)</span> is large. It does not exploit long runs as aggressively as a run-based representation, since its general bound depends on symbol frequencies.</p>
-<h3 id="43-a-separate-information-bound-from-run-count">4.3 A separate information bound from run count<a class="headerlink" href="#43-a-separate-information-bound-from-run-count" title="Permanent link">&para;</a></h3>
-<p>Count length-<span class="arithmatex">\(n\)</span> words over an alphabet of size <span class="arithmatex">\(\sigma\)</span> with exactly <span class="arithmatex">\(r\)</span> runs. Choose positive run lengths in <span class="arithmatex">\(\binom{n-1}{r-1}\)</span> ways, the first character in <span class="arithmatex">\(\sigma\)</span> ways, and each subsequent character in <span class="arithmatex">\(\sigma-1\)</span> ways:</p>
-<div class="arithmatex">\[
-\boxed{N(n,r,\sigma)=\sigma(\sigma-1)^{r-1}\binom{n-1}{r-1}.}\tag{13}
-\]</div>
-<p>The bits required to enumerate this broader family are</p>
-<div class="arithmatex">\[
-\boxed{B_{\mathrm{run}}=
-\left\lceil\log_2\sigma+(r-1)\log_2(\sigma-1)+\log_2\binom{n-1}{r-1}\right\rceil.}\tag{14}
-\]</div>
-<p>For <span class="arithmatex">\(r\ll n\)</span>, this is <span class="arithmatex">\(O(r\log(n/r)+r\log\sigma)\)</span>.</p>
-<p>This counts all words with specified run count, not only valid BWT images or fixed-histogram words. It is an achievable representation-size benchmark for the larger family, not a tight bound for bzip2 blocks.</p>
-<h3 id="44-two-independent-measures-of-compressibility">4.4 Two independent measures of compressibility<a class="headerlink" href="#44-two-independent-measures-of-compressibility" title="Permanent link">&para;</a></h3>
-<p>The two measures</p>
-<div class="arithmatex">\[
-\boxed{H_0(L)}\qquad\text{and}\qquad\boxed{r}
-\]</div>
-<p>answer different questions. Low entropy means concentrated character frequency; low <span class="arithmatex">\(r\)</span> means few constant BWT runs. A block can have low entropy and many short runs, or high entropy and few long runs.</p>
-<table>
-<thead>
-<tr>
-<th>Property</th>
-<th>Mathematical implication</th>
-<th>Relevant structure</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Low <span class="arithmatex">\(H_0(L)\)</span></td>
-<td>Fewer stable-sort arrangements</td>
-<td>Entropy-based sequence encodings</td>
-</tr>
-<tr>
-<td>Low <span class="arithmatex">\(r\)</span></td>
-<td>Few translated navigation intervals</td>
-<td>Run descriptors and move structures</td>
-</tr>
-<tr>
-<td>Small gaps between occurrences</td>
-<td>Narrow destination spans</td>
-<td>Base-plus-offset records</td>
-</tr>
-<tr>
-<td>Small <span class="arithmatex">\(\sigma\)</span></td>
-<td>Few output-byte bucket boundaries</td>
-<td>Shared-character headers</td>
-</tr>
-</tbody>
-</table>
-<p>There need not be one universally optimal compact representation.</p>
-<h2 id="5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem">5. Fourth consequence: move structures already solve the theoretical navigation problem<a class="headerlink" href="#5-fourth-consequence-move-structures-already-solve-the-theoretical-navigation-problem" title="Permanent link">&para;</a></h2>
-<p>The interval-exchange permutation in Section 3 is precisely the sort of permutation handled by <em>move structures</em>, introduced by Nishimoto and Tabei. Their 2021 result establishes <span class="arithmatex">\(O(1)\)</span>-time move queries with <span class="arithmatex">\(O(r)\)</span> words of space after balancing represented intervals.</p>
-<h3 id="51-carry-the-interval-identifier">5.1 Carry the interval identifier<a class="headerlink" href="#51-carry-the-interval-identifier" title="Permanent link">&para;</a></h3>
-<p>An ordinary query is <span class="arithmatex">\(i\mapsto\Psi(i)\)</span>. An interval representation must locate the interval containing <span class="arithmatex">\(i\)</span>, potentially requiring an expensive predecessor search. Instead retain</p>
-<div class="arithmatex">\[
-\boxed{(i,t)}
-\]</div>
-<p>where <span class="arithmatex">\(t\)</span> identifies the interval. The next row follows directly:</p>
+<p>This is only a storage comparison for basic descriptors, not a complete performance or
+working-memory bound. A practical move structure needs additional information to locate the
+next interval. Nevertheless, it proves there is a potentially much smaller, exact
+representation whenever the BWT contains sufficiently long runs.</p>
+<h2 id="3-when-do-the-shifts-save-nothing">3. When do the shifts save nothing?<a class="headerlink" href="#3-when-do-the-shifts-save-nothing" title="Permanent link">&para;</a></h2>
+<p>When the runs are short. The valid cyclic BWT of <code>abba</code> is <span class="arithmatex">\(L=\texttt{baba}\)</span>: four rows and
+four runs, <span class="arithmatex">\(r=n=4\)</span>. Its descriptors take <span class="arithmatex">\(40r=160\)</span> bits, more than the T-vector's <span class="arithmatex">\(32n=128\)</span>
+bits, before any index is added. So run-based storage is not guaranteed to be smaller. The
+comparison is of descriptors alone. A practical move structure stores more than this, so its
+break-even point lies below <span class="arithmatex">\(r/n=0.8\)</span>, by an amount nobody has measured for mibz2.</p>
+<p>Nor does a block that compresses well necessarily have few runs. The two simplest measures, the zero-order entropy
+<span class="arithmatex">\(H_0(L)\)</span> of the byte frequencies and <span class="arithmatex">\(r\)</span>, answer different questions: a block can have low
+entropy and many short runs, or high entropy and few long runs
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#3-space-bounds">appendix section 3</a>). The run
+count itself has a precise meaning: exactly <span class="arithmatex">\(n-r\)</span> pairs of adjacent rows within a character's
+block have consecutive next rows
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#2-consecutive-entries-and-sparse-corrections">appendix section 2</a>).</p>
+<p><strong>How small is <span class="arithmatex">\(r\)</span> on mibz2's blocks?</strong> It has not been counted. One earlier figure bounds it.
+On the main Wikidata corpus, 207,006,515 rows in 434 blocks, the builder of compact30, our
+research table that packs thirty rows into each 64-byte record, wrote 74.3% of rows through its bulk emitter, as 5,127,300 complete 30-row records, each covered by one
+run of <span class="arithmatex">\(L\)</span> (<a href="../2026-11-04-compact30-constructor/#6-most-rows-never-take-the-per-row-path">the 4 November post, section 6</a>).
+Each of those runs holds at least one such record, so there are at most 5,127,300 of them.
+The remaining 53.2 million rows can lie in at most 53.2 million further runs. So, across the
+corpus, <span class="arithmatex">\(r\le58.3\)</span> million and <span class="arithmatex">\(r/n\le0.28\)</span>. This is derived, not measured, and it is an
+aggregate: it says nothing about the spread from block to block, and the true <span class="arithmatex">\(r\)</span> may be much
+smaller.</p>
+<h2 id="4-how-does-a-walk-move-between-intervals-in-constant-time">4. How does a walk move between intervals in constant time?<a class="headerlink" href="#4-how-does-a-walk-move-between-intervals-in-constant-time" title="Permanent link">&para;</a></h2>
+<p>The interval-exchange permutation of section 2 is precisely the sort of permutation handled by
+<em>move structures</em>, introduced by Nishimoto and Tabei. Their 2021 result establishes
+<span class="arithmatex">\(O(1)\)</span>-time move queries with <span class="arithmatex">\(O(r)\)</span> words of space after balancing represented intervals.</p>
+<p>An ordinary query is <span class="arithmatex">\(i\mapsto\Psi(i)\)</span>. An interval representation must locate the interval
+containing <span class="arithmatex">\(i\)</span>, potentially requiring an expensive predecessor search: finding the last
+interval start at or before <span class="arithmatex">\(i\)</span>. Instead retain the pair
+<span class="arithmatex">\((i,t)\)</span>, where <span class="arithmatex">\(t\)</span> identifies the interval. The next row follows directly:</p>
 <div class="arithmatex">\[
 j=p_t+(i-a_t).
 \]</div>
-<p>We then need the interval <span class="arithmatex">\(t'\)</span> containing <span class="arithmatex">\(j\)</span>. A move structure stores information about the destination interval of each image's beginning and advances through descriptors to locate <span class="arithmatex">\(j\)</span>. Unbalanced intervals may require multiple advances. The crucial theorem is that intervals can be split into <span class="arithmatex">\(O(r)\)</span> balanced pieces, guaranteeing a constant number of advances:</p>
+<p>We then need the interval <span class="arithmatex">\(t'\)</span> containing <span class="arithmatex">\(j\)</span>. A move structure stores information about the
+destination interval of each image's beginning and advances through descriptors to locate <span class="arithmatex">\(j\)</span>,
+as the <code>banana</code> walk stepped from B to N. Unbalanced intervals may require multiple advances.
+The crucial theorem is that intervals can be split into <span class="arithmatex">\(O(r)\)</span> balanced pieces, guaranteeing a
+constant number of advances:</p>
 <div class="arithmatex">\[
-\boxed{(i,t)\xrightarrow{O(1)}(\Psi(i),t')}\tag{15}
+\boxed{(i,t)\xrightarrow{O(1)}(\Psi(i),t')}\tag{5}
 \]</div>
-<p>using <span class="arithmatex">\(O(r)\)</span> words in the word-RAM model.</p>
-<p>Carrying <span class="arithmatex">\(t\)</span> is essential. This is not one-memory-access arbitrary-row lookup.</p>
-<h3 id="52-why-it-matters-to-mibz2">5.2 Why it matters to mibz2<a class="headerlink" href="#52-why-it-matters-to-mibz2" title="Permanent link">&para;</a></h3>
-<p>mibz2 already maintains per-lane state. A move structure adds a run/interval identifier to each lane, giving state</p>
+<p>using <span class="arithmatex">\(O(r)\)</span> words in the word-RAM model, the standard model in which reading one machine
+word is one step. Carrying <span class="arithmatex">\(t\)</span> is essential. This is not
+one-memory-access arbitrary-row lookup. The theorem shows that compact representation does not
+imply logarithmic lookup time. That removes a theoretical objection, not the hardware concern
+about several serial descriptor loads: an <span class="arithmatex">\(O(1)\)</span> bound in the RAM model is not a claim of one
+load, or of fewer cycles.</p>
+<p>mibz2 already maintains per-lane state. It walks 32 interleaved lanes, each following one
+segment, so that 32 independent memory reads can be in flight at once
+(<a href="../2026-10-31-room-walk-overlap/">32 lanes, 8.6 chains</a>), and it supports parallel work
+across blocks. A move structure adds a run/interval
+identifier to each lane, giving state</p>
 <div class="arithmatex">\[
 (\text{row},\text{interval},\text{segment state}).
 \]</div>
-<p>A fresh segment start may require predecessor search once. For <span class="arithmatex">\(P\)</span> segment starts initialised with binary search, seeding costs <span class="arithmatex">\(O(P\log r)\)</span>; later transitions maintain interval state. The structure therefore removes general predecessor queries from the hot path.</p>
-<p>It does not remove memory dependencies: a move query may load several descriptors. It does change the algorithmic problem from repeated searches to constant-time state transitions.</p>
-<h3 id="53-the-2026-result-linear-time-inversion-in-run-bounded-space">5.3 The 2026 result: linear-time inversion in run-bounded space<a class="headerlink" href="#53-the-2026-result-linear-time-inversion-in-run-bounded-space" title="Permanent link">&para;</a></h3>
-<p>Brown and Langmead's <em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations</em> (SEA 2026) studies <em>length capping</em>. (RLBWT is the run-length BWT: the last column <span class="arithmatex">\(L\)</span> stored as its <span class="arithmatex">\(r\)</span> runs, each a character and a length.) Set the average interval length to <span class="arithmatex">\(n/r\)</span>; for constant <span class="arithmatex">\(c\)</span>, split until every interval is of length at most</p>
+<p>A fresh segment start may require predecessor search once. For <span class="arithmatex">\(P\)</span> segment starts initialised
+with binary search, seeding costs <span class="arithmatex">\(O(P\log r)\)</span>; later transitions maintain interval state. The
+structure therefore removes general predecessor queries from the hot path. It does not remove
+memory dependencies: a move query may load several descriptors. It does change the algorithmic
+problem from repeated searches to constant-time state transitions.</p>
+<h2 id="5-can-a-whole-block-be-inverted-this-way">5. Can a whole block be inverted this way?<a class="headerlink" href="#5-can-a-whole-block-be-inverted-this-way" title="Permanent link">&para;</a></h2>
+<p>Brown and Langmead's <em>Bounding the Average Move Structure Query for Faster and Smaller RLBWT
+Permutations</em> (SEA 2026) studies <em>length capping</em>. (RLBWT is the run-length BWT: the last
+column <span class="arithmatex">\(L\)</span> stored as its <span class="arithmatex">\(r\)</span> runs, each a character and a length.) Set the average interval
+length to <span class="arithmatex">\(n/r\)</span>; for constant <span class="arithmatex">\(c\)</span>, split until every interval is of length at most</p>
 <div class="arithmatex">\[
-\boxed{L_{\max}=c\frac nr.}\tag{16}
+\boxed{L_{\max}=c\frac nr.}\tag{6}
 \]</div>
-<p>The number of additional intervals is approximately at most <span class="arithmatex">\(r/c\)</span>, so <span class="arithmatex">\(r'\le r+r/c\)</span>, up to rounding.</p>
-<p>Their Theorem 2 bounds aggregate work over all <span class="arithmatex">\(n\)</span> distinct positions, not strict worst-case cost per query. The number of interval advances is bounded by a constant multiple of <span class="arithmatex">\(n\)</span>:</p>
+<p>The number of additional intervals is approximately at most <span class="arithmatex">\(r/c\)</span>, so <span class="arithmatex">\(r'\le r+r/c\)</span>, up to
+rounding. Their Theorem 2 bounds aggregate work over all <span class="arithmatex">\(n\)</span> distinct positions, not strict
+worst-case cost per query. The number of interval advances is bounded by a constant multiple
+of <span class="arithmatex">\(n\)</span>:</p>
 <div class="arithmatex">\[
-\boxed{T_{\mathrm{all\ moves}}=O(n).}\tag{17}
+\boxed{T_{\mathrm{all\ moves}}=O(n).}\tag{7}
 \]</div>
-<p>For a single-cycle permutation, full traversal visits every position once. They also show <span class="arithmatex">\(O(r)\)</span>-time/space construction of a capped structure for LF or its inverse from RLBWT. Their Theorem 9 establishes</p>
+<p>For a single-cycle permutation, full traversal visits every position once. The mathematical
+argument can be set-based, not necessarily requiring one serial traversal order. They also show
+<span class="arithmatex">\(O(r)\)</span>-time/space construction of a capped structure for LF or its inverse from RLBWT. Their
+Theorem 9 establishes</p>
 <div class="arithmatex">\[
-\boxed{\text{BWT inversion time}=O(n),\qquad\text{additional working space}=O(r).}\tag{18}
+\boxed{\begin{gathered}\text{BWT inversion time}=O(n),\\\text{additional working space}=O(r).\end{gathered}}\tag{8}
 \]</div>
 <p>This is a complexity theorem for inversion, not merely compressibility.</p>
-<h3 id="54-how-directly-does-it-apply-to-bzip2">5.4 How directly does it apply to bzip2?<a class="headerlink" href="#54-how-directly-does-it-apply-to-bzip2" title="Permanent link">&para;</a></h3>
-<p>The theorem starts from run-length BWT. mibz2 reconstructs the byte sequence <span class="arithmatex">\(L\)</span> after MTF (undoing bzip2's move-to-front coding, the stage before the inverse BWT), so discovering the runs involves examining <span class="arithmatex">\(n\)</span> bytes. From the decoded sequence the construction-plus-inversion asymptotic cost is <span class="arithmatex">\(O(n)\)</span> with <span class="arithmatex">\(O(r)\)</span> navigation storage, when the input sequence and output buffer are accounted for separately. This does not make the entire decompressor <span class="arithmatex">\(O(r)\)</span> total memory.</p>
-<p>The single-cycle amortisation argument applies directly to primitive strings. Periodic cyclic BWTs may have several cycles; segmented traversal needs to preserve applicable assumptions. The balanced 2021 structure gives a per-move guarantee independent of single-cycle amortisation, at additional construction complexity.</p>
-<h3 id="55-established-result">5.5 Established result<a class="headerlink" href="#55-established-result" title="Permanent link">&para;</a></h3>
-<p>There exists a mathematically established family of navigation structures whose storage scales with BWT runs rather than rows and that supports efficient repeated successor traversal without a fresh general predecessor search on each step.</p>
-<p>The relevant works are <a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Nishimoto and Tabei (2021)</a> and <a href="https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html">Brown and Langmead (2026)</a>. Brown and Langmead's <a href="https://github.com/drnatebrown/orbit">Orbit library</a> implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust T-vector.</p>
-<h2 id="6-fifth-consequence-compact30s-representability-can-be-characterised-exactly">6. Fifth consequence: compact30's representability can be characterised exactly<a class="headerlink" href="#6-fifth-consequence-compact30s-representability-can-be-characterised-exactly" title="Permanent link">&para;</a></h2>
-<h3 id="61-the-ordinary-record-condition">6.1 The ordinary-record condition<a class="headerlink" href="#61-the-ordinary-record-condition" title="Permanent link">&para;</a></h3>
-<p>compact30 groups thirty consecutive rows into 64-byte records and uses a label transform</p>
+<p><strong>How directly does it apply to bzip2?</strong> The theorem starts from run-length BWT. mibz2
+reconstructs the byte sequence <span class="arithmatex">\(L\)</span> after MTF (undoing bzip2's move-to-front coding, the stage
+before the inverse BWT), so discovering the runs involves examining <span class="arithmatex">\(n\)</span> bytes. Given <span class="arithmatex">\(L\)</span> and
+its counts, the runs can be enumerated in <span class="arithmatex">\(O(n)\)</span> time, and the capped structure built from them
+in <span class="arithmatex">\(O(r)\)</span>, giving an <span class="arithmatex">\(O(n+r)=O(n)\)</span> path with <span class="arithmatex">\(O(r)\)</span> navigation storage, when the input sequence
+and output buffer are accounted for separately. This does not make the entire decompressor
+<span class="arithmatex">\(O(r)\)</span> total memory. Linear asymptotic construction does not mean lower constant cost than
+mibz2's fused counting-sort builder.</p>
+<p>The single-cycle amortisation argument applies directly to primitive strings, those that
+are not a repetition of a shorter string. Periodic cyclic
+BWTs may have several cycles
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#6-cycle-structure-and-necklaces">appendix section 6</a>);
+mibz2's segmented traversal needs to preserve applicable assumptions. The balanced 2021
+structure gives a per-move guarantee independent of single-cycle amortisation, at additional
+construction complexity. Brown and Langmead's <a href="https://github.com/drnatebrown/orbit">Orbit library</a>
+implements move-structure variants, but is not a verified drop-in replacement for mibz2's Rust
+T-vector.</p>
+<p>So there exists a mathematically established family of navigation structures whose storage
+scales with BWT runs rather than rows, and that supports efficient repeated successor traversal
+without a fresh general predecessor search on each step.</p>
+<h2 id="6-what-would-it-cost-mibz2-and-what-would-settle-it">6. What would it cost mibz2, and what would settle it?<a class="headerlink" href="#6-what-would-it-cost-mibz2-and-what-would-settle-it" title="Permanent link">&para;</a></h2>
+<p>A smaller table helps mibz2 only through a chain of costs. Fewer bytes mean less of the cache
+taken by each block's walk. But each step then reads one or more descriptors instead of one
+entry, and the builder must find the runs and write the descriptors before the walk begins.
+What the 32 lanes need is many independent reads in flight at once, and a step that reads two
+descriptors in turn can have two waits on its path, not one. Three resources stay separate:</p>
 <div class="arithmatex">\[
-\varphi(i)=32\left\lfloor\frac i{30}\right\rfloor+(i\bmod30)
+\boxed{\begin{gathered}\text{navigation storage},\\\text{construction work},\\\text{critical-path memory dependencies}.\end{gathered}}
 \]</div>
-<p>or</p>
-<div class="arithmatex">\[
-\boxed{\varphi(i)=i+2\left\lfloor\frac i{30}\right\rfloor.}\tag{19}
-\]</div>
-<p>Two unused labels per group correspond to the record header. For a complete group <span class="arithmatex">\(G=[a,a+30)\)</span>, ordinary-record conditions are a shared output character and labelled successor offsets fitting in 16 bits. Since <span class="arithmatex">\(\Psi\)</span> and <span class="arithmatex">\(\varphi\)</span> increase within a bucket, the endpoints suffice.</p>
-<p>Ignoring special padding and sentinel cases:</p>
-<div class="arithmatex">\[
-\boxed{F[a]=F[a+29]}
-\]</div>
-<p>and</p>
-<div class="arithmatex">\[
-\boxed{\varphi(\Psi(a+29))-\varphi(\Psi(a))\le65{,}533.}\tag{20}
-\]</div>
-<p>This bounds <em>encoded successor-label span</em>, not necessarily raw row-index difference. It captures monotonicity used by the existing builder.</p>
-<h3 id="62-gap-based-interpretation">6.2 Gap-based interpretation<a class="headerlink" href="#62-gap-based-interpretation" title="Permanent link">&para;</a></h3>
-<p>Suppose the group lies entirely in bucket <span class="arithmatex">\(c\)</span>, with first destination <span class="arithmatex">\(x\)</span> and last destination <span class="arithmatex">\(y\)</span>. Between the thirty occurrences,</p>
-<div class="arithmatex">\[
-y-x=29+\#\{j:x&lt;j&lt;y,\ L[j]\neq c\}.
-\]</div>
-<p>Therefore</p>
-<div class="arithmatex">\[
-\boxed{\Psi(a+29)-\Psi(a)=29+h,}\tag{21}
-\]</div>
-<p>where <span class="arithmatex">\(h\)</span> is the count of intervening non-<span class="arithmatex">\(c\)</span> characters. The labelled span is</p>
-<div class="arithmatex">\[
-\begin{aligned}
-W={}&amp;29+h\\
-&amp;+2\left(\left\lfloor\frac y{30}\right\rfloor-\left\lfloor\frac x{30}\right\rfloor\right).
-\end{aligned}\tag{22}
-\]</div>
-<p>Apart from bucket crossings, compact30 RAW groups arise from too many intervening characters among thirty occurrences. It is occurrence-gap arrangement, not absolute destination position, that matters.</p>
-<h3 id="63-guaranteed-ordinary-groups">6.3 Guaranteed ordinary groups<a class="headerlink" href="#63-guaranteed-ordinary-groups" title="Permanent link">&para;</a></h3>
-<p>If a complete 30-row group lies inside one translation interval,</p>
-<div class="arithmatex">\[
-\Psi(a+t)=p+t,\qquad0\le t&lt;30.
-\]</div>
-<p>The raw span is exactly 29, and the labelled span at most 31. The group is guaranteed to fit an ordinary compact30 record. Its offsets form a precomputable pattern, precisely the bulk-emission case in the existing constructor, where the builder writes a whole record from a precomputed pattern because one run of <span class="arithmatex">\(L\)</span> fills the group.</p>
-<h3 id="64-exact-formula-for-pure-groups">6.4 Exact formula for pure groups<a class="headerlink" href="#64-exact-formula-for-pure-groups" title="Permanent link">&para;</a></h3>
-<p>Let translation intervals be <span class="arithmatex">\(I_t=[a_t,b_t)\)</span>. For group width <span class="arithmatex">\(g\)</span>, the number of complete aligned groups contained in interval <span class="arithmatex">\(I_t\)</span> is</p>
-<div class="arithmatex">\[
-G_t=\max\left(0,\left\lfloor\frac{b_t}{g}\right\rfloor-\left\lceil\frac{a_t}{g}\right\rceil\right).
-\]</div>
-<p>Therefore</p>
-<div class="arithmatex">\[
-\boxed{G_{\mathrm{pure}}=\sum_{t=1}^{r}G_t.}\tag{23}
-\]</div>
-<p>For compact30,</p>
-<div class="arithmatex">\[
-\boxed{R_{\mathrm{pure}}=30G_{\mathrm{pure}}.}\tag{24}
-\]</div>
-<p>This is computable from BWT run boundaries and character ranks without building the entire navigation table.</p>
-<p>Every complete group not inside one translation interval crosses a boundary. There are at most <span class="arithmatex">\(r-1\)</span> such boundaries, each inside at most one aligned group:</p>
-<div class="arithmatex">\[
-\boxed{N_{\mathrm{nonpure}}\le r-1.}\tag{25}
-\]</div>
-<p>The bound may be loose and non-pure groups can still be ordinary records. But when <span class="arithmatex">\(r\ll n/g\)</span>, almost all complete groups are guaranteed pure.</p>
-<h3 id="65-consequence-for-construction">6.5 Consequence for construction<a class="headerlink" href="#65-consequence-for-construction" title="Permanent link">&para;</a></h3>
-<p>BWT runs determine destination intervals. Record boundaries can be enumerated in row order, with endpoint spans found by sequential sweeps through run descriptors. Once runs are known, group classification can take</p>
-<div class="arithmatex">\[
-\boxed{O\left(r+\frac ng+\sigma\right)}
-\]</div>
-<p>time without materialising every successor. A scan of <span class="arithmatex">\(L\)</span> can then scatter final entries into classified records. This gives an <span class="arithmatex">\(O(n+r+n/g)\)</span>-time construction strategy with appropriate run, record and cursor storage.</p>
-<p>It <strong>does not prove</strong> lower instruction count or fewer writes than the fused builder. It proves that record classification need not be interleaved with every per-row scatter: structure permits classification at the interval and group level.</p>
-<h2 id="7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation">7. Sixth consequence: multiple BWT steps admit a small interval representation<a class="headerlink" href="#7-sixth-consequence-multiple-bwt-steps-admit-a-small-interval-representation" title="Permanent link">&para;</a></h2>
-<h3 id="71-powers-of-the-navigation-permutation">7.1 Powers of the navigation permutation<a class="headerlink" href="#71-powers-of-the-navigation-permutation" title="Permanent link">&para;</a></h3>
-<p>Conventional traversal visits <span class="arithmatex">\(i,\Psi(i),\Psi^2(i),\ldots\)</span>. A multi-step transition computes <span class="arithmatex">\(\Psi^k(i)\)</span> while emitting the <span class="arithmatex">\(k\)</span> intermediate characters:</p>
-<div class="arithmatex">\[
-W_k(i)=F[i]F[\Psi(i)]\cdots F[\Psi^{k-1}(i)].
-\]</div>
-<p>The desired operation is</p>
-<div class="arithmatex">\[
-\boxed{i\longmapsto\left(W_k(i),\Psi^k(i)\right).}\tag{26}
-\]</div>
-<p>For a general permutation this could need <span class="arithmatex">\(n\)</span> stored entries; an interval-exchange permutation gives a better bound.</p>
-<h3 id="72-bound-on-pieces-of-psik">7.2 Bound on pieces of <span class="arithmatex">\(\Psi^k\)</span><a class="headerlink" href="#72-bound-on-pieces-of-psik" title="Permanent link">&para;</a></h3>
-<p>Start with a partition <span class="arithmatex">\(P\)</span> into <span class="arithmatex">\(r\)</span> translated intervals, each with constant output byte; there are <span class="arithmatex">\(r-1\)</span> boundaries. Refine it so that two successive steps follow fixed source intervals. Splits occur at preimages of original boundaries. Since <span class="arithmatex">\(\Psi\)</span> is bijective and translates each existing piece, images of the pieces are disjoint intervals partitioning the destination domain. Each original boundary introduces at most one new split across the whole refined partition. Each further step adds at most <span class="arithmatex">\(r-1\)</span> boundaries. Thus</p>
-<div class="arithmatex">\[
-\boxed{N_k\le\min\{n,\ 1+k(r-1)\}.}\tag{27}
-\]</div>
-<p>On every refined interval, <span class="arithmatex">\(\Psi^k\)</span> is a translation and <span class="arithmatex">\(W_k\)</span> is constant.</p>
-<p>For two and four steps respectively:</p>
-<div class="arithmatex">\[
-\boxed{N_2\le2r-1,\qquad N_4\le4r-3.}
-\]</div>
-<p>This bound becomes uninformative when <span class="arithmatex">\(k(r-1)\)</span> approaches <span class="arithmatex">\(n\)</span>.</p>
-<h3 id="73-multi-character-transition-table">7.3 Multi-character transition table<a class="headerlink" href="#73-multi-character-transition-table" title="Permanent link">&para;</a></h3>
-<p>Each interval stores its starting row, displacement to <span class="arithmatex">\(\Psi^k(i)\)</span>, and the emitted <span class="arithmatex">\(k\)</span>-character word. With interval identifier, output retrieval and destination computation are straightforward. An explicit representation uses</p>
-<div class="arithmatex">\[
-\boxed{O\left(kr(\log n+k\log\sigma)\right)}\tag{28}
-\]</div>
-<p>bits when <span class="arithmatex">\(k(r-1)\ll n\)</span>. For fixed small <span class="arithmatex">\(k\)</span>, that is <span class="arithmatex">\(O(kr\log n)\)</span>.</p>
-<p>This proves a compact representation for the <em>function</em>, not constant-latency arbitrary interval lookup. Multi-character navigation need not inherently require an <span class="arithmatex">\(n\)</span>-entry jump table.</p>
-<h3 id="74-implication-for-mibz2">7.4 Implication for mibz2<a class="headerlink" href="#74-implication-for-mibz2" title="Permanent link">&para;</a></h3>
-<p>Kärkkäinen, Kempa and Puglisi's 2012 work studied reducing cache misses through multi-character BWT navigation, including two characters per lookup. mibz2 cites it as <a href="../../concepts/prior-work/">prior art</a>. mibz2 has also built such a table: the pair walk of <a href="https://github.com/lmmx/mibz2/pull/34">PR #34</a>, whose entries hold the row two steps on, was measured and dropped, because each step cost about twice as much and the table took about three times as long to build (<a href="../../concepts/couriers/">Why 32 couriers beat one</a>). The interval view suggests representing <span class="arithmatex">\(k\)</span>-step transitions by run-sensitive translated intervals instead of a complete super-alphabet table.</p>
-<p>The number of intervals increases at most linearly with <span class="arithmatex">\(kr\)</span>. For repetitive blocks it can be substantially below <span class="arithmatex">\(n\)</span>, though it may become large for run-rich blocks. Interval identification, segment boundaries and output ordering remain essential. A mathematical <span class="arithmatex">\(k\)</span>-step operation does not imply one cache miss or CPU instruction.</p>
-<h2 id="8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images">8. Seventh consequence: cycle structure distinguishes actual BWT images<a class="headerlink" href="#8-seventh-consequence-cycle-structure-distinguishes-actual-bwt-images" title="Permanent link">&para;</a></h2>
-<h3 id="81-cycle-count">8.1 Cycle count<a class="headerlink" href="#81-cycle-count" title="Permanent link">&para;</a></h3>
-<p>Let <span class="arithmatex">\(\operatorname{cycles}(\Psi_L)\)</span> be the number of permutation cycles, and <span class="arithmatex">\(m_1,\ldots,m_r\)</span> the maximal run lengths in <span class="arithmatex">\(L\)</span>. A characterisation due to Likhomanov and Shur, reported in a survey of the bijective BWT, states</p>
-<div class="arithmatex">\[
-\boxed{L\text{ is a valid cyclic BWT image}\iff\operatorname{cycles}(\Psi_L)=\gcd(m_1,\ldots,m_r).}\tag{29}
-\]</div>
-<p>For primitive input, the permutation is one cycle. Periodic inputs may have several. We must not assume every bzip2 traversal visits all distinct rows in one cycle.</p>
-<h3 id="82-necklaces-and-exact-enumeration">8.2 Necklaces and exact enumeration<a class="headerlink" href="#82-necklaces-and-exact-enumeration" title="Permanent link">&para;</a></h3>
-<p>The BWT identifies cyclic rotations, so its images correspond naturally to <em>necklaces</em>. With counts <span class="arithmatex">\(n_1,\ldots,n_\sigma\)</span> and <span class="arithmatex">\(g=\gcd(n_1,\ldots,n_\sigma)\)</span>, Burnside's lemma gives</p>
-<div class="arithmatex">\[
-\boxed{N_{\mathrm{BWT}}=\frac1n\sum_{d\mid g}\phi(d)\frac{(n/d)!}{\prod_c(n_c/d)!}.}\tag{30}
-\]</div>
-<p>The number of primitive necklaces is</p>
-<div class="arithmatex">\[
-\boxed{N_{\mathrm{primitive}}=\frac1n\sum_{d\mid g}\mu(d)\frac{(n/d)!}{\prod_c(n_c/d)!}.}\tag{31}
-\]</div>
-<p>Here <span class="arithmatex">\(\phi\)</span> is Euler's totient and <span class="arithmatex">\(\mu\)</span> the Möbius function.</p>
-<h3 id="83-coprime-frequency-simplification">8.3 Coprime-frequency simplification<a class="headerlink" href="#83-coprime-frequency-simplification" title="Permanent link">&para;</a></h3>
-<p>When <span class="arithmatex">\(g=1\)</span>, all source strings with that histogram are primitive:</p>
-<div class="arithmatex">\[
-\boxed{N_{\mathrm{BWT}}=\frac1n\frac{n!}{\prod_c n_c!}.}\tag{32}
-\]</div>
-<p>The BWT restriction reduces the stable-sort family by a factor of exactly <span class="arithmatex">\(n\)</span>; the information saving is</p>
-<div class="arithmatex">\[
-\boxed{\log_2n\text{ bits}.}\tag{33}
-\]</div>
-<p>At <span class="arithmatex">\(n=900{,}000\)</span>, this is approximately 19.78 bits for the entire block. Identifying the original rotation requires a primary index with roughly the same amount of information.</p>
-<p>Cycle structure is useful for validity checks, periodicity, testing and traversal assumptions, but it is not a promising independent source of major storage savings. The stable-sort restriction accounts for most of the representational reduction.</p>
-<h2 id="9-what-does-the-original-permutree-thesis-contribute">9. What does the original permutree thesis contribute?<a class="headerlink" href="#9-what-does-the-original-permutree-thesis-contribute" title="Permanent link">&para;</a></h2>
-<p>Tamayo Jiménez studies weak-order lattices, permutree congruences, pattern-avoiding permutations, and related geometry. The inverse-BWT permutation belongs to a classical parabolic quotient of the symmetric group.</p>
-<p>Let</p>
-<div class="arithmatex">\[
-J=\{s_i:\ i,i+1\text{ lie in the same character bucket}\}.
-\]</div>
-<p>Then</p>
-<div class="arithmatex">\[
-\boxed{\Psi\in W^J},
-\]</div>
-<p>where <span class="arithmatex">\(W^J\)</span> consists of permutations with no right descents at positions in <span class="arithmatex">\(J\)</span>.</p>
-<h3 id="91-weak-order-inversion-statistic">9.1 Weak-order inversion statistic<a class="headerlink" href="#91-weak-order-inversion-statistic" title="Permanent link">&para;</a></h3>
-<p>The Coxeter length is</p>
-<div class="arithmatex">\[
-\ell(\Psi)=\#\{(i,j):i&lt;j,\ \Psi(i)&gt;\Psi(j)\}.
-\]</div>
-<p>Stable sorting implies</p>
-<div class="arithmatex">\[
-\boxed{\ell(\Psi)=\#\{(i,j):i&lt;j,\ L[i]&gt;L[j]\}.}\tag{34}
-\]</div>
-<p>This gives an exact algebraic rank, but it should not be confused with BWT run count.</p>
-<h3 id="92-large-inversion-count-can-coexist-with-easy-navigation">9.2 Large inversion count can coexist with easy navigation<a class="headerlink" href="#92-large-inversion-count-can-coexist-with-easy-navigation" title="Permanent link">&para;</a></h3>
-<p>For <span class="arithmatex">\(L=b^ma^m\)</span>, <span class="arithmatex">\(a&lt;b\)</span>,</p>
-<div class="arithmatex">\[
-\Psi(i)=\begin{cases}i+m,&amp;0\le i&lt;m,\\i-m,&amp;m\le i&lt;2m.\end{cases}
-\]</div>
-<p>There are just <span class="arithmatex">\(r=2\)</span> runs but</p>
-<div class="arithmatex">\[
-\boxed{\ell(\Psi)=m^2}.
-\]</div>
-<p>Thus quadratic Coxeter length coexists with two translated intervals. This is a valid cyclic BWT image of an alternating periodic word.</p>
-<p>Weak-order geometry measures distance from identity under adjacent transpositions; it does not measure cost of successor queries.</p>
-<h3 id="93-meets-and-joins">9.3 Meets and joins<a class="headerlink" href="#93-meets-and-joins" title="Permanent link">&para;</a></h3>
-<p>The parabolic-quotient family has weak-order meets and joins, but mibz2 evaluates one fixed permutation rather than optimising over permutations. Meets and joins need not preserve valid BWT images. The permutree thesis does not directly imply a faster decoder; its relevance is the algebraic setting, while useful data structures come from stable sorting, succinct sequences and run-bounded interval permutations.</p>
-<h2 id="10-stronger-correctness-guarantees-and-proof-obligations">10. Stronger correctness guarantees and proof obligations<a class="headerlink" href="#10-stronger-correctness-guarantees-and-proof-obligations" title="Permanent link">&para;</a></h2>
-<p>The mathematical properties support independent invariants:</p>
-<table>
-<thead>
-<tr>
-<th>Invariant</th>
-<th>Exact property</th>
-<th>What it checks</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Permutation</td>
-<td><span class="arithmatex">\(\Psi\)</span> bijective on <span class="arithmatex">\([0,n)\)</span></td>
-<td>No missing or duplicated destinations</td>
-</tr>
-<tr>
-<td>Stable-sort identity</td>
-<td>Equation (1)</td>
-<td>Correct correspondence with <span class="arithmatex">\(L\)</span></td>
-</tr>
-<tr>
-<td>Bucket monotonicity</td>
-<td><span class="arithmatex">\(\Psi(i+1)&gt;\Psi(i)\)</span> within buckets</td>
-<td>Counting-sort ordering</td>
-</tr>
-<tr>
-<td>Run structure</td>
-<td>Exactly <span class="arithmatex">\(n-r\)</span> within-bucket adjacent pairs advance by one</td>
-<td>Correct run correspondence</td>
-</tr>
-<tr>
-<td>Interval translation</td>
-<td>Equation (4) on every run</td>
-<td>Correct interval descriptors</td>
-</tr>
-<tr>
-<td>compact30 classification</td>
-<td>Equation (20)</td>
-<td>Ordinary/RAW representation decisions</td>
-</tr>
-<tr>
-<td>BWT cycle validity</td>
-<td>Equation (29)</td>
-<td>Valid cyclic-BWT structure</td>
-</tr>
-<tr>
-<td>Multi-step navigation</td>
-<td>Equation (26)</td>
-<td>Correct jump destinations and emitted words</td>
-</tr>
-</tbody>
-</table>
-<p>These diagnose internal errors more precisely than end-to-end decoded-output comparison.</p>
-<h3 id="101-independent-oracle">10.1 Independent oracle<a class="headerlink" href="#101-independent-oracle" title="Permanent link">&para;</a></h3>
-<p>Given <span class="arithmatex">\(L\)</span> and its histogram, construct the reference mapping through (1). For every row <span class="arithmatex">\(i\)</span> verify</p>
-<div class="arithmatex">\[
-\Psi_{\mathrm{candidate}}(i)=\operatorname{select}_{F[i]}(L,i-C(F[i])).
-\]</div>
-<p>This is a complete equivalence check, stronger than traversal from the primary index alone (which need not visit all distinct rows for periodic blocks). For <span class="arithmatex">\(k\)</span>-step representations verify</p>
-<div class="arithmatex">\[
-\Psi_{\mathrm{candidate}}^{(k)}(i)=\Psi^k(i)
-\]</div>
-<p>and</p>
-<div class="arithmatex">\[
-W_{k,\mathrm{candidate}}(i)=W_k(i).
-\]</div>
-<p>These are development oracles, not obligatory checks in production decoding.</p>
-<h2 id="11-how-the-results-constrain-the-design-space">11. How the results constrain the design space<a class="headerlink" href="#11-how-the-results-constrain-the-design-space" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Representation</th>
-<th>Space for navigation</th>
-<th>Access complexity</th>
-<th>Main consideration</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Conventional T-vector</td>
-<td><span class="arithmatex">\(32n\)</span> bits</td>
-<td>One direct lookup</td>
-<td>High footprint</td>
-</tr>
-<tr>
-<td>Packed destinations</td>
-<td>About <span class="arithmatex">\(20n\)</span> bits, plus symbols/metadata</td>
-<td>Direct addressing</td>
-<td>Bit extraction</td>
-</tr>
-<tr>
-<td>Per-character Elias–Fano</td>
-<td>About <span class="arithmatex">\(nH_0(L)+O(n)\)</span> bits</td>
-<td>Indexed select</td>
-<td>More dependencies</td>
-</tr>
-<tr>
-<td>Simple run descriptors</td>
-<td><span class="arithmatex">\(O(r\log n)\)</span> bits</td>
-<td><span class="arithmatex">\(O(\log r)\)</span> predecessor</td>
-<td>Repeated searches</td>
-</tr>
-<tr>
-<td>Balanced move structure</td>
-<td><span class="arithmatex">\(O(r)\)</span> words</td>
-<td><span class="arithmatex">\(O(1)\)</span> with interval state</td>
-<td>Interval transitions</td>
-</tr>
-<tr>
-<td>Length-capped move structure</td>
-<td><span class="arithmatex">\(O(r)\)</span> words</td>
-<td>Amortised <span class="arithmatex">\(O(1)\)</span> over distinct full-cycle visits</td>
-<td>Coverage assumptions</td>
-</tr>
-<tr>
-<td><span class="arithmatex">\(k\)</span>-step intervals</td>
-<td><span class="arithmatex">\(O(kr(\log n+k\log\sigma))\)</span> bits</td>
-<td>Interval-dependent</td>
-<td>Multi-character operation</td>
-</tr>
-</tbody>
-</table>
-<p>The key distinction is <em>random row access</em> versus <em>stateful successor navigation</em>. mibz2 predominantly needs the latter. Every lane follows a path and maintains state, making move structures relevant.</p>
-<h3 id="111-constant-time-transitions">11.1 Constant-time transitions<a class="headerlink" href="#111-constant-time-transitions" title="Permanent link">&para;</a></h3>
-<p>The 2021 theorem establishes that compact representation does not imply logarithmic lookup time: <span class="arithmatex">\(O(r)\)</span>-space stateful navigation can have <span class="arithmatex">\(O(1)\)</span> worst-case move time. That removes a theoretical objection, not the hardware concern about several serial descriptor loads.</p>
-<h3 id="112-amortised-guarantees">11.2 Amortised guarantees<a class="headerlink" href="#112-amortised-guarantees" title="Permanent link">&para;</a></h3>
-<p>The 2026 result bounds cumulative descriptor advances by <span class="arithmatex">\(O(n)\)</span> for visits to distinct rows, rather than requiring each move to be worst-case constant. The mathematical argument can be set-based, not necessarily requiring one serial traversal order. mibz2's exact segmented and periodic-block behaviour still needs to meet the proof assumptions.</p>
-<h3 id="113-construction">11.3 Construction<a class="headerlink" href="#113-construction" title="Permanent link">&para;</a></h3>
-<p>Given <span class="arithmatex">\(L\)</span> and counts, its runs can be enumerated in <span class="arithmatex">\(O(n)\)</span> time. Navigation intervals arise directly from runs; a full pointer array is unnecessary. The length-capped structure can then be built in <span class="arithmatex">\(O(r)\)</span> time from RLBWT, giving an <span class="arithmatex">\(O(n+r)=O(n)\)</span> path starting from decoded <span class="arithmatex">\(L\)</span>. Linear asymptotic construction does not mean lower constant cost than mibz2's fused counting-sort builder.</p>
-<h3 id="114-memory-versus-critical-path-latency">11.4 Memory versus critical-path latency<a class="headerlink" href="#114-memory-versus-critical-path-latency" title="Permanent link">&para;</a></h3>
-<p>mibz2's compact30 work reduced footprint and benefited concurrent traversal, but direct construction remained expensive; the <a href="../2026-11-04-compact30-constructor/">4 November post</a> says bulk emission covered 74.3% of rows on the main Wikidata corpus. The <a href="../2026-11-07-pipelined-teams/">7 November pipelining work</a> overlaps a block's construction and traversal with other stages of neighbouring blocks: a team's leader runs the next block's MTF and finishes the previous block while its helpers build and walk the current one. Three resources remain separate:</p>
-<div class="arithmatex">\[
-\boxed{\text{navigation storage},\quad\text{construction work},\quad\text{critical-path memory dependencies}.}
-\]</div>
-<p>A representation may improve one and worsen another. The mathematical space/time bounds do not equate them.</p>
-<h2 id="12-what-this-means-for-the-direction-of-mibz2-research">12. What this means for the direction of mibz2 research<a class="headerlink" href="#12-what-this-means-for-the-direction-of-mibz2-research" title="Permanent link">&para;</a></h2>
-<h3 id="121-run-based-navigation-is-a-real-alternative-algorithm-family">12.1 Run-based navigation is a real alternative algorithm family<a class="headerlink" href="#121-run-based-navigation-is-a-real-alternative-algorithm-family" title="Permanent link">&para;</a></h3>
-<p>mibz2 need not choose only between the complete T-vector and packed per-row T-vectors. Move structures store interval transitions and support repeated navigation. When <span class="arithmatex">\(r\)</span> is small they offer a theoretical reduction in live navigation storage, with established constructions and query guarantees.</p>
-<h3 id="122-compact30-exceptions-can-be-bounded-and-predicted">12.2 Compact30 exceptions can be bounded and predicted<a class="headerlink" href="#122-compact30-exceptions-can-be-bounded-and-predicted" title="Permanent link">&para;</a></h3>
-<p>Character crossings are bounded by 255 groups; pure-run groups can be counted from (23); ordinary eligibility is expressed by (20). This enables interval/group-level classification and verification rather than opaque per-row heuristics.</p>
-<h3 id="123-multi-step-navigation-has-a-run-sensitive-bound">12.3 Multi-step navigation has a run-sensitive bound<a class="headerlink" href="#123-multi-step-navigation-has-a-run-sensitive-bound" title="Permanent link">&para;</a></h3>
-<p>The pair <span class="arithmatex">\((\Psi^k,W_k)\)</span> has at most <span class="arithmatex">\(1+k(r-1)\)</span> translated, constant-output intervals. This establishes a compact <em>theoretical</em> representation of multi-character decoding transitions when <span class="arithmatex">\(kr\ll n\)</span>, without guaranteeing CPU speedup.</p>
-<h3 id="124-cycle-structure-is-mainly-for-correctness">12.4 Cycle structure is mainly for correctness<a class="headerlink" href="#124-cycle-structure-is-mainly-for-correctness" title="Permanent link">&para;</a></h3>
-<p>The restriction to valid BWT permutations adds characterisations and tests but removes little representation information beyond stable-sort structure in coprime-frequency cases. It should not be expected to supply major independent memory savings.</p>
-<h3 id="125-weak-order-geometry-provides-context-not-the-central-optimisation">12.5 Weak-order geometry provides context, not the central optimisation<a class="headerlink" href="#125-weak-order-geometry-provides-context-not-the-central-optimisation" title="Permanent link">&para;</a></h3>
-<p>Parabolic quotients explain increasing buckets and inversion structure, but the objects the decoder actually evaluates are</p>
-<div class="arithmatex">\[
-\boxed{\operatorname{select}_c(L,k),\quad\text{translated intervals},\quad\text{move queries},\quad\Psi^k.}
-\]</div>
-<p>These admit operational data structures and meaningful complexity bounds.</p>
-<h2 id="13-final-assessment">13. Final assessment<a class="headerlink" href="#13-final-assessment" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Gain</th>
-<th>Established mathematical result</th>
-<th>Value to mibz2</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Stable-sort representation</td>
-<td><span class="arithmatex">\(\Psi\)</span> is a collection of character-select sequences</td>
-<td>Succinct sequence structures</td>
-</tr>
-<tr>
-<td>Run-bounded representation</td>
-<td><span class="arithmatex">\(\Psi\)</span> has <span class="arithmatex">\(r\)</span> translated intervals</td>
-<td>Space scaling with <span class="arithmatex">\(r\)</span></td>
-</tr>
-<tr>
-<td>Move structures</td>
-<td><span class="arithmatex">\(O(1)\)</span> stateful moves in <span class="arithmatex">\(O(r)\)</span> words</td>
-<td>Alternative to full T-vector</td>
-</tr>
-<tr>
-<td>Linear-time inversion</td>
-<td><span class="arithmatex">\(O(n)\)</span> time and <span class="arithmatex">\(O(r)\)</span> additional RLBWT working space under assumptions</td>
-<td>End-to-end theoretical feasibility</td>
-</tr>
-<tr>
-<td>Fixed-record identities</td>
-<td>Exact character crossings, spans and pure-group bounds</td>
-<td>Formal compact30 analysis</td>
-</tr>
-<tr>
-<td>Multi-step interval bound</td>
-<td>At most <span class="arithmatex">\(1+k(r-1)\)</span> pieces for <span class="arithmatex">\(k\)</span>-step navigation</td>
-<td>Compact multi-character transitions</td>
-</tr>
-</tbody>
-</table>
-<p>The permutree thesis identifies a legitimate algebraic neighbourhood, but the directly applicable algorithmic theorems come from succinct data structures and run-length BWT.</p>
-<p><strong>What is proved:</strong> the inverse-BWT navigation problem supports representations and algorithms with run-bounded space, efficient repeated traversal, and (in the RLBWT model) asymptotically optimal inversion time.</p>
-<p><strong>What is not proved for mibz2:</strong> that these beat its 32-lane, four-byte-per-row implementation in elapsed CPU cycles once table construction, segmented starts, emitted characters and shared-cache behaviour are counted.</p>
-<p>The central research question changes from <em>how much can we compress the existing navigation table?</em> to:</p>
-<p><strong>What is the least expensive stateful navigation representation for a BWT interval-exchange permutation, while preserving high memory-level parallelism across simultaneous traversals?</strong></p>
-<p>The most consequential result to investigate further is the move structure, especially Brown and Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to the problem mibz2 solves.</p>
+<p>A representation may improve one and worsen another. The mathematical space/time bounds do not
+equate them. The representations the theory offers, and what each costs, are compared in
+<a href="../2026-11-08-inverse-bwt-navigation-notes/#9-the-design-space-and-the-results">appendix section 9</a>.</p>
+<p>The same intervals bear on mibz2's other work. In compact30, every 30-row group lying inside
+one interval is guaranteed an ordinary record, and these groups can be counted from the runs
+without building the table
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-intervals-say-about-compact30">appendix section 4</a>).
+Taking <span class="arithmatex">\(k\)</span> steps at once needs at most <span class="arithmatex">\(1+k(r-1)\)</span> intervals
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#5-several-steps-at-once">appendix section 5</a>).</p>
+<p>The central research question changes from <em>how much can we compress the existing navigation
+table?</em> to:</p>
+<p><strong>What is the least expensive stateful navigation representation for a BWT interval-exchange
+permutation, while preserving high memory-level parallelism across simultaneous traversals?</strong></p>
+<p>Two measurements would settle whether it is worth building. The first is the run count of each
+block on mibz2's corpora, and so the size of the descriptors, block by block, against the
+T-vector's. The second, only if those are small, is a 32-lane walk over a move structure, timed
+against the T-vector walk with the cost of building each counted. Neither has been done. The
+most consequential result to investigate further is the move structure, especially Brown and
+Langmead's 2026 length-capping construction. It is the closest existing theoretical answer to
+the problem mibz2 solves.</p>
+<h2 id="7-the-argument-in-brief">7. The argument in brief<a class="headerlink" href="#7-the-argument-in-brief" title="Permanent link">&para;</a></h2>
+<p>The next-row map sends the <span class="arithmatex">\(k\)</span>th copy of each byte in <span class="arithmatex">\(F\)</span> to its <span class="arithmatex">\(k\)</span>th copy in <span class="arithmatex">\(L\)</span>, so each
+run of <span class="arithmatex">\(L\)</span> is one shifted interval, and the map is at most <span class="arithmatex">\(r\)</span> of them. A walk that carries its
+interval needs no search to take its next step, and move structures make that step take
+constant time in <span class="arithmatex">\(O(r)\)</span> words. Brown and Langmead turn this into a linear-time inversion with
+run-bounded working space.</p>
+<p><strong>What is proved:</strong> the inverse-BWT navigation problem supports representations and algorithms
+with run-bounded space, efficient repeated traversal, and (in the RLBWT model) asymptotically
+optimal inversion time.</p>
+<p><strong>What is not proved for mibz2:</strong> that these beat its 32-lane, four-byte-per-row implementation
+in elapsed CPU cycles once table construction, segmented starts, emitted characters and
+shared-cache behaviour are counted. The permutree thesis identifies a legitimate algebraic
+neighbourhood, but the directly applicable algorithmic theorems come from succinct data
+structures and run-length BWT
+(<a href="../2026-11-08-inverse-bwt-navigation-notes/#7-what-does-the-permutree-thesis-contribute">appendix section 7</a>).</p>
+<p>The general lesson is that a table walked in order can often be replaced by less data plus
+state carried by the walker, since each step already knows where the last one was.</p>
 <hr />
 <p><strong>Sources:</strong></p>
 <ul>
+<li><a href="../2026-11-08-inverse-bwt-navigation-notes/">Technical appendix</a>: the secondary derivations,
+  bounds and checks, with their equations.</li>
 <li><a href="https://arxiv.org/abs/2310.19732">Daniel Tamayo Jiménez, <em>Combinatorics of Permutreehedra and Geometry of s-Permutahedra</em></a>,
   PhD thesis (2023): weak order and parabolic quotients.</li>
 <li><a href="https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101">Takaaki Nishimoto and Yasuo Tabei, <em>Optimal-Time Queries on BWT-runs Compressed Indexes</em></a>,
@@ -4091,13 +2668,13 @@ W_{k,\mathrm{candidate}}(i)=W_k(i).
         
         
           
-          <a href="../2026-11-07-pipelined-teams/" class="md-footer__link md-footer__link--next" aria-label="Next: Pipelined teams in mibz2 0.2.6">
+          <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-footer__link md-footer__link--next" aria-label="Next: Technical appendix">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Pipelined teams in mibz2 0.2.6
+                Technical appendix
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4192,19 +2769,19 @@ W_{k,\mathrm{candidate}}(i)=W_k(i).
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/bench.js?v=05f28031de49"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/couriers.js?v=05f28031de49"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/blog.js?v=05f28031de49"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/frontier.js?v=05f28031de49"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/observatory.js?v=05f28031de49"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=a18f350c4327"></script>
+        <script src="../../assets/javascripts/katex.js?v=05f28031de49"></script>
       
     
   </body>
