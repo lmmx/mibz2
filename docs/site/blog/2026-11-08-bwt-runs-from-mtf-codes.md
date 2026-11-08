@@ -310,9 +310,11 @@ $$
 Cutting a run at a checkpoint changes the records, not the symbols, so it doesn't change $m$.
 A second script checked the exact count, not only the bound, on every word of up to twelve
 letters over two letters and up to eight over three, and on the columns of 3,000 random and
-periodic strings. So building the records takes time sublinear in $n$ on blocks with long
-runs. That is not sublinear inversion, which writes $n$ bytes regardless, and it adds no
-information: it follows from the input having coded the runs already.
+periodic strings.
+
+So building the records takes time sublinear in $n$ on blocks with long runs. That is not
+sublinear inversion, which writes $n$ bytes regardless, and it is not new: it follows from the
+input having coded the runs already.
 
 ## 5. What has mibz2 measured?
 
@@ -370,7 +372,7 @@ the plain text in space bounded by $r$
 ([Nishimoto, Kanda and Tabei, ICALP 2022](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2022.99)),
 from an LZ77 parse
 ([Kempa and Kociumaka, FOCS 2020](https://arxiv.org/abs/1910.10631)), and a move structure
-for any permutation in $O(r)$ time
+for any permutation, from its intervals, in $O(r)$ time
 ([Brown, Sanaullah, Zhang and Langmead, 2026 preprint](https://arxiv.org/abs/2603.22147)).
 
 **What is open** is the speculative question: does bzip2's coded form give a stronger
