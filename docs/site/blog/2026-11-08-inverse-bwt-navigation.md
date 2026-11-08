@@ -225,7 +225,7 @@ The entire run is represented by one constant displacement. Every character occu
 to exactly one run. Their corresponding intervals partition the domain of $\Psi$:
 
 $$
-\boxed{\Psi\text{ admits a partition into }r\text{ intervals, on each of which it is a translation.}}\tag{3}
+\boxed{\begin{gathered}\Psi\text{ admits a partition into }r\text{ intervals,}\\\text{on each of which it is a translation.}\end{gathered}}\tag{3}
 $$
 
 In `banana`, the run `aaa` starts at $p=3$, and the `a` rows start at $a=0$: the shift is
@@ -363,7 +363,7 @@ $O(r)$-time/space construction of a capped structure for LF or its inverse from 
 Theorem 9 establishes
 
 $$
-\boxed{\text{BWT inversion time}=O(n),\qquad\text{additional working space}=O(r).}\tag{8}
+\boxed{\begin{gathered}\text{BWT inversion time}=O(n),\\\text{additional working space}=O(r).\end{gathered}}\tag{8}
 $$
 
 This is a complexity theorem for inversion, not merely compressibility.
@@ -400,7 +400,7 @@ What the 32 lanes need is many independent reads in flight at once, and a step t
 descriptors in turn can have two waits on its path, not one. Three resources stay separate:
 
 $$
-\boxed{\text{navigation storage},\quad\text{construction work},\quad\text{critical-path memory dependencies}.}
+\boxed{\begin{gathered}\text{navigation storage},\\\text{construction work},\\\text{critical-path memory dependencies}.\end{gathered}}
 $$
 
 A representation may improve one and worsen another. The mathematical space/time bounds do not

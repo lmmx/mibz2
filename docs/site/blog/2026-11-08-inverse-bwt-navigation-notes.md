@@ -647,7 +647,9 @@ These are development oracles, not obligatory checks in production decoding.
 
 ## 9. The design space and the results
 
-mibz2's compact30 work reduced footprint and benefited concurrent traversal, but
+[Section 6 of the main post](2026-11-08-inverse-bwt-navigation.md#6-what-would-it-cost-mibz2-and-what-would-settle-it)
+keeps three resources apart: navigation storage, construction work and critical-path memory
+dependencies. mibz2's compact30 work reduced footprint and benefited concurrent traversal, but
 direct construction remained expensive; the
 [4 November post](2026-11-04-compact30-constructor.md) says bulk emission covered 74.3% of rows
 on the main Wikidata corpus. The [7 November pipelining work](2026-11-07-pipelined-teams.md)
