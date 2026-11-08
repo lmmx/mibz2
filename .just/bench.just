@@ -262,12 +262,16 @@ bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     lb=$(lbzip2 --version 2>&1 | head -1 | grep -oE '[0-9]+(\.[0-9]+)+' || true)
     files=(--file "wikidata=$W/wikidata.bz2")
     for f in {{FILES}}; do files+=(--file "$(basename "$f" .bz2)=$f"); done
-    python3 bench/release_scaling.py record bench/release-scaling --runs "$W/runs.jsonl" \
+    # The record goes under target/, not into the checkout: a file left in the working tree would make
+    # the workstation queue refuse every later entry (bench/await-submit.sh needs a clean tree).
+    # The coordinator commits recorded/ to bench/release-scaling/ from the bundle (RELEASING §5).
+    rec=$(mktemp -d "$W/record.XXXXXX")
+    python3 bench/release_scaling.py record "$rec" --runs "$W/runs.jsonl" \
       --env "$W/env.json" --lscpu "$W/lscpu.txt" --ref mibz2 \
       --arm "mibz2=${NEW#v}" --arm "mibz2@$OLDAB=${OLD#v}" \
       --arm "lbzip2=lbzip2 $lb" "${files[@]}"
     cp "$W/runs.jsonl" "$W/env.json" "$W/lscpu.txt" "$W/summary.txt" "$O/"
-    cp -r "bench/release-scaling/$(ls -t bench/release-scaling | head -1)" "$O/recorded"
+    mv "$rec/$(ls "$rec")" "$O/recorded" && rmdir "$rec"
     bash bench/bundle.sh "$O"
 
 # Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
