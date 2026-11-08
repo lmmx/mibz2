@@ -343,7 +343,7 @@ This gives the BWT run count a precise interpretation as a measure of local navi
 
 Two concepts must not be conflated:
 
-- The number of *descents* of $\Psi$ is at most $\sigma-1$.
+- The number of *descents* of $\Psi$ (positions where $\Psi(i)>\Psi(i+1)$) is at most $\sigma-1$.
 - The number of failures of consecutive translation **within buckets** is exactly $r-\sigma$.
 
 The second quantity is relevant for run-based navigation compression.
@@ -378,7 +378,7 @@ Thus the navigation map can be described by one starting destination per charact
 
 The query becomes predecessor or prefix-sum over sparse corrections. This is mathematically equivalent to the interval representation, but suggests sparse bitvectors, indexed delta streams, or two-level directories.
 
-**What we have gained:** an exact structural complexity parameter for the map. The important variable is principally $r$, the number of BWT runs, rather than $n$, descents, or Coxeter length.
+**What we have gained:** an exact structural complexity parameter for the map. The important variable is principally $r$, the number of BWT runs, rather than $n$, descents, or Coxeter length (the inversion count, section 9).
 
 ## 4. Third consequence: rigorous succinct-space bounds
 
@@ -607,7 +607,7 @@ $$
 \Psi(a+t)=p+t,\qquad0\le t<30.
 $$
 
-The raw span is exactly 29, and the labelled span at most 31. The group is guaranteed to fit an ordinary compact30 record. Its offsets form a precomputable pattern, precisely the bulk-emission case in the existing constructor.
+The raw span is exactly 29, and the labelled span at most 31. The group is guaranteed to fit an ordinary compact30 record. Its offsets form a precomputable pattern, precisely the bulk-emission case in the existing constructor, where the builder writes a whole record from a precomputed pattern because one run of $L$ fills the group.
 
 ### 6.4 Exact formula for pure groups
 
@@ -898,7 +898,7 @@ The pair $(\Psi^k,W_k)$ has at most $1+k(r-1)$ translated, constant-output inter
 
 ### 12.4 Cycle structure is mainly for correctness
 
-The restriction to valid BWT permutations adds characterizations and tests but removes little representation information beyond stable-sort structure in coprime-frequency cases. It should not be expected to supply major independent memory savings.
+The restriction to valid BWT permutations adds characterisations and tests but removes little representation information beyond stable-sort structure in coprime-frequency cases. It should not be expected to supply major independent memory savings.
 
 ### 12.5 Weak-order geometry provides context, not the central optimisation
 
@@ -942,7 +942,7 @@ The most consequential result to investigate further is the move structure, espe
 - [Takaaki Nishimoto and Yasuo Tabei, *Optimal-Time Queries on BWT-runs Compressed Indexes*](https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101),
   ICALP 2021, LIPIcs 198, 101:1–101:15: constant-time move structures.
 - [Nathaniel K. Brown and Ben Langmead, *Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations*](https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html),
-  SEA 2026, LIPIcs 371, paper 9: length capping and $O(n)$-time, $O(r)$-space inversion.
+  SEA 2026, LIPIcs 371, paper 9: length capping, and inversion in $O(n)$ time and $O(r)$ space.
 - [Hideo Bannai, Dominik Köppl and Zsuzsanna Lipták, *A Survey of the Bijective Burrows–Wheeler Transform*](https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/html/OASIcs.Manzini.2/OASIcs.Manzini.2.html)
   (2025), in the Festschrift for Giovanni Manzini, OASIcs 131: cyclic BWT and necklace enumeration.
 - [Juha Kärkkäinen, Dominik Kempa and Simon J. Puglisi, *Slashing the Time for BWT Inversion*](https://researchportal.helsinki.fi/en/publications/slashing-the-time-for-bwt-inversion/),
