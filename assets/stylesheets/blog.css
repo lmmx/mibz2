@@ -653,3 +653,21 @@
 @media screen and (max-width: 44.9375em) {
   .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
 }
+
+/* Frames (the inverse-BWT post): a figure told in numbered steps, each a narrow SVG with its
+   narration beneath. Two frames a row on a wide screen, one on a phone, so each SVG is drawn
+   near its own size at either width. */
+.bf-fig .bf-cell-amber { fill: var(--bf-amber-tint); }
+.bf-fig .bf-cell-steel { fill: var(--bf-steel-tint); }
+.bf-fig .bf-band-amber { fill: var(--bf-amber-tint); fill-opacity: 0.75; stroke: var(--bf-amber); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-band-steel { fill: var(--bf-steel-tint); fill-opacity: 0.75; stroke: var(--bf-steel); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-outline { fill: none; stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-mono { fill: var(--bf-ink); font-family: var(--md-code-font-family); font-size: 14px; }
+.md-typeset .bf-frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.2rem; margin: 0; }
+.md-typeset .bf-frame { min-width: 0; margin: 0; }
+.md-typeset .bf-frame svg { max-width: 22rem; margin: 0 auto; }
+.md-typeset .bf-frame .bf-step { margin: 0.45rem 0 0; color: var(--bf-ink); font-size: 0.68rem; line-height: 1.5; }
+.md-typeset .bf-frame .bf-step code { font-size: 0.92em; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); }
+}

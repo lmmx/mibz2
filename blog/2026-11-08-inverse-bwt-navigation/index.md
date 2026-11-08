@@ -8,7 +8,7 @@ The inverse BWT's next-row map is one shift per run of equal bytes, so it can be
 
 To undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT), a bzip2 decoder follows a chain through each block: from one row of the transform's sorted matrix to the next, emitting one byte at each step. mibz2, our bzip2 decoder, stores that chain as a table with one navigation entry per row, which we call the T-vector. Each entry is four bytes, holding the next row and the byte to emit. At the maximum bzip2 block size of 900,000 bytes, the T-vector occupies 3.6 MB. The inverse BWT is the expensive part of decoding a block, because each step's address comes from the entry just read; mibz2 walks many such chains at once so that their memory reads overlap. [An earlier post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works the transform through on a small example.
 
-**The entries of that table are not independent.** When the transformed word `banana` is decoded, the three rows that emit `a` have next rows 3, 4 and 5. One starting row and a length describe all three. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: [Nishimoto and Tabei (2021)](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) gave constant-time steps in \\(O(r)\\) machine words, and [Brown and Langmead (2026)](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
+**The entries of that table are not independent.** When the transformed word `banana` is decoded, rows 0, 1 and 2, the three that emit `a`, have next rows 3, 4 and 5. One descriptor covers all three: the first row, the first next row and the length. Every run of equal bytes in the BWT's output works the same way, so the whole table can be described by one shift per run, \\(r\\) of them, instead of one entry per row, \\(n\\) of them. **A walk can follow those shifts without searching for the right one at each step,** by remembering which run it is in. Data structures that do this, *move structures*, are published, with proofs: [Nishimoto and Tabei (2021)](<https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ICALP.2021.101>) gave constant-time steps in \\(O(r)\\) machine words, and [Brown and Langmead (2026)](<https://drops.dagstuhl.de/storage/00lipics/lipics-vol371-sea2026/html/LIPIcs.SEA.2026.9/LIPIcs.SEA.2026.9.html>) inverted a whole BWT in \\(O(n)\\) time with \\(O(r)\\) additional working space, starting from a run-length BWT representation.
 
 **What is not proved** is that any of them beats mibz2's 32-lane, four-byte-per-row implementation in elapsed CPU cycles. Everything in this post is mathematics and published theory: nothing in it has been built or measured in mibz2, and it changes nothing in the decoder. Nor has \\(r\\) been counted on mibz2's blocks; [section 3](<#3-when-do-the-shifts-save-nothing>) derives an upper bound from an earlier measurement.
 
@@ -33,27 +33,43 @@ Reading down the rotations' last letters gives \\(L=\\texttt{nnbaaa}\\), and the
 
 and the bytes emitted are `banana`. mibz2's T-vector stores exactly this: for each row, \\(F\[i\]\\) and \\(\\Psi(i)\\).
 
-Moving a rotation's first byte to its end puts that byte last, so \\(\\Psi(i)\\) is always a row whose \\(L\\) byte is \\(F\[i\]\\). The three `a` rows of \\(F\\) go to the three `a` positions of \\(L\\), and they go in order. Rows with the same first byte are sorted by the rest of their rotation, and moving the first byte to the end keeps that order. The next figure draws every row's arrow.
+Moving a rotation's first byte to its end puts that byte last, so \\(\\Psi(i)\\) is always a row whose \\(L\\) byte is \\(F\[i\]\\): the three `a` rows of \\(F\\) go to the three `a` positions of \\(L\\). Which `a` goes to which, and why that lets three entries be stored as one, is what the next figure works out. It takes four steps on the same six rows, and each step's sentence says what changed.
 
-The next-row map of banana: parallel arrows, one bundle per run of L
+Why consecutive copies of a byte go to consecutive rows, and three arrows become one descriptor
 
-Each arrow goes from row i, on the left, to its next row Ψ(i), on the right. Arrows from one interval are parallel: they all shift by the same amount. Conceptual, worked by hand from the table above.
+**1\. Number the copies.** *F* is *L*'s six bytes, sorted. The small numbers count each byte's copies from the top of its column. Position *j* of *L* is the last byte of row *j*, so a position is also a row. The table gives row 0's next row as 3 and row 1's as 4: the 1st `a` of *F* goes to the 1st `a` of *L*, and the 2nd to the 2nd. Before reading on, predict where row 2 goes.
 
-Rows 0, 1 and 2 go to 3, 4 and 5: each moves down by three. Row 3 moves up by one, and rows 4 and 5 move up by four. Written out,
+**2\. Why the order is kept.** Rows 0–2 are the rotations that start with `a`, sorted by the five letters after it. Moving the `a` to the end gives the rotations that end with `a`. Those sort by the same five letters, so they come in the same order. The *k*th `a` of *F* goes to the *k*th `a` of *L*, and row 2 goes to 5. The argument holds for every byte of every block.
+
+**3\. A run collapses the arrows.** The three copies of `a` in *L* are adjacent, at positions 3–5: they are one run. So consecutive rows of *F* go to consecutive positions, and each arrow is the one above it moved down a row. One descriptor holds all three: where the rows start in *F*, where their next rows start, and how many there are. The shift, +3, is destination minus source. Had the copies of `a` in *L* been split into two runs, the `a` rows of *F* would split into two descriptors.
+
+**4\. One descriptor per run of *L*.** The `b` at position 2 receives row 3, a shift of −1, and the run `nn` receives rows 4–5, a shift of −4. We call the three source intervals A, B and N, after their bytes. In *F* they come in byte order, in *L* in position order. Six next-row entries become three descriptors. That counts entries, not bytes: a descriptor holds more than a T-vector entry (section 2.1).
+
+Every frame shows the six rows of banana. Green, amber and blue mark the bytes a, b and n. Conceptual, worked by hand from the table above.
+
+Written out, the whole map is
 
 \\\[ \\Psi(i)=\\begin{cases}i+3,&amp;0\\le i\<3,\\\\i-1,&amp;i=3,\\\\i-4,&amp;4\\le i\<6.\\end{cases} \\\]
 
-**Three row entries become one start and a length.** Six table entries become three descriptors, each a starting row, a length and a shift, and each emits one byte. The three pieces are not special to `banana`: they are the three runs of \\(L\\), `nn`, `b` and `aaa`. That is the first result of this post. **The next-row map is a set of shifted intervals, one for each run of the last column.**
+**Three row entries become one descriptor:** a source start, a destination start and a length, with the byte the rows emit. Six table entries become three descriptors. The three pieces are not special to `banana`: they are the three runs of \\(L\\), `nn`, `b` and `aaa`. That is the first result of this post. **The next-row map is a set of shifted intervals, one for each run of the last column.**
 
 ### 1.1 Walking the intervals without a search
 
-Storing intervals instead of rows raises a question. To find the next row of row \\(i\\), a decoder would first have to find which interval holds \\(i\\), which is a search among the \\(r\\) starting rows. A walk doesn't need it, because it can carry the interval's name along with the row. Each interval also records where its destinations begin: interval A's begin at row 3, which lies in interval B.
+Storing intervals instead of rows raises a question. To find the next row of row \\(i\\), a decoder would first have to find which interval holds \\(i\\), which is a search among the \\(r\\) starting rows. A walk doesn't need it, because it can carry the interval's name along with the row. Each descriptor also records one more value, its *anchor*: the interval its destinations begin in. Interval A's destinations begin at row 3, which lies in interval B. The next figure takes one step of the walk, from row 1, using the descriptors of the last figure.
 
-The banana walk, carrying its interval as well as its row
+One step of the walk: from row 1 in interval A to row 4 in interval N
 
-Each card is one step of the walk, read left to right and then the second line: the row, the interval it lies in, and, on the right, the byte emitted. The highlighted step 4 is worked in the text below. Conceptual.
+**1\. The state.** The walk holds a row and the interval it lies in: row 1, interval A. It emits A's byte, `a`, and reads A's descriptor directly, by its name.
 
-From row 1 in interval A, the next row is A's first destination plus the offset within A: \\(3+(1-0)=4\\). The walk knows that A's destinations begin in interval B, so it checks only whether row 4 is still in B. It isn't, since B is row 3 alone, so the walk steps forward one interval, to N. **Carrying the interval as traversal state turns each step into arithmetic and a short forward step, with no search.** This is the idea behind move structures ([section 4](<#4-how-does-a-walk-move-between-intervals-in-constant-time>)).
+**2\. The arithmetic.** Row 1 is one row past A's source start, 0. A's destination starts at 3, so the next row is 3 + (1 − 0) = 4. The next step needs to know which interval holds row 4.
+
+**3\. The anchor.** A's descriptor names the interval its destination starts in: B. A's destinations start at row 3 and count upwards, so row 4 is in B or in an interval after it. The walk compares row 4 with B's end only. B is row 3 alone, so row 4 lies past it.
+
+**4\. One step forward.** The interval after B is N, rows 4–5, and it holds row 4. The new state is row 4 in N. The walk compared row 4 with B's and N's boundaries, not with every interval's start. Here one step forward was enough. In a large block one interval's destinations can cross many intervals, and section 4 shows how splitting intervals bounds those steps by a constant. A constant number of steps is still not one memory read.
+
+The rows on the left are F, grouped into the intervals of the last figure; the table is their descriptors, each with its anchor. Conceptual, worked by hand.
+
+Repeated from row 3, the same actions visit row 3 in B, then 2 in A, 5 in N, 1 in A, 4 in N and 0 in A, and emit `banana`. **Carrying the interval as traversal state turns each step into arithmetic and a short forward step, with no search.** This is the idea behind move structures ([section 4](<#4-how-does-a-walk-move-between-intervals-in-constant-time>)).
 
 The difference is between *random row access*, where any row can be asked for at any time, and *stateful successor navigation*, where each question follows from the last answer. mibz2 needs mostly the second. Every lane of its walk follows a path and keeps state, which is why move structures are relevant to it.
 
@@ -123,7 +139,17 @@ This is only a storage comparison for basic descriptors, not a complete performa
 
 ## 3\. When do the shifts save nothing?
 
-When the runs are short. The valid cyclic BWT of `abba` is \\(L=\\texttt{baba}\\): four rows and four runs, \\(r=n=4\\). Its descriptors take \\(40r=160\\) bits, more than the T-vector's \\(32n=128\\) bits, before any index is added. So run-based storage is not guaranteed to be smaller. The comparison is of descriptors alone. A practical move structure stores more than this, so its break-even point lies below \\(r/n=0.8\\), by an amount nobody has measured for mibz2.
+When the runs are short. The valid cyclic BWT of `abba` is \\(L=\\texttt{baba}\\): four rows and four runs, \\(r=n=4\\). Its descriptors take \\(40r=160\\) bits, more than the T-vector's \\(32n=128\\) bits, before any index is added. The next figure sets it beside `banana`.
+
+Rows against runs: the T-vector's bits and the basic descriptors' bits
+
+**banana.** Three runs in six rows. The descriptors take 120 bits, against the T-vector's 192.
+
+**abba.** Every run is one byte long, so there is a descriptor per row. Four descriptors take 160 bits, against 128.
+
+Bits from the formulas of section 2.1, 32 per row and 40 per run, drawn to one scale. They count basic descriptors only: a move structure also stores anchors and an index. Not measured sizes.
+
+So run-based storage is not guaranteed to be smaller. The comparison is of descriptors alone. A practical move structure stores more than this, so its break-even point lies below \\(r/n=0.8\\), by an amount nobody has measured for mibz2.
 
 Nor does a block that compresses well necessarily have few runs. The two simplest measures, the zero-order entropy \\(H\_0(L)\\) of the byte frequencies and \\(r\\), answer different questions: a block can have low entropy and many short runs, or high entropy and few long runs ([appendix section 3](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/#3-space-bounds>)). The run count itself has a precise meaning: exactly \\(n-r\\) pairs of adjacent rows within a character's block have consecutive next rows ([appendix section 2](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/#2-consecutive-entries-and-sparse-corrections>)).
 
@@ -137,7 +163,7 @@ An ordinary query is \\(i\\mapsto\\Psi(i)\\). An interval representation must lo
 
 \\\[ j=p\_t+(i-a\_t). \\\]
 
-We then need the interval \\(t'\\) containing \\(j\\). A move structure stores information about the destination interval of each image's beginning and advances through descriptors to locate \\(j\\), as the `banana` walk stepped from B to N. Unbalanced intervals may require multiple advances. The crucial theorem is that intervals can be split into \\(O(r)\\) balanced pieces, guaranteeing a constant number of advances:
+We then need the interval \\(t'\\) containing \\(j\\). A move structure stores, for each interval, the interval its destinations begin in (its anchor, in section 1.1), and advances through descriptors to locate \\(j\\), as the `banana` walk stepped from B to N. Unbalanced intervals may require multiple advances. The crucial theorem is that intervals can be split into \\(O(r)\\) balanced pieces, guaranteeing a constant number of advances:
 
 \\\[ \\boxed{(i,t)\\xrightarrow{O(1)}(\\Psi(i),t')}\\tag{5} \\\]
 
