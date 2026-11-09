@@ -352,10 +352,7 @@ fn tiling_ok(recs: &[u32], counts: &[u32; 256], n: usize) -> bool {
 fn spell(recs: &[u32]) -> Vec<u8> {
     let mut l = Vec::new();
     for w in recs.windows(2) {
-        l.extend(std::iter::repeat_n(
-            (w[0] & 0xff) as u8,
-            ((w[1] >> 8) - (w[0] >> 8)) as usize,
-        ));
+        l.extend(std::iter::repeat((w[0] & 0xff) as u8).take(((w[1] >> 8) - (w[0] >> 8)) as usize));
     }
     l
 }
@@ -404,7 +401,7 @@ fn tampered(ll: &[u8], split: u64, ops: &[u64]) -> (Vec<u32>, [u32; 256], usize)
                 // a valid edit: split a run, if one is longer than a row
                 if j + 1 < len && (recs[j + 1] >> 8) > (recs[j] >> 8) + 1 && recs[j] >> 8 < n as u32
                 {
-                    let mid = (recs[j] & !0xff) + 256 | (recs[j] & 0xff);
+                    let mid = ((recs[j] & !0xff) + 256) | (recs[j] & 0xff);
                     recs.insert(j + 1, mid);
                 }
             }
@@ -451,7 +448,7 @@ fn column(r: &mut Rng) -> Vec<u8> {
             for &c in &alpha {
                 let size = 8 * (1 + r.below(3) as usize) + r.below(3) as usize;
                 let size = size.saturating_sub(r.below(2) as usize * 2);
-                v.extend(std::iter::repeat_n(c, size));
+                v.extend(std::iter::repeat(c).take(size));
             }
             // shuffle the rows in runs, so that L's runs cross the buckets' ends
             let mut out = Vec::new();
@@ -468,7 +465,7 @@ fn column(r: &mut Rng) -> Vec<u8> {
             while v.len() < n {
                 let c = alpha[r.below(sigma as u64) as usize];
                 let run = [1, 1, 1, 2, 3, 7, 8, 9, 15, 16, 17, 24][r.below(12) as usize];
-                v.extend(std::iter::repeat_n(c, run));
+                v.extend(std::iter::repeat(c).take(run));
             }
             v.truncate(n);
             v
