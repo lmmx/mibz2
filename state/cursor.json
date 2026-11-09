@@ -992,6 +992,20 @@
       "receipt_commit": "781e9059c93891e14783833db83c43cd52845322",
       "disposition": "All-observation diagnostic logging admissible; selective deletion not delegated; whole-attempt narrowing distinguished; C5/C6 reserved",
       "comment": 6737091245
+    },
+    {
+      "id": "D065",
+      "pr": 298,
+      "incoming_pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6739273655,
+      "sha": "c754acc8180a08b1c92cf21c411bc6504a41c7c2",
+      "evidence_digest": "git-blob:e520140fdb5a00863803df72741147a33df3d491",
+      "decision": "G2",
+      "status": "complete",
+      "commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
+      "receipt_commit": "17c17dc22d04e247b9fc9b5e32818b531b931b0b",
+      "disposition": "REVISE telemetry-check admission: preserve failure, correct probe error/coverage claims, bind executable; independent of #299"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1187,7 +1201,9 @@
     "85bff2185c3ef9d35181f8c5617cad207e2a16ee",
     "781e9059c93891e14783833db83c43cd52845322",
     "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
-    "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa"
+    "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa",
+    "17c17dc22d04e247b9fc9b5e32818b531b931b0b",
+    "0cd0fe9678f724e4b872353e330b3a7da62c34f5"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1252,7 +1268,8 @@
     6733568497,
     6733879388,
     6734225080,
-    6735319842
+    6735319842,
+    6739273655
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1331,11 +1348,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6735319842,
-    "status": "finished",
-    "decision": "D064",
-    "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
-    "review_comment_id": 6737091245
+    "active_comment": 6739273655,
+    "status": "complete",
+    "decision": "D065",
+    "work_commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5"
   },
   "duplicate_events": [
     {
@@ -1839,6 +1855,13 @@
       "decision": "D064",
       "commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
       "comment": 6737091245
+    },
+    {
+      "pr": 298,
+      "sha": "c754acc8180a08b1c92cf21c411bc6504a41c7c2",
+      "evidence_digest": "git-blob:e520140fdb5a00863803df72741147a33df3d491",
+      "decision": "D065",
+      "commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2245,9 +2268,11 @@
     {
       "comment_id": 6739273655,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D065",
-      "progress": "Migration verified; receipt; reviewing telemetry-check admission at c754acc8180a08b1c92cf21c411bc6504a41c7c2."
+      "progress": "D065 complete: REVISE self-check admission; awaiting one REVIEW on #145.",
+      "receipt_commit": "17c17dc22d04e247b9fc9b5e32818b531b931b0b",
+      "work_commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5"
     }
   ],
   "migrated_from": {
