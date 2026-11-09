@@ -44,6 +44,9 @@ jobs:
       # bench/service_2x3.py's validity and readings on synthetic records (no decoder run)
       - name: The service 2 x 3 report's fixtures
         run: python3 bench/test_service_2x3.py
+      # bench/service_lookahead.py's validity and readings on synthetic records (no decoder run)
+      - name: The service lookahead report's fixtures
+        run: python3 bench/test_service_lookahead.py
 
   get-python-versions:
     runs-on: ubuntu-latest

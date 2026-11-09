@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S [--admission N]] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -32,6 +32,10 @@
 //! `--levers park|spin2k|small|both` (with `--pipe`) runs the pipelined teams with those levers
 //! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
 //! `mibz2-pipeK-LEVER` arms do.
+//!
+//! `--admission N` (with `--svc`; research) gives the service core's prepared queue an
+//! admission threshold of N blocks rather than its teams
+//! (`BzReader::parallel_service_admission`).
 //!
 //! `--svc S` (research) runs the service core instead (`BzReader::parallel_service`), as
 //! examples/ab.rs's `mibz2-svcS` arm: `S` is `1`, `2` (K service workers, teams of 3) or
@@ -142,8 +146,15 @@ fn child(a: &[String]) {
         small: lever == "small" || lever == "both",
         spin2k: lever == "spin2k",
     };
-    // the service core (`--svc`): "s1", "s2", "s1t2": (service workers, team size)
+    // the service core (`--svc`): "s1", "s2", "s1t2": (service workers, team size); and
+    // "s2a4" and the like: the prepared queue's admission threshold given (`--admission`)
+    let admission: Option<usize> = a
+        .get(4)
+        .filter(|k| k.starts_with('s'))
+        .and_then(|k| k.split_once('a'))
+        .map(|(_, l)| l.parse().unwrap());
     let svc: Option<(usize, usize)> = a.get(4).and_then(|k| k.strip_prefix('s')).map(|k| {
+        let k = k.split_once('a').map_or(k, |(k, _)| k);
         let (n, t) = k.split_once('t').unwrap_or((k, "3"));
         (n.parse().unwrap(), t.parse().unwrap())
     });
@@ -171,7 +182,25 @@ fn child(a: &[String]) {
                 Plan::Teams { teams, k } if svc.is_some() => {
                     let window = (slots * teams / threads).max(teams);
                     let services = svc.map_or(1, |s| s.0);
-                    BzReader::parallel_service(f, teams, k, services, window, Kernels::detect())
+                    match admission {
+                        None => BzReader::parallel_service(
+                            f,
+                            teams,
+                            k,
+                            services,
+                            window,
+                            Kernels::detect(),
+                        ),
+                        Some(l) => BzReader::parallel_service_admission(
+                            f,
+                            teams,
+                            k,
+                            services,
+                            window,
+                            l,
+                            Kernels::detect(),
+                        ),
+                    }
                 }
                 Plan::Teams { teams, k } if pipe => {
                     let window = (slots * teams / threads).max(teams);
@@ -464,7 +493,9 @@ fn cross_overlaps(iv: &[Interval], lead: &str) -> usize {
 ///   `SvcGot` (the finishing queue: the service-saturation measure);
 /// - `backlog.{prep,finish}_mean`: the blocks waiting in each queue, averaged over the span
 ///   (the waits summed over the span), and `backlog.{prep,finish}_max`: the most queued, by
-///   the `len` the marks carry;
+///   the `len` the marks carry; `backlog.prep_median`: the median of the prepared count each
+///   preparation's push left (`Prepared`'s `len`), which can exceed the service core's
+///   admission threshold (its `lookahead`) by its overlapping preparations;
 /// - `team.idle_prep_share`, `team.idle_back_share`: the teams' idle time waiting for a
 ///   prepared block (prep starvation), and for a back set with a block prepared (finish
 ///   backlog reaching the teams), each over the teams' total time (teams × span);
@@ -498,6 +529,8 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
     // the first mark of each block's event: (kind, place) -> ns
     let mut at: BTreeMap<(u8, u64), u64> = BTreeMap::new();
     let mut prep_max = 0u64;
+    // the prepared count each preparation's push left (the admission threshold's reach)
+    let mut prep_at_push: Vec<f64> = Vec::new();
     let mut finish_max = 0u64;
     let mut utils = Vec::new();
     for (ti, t) in traces.iter().enumerate() {
@@ -517,6 +550,7 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
                 JobGot => Some(1),
                 Prepared => {
                     prep_max = prep_max.max(m.len);
+                    prep_at_push.push(m.len as f64);
                     Some(2)
                 }
                 TeamGot => Some(3),
@@ -594,6 +628,7 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
         }
     }
     kv.f("t.svc.backlog.prep_max", prep_max as f64);
+    kv.f("t.svc.backlog.prep_median", median(&mut prep_at_push));
     kv.f("t.svc.backlog.finish_max", finish_max as f64);
     // the teams' idle time, by what they waited for
     let teams = traces
@@ -1270,6 +1305,7 @@ fn parent(args: &[String]) {
     let mut teams: Option<usize> = None;
     let mut pipe = false;
     let mut svc: Option<String> = None;
+    let mut admission: Option<usize> = None;
     let mut lever: Option<String> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
@@ -1350,9 +1386,17 @@ fn parent(args: &[String]) {
                 svc = Some(spec);
                 teams = Some(3);
             }
+            "--admission" => {
+                admission = Some(
+                    it.next()
+                        .expect("--admission N")
+                        .parse()
+                        .expect("admission"),
+                );
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S [--admission N]] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -1360,6 +1404,10 @@ fn parent(args: &[String]) {
     }
     let file = file.expect("occupancy FILE.bz2 [...]");
     assert!(lever.is_none() || pipe, "--levers needs --pipe K");
+    assert!(
+        admission.is_none() || svc.is_some(),
+        "--admission needs --svc S"
+    );
     let m = machine();
     let threads = threads.unwrap_or_else(|| {
         let mut v: Vec<usize> = std::iter::successors(Some(1usize), |t| Some(t * 2))
@@ -1454,7 +1502,10 @@ fn parent(args: &[String]) {
                         &s.to_string(),
                         &level.to_string(),
                         &match &svc {
-                            Some(spec) => format!("s{spec}"),
+                            Some(spec) => match admission {
+                                Some(n) => format!("s{spec}a{n}"),
+                                None => format!("s{spec}"),
+                            },
                             None => teams.map_or("auto".to_string(), |k| {
                                 let lever =
                                     lever.as_ref().map_or(String::new(), |l| format!("-{l}"));
@@ -1483,7 +1534,22 @@ fn parent(args: &[String]) {
                         kv.get("t.complete")
                             .map_or(String::new(), |c| format!("  trace complete: {c}"))
                     );
-                    raw.push((r, t, s, spec.clone(), mode, line));
+                    // the child's exit: its code, or -signal (Unix) when a signal ended it
+                    let status = o.status.code().map_or_else(
+                        || {
+                            #[cfg(unix)]
+                            {
+                                use std::os::unix::process::ExitStatusExt;
+                                -o.status.signal().unwrap_or(0) as i64
+                            }
+                            #[cfg(not(unix))]
+                            {
+                                i64::MIN
+                            }
+                        },
+                        i64::from,
+                    );
+                    raw.push((r, t, s, spec.clone(), mode, line, status));
                     runs.entry((t, spec.clone(), mode)).or_default().push(kv);
                     if gap > 0.0 {
                         std::thread::sleep(Duration::from_secs_f64(gap));
@@ -1493,6 +1559,9 @@ fn parent(args: &[String]) {
         }
     }
     let selftest = sched_selftest(m.allowed);
+    // every child's exit, kept: the pass fails on any that didn't exit 0, whatever it printed
+    let children_ok = raw.iter().all(|x| x.6 == 0);
+    let expected_children = rounds * threads.len() * specs.len() * MODES.len();
 
     // parity: one output for every run
     let outs: BTreeSet<(String, String)> = runs
@@ -1764,6 +1833,7 @@ fn parent(args: &[String]) {
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("SLOTS_PER_THREAD (4) x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
+                ("admission".into(), admission.map_or(J::S("teams (the service core's own)".into()), |n| J::N(n as f64))),
                 ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(match &svc { Some(spec) => format!("the service core, mibz2-svc{spec}'s plan"), None => format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}"))) }))),
                 (
                     "workload".into(),
@@ -1773,13 +1843,15 @@ fn parent(args: &[String]) {
             ]),
         ),
         ("parity".into(), J::B(parity)),
+        ("children_ok".into(), J::B(children_ok)),
+        ("children_expected".into(), J::N(expected_children as f64)),
         ("output_bytes".into(), J::N(out_bytes)),
         ("schedstat".into(), selftest.clone()),
         ("results".into(), J::A(results)),
         ("placement_comparisons".into(), J::A(comparisons)),
         (
             "runs".into(),
-            J::A(raw.iter().map(|(r, t, s, spec, mode, line)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("placement".into(), J::S(spec.clone())), ("mode".into(), J::S(mode.to_string())), ("line".into(), J::S(line.clone()))])).collect()),
+            J::A(raw.iter().map(|(r, t, s, spec, mode, line, status)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("placement".into(), J::S(spec.clone())), ("mode".into(), J::S(mode.to_string())), ("status".into(), J::N(*status as f64)), ("line".into(), J::S(line.clone()))])).collect()),
         ),
     ]);
     let out = out.unwrap_or_else(|| "occupancy.json".into());
@@ -1811,6 +1883,15 @@ fn parent(args: &[String]) {
     print!("{summary}");
     println!("Written: {out}");
     if !parity {
+        std::process::exit(1);
+    }
+    if !children_ok || raw.len() != expected_children {
+        eprintln!(
+            "occupancy: {} of {} children ran, {} exited nonzero",
+            raw.len(),
+            expected_children,
+            raw.iter().filter(|x| x.6 != 0).count()
+        );
         std::process::exit(1);
     }
 }

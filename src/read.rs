@@ -154,6 +154,24 @@ impl<R: Read + Send + 'static> BzReader<R> {
         )
     }
 
+    /// Research, opt-in: `parallel_service` with the prepared queue's admission threshold
+    /// given (`StreamDecoder::service_admission`) rather than `teams`
+    #[doc(hidden)]
+    pub fn parallel_service_admission(
+        r: R,
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        admission: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::service_admission(teams, k, services, slots, admission, kernels),
+        )
+    }
+
     fn on(mut r: R, dec: StreamDecoder) -> Self {
         let dec = Arc::new(dec);
         let read_error = Arc::new(Mutex::new(None));

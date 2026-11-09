@@ -1,0 +1,8 @@
+# The service core's prepared-queue admission threshold on the workstation
+# (docs/journal/2026-11-09-service-lookahead-registration.md; the run held under Guardian D045).
+# The commit the registration, the code change, the harness, the recipe and the report are
+# frozen at: just bench-service-lookahead's measured inputs must match it exactly.
+# (Supersedes de4952199cb3c62def68c717acce3ce5085e9ee6 (before the second revision),
+# 79e414197ba956d19ba6b660927f8eca6c3ed520 (before the first) and
+# 4587b54bedabe5026205aeb60e9a217ee5fe67e6 (the window version); nothing timed ran under any.)
+frozen 4ac25fcd1a3c6a898221d23fbcf7d3a904deb2c5
