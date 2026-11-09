@@ -47,21 +47,36 @@ wall time × the sampled clock, not counted cycles.
   - the row-built pair O is 14.427.
 - **R took 231 of 233 paired blocks** by the pair walk; the admission declined 2.
 
-**The consumer is the loss, not the build.** Rows and output bytes are almost the same count here
-(209.7 M each). So subtracting each build from its whole entry point gives a rough consumer cost:
-- R − run build ≈ 11.7 − 5.7 ≈ **6.0 c/B**;
-- O − row build ≈ 14.4 − 8.2 ≈ **6.2 c/B**.
+**The consumer is the larger cost, but this run doesn't isolate it.** Rows and output bytes are
+almost the same count here (209.7 M each). So subtracting each build from its whole entry point
+gives rough residuals. The Optimiser replayed the raw CSVs, paired by round (6731728422), in
+nominal c/B per output byte:
+- R − run build: **6.072 (6.024, 6.120)**;
+- O − row build: **6.169 (6.140, 6.197)**;
+- P − one-hop build: **3.984 (3.963, 4.004)**;
+- (R − run) − (P − one): **2.088 (2.031, 2.146)**.
 
-This is arithmetic across two medians, not a measured interval. It says that #34's pair walk alone
-costs about what production's whole entry point does, build included. **A free build would still
-leave R near parity with P**, so no builder can carry Q2 on this consumer. That is the transferred
-prediction from #34, now measured on the current baseline.
+**These are not walk-only intervals.** They subtract separate sweeps, with different cache states,
+setup and admission. The build covers 233 blocks, and R pairs only 231 of them. Synthetic text
+shows how far off they can be: R declines every pair block there, yet R − run comes out at
+−9.4 c/B.
 
-**The run build itself does what it was meant to.**
+So this run doesn't establish that even a free build would leave R at parity with P. The
+first draft of this entry said it did, and that claim is withdrawn. What it does show is that the
+pair path's residual is about 2.1 c/B above production's, by this arithmetic. A pre-built-table
+consumer interval would need its own experiment.
+
+**The run build beats the old row pair builder, never production's one-hop build.**
 - It removes 31% of the row build's cost on Wikidata, and 19% of the whole pair path (R / O 0.81).
-- **It is far cheaper on run-heavy data:**
+- **Against the row pair builder, it is far cheaper on run-heavy data:**
   - pattern 0.239 (0.237, 0.242);
   - one byte 0.343 (0.337, 0.350).
+- **Against production's one-hop build (run / one, Optimiser replay),** it is:
+  - Wikidata 2.563 (2.556, 2.569);
+  - one byte 2.274 (2.185, 2.367);
+  - pattern 1.009 (1.003, 1.015).
+
+  On no corpus with paired blocks does the run pair builder beat the one-hop build.
 - **It is far dearer where r/n ≈ 1:**
   - random 1.81;
   - records 3.45.
@@ -77,29 +92,35 @@ prediction from #34, now measured on the current baseline.
 As registered, the run-built pair table with #34's consumer is **1.9× production at the entry
 point**. Under the registration, this candidate pauses. It isn't the run-fed line closing
 (PROTOCOL §11). There are two separate findings:
-1. **The run-intersection build is a real saving over the row build** (31% on Wikidata, 66–76%
-   on run-heavy data). It is only Q1 INCONCLUSIVE because the registration set POSITIVE at 0.50.
-2. **The pair consumer costs about 6 c/B on its own,** about all of production's entry point. Any
-   pair-table route needs a consumer that is cheaper per output byte than the room walk. A
-   cheaper builder alone can't do it.
+1. **The run-intersection build is a real saving over the row pair build** (31% on Wikidata,
+   66–76% on run-heavy data). It is Q1 INCONCLUSIVE only because the registration set POSITIVE
+   at 0.50. **It is not cheaper than production's one-hop build on any corpus.**
+2. **The pair path's residual cost is about 2.1 c/B above production's,** by paired arithmetic
+   across separate sweeps. That is not a measured consumer interval. A pair-table route needs a
+   consumer measured cheaper per output byte than the room walk, on a pre-built table.
 
-## Construction targets (PROTOCOL §11)
+## Construction targets (PROTOCOL §11), as ranked by the Optimiser (6731728422)
 
-1. **The consumer first.** A pair consumer at or below the room walk's per-byte cost. Candidates:
-   - the Optimiser's C37 staged pair rooms;
-   - the C38 two-bit tags (bits 28–29), which drop the first-byte lookup.
+1. **C31, the one-hop table filled directly from the run records.** Production's
+   T[q] = L[q] | Ψ(q) << 8, filled from the emitted records with resumed cursors and no sort.
+   - It drops the pair work: L reconstruction, the first-symbol directory, the composition
+     metadata, and pair starts.
+   - It keeps the checked counts, the prefixes, the F/L intersections and the room consumer.
+   - It is judged against #269's own budget, Δ ≈ .218 + δ_direct − e − f, not against
+     phase costs transplanted from this runner.
+   - This is the Researcher's angle 1, direct F with resumed cursors.
+2. **Matched emitter and fallback controls** (6730842547). These attack #269's one-worker loss
+   without a new consumer.
+3. **C37, staged pair rooms,** as a bounded consumer diagnostic on a pre-built table. To match
+   the room walk on the residual proxy, it would need a reduction of more than 34.4%.
+4. **C38, two-bit tags,** with or after C37, not as a standalone rescue. They remove the common
+   dependent end load. The high-symbol directory load remains.
 
-   Gate: show the consumer's per-byte cost under production's walk on a pre-built table, before
-   any builder is joined to it.
-2. **The run build for the single-hop table,** not the pair table. Wikidata's run build is 5.7 c/B
-   of rows. The question is whether the same intersection walk can fill production's one-hop
-   T-vector more cheaply than production's build. This is the Researcher's angle 1, direct F with
-   resumed cursors, and it is the next construction already queued.
-3. **Admission by measured benefit:**
-   - the run build wins three to four times on pattern and one-byte blocks;
-   - it loses two to three times at r/n ≈ 1.
+**Admission is not a target from this run.** The CSVs hold corpus totals, not per-block
+timings. A selector between pair builders doesn't show any production benefit. The recoverable
+saving on Wikidata is unmeasured.
 
-   A per-block rule on r/n (or cells/r) for the builder alone is cheap to test from these counts.
+Nothing here changes production.
 
-Nothing here changes production. These targets go to the Optimiser and the Researcher in the same
-wake.
+**Revision (same day):** the consumer-cost and admission statements are corrected from the
+Optimiser's replay (6731728422). The verdicts are unchanged.
