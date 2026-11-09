@@ -9,6 +9,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.7](https://github.com/lmmx/mibz2/compare/v0.2.6...v0.2.7) - 2026-11-09
 
+A safety release. A parallel `BzReader` whose source panics now fails its next read, instead
+of waiting for ever (#278). The decoder's plans, the output, the API and the supported
+inputs are unchanged.
+
+- **The fix (#278).** A parallel reader reads its source on a thread of its own. If the
+  source's `read` panicked, that thread used to unwind without cancelling the decode, and the
+  reader's next read waited for input that would never come. Every parallel reader was
+  affected: the workers, the teams and the pipelined teams. Now a guard on that thread
+  cancels the decode as it unwinds, and the next read returns an `io::Error` saying the
+  input's reader panicked. `BzReader`'s docs state the contract and what stays outside it:
+  an abort (an out-of-memory one among them) still ends the process, and a `read` that
+  blocks for ever is still never interrupted.
+- **Tests only (#275, Guardian D047; and #273, D042).** A deterministic test unwinds a
+  pipelined team's worker at three points and checks what the reader gets, with a mutant
+  that the test kills, a Miri filter, and the provenance of the pipeline's fuzz entry. #273
+  adds pipeline fuzz candidates and invariant-mutation evidence for 0.2.6's default. Both
+  are `cfg(test)`: the shipped decoder is unchanged by them.
+
+### Measured
+
+One paired run of this release's source (master at `5c98d423`, whose library is 0.2.7's)
+against `v0.2.6` (`a49038b0`), both builds on one 4-CPU CI runner (AMD EPYC 9V45, 2 physical
+cores), 10 rounds, the builds' order alternating, the bench's Wikidata sample (12 slices of
+the dump, 210 MB decoded) and the crate's corpora
+([run 42643237164](https://github.com/lmmx/mibz2/actions/runs/42643237164), bench 3.4.0):
+
+| threads | wall, 0.2.6 → 0.2.7 (median) | wall change (95%) | CPU change (95%) | peak RSS |
+|--:|--:|--:|--:|--:|
+| 1 | 0.348 → 0.349 s | +0.6% (−0.7, +2.0) | +0.6% (−0.7, +2.0) | 26 → 26 MB (+0.6%) |
+| 2 | 0.194 → 0.201 s | +1.6% (−1.0, +4.3) | +1.7% (−0.7, +4.2) | 49 → 49 MB (+0.2%) |
+| 4 | 0.178 → 0.182 s | +2.9% (−0.2, +6.0) | +2.7% (−1.1, +6.6) | 78 → 78 MB (+0.2%) |
+
+- **Result:** no change detected on the four measures at this run's precision. Every
+  interval holds no change, which is not a proof that nothing changed.
+  - Best wall time against best: +2.9% (−0.2, +6.0), both at 4 threads.
+  - CPU per byte at 4 threads: 3.10 → 3.19 ns/B. Amplification over one thread: +1.0%
+    (−2.0, +4.2) at 2 threads and +2.1% (−1.6, +5.9) at 4, neither a change.
+  - The output was the same bytes as the base's on every corpus.
+- **The other corpora:** no change at 2 or 4 threads. One flag of 21 rows: `text` at one
+  thread, +2.1% (+0.4, +3.8) slower, about what chance gives across that many intervals.
+- **By stage,** at one thread: a total of 7.14 → 7.04 cycles a byte, −1.6% (−3.4, +0.4).
+  The T-vector build reads −5.2% (−6.5, −3.8), though its code is the same in both builds:
+  with seven intervals a run, one stage's flag alone can be chance or code layout. The
+  scanner, MTF, the walk, RLE1 and CRC are each within ±1.2%, none a change.
+
+### The cost
+
+- **The guard:** one check, as the reader's thread ends, and nothing a chunk. The run above
+  shows no wall or CPU cost at any thread count.
+- **Memory:** peak RSS is 0.1–0.3 MB higher (+0.5% to +0.9%) at one thread on every
+  corpus, and at every thread count on `onebyte` and `runs`, each flagged. On the Wikidata
+  sample at 2 and 4 threads it isn't a change (+0.2%). Its cause isn't identified. Being
+  about the same in megabytes on every corpus, it looks like a fixed cost of the process,
+  not a cost a byte. One larger flag, `random` at 4 threads, +2.0 MB, +3.1% (+0.1, +6.3),
+  sits beside `pattern`'s −2.3 MB at 4 threads (not a change): the multi-threaded rows'
+  memory is noisier than this.
+
+### Caveats
+
+- **One run on one CPU model,** a 2-core runner. It is a no-regression check: it can't show
+  the ten-core plans, which CI's runners never take.
+- **The release-scaling figures follow.** `bench-release-scaling`, 0.2.7 against 0.2.6 on
+  the i9-10900K, is queued on the workstation at `539523b1`. Its figures will be added
+  here once they are in.
+- **0.2.6's known issue stands.** On the ten-core topology, the default is slower than
+  0.2.4's on files compressed at bzip2 levels 1 and 2 (see 0.2.6's notes). 0.2.7 doesn't
+  change the plans; `Plan::Teams { teams: 4, k: 2 }` still avoids it.
+
 ### <!-- 9 -->Other
 
 - Bench 3.4.0: the recorder check's failed reads and controls are INCOMPLETE (Guardian D066)
