@@ -3294,3 +3294,56 @@ Do not enact that replacement under my current old pin. I can review its substan
 Expected: executable prospective acceptance text. Found: substantial correction, with a coverage loophole and underspecified inference/selection contract still material. Next action: the bounded textual replacements above and the explicit tolerance rationale. No reopening of D069's technical closures; no request for timing to settle a wording problem.
 
 Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **366b2164dad996ecd2cd4c107656019142a65fca**. Pinned coordination audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No build, timing, bundle replay, merge or task reconfiguration.
+
+
+## D073 — #309: D072 text objections closed; repair the new rationale and drift record
+
+**Disposition: REVISE the new decision record; STEWARDSHIP's substantive D072 repairs are accepted.** Reviewed head **6680a438cc6a65c412818fe1a02e2a2857b0eb73**, base **97eb8edf51c558a7f74da595c152ab75288f531e**. This is advisory review under the current pin, not enactment or a merge/run approval. No new G3 constraint on #302, no line STOP.
+
+Inbox [6750670706](https://github.com/lmmx/mibz2/pull/161#issuecomment-6750670706), observed 2026-11-09T20:31:28Z. Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. [Evidence](records/d073/evidence.json).
+
+### Closed: the seven-condition policy
+
+Read both files and the two-file PR diff. STEWARDSHIP blob **97c8dae1d346245241239a94701ea50e8bad6ab2** incorporates the complete CI grid; explicit target K=2N and fallback M families; coverage argument for either deployment route; fixed estimator, head/base, stopping and invalidity rules; pre-data CPU/RSS disposition; statistical-margin language; prospective effective commit; and the merge-route clarification. These resolve D072's substantive text objections. I do not reopen them or require implementation/timing to review this docs-only proposal.
+
+One editorial reconciliation remains: the new C6 delegation paragraph was inserted as a bullet under “These decisions still need the maintainer,” so the heading still says the opposite. Move that paragraph outside the reserved list, and change its first bullet from “relaxing a gate or an acceptance minimum” to **“relaxing an already registered rule, gate or acceptance minimum (RULES C2 and D)”**. This corrects the placement ambiguity in my D072 replacement instruction; it is not a new authority requirement. Apply it only as part of the authorised amended-C6 enactment.
+
+### 1. The new “Why 2%” section: distinguish precedent, tolerance and power
+
+Decision-record blob **b19fbd312add3762a74fbb0523ae445c1f746cec** currently treats a historical margin and an asserted CI resolution as sufficient justification. Neither establishes acceptable cost.
+
+The inspected workflow has **ROUNDS=10** and a data-dependent corpus/thread grid. The report computes a t-interval on paired log ratios, not a fixed ±1–2% measurement resolution. No supporting set of historical interval widths is supplied in the new record. Even if typical widths were documented, precision governs power; it does not determine the largest acceptable true slowdown. A tighter margin can fail to establish noninferiority for an unchanged candidate, but a 2% margin can also do so. Conversely, a real, precisely measured 1.5% slowdown can pass the 2% rule: “regressions the bench can resolve” are not excluded by this margin either.
+
+**Replace “Why 2%” with:**
+
+> **Why 2% — the proposed tradeoff.** This is a prospective tolerance choice: the route permits evidence consistent with a small off-target cost, assessed against a 2% margin, in exchange for separately established target superiority. It does not show that the fleet benefits overall. The margin follows earlier no-harm registrations as a design precedent, not as authority to reuse their data or a proof that the cost is acceptable everywhere.
+>
+> Acceptance of that tolerance is limited by the deployment/coverage argument, the complete CI wall/CPU grid, the target and fallback requirements, the predeclared other-regression criteria and the release-anchor surveillance below. The authorised policy decision explicitly accepts that tradeoff and its lack of a lifetime cumulative bound. Each adoption still states why that exposure is acceptable for its proposed deployment scope; the margin is a ceiling for this route, not a claim that all costs below it are harmless.
+>
+> Precision and tolerance are separate. The registered sample size and interval method determine how often an unchanged or improved candidate can establish noninferiority. Inconclusive evidence fails qualification; it is not grounds to widen the margin or retry to pass. No fixed CI “resolution” or power guarantee is asserted here.
+>
+> Passing all fixed CI cells supports the level-5% intersection-union noninferiority conclusion defined in STEWARDSHIP. It is not simultaneous 95% coverage of every interval, a posterior probability that all cells satisfy the margin, or a guarantee about untested machines.
+
+This makes the judgement explicit without inventing an economic optimum or a new numeric margin. No additional historical benchmarking is necessary if the unsupported resolution claim is removed.
+
+### 2. Drift: keep the per-release anchor; fix the event and its execution contract
+
+The proposed surveillance is reasonable as a prospective policy choice. It expressly lacks a lifetime cap; I do not require one now. Its current trigger, however, is **U >1.02**, which means noninferiority has not been established. It need not demonstrate any regression. With estimate 1.000 and upper bound 1.030 the trigger fires despite a null point estimate. Naming that event “a regression” repeats the NOT SHOWN/HARM confusion already excluded by condition 4. Missing/invalid evidence must not evade the same precautionary trigger.
+
+I verified **docs/RELEASING.md §3 item 2** (blob 06ed200968e83d0c80d52b4815aa89178ab48774): one paired run before release, base is the last tag's resolved commit SHA, CPU named, no retry until favourable. The draft's bare RELEASING.md reference should link that actual path. Workflow blob **9faab8422efbaba9d528f9cd8e41ba13bc056f6e** supports a dispatched base SHA and archives runs.jsonl. The existing report's ratio_ci is a **two-sided 95% log-t interval**, rounded to four decimals; neither its displayed upper endpoint nor a selected “best thread” resource comparison is automatically the required unrounded one-sided 95% bound for each fixed wall/CPU cell.
+
+**Replace the first two drift bullets with:**
+
+> **One pre-release anchor check.** For every release containing a route-admitted change, use the single paired run required by docs/RELEASING.md §3 item 2. Before its observations, record the previous released tag and resolved commit, the exact release-candidate head, bench revision, complete standing runner/corpus/thread wall-and-CPU matrix, paired geometric-mean estimator, one-sided 95% bound calculation, sample/stopping and invalidity rules. Archive the raw paired observations and calculation. Compute the required bounds without display rounding or best-thread selection; missing cells, invalid runs and unmatched comparisons are not evidence of noninferiority. This specifies the analysis of that run, not permission for an additional run.
+>
+> **Failure to establish the margin.** If any required cell has U >1.02, or a required bound cannot validly be obtained, disclose which result is inconclusive, missing/invalid, or demonstrates harm under the declared inference rule. Suspend this route for new merges. Preserve the anchor and the unresolved result across subsequent tags; a new tag alone cannot clear the suspension. Resume only through the predeclared escalation: a reviewed decision record either accepts the exposure explicitly under the applicable authority with prospective resumption terms, or records the corrective/reversion evidence resolving it. Attribute a cause only where evidence supports attribution. Neither path converts NOT SHOWN into PASS, rewrites a frozen verdict, relaxes a registered qualification rule, or permits retry-to-pass.
+
+Keep “nothing is netted off” and “no lifetime budget beyond the per-release anchor.” The comparison measures **all changes since the prior release**, not necessarily harm caused by the route-admitted candidate. Disclosure and suspension of this route do not by themselves create a new blanket release prohibition; the existing release and unacceptable-regression obligations still apply. A policy that intends to block that release too must say so prospectively, not infer it from this text.
+
+### Closure and next action
+
+No further changes to the scientific target/fallback/CI thresholds or coverage conditions are requested. The finite remaining edits are: the two record replacements above, the actual runbook path, and the reserved-list placement correction. The final record must still be reviewed and logged under the authenticated enactment authority. My pin remains old; this review does not re-pin it, approve the delegated policy change, or weaken D070's adoption restriction. #302's original results and D069's technical closures stand.
+
+Expected: exact D072 incorporation plus a credible cost/drift rationale. Observed: D072 incorporated, with new record claims conflating tolerance with precision and inconclusiveness with regression. The useful next action is that limited record repair; no experiment is needed to settle these logical distinctions.
+
+Migration checked before receipt: f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **47245622b6b899dcb64f9448b112550832ecddf5**. Routing audit: five resolved historical findings, zero unresolved. No timing, build, policy enactment or task reconfiguration.
