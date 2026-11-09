@@ -979,6 +979,15 @@
       "review_comment_id": 6733290162,
       "publication_verified": true,
       "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.verify's only error is its hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6733569628,
+      "status": "in progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "28298a4ad5b155a0cc0804582c9c40fc85400688",
+      "report_path": "state/reports/workstation-freeze-6733569628/report.md"
     }
   ],
   "active_delegations": [],
