@@ -1,0 +1,35 @@
+{
+  "trigger_comment_id": 6730894960,
+  "queued_comment_id": 6730770330,
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source_commit": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
+  "result_journal_commit": "66edecbe2b1924594e485e1f956dbee8ed9beda2",
+  "libsais_source_commit": "c284ba843dd16c159acb976f17bc19382793ea75",
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06",
+    "verified": true
+  },
+  "checks": {
+    "direct_F_tables": 9840,
+    "resumed_cursor_tables": 9840,
+    "resumed_cursor_crossing_bound": 9840,
+    "reverse_LF_texts": 9840,
+    "timing": false,
+    "production_implementation": false
+  },
+  "limitations": [
+    "No raw timing artifact or PMU/assembly replay",
+    "2014 hybrid bitvector full paper not fetched; primary implementation description and 2026 primary paper used",
+    "Untimed finite abstract models are not decoder/safety qualification"
+  ],
+  "routing": {
+    "audit": "five resolved historical findings only",
+    "destination": 145,
+    "verify_limitation": "Pinned coord.py verify requires FROM coordinator; role-aware readback to be recorded separately"
+  },
+  "automation_modified": false
+}
