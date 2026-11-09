@@ -1,0 +1,15 @@
+{
+  "comment_id": 6740148831,
+  "pr": 145,
+  "body_matches": true,
+  "incoming_comment_id": 6739971921,
+  "work_commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d",
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "PASS",
+  "task_configuration_changed": false
+}
