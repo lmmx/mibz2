@@ -667,6 +667,22 @@
       "status": "finished",
       "disposition": "Checked-state repair concurred; B5 HOLD applies before CI timing; emitter Miri and reached-path fuzz absent.",
       "comment": 6729932417
+    },
+    {
+      "id": "D045",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6730002640,
+      "queued_comment": 6729896881,
+      "sha": "9ef3c17d12b0fcfc7609322b1d78e63ede8acdd3",
+      "evidence_digest": "cd49f6282bf03a0f150a28d51fbef772c851bad41cc4fd9b90bfdca030141907",
+      "commit": "74a413571b458ad9495430fe051626628babcbd6",
+      "status": "complete",
+      "disposition": "HOLD further service performance runs and production admission pending reached-path fuzz and targeted mutation evidence; scoped Miri/source concurrence; correct lookahead and CPU claims."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -913,7 +929,7 @@
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
     "last_completed_incoming_comment": 6729878093,
-    "last_decision": "D044",
+    "last_decision": "D045",
     "last_outgoing_comment": 6729932417,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
@@ -921,14 +937,14 @@
     "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "24bf0264417dff742fab1074bc64222aa233d431",
+    "last_decision_commit": "74a413571b458ad9495430fe051626628babcbd6",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "D044 REVIEW on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
+    "active_comment_status": "complete",
     "queue_snapshot": [
       6681847165,
       6682032075,
@@ -952,7 +968,7 @@
       6730002640
     ],
     "active_incoming_comment": 6730002640,
-    "status": "in_progress"
+    "status": "complete"
   },
   "duplicate_events": [
     {
@@ -1296,6 +1312,13 @@
       "decision": "D044",
       "commit": "24bf0264417dff742fab1074bc64222aa233d431",
       "comment": 6729932417
+    },
+    {
+      "pr": 251,
+      "sha": "9ef3c17d12b0fcfc7609322b1d78e63ede8acdd3",
+      "evidence_digest": "cd49f6282bf03a0f150a28d51fbef772c851bad41cc4fd9b90bfdca030141907",
+      "decision": "D045",
+      "commit": "74a413571b458ad9495430fe051626628babcbd6"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1496,8 +1519,10 @@
     {
       "comment_id": 6730002640,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D045"
+      "status": "complete",
+      "decision": "D045",
+      "receipt_commit": "3d8124dba08c37deecb0d48715bce54c8d5c469d",
+      "work_commit": "74a413571b458ad9495430fe051626628babcbd6"
     }
   ],
   "migrated_from": {
