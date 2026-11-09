@@ -36,6 +36,7 @@ jobs:
   # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
   # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
+  # and C29's (those teams with the register-list checkpoint kernel selected),
   # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
   fuzz-smoke:
@@ -50,6 +51,10 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      # C29 (opt-in): the same pipeline cases on the default's teams with the register-list
+      # checkpoint kernel selected (docs/journal/2026-11-09-c29-register-checkpoints.md)
+      - name: C29 candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/c29 c29
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7

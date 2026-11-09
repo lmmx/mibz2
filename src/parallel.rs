@@ -81,6 +81,9 @@ struct Shared {
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
     overlap_errors: AtomicU64,
+    /// the blocks a leader staged by C29's kernel (`Levers::register_list`), so that a
+    /// test or the fuzz loop can tell the switch reached them (`StreamDecoder::c29_stages`)
+    c29_stages: AtomicU64,
     /// testing only: the pipelined team's injected faults, and what they left
     #[cfg(test)]
     faults: Mutex<Faults>,
@@ -190,7 +193,7 @@ impl StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         let mut dec = Self::launch(teams, slots, move |shared, jobs| {
             pipelined_worker::<false, false, { super::coop::BARRIER_SPINS }>(
-                shared, jobs, kernels, team_k,
+                shared, jobs, kernels, team_k, false,
             )
         });
         dec.threads = teams * team_k;
@@ -211,10 +214,11 @@ impl StreamDecoder {
     ) -> StreamDecoder {
         use super::coop::{BARRIER_SPINS as LONG, SHORT_SPINS as SHORT};
         let (teams, team_k) = (teams.max(1), k.max(2));
+        let reg = levers.register_list;
         macro_rules! launch {
             ($park:literal, $small:literal, $spin:ident) => {
                 Self::launch(teams, slots, move |shared, jobs| {
-                    pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k)
+                    pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k, reg)
                 })
             };
         }
@@ -244,6 +248,14 @@ impl StreamDecoder {
         )
     }
 
+    /// The blocks whose move-to-front a pipelined leader ran by C29's register-list
+    /// checkpoint kernel (`Levers::register_list`) so far, failed ones included: 0 with the
+    /// switch off, and for every other decoder. Research only.
+    #[doc(hidden)]
+    pub fn c29_stages(&self) -> u64 {
+        self.shared.c29_stages.load(Ordering::Relaxed)
+    }
+
     /// The scanner, and `threads` workers each running `work`
     fn launch<W>(threads: usize, slots: usize, work: W) -> StreamDecoder
     where
@@ -265,6 +277,7 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            c29_stages: AtomicU64::new(0),
             #[cfg(test)]
             faults: Mutex::default(),
         });
@@ -628,6 +641,12 @@ pub struct Levers {
     /// for the team or finds none queued, so a small block no longer leaves the next run
     /// with nothing staged (`pipelined_worker`'s `SMALL`)
     pub small: bool,
+    /// C29: the leader's move-to-front stage by `mtf::mtf_checkpoints_reg`, the
+    /// register-list checkpoint kernel, rather than `mtf::mtf_checkpoints`
+    /// (docs/journal/2026-11-09-c29-register-checkpoints.md, a DRAFT diagnostic). Off in
+    /// `PIPELINED_LEVERS`, so the default decoder is unchanged; set, every output and error
+    /// is the same, since the two kernels' results, columns, counts and checkpoints are
+    pub register_list: bool,
 }
 
 /// A block's move-to-front stage's buffers (`Scratch`'s first three)
@@ -714,9 +733,21 @@ struct Inverted {
 }
 
 /// The move-to-front stage of a block into `f`, and its primary index checked
-/// (`decode_block`'s first steps): its length
-fn front_stage(b: &super::block::Symbols, f: &mut Front, k: Kernels) -> Result<usize, ErrorKind> {
-    let n = super::mtf::mtf_checkpoints(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
+/// (`decode_block`'s first steps): its length. With `reg` (`Levers::register_list`), by
+/// the register-list checkpoint kernel (C29), whose output is the same.
+fn front_stage(
+    b: &super::block::Symbols,
+    f: &mut Front,
+    k: Kernels,
+    reg: bool,
+) -> Result<usize, ErrorKind> {
+    use super::mtf::{mtf_checkpoints, mtf_checkpoints_reg};
+    let mtf = if reg {
+        mtf_checkpoints_reg
+    } else {
+        mtf_checkpoints
+    };
+    let n = mtf(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
@@ -921,11 +952,14 @@ enum Staging {
     Failed,
 }
 
-/// A job's move-to-front into `f`. A panic resets `f`.
-fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> Staging {
+/// A job's move-to-front into `f` (by C29 with `reg`). A panic resets `f`.
+fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels, reg: bool) -> Staging {
     let (place, bit, symbols) = job;
     mark!(MtfStart, place);
-    let r = catch_unwind(AssertUnwindSafe(|| front_stage(&symbols, f, k)));
+    let r = catch_unwind(AssertUnwindSafe(|| front_stage(&symbols, f, k, reg)));
+    if reg {
+        shared.c29_stages.fetch_add(1, Ordering::Relaxed);
+    }
     mark!(MtfEnd, place);
     let s = Staged {
         place,
@@ -951,12 +985,14 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
 
 /// A pipelined team's worker: its leader's loop. `PARK` and `SMALL` are `Levers`' park and
 /// small, `SPIN` the waits' spin budget; both false at `coop::BARRIER_SPINS`, it is the
-/// registered prototype's
+/// registered prototype's. `reg` is `Levers::register_list` (C29), a runtime choice, once
+/// a block: the move-to-front kernel the leader stages each block with.
 fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
     shared: &Shared,
     jobs: &Mutex<Receiver<Job>>,
     k: Kernels,
     team_k: usize,
+    reg: bool,
 ) {
     use super::bwt::FLAGGED_LANES;
     let mut t = Team::default();
@@ -990,7 +1026,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             if shared.lock().cancelled {
                 continue; // (drain the queue, so the scanner never waits on it)
             }
-            match stage(shared, job, &mut t.fronts[0], 0, k) {
+            match stage(shared, job, &mut t.fronts[0], 0, k, reg) {
                 Staging::Team(s) => staged = Some(s),
                 Staging::Small(small) => solo_on(shared, &mut t, small, k),
                 Staging::Failed => {}
@@ -1056,7 +1092,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                     return;
                 }
                 let mut f = lf.lock().unwrap_or_else(|e| e.into_inner());
-                match stage(shared, job, &mut f, other, k) {
+                match stage(shared, job, &mut f, other, k, reg) {
                     Staging::Team(next) => l.next = Some(next),
                     Staging::Small(b) => {
                         // a block below `MIN_COOP`: decoded whole here, overlapped too
@@ -1177,11 +1213,14 @@ const TEN_CORES_MIN_THREADS: usize = 10;
 /// keeps the plain path.
 pub const PIPELINED_PLAN: Plan = Plan::Teams { teams: 3, k: 3 };
 
-/// The default pipelined teams' levers: park and small, not the spin-budget control
+/// The default pipelined teams' levers: park and small, not the spin-budget control, and
+/// the shipped move-to-front kernel (C29's `register_list` off: opt-in until its
+/// registered diagnostic and a production gate decide otherwise)
 pub const PIPELINED_LEVERS: Levers = Levers {
     park: true,
     small: true,
     spin2k: false,
+    register_list: false,
 };
 
 thread_local! {
@@ -1325,6 +1364,37 @@ fn l3_bytes() -> Option<u64> {
 
 #[cfg(test)]
 mod unwind_tests;
+
+/// C29's switch: the front stage runs the register-list kernel exactly when it is selected
+/// (the two kernels' outputs are the same, so only the call tells them apart)
+#[cfg(test)]
+mod c29_tests {
+    use super::*;
+    use crate::mtf::{tests::symbols_of, REG_CALLS};
+
+    #[test]
+    fn the_front_stage_runs_c29_exactly_when_selected() {
+        let ll: Vec<u8> = (0..70_000u32).map(|i| b"abcab"[(i % 5) as usize]).collect();
+        let b = symbols_of(&ll);
+        for k in [Kernels::scalar(), Kernels::detect()] {
+            let mut want = None;
+            for reg in [false, true, false, true] {
+                let mut f = Front::default();
+                let before = REG_CALLS.with(|c| c.get());
+                let n = front_stage(&b, &mut f, k, reg).unwrap();
+                let calls = REG_CALLS.with(|c| c.get()) - before;
+                assert_eq!(calls, reg as u64, "{k:?}, reg {reg}: C29's calls");
+                assert_eq!(n, ll.len());
+                let got = (f.ll, f.counts, f.checkpoints);
+                assert!(got.0 == ll);
+                match &want {
+                    None => want = Some(got),
+                    Some(w) => assert!(*w == got, "{k:?}, reg {reg}: the front"),
+                }
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod plan_tests {

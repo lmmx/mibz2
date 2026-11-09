@@ -15,8 +15,13 @@
 //! and bit) as well as to libbzip2, and counted as reaching the pipeline when a leader took
 //! a job while its helpers inverted another block (`pipeline_counts`).
 //!
+//! C29's cases (MODE c29; docs/journal/2026-11-09-c29-register-checkpoints.md): the same
+//! pipeline cases, each case one, on tests/common's `c29_candidates` instead: the
+//! default's pipelined teams with `Levers::register_list` set, the register-list
+//! checkpoint kernel in the leader's front stage.
+//!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
-//! MODE: mixed (the default: every 8th case a pipeline case), classic, or pipeline
+//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline, or c29
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -34,8 +39,8 @@ fn main() {
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
-        "pipeline" => 1,
-        m => panic!("MODE is mixed, classic or pipeline, not {m}"),
+        "pipeline" | "c29" => 1,
+        m => panic!("MODE is mixed, classic, pipeline or c29, not {m}"),
     };
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 
@@ -63,7 +68,11 @@ fn main() {
         }
     }
     let cands = candidates();
-    let pipes = pipeline_candidates();
+    let pipes = if mode == "c29" {
+        c29_candidates()
+    } else {
+        pipeline_candidates()
+    };
     let pipe_corpus: Vec<(Vec<u8>, Vec<u64>)> = if every == 0 {
         Vec::new()
     } else {
@@ -169,6 +178,26 @@ fn main() {
             println!("{:>9}  {}: {reach}", st.cases, p.name());
         }
     }
+    if mode == "c29" {
+        // the switch must have reached every candidate that ran: a case of each staged by
+        // C29's kernel, or the run checked the shipped kernel alone
+        println!("C29 reach: candidate, cases with a block staged by C29, blocks so staged");
+        for (p, st) in pipes.iter().zip(&pipe_stats) {
+            println!(
+                "{:>9}  {}: {} blocks",
+                st.c29_cases,
+                p.name(),
+                st.c29_stages
+            );
+            if st.cases > 0 && st.c29_cases == 0 {
+                bad += 1;
+                println!("  NOT REACHED: no block of {} staged by C29", p.name());
+            }
+        }
+    } else if pipe_stats.iter().any(|st| st.c29_stages > 0) {
+        bad += 1;
+        println!("C29 staged a block with the switch off");
+    }
     std::process::exit(if bad == 0 { 0 } else { 1 });
 }
 
@@ -180,6 +209,9 @@ struct PipeStats {
     reached: u64,
     overlap_error_cases: u64,
     overlapped_jobs: u64,
+    /// blocks staged by C29's kernel (`StreamDecoder::c29_stages`), and the cases with any
+    c29_stages: u64,
+    c29_cases: u64,
 }
 
 /// One pipeline case: a multi-block input, edited (or not), decoded by `p`, by the plain
@@ -237,6 +269,10 @@ fn pipeline_case(
         st.reached += (jobs > 0) as u64;
         st.overlap_error_cases += (errs > 0) as u64;
         st.overlapped_jobs += jobs;
+    }
+    if let Some(n) = got.c29_stages {
+        st.c29_stages += n;
+        st.c29_cases += (n > 0) as u64;
     }
     let same_as_plain =
         got.res == plain_res && (got.out == plain_out || (!p.partial() && got.res.is_err()));

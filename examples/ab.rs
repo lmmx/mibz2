@@ -53,6 +53,10 @@
 //!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
 //!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
 //!   `both`, park and small together), each its pipeK arm's plan and window;
+//! - `mibz2-pipe2-both-c29`, `-pipe3-both-c29`, `-pipe4-both-c29` (C29, opt-in: a
+//!   pipeK-both arm with `Levers::register_list` set, the leader's move-to-front by the
+//!   register-list checkpoint kernel; docs/journal/2026-11-09-c29-register-checkpoints.md),
+//!   so in one build it differs from its pipeK-both arm in that kernel alone;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -590,6 +594,30 @@ fn decode(
                 park: lever == "park" || lever == "both",
                 small: lever == "small" || lever == "both",
                 spin2k: lever == "spin2k",
+                register_list: false,
+            };
+            drain(
+                mibz2::BzReader::parallel_pipelined_levers(
+                    open()?,
+                    teams,
+                    k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                    levers,
+                ),
+                h,
+                last,
+            )
+        }
+        // C29 (opt-in, `Levers::register_list`): the pipeK-both arm, its plan, window and
+        // levers, with the register-list checkpoint kernel in the leader's front stage
+        "mibz2-pipe2-both-c29" | "mibz2-pipe3-both-c29" | "mibz2-pipe4-both-c29" => {
+            let k = (arm.as_bytes()["mibz2-pipe".len()] - b'0') as usize;
+            let teams = (threads / k).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let levers = mibz2::parallel::Levers {
+                register_list: true,
+                ..mibz2::parallel::PIPELINED_LEVERS
             };
             drain(
                 mibz2::BzReader::parallel_pipelined_levers(

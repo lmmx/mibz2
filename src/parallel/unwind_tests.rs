@@ -144,6 +144,7 @@ fn team(
         slots: n.max(1),
         overlapped: AtomicU64::new(0),
         overlap_errors: AtomicU64::new(0),
+        c29_stages: AtomicU64::new(0),
         faults: Mutex::new(Faults {
             at: Some(fault),
             min_coop,
@@ -164,6 +165,7 @@ fn team(
                 &Mutex::new(rx),
                 k,
                 team_k,
+                false,
             )
         })
         .unwrap();

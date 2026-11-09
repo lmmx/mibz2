@@ -7,7 +7,9 @@
 //! leader prefetched while the one before was in flight); and a reader dropped mid-stream.
 //! Every test runs the registered prototype and each of its levers
 //! (`StreamDecoder::pipelined_levers`): park, the spin-budget control (spin2k), small, park
-//! and small together, and park after the short spin.
+//! and small together, and park after the short spin; and C29 (`register_list`, the
+//! register-list checkpoint kernel in the leader's front stage), alone and with the
+//! default's levers (park and small).
 //!
 //! **The default at the measured plan:** `StreamDecoder::new` (so `BzReader::parallel` and
 //! `decode_parallel`) runs pipelined teams with park and small at three teams of three
@@ -51,14 +53,17 @@ fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
 }
 
 /// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone,
-/// the spin-budget control, park and small together, and park at the short budget
-const LEVERS: [Levers; 6] = [
+/// the spin-budget control, park and small together, and park at the short budget; then
+/// C29 alone, and C29 with the default's levers (`PIPELINED_LEVERS` and `register_list`)
+const LEVERS: [Levers; 8] = [
     lv(false, false, false),
     lv(true, false, false),
     lv(false, false, true),
     lv(false, true, false),
     lv(true, true, false),
     lv(true, false, true),
+    c29(false, false),
+    c29(true, true),
 ];
 
 const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {
@@ -66,6 +71,17 @@ const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {
         park,
         small,
         spin2k,
+        register_list: false,
+    }
+}
+
+/// C29 (`register_list`) with park and small as given
+const fn c29(park: bool, small: bool) -> Levers {
+    Levers {
+        park,
+        small,
+        spin2k: false,
+        register_list: true,
     }
 }
 
@@ -94,6 +110,13 @@ fn pipe_with(
     assert_eq!(dec.threads(), teams * k);
     let (out, res) = run(&dec, z);
     let counts = dec.pipeline_counts();
+    // C29 reached exactly when it is selected: every block is staged, so a decode with
+    // output staged at least one
+    if !levers.register_list {
+        assert_eq!(dec.c29_stages(), 0, "{levers:?}: C29 staged a block");
+    } else if !out.is_empty() {
+        assert!(dec.c29_stages() > 0, "{levers:?}: C29 never staged a block");
+    }
     (out, res, counts)
 }
 
@@ -125,6 +148,8 @@ fn default_33_same(z: &[u8], want: &[u8], want_res: &Result<(), Error>, what: &s
     let (got, res) = run(&dec, z);
     assert!(got == want, "{what}: the default at 3 × 3: the bytes");
     assert_eq!(&res, want_res, "{what}: the default at 3 × 3: the result");
+    // (C29 is opt-in: the default never stages a block by it)
+    assert_eq!(dec.c29_stages(), 0, "{what}: the default at 3 × 3 ran C29");
     let plain = StreamDecoder::planned(PIPELINED_PLAN, 12, Kernels::detect());
     assert!(!plain.is_pipelined());
     let (pgot, pres) = run(&plain, z);
@@ -463,21 +488,27 @@ fn an_mtf_error_on_the_prefetched_block() {
     default_33_same(&z, &want, &want_res, "an MTF error on the prefetched block");
     // until a run has staged it overlapped (the scanner is far ahead of the decode, so
     // nearly always the first time), and every time the same bytes and error
-    let mut overlapped_errors = 0;
+    // (the registered prototype, and C29 alone, each apart)
+    let mut overlapped_errors = [0; 2];
     for _ in 0..20 {
         for k in [2, 3, 4] {
-            let (got, res, (_, errs)) = pipe(&z, 1, k, 8);
-            assert!(got == want, "k {k}: the bytes before the error");
-            assert_eq!(res, want_res, "k {k}");
-            overlapped_errors += errs;
+            for (i, levers) in [Levers::default(), c29(false, false)]
+                .into_iter()
+                .enumerate()
+            {
+                let (got, res, (_, errs)) = pipe_with(&z, 1, k, 8, levers);
+                assert!(got == want, "k {k}, {levers:?}: the bytes before the error");
+                assert_eq!(res, want_res, "k {k}, {levers:?}");
+                overlapped_errors[i] += errs;
+            }
         }
-        if overlapped_errors > 0 {
+        if overlapped_errors.iter().all(|&e| e > 0) {
             break;
         }
     }
     assert!(
-        overlapped_errors > 0,
-        "the failing block was never staged overlapped"
+        overlapped_errors.iter().all(|&e| e > 0),
+        "the failing block was never staged overlapped: {overlapped_errors:?}"
     );
 }
 
@@ -501,24 +532,29 @@ fn an_mtf_error_after_a_small_block() {
     expect.extend(reference(&column(1_500, 9), 42).unwrap());
     assert!(want == expect);
     same_as_default(&z, "an MTF error after a small block");
-    let mut overlapped_errors = 0;
+    // (each move-to-front kernel apart: the shipped one, and C29's)
+    let mut overlapped_errors = [0; 2];
     for _ in 0..20 {
         for k in [2, 3, 4] {
             for park in [false, true] {
-                let levers = lv(park, true, false);
-                let (got, res, (_, errs)) = pipe_with(&z, 1, k, 8, levers);
-                assert!(got == want, "k {k}, {levers:?}: the bytes before the error");
-                assert_eq!(res, want_res, "k {k}, {levers:?}");
-                overlapped_errors += errs;
+                for (i, levers) in [lv(park, true, false), c29(park, true)]
+                    .into_iter()
+                    .enumerate()
+                {
+                    let (got, res, (_, errs)) = pipe_with(&z, 1, k, 8, levers);
+                    assert!(got == want, "k {k}, {levers:?}: the bytes before the error");
+                    assert_eq!(res, want_res, "k {k}, {levers:?}");
+                    overlapped_errors[i] += errs;
+                }
             }
         }
-        if overlapped_errors > 0 {
+        if overlapped_errors.iter().all(|&e| e > 0) {
             break;
         }
     }
     assert!(
-        overlapped_errors > 0,
-        "the failing block was never staged overlapped after the small one"
+        overlapped_errors.iter().all(|&e| e > 0),
+        "the failing block was never staged overlapped after the small one: {overlapped_errors:?}"
     );
 }
 
