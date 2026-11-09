@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index fcdd7cca..e9ec6d09 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -950,7 +950,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
+         // the run: the helpers invert `s` into bufs[a], while the leader finishes
+         // `inverted` from bufs[1 - a] and stages the next job in fronts[1 - s.front]
+         let a = inverted.as_ref().map_or(0, |b| 1 - b.buf);
+-        let other = 1 - s.front;
++        let other = s.front;
+         let lead = Mutex::new(Lead {
+             inverted: inverted.take(),
+             ..Lead::default()

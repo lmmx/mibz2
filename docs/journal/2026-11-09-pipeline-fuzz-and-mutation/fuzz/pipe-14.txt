@@ -1,0 +1,25 @@
+4519 cases in 180 s (seed 14, mode pipeline), 0 failures
+      567  pipeline: both decode, same bytes
+      300  pipeline: both fail (BadBlockMagic), as the plain decoder
+      519  pipeline: both fail (BadCodeLength), as the plain decoder
+       97  pipeline: both fail (BadGroups), as the plain decoder
+      321  pipeline: both fail (BadHuffmanCode), as the plain decoder
+      101  pipeline: both fail (BadOrigPtr), as the plain decoder
+      189  pipeline: both fail (BadSelector), as the plain decoder
+      932  pipeline: both fail (BlockCrc), as the plain decoder
+      118  pipeline: both fail (BlockTooLong), as the plain decoder
+        2  pipeline: both fail (NoSymbols), as the plain decoder
+        7  pipeline: both fail (NotBz2), as the plain decoder
+       17  pipeline: both fail (Randomised), as the plain decoder
+        5  pipeline: both fail (RunTooLong), as the plain decoder
+       27  pipeline: both fail (RunUnfinished), as the plain decoder
+      170  pipeline: both fail (SelectorOverrun), as the plain decoder
+      148  pipeline: both fail (StreamCrc), as the plain decoder
+        3  pipeline: both fail (TrailingData), as the plain decoder
+      996  pipeline: both fail (Truncated), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+      903  mibz2 default 3x3 StreamDecoder::new w1048576 r65536: 257 of 903 reached, 1 with an overlapped error, 440 overlapped jobs
+      904  mibz2 default 3x3 StreamDecoder::new w997 r509: 283 of 904 reached, 7 with an overlapped error, 506 overlapped jobs
+      904  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)
+      904  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)
+      904  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 498 of 904 reached, 15 with an overlapped error, 1307 overlapped jobs

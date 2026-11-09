@@ -1,0 +1,20 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index fcdd7cca..6cc232b5 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -841,12 +841,9 @@ struct Lead {
+ /// held, by a worker waiting in `recv`, which will take the next one)
+ fn try_job(jobs: &Mutex<Receiver<Job>>) -> Option<Job> {
+     use std::sync::TryLockError;
+-    let rx = match jobs.try_lock() {
+-        Ok(rx) => rx,
+-        Err(TryLockError::Poisoned(p)) => p.into_inner(),
+-        Err(TryLockError::WouldBlock) => return None,
+-    };
+-    rx.try_recv().ok()
++    let _ = TryLockError::<()>::WouldBlock;
++    let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
++    rx.recv().ok()
+ }
+ 
+ /// What a job's move-to-front gave: a block for the team, a block below `MIN_COOP` for the

@@ -1,0 +1,14 @@
+diff --git a/src/coop.rs b/src/coop.rs
+index 563ad213..f884af17 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -1166,8 +1166,8 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
+         }
+         if relay.built.fetch_add(1, Ordering::AcqRel) + 1 == helpers {
+             // SAFETY: this is the last helper to count in: every share has ended
+-            unsafe { relay.end_build() };
+             relay.set_walk_ready::<PARK>();
++            unsafe { relay.end_build() };
+         } else {
+             tmark!(BuildWaitStart, place);
+             relay.wait_walk_ready::<PARK, SPIN>();
