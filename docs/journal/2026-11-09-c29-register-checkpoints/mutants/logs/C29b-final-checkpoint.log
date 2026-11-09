@@ -1,0 +1,39 @@
+mutant C29b-final-checkpoint on 2153cd40e04489155c1cdaf26df41e7b3ef94701 + mutants/C29b-final-checkpoint.patch; 2026-11-09T05:35:20Z
+cmd: cargo test -j2 --lib mtf::tests -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.27s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 3 tests
+test mtf::tests::miri_register_checkpoints ... FAILED
+test mtf::tests::register_checkpoints_are_checkpoints ... FAILED
+test mtf::tests::register_checkpoints_reach_every_class ... FAILED
+
+failures:
+
+---- mtf::tests::miri_register_checkpoints stdout ----
+
+thread 'mtf::tests::miri_register_checkpoints' (9904) panicked at src/mtf/tests.rs:369:13:
+assertion failed: p == p2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- mtf::tests::register_checkpoints_are_checkpoints stdout ----
+
+thread 'mtf::tests::register_checkpoints_are_checkpoints' (9905) panicked at src/mtf/tests.rs:189:13:
+3431 symbols, max_len 900000, Kernels { avx2: true, clmul: true }: the checkpoints
+
+---- mtf::tests::register_checkpoints_reach_every_class stdout ----
+
+thread 'mtf::tests::register_checkpoints_reach_every_class' (9907) panicked at src/mtf/tests.rs:189:13:
+16 symbols, max_len 16384, Kernels { avx2: true, clmul: true }: the checkpoints
+
+
+failures:
+    mtf::tests::miri_register_checkpoints
+    mtf::tests::register_checkpoints_are_checkpoints
+    mtf::tests::register_checkpoints_reach_every_class
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.22s
+
+error: test failed, to rerun pass `--lib`
+rc=101

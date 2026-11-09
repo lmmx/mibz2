@@ -35,6 +35,28 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.3.0] - 2026-11-09
+
+### Added
+
+- **C29's arms and its exposed-path diagnostic** (docs/journal/2026-11-09-c29-register-checkpoints.md,
+  a DRAFT registration).
+  - `examples/ab.rs`'s `mibz2-pipe2-both-c29`, `-pipe3-both-c29` and `-pipe4-both-c29`: a
+    pipeK-both arm with `Levers::register_list` set, the pipelined leader's move-to-front by
+    the register-list checkpoint kernel. In one build each differs from its pipeK-both arm in
+    that kernel alone.
+  - `sweep.yml`'s `tool: c29` runs `mibz2-pipe3-both` against `mibz2-pipe3-both-c29` at 9 and
+    3 threads, and `bench/c29_checkpoints.py` admits and reads it (`bench/test_c29_checkpoints.py`
+    checks it).
+  - They're not in bench.yml's arms, and its default cells (1, 2 and 4 threads, which never
+    run the pipelined teams) don't reach the kernel.
+
+- **Each run's child's exit status** (`examples/ab.rs`, `exit`: 0, its code, or -1 for a
+  signal), as #270's research harness records it, so a reporter can refuse a run whose child
+  failed. This is a change to what is stored.
+
+Every existing figure is as it was: the new arms, the field and the diagnostic sit beside them.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added

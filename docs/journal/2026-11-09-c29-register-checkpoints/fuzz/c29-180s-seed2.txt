@@ -1,0 +1,32 @@
+fuzz c29, 180 s, seed 2, head 2153cd40e04489155c1cdaf26df41e7b3ef94701, rustc 1.97.0 (2d8144b78 2026-07-07), profile fuzz
+4259 cases in 180 s (seed 2, mode c29), 0 failures
+      572  pipeline: both decode, same bytes
+      298  pipeline: both fail (BadBlockMagic), as the plain decoder
+      481  pipeline: both fail (BadCodeLength), as the plain decoder
+       87  pipeline: both fail (BadGroups), as the plain decoder
+      294  pipeline: both fail (BadHuffmanCode), as the plain decoder
+      101  pipeline: both fail (BadOrigPtr), as the plain decoder
+      194  pipeline: both fail (BadSelector), as the plain decoder
+        5  pipeline: both fail (BadSelectors), as the plain decoder
+      856  pipeline: both fail (BlockCrc), as the plain decoder
+      106  pipeline: both fail (BlockTooLong), as the plain decoder
+        2  pipeline: both fail (NoSymbols), as the plain decoder
+        6  pipeline: both fail (NotBz2), as the plain decoder
+       21  pipeline: both fail (Randomised), as the plain decoder
+        6  pipeline: both fail (RunTooLong), as the plain decoder
+       12  pipeline: both fail (RunUnfinished), as the plain decoder
+      155  pipeline: both fail (SelectorOverrun), as the plain decoder
+      113  pipeline: both fail (StreamCrc), as the plain decoder
+        3  pipeline: both fail (TrailingData), as the plain decoder
+      947  pipeline: both fail (Truncated), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+     1064  mibz2 pipelined 3x3 park+small+c29 s12 w1048576 r65536: 288 of 1064 reached, 3 with an overlapped error, 463 overlapped jobs
+     1065  mibz2 pipelined 3x3 park+small+c29 s12 w997 r509: 299 of 1065 reached, 8 with an overlapped error, 490 overlapped jobs
+     1065  mibz2 pipelined 3x3 park+small+c29 s12 w100003 r4093: 325 of 1065 reached, 2 with an overlapped error, 508 overlapped jobs
+     1065  mibz2 pipelined 1x3 park+small+c29 s4 w100003 r65536: 578 of 1065 reached, 17 with an overlapped error, 1619 overlapped jobs
+C29 reach: candidate, cases with a block staged by C29, blocks so staged
+      895  mibz2 pipelined 3x3 park+small+c29 s12 w1048576 r65536: 3902 blocks
+      906  mibz2 pipelined 3x3 park+small+c29 s12 w997 r509: 3895 blocks
+      925  mibz2 pipelined 3x3 park+small+c29 s12 w100003 r4093: 4049 blocks
+      906  mibz2 pipelined 1x3 park+small+c29 s4 w100003 r65536: 3684 blocks
+rc=0

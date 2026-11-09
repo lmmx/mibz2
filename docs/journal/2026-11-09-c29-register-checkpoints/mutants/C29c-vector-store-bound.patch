@@ -1,0 +1,13 @@
+diff --git a/src/mtf.rs b/src/mtf.rs
+index 95ee0e1d..062830ba 100644
+--- a/src/mtf.rs
++++ b/src/mtf.rs
+@@ -594,7 +594,7 @@ unsafe fn mtf_checkpoints_reg_avx2(
+             let len = $len;
+             let c = _mm_cvtsi128_si32(f0) as u8;
+             counts[c as usize] += len as u32;
+-            if len <= 64 && n + 64 <= max {
++            if len <= 64 && n < max {
+                 let v = _mm256_broadcastb_epi8(f0);
+                 _mm256_storeu_si256(out.add(n) as *mut __m256i, v);
+                 _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, v);

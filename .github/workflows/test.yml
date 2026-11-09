@@ -72,6 +72,15 @@ jobs:
       - name: Submission tests
         run: python3 bench/test_submit.py
 
+  # bench/c29_checkpoints.py, C29's diagnostic's reporter, on synthetic runs: VALID with the
+  # reading its ratios give, INVALID on each defect its admission guards against
+  c29-reporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Reporter tests
+        run: python3 bench/test_c29_checkpoints.py
+
   get-python-versions:
     runs-on: ubuntu-latest
     outputs:

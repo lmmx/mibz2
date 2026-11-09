@@ -1,0 +1,25 @@
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 24.38s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 3 tests
+test mtf::tests::miri_register_checkpoints ... ok
+test mtf::tests::register_checkpoints_are_checkpoints ... ok
+C29: 2811 streams, kernels [Kernels { avx2: false, clmul: false }, Kernels { avx2: true, clmul: true }]
+     1575  run split at a checkpoint
+      211  run ending at a checkpoint
+      861  byte at a checkpoint
+      172  block ending at a checkpoint
+   761427  run by the vector stores
+      627  run of <= 64 by bytes at the bound
+    12621  run of > 64
+     1439  Ok
+      901  BlockTooLong in a run
+      317  BlockTooLong at a byte
+      129  RunTooLong
+       25  no end-of-block symbol
+test mtf::tests::register_checkpoints_reach_every_class ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 1.32s
+

@@ -1,0 +1,25 @@
+mutant C29d-lever-dropped on 2153cd40e04489155c1cdaf26df41e7b3ef94701 + mutants/C29d-lever-dropped.patch; 2026-11-09T05:36:07Z
+cmd: cargo test -j2 --test pipelined an_mtf_error_after_a_small_block -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.15s
+     Running tests/pipelined.rs (target/debug/deps/pipelined-30dc416feec0764c)
+
+running 1 test
+test an_mtf_error_after_a_small_block ... FAILED
+
+failures:
+
+---- an_mtf_error_after_a_small_block stdout ----
+
+thread 'an_mtf_error_after_a_small_block' (20799) panicked at tests/pipelined.rs:118:9:
+Levers { park: false, spin2k: false, small: false, register_list: true }: C29 never staged a block
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    an_mtf_error_after_a_small_block
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.43s
+
+error: test failed, to rerun pass `--test pipelined`
+rc=101

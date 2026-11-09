@@ -6,7 +6,14 @@
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
 # decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
-# stages alone and with every CPU busy, as a multi-threaded decode runs them.
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: c29`, C29's exposed-path diagnostic instead (docs/journal/2026-11-09-c29-register-
+# checkpoints.md, DRAFT, NOT FROZEN): `ab run` of the shipped pipelined teams
+# (`mibz2-pipe3-both`, the default's levers) against the same with the register-list
+# checkpoint kernel selected (`mibz2-pipe3-both-c29`), one build, interleaved by round,
+# ROUNDS rounds at 9 threads (3 teams of 3) and at 3 (1 team of 3), on the runner's every
+# CPU, unpinned; then bench/c29_checkpoints.py's validity and reading, and the raw runs
+# archived.
 name: Walk sweep
 
 on:
@@ -17,9 +24,13 @@ on:
         required: false
         default: "5"
       tool:
-        description: "sweep (the factorial) or phases (the stages)"
+        description: "sweep (the factorial), phases (the stages) or c29 (C29's exposed-path A/B)"
         required: false
         default: "sweep"
+      registered_head:
+        description: "c29: the frozen registration's full 40-character head, for the judged reading (empty: UNJUDGED)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -44,7 +55,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release --example sweep --example phases --example windows
+        run: cargo build --release --example sweep --example phases --example windows --example ab
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -73,11 +84,67 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           TOOL: ${{ inputs.tool || 'sweep' }}
+          REGISTERED: ${{ inputs.registered_head }}
         run: |
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          case "$TOOL" in sweep|phases) ;; *) echo "tool: sweep or phases"; exit 1 ;; esac
+          case "$TOOL" in sweep|phases|c29) ;; *) echo "tool: sweep, phases or c29"; exit 1 ;; esac
+          if [ "$TOOL" = c29 ]; then
+            set -o pipefail
+            # whole decodes, one process a run (ab's), both arms' outputs hashed and paired
+            # by round; the 9-thread cell judged, the 3-thread one (one team) secondary
+            ab=target/release/examples/ab
+            arms=mibz2-pipe3-both,mibz2-pipe3-both-c29
+            # the run's identity, for the reporter to check against the registration: the
+            # head, a clean tree (the sources the build and the reporter read), the build,
+            # and the binary's and corpus's digests before and after the run
+            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench Cargo.toml Cargo.lock)" ] && echo true || echo false)
+            bin0=$(sha256sum "$ab" | cut -d' ' -f1); cor0=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            $ab env > c29-env.json
+            $ab run c29-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> c29-progress.txt
+            bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            python3 - "$arms" > c29-identity.json <<EOF
+          import json, subprocess, sys
+          print(json.dumps({
+              "schema": "c29_checkpoints/identity/1",
+              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "tree_clean": json.loads("$tree_clean"),
+              "features": [],
+              "profile": "release",
+              "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "binary_sha256_before": "$bin0",
+              "binary_sha256_after": "$bin1",
+              "corpus_sha256_before": "$cor0",
+              "corpus_sha256_after": "$cor1",
+              "arms": sys.argv[1].split(","),
+              "threads": [9, 3],
+              "rounds": int("$ROUNDS"),
+          }, indent=1))
+          EOF
+            # judged only at the registered head; any other run UNJUDGED. No re-run on an
+            # INVALID: a failed admission is kept and investigated
+            if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
+            status=0
+            python3 bench/c29_checkpoints.py report c29-runs.jsonl "${judge[@]}" --identity c29-identity.json --out c29-report > c29-report.txt || status=$?
+            {
+              echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse HEAD); c29, rounds $ROUNDS"
+              echo "corpus sha256 $(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)"
+              cat c29-report.txt
+              echo
+              echo "(ab summary against mibz2-pipe3-both, at both thread counts: reported, never judged)"
+              $ab summary c29-runs.jsonl --ref mibz2-pipe3-both || true
+            } > sweep-1.txt
+            cat sweep-1.txt
+            {
+              echo "## C29 exposed-path A/B (DRAFT, NOT FROZEN): $model, $(nproc) CPUs"
+              echo
+              echo '```'
+              cat sweep-1.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
           bin=target/release/examples/$TOOL
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures
@@ -112,5 +179,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sweep-${{ github.sha }}
-          path: sweep-*.txt
+          path: |
+            sweep-*.txt
+            c29-*
           if-no-files-found: ignore

@@ -1,0 +1,27 @@
+mutant C29e-front-stage-ignores-switch on 2153cd40e04489155c1cdaf26df41e7b3ef94701 + mutants/C29e-front-stage-ignores-switch.patch; 2026-11-09T05:36:10Z
+cmd: cargo test -j2 --lib parallel::c29_tests -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.31s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 1 test
+test parallel::c29_tests::the_front_stage_runs_c29_exactly_when_selected ... FAILED
+
+failures:
+
+---- parallel::c29_tests::the_front_stage_runs_c29_exactly_when_selected stdout ----
+
+thread 'parallel::c29_tests::the_front_stage_runs_c29_exactly_when_selected' (22848) panicked at src/parallel.rs:1383:17:
+assertion `left == right` failed: Kernels { avx2: false, clmul: false }, reg true: C29's calls
+  left: 0
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    parallel::c29_tests::the_front_stage_runs_c29_exactly_when_selected
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`
+rc=101
