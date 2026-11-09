@@ -667,11 +667,13 @@
     {
       "comment_id": 6732659575,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "03e52206ac248737bc856f064928adf238265917",
-      "progress": "Completed replay, source audit, phase accounting, C29/LS/C42 ranking and prospective registrations; work committed next, publication pending."
+      "progress": "Complete report, raw artifact replay, arithmetic and ledger committed; exact report readback verified. REVIEW publication pending.",
+      "report_commit": "92ccf8c9804c50da1458cefc62c1ab9b2ac374a3",
+      "report_path": "state/records/reviews/inbox-6732659575/report.md"
     }
   ],
   "migrated_from": {
