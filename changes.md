@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6734039197:** #283's untimed disassembly, counters and stack probe traced large all-fallback B/A penalties to harness layout; retained 4 KiB aliasing as unproved mechanism and left registered verdicts intact. #270 workstation timing registration specified but occupancy admission and join-before-take claim remain REVISE. C29 received scoped diagnostic safety clearance but not production qualification; default-off one-thread anomaly did not reproduce. #282 pre-commit fix merged; #271 ready tag remains unset.
+
 - **2026-11-09, channel through 6733117820:** #277's valid registered direct-placement run STOPped on an AMD worker. Sorted B/A won there but lost in #269's Intel run with a different baseline; retained both verdicts without causal machine attribution. #280 packet census paused its arm. #270 CI LEAD stands, but Researcher requires workstation recipe revision and the C29 prototype is separate. #271's safety and admission holds lifted; its ready tag is blocked by a refused run-signal dispatch. #279 routing fix merged.
 
 - **2026-11-09, channel through 6732679972:** Guardian D057 lifted the scoped D045/D053 service-core safety HOLD after corrected trace attribution and completed pinned Miri. #271's independent admission HOLD remains; guarded integration does not inherit #258's unguarded performance result.
