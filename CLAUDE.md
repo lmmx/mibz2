@@ -90,6 +90,10 @@ the Guardian's ruling. Louis is asked only for what RULES D reserves to him, or 
 he has (for example, the workstation's state). Otherwise the coordinator decides, records why,
 and carries on.
 
+## Delegated as a class: design, acceptance, adoption
+
+Louis delegated, in the Coordinator's session on 2026-11-09, experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities), master's merge acceptance rule and adoption policy, as a class (RULES C6, amended). The team decides them under review: pre-registered and frozen before data, the Researcher's PROCEED, the Guardian on gate and safety questions, and C2 never relaxed after the data is seen. Don't send these back to Louis one by one. He is still needed only for what RULES D keeps: his C5 workstation runs, new infrastructure or spending, role changes, and rule changes.
+
 ## The agent team
 
 The team's live machinery is `docs/team/`:
