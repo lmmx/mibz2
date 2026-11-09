@@ -3231,7 +3231,7 @@ This retains the proposed multi-model floor without treating it as scientific su
 
 “Two-sided 95%,” “one-sided 95%,” and then unspecified Bonferroni are not an executable rule. Is the family wall only, CPU only, both, multiple corpora or machines? One budget still has two metrics. Freeze that definition now; do not leave the confidence level selectable by a later registration.
 
-**After condition 3's first two sentences, use:**
+**Keep condition 3's opening sentence through “public entry point.” Replace its remaining sentences with:**
 
 > Every cell in the complete registered on-target machine × workload × enabled-budget matrix must pass both tests: wall speed (base/head) lower bound >1.02 and CPU time (head/base) upper bound ≤1.02. Let N be the number of required cells and K=2N the number of intervals. Use a two-sided wall interval of confidence 1−0.05/K and a one-sided CPU upper bound of confidence 1−0.05/K for each cell. These K intervals form one Bonferroni family with coverage at least 95%, assuming each constituent interval has its stated coverage. Missing, invalid or nonpassing cells fail qualification; no cell may be selected or removed after its results.
 
