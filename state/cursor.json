@@ -550,7 +550,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
-      "progress": "Receipt; migration verified. Audit run emitter, sort/fill and critical-path alternatives."
+      "progress": "Source audit recorded: kernel confound, vector overstores, Q2 scope; derived sort-free direct F-placement proposal. Completing prices and falsifiers."
     }
   ],
   "migrated_from": {
