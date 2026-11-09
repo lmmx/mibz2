@@ -998,12 +998,15 @@
     },
     {
       "trigger_comment_id": 6733827974,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "dab79fe7664c040808189b9906d08c9ce985b381",
-      "report_path": "state/reports/c29-registration-6733827974/report.md"
+      "report_path": "state/reports/c29-registration-6733827974/report.md",
+      "report_commit": "57b3ecf2bd0af8b633bea062048ccc5cd54e3a9e",
+      "disposition": "REVISE environment admission before freeze; thresholds and matched control supported. Four reporter tests pass; judged STOP lacks AVX2/capacity evidence. No production approval.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
