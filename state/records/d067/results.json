@@ -1,0 +1,74 @@
+{
+  "scope": "D067: finite source-backed witnesses, not Rust/Miri or a kernel probe.",
+  "quota_read_failures": [
+    {
+      "case": "membership EACCES",
+      "quota": "Unlimited",
+      "other_target_facts_true": true,
+      "service_target": true
+    },
+    {
+      "case": "all cpu.max reads EACCES",
+      "quota": "Unlimited",
+      "other_target_facts_true": true,
+      "service_target": true
+    },
+    {
+      "case": "leaf max; parent EACCES hiding a smaller quota",
+      "quota": "Unlimited",
+      "other_target_facts_true": true,
+      "service_target": true
+    }
+  ],
+  "eof_before_retirement": [
+    {
+      "step": "last finisher before publish",
+      "issued": 4,
+      "taken": 3,
+      "ready": [],
+      "end": 4,
+      "live": 1,
+      "finished": 3
+    },
+    {
+      "step": "publish wakes reader; finisher descheduled",
+      "issued": 4,
+      "taken": 3,
+      "ready": [
+        3
+      ],
+      "end": 4,
+      "live": 1,
+      "finished": 3
+    },
+    {
+      "step": "reader consumes last output then sees EOF",
+      "issued": 4,
+      "taken": 4,
+      "ready": [],
+      "end": 4,
+      "live": 1,
+      "finished": 3
+    },
+    {
+      "step": "finisher retires later",
+      "issued": 4,
+      "taken": 4,
+      "ready": [],
+      "end": 4,
+      "live": 0,
+      "finished": 4
+    }
+  ],
+  "lost_token_after_cancel": {
+    "state": {
+      "closed": true,
+      "jobs": 0,
+      "prepared": 0,
+      "walked": 0,
+      "live": 1,
+      "cancelled": true
+    },
+    "hub_done": false
+  }
+}

@@ -1,0 +1,74 @@
+--- fc013927/src_read.rs
++++ 3c16b730/src_read.rs
+@@ -24,12 +24,12 @@
+ /// `io::Error` of kind `InvalidData` wrapping this crate's `Error`, after every byte of
+ /// the blocks before the bad one has been read.
+ ///
+-/// A parallel reader reads `r` on a thread of its own, and a panic in `r`'s `read` is not
+-/// caught there (this research snapshot, 3e201246's reader): that thread unwinds without
+-/// closing the decoder's input or cancelling it, so the reader's next read can wait for
+-/// ever. A caller whose source can panic must not rely on this reader's recovery from it
+-/// (D045, D053). Nor is anything promised for an abort, an out-of-memory one among them,
+-/// or a `read` that blocks for ever (dropping the reader leaves that thread to finish it).
++/// A parallel reader reads `r` on a thread of its own. If `r`'s `read` panics, that thread
++/// cancels the decode as it unwinds, and the next read fails with an `io::Error` saying the
++/// input's reader panicked (the bytes of the blocks before may or may not have been read).
++/// Nothing is promised past that: an abort (an out-of-memory one among them) ends the
++/// process, and a `read` that blocks for ever is never interrupted (dropping the reader
++/// leaves that thread to finish it).
+ pub struct BzReader<R> {
+     inner: Inner<R>,
+ }
+@@ -87,6 +87,19 @@
+     }
+ }
+ 
++impl<R> BzReader<R> {
++    /// Testing: the parallel decoder this reader runs (None for a sequential reader), so a
++    /// test can see which decoder `parallel`/`parallel_with` built (`is_service`,
++    /// `is_pipelined`, `threads`, `window`)
++    #[doc(hidden)]
++    pub fn parallel_decoder(&self) -> Option<&StreamDecoder> {
++        match &self.inner {
++            Inner::Par(p) => Some(&p.dec),
++            Inner::Seq(_) => None,
++        }
++    }
++}
++
+ impl<R: Read + Send + 'static> BzReader<R> {
+     /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
+     /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams
+@@ -168,6 +181,10 @@
+         let feeder = std::thread::Builder::new()
+             .name("mibz2-read".into())
+             .spawn(move || {
++                // (a panic in `r`'s read unwinds this thread: the guard then records it as
++                // the read's error and cancels the decode, so the reader is not left
++                // waiting for input that will never come)
++                let _unwind = CancelOnUnwind(&d, &e);
+                 loop {
+                     let mut buf = vec![0u8; CHUNK];
+                     let n = match read_full(&mut r, &mut buf) {
+@@ -195,6 +212,21 @@
+                 feeder: Some(feeder),
+                 read_error,
+             }),
++        }
++    }
++}
++
++/// A parallel reader's feeder's guard: if the feeder unwinds (its source's `read`
++/// panicked), the decode is cancelled and the reader's next read fails with an
++/// `io::Error` saying so, instead of waiting for input that will never come
++struct CancelOnUnwind<'a>(&'a StreamDecoder, &'a Mutex<Option<io::Error>>);
++
++impl Drop for CancelOnUnwind<'_> {
++    fn drop(&mut self) {
++        if std::thread::panicking() {
++            *self.1.lock().unwrap_or_else(|p| p.into_inner()) =
++                Some(io::Error::other("the input's reader panicked"));
++            self.0.cancel();
+         }
+     }
+ }

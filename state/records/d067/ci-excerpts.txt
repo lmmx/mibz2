@@ -1,0 +1,67 @@
+JOB 129157303165
+2026-11-09T12:22:14.6202455Z HEAD is now at 9aaa455 Merge 3c16b730161e416d7e282874a848ee387e4202c2 into ddc6d4db7e4cbd28422fa06b5e53afbf0fabef86
+2026-11-09T12:22:14.6206974Z ##[endgroup]
+2026-11-09T12:22:14.6238590Z [command]/usr/bin/git log -1 --format=%H
+2026-11-09T12:22:14.6260560Z 9aaa45529e09de10425a60a2e6bcc6a6a222f381
+2026-11-09T12:22:21.3615277Z ##[group]Run cargo test
+2026-11-09T12:22:21.3615467Z [36;1mcargo test[0m
+2026-11-09T12:22:21.3654501Z shell: /usr/bin/bash -e {0}
+2026-11-09T12:22:49.8784634Z test parallel::plan_tests::the_service_default ... ok
+2026-11-09T12:22:49.8786224Z test parallel::plan_tests::the_service_target ... ok
+2026-11-09T12:24:10.0118052Z test result: ok. 64 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 82.05s
+2026-11-09T12:24:10.0118383Z 
+2026-11-09T12:24:17.4847062Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.47s
+2026-11-09T12:24:17.4847360Z 
+2026-11-09T12:24:21.5758849Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.08s
+2026-11-09T12:24:21.5759082Z 
+2026-11-09T12:24:32.6689322Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.09s
+2026-11-09T12:24:32.6689529Z 
+2026-11-09T12:24:34.5878767Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.90s
+2026-11-09T12:24:34.5878968Z 
+2026-11-09T12:24:36.5204907Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.93s
+2026-11-09T12:24:36.5205113Z 
+2026-11-09T12:24:39.5659637Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.04s
+2026-11-09T12:24:39.5659846Z 
+2026-11-09T12:24:49.1159929Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.55s
+2026-11-09T12:24:49.1160228Z 
+2026-11-09T12:24:49.1370076Z [1m[92m     Running[0m tests/reader_panic.rs (target/debug/deps/reader_panic-f58bec17062a9d31)
+2026-11-09T12:24:49.1380551Z 
+2026-11-09T12:24:49.7365325Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s
+2026-11-09T12:24:49.7365628Z 
+2026-11-09T12:24:49.7404716Z [1m[92m     Running[0m tests/service.rs (target/debug/deps/service-35adb7334dcd6224)
+2026-11-09T12:24:49.7415817Z 
+2026-11-09T12:24:53.7560226Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.01s
+2026-11-09T12:24:53.7560436Z 
+2026-11-09T12:24:53.7773426Z [1m[92m     Running[0m tests/service_default.rs (target/debug/deps/service_default-e14900520b208159)
+2026-11-09T12:24:53.7784216Z 
+2026-11-09T12:24:54.6791134Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.90s
+2026-11-09T12:24:54.6791453Z 
+2026-11-09T12:24:55.9414385Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+2026-11-09T12:24:55.9415072Z 
+2026-11-09T12:24:55.9667219Z ##[group]Run cargo test --example ab
+2026-11-09T12:24:55.9667559Z [36;1mcargo test --example ab[0m
+2026-11-09T12:24:55.9708070Z shell: /usr/bin/bash -e {0}
+2026-11-09T12:24:57.4176045Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+2026-11-09T12:24:57.4176355Z 
+
+JOB 129157302740
+2026-11-09T12:22:21.5748671Z HEAD is now at 9aaa4552 Merge 3c16b730161e416d7e282874a848ee387e4202c2 into ddc6d4db7e4cbd28422fa06b5e53afbf0fabef86
+2026-11-09T12:22:21.5750817Z ##[endgroup]
+2026-11-09T12:22:21.5799176Z [command]/usr/bin/git log -1 --format=%H
+2026-11-09T12:22:21.5825923Z 9aaa45529e09de10425a60a2e6bcc6a6a222f381
+2026-11-09T12:22:32.8217095Z ##[group]Run cargo test --release --features trace --lib --example occupancy
+2026-11-09T12:22:32.8217668Z [36;1mcargo test --release --features trace --lib --example occupancy[0m
+2026-11-09T12:22:32.8266769Z shell: /usr/bin/bash -e {0}
+2026-11-09T12:23:01.7906102Z test parallel::plan_tests::the_service_default ... FAILED
+2026-11-09T12:23:01.7910403Z test parallel::plan_tests::the_service_target ... ok
+2026-11-09T12:25:19.2954499Z ---- parallel::plan_tests::the_service_default stdout ----
+2026-11-09T12:25:19.2955131Z 
+2026-11-09T12:25:19.2955788Z thread 'parallel::plan_tests::the_service_default' (4738) panicked at src/parallel.rs:3141:9:
+2026-11-09T12:25:19.2956984Z assertion `left == right` failed
+2026-11-09T12:25:19.2957624Z   left: (4, 3)
+2026-11-09T12:25:19.2958116Z  right: (4, 4)
+2026-11-09T12:25:19.2958368Z 
+2026-11-09T12:25:19.2959144Z     parallel::plan_tests::the_service_default
+2026-11-09T12:25:19.2959565Z 
+2026-11-09T12:25:19.2960137Z test result: FAILED. 63 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 139.99s
+2026-11-09T12:25:19.2960871Z 

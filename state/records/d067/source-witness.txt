@@ -1,0 +1,129 @@
+// Source excerpts at 3c16b730161e416d7e282874a848ee387e4202c2, src/parallel.rs
+// Lines 1300-1340
+impl HubState {
+    fn done(&self) -> bool {
+        self.closed && self.jobs.is_empty() && self.live == 0
+    }
+}
+
+struct Hub {
+    st: Mutex<HubState>,
+    cv: Condvar,
+    lookahead: usize,
+    fault: Option<ServiceFault>,
+}
+
+impl Hub {
+    fn lock(&self) -> std::sync::MutexGuard<'_, HubState> {
+        // (no stage runs under this lock; it is consistent at every unlock)
+        self.st.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn wait<'a>(
+        &self,
+        g: std::sync::MutexGuard<'a, HubState>,
+    ) -> std::sync::MutexGuard<'a, HubState> {
+        self.cv.wait(g).unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// A block left the decode (published or dropped): its buffers back, if any
+    fn retire(&self, front: Option<Front>, back: Option<Back>) {
+        self.retire_counted(front, back, false);
+    }
+
+    /// `retire`, counting a finished block (`ServiceCounts::finished`) under the same lock
+    fn retire_counted(&self, front: Option<Front>, back: Option<Back>, finished: bool) {
+        let mut st = self.lock();
+        st.live -= 1;
+        st.counts.finished += u64::from(finished);
+        st.fronts.extend(front);
+        st.backs.extend(back);
+        drop(st);
+        self.cv.notify_all();
+    }
+// Lines 1576-1614
+/// A walked block's assembly, RLE1 and CRC, and its result published; a panic made its
+/// `Internal` error, its back set and the assembly's buffer replaced
+fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) {
+    let Walked {
+        place,
+        bit,
+        symbols,
+        back,
+    } = w;
+    let Some(mut out) = take_out(shared) else {
+        return hub.retire(None, Some(back)); // (cancelled)
+    };
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        let inverted: &[u8] = if back.segmented {
+            mark!(AssembleStart, place);
+            back.seg.assemble(asm);
+            mark!(AssembleEnd, place);
+            asm
+        } else {
+            &back.direct
+        };
+        mark!(RleStart, place);
+        if hub.fault == Some(ServiceFault::Finish { place }) {
+            panic!("an injected panic in block {place}'s finishing");
+        }
+        finish_block(inverted, symbols.crc, k, &mut out)
+    }));
+    mark!(RleEnd, place, out.len(), out.capacity());
+    let (res, back) = match r {
+        Ok(Ok(())) => (Ok(out), back),
+        Ok(Err(kind)) => (Err(kind), back),
+        Err(p) => {
+            *asm = Vec::new();
+            (Err(ErrorKind::Internal(panic_message(p))), Back::default())
+        }
+    };
+    publish(shared, place, bit, res, symbols.syms);
+    hub.retire_counted(None, Some(back), true);
+}
+// Lines 2696-2740
+/// This process's cgroup v2 CPU quota (`cpu.max`: `max` or `quota period`, in µs)
+fn cpu_quota() -> Quota {
+    #[cfg(target_os = "linux")]
+    {
+        let Ok(cg) = std::fs::read_to_string("/proc/self/cgroup") else {
+            return Quota::Unlimited;
+        };
+        // (the v2 line, `0::/path`; a v1-only machine has none, and no `cpu.max`)
+        let Some(path) = cg.lines().find_map(|l| l.strip_prefix("0::")) else {
+            return Quota::Unlimited;
+        };
+        // (the tightest quota on the way up: a parent's limits its children)
+        let mut q = Quota::Unlimited;
+        let mut dir = std::path::PathBuf::from(format!("/sys/fs/cgroup{}", path.trim()));
+        loop {
+            if let Ok(max) = std::fs::read_to_string(dir.join("cpu.max")) {
+                q = match (q, parse_cpu_max(&max)) {
+                    (Quota::Unknown, _) | (_, Quota::Unknown) => Quota::Unknown,
+                    (Quota::Cpus(a), Quota::Cpus(b)) => Quota::Cpus(a.min(b)),
+                    (Quota::Cpus(a), Quota::Unlimited) | (Quota::Unlimited, Quota::Cpus(a)) => {
+                        Quota::Cpus(a)
+                    }
+                    (Quota::Unlimited, Quota::Unlimited) => Quota::Unlimited,
+                };
+            }
+            if dir == std::path::Path::new("/sys/fs/cgroup") || !dir.pop() {
+                return q;
+            }
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    Quota::Unlimited
+}
+
+/// A `cpu.max` line's quota
+fn parse_cpu_max(s: &str) -> Quota {
+    let mut it = s.split_whitespace();
+    match (it.next(), it.next().map(str::parse::<f64>)) {
+        (Some("max"), _) => Quota::Unlimited,
+        (Some(q), Some(Ok(period))) if period > 0.0 => match q.parse::<f64>() {
+            Ok(q) if q > 0.0 => Quota::Cpus(q / period),
+            _ => Quota::Unknown,
+        },
+        _ => Quota::Unknown,
+    }
