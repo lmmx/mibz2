@@ -2,7 +2,7 @@
 read as registered, and each defect the rule guards against makes it invalid (after
 bench/test_pipelined_default.py).
 
-    python3 -m pytest bench/test_service_guarded.py
+    python3 bench/test_service_guarded.py   (or python3 -m pytest bench/test_service_guarded.py)
 """
 
 import random
@@ -125,3 +125,11 @@ def test_plan_names():
     assert sg.plan_of(names(sg.SVC2, False)) == sg.SVC2
     assert sg.plan_of(names(sg.PIPED_3X3, True)) == sg.PIPED_3X3
     assert sg.plan_of("mibz2-svc-feed mibz2-read") == (0, 0, 0, 0)
+
+
+if __name__ == "__main__":
+    # (runnable without pytest: python3 bench/test_service_guarded.py)
+    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+    for t in tests:
+        t()
+    print(f"{len(tests)} passed")
