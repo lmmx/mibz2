@@ -716,6 +716,22 @@
       "status": "finished",
       "disposition": "D042 fuzz gap closed; B5 qualification HOLD narrowed to outer-run panic completion and mutation evidence; M12 targeted B6 stop; corpus provenance correction.",
       "comment": 6730448704
+    },
+    {
+      "id": "D048",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6730455683,
+      "queued_comment": 6730312307,
+      "sha": "83970f68b309d9667f6fe8fbd4a70f50be5f73da",
+      "evidence_digest": "git-blob:6882e6a7a7bef42b216986de6fbc196d76a61850",
+      "commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
+      "status": "complete",
+      "disposition": "D044 B5 HOLD lifted for #269's frozen CI diagnostic at fd60fffa; repaired checked-state B6 resumption recorded; other safety holds unchanged."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -843,7 +859,9 @@
     "efc9299940df52cf8e7645687986e0e8f1a0d87f",
     "9ad0ab791ed4c2df3bb73609d70738f725f0000e",
     "bab6f81695fe3b3c1e3ea738af66c8cfb1e3282b",
-    "35ccf0fbd04aa6a2149d0d4b7c9e4100cf7caa31"
+    "35ccf0fbd04aa6a2149d0d4b7c9e4100cf7caa31",
+    "3f33c6bfd214bf04f5bd7971b7ba81edd3975b20",
+    "92a76292db9be1ed03baef192bc987b3af4c3526"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -891,7 +909,8 @@
     6729878093,
     6730002640,
     6730271091,
-    6730370805
+    6730370805,
+    6730455683
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -973,8 +992,8 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6730370805,
-    "last_decision": "D047",
+    "last_completed_incoming_comment": 6730455683,
+    "last_decision": "D048",
     "last_outgoing_comment": 6730448704,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
@@ -982,14 +1001,14 @@
     "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "bab6f81695fe3b3c1e3ea738af66c8cfb1e3282b",
+    "last_decision_commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D047 REVIEW on #145; read-back routing/header/inbox-ID/queued-ID/SHA verified",
+    "source_app_reply": "D048 work complete; publication pending on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "in_progress",
+    "active_comment_status": "complete",
     "queue_snapshot": [
       6681847165,
       6682032075,
@@ -1016,7 +1035,7 @@
       6730455683
     ],
     "active_incoming_comment": 6730455683,
-    "status": "in_progress"
+    "status": "complete"
   },
   "duplicate_events": [
     {
@@ -1384,6 +1403,13 @@
       "decision": "D047",
       "commit": "bab6f81695fe3b3c1e3ea738af66c8cfb1e3282b",
       "comment": 6730448704
+    },
+    {
+      "pr": 274,
+      "sha": "83970f68b309d9667f6fe8fbd4a70f50be5f73da",
+      "evidence_digest": "git-blob:6882e6a7a7bef42b216986de6fbc196d76a61850",
+      "decision": "D048",
+      "commit": "92a76292db9be1ed03baef192bc987b3af4c3526"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1614,8 +1640,10 @@
     {
       "comment_id": 6730455683,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D048"
+      "status": "complete",
+      "decision": "D048",
+      "receipt_commit": "3f33c6bfd214bf04f5bd7971b7ba81edd3975b20",
+      "work_commit": "92a76292db9be1ed03baef192bc987b3af4c3526"
     }
   ],
   "migrated_from": {
