@@ -355,7 +355,9 @@ Wall times are the runs' own, not measurements of the decoder.
    exact-head CI read-back (native, the occupancy job, Miri, fuzz).
 2. **The adoption question D067 §5 raises:** the default's automatic reach on the supported
    class against the admitted evidence, and how CI's unchanged acceptance rule applies when
-   CI can't exercise svc2. These are Louis's (RULES D/C6), not settled here.
+   CI can't exercise svc2. Under amended C6 (#306) these are the team's: adoption is made
+   separately, after the evidence, by a Guardian-reviewed decision-record entry; not settled
+   here.
 3. **The registration** (DRAFT: `2026-11-09-service-guarded-registration.md`, its recipe
    `just bench-service-guarded`, judge `bench/service_guarded.py`, preflight
    `examples/svc_target.rs`; D069 said to draft it; Researcher assesses, Coordinator registers): the exact switched

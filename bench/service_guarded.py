@@ -43,7 +43,12 @@ outcome map. N1 (the base against its byte-identical twin at 10) both bounds wit
 run its own process) reported, not judged.
 
 A failed attempt says which kind of failure it is (`failure`): `identity`, `workload`,
-`preflight`, `structural` (rows, rounds, plans) or `n1`. None is a reason to retry.
+`preflight`, `structural` (rows, rounds, plans) or `n1`. None is a reason to retry: one attempt,
+no replacement. The twin runs at every budget; N1 is judged at 10 only, its other cells
+reported. P1 keeps the service-core outcome map, not the pipelined default's 1.03 threshold.
+(Each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review.)
+Adoption is not this report's: it is decided separately, after the evidence, by a
+Guardian-reviewed decision-record entry.
 """
 
 import argparse

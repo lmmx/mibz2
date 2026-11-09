@@ -3,7 +3,9 @@
 9 November 2026. **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a
 measurement. `bench/service-guarded.frozen` names no commits, so `just bench-service-guarded`
 refuses. A freeze needs the Researcher's assessment and the Coordinator's registration
-(RULES C1, C5); the run is Louis's, on the i9, after that. The Guardian's D069 (#145, comment
+(RULES C1, C5); the run is Louis's, on the i9, after that. **RULES C6 is amended (#306):**
+bench design, merge acceptance and adoption policy are the team's, as a class, under review;
+this registration's design choices below are each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review. The Guardian's D069 (#145, comment
 6741390621) resolved D067's technical objections at 6642faf4 and said to draft this; timing,
 queueing and production admission stay gated by it.
 
@@ -16,11 +18,12 @@ a later Coordinator decision: the pipelined default's, exactly); the recipe
 is exercised end to end past its refusals (answer 6); and the preflight-only entry
 (`2026-11-09-svc-target-registration.md`, answer 5) comes first.
 
-**What this does not presume.** D067 §5's adoption question is open and Louis's: the change
-makes svc2 an automatic default on a class of machines CI can't exercise, and how CI's
-unchanged acceptance rule applies to that is not settled. This registration measures the
-candidate on the one machine it can; it decides nothing about adoption, and no outcome below
-is a merge or release rule.
+**What this does not presume.** D067 §5's adoption question (the change makes svc2 an
+automatic default on a class of machines CI can't exercise, and how CI's acceptance rule
+applies to that) is, under amended C6 (#306), a team decision, **made separately, after the
+evidence, by a Guardian-reviewed decision-record entry**. This registration measures the
+candidate on the one machine it can; it does not presume that decision, decides nothing about
+adoption, and no outcome below is a merge or release rule.
 
 It follows the switched-default precedent (`2026-11-07-pipelined-default-registration.md`: the
 exact switched default against the exact current default through the same public entry point,
@@ -82,8 +85,7 @@ Its preflight is sent TERM at 120 s and KILL 10 s later.
   that process, the scanner, the feeders, the caller and the pool helpers included) and its
   **peak RSS (its own `ru_maxrss`, which never resets: one process per run is what makes it
   the run's)** are recorded for every run.
-- **The grid: the pipelined default's, exactly** (a Coordinator decision, to remove the
-  pending RULES C6 dependency a new 9/10/11 design had): 8, 9, 10, 11, 12, 16 and 20 threads,
+- **The grid: the pipelined default's, exactly** (decided by the Coordinator under amended C6 (#306), subject to the Researcher's review): 8, 9, 10, 11, 12, 16 and 20 threads,
   20 rounds, paired by round, arms' order rotated as `ab` does, on the bench's Wikidata sample,
   as registered in `2026-11-07-pipelined-default-registration.md` and authorised there (Louis's
   decision to ship after one frozen confirmation run, "Confirm first, then ship",
@@ -91,22 +93,21 @@ Its preflight is sent TERM at 120 s and KILL 10 s later.
   the 10-thread cell, the only budget where the plan switches; at the six others neither build
   changes plan, and they take that registration's own rules: identity checks at 8 and 9, no
   harm at 11, 12, 16 and 20 (below).
-- **What is not carried over unchanged, said exactly:**
+- **What is not carried over unchanged, said exactly** (each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review):
   - **the twin arm.** The precedent ran two arms (head and base). This run keeps the
     service-core registrations' noise control N1 (a validity condition of the P1 rule it
     uses), which needs a third arm, the base's byte-identical twin. `ab` runs every arm at
     every budget, so the twin runs at all seven. That is a departure from the precedent's arms
     structure, made for P1's validity rule; it changes no budget, round count or threshold.
-    If the twin should instead be dropped (and with it N1 as a validity condition), that
-    changes the service-core rule's validity, which RULES C6 reserves to Louis: not presumed
-    here.
+    **Decided:** the twin runs at all seven budgets; N1 is a validity condition at 10 only,
+    and the twin's other six cells are reported, not judged.
   - **the replacement.** The precedent allowed one replacement of an invalid run, as decided
     for that experiment. The Researcher (REVIEW 6742157313, answer 4) found no authority that
-    carries it to this one, so **this run registers none**. Restoring it needs its own
-    decision: not presumed here.
+    carries it to this one. **Decided: no replacement attempt**: one attempt, its kind of
+    outcome recorded, no retry to pass.
   - **the primary's rule.** The precedent's primary (speed at least 1.03 with its lower bound
-    above 1.00) is not this run's P1: P1 keeps the service-core outcome map and readings,
-    unchanged from those registrations.
+    above 1.00) is not this run's P1. **Decided:** P1 keeps the service-core outcome map and
+    readings, unchanged from those registrations.
 - **The cost:** 7 budgets × 3 arms × 20 rounds = **420 runs**, at about 2.2 s a run about
   **15.4 minutes** of runs (the precedent's two arms were 280 runs, about 10.3 minutes; the
   twin adds 140 runs, about 5.1 minutes), plus two release builds and the corpus: **about 20
@@ -150,7 +151,7 @@ its kind, and none is a reason to retry):
   the producer's own failure encodings); finite positive wall, CPU and RSS; 20 rounds a cell,
   each once; every run's plan as in the table;
 - **N1:** the twin against the base at 10 threads, both bounds of its 95% interval within
-  [0.97, 1.03] (the service-core control's method, unchanged; RULES C6 reserves it to Louis).
+  [0.97, 1.03] (the service-core control's method, unchanged; its placement at 10 only is decided by the Coordinator under amended C6 (#306), subject to the Researcher's review).
   **What changed in its implementation:** service-2x3's twin was the same decoder under two
   arm names in one build; here it is the base executable copied byte for byte to a second
   path. Both are A/A controls of run-to-run noise under the interleaving; neither certifies
@@ -190,12 +191,10 @@ geometric mean with its interval, and every arm's medians (answer 3). **No memor
 is registered, and no result of this run can be advertised as passing one.** The old
 64/74 MB corpus medians are not a resource bound.
 
-**Attempts:** **one attempt; no replacement is registered** (answer 4: neither precedent
-authorises one here). Every attempt is kept and reported with its kind of outcome: VALID;
+**Attempts:** **one attempt; no replacement is registered** (decided by the Coordinator under amended C6 (#306), subject to the Researcher's review). Every attempt is kept and reported with its kind of outcome: VALID;
 INVALID (identity, workload, structural or N1, said which); REFUSED by the preflight (before
 any measurement); REFUSED otherwise (nothing ran); INCOMPLETE. What follows any attempt that is
-not VALID is decided then, through the Coordinator and, for a rerun, Louis: never a retry until
-a pass.
+not VALID is decided then, by the team under amended C6 (#306): never a retry until a pass.
 
 ## Before readiness: the recipe exercised (answer 6)
 
@@ -247,9 +246,9 @@ intervals of about ±2.2% and ±1.8% at 20 rounds; N1's 0.032, about ±1.5%. **R
 
 ## Still open before a freeze
 
-1. **The two parts not carried over from the precedent** (above): the twin arm, kept for N1,
-   and no replacement. Each is the Coordinator's or Louis's to confirm or change; neither is
-   presumed.
+1. **The Researcher's re-review** of this revision: the grid, the twin arm, no replacement and
+   P1's rule are each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review.
 2. **The base's merge and SHA:** at the freeze (above).
-3. **The Researcher's re-review** of this revision, the grid among it.
-4. **Adoption** (D067 §5): not this registration's to answer.
+3. **Adoption** (D067 §5): a team decision under amended C6, made separately after the
+   evidence by a Guardian-reviewed decision-record entry; not this registration's to answer,
+   and not presumed by it.
