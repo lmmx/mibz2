@@ -1332,6 +1332,17 @@ fn gen(args: &[String]) {
     }
 }
 
+/// A layout placebo, for #281's 1-thread question only (never merged): 48 bytes of inert
+/// code ahead of the decoder's, so that the decoder's code moves as #281's head moves it
+/// (by 16 bytes mod 64), with nothing else changed. Kept by `#[used]`; never called.
+#[inline(never)]
+extern "C" fn layout_placebo() {
+    // SAFETY: nops, then the function returns
+    unsafe { std::arch::asm!(".fill 40, 1, 0x90") }
+}
+#[used]
+static LAYOUT_PLACEBO: extern "C" fn() = layout_placebo;
+
 fn main() {
     let args: Vec<String> = std::env::args()
         .skip(1)
