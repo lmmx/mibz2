@@ -53,39 +53,79 @@ for attribution. I also computed two contrasts against `reg`, the register-list 
 - **dir / reg: 0.9921 [0.9865, 0.9977]**;
 - **ls / reg: 0.9746 [0.9697, 0.9796]**.
 
-So, at the registered attribution's own level, the LEAD is attributed. Mechanistically:
-1. **Most of the primary's 3.3% is C29's register-list MTF checkpoint kernel.** `reg`, which uses
-   that kernel with no records, gets 2.5% alone (0.9745). The direct fill adds a further 0.8%
-   over it (dir/reg 0.992).
-2. **The leader-sort arm `ls` is the strongest:** 5.0% against the incumbent, and 2.5% beyond
-   `reg`. It is a secondary, so it is never judged, and the registration chose `dir` as its
-   primary before the run.
+These are post-run descriptive contrasts. They neither replace the registered reference nor add a
+retrospective gate. The Researcher reproduced both independently (6732761085): dir/reg
+0.992134 [0.986550, 0.997749] and ls/reg 0.974647 [0.969726, 0.979592].
+
+At the registered attribution's own level, the LEAD is attributed. What the contrasts do and
+don't show:
+1. **`reg` alone gets 2.5%** (0.9745). It is the C29 register-list MTF checkpoint kernel, with no
+   records.
+2. **"The direct fill adds 0.8%" would be too causal.** `reg` uses C29 on every block. The record
+   arms keep the old checkpoint kernel on blocks the rule doesn't take, and they also change
+   several construction and scheduling paths. So dir/reg is a contrast between two whole
+   configurations; it does not isolate the direct fill's benefit. The registered attribution
+   passes, but it doesn't credit the whole 3.3% to the direct fill either.
+3. **The leader-sort arm `ls` is the strongest at 9 threads:** 5.0% against the incumbent, and
+   2.5% beyond `reg`. It is a secondary, so it is never judged, and the registration chose `dir`
+   as its primary before the run.
    - **The phases:** `ls` has the shortest `run_ns` (4.435 ms against ctl's 4.769) and the
      shortest `join_wait`.
-   - **The cost:** its leader does the sort (0.215 ms), and its helpers have no sort step.
+   - **The sort:** its leader does it (0.215 ms), and its helpers have no sort step.
    - **dir, by comparison:** it pays 0.754 ms of helper sort and 163 lookups a block.
-3. **The 3-thread cells** (one team, reported only, never judged) agree. Against `pipe3-both`:
+   - Helper phase totals can't identify critical-path savings by subtraction.
+4. **The 3-thread cells don't agree with the 9-thread ranking.** These are one team, reported
+   only and never judged. Against `pipe3-both`:
    - dir 0.9609;
    - reg 0.9615;
    - ls 0.9761;
    - hs 0.9836;
    - ctl 1.0028.
 
+   The Researcher's paired recomputation at one team:
+   - dir/reg 0.999362 [0.992310, 1.006464];
+   - ls/reg 1.015168 [1.001756, 1.028760];
+   - ls/dir 1.015817 [1.001113, 1.030736].
+
+   So at one team `ls` is *slower* than both `reg` and `dir`, and `dir` is level with `reg`. The
+   cells agree only in that every record arm gains against both controls. This argues for
+   measuring the target machine, not for predicting that `ls` will win there.
+
 These phase clocks include descheduling on an oversubscribed runner (9 threads on 4 vCPUs), so
 they are CI-specific. The registration says so in its §7.
 
 ## What the registration permits, and what follows (PROTOCOL §11)
 
-- **The workstation run.** An attributed LEAD on CI permits freezing §8's workstation recipe,
-  unchanged but for its frozen commit, as the decision's evidence. It still needs its own
-  admission at 10 threads and its review (§8). It permits no production change.
+- **The workstation run.** An attributed LEAD on CI permits freezing §8's workstation recipe as the
+  decision's evidence. It permits no production change. The Researcher's review (6732761085)
+  asks for a REVISE of §8 before the freeze. `dir` stays the primary, with `ls` and `hs` as
+  secondaries. The freeze must have:
+  - all seven arms, their order, and the `default33` reference;
+  - exactly 20 paired rounds at a requested 10 threads (140 timed records), with three leaders
+    and six pipelined helpers observed;
+  - a separate, fail-closed admission, not the CI reporter's hard-coded 15 rounds at [9, 3] or
+    its UNJUDGED mode;
+  - the thresholds and attribution stated prospectively: §6's, with df = 19 intervals;
+  - frozen source, recipe and admission identities, and stable binary and corpus digests;
+  - the ctl and dir occupancy captures, defined and admitted separately;
+  - partial or failing evidence kept.
+
+  Louis's own run of the frozen recipe, submitted with a verified digest, is still required
+  (C5).
 - **C29 is a separate lead, with its own registration** (§6: "if `reg` is faster than `ctl` …
   that is a separate lead"). `reg/ctl` is 0.9739 [0.9682, 0.9797].
   - The register-list kernel is a candidate replacement for the shipped `mtf_checkpoints_avx2`
     in the shipped pipelined path, independent of records.
   - That is a production prototype: its own registration, CI's paired bench, and B5.
-- **`ls` as a primary.** The leader-sort arm's 2.5% beyond `reg` is the largest record effect
-  seen. Making it a primary needs a new registration, since it was a secondary here.
+- **`ls` as a primary.** The leader-sort arm's 2.5% beyond `reg` at 9 threads is the largest
+  record effect seen, but it reverses at one team. Making it a primary needs a new registration.
+  - **A narrower angle (the Researcher):** fuse the run-count and row histograms into emission,
+    to remove the later count pass. `ls` already does a stable counting sort in the next block's
+    leader front stage.
+  - **The obstacle:** final F placement still needs lower-byte totals, which are not known until
+    emission ends. Keep the prefix and scatter, or cost the buffering and fix-ups.
+  - **The comparison:** fused against unfused `ls`, with the rest fixed, under its own
+    registration.
 - **Not shown:** the whole-decoder gain on the target machine, and any production benefit. CI's
   9-on-4 oversubscription is not the i9's.
 
@@ -96,3 +136,6 @@ These are carried from D056 and are non-blocking:
   `[0]`. All of them give empty semantics and no table stores. `[1]` and `[255]` are negative
   cases if the contract is tightened.
 - `r3-case596-replay.txt` shows 20 post-fix repeats. The pre-fix failure evidence is mutant R3a.
+
+**Revision (same day):** the mechanism reading and the 3-thread sentence were corrected from the
+Researcher's review (6732761085). The verdict is unchanged.
