@@ -86,9 +86,10 @@
     6715369675,
     6729118037,
     6729243943,
-    6729371816
+    6729371816,
+    6729486092
   ],
-  "last_processed_comment_id": 6729371816,
+  "last_processed_comment_id": 6729486092,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -642,8 +643,13 @@
       "related_queued_comment_id": 6729427506,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
-      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57"
+      "status": "complete",
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "report_commit": "1db0acdb762a8649570a66b149a9f3ad1892e053",
+      "report_path": "state/reports/run-constructions-6729486092/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Ranked primary-source review; derive run-intersection dense pair builder, spare-bit first-symbol path and packed 24-bit alternative. Prioritize matched MTF and helper one-hop; 3359 finite formula cases passed. No implementation, timing or authority expansion.",
+      "review_comment_id": null
     }
   ],
   "active_delegations": [],
