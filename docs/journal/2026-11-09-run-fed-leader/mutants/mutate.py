@@ -16,6 +16,9 @@ M = {
  "B6c-count-unguarded-no-assert": (RT, [("    fn count(&self, j: usize) {\n        if !self.owns(j) {\n            return;\n        }\n",
                                          "    fn count(&self, j: usize) {\n"),
                                         ("        debug_assert!(self.owns(j));\n        if self.direct {", "        if self.direct {")], None),
+ # R3: the shares' prefix refusing the empty tiling again (the fuzz case 596's cause)
+ "R3a-empty-tiling-refused": (RT, "    hists: &mut [[[u32; 256]; 3]],\n) -> bool {\n    if recs.is_empty() || n >= 1 << 24 {",
+                                  "    hists: &mut [[[u32; 256]; 3]],\n) -> bool {\n    if recs.len() < 2 || n >= 1 << 24 {"),
  # M12's twin: the current and next blocks not published in the outer Err
  "M12r-current-next": (RT, "                for b in held.into_iter().flatten() {",
                            "                for b in held.into_iter().flatten().take(0) {"),

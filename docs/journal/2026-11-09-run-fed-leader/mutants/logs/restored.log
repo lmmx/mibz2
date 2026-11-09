@@ -1,39 +1,39 @@
-restored: 5a350c8469b9d19c96b4e8e4facbcbfc6274b7ad, src/ as committed (git diff --quiet: clean); rustc 1.97.0 (2d8144b78 2026-07-07); 2026-11-09T03:56:24Z
+restored: f67085670ee696340337aa37377afab886dded3a, src/ as committed (git diff --quiet: clean); rustc 1.97.0 (2d8144b78 2026-07-07); 2026-11-09T04:29:29Z
 == cargo test -j2 -- --test-threads=2
-test result: ok. 89 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 123.26s
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.95s
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.06s
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.71s
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.76s
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.82s
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.26s
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.95s
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
-[cap.py] rc=0 peak RSS 340 MB (6 GB address-space cap)
+test result: ok. 90 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 116.32s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.20s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.94s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.81s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.98s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.70s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.18s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.55s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+[cap.py] rc=0 peak RSS 362 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --test mtf_kernels -- --test-threads=2
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.51s
-[cap.py] rc=0 peak RSS 296 MB (6 GB address-space cap)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.42s
+[cap.py] rc=0 peak RSS 208 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --lib run_stage -- --test-threads=2
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 87 filtered out; finished in 0.07s
-[cap.py] rc=0 peak RSS 401 MB (6 GB address-space cap)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 88 filtered out; finished in 0.08s
+[cap.py] rc=0 peak RSS 407 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --doc run_stage
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.14s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.12s
 [cap.py] rc=0 peak RSS 109 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --example run_fed_stage -- --test-threads=2
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 [cap.py] rc=0 peak RSS 186 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --lib run_team -- --test-threads=2
-test result: ok. 28 passed; 0 failed; 1 ignored; 0 measured; 62 filtered out; finished in 4.68s
-[cap.py] rc=0 peak RSS 196 MB (6 GB address-space cap)
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 62 filtered out; finished in 4.62s
+[cap.py] rc=0 peak RSS 201 MB (6 GB address-space cap)
 == cargo test -j2 --features run-fed --test run_fed_leader -- --test-threads=2
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.90s
-[cap.py] rc=0 peak RSS 290 MB (6 GB address-space cap)
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.48s
+[cap.py] rc=0 peak RSS 277 MB (6 GB address-space cap)
 == cargo test -j2 --example ab -- --test-threads=2
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-[cap.py] rc=0 peak RSS 202 MB (6 GB address-space cap)
-== cargo test -j2 --lib -- run_team parallel::unwind_tests, 5 more times
-test result: ok. 36 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.90s
-test result: ok. 36 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.13s
-test result: ok. 36 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.79s
-test result: ok. 36 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.82s
-test result: ok. 36 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.95s
+[cap.py] rc=0 peak RSS 201 MB (6 GB address-space cap)
+== cargo test -j2 --lib -- run_team parallel::unwind_tests register_checkpoints, 5 more times
+test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.66s
+test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.77s
+test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.81s
+test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.81s
+test result: ok. 37 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.81s

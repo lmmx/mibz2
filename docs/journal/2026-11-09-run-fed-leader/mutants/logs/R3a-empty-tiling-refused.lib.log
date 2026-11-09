@@ -1,0 +1,18 @@
+mutant R3a-empty-tiling-refused (f6708567 + mutants/R3a-empty-tiling-refused.patch); 2026-11-09T04:29:12Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- the_empty_block_tiles tampered --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.73s
+running 3 tests
+test parallel::run_team::tests::miri_tampered_tilings ... ok
+test parallel::run_team::tests::the_empty_block_tiles ... FAILED
+test parallel::run_team::tests::tampered_tilings_are_refused_or_tile ... ok
+failures:
+---- parallel::run_team::tests::the_empty_block_tiles stdout ----
+thread 'parallel::run_team::tests::the_empty_block_tiles' (29703) panicked at src/parallel/run_team.rs:2485:9:
+assertion failed: sort_one_share(&recs, &counts, 0, &mut hist, &mut fo)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+failures:
+    parallel::run_team::tests::the_empty_block_tiles
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 89 filtered out; finished in 1.87s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 315 MB (6 GB address-space cap)
+rc=101

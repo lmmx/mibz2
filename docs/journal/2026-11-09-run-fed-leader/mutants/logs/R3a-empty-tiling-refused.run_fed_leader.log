@@ -1,0 +1,18 @@
+mutant R3a-empty-tiling-refused (f6708567 + mutants/R3a-empty-tiling-refused.patch); 2026-11-09T04:29:16Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --features run-fed --test run_fed_leader -- an_empty_block --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.48s
+running 1 test
+test an_empty_block_by_records ... FAILED
+failures:
+---- an_empty_block_by_records stdout ----
+thread 'an_empty_block_by_records' (29900) panicked at tests/run_fed_leader.rs:99:5:
+assertion `left == right` failed: fuzz seed 1 case 596: a refused check
+  left: 5
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+failures:
+    an_empty_block_by_records
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.07s
+error: test failed, to rerun pass `--test run_fed_leader`
+[cap.py] rc=101 peak RSS 205 MB (6 GB address-space cap)
+rc=101

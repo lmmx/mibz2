@@ -1,0 +1,13 @@
+diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
+index 8e5f2aca..1bab0b03 100644
+--- a/src/parallel/run_team.rs
++++ b/src/parallel/run_team.rs
+@@ -429,7 +429,7 @@ fn merge_shares(
+     n: usize,
+     hists: &mut [[[u32; 256]; 3]],
+ ) -> bool {
+-    if recs.is_empty() || n >= 1 << 24 {
++    if recs.len() < 2 || n >= 1 << 24 {
+         return false;
+     }
+     let r = recs.len() - 1;
