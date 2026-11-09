@@ -617,6 +617,23 @@
       "status": "published; D040 clearance retained; nonblocking ancestor-path inventory caveat",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
       "comment": 6695760685
+    },
+    {
+      "id": "D042",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6715368365,
+      "resumed_by": 6729117187,
+      "sha": "a4f97714cc14366984015869d9d094d89488ac57",
+      "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
+      "commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
+      "receipt_commit": "533aa057ff156f3aea766de87c24e1b563346d87",
+      "status": "complete",
+      "disposition": "Default gate confirmed; pipeline B5 qualification HOLD for pipeline-specific fuzz/mutation evidence; no UB found in static review; CPU ratio wording disputed."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -858,7 +875,7 @@
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
     "last_completed_incoming_comment": 6695685974,
-    "last_decision": "D041",
+    "last_decision": "D042",
     "last_outgoing_comment": 6695760685,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
@@ -866,16 +883,16 @@
     "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "89736f2b53e1630ef5353c5c1922b7dbb9b935cd",
+    "last_decision_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "one TYPE: REVIEW for D041 on #145",
     "input_pr": 161,
     "output_pr": 145,
-    "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+    "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
+    "active_comment_status": "complete",
     "queue_snapshot": "18 inbox comments listed; all after offset finished",
-    "active_incoming_comment": 6695685974
+    "active_incoming_comment": 6715368365
   },
   "duplicate_events": [
     {
@@ -1193,6 +1210,13 @@
       "decision": "D041",
       "commit": "89736f2b53e1630ef5353c5c1922b7dbb9b935cd",
       "comment": 6695760685
+    },
+    {
+      "pr": 250,
+      "sha": "a4f97714cc14366984015869d9d094d89488ac57",
+      "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
+      "decision": "D042",
+      "commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1360,10 +1384,11 @@
     {
       "comment_id": 6715368365,
       "pr": 161,
-      "status": "in_progress",
+      "status": "complete",
       "decision": "D042",
       "receipt_commit": "533aa057ff156f3aea766de87c24e1b563346d87",
-      "progress": "Source review completed: gate scoped to Plan::Teams{3,3}; static relay/parking/panic audit; tests inspected; built-in fuzz candidates omit pipeline. Checking B5 evidence and documenting bounded verdict."
+      "progress": "Review completed; scoped B5 evidence HOLD and documentation corrections recorded.",
+      "work_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557"
     }
   ],
   "migrated_from": {
@@ -1374,8 +1399,8 @@
     "date": "2026-11-06"
   },
   "authority_transition": {
-    "previous_spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-    "active_spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+    "previous_spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+    "active_spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "source": "direct user instruction in this run",
     "historical_fields": "operating_pin, stage, activation and earlier assessments retain their compact30 provenance; current authority is docs/team/SPEC.GUARDIAN.md at active_spec_pin",
     "migration_checked": true,
