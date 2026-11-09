@@ -259,9 +259,9 @@ each a little beyond it:
 
 | control | predicted | measured |
 | --- | ---: | ---: |
-| plain two teams, elapsed (s) | 0.180–0.188 | 0.193 |
-| service vs plain two teams, speed | near 1.33 | 1.402 |
-| two pipelined teams vs default, speed | 0.82–0.85 | 0.866 |
+| plain two teams (s) | 0.180–0.188 | 0.193 |
+| service vs plain (speed) | near 1.33 | 1.402 |
+| two pipelined vs default | 0.82–0.85 | 0.866 |
 
 ## 5. Has the result been seen again?
 
@@ -270,16 +270,17 @@ about the admission threshold. Beside its own comparisons, it ran the service la
 default again, as a reported comparison. Its noise check came out at 0.994. The three runs that
 measured the layout against the default:
 
-| run (pull request) | status | speed (95%) | CPU (95%) | peak memory (MB) |
-| --- | --- | ---: | ---: | ---: |
-| first (251) | reported | 1.045 (1.023–1.068) | 1.138 (1.118–1.158) | 64 vs 74 |
-| second (258) | registered | 1.045 (1.017–1.073) | 1.146 (1.123–1.170) | 64 vs 74 |
-| third (271) | reported | 1.073 (1.041–1.106) | 1.169 (1.135–1.204) | 64 vs 74 |
+| run (pull request) | speed (95%) | CPU (95%) |
+| --- | ---: | ---: |
+| first (251), reported | 1.045 (1.023–1.068) | 1.138 (1.118–1.158) |
+| second (258), registered | 1.045 (1.017–1.073) | 1.146 (1.123–1.170) |
+| third (271), reported | 1.073 (1.041–1.106) | 1.169 (1.135–1.204) |
 
 The third run makes the same comparison as the registered one, on the same machine and file. But it
 is another run, at a later commit of the prototype, beside other arms. It was never judged, so it
 doesn't replace the registered 1.045. What it adds is that the direction held. In all three runs
-the layout was faster than the default and spent 12–15% less processor time.
+the layout was faster than the default and spent 12–15% less processor time. Its peak memory, by
+the runs' medians, was 64 MB against the default's 74 each time.
 
 The three estimates also say something about the intervals. Each is the uncertainty of its own
 run's estimate. The registered 1.045 and the later 1.073 differ by about half the width of either
