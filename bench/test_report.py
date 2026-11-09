@@ -278,6 +278,97 @@ class Resources(unittest.TestCase):
         self.assertIn("throttled", a["verdict"])
 
 
+def with_machine(runs: list[dict], slow_round: int | None = None) -> list[dict]:
+    """The runs as `ab run --machine-state` records them: cycles at 4.9 GHz of the CPU, or
+    at half that in `slow_round`, and the clock before and after."""
+    out = []
+    for r in runs:
+        ghz = 2.45 if r["round"] == slow_round else 4.9
+        st = {"freq_mhz": 1000 * ghz, "freq_cpus": 1, "governor": "powersave", "pkg_temp_c": 70.0}
+        out.append(
+            dict(
+                r,
+                cycles=round(r["cpu"] * ghz * 1e9),
+                instructions=round(r["cpu"] * 9e9),
+                task_clock_s=r["cpu"],
+                perf_scope="user+kernel",
+                perf_running=1.0,
+                eff_ghz=ghz,
+                machine_pre=st,
+                machine_post=dict(st, pkg_temp_c=75.0),
+            )
+        )
+    return out
+
+
+class MachineState(unittest.TestCase):
+    def test_absent_without_the_flag(self):
+        runs = decodes(*builds())
+        self.assertIsNone(report.machine_state(runs, True))
+        # (and so no table: `markdown` adds one only for a result's `machine_state`)
+
+    def test_cycles_and_the_effective_clock_beside_wall(self):
+        ms = report.machine_state(with_machine(decodes(*builds()), slow_round=1), True)
+        c = ms["wikidata"]["head"]["4"]
+        self.assertEqual(c["counted"], c["n"])
+        self.assertAlmostEqual(c["eff_ghz"], 4.9)
+        # the slow round shows as the interval's low end, never averaged away
+        self.assertEqual(c["eff_ghz_range"], [2.45, 4.9])
+        self.assertAlmostEqual(
+            c["cycles_per_byte"],
+            statistics.median(
+                [
+                    r["cycles"] / r["out"]
+                    for r in with_machine(decodes(*builds()), 1)
+                    if r["arm"] == "mibz2" and r["threads"] == 4
+                ]
+            ),
+            places=3,
+        )
+        self.assertEqual(
+            (c["freq_mhz_pre"], c["pkg_temp_c_pre"], c["pkg_temp_c_post"]), (4900, 70.0, 75.0)
+        )
+        self.assertEqual(c["scope"], "user+kernel")
+        self.assertIsNone(c["cycles_why"])
+        md = "\n".join(report.machine_state_lines(ms))
+        self.assertIn("recorded, never judged", md)
+        self.assertIn("| `wikidata` | head | 4 |", md)
+        self.assertIn("4.90 (2.45–4.90)", md)
+        self.assertIn("4900 → 4900", md)
+
+    def test_unavailable_cycles_show_their_reason(self):
+        why = "no such event here (no hardware PMU: a VM or container without a virtual PMU)"
+        runs = [
+            dict(r, cycles=None, cycles_why=why, eff_ghz=None, eff_ghz_why="no cycles: " + why)
+            for r in decodes(*builds())
+        ]
+        ms = report.machine_state(runs, True)
+        c = ms["wikidata"]["base"]["1"]
+        self.assertEqual((c["counted"], c["cycles_per_byte"], c["eff_ghz"]), (0, None, None))
+        self.assertEqual(c["cycles_why"], why)
+        md = "\n".join(report.machine_state_lines(ms))
+        self.assertIn("Cycles not counted: " + why, md)
+
+    def test_no_verdict_changes(self):
+        runs = decodes(*builds())
+        plain = pr_result(runs)
+        counted = pr_result(with_machine(runs, slow_round=0))
+        for k in ("figures", "resources", "paired_resources", "assessment", "accounting"):
+            self.assertEqual(plain[k], counted[k], k)
+
+    def test_the_run_table_has_a_row_a_run(self):
+        runs = with_machine(decodes(*builds()), slow_round=2)
+        lines = report.run_lines(runs)
+        self.assertEqual(len(lines), 2 + len(runs))
+        self.assertIn("eff. clock GHz", lines[0])
+        slow = next(l for l in lines[2:] if l.startswith("| 2 |"))
+        self.assertIn("| 2.45 |", slow)
+        self.assertIn("2450 → 2450", slow)
+        # a run recorded without the flag: its wall and CPU, the rest blank
+        bare = report.run_lines(decodes(*builds())[:1])[2]
+        self.assertIn("| – | – | – → – | – → – | – |", bare)
+
+
 class Placement(unittest.TestCase):
     ENV = {"cpus": 4, "cores": 2, "core_cpus": ["0,1", "2,3"]}
 
