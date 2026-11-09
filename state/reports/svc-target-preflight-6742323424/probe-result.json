@@ -1,0 +1,49 @@
+{
+  "positive": [
+    "TARGET",
+    []
+  ],
+  "infinite_quota": [
+    "TARGET",
+    []
+  ],
+  "missing_team_shape": [
+    "TARGET",
+    []
+  ],
+  "float_budget": [
+    "TARGET",
+    []
+  ],
+  "float_service_plan": [
+    "TARGET",
+    []
+  ],
+  "negative_pooled": [
+    "TARGET",
+    []
+  ],
+  "missing_plan_negative_control": [
+    "INVALID RECORD",
+    [
+      "at 9: plan malformed"
+    ]
+  ],
+  "unknown_quota_negative_control": [
+    "INVALID RECORD",
+    [
+      "at 10: the predicate's answer True disagrees with the facts",
+      "at 10: the service core built where the predicate is false"
+    ]
+  ],
+  "json_1e309_quota": [
+    "TARGET",
+    []
+  ],
+  "non_target_decode_failure": [
+    "NOT TARGET",
+    [
+      "at 9: the decode did not give back the input"
+    ]
+  ]
+}
