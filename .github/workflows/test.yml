@@ -25,6 +25,10 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the thread record's completion test alone, in a process of its own, so that no other
+      # decoder test's threads (the same names) are in its record (Guardian D063; src/threads.rs)
+      - name: The thread record's completion test, alone
+        run: cargo test --lib -- --exact threads::tests::the_record_is_whole_once_the_output_is_read_before_any_join
       # the run-fed research (the `run-fed` feature: mtf::mtf_runs, src/run_stage.rs): its
       # emitter against the reference on every MTF test stream, its table's own tests, the
       # doc tests that show no unchecked `Sorted` can be made, and the diagnostic's own

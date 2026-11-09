@@ -11,8 +11,9 @@
 //! as attempted). It records neither that the threads ran at the same time nor that their
 //! work succeeded. Every entry is a thread of a decode that ran while recording was on.
 //!
-//! **Complete for every thread that contributed to a complete output, by its completion
-//! order, not by any join** (D062):
+//! **It includes every thread that contributed to a complete output, by its completion
+//! order, not by any join** (D062, D063). Its entries are worker starts and helper task
+//! attempts, not per-thread useful work: it may also hold threads that contributed nothing.
 //! - a helper records before it counts its task's completion (`done`, in `coop::helper`),
 //!   and `Pool::run` returns only once every helper of the run has counted (`Wait`'s
 //!   acquire), so a run that ended had every helper's record first;
@@ -25,9 +26,11 @@
 //!   every such thread's entry, in every arm: the shipped workers and the run-fed ones are
 //!   spawned by `parallel::launch`, and every team runs on `Pool::run`.
 //!
-//! A thread that contributed nothing (a worker that published no block, a pool that ran no
-//! task) may or may not be recorded. So the record can fall short of a plan that was set up
-//! but not run, never exceed the threads that ran. The record says nothing about teardown:
+//! A thread that contributed nothing may or may not be recorded: a worker records its start
+//! whether or not it publishes a block, and a pool that ran no task records none of its
+//! helpers. So the record includes every contributor; it need not contain only
+//! contributors. A required count that is missing from it is INVALID. The record says
+//! nothing about teardown:
 //! the decoder's threads may still be ending, its join may come later (its last reference
 //! can be a detached feeder's, `BzReader::drop`), and a thread that records after `take` is
 //! simply not in it.

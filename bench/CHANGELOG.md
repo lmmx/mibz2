@@ -48,7 +48,8 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   record is complete for a fresh child that turns it on before the decode spawns any thread
   and reads it once the decode's whole output is read: every worker that published a block,
   and every helper of every team run that built one, recorded before that output, by the
-  order of completion, not by a join (the decoder's threads may still be ending); it records a worker's start and a
+  order of completion, not by a join (the decoder's threads may still be ending). It includes
+  every contributor, but need not contain only contributors; it records a worker's start and a
   helper's first task attempt (a caught panic included), not simultaneous occupancy or
   successful work. A new figure beside the others: every existing figure keeps its meaning.
   Its cost: off, one relaxed load a thread; on, in ab's children, each thread allocates its

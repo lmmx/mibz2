@@ -2,9 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised eight times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+Revised nine times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
 CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
-decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review); §R8, the record's completeness by completion order (D062).
+decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review); §R8, the record's completeness by completion order (D062); §R9, its two qualifications (D063).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -481,11 +481,12 @@ an error of the admission itself is INVALID):
     the decode spawns any thread, and reads it once it has read the decode's whole output.
     By the order of completion, not by any join, that output comes after the record of
     every worker that published a block and of every helper of every team run that built
-    one. So the record holds every thread that contributed, in every arm, and never a
-    thread that didn't run. It records a worker's start and a helper's first task attempt
-    (a caught panic included), not that the threads ran at the same time, nor that their
-    work succeeded. It says nothing about teardown, which may still be running when it is
-    read;
+    one. So the record includes every thread that contributed, in every arm (§R9: it need
+    not contain only contributors, as a worker records its start whether or not it
+    publishes). Its entries are worker starts and helper first task attempts (a caught
+    panic included), not useful work, nor that the threads ran at the same time. A
+    required count missing from it is INVALID. It says nothing about teardown, which may
+    still be running when it is read;
   - for the run-fed arms, every registered phase once, as non-negative integers, with
     consistent counts, no fallback, and the controls with no records;
   - then threads 10 only, rounds 0–19, each arm once a round, in ab's rotation, and
@@ -1173,24 +1174,29 @@ needed no change to code: the invariant already held. Only its statement changes
   - every one is spawned by `parallel::launch`;
   - every team runs on `Pool::run` (`coop::invert_pipelined_with`, `run_team::invert`).
 
-**So the record holds every thread that contributed to the output, and none that didn't
-run.** A thread that contributed nothing may be missing: a worker that published no block,
-or a pool that ran no task. The record can therefore fall short of a plan that was set up
-but not run, which is INVALID, as it should be. It can never exceed the threads that ran.
-The registered (3, 0, 6) is read only from contributors: three workers, each having
-published blocks, and two helpers in each of their pools, each having completed runs.
+**So the record includes every thread that contributed to the output.** (Corrected in §R9,
+D063: as first written here it also said "and none that didn't run", and that the plan is
+read only from contributors. Neither holds. A worker records its start whether or not it
+publishes a block, so the record includes every contributor but need not contain only
+contributors.) Its entries are worker starts and helper task attempts, not per-thread
+useful work. A thread that contributed nothing may or may not be in it: a worker that
+published no block may be, and a pool that ran no task isn't. The record can fall short of
+a plan that was set up but not run, and a required count missing from it is INVALID, as it
+should be.
 
 **What it doesn't say:** nothing about teardown. The decoder's threads may still be ending
 when the record is read, its join may come later, and a thread recording after the take is
 not in it.
 
-**The resource snapshots:** the child's CPU and RSS (`getrusage`) are taken at that moment.
-Teardown still running then, a detached feeder's last decoder reference included, is in
-neither. That is so in every arm alike, and it is stated in ab's comment.
+**The resource snapshots:** the child's CPU and RSS (`getrusage`) are taken at that moment:
+cumulative CPU and peak-so-far RSS. (Corrected in §R9, D063.) Teardown already done by
+then can be in them. Only work and new peaks after the snapshot are left out, a detached
+feeder's last decoder reference among them. Every arm's child takes them the same way, but
+that doesn't make what is left out equal across arms. It is stated in ab's comment.
 
 **The wording**, now the completion invariant, in:
-- `src/threads.rs` ("Complete for every thread that contributed to a complete output, by its
-  completion order, not by any join");
+- `src/threads.rs` ("It includes every thread that contributed to a complete output, by its
+  completion order, not by any join", as §R9 qualifies it);
 - ab's two comments;
 - §8;
 - the corrections beside §R5's and §R6's join claims;
@@ -1219,6 +1225,31 @@ pass is claimed here):
   `miri_register_checkpoints` and `miri_share_kernels` are in it, then runs it.
 
 `bench/run-fed-leader.frozen` stays `frozen none`.
+
+## R9. Revision, 2026-11-09: the completion invariant's two qualifications (the Guardian's D063)
+
+D063 (#145, comment 6734295081) gives PROCEED on §R8's (b). It asks for two wording
+qualifications, not a new gate, applied wherever the invariant is stated: `src/threads.rs`,
+ab's two comments, §8, the bench 3.3.0 changelog and §R8, each corrected beside its old
+wording.
+
+1. **The record includes every contributor; it need not contain only contributors.** A
+   worker records its start whether or not it publishes a block. The record is defined as
+   worker starts and helper task attempts, not per-thread useful work. A required count
+   missing from it stays INVALID. "Never a thread that didn't run", "none that didn't run"
+   and "read only from contributors" are withdrawn.
+2. **CPU and RSS are cumulative and peak-so-far snapshots.** Teardown already done by the
+   snapshot can be in them. Only work and new peaks after the snapshot are left out. The
+   same snapshot rule in every arm's child is not claimed to leave out an equal cost across
+   arms.
+
+**Provenance, the optional step:** test.yml's rust job gains one step. It runs
+`threads::tests::the_record_is_whole_once_the_output_is_read_before_any_join` alone, in a
+process of its own (`--exact`), so that no other decoder test's threads, whose names are
+the same, are in its record.
+
+No code path, predicate or threshold changes. `bench/run-fed-leader.frozen` stays
+`frozen none`.
 
 ## Provenance and reproduction
 
