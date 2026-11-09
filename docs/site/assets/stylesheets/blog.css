@@ -699,3 +699,69 @@
 @media screen and (max-width: 44.9375em) {
   .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
 }
+
+/* A playful figure in the logo's language (the service-threads post's "A block's path", a race
+   circuit): translucent, interlocking bands in the logo's three hues, numbered rounded-triangle
+   stops, and a block that drives the circuit as a car. With reduced motion the car is not
+   shown; parked cars show the way instead. */
+.bf-fig .bf-play { --bf-play-bg: var(--md-default-bg-color); }
+.bf-fig .bf-play-coral { color: rgb(255, 92, 74); }
+.bf-fig .bf-play-blue { color: rgb(40, 92, 255); }
+.bf-fig .bf-play-green { color: rgb(40, 190, 135); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-coral { color: rgb(255, 112, 96); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-blue { color: rgb(92, 132, 255); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-green { color: rgb(52, 206, 150); }
+.bf-fig .bf-play-glow path { fill: none; stroke: currentColor; stroke-linecap: round; opacity: 0.3; }
+.bf-fig .bf-play-band path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-opacity: 0.42; }
+.bf-fig .bf-play-shine { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.1 14; opacity: 0.75; }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-shine { opacity: 0.4; }
+.bf-fig .bf-play-start { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: 0.9; }
+.bf-fig .bf-play-checkl { fill: #fff; }
+.bf-fig .bf-play-checkd { fill: #1d1d1b; }
+.bf-fig .bf-play-rim { fill: currentColor; stroke: currentColor; stroke-width: 23; stroke-linejoin: round; }
+.bf-fig .bf-play-badge {
+  fill: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke-width: 16;
+  stroke-linejoin: round;
+}
+.bf-fig .bf-play-num { fill: var(--bf-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-play-tag { fill: color-mix(in srgb, currentColor 20%, var(--bf-play-bg)); stroke: color-mix(in srgb, currentColor 70%, var(--bf-play-bg)); stroke-width: 1.5; }
+.bf-fig .bf-play-tagt { fill: var(--bf-ink); font-weight: 600; letter-spacing: 0.02em; }
+.bf-fig .bf-play-key { fill: color-mix(in srgb, currentColor 30%, transparent); stroke: currentColor; stroke-width: 3.5; stroke-linejoin: round; }
+.bf-fig .bf-play-chip { fill: var(--bf-surface); stroke: var(--bf-ink); stroke-width: 2.5; }
+.bf-fig .bf-play-wheel, .bf-fig .bf-play-wing { fill: var(--bf-ink); }
+.bf-fig .bf-play-stripe { fill: none; stroke: rgb(255, 92, 74); stroke-width: 3; stroke-linecap: round; }
+.bf-fig .bf-play-helmet { fill: rgb(40, 92, 255); stroke: var(--bf-ink); stroke-width: 1.5; }
+.bf-fig .bf-play-token { offset-rotate: auto; animation: bf-play-ride 18.1s linear infinite; }
+.bf-fig .bf-play-still { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bf-fig .bf-play-token { display: none; animation: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@supports not (offset-path: path("M0 0")) {
+  .bf-fig .bf-play-token { display: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@keyframes bf-play-ride {
+  0.0% { offset-distance: 0.00%; }
+  2.0% { offset-distance: 3.15%; }
+  6.4% { offset-distance: 3.15%; }
+  10.4% { offset-distance: 9.40%; }
+  14.9% { offset-distance: 9.40%; }
+  18.6% { offset-distance: 15.19%; }
+  23.0% { offset-distance: 15.19%; }
+  50.4% { offset-distance: 57.90%; }
+  54.8% { offset-distance: 57.90%; }
+  73.7% { offset-distance: 87.33%; }
+  78.1% { offset-distance: 87.33%; }
+  81.8% { offset-distance: 93.12%; }
+  86.2% { offset-distance: 93.12%; }
+  90.2% { offset-distance: 99.37%; }
+  94.6% { offset-distance: 99.37%; }
+  95.0% { offset-distance: 100.00%; }
+  100% { offset-distance: 100%; }
+  0%, 100% { opacity: 0; }
+  2%, 95.9% { opacity: 1; }
+}
+
