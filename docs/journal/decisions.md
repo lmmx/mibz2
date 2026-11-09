@@ -210,3 +210,39 @@ Why there is no attachment: GitHub has no supported scripted way to attach a fil
 (`gh issue comment` has no attach option, and uploads go through the browser only). So the
 bundle is a git object on the orphan `evidence` branch, linked at its commit. Pushes to that
 branch start no workflow: the push triggers are master, main and `py-*` tags only.
+
+## 2026-11-09: a breakthrough-chasing role is asked for (the Pathfinder, proposed)
+
+- **Source:** Louis, in a Claude Code session of its own on the branch
+  `claude/agent-swarm-fable-breakthrough-0u7j4d`. This is **not** the Coordinator's session, so
+  whether it meets RULES A4 is for the Coordinator to record. Until then the entry is a request,
+  not a decision in force.
+- **Observed:** 2026-11-09, late evening UTC.
+- **What was asked:** a new role for chasing step changes rather than marginal gains, built on
+  the existing specs; and use of the workstation queue.
+- **Applies:** RULES D8 (adding a role); PROTOCOL §9 (the queue); `docs/team/SPEC.PATHFINDER.md`
+  and ROLES.md's "Pathfinder (proposed)", both written as proposed.
+
+His words in that session, verbatim, the parts that bear on authority:
+
+> You will find role specs in the repo for the autonomous agent swarm, including Researcher
+> roles. Feel free to build on these to define a new role for this breakthrough chasing role, I
+> think it is self explanatory that I am after more than just marginal gains here, I want to find
+> the route to unlock seriously enhanced throughput via opportunities that have simply gone
+> unnoticed and unexploited to decompress in smarter ways.
+
+> There is an existing workstation queue mechanism you should feel free to use, as well as to
+> simply present many potential avenues that you think could have outsized payoff.
+
+And later in the same session:
+
+> (FYI in case you didn't notice the workstation queue is primed and will take any new work you
+> have to run and return the results via the repo comment relay mechanism with the tarball as an
+> attachment, there are previous examples of this in the repo)
+
+**What was done under it, and what was not:**
+- the role's spec and its ROLES.md section were written, each marked proposed;
+- a diagnostic recipe, `bench-phrase-knee`, was registered and frozen on that branch
+  (`docs/journal/2026-11-09-phrase-structure.md`, section 6);
+- **no queue entry was added and no ready tag was set.** PROTOCOL §9 gives both to the
+  Coordinator, after the Researcher's PROCEED and green CI on the commit to run.

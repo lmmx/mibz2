@@ -12,6 +12,7 @@ measurably faster, correct production decoder, properly released. MODE.md says t
 | [SPEC.md](SPEC.md) | what every Work task's spec has in common, and the command that loads them |
 | [WORK-TASKS.md](WORK-TASKS.md) | the only prompts for creating or re-pinning a ChatGPT Work task, each marked known to work or untested |
 | `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, OBSERVER |
+| [SPEC.PATHFINDER.md](SPEC.PATHFINDER.md) | the Pathfinder's spec: a proposed role, not yet in force (ROLES.md) |
 
 **Where the rest lives:**
 - **Each role's state:** `team-state/<role>`, a continuation of its old branch, holding its
