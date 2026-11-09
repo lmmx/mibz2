@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6729116055:** reconciled the Researcher's corrected knee analysis; valid pipeline and lever results, passing default confirmation and 0.2.6 release; release scaling; three valid general-plan diagnostics and a measured low-level slowdown; service-core trade and #258's pending review; run-fed bounded diagnostic beginning. Replaced obsolete H1/release waits, recorded the repaired queue interruption and the withdrawal of the stand-in #258 request.
+
 - **2026-11-07, channel through 6699486962:** downstream 0.2.5 update merged on a one-off maintainer decision; release-scaling results and release notes completed. Scaling research resumed, with reported overlap prototype and adversarial review before freeze. Replaced the old dispatch pause; distinguished measurements from causal attributions, predictions and unconfirmed implementation completion.
 
 - **2026-11-06, channel through 6698812800:** 0.2.5 published after successful pre-release checks. Added informative release-scaling follow-up pending Louis, with current/previous defaults merged; release does not wait. Confirmation journal merged; release notes open. Downstream PR retargeted to 0.2.5 with its new benchmark running; exposed the prior revision's no-gain hold and memory flag without transplanting its verdict.

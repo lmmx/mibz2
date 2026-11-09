@@ -1,32 +1,19 @@
-# 1. Scaling beyond eight threads
+# 1. Scaling and plan policy
 
-- **Doing:** resumed analysis of the scaling limit and reported opt-in pipeline prototyping.
-- **In order to:** 0, further correct whole-decoder throughput.
-- **Status:** doing, at Louis's direction recorded in [6699486962](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699486962); no new i9 timing tonight. Earlier dispatch pause is superseded, not a dependency that survived release.
+- **Doing:** revise the general worker-plan policy against recent diagnostics, in order to serve 0.
+- **Status:** research and preparation; no new default qualified.
 
-## Completed evidence: 1.1, 1.4, 1.5 and 1.6
+## Completed pipeline and release
 
-Three-team candidates and the production policy passed their respective two-run rules; #234 merged and shipped in 0.2.5. Ten-thread production-policy speed ratios were 1.089 (1.075–1.103) and 1.088 (1.076–1.101); confirmation CPU 0.89 and peak memory 0.81. These are recorded verdicts, not fresh Observer adjudication. [Full prior evidence and limits](https://github.com/lmmx/mibz2/blob/bd440eac0c946aa3026ff13747984d9291eee25c/current/L3/1-scaling-past-8-threads.md).
+The revised knee journal [accepted seven Researcher objections](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699649478): serial-time attribution, memory saturation, buffer labels, predicted gain and falsifiers were narrowed. H1's predicted gain could disappear under plausible added table contention. The first registered pipeline run was valid: matched teams improved by about 3–4%, with 8–11% more processor use ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6702315743)). Its parking and small-block levers gave separate effects; the combined arm was reported, not qualified by that lever run ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6705082379)).
 
-Release notes #245 merged at e98976910672c8c9cbf5980ccaea402ccf5a420d. [Release-scaling files](https://github.com/lmmx/mibz2/tree/853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0/bench/release-scaling/2026-11-06-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.5) are now present on master. The [mechanism entry](https://github.com/lmmx/mibz2/blob/853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0/docs/journal/2026-11-07-knee-mechanism.md) reports 0.2.4 taking 11.9% longer at ten threads, 8.1–8.7% longer at twelve to twenty. This completes the former informative collection wait, without changing the policy's registered verdict. Raw timing was not reanalysed here; live History deployment was not checked.
+A subsequent registered confirmation of the intended default passed: 1.072 (95% interval 1.054–1.089) at ten threads versus 0.2.5, and roughly 1.07 at eleven through twenty ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6706005681)). The Coordinator admitted and [released 0.2.6](https://github.com/lmmx/mibz2/pull/145#issuecomment-6706739698). Informative release scaling against 0.2.5 recorded 1.037 (0.984–1.093) at ten, 1.046–1.065 at twelve through twenty, with higher CPU and memory ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6714526161)). It does not rewrite the registered confirmation.
 
-## 1.2 Mechanism: analysis under review
+## General plan: three diagnostics, no adoption
 
-- **Purpose:** explain the scaling limit to direct the next intervention, in order to serve 1.
-- **Evidence as synthesised by the Coordinator:** at fixed team counts, extra helpers barely change throughput; archived isolated build/walk counters show table-byte pressure on last-level cache; traced mean live tables are 2.59–2.75 for four teams; placement and workspace matter. Full numerical claims E1–E7 are in the [entry](https://github.com/lmmx/mibz2/blob/853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0/docs/journal/2026-11-07-knee-mechanism.md).
-- **Interpretation, not direct measurement of the complete mechanism:** fewer simultaneously live tables reduce contention enough to offset one fewer team. E4 attributes 31–35% outside active-table time to leader serial stages. E3 attributes flat helper scaling to memory saturation. The [Researcher brief](https://github.com/lmmx/mibz2/pull/162#issuecomment-6699480548) explicitly asks whether those attributions are valid and whether alternatives explain the observations.
-- **Status:** review dispatched; no review result within this watermark. The Observer does not promote disputed or unchecked derivations to established causal findings.
-- **Limits:** isolated-kernel counters, traced occupancy and timed production results have different boundaries. A successful policy does not isolate its mechanism; earlier control-offset and hardware/workload limits remain.
+- **Boundary:** the eight-thread rule A fallback was falsified; a pipelined two-by-four plan returned 1.079 (1.055–1.102) against four-by-two. Rule B was unresolved at eight threads. Nine-thread pipelined three-by-three gained 1.141 (1.119–1.163) ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6719903152)).
+- **Bytes:** plain three-by-three versus four-by-two returned 0.916 at level six, 0.957 at seven and 1.087 at nine on the i9. This supports the local bytes-per-team premise without licensing a rule for other cache sizes ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6719949774)).
+- **Levels:** at levels one and two, 0.2.6's default returned about 0.76–0.78 against 0.2.4; forcing four-by-two restored about 1.30–1.32 against the default, while same-plan comparisons were roughly 1.008. The registered reading is a decoder-count scheduling slowdown, with the crossover between levels two and three ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6720088760)).
+- **Next:** register and test a revised scheduling rule; the three diagnostics cannot qualify it by themselves. The README/CHANGELOG workaround is merged as #256.
 
-## 1.3 Overlap and placement: resumed
-
-- **Doing:** Coordinator reports an opt-in prototype on research/team-pipeline. GitHub returned 404 for that ref; execution is reported, code/test completion not independently established.
-- **In order to:** 1, overlap leader preparation/finishing with helpers' build/walk while retaining one table per team.
-- **Prediction:** H1 pipelined 3 × 4 at twelve threads versus today's 3 × 3 at ten: 1.10–1.30×. Prediction only; greater table duty cycle may consume the gain.
-- **Dependency:** Researcher review before registration freeze. Later target-machine tests require Louis; no new workstation run tonight. Preparation is not blocked on him.
-- **Ranking:** Coordinator places H1 overlap first, H2 physical-core placement next, H3 smaller tables under teams third, H4 non-table hot-set reduction last. This records that ranking, not an Observer recommendation.
-- **Source mismatch:** the entry's “Done here” section lists prototype, tests and registration, while its H1 section and newer dispatch describe prototyping and review before freeze. Completion is unconfirmed; use the explicit current dispatch, not that heading as proof of finished work.
-
-## Accepted, not aimed at
-
-The released policy's lower processor use and memory accompany its throughput gain. They do not establish the proposed pipeline's cost or qualify another change.
+Earlier team-size, policy, mechanism and control evidence remains in the [previous settled detail](https://github.com/lmmx/mibz2/blob/87b7cd8b0d67e570e62c8b8b97d291ccd36d3ee8/current/L3/1-scaling-past-8-threads.md).

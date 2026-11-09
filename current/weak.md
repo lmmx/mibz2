@@ -26,6 +26,10 @@
 
 
 
-- **1.2 — measurement versus attribution:** E3's memory-saturation and E4's serial-share claims are explicitly under adversarial review; do not treat the synthesis's “Established” heading as resolution ([brief](https://github.com/lmmx/mibz2/pull/162#issuecomment-6699480548)).
-- **1.3 — reported prototype versus completion:** entry's “Done here” heading conflicts with current in-progress/review-before-freeze dispatch; named remote branch unavailable. No completed implementation or frozen registration established ([entry](https://github.com/lmmx/mibz2/blob/853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0/docs/journal/2026-11-07-knee-mechanism.md); [direction](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699486962)).
 - **2 — exception versus general rule:** merged on Louis's one-off call without CI end-to-end gain; proposed workstation bench/rule remains pending approval ([decision](https://github.com/lmmx/wikidata-pq/pull/97#issuecomment-6699288552)).
+
+
+- **1 — old policy is not the new general rule:** 0.2.6's win at level nine coexists with measured slowdown at levels one and two; new plan diagnostics narrow design but do not qualify a replacement ([levels](https://github.com/lmmx/mibz2/pull/145#issuecomment-6720088760)).
+- **4 — signal is not verdict:** svc2@10's reported gain was outside the service-core run's judged cells; #258's matched registration awaits its own Researcher review ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6720510159); [queue](https://github.com/lmmx/mibz2/pull/145#issuecomment-6729027210)).
+- **4 — run-fed premise unmeasured:** test-only #266 proves neither fair SIMD-comparable run emission nor end-to-end stage economics; bounded diagnostic must account for sort and emission costs ([direction](https://github.com/lmmx/mibz2/pull/145#issuecomment-6728891399)).
+- **2 — upstream gain does not establish downstream gain:** wikidata-pq's default four-thread cap prevents the ten-core policy engaging; a workstation-shaped bench and rule remain distinct proposals ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699649478)).

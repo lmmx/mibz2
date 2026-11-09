@@ -22,3 +22,11 @@
 - **Doing:** separate runbook [docs/RELEASING.md](https://github.com/lmmx/mibz2/blob/8823f617717aa8bf02e91e95f9b4b24284e388e9/docs/RELEASING.md) at Louis's request, referenced by CLAUDE.md.
 - **In order to:** 0, make release checks/publication/follow-ups reproducible.
 - **Status:** present at 8823f617717aa8bf02e91e95f9b4b24284e388e9; #244 merged the current/previous-tag defaults. Runbook distinguishes mandatory pre-release checks from the informative post-release workstation scaling request. That run is Louis's and does not hold publication.
+
+
+## Frozen workstation queue and stand-ins
+
+- **Purpose:** hand over fully prepared, reviewed, immutable runs to Louis, in order to serve 0 without leaving decisions for run time ([protocol](https://github.com/lmmx/mibz2/blob/a4f97714cc14366984015869d9d094d89488ac57/docs/team/PROTOCOL.md)).
+- **Status:** ready tags, run signal and workstation queue introduced; 0.2.6 release scaling and three general-plan diagnostics completed. The first queue pass stopped after release scaling left untracked output; [fix](https://github.com/lmmx/mibz2/pull/145#issuecomment-6719645632) moved output into the bundle, and [queue continuation](https://github.com/lmmx/mibz2/pull/145#issuecomment-6720735366) now rereads entries each pass. That interruption did not measure the later entries.
+- **Stand-ins:** when Work roles were unavailable, documented stand-in reviews were marked as such; they never wrote the roles' cursors. After tasks returned, the #258 stand-in request was withdrawn and its own Researcher review queued ([withdrawal](https://github.com/lmmx/mibz2/pull/145#issuecomment-6729027714)).
+- **Current queue:** last confirmed empty after the five read entries were cleared ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6720735366)); #258 is near ready, not admitted.
