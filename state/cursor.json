@@ -35,7 +35,7 @@
     "6729118948": 6729167954,
     "6729178007": 6729195690
   },
-  "last_rebuilt_from": 6729116055,
+  "last_rebuilt_from": 6730114756,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -137,9 +137,10 @@
     },
     "6730190055": {
       "comment_id": 6730190055,
-      "status": "in_progress",
-      "progress": "Migration verified; reconciling #258, run-fed line and Guardian holds."
+      "status": "complete",
+      "progress": "Record committed through channel 6730114756; REVIEW pending.",
+      "work_commit": "981b655ab9ae8931b2410c1cb60526d9621eb4e0"
     }
   },
-  "last_record_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6"
+  "last_record_commit": "981b655ab9ae8931b2410c1cb60526d9621eb4e0"
 }
