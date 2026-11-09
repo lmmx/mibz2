@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Pair #272 count closure complete; awaiting publication.",
+  "state": "Pair #272 count closure finished: PROCEED to freeze at ae62ea75a0e9e75a6d300264daffb99c6763e9f9.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -806,7 +806,7 @@
     },
     {
       "trigger_comment_id": 6731216735,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "source_commit": "ae62ea75a0e9e75a6d300264daffb99c6763e9f9",
@@ -814,7 +814,10 @@
       "report_commit": "5eed38fdf607bae320520b0026be2ee2eef0700c",
       "report_path": "state/reports/pair-count-closure-6731216735/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED to freeze #272 at ae62ea75a0e9e75a6d300264daffb99c6763e9f9: count reconciliation closes prior objection; 39 tests pass and four old witnesses rejected. Paired-row pinning and rounded synthetic output limits qualified. D052 separate; no timing."
+      "disposition": "PROCEED to freeze #272 at ae62ea75a0e9e75a6d300264daffb99c6763e9f9: count reconciliation closes prior objection; 39 tests pass and four old witnesses rejected. Paired-row pinning and rounded synthetic output limits qualified. D052 separate; no timing.",
+      "review_comment_id": 6731275111,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],

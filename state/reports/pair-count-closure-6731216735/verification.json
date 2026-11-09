@@ -1,0 +1,10 @@
+{
+  "comment": 6731275111,
+  "issue": 145,
+  "ok": false,
+  "problems": [
+    "FROM is 'researcher', not coordinator"
+  ],
+  "exact_body_readback_passed": true,
+  "role_aware_routing_passed": true
+}
