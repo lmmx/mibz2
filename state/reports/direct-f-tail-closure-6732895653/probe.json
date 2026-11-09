@@ -1,0 +1,660 @@
+{
+  "positive_problems": [],
+  "negative_cases": [
+    {
+      "case": 1,
+      "name": "ghz negative (Researcher 1)",
+      "problems": [
+        "ghz -1: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 2,
+      "name": "ghz zero (Researcher 2)",
+      "problems": [
+        "ghz 0: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 3,
+      "name": "ghz a boolean (Researcher 3)",
+      "problems": [
+        "ghz True: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 4,
+      "name": "ghz missing (Researcher 4)",
+      "problems": [
+        "ghz None: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 5,
+      "name": "Wikidata's output 1 (Researcher 5)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): output 1, not the evidence's 209700196",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output >= 4 (rows - 4 blocks)"
+      ]
+    },
+    {
+      "case": 6,
+      "name": "rows_runs 1 with 999,999,999 records and cells (Researcher 6)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= rows_runs <= 900,000 a block by records",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)"
+      ]
+    },
+    {
+      "case": 7,
+      "name": "ghz past the plausible clock",
+      "problems": [
+        "ghz 2800: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 8,
+      "name": "ghz a string",
+      "problems": [
+        "ghz '2.8': the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": 9,
+      "name": "Wikidata's rows 1",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks <= rows <= 900,000 a block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output <= 259 rows"
+      ]
+    },
+    {
+      "case": 10,
+      "name": "Wikidata's input size",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): bytes 11854934, not the evidence's 11854933"
+      ]
+    },
+    {
+      "case": 11,
+      "name": "Wikidata's blocks, both paths moved together",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): blocks 432, not the evidence's 431"
+      ]
+    },
+    {
+      "case": 12,
+      "name": "a synthetic output",
+      "problems": [
+        "file 3 ('synthetic one byte'): output 4999999, not the evidence's 5000000"
+      ]
+    },
+    {
+      "case": 13,
+      "name": "a synthetic digest",
+      "problems": [
+        "file 5 ('synthetic runs'): sha256 '0000000000000000000000000000000000000000000000000000000000000000', not the evidence's '24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec'"
+      ]
+    },
+    {
+      "case": 14,
+      "name": "records past rows_runs",
+      "problems": [
+        "file 4 ('synthetic pattern'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 4 ('synthetic pattern'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": 15,
+      "name": "cells at 2r - blocks_runs + 1",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": 16,
+      "name": "cells below r",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: records <= cells <= 2 records - blocks_runs",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= slots <= rows_runs + 7 cells"
+      ]
+    },
+    {
+      "case": 17,
+      "name": "slots not a multiple of 8",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: slots a multiple of 8",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 18,
+      "name": "slots below rows_runs",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= slots <= rows_runs + 7 cells",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 19,
+      "name": "D's stores short of its rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 20,
+      "name": "D's one-slot stores past 7 a stream",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: d_scalar <= 7 d_streams"
+      ]
+    },
+    {
+      "case": 21,
+      "name": "D's streams past 256 a block",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= d_streams <= 256 blocks_runs"
+      ]
+    },
+    {
+      "case": 22,
+      "name": "D's census missing",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): path counts missing or not whole: [11854933, 209700196, 431, 209706557, 384, 167407936, 10389028, 47, 12676540, 247388152, 30877916, 84059, None]"
+      ]
+    },
+    {
+      "case": 23,
+      "name": "counts for a path with no blocks",
+      "problems": [
+        "file 2 ('synthetic random'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 2 ('synthetic random'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": 24,
+      "name": "RLE1: too little output for the rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output >= 4 (rows - 4 blocks)"
+      ]
+    },
+    {
+      "case": 25,
+      "name": "a fallback block with no rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": 26,
+      "name": "zero fallback blocks but one fallback row (closure review 1, on the census's one-byte corpus)",
+      "problems": [
+        "file 3 ('synthetic one byte'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": 27,
+      "name": "42.4 M fallback rows in 47 blocks (closure review 2, on the census's Wikidata counts)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": 28,
+      "name": "one run but 256 nonempty buckets (closure review 3)",
+      "problems": [
+        "file 3 ('synthetic one byte'): the counts break: d_streams <= records (a nonempty bucket holds a run at least)"
+      ]
+    },
+    {
+      "case": 29,
+      "name": "too few B slots and D stores for the cells (closure review 4)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 30,
+      "name": "too few D stores for the cells alone",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 31,
+      "name": "too few B slots for the cells alone",
+      "problems": [
+        "file 4 ('synthetic pattern'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 4 ('synthetic pattern'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 4 ('synthetic pattern'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 32,
+      "name": "the old fixture's Wikidata tuple: t = 500,000 tail cells from 60,000 one-slot rows (tail-coupling review 1)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 33,
+      "name": "the old fixture's text tuple: t = 100,000 from 2,000 (tail-coupling review 2)",
+      "problems": [
+        "file 1 ('synthetic text'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)",
+        "file 1 ('synthetic text'): round 0, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 0, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 0, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 0, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 0, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 0, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 1, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 1, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 1, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 1, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 1, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 1, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 2, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 2, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 2, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 2, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 2, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 2, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 3, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 3, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 3, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 3, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 3, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 3, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 4, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 4, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 4, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 4, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 4, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 4, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 5, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 5, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 5, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 5, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 5, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 5, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 6, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 6, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 6, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 6, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 6, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 6, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 7, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 7, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 7, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 7, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 7, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 7, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 8, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 8, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 8, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 8, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 8, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 8, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 9, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 9, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 9, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 9, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 9, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 9, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 10, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 10, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 10, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 10, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 10, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 10, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 11, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 11, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 11, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 11, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 11, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 11, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 12, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 12, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 12, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 12, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 12, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 12, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 13, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 13, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 13, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 13, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 13, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 13, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 14, A column, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 14, A column, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 14, B records, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 14, B records, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 14, D direct, records: no time for a path with blocks",
+        "file 1 ('synthetic text'): round 14, D direct, fallback: a time for a path with no blocks",
+        "file 1 ('synthetic text'): round 0, A column front: not timed",
+        "file 1 ('synthetic text'): round 0, A column build: not timed",
+        "file 1 ('synthetic text'): round 0, B records front: not timed",
+        "file 1 ('synthetic text'): round 0, B records sort: not timed",
+        "file 1 ('synthetic text'): round 0, B records build: not timed",
+        "file 1 ('synthetic text'): round 0, D direct front: not timed",
+        "file 1 ('synthetic text'): round 0, D direct build: not timed",
+        "file 1 ('synthetic text'): round 0, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 0, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 0, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 1, A column front: not timed",
+        "file 1 ('synthetic text'): round 1, A column build: not timed",
+        "file 1 ('synthetic text'): round 1, B records front: not timed",
+        "file 1 ('synthetic text'): round 1, B records sort: not timed",
+        "file 1 ('synthetic text'): round 1, B records build: not timed",
+        "file 1 ('synthetic text'): round 1, D direct front: not timed",
+        "file 1 ('synthetic text'): round 1, D direct build: not timed",
+        "file 1 ('synthetic text'): round 1, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 1, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 1, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 2, A column front: not timed",
+        "file 1 ('synthetic text'): round 2, A column build: not timed",
+        "file 1 ('synthetic text'): round 2, B records front: not timed",
+        "file 1 ('synthetic text'): round 2, B records sort: not timed",
+        "file 1 ('synthetic text'): round 2, B records build: not timed",
+        "file 1 ('synthetic text'): round 2, D direct front: not timed",
+        "file 1 ('synthetic text'): round 2, D direct build: not timed",
+        "file 1 ('synthetic text'): round 2, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 2, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 2, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 3, A column front: not timed",
+        "file 1 ('synthetic text'): round 3, A column build: not timed",
+        "file 1 ('synthetic text'): round 3, B records front: not timed",
+        "file 1 ('synthetic text'): round 3, B records sort: not timed",
+        "file 1 ('synthetic text'): round 3, B records build: not timed",
+        "file 1 ('synthetic text'): round 3, D direct front: not timed",
+        "file 1 ('synthetic text'): round 3, D direct build: not timed",
+        "file 1 ('synthetic text'): round 3, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 3, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 3, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 4, A column front: not timed",
+        "file 1 ('synthetic text'): round 4, A column build: not timed",
+        "file 1 ('synthetic text'): round 4, B records front: not timed",
+        "file 1 ('synthetic text'): round 4, B records sort: not timed",
+        "file 1 ('synthetic text'): round 4, B records build: not timed",
+        "file 1 ('synthetic text'): round 4, D direct front: not timed",
+        "file 1 ('synthetic text'): round 4, D direct build: not timed",
+        "file 1 ('synthetic text'): round 4, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 4, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 4, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 5, A column front: not timed",
+        "file 1 ('synthetic text'): round 5, A column build: not timed",
+        "file 1 ('synthetic text'): round 5, B records front: not timed",
+        "file 1 ('synthetic text'): round 5, B records sort: not timed",
+        "file 1 ('synthetic text'): round 5, B records build: not timed",
+        "file 1 ('synthetic text'): round 5, D direct front: not timed",
+        "file 1 ('synthetic text'): round 5, D direct build: not timed",
+        "file 1 ('synthetic text'): round 5, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 5, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 5, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 6, A column front: not timed",
+        "file 1 ('synthetic text'): round 6, A column build: not timed",
+        "file 1 ('synthetic text'): round 6, B records front: not timed",
+        "file 1 ('synthetic text'): round 6, B records sort: not timed",
+        "file 1 ('synthetic text'): round 6, B records build: not timed",
+        "file 1 ('synthetic text'): round 6, D direct front: not timed",
+        "file 1 ('synthetic text'): round 6, D direct build: not timed",
+        "file 1 ('synthetic text'): round 6, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 6, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 6, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 7, A column front: not timed",
+        "file 1 ('synthetic text'): round 7, A column build: not timed",
+        "file 1 ('synthetic text'): round 7, B records front: not timed",
+        "file 1 ('synthetic text'): round 7, B records sort: not timed",
+        "file 1 ('synthetic text'): round 7, B records build: not timed",
+        "file 1 ('synthetic text'): round 7, D direct front: not timed",
+        "file 1 ('synthetic text'): round 7, D direct build: not timed",
+        "file 1 ('synthetic text'): round 7, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 7, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 7, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 8, A column front: not timed",
+        "file 1 ('synthetic text'): round 8, A column build: not timed",
+        "file 1 ('synthetic text'): round 8, B records front: not timed",
+        "file 1 ('synthetic text'): round 8, B records sort: not timed",
+        "file 1 ('synthetic text'): round 8, B records build: not timed",
+        "file 1 ('synthetic text'): round 8, D direct front: not timed",
+        "file 1 ('synthetic text'): round 8, D direct build: not timed",
+        "file 1 ('synthetic text'): round 8, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 8, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 8, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 9, A column front: not timed",
+        "file 1 ('synthetic text'): round 9, A column build: not timed",
+        "file 1 ('synthetic text'): round 9, B records front: not timed",
+        "file 1 ('synthetic text'): round 9, B records sort: not timed",
+        "file 1 ('synthetic text'): round 9, B records build: not timed",
+        "file 1 ('synthetic text'): round 9, D direct front: not timed",
+        "file 1 ('synthetic text'): round 9, D direct build: not timed",
+        "file 1 ('synthetic text'): round 9, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 9, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 9, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 10, A column front: not timed",
+        "file 1 ('synthetic text'): round 10, A column build: not timed",
+        "file 1 ('synthetic text'): round 10, B records front: not timed",
+        "file 1 ('synthetic text'): round 10, B records sort: not timed",
+        "file 1 ('synthetic text'): round 10, B records build: not timed",
+        "file 1 ('synthetic text'): round 10, D direct front: not timed",
+        "file 1 ('synthetic text'): round 10, D direct build: not timed",
+        "file 1 ('synthetic text'): round 10, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 10, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 10, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 11, A column front: not timed",
+        "file 1 ('synthetic text'): round 11, A column build: not timed",
+        "file 1 ('synthetic text'): round 11, B records front: not timed",
+        "file 1 ('synthetic text'): round 11, B records sort: not timed",
+        "file 1 ('synthetic text'): round 11, B records build: not timed",
+        "file 1 ('synthetic text'): round 11, D direct front: not timed",
+        "file 1 ('synthetic text'): round 11, D direct build: not timed",
+        "file 1 ('synthetic text'): round 11, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 11, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 11, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 12, A column front: not timed",
+        "file 1 ('synthetic text'): round 12, A column build: not timed",
+        "file 1 ('synthetic text'): round 12, B records front: not timed",
+        "file 1 ('synthetic text'): round 12, B records sort: not timed",
+        "file 1 ('synthetic text'): round 12, B records build: not timed",
+        "file 1 ('synthetic text'): round 12, D direct front: not timed",
+        "file 1 ('synthetic text'): round 12, D direct build: not timed",
+        "file 1 ('synthetic text'): round 12, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 12, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 12, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 13, A column front: not timed",
+        "file 1 ('synthetic text'): round 13, A column build: not timed",
+        "file 1 ('synthetic text'): round 13, B records front: not timed",
+        "file 1 ('synthetic text'): round 13, B records sort: not timed",
+        "file 1 ('synthetic text'): round 13, B records build: not timed",
+        "file 1 ('synthetic text'): round 13, D direct front: not timed",
+        "file 1 ('synthetic text'): round 13, D direct build: not timed",
+        "file 1 ('synthetic text'): round 13, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 13, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 13, D direct fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 14, A column front: not timed",
+        "file 1 ('synthetic text'): round 14, A column build: not timed",
+        "file 1 ('synthetic text'): round 14, B records front: not timed",
+        "file 1 ('synthetic text'): round 14, B records sort: not timed",
+        "file 1 ('synthetic text'): round 14, B records build: not timed",
+        "file 1 ('synthetic text'): round 14, D direct front: not timed",
+        "file 1 ('synthetic text'): round 14, D direct build: not timed",
+        "file 1 ('synthetic text'): round 14, A column fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 14, B records fallback: its time and its 0 blocks disagree",
+        "file 1 ('synthetic text'): round 14, D direct fallback: its time and its 0 blocks disagree"
+      ]
+    },
+    {
+      "case": 34,
+      "name": "the old fixture's runs tuple: t = 1,000 from 500 (tail-coupling review 3)",
+      "problems": [
+        "file 5 ('synthetic runs'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 35,
+      "name": "t negative: more D vector stores than B's",
+      "problems": [
+        "file 3 ('synthetic one byte'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 3 ('synthetic one byte'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    },
+    {
+      "case": 36,
+      "name": "t below ceil(d_scalar/7), every other bound kept",
+      "problems": [
+        "file 4 ('synthetic pattern'): the counts break: the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)"
+      ]
+    }
+  ],
+  "census": [
+    {
+      "name": "corpora/wikidata.bz2",
+      "tail_cells": 45603,
+      "lower": 12009,
+      "upper": 84059,
+      "relations": []
+    },
+    {
+      "name": "synthetic text",
+      "tail_cells": 0,
+      "lower": 0,
+      "upper": 0,
+      "relations": []
+    },
+    {
+      "name": "synthetic random",
+      "tail_cells": 0,
+      "lower": 0,
+      "upper": 0,
+      "relations": []
+    },
+    {
+      "name": "synthetic one byte",
+      "tail_cells": 2,
+      "lower": 2,
+      "upper": 5,
+      "relations": []
+    },
+    {
+      "name": "synthetic pattern",
+      "tail_cells": 28,
+      "lower": 8,
+      "upper": 50,
+      "relations": []
+    },
+    {
+      "name": "synthetic runs",
+      "tail_cells": 1754,
+      "lower": 252,
+      "upper": 1761,
+      "relations": []
+    },
+    {
+      "name": "synthetic records",
+      "tail_cells": 0,
+      "lower": 0,
+      "upper": 0,
+      "relations": []
+    }
+  ],
+  "rust_literal_counts_match_json": true,
+  "current_synthetic": [
+    {
+      "name": "synthetic text",
+      "output": 3361802,
+      "sha256": "bd9c715abcaca17a04247ba4007850574c1677b6bc15cf7c57fa8ffb6a07c1b2",
+      "bytes": 622150,
+      "blocks": 4
+    },
+    {
+      "name": "synthetic random",
+      "output": 2000000,
+      "sha256": "69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198",
+      "bytes": 1774781,
+      "blocks": 3
+    },
+    {
+      "name": "synthetic one byte",
+      "output": 5000000,
+      "sha256": "fe83f12dd7b68f263d44f27080c7c21168eaca3ef9c5f54a73a061b262068bb8",
+      "bytes": 49,
+      "blocks": 1
+    },
+    {
+      "name": "synthetic pattern",
+      "output": 4900000,
+      "sha256": "bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3",
+      "bytes": 314,
+      "blocks": 6
+    },
+    {
+      "name": "synthetic runs",
+      "output": 2500444,
+      "sha256": "24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec",
+      "bytes": 9955,
+      "blocks": 1
+    },
+    {
+      "name": "synthetic records",
+      "output": 2400000,
+      "sha256": "616e54bd727b056d7ff6fedb2a13c9eb411f2c512cca52ac4a419c131b135c2b",
+      "bytes": 2397517,
+      "blocks": 3
+    }
+  ],
+  "routing": {
+    "issue": 145,
+    "type": "REVIEW",
+    "why": "a publication: the channel PR"
+  },
+  "audit": [
+    {
+      "issue": 145,
+      "comment": 6652503445,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6653242752,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654146350,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its first run could not comment on locked #145 (#187)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654371320,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its check run did not reopen the finished suite (#188)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654531225,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; an in-progress check run did not reopen it either"
+    }
+  ],
+  "audit_unresolved": []
+}
