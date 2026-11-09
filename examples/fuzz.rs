@@ -167,14 +167,16 @@ fn main() {
             } else {
                 format!(
                     "of {}: build {}, walk {}, finish {}, assemble {}, back reuse {}, \
-                     front reuse {}",
+                     front reuse {}, prepared queue past teams {} (longest {})",
                     st.counted,
                     st.pooled_build,
                     st.pooled_walk,
                     st.finished,
                     st.assembled,
                     st.back_reuse,
-                    st.front_reuse
+                    st.front_reuse,
+                    st.beyond_teams,
+                    st.max_prepared
                 )
             };
             println!(
@@ -201,6 +203,10 @@ struct SvcStats {
     assembled: u64,
     back_reuse: u64,
     front_reuse: u64,
+    /// cases whose prepared queue grew past `teams` blocks (the lookahead is an admission
+    /// threshold, not a cap: D045), and the longest it grew in any case
+    beyond_teams: u64,
+    max_prepared: u64,
 }
 
 /// What one service run reached, from the decoder's marks (`trace`): helpers' shares of a
@@ -222,6 +228,15 @@ fn reached(c: &Serviced, st: &mut SvcStats, traces: &[mibz2::trace::ThreadTrace]
         .filter(|t| !t.name.starts_with("mibz2-svc") && !t.name.starts_with("mibz2-coop"))
         .map(|t| t.marks.iter().filter(|m| m.kind == Kind::TeamGot).count() as u64)
         .sum();
+    let longest = traces
+        .iter()
+        .flat_map(|t| t.marks.iter())
+        .filter(|m| m.kind == Kind::Prepared)
+        .map(|m| m.len)
+        .max()
+        .unwrap_or(0);
+    st.beyond_teams += (longest > c.teams as u64) as u64;
+    st.max_prepared = st.max_prepared.max(longest);
     st.counted += 1;
     st.pooled_build += (count("mibz2-coop", Kind::BuildStart) > 0) as u64;
     st.pooled_walk += (count("mibz2-coop", Kind::WalkStart) > 0) as u64;
