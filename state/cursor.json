@@ -231,6 +231,13 @@
       "type": "REVIEW",
       "sha": "6c82bea87137485383a20c11af2bcc87405195df",
       "checkpoint_comment_id": 6735168430
+    },
+    {
+      "pr": 145,
+      "id": 6739420751,
+      "type": "REVIEW",
+      "sha": "79f6ece99a6f132329d9f0770133cadd124d5a13",
+      "checkpoint_comment_id": 6739270804
     }
   ],
   "reviews": [
@@ -406,7 +413,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "COMPLETE_PENDING_REVIEW",
+  "status": "IDLE",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -790,13 +797,15 @@
     {
       "comment_id": 6739270804,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "a773853f05fa9e12bb65fb93bf5c07e1bc7fea11",
-      "progress": "Work and ledger complete; one REVIEW on #145 pending.",
+      "progress": "Report and ledger committed; REVIEW delivered and exact author/body/destination verified.",
       "report_path": "state/records/reviews/inbox-6739270804/report.md",
-      "report_commit": "79f6ece99a6f132329d9f0770133cadd124d5a13"
+      "report_commit": "79f6ece99a6f132329d9f0770133cadd124d5a13",
+      "reply_id": 6739420751,
+      "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator, so optimizer verify-pass not claimed."
     }
   ],
   "migrated_from": {
