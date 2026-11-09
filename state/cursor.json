@@ -1120,13 +1120,12 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6731982223,
-    "decision": "D054",
-    "status": "finished",
-    "work_commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
-    "review_comment_id": 6732094558,
-    "queue_snapshot": [],
-    "verification": "Exact #145 comment readback; pinned verify's sole failure is coordinator-only sender assumption; guardian sender, route, headers, incoming ID and work link verified."
+    "active_comment": 6732361106,
+    "decision": "D055",
+    "status": "in_progress",
+    "queue_snapshot": [
+      6732361106
+    ]
   },
   "duplicate_events": [
     {
@@ -1846,6 +1845,12 @@
       "work_commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
       "complete_cursor_commit": "f972af2c2762b894c16365848465ff1efe0b4768",
       "review_comment_id": 6732094558
+    },
+    {
+      "comment_id": 6732361106,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D055"
     }
   ],
   "migrated_from": {
