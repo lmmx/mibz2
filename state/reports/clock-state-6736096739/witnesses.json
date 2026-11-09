@@ -1,0 +1,35 @@
+{
+  "same_wall_cpu_different_cause": {
+    "half_clock": {
+      "wall": 2.0,
+      "cpu": 2.0,
+      "cycles": 4
+    },
+    "double_work": {
+      "wall": 2.0,
+      "cpu": 2.0,
+      "cycles": 8
+    }
+  },
+  "cycles_can_favour_slower_execution": {
+    "high_frequency": {
+      "wall": 2.0,
+      "cpu": 2.0,
+      "cycles": 8
+    },
+    "low_frequency": {
+      "wall": 3.0,
+      "cpu": 3.0,
+      "cycles": 6
+    }
+  },
+  "balanced_mismatch_ratios": [
+    1.8,
+    0.45
+  ],
+  "selection": {
+    "all_pairs_gmean": 1.2727922061357857,
+    "retained_fast_pairs_gmean": 0.9
+  },
+  "limits": "Synthetic algebra, not #270 raw data or evidence of its cause."
+}
