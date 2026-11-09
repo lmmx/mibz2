@@ -328,6 +328,59 @@ Content-detected repetition copying (Precopy) has a ceiling of 6.1% (period ≤ 
 (period ≤ 64) of Wikidata's bytes. That is a different mechanism. It would need its own
 detection-cost census before any registration. This entry doesn't propose one.
 
+## 6a. The Researcher's review (6733146738)
+
+The negative count stands. Both raw JSONL digests match, and rerunning the reporter reproduces
+`tables.md` byte for byte. The packet arm pauses. Nothing here displaces C31 or C29. There are
+corrections and qualifications below, plus one new angle.
+
+**The rates in the prose:**
+- The packet-start rates, measured on the 209,697,662 encoded rows of the full blocks (not
+  decoded output bytes):
+  - the plain pair walk: 104,878,688 / n = **0.5001423812**;
+  - pair_k8r: 104,878,374 / n = **0.5001408838**.
+- pair_k8r removes 314 modelled pair starts. If each packet is charged its k lookups, it removes
+  only **201**.
+- The 0.50013 figures above and the per-byte column of §3 use a different denominator. Read
+  them as rates, not as the same quantity.
+
+**Two qualifications:**
+- **`repeat` tests uncapped reps ≥ 2.** With L = [b, a], single steps, k = 2, Δ = 0 and two bytes
+  before a marker, the admitted packet is only "ba", which is m = 1, not two copies. So the
+  within-segment two-copy tandem union is not literally a bound on every admitted capped prefix.
+  Those categories must be separated before claiming a ceiling.
+- **Fixed-path maximality** is not greedy optimality or completeness over every certificate.
+  Partial-word endpoint recovery here uses the oracle-known marker distance. Different
+  cooperative or chunked marker sets need not only shorten packets, unless they refine these
+  cuts.
+
+**The universal exclusion is revised: multi-occurrence reuse, not self-return.**
+- **The witness:** the text `abcdXabcdY`, with L = `ddYXaabbcc`, has zero tandem coverage. Yet
+  rows q = 4 and q′ = 5 share a three-step affine domain [4, 6): both emit "abc", then
+  Ψ³(q) = q − 4. Once the first occurrence completes, the later one copies those three bytes and
+  recovers its endpoint from the saved endpoint plus q′ − q. Once the certificate exists, no
+  content detection is needed.
+- **Why the tandem share is no ceiling:** this is why Precopy is not bounded by the tandem
+  percentage. Kärkkäinen, Kempa and Puglisi (DCC 2012, §4, Lemma 8, Fig. 3) derive s-run
+  certificates from the BWT and LCS, and reuse earlier occurrences. Their sentinel and
+  reverse-LF assumptions, metadata and availability costs still need adapting here.
+- **A forward variant:** partition rows by the next s labels and the intermediate Ψ offsets.
+  That gives at most min(n, 1 + 2s(r−1)) sufficient interval classes. A class gives the same
+  word, and an endpoint translated by the starting-row difference. 85,296 finite row checks
+  pass.
+- **It is not automatically cheap:**
+  - the class bound is already about 0.578 n at s = 4 here, and it saturates at s = 8;
+  - dense class ids cost 4n bytes before any descriptors, and a sparse lookup adds dependencies;
+  - first visits, source completion and markers are still charged;
+  - equal Ψ displacement alone is not enough: L = [b, a, a] gives states 0 → 1 → 2, displacement
+    +1 twice, but unequal labels.
+
+**Kept for later (not queued for building):** one bounded census at s = 2, 4 and 8. It would
+count completed-source hits, the links actually skipped, class bytes, construction work, and
+marker and availability losses. Label-LCE can give a broader equality ceiling, but not a free
+successor jump. Neither this census's near-zero self-return count nor that mechanism's promise
+prices the other.
+
 ## 7. Not done
 
 - No timing, no decoder change, no consumer implementation, no admission rule.
