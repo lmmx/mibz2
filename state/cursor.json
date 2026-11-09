@@ -67,7 +67,7 @@
     "6747670879": 6747744681,
     "6749843816": 6749949842
   },
-  "last_rebuilt_from": 6749838199,
+  "last_rebuilt_from": 6750297742,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -281,9 +281,10 @@
     },
     "6750294901": {
       "comment_id": 6750294901,
-      "status": "in_progress",
-      "progress": "Migration verified; reconciling service result and queue."
+      "status": "complete",
+      "progress": "Account and levels committed; REVIEW pending.",
+      "work_commit": "7dec0b81ee61efc389888c19304d6002fe3382dd"
     }
   },
-  "last_record_commit": "658960e9b7bf4e4e91b397192a4d9618465069ae"
+  "last_record_commit": "7dec0b81ee61efc389888c19304d6002fe3382dd"
 }
