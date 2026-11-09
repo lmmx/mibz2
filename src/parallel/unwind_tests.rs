@@ -174,6 +174,7 @@ fn team(
         reader: Mutex::default(),
         threads: team_k,
         pipelined: true,
+        hub: None,
     })
 }
 
