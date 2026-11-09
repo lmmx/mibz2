@@ -215,6 +215,13 @@
       "type": "REVIEW",
       "sha": "ec8217f3d6a84205c0a9a1b7f9e49a6fda7ad939",
       "checkpoint_comment_id": 6733116723
+    },
+    {
+      "pr": 145,
+      "id": 6734171410,
+      "type": "REVIEW",
+      "sha": "8a6bf17c33f25bf0c3c358826d7bae0e62b54633",
+      "checkpoint_comment_id": 6734039567
     }
   ],
   "reviews": [
@@ -390,7 +397,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "AWAITING_REVIEW_PUBLICATION",
+  "status": "WAITING_FOR_INBOX",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -748,13 +755,15 @@
     {
       "comment_id": 6734039567,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "adb16fb75cb7e25eb734aeebf4cc9e7bf28ff8c5",
-      "progress": "Completed report, canonical ledger, primary-source assessment, archived arithmetic replay and routing audit; REVIEW publication pending.",
+      "progress": "Report, ledger and replay evidence committed; one REVIEW published on #145 and exact author/body/destination read back.",
       "report_path": "state/records/reviews/inbox-6734039567/report.md",
-      "report_commit": "8a6bf17c33f25bf0c3c358826d7bae0e62b54633"
+      "report_commit": "8a6bf17c33f25bf0c3c358826d7bae0e62b54633",
+      "reply_id": 6734171410,
+      "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
     }
   ],
   "migrated_from": {
