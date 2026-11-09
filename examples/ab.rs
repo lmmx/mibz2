@@ -1837,10 +1837,9 @@ mod machine {
     const SYS_PERF_EVENT_OPEN: Option<i64> = None;
 
     extern "C" {
-        fn syscall(n: i64, ...) -> i64;
-        fn ioctl(fd: i32, req: u64, ...) -> i32;
-        fn read(fd: i32, buf: *mut u8, n: usize) -> isize;
-        fn close(fd: i32) -> i32;
+        // (libc's own signatures: the descriptors are read and closed through std's File)
+        fn syscall(num: std::ffi::c_long, ...) -> std::ffi::c_long;
+        fn ioctl(fd: std::ffi::c_int, request: std::ffi::c_ulong, ...) -> std::ffi::c_int;
     }
 
     const TYPE_HARDWARE: u64 = 0;
@@ -1850,6 +1849,15 @@ mod machine {
     const SW_TASK_CLOCK: u64 = 1;
     const IOC_ENABLE: u64 = 0x2400;
     const IOC_DISABLE: u64 = 0x2401;
+
+    /// A descriptor as a File, which closes it when dropped
+    ///
+    /// # Safety
+    /// `fd` is open, owned by the caller, and never used or closed again after this
+    unsafe fn owned(fd: i32) -> std::fs::File {
+        use std::os::fd::FromRawFd;
+        unsafe { std::fs::File::from_raw_fd(fd) }
+    }
 
     /// One counter: an open descriptor, or why it couldn't be opened
     type Counter = Result<i32, String>;
@@ -1891,7 +1899,16 @@ mod machine {
         attr[5] = 1 | 2 | if user_only { 1 << 5 } else { 0 } | 1 << 6;
         // SAFETY: the attribute is a valid perf_event_attr of the size it declares; pid 0,
         // any CPU, no group, close-on-exec (PERF_FLAG_FD_CLOEXEC)
-        let fd = unsafe { syscall(nr, attr.as_ptr(), 0i64, -1i64, -1i64, 8u64) };
+        let fd = unsafe {
+            syscall(
+                nr as std::ffi::c_long,
+                attr.as_ptr(),
+                0i64,
+                -1i64,
+                -1i64,
+                8u64,
+            )
+        };
         if fd < 0 {
             Err(std::io::Error::last_os_error().raw_os_error().unwrap_or(0))
         } else {
@@ -1955,7 +1972,7 @@ mod machine {
                 .flatten()
             {
                 // SAFETY: an open perf event descriptor; the request takes no argument
-                unsafe { ioctl(*fd, req, 0u64) };
+                unsafe { ioctl(*fd, req as std::ffi::c_ulong, 0u64) };
             }
         }
         /// Just before the timed region's clock starts
@@ -1974,14 +1991,15 @@ mod machine {
         pub fn finish(self) -> String {
             let get = |c: &Counter| -> Result<(u64, f64), String> {
                 let fd = *c.as_ref().map_err(Clone::clone)?;
-                let mut b = [0u64; 3];
-                // SAFETY: reading the value, time enabled and time running (read_format 3)
-                // into a buffer of that size
-                let n = unsafe { read(fd, b.as_mut_ptr() as *mut u8, 24) };
-                unsafe { close(fd) };
-                if n != 24 {
-                    return Err(format!("reading the counter returned {n}"));
-                }
+                // SAFETY: an open perf event descriptor this Perf owns, taken once: the File
+                // closes it when dropped
+                let mut file = unsafe { owned(fd) };
+                // (the value, time enabled and time running: read_format 3)
+                let mut raw = [0u8; 24];
+                std::io::Read::read_exact(&mut file, &mut raw)
+                    .map_err(|e| format!("reading the counter: {e}"))?;
+                let w = |i: usize| u64::from_ne_bytes(raw[8 * i..8 * i + 8].try_into().unwrap());
+                let b = [w(0), w(1), w(2)];
                 Ok((
                     b[0],
                     if b[1] == 0 {
@@ -2042,8 +2060,8 @@ mod machine {
                 .into_iter()
                 .flatten()
             {
-                // SAFETY: an open descriptor, closed once
-                unsafe { close(*fd) };
+                // SAFETY: an open descriptor this Perf owns, closed once (by the File's drop)
+                drop(unsafe { owned(*fd) });
             }
             r
         }
@@ -2241,11 +2259,15 @@ mod machine {
         /// it are checked on any Linux machine
         #[test]
         fn counts_threads_started_in_the_region_and_nothing_outside_it() {
+            // (spinning for `ms` of this thread's own CPU time, RUSAGE_THREAD, not wall
+            // time, so a preempted thread on a busy machine spins as long)
             let spin = |ms: u64| {
-                let t = std::time::Instant::now();
+                let t = crate::rusage(1).0;
                 let mut x = 0u64;
-                while t.elapsed() < std::time::Duration::from_millis(ms) {
-                    x = std::hint::black_box(x.wrapping_add(1));
+                while crate::rusage(1).0 - t < ms as f64 * 1e-3 {
+                    for _ in 0..10_000 {
+                        x = std::hint::black_box(x.wrapping_add(1));
+                    }
                 }
             };
             let p = Perf::open_events((TYPE_SOFTWARE, SW_TASK_CLOCK), (TYPE_SOFTWARE, 0));
