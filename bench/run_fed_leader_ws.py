@@ -71,6 +71,13 @@ OCC_TEAMS = "pipelined teams of 3, forced, levers: rf{sub}"
 OCC_PLAN = "pipe3x3-rf{sub}"
 TEAM_WORKERS = 3  # each team's leader records its buffers at its end
 HEX40, HEX64 = rfl.HEX40, rfl.HEX64
+# What a record's wall and CPU include of the thread record (src/threads.rs, D061): stated
+# with every admission, never subtracted
+CPU_SCOPE = (
+    "wall and CPU both include the decoders' thread record's pushes (one a thread, under one "
+    "lock, each allocating its name); the record's read, sort and join come after both "
+    "readings, in every arm's child alike, so neither includes them"
+)
 
 
 def load_json(path, what):
@@ -295,6 +302,7 @@ def admit(args):
     b, runs = admit_records(recs, rounds, census)
     bad += b
     out = {
+        "cpu_scope": CPU_SCOPE,
         "census_misreads": census,
         "label": label,
         "threads": THREADS,
@@ -327,6 +335,7 @@ def admit(args):
         print(
             f"  (the census misread {len(out['census_misreads'])} plans; the plan is the decoders' record: reported, not judged)"
         )
+    print(f"  (scope: {CPU_SCOPE})")
     print("Control contrasts (reported, never judged):")
     for k, x in out["contrasts"].items():
         print(f"  {k:<44} wall {rfl.fmt(x['wall'])}  CPU {rfl.fmt(x['cpu'])}")

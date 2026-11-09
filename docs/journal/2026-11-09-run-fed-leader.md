@@ -2,9 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised five times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+Revised six times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
 CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
-decoders' own record (D059).
+decoders' own record (D059); §R6, that hook's claims corrected (D061).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -477,12 +477,22 @@ an error of the admission itself is INVALID):
   - finite positive wall and CPU, and the corpus `wikidata`;
   - the plan (3, 0, 6), read from the decoders' own record of the threads they ran
     (`ran_threads`, §R5), not from the census's polling, which is kept, required present,
-    and reported, never judged;
+    and reported, never judged. Its scope (§R6): it is complete for ab's fresh child, which
+    turns recording on before the decode spawns any thread and reads it once the decoder's
+    threads are joined. It records a worker's start and a helper's first task attempt (a
+    caught panic included), not that the threads ran at the same time, nor that their work
+    succeeded;
   - for the run-fed arms, every registered phase once, as non-negative integers, with
     consistent counts, no fallback, and the controls with no records;
   - then threads 10 only, rounds 0–19, each arm once a round, in ab's rotation, and
     exactly 140 records;
 - every judged interval present and finite.
+
+**What each run's wall and CPU include** (§R6, stated in the admission's output, never
+subtracted): both include the thread record's pushes during the decode, one a thread under
+one process-wide lock, each allocating its name. The record's read, sort and join come
+after the child's wall, CPU and RSS readings, so none of them includes these. Every arm's
+child runs the same code. The cost is not claimed equal across arms (§R6).
 
 **The occupancy captures, admitted apart** (`admit-occupancy DIR ctl|dir`). They are made
 after the timing and never enter its judgement. Each is one capture of
@@ -956,11 +966,14 @@ No unprivileged external observer sees a thread's birth.
   - `Pool::named` made `pub(crate)`, for the record's test;
 - `src/parallel.rs` (`launch`): each worker calls `threads::ran()` once before `work`.
 
-These touch the timed paths of every arm alike: the incumbent's, the shipped worker's and
-the run-fed teams'. Off, the cost is one relaxed load a thread, once. In ab's children,
-where recording is on, it is one uncontended lock and push a thread per decode: 3 workers
-and 6 helpers. That is nothing a decode's milliseconds can see, but it is a change to code
-the arms run, so it is stated here.
+These touch the timed paths of every arm: the incumbent's, the shipped worker's and the
+run-fed teams'. Off, the cost is one relaxed load a thread, once. In ab's children, where
+recording is on, it is one lock and push a thread per decode (3 workers and 6 helpers).
+That is small beside a decode, but it is a change to code the arms run, so it is stated
+here. (Correction, D061: the lock is one process-wide mutex, which threads starting
+together can contend for, and each push allocates its name, and now and then the vector's
+growth. "Uncontended" was wrong, and equal counts across arms do not make the cost equal.
+No equality is claimed, §R6.)
 
 **The fixtures** (`bench/test_run_fed_leader_ws.py`, now 16, all pass):
 - a census misread (D059's (4, 0, 5), three records) with the record (3, 0, 6) is VALID,
@@ -985,7 +998,11 @@ at 10 threads, 50 rounds, 350 records, wall median 24.7 ms. Results:
 - the decoders' record read (3, 0, 6) in **all 350**;
 - every exit 0 and every error empty.
 
-The old race no longer gives a false plan.
+The old race no longer gives a false plan. (Scope, D061: this is the record's completeness for
+ab's fresh children, read after their decoders' threads are joined. The admission's
+fixtures are synthetic records: they show what the admission refuses, not that a
+physically delayed or early-exiting Rust thread behaves as they model. The Rust test
+`threads::tests` covers the pool's idle, ran, panicked and reused cases, §R6.)
 
 **The checks at `a5a9f048`:**
 - `cargo test`: the library 91 passed, 2 ignored, every integration and doc suite passed;
@@ -1001,6 +1018,39 @@ heavy steps; it was untimed, so its figures mean nothing either way.
 **The pin.** `bench/run-fed-leader.frozen` stays `frozen none`. The frozen head is this
 PR's head carrying this section, once the coordinator names it. Since `src/` changed, the
 Guardian's PROCEED for `a08be2e9` does not cover it.
+
+## R6. Revision, 2026-11-09: the census hook's claims corrected (the Guardian's D061)
+
+D061 (6733631922; `state/decisions.md` at `ffff8b86`, L2667) gives **PROCEED toward the
+freeze**, with no new B5 HOLD, and asks for three claims to be corrected, plus the hook's
+premise stated. These are docs and comments, not new mechanisms. One change to ab's child
+is made symmetrically, as D061 allowed.
+
+| D061 | corrected in |
+|---|---|
+| **cost:** the single mutex can contend; the name's copy and the vector's growth allocate; equal counts across arms don't make equal cost | `src/threads.rs`'s module doc; bench/CHANGELOG 3.3.0; §R5 (the correction beside the old "uncontended" claim); §8 |
+| **what CPU includes:** the record's take, sort, join and replace sat outside the wall but inside the reported CPU | changed, symmetrically: ab's child now reads the record after its CPU and RSS readings as well as its wall, in every arm's child alike. Each run's CPU includes the pushes during the decode, and none of the reading. Stated in §8, in the admission's output (`cpu_scope`, and a line with every VALID), and in ab's comment. Nothing is subtracted |
+| **completeness, scoped:** a fresh child, recording on before any spawn, and joined before the take; worker starts and helper task *attempts*, caught panics included, not simultaneous occupancy or successful work; the synthetic fixtures don't prove physically delayed or early-exit Rust behaviour | `src/threads.rs`'s module doc ("What it records, and its scope"); ab's comment (turned on before the decode spawns any thread, read once the decode has returned and its decoder's threads are joined); §8; §R5 |
+| **the hook's non-unwinding premise** | `src/threads.rs` ("It never unwinds": `ran` sits between a task and the helper's `done` count; a poisoned lock is taken as it is; an allocation failure aborts, it doesn't unwind); `ran`'s doc; the helper loop's comment in `src/coop.rs` |
+
+**The join before the take,** stated precisely. ab's child reads the record once `decode`
+has returned and dropped its reader. `BzReader`'s drop cancels the decoder. Its last
+reference then drops the decoder, whose drop joins every worker (`StreamDecoder::join`),
+and each worker's pool joins its helpers on drop. If the feeder thread still held the
+decoder, that join would come later. On a file the feeder has read to its end before the
+reader's last byte, and if not, the record could only miss a thread, never invent one.
+
+**The optional hardening, done:** `threads::tests::miri_helpers_record_their_own_names_
+once_they_ran` now also has a helper whose task panics. The run resumes the panic, the
+helper is recorded once (an attempt), and the pool, reused, records nothing more. It runs
+under Miri (passed locally, nightly `16d1ffac1`), and `miri.yml` now triggers on
+`src/threads.rs`.
+
+**Master merged** (`#280`'s `examples/packet_census.rs` and `bench/packet_census.py`, and
+the journals since). `examples/` is a measured input, so the frozen head includes them.
+
+**The checks at the merged head** are listed in the commit that records them;
+`bench/run-fed-leader.frozen` stays `frozen none`.
 
 ## Provenance and reproduction
 

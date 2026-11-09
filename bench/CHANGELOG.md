@@ -45,9 +45,15 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   (`observed_threads`, polled from outside every 5 ms) is kept as it was. It can catch a
   helper only in the instant after its birth, under its leader's inherited name, and miss
   it after: the Guardian's D059 reproduced a false (4, 0, 5) plan on a 20 ms decode. The
-  record is complete by construction. A new figure beside the others: every existing
-  figure keeps its meaning. The record costs each decoder thread one relaxed load, and in
-  ab's children one lock and push a thread, once. The run-fed leader's workstation
+  record is complete for a fresh child that turns it on before the decode spawns any thread
+  and reads it once the decoder's threads are joined; it records a worker's start and a
+  helper's first task attempt (a caught panic included), not simultaneous occupancy or
+  successful work. A new figure beside the others: every existing figure keeps its meaning.
+  Its cost: off, one relaxed load a thread; on, in ab's children, each thread allocates its
+  name and pushes it under one process-wide lock that threads starting together can
+  contend for, once. Equal counts across arms do not make that cost equal. The pushes are
+  inside each run's wall and CPU; the record's read, sort and join come after both
+  readings, in every arm alike. The run-fed leader's workstation
   admission (`bench/run_fed_leader_ws.py`) reads the plan from it; the CI reporter is
   unchanged.
 

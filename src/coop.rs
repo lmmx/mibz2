@@ -226,6 +226,8 @@ fn helper(s: &Shared, idx: usize) {
                     *slot = Some(p);
                 }
             }
+            // (recorded once, after the first task attempt, a caught panic included; before
+            // `done` below, so `ran` must not unwind, and doesn't: crate::threads)
             if !ran {
                 ran = true;
                 crate::threads::ran();
