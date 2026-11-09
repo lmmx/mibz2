@@ -1,0 +1,14 @@
+{
+  "comment": 6732441720,
+  "issue": 145,
+  "body_exact": true,
+  "incoming": 6732361106,
+  "work": "fe03ad8836c1ada255438e92d70032b31b706178",
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "guardian_checks": "Exact id, destination, FROM guardian, TO coordinator, TYPE REVIEW, incoming ID and immutable work commit verified; misrouted returned None."
+}
