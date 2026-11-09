@@ -1208,17 +1208,12 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "last_finished_comment": 6732894651,
-    "decision": "D058",
-    "status": "finished",
-    "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
-    "review_comment_id": 6732989448,
+    "active_comment": 6733174182,
+    "status": "in progress",
+    "decision": "D059",
     "queue_snapshot": [
-      6732894651
-    ],
-    "remaining_in_snapshot": [],
-    "automation": "unchanged; persistent task remains enabled"
+      6733174182
+    ]
   },
   "duplicate_events": [
     {
@@ -2011,6 +2006,12 @@
       "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
       "review_comment_id": 6732989448,
       "complete_cursor_commit": "dbcda95697fb3fd303929dbb91dbe14dc3431f2b"
+    },
+    {
+      "comment_id": 6733174182,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D059"
     }
   ],
   "migrated_from": {
