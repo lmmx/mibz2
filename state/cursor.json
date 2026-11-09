@@ -1302,11 +1302,15 @@
     },
     {
       "trigger_comment_id": 6746912441,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "bb362fa3c5e0650d730614682faeab8a43b20d19"
+      "source_commit": "bb362fa3c5e0650d730614682faeab8a43b20d19",
+      "report_path": "state/reports/service-guarded-r2-6746912441/report.md",
+      "report_commit": "fed220d66ae55fd4f143393c3e7a06fd6f9b1731",
+      "review_comment_pr": 145,
+      "disposition": "Technical PROCEED: child termination and required acquisition status gaps closed; 17 local tests/one native skip, 15 probes, exact-head CI native producer and 11 recipe tests verified. Authenticated C6 repin, freeze base integration and version reconciliation remain separate prerequisites."
     }
   ],
   "active_delegations": [],
