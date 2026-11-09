@@ -113,7 +113,8 @@
     6734368711,
     6734526651,
     6734802309,
-    6735163830
+    6735163830,
+    6735725456
   ],
   "last_processed_comment_id": 6735163830,
   "comment_reviews": [
@@ -1078,7 +1079,7 @@
     },
     {
       "trigger_comment_id": 6735725456,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1086,7 +1087,10 @@
       "report_path": "state/reports/service-starvation-6735725456/report.md",
       "report_commit": "d6f52bdd947dcf54b3e67acfb534a70534294e2b",
       "review_comment_pr": 145,
-      "disposition": "PROCEED bounded untimed eligibility/credit diagnostic; prep already shared, eligible front shortage excluded under ownership assumptions, wait-entry attribution is not causal, finish-first and ordered credits admit distinct starvation. Conditional next candidate: in-flight-aware prep reserve with two workers; no performance qualification."
+      "disposition": "PROCEED bounded untimed eligibility/credit diagnostic; prep already shared, eligible front shortage excluded under ownership assumptions, wait-entry attribution is not causal, finish-first and ordered credits admit distinct starvation. Conditional next candidate: in-flight-aware prep reserve with two workers; no performance qualification.",
+      "review_comment_id": 6736071231,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing pass. Pinned coord.py verify reports solely hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
