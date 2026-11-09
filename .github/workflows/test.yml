@@ -101,6 +101,12 @@ jobs:
       # bundles: its refusals and its captures' (docs/journal/2026-11-09-run-fed-leader.md §R4)
       - name: Run-fed leader workstation admission tests
         run: python3 bench/test_run_fed_leader_ws.py
+      - name: Install just
+        uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
+        with:
+          tool: just@1.38.0
+      - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
+        run: python3 bench/test_telemetry_check.py
 
   get-python-versions:
     runs-on: ubuntu-latest

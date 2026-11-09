@@ -146,6 +146,77 @@ restructure rather than append [X: README, reduction]. The maintainer's large re
 shortened posts: 33 minutes to 14 [E: 2464928e], 262 lines out for 159 in [E: 340cada7],
 and detail moved to a technical appendix [E: 2464928e, 54220de4, d0640e02].
 
+## The title and the dek: fantastic news
+
+**The durable concept for every title and dek** (Louis, 9 November 2026): "imagine waking up
+one morning, bright and early, the birds are chirping and as you glimpse the first rays of the
+morning sun you open this mibz2 blog page and spy a wondrous thing: some fantastic news has
+arrived!" The title and the dek are that moment. They announce the news with delight and
+style, not a description of the method.
+- **The title is a headline,** short and vivid, with an image or a turn of phrase where one
+  fits. Not a label for the method ("Service threads: moving mibz2's serial work out of its
+  teams") but the news ("mibz2 gets a pit crew").
+- **The dek delivers the news in one polished sentence** (the band below), with the finding
+  and its best figures, and the same light touch.
+- **A metaphor, once introduced, is extended** (Louis, 9 November 2026). Carry it through every
+  part of the post that has leeway for joyful edits: figures above all (a flow diagram becomes
+  the metaphor's scene), section openings and captions. "mibz2 gets a pit crew" makes the
+  block's-path figure a race circuit: the teams on the track, the service threads in the pit
+  lane, the reader at the finish line. The plain technical label stays on every element. The
+  metaphor dresses the content and never replaces it, and it stops short of flippancy.
+- **Truth still binds.** The joy is in the telling, never in the claim. Each figure in the dek
+  is a registered result, and the body carries the scope.
+
+## The dek, and the sentences
+
+**The dek (the subtitle) is a durable requirement, checked by `docs/scripts/check_prose.py`
+on every pull request that touches a post** (Louis, 9 November 2026). It is one well-built,
+sophisticated sentence that a reader takes in at once, with a little joy in it. It fails in
+three ways:
+- **A mess of overloaded fragments:** stacked clauses, colon-joined pieces, runs of numbers,
+  procedural detail ("Two teams of three, fed by two threads that only prepare and finish
+  blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the
+  default."), or a garden path the reader has to parse twice ("Two dedicated threads take every
+  block's one-thread chores, leaving the teams only the work they share: 4.5% faster on ten
+  cores, with 13% less processor time.").
+- **Childishly plain:** short primer sentences in a flat register ("We gave the chores to two
+  dedicated threads, so the teams could focus on decoding. mibz2 got faster and used less
+  processor time.").
+- **Bland:** correct but joyless. It should spark joy, not merely inform. "We will not be shipping bland works any more." Give it a
+  flourish: a turn of phrase, an image or a touch of wit that carries the finding, never a
+  procedure or an apology.
+
+- **Managerial and grey:** passes the band but you wouldn't feel joy reading it ("Hand the
+  chores to two service threads and mibz2's teams get on with what they do best, decoding 4.5%
+  faster on ten cores for 13% less CPU.").
+
+- **Flippant:** joy is not jokes. A metaphor pushed so far that it trivialises the work
+  ("Two nimble service threads now refuel every block mid-race, so mibz2's teams never leave
+  the track and cross the line 4.5% sooner on 13% less fuel.") fails as surely as a grey one.
+
+What passes, under the headline "mibz2 gets a pit crew": "Handing each block's serial steps to
+two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13%
+less CPU." It sparks joy and stays serious. The delight comes from the result itself (faster
+*and* cheaper) told with assurance; the headline may carry a light image, and the dek states
+the news plainly and well.
+
+**The band** `check_prose.py` enforces, so neither failure can ship:
+- one sentence, of 16 to 28 words;
+- at most one internal break (comma, colon, semicolon, dash or parenthesis);
+- at most two figures;
+- Flesch reading ease from 35 to 70: below 35 is dense, above 70 reads as a primer.
+
+Joy can't be measured, so the reviewer and the coordinator judge it, and say so in the PR.
+Defensive caveats ("it is not the default") never go in the dek. In the body, frame them as
+what comes next, not as an apology.
+
+**The body, sentence by sentence.** `check_prose.py` also reports every sentence of more than
+25 words, or with a load (breaks plus figures) of 5 or more. The target is at most 15% of
+sentences flagged. It is reported, not yet a gate, because the existing posts sit at 25–31%.
+Split an overloaded sentence, or move its numbers into a table or a figure; don't shorten it
+into a primer. Write with the same polish and life as the dek: sophisticated, never
+mind-numbing, never dumb.
+
 ## The opening
 
 **Don't start in medias res, and don't continue in it.** The main failure of a drafted post
@@ -162,6 +233,13 @@ Open in this order:
    stage it is, what share of the time it takes, what depends on it.
 2. **What was found:** the result and its scope, in a sentence or two.
 3. **How it was found,** and the route through the post.
+
+**The key takeaways land first.** Before drafting, write the simplest correct explanation
+of the result (two or three sentences) and the key takeaways. The opening gives that
+explanation, and the takeaways appear in the opening or section 1 at the latest, caveats
+included. They are never held back for a later section, leaving the reader unsure in between.
+Later sections show how each takeaway is known. (Louis, 9 November 2026; reviewed by
+`coordinate-blog-post`'s two rounds.)
 
 The opening also settles, in a sentence each, anything its own claims make the reader
 wonder about: why the mechanism costs anything, what a named sample or machine is, how its
@@ -276,6 +354,20 @@ Fix every "assumed" and every "late" before publishing.
 - **Every process or structure gets a diagram,** and the central idea gets a worked
   example small enough to follow by hand. A post about Huffman decoding shows a toy code
   being read before it shows a lookup table.
+- **Dense prose without visuals is a failure mode** (Louis, 9 November 2026). When a
+  passage carries a comparison, a set of numbers, a structure, a sequence or a trade-off,
+  the substance lands faster as a figure, with prose leading into it and drawing the point
+  out. Read each section of the draft and ask whether a figure would carry it better.
+  - **Results:** a chart of the ratios with their intervals, the reference line at 1 and
+    "registered" against "reported, never judged" marked.
+  - **Architectures:** a before/after diagram of who does what.
+  - **Trade-offs:** speed against CPU or memory, on one figure.
+  - **Timelines and sequences:** a timeline or a swim-lane.
+
+  A paragraph that lists four or more numbers, or walks through a structure in words, is
+  the signal. The figure doesn't replace the explanation; it is what the explanation
+  points at. The key takeaways in particular should each have a visual where one helps
+  them land, and early.
 - **Prose, not bullets, for explanation.** A bullet list strips out the connecting words
   ("because", "so", "then") that carry an explanation. Use bullets only for parallel,
   self-contained items whose concepts the reader already has: results, rule clauses, a
@@ -589,11 +681,17 @@ Before `publish-page`:
       introduction's own figures is left open there.
 - [ ] The domain is explained before the routine, with a diagram for each process or
       structure and a worked example for the central idea.
+- [ ] No section is dense prose where a figure would carry it. Results, comparisons,
+      architectures and trade-offs each have a figure, and the key takeaways have visuals
+      where they help.
 - [ ] Each mechanism appears first on the toy example, worked through in full, before the
       real one. No sentence packs a cause, a consequence and a list of cases together.
 - [ ] Every interactive figure has a lead-in saying what one press does, a key inside the
       figure, a narration of each step in words, a button that names its action and a step
       counter. A fresh reader, from the figure alone, could say what the next press does.
+- [ ] `check_prose.py` passes the dek: one sentence, 16–28 words, at most one break and two
+      figures, reading ease 35–70. It has a little joy and a flourish, and no procedure or
+      caveat. The body's flagged share is reported in the PR, against a target of 15%.
 - [ ] The de-slop pass is done: no mannered prose (metaphor or flourish where a literal
       phrase exists).
 - [ ] No bullets carry explanation or narrative. Project jargon is defined in plain words

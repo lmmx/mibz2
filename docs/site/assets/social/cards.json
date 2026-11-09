@@ -77,6 +77,12 @@
     "section": " · Research blog",
     "title": "The mathematical structure of inverse-BWT navigation"
   },
+  "assets/social/blog-2026-11-09-pit-crew-service-threads.png": {
+    "description": "Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.",
+    "foot": "lmmx.github.io/mibz2 · 9 November 2026",
+    "section": " · Research blog",
+    "title": "mibz2 gets a pit crew"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

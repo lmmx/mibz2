@@ -51,7 +51,7 @@ PAGE = """<!doctype html>
     position: absolute; left: 76px; top: 64px; bottom: 70px; width: 700px;
     display: flex; flex-direction: column;
   }}
-  .kicker {{ font-size: 26px; font-weight: 600; color: #0f6e74; letter-spacing: 0.01em; }}
+  .kicker {{ font-size: 28px; font-weight: 600; color: #0f6e74; letter-spacing: 0.01em; }}
   .kicker span {{ color: #8a8983; font-weight: 400; }}
   h1 {{
     margin: 26px 0 0; font-size: {title_px}px; line-height: 1.12; font-weight: 600;
@@ -59,10 +59,10 @@ PAGE = """<!doctype html>
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }}
   p {{
-    margin: 24px 0 0; font-size: 27px; line-height: 1.4; color: #5d5c56;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    margin: 26px 0 0; font-size: {dek_px}px; line-height: 1.38; color: #5d5c56;
+    display: -webkit-box; -webkit-line-clamp: {dek_lines}; -webkit-box-orient: vertical; overflow: hidden;
   }}
-  .foot {{ margin-top: auto; font-size: 22px; color: #8a8983; }}
+  .foot {{ margin-top: auto; font-size: 24px; color: #8a8983; }}
   .hero {{ position: absolute; right: 30px; top: 50%; width: 400px; transform: translateY(-50%); }}
   .bar {{ position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background: #0f6e74; }}
 </style></head>
@@ -113,8 +113,15 @@ def find_chrome(arg):
 def render(chrome, out, **fields):
     """Render one card (section, title, description, foot) to the PNG `out`."""
     fields = {k: html.escape(str(v)) for k, v in fields.items()}
-    title_px = 60 if len(fields["title"]) <= 70 else 46
-    page = PAGE.format(w=W, h=H, title_px=title_px, hero=HERO.resolve().as_uri(), **fields)
+    title = len(fields["title"])
+    title_px = 66 if title <= 30 else 60 if title <= 70 else 46
+    # a one-line headline leaves room for a larger dek over four lines; a longer title keeps
+    # the dek to three lines so it never crowds the foot
+    if title <= 30:
+        dek_px, dek_lines = 33, 4
+    else:
+        dek_px, dek_lines = 28, 3
+    page = PAGE.format(w=W, h=H, title_px=title_px, dek_px=dek_px, dek_lines=dek_lines, hero=HERO.resolve().as_uri(), **fields)
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / "card.html"
         src.write_text(page)
