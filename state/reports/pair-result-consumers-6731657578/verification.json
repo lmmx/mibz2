@@ -1,0 +1,13 @@
+{
+  "pinned_verifier": {
+    "comment": 6731804749,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "role_aware_check": true,
+  "exact_body_readback": true,
+  "note": "Pinned helper hard-codes Coordinator sender. Sole mismatch retained; Researcher sender, destination and routing independently verified."
+}
