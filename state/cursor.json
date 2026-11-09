@@ -1007,6 +1007,19 @@
       "receipt_commit": "17c17dc22d04e247b9fc9b5e32818b531b931b0b",
       "disposition": "REVISE telemetry-check admission: preserve failure, correct probe error/coverage claims, bind executable; independent of #299",
       "comment": 6739426262
+    },
+    {
+      "pr": 298,
+      "sha": "7678d34716db60dddf7c6e5a1a824a7909cd2bcc",
+      "evidence_digest": "git-blob:0af5d1e77a74ab8e8fccd6ef5d2ef403bb276709",
+      "decision": "D066",
+      "commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+      "id": "D066",
+      "incoming_pr": 161,
+      "incoming_comment": 6739842300,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "REVISE remaining inheritance/multiplex status paths; other D065 fixes accepted"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1206,7 +1219,9 @@
     "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa",
     "17c17dc22d04e247b9fc9b5e32818b531b931b0b",
     "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
-    "941ceb0fa83678f92e316ec5d0b3798adb8f89c8"
+    "941ceb0fa83678f92e316ec5d0b3798adb8f89c8",
+    "eeca52734cc0e882ea4d97ba8d47e2b9458cc734",
+    "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1272,7 +1287,8 @@
     6733879388,
     6734225080,
     6735319842,
-    6739273655
+    6739273655,
+    6739842300
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1351,11 +1367,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6739273655,
-    "status": "finished",
-    "decision": "D065",
-    "work_commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
-    "review_comment_id": 6739426262
+    "active_comment": 6739842300,
+    "status": "complete",
+    "decision": "D066",
+    "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
   },
   "duplicate_events": [
     {
@@ -1867,6 +1882,13 @@
       "decision": "D065",
       "commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
       "comment": 6739426262
+    },
+    {
+      "pr": 298,
+      "sha": "7678d34716db60dddf7c6e5a1a824a7909cd2bcc",
+      "evidence_digest": "git-blob:0af5d1e77a74ab8e8fccd6ef5d2ef403bb276709",
+      "decision": "D066",
+      "commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2284,8 +2306,10 @@
     {
       "comment_id": 6739842300,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D066"
+      "status": "complete",
+      "decision": "D066",
+      "receipt_commit": "eeca52734cc0e882ea4d97ba8d47e2b9458cc734",
+      "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
     }
   ],
   "migrated_from": {
