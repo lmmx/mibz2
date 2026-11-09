@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default.">
+        <meta name="description" content="Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Service threads: moving mibz2's serial work out of its teams - mibz2</title>
+        <title>mibz2 gets a pit crew - mibz2</title>
       
     
     
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=b593e0147fc3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=b593e0147fc3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=b593e0147fc3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=b593e0147fc3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=b593e0147fc3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=7a572cc2deda">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=b593e0147fc3">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -89,19 +89,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Service threads: moving mibz2's serial work out of its teams">
-  <meta property="og:description" content="Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default.">
+  <meta property="og:title" content="mibz2 gets a pit crew">
+  <meta property="og:description" content="Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-09-service-threads/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-09-service-threads.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Service threads: moving mibz2's serial work out of its teams">
+  <meta property="og:image:alt" content="mibz2 gets a pit crew">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Service threads: moving mibz2's serial work out of its teams">
-  <meta name="twitter:description" content="Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default.">
+  <meta name="twitter:title" content="mibz2 gets a pit crew">
+  <meta name="twitter:description" content="Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-09-service-threads.png">
-  <meta name="twitter:image:alt" content="Service threads: moving mibz2's serial work out of its teams">
+  <meta name="twitter:image:alt" content="mibz2 gets a pit crew">
 
   </head>
   
@@ -154,7 +154,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Service threads: moving mibz2's serial work out of its teams
+              mibz2 gets a pit crew
             
           </span>
         </div>
@@ -1159,7 +1159,7 @@
   <span class="md-ellipsis">
     
   
-  Service threads in mibz2
+  mibz2 gets a pit crew
 
     
   </span>
@@ -1176,7 +1176,7 @@
   <span class="md-ellipsis">
     
   
-  Service threads in mibz2
+  mibz2 gets a pit crew
 
     
   </span>
@@ -2225,9 +2225,9 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="service-threads-moving-mibz2s-serial-work-out-of-its-teams">Service threads: moving mibz2's serial work out of its teams<a class="headerlink" href="#service-threads-moving-mibz2s-serial-work-out-of-its-teams" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5%
-on ten cores with 13% less processor time. It is not the default.</p>
+<h1 id="mibz2-gets-a-pit-crew">mibz2 gets a pit crew<a class="headerlink" href="#mibz2-gets-a-pit-crew" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win,
+decoding 4.5% faster on ten cores with 13% less CPU.</p>
 <p class="post-meta">9 November 2026 · 15 min read · <a href="#8-where-do-things-stand">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
@@ -2239,8 +2239,8 @@ step before the shared part, and the finish after it, run on one thread. The
 work, by having each team's leader do it while the other two threads work on another block. This
 post is about the next step: taking that work out of the teams altogether. Two threads of their
 own, which we call service threads, do the one-thread work of every block, and the teams only do
-the shared part. On ten threads that makes two teams of three plus two service threads, where
-0.2.6 runs three teams of three.</p>
+the shared part. They are the teams' pit crew, so the teams never have to leave the track. On ten threads that makes two teams of three plus two service
+threads, where 0.2.6 runs three teams of three.</p>
 <p>On the ten-core machine we test on, this layout decoded our test file faster than 0.2.6's default
 and spent less processor time doing it. In a run whose comparisons and decision rules were fixed
 before it ran, it was 4.5% faster (a speed ratio, the default's elapsed time over the layout's, of 1.045,
@@ -2259,11 +2259,12 @@ a line; to the right of the line at 1 is faster.</p>
 <figcaption>Measured, the test machine, ten threads, 20 paired rounds each, with 95% intervals that describe the spread within each run. Green dots are comparisons registered as decisions before their run; amber dots were reported beside them and never judged. The numbers in brackets are the pull requests of the runs. The lower panel compares the service layout with itself, at a higher admission threshold, the number of blocks the service threads prepare ahead of the teams: both intervals span 1, so neither change is shown to help or hurt.</figcaption>
 </figure>
 
-<p>The service layout is not the decoder's default, and is not in any release. There are three
-reasons. It has been measured on one processor, an Intel Core i9-10900K, and principally one file,
-a sample of the Wikidata dump. What causes its gain is not separated: the runs measure the layout
-as a whole. And an independent safety review has accepted the evidence only for the two research
-versions that were measured, and states that this does not qualify a version for release.</p>
+<p>The next step is to make it mibz2's default, and three things stand between here and there. So
+far it has been measured on one processor, an Intel Core i9-10900K, and principally one file, a
+sample of the Wikidata dump; other machines and other files come next. The runs measure the
+layout as a whole, so which part of it earns the gain is still to be separated. And the
+independent safety review has accepted the evidence for the two research versions we measured;
+a release version needs its own.</p>
 <p><a href="#1-what-does-a-service-thread-do">Section 1</a> shows what a service thread does, and
 <a href="#2-why-might-it-pay-and-why-might-it-not">section 2</a> why that might pay and why it might not.
 <a href="#3-why-isnt-one-service-thread-enough">Section 3</a> is the first measurement, where one service
@@ -2791,19 +2792,19 @@ measuring showed which.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/bench.js?v=b593e0147fc3"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/couriers.js?v=b593e0147fc3"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/blog.js?v=b593e0147fc3"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/frontier.js?v=b593e0147fc3"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/observatory.js?v=b593e0147fc3"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=7a572cc2deda"></script>
+        <script src="../../assets/javascripts/katex.js?v=b593e0147fc3"></script>
       
     
   </body>
