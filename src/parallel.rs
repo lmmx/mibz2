@@ -71,6 +71,20 @@ struct State {
     /// buffers to reuse: decoded blocks' and symbols'
     free_out: Vec<Vec<u8>>,
     free_syms: Vec<Vec<u16>>,
+    /// the decode's terminal failure, if it failed as a whole (the service core's outer
+    /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
+    /// reader's error in place of `Cancelled`
+    terminal: Option<Error>,
+}
+
+impl State {
+    /// The reader's error once the decode is cancelled: the terminal failure, if the decode
+    /// failed as a whole, else `Cancelled`
+    fn stopped(&self) -> Error {
+        self.terminal
+            .clone()
+            .unwrap_or_else(|| Error::new(ErrorKind::Cancelled))
+    }
 }
 
 struct Shared {
@@ -106,6 +120,9 @@ pub struct StreamDecoder {
     threads: usize,
     /// its workers are pipelined teams
     pipelined: bool,
+    /// the service core's hub, if it is the service core (`service`, or the default at
+    /// `SERVICE_PLAN`): for `is_service` and `service_counts`
+    hub: Option<Arc<Hub>>,
 }
 
 #[derive(Default)]
@@ -125,10 +142,52 @@ impl StreamDecoder {
     /// pipelined, with park and small (`PIPELINED_LEVERS`); every other plan runs as
     /// `planned` runs it. `planned(Plan::Workers(threads), ..)` is the decoder before the
     /// policy, and `planned(PIPELINED_PLAN, ..)` the three plain teams of three.
+    ///
+    /// One narrower exception comes first: at exactly `SERVICE_THREADS` threads on the
+    /// service core's supported target (`service_target`: the measured i9-10900K's CPU and
+    /// shape, with its own kernels), the decoder is the service core at `SERVICE_PLAN`
+    /// (two teams of three that only build and walk, two service workers), its window
+    /// scaled to its two teams as a plan's is (`window`: 8 blocks at the 40 a caller of
+    /// `BzReader::parallel` or `decode_parallel` gives at 10 threads), its lookahead one
+    /// block a team (2). A plan forced with `with_plan` is never replaced by it.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
-        let plan = Plan::for_threads(threads);
-        Self::defaulted(plan, window(plan, threads, slots), k)
+        let forced = FORCED.with(|c| c.get()).is_some();
+        // (the cheap conditions first: the machine is read only at the target's budget)
+        let dec = if !forced
+            && threads == SERVICE_THREADS
+            && k.avx2
+            && k.clmul
+            && service_target(threads, k, &Machine::here())
+        {
+            let p = SERVICE_PLAN;
+            let slots = window(p.as_plan(), threads, slots);
+            Self::service(p.teams, p.k, p.services, slots, k)
+        } else {
+            let plan = Plan::for_threads(threads);
+            Self::defaulted(plan, window(plan, threads, slots), k)
+        };
+        record_built(&dec);
+        dec
+    }
+
+    /// Whether this decoder is the service core (`service`, or `new` at `SERVICE_PLAN`)
+    #[doc(hidden)]
+    pub fn is_service(&self) -> bool {
+        self.hub.is_some()
+    }
+
+    /// The blocks this decoder keeps in flight (its window, after any scaling to its teams)
+    #[doc(hidden)]
+    pub fn window(&self) -> u64 {
+        self.shared.slots
+    }
+
+    /// The service core's counts so far (None for any other decoder): blocks prepared,
+    /// inverted on a team's pool, and finished. Research and tests only.
+    #[doc(hidden)]
+    pub fn service_counts(&self) -> Option<ServiceCounts> {
+        self.hub.as_ref().map(|h| h.counts())
     }
 
     /// The default decoder for `plan` (`new`'s): the pipelined teams with
@@ -260,6 +319,7 @@ impl StreamDecoder {
                 cancelled: false,
                 free_out: Vec::new(),
                 free_syms: Vec::new(),
+                terminal: None,
             }),
             cv: Condvar::new(),
             slots,
@@ -295,6 +355,7 @@ impl StreamDecoder {
             reader: Mutex::default(),
             threads,
             pipelined: false,
+            hub: None,
         }
     }
 
@@ -340,8 +401,11 @@ impl StreamDecoder {
     /// after), or after `cancel`.
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
-        if !r.done && r.failed.is_none() && self.shared.lock().cancelled {
-            r.failed = Some(Error::new(ErrorKind::Cancelled));
+        if !r.done && r.failed.is_none() {
+            let st = self.shared.lock();
+            if st.cancelled {
+                r.failed = Some(st.stopped());
+            }
         }
         loop {
             if let Some(e) = &r.failed {
@@ -365,7 +429,7 @@ impl StreamDecoder {
             mark!(ReadWait);
             loop {
                 if st.cancelled {
-                    r.failed = Some(Error::new(ErrorKind::Cancelled));
+                    r.failed = Some(st.stopped());
                     break;
                 }
                 let taken = st.taken;
@@ -1147,6 +1211,888 @@ fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+// ---- The service core (research, opt-in: `StreamDecoder::service`) ----
+//
+// The teams' serial work taken out of the teams. K service workers serve every team: for
+// a block to come, its move-to-front and checkpoints ("preparing"); for a block walked,
+// its assembly, RLE1, CRC and publish ("finishing"). Each team's k threads only build and
+// walk (`coop::invert_team`: `bwt::Cooperative`'s build and walk, unassembled).
+//
+// Threads: the scanner (as every decoder's); a feeder (`mibz2-svc-feed`) moving the
+// scanner's jobs into the hub, so a service worker waits on one condition for either kind
+// of work (it never sits in the jobs' `recv` while a walked block waits for it, which could
+// leave the reader's next block behind a scanner waiting for the reader's slot); K service
+// workers (`mibz2-svc-N`); and the teams (`mibz2-N`, each with its pool's `mibz2-coop-*`).
+//
+// The hub's two queues, and the buffers that bound them:
+// - **prepared** (service → teams): blocks whose move-to-front is done, each in a front
+//   set (`Front`: `ll`, counts, checkpoints). Fronts: a team's each, the queue's lookahead
+//   (`teams`), and a service worker's each; a service worker takes a free one to prepare
+//   into, a team gives it back once its block is walked (or dropped, or failed).
+// - **finishing** (teams → service): blocks walked, each in a back set (`Back`: the walk's
+//   segments, or for a block below `MIN_SEGMENTED` its bytes). Backs: two a team; a team
+//   takes one with each block, a service worker gives it back once it has finished it.
+//
+// **The service's priority (registered):** finishing first, except that the prepared queue
+// is never left empty while a block can be prepared. In order, a service worker:
+// 1. prepares, if the prepared queue is empty and a job and a front set are free (so no
+//    team waits for a block while finishing is backed up);
+// 2. finishes the walked block earliest in the stream, if any (the reader's next, and a
+//    back set freed for the teams);
+// 3. prepares, if the prepared queue is below its lookahead (a block a team) and a job and
+//    a front set are free;
+// 4. ends, once the jobs are closed and no block is left in flight; else waits.
+//
+// **Small blocks** (below `MIN_COOP`) are prepared and finished by the service, as every
+// block, and inverted whole by a team's first thread on the one-core kernel (its helpers
+// idle meanwhile), exactly as a `Cooperative` team inverts them today. Not by the service:
+// the model makes the service the scarce resource (about 0.8 of a core at 1.4 GB/s on its
+// own stages), and a block's inversion costs about three times its serial stages, so small
+// blocks on the service would saturate it first (registration).
+//
+// **Ordered output, errors, cancellation, panics:** every block's result (or its error,
+// with its place and bit) goes to the decoder's `ready` through `publish`, as a worker's
+// does, so the reader takes them in order. A cancelled decode drops its blocks wherever
+// they are (their buffers returned), and the feeder drains the jobs so the scanner never
+// waits on them. A panic in any stage (a service worker's preparing or finishing, a team's
+// build or walk, any of its pool's threads) is caught where it happens and becomes that
+// block's `Internal` error, the buffers it held replaced with new ones (never lost, so the
+// buffer bounds never shrink into a deadlock). Each thread ends once the jobs are closed
+// (the scanner's end) and every block taken has been published or dropped: the end of
+// stream's flush.
+
+/// A block's inversion's buffers (a back set): the walk's segments, or, for a block too
+/// short to segment, its bytes walked straight into `direct`
+#[derive(Default)]
+struct Back {
+    seg: super::bwt::SegScratch,
+    direct: Vec<u8>,
+    segmented: bool,
+}
+
+/// A block prepared (move-to-front done), in its front set
+struct Prepared {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    front: Front,
+    rows: usize,
+}
+
+/// A block walked, in its back set
+struct Walked {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    back: Back,
+}
+
+/// Where the tests' fault hook makes a service-core stage panic (research, tests only):
+/// a block's preparing or finishing on a service worker, or a team's pool thread `thread`
+/// in that block's walk (0 the team's first thread, 1.. its helpers)
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ServiceFault {
+    Prepare { place: u64 },
+    Finish { place: u64 },
+    Team { place: u64, thread: usize },
+}
+
+struct HubState {
+    /// the scanner's jobs, moved here by the feeder; closed at the scanner's end
+    jobs: std::collections::VecDeque<Job>,
+    closed: bool,
+    prepared: std::collections::VecDeque<Prepared>,
+    walked: Vec<Walked>,
+    fronts: Vec<Front>,
+    backs: Vec<Back>,
+    /// blocks taken from `jobs`, not yet published or dropped
+    live: usize,
+    /// what the service core has done so far (`StreamDecoder::service_counts`): blocks
+    /// prepared and queued, blocks a team inverted on its pool (not alone), blocks
+    /// finished (published, any result); counted under this lock where it is already held
+    counts: ServiceCounts,
+    /// the decode failed as a whole (`Hub::fail`): every thread ends at its next look at
+    /// the hub, whatever is left
+    failed: bool,
+    /// the hub's threads that have ended (`Outer`'s drop, the last thing each does), of
+    /// `Hub::threads`: the completion fence for `counts` (each thread's last retirement
+    /// comes before its end, both under this lock)
+    exited: usize,
+    /// (tests only: live tokens taken (a job taken to prepare) and retired (published or
+    /// dropped, by a stage or by `Hub::fail`), so a test sees none lost and none twice)
+    #[cfg(test)]
+    tokens: (u64, u64),
+    /// (tests only: the waits a service worker and a team's first thread have entered,
+    /// each counted under this lock just before its `Condvar::wait`, so a test holding the
+    /// lock and seeing the count knows that thread is parked, not merely slow)
+    #[cfg(test)]
+    svc_waits: usize,
+    #[cfg(test)]
+    team_waits: usize,
+    /// (tests only: the threads in `Condvar::wait` now, counted in under this lock before
+    /// the wait and out after it, for `OuterFault::parked`'s handshake)
+    #[cfg(test)]
+    parked: usize,
+}
+
+impl HubState {
+    /// After the decode failed (`Hub::fail`), a block a stage has done with is not handed
+    /// on (no thread would take it from the queue): it retires here, with `o`'s hold, its
+    /// buffers dropped by the caller. Whether it did.
+    fn retired_on_failure(&mut self, o: &Outer) -> bool {
+        if !self.failed {
+            return false;
+        }
+        self.live = self.live.saturating_sub(1);
+        o.held.set(None);
+        #[cfg(test)]
+        {
+            self.tokens.1 += 1;
+        }
+        true
+    }
+
+    /// The decode's end for the hub's threads: every job taken and every block taken
+    /// retired after the scanner's end, or the decode failed as a whole
+    fn done(&self) -> bool {
+        self.failed || (self.closed && self.jobs.is_empty() && self.live == 0)
+    }
+}
+
+struct Hub {
+    st: Mutex<HubState>,
+    cv: Condvar,
+    lookahead: usize,
+    fault: Option<ServiceFault>,
+    /// its threads: the feeder, the service workers and the teams' first threads
+    threads: usize,
+    /// (tests only: a panic outside every stage's catch, `outer_fault`; fired once)
+    #[cfg(test)]
+    outer: Option<OuterFault>,
+    #[cfg(test)]
+    fired: std::sync::atomic::AtomicBool,
+}
+
+/// A service-core thread's outer guard (D067's guard-and-fail). Each stage's own catch
+/// recovers its block alone (an `Internal` error at its place and bit, its buffers
+/// replaced), and stays the recovery for everything a stage runs. The guard covers what
+/// runs outside those catches: acquiring a block and a buffer set under the hub's lock,
+/// the hand-offs, a team's pool set-up, and the gap between a block's publication and its
+/// retirement. Should a thread unwind there (a bug: nothing there should panic), the
+/// hub's state can't be trusted to be repaired in place, so the decode fails as a whole
+/// (`Hub::fail`) rather than continuing.
+///
+/// `held` is the live block this thread is responsible for (its place): set when it takes
+/// one (a job to prepare, a prepared block to walk, a walked block to finish) and cleared
+/// when it hands it on (queued for the next stage) or retires it, each under the hub's
+/// lock, in the same critical section as the queue's change or `live`'s. So the guard
+/// retires exactly the blocks no queue and no other thread holds, once each.
+///
+/// The guard is the first thing each thread makes, so it drops last: every lock the thread
+/// held is released before it runs, and a team's pool (whose drop joins its helpers) has
+/// ended before it. It allocates only its error's message and takes the two locks one
+/// after the other, never nested.
+struct Outer<'a> {
+    shared: &'a Shared,
+    hub: &'a Hub,
+    held: std::cell::Cell<Option<u64>>,
+    what: &'static str,
+}
+
+impl<'a> Outer<'a> {
+    fn new(shared: &'a Shared, hub: &'a Hub, what: &'static str) -> Self {
+        Outer {
+            shared,
+            hub,
+            held: std::cell::Cell::new(None),
+            what,
+        }
+    }
+}
+
+impl Drop for Outer<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            self.hub.fail(self.shared, self.held.take(), self.what);
+        }
+        self.hub.lock().exited += 1;
+    }
+}
+
+/// Testing only: where a service-core thread panics outside every stage's catch
+/// (`Outer`), once
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OuterAt {
+    /// a service worker, at its loop's top, holding nothing
+    SvcIdle,
+    /// a service worker, a job and a front set just taken, before preparing it
+    AfterJob,
+    /// a service worker, a block prepared, before queueing it for the teams
+    BeforePrepared,
+    /// a service worker, a block just queued for the teams (held by the queue)
+    AfterPrepared,
+    /// a team, a prepared block and a back set just taken, before its pool is chosen
+    AfterTake,
+    /// a team, a block just queued for finishing (held by the queue)
+    AfterWalked,
+    /// a service worker, a walked block just taken, before finishing it
+    AfterFinishTake,
+    /// a service worker, a block's result published, before it is retired
+    AfterPublish,
+    /// the hub's feeder, a job just moved into the hub
+    Feeder,
+}
+
+/// Testing only: an outer fault: where, at which block (None: the first time `at` is
+/// reached), and how many of the hub's threads must be parked in its wait now
+/// (`HubState::parked`), with the jobs closed, before it fires (a parked-state handshake, so a waiter is known to be
+/// parked in `Condvar::wait` when the decode fails; 0 for none)
+#[cfg(test)]
+#[derive(Clone, Copy, Debug)]
+struct OuterFault {
+    at: OuterAt,
+    place: Option<u64>,
+    parked: usize,
+}
+
+/// Testing only: panic here if the hub's outer fault is `at` this block (once)
+#[cfg(test)]
+fn outer_fault(hub: &Hub, at: OuterAt, place: Option<u64>) {
+    let Some(f) = hub.outer else { return };
+    if f.at != at || (f.place.is_some() && f.place != place) {
+        return;
+    }
+    if hub.fired.swap(true, Ordering::AcqRel) {
+        return;
+    }
+    if f.parked > 0 {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+        loop {
+            {
+                let st = hub.lock();
+                if st.closed && st.parked >= f.parked {
+                    break;
+                }
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "the handshake: never parked"
+            );
+            std::thread::yield_now();
+        }
+    }
+    panic!("an injected outer panic at {at:?}, block {place:?}");
+}
+
+impl Hub {
+    fn lock(&self) -> std::sync::MutexGuard<'_, HubState> {
+        // (no stage runs under this lock; it is consistent at every unlock)
+        self.st.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn wait<'a>(
+        &self,
+        g: std::sync::MutexGuard<'a, HubState>,
+    ) -> std::sync::MutexGuard<'a, HubState> {
+        self.cv.wait(g).unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// A block left the decode (published or dropped): its buffers back, if any, and the
+    /// thread's hold on it (`Outer::held`) released under the same lock
+    fn retire(&self, o: &Outer, front: Option<Front>, back: Option<Back>) {
+        self.retire_counted(o, front, back, false);
+    }
+
+    /// `retire`, counting a finished block (`ServiceCounts::finished`) under the same lock
+    fn retire_counted(&self, o: &Outer, front: Option<Front>, back: Option<Back>, finished: bool) {
+        let mut st = self.lock();
+        st.live -= 1;
+        o.held.set(None);
+        #[cfg(test)]
+        {
+            st.tokens.1 += 1;
+        }
+        st.counts.finished += u64::from(finished);
+        st.fronts.extend(front);
+        st.backs.extend(back);
+        drop(st);
+        self.cv.notify_all();
+    }
+}
+
+impl Hub {
+    /// Its counts, and whether they are final (`ServiceCounts::ended`)
+    fn counts(&self) -> ServiceCounts {
+        let st = self.lock();
+        ServiceCounts {
+            ended: st.exited >= self.threads,
+            ..st.counts
+        }
+    }
+
+    /// The decode fails as a whole (`Outer`): a thread unwound outside every stage's
+    /// catch. In this order:
+    /// 1. the terminal error (`Internal`, naming the thread) is recorded, with `cancelled`,
+    ///    before anything is woken, so the reader's next look sees it, not `Cancelled`; the
+    ///    blocks ready but not yet read are dropped, as a cancel drops them, so **the bytes
+    ///    before the failure are not all delivered**: only those the reader already had;
+    /// 2. the hub fails: `held` (the block the unwinding thread was responsible for, if
+    ///    any) is retired, and so is every block a queue holds (prepared, walked), their
+    ///    buffers dropped, never reused; the jobs not yet taken are dropped. A block another
+    ///    thread holds in a stage is that thread's to retire as its stage ends (a team's
+    ///    pool waits for its helpers first);
+    /// 3. both domains are woken: the reader, scanner and writers (`Shared::cv`; the
+    ///    scanner then ends, closing the jobs), and every hub waiter (`Hub::cv`), each of
+    ///    which sees `done` and ends.
+    ///
+    /// The first failure's error stands; a second (another thread unwinding meanwhile)
+    /// changes nothing but its own block's retirement. Counts saturate rather than panic:
+    /// this runs during an unwind, on state a bug may have left inconsistent.
+    fn fail(&self, shared: &Shared, held: Option<u64>, what: &str) {
+        {
+            let mut st = shared.lock();
+            if st.terminal.is_none() {
+                st.terminal = Some(Error::new(ErrorKind::Internal(format!(
+                    "the service core's {what} thread panicked outside its stages; the \
+                     decode is stopped"
+                ))));
+            }
+            st.cancelled = true;
+            st.ready.clear();
+        }
+        {
+            let mut st = self.lock();
+            st.failed = true;
+            let queued = st.prepared.len() + st.walked.len();
+            let retired = queued + usize::from(held.is_some());
+            st.prepared.clear();
+            st.walked.clear();
+            st.jobs.clear();
+            st.live = st.live.saturating_sub(retired);
+            #[cfg(test)]
+            {
+                st.tokens.1 += retired as u64;
+            }
+        }
+        shared.cv.notify_all();
+        self.cv.notify_all();
+    }
+}
+
+impl StreamDecoder {
+    /// Research, opt-in, not the default: the service core. `teams` teams of `k` threads
+    /// (at least 1 team, and `k` of 1 to 4) only build and walk each block, while `services`
+    /// service workers (at least 1) do every block's move-to-front and checkpoints, and its
+    /// assembly, RLE1, CRC and publish, with `slots` blocks in flight (at least `teams`).
+    /// Byte for byte the default decoder's output and errors.
+    #[doc(hidden)]
+    pub fn service(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> StreamDecoder {
+        Self::service_with_fault(teams, k, services, slots, kernels, None)
+    }
+
+    /// `service` with the tests' fault hook (research: a stage made to panic, for the tests
+    /// of the panic path; `None` is `service`)
+    #[doc(hidden)]
+    pub fn service_with_fault(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+        fault: Option<ServiceFault>,
+    ) -> StreamDecoder {
+        Self::service_built(
+            teams,
+            k,
+            services,
+            slots,
+            kernels,
+            fault,
+            #[cfg(test)]
+            None,
+        )
+    }
+
+    /// `service_with_fault`, with (tests only) an outer fault (`OuterFault`)
+    fn service_built(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+        fault: Option<ServiceFault>,
+        #[cfg(test)] outer: Option<OuterFault>,
+    ) -> StreamDecoder {
+        let (teams, team_k, services) = (teams.max(1), k.clamp(1, 4), services.max(1));
+        let slots = slots.max(teams) as u64;
+        let shared = Arc::new(Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+                terminal: None,
+            }),
+            cv: Condvar::new(),
+            slots,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+            #[cfg(test)]
+            faults: Mutex::default(),
+        });
+        let lookahead = teams;
+        let hub = Arc::new(Hub {
+            st: Mutex::new(HubState {
+                jobs: Default::default(),
+                closed: false,
+                prepared: Default::default(),
+                walked: Vec::new(),
+                fronts: (0..teams + lookahead + services)
+                    .map(|_| Front::default())
+                    .collect(),
+                backs: (0..2 * teams).map(|_| Back::default()).collect(),
+                live: 0,
+                counts: ServiceCounts::default(),
+                failed: false,
+                exited: 0,
+                #[cfg(test)]
+                tokens: (0, 0),
+                #[cfg(test)]
+                svc_waits: 0,
+                #[cfg(test)]
+                team_waits: 0,
+                #[cfg(test)]
+                parked: 0,
+            }),
+            cv: Condvar::new(),
+            lookahead,
+            fault,
+            threads: 1 + services + teams,
+            #[cfg(test)]
+            outer,
+            #[cfg(test)]
+            fired: Default::default(),
+        });
+        let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
+        let (job_tx, job_rx) = channel::<Job>();
+        let mut handles = Vec::with_capacity(teams + services + 2);
+        let spawn = |name: String, f: Box<dyn FnOnce() + Send>| {
+            std::thread::Builder::new()
+                .name(name)
+                .spawn(f)
+                .expect("spawn a bz2 service-core thread")
+        };
+        let (s, h) = (shared.clone(), hub.clone());
+        handles.push(spawn(
+            "mibz2-svc-feed".into(),
+            Box::new(move || feed(&s, &h, job_rx)),
+        ));
+        for i in 0..services {
+            let (s, h) = (shared.clone(), hub.clone());
+            handles.push(spawn(
+                format!("mibz2-svc-{i}"),
+                Box::new(move || service_worker(&s, &h, kernels)),
+            ));
+        }
+        for i in 0..teams {
+            let (s, h) = (shared.clone(), hub.clone());
+            handles.push(spawn(
+                format!("mibz2-{i}"),
+                Box::new(move || team_worker(&s, &h, team_k)),
+            ));
+        }
+        let sh = shared.clone();
+        handles.push(spawn(
+            "mibz2-scan".into(),
+            Box::new(move || scanner(&sh, in_rx, job_tx)),
+        ));
+        StreamDecoder {
+            input: Mutex::new(Some(in_tx)),
+            shared,
+            handles: Mutex::new(handles),
+            reader: Mutex::default(),
+            threads: teams * team_k + services,
+            pipelined: false,
+            hub: Some(hub),
+        }
+    }
+}
+
+/// The scanner's jobs into the hub, then its end (the jobs' channel closed). It holds no
+/// block (a job is no one's until a service worker takes it), but its loss would leave the
+/// jobs never closed, so it is guarded too. Once the decode has failed it drops the jobs
+/// it is given.
+fn feed(shared: &Shared, hub: &Hub, rx: Receiver<Job>) {
+    let _o = Outer::new(shared, hub, "feeder");
+    while let Ok(job) = rx.recv() {
+        #[cfg(test)]
+        let place = job.0;
+        {
+            let mut st = hub.lock();
+            if !st.failed {
+                st.jobs.push_back(job);
+            }
+        }
+        hub.cv.notify_all();
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::Feeder, Some(place));
+    }
+    hub.lock().closed = true;
+    hub.cv.notify_all();
+}
+
+/// What a service worker does next (the priority above)
+// (one at a time, on the worker's stack: a front set's counts are 1 KB)
+#[allow(clippy::large_enum_variant)]
+enum SvcTask {
+    Prepare(Job, Front),
+    Finish(Walked),
+}
+
+fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
+    let o = Outer::new(shared, hub, "service");
+    // the assembly's buffer, this worker's own
+    let mut asm: Vec<u8> = Vec::new();
+    loop {
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::SvcIdle, None);
+        let task = {
+            let mut st = hub.lock();
+            let mut idle = false;
+            let task = loop {
+                if st.failed {
+                    break None;
+                }
+                let can_prepare = !st.jobs.is_empty() && !st.fronts.is_empty();
+                if can_prepare && st.prepared.is_empty() {
+                    break Some(take_job(&mut st, &o));
+                }
+                if !st.walked.is_empty() {
+                    // (the earliest place: the reader's next)
+                    let i = (0..st.walked.len())
+                        .min_by_key(|&i| st.walked[i].place)
+                        .unwrap_or(0);
+                    let w = st.walked.swap_remove(i);
+                    o.held.set(Some(w.place));
+                    mark!(SvcGot, w.place, st.walked.len(), 0);
+                    break Some(SvcTask::Finish(w));
+                }
+                if can_prepare && st.prepared.len() < hub.lookahead {
+                    break Some(take_job(&mut st, &o));
+                }
+                if st.done() {
+                    break None;
+                }
+                if !idle {
+                    idle = true;
+                    mark!(SvcIdleStart);
+                }
+                #[cfg(test)]
+                {
+                    st.svc_waits += 1;
+                    st.parked += 1;
+                }
+                st = hub.wait(st);
+                #[cfg(test)]
+                {
+                    st.parked -= 1;
+                }
+            };
+            if idle {
+                mark!(SvcIdleEnd);
+            }
+            task
+        };
+        match task {
+            None => return,
+            Some(SvcTask::Prepare(job, front)) => {
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterJob, Some(job.0));
+                prepare(shared, hub, &o, job, front, k)
+            }
+            Some(SvcTask::Finish(w)) => {
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterFinishTake, Some(w.place));
+                finish(shared, hub, &o, w, &mut asm, k)
+            }
+        }
+    }
+}
+
+/// The next job and a front set, taken (the block live from here, and `o`'s)
+fn take_job(st: &mut HubState, o: &Outer) -> SvcTask {
+    let job = st.jobs.pop_front().expect("a job");
+    let front = st.fronts.pop().expect("a front set");
+    st.live += 1;
+    o.held.set(Some(job.0));
+    #[cfg(test)]
+    {
+        st.tokens.0 += 1;
+    }
+    SvcTask::Prepare(job, front)
+}
+
+/// A block's move-to-front (and its primary index's check) into `front`, then queued for
+/// the teams; its error published, or its panic made its `Internal` error
+fn prepare(shared: &Shared, hub: &Hub, o: &Outer, job: Job, mut front: Front, k: Kernels) {
+    let (place, bit, symbols) = job;
+    mark!(JobGot, place);
+    if shared.lock().cancelled {
+        return hub.retire(o, Some(front), None);
+    }
+    mark!(MtfStart, place);
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        if hub.fault == Some(ServiceFault::Prepare { place }) {
+            panic!("an injected panic in block {place}'s preparing");
+        }
+        front_stage(&symbols, &mut front, k)
+    }));
+    mark!(MtfEnd, place);
+    match r {
+        Ok(Ok(rows)) => {
+            #[cfg(test)]
+            outer_fault(hub, OuterAt::BeforePrepared, Some(place));
+            let mut st = hub.lock();
+            if st.retired_on_failure(o) {
+                return;
+            }
+            st.prepared.push_back(Prepared {
+                place,
+                bit,
+                symbols,
+                front,
+                rows,
+            });
+            o.held.set(None);
+            st.counts.prepared += 1;
+            mark!(Prepared, place, st.prepared.len(), 0);
+            drop(st);
+            hub.cv.notify_all();
+            #[cfg(test)]
+            outer_fault(hub, OuterAt::AfterPrepared, Some(place));
+        }
+        Ok(Err(kind)) => {
+            publish(shared, place, bit, Err(kind), symbols.syms);
+            hub.retire(o, Some(front), None);
+        }
+        Err(p) => {
+            let kind = ErrorKind::Internal(panic_message(p));
+            publish(shared, place, bit, Err(kind), symbols.syms);
+            hub.retire(o, Some(Front::default()), None);
+        }
+    }
+}
+
+/// A walked block's assembly, RLE1 and CRC, and its result published; a panic made its
+/// `Internal` error, its back set and the assembly's buffer replaced
+fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k: Kernels) {
+    let Walked {
+        place,
+        bit,
+        symbols,
+        back,
+    } = w;
+    let Some(mut out) = take_out(shared) else {
+        return hub.retire(o, None, Some(back)); // (cancelled)
+    };
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        let inverted: &[u8] = if back.segmented {
+            mark!(AssembleStart, place);
+            back.seg.assemble(asm);
+            mark!(AssembleEnd, place);
+            asm
+        } else {
+            &back.direct
+        };
+        mark!(RleStart, place);
+        if hub.fault == Some(ServiceFault::Finish { place }) {
+            panic!("an injected panic in block {place}'s finishing");
+        }
+        finish_block(inverted, symbols.crc, k, &mut out)
+    }));
+    mark!(RleEnd, place, out.len(), out.capacity());
+    let (res, back) = match r {
+        Ok(Ok(())) => (Ok(out), back),
+        Ok(Err(kind)) => (Err(kind), back),
+        Err(p) => {
+            *asm = Vec::new();
+            (Err(ErrorKind::Internal(panic_message(p))), Back::default())
+        }
+    };
+    // (published, not yet retired: still `o`'s, so an unwind here retires it once, and
+    // `Hub::fail` never publishes it again)
+    publish(shared, place, bit, res, symbols.syms);
+    #[cfg(test)]
+    outer_fault(hub, OuterAt::AfterPublish, Some(place));
+    hub.retire_counted(o, None, Some(back), true);
+}
+
+/// A team's next prepared block and a back set to walk it into, waiting until both are
+/// there; None once the decode has ended. Taking a prepared block wakes the hub's waiters:
+/// a service worker waiting with the prepared queue at its lookahead (its rule 3) may now
+/// prepare again. (`notify_all`: teams and service workers share the one condition, so a
+/// single wake-up could go to a team that can't use it.)
+fn take_prepared(hub: &Hub, o: &Outer) -> Option<(Prepared, Back)> {
+    let mut st = hub.lock();
+    let mut idle = false;
+    let got = loop {
+        if st.failed {
+            break None;
+        }
+        if !st.prepared.is_empty() && !st.backs.is_empty() {
+            let p = st.prepared.pop_front().expect("a prepared block");
+            let b = st.backs.pop().expect("a back set");
+            o.held.set(Some(p.place));
+            mark!(TeamGot, p.place, st.prepared.len(), 0);
+            break Some((p, b));
+        }
+        if st.done() {
+            break None;
+        }
+        if !idle {
+            idle = true;
+            mark!(
+                TeamIdleStart,
+                crate::trace::NONE,
+                u8::from(!st.prepared.is_empty()),
+                0
+            );
+        }
+        #[cfg(test)]
+        {
+            st.team_waits += 1;
+            st.parked += 1;
+        }
+        st = hub.wait(st);
+        #[cfg(test)]
+        {
+            st.parked -= 1;
+        }
+    };
+    drop(st);
+    if idle {
+        mark!(TeamIdleEnd);
+    }
+    if got.is_some() {
+        hub.cv.notify_all();
+    }
+    got
+}
+
+/// A team: its first thread takes prepared blocks and inverts each on the team's pool
+/// (`coop::invert_team`), or alone for a block below `MIN_COOP` (or with no pool), into a
+/// back set, then queues it for finishing
+fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
+    use super::bwt::FLAGGED_LANES;
+    // (made first, so dropped last: after the pool, whose drop joins its helpers)
+    let o = Outer::new(shared, hub, "team");
+    let mut tt = super::bwt::TVector::default();
+    let mut pool: Option<std::io::Result<super::coop::Pool>> = None;
+    loop {
+        let Some((p, mut back)) = take_prepared(hub, &o) else {
+            return;
+        };
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::AfterTake, Some(p.place));
+        let Prepared {
+            place,
+            bit,
+            symbols,
+            front,
+            rows,
+        } = p;
+        if shared.lock().cancelled {
+            hub.retire(&o, Some(front), Some(back));
+            continue;
+        }
+        let team = if team_k >= 2 && rows >= min_coop(shared) {
+            pool.get_or_insert_with(|| super::coop::Pool::new(team_k))
+                .as_ref()
+                .ok()
+        } else {
+            None
+        };
+        let thread_fault = match hub.fault {
+            Some(ServiceFault::Team { place: p, thread }) if p == place => Some(thread),
+            _ => None,
+        };
+        mark!(RunStart, place);
+        let r = catch_unwind(AssertUnwindSafe(|| match team {
+            Some(pool) => {
+                super::coop::invert_team::<FLAGGED_LANES>(
+                    pool,
+                    &front.ll,
+                    &front.counts,
+                    &front.checkpoints,
+                    super::mtf::CHECKPOINT,
+                    symbols.orig_ptr,
+                    &mut tt,
+                    &mut back.seg,
+                    place,
+                    thread_fault,
+                );
+                back.segmented = true;
+            }
+            None => {
+                // (the one-core kernel, as `bwt::Cooperative` inverts a small block)
+                if thread_fault == Some(0) {
+                    panic!("an injected panic in block {place}'s one-core inversion");
+                }
+                super::bwt::build(&front.ll, &front.counts, &mut tt);
+                back.segmented = super::bwt::walk_segments_room_parts(
+                    &mut tt,
+                    symbols.orig_ptr,
+                    &mut back.direct,
+                    &mut back.seg,
+                );
+            }
+        }));
+        mark!(RunEnd, place);
+        match r {
+            Ok(()) => {
+                let mut st = hub.lock();
+                if st.retired_on_failure(&o) {
+                    continue;
+                }
+                st.counts.pooled += u64::from(team.is_some());
+                st.fronts.push(front);
+                st.walked.push(Walked {
+                    place,
+                    bit,
+                    symbols,
+                    back,
+                });
+                o.held.set(None);
+                mark!(Walked, place, st.walked.len(), 0);
+                drop(st);
+                hub.cv.notify_all();
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterWalked, Some(place));
+            }
+            Err(p) => {
+                // a team thread's stage panicked: the block fails, the table and the back
+                // set are replaced (the pool is reusable: `Pool::run` resumed the panic
+                // once all its threads had ended)
+                tt = Default::default();
+                let kind = ErrorKind::Internal(panic_message(p));
+                publish(shared, place, bit, Err(kind), symbols.syms);
+                hub.retire(&o, Some(front), Some(Back::default()));
+            }
+        }
+    }
+}
+
 /// How a decoder spends its threads: production's one block a worker, or teams of `k`
 /// threads each inverting one block together (`bwt::Cooperative<k>`), so `teams` tables
 /// are live on `teams × k` threads
@@ -1226,7 +2172,8 @@ impl Plan {
         if let Some(plan) = FORCED.with(|c| c.get()) {
             return plan;
         }
-        plan_with(threads.max(1), physical_cores(), l3_bytes())
+        let m = Machine::here();
+        plan_with(threads.max(1), m.phys, m.l3)
     }
 
     /// The decoder's worker threads (teams count as one each) and its threads in all
@@ -1243,6 +2190,276 @@ impl Plan {
             Plan::Teams { teams, k } => teams.max(1) * k.max(1),
         }
     }
+}
+
+/// The service core's counts (`StreamDecoder::service_counts`)
+#[doc(hidden)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ServiceCounts {
+    /// blocks whose move-to-front a service worker did, queued for the teams
+    pub prepared: u64,
+    /// blocks a team inverted on its pool (`coop::invert_team`), not its first thread alone
+    pub pooled: u64,
+    /// blocks a service worker finished (assembly, RLE1, CRC) and published, any result
+    /// (blocks failing in preparing or a team's run retire without finishing)
+    pub finished: u64,
+    /// whether every one of the hub's threads (feeder, service workers, teams) had ended
+    /// when these were read: only then are they final. A reader's EOF is not that fence
+    /// (the last block is published, and read, before its finisher retires it), nor is
+    /// dropping a `BzReader` (its feeder may hold the decoder's last reference); joining
+    /// the decoder (`StreamDecoder::join`) is.
+    pub ended: bool,
+}
+
+/// The service core's shape: `teams` teams of `k` threads that only build and walk, and
+/// `services` service workers doing every block's serial stages
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ServicePlan {
+    pub teams: usize,
+    pub k: usize,
+    pub services: usize,
+}
+
+impl ServicePlan {
+    /// The teams as a `Plan` (for `window`: a team counts as one worker)
+    pub fn as_plan(&self) -> Plan {
+        Plan::Teams {
+            teams: self.teams,
+            k: self.k,
+        }
+    }
+
+    /// Its decoding threads: the teams' and the service workers' (8 at `SERVICE_PLAN`);
+    /// the scanner, the hub's feeder and the caller's threads are not among them
+    pub fn threads(&self) -> usize {
+        self.teams * self.k + self.services
+    }
+}
+
+/// The one shape the default decoder runs the service core at (`StreamDecoder::new`):
+/// svc2, two teams of three and two service workers, the shape #258's registered run
+/// measured at 10 threads on the i9-10900K (docs/journal/2026-11-09-service-2x3-result.md;
+/// a runtime without this integration's later changes, so the guarded candidate is not
+/// thereby qualified: docs/journal/2026-11-09-service-guarded-scope.md)
+pub const SERVICE_PLAN: ServicePlan = ServicePlan {
+    teams: 2,
+    k: 3,
+    services: 2,
+};
+
+/// The one thread budget the service core is the default at: exactly 10, as measured.
+/// 9, 11 and every other budget keep the existing plan.
+pub const SERVICE_THREADS: usize = 10;
+
+/// The supported target's CPU: Intel family 6, model 165 (Comet Lake-S: the i9-10900K's
+/// CPUID; other Comet Lake-S parts share it), with 10 physical cores, 20 logical CPUs (two
+/// a core) and a 20 MiB L3, every one of them this process's to use
+const SERVICE_CPU: (&str, u32, u32) = ("GenuineIntel", 6, 165);
+const SERVICE_LOGICAL: usize = 20;
+
+/// What the plan policy and the service core's target predicate read of the machine
+/// (`Machine::here`). The plan policy's two facts are as it has always read them (`phys`,
+/// `l3`: None where the OS doesn't say). The predicate reads only `target` and `quota`,
+/// each read to fail closed: None, or `Quota::Unknown`, wherever a fact it needs can't be
+/// established.
+#[doc(hidden)]
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Machine {
+    /// the plan policy's: physical cores of the CPUs this process may use
+    /// (`physical_cores`)
+    pub phys: Option<usize>,
+    /// the plan policy's: the L3's bytes (`l3_bytes`)
+    pub l3: Option<u64>,
+    /// the predicate's: the CPUs this process may use, as one coherent snapshot
+    /// (`target_topology`), None if any of it can't be read or the CPUs differ
+    pub target: Option<Topology>,
+    /// the predicate's: the CPU quota of this process's cgroup and every ancestor
+    /// (`cpu_quota`)
+    pub quota: Quota,
+}
+
+/// The CPUs this process may use and that are online, read together (`target_topology`):
+/// every one of them with its core, package and L3 read, and all of one vendor, family,
+/// model and L3 size
+#[doc(hidden)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Topology {
+    /// distinct (package, core) pairs among them
+    pub phys: usize,
+    /// how many CPUs
+    pub logical: usize,
+    /// each one's L3, in bytes (all the same)
+    pub l3: u64,
+    /// each one's vendor, family and model (all the same)
+    pub cpu: (String, u32, u32),
+}
+
+/// A cgroup's CPU quota, as `cpu_quota` establishes it
+#[doc(hidden)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum Quota {
+    /// established: no `cpu.max` limit on this process's cgroup or any ancestor, up to and
+    /// including the hierarchy's true root
+    Unlimited,
+    /// established: the tightest limit on the way up is this many CPUs' time
+    Cpus(f64),
+    /// not established (unreadable, unparsable, a hidden ancestor, cgroup v1 or no cgroup
+    /// v2 mount): the predicate is false
+    #[default]
+    Unknown,
+}
+
+/// `observe_builds`'s record: each decoder built, with the service core's hub to read its
+/// counts from
+type Builds = Vec<(Built, Option<Arc<Hub>>)>;
+
+thread_local! {
+    /// `Machine::here`'s answer on this thread while `with_machine` runs
+    static MACHINE: std::cell::RefCell<Option<Machine>> = const { std::cell::RefCell::new(None) };
+    /// `observe_builds`'s record, while it runs on this thread
+    static BUILT: std::cell::RefCell<Option<Builds>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+impl Machine {
+    /// This machine, as this process sees it now (or `with_machine`'s, on this thread)
+    pub fn here() -> Machine {
+        if let Some(m) = MACHINE.with(|c| c.borrow().clone()) {
+            return m;
+        }
+        Machine {
+            phys: physical_cores(),
+            l3: l3_bytes(),
+            target: target_topology(&RealFs),
+            quota: cpu_quota(&RealFs),
+        }
+    }
+
+    /// The i9-10900K as the service core's registered run saw it: every fact
+    /// `service_target` asks for, as it asks
+    pub fn service_target() -> Machine {
+        Machine {
+            phys: Some(TEN_CORES.0),
+            l3: Some(TEN_CORES.1),
+            target: Some(Topology {
+                phys: TEN_CORES.0,
+                logical: SERVICE_LOGICAL,
+                l3: TEN_CORES.1,
+                cpu: (SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2),
+            }),
+            quota: Quota::Unlimited,
+        }
+    }
+}
+
+/// Testing: `f` run with `Machine::here` answering `m` on this thread, so that the plan
+/// policy (`Plan::for_threads`) and the service core's predicate (`service_target`) see
+/// that machine and the default constructors (`StreamDecoder::new`, `BzReader::parallel`,
+/// `decode_parallel`) choose as they would on it, by their own dispatch. Restored on return
+/// or unwind; other threads are unaffected.
+#[doc(hidden)]
+pub fn with_machine<T>(m: Machine, f: impl FnOnce() -> T) -> T {
+    struct Restore(Option<Machine>);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            let m = self.0.take();
+            MACHINE.with(|c| *c.borrow_mut() = m);
+        }
+    }
+    let _restore = Restore(MACHINE.with(|c| c.borrow_mut().replace(m)));
+    f()
+}
+
+/// What `StreamDecoder::new` built, as `observe_builds` records it
+#[doc(hidden)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Built {
+    pub service: bool,
+    pub pipelined: bool,
+    pub threads: usize,
+    pub window: u64,
+    /// the service core's counts once `observe_builds`'s `f` had returned (None otherwise)
+    pub counts: Option<ServiceCounts>,
+}
+
+/// Testing: `f`'s result, and every decoder `StreamDecoder::new` built on this thread while
+/// it ran (so through `BzReader::parallel`, `parallel_with` and `decode_parallel` too), with
+/// the service core's counts read once `f` returned: what the default dispatch chose, and
+/// what that decoder then did
+#[doc(hidden)]
+pub fn observe_builds<T>(f: impl FnOnce() -> T) -> (T, Vec<Built>) {
+    struct Restore(Option<Builds>);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            let v = self.0.take();
+            BUILT.with(|c| *c.borrow_mut() = v);
+        }
+    }
+    let restore = Restore(BUILT.with(|c| c.borrow_mut().replace(Vec::new())));
+    let t = f();
+    let got = BUILT.with(|c| c.borrow_mut().take()).unwrap_or_default();
+    drop(restore);
+    let got = got
+        .into_iter()
+        .map(|(mut b, hub)| {
+            b.counts = hub.map(|h| h.counts());
+            b
+        })
+        .collect();
+    (t, got)
+}
+
+/// `observe_builds`'s record of `dec`, if it is running on this thread
+fn record_built(dec: &StreamDecoder) {
+    BUILT.with(|c| {
+        if let Some(v) = c.borrow_mut().as_mut() {
+            v.push((
+                Built {
+                    service: dec.is_service(),
+                    pipelined: dec.pipelined,
+                    threads: dec.threads,
+                    window: dec.shared.slots,
+                    counts: None,
+                },
+                dec.hub.clone(),
+            ));
+        }
+    });
+}
+
+/// The service core's supported target, the one place the default decoder runs it
+/// (`StreamDecoder::new`), every condition explicit and each one the measured run's:
+/// - exactly `SERVICE_THREADS` (10) threads asked for: not 9, not 11, not "10 or more";
+/// - the kernels the run used: AVX2 (with BMI1) and the CLMUL CRC, as `Kernels::detect`
+///   finds them there (the scalar kernels, or any other mix, keep the existing plan);
+/// - an x86-64 Linux machine (the only OS whose topology this reads);
+/// - the CPUs this process may use, online, read as one coherent snapshot
+///   (`target_topology`): every one `GenuineIntel`, family 6, model 165, with a 20 MiB L3,
+///   20 of them on 10 physical cores. This is a microarchitecture and topology class (the
+///   10-core Comet Lake-S parts), not the one i9-10900K measured: its other members are
+///   unmeasured, and that one result does not qualify them. The existing 10-core / 20 MiB
+///   rule's wider reach (any CPU of that shape) is not inherited;
+/// - an established cgroup CPU quota (`cpu_quota`) of none, or at least 10 CPUs.
+///
+/// Discovery fails closed: any fact that can't be established (`Machine::target` None,
+/// `Quota::Unknown`) makes the predicate false. On any other machine or budget the decoder
+/// is exactly what it was.
+pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
+    threads == SERVICE_THREADS
+        && k.avx2
+        && k.clmul
+        && cfg!(all(target_os = "linux", target_arch = "x86_64"))
+        && m.target.as_ref().is_some_and(|t| {
+            (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
+                && t.phys == TEN_CORES.0
+                && t.logical == SERVICE_LOGICAL
+                && t.l3 == TEN_CORES.1
+        })
+        && match m.quota {
+            Quota::Unlimited => true,
+            Quota::Cpus(c) => c >= SERVICE_THREADS as f64,
+            Quota::Unknown => false,
+        }
 }
 
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
@@ -1323,8 +2540,723 @@ fn l3_bytes() -> Option<u64> {
     None
 }
 
+/// The service core's hub under Miri's race detector: its threads (feeder, service
+/// workers, teams), queues, buffer bounds and wake-ups, on a stream small enough to
+/// interpret (four streams of a small block each, as Python's bz2 writes them)
+#[cfg(test)]
+mod service_tests {
+    use super::*;
+
+    /// `bz2.compress(b"service core %d " % i * (3 + i), 1)` for i in 0..4, concatenated
+    pub(super) const Z: &[u8] = &[
+        66, 90, 104, 49, 49, 65, 89, 38, 83, 89, 8, 54, 204, 213, 0, 0, 20, 153, 128, 64, 0, 64, 0,
+        10, 32, 153, 0, 32, 0, 34, 191, 213, 79, 81, 147, 66, 12, 152, 142, 105, 17, 214, 214, 167,
+        152, 140, 98, 214, 248, 187, 146, 41, 194, 132, 128, 65, 182, 102, 168, 66, 90, 104, 49,
+        49, 65, 89, 38, 83, 89, 209, 238, 231, 126, 0, 0, 27, 153, 128, 64, 0, 32, 0, 10, 32, 153,
+        0, 32, 0, 49, 6, 76, 64, 85, 71, 168, 201, 167, 4, 33, 211, 101, 148, 120, 194, 24, 97,
+        101, 159, 23, 114, 69, 56, 80, 144, 209, 238, 231, 126, 66, 90, 104, 49, 49, 65, 89, 38,
+        83, 89, 96, 89, 60, 120, 0, 0, 34, 153, 128, 64, 0, 16, 0, 10, 32, 153, 0, 32, 0, 49, 6,
+        76, 64, 138, 158, 161, 234, 105, 177, 34, 68, 226, 105, 42, 117, 60, 152, 145, 49, 49, 42,
+        84, 248, 187, 146, 41, 194, 132, 131, 2, 201, 227, 192, 66, 90, 104, 49, 49, 65, 89, 38,
+        83, 89, 195, 71, 89, 100, 0, 0, 41, 153, 128, 64, 0, 8, 0, 10, 32, 153, 0, 32, 0, 49, 6,
+        76, 64, 138, 158, 161, 234, 105, 176, 96, 193, 224, 232, 104, 244, 124, 56, 48, 112, 112,
+        104, 209, 248, 187, 146, 41, 194, 132, 134, 26, 58, 203, 32,
+    ];
+
+    pub(super) fn want() -> Vec<u8> {
+        (0..4)
+            .flat_map(|i| format!("service core {i} ").repeat(3 + i).into_bytes())
+            .collect()
+    }
+
+    fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
+        dec.write(z.to_vec()).unwrap();
+        dec.close();
+        let (mut out, mut buf) = (Vec::new(), [0u8; 64]);
+        loop {
+            match dec.read(&mut buf) {
+                Ok(0) => return (out, Ok(())),
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => return (out, Err(e)),
+            }
+        }
+    }
+
+    /// Each stream's block's stored CRC flipped in turn, and stream `s`'s first block's bit
+    fn flipped(s: usize) -> (Vec<u8>, u64) {
+        let at: Vec<usize> = (0..Z.len() - 3)
+            .filter(|&i| &Z[i..i + 4] == b"BZh1")
+            .collect();
+        let mut z = Z.to_vec();
+        z[at[s] + 4 + 6] ^= 0x10;
+        (z, (at[s] as u64 + 4) * 8)
+    }
+
+    /// A hub as `service_with_fault` makes it, with no threads: `lookahead` blocks of
+    /// lookahead and `fronts` front sets
+    fn hub(lookahead: usize, fronts: usize) -> Hub {
+        hub_with(lookahead, fronts, 1, None)
+    }
+
+    /// `hub`, with `backs` back sets and the fault hook given
+    fn hub_with(lookahead: usize, fronts: usize, backs: usize, fault: Option<ServiceFault>) -> Hub {
+        Hub {
+            st: Mutex::new(HubState {
+                jobs: Default::default(),
+                closed: false,
+                prepared: Default::default(),
+                walked: Vec::new(),
+                fronts: (0..fronts).map(|_| Front::default()).collect(),
+                backs: (0..backs).map(|_| Back::default()).collect(),
+                live: 0,
+                counts: ServiceCounts::default(),
+                failed: false,
+                exited: 0,
+                tokens: (0, 0),
+                svc_waits: 0,
+                team_waits: 0,
+                parked: 0,
+            }),
+            cv: Condvar::new(),
+            lookahead,
+            fault,
+            threads: 0,
+            outer: None,
+            fired: Default::default(),
+        }
+    }
+
+    /// A decoder's shared state, as `service_with_fault` makes it (cancelled or not)
+    fn shared(cancelled: bool) -> Shared {
+        Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+                terminal: None,
+            }),
+            cv: Condvar::new(),
+            slots: 4,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+            faults: Mutex::default(),
+        }
+    }
+
+    /// Wait (yielding, at most `secs`) until `ok` holds of the hub's state, checked under
+    /// its lock; whether it did
+    fn until(h: &Hub, secs: u64, ok: impl Fn(&HubState) -> bool) -> bool {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(secs);
+        loop {
+            if ok(&h.lock()) {
+                return true;
+            }
+            if std::time::Instant::now() > deadline {
+                return false;
+            }
+            std::thread::yield_now();
+        }
+    }
+
+    /// The wake-up of rule 3 under a controlled schedule (D045's handshake): the service
+    /// worker is shown to be parked in its `Condvar::wait` before the pop it must wake on,
+    /// not merely given time. Each waiter counts its wait under the hub's lock just before
+    /// it waits, and `Condvar::wait` releases that lock only once the thread is waiting, so
+    /// a test that then holds the lock and sees the count knows the thread is parked (or,
+    /// after a spurious wake-up, blocked on the lock to recheck: the only schedule in which
+    /// a missing wake-up could go unseen here). A team's first thread is parked before it
+    /// too (waiting for a back set), so the one wake-up a `notify_one` would send can go to
+    /// the team, which can't use it, rather than to the service worker.
+    ///
+    /// Then a team takes the prepared block (`take_prepared`, the rule-3 wake-up) with the
+    /// lock never released between that pop and the handshake but by the pop itself, and
+    /// nothing else happens until the service worker has taken its job or 10 s (Miri: 120)
+    /// have passed: no job fed, no front set returned, no block walked.
+    #[test]
+    fn miri_a_parked_service_worker_wakes_on_the_pop() {
+        let shared = shared(false);
+        // lookahead 1, two front sets (one holding block 0), no back set yet
+        let h = hub_with(1, 2, 0, None);
+        {
+            let mut st = h.lock();
+            st.live = 1;
+            let front = st.fronts.pop().unwrap();
+            st.prepared.push_back(Prepared {
+                place: 0,
+                bit: 0,
+                symbols: job(0).2,
+                front,
+                rows: 0,
+            });
+            st.jobs.push_back(job(1));
+        }
+        let secs = if cfg!(miri) { 120 } else { 10 };
+        let o = Outer::new(&shared, &h, "test");
+        std::thread::scope(|s| {
+            // a team's first thread, parked: a prepared block, but no back set to walk into
+            let team = s.spawn(|| take_prepared(&h, &Outer::new(&shared, &h, "test")));
+            assert!(
+                until(&h, secs, |st| st.team_waits == 1),
+                "the team never parked"
+            );
+            // the service worker, parked: the prepared queue at its lookahead
+            let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
+            assert!(
+                until(&h, secs, |st| st.svc_waits == 1),
+                "the service never parked"
+            );
+            let (p, back) = {
+                let mut st = h.lock();
+                // both parked, and nothing done: the handshake
+                assert_eq!((st.team_waits, st.svc_waits), (1, 1));
+                assert_eq!((st.jobs.len(), st.prepared.len()), (1, 1));
+                // a back set for this thread's pop, given without a wake-up (the team
+                // parked above is not told of it)
+                st.backs.push(Back::default());
+                drop(st);
+                take_prepared(&h, &o).expect("block 0")
+            };
+            assert_eq!(p.place, 0);
+            let woke = until(&h, secs, |st| st.jobs.is_empty());
+            // (end it either way: block 1's empty symbols fail their move-to-front, so it
+            // retires; block 0 retires here, then the hub is closed: the close's own
+            // wake-up ends both threads even where the pop's was missing)
+            h.retire(&o, Some(p.front), Some(back));
+            h.lock().closed = true;
+            h.cv.notify_all();
+            svc.join().unwrap();
+            assert!(team.join().unwrap().is_none());
+            assert!(
+                woke,
+                "the parked service worker never woke on the team's pop"
+            );
+        });
+        let st = h.lock();
+        assert!(st.done() && st.prepared.is_empty());
+        assert_eq!((st.fronts.len(), st.backs.len()), (2, 1));
+        assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
+    }
+
+    /// Every route by which a block leaves the decode returns the buffers it held (or new
+    /// ones, after a panic) and retires it once: preparing (its error, its panic, a
+    /// cancelled decode), a team's run (its panic, a cancelled decode) and finishing (a CRC
+    /// error, its panic, success, a cancelled decode). Each route is driven alone on a hub
+    /// holding exactly one live block, and the hub then checked: `live` back to zero, and
+    /// every front and back set home, so no route can shrink a buffer bound into a deadlock
+    /// or leave the end waiting (D045: retirement and buffer return).
+    #[test]
+    fn miri_every_retirement_returns_its_buffers() {
+        const FRONTS: usize = 3;
+        const BACKS: usize = 2;
+        let k = Kernels::scalar();
+        let home = |h: &Hub, what: &str| {
+            let st = h.lock();
+            assert_eq!(st.live, 0, "{what}: retired");
+            assert_eq!(st.fronts.len(), FRONTS, "{what}: the front sets");
+            assert_eq!(st.backs.len(), BACKS, "{what}: the back sets");
+            assert!(st.prepared.is_empty() && st.walked.is_empty(), "{what}");
+        };
+        let published = |sh: &Shared, place: u64| sh.lock().ready.get(&place).cloned();
+        // preparing: a move-to-front error, a panic, a cancelled decode
+        for (what, fault, cancelled) in [
+            ("preparing's error", None, false),
+            (
+                "preparing's panic",
+                Some(ServiceFault::Prepare { place: 3 }),
+                false,
+            ),
+            ("preparing cancelled", None, true),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            let o = Outer::new(&sh, &h, "test");
+            let task = {
+                let mut st = h.lock();
+                st.jobs.push_back(job(3));
+                take_job(&mut st, &o)
+            };
+            let SvcTask::Prepare(j, front) = task else {
+                unreachable!()
+            };
+            prepare(&sh, &h, &o, j, front, k);
+            assert_eq!(o.held.get(), None, "{what}: released");
+            home(&h, what);
+            let r = published(&sh, 3);
+            if cancelled {
+                assert!(r.is_none(), "{what}");
+            } else {
+                let e = r.expect(what).unwrap_err();
+                assert_eq!((e.block, e.bit), (Some(3), Some(0)), "{what}");
+                assert_eq!(fault.is_some(), matches!(e.kind, ErrorKind::Internal(_)));
+            }
+        }
+        // a team's run: a panic (on the one-core path, as a block below MIN_COOP), and a
+        // cancelled decode; the team ends once the hub is done
+        for (what, fault, cancelled) in [
+            (
+                "a team's panic",
+                Some(ServiceFault::Team {
+                    place: 4,
+                    thread: 0,
+                }),
+                false,
+            ),
+            ("a team cancelled", None, true),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            {
+                let mut st = h.lock();
+                let front = st.fronts.pop().unwrap();
+                st.prepared.push_back(Prepared {
+                    place: 4,
+                    bit: 32,
+                    symbols: job(4).2,
+                    front,
+                    rows: 0,
+                });
+                st.live = 1;
+                st.closed = true;
+            }
+            team_worker(&sh, &h, 2);
+            home(&h, what);
+            let r = published(&sh, 4);
+            if cancelled {
+                assert!(r.is_none(), "{what}");
+            } else {
+                let e = r.expect(what).unwrap_err();
+                assert!(matches!(e.kind, ErrorKind::Internal(_)), "{what}: {e}");
+                assert_eq!((e.block, e.bit), (Some(4), Some(32)), "{what}");
+            }
+        }
+        // finishing: a CRC error, a panic, success, a cancelled decode (a block too short
+        // to segment, its bytes walked straight into `direct`)
+        let crc_x = super::super::crc::crc32(b"x", k);
+        for (what, fault, cancelled, crc, want) in [
+            ("finishing's CRC error", None, false, crc_x ^ 1, None),
+            (
+                "finishing's panic",
+                Some(ServiceFault::Finish { place: 5 }),
+                false,
+                crc_x,
+                None,
+            ),
+            ("finishing", None, false, crc_x, Some(b"x".to_vec())),
+            ("finishing cancelled", None, true, crc_x, None),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            let back = {
+                let mut st = h.lock();
+                st.live = 1;
+                st.backs.pop().unwrap()
+            };
+            let mut symbols = job(5).2;
+            symbols.crc = crc;
+            let w = Walked {
+                place: 5,
+                bit: 40,
+                symbols,
+                back: Back {
+                    direct: b"x".to_vec(),
+                    ..back
+                },
+            };
+            let o = Outer::new(&sh, &h, "test");
+            o.held.set(Some(5));
+            finish(&sh, &h, &o, w, &mut Vec::new(), k);
+            assert_eq!(o.held.get(), None, "{what}: released");
+            home(&h, what);
+            let r = published(&sh, 5);
+            match (cancelled, want) {
+                (true, _) => assert!(r.is_none(), "{what}"),
+                (false, Some(bytes)) => assert_eq!(r, Some(Ok(bytes)), "{what}"),
+                (false, None) => {
+                    let e = r.expect(what).unwrap_err();
+                    assert_eq!((e.block, e.bit), (Some(5), Some(40)), "{what}");
+                    assert_eq!(fault.is_some(), matches!(e.kind, ErrorKind::Internal(_)));
+                }
+            }
+        }
+    }
+
+    fn job(place: u64) -> Job {
+        let symbols = super::super::block::Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq: [0; 256],
+            syms: vec![],
+            eob: 1,
+            max_len: 100_000,
+        };
+        (place, 0, symbols)
+    }
+
+    /// A service worker waiting with the prepared queue at its lookahead (rule 3) wakes when
+    /// a team takes a prepared block, with nothing else to wake it (no walked block, no
+    /// front set returned, no new job), and prepares the job waiting
+    #[test]
+    fn miri_a_team_taking_a_prepared_block_wakes_the_service() {
+        let shared = Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+                terminal: None,
+            }),
+            cv: Condvar::new(),
+            slots: 4,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+            faults: Mutex::default(),
+        };
+        let h = hub(1, 2);
+        {
+            // block 0 prepared (the queue at its lookahead of 1), block 1 waiting as a job
+            let mut st = h.lock();
+            st.live = 1;
+            let front = st.fronts.pop().unwrap();
+            st.prepared.push_back(Prepared {
+                place: 0,
+                bit: 0,
+                symbols: job(0).2,
+                front,
+                rows: 0,
+            });
+            st.jobs.push_back(job(1));
+        }
+        let o = Outer::new(&shared, &h, "test");
+        std::thread::scope(|s| {
+            let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
+            // the service worker can't prepare yet: wait until it is parked on the hub (it
+            // holds the lock only while it decides), then give it nothing else to see
+            for _ in 0..if cfg!(miri) { 20 } else { 2000 } {
+                std::thread::yield_now();
+            }
+            assert_eq!(h.lock().jobs.len(), 1, "prepared beyond the lookahead");
+            let (p, back) = take_prepared(&h, &o).expect("block 0");
+            assert_eq!(p.place, 0);
+            // the service takes the job only if the pop woke it
+            let wait = std::time::Duration::from_secs(if cfg!(miri) { 120 } else { 10 });
+            let deadline = std::time::Instant::now() + wait;
+            let mut woke = true;
+            while !h.lock().jobs.is_empty() {
+                if std::time::Instant::now() > deadline {
+                    woke = false;
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            // (block 1's empty symbols fail their move-to-front: its error published, and
+            // it retires; block 0 retires here, then the hub is closed and both end, the
+            // close's own wake-up ending the service worker even if the pop's was missing)
+            h.retire(&o, Some(p.front), Some(back));
+            h.lock().closed = true;
+            h.cv.notify_all();
+            svc.join().unwrap();
+            assert!(woke, "the service worker never woke on the team's pop");
+        });
+        let st = h.lock();
+        assert!(st.done() && st.prepared.is_empty());
+        assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
+    }
+
+    #[test]
+    fn miri_service_core_hub() {
+        let k = Kernels::scalar();
+        let shapes: &[(usize, usize, usize, usize)] = if cfg!(miri) {
+            &[(1, 2, 1, 1), (2, 1, 2, 3)]
+        } else {
+            &[(1, 2, 1, 1), (2, 1, 2, 3), (3, 3, 1, 12), (1, 4, 2, 2)]
+        };
+        for &(teams, tk, services, slots) in shapes {
+            let shape = format!("{teams} x {tk} + {services} in {slots}");
+            let (got, res) = run(&StreamDecoder::service(teams, tk, services, slots, k), Z);
+            res.unwrap();
+            assert!(got == want(), "{shape}");
+            // a bad block CRC: the error at its place and bit, as the default's
+            let (z, bit) = flipped(2);
+            let (got, res) = run(&StreamDecoder::service(teams, tk, services, slots, k), &z);
+            let (want_got, want_res) = run(
+                &StreamDecoder::with_inverse::<super::super::bwt::Segmented>(1, 2, k),
+                &z,
+            );
+            let e = res.clone().unwrap_err();
+            assert!(matches!(e.kind, ErrorKind::BlockCrc { .. }), "{shape}: {e}");
+            assert_eq!((e.block, e.bit), (Some(2), Some(bit)), "{shape}");
+            assert_eq!(res, want_res, "{shape}");
+            assert!(got == want_got, "{shape}");
+            // a panic in each kind of stage: its block's Internal error, the bytes before
+            for fault in [
+                ServiceFault::Prepare { place: 1 },
+                ServiceFault::Finish { place: 2 },
+                ServiceFault::Team {
+                    place: 1,
+                    thread: 0,
+                },
+            ] {
+                let dec =
+                    StreamDecoder::service_with_fault(teams, tk, services, slots, k, Some(fault));
+                let (got, res) = run(&dec, Z);
+                let e = res.unwrap_err();
+                assert!(matches!(&e.kind, ErrorKind::Internal(m) if m.contains("injected")));
+                let place = match fault {
+                    ServiceFault::Prepare { place }
+                    | ServiceFault::Finish { place }
+                    | ServiceFault::Team { place, .. } => place,
+                };
+                assert_eq!(e.block, Some(place), "{shape} {fault:?}");
+                let before: usize = (0..place as usize)
+                    .map(|i| format!("service core {i} ").len() * (3 + i))
+                    .sum();
+                assert!(got == want()[..before], "{shape} {fault:?}");
+            }
+            // cancelled before its input ends, and dropped
+            let dec = StreamDecoder::service(teams, tk, services, slots, k);
+            dec.write(Z[..100].to_vec()).unwrap();
+            dec.cancel();
+            assert_eq!(
+                dec.read(&mut [0; 8]).unwrap_err().kind,
+                ErrorKind::Cancelled
+            );
+            drop(dec);
+        }
+    }
+}
+
+/// The files discovery reads (`RealFs`, or a test's fixture): a file's text, or why not
+trait Fs {
+    fn read(&self, path: &str) -> std::io::Result<String>;
+    fn is_dir(&self, path: &str) -> bool;
+}
+
+struct RealFs;
+
+impl Fs for RealFs {
+    fn read(&self, path: &str) -> std::io::Result<String> {
+        std::fs::read_to_string(path)
+    }
+    fn is_dir(&self, path: &str) -> bool {
+        std::path::Path::new(path).is_dir()
+    }
+}
+
+/// A CPU list (`0-3,8,10-11`), strictly: None for anything else
+fn cpu_list(s: &str) -> Option<std::collections::BTreeSet<usize>> {
+    let s = s.trim();
+    let mut v = std::collections::BTreeSet::new();
+    if s.is_empty() {
+        return Some(v);
+    }
+    for part in s.split(',') {
+        let (a, b) = part.split_once('-').unwrap_or((part, part));
+        let (a, b): (usize, usize) = (a.parse().ok()?, b.parse().ok()?);
+        if a > b || b > 1 << 16 {
+            return None;
+        }
+        v.extend(a..=b);
+    }
+    Some(v)
+}
+
+/// The predicate's topology (`Topology`), read to fail closed (Linux): the CPUs in this
+/// process's affinity (`Cpus_allowed_list`) that sysfs lists online; CPUs it lists absent
+/// (not `present`) or offline are positively excluded, not guessed. Each counted CPU's core
+/// and package ids, its L3 (`cache/index3`, of level 3) and its `/proc/cpuinfo` record (by
+/// `processor`) must all be read; one unreadable or unparsable is None, and so is any
+/// difference among them (a mixed vendor, model or L3 size).
+fn target_topology(fs: &dyn Fs) -> Option<Topology> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    let status = fs.read("/proc/self/status").ok()?;
+    let allowed = cpu_list(
+        status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?,
+    )?;
+    let sys = "/sys/devices/system/cpu";
+    let online = cpu_list(&fs.read(&format!("{sys}/online")).ok()?)?;
+    let present = cpu_list(&fs.read(&format!("{sys}/present")).ok()?)?;
+    let cpus: Vec<usize> = allowed
+        .iter()
+        .copied()
+        .filter(|c| present.contains(c) && online.contains(c))
+        .collect();
+    if cpus.is_empty() {
+        return None;
+    }
+    // (cpuinfo's records by processor)
+    let info = fs.read("/proc/cpuinfo").ok()?;
+    let mut ids = std::collections::BTreeMap::new();
+    for rec in info.split("\n\n").filter(|r| !r.trim().is_empty()) {
+        let field = |name: &str| {
+            rec.lines().find_map(|l| {
+                let (k, v) = l.split_once(':')?;
+                (k.trim() == name).then(|| v.trim().to_string())
+            })
+        };
+        let n: usize = field("processor")?.parse().ok()?;
+        let id = (
+            field("vendor_id")?,
+            field("cpu family")?.parse::<u32>().ok()?,
+            field("model")?.parse::<u32>().ok()?,
+        );
+        if ids.insert(n, id).is_some() {
+            return None;
+        }
+    }
+    let num = |p: String| p.trim().parse::<u64>().ok();
+    let (mut cores, mut l3, mut cpu) = (std::collections::BTreeSet::new(), None, None);
+    for c in &cpus {
+        let t = format!("{sys}/cpu{c}");
+        let core = num(fs.read(&format!("{t}/topology/core_id")).ok()?)?;
+        let pkg = num(fs.read(&format!("{t}/topology/physical_package_id")).ok()?)?;
+        cores.insert((pkg, core));
+        if num(fs.read(&format!("{t}/cache/index3/level")).ok()?)? != 3 {
+            return None;
+        }
+        let size = cache_size(&fs.read(&format!("{t}/cache/index3/size")).ok()?)?;
+        if *l3.get_or_insert(size) != size {
+            return None;
+        }
+        let id = ids.get(c)?;
+        if cpu.get_or_insert_with(|| id.clone()) != id {
+            return None;
+        }
+    }
+    Some(Topology {
+        phys: cores.len(),
+        logical: cpus.len(),
+        l3: l3?,
+        cpu: cpu?,
+    })
+}
+
+/// A sysfs cache size (`20480K`), strictly
+fn cache_size(s: &str) -> Option<u64> {
+    let s = s.trim();
+    let (num, mult) = match s.as_bytes().last()? {
+        b'K' => (&s[..s.len() - 1], 1u64 << 10),
+        b'M' => (&s[..s.len() - 1], 1 << 20),
+        _ => (s, 1),
+    };
+    num.parse::<u64>().ok()?.checked_mul(mult)
+}
+
+/// This process's CPU quota, established or `Unknown` (Linux, cgroup v2 only). From
+/// `/proc/self/cgroup`'s one v2 entry (`0::path`) and the one `cgroup2` mount in
+/// `/proc/self/mountinfo` (its root and mount point), the process's cgroup directory, then
+/// every directory up to the mount point, each `cpu.max` parsed strictly and the tightest
+/// kept. A level's `cpu.max` may be absent (the cpu controller not enabled there: no limit
+/// at that level) only if its directory is there. The mount point must be the hierarchy's
+/// true root (no `cgroup.type`, which every non-root cgroup has): a mount of a cgroup below
+/// the root (a cgroup namespace, a container) hides ancestors whose limits can't be read,
+/// so it is `Unknown`. Any other read failure, any unparsable or ambiguous file (no v2
+/// entry, cgroup v1 alone, several entries or mounts, an escaped path), is `Unknown`.
+fn cpu_quota(fs: &dyn Fs) -> Quota {
+    if !cfg!(target_os = "linux") {
+        return Quota::Unknown;
+    }
+    cpu_quota_of(fs).unwrap_or(Quota::Unknown)
+}
+
+fn cpu_quota_of(fs: &dyn Fs) -> Option<Quota> {
+    use std::io::ErrorKind::NotFound;
+    let cg = fs.read("/proc/self/cgroup").ok()?;
+    let mut v2 = cg.lines().filter_map(|l| l.strip_prefix("0::"));
+    let path = v2.next()?.trim().to_string();
+    if v2.next().is_some() || !path.starts_with('/') || path.contains("..") || path.contains(' ') {
+        return None;
+    }
+    let info = fs.read("/proc/self/mountinfo").ok()?;
+    let mut mounts = info.lines().filter_map(|l| {
+        let (pre, post) = l.split_once(" - ")?;
+        (post.split_whitespace().next()? == "cgroup2").then_some(pre)
+    });
+    let pre = mounts.next()?;
+    if mounts.next().is_some() {
+        return None;
+    }
+    let f: Vec<&str> = pre.split_whitespace().collect();
+    let (root, point) = (*f.get(3)?, *f.get(4)?);
+    if root.contains('\\') || point.contains('\\') || !point.starts_with('/') {
+        return None;
+    }
+    // the process's cgroup under the mount's root, as a path under the mount point
+    let rel = if root == "/" {
+        path.as_str()
+    } else {
+        let r = path.strip_prefix(root)?;
+        if !(r.is_empty() || r.starts_with('/')) {
+            return None;
+        }
+        r
+    };
+    let point = point.trim_end_matches('/');
+    let mut levels = vec![point.to_string()];
+    let mut at = String::from(point);
+    for part in rel.split('/').filter(|p| !p.is_empty()) {
+        at = format!("{at}/{part}");
+        levels.push(at.clone());
+    }
+    let mut q = Quota::Unlimited;
+    for dir in &levels {
+        if !fs.is_dir(dir) {
+            return None;
+        }
+        match fs.read(&format!("{dir}/cpu.max")) {
+            Ok(text) => {
+                q = match (q, parse_cpu_max(&text)) {
+                    (_, Quota::Unknown) => return None,
+                    (Quota::Cpus(a), Quota::Cpus(b)) => Quota::Cpus(a.min(b)),
+                    (Quota::Unlimited, b) => b,
+                    (a, Quota::Unlimited) => a,
+                    (Quota::Unknown, _) => return None,
+                };
+            }
+            Err(e) if e.kind() == NotFound => {}
+            Err(_) => return None,
+        }
+    }
+    // the top must be the true root: `cgroup.type` absent there, positively
+    match fs.read(&format!("{point}/cgroup.type")) {
+        Err(e) if e.kind() == NotFound => Some(q),
+        _ => None,
+    }
+}
+
+/// A `cpu.max` file's quota, strictly: one line, `max PERIOD` or `QUOTA PERIOD`, each a
+/// positive integer (in µs); anything else is `Unknown`
+fn parse_cpu_max(s: &str) -> Quota {
+    let line = s.strip_suffix('\n').unwrap_or(s);
+    let f: Vec<&str> = line.split(' ').collect();
+    let pos = |t: &str| {
+        (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| t.parse::<u64>().ok())
+            .flatten()
+            .filter(|&n| n > 0)
+    };
+    match f.as_slice() {
+        [q, p] => match (pos(p), *q) {
+            (Some(_), "max") => Quota::Unlimited,
+            (Some(p), q) => pos(q).map_or(Quota::Unknown, |q| Quota::Cpus(q as f64 / p as f64)),
+            (None, _) => Quota::Unknown,
+        },
+        _ => Quota::Unknown,
+    }
+}
+
 #[cfg(test)]
 mod unwind_tests;
+
+#[cfg(test)]
+mod service_unwind_tests;
 
 #[cfg(test)]
 mod plan_tests {
@@ -1450,6 +3382,562 @@ mod plan_tests {
             let e = dec.read(&mut [0; 16]).unwrap_err();
             assert_eq!(e.kind, ErrorKind::Empty);
         }
+    }
+
+    /// The service core's target predicate: every condition alone flips it off
+    #[test]
+    fn the_service_target() {
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let i9 = Machine::service_target();
+        let here = cfg!(all(target_os = "linux", target_arch = "x86_64"));
+        assert_eq!(service_target(10, both, &i9), here);
+        // the budget: exactly 10
+        for t in [0, 1, 4, 8, 9, 11, 12, 16, 20, 64, usize::MAX] {
+            assert!(!service_target(t, both, &i9), "{t} threads");
+        }
+        // the kernels: the run's own, both
+        for k in [
+            Kernels::scalar(),
+            Kernels {
+                avx2: true,
+                clmul: false,
+            },
+            Kernels {
+                avx2: false,
+                clmul: true,
+            },
+        ] {
+            assert!(!service_target(10, k, &i9), "{k:?}");
+        }
+        // each fact of the topology off by a little, or the snapshot unread
+        let mib = 1u64 << 20;
+        let with = |f: &dyn Fn(&mut Topology)| {
+            let mut m = i9.clone();
+            f(m.target.as_mut().unwrap());
+            m
+        };
+        let off: Vec<(&str, Machine)> = vec![
+            ("9 cores", with(&|t| t.phys = 9)),
+            ("11 cores", with(&|t| t.phys = 11)),
+            ("19 CPUs", with(&|t| t.logical = 19)),
+            ("10 CPUs (no SMT)", with(&|t| t.logical = 10)),
+            ("L3 a byte less", with(&|t| t.l3 = 20 * mib - 1)),
+            ("L3 16 MiB", with(&|t| t.l3 = 16 * mib)),
+            ("model 166", with(&|t| t.cpu.2 = 166)),
+            ("model 158", with(&|t| t.cpu.2 = 158)),
+            ("family 15", with(&|t| t.cpu.1 = 15)),
+            ("AMD", with(&|t| t.cpu.0 = "AuthenticAMD".into())),
+            (
+                "no snapshot",
+                Machine {
+                    target: None,
+                    ..i9.clone()
+                },
+            ),
+            (
+                "quota 9.5",
+                Machine {
+                    quota: Quota::Cpus(9.5),
+                    ..i9.clone()
+                },
+            ),
+            (
+                "quota 2",
+                Machine {
+                    quota: Quota::Cpus(2.0),
+                    ..i9.clone()
+                },
+            ),
+            (
+                "quota unknown",
+                Machine {
+                    quota: Quota::Unknown,
+                    ..i9.clone()
+                },
+            ),
+            ("the default machine", Machine::default()),
+        ];
+        for (what, m) in &off {
+            assert!(!service_target(10, both, m), "{what}");
+        }
+        // the plan policy's own facts are not the predicate's
+        let m = Machine {
+            phys: None,
+            l3: None,
+            ..i9.clone()
+        };
+        assert_eq!(service_target(10, both, &m), here);
+        // a quota of 10 CPUs or more leaves it on
+        for q in [10.0, 12.5, 20.0] {
+            let m = Machine {
+                quota: Quota::Cpus(q),
+                ..i9.clone()
+            };
+            assert_eq!(service_target(10, both, &m), here, "quota {q}");
+        }
+        assert_eq!(Quota::default(), Quota::Unknown);
+        assert_eq!(SERVICE_PLAN.threads(), 8);
+    }
+
+    /// A machine's files for discovery's tests: each path's text, or the error reading it;
+    /// a path not given is not found, and a directory is there if listed
+    #[derive(Default, Clone)]
+    struct FakeFs {
+        files: std::collections::BTreeMap<String, Result<String, std::io::ErrorKind>>,
+        dirs: std::collections::BTreeSet<String>,
+    }
+
+    impl FakeFs {
+        fn file(mut self, p: &str, s: &str) -> Self {
+            self.files.insert(p.into(), Ok(s.into()));
+            self
+        }
+        fn fails(mut self, p: &str, e: std::io::ErrorKind) -> Self {
+            self.files.insert(p.into(), Err(e));
+            self
+        }
+        fn dir(mut self, p: &str) -> Self {
+            self.dirs.insert(p.into());
+            self
+        }
+        fn without(mut self, p: &str) -> Self {
+            self.files.remove(p);
+            self.dirs.remove(p);
+            self
+        }
+    }
+
+    impl Fs for FakeFs {
+        fn read(&self, p: &str) -> std::io::Result<String> {
+            match self.files.get(p) {
+                Some(Ok(s)) => Ok(s.clone()),
+                Some(Err(e)) => Err((*e).into()),
+                None => Err(std::io::ErrorKind::NotFound.into()),
+            }
+        }
+        fn is_dir(&self, p: &str) -> bool {
+            self.dirs.contains(p)
+        }
+    }
+
+    /// A desktop's cgroup v2 hierarchy: the process in /user.slice/u/app, the true root
+    /// mounted at /sys/fs/cgroup, no `cpu.max` anywhere (the controller enabled nowhere)
+    fn hierarchy() -> FakeFs {
+        let root = "/sys/fs/cgroup";
+        FakeFs::default()
+            .file("/proc/self/cgroup", "0::/user.slice/u/app\n")
+            .file(
+                "/proc/self/mountinfo",
+                "22 1 0:21 / / rw - ext4 /dev/vda rw\n\
+                 30 22 0:26 / /sys/fs/cgroup rw,nosuid - cgroup2 cgroup2 rw\n",
+            )
+            .dir(root)
+            .dir("/sys/fs/cgroup/user.slice")
+            .dir("/sys/fs/cgroup/user.slice/u")
+            .dir("/sys/fs/cgroup/user.slice/u/app")
+            .file("/sys/fs/cgroup/user.slice/cgroup.type", "domain\n")
+    }
+
+    /// Discovery's quota fails closed: unreadable membership, an unreadable or restrictive
+    /// parent, no or a relocated v2 mount, cgroup v1 alone, a hidden ancestor (a cgroup
+    /// namespace) are `Unknown` or the limit; an established unlimited hierarchy, and
+    /// inherited quotas below and at ten, are what they are
+    #[test]
+    fn discovery_fails_closed_quota() {
+        let (leaf, parent) = (
+            "/sys/fs/cgroup/user.slice/u/app/cpu.max",
+            "/sys/fs/cgroup/user.slice/cpu.max",
+        );
+        let i9 = Machine::service_target();
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let here = cfg!(all(target_os = "linux", target_arch = "x86_64"));
+        let on = |fs: &FakeFs| {
+            service_target(
+                10,
+                both,
+                &Machine {
+                    quota: cpu_quota(fs),
+                    ..i9.clone()
+                },
+            )
+        };
+        let unlimited = if here {
+            Quota::Unlimited
+        } else {
+            Quota::Unknown
+        };
+        let cases: Vec<(&str, FakeFs, Quota)> = vec![
+            ("established unlimited", hierarchy(), unlimited),
+            (
+                "a leaf's max",
+                hierarchy().file(leaf, "max 100000\n"),
+                unlimited,
+            ),
+            (
+                "membership unreadable",
+                hierarchy().fails("/proc/self/cgroup", std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "membership missing",
+                hierarchy().without("/proc/self/cgroup"),
+                Quota::Unknown,
+            ),
+            (
+                "a parent's cpu.max unreadable",
+                hierarchy().fails(parent, std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "a parent's cpu.max an I/O error, beneath an unlimited leaf",
+                hierarchy()
+                    .file(leaf, "max 100000\n")
+                    .fails(parent, std::io::ErrorKind::Other),
+                Quota::Unknown,
+            ),
+            (
+                "a restrictive parent beneath an unlimited leaf",
+                hierarchy()
+                    .file(leaf, "max 100000\n")
+                    .file(parent, "800000 100000\n"),
+                if here {
+                    Quota::Cpus(8.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "an inherited quota of ten",
+                hierarchy().file(parent, "1000000 100000\n"),
+                if here {
+                    Quota::Cpus(10.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "the tightest of two",
+                hierarchy()
+                    .file(leaf, "1500000 100000\n")
+                    .file(parent, "1200000 100000\n"),
+                if here {
+                    Quota::Cpus(12.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "a parent's cpu.max unparsable",
+                hierarchy().file(parent, "max garbage\n"),
+                Quota::Unknown,
+            ),
+            (
+                "a level's directory missing",
+                hierarchy().without("/sys/fs/cgroup/user.slice/u"),
+                Quota::Unknown,
+            ),
+            (
+                "no cgroup2 mount",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "22 1 0:21 / / rw - ext4 /dev/vda rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "mountinfo unreadable",
+                hierarchy().fails("/proc/self/mountinfo", std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "a relocated mount (its root not the process's ancestor)",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "30 22 0:26 /system.slice /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "two cgroup2 mounts",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "30 22 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n\
+                     31 22 0:26 / /mnt/cg rw - cgroup2 cgroup2 rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "cgroup v1 alone",
+                hierarchy().file(
+                    "/proc/self/cgroup",
+                    "4:cpu,cpuacct:/user.slice\n1:name=systemd:/x\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "a hidden ancestor (the mount's top not the true root)",
+                hierarchy().file("/sys/fs/cgroup/cgroup.type", "domain\n"),
+                Quota::Unknown,
+            ),
+            (
+                "the root's cgroup.type unreadable",
+                hierarchy().fails(
+                    "/sys/fs/cgroup/cgroup.type",
+                    std::io::ErrorKind::PermissionDenied,
+                ),
+                Quota::Unknown,
+            ),
+        ];
+        for (what, fs, want) in &cases {
+            assert_eq!(cpu_quota(fs), *want, "{what}");
+            let admits =
+                matches!(want, Quota::Unlimited) || matches!(want, Quota::Cpus(c) if *c >= 10.0);
+            assert_eq!(on(fs), here && admits, "{what}: the predicate");
+        }
+        // `cpu.max`, strictly
+        assert_eq!(parse_cpu_max("max 100000\n"), Quota::Unlimited);
+        assert_eq!(parse_cpu_max("200000 100000\n"), Quota::Cpus(2.0));
+        assert_eq!(parse_cpu_max("1000000 100000"), Quota::Cpus(10.0));
+        for bad in [
+            "",
+            "\n",
+            "x 100000",
+            "100000 0",
+            "100000",
+            "-5 100000",
+            "max garbage",
+            "max",
+            "inf 100000",
+            "1e6 100000",
+            "max 100000 5",
+            "max  100000",
+            "+5 100000",
+            "max 100000\n\n",
+            "0 100000",
+        ] {
+            assert_eq!(parse_cpu_max(bad), Quota::Unknown, "{bad:?}");
+        }
+    }
+
+    /// A ten-core, twenty-CPU Comet Lake-S as sysfs and cpuinfo show it, CPU n on core
+    /// n % 10
+    fn cpus() -> FakeFs {
+        let sys = "/sys/devices/system/cpu";
+        let mut fs = FakeFs::default()
+            .file("/proc/self/status", "Name:\tx\nCpus_allowed_list:\t0-19\n")
+            .file(&format!("{sys}/online"), "0-19\n")
+            .file(&format!("{sys}/present"), "0-19\n");
+        let mut info = String::new();
+        for c in 0..20 {
+            let t = format!("{sys}/cpu{c}");
+            fs = fs
+                .file(&format!("{t}/topology/core_id"), &format!("{}\n", c % 10))
+                .file(&format!("{t}/topology/physical_package_id"), "0\n")
+                .file(&format!("{t}/cache/index3/level"), "3\n")
+                .file(&format!("{t}/cache/index3/size"), "20480K\n");
+            info += &format!(
+                "processor\t: {c}\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n"
+            );
+        }
+        fs.file("/proc/cpuinfo", &info)
+    }
+
+    /// Discovery's topology fails closed: a read error is never an offline CPU, and the CPUs
+    /// must agree; CPUs positively offline or absent are left out
+    #[test]
+    fn discovery_fails_closed_topology() {
+        if !cfg!(target_os = "linux") {
+            assert_eq!(target_topology(&cpus()), None);
+            return;
+        }
+        let sys = "/sys/devices/system/cpu";
+        let i9 = Machine::service_target().target;
+        assert_eq!(target_topology(&cpus()), i9);
+        let pd = std::io::ErrorKind::PermissionDenied;
+        let none: Vec<(&str, FakeFs)> = vec![
+            (
+                "a core id unreadable",
+                cpus().fails(&format!("{sys}/cpu7/topology/core_id"), pd),
+            ),
+            (
+                "a core id missing",
+                cpus().without(&format!("{sys}/cpu7/topology/core_id")),
+            ),
+            (
+                "a package unreadable",
+                cpus().fails(&format!("{sys}/cpu3/topology/physical_package_id"), pd),
+            ),
+            (
+                "an L3 unreadable",
+                cpus().fails(&format!("{sys}/cpu12/cache/index3/size"), pd),
+            ),
+            (
+                "an L3 of another size",
+                cpus().file(&format!("{sys}/cpu12/cache/index3/size"), "16384K\n"),
+            ),
+            (
+                "index3 not level 3",
+                cpus().file(&format!("{sys}/cpu0/cache/index3/level"), "2\n"),
+            ),
+            (
+                "online unreadable",
+                cpus().fails(&format!("{sys}/online"), pd),
+            ),
+            (
+                "present unreadable",
+                cpus().without(&format!("{sys}/present")),
+            ),
+            ("status unreadable", cpus().fails("/proc/self/status", pd)),
+            (
+                "affinity unparsable",
+                cpus().file("/proc/self/status", "Cpus_allowed_list:\t0-x\n"),
+            ),
+            ("cpuinfo unreadable", cpus().fails("/proc/cpuinfo", pd)),
+            ("a CPU of another model", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                    "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165",
+                    "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 166",
+                    1,
+                );
+                fs.file("/proc/cpuinfo", &info)
+            }),
+            ("a CPU with no cpuinfo record", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                        "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n",
+                        "",
+                        1,
+                    );
+                fs.file("/proc/cpuinfo", &info)
+            }),
+        ];
+        for (what, fs) in &none {
+            assert_eq!(target_topology(fs), None, "{what}");
+        }
+        // positively offline (sysfs's online list) and absent CPUs are left out, not errors:
+        // the snapshot then is a smaller machine, not the target
+        let offline = cpus().file(&format!("{sys}/online"), "0-18\n");
+        let t = target_topology(&offline).unwrap();
+        assert_eq!((t.logical, t.phys), (19, 10));
+        let absent = cpus()
+            .file("/proc/self/status", "Cpus_allowed_list:\t0-63\n")
+            .fails(&format!("{sys}/cpu40/topology/core_id"), pd);
+        assert_eq!(target_topology(&absent), i9, "CPUs allowed but not present");
+        let masked = cpus().file("/proc/self/status", "Cpus_allowed_list:\t0-9\n");
+        let t = target_topology(&masked).unwrap();
+        assert_eq!((t.logical, t.phys), (10, 10));
+    }
+
+    /// `StreamDecoder::new`'s own dispatch on the target machine (`with_machine`): the
+    /// service core at exactly 10 threads, its window scaled to its two teams, and the
+    /// existing plan at every other budget, on the scalar kernels, off the target, and with
+    /// a plan forced
+    #[test]
+    fn the_service_default() {
+        if !cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+            return;
+        }
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let i9 = Machine::service_target();
+        let build = |m: &Machine, t: usize, slots: usize, k: Kernels| {
+            let (dec, b) =
+                observe_builds(|| with_machine(m.clone(), || StreamDecoder::new(t, slots, k)));
+            assert_eq!(b.len(), 1);
+            assert_eq!(
+                (b[0].service, b[0].window),
+                (dec.is_service(), dec.window())
+            );
+            dec
+        };
+        // the target: the service core, 8 decoding threads, a window of 8 at 4 a thread
+        let dec = build(&i9, 10, 40, both);
+        assert!(dec.is_service() && !dec.is_pipelined());
+        assert_eq!((dec.threads(), dec.window()), (8, 8));
+        assert_eq!(dec.service_counts(), Some(ServiceCounts::default()));
+        // custom windows scale as a plan's do (`window`), at least a block a team
+        for (slots, want) in [
+            (1, 2),
+            (2, 2),
+            (10, 2),
+            (20, 4),
+            (40, 8),
+            (41, 8),
+            (60, 12),
+            (80, 16),
+        ] {
+            assert_eq!(build(&i9, 10, slots, both).window(), want, "{slots} slots");
+        }
+        assert_eq!(
+            build(&i9, 10, usize::MAX, both).window(),
+            (usize::MAX / 10) as u64
+        );
+        // every other budget: what the plan policy says on this machine, as before
+        for t in [1, 4, 8, 9, 11, 12, 16, 20] {
+            let dec = build(&i9, t, 4 * t, both);
+            let plan = with_machine(i9.clone(), || Plan::for_threads(t));
+            assert!(!dec.is_service(), "{t}");
+            assert_eq!(dec.threads(), plan.threads(), "{t}");
+            assert_eq!(dec.is_pipelined(), plan == PIPELINED_PLAN, "{t}");
+            assert_eq!(dec.window(), window(plan, t, 4 * t) as u64, "{t}");
+        }
+        // 10 threads on the scalar kernels, or off the target: the three pipelined teams
+        // of three (the existing 10-core rule), or the plan for that machine
+        let dec = build(&i9, 10, 40, Kernels::scalar());
+        assert!(!dec.is_service() && dec.is_pipelined() && dec.threads() == 9);
+        let mut amd = i9.clone();
+        amd.target.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
+        let dec = build(&amd, 10, 40, both);
+        assert!(!dec.is_service() && dec.is_pipelined() && dec.window() == 12);
+        let small = Machine {
+            phys: Some(4),
+            target: None,
+            ..i9.clone()
+        };
+        let dec = build(&small, 10, 40, both);
+        assert!(!dec.is_service() && !dec.is_pipelined() && dec.threads() == 10);
+        // a forced plan wins, on the target too
+        for plan in [
+            PIPELINED_PLAN,
+            Plan::Workers(10),
+            Plan::Teams { teams: 4, k: 2 },
+        ] {
+            let dec = with_plan(plan, || build(&i9, 10, 40, both));
+            assert!(!dec.is_service(), "{plan:?}");
+            assert_eq!(dec.threads(), plan.threads(), "{plan:?}");
+        }
+        // and it decodes: four streams, through the service core's own threads
+        let dec = build(&i9, 10, 40, both);
+        dec.write(service_tests::Z.to_vec()).unwrap();
+        dec.close();
+        let mut out = Vec::new();
+        let mut buf = [0u8; 64];
+        loop {
+            match dec.read(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => panic!("{e}"),
+            }
+        }
+        assert_eq!(out, service_tests::want());
+        // (EOF is not the workers' end: the last block is read once published, before its
+        // finisher retires it, D067; join is the fence, and `ended` its witness)
+        dec.join();
+        let c = dec.service_counts().unwrap();
+        assert!(c.ended, "{c:?}");
+        assert_eq!((c.prepared, c.finished), (4, 4));
+        // (none of these blocks is big enough for a team's pool: tests/service_default.rs
+        // reaches it, on full blocks)
+        assert_eq!(c.pooled, 0);
     }
 
     /// Whatever this machine is, the plan is one of the two shapes and never more threads

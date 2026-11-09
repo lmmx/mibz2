@@ -35,6 +35,27 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.5.0] - 2026-11-09
+
+### Added
+
+Both are opt-in or a new field beside the others: no measured figure changes meaning. The
+same `examples/ab.rs` change is on #305 (`cb2c233e`), whose further additions take the next
+version.
+
+- **`ab env --facts`** (`examples/ab.rs`): the machine's facts read passively, from procfs,
+  sysfs, cgroupfs and `sched_getaffinity` alone. No thread is started, nothing spins and no
+  perf counter is opened; plain `ab env` is unchanged. The CPUs allowed are the affinity mask
+  and `Cpus_allowed_list`, which must agree. The CPU quota is that of the process's effective
+  cgroup hierarchy (v2, or the v1 hierarchy holding the `cpu` controller), every level read
+  up to the hierarchy's true root: `unlimited`, `limited` or `unknown` with why, in the
+  representation of `parallel::cpu_quota`. The service-guarded recipe's diagnostics read it.
+- **Each run's child termination** (`examples/ab.rs`, `termination`): `"success"`,
+  `"exit N"`, `"signal N"` or `"unknown"`, as the parent reaped the child. Output written
+  before a nonzero exit or a signal is no longer indistinguishable from a successful run. The
+  service-guarded judge (`bench/service_guarded.py`) requires `"success"`, and a row without
+  it is refused.
+
 ## [3.4.0] - 2026-11-09
 
 ### Fixed

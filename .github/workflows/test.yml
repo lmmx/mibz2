@@ -28,6 +28,12 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # the guarded service A/B's judge, with its producer driven for real: `ab run` with
+      # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
+      - name: The guarded service A/B's producer and judge (stand-in children, untimed)
+        run: |
+          cargo build --example ab
+          SG_AB=target/debug/examples/ab SG_REQUIRE_AB=1 python3 bench/test_service_guarded.py
       # bench/alternatives has its own lock, on this crate by path, and master's benchmark
       # builds it --locked: a version bump that leaves it behind fails here, not only there
       - name: The benchmark alternatives' lock
@@ -50,6 +56,8 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      - name: Service candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/service service
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7
@@ -72,6 +80,14 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      - name: The service core's target preflight record checker (its witnesses)
+        run: python3 bench/test_svc_target_check.py
+      - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
+        run: python3 bench/test_svc_target.py
+      - name: The guarded service A/B's judge and admission (its witnesses)
+        run: python3 bench/test_service_guarded.py
+      - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_guarded_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest

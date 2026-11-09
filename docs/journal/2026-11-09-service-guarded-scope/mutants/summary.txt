@@ -1,0 +1,34 @@
+G1-guard-removed: exit 101; test result: FAILED. 0 passed; 7 failed; 0 ignored; 0 measured; 67 filtered out; finished in 120.09s
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+    test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... FAILED
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+    test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+    test parallel::service_unwind_tests::miri_outer_after_job ... FAILED
+    test parallel::service_unwind_tests::miri_outer_after_publish ... FAILED
+    test parallel::service_unwind_tests::miri_outer_parked ... FAILED
+    test result: FAILED. 0 passed; 7 failed; 0 ignored; 0 measured; 67 filtered out; finished in 120.09s
+G2-no-hub-wake: exit 101; test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 67 filtered out; finished in 60.20s
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+    test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... FAILED
+    test parallel::service_unwind_tests::miri_outer_parked ... FAILED
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+    test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 67 filtered out; finished in 60.20s
+G3-no-terminal-predicate: exit 101; test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 67 filtered out; finished in 60.14s
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+    test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+    test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 67 filtered out; finished in 60.14s
+G4-double-retirement: exit 101; test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.10s
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+    test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+    test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.10s
+G5-early-disarm: exit 101; test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.18s
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+    test parallel::service_unwind_tests::miri_outer_after_publish ... FAILED
+    test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+    test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+    test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.18s
+restored: exit 0; test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.25s
+
+DONE
