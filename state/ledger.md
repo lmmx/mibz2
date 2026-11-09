@@ -404,3 +404,16 @@ No new measured credit, implementation, compilation, timing, safety certificatio
 - Heap counts/preallocation/logged geometry recommended as proposals; align4096 is no cure and does not align Vec backing storage. Standalone counts padding about3KiB/set; extra call costs scale with fallback blocks, diagnostic replication with arm/offset/process factors. C5/C6 authority unchanged.
 
 No implementation, compilation, timing, safety certification, admission change or new measured credit.
+
+
+## C29 transfer and default-on evidence: inbox6735168430
+
+[Report](records/reviews/inbox-6735168430/report.md); reviewed1197bbcced86eae74c6d99eb8096b5c816a834d7.
+
+- C29 remains first for investigation; run42582708226 remains terminal VALID/UNJUDGED. Reported .9700 not replayed here and never rejudged.
+- Explicit nine-thread forced3x3 is not public default reach: natural special case needs10 physical cores,20MiB L3,requestedthreads>=10. Prove all three constructors and actual kernel selection untimed, then target default performance.
+- D060: switched held-prior/current/next and partial-front unwind/reuse, exact constructor reach, current-source independent B5; unchanged evidence reusable only with scope reconciliation.
+- Beyond judged LEAD: minimum two performance packages, target C5 actual-default comparison plus normal CI release/off-path bench; layout diagnostic integrated or additional if material. From today add one separately frozen repaired CI attempt (80 decodes), never retry-to-pass.
+- Cross semantics×build/layout, explicit/default entry, target environment; record data geometry and unchanged-path controls. Stable src and mixed flags do not prove harmless layout. No best-padding selection or changed estimand/grid.
+- Critical-path model f(1-r)=.03; aggregate front CPU is not exposed fraction. Hypothetical3% exposed gain vs1.1% off-path loss needs26.83% baseline-time exposed share merely to break even; not a gate or observed deployment estimate.
+- C43 below C29 transfer; existing B layout inquiry stays diagnostic. No new measured credit or default-on clearance.

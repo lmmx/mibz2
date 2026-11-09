@@ -773,7 +773,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "1197bbcced86eae74c6d99eb8096b5c816a834d7",
-      "progress": "Migration checked; auditing C29 transfer, D060 coverage and adoption layout controls.",
+      "progress": "Pinned source, D060 and registration reviewed; transfer/campaign cost and adoption layout report committed; publication checks pending.",
       "report_path": "state/records/reviews/inbox-6735168430/report.md"
     }
   ],
