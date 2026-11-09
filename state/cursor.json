@@ -1105,6 +1105,19 @@
       "status": "finished",
       "disposition": "REVISE coverage, interval families, CI selection contract, tolerance wording/rationale and authority consistency; advisory only",
       "comment": 6750633358
+    },
+    {
+      "pr": 309,
+      "sha": "6680a438cc6a65c412818fe1a02e2a2857b0eb73",
+      "evidence_digest": "stewardship:97c8dae1d346245241239a94701ea50e8bad6ab2;record:b19fbd312add3762a74fbb0523ae445c1f746cec",
+      "decision": "D073",
+      "commit": "43ad015374da8d553df7fdb2dde3e1697b8935cc",
+      "id": "D073",
+      "incoming_pr": 161,
+      "incoming_comment": 6750670706,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "D072 scientific policy-text objections closed; REVISE new rationale and drift record plus reserved-list placement"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1333,7 +1346,9 @@
     "366b2164dad996ecd2cd4c107656019142a65fca",
     "34e654e58b403659d7bfb5e9542632aa493a6736",
     "641bb38d57d42e4d7db96d47f7d1056c05b063f2",
-    "608a427a07d128eb5608524deffcabbfea0fd537"
+    "608a427a07d128eb5608524deffcabbfea0fd537",
+    "47245622b6b899dcb64f9448b112550832ecddf5",
+    "43ad015374da8d553df7fdb2dde3e1697b8935cc"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1406,7 +1421,8 @@
     6741180673,
     6750287351,
     6750412724,
-    6750546526
+    6750546526,
+    6750670706
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1486,8 +1502,9 @@
   },
   "current_execution": {
     "active_comment": 6750670706,
-    "status": "in progress",
-    "decision": "D073"
+    "status": "complete",
+    "decision": "D073",
+    "work_commit": "43ad015374da8d553df7fdb2dde3e1697b8935cc"
   },
   "duplicate_events": [
     {
@@ -2055,6 +2072,13 @@
       "decision": "D072",
       "commit": "641bb38d57d42e4d7db96d47f7d1056c05b063f2",
       "comment": 6750633358
+    },
+    {
+      "pr": 309,
+      "sha": "6680a438cc6a65c412818fe1a02e2a2857b0eb73",
+      "evidence_digest": "stewardship:97c8dae1d346245241239a94701ea50e8bad6ab2;record:b19fbd312add3762a74fbb0523ae445c1f746cec",
+      "decision": "D073",
+      "commit": "43ad015374da8d553df7fdb2dde3e1697b8935cc"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2548,8 +2572,10 @@
     {
       "comment_id": 6750670706,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D073"
+      "status": "complete",
+      "decision": "D073",
+      "receipt_commit": "47245622b6b899dcb64f9448b112550832ecddf5",
+      "work_commit": "43ad015374da8d553df7fdb2dde3e1697b8935cc"
     }
   ],
   "migrated_from": {
