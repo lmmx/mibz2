@@ -1018,8 +1018,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6739842300,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "REVISE remaining inheritance/multiplex status paths; other D065 fixes accepted"
+      "status": "finished",
+      "disposition": "REVISE remaining inheritance/multiplex status paths; other D065 fixes accepted",
+      "comment": 6739925087
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1083,7 +1084,8 @@
     6733983929,
     6734295081,
     6737091245,
-    6739426262
+    6739426262,
+    6739925087
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1221,7 +1223,8 @@
     "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
     "941ceb0fa83678f92e316ec5d0b3798adb8f89c8",
     "eeca52734cc0e882ea4d97ba8d47e2b9458cc734",
-    "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
+    "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+    "d37723b7f80e9912edea65395b383ac75693d8a0"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1368,9 +1371,10 @@
   },
   "current_execution": {
     "active_comment": 6739842300,
-    "status": "complete",
+    "status": "finished",
     "decision": "D066",
-    "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
+    "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+    "review_comment_id": 6739925087
   },
   "duplicate_events": [
     {
@@ -1888,7 +1892,8 @@
       "sha": "7678d34716db60dddf7c6e5a1a824a7909cd2bcc",
       "evidence_digest": "git-blob:0af5d1e77a74ab8e8fccd6ef5d2ef403bb276709",
       "decision": "D066",
-      "commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
+      "commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+      "comment": 6739925087
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2306,10 +2311,12 @@
     {
       "comment_id": 6739842300,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D066",
       "receipt_commit": "eeca52734cc0e882ea4d97ba8d47e2b9458cc734",
-      "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6"
+      "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+      "review_comment_id": 6739925087,
+      "complete_cursor_commit": "d37723b7f80e9912edea65395b383ac75693d8a0"
     }
   ],
   "migrated_from": {

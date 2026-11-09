@@ -1,0 +1,9 @@
+{
+  "incoming_comment": 6739842300,
+  "review_comment_id": 6739925087,
+  "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
+  "complete_cursor_commit": "d37723b7f80e9912edea65395b383ac75693d8a0",
+  "exact_readback": true,
+  "destination": 145,
+  "verifier_limitation": "Pinned verify expects FROM coordinator; independent Guardian header/routing/body checks passed."
+}
