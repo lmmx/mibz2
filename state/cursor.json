@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Concur VALID/JUDGED/INCONCLUSIVE after artifact digest, raw identity and independent paired-statistics replay. Correct effect-size bound and equal-RSS wording. Close registered timing; bounded transfer audit conditional, guarded service adoption first.",
+  "state": "REVISE before freeze: restore workload/identity and structured preflight admission; pin current-master base; establish grid/replacement authority; preflight-only target entry and end-to-end recipe check. Eight tests pass; malformed-evidence witnesses still VALID. Adoption boundary unchanged.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -121,9 +121,10 @@
     6739466190,
     6739661717,
     6740021640,
-    6740568118
+    6740568118,
+    6741912733
   ],
-  "last_processed_comment_id": 6740568118,
+  "last_processed_comment_id": 6741912733,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1206,11 +1207,15 @@
     },
     {
       "trigger_comment_id": 6741912733,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "3c9df6701c3a3fc60502598482a50cec266f9cb5"
+      "source_commit": "3c9df6701c3a3fc60502598482a50cec266f9cb5",
+      "report_commit": "b365250e5230f64e35b918b8f8e847de1755735a",
+      "report_path": "state/reports/service-guarded-registration-6741912733/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE before freeze: restore workload/identity and structured preflight admission; pin current-master base; establish grid/replacement authority; preflight-only target entry and end-to-end recipe check. Eight tests pass; malformed-evidence witnesses still VALID. Adoption boundary unchanged."
     }
   ],
   "active_delegations": [],
@@ -1230,10 +1235,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6740568118
+      6741912733
     ],
     "handled": [
-      6740568118
+      6741912733
     ],
     "skipped": [],
     "automation_modified": false
