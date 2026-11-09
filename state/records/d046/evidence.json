@@ -1,0 +1,70 @@
+{
+  "decision": "D046",
+  "incoming_comment": 6730271091,
+  "pr": 272,
+  "sha": "280643cef83b09ac89707b747670e8198b21b68e",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "sources": {
+    "src/pair_runs.rs": {
+      "sha": "e6ca17e7a10eb3d3d1d43069324016e94d3fb435",
+      "url": "https://github.com/lmmx/mibz2/blob/280643cef83b09ac89707b747670e8198b21b68e/src/pair_runs.rs"
+    },
+    "src/lib.rs": {
+      "sha": "1f6d5058eb04163cb82127f8c4852835b0c832ef",
+      "url": "https://github.com/lmmx/mibz2/blob/280643cef83b09ac89707b747670e8198b21b68e/src/lib.rs"
+    },
+    "Cargo.toml": {
+      "sha": "cf32c6527bf46a460de3b5a435984fe4b2d6faab",
+      "url": "https://github.com/lmmx/mibz2/blob/280643cef83b09ac89707b747670e8198b21b68e/Cargo.toml"
+    },
+    ".github/workflows/miri.yml": {
+      "sha": "0d544b457d9c142823e2daf3f80942d63b873f00",
+      "url": "https://github.com/lmmx/mibz2/blob/280643cef83b09ac89707b747670e8198b21b68e/.github/workflows/miri.yml"
+    },
+    "docs/journal/2026-11-09-pair-from-runs.md": {
+      "sha": "35e3eabe17f0da13262b8a0c5fc7995772031c7b",
+      "url": "https://github.com/lmmx/mibz2/blob/280643cef83b09ac89707b747670e8198b21b68e/docs/journal/2026-11-09-pair-from-runs.md"
+    }
+  },
+  "ci_snapshot": [
+    {
+      "id": 42547011049,
+      "name": "Miri",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "280643cef83b09ac89707b747670e8198b21b68e"
+    },
+    {
+      "id": 42547011066,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "280643cef83b09ac89707b747670e8198b21b68e"
+    },
+    {
+      "id": 42547011087,
+      "name": "Documentation site",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "280643cef83b09ac89707b747670e8198b21b68e"
+    },
+    {
+      "id": 42547011076,
+      "name": "Test",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "280643cef83b09ac89707b747670e8198b21b68e"
+    },
+    {
+      "id": 42547011050,
+      "name": "Benchmark",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "280643cef83b09ac89707b747670e8198b21b68e"
+    }
+  ],
+  "reproduced": "Independent Python interval/spill model and wrong-histogram index arithmetic",
+  "not_executed": "Rust, Miri, SIMD, fuzz, safety mutations, decoder, benchmarks",
+  "routing_audit": "Pinned coord.py audit/route functions executed with connector-fetched snapshots: only the five explicitly RESOLVED historical misroutes. verify assumes FROM coordinator and cannot pass unchanged for a Guardian REVIEW; use misrouted/header/destination read-back explicitly.",
+  "receipt_commit": "dead6f8390fc40c4c17cd236b96e8e2c521a4fd7"
+}

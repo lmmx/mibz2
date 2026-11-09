@@ -1,0 +1,20 @@
+{
+  "model": {
+    "columns": 10315,
+    "cells": 71233,
+    "wide_stores": 7989,
+    "spill_stores": 6432
+  },
+  "wrong_histogram": {
+    "ll": [
+      1
+    ],
+    "counts_nonzero": {
+      "0": 1
+    },
+    "n": 1,
+    "q": 1,
+    "unchecked_read_in_bounds": false
+  },
+  "limits": "Python only; no Rust/Miri/SIMD execution or safety mutation claim"
+}
