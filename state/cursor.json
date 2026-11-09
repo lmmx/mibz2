@@ -57,7 +57,7 @@
     "6735179771": 6735248713,
     "6736936857": 6738978353
   },
-  "last_rebuilt_from": 6738754551,
+  "last_rebuilt_from": 6738978353,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -236,9 +236,10 @@
     },
     "6738988173": {
       "comment_id": 6738988173,
-      "status": "in_progress",
-      "progress": "Migration verified; checking moved blog URL and latest handoffs."
+      "status": "complete",
+      "progress": "Account link and telemetry limits corrected; REVIEW pending.",
+      "work_commit": "e470e1b6ddfdbcfa71ddbea210684b2083ca1567"
     }
   },
-  "last_record_commit": "f20711493c618a1b1cb69c644ab9008276225c86"
+  "last_record_commit": "e470e1b6ddfdbcfa71ddbea210684b2083ca1567"
 }
