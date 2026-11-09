@@ -1771,7 +1771,9 @@
       "comment_id": 6731861816,
       "pr": 161,
       "status": "in_progress",
-      "decision": "D053"
+      "decision": "D053",
+      "receipt_commit": "e4327a49f804f6a6e0d989e08cee0e4df5114d88",
+      "progress": "Source/CI review complete: trace lifetime attribution counterexample; D045 HOLD narrowed; guard separation advised."
     }
   ],
   "migrated_from": {

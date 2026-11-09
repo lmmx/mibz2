@@ -1,0 +1,47 @@
+2026-11-09T03:55:37.5822758Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3cf1cb47d0075b24d8ec4b8905e09c5738e8e21f:refs/remotes/pull/276/merge
+2026-11-09T03:55:38.4217927Z  * [new ref]         3cf1cb47d0075b24d8ec4b8905e09c5738e8e21f -> pull/276/merge
+2026-11-09T03:55:38.5615217Z HEAD is now at 3cf1cb4 Merge 1c7bac66a3157a0620573c769de718b7a3b85e56 into 3e201246cf1266d4b2a984cb19eb9fdba5b9835d
+2026-11-09T03:55:38.5794344Z 3cf1cb47d0075b24d8ec4b8905e09c5738e8e21f
+2026-11-09T03:55:42.0740686Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T03:55:42.1056452Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T03:55:42.3066437Z rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T03:55:56.1773801Z ##[group]Run cargo test
+2026-11-09T03:56:33.9339112Z test coop::tests::build_fused_is_build ... ok
+2026-11-09T03:56:33.9558262Z test coop::tests::build_fused_refuses_wrong_checkpoints ... ok
+2026-11-09T03:56:33.9728279Z test coop::tests::cooperative_kernel_engages ... ok
+2026-11-09T03:56:33.9758735Z test coop::tests::helper_names ... ok
+2026-11-09T03:56:33.9867860Z test coop::tests::miri_build_fused ... ok
+2026-11-09T03:56:34.1268080Z test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+2026-11-09T03:56:34.1327800Z test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+2026-11-09T03:56:34.1334407Z test coop::tests::miri_pool_caller_panic_wins ... ok
+2026-11-09T03:56:34.1544219Z test coop::tests::miri_pool_dropped_while_parked ... ok
+2026-11-09T03:56:34.1552534Z test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+2026-11-09T03:56:34.1569920Z test coop::tests::miri_pool_runs_every_index_once ... ok
+2026-11-09T03:56:34.1576622Z test coop::tests::miri_pool_writes_visible_after_run ... ok
+2026-11-09T03:56:34.1657870Z test coop::tests::miri_split_build_and_walk ... ok
+2026-11-09T03:56:34.2268178Z test coop::tests::miri_team_run_and_its_panic ... ok
+2026-11-09T03:56:34.2297814Z test coop::tests::miri_walk_room_handoffs ... ok
+2026-11-09T03:56:34.6284424Z test coop::tests::pipelined_leader_late_or_early ... ok
+2026-11-09T03:56:34.6310857Z test coop::tests::pipelined_leader_panic ... ok
+2026-11-09T03:56:35.0518175Z test coop::tests::pool_per_worker ... ok
+2026-11-09T03:56:36.4388958Z test coop::tests::pool_many_short_runs ... ok
+2026-11-09T03:56:36.4540531Z test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+2026-11-09T03:56:36.4548095Z test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+2026-11-09T03:56:36.4559790Z test parallel::service_tests::miri_every_retirement_returns_its_buffers ... ok
+2026-11-09T03:56:36.4773772Z test parallel::service_tests::miri_service_core_hub ... ok
+2026-11-09T03:56:36.5702237Z test coop::tests::split_build_and_walk_are_build_and_walk ... ok
+2026-11-09T03:56:36.5704019Z test coop::tests::walk_room_is_walk ... ok
+2026-11-09T03:58:30.8491883Z test result: ok. 50 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 117.50s
+2026-11-09T03:58:43.5659809Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.71s
+2026-11-09T03:58:50.7444511Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.17s
+2026-11-09T03:59:08.8072125Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.06s
+2026-11-09T03:59:12.1585244Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.34s
+2026-11-09T03:59:15.5281379Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.36s
+2026-11-09T03:59:20.4009783Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.87s
+2026-11-09T03:59:35.7404328Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.34s
+2026-11-09T03:59:35.7559565Z [1m[92m     Running[0m tests/service.rs (target/debug/deps/service-35adb7334dcd6224)
+2026-11-09T03:59:37.1298647Z test a_panicking_source ... ok
+2026-11-09T03:59:42.5114518Z test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.75s
+2026-11-09T03:59:43.0591944Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+2026-11-09T03:59:43.0844091Z ##[group]Run cargo test --example ab
+2026-11-09T03:59:44.2466016Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
