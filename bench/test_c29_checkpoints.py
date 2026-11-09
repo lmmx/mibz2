@@ -1,11 +1,15 @@
 """bench/c29_checkpoints.py on synthetic runs: a clean run is VALID with the reading its
 ratios give, each defect the admission guards against makes it INVALID, and a run whose
-registered environment (AVX2, the CPU allocation) is absent or other is never JUDGED.
+registered environment (AVX2, the CPU allocation, the cgroup quota's coverage) is absent or
+other is never JUDGED. The quota cases are examples/ab.rs's own census over fake trees
+(bench/c29_fixtures, written and checked by `cargo test --example ab`), through the identity
+builder and the reporter.
 
     python3 bench/test_c29_checkpoints.py
 """
 
 import json
+import math
 import subprocess
 import sys
 import tempfile
@@ -18,9 +22,18 @@ import c29_checkpoints as c  # noqa: E402
 import c29_identity  # noqa: E402
 
 HEAD = "a" * 40
+FIXTURES = HERE / "c29_fixtures"
+
+
+def fixture(name):
+    """`ab env`'s quota fields (cpu_quota, cpu_quota_state, cgroup) for a fake tree"""
+    return json.loads((FIXTURES / f"{name}.json").read_text())
+
+
 # the registered environment's facts, as ab's child and the workflow record them
 RECORD_FACTS = {"avx2": True, "cpus_allowed": 4, "available_parallelism": 4, "cpus": "all"}
-# `ab env`'s line on a registered runner: AVX2, 4 CPUs, a quota read and unlimited
+# `ab env`'s line on a registered runner: AVX2, 4 CPUs, every level's quota max to the real
+# root (the census's fixture v2_all_max)
 ENV = {
     "cpus": 4,
     "avx2": True,
@@ -28,8 +41,8 @@ ENV = {
     "available_parallelism": 4,
     "cores": 2,
     "core_cpus": ["0,1", "2,3"],
-    "cpu_quota": None,
-    "cpu_quota_state": "unlimited",
+    "cpus_allowed_ids": [0, 1, 2, 3],
+    **fixture("v2_all_max"),
 }
 # the identity's fields schema 1 lacked (the environment's, the toolchain's, the run status)
 IDENTITY_FACTS = (
@@ -38,6 +51,10 @@ IDENTITY_FACTS = (
     "cpus_allowed",
     "available_parallelism",
     "cpu_quota",
+    "cpu_quota_after",
+    "cgroup_stable",
+    "cpus_allowed_ids",
+    "env_after",
     "cpu_model",
     "ab_run_status",
     "toolchain",
@@ -80,12 +97,15 @@ def runs(ratio=0.97, cpu=1.0, rounds=c.ROUNDS, noise=0.004, facts=None):
     return out
 
 
-def identity(env_text=None, nproc_text="4\n", run_status=0, **kw):
+def identity(env_text=None, nproc_text="4\n", run_status=0, after=None, **kw):
     """The identity as the workflow builds it (bench/c29_identity.py's `build`), from `ab
-    env`'s line (default ENV's) and `nproc`'s output; then any field overridden"""
+    env`'s line before (default ENV's) and after the run (default the same) and `nproc`'s
+    output; then any field overridden"""
+    text = json.dumps(ENV) if env_text is None else env_text
     d = c29_identity.build(
-        json.dumps(ENV) if env_text is None else env_text,
+        text,
         nproc_text,
+        env_after_text=text if after is None else after,
         head=HEAD,
         tree_clean=True,
         rustc="rustc 1.97.0",
@@ -105,6 +125,11 @@ def env_line(**kw):
     """ENV with fields replaced; a None value drops the field"""
     e = {**ENV, **kw}
     return json.dumps({k: v for k, v in e.items() if v is not None or k == "cpu_quota"})
+
+
+def census_line(name, **kw):
+    """ENV with a fixture's quota fields in place of v2_all_max's"""
+    return json.dumps({**ENV, **fixture(name), **kw})
 
 
 def report(recs, ident=None, judged=True):
@@ -219,9 +244,10 @@ class Environment(unittest.TestCase):
         self.not_judged(
             runs(ratio=0.97, facts={**RECORD_FACTS, "available_parallelism": 2}), identity()
         )
-        # a cgroup quota of 2 CPUs, the mask's 4: not the registered capacity
-        two_quota = env_line(cpu_quota=2.0, cpu_quota_state="finite")
-        self.assertIn("cpu_quota 2.0 CPUs", self.not_judged(runs(), identity(two_quota)))
+        # a cgroup quota of 2 CPUs (at the parent, max below), the mask's 4: not the
+        # registered capacity
+        two_quota = census_line("v2_parent_two_child_max")
+        self.assertIn("below 4 CPUs", self.not_judged(runs(), identity(two_quota)))
         # a pinned run is not the registered, unpinned setting
         self.not_judged(runs(facts={**RECORD_FACTS, "cpus": "0,1"}), identity())
 
@@ -236,40 +262,41 @@ class Environment(unittest.TestCase):
         self.assertIn("Reading (JUDGED, 9 threads): LEAD", out)
 
     def test_quota_states(self):
-        # the producer's three states, through the workflow's mapping (c29_identity.build)
-        self.assertEqual(identity()["cpu_quota"], {"state": "unlimited"})
-        for q in (4.0, 8.0):
-            ident = identity(env_line(cpu_quota=q, cpu_quota_state="finite"))
-            self.assertEqual(ident["cpu_quota"], {"state": "finite", "cpus": q})
+        # through the workflow's mapping (c29_identity.build), from the census
+        self.assertEqual(identity()["cpu_quota"], {"state": "unlimited", "coverage": "complete"})
+        for name, q in (("v2_exactly_four", 200000), ("v2_parent_eight_child_four", 400000)):
+            ident = identity(census_line(name))
+            self.assertEqual(ident["cpu_quota"]["state"], "finite")
+            self.assertEqual(ident["cpu_quota"]["quota"], q)
             code, out = report(runs(ratio=0.97), ident)
             self.assertEqual(code, 0, out)
             self.assertIn("Reading (JUDGED, 9 threads): LEAD", out)
-        # negatives: the Researcher's (REVIEW 6734701311) and their kin, each not JUDGED
+        # negatives: the earlier producer's shapes, and their kin, each not JUDGED
+        no_census = {k: v for k, v in ENV.items() if k != "cgroup"}
         negatives = {
-            # ab env's quota not read (neither cgroup file, or unparsable): null, "unknown"
+            # the first registration's producer: a state, no census (run 42582708226's shape)
+            "state without a census": json.dumps({**no_census, "cpu_quota_state": "unlimited"}),
             "failed detection": env_line(cpu_quota_state="unknown"),
-            # the quota keys absent from ab env's line (the review's
-            # workflow_absent_quota_mapped_to_null probe)
-            "absent key": json.dumps(
-                {k: v for k, v in ENV.items() if k not in ("cpu_quota", "cpu_quota_state")}
+            "absent keys": json.dumps(
+                {k: v for k, v in no_census.items() if k not in ("cpu_quota", "cpu_quota_state")}
             ),
-            # a null quota with no state (an older producer): never read as unlimited
-            "null": json.dumps({k: v for k, v in ENV.items() if k != "cpu_quota_state"}),
-            # a state that disagrees with its number
-            "unlimited with a number": env_line(cpu_quota=2.0, cpu_quota_state="unlimited"),
+            "null, no state": json.dumps({k: v for k, v in ENV.items() if k != "cpu_quota_state"}),
+            # a state that disagrees with its number, or with the census
+            "unlimited with a number": env_line(cpu_quota=2.0),
             "finite without a number": env_line(cpu_quota_state="finite"),
-            # ab env's line absent or broken: every fact unknown
+            "census says finite": json.dumps(
+                {**ENV, "cgroup": {**ENV["cgroup"], "state": "finite"}}
+            ),
             "no line": "",
             "broken line": "{not json",
         }
         for what, text in negatives.items():
             with self.subTest(what):
                 ident = identity(text)
-                if what not in ("no line", "broken line"):
-                    self.assertEqual(ident["cpu_quota"], {"state": "unknown"}, what)
+                self.assertEqual(ident["cpu_quota"]["state"], "unknown", what)
                 self.assertIn("cpu_quota", self.not_judged(runs(ratio=1.0), ident))
-        # and the identity's own quota field absent, null or a bare number
-        for q in (None, 4.0, "unlimited"):
+        # and the identity's own quota field absent, null, a bare number, or a state alone
+        for q in (None, 4.0, "unlimited", {"state": "unlimited"}, {"state": "finite", "cpus": 4.0}):
             self.not_judged(runs(ratio=1.0), identity(cpu_quota=q))
         ident = identity()
         del ident["cpu_quota"]
@@ -296,6 +323,213 @@ class Environment(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("VALID (UNJUDGED)", out)
         self.assertIn("not the registered one", out)
+
+
+# Every census fixture's expected outcome: judged (True), or the reason a judged reading is
+# refused (False). Written by hand from the Researcher's REVIEW 6735626248, not from the
+# collector's output
+EXPECTED = {
+    # complete coverage, unlimited
+    "v2_all_max": True,
+    "v2_in_root": True,  # the real root without cpu.max: a justified absence
+    "v2_no_controller_parent": True,  # no cpu controller below the root: no limit there
+    "v2_escaped_mount_point": True,  # a non-default mount point, `\040` unescaped
+    "v1_combined_unlimited": True,  # v1 cpu,cpuacct, -1 to the root
+    # complete coverage, finite, Q >= 4P exactly
+    "v2_exactly_four": True,  # 200000/50000: Q = 4P
+    "v2_parent_eight_child_four": True,  # the tightest is the child's 4
+    "hybrid_cpu_on_v1": True,  # cpu bound to v1 beside a v2 hierarchy, 4 CPUs
+    # complete coverage, below four
+    "v2_parent_two_child_max": False,  # finite at the parent, max below: 2
+    "v2_just_under_four": False,  # 399999/100000
+    "v2_rational_under_four": False,  # 1199999/300000: "4.00" rounded, under 4 exactly
+    "v1_combined_two": False,
+    # incomplete coverage: unknown, never a pass
+    "witness1_max_hidden2": False,
+    "witness2_four_hidden2": False,
+    "witness3_eight_hidden2": False,
+    "witness4_max_hidden8": False,
+    "v2_malformed_parent": False,
+    "v2_zero_period": False,
+    "v2_three_fields": False,
+    "v2_no_cpu_max_with_cpu": False,  # cpu enabled, cpu.max missing: unexplained
+    "v2_namespace_root": False,  # a visible / in a cgroup namespace: ancestors hidden
+    "v2_mount_root_offset": False,  # the mount's root /docker/abc: ancestors hidden
+    "v2_path_outside_namespace": False,
+    "v2_overmounted": False,
+    "v1_malformed_quota": False,
+    "no_membership": False,
+    "malformed_membership": False,
+}
+BELOW = {
+    "v2_parent_two_child_max",
+    "v2_just_under_four",
+    "v2_rational_under_four",
+    "v1_combined_two",
+}
+
+
+class Coverage(unittest.TestCase):
+    """The collector's census, through the identity, to the reporter's admission"""
+
+    def outcome(self, name, **kw):
+        ident = identity(census_line(name), **kw)
+        return ident, report(runs(ratio=0.97), ident)
+
+    def test_every_fixture_is_expected(self):
+        on_disk = {p.stem for p in FIXTURES.glob("*.json")}
+        self.assertEqual(on_disk, set(EXPECTED))
+
+    def test_each_fixture(self):
+        for name, judged in EXPECTED.items():
+            with self.subTest(name):
+                ident, (code, out) = self.outcome(name)
+                q = ident["cpu_quota"]
+                if judged:
+                    self.assertEqual(code, 0, out)
+                    self.assertIn("VALID (JUDGED)", out)
+                    self.assertEqual(q["coverage"], "complete")
+                else:
+                    self.assertEqual(code, 3, out)
+                    self.assertIn("UNJUDGED (FALLBACK)", out)
+                    self.assertNotIn("VALID (JUDGED)", out)
+                    if name in BELOW:
+                        self.assertEqual(q["coverage"], "complete")
+                        self.assertIn("below 4 CPUs", out)
+                    else:
+                        self.assertEqual(q["state"], "unknown")
+                        self.assertIn("not known", out)
+
+    def test_the_witnesses(self):
+        # the Researcher's witnesses.py: (observed, hidden parent). "Unknown only when no level
+        # parses" admits three of them falsely; coverage refuses all four
+        worlds = {
+            "witness1_max_hidden2": 2,
+            "witness2_four_hidden2": 2,
+            "witness3_eight_hidden2": 2,
+            "witness4_max_hidden8": 8,
+        }
+        false_admissions = 0
+        for name, hidden in worlds.items():
+            cg = fixture(name)["cgroup"]
+            parsed = [
+                lv["quota"] / lv["period"] if lv["kind"] == "limit" else math.inf
+                for lv in cg["levels"]
+                if lv["kind"] in ("limit", "unlimited")
+            ]
+            proposed = min(parsed)
+            actual = min(proposed, hidden)
+            false_admissions += proposed >= 4 and actual < 4
+            ident, (code, out) = self.outcome(name)
+            self.assertEqual(code, 3, out)
+            self.assertEqual(ident["cpu_quota"]["state"], "unknown")
+        self.assertEqual(false_admissions, 3)
+        # an observed limit under incomplete coverage is kept, as an upper bound only
+        ident, _ = self.outcome("witness2_four_hidden2")
+        self.assertEqual(ident["cpu_quota"]["observed_tightest"]["quota"], 400000)
+        # witnesses 1 and 4: one observation, two worlds, one census
+        self.assertEqual(fixture("witness1_max_hidden2"), fixture("witness4_max_hidden8"))
+
+    def test_a_tampered_census_is_not_trusted(self):
+        cg = fixture("witness1_max_hidden2")["cgroup"]
+        # the producer's kinds and state rewritten to unlimited: the files still say EACCES
+        lv = [
+            {**x, "kind": "unlimited" if x["kind"] == "unknown" else x["kind"]}
+            for x in cg["levels"]
+        ]
+        forged = {**cg, "levels": lv, "state": "unlimited", "coverage": "complete", "gaps": []}
+        line = json.dumps({**ENV, "cgroup": forged, "cpu_quota_state": "unlimited"})
+        self.assertIn("cpu_quota", Environment.not_judged(self, runs(), identity(line)))
+        good = ENV["cgroup"]
+        tampered = {
+            "a non-initial namespace": {
+                **good,
+                "ns": {**good["ns"], "cgroup": {"text": "cgroup:[1]"}},
+            },
+            "the boundary not claimed": {
+                **good,
+                "boundary": {**good["boundary"], "real_root": False},
+            },
+            "a mount-root offset": {**good, "mount": {**good["mount"], "root": "/x"}},
+            "a level dropped": {**good, "levels": good["levels"][1:]},
+            "a gap in the chain": {**good, "levels": [good["levels"][0], good["levels"][2]]},
+            "a bool quota": {
+                **good,
+                "levels": [{**good["levels"][0], "kind": "limit", "quota": True, "period": 1}]
+                + good["levels"][1:],
+            },
+            "no schema": {k: v for k, v in good.items() if k != "schema"},
+        }
+        for what, cg in tampered.items():
+            with self.subTest(what):
+                ident = identity(json.dumps({**ENV, "cgroup": cg}))
+                self.assertEqual(ident["cpu_quota"]["state"], "unknown", what)
+                Environment.not_judged(self, runs(), ident)
+
+    def test_before_and_after(self):
+        # the configuration changed between the readings: not judged
+        after = census_line("v2_exactly_four")
+        out = Environment.not_judged(self, runs(), identity(after=after))
+        self.assertIn("cgroup_stable", out)
+        # no reading after: not judged
+        ident = identity()
+        ident["cgroup_stable"] = c29_identity.stability(ENV, {})
+        Environment.not_judged(self, runs(), ident)
+        self.not_judged_without("cgroup_stable")
+        # the counters alone moved: still judged
+        cg = json.loads(json.dumps(ENV["cgroup"]))
+        cg["levels"][0]["files"]["cpu.stat"] = {"text": "usage_usec 99999\n"}
+        code, out = report(runs(), identity(after=json.dumps({**ENV, "cgroup": cg})))
+        self.assertEqual(code, 0, out)
+        # the affinity's CPU IDs changed: not judged
+        Environment.not_judged(
+            self, runs(), identity(after=json.dumps({**ENV, "cpus_allowed_ids": [0, 1, 2, 4]}))
+        )
+
+    def not_judged_without(self, key):
+        ident = identity()
+        del ident[key]
+        Environment.not_judged(self, runs(), ident)
+
+
+class Preflight(unittest.TestCase):
+    """`preflight`: the environment alone, no records, no run status"""
+
+    def run_preflight(self, before, after=None, nproc="4\n"):
+        with tempfile.TemporaryDirectory() as d:
+            paths = []
+            for name, text in (
+                ("env", before),
+                ("after", after if after is not None else before),
+                ("nproc", nproc),
+            ):
+                p = Path(d) / name
+                if text is not None:
+                    p.write_text(text)
+                paths.append(str(p))
+            cmd = [sys.executable, str(HERE / "c29_checkpoints.py"), "preflight"]
+            cmd += ["--env", paths[0], "--env-after", paths[1], "--nproc", paths[2]]
+            cmd += ["--out", str(Path(d) / "pf")]
+            r = subprocess.run(cmd, capture_output=True, text=True)
+            saved = (
+                json.loads((Path(d) / "pf.json").read_text()) if r.returncode in (0, 3) else None
+            )
+            return r.returncode, r.stdout, saved
+
+    def test_pass_and_fail(self):
+        code, out, saved = self.run_preflight(json.dumps(ENV))
+        self.assertEqual(code, 0, out)
+        self.assertTrue(out.startswith("PREFLIGHT PASS"), out)
+        self.assertEqual(saved["preflight"], "PASS")
+        for name in ("witness1_max_hidden2", "v2_namespace_root", "v2_just_under_four"):
+            code, out, saved = self.run_preflight(census_line(name))
+            self.assertEqual(code, 3, out)
+            self.assertTrue(out.startswith("PREFLIGHT FAIL"), out)
+        # two CPUs, or no line at all
+        self.assertEqual(self.run_preflight(json.dumps(ENV), nproc="2\n")[0], 3)
+        self.assertEqual(self.run_preflight("")[0], 3)
+        # changed between its two readings
+        self.assertEqual(self.run_preflight(json.dumps(ENV), census_line("v2_exactly_four"))[0], 3)
 
 
 if __name__ == "__main__":

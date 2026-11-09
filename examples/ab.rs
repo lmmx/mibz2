@@ -32,7 +32,12 @@
 //!                                    quota (and `cpu_quota_state`: unlimited, finite or
 //!                                    unknown), whether the run-queue counter counts, and
 //!                                    each run's facts (AVX2 as detected, the affinity
-//!                                    mask's CPUs, `available_parallelism`)
+//!                                    mask's CPUs, `available_parallelism`); then the
+//!                                    affinity's CPU IDs, the scheduling policy, the
+//!                                    kernel, the runner image, and `cgroup`: the CPU
+//!                                    bandwidth census (examples/cgroup/mod.rs), every
+//!                                    level from the leaf to the visible boundary, its
+//!                                    coverage, and the quota known only when complete
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -106,6 +111,9 @@
 
 #[path = "../tests/common/mod.rs"]
 mod common;
+// `ab env`'s CPU-bandwidth census (C29's follow-up registration)
+#[path = "cgroup/mod.rs"]
+mod cgroup;
 
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
@@ -123,6 +131,7 @@ struct Rusage {
 extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
     fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+    fn sched_getscheduler(pid: i32) -> i32;
 }
 
 /// (CPU seconds, peak RSS in KiB) of this process (who 0), its waited-for children (-1)
@@ -972,15 +981,61 @@ fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
 
-/// The cgroup CPU quota's state, which `cpu_quota`'s null alone can't tell apart: read and
-/// unlimited (`max`), read and a number of CPUs, or not read at all (neither cgroup file, or
-/// one that doesn't parse). C29's reporter judges only the first two (at least 4 CPUs)
+/// The cgroup CPU quota's state, which `cpu_quota`'s null alone can't tell apart: known
+/// unlimited (`max` at every level, coverage complete), a number of CPUs (the tightest
+/// level's, coverage complete), or not known (`cgroup::collect`: any level unread,
+/// malformed or hidden). C29's reporter judges only the first two (at least 4 CPUs), and
+/// re-derives them from the census itself
 fn quota_state(quota: Option<Option<f64>>) -> &'static str {
     match quota {
         Some(None) => "unlimited",
         Some(Some(_)) => "finite",
         None => "unknown",
     }
+}
+
+/// `ab env`'s quota fields from a census: the legacy `cpu_quota` (CPUs to two decimals, or
+/// null) and `cpu_quota_state`, and the census itself as `cgroup`; one JSON object, which
+/// the fixtures in bench/c29_fixtures are
+#[cfg(test)]
+fn quota_fields(c: &cgroup::Census) -> cgroup::J {
+    use cgroup::J;
+    let quota = c.legacy();
+    J::obj([
+        (
+            "cpu_quota",
+            match quota {
+                Some(Some(q)) => J::Num(format!("{q:.2}")),
+                _ => J::Null,
+            },
+        ),
+        ("cpu_quota_state", J::s(quota_state(quota))),
+        ("cgroup", c.json()),
+    ])
+}
+
+/// The facts `ab env` adds after its legacy fields: the affinity mask's CPU IDs, the
+/// scheduling policy (`sched_getscheduler`: 0 SCHED_OTHER), the kernel, the runner image
+/// (GitHub's `ImageOS`, `ImageVersion`), all untimed
+fn placement_fields() -> String {
+    use cgroup::J;
+    let ids = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+                .map(cpu_list)
+        })
+        .map_or(J::Null, |v| J::Arr(v.into_iter().map(J::n).collect()));
+    let policy = unsafe { sched_getscheduler(0) };
+    let text = |p: &str| std::fs::read_to_string(p).map_or(J::Null, |s| J::s(s.trim()));
+    let var = |k: &str| std::env::var(k).map_or(J::Null, |v| J::s(&v));
+    format!(
+        "\"cpus_allowed_ids\":{ids},\"sched_policy\":{policy},\"kernel\":{},\"kernel_version\":{},\"image\":{}",
+        text("/proc/sys/kernel/osrelease"),
+        text("/proc/sys/kernel/version"),
+        J::obj([("ImageOS", var("ImageOS")), ("ImageVersion", var("ImageVersion"))]),
+    )
 }
 
 /// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
@@ -990,30 +1045,8 @@ fn quota_state(quota: Option<Option<f64>>) -> &'static str {
 fn env() {
     let cores = cores();
     let ncpu: usize = cores.iter().map(Vec::len).sum();
-    let quota = std::fs::read_to_string("/sys/fs/cgroup/cpu.max")
-        .ok()
-        .and_then(|s| {
-            let mut f = s.split_whitespace();
-            let (q, p) = (f.next()?, f.next()?.parse::<f64>().ok()?);
-            Some(if q == "max" {
-                None
-            } else {
-                Some(q.parse::<f64>().ok()? / p)
-            })
-        })
-        .or_else(|| {
-            let q: f64 = std::fs::read_to_string("/sys/fs/cgroup/cpu/cpu.cfs_quota_us")
-                .ok()?
-                .trim()
-                .parse()
-                .ok()?;
-            let p: f64 = std::fs::read_to_string("/sys/fs/cgroup/cpu/cpu.cfs_period_us")
-                .ok()?
-                .trim()
-                .parse()
-                .ok()?;
-            Some(if q < 0.0 { None } else { Some(q / p) })
-        });
+    let census = cgroup::collect(&cgroup::Real);
+    let quota = census.legacy();
     let spin = 2 * ncpu.max(1);
     let t0 = Instant::now();
     let hs: Vec<_> = (0..spin)
@@ -1053,7 +1086,7 @@ fn env() {
             .join(",")
     };
     println!(
-        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"cpu_quota_state\":\"{}\",\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"cpu_quota_state\":\"{}\",\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}},{},\"cgroup\":{}}}",
         run_facts(),
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
@@ -1064,6 +1097,8 @@ fn env() {
         quota_state(quota),
         throttled().is_some(),
         psi_cpu().is_some(),
+        placement_fields(),
+        census.json(),
     );
 }
 
@@ -1498,5 +1533,426 @@ mod tests {
         assert_eq!(cores, vec![vec![0], vec![2]]);
         // siblings unreadable: each CPU a core of its own
         assert_eq!(group(&[0, 1], |_| None), vec![vec![0], vec![1]]);
+    }
+}
+
+/// The CPU-bandwidth census (examples/cgroup/mod.rs) over fake `/proc` and `/sys` trees.
+/// Each fixture's `quota_fields` is compared with its committed copy in bench/c29_fixtures,
+/// which bench/test_c29_checkpoints.py runs through the identity and the reporter: the
+/// collector-to-identity-to-reporter chain, on the same bytes (`AB_BLESS=1` rewrites them)
+#[cfg(test)]
+mod cgroup_tests {
+    use super::cgroup::{self, Census, Fake, Got, Kind, State};
+    use super::quota_fields;
+
+    const NS_MNT: &str = "mnt:[4026531841]";
+    const OTHER_NS: &str = "cgroup:[4026532712]";
+    const MI_V2: &str = "25 1 0:26 / /sys/fs/cgroup rw,nosuid,nodev,noexec,relatime shared:4 - cgroup2 cgroup2 rw,nsdelegate,memory_recursiveprot\n";
+    const ROOT_CTL: &str = "cpuset cpu io memory hugetlb pids rdma misc\n";
+
+    /// A v2 hierarchy mounted at `point` (root `/`), the process at `path`; `levels` each
+    /// non-root level's `cpu.max` (None: unreadable, EACCES), every level's controllers cpu's
+    fn v2(path: &str, levels: &[(&str, Option<&str>)]) -> Fake {
+        let mut f = Fake::default()
+            .file("/proc/self/cgroup", &format!("0::{path}\n"))
+            .file("/proc/self/mountinfo", MI_V2)
+            .link("/proc/self/ns/cgroup", cgroup::INIT_CGROUP_NS)
+            .link("/proc/self/ns/mnt", NS_MNT)
+            .file("/sys/fs/cgroup/cgroup.controllers", ROOT_CTL)
+            .file("/sys/fs/cgroup/cpu.stat", "usage_usec 100\n");
+        for (p, max) in levels {
+            let d = format!("/sys/fs/cgroup{p}");
+            f = f
+                .file(&format!("{d}/cgroup.type"), "domain\n")
+                .file(&format!("{d}/cgroup.controllers"), ROOT_CTL)
+                .file(
+                    &format!("{d}/cpu.stat"),
+                    "usage_usec 50\nnr_periods 0\nnr_throttled 0\nthrottled_usec 0\n",
+                )
+                .file(&format!("{d}/cpu.max.burst"), "0\n")
+                .file(&format!("{d}/cpu.weight"), "100\n");
+            f = match max {
+                Some(m) => f.file(&format!("{d}/cpu.max"), &format!("{m}\n")),
+                None => f.err(
+                    &format!("{d}/cpu.max"),
+                    "errno 13: Permission denied (os error 13)",
+                ),
+            };
+        }
+        f
+    }
+
+    /// A v1 cpu hierarchy (`ctl` its controllers) mounted at /sys/fs/cgroup/`ctl`, root `/`,
+    /// the process at `path`; `levels` every level's (quota, period), the root's included
+    fn v1(ctl: &str, path: &str, levels: &[(&str, &str, &str)], with_v2: bool) -> Fake {
+        let mut cg = format!("5:memory:/x\n4:{ctl}:{path}\n2:cpuset:/\n");
+        let mut mi = format!(
+            "30 25 0:27 / /sys/fs/cgroup ro,nosuid,nodev,noexec shared:9 - tmpfs tmpfs ro,mode=755\n\
+             31 30 0:28 / /sys/fs/cgroup/{ctl} rw,nosuid,nodev,noexec,relatime shared:10 - cgroup cgroup rw,{ctl}\n\
+             32 30 0:29 / /sys/fs/cgroup/memory rw,relatime shared:11 - cgroup cgroup rw,memory\n\
+             33 30 0:30 / /sys/fs/cgroup/cpuset rw,relatime shared:12 - cgroup cgroup rw,cpuset\n"
+        );
+        if with_v2 {
+            cg.push_str("0::/user.slice\n");
+            mi.push_str(
+                "34 30 0:31 / /sys/fs/cgroup/unified rw,relatime shared:13 - cgroup2 cgroup2 rw\n",
+            );
+        }
+        let mut f = Fake::default()
+            .file("/proc/self/cgroup", &cg)
+            .file("/proc/self/mountinfo", &mi)
+            .link("/proc/self/ns/cgroup", cgroup::INIT_CGROUP_NS)
+            .link("/proc/self/ns/mnt", NS_MNT)
+            .file("/sys/fs/cgroup/cpuset/cpuset.effective_cpus", "0-3\n");
+        for (p, q, per) in levels {
+            let d = format!("/sys/fs/cgroup/{ctl}{p}")
+                .trim_end_matches('/')
+                .to_string();
+            f = f
+                .file(&format!("{d}/cpu.cfs_quota_us"), &format!("{q}\n"))
+                .file(&format!("{d}/cpu.cfs_period_us"), &format!("{per}\n"))
+                .file(&format!("{d}/cpu.shares"), "1024\n")
+                .file(
+                    &format!("{d}/cpu.stat"),
+                    "nr_periods 0\nnr_throttled 0\nthrottled_time 0\n",
+                );
+        }
+        f
+    }
+
+    const RUNNER: &str = "/system.slice/hosted-compute-agent.service";
+
+    /// Every fixture, by name (bench/c29_fixtures/NAME.json)
+    fn fixtures() -> Vec<(&'static str, Fake)> {
+        let max = Some("max 100000");
+        let runner = |leaf: Option<&'static str>, parent: Option<&'static str>| {
+            v2(RUNNER, &[("/system.slice", parent), (RUNNER, leaf)])
+        };
+        vec![
+            // a GitHub runner's shape: every non-root level max, the real root without cpu.max
+            ("v2_all_max", runner(max, max)),
+            // the process in the root cgroup itself: the real root, no cpu.max by definition
+            ("v2_in_root", v2("/", &[])),
+            // nested: finite (2 CPUs) at the parent, max below
+            (
+                "v2_parent_two_child_max",
+                runner(max, Some("200000 100000")),
+            ),
+            (
+                "v2_parent_eight_child_four",
+                runner(Some("400000 100000"), Some("800000 100000")),
+            ),
+            // the Q = 4P boundary, exact; one microsecond under it; and a rational just under
+            ("v2_exactly_four", runner(Some("200000 50000"), max)),
+            ("v2_just_under_four", runner(Some("399999 100000"), max)),
+            (
+                "v2_rational_under_four",
+                runner(Some("1199999 300000"), max),
+            ),
+            // the Researcher's four witnesses: an unreadable parent (hidden 2, 2, 2, 8)
+            ("witness1_max_hidden2", runner(max, None)),
+            ("witness2_four_hidden2", runner(Some("400000 100000"), None)),
+            (
+                "witness3_eight_hidden2",
+                runner(Some("800000 100000"), None),
+            ),
+            ("witness4_max_hidden8", runner(max, None)),
+            // malformed parents, a valid child
+            ("v2_malformed_parent", runner(max, Some("lots 100000"))),
+            ("v2_zero_period", runner(max, Some("200000 0"))),
+            ("v2_three_fields", runner(max, Some("max 100000 7"))),
+            // a parent without the cpu controller (justified), and one without cpu.max that
+            // claims it (not)
+            ("v2_no_controller_parent", {
+                let mut f = runner(max, max)
+                    .file(
+                        "/sys/fs/cgroup/system.slice/cgroup.controllers",
+                        "memory pids\n",
+                    )
+                    .file(
+                        &format!("/sys/fs/cgroup{RUNNER}/cgroup.controllers"),
+                        "memory\n",
+                    );
+                f.files.remove("/sys/fs/cgroup/system.slice/cpu.max");
+                f.files.remove(&format!("/sys/fs/cgroup{RUNNER}/cpu.max"));
+                f
+            }),
+            ("v2_no_cpu_max_with_cpu", {
+                let mut f = runner(max, max);
+                f.files.remove("/sys/fs/cgroup/system.slice/cpu.max");
+                f
+            }),
+            // a cgroup namespace (Docker's private cgroupns): "/" visible, a cpu.max on it,
+            // the ancestors hidden
+            (
+                "v2_namespace_root",
+                v2("/", &[])
+                    .link("/proc/self/ns/cgroup", OTHER_NS)
+                    .file("/sys/fs/cgroup/cpu.max", "max 100000\n")
+                    .file("/sys/fs/cgroup/cgroup.type", "domain\n"),
+            ),
+            // a mount-root offset: the container's subtree bind-mounted at /sys/fs/cgroup
+            (
+                "v2_mount_root_offset",
+                Fake::default()
+                    .file("/proc/self/cgroup", "0::/docker/abc/app\n")
+                    .file(
+                        "/proc/self/mountinfo",
+                        "40 30 0:26 /docker/abc /sys/fs/cgroup ro,nosuid - cgroup2 cgroup rw\n",
+                    )
+                    .link("/proc/self/ns/cgroup", cgroup::INIT_CGROUP_NS)
+                    .link("/proc/self/ns/mnt", NS_MNT)
+                    .file("/sys/fs/cgroup/app/cpu.max", "max 100000\n")
+                    .file("/sys/fs/cgroup/cpu.max", "800000 100000\n"),
+            ),
+            // a path leaving the namespace's root
+            (
+                "v2_path_outside_namespace",
+                v2("/../sibling", &[]).link("/proc/self/ns/cgroup", OTHER_NS),
+            ),
+            // a non-default mount point with an escaped space
+            (
+                "v2_escaped_mount_point",
+                Fake::default()
+                    .file("/proc/self/cgroup", "0::/job\n")
+                    .file(
+                        "/proc/self/mountinfo",
+                        "50 1 0:40 / /mnt/cg\\040two rw,relatime - cgroup2 none rw\n",
+                    )
+                    .link("/proc/self/ns/cgroup", cgroup::INIT_CGROUP_NS)
+                    .link("/proc/self/ns/mnt", NS_MNT)
+                    .file("/mnt/cg two/job/cpu.max", "max 100000\n")
+                    .file("/mnt/cg two/job/cgroup.type", "domain\n"),
+            ),
+            // the cgroup2 mount overmounted by a tmpfs: its levels unreadable through it
+            (
+                "v2_overmounted",
+                v2(RUNNER, &[("/system.slice", max), (RUNNER, max)]).file(
+                    "/proc/self/mountinfo",
+                    &format!("{MI_V2}60 25 0:50 / /sys/fs/cgroup rw - tmpfs tmpfs rw\n"),
+                ),
+            ),
+            // v1, combined cpu,cpuacct: unlimited at every level; finite 2 at the leaf
+            (
+                "v1_combined_unlimited",
+                v1(
+                    "cpu,cpuacct",
+                    "/job",
+                    &[("/", "-1", "100000"), ("/job", "-1", "100000")],
+                    false,
+                ),
+            ),
+            (
+                "v1_combined_two",
+                v1(
+                    "cpu,cpuacct",
+                    "/job",
+                    &[("/", "-1", "100000"), ("/job", "200000", "100000")],
+                    false,
+                ),
+            ),
+            (
+                "v1_malformed_quota",
+                v1(
+                    "cpu,cpuacct",
+                    "/job",
+                    &[("/", "-1", "100000"), ("/job", "-5", "100000")],
+                    false,
+                ),
+            ),
+            // hybrid: cpu on v1, a v2 hierarchy beside it (no controllers of its own)
+            (
+                "hybrid_cpu_on_v1",
+                v1(
+                    "cpu,cpuacct",
+                    "/job",
+                    &[("/", "-1", "100000"), ("/job", "400000", "100000")],
+                    true,
+                ),
+            ),
+            // nothing readable
+            ("no_membership", Fake::default()),
+            (
+                "malformed_membership",
+                Fake::default()
+                    .file("/proc/self/cgroup", "garbage\n")
+                    .file("/proc/self/mountinfo", MI_V2)
+                    .link("/proc/self/ns/cgroup", cgroup::INIT_CGROUP_NS),
+            ),
+        ]
+    }
+
+    fn census(name: &str) -> Census {
+        let (_, f) = fixtures().into_iter().find(|(n, _)| *n == name).unwrap();
+        cgroup::collect(&f)
+    }
+
+    #[test]
+    fn fixtures_match_their_committed_copies() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("bench/c29_fixtures");
+        let bless = std::env::var_os("AB_BLESS").is_some();
+        let mut stale = Vec::new();
+        for (name, f) in fixtures() {
+            let line = format!("{}\n", quota_fields(&cgroup::collect(&f)));
+            let p = dir.join(format!("{name}.json"));
+            if bless {
+                std::fs::create_dir_all(&dir).unwrap();
+                std::fs::write(&p, &line).unwrap();
+            } else if std::fs::read_to_string(&p).ok().as_deref() != Some(&line) {
+                stale.push(name);
+            }
+        }
+        assert!(
+            stale.is_empty(),
+            "stale fixtures (AB_BLESS=1 rewrites them): {stale:?}"
+        );
+    }
+
+    #[test]
+    fn coverage_is_kept_apart_from_the_minimum() {
+        // complete: unlimited, finite at the parent
+        assert_eq!(census("v2_all_max").state, State::Unlimited);
+        assert_eq!(census("v2_in_root").state, State::Unlimited);
+        let State::Finite(l) = census("v2_parent_two_child_max").state else {
+            panic!()
+        };
+        assert_eq!(
+            (l.quota, l.period, l.path.as_str()),
+            (200000, 100000, "/system.slice")
+        );
+        let State::Finite(l) = census("v2_parent_eight_child_four").state else {
+            panic!()
+        };
+        assert_eq!((l.quota, l.path.as_str()), (400000, RUNNER));
+        // the witnesses: never known, whatever the readable level says
+        for w in [
+            "witness1_max_hidden2",
+            "witness2_four_hidden2",
+            "witness3_eight_hidden2",
+            "witness4_max_hidden8",
+        ] {
+            let c = census(w);
+            assert_eq!(c.state, State::Unknown, "{w}");
+            assert_eq!(c.legacy(), None, "{w}");
+            assert!(matches!(c.levels[1].kind, Kind::Unknown(_)), "{w}");
+        }
+        // witness 2's readable 4 is kept as an upper bound only
+        assert_eq!(
+            census("witness2_four_hidden2").observed.unwrap().quota,
+            400000
+        );
+        // the same observation in two worlds (hidden 2 and hidden 8): the same census
+        assert_eq!(
+            quota_fields(&census("witness1_max_hidden2")).to_string(),
+            quota_fields(&census("witness4_max_hidden8")).to_string()
+        );
+    }
+
+    #[test]
+    fn the_root_and_justified_absences() {
+        let c = census("v2_all_max");
+        assert!(c.boundary_real_root);
+        assert!(matches!(c.levels.last().unwrap().kind, Kind::Root(_)));
+        assert_eq!(
+            c.levels.iter().map(|l| l.path.as_str()).collect::<Vec<_>>(),
+            vec![RUNNER, "/system.slice", "/"]
+        );
+        let c = census("v2_no_controller_parent");
+        assert_eq!(c.state, State::Unlimited);
+        assert!(matches!(c.levels[0].kind, Kind::NoController(_)));
+        assert!(matches!(c.levels[1].kind, Kind::NoController(_)));
+        assert_eq!(census("v2_no_cpu_max_with_cpu").state, State::Unknown);
+    }
+
+    #[test]
+    fn hidden_ancestors_are_unknown() {
+        for n in [
+            "v2_namespace_root",
+            "v2_mount_root_offset",
+            "v2_path_outside_namespace",
+            "v2_overmounted",
+        ] {
+            let c = census(n);
+            assert_eq!(c.state, State::Unknown, "{n}");
+            assert!(!c.gaps.is_empty(), "{n}");
+        }
+        // the offset's levels mapped below the mount: /docker/abc/app at /sys/fs/cgroup/app
+        let c = census("v2_mount_root_offset");
+        assert_eq!(c.levels[0].dir, "/sys/fs/cgroup/app");
+        assert_eq!(c.levels[1].path, "/docker/abc");
+        assert_eq!(c.observed.unwrap().quota, 800000);
+        let c = census("v2_escaped_mount_point");
+        assert_eq!(c.state, State::Unlimited);
+        assert_eq!(c.levels[0].dir, "/mnt/cg two/job");
+        assert_eq!(c.levels[1].dir, "/mnt/cg two");
+    }
+
+    #[test]
+    fn v1_and_hybrid() {
+        assert_eq!(census("v1_combined_unlimited").state, State::Unlimited);
+        let State::Finite(l) = census("v1_combined_two").state else {
+            panic!()
+        };
+        assert_eq!((l.quota, l.period), (200000, 100000));
+        assert_eq!(census("v1_malformed_quota").state, State::Unknown);
+        let c = census("hybrid_cpu_on_v1");
+        assert!(c.hybrid);
+        assert_eq!(c.version, Some(cgroup::Version::V1));
+        assert_eq!(c.levels[0].dir, "/sys/fs/cgroup/cpu,cpuacct/job");
+        assert_eq!(c.cpuset.as_ref().unwrap().1, Got::Text("0-3\n".into()));
+    }
+
+    #[test]
+    fn parsers() {
+        assert_eq!(cgroup::parse_cpu_max("max 100000\n"), Ok(Kind::Unlimited));
+        assert_eq!(
+            cgroup::parse_cpu_max("400000 100000"),
+            Ok(Kind::Limit {
+                quota: 400000,
+                period: 100000
+            })
+        );
+        for bad in [
+            "",
+            "max",
+            "max 0",
+            "0 100000",
+            "-1 100000",
+            "1.5 100000",
+            "1 2 3",
+            "max -1",
+        ] {
+            assert!(cgroup::parse_cpu_max(bad).is_err(), "{bad:?}");
+        }
+        assert_eq!(cgroup::parse_cfs("-1\n", "100000\n"), Ok(Kind::Unlimited));
+        assert!(cgroup::parse_cfs("0", "100000").is_err());
+        assert!(cgroup::parse_cfs("100", "0").is_err());
+        assert_eq!(cgroup::unescape("/a\\040b\\134c\\011"), "/a b\\c\t");
+        assert_eq!(cgroup::unescape("\\04"), "\\04");
+        let (m, bad) = cgroup::parse_mountinfo(
+            "36 25 0:31 / /sys/fs/cgroup rw shared:9 master:2 - cgroup2 cgroup2 rw\nshort line\n",
+        );
+        assert_eq!((m.len(), bad.len()), (1, 1));
+        assert_eq!(
+            (m[0].fstype.as_str(), m[0].point.as_str()),
+            ("cgroup2", "/sys/fs/cgroup")
+        );
+        let (m, bad) = cgroup::parse_membership("0::/a/b\n4:cpu,cpuacct:/x\n12::\nnope\n");
+        assert_eq!((m.len(), bad.len()), (2, 2));
+        assert_eq!(m[1].controllers, vec!["cpu", "cpuacct"]);
+        // exact comparison: 1199999/300000 < 4 though it rounds to 4.00
+        let State::Finite(l) = census("v2_rational_under_four").state else {
+            panic!()
+        };
+        assert!(l.quota < 4 * l.period);
+        assert_eq!(format!("{:.2}", l.quota as f64 / l.period as f64), "4.00");
+    }
+
+    #[test]
+    fn the_real_census_runs() {
+        // this machine's own hierarchy, whatever it is: a census, never a panic
+        let c = cgroup::collect(&cgroup::Real);
+        let j = c.json().to_string();
+        assert!(j.starts_with("{\"schema\":\"ab/cgroup/1\""), "{j}");
     }
 }

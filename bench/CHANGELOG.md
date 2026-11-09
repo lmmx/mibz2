@@ -35,6 +35,27 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.4.0] - 2026-11-09
+
+### Added
+
+- **`ab env`'s CPU-bandwidth census** (`examples/cgroup/mod.rs`, `cgroup`; C29's follow-up
+  registration, docs/journal/2026-11-09-c29-follow-up-registration.md, a DRAFT). The cgroup
+  hierarchy is resolved from `/proc/self/cgroup` and `/proc/self/mountinfo`, and every level
+  from the leaf to the visible boundary is read, its raw files kept. The quota is known only
+  with complete coverage up to the hierarchy's real root. Beside it: the affinity's CPU IDs
+  (`cpus_allowed_ids`), the scheduling policy, the kernel and the runner image. This is a
+  change to what is stored.
+
+### Changed
+
+- **`ab env`'s `cpu_quota` and `cpu_quota_state` come from the census.** Before, they came from
+  the root `cpu.max` (or v1's root `cpu.cfs_quota_us`) alone. `unlimited` and `finite` now need
+  complete coverage, and a finite quota is the tightest level's. On a runner whose v2 root has
+  no `cpu.max` (by definition it has none), the old reading was `unknown`, null; it is now
+  `unlimited` where every level is read, null as before. bench.yml's report prints "no CPU
+  quota" for both. No measured figure changes meaning.
+
 ## [3.3.0] - 2026-11-09
 
 ### Added

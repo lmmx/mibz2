@@ -1,10 +1,12 @@
-"""C29's exposed-path diagnostic (docs/journal/2026-11-09-c29-register-checkpoints.md, a
-DRAFT registration, NOT FROZEN): its admission, its paired ratios and the reading the
-registration sets. Shaped on #270's reporter (research/run-fed-leader's
+"""C29's exposed-path diagnostic, its follow-up registration
+(docs/journal/2026-11-09-c29-follow-up-registration.md, DRAFT, NOT FROZEN; the first,
+docs/journal/2026-11-09-c29-register-checkpoints.md, is closed VALID, UNJUDGED (FALLBACK)): its
+admission, its paired ratios and the reading the registration sets. Shaped on #270's reporter (research/run-fed-leader's
 bench/run_fed_leader.py): the same identity, the same admission, the same reading rule.
 
     python3 bench/c29_checkpoints.py report RUNS.jsonl --head SHA --identity ID.json [--out STEM]
     python3 bench/c29_checkpoints.py report RUNS.jsonl --unjudged [--rounds N] [--identity ID.json] [--out STEM]
+    python3 bench/c29_checkpoints.py preflight --env ENV.json --env-after ENV2.json --nproc N.txt [--out STEM]
 
 The first form is the judged run: bound to the registration (the frozen head, the build's
 identity, the corpus's digest, ROUNDS rounds, the two arms in ab's rotation, at 9 and 3
@@ -26,8 +28,14 @@ and no reading is given. A judged reading further needs the registered environme
 untimed, in the identity and in every record (`environment_problems`): AVX2 detected (as
 `Kernels::detect` reports it, the bool C29's and the control's kernels dispatch on: without
 it both are the same scalar kernel) and the registered CPU allocation (REGISTERED_CPUS, by
-`nproc`, the affinity mask and `available_parallelism`, a cgroup quota known unlimited or
-at least that, unpinned), and `ab run` itself exited 0.
+`nproc`, the affinity mask and `available_parallelism`, unpinned; a cgroup CPU quota known
+from complete coverage, bench/c29_identity.py's `coverage`: unlimited at every level to the
+hierarchy's real root, or a tightest quota Q µs a period P µs with Q >= 4P, integers, no
+rounding; and that configuration unchanged after the run, `cgroup_stable`), and `ab run`
+itself exited 0. Incomplete coverage is unknown, never a pass, whatever the readable levels
+say.
+The preflight is the environment's half alone, untimed and with no decoder run: whether a
+run in this environment could be judged (exit 0) or not (exit 3).
 A fact absent or other than registered refuses the judged reading: the run is kept as
 UNJUDGED (FALLBACK), its ratios printed under that label, exit 3, never re-run to pass.
 Every measurement is checked for presence and type before any arithmetic, so an absent or
@@ -54,13 +62,13 @@ C29 = "mibz2-pipe3-both-c29"
 # ab's --arms order, which its rotation indexes
 REGISTERED_ARMS = [CTL, C29]
 
-# The registration (DRAFT, NOT FROZEN)
+# The registration (the follow-up's, DRAFT, NOT FROZEN; unchanged from the first's)
 ROUNDS = 20
 THREADS = 9  # judged: three teams of three
 REPORTED_THREADS = 3  # one team of three: the same rule's reading, secondary, never judged
 CORPUS = "wikidata"
 CORPUS_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
-IDENTITY_SCHEMA = "c29_checkpoints/identity/3"
+IDENTITY_SCHEMA = "c29_checkpoints/identity/4"
 FEATURES = []
 PROFILE = "release"
 # (leaders, plain helpers, pipelined helpers) each run must be seen running
@@ -206,9 +214,31 @@ def identity_problems(ident, head, judged, rounds):
     return bad
 
 
-def environment_problems(ident, recs):
+def quota_problems(key, q):
+    """The quota's reasons: none only for complete coverage, unlimited, or finite with
+    Q >= REGISTERED_CPUS * P exactly"""
+    qd = q if isinstance(q, dict) else {}
+    state, cov = qd.get("state"), qd.get("coverage")
+    if cov != "complete":
+        why = "; ".join(str(r) for r in (qd.get("reasons") or [])[:3])
+        return [f"identity: {key} {state!r}, coverage {cov!r}: not known ({why})"]
+    if state == "unlimited":
+        return []
+    qq, pp = qd.get("quota"), qd.get("period")
+    if state == "finite" and is_int(qq) and is_int(pp) and qq > 0 and pp > 0:
+        if qq < REGISTERED_CPUS * pp:
+            return [
+                f"identity: {key} {qq}/{pp} at {qd.get('path')!r}: below {REGISTERED_CPUS} CPUs "
+                f"({qq} < {REGISTERED_CPUS} x {pp})"
+            ]
+        return []
+    return [f"identity: {key} {q!r}: not known unlimited or finite"]
+
+
+def environment_problems(ident, recs, preflight=False):
     """The registered environment's facts, absent or not as registered: a reason each. Any
-    reason refuses a judged reading (UNJUDGED (FALLBACK)), never an INVALID's"""
+    reason refuses a judged reading (UNJUDGED (FALLBACK)), never an INVALID's. The preflight
+    has no run, so no run status"""
     bad = []
     if not isinstance(ident, dict):
         ident = {}
@@ -218,20 +248,15 @@ def environment_problems(ident, recs):
         v = ident.get(k)
         if not (is_int(v) and v == REGISTERED_CPUS):
             bad.append(f"identity: {k} {v!r}, not {REGISTERED_CPUS}")
-    # the quota's three states (bench/c29_identity.py): unlimited, or finite at least
-    # REGISTERED_CPUS; unknown, absent, null or anything else is not shown
-    q = ident.get("cpu_quota")
-    qd = q if isinstance(q, dict) else {}
-    state, qcpus = qd.get("state"), qd.get("cpus")
-    if state == "unlimited":
-        pass
-    elif state == "finite" and isinstance(qcpus, (int, float)) and positive(qcpus):
-        if qcpus < REGISTERED_CPUS:
-            bad.append(f"identity: cpu_quota {qcpus!r} CPUs, below {REGISTERED_CPUS}")
-    else:
-        bad.append(f"identity: cpu_quota {q!r}: not known unlimited or finite")
+    # the quota from the census's coverage (bench/c29_identity.py's `coverage`), before and
+    # after the run, and its configuration unchanged between them
+    for k in ("cpu_quota", "cpu_quota_after"):
+        bad += quota_problems(k, ident.get(k))
+    st = ident.get("cgroup_stable")
+    if not (isinstance(st, dict) and st.get("stable") is True):
+        bad.append(f"identity: cgroup_stable {st!r}: the configuration not shown unchanged")
     # a failed `ab run` (its parent's status) is no judged attempt, its records complete or not
-    if not (is_int(ident.get("ab_run_status")) and ident["ab_run_status"] == 0):
+    if not preflight and not (is_int(ident.get("ab_run_status")) and ident["ab_run_status"] == 0):
         bad.append(f"identity: ab_run_status {ident.get('ab_run_status')!r}, not 0")
     for rec in recs:
         where = (
@@ -413,6 +438,37 @@ def report(args):
     return 3 if fallback else 0
 
 
+def preflight(args):
+    """The environment alone, untimed, no decoder run: would a run here be judged?"""
+    import c29_identity
+
+    def read(p):
+        try:
+            with open(p) as f:
+                return f.read()
+        except (OSError, TypeError):
+            return None
+
+    facts = c29_identity.environment(read(args.env), read(args.env_after), read(args.nproc))
+    bad = environment_problems(facts, [], preflight=True)
+    q = facts["cpu_quota"]
+    out = {"preflight": "PASS" if not bad else "FAIL", "environment": bad, "facts": facts}
+    if args.out:
+        with open(args.out + ".json", "w") as f:
+            json.dump(out, f, indent=1)
+    if bad:
+        print("PREFLIGHT FAIL: a run in this environment would not be judged (no decoder run)")
+        for b in bad:
+            print(f"  {b}")
+    else:
+        print("PREFLIGHT PASS: this environment would be judged (no decoder run)")
+    print(f"  quota: {json.dumps({k: v for k, v in q.items() if k != 'reasons'})}")
+    for r in q.get("reasons") or []:
+        print(f"    {r}")
+    print(f"  stability: {json.dumps(facts['cgroup_stable'])}")
+    return 0 if not bad else 3
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -423,7 +479,19 @@ def main():
     r.add_argument("--unjudged", action="store_true", help="not the registered run")
     r.add_argument("--rounds", type=int, help=f"an unjudged run's rounds (judged: {ROUNDS})")
     r.add_argument("--out")
+    p = sub.add_parser("preflight")
+    p.add_argument("--env", required=True, help="`ab env`'s line")
+    p.add_argument("--env-after", required=True, help="`ab env`'s line, read again after")
+    p.add_argument("--nproc", required=True, help="`nproc`'s output")
+    p.add_argument("--out")
     args = ap.parse_args()
+    if args.cmd == "preflight":
+        try:
+            code = preflight(args)
+        except Exception as e:  # (a bug is never a PASS)
+            print(f"PREFLIGHT FAIL\n  the preflight failed: {type(e).__name__}: {e}")
+            code = 3
+        sys.exit(code)
     if args.unjudged and args.rounds is None:
         args.rounds = ROUNDS
     try:
