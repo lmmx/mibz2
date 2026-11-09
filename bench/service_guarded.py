@@ -24,17 +24,23 @@ Wikidata sample, paired by round. It judges an attempt's directory, as the recip
   bench/svc_target_check.py: TARGET, not merely `ok`;
 - **the plans:** every run's plan as expected, from both thread records.
 
+**The grid** is the pipelined default's authorised one, exactly (8, 9, 10, 11, 12, 16 and 20
+threads; docs/journal/2026-11-07-pipelined-default-registration.md), with its rules for the
+budgets where neither build changes plan: identity checks at 8 and 9 (reported, the ±2%
+flag), no harm at 11, 12, 16 and 20 (each head-over-base wall ratio's one-sided upper bound,
+Bonferroni over the four, at most 1.02; judged, and reported beside P1).
+
 These are checks of the archived records. They do not prove what the binaries were built from
 (the recipe's refusals do that), that the window or kernels are as the plan implies (that
-follows only from the pinned dispatch code), or that equal plans at 9 and 11 mean equal
-binaries or no regression there.
+follows only from the pinned dispatch code), or that equal plans at the other budgets mean
+equal binaries there (no harm is its own judged predicate).
 
 **The rule** (the service-core registrations', unchanged where it applies): P1 at 10 threads,
 speed (base wall over head wall) and CPU (base CPU over head CPU), each the geometric mean of
 the 20 rounds' paired ratios with its two-sided 95% t-interval, co-primary, each by the
 outcome map. N1 (the base against its byte-identical twin at 10) both bounds within
-[0.97, 1.03], a validity condition; the twins at 9 and 11 reported. 9 and 11 are identity
-checks, reported with the ±2% flag. Peak RSS (each run its own process) reported, not judged.
+[0.97, 1.03], a validity condition; the twins at the other budgets reported. Peak RSS (each
+run its own process) reported, not judged.
 
 A failed attempt says which kind of failure it is (`failure`): `identity`, `workload`,
 `preflight`, `structural` (rows, rounds, plans) or `n1`. None is a reason to retry.
@@ -55,17 +61,28 @@ import svc_target_check  # noqa: E402
 ROUNDS = 20
 # Student's t at 19 degrees of freedom: the two-sided 95% quantile (scipy.stats.t.ppf(0.975, 19))
 T_975 = 2.0930
-CONTROLS = (9, 11)  # identity checks: reported, not judged
+# the one-sided quantile for a familywise 0.05 over the four no-harm cells (Bonferroni, each at
+# 1 - 0.05/4), as the pipelined default's registration has it
+T_9875 = 2.4334
+# the pipelined default's authorised grid (docs/journal/2026-11-07-pipelined-default-registration.md),
+# carried over exactly: identity checks at 8 and 9 (reported, not judged), the primary at 10,
+# no harm at 11, 12, 16 and 20 (its rule)
+CONTROLS = (8, 9)
 PRIMARY = 10
-THREADS = (9, PRIMARY, 11)
+NO_HARM = (11, 12, 16, 20)
+NO_HARM_MAX = 1.02
+THREADS = CONTROLS + (PRIMARY,) + NO_HARM
 # plans as (leaders, plain helpers, pipelined helpers, service workers)
 FOUR_BY_TWO = (4, 4, 0, 0)
 PIPED_3X3 = (3, 0, 6, 0)
 SVC2 = (2, 4, 0, 2)
 EXPECT = {
-    9: {"base": FOUR_BY_TWO, "head": FOUR_BY_TWO, "twin": FOUR_BY_TWO},
-    10: {"base": PIPED_3X3, "head": SVC2, "twin": PIPED_3X3},
-    11: {"base": PIPED_3X3, "head": PIPED_3X3, "twin": PIPED_3X3},
+    t: (
+        {"base": FOUR_BY_TWO, "head": FOUR_BY_TWO, "twin": FOUR_BY_TWO}
+        if t in CONTROLS
+        else {"base": PIPED_3X3, "head": SVC2 if t == PRIMARY else PIPED_3X3, "twin": PIPED_3X3}
+    )
+    for t in THREADS
 }
 CONTROL_BAND = (0.98, 1.02)
 N1_BAND = (0.97, 1.03)
@@ -249,7 +266,7 @@ def judge(files, rows, unreadable=(), reg=None):
     present); `rows`: runs.jsonl's parsed lines; `unreadable`: its lines that weren't JSON"""
     reg = reg or registered()
     v = {"valid": False, "failure": None, "problems": [], "cells": {}, "n1": None, "p1": None,
-         "preflight": None}
+         "no_harm": None, "preflight": None}
 
     def fail(kind, problems):
         v["failure"] = v["failure"] or kind
@@ -308,6 +325,11 @@ def judge(files, rows, unreadable=(), reg=None):
             # (head over base: above 1 is more memory)
             c["rss"] = paired(head, base, "rss_kb")
             c["twin_speed"] = paired(base, twin, "wall")
+            # the head's wall over the base's, its one-sided Bonferroni upper bound (the
+            # pipelined default's no-harm rule): from the speed's mean and standard error
+            sp = c["speed"]
+            se = math.log(sp["hi"] / sp["ratio"]) / T_975
+            c["harm_upper"] = math.exp(-math.log(sp["ratio"]) + T_9875 * se)
             c["median"] = {
                 b: {k: statistics.median(r[k] for r in runs[b]) for k in ("wall", "cpu", "rss_kb")}
                 for b in runs
@@ -326,6 +348,9 @@ def judge(files, rows, unreadable=(), reg=None):
     c = v["cells"][PRIMARY]
     so, co = outcome(c["speed"]), outcome(c["cpu"], cpu=True)
     v["p1"] = {"speed": so, "cpu": co, "reading": reading(so, co)}
+    # no harm at 11, 12, 16 and 20, as the pipelined default's rule: each upper bound at most
+    # 1.02; an interval too wide to show it is not shown
+    v["no_harm"] = {t: v["cells"][t]["harm_upper"] <= NO_HARM_MAX for t in NO_HARM}
     v["valid"] = True
     return v
 
@@ -342,18 +367,23 @@ def markdown(v):
         "less); peak RSS is the head's over the base's (above 1: more memory), each run its own "
         "process. Paired geometric means over 20 rounds, 95% t-intervals.",
         "",
-        "| threads | role | plans, base → head | speed | CPU | peak RSS (reported) | twin over base |",
-        "|--:|---|---|--:|--:|--:|--:|",
+        "| threads | role | plans, base → head | speed | head/base wall, upper bound | CPU | peak RSS (reported) | twin over base |",
+        "|--:|---|---|--:|--:|--:|--:|--:|",
     ]
     for t in THREADS:
         c = v["cells"].get(t, {})
-        role = "P1 (judged); N1 (validity)" if t == PRIMARY else "identity (reported)"
+        role = (
+            "P1 (judged); N1 (validity)"
+            if t == PRIMARY
+            else "identity (reported)" if t in CONTROLS else "no harm (judged)"
+        )
         seen = c.get("seen", {})
         plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
         flag = " ±2% FLAG" if c.get("flag") else ""
+        upper = f"{c['harm_upper']:.3f}" if "harm_upper" in c else "–"
         out.append(
-            f"| {t} | {role} | {plans} | {fmt(c.get('speed'))}{flag} | {fmt(c.get('cpu'))} "
-            f"| {fmt(c.get('rss'))} | {fmt(c.get('twin_speed'))} |"
+            f"| {t} | {role} | {plans} | {fmt(c.get('speed'))}{flag} | {upper} "
+            f"| {fmt(c.get('cpu'))} | {fmt(c.get('rss'))} | {fmt(c.get('twin_speed'))} |"
         )
     pf = v.get("preflight") or {}
     out += ["", f"**The preflight:** {pf.get('verdict', '–')}."]
@@ -366,6 +396,14 @@ def markdown(v):
             "",
             f"**P1:** speed {s} {fmt(c10['speed'])}; CPU {c} {fmt(c10['cpu'])}: **{v['p1']['reading']}**.",
         ]
+        nh = v["no_harm"] or {}
+        failed = [str(t) for t, ok in nh.items() if not ok]
+        out.append(
+            "**No harm at 11, 12, 16 and 20** (each head/base wall upper bound at most 1.02, "
+            "Bonferroni over the four): "
+            + ("**shown at every one**." if not failed else f"**not shown at {', '.join(failed)}** "
+               "(an interval too wide to show it counts as not shown).")
+        )
         if s in QUALIFY:
             out.append(f"- Speed {s}: {QUALIFY[s]}.")
         if f"CPU {c}" in QUALIFY:
@@ -376,7 +414,8 @@ def markdown(v):
             "- A product gain does not identify the service threads as its cause: svc2 against the "
             "current default changes the plan, the teams, the window and the decoding threads together.",
             "- The plans are the sampled thread counts, not a proof of the window or the kernels; "
-            "equal plans at 9 and 11 are a fallback check, not binary identity or no-regression evidence.",
+            "equal plans at the other budgets are a fallback check, not binary identity; no harm "
+            "there is its own predicate, above.",
             "- Peak RSS is reported, not judged: no memory condition was registered, and none is met here.",
             "- One i9 result does not qualify the predicate's class, and CI's off-path bench does not "
             "qualify the service default's gain.",

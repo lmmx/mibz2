@@ -47,9 +47,9 @@ elif cmd == "run":
     threads = [int(t) for t in a[a.index("--threads") + 1].split(",")]
     rounds, corpus = int(a[a.index("--rounds") + 1]), os.path.basename(a[-1]).rsplit(".", 1)[0]
     mode = os.environ["FAKE_RUN"]
-    plans = {9: {"base": (4, 4, 0, 0), "head": (4, 4, 0, 0)},
-             10: {"base": (3, 0, 6, 0), "head": (2, 4, 0, 2)},
-             11: {"base": (3, 0, 6, 0), "head": (3, 0, 6, 0)}}
+    plans = {t: {"base": (4, 4, 0, 0), "head": (4, 4, 0, 0)} if t < 10 else
+                {"base": (3, 0, 6, 0), "head": (2, 4, 0, 2) if t == 10 else (3, 0, 6, 0)}
+             for t in (8, 9, 10, 11, 12, 16, 20)}
     def names(p, busy):
         l, pl, pi, s = p
         n = [f"mibz2-{i}" for i in range(l)] + [f"mibz2-coop-{i+1}" for i in range(pl)]

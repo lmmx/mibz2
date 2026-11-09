@@ -41,7 +41,7 @@ def names(plan, busy):
     return " ".join(sorted(n + extra))
 
 
-def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3):
+def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3, harm=1.0):
     rng = random.Random(seed)
     out = []
     for rnd in range(20):
@@ -61,6 +61,8 @@ def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3):
                     c /= cpu
                 if b == "twin":
                     wall /= twin
+                if b == "head" and t in sg.NO_HARM:
+                    wall *= harm
                 out.append({
                     "round": rnd, "corpus": "wikidata", "threads": t, "arm": arm,
                     "wall": wall, "cpu": c,
@@ -101,6 +103,8 @@ class Judge(unittest.TestCase):
         v = judge()
         self.assertTrue(v["valid"], v["problems"])
         self.assertEqual(v["preflight"]["verdict"], "TARGET")
+        self.assertEqual(v["no_harm"], {t: True for t in (11, 12, 16, 20)})
+        self.assertEqual(sg.THREADS, (8, 9, 10, 11, 12, 16, 20))
         self.assertEqual((v["p1"]["speed"], v["p1"]["cpu"]), ("GAIN", "CPU SAVING"))
         self.assertEqual(v["p1"]["reading"], "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT")
         self.assertLess(v["cells"][10]["rss"]["ratio"], 1)
@@ -202,7 +206,15 @@ class Judge(unittest.TestCase):
         self.assertRefused(judge(unreadable=(7,)), "structural", "an unreadable line")
         r = rows()
         self.assertRefused(judge(r=r + [dict(r[0])]), "structural", "a duplicate round")
-        self.assertRefused(judge(r=r + [dict(r[0], threads=12)]), "structural", "12 threads")
+        self.assertRefused(judge(r=r + [dict(r[0], threads=13)]), "structural", "13 threads")
+
+    def test_no_harm_is_judged_beside_p1(self):
+        v = judge(r=rows(harm=1.04))
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(set(v["no_harm"].values()), {False})
+        self.assertIn("not shown at 11, 12, 16, 20", sg.markdown(v))
+        # the precedent's quantile: one-sided, Bonferroni over four, at 19 degrees of freedom
+        self.assertEqual(sg.T_9875, 2.4334)
 
     def test_n1_is_its_own_failure(self):
         v = judge(r=rows(twin=1.05))

@@ -11,7 +11,8 @@ queueing and production admission stay gated by it.
 `state/reports/service-guarded-registration-6741912733/` on b365250e):** the judge now admits
 an attempt's directory, not a bare runs file, and binds its workload, identity and preflight
 (R1, R2); the row schema is strict (R2); the report keeps the earlier qualifications (R3); the
-base, grid, RSS, N1 and replacement answers below follow the review's six answers; the recipe
+base, RSS, N1 and replacement answers below follow the review's six answers (the grid follows
+a later Coordinator decision: the pipelined default's, exactly); the recipe
 is exercised end to end past its refusals (answer 6); and the preflight-only entry
 (`2026-11-09-svc-target-registration.md`, answer 5) comes first.
 
@@ -81,11 +82,35 @@ Its preflight is sent TERM at 120 s and KILL 10 s later.
   that process, the scanner, the feeders, the caller and the pool helpers included) and its
   **peak RSS (its own `ru_maxrss`, which never resets: one process per run is what makes it
   the run's)** are recorded for every run.
-- **The grid:** 9, 10 and 11 threads; 20 rounds, paired by round, arms' order rotated as `ab`
-  does; the bench's Wikidata sample. 3 arms × 3 budgets × 20 = 180 runs. **Louis's authority
-  for this grid is pending** (RULES C6 reserves the thread grid; the Researcher has asked
-  him). Neither precedent is this design: service-2x3 was one budget with six arms, the
-  pipelined default seven budgets with two. The freeze waits for his decision.
+- **The grid: the pipelined default's, exactly** (a Coordinator decision, to remove the
+  pending RULES C6 dependency a new 9/10/11 design had): 8, 9, 10, 11, 12, 16 and 20 threads,
+  20 rounds, paired by round, arms' order rotated as `ab` does, on the bench's Wikidata sample,
+  as registered in `2026-11-07-pipelined-default-registration.md` and authorised there (Louis's
+  decision to ship after one frozen confirmation run, "Confirm first, then ship",
+  `decisions.md`, 2026-11-07; that registration's grid is the one this run copies). P1 stays
+  the 10-thread cell, the only budget where the plan switches; at the six others neither build
+  changes plan, and they take that registration's own rules: identity checks at 8 and 9, no
+  harm at 11, 12, 16 and 20 (below).
+- **What is not carried over unchanged, said exactly:**
+  - **the twin arm.** The precedent ran two arms (head and base). This run keeps the
+    service-core registrations' noise control N1 (a validity condition of the P1 rule it
+    uses), which needs a third arm, the base's byte-identical twin. `ab` runs every arm at
+    every budget, so the twin runs at all seven. That is a departure from the precedent's arms
+    structure, made for P1's validity rule; it changes no budget, round count or threshold.
+    If the twin should instead be dropped (and with it N1 as a validity condition), that
+    changes the service-core rule's validity, which RULES C6 reserves to Louis: not presumed
+    here.
+  - **the replacement.** The precedent allowed one replacement of an invalid run, as decided
+    for that experiment. The Researcher (REVIEW 6742157313, answer 4) found no authority that
+    carries it to this one, so **this run registers none**. Restoring it needs its own
+    decision: not presumed here.
+  - **the primary's rule.** The precedent's primary (speed at least 1.03 with its lower bound
+    above 1.00) is not this run's P1: P1 keeps the service-core outcome map and readings,
+    unchanged from those registrations.
+- **The cost:** 7 budgets × 3 arms × 20 rounds = **420 runs**, at about 2.2 s a run about
+  **15.4 minutes** of runs (the precedent's two arms were 280 runs, about 10.3 minutes; the
+  twin adds 140 runs, about 5.1 minutes), plus two release builds and the corpus: **about 20
+  minutes from built, 25 from cold.**
 - **No PMU telemetry:** `--machine-state` is not passed (`perf_event_paranoid=4` on the
   workstation; `telemetry-check/20261109T125938Z` found the #298 counters UNAVAILABLE).
   `ab env`, `lscpu` and `ab sample` before and after the run go to `diagnostics/`, never judged
@@ -95,14 +120,15 @@ Its preflight is sent TERM at 120 s and KILL 10 s later.
 
   | threads | base and twin | head |
   |---|---|---|
-  | 9 | 4 × 2 plain | 4 × 2 plain |
+  | 8, 9 | 4 × 2 plain | 4 × 2 plain |
   | 10 | 3 × 3 pipelined | 2 × 3 plain + 2 service (svc2) |
-  | 11 | 3 × 3 pipelined | 3 × 3 pipelined |
+  | 11, 12, 16, 20 | 3 × 3 pipelined | 3 × 3 pipelined |
 
   These are the sampled thread counts. That the windows are 16, 12 and 8 follows only from the
-  pinned dispatch and `window` code at both commits, not from the names. **Equal plans at 9 and
-  11 are a fallback check, not fallback equivalence:** they don't show the binaries equal there
-  (the candidate's discovery and layout differ), nor that the candidate doesn't regress there.
+  pinned dispatch and `window` code at both commits, not from the names. **Equal plans at the
+  other budgets are a fallback check, not fallback equivalence:** they don't show the binaries
+  equal there (the candidate's discovery and layout differ); whether the candidate harms them
+  is the no-harm predicate's question, at 11, 12, 16 and 20.
 
 ## The rule (`bench/service_guarded.py`, fixed with the freeze)
 
@@ -129,8 +155,8 @@ its kind, and none is a reason to retry):
   arm names in one build; here it is the base executable copied byte for byte to a second
   path. Both are A/A controls of run-to-run noise under the interleaving; neither certifies
   differential overhead between the two builds or between-build layout effects. The twins at
-  9 and 11 are reported, not judged (answer 4: extending validity to them would change the
-  selection policy, not only the reporting).
+  the other six budgets are reported, not judged (answer 4: extending validity to them would
+  change the selection policy, not only the reporting).
 
 **P1 (judged, 10 threads):** speed (base wall over head wall) and CPU (base CPU over head CPU),
 each the geometric mean of the 20 rounds' paired ratios with its two-sided 95% t-interval,
@@ -140,6 +166,12 @@ NULL lo ≥ 0.97, hi ≤ 1.03, 1 inside; REGRESSION hi < 1 (CPU COST); INCONCLUS
 not a CPU COST); A TRADE (a speed gain with a CPU COST); NOT REPLICATED (NULL or REGRESSION);
 INCONCLUSIVE otherwise. The head runs fewer decoding threads than the base at 10 (8 against
 9): no extra-thread label applies.
+
+**No harm (judged, 11, 12, 16 and 20 threads), the pipelined default's rule unchanged:** each
+head-over-base wall ratio's one-sided upper bound at most 1.02, the bound Bonferroni over the
+four (t at 1 − 0.05/4, 19 degrees of freedom, 2.4334); an interval too wide to show it counts
+as not shown. It is reported beside P1 (shown at every one, or not shown at the budgets named),
+and like P1 decides nothing about adoption.
 
 **The qualifications the report states with them** (the earlier reports', restored):
 - CPU INCONCLUSIVE means no CPU cost was detected, not that none exists; a speed gain with
@@ -152,8 +184,8 @@ INCONCLUSIVE otherwise. The head runs fewer decoding threads than the base at 10
 - a product gain does not identify service-thread causality: svc2 against the current default
   changes plan, teams, window and thread count together.
 
-**Reported, not judged:** the identity checks at 9 and 11 (speed with the ±2% flag), the
-twins at 9 and 11, every cell's CPU, and **peak RSS**: the head's over the base's as a paired
+**Reported, not judged:** the identity checks at 8 and 9 (speed with the ±2% flag, the
+precedent's), the twins at every budget but 10, every cell's CPU, and **peak RSS**: the head's over the base's as a paired
 geometric mean with its interval, and every arm's medians (answer 3). **No memory condition
 is registered, and no result of this run can be advertised as passing one.** The old
 64/74 MB corpus medians are not a resource bound.
@@ -194,13 +226,13 @@ edited for it.
 From #258's runtime on this sample (history, not transfer): svc2@10 against the default at 10,
 P1 1.045 [1.017, 1.073], CPU 1.146 [1.123, 1.170], peak RSS about 64 MB against 74 MB. The
 guarded runtime adds per-block `Cell` stores and `failed` checks inside existing critical
-sections and one lock acquisition per hub-thread exit. At 9 and 11 both builds run the same
-plan, so the identity checks should be about 1.00.
+sections and one lock acquisition per hub-thread exit. At the other budgets both builds run
+the same plan, so the identity checks and the no-harm ratios should be about 1.00.
 
 **Size:** #258's paired sd of the log-ratio at 10 threads, 0.046 (speed) and 0.038 (CPU), gives
 intervals of about ±2.2% and ±1.8% at 20 rounds; N1's 0.032, about ±1.5%. **Run time:** about
-2.2 s a run, so 180 runs in about 6.6 minutes, plus two release builds and the corpus: about 10
-minutes from built, 15 from cold.
+2.2 s a run, so 420 runs in about 15.4 minutes, plus two release builds and the corpus: about
+20 minutes from built, 25 from cold (above).
 
 ## Scope: what a result would and would not show
 
@@ -215,7 +247,9 @@ minutes from built, 15 from cold.
 
 ## Still open before a freeze
 
-1. **The grid's authority** (Louis, RULES C6): pending; the freeze waits for it.
+1. **The two parts not carried over from the precedent** (above): the twin arm, kept for N1,
+   and no replacement. Each is the Coordinator's or Louis's to confirm or change; neither is
+   presumed.
 2. **The base's merge and SHA:** at the freeze (above).
-3. **The real-build exercise** (above), then the Researcher's re-review of this revision.
+3. **The Researcher's re-review** of this revision, the grid among it.
 4. **Adoption** (D067 §5): not this registration's to answer.

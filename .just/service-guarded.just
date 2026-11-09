@@ -2,7 +2,7 @@
 # a DRAFT, not frozen, not queued; bench/service-guarded.frozen names no commits yet, so the
 # recipe refuses). The candidate build's default decoder (svc2 at exactly 10 threads on its
 # target) against the current default's build, both through `BzReader::parallel` (ab's
-# `mibz2`), at 9, 10 and 11 threads, 20 paired rounds on the bench's Wikidata sample, with the
+# `mibz2`), at the pipelined default's grid (8, 9, 10, 11, 12, 16, 20 threads), 20 paired rounds on the bench's Wikidata sample, with the
 # base binary's byte-identical twin as the noise control, judged by bench/service_guarded.py
 # from the attempt's directory. An actual-target preflight (examples/svc_target.rs, checked
 # whole by bench/svc_target_check.py) runs first and refuses before anything is measured
@@ -18,7 +18,7 @@
 # Exit: 0 VALID, 1 INVALID (identity, workload, preflight, structural or N1, said which),
 # 4 REFUSED by the preflight, 2 any other refusal or a report error, 3 INCOMPLETE.
 
-# The service default (svc2 at 10 threads) against the current default, 9 to 11 threads
+# The service default (svc2 at 10 threads) against the current default, at the pipelined default's grid
 bench-service-guarded DRY="" CORPUS="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -153,7 +153,7 @@ bench-service-guarded DRY="" CORPUS="":
     } > "$W/inputs.txt"
     cat "$W/inputs.txt"
     "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB,mibz2@$TWINAB" \
-      --threads "9,10,11" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+      --threads "8,9,10,11,12,16,20" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
     "$AB" sample --count 5 > "$W/diagnostics/sample-after.jsonl"
     set +e
     python3 bench/service_guarded.py report "$W" --out "$W/service-guarded"
