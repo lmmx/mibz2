@@ -42,6 +42,10 @@ python = ["dep:pyo3"]
 # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
 # by default, and each mark a relaxed load when compiled in and not turned on
 trace = []
+# The service core's starvation diagnostic (src/diag.rs, research): an event log of the
+# hub's, the window's and the reader's transitions, for bench/svc_diag.py; off by default,
+# never in a timed build
+svc-diag = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -82,3 +86,12 @@ unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 [[example]]
 name = "occupancy"
 required-features = ["trace"]
+
+# The starvation diagnostic's run (examples/svc_diag.rs): untimed, never a benchmark
+[[example]]
+name = "svc_diag"
+required-features = ["svc-diag"]
+
+[[test]]
+name = "svc_diag"
+required-features = ["svc-diag"]

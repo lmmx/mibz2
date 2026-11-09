@@ -91,6 +91,10 @@ pub mod stream;
 // (the `trace` feature's; compiled for the tests too, which check its footprint ledger)
 #[cfg(any(test, feature = "trace"))]
 pub mod trace;
+// (the `svc-diag` feature's: the service core's starvation diagnostic, research, off by
+// default and compiled out of every timed build)
+#[cfg(feature = "svc-diag")]
+pub mod diag;
 
 #[cfg(feature = "python")]
 mod python;

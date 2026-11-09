@@ -56,6 +56,17 @@ macro_rules! mark {
     };
 }
 
+/// The service core's starvation diagnostic (src/diag.rs), with the `svc-diag` feature only:
+/// the statements given, else nothing
+macro_rules! diag {
+    ($($t:tt)*) => {
+        #[cfg(feature = "svc-diag")]
+        {
+            $($t)*
+        }
+    };
+}
+
 /// A block to finish: its place in the stream, its first bit, its symbols
 type Job = (u64, u64, super::block::Symbols);
 
@@ -81,6 +92,9 @@ struct Shared {
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
     overlap_errors: AtomicU64,
+    /// the diagnostic's decoder id (0: this decoder logs nothing)
+    #[cfg(feature = "svc-diag")]
+    diag: u64,
 }
 
 impl Shared {
@@ -241,6 +255,14 @@ impl StreamDecoder {
         )
     }
 
+    /// This decoder's id in the service core's starvation diagnostic (`diag::take`): 0 for
+    /// every decoder but the service core's, which logs nothing. Research only.
+    #[cfg(feature = "svc-diag")]
+    #[doc(hidden)]
+    pub fn diag_id(&self) -> u64 {
+        self.shared.diag
+    }
+
     /// The scanner, and `threads` workers each running `work`
     fn launch<W>(threads: usize, slots: usize, work: W) -> StreamDecoder
     where
@@ -262,6 +284,8 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "svc-diag")]
+            diag: 0,
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
@@ -326,6 +350,7 @@ impl StreamDecoder {
         let mut st = self.shared.lock();
         st.cancelled = true;
         st.ready.clear();
+        diag!(win_ev(&self.shared, &st, DK::Cancel, DN, 0, 0));
         drop(st);
         self.shared.cv.notify_all();
     }
@@ -358,14 +383,18 @@ impl StreamDecoder {
             }
             r.at = 0;
             mark!(ReadWait);
+            #[cfg(feature = "svc-diag")]
+            let mut waited = false;
             loop {
                 if st.cancelled {
                     r.failed = Some(Error::new(ErrorKind::Cancelled));
+                    diag!(win_ev(&self.shared, &st, DK::ReadEnd, DN, 1, 0));
                     break;
                 }
                 let taken = st.taken;
                 if let Some(res) = st.ready.remove(&taken) {
                     st.taken += 1;
+                    diag!(win_ev(&self.shared, &st, DK::Taken, taken, 0, 0));
                     self.shared.cv.notify_all();
                     mark!(Taken, taken);
                     match res {
@@ -376,8 +405,18 @@ impl StreamDecoder {
                 }
                 if st.end == Some(st.taken) {
                     r.done = true;
+                    diag!(win_ev(&self.shared, &st, DK::ReadEnd, DN, 0, 0));
                     break;
                 }
+                diag!({
+                    let kind = if waited {
+                        DK::ReadRecheck
+                    } else {
+                        DK::ReadWait
+                    };
+                    win_ev(&self.shared, &st, kind, taken, 0, 0);
+                    waited = true;
+                });
                 st = self.shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
             }
         }
@@ -414,9 +453,22 @@ impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
             mark!(InputWait);
+            diag!(crate::diag::record(
+                self.shared.diag,
+                DK::InputWait,
+                DN,
+                0,
+                0,
+                None,
+                None
+            ));
             match self.rx.recv() {
                 Ok(chunk) => {
                     mark!(InputGot);
+                    diag!({
+                        let n = chunk.len() as u64;
+                        crate::diag::record(self.shared.diag, DK::InputGot, DN, n, 0, None, None);
+                    });
                     let drop_n = (self.released - self.base) as usize;
                     if drop_n >= COMPACT {
                         self.buf.drain(..drop_n);
@@ -432,6 +484,15 @@ impl Source for ChannelSource<'_> {
                 }
                 Err(_) => {
                     mark!(InputEnd);
+                    diag!(crate::diag::record(
+                        self.shared.diag,
+                        DK::InputEnd,
+                        DN,
+                        0,
+                        0,
+                        None,
+                        None
+                    ));
                     self.eof = true;
                 }
             }
@@ -469,6 +530,10 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
             }
             _ => st.end = Some(at),
         }
+        diag!({
+            let err = u64::from(st.end != Some(at));
+            win_ev(shared, &st, DK::ScanEnd, DN, err, 0);
+        });
         drop(st);
         shared.cv.notify_all();
     };
@@ -477,9 +542,23 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
         mark!(SlotWait);
         let syms = {
             let mut st = shared.lock();
+            #[cfg(feature = "svc-diag")]
+            let mut waited = false;
             while !st.cancelled && st.issued - st.taken >= shared.slots {
+                diag!({
+                    let kind = if waited {
+                        DK::SlotRecheck
+                    } else {
+                        DK::SlotWait
+                    };
+                    win_ev(shared, &st, kind, DN, 0, 0);
+                    waited = true;
+                });
                 st = shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
             }
+            diag!(if !st.cancelled {
+                win_ev(shared, &st, DK::SlotGot, DN, u64::from(waited), 0);
+            });
             if st.cancelled {
                 drop(st);
                 return finish(None);
@@ -499,6 +578,14 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
+                diag!(win_ev(
+                    shared,
+                    &st,
+                    DK::Issued,
+                    place,
+                    0,
+                    symbols.syms.len() as u64
+                ));
                 drop(st);
                 mark!(
                     Issued,
@@ -511,6 +598,15 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                     return finish(None);
                 }
                 mark!(Enqueued, place);
+                diag!(crate::diag::record(
+                    shared.diag,
+                    DK::Enqueued,
+                    place,
+                    0,
+                    0,
+                    None,
+                    None
+                ));
             }
             Ok(Event::Done) => return finish(None),
             Err(e) => return finish(Some(e)),
@@ -745,9 +841,16 @@ fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind
         bit: Some(bit),
     });
     let mut st = shared.lock();
+    #[cfg(feature = "svc-diag")]
+    let how = if st.cancelled {
+        2
+    } else {
+        u64::from(res.is_err())
+    };
     if !st.cancelled {
         st.ready.insert(place, res);
     }
+    diag!(win_ev(shared, &st, DK::Publish, place, how, 0));
     if st.free_syms.len() < shared.slots as usize {
         st.free_syms.push(syms);
     }
@@ -1170,6 +1273,10 @@ struct HubState {
     backs: Vec<Back>,
     /// blocks taken from `jobs`, not yet published or dropped
     live: usize,
+    /// the diagnostic's counters (its decoder id, and the preparations, finishes and walks
+    /// under way), kept for the log only
+    #[cfg(feature = "svc-diag")]
+    d: crate::diag::HubCounts,
 }
 
 impl HubState {
@@ -1183,6 +1290,9 @@ struct Hub {
     cv: Condvar,
     lookahead: usize,
     fault: Option<ServiceFault>,
+    /// the diagnostic's decoder id (the shared state's)
+    #[cfg(feature = "svc-diag")]
+    diag: u64,
 }
 
 impl Hub {
@@ -1204,6 +1314,7 @@ impl Hub {
         st.live -= 1;
         st.fronts.extend(front);
         st.backs.extend(back);
+        diag!(diag_retire(&mut st));
         drop(st);
         self.cv.notify_all();
     }
@@ -1282,6 +1393,8 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "svc-diag")]
+            diag: crate::diag::new_decoder(),
         });
         let lookahead = admission_for(teams, admission);
         let hub = Arc::new(Hub {
@@ -1295,10 +1408,24 @@ impl StreamDecoder {
                     .collect(),
                 backs: (0..2 * teams).map(|_| Back::default()).collect(),
                 live: 0,
+                #[cfg(feature = "svc-diag")]
+                d: crate::diag::HubCounts {
+                    dec: shared.diag,
+                    ..Default::default()
+                },
             }),
             cv: Condvar::new(),
             lookahead,
             fault,
+            #[cfg(feature = "svc-diag")]
+            diag: shared.diag,
+        });
+        diag!({
+            let st = hub.lock();
+            let w = shared.lock();
+            let (h, w) = (hub_snap(&st), win_snap(&shared, &w));
+            let (t, k) = (teams as u64, services as u64);
+            crate::diag::record(shared.diag, DK::Config, t, k, 0, Some(h), Some(w));
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
@@ -1344,6 +1471,99 @@ impl StreamDecoder {
     }
 }
 
+/// The diagnostic's kinds and its no-place, in the hooks above and below
+#[cfg(feature = "svc-diag")]
+use crate::diag::{Kind as DK, NONE as DN};
+
+/// The hub's state for the diagnostic, under its lock
+#[cfg(feature = "svc-diag")]
+fn hub_snap(st: &HubState) -> crate::diag::HubSnap {
+    let n = |v: usize| v as u32;
+    crate::diag::HubSnap {
+        j: n(st.jobs.len()),
+        p: n(st.prepared.len()),
+        q: n(st.walked.len()),
+        a: st.d.preparing,
+        c: st.d.finishing,
+        u: st.d.walking,
+        free_front: n(st.fronts.len()),
+        free_back: n(st.backs.len()),
+        live: n(st.live),
+        closed: st.closed,
+    }
+}
+
+/// The window's state for the diagnostic, under the shared state's lock
+#[cfg(feature = "svc-diag")]
+fn win_snap(shared: &Shared, st: &State) -> crate::diag::WinSnap {
+    crate::diag::WinSnap {
+        issued: st.issued,
+        taken: st.taken,
+        ready: st.ready.len() as u32,
+        ready_min: st.ready.keys().next().copied().unwrap_or(DN),
+        ready_max: st.ready.keys().next_back().copied().unwrap_or(DN),
+        end: st.end.unwrap_or(DN),
+        slots: shared.slots,
+        cancelled: st.cancelled,
+    }
+}
+
+/// A hub event, under its lock
+#[cfg(feature = "svc-diag")]
+fn hub_ev(st: &HubState, kind: DK, place: u64, arg: u64, n: u64) {
+    crate::diag::record(st.d.dec, kind, place, arg, n, Some(hub_snap(st)), None);
+}
+
+/// A window event, under the shared state's lock
+#[cfg(feature = "svc-diag")]
+fn win_ev(shared: &Shared, st: &State, kind: DK, place: u64, arg: u64, n: u64) {
+    crate::diag::record(
+        shared.diag,
+        kind,
+        place,
+        arg,
+        n,
+        None,
+        Some(win_snap(shared, st)),
+    );
+}
+
+/// Why a waiting service worker can't prepare (`diag::svc_why`)
+#[cfg(feature = "svc-diag")]
+fn svc_why(st: &HubState) -> u64 {
+    use crate::diag::svc_why::*;
+    if st.jobs.is_empty() {
+        NO_JOB
+    } else if st.fronts.is_empty() {
+        NO_FRONT
+    } else {
+        THRESHOLD
+    }
+}
+
+/// A retire accounted to the task this thread had under way, under the hub's lock
+#[cfg(feature = "svc-diag")]
+fn diag_retire(st: &mut HubState) {
+    use crate::diag::Task;
+    let d = &mut st.d;
+    let (kind, place) = match crate::diag::take_task() {
+        Task::Prepare(p) => {
+            d.preparing = d.preparing.saturating_sub(1);
+            (DK::PrepRetire, p)
+        }
+        Task::Finish(p) => {
+            d.finishing = d.finishing.saturating_sub(1);
+            (DK::FinishRetire, p)
+        }
+        Task::Walk(p) => {
+            d.walking = d.walking.saturating_sub(1);
+            (DK::WalkRetire, p)
+        }
+        Task::Idle => (DK::RetireUnowned, DN),
+    };
+    hub_ev(st, kind, place, 0, 0);
+}
+
 /// The prepared queue's admission threshold (the hub's `lookahead`): `teams` (a block a
 /// team), unless one is given
 fn admission_for(teams: usize, asked: Option<usize>) -> usize {
@@ -1353,10 +1573,27 @@ fn admission_for(teams: usize, asked: Option<usize>) -> usize {
 /// The scanner's jobs into the hub, then its end (the jobs' channel closed)
 fn feed(hub: &Hub, rx: Receiver<Job>) {
     while let Ok(job) = rx.recv() {
-        hub.lock().jobs.push_back(job);
+        #[cfg(feature = "svc-diag")]
+        let place = job.0;
+        diag!(crate::diag::record(
+            hub.diag,
+            DK::FeedRecv,
+            place,
+            0,
+            0,
+            None,
+            None
+        ));
+        let mut st = hub.lock();
+        st.jobs.push_back(job);
+        diag!(hub_ev(&st, DK::JobIn, place, 0, 0));
+        drop(st);
         hub.cv.notify_all();
     }
-    hub.lock().closed = true;
+    let mut st = hub.lock();
+    st.closed = true;
+    diag!(hub_ev(&st, DK::Closed, DN, 0, 0));
+    drop(st);
     hub.cv.notify_all();
 }
 
@@ -1387,14 +1624,24 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
                         .unwrap_or(0);
                     let w = st.walked.swap_remove(i);
                     mark!(SvcGot, w.place, st.walked.len(), 0);
+                    diag!({
+                        st.d.finishing += 1;
+                        hub_ev(&st, DK::SvcFinish, w.place, 0, 0);
+                        crate::diag::set_task(crate::diag::Task::Finish(w.place));
+                    });
                     break Some(SvcTask::Finish(w));
                 }
                 if can_prepare && st.prepared.len() < hub.lookahead {
                     break Some(take_job(&mut st));
                 }
                 if st.done() {
+                    diag!(hub_ev(&st, DK::SvcExit, DN, 0, 0));
                     break None;
                 }
+                diag!({
+                    let kind = if idle { DK::SvcRecheck } else { DK::SvcWait };
+                    hub_ev(&st, kind, DN, svc_why(&st), 0);
+                });
                 if !idle {
                     idle = true;
                     mark!(SvcIdleStart);
@@ -1419,6 +1666,13 @@ fn take_job(st: &mut HubState) -> SvcTask {
     let job = st.jobs.pop_front().expect("a job");
     let front = st.fronts.pop().expect("a front set");
     st.live += 1;
+    diag!({
+        // (rule 1, P empty, or rule 3, below the threshold)
+        let rule = u64::from(!st.prepared.is_empty());
+        st.d.preparing += 1;
+        hub_ev(st, DK::SvcPrepare, job.0, rule, job.2.syms.len() as u64);
+        crate::diag::set_task(crate::diag::Task::Prepare(job.0));
+    });
     SvcTask::Prepare(job, front)
 }
 
@@ -1449,6 +1703,12 @@ fn prepare(shared: &Shared, hub: &Hub, job: Job, mut front: Front, k: Kernels) {
                 rows,
             });
             mark!(Prepared, place, st.prepared.len(), 0);
+            diag!({
+                st.d.preparing = st.d.preparing.saturating_sub(1);
+                crate::diag::take_task();
+                let cap = st.prepared.back().map_or(0, |p| p.front.ll.capacity()) as u64;
+                hub_ev(&st, DK::Prepared, place, rows as u64, cap);
+            });
             drop(st);
             hub.cv.notify_all();
         }
@@ -1517,11 +1777,21 @@ fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
             let p = st.prepared.pop_front().expect("a prepared block");
             let b = st.backs.pop().expect("a back set");
             mark!(TeamGot, p.place, st.prepared.len(), 0);
+            diag!({
+                st.d.walking += 1;
+                hub_ev(&st, DK::TeamGot, p.place, 0, 0);
+                crate::diag::set_task(crate::diag::Task::Walk(p.place));
+            });
             break Some((p, b));
         }
         if st.done() {
+            diag!(hub_ev(&st, DK::TeamExit, DN, 0, 0));
             break None;
         }
+        diag!({
+            let kind = if idle { DK::TeamRecheck } else { DK::TeamWait };
+            hub_ev(&st, kind, DN, u64::from(!st.prepared.is_empty()), 0);
+        });
         if !idle {
             idle = true;
             mark!(
@@ -1619,6 +1889,11 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
                     back,
                 });
                 mark!(Walked, place, st.walked.len(), 0);
+                diag!({
+                    st.d.walking = st.d.walking.saturating_sub(1);
+                    crate::diag::take_task();
+                    hub_ev(&st, DK::Walked, place, 0, 0);
+                });
                 drop(st);
                 hub.cv.notify_all();
             }
@@ -1875,10 +2150,14 @@ mod service_tests {
                 fronts: (0..fronts).map(|_| Front::default()).collect(),
                 backs: vec![Back::default()],
                 live: 0,
+                #[cfg(feature = "svc-diag")]
+                d: Default::default(),
             }),
             cv: Condvar::new(),
             lookahead,
             fault: None,
+            #[cfg(feature = "svc-diag")]
+            diag: 0,
         }
     }
 
@@ -1897,6 +2176,14 @@ mod service_tests {
     /// A service worker waiting with the prepared queue at its lookahead (rule 3) wakes when
     /// a team takes a prepared block, with nothing else to wake it (no walked block, no
     /// front set returned, no new job), and prepares the job waiting
+    /// The diagnostic's hooks are nothing without its feature (`svc-diag`), and run with it
+    #[test]
+    fn diag_hooks_are_compiled_out_without_their_feature() {
+        let ran = std::cell::Cell::new(false);
+        diag!(ran.set(true));
+        assert_eq!(ran.get(), cfg!(feature = "svc-diag"));
+    }
+
     #[test]
     fn miri_a_team_taking_a_prepared_block_wakes_the_service() {
         let shared = Shared {
@@ -1913,6 +2200,8 @@ mod service_tests {
             slots: 4,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "svc-diag")]
+            diag: 0,
         };
         let h = hub(1, 2);
         {

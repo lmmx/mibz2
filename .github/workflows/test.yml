@@ -25,6 +25,12 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the service core's starvation diagnostic (feature svc-diag, research, off by default):
+      # its event log's own tests, and a small svc2 decode's log complete, its bytes unchanged
+      - name: The starvation diagnostic
+        run: |
+          cargo test --features svc-diag --lib diag
+          cargo test --features svc-diag --test svc_diag
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
@@ -47,6 +53,9 @@ jobs:
       # bench/service_lookahead.py's validity and readings on synthetic records (no decoder run)
       - name: The service lookahead report's fixtures
         run: python3 bench/test_service_lookahead.py
+      # bench/svc_diag.py's attribution on the Researcher's abstract witnesses (no decoder run)
+      - name: The starvation diagnostic's witnesses
+        run: python3 bench/test_svc_diag.py
 
   get-python-versions:
     runs-on: ubuntu-latest
