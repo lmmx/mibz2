@@ -278,6 +278,8 @@ impl StreamDecoder {
                 std::thread::Builder::new()
                     .name(format!("mibz2-{i}"))
                     .spawn(move || {
+                        // (before the worker's first job, inside the timing when recording:
+                        // crate::threads)
                         super::threads::ran();
                         work(&shared, &job_rx)
                     })

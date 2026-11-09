@@ -10,7 +10,9 @@ occupancy captures are admitted apart, each refusal with its reason.
 """
 
 import json
+import math
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -99,12 +101,57 @@ def identity(dry=False):
     }
 
 
-def capture(sub, dry=False, ident=None):
-    """An occupancy capture as examples/occupancy.rs writes one (the fields admitted)"""
+T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228]
+
+
+def interval(ratios):
+    """The geometric mean and 95% t-interval of `ratios`, computed here, independently of
+    both the admission and the instrument"""
+    logs = [math.log(x) for x in ratios]
+    n = len(logs)
+    m = sum(logs) / n
+    sd = math.sqrt(sum((x - m) ** 2 for x in logs) / (n - 1))
+    h = T975[n - 2] * sd / math.sqrt(n)
+    return {
+        "ratio": round(math.exp(m), 6),
+        "lo": round(math.exp(m - h), 6),
+        "hi": round(math.exp(m + h), 6),
+    }
+
+
+def capture(sub, dry=False, ident=None, slow=None):
+    """An occupancy capture in examples/occupancy.rs's schema: its raw grid (each round's
+    off, timeline and full run, each its own wall), and each traced mode's perturbation
+    computed from it; `slow` a mode's walls scaled up (a perturbing mode)"""
     rounds = ws.DRY_OCC_ROUNDS if dry else ws.OCC_ROUNDS
     ident = ident or identity(dry)
-    mode = {"complete_rounds": rounds, "blocks": 4, "pipe.n.run": 4, "f.w.recorded": 3}
-    line = f"wall=0.027 cpu=0.059 rss_kb=33628 out=3030698 hash=6c462eda07e33ba8 err=- plan=pipe3x3-rf{sub}"
+    mode_sum = {"complete_rounds": rounds, "blocks": 4, "pipe.n.run": 4, "f.w.recorded": 3}
+    out = 3030698
+    walls = {}
+    for r in range(rounds):
+        base = 0.027 * (1 + 0.04 * ((r * 5) % 3))
+        for k, m in enumerate(("off", "timeline", "full")):
+            jitter = 1 + 0.01 * (((r + 2 * k) * 7) % 5 - 2)
+            # (to the line's six decimals: the instrument reads its clocks from its lines)
+            walls[(r, m)] = round(base * jitter * (1.3 if m == slow else 1.0), 6)
+    runs = [
+        {
+            "round": r,
+            "threads": 10,
+            "slots": 12,
+            "placement": "",
+            "mode": m,
+            "line": f"wall={walls[(r, m)]:.6f} cpu=0.059 rss_kb=33628 out={out} hash=6c462eda07e33ba8 err=- plan=pipe3x3-rf{sub}",
+        }
+        for r in range(rounds)
+        for m in ("off", "timeline", "full")
+    ]
+    pert = {}
+    for m in ("timeline", "full"):
+        # (throughput over off's, round by round: wall off over wall mode)
+        iv = interval([walls[(r, "off")] / walls[(r, m)] for r in range(rounds)])
+        verdict = ws.OCC_NO_PERTURBATION if iv["lo"] <= 1 <= iv["hi"] else ws.OCC_PERTURBS
+        pert[m] = {"throughput_ratio": iv, "verdict": verdict}
     return {
         "tool": "examples/occupancy.rs (#39)",
         "format": 1,
@@ -118,19 +165,12 @@ def capture(sub, dry=False, ident=None):
         "results": [
             {
                 "threads": 10,
-                "timeline": dict(mode),
-                "full": dict(mode),
-                "perturbation": {
-                    "timeline": {"verdict": "no perturbation shown (interval includes no change)"},
-                    "full": {"verdict": "no perturbation shown (interval includes no change)"},
-                },
+                "timeline": dict(mode_sum),
+                "full": dict(mode_sum),
+                "perturbation": pert,
             }
         ],
-        "runs": [
-            {"round": r, "threads": 10, "mode": m, "line": line}
-            for r in range(rounds)
-            for m in ("off", "timeline", "full")
-        ],
+        "runs": runs,
     }
 
 
@@ -360,14 +400,74 @@ class Occupancy(unittest.TestCase):
         self.assertIn("DRY", text)
 
     def test_a_perturbing_capture_is_admitted_and_marked(self):
-        cap = capture("dir")
-        cap["results"][0]["perturbation"]["full"]["verdict"] = (
-            "perturbs: its trace is not interpreted at this thread count"
-        )
+        cap = capture("dir", slow="full")
+        self.assertEqual(cap["results"][0]["perturbation"]["full"]["verdict"], ws.OCC_PERTURBS)
         code, text, js = self.occ("dir", cap)
         self.assertEqual(code, 0, text)
         self.assertIn("not to be interpreted", text)
         self.assertEqual(js["perturbing_modes"], ["full"])
+        self.assertFalse(js["interpretable"])
+
+    def test_a_real_schema_capture_with_numeric_intervals_is_interpretable(self):
+        cap = capture("ctl")
+        for m in ("timeline", "full"):
+            iv = cap["results"][0]["perturbation"][m]["throughput_ratio"]
+            self.assertTrue(all(isinstance(iv[k], float) for k in ("ratio", "lo", "hi")))
+        code, text, js = self.occ("ctl", cap)
+        self.assertEqual(code, 0, text)
+        self.assertTrue(js["interpretable"])
+        self.assertEqual(js["perturbing_modes"], [])
+
+    def test_missing_unknown_or_insufficient_evidence_is_never_interpretable(self):
+        # (the Researcher's five, 6733680620: each was VALID and interpretable)
+        def no_perturbation(c):
+            del c["results"][0]["perturbation"]
+
+        def unknown_verdict(c):
+            c["results"][0]["perturbation"]["full"]["verdict"] = "looks fine"
+
+        def too_few_rounds(c):
+            c["results"][0]["perturbation"]["timeline"] = {
+                "throughput_ratio": {"ratio": 1.0, "lo": None, "hi": None},
+                "verdict": "too few rounds",
+            }
+
+        def one_run_eighteen_times(c):
+            c["runs"] = [dict(c["runs"][0]) for _ in range(18)]
+
+        def every_clock_nan(c):
+            for run in c["runs"]:
+                run["line"] = re.sub(r"wall=\S+", "wall=NaN", run["line"])
+
+        for mutate, why in [
+            (no_perturbation, "perturbation timeline: absent"),
+            (unknown_verdict, "verdict 'looks fine'"),
+            (too_few_rounds, "not finite"),
+            (one_run_eighteen_times, "twice"),
+            (every_clock_nan, "not a finite positive clock"),
+        ]:
+            cap = capture("dir")
+            mutate(cap)
+            code, text, js = self.occ("dir", cap)
+            self.assertEqual(code, 2, f"{mutate.__name__}: {text}")
+            self.assertIn(why, text, mutate.__name__)
+            self.assertNotIn("interpretable", js or {}, mutate.__name__)
+        cap = capture("dir")
+        cap["runs"] = [dict(cap["runs"][0]) for _ in range(18)]
+        _, text, _ = self.occ("dir", cap)
+        self.assertIn("the grid lacks 17 of 18", text)
+
+    def test_a_misreported_or_misclassified_interval_is_refused(self):
+        cap = capture("dir")
+        cap["results"][0]["perturbation"]["full"]["throughput_ratio"]["ratio"] = 0.5
+        code, text, _ = self.occ("dir", cap)
+        self.assertEqual(code, 2, text)
+        self.assertIn("not the grid's", text)
+        cap = capture("dir", slow="full")
+        cap["results"][0]["perturbation"]["full"]["verdict"] = ws.OCC_NO_PERTURBATION
+        code, text, _ = self.occ("dir", cap)
+        self.assertEqual(code, 2, text)
+        self.assertIn("verdict", text)
 
     def refused(self, why, mutate, sub="dir"):
         cap = capture(sub)
@@ -397,7 +497,7 @@ class Occupancy(unittest.TestCase):
                 line=c["runs"][4]["line"].replace("hash=6c46", "hash=0000")
             ),
         )
-        self.refused("runs, not 18", lambda c: c["runs"].pop())
+        self.refused("the grid lacks 1 of 18", lambda c: c["runs"].pop())
         self.refused(
             "err",
             lambda c: c["runs"][0].update(

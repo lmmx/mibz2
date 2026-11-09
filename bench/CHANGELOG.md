@@ -51,9 +51,11 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   successful work. A new figure beside the others: every existing figure keeps its meaning.
   Its cost: off, one relaxed load a thread; on, in ab's children, each thread allocates its
   name and pushes it under one process-wide lock that threads starting together can
-  contend for, once. Equal counts across arms do not make that cost equal. The pushes are
-  inside each run's wall and CPU; the record's read, sort and join come after both
-  readings, in every arm alike. The run-fed leader's workstation
+  contend for, once. The pushes are inside each run's wall and CPU: a worker's before its
+  first job, a helper's before it publishes its first task's completion, so a contended
+  push can extend a run. Equal counts across arms do not make that cost equal: the
+  instrumentation can be differential, and its cost is not measured. The record's read,
+  sort and join come after the wall, CPU and RSS readings, in every arm alike. The run-fed leader's workstation
   admission (`bench/run_fed_leader_ws.py`) reads the plan from it; the CI reporter is
   unchanged.
 

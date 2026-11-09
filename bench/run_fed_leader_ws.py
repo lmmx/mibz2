@@ -39,6 +39,7 @@ itself is INVALID with its reason, never a crash and never a VALID.
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -69,6 +70,12 @@ OCC_ROUNDS = 6
 DRY_OCC_ROUNDS = 3
 OCC_TEAMS = "pipelined teams of 3, forced, levers: rf{sub}"
 OCC_PLAN = "pipe3x3-rf{sub}"
+OCC_MODES = ("off", "timeline", "full")
+# the instrument's verdicts (examples/occupancy.rs), the two a finite interval can give
+OCC_NO_PERTURBATION = "no perturbation shown (interval includes no change)"
+OCC_PERTURBS = "perturbs: its trace is not interpreted at this thread count"
+# the reported interval against the grid's recomputation (the instrument writes 6 decimals)
+OCC_TOLERANCE = 1e-5
 TEAM_WORKERS = 3  # each team's leader records its buffers at its end
 HEX40, HEX64 = rfl.HEX40, rfl.HEX64
 # What a record's wall and CPU include of the thread record (src/threads.rs, D061): stated
@@ -382,23 +389,79 @@ def occupancy_problems(occ, sub, ident, ref, dry):
             bad.append(
                 f"{mode}: {m.get('f.w.recorded')!r} team workers' buffers recorded, not {TEAM_WORKERS}"
             )
+    # the raw grid: every (round, mode) exactly once, its clock finite and positive, its
+    # output the timing's incumbent's (the summaries above are the instrument's own, and
+    # never stand in for the grid: Researcher 6733680620)
     runs = occ.get("runs")
-    if not isinstance(runs, list) or len(runs) != 3 * rounds:
-        bad.append(
-            f"{len(runs) if isinstance(runs, list) else runs!r} runs, not {3 * rounds} (three modes a round)"
-        )
-        runs = runs if isinstance(runs, list) else []
+    if not isinstance(runs, list):
+        return bad + [f"runs {runs!r}, not a list"]
+    grid = {}
     for i, run in enumerate(runs):
-        line = run.get("line") if isinstance(run, dict) else None
+        if not isinstance(run, dict):
+            bad.append(f"run {i}: not an object")
+            continue
+        rnd, mode, line = run.get("round"), run.get("mode"), run.get("line")
+        where = f"run {i} (round {rnd!r}, {mode!r})"
+        if not (rfl.is_int(rnd) and 0 <= rnd < rounds) or mode not in OCC_MODES:
+            bad.append(f"{where}: not a round 0..{rounds - 1} in {list(OCC_MODES)}")
+            continue
+        if run.get("threads") != THREADS:
+            bad.append(f"{where}: threads {run.get('threads')!r}, not {THREADS}")
+        if (rnd, mode) in grid:
+            bad.append(f"{where}: twice")
+            continue
         kv = dict(re.findall(r"(\S+?)=(\S+)", line)) if isinstance(line, str) else {}
         if kv.get("plan") != OCC_PLAN.format(sub=sub):
-            bad.append(f"run {i}: plan {kv.get('plan')!r}, not {OCC_PLAN.format(sub=sub)}")
+            bad.append(f"{where}: plan {kv.get('plan')!r}, not {OCC_PLAN.format(sub=sub)}")
         if kv.get("err") != "-":
-            bad.append(f"run {i}: err {kv.get('err')!r}")
+            bad.append(f"{where}: err {kv.get('err')!r}")
         if ref is not None and (kv.get("hash"), kv.get("out")) != (ref[0], str(ref[1])):
             bad.append(
-                f"run {i}: output {kv.get('hash')!r}/{kv.get('out')!r}, not the incumbent's {ref[0]}/{ref[1]}"
+                f"{where}: output {kv.get('hash')!r}/{kv.get('out')!r}, not the incumbent's {ref[0]}/{ref[1]}"
             )
+        try:
+            wall, out_b = float(kv.get("wall", "")), int(kv.get("out", ""))
+        except ValueError:
+            wall, out_b = math.nan, 0
+        if not (math.isfinite(wall) and wall > 0 and out_b > 0):
+            bad.append(
+                f"{where}: wall {kv.get('wall')!r}, out {kv.get('out')!r}: not a finite positive clock"
+            )
+            continue
+        grid[(rnd, mode)] = out_b / wall / 1e6
+    missing = [(r, m) for r in range(rounds) for m in OCC_MODES if (r, m) not in grid]
+    if missing:
+        bad.append(
+            f"the grid lacks {len(missing)} of {rounds * len(OCC_MODES)} observations: {missing[:6]}"
+        )
+    # each traced mode's perturbation, recomputed from the grid (the instrument's own
+    # `ratio_ci`: the geometric mean of mode / off, round by round, and its 95% t-interval),
+    # and the reported interval and verdict held to it: finite, and classified as it says
+    pert = r.get("perturbation") if isinstance(r.get("perturbation"), dict) else {}
+    for mode in ("timeline", "full"):
+        v = pert.get(mode)
+        if not isinstance(v, dict):
+            bad.append(f"perturbation {mode}: absent")
+            continue
+        tr = v.get("throughput_ratio") if isinstance(v.get("throughput_ratio"), dict) else {}
+        got = tuple(tr.get(k) for k in ("ratio", "lo", "hi"))
+        if not all(
+            isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+            for x in got
+        ):
+            bad.append(f"perturbation {mode}: interval {got!r}, not finite")
+            continue
+        verdict = v.get("verdict")
+        want_verdict = OCC_NO_PERTURBATION if got[1] <= 1 <= got[2] else OCC_PERTURBS
+        if verdict != want_verdict:
+            bad.append(f"perturbation {mode}: verdict {verdict!r}, not {want_verdict!r} for {got}")
+        if missing:
+            continue
+        mine = rfl.geo_ci([grid[(rr, mode)] / grid[(rr, "off")] for rr in range(rounds)])
+        if mine is None or any(
+            abs(a - b) > OCC_TOLERANCE * max(abs(b), 1) for a, b in zip(got, mine)
+        ):
+            bad.append(f"perturbation {mode}: reported {got}, not the grid's {mine}")
     return bad
 
 
@@ -424,15 +487,12 @@ def admit_occupancy(args):
         bad += occupancy_problems(occ, sub, ident, ref, dry)
     out = {"sub": sub, "dry": dry, "invalid": bad}
     if not bad:
-        pert = occ["results"][0].get("perturbation", {})
-        out["perturbation"] = pert
-        # (the instrument's own verdict: "perturbs: ..." where a traced mode's paired
-        # throughput interval excludes no change)
-        perturbs = [
-            m
-            for m, v in pert.items()
-            if isinstance(v, dict) and str(v.get("verdict", "")).startswith("perturbs")
-        ]
+        pert = occ["results"][0]["perturbation"]
+        out["perturbation"] = {m: pert[m] for m in ("timeline", "full")}
+        # (interpretable only where both traced modes were checked above, each finite, its
+        # verdict "no perturbation shown" by its own interval and the grid's: a missing,
+        # unknown or insufficient comparison is INVALID above, never interpretable)
+        perturbs = [m for m in ("timeline", "full") if pert[m]["verdict"] != OCC_NO_PERTURBATION]
         out["perturbing_modes"] = perturbs
         out["interpretable"] = not perturbs
     write(out, args.out)

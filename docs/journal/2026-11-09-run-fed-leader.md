@@ -2,9 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised six times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+Revised seven times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
 CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
-decoders' own record (D059); §R6, that hook's claims corrected (D061).
+decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -492,23 +492,35 @@ an error of the admission itself is INVALID):
 subtracted): both include the thread record's pushes during the decode, one a thread under
 one process-wide lock, each allocating its name. The record's read, sort and join come
 after the child's wall, CPU and RSS readings, so none of them includes these. Every arm's
-child runs the same code. The cost is not claimed equal across arms (§R6).
+child runs the same code. That is not equal cost: a helper records before it publishes its
+first task's completion, and a worker before its first job, so a push under the shared lock
+can extend a run, and when threads start, and so what they contend with, differs by arm.
+The instrumentation can be differential, and its cost is not measured. No claim that it is
+small, uncontended or equal is made (§R6).
 
 **The occupancy captures, admitted apart** (`admit-occupancy DIR ctl|dir`). They are made
 after the timing and never enter its judgement. Each is one capture of
 `examples/occupancy.rs --threads 10 --pipe 3 --run-fed SUB --rounds 6`: its three modes,
-off, timeline and full, each twice, with ab's run-fed arm's window. Each is admitted only
+off, timeline and full, six observations per mode, with ab's run-fed arm's window. Each is admitted only
 if:
 - it is the instrument's format;
 - it shows the sub-arm at 10 threads in three teams of three, with 6 rounds;
 - every round is complete in both traced modes, with blocks and team runs traced;
 - each team's buffers are recorded (3);
-- all 18 runs' outputs are one, each the timing's incumbent's bytes and hash, with no
-  error;
-- its commit and corpus are the identity's.
+- its raw grid is whole (§R7): each of the 6 rounds × 3 modes observed exactly once, at 10
+  threads, with the sub-arm's plan, no error, a finite positive clock, and the timing's
+  incumbent's bytes and hash;
+- its commit and corpus are the identity's;
+- both traced modes' perturbation comparisons (timeline and full, each over off, round by
+  round) are present and finite, each equal to its recomputation from the grid, and each
+  verdict the one its interval gives.
 
-Its perturbation verdicts are reported, not judged: a capture whose traced modes perturb is
-admitted, marked "its timeline not to be interpreted". The captures' purpose is the i9's
+The perturbation is reported, not judged against the timing. A capture is
+**interpretable** only if both comparisons say "no perturbation shown". A capture whose
+traced modes perturb is admitted, marked "its timeline not to be interpreted". A missing,
+unknown or insufficient comparison ("too few rounds"), or a grid missing an observation,
+is INVALID, never interpretable. A capture's failure never touches the timing's
+validity. The captures' purpose is the i9's
 critical path, seen rather than inferred: who ends each run, the leader or the helpers.
 
 **The bundle** (one directory per attempt, `target/run-fed-leader/<UTC>`, packed by
@@ -969,8 +981,7 @@ No unprivileged external observer sees a thread's birth.
 These touch the timed paths of every arm: the incumbent's, the shipped worker's and the
 run-fed teams'. Off, the cost is one relaxed load a thread, once. In ab's children, where
 recording is on, it is one lock and push a thread per decode (3 workers and 6 helpers).
-That is small beside a decode, but it is a change to code the arms run, so it is stated
-here. (Correction, D061: the lock is one process-wide mutex, which threads starting
+It is a change to code the arms run, inside their timing, so it is stated here. (Correction, D061: the lock is one process-wide mutex, which threads starting
 together can contend for, and each push allocates its name, and now and then the vector's
 growth. "Uncontended" was wrong, and equal counts across arms do not make the cost equal.
 No equality is claimed, §R6.)
@@ -1051,6 +1062,68 @@ the journals since). `examples/` is a measured input, so the frozen head include
 
 **The checks at the merged head** are listed in the commit that records them;
 `bench/run-fed-leader.frozen` stays `frozen none`.
+
+## R7. Revision, 2026-11-09: the occupancy admission (the Researcher's freeze review, 6733680620)
+
+The Researcher's freeze review (report at `aa966a90`, `state/reports/workstation-freeze-
+6733569628/`) closes the timing registration: seven arms, `default33`, `dir` primary,
+20 × 10 threads, 140 records, df = 19. It is a narrow REVISE of the occupancy admission.
+
+**The defect.** Five synthetic captures each exited 0, printed VALID with no perturbation
+shown, and wrote `interpretable=true`:
+- a missing perturbation;
+- an unknown verdict;
+- the instrument's own "too few rounds" with a null interval;
+- eighteen copies of round 0's off run;
+- every capture wall clock NaN.
+
+The cause: the raw runs' length and the summaries' completeness stood in for the 6 × 3
+grid, and a capture was interpretable unless some verdict began "perturbs". Missing
+evidence became permission.
+
+**The fix** (`bench/run_fed_leader_ws.py`, `occupancy_problems`):
+- **The raw grid is validated:** every (round, mode) of 6 × {off, timeline, full} exactly
+  once, at 10 threads, with the sub-arm's plan, no error, a finite positive clock, and the
+  timing's incumbent's bytes and hash. An observation missing, repeated or out of the grid
+  is a reason.
+- **Both perturbation comparisons are required:** each present, its interval finite, and
+  each recomputed from the grid. The recomputation follows the instrument's own `ratio_ci`:
+  the geometric mean of mode over off throughput (bytes over the line's wall, which the
+  instrument also reads from its lines), round by round, with its 95% t-interval. Each
+  reported interval must equal its recomputation (within 1e-5, since the instrument writes
+  six decimals), and its verdict must be the one its interval gives: "no perturbation
+  shown" if it contains 1, else "perturbs". Anything else is a reason.
+- **Interpretable only when** both comparisons pass and both say "no perturbation shown".
+  A missing, unknown or insufficient comparison is INVALID, never interpretable. The
+  capture's admission stays apart from the timing's, as before.
+
+**The fixtures** (`bench/test_run_fed_leader_ws.py`, now 19, all pass). The capture builder
+now writes the instrument's real schema: the raw grid of 18 runs, each with its own wall,
+and both intervals computed from it in the test, independently of the admission and the
+instrument.
+- **Positive:**
+  - a real-schema capture with numeric intervals, interpretable;
+  - a genuinely perturbing one (full 30% slower), admitted and marked not interpretable.
+- **The Researcher's five, each INVALID and never interpretable:** no perturbation; an
+  unknown verdict; "too few rounds" with a null interval; one run eighteen times (also "the
+  grid lacks 17 of 18"); every clock NaN.
+- **Also INVALID:** an interval misreported against the grid; a verdict misclassified
+  against its interval; one run missing ("the grid lacks 1 of 18").
+
+**The wording:** §8's "each twice" now reads "six observations per mode".
+
+**The recording hook's cost, beyond D061's three corrections** (`src/threads.rs`, the helper
+loop's comment in `src/coop.rs`, `launch`'s in `src/parallel.rs`, bench/CHANGELOG 3.3.0,
+§8, §R5):
+- the hooks are inside every run's wall timing;
+- a worker records before its first job;
+- a helper records after its first task and before it publishes that task's completion
+  (`done`), so a contended push can extend that run's completion;
+- the "uncontended", "small beside a decode" and equal-cost claims are removed;
+- the instrumentation is disclosed as potentially differential, since when threads start,
+  and so what they contend with, differs by arm, and its cost is not measured;
+- D059's recommendation of observation outside the timed region was replaced by a record
+  taken inside it, not met.
 
 ## Provenance and reproduction
 

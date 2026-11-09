@@ -15,13 +15,18 @@
 //! thread's push happens before its join returns, and nothing pushes after it. Read earlier,
 //! a thread not yet started is missing.
 //!
-//! **What it costs:** off (unless a harness turns it on, `record`), one relaxed load a
-//! thread, once. On, each recorded thread copies its name into a new `String` and pushes it,
-//! under one process-wide mutex, once: an allocation, the vector's growth (another
-//! allocation now and then), and a lock that threads starting together can contend for. So
-//! equal counts of recorded threads across arms do not make the cost equal: the threads'
-//! timing decides any contention. It is small beside a decode, but not zero, and not
-//! claimed equal.
+//! **What it costs, and where:** off (unless a harness turns it on, `record`), one relaxed
+//! load a thread, once. On, each recorded thread copies its name into a new `String` and
+//! pushes it, under one process-wide mutex, once: an allocation, the vector's growth
+//! (another allocation now and then), and a lock that threads starting together can
+//! contend for. The calls sit inside every run's timing: a worker records before its first
+//! job; a helper records after its first task and **before it publishes that task's
+//! completion** (`done`), so a contended push can extend that run's completion. Equal counts
+//! of recorded threads across arms do not make the cost equal: when threads start, and so
+//! what they contend with, differs by arm, so this instrumentation can be differential.
+//! Its cost is not measured here, and no claim that it is small, uncontended or equal across
+//! arms is made. (D059 recommended observation outside the timed region; this design
+//! replaces that recommendation with a record taken inside it, and does not meet it.)
 //!
 //! **It never unwinds** (the premise the pool's helper loop relies on: `ran` is called
 //! between a task and the helper's `done` count, and a panic there would end the helper
