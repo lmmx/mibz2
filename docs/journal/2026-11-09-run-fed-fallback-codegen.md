@@ -1,5 +1,13 @@
 # Run-fed: why B's fallback is slower than A's (#277's all-fallback corpora)
 
+> **Corrected (Optimiser REVIEW
+> [6734171410](https://github.com/lmmx/mibz2/issues/145#issuecomment-6734171410)).** This
+> entry first concluded that the fallback penalty "is harness layout". The evidence supports
+> less: **local same-kernel evidence narrows extra-work explanations; address geometry and
+> process placement remain live hypotheses, and 1 KiB dependency evidence requires revising
+> the census.** No measured credit and no CPU-causal conclusion follow from it. See
+> [§6](#6-correction-what-the-evidence-supports).
+
 9 November 2026. This is a static, untimed investigation for the run-fed line (PROTOCOL §11). It
 answers the Researcher's control (6733290162): on #277's three all-fallback corpora, B/A is
 1.06–1.37 while D/A is level.
@@ -270,14 +278,16 @@ they are CI's.
 6. **Ruled out: cache history and arm order.** The penalty is constant across all 15 rotated
    rounds.
 
-**What this changes:** #277's B/A on the fallback corpora is a harness-layout reading, not a cost
-of B's construction.
-- **Charge nothing to the records, the selector or the CPU from it.**
-- **Wikidata at the entry point:** B is likely mildly penalised by the same overlap. Its fallback
-  blocks are 1.1% exposed in the phase window, and B/A on Wikidata includes them.
+**What this changes** (as corrected in §6): B executes the same kernels, the same instructions
+and the same simulated misses as A on a fallback block, so #277's fallback B/A is no measured
+cost of B's extra work. It is not shown to be a layout effect either.
+- **Charge nothing to the records, the selector or the CPU from it,** and credit B nothing for
+  removing it.
 - **The same caution applies to #269's pinned-only R_fb 1.11.**
 
-## 5. The proposed control: a shared fallback
+## 5. The proposed control: a shared fallback (superseded by §6.3)
+
+This section's design is kept as first written. §6.3 replaces it.
 
 This is for a later registered diagnostic; it is not implemented on the measured branch. Its
 arms share one fallback function, and the layout is crossed with the arm:
@@ -313,6 +323,61 @@ The control's cheapest falsification is the aliasing set alone. If B on a clean 
 with A while A on the aliasing set is 28% slower, H1 is confirmed and the fix is a layout
 discipline for every harness. If the penalty stays with B's process and not with the set, H1
 falls to H2.
+
+## 6. Correction: what the evidence supports
+
+From the Optimiser's REVIEW 6734171410 (report, ledger and paired arithmetic at
+`8a6bf17c33f25bf0c3c358826d7bae0e62b54633`, `state/records/reviews/inbox-6734039567/`).
+
+### 6.1 The discriminator was mod 4 KiB; Zen 4 also shows 1 KiB
+
+Agner Fog's Zen 4 measurements report false store-to-load dependences at **1 KiB spacing**.
+§2's control fact, that A's and D's frames are clear of their `counts` window mod 4 KiB, then
+separates nothing:
+- **`counts` is exactly 1 KiB** (256 × `u32`). Modulo 1 KiB it covers every residue, so every
+  byte of every arm's `mtf_avx2` frame meets some `counts` slot mod 1 KiB, in A and D as in B.
+- **What differs between arms at 1 KiB** is only *which* slot each frame byte meets, and so
+  which literals are exposed. §3's census counted exposure mod 4 KiB only, B's window alone.
+- **Open:** the census recounted at both 1 KiB and 4 KiB for all three arms, from the actual
+  access addresses. Until then §3's exposure table is no evidence for H1 over H2.
+
+### 6.2 The fitted cost is not a measurement
+
+The ~50 nominal cycles per exposed literal in §3 is a fit of a c/B gap to a count. It is
+neither a measured event latency nor evidence that chooses aliasing over placement. §4's H1
+and H2 both stay live; H3 (text's entry depth) is unchanged.
+
+### 6.3 The revised control
+
+§5's shared callee still inherits a different caller stack depth per arm. The control, for a
+later registered diagnostic:
+- **A common-call-site isolation path,** plus an unchanged-entry reference arm, so the layout
+  effect and the shipped entry are both read.
+- **Crossed factors, varied independently:** backing-set identity, the relative offset of
+  `counts` against the kernel frames, the arm, and the order; with **A/A′**.
+- **Reciprocal within-set offset interventions:** a penalty that follows a buffer set fits
+  physical placement as well as aliasing, so the offset is moved within one set, both ways.
+- **Layout as a crossed factor on both hosts** (the EPYC 9V74 and the Intel 6973P-C), not a
+  special B-only arm.
+- **Logged geometry:** preallocated heap `counts`, every buffer's address mod 1 KiB, 4 KiB and
+  2 MiB, THP state and SMT, and matched initialisation.
+  - `align(4096)` alone is no cure, and it does not align a `Vec`'s backing allocation.
+- **Not acceptance criteria:** §5's "three processes" and "±2%" are dropped. The registration
+  sets its criteria.
+
+### 6.4 B's lead, with the fallback excess removed (noncausal)
+
+On #277's archived 15-round replay, B/A is **0.976269848**. Replacing only B's fallback seconds
+with the same round's A fallback seconds gives **0.970909695**: the observed fallback excess
+costs B about 0.536 percentage points.
+- This is a noncausal counterfactual, not a corrected result.
+- Layout elsewhere could explain all of B's 2.373% lead. **No layout-free gain is established.**
+
+### 6.5 What stands
+
+- **Ranking:** C29 first; the corrected layout attribution before C43. B stays a diagnostic
+  reference. C43's 6.44/run allowance is provisional.
+- **Unchanged:** #277's D STOP and every existing registration.
 
 ## Commands
 
