@@ -854,7 +854,7 @@
     },
     {
       "trigger_comment_id": 6731990737,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "705323290b5470dea4a31910c22522c342e9d064",
       "repository": "lmmx/mibz2",
@@ -862,7 +862,10 @@
       "report_commit": "6bc26d287a86d09271f66d028012aab694638a7d",
       "report_path": "state/reports/direct-f-registration-6731990737/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: invalid clock/output/count evidence admitted and timed D path guard missing. Construction and historical budget accepted; prospective diagnostic gate/control removal reasonable; narrow sort-only causal and whole-cost claims. 45 tests pass; six fixture mutations recorded. No native timing or implementation."
+      "disposition": "REVISE before freeze: invalid clock/output/count evidence admitted and timed D path guard missing. Construction and historical budget accepted; prospective diagnostic gate/control removal reasonable; narrow sort-only causal and whole-cost claims. 45 tests pass; six fixture mutations recorded. No native timing or implementation.",
+      "review_comment_id": 6732062626,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned verifier hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
