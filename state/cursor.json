@@ -570,6 +570,15 @@
       },
       "reply_id": 6729548266,
       "routing_verification": "Pinned route and check passed; exact readback passed. Pinned verify hardcodes FROM coordinator and is not claimed to pass for an optimizer publication."
+    },
+    {
+      "comment_id": 6729932062,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "f94551ab8c359ec28dca02956ddca150595cc7cb",
+      "progress": "Receipt; migration head and exact manifest digest verified. Reviewing helper construction and counters."
     }
   ],
   "migrated_from": {
