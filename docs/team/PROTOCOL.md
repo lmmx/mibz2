@@ -246,6 +246,28 @@ A red CI check on a PR is handled by `docs/team/CI-INCIDENTS.md`:
 
 The Coordinator owns this for every PR the team drives.
 
+## 11. A negative result on a line Louis is pursuing
+
+Louis, 9 November 2026: "in the past we have had negative results and sought to sharpen them
+through the Optimiser and then they started showing benefit… and/or we could send the ideas
+themselves to the Researcher to find new angles on or adjacent ideas and then make
+breakthroughs there. i dont wanna wake up to find that you agents just gave up".
+
+A STOP on one arm closes that arm, not the line. When an arm of a line Louis is pursuing reads
+STOP, NO GAIN or INCONCLUSIVE, the Coordinator, in the same wake:
+1. **Sends it to the Optimiser to sharpen:** the measured costs by phase, and the question
+   "which construction removes the cost that bound this arm?" The answer is ranked
+   constructions, each with a CI falsifier.
+2. **Sends the idea to the Researcher for new angles:** adjacent results, other formulations
+   and primary sources, each with a falsifiable prediction.
+3. **Builds the best-ranked construction** as the next registered arm, once a review allows.
+
+The line stays open until Louis closes it, or until both roles report no remaining
+construction worth a falsifier. Then the Coordinator states that on #145 and asks Louis.
+
+**Lines this applies to now:** run-fed construction of the navigation table from compressed
+runs (the posts of 8 November, #266, #269, the run-fed leader).
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:
