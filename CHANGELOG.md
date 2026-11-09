@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7](https://github.com/lmmx/mibz2/compare/v0.2.6...v0.2.7) - 2026-11-09
+
+### <!-- 9 -->Other
+
+- Bench 3.4.0: the recorder check's failed reads and controls are INCOMPLETE (Guardian D066)
+- Bench 3.4.0: the recorder check revised for Guardian D065
+- Bench 3.4.0: the machine-state recorder's validity fixes, raw timestamped readings, and its untimed check
+- publish first, review in flight (Louis's instruction) ([#294](https://github.com/lmmx/mibz2/pull/294))
+- point every reference at the pit-crew post's new URL and card
+- "mibz2 gets a pit crew"; check_prose.py; title and dek rules ([#295](https://github.com/lmmx/mibz2/pull/295))
+- Service threads, moving mibz2's serial work out of its teams ([#292](https://github.com/lmmx/mibz2/pull/292))
+- per-run cycles, clock and thermal state, recorded and never judged ([#290](https://github.com/lmmx/mibz2/pull/290))
+- coordinate-blog-post; takeaways first and visuals over dense prose in write-blog-post ([#291](https://github.com/lmmx/mibz2/pull/291))
+- ask the Guardian, not Louis, when genuinely unsure ([#287](https://github.com/lmmx/mibz2/pull/287))
+- Workstation queue: #271 and #270; Louis's standing authorisation for run-signal ([#285](https://github.com/lmmx/mibz2/pull/285))
+- certified-packet census on the inverse BWT; packets cover almost nothing on Wikidata ([#280](https://github.com/lmmx/mibz2/pull/280))
+- a parallel BzReader's source panicking cancels the decode instead of stranding the reader ([#278](https://github.com/lmmx/mibz2/pull/278))
+- deterministic worker-unwind test for M12, Miri filter, provenance (Guardian D047) ([#275](https://github.com/lmmx/mibz2/pull/275))
+- pipeline fuzz candidates and invariant-mutation evidence for 0.2.6's default (Guardian D042) ([#273](https://github.com/lmmx/mibz2/pull/273))
+- the MTF-runs post is its own post, not a sub-post of the inverse-BWT navigation post
+- a run-fed T-vector and a run-compressed Ψ², checked and censused; neither proposed for timing ([#266](https://github.com/lmmx/mibz2/pull/266))
+- reading the BWT's runs off bzip2's move-to-front codes ([#262](https://github.com/lmmx/mibz2/pull/262))
+- inverse-BWT navigation restructured, with a technical appendix ([#259](https://github.com/lmmx/mibz2/pull/259))
+- the mathematical structure of inverse-BWT navigation ([#257](https://github.com/lmmx/mibz2/pull/257))
+- README, CHANGELOG: 0.2.6's measured slowdown at bzip2 levels 1-2 ([#256](https://github.com/lmmx/mibz2/pull/256))
+- relay an attached file's complete text in a collapsed details block within the one #145 comment
+- CI incidents runbook: classify a red check from its log, re-run only the failed job paced to the outage, record what did not run; the green-head gate holds, an infrastructure exception is proposed for Louis
+- a general plan policy (rule A, the evidence envelope), reviewed; README: unmeasured topologies ([#253](https://github.com/lmmx/mibz2/pull/253))
+- pipelined teams, how mibz2 0.2.6 decodes 7% faster on ten cores ([#252](https://github.com/lmmx/mibz2/pull/252))
+- The workstation queue: prepared runs listed in bench/workstation-queue.txt, run with just workstation-queue (PROTOCOL 9); await-submit checks out the tagged commit
+
 ## [0.2.6](https://github.com/lmmx/mibz2/compare/v0.2.5...v0.2.6) - 2026-11-07
 
 ### <!-- 4 -->Documentation
