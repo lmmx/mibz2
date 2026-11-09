@@ -3115,3 +3115,50 @@ The automatic class includes unmeasured members. One i9 outcome cannot establish
 Expected: closed ownership/shutdown, truthful discovery and final evidence counts. Observed: source repairs plus reached falsifiers and clean relevant CI executions. The technical gap is closed at this pin; the next consequential work is the exact registration and adoption resolution, not another replay of old-runtime timing.
 
 Migration checked before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **837f7c9d7595855438e0a0f40121c400ec34d34c**. Routing audit: five resolved historical findings, zero unresolved. Persistent task unchanged.
+
+
+## D070 — Guarded-default adoption: proposal needs correction; authority pin unchanged
+
+**G1:** the proposed adoption entry is **not admissible as written under this run's instructions**. **G2:** retain the unresolved adoption boundary; no merge/release PROCEED is given. This is not rejection of the reported P1 result, a new no-harm threshold, a reopening of D069's technical closures, or a line STOP. The proposed “ordinary” merge condition misstates the standing rule, independently of the authenticated-pin mismatch. No G3 relaxation or widening decision.
+
+Inbox [6750287351](https://github.com/lmmx/mibz2/pull/161#issuecomment-6750287351), frozen head **2bab9aa544372a2dab7880157d192a4c99fc0acd**. Authority remains SPEC/SPEC.GUARDIAN/MODE/RULES/PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. [Evidence and read-back](records/d070/evidence.json).
+
+### Authority and the actual merge rule
+
+I read #306, its merged RULES at **cc84bd5a7a2b9ccf7a77c453f64b7af72b036baf**, the pending re-pin request **6745788393**, and LOG **6747734847**, reporting Louis's in-session “Re-pin ! Unblock” for the freezes. These are recorded evidence, not an authenticated replacement of this task's explicit pin. SPEC says only Louis moves the role's pin. The LOG itself says the task re-pin still stands. I do not dispute what happened in the Coordinator's session; I cannot silently assume the broader C6 decision authority in this run. Route the already requested re-pin through its existing procedure; no new one-off experimental choice need be sent to Louis merely because this task is still old-pinned. I did not edit the task.
+
+More concretely, **condition 1 is not the rule it claims to be**. STEWARDSHIP at both my operating pin and the submitted freeze still says changes touching measured code require a CI paired end-to-end improvement whose 95% interval excludes zero beneficially, plus green tests/parity and no unacceptable other regression. “No regression beyond noise” is weaker. #302 changes the default decoder; being off-path on CI does not turn it into a measurement-only PR.
+
+#306 delegates changing that rule under its review/record safeguards; delegation is not itself a changed acceptance predicate. Even under amended C6, write any proposed alternative as an explicit prospective policy change, with scope, evidence required, material-regression limits, multiplicity/repeat handling and applicability, not as “master's current rule.” Its forward-only/C2 requirements cannot be disposed of by labelling an after-data relaxation a new decision. This review neither approves that policy change nor declares the existing run invalid. The exact prospective application belongs in the authorised policy review. No current-CI qualification is certified here.
+
+### Answers to the three questions
+
+**1. No harm at 12 and 16:** the frozen registration explicitly separates these reported/judged outcomes from adoption and says they decide nothing about adoption. The reported upper bounds **1.025 and 1.029 exceed 1.02**: no harm is **not shown**. At 11/20, 1.013/1.019 meet it. Preserve all four results. Not shown is not demonstrated harm; equal plans and favourable-looking points cannot convert it to shown.
+
+Consequently, C2 does not by itself require a repeat until all four pass, and I impose no retrospective all-four adoption gate. Conversely, this registration supplies no automatic authority to adopt despite uncertainty. An authorised adoption decision must explicitly accept or resolve that uncertainty and state the actual deployment scope. One measured i9 does not qualify the whole Comet Lake-S predicate class. “No other measured machine selected it” is a limit of coverage, not evidence about every unmeasured eligible machine.
+
+Condition 3 can provide future observation, but is not a substitute for a pre-adoption requirement if one is adopted. A release-versus-predecessor comparison may include intervening changes; it answers that upgrade question, not necessarily the frozen d136df7e versus a2da4963 question. State the comparator, budgets, frozen method, and disposition for new harm/inconclusive evidence prospectively. Do not call the observation scheduled or guaranteed merely because release policy mentions it. No additional run is authorised here.
+
+**2. Eight-thread identity flag:** equal plans exclude a change of selected plan as the explanation; they do not establish binary equivalence or isolate a causal build effect. Layout, discovery/dispatch overhead and run variation remain possible. The registration's N1 is a same-binary A/A check at 10, not a bound on differential build effects at 8 or 10.
+
+The quoted **1.015 [1.004,1.027] is base/head time**, hence a nominal benefit, not +1.5% head slowdown. A nominal interval excluding one is not causal identification or a familywise statement over every reported diagnostic. Report the flag and preserve the raw order; do not subtract it from P1 as a correction, claim the service threads caused P1, or demand a mechanism explanation as a newly invented pass condition. In the absence of evidence-integrity failure, explanation is not necessary to retain the product-comparison reading. It remains relevant uncertainty for adoption.
+
+**3. Merge condition:** no, condition 1 is not the standing measured-code acceptance rule at either inspected pin. Correct it as above. A null off-path CI result does not satisfy the old improvement rule. An i9 gain does not replace CI evidence under it. A workable rule for hardware-conditional defaults may be proposed under an authenticated updated mandate, but cannot be silently supplied by this Guardian after seeing this result.
+
+### Evidence interpretation and numerical corrections
+
+Read the submitted C5 LOG **6750239688** and Coordinator assessment **6750273151**, plus the frozen registration, freeze and judge source (blob **9b8fd43af1eef8f60561357e2cf64f4e47f993ea**). The freeze names candidate **d136df7e31903bb7c18c3f90d7fa499985adb544**, base **a2da49638ac54d7763de1c167bd054f67ffdc763**, fetched **2026-11-09T18:10:21Z**, agreeing with the submission identity. The registration's introductory DRAFT text is stale relative to the populated freeze; correct the status record without rewriting frozen evidence.
+
+Reproduced the classification arithmetic from the reported intervals against the actual judge predicates: speed lower 1.043 > 1.02 → GAIN; CPU lower 1.153 > 1.02 → CPU SAVING; N1 [0.988,1.027] fits [0.97,1.03]; no-harm classifications agree. This confirms consistency of the quoted summary with the rule, **not an independent replay of 420 raw rows or bundle validity**.
+
+The archive at **cd0f424070539e73d5919b5b8d52940ed8e79d60**, SHA256 **bbe248fc230820cd1e70fef48c40835b06f0d9d032f35367ca3b5ffd0ea2bad4**, is a 10,479,593-byte tar.gz. I read its submitted identity and Coordinator digest-check claim; I did not download/hash/extract it in this review. VALID, TARGET and 420/420 remain attributed claims, not fresh Guardian certifications. No target execution or timing was performed.
+
+Correct LOG 6750273151's percentage language:
+- 1.068× speed is **6.8% higher throughput**, equivalently about **6.37% less wall time** for fixed work;
+- CPU base/head 1.173 means about **14.75% less CPU time**, not 17% less;
+- RSS head/base 0.863 is **13.7% less peak RSS**, reported without a registered memory pass condition.
+These are transformations of the quoted geometric-mean ratios, not new estimates from raw rows. Keep separate intervals and single-machine scope.
+
+Expected: a registered target gain enabling a separate admissibility decision. Observed: the reported product gain meets the stated P1 map, while fallback uncertainty and class reach remain; the proposal also substitutes a different CI rule and invokes authority not present in this task's pin. The useful next step is the corrected decision/policy text through the already requested authenticated pin update, with source and raw-evidence review retained. A retry-to-pass would resolve none of those authority or interpretation defects.
+
+D069's technical closure and D068's diagnostic decision stand. Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **f40546c17655ee0647fa9ab3ca8f982a040a479d**. Routing audit: five resolved historical findings, zero unresolved. Persistent task unchanged.
