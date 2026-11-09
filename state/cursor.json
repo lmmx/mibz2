@@ -34,7 +34,8 @@
     6715370785,
     6729116363,
     6729426658,
-    6729932062
+    6729932062,
+    6730271993
   ],
   "outgoing_comment_ids": [
     {
@@ -166,6 +167,13 @@
       "type": "REVIEW",
       "sha": "08abbe6821301fd26780ee1d8eb59dbe6e779ed2",
       "checkpoint_comment_id": 6729932062
+    },
+    {
+      "pr": 145,
+      "id": 6730372937,
+      "type": "REVIEW",
+      "sha": "cb3283a21466b9f025446a9bfda7da62afc74a7d",
+      "checkpoint_comment_id": 6730271993
     }
   ],
   "reviews": [
@@ -341,7 +349,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "WAITING_FOR_INBOX",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -595,11 +603,11 @@
     {
       "comment_id": 6730271993,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "280643cef83b09ac89707b747670e8198b21b68e",
-      "progress": "Complete: source findings, ranking, prices and D046 timing STOP recorded; awaiting REVIEW.",
+      "progress": "Source audit, proposals and ledger committed; REVIEW published and exact body/author/destination verified. D046 STOP carried forward.",
       "report_path": "state/records/reviews/inbox-6730271993/report.md",
       "report_commit": "cb3283a21466b9f025446a9bfda7da62afc74a7d",
       "audit_scope": {
@@ -609,7 +617,9 @@
         "new_timing": false,
         "tests_executed": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6730372937,
+      "routing_verification": "Pinned route/check passed; exact readback passed. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
     }
   ],
   "migrated_from": {
