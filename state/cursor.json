@@ -881,6 +881,23 @@
       "status": "published; scoped D045/D053 HOLD lifted",
       "disposition": "D045/D053 HOLD lifted for reviewed service-core/admission snapshots; exact build/walk intersection not established; ordinary registration, timing and integration gates remain",
       "comment": 6732679972
+    },
+    {
+      "id": "D058",
+      "pr": 277,
+      "incoming_pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6732894651,
+      "sha": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
+      "evidence_digest": "git-blob:cb09d7da817fa467cbdc4664ddf2289e68157d1f;journal:5eed3ea4b1505f0a82fd50eece86eb80414025b4;fuzz-job:128994104250",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "status": "complete",
+      "disposition": "D055 evidence objections resolved; timing HOLD lifts once Researcher freeze and green CI including completed empty-composition Miri are satisfied; not ready at observed red/incomplete snapshot",
+      "commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
+      "receipt_commit": "20619365c570c41d42b089cf23fa9bb3c0c2a795"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1048,7 +1065,9 @@
     "41af868c294772b8ddebfa351b6a8172cac9a55f",
     "61d3b9d2de69680d6fd1f7016edd9dc7e140fd77",
     "aa0538a305b51368e8274c1bb508d8316c30bd95",
-    "d51723b1b4921bbd5cf6e05c9970542aace04f24"
+    "d51723b1b4921bbd5cf6e05c9970542aace04f24",
+    "20619365c570c41d42b089cf23fa9bb3c0c2a795",
+    "fa85f6b20d349c4b68dbb7384b7c592120652341"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1187,12 +1206,13 @@
   "current_execution": {
     "active_comment": 6732894651,
     "decision": "D058",
-    "status": "in progress",
+    "status": "complete",
     "queue_snapshot": [
       6732894651
     ],
     "remaining_in_snapshot": [],
-    "automation": "unchanged; persistent task remains enabled"
+    "automation": "unchanged; persistent task remains enabled",
+    "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
   },
   "duplicate_events": [
     {
@@ -1640,6 +1660,13 @@
       "decision": "D057",
       "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
       "comment": 6732679972
+    },
+    {
+      "pr": 277,
+      "sha": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
+      "evidence_digest": "git-blob:cb09d7da817fa467cbdc4664ddf2289e68157d1f;journal:5eed3ea4b1505f0a82fd50eece86eb80414025b4;fuzz-job:128994104250",
+      "decision": "D058",
+      "commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1970,9 +1997,11 @@
     {
       "comment_id": 6732894651,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D058",
-      "progress": "Evidence read; correcting prior receipt commit, which inadvertently preserved the previous cursor without adding this ID. No work decision or REVIEW published."
+      "progress": "D058 work committed; REVIEW pending.",
+      "receipt_commit": "20619365c570c41d42b089cf23fa9bb3c0c2a795",
+      "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
     }
   ],
   "migrated_from": {
