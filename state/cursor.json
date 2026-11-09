@@ -722,7 +722,7 @@
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
       "result_commit": "c41ef38d7df2f596193c01d9adbb2f4893f1d217",
-      "progress": "Raw artifacts hash-verified and readings replayed. Identical measured kernels and B synthetic regressions found; drafting compressed ordering proposal and controlled runner diagnostic."
+      "progress": "Raw replay, source identity audit, C43 cost model and crossed runner diagnostic completed in report; publication pending."
     }
   ],
   "migrated_from": {

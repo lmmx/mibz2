@@ -374,3 +374,19 @@ No implementation, compilation, timing, merge, safety certification or automatio
 Source/count review and arithmetic only; census raw gzip and historical Precopy runs not independently replayed. No implementation, compilation, timing, safety certification, acceptance change or new measured credit.
 
 Publication-time channel update: Coordinator LOG6733033907 reports that D058's conditions are met and the unchanged #277 registered sweep42567752634 has been dispatched at aa409f6f2ebce9f41dc7902789f0ab8d6958b020. This is a reported dispatch, not a result or an independent CI/Miri verification by this review. The frozen comparison remains in flight; no duplicate run is proposed.
+
+
+## Direct-placement STOP and runner contrast: inbox6733116723
+
+[Report and bounded diagnostic](records/reviews/inbox-6733116723/report.md). Measured aa409f6f2ebce9f41dc7902789f0ab8d6958b020; result c41ef38d7df2f596193c01d9adbb2f4893f1d217.
+
+- Artifact13651923399 and old13645275344 SHA256 verified; raw pinned-copy arithmetic replayed. D/A1.052451, D/B1.078033; registered STOP and screens retained. Full corpus admission not independently rerun.
+- **Ranking:** C29 first; crossed common-binary host/build diagnostic next; preserve existing frozen transfer; C43 compact run-index order conditional. No B promotion to production lead.
+- Measured old/new heads have identical whole mtf.rs and bwt.rs blobs and B's runtime prefix. Both declared master baselines also have identical mtf/bwt sources. Compiler version matches. Host, harness/layout/history remain confounded; no demonstrated CPU-family cause.
+- B/A.976270 on Wikidata hides random1.28423, records1.37493, runs1.38307 and Wikidata fallback1.02107. No all-corpus qualification.
+- D's compound placement exceeds sort+fill by.270698 nominal c/output B:5.46398/run or4.47799/cell. Seeds alone would need2927.86/seed; equal slots do not identify locality vs dependencies/control. D has38456 more source-level table-store operations.
+- **C43 proposal:** stable u32 indices per byte, two grouping passes then global sequential fill;4r rather than8r ordering scratch. Charge histogram/validation/scatter and dependent recs[j],recs[j+1] gathers. G+incremental_fill+other<.318992/output B (6.43878/run) to beat B's1.328894 sort+fill. Not implemented.
+- Diagnostic A_old/A_new/B at exact pins on both named families, same corpus and frozen binaries. A kernel aliases are a negative control; full-revision comparison requires same B control in both builds. ubuntu-latest does not guarantee CPU model. Missing host stratum remains missing; no unbounded recruitment, infrastructure or C6 change.
+- Observed front and fill/build ratios both improve across archival runs; sort/build does not. Report seconds and within-host ratios; nominal GHz is not a comparable PMU-cycle measurement.
+
+No new measured credit, implementation, compilation, timing, safety certification or acceptance change.
