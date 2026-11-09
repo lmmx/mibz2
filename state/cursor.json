@@ -1091,6 +1091,19 @@
       "status": "finished",
       "disposition": "Prospective target-gated route defensible; revise evidence contract before enactment; current pin permits advice only",
       "comment": 6750520217
+    },
+    {
+      "pr": 309,
+      "sha": "c40c8b46b99b8216ed102ff2ed3c4658e4d7edf0",
+      "evidence_digest": "stewardship:220f2360c6e554cae531a0f1087fb8a82901e82c;request:6750546526",
+      "decision": "D072",
+      "commit": "641bb38d57d42e4d7db96d47f7d1056c05b063f2",
+      "id": "D072",
+      "incoming_pr": 161,
+      "incoming_comment": 6750546526,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "REVISE coverage, interval families, CI selection contract, tolerance wording/rationale and authority consistency; advisory only"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1314,7 +1327,10 @@
     "1bd2cc941e5fcf4efcfd7005baafce100e2dda2a",
     "5afaeab9bb66d1cb8706eff4a0214942c1d0286b",
     "10355dc63786883a8c3e9bd93bfe537539c403cd",
-    "66234a70a159accc458f94dd872b70d5dc734c16"
+    "66234a70a159accc458f94dd872b70d5dc734c16",
+    "366b2164dad996ecd2cd4c107656019142a65fca",
+    "34e654e58b403659d7bfb5e9542632aa493a6736",
+    "641bb38d57d42e4d7db96d47f7d1056c05b063f2"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1386,7 +1402,8 @@
     6740161956,
     6741180673,
     6750287351,
-    6750412724
+    6750412724,
+    6750546526
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1466,8 +1483,9 @@
   },
   "current_execution": {
     "active_comment": 6750546526,
-    "status": "in progress",
-    "decision": "D072"
+    "status": "complete",
+    "decision": "D072",
+    "work_commit": "641bb38d57d42e4d7db96d47f7d1056c05b063f2"
   },
   "duplicate_events": [
     {
@@ -2027,6 +2045,13 @@
       "decision": "D071",
       "commit": "10355dc63786883a8c3e9bd93bfe537539c403cd",
       "comment": 6750520217
+    },
+    {
+      "pr": 309,
+      "sha": "c40c8b46b99b8216ed102ff2ed3c4658e4d7edf0",
+      "evidence_digest": "stewardship:220f2360c6e554cae531a0f1087fb8a82901e82c;request:6750546526",
+      "decision": "D072",
+      "commit": "641bb38d57d42e4d7db96d47f7d1056c05b063f2"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2509,8 +2534,10 @@
     {
       "comment_id": 6750546526,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D072"
+      "status": "complete",
+      "decision": "D072",
+      "receipt_commit": "366b2164dad996ecd2cd4c107656019142a65fca",
+      "work_commit": "641bb38d57d42e4d7db96d47f7d1056c05b063f2"
     }
   ],
   "migrated_from": {
