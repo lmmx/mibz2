@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Pair-from-runs #272 re-review complete; awaiting REVIEW publication.",
+  "state": "Pair-from-runs #272 re-review finished; REVISE narrowed to raw count reconciliation.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -790,7 +790,7 @@
     {
       "trigger_comment_id": 6731077460,
       "related_queued_comment_id": 6731019236,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "source_commit": "4c70dfc42536c32e9b55c6f2e95da5b1d8538b39",
@@ -798,7 +798,10 @@
       "report_commit": "3b063b1eec880f6b39cc6fe01e4c9068f721f60b",
       "report_path": "state/reports/pair-from-runs-rereview-6731077460/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE narrowed to count reconciliation before freeze: prior interval/inventory/framing repairs accepted; 28 tests pass, four inconsistent count fixtures remain VALID and single-copy denominator changes reverse M1. Separate D046/B5 unchanged; no native timing or implementation."
+      "disposition": "REVISE narrowed to count reconciliation before freeze: prior interval/inventory/framing repairs accepted; 28 tests pass, four inconsistent count fixtures remain VALID and single-copy denominator changes reverse M1. Separate D046/B5 unchanged; no native timing or implementation.",
+      "review_comment_id": 6731167553,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
