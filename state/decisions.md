@@ -3028,3 +3028,41 @@ Whole-process CPU/RSS accounting is the right unit, including hub/input feeders 
 Expected: an unchanged safe core behind a narrow selector. Observed: core evidence largely reusable, but outer failure termination is unresolved, discovery fails open, and final-count evidence races retirement. The useful next pass is those bounded repairs and their falsifiers, then one exact-candidate registration. Another old-runtime timing attempt closes none of these gaps.
 
 No local Rust/Miri/fuzz execution: rustc/cargo unavailable. Executed only the finite Python witnesses and source comparisons; CI logs are archived execution by CI, with merge checkout identified. Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **fd56b1a6b01564595faf8f479f4099d73c0e54fe**. Routing audit: five resolved, zero unresolved; REVIEW routes to #145. Task unchanged.
+
+
+## D068 — Telemetry classification repaired; one diagnostic may proceed
+
+**G1:** concur that D066's two error-stage defects and task-clock zero-reading mismatch are repaired at **7356898c4cc5b10bc2b49b40b2a015361b917a56** (#298). **G2:** lift the D065/D066 HOLD on this diagnostic. **PROCEED for one frozen `bench-telemetry-check` attempt**, eligible for the workstation queue once the Coordinator completes the existing PROTOCOL §9 conditions on the eventual merged commit. This is the review's admission disposition, not a claim that a queue entry, ready tag, merge or workstation run already exists. No G3 relaxation or G8 line stop. D067's #302 HOLD remains unchanged.
+
+Inbox [6740161956](https://github.com/lmmx/mibz2/pull/161#issuecomment-6740161956), dispatching [6740121675](https://github.com/lmmx/mibz2/pull/145#issuecomment-6740121675). Authority: SPEC/SPEC.GUARDIAN/MODE/RULES/PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Independent source and CI-log review; no implementation involvement. [Evidence](records/d068/evidence.json), [inspected delta](records/d068/source-delta.json), [CI excerpts](records/d068/ci-excerpts.txt).
+
+### Repairs and reached evidence
+
+- **Inheritance:** failed readings now retain typed Open, Control or Read provenance. Both regions are inspected before classification. Any Control/Read fault wins over an Open fault and yields INCOMPLETE; open-only failure yields UNAVAILABLE. Successful readings must still be whole and meet the registered 10× witness. Thus EIO in either region and Open-inside/Control-before can no longer masquerade as unavailable capability.
+- **Multiplex-live:** opened-event Control/Read failures are tested first, before any PASS or “not exercised.” Unopened events are left out, with raw observations retained. A valid partial reading must be listed; partial cycles/task-clock must suppress eff_ghz. No valid multiplexing remains OBSERVED. The mixed cycles-control-failure/instructions-partial witness is now INCOMPLETE.
+- **Task-clock modes:** both values must be nonzero and whole. Zero either way is INCOMPLETE; valid output remains OBSERVED, never validation by itself.
+- **Exit:** FAIL → 1 still precedes INCOMPLETE → 3. The new negative fixtures check D066's witnesses and their exit 3, rather than converting them to PASS. The missing-list and invalid-ratio multiplex fixtures still FAIL.
+
+Native CI job **129158716451** independently records **16 example-ab tests passed**, including inheritance_witness_negative_controls and multiplex_status_negative_controls. Its library run is 57 passed, one ignored. Submission job **129158716146** records all three telemetry end-to-end fixtures passing: dirty-input refusal, check exit through the bundle, and failure remaining nonzero while submitted. These are inspected CI executions, not Rust executed locally or proof of target PMU access. The brief's VM dry run (CHECKED; PASS 9, UNAVAILABLE 5, OBSERVED 1) remains attributed to the Coordinator.
+
+The native/submission checkout was CI merge **082239d422db9a9610a8b4196275cc9a2329666e**. Compared with the reviewed head, its sole file difference is **docs/site/blog/2026-11-09-pit-crew-service-threads.md**. All diagnostic measured inputs match; the full trees do not. No blanket tree-equivalence claim.
+
+### Freeze, bounds and queue scope
+
+Registration blob **198ff4dcb964a26b07e04a1772047cb5a627713b**, ab.rs blob **f7f4dfbfa7b84d656b388f88dd09c49360519d13**. Freeze blob **a4fcb1d4bc6be97dfd693d27f65e6da240dddbe0** names **37bd85af502d0306b27afaf041501ce67df97d37**. The only change from that freeze commit to 7356898c is the freeze file itself. Measured inputs are identical.
+
+Rechecked the recipe: reject dirty or changed measured inputs; use Cargo's reported executable; record/recheck its digest and toolchain; bound each spin at 10 seconds and the check at 300 seconds; retain the attempt bundle and nonzero outcome. The registration permits **one** attempt through Louis's `just submit bench-telemetry-check`. A new SHA does not license a retry. FAILED/REFUSED/INCOMPLETE must be retained and reviewed. UNAVAILABLE establishes no capability and authorizes no host/credential change.
+
+#298 was still open at inspection. The Coordinator must preserve these reviewed inputs through merge, apply the existing CI/untimed-dry-run conditions to the commit to run, and bind ready/bench-telemetry-check exactly as PROTOCOL §9 requires before adding the one queue line. A changed measured input is not silently covered. This is ordinary identity verification, not a new Guardian approval prerequisite. No dependency on #299 or #302 is introduced.
+
+### Bench claim narrowed; history retained
+
+Current checks: **24 successes, 3 skipped**, no failure or unfinished check in the inspected snapshot. Bench run **42616847047**, head 7356898c, records **420 decodes, parity OK**. All reported wall-time intervals include zero. Its four-measure “no change detected” assessment concerns the displayed Wikidata resource comparison, not proof of equivalence across every table. The full report also labels some RSS increases “more,” including random/4 at **+3.8%**. Preserve those observations; “no change” without that scope is too broad.
+
+The source delta from D066's 7678d347 changes classification/tests, registration, changelog and freeze only; **src/ is unchanged**. The Coordinator reports the old-head second attempt reproduced a speed flag. That historical result remains intact; this run did not re-fetch that old attempt. Neither current intervals nor this source comparison identifies the cause as binary layout or runner variation. I lift the diagnostic defect HOLD, not waive the measurement-only merge rule or certify every measured resource unchanged. Integration remains the Coordinator's decision under STEWARDSHIP and RULES C6.
+
+No new unsafe primitive in the inspected repair: the existing descriptor ownership transfer is preserved; the change retains and classifies failures. No fresh blanket decoder B5 gate is warranted by this delta. The diagnostic establishes only the registered recorder properties on the machine where Louis runs it: not perturbation cost, hybrid coverage, complete attribution, hardware region boundaries, frequency truth, or decoder performance.
+
+Expected: honest failure-stage classification. Observed: typed provenance, correct precedence and reached negative tests. D065/D066's identified gap is closed. The next useful evidence is the one bounded target diagnostic, honestly allowing unavailable or incomplete results; another performance attempt cannot replace it.
+
+Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; exact manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **ccff1819752278b15d26e1cc249d16b59cc0501e**. Routing audit: five resolved historical findings, zero unresolved. Persistent task unchanged.

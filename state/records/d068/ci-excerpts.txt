@@ -1,0 +1,60 @@
+
+JOB 129158716451
+2026-11-09T12:25:14.4875171Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +082239d422db9a9610a8b4196275cc9a2329666e:refs/remotes/pull/298/merge
+2026-11-09T12:25:15.3695156Z  * [new ref]         082239d422db9a9610a8b4196275cc9a2329666e -> pull/298/merge
+2026-11-09T12:25:15.4620133Z HEAD is now at 082239d Merge 7356898c4cc5b10bc2b49b40b2a015361b917a56 into ddc6d4db7e4cbd28422fa06b5e53afbf0fabef86
+2026-11-09T12:25:15.4685052Z 082239d422db9a9610a8b4196275cc9a2329666e
+2026-11-09T12:27:52.7109134Z test result: ok. 57 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 84.69s
+2026-11-09T12:28:00.3124433Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.60s
+2026-11-09T12:28:04.4342970Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.11s
+2026-11-09T12:28:15.6670697Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.23s
+2026-11-09T12:28:17.6272906Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.94s
+2026-11-09T12:28:19.6338642Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.00s
+2026-11-09T12:28:22.7444768Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.11s
+2026-11-09T12:28:32.2466917Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.50s
+2026-11-09T12:28:32.8196364Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+2026-11-09T12:28:34.6037150Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+2026-11-09T12:28:36.9799507Z test machine::tests::inheritance_witness_negative_controls ... ok
+2026-11-09T12:28:36.9799892Z test machine::tests::multiplex_status_negative_controls ... ok
+2026-11-09T12:28:36.9813289Z test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+JOB 129158716146
+2026-11-09T12:25:14.1027237Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +082239d422db9a9610a8b4196275cc9a2329666e:refs/remotes/pull/298/merge
+2026-11-09T12:25:14.8583520Z  * [new ref]         082239d422db9a9610a8b4196275cc9a2329666e -> pull/298/merge
+2026-11-09T12:25:14.9539096Z HEAD is now at 082239d Merge 7356898c4cc5b10bc2b49b40b2a015361b917a56 into ddc6d4db7e4cbd28422fa06b5e53afbf0fabef86
+2026-11-09T12:25:14.9596025Z 082239d422db9a9610a8b4196275cc9a2329666e
+2026-11-09T12:25:29.7743178Z test_dirty_inputs_refuse_nonzero (__main__.EndToEnd.test_dirty_inputs_refuse_nonzero) ... ok
+2026-11-09T12:25:34.9394730Z test_exit_follows_the_check_through_the_bundle (__main__.EndToEnd.test_exit_follows_the_check_through_the_bundle) ... ok
+2026-11-09T12:25:39.3801583Z test_submit_keeps_a_failure_nonzero_and_submits_it (__main__.EndToEnd.test_submit_keeps_a_failure_nonzero_and_submits_it) ... ok
+2026-11-09T12:25:39.3802870Z Ran 3 tests in 10.776s
+
+JOB 129158714801
+2026-11-09T12:25:19.3129386Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:20.9166954Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:25.1518399Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:25.1629084Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:25.2048646Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:25.2158936Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:25.2289560Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.1904035Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.2117507Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.2709916Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.2826940Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.2927039Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.3221208Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.3414003Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:27.3629761Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:29.5435559Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:25:54.9413386Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:26:09.7691796Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:26:13.2099083Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:26:14.1326422Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:26:20.0781732Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:26:20.4021955Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:28:35.4933792Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:29:48.8054164Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:29:48.9435341Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:29:49.1157513Z result.json, comment.md: 420 runs, parity ok
+2026-11-09T12:29:49.1282955Z **Assessment:** No change detected on the four measures at this run's precision (every interval holds no change; not a proof that nothing changed).
+2026-11-09T12:29:49.1423620Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56
+2026-11-09T12:29:50.5559828Z   HEAD_SHA: 7356898c4cc5b10bc2b49b40b2a015361b917a56

@@ -1,0 +1,247 @@
+{
+  "decision": "D068",
+  "input": 6740161956,
+  "queued": 6740121675,
+  "pr": 298,
+  "head": "7356898c4cc5b10bc2b49b40b2a015361b917a56",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "disposition": "G1 accept repairs; G2 lift D065/D066 diagnostic HOLD; PROCEED one frozen diagnostic subject to existing PROTOCOL 9",
+  "source_blobs": {
+    "examples/ab.rs": "f7f4dfbfa7b84d656b388f88dd09c49360519d13",
+    "bench/telemetry-check.frozen": "a4fcb1d4bc6be97dfd693d27f65e6da240dddbe0",
+    "docs/journal/2026-11-09-telemetry-check-registration.md": "198ff4dcb964a26b07e04a1772047cb5a627713b",
+    ".just/bench.just": "34bb6c44f8937db68830d9965af5edd8a89f49af"
+  },
+  "checks": [
+    {
+      "id": 129159562250,
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847103/job/129159562250"
+    },
+    {
+      "id": 129159559426,
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847103/job/129159559426"
+    },
+    {
+      "id": 129159558809,
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847103/job/129159558809"
+    },
+    {
+      "id": 129159519480,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129159519480"
+    },
+    {
+      "id": 129158780339,
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780339"
+    },
+    {
+      "id": 129158780308,
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780308"
+    },
+    {
+      "id": 129158780301,
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780301"
+    },
+    {
+      "id": 129158780165,
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780165"
+    },
+    {
+      "id": 129158780128,
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780128"
+    },
+    {
+      "id": 129158780108,
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158780108"
+    },
+    {
+      "id": 129158754255,
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158754255"
+    },
+    {
+      "id": 129158752347,
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158752347"
+    },
+    {
+      "id": 129158752256,
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158752256"
+    },
+    {
+      "id": 129158752046,
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158752046"
+    },
+    {
+      "id": 129158752009,
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158752009"
+    },
+    {
+      "id": 129158751999,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158751999"
+    },
+    {
+      "id": 129158751996,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158751996"
+    },
+    {
+      "id": 129158716615,
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158716615"
+    },
+    {
+      "id": 129158716600,
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158716600"
+    },
+    {
+      "id": 129158716451,
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158716451"
+    },
+    {
+      "id": 129158716401,
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158716401"
+    },
+    {
+      "id": 129158716146,
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847062/job/129158716146"
+    },
+    {
+      "id": 129158715105,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847103/job/129158715105"
+    },
+    {
+      "id": 129158714801,
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847047/job/129158714801"
+    },
+    {
+      "id": 129158714639,
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847103/job/129158714639"
+    },
+    {
+      "id": 129158713925,
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847048/job/129158713925"
+    },
+    {
+      "id": 129158713911,
+      "name": "occupancy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42616847044/job/129158713911"
+    }
+  ],
+  "freeze_comparison": {
+    "files": [
+      {
+        "filename": "bench/telemetry-check.frozen",
+        "status": "modified",
+        "sha": "a4fcb1d4bc6be97dfd693d27f65e6da240dddbe0"
+      }
+    ],
+    "commits": 1
+  },
+  "ci_merge_comparison": {
+    "sha": "082239d422db9a9610a8b4196275cc9a2329666e",
+    "files": [
+      {
+        "filename": "docs/site/blog/2026-11-09-pit-crew-service-threads.md",
+        "status": "modified",
+        "sha": "3bb5c8901271c6ad7b879a3f477fd00f911f56cd"
+      }
+    ],
+    "measured_inputs_equal": true,
+    "full_trees_equal": false
+  },
+  "review_method": [
+    "independent inspection of source/registration/recipe",
+    "compare API file deltas",
+    "native/submission/bench CI execution logs inspected"
+  ],
+  "limits": [
+    "No local Rust/Miri or target PMU execution",
+    "Coordinator VM dry run attributed only",
+    "Old-head second bench flag preserved as reported; no causal attribution",
+    "Current null intervals are not equivalence; RSS increases remain visible",
+    "PR open; eventual merged commit and readiness still Coordinator responsibilities"
+  ],
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  }
+}
