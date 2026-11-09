@@ -1021,6 +1021,19 @@
       "status": "finished",
       "disposition": "REVISE remaining inheritance/multiplex status paths; other D065 fixes accepted",
       "comment": 6739925087
+    },
+    {
+      "pr": 302,
+      "sha": "3c16b730161e416d7e282874a848ee387e4202c2",
+      "evidence_digest": "git-blob:ea5a7deaaadbf221089fb03804d7eb08c3d95158;parallel:efae1a86ab20bb5a0889c574a01e7e02c9b06f12;occupancy-job:129157302740",
+      "decision": "D067",
+      "commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d",
+      "id": "D067",
+      "incoming_pr": 161,
+      "incoming_comment": 6739971921,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "HOLD guarded service timing/admission; outer unwind, fail-open discovery, completion fence; scoped B5 reuse accepted"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1224,7 +1237,9 @@
     "941ceb0fa83678f92e316ec5d0b3798adb8f89c8",
     "eeca52734cc0e882ea4d97ba8d47e2b9458cc734",
     "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
-    "d37723b7f80e9912edea65395b383ac75693d8a0"
+    "d37723b7f80e9912edea65395b383ac75693d8a0",
+    "fd56b1a6b01564595faf8f479f4099d73c0e54fe",
+    "d882543d9a75b68f99f9a56beb6bcb96f933cc1d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1370,11 +1385,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6739842300,
-    "status": "finished",
-    "decision": "D066",
-    "work_commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
-    "review_comment_id": 6739925087
+    "active_comment": 6739971921,
+    "status": "complete",
+    "decision": "D067",
+    "work_commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d"
   },
   "duplicate_events": [
     {
@@ -1894,6 +1908,13 @@
       "decision": "D066",
       "commit": "46e8b389a3d77d9b7b22fcdfed4ebda1e37320b6",
       "comment": 6739925087
+    },
+    {
+      "pr": 302,
+      "sha": "3c16b730161e416d7e282874a848ee387e4202c2",
+      "evidence_digest": "git-blob:ea5a7deaaadbf221089fb03804d7eb08c3d95158;parallel:efae1a86ab20bb5a0889c574a01e7e02c9b06f12;occupancy-job:129157302740",
+      "decision": "D067",
+      "commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2321,8 +2342,10 @@
     {
       "comment_id": 6739971921,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D067"
+      "status": "complete",
+      "decision": "D067",
+      "receipt_commit": "fd56b1a6b01564595faf8f479f4099d73c0e54fe",
+      "work_commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d"
     }
   ],
   "migrated_from": {
