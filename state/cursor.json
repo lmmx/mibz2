@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Service diagnostic review finished: REVISE before C5; three attribution counterexamples and two admission probes published. Corrected diagnostic recommended for guarded integration.",
+  "state": "Narrowed #299 review finished: recommend closing old-runtime draft in favour of guarded evidence; conditional open questions answered.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -118,9 +118,10 @@
     6736096739,
     6738933099,
     6739269334,
-    6739466190
+    6739466190,
+    6739661717
   ],
-  "last_processed_comment_id": 6739466190,
+  "last_processed_comment_id": 6739661717,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1158,7 +1159,7 @@
     },
     {
       "trigger_comment_id": 6739661717,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1166,7 +1167,10 @@
       "report_path": "state/reports/service-r2-value-6739661717/report.md",
       "report_commit": "a96b42061b102203a2455fc140cbad0e5a21e56f",
       "review_comment_pr": 145,
-      "disposition": "Recommend close #299, not queue a lower-priority old-runtime replication; guarded candidate has higher decision value. Conditional resolutions for counter perturbation, load-wait bounds, PMU absence and reference-rate bins."
+      "disposition": "Recommend close #299, not queue a lower-priority old-runtime replication; guarded candidate has higher decision value. Conditional resolutions for counter perturbation, load-wait bounds, PMU absence and reference-rate bins.",
+      "review_comment_id": 6739734384,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1186,10 +1190,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6739466190
+      6739661717
     ],
     "handled": [
-      6739466190
+      6739661717
     ],
     "skipped": [],
     "automation_modified": false
