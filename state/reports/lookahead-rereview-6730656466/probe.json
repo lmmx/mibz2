@@ -1,0 +1,38 @@
+{
+  "control": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "three_children_instead_of_eighteen": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "raw_hash_and_error_disagree_with_parity": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "one_complete_round_share_99": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "one_complete_round_share_NaN": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "one_complete_round_six_requested": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  }
+}
