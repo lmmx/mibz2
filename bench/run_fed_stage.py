@@ -1,4 +1,6 @@
-"""The run-fed stage diagnostic's admission verifier (docs/journal/2026-11-09-run-fed-stage.md).
+"""The run-fed diagnostic's admission verifier, for C31's direct placement
+(docs/journal/2026-11-09-run-fed-direct.md; #269's, docs/journal/2026-11-09-run-fed-stage.md,
+was schema 1, at fd60fffa).
 
 examples/run_fed_stage.rs writes a record of its run (RUN_FED_RECORD): its identity, its
 corpora's, and every round's raw times, arm by arm. This judges that record on its own:
@@ -29,10 +31,14 @@ SYNTHETIC = [
     "synthetic runs",
     "synthetic records",
 ]
-ARMS = ["A column", "B records", "C column+ckpt", "D floor"]
+SCHEMA = "run_fed_stage/2"
+ARMS = ["A column", "B records", "D direct"]
 PHASES = ["front", "sort", "build", "fallback"]
 ENTRY_PATHS = ["records", "fallback"]
-NARMS = 4
+NARMS = 3
+# #269's phase-sum gap less its sort, nominal c/B (4.228 - 3.693 - 0.317): the budget's
+# fixed term (docs/journal/2026-11-09-run-fed-direct.md, section 3)
+BUDGET_269 = 0.218
 HEX40 = re.compile(r"[0-9a-f]{40}")
 HEX64 = re.compile(r"[0-9a-f]{64}")
 T95 = [
@@ -67,9 +73,9 @@ T95 = [
     2.045,
     2.042,
 ]
-# phases[arm][phase] that must be timed (positive) on a corpus with records' blocks;
-# A's and C's sort is never timed (exactly 0)
-REQUIRED_PHASES = [(0, 0), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 2), (3, 0), (3, 1), (3, 2)]
+# phases[arm][phase] that must be timed (positive) on a corpus with records' blocks (D's
+# "build" is its placement); A's and D's sort is never timed (exactly 0)
+REQUIRED_PHASES = [(0, 0), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 2)]
 NEVER_TIMED = [(0, 1), (2, 1)]
 
 
@@ -109,8 +115,8 @@ def check(rec, head, wikidata_sha256=None, primary=True):
     p = []
     if not isinstance(rec, dict):
         return ["the record is not an object"]
-    if rec.get("schema") != "run_fed_stage/1":
-        p.append(f"schema {rec.get('schema')!r}, not run_fed_stage/1")
+    if rec.get("schema") != SCHEMA:
+        p.append(f"schema {rec.get('schema')!r}, not {SCHEMA}")
     if not (isinstance(head, str) and HEX40.fullmatch(head)):
         p.append(f"the registered head {head!r} is not a full 40-character commit")
     rh = rec.get("head")
@@ -163,6 +169,7 @@ def check_file(i, f, rounds, wikidata_sha256):
             p.append(f"{where}: SHA-256 {f.get('sha256')!r} not recorded")
     counts = [
         "bytes",
+        "output",
         "blocks",
         "rows",
         "blocks_runs",
@@ -175,7 +182,7 @@ def check_file(i, f, rounds, wikidata_sha256):
     if not all(_is_int(f.get(c)) and f[c] >= 0 for c in counts):
         p.append(f"{where}: path counts missing or not whole: {[f.get(c) for c in counts]}")
         return p
-    if f["bytes"] == 0 or f["blocks"] == 0 or f["rows"] == 0:
+    if f["bytes"] == 0 or f["output"] == 0 or f["blocks"] == 0 or f["rows"] == 0:
         p.append(f"{where}: an empty corpus")
     if f["blocks_runs"] + f["blocks_fallback"] != f["blocks"]:
         p.append(f"{where}: {f['blocks_runs']} + {f['blocks_fallback']} blocks, not {f['blocks']}")
@@ -204,7 +211,7 @@ def check_file(i, f, rounds, wikidata_sha256):
                 and len(row) == NARMS
                 and all(isinstance(a, list) and len(a) == 2 and all(map(_is_time, a)) for a in row)
             ):
-                p.append(f"{where}: round {r}'s entry times are not 4 arms x 2 finite times")
+                p.append(f"{where}: round {r}'s entry times are not {NARMS} arms x 2 finite times")
                 continue
             for a in range(NARMS):
                 for path in (0, 1):
@@ -232,7 +239,7 @@ def check_file(i, f, rounds, wikidata_sha256):
                 and len(row) == NARMS
                 and all(isinstance(a, list) and len(a) == 4 and all(map(_is_time, a)) for a in row)
             ):
-                p.append(f"{where}: round {r}'s phase times are not 4 arms x 4 finite times")
+                p.append(f"{where}: round {r}'s phase times are not {NARMS} arms x 4 finite times")
                 continue
             for a, ph in REQUIRED_PHASES:
                 if has[0] and row[a][ph] <= 0:
@@ -251,6 +258,10 @@ def check_file(i, f, rounds, wikidata_sha256):
     return p
 
 
+def _median(xs):
+    return sorted(xs)[len(xs) // 2]
+
+
 def readings(rec):
     """The registered readings, from a VALID record's raw times"""
     files = rec["files"]
@@ -258,35 +269,50 @@ def readings(rec):
     for f in files:
         e, ph = f["entry"], f["phases"]
         row = {"name": f["name"], "blocks_fallback": f["blocks_fallback"]}
-        row["R_stage"] = ratio(e, lambda r: r[1][0] + r[1][1], lambda r: r[0][0] + r[0][1])
-        row["R_acc"] = ratio(e, lambda r: r[1][0], lambda r: r[0][0]) if f["blocks_runs"] else None
-        row["R_fb"] = (
-            ratio(e, lambda r: r[1][1], lambda r: r[0][1]) if f["blocks_fallback"] else None
-        )
+        tot = lambda a: lambda r: r[a][0] + r[a][1]  # noqa: E731
+        row["R_direct"] = ratio(e, tot(2), tot(0))
+        row["R_stage"] = ratio(e, tot(1), tot(0))
+        row["R_DB"] = ratio(e, tot(2), tot(1))
         if f["blocks_runs"]:
-            row["R_phases"] = ratio(ph, lambda r: sum(r[1]), lambda r: sum(r[0]))
-            row["R_lead"] = ratio(ph, lambda r: r[1][0] + r[1][1], lambda r: r[2][0])
-            row["R_emit"] = ratio(ph, lambda r: r[1][0], lambda r: r[2][0])
-            row["R_floor"] = ratio(ph, lambda r: r[3][1], lambda r: r[0][2])
-            row["R_warm"] = ratio(ph, lambda r: r[3][2], lambda r: r[0][2])
-            fill = sorted(r[1][2] for r in ph)[len(ph) // 2]
-            row["M3_nominal_cycles_per_cell"] = fill * rec["ghz"] * 1e9 / f["cells"]
-            row["slots_per_row"] = f["slots"] / f["rows_runs"]
+            row["R_acc_D"] = ratio(e, lambda r: r[2][0], lambda r: r[0][0])
+            row["R_acc"] = ratio(e, lambda r: r[1][0], lambda r: r[0][0])
+        else:
+            row["R_acc_D"] = row["R_acc"] = None
+        if f["blocks_fallback"]:
+            row["R_fb_D"] = ratio(e, lambda r: r[2][1], lambda r: r[0][1])
+            row["R_fb"] = ratio(e, lambda r: r[1][1], lambda r: r[0][1])
+        else:
+            row["R_fb_D"] = row["R_fb"] = None
+        if f["blocks_runs"]:
+            row["R_phases_D"] = ratio(ph, lambda r: sum(r[2]), lambda r: sum(r[0]))
+            row["R_place"] = ratio(ph, lambda r: r[2][2], lambda r: r[0][2])
+            row["R_pf"] = ratio(ph, lambda r: r[2][2], lambda r: r[1][2])
+            row["R_psf"] = ratio(ph, lambda r: r[2][2], lambda r: r[1][1] + r[1][2])
+            # the budget's terms, nominal c/B of output: medians of the rounds' paired
+            # differences (a sensitivity, not a reconstructed paired verdict)
+            cb = rec["ghz"] * 1e9 / f["output"]
+            med = lambda g: _median([g(r) for r in ph]) * cb  # noqa: E731
+            row["delta_direct"] = med(lambda r: r[2][2] - r[1][2])
+            row["e"] = med(lambda r: r[1][0] - r[2][0])
+            row["f"] = med(lambda r: r[1][3] - r[2][3])
+            row["D_minus_A"] = med(lambda r: sum(r[2]) - sum(r[0]))
+            row["B_minus_A_less_sort"] = med(lambda r: sum(r[1]) - sum(r[0]) - r[1][1])
+            row["budget"] = BUDGET_269 + row["delta_direct"] - row["e"] - row["f"]
         out["files"].append(row)
     w = out["files"][0]
-    g, lo, hi = w["R_stage"]
-    syn = max(out["files"][1:], key=lambda r: r["R_stage"][0])
-    fbs = [r for r in out["files"] if r["R_fb"] is not None]
-    fb = max(fbs, key=lambda r: r["R_fb"][0]) if fbs else None
-    s_syn = syn["R_stage"][0] <= 1.02
-    s_fb = fb is None or fb["R_fb"][0] <= 1.02
-    out["screen_synthetic"] = {"worst": syn["name"], "geomean": syn["R_stage"][0], "pass": s_syn}
+    g, lo, hi = w["R_direct"]
+    syn = max(out["files"][1:], key=lambda r: r["R_direct"][0])
+    fbs = [r for r in out["files"] if r["R_fb_D"] is not None]
+    fb = max(fbs, key=lambda r: r["R_fb_D"][0]) if fbs else None
+    s_syn = syn["R_direct"][0] <= 1.02
+    s_fb = fb is None or fb["R_fb_D"][0] <= 1.02
+    out["screen_synthetic"] = {"worst": syn["name"], "geomean": syn["R_direct"][0], "pass": s_syn}
     out["screen_fallback"] = (
-        {"worst": fb["name"], "geomean": fb["R_fb"][0], "pass": s_fb}
+        {"worst": fb["name"], "geomean": fb["R_fb_D"][0], "pass": s_fb}
         if fb
         else {"worst": None, "geomean": None, "pass": True, "vacuous": True}
     )
-    gate = g <= 0.90 and hi < 1.0
+    gate = g <= 0.95 and hi < 1.0
     if gate and s_syn and s_fb:
         q1 = "FEASIBLE"
     elif lo > 0.95:
@@ -296,17 +322,14 @@ def readings(rec):
     else:
         q1 = "STOP, INCONCLUSIVE"
     out["Q1"] = q1
-    if "R_lead" in w:
-        lg, llo, lhi = w["R_lead"]
-        out["Q2"] = (
-            "LEADER LEAD"
-            if lg <= 0.90 and lhi < 1.0
-            else "NO LEADER LEAD"
-            if llo > 0.95
-            else "NO LEADER LEAD, INCONCLUSIVE"
-        )
-    else:
-        out["Q2"] = "n/a"
+    dg, dlo, dhi = w["R_DB"]
+    out["sort_removal"] = (
+        "D CHEAPER THAN B"
+        if dhi < 1.0
+        else "D NOT CHEAPER THAN B"
+        if dlo >= 1.0
+        else "D AGAINST B, INCONCLUSIVE"
+    )
     return out
 
 
@@ -314,11 +337,10 @@ NOTES = [
     "Q1's screens are point-estimate screens, not a noninferiority claim: a passing screen "
     "does not show that no corpus or fallback regresses by more than 2%.",
     "STOP and INCONCLUSIVE are operational pauses for this implementation on this runner, "
-    "not proof of no effect.",
-    "Q2 and M1-M3 are exploratory: estimates and intervals, not mechanism proofs.",
-    "M1 is a pre-touch contrast and does not isolate cold write misses; M2's reference is "
-    "store-only, not a floor every build obeys (B overstores at cell ends); M3's nominal "
-    "cycles are wall time x the sampled clock, not counted cycles.",
+    "not proof of no effect; a STOP on this arm does not close the run-fed line (PROTOCOL 11).",
+    "R_DB, the phase ratios and the budget are exploratory. The budget is a sensitivity on "
+    "the phase sweep (nominal c/B of output: wall time x the sampled clock), not a "
+    "reconstructed paired verdict: the phase sum is not the entry point's cost.",
 ]
 
 
@@ -360,20 +382,23 @@ def main(argv=None):
     print(f"VALID; readings {label}")
     for f in r["files"]:
         print(
-            f"  {f['name']}: R_stage {fmt(f['R_stage'])}, R_acc {fmt(f['R_acc'])}, "
-            f"R_fb {fmt(f['R_fb'])}"
+            f"  {f['name']}: R_direct {fmt(f['R_direct'])}, R_stage {fmt(f['R_stage'])}, "
+            f"R_DB {fmt(f['R_DB'])}, R_acc_D {fmt(f['R_acc_D'])}, R_fb_D {fmt(f['R_fb_D'])}"
         )
     w = r["files"][0]
-    for key in ("R_phases", "R_lead", "R_emit", "R_floor", "R_warm"):
+    for key in ("R_phases_D", "R_place", "R_pf", "R_psf"):
         print(f"  {key} {fmt(w.get(key))}")
-    print(
-        f"  M3 {w.get('M3_nominal_cycles_per_cell', float('nan')):.1f} nominal cycles a cell, "
-        f"{w.get('slots_per_row', float('nan')):.4f} fill slots a row"
-    )
+    if "budget" in w:
+        print(
+            f"  budget (exploratory, nominal c/B): delta_direct {w['delta_direct']:+.3f}, "
+            f"e {w['e']:+.3f}, f {w['f']:+.3f}; {BUDGET_269} + delta_direct - e - f = "
+            f"{w['budget']:+.3f}, against D - A's phase sum {w['D_minus_A']:+.3f}; this "
+            f"run's B - A - sort {w['B_minus_A_less_sort']:+.3f}"
+        )
     print(f"  screen, synthetic whole stage: {r['screen_synthetic']}")
     print(f"  screen, fallback (entry point, selector charged): {r['screen_fallback']}")
     print(f"  Q1 ({label}): {r['Q1']}")
-    print(f"  Q2 (exploratory): {r['Q2']}")
+    print(f"  D against B (exploratory): {r['sort_removal']}")
     for n in NOTES:
         print(f"  note: {n}")
     return 0

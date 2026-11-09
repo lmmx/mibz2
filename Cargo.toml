@@ -42,8 +42,9 @@ python = ["dep:pyo3"]
 # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
 # by default, and each mark a relaxed load when compiled in and not turned on
 trace = []
-# Research: the T-vector from MTF run records (src/run_stage.rs, mtf::mtf_runs), for
-# examples/run_fed_stage.rs's diagnostic only; nothing in the decoder calls it
+# Research: the T-vector from MTF run records, sorted or placed directly (src/run_stage.rs,
+# mtf::mtf_runs), for examples/run_fed_stage.rs's diagnostic only; nothing in the decoder
+# calls it
 run-fed = []
 
 [dev-dependencies]

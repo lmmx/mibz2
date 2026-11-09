@@ -8,7 +8,8 @@
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
 # stages alone and with every CPU busy, as a multi-threaded decode runs them. With
 # `tool: run_fed_stage`, the run-fed stage's diagnostic (examples/run_fed_stage.rs, the
-# `run-fed` feature; docs/journal/2026-11-09-run-fed-stage.md) runs the same way, ROUNDS its
+# `run-fed` feature; docs/journal/2026-11-09-run-fed-stage.md, and since C31 its direct
+# placement, docs/journal/2026-11-09-run-fed-direct.md) runs the same way, ROUNDS its
 # rounds.
 name: Walk sweep
 

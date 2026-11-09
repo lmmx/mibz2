@@ -345,6 +345,208 @@ pub fn build(
     Ok((n, false))
 }
 
+// C31, the direct placement (docs/journal/2026-11-09-run-fed-direct.md): the same records,
+// production's same table, and no F order. Each run (c, p, ℓ) of L, taken in L order, owns
+// the next ℓ rows of its byte's bucket, `[a, a + ℓ)` with a = C(c) + k; on them Ψ is the
+// translation q ↦ p + (q − a). What each row also needs is L[q], the byte of the L run
+// that holds row q, and for that each bucket keeps one L cursor, resumed run after run.
+// The rows a bucket's runs own rise, so its cursor only moves forward, inside the bucket:
+// at most r − 1 advances in all, and O(256) state.
+
+/// Production's table, `T[q] = L[q] | Ψ(q) << 8`, placed straight from the L-order records
+/// (`recs` as `mtf::mtf_runs` leaves them, for a block of `n` rows whose bytes `counts`
+/// counts), run by run, with no sort and no F-order records. True, and `tt` the table,
+/// only if both orders tile `[0, n)`, as `sort` requires; otherwise false, `tt` empty.
+///
+/// The checks are `sort`'s, made on the way: the L starts rise strictly from 0 to the
+/// closing n, the counts sum to n, every write stays below its bucket's end, and at the
+/// end every bucket's runs have reached its end exactly, which proves each row below n
+/// written by its own run. The vector stores write 8 slots, past a cell's end only
+/// where the bucket has those slots and its later cells or runs write them again; within
+/// 8 of a bucket's end the rest is stored one slot at a time, so no store reaches a row
+/// of another bucket (which may be written already) or past n.
+pub fn place(recs: &[u32], counts: &[u32; 256], n: usize, tt: &mut TVector, k: Kernels) -> bool {
+    tt.0.clear();
+    if n >= 1 << 24 {
+        return false;
+    }
+    tt.0.reserve(n);
+    let out = tt.0.as_mut_ptr();
+    #[cfg(target_arch = "x86_64")]
+    let ok = if k.avx2 {
+        // SAFETY: `k.avx2` is set only when AVX2 was detected (`Kernels`' contract, as
+        // `fill`'s); `out` has room for n slots, as `place_rows` requires
+        unsafe { place_avx2(recs, counts, n, out) }
+    } else {
+        // SAFETY: as above, for the scalar stores
+        unsafe { place_rows::<false>(recs, counts, n, out) }
+    };
+    #[cfg(not(target_arch = "x86_64"))]
+    let ok = {
+        let _ = k;
+        // SAFETY: `out` has room for n slots
+        unsafe { place_rows::<false>(recs, counts, n, out) }
+    };
+    if ok {
+        // SAFETY: true only once both orders tile [0, n), so every slot below n was
+        // written by its own run (any overstore into it written again after)
+        unsafe { tt.0.set_len(n) };
+    }
+    ok
+}
+
+/// `place_rows` with the 8-wide stores
+///
+/// # Safety
+///
+/// AVX2 must be available, and `out` valid for writes of n slots
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn place_avx2(recs: &[u32], counts: &[u32; 256], n: usize, out: *mut u32) -> bool {
+    place_rows::<true>(recs, counts, n, out)
+}
+
+/// The placement, `V` the 8-wide stores (else one slot a store): `place`'s checks, and
+/// its writes, every one to a slot below n.
+///
+/// The reads are safe code, and need no premise: the records are checked as the loop
+/// meets them, while the cursors read ahead of that, so on records that fail a check the
+/// cursors may find wrong bytes, and the table they make is discarded. Every write is
+/// below its bucket's end (checked before the run's first), hence below n; and each cell
+/// ends past its start, so the loop ends: the cursor stops at a record past q, and the
+/// closing record is n, past every q.
+///
+/// # Safety
+///
+/// `out` valid for writes of n slots; with `V`, AVX2 available (only `place_avx2`
+/// instantiates it)
+#[inline(always)]
+unsafe fn place_rows<const V: bool>(
+    recs: &[u32],
+    counts: &[u32; 256],
+    n: usize,
+    out: *mut u32,
+) -> bool {
+    if n == 0 {
+        // the empty block: its closing record alone, and no counts
+        return recs == [0] && counts.iter().all(|&c| c == 0);
+    }
+    if n >= 1 << 24 || recs.len() < 2 || recs[0] >> 8 != 0 || recs[recs.len() - 1] >> 8 != n as u32
+    {
+        return false;
+    }
+    let r = recs.len() - 1;
+    // the prefixes: each bucket's next row a[c] and its end
+    let (mut a, mut end) = ([0u32; 256], [0u32; 256]);
+    let mut rows = 0u64;
+    for c in 0..256 {
+        a[c] = rows as u32;
+        rows += counts[c] as u64;
+        end[c] = rows as u32;
+    }
+    if rows != n as u64 {
+        return false;
+    }
+    // the cursors, seeded once a bucket: the L run holding its first row (a search
+    // narrowed from the last bucket's, since the buckets' starts rise). Kept below r, so
+    // `cur + 1` is a record; on unchecked records any index, as above
+    let mut cur = [0u32; 256];
+    let mut lo = 0usize;
+    for c in 0..256 {
+        if a[c] < end[c] {
+            let q = a[c];
+            lo += recs[lo..].partition_point(|&x| x >> 8 <= q);
+            lo = lo.saturating_sub(1).min(r - 1);
+            cur[c] = lo as u32;
+        }
+    }
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    for j in 0..r {
+        let (x, next) = (recs[j], recs[j + 1] >> 8);
+        let (c, p) = ((x & 0xff) as usize, x >> 8);
+        if next <= p {
+            return false;
+        }
+        // the run's rows in its bucket: [q0, e), below the bucket's end
+        let q0 = a[c];
+        let e = q0 + (next - p);
+        let bend = end[c];
+        if e > bend {
+            return false;
+        }
+        let mut l = cur[c] as usize;
+        let mut q = q0;
+        loop {
+            // the cursor resumed: the L run holding row q (it stops at the closing record
+            // at the latest, which is n > q)
+            while recs[l + 1] >> 8 <= q {
+                l += 1;
+            }
+            let ce = e.min(recs[l + 1] >> 8);
+            // Ψ(q) = p + (q − q0) < next < 2^24, so the entry is exact
+            let base = (recs[l] & 0xff) | (p + (q - q0)) << 8;
+            let mut w = q;
+            #[cfg(target_arch = "x86_64")]
+            if V {
+                // (only `place_avx2`'s instance reaches these: AVX2 is there)
+                let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
+                let step = _mm256_set1_epi32(2048);
+                let mut v = _mm256_add_epi32(_mm256_set1_epi32(base as i32), lanes);
+                while w < ce && w + 8 <= bend {
+                    // SAFETY: w + 8 <= bend <= n: the slots are the bucket's, written
+                    // again by its later cells and runs past ce
+                    _mm256_storeu_si256(out.add(w as usize) as *mut __m256i, v);
+                    w += 8;
+                    v = _mm256_add_epi32(v, step);
+                }
+            }
+            // the rest one slot at a time (with `V`, only within 8 of the bucket's end)
+            let mut val = base.wrapping_add(w.wrapping_sub(q) << 8);
+            while w < ce {
+                // SAFETY: w < ce <= e <= bend <= n
+                *out.add(w as usize) = val;
+                val = val.wrapping_add(256);
+                w += 1;
+            }
+            q = ce;
+            if q == e {
+                break;
+            }
+        }
+        cur[c] = l as u32;
+        a[c] = e;
+    }
+    // implied by the checks above (the runs' lengths sum to n, each bucket's stay within
+    // it, and the buckets' sizes sum to n), and kept: it is the tiling, stated once
+    a == end
+}
+
+/// The stage as `build` makes it, with the direct placement in place of the sort and the
+/// fill (arm D of the diagnostic): `takes_runs`, then `mtf::mtf_runs` and `place`, or the
+/// column's path, the fallback, exactly `build`'s. The same table, word for word, and the
+/// same result, error kind included
+pub fn build_direct(
+    b: &Symbols,
+    recs: &mut Vec<u32>,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    tt: &mut TVector,
+    k: Kernels,
+) -> Result<(usize, bool), ErrorKind> {
+    if takes_runs(b) {
+        let n = mtf::mtf_runs(b, recs, counts, k)?;
+        if place(recs, counts, n, tt, k) {
+            return Ok((n, true));
+        }
+        // as `build`: a broken tiling is a bug in `mtf_runs`, and the column still serves
+        debug_assert!(false, "the run records don't tile the block");
+    }
+    let n = mtf::mtf(b, ll, counts, k)?;
+    bwt::build(ll, counts, tt);
+    Ok((n, false))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -386,6 +588,7 @@ mod tests {
             fill(&t, &mut tt, k);
             assert!(tt.0 == want, "n {n}, {k:?}: the table");
         }
+        direct(ll, &recs, &counts, &want);
         for shares in 1..=5u32 {
             let mut out = Vec::new();
             for j in 0..shares {
@@ -415,6 +618,157 @@ mod tests {
         if n > 0 {
             refused(&recs, &counts, n - 1, &mut s, "n one less");
         }
+    }
+
+    /// The direct placement (C31) of a column's records, every kernel, the production
+    /// table word for word, into a dirty table; and each broken tiling refused, the table
+    /// left empty: a count off by one, a count moved to another byte, n off by one either
+    /// way, the closing record moved, a run's start moved, two records swapped
+    fn direct(ll: &[u8], recs: &[u32], counts: &[u32; 256], want: &[u32]) {
+        let n = ll.len();
+        for k in kernels() {
+            let mut tt = TVector(vec![9; 3]);
+            assert!(place(recs, counts, n, &mut tt, k), "n {n}, {k:?}: placed");
+            assert!(tt.0 == want, "n {n}, {k:?}: the direct table");
+        }
+        let no = |recs: &[u32], counts: &[u32; 256], n: usize, what: &str| {
+            for k in kernels() {
+                let mut tt = TVector(vec![9; 3]);
+                assert!(!place(recs, counts, n, &mut tt, k), "n {n}, {k:?}: {what}");
+                assert!(tt.0.is_empty(), "n {n}, {k:?}: {what}: the table");
+            }
+        };
+        no(recs, counts, n + 1, "n one more");
+        if n > 0 {
+            no(recs, counts, n - 1, "n one less");
+            let b = ll[0] as usize;
+            let mut c = *counts;
+            c[b] -= 1;
+            no(recs, &c, n, "a count one less");
+            c[b] += 2;
+            no(recs, &c, n, "a count one more");
+            let mut c = *counts;
+            c[b] -= 1;
+            c[(b + 1) % 256] += 1;
+            no(recs, &c, n, "a count moved to another byte");
+            let mut r = recs.to_vec();
+            *r.last_mut().unwrap() += 256;
+            no(&r, counts, n, "the closing record moved");
+            if recs.len() > 2 {
+                let mut r = recs.to_vec();
+                r[1] += 256;
+                no(&r, counts, n, "a run's start moved");
+                let mut r = recs.to_vec();
+                r.swap(0, 1);
+                no(&r, counts, n, "two records swapped");
+            }
+        }
+    }
+
+    /// The direct table of `ll` against production's, with its refusals
+    fn check_direct(ll: &[u8]) {
+        let counts = run_fed::counts_of(ll);
+        direct(ll, &recs_of(ll), &counts, &run_fed::production(ll, &counts));
+    }
+
+    /// C31's cases by name: the empty and tiny blocks; one symbol; every one of the 256;
+    /// r = n (no run longer than a row); runs that cross bucket boundaries; and a bucket's
+    /// last cell within 8 of its end where the next bucket is already written (the 8-wide
+    /// store must not reach it: L = c^10 b^10 writes c's rows first, then b's)
+    #[test]
+    fn direct_cases() {
+        check_direct(&[]);
+        for ll in [&b"a"[..], b"ab", b"ba", b"aa", b"abba", b"bba", b"aab"] {
+            check_direct(ll);
+        }
+        // one symbol: one run, or a byte of each length to 40
+        for len in 1..=40 {
+            check_direct(&vec![7u8; len]);
+        }
+        check_direct(&vec![255u8; 70_000]);
+        // all 256: each once (r = n), in order and reversed; each as a run of 1..=20
+        let all: Vec<u8> = (0..=255).collect();
+        check_direct(&all);
+        check_direct(&all.iter().rev().copied().collect::<Vec<_>>());
+        let mut runs = Vec::new();
+        for c in 0..=255u8 {
+            runs.extend(std::iter::repeat_n(c, 1 + c as usize % 20));
+        }
+        check_direct(&runs);
+        // r = n: alternating bytes, and a cycle of three
+        check_direct(&b"ab".repeat(500));
+        check_direct(&b"cab".repeat(333));
+        // runs crossing bucket boundaries: a = rows 0..3, b = 3..8, L's b run is 1..6
+        check_direct(b"abbbbbaa");
+        check_direct(&[vec![1u8; 9], vec![0; 30], vec![1; 31], vec![2; 3]].concat());
+        // the protected tail: b's bucket [0, 10) placed after c's [10, 20)
+        for len in 1..=24 {
+            check_direct(&[vec![2u8; len], vec![1; len]].concat());
+            check_direct(&[vec![2u8; len], vec![1; len], vec![0; 3], vec![1; 5]].concat());
+        }
+    }
+
+    /// The direct placement's states it must never accept, each refused with no table,
+    /// natively and under Miri (scalar and AVX2): no records, for n 0 and 1; the closing
+    /// record alone; the empty block's records for one row; another block's n; records out
+    /// of order, two runs at one row, a first run past row 0, an uncounted byte; counts
+    /// that sum past n, or wrap; and n at 2^24
+    #[test]
+    fn miri_direct_unchecked_states_refused() {
+        expect_avx2();
+        let zero = [0u32; 256];
+        let no = |recs: &[u32], counts: &[u32; 256], n: usize, what: &str| {
+            for k in kernels() {
+                let mut tt = TVector(vec![9; 3]);
+                assert!(!place(recs, counts, n, &mut tt, k), "{k:?}: {what}");
+                assert!(tt.0.is_empty(), "{k:?}: {what}: the table");
+            }
+        };
+        no(&[], &zero, 0, "no records, the empty block");
+        no(&[], &zero, 1, "no records, one row");
+        let mut one = zero;
+        one[7] = 1;
+        no(&[], &one, 1, "no records, one row counted");
+        no(&[1 << 8], &one, 1, "only the closing record");
+        no(&[0], &zero, 1, "the empty block's records, one row");
+        no(&[7, 1 << 8], &one, 1 << 24, "n at 2^24");
+        for k in kernels() {
+            let mut tt = TVector(vec![1; 4]);
+            assert!(place(&[0], &zero, 0, &mut tt, k), "{k:?}: the empty block");
+            assert!(tt.0.is_empty(), "{k:?}: the empty table");
+        }
+        let ll = b"abba";
+        let (counts, recs) = (run_fed::counts_of(ll), recs_of(ll));
+        for n in [0, 1, 3, 5] {
+            no(&recs, &counts, n, "another block's n");
+        }
+        let mut swapped = recs.clone();
+        swapped.swap(1, 2);
+        no(&swapped, &counts, 4, "records out of order");
+        let mut late = recs.clone();
+        late[0] += 1 << 8;
+        no(&late, &counts, 4, "the first run past row 0");
+        let mut dup = recs.clone();
+        dup[1] = dup[0];
+        no(&dup, &counts, 4, "two runs at one row");
+        let mut byte = recs.clone();
+        byte[1] = byte[1] & !0xff | b'c' as u32;
+        no(&byte, &counts, 4, "a run's byte not counted");
+        let mut wrap = counts;
+        wrap[0] = u32::MAX;
+        wrap[1] = 5;
+        no(&recs, &wrap, 4, "counts that wrap a u32");
+        // a run longer than its byte's bucket, its byte's count short by its overflow
+        let mut long = zero;
+        long[b'a' as usize] = 1;
+        long[b'b' as usize] = 3;
+        no(&recs, &long, 4, "a run past its bucket's end");
+        // and the tiny tables it does accept, by both kernels, under Miri
+        for ll in [&b"a"[..], b"ab", b"abba", b"bba"] {
+            check_direct(ll);
+        }
+        check_direct(&[vec![2u8; 10], vec![1; 10]].concat());
+        check_direct(&[vec![0u8; 17], vec![2; 3], vec![0; 16]].concat());
     }
 
     /// With `MIBZ2_EXPECT_AVX2` set (`miri.yml`'s AVX2 step), the AVX2 fill must be among

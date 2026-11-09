@@ -1,4 +1,5 @@
-"""bench/run_fed_stage.py's admission verdict and bench/copies.sh's exit statuses, on
+"""bench/run_fed_stage.py's admission verdict (schema 2: arms A, B and C31's D) and
+bench/copies.sh's exit statuses, on
 fixtures: the record examples/run_fed_stage.rs's own writer made (bench/fixtures/
 run_fed_stage.json, checked against `record` by that example's test), passing, and each
 defect the registration guards against failing it.
@@ -31,10 +32,11 @@ def problems(rec, head=HEAD, **kw):
     return v.check(rec, head, **kw)
 
 
-def scale_b(rec, file, path, factor):
-    """B's entry time on one path of one file, times `factor`, every round"""
+def scale(rec, file, path, factor, arm=2):
+    """An arm's entry time (D's by default) on one path of one file, times `factor`, every
+    round"""
     for row in rec["files"][file]["entry"]:
-        row[1][path] *= factor
+        row[arm][path] *= factor
 
 
 class Admission(unittest.TestCase):
@@ -76,7 +78,7 @@ class Admission(unittest.TestCase):
     def test_a_negative_time(self):
         r = base()
         r["files"][0]["entry"][2][1][0] = -0.1
-        self.assertInvalid(r, "not 4 arms x 2 finite times")
+        self.assertInvalid(r, "not 3 arms x 2 finite times")
 
     def test_a_time_for_an_absent_path(self):
         r = base()
@@ -106,6 +108,31 @@ class Admission(unittest.TestCase):
         r = base()
         r["files"][0]["phases"][3][1][1] = 0.0  # B's sort
         self.assertInvalid(r, "B records sort: not timed")
+
+    def test_missing_placement_times(self):
+        r = base()
+        r["files"][0]["phases"][5][2][2] = 0.0  # D's placement
+        self.assertInvalid(r, "D direct build: not timed")
+
+    def test_a_sort_time_for_d(self):
+        r = base()
+        r["files"][0]["phases"][2][2][1] = 0.01  # D has no sort
+        self.assertInvalid(r, "D direct sort: a time where none is taken")
+
+    def test_the_old_schema(self):
+        r = base()
+        r["schema"] = "run_fed_stage/1"
+        self.assertInvalid(r, "not run_fed_stage/2")
+
+    def test_the_old_arms(self):
+        r = base()
+        r["arms"] = ["A column", "B records", "C column+ckpt", "D floor"]
+        self.assertInvalid(r, "arms")
+
+    def test_no_output_size(self):
+        r = base()
+        del r["files"][0]["output"]
+        self.assertInvalid(r, "path counts missing")
 
     def test_the_wrong_rounds(self):
         r = base()
@@ -158,7 +185,7 @@ class Admission(unittest.TestCase):
 
     def test_the_arms_order_not_rotated(self):
         r = base()
-        r["files"][0]["order"][3] = [0, 1, 2, 3]
+        r["files"][0]["order"][3] = [2, 1, 0]
         self.assertInvalid(r, "not the registered rotation")
 
     def test_blocks_that_dont_add_up(self):
@@ -183,6 +210,29 @@ class Readings(unittest.TestCase):
         r = v.readings(base())
         self.assertEqual(r["Q1"], "FEASIBLE")
         self.assertTrue(r["screen_fallback"]["pass"])
+        self.assertEqual(r["sort_removal"], "D CHEAPER THAN B")
+        w = r["files"][0]
+        # D 0.85 of A on the records' blocks (0.5 s), equal on the fallback's (0.25 s)
+        self.assertAlmostEqual(w["R_direct"][0], (0.85 * 0.5 + 0.25) / 0.75, delta=0.005)
+        self.assertGreater(w["R_stage"][0], 1.0)
+
+    def test_q1_reads_d_not_b(self):
+        # B made as cheap as D's fixture figure and D as dear as B's: Q1 follows D
+        rec = base()
+        scale(rec, 0, 0, 1.16 / 0.85)
+        scale(rec, 0, 0, 0.85 / 1.16, arm=1)
+        r = v.readings(rec)
+        self.assertLess(r["files"][0]["R_stage"][0], 0.95)
+        self.assertNotEqual(r["Q1"], "FEASIBLE")
+        self.assertEqual(r["sort_removal"], "D NOT CHEAPER THAN B")
+
+    def test_the_budget_terms(self):
+        # the fixture: D's placement 0.18 against B's fill 0.2 a round, so delta_direct < 0
+        w = v.readings(base())["files"][0]
+        for key in ("delta_direct", "e", "f", "D_minus_A", "B_minus_A_less_sort", "budget"):
+            self.assertIn(key, w)
+        self.assertAlmostEqual(w["budget"], v.BUDGET_269 + w["delta_direct"] - w["e"] - w["f"])
+        self.assertLess(w["delta_direct"], 0)
 
     def test_the_fallback_screen_reads_r_fb_not_r_stage(self):
         # the review's counterexample: accepted blocks 20% worse, fallback equal. R_stage
@@ -192,24 +242,24 @@ class Readings(unittest.TestCase):
         f = rec["files"][1]
         f["blocks_fallback"], f["blocks"] = 1, f["blocks"] + 1
         for row in f["entry"]:
-            for a in range(4):
+            for a in range(3):
                 row[a][1] = 0.5
-            row[1][0] = row[0][0] * 1.2
+            row[2][0] = row[0][0] * 1.2
         for row in f["phases"]:
-            for a in range(4):
+            for a in range(3):
                 row[a][3] = 0.25
         self.assertEqual(v.check(rec, HEAD), [])
         r = v.readings(rec)
         text = next(x for x in r["files"] if x["name"] == "synthetic text")
-        self.assertAlmostEqual(text["R_fb"][0], 1.0, places=6)
-        self.assertGreater(text["R_stage"][0], 1.02)
+        self.assertAlmostEqual(text["R_fb_D"][0], 1.0, places=6)
+        self.assertGreater(text["R_direct"][0], 1.02)
         self.assertFalse(r["screen_synthetic"]["pass"])
         self.assertTrue(r["screen_fallback"]["pass"])
         self.assertEqual(r["Q1"], "STOP: a screen failed")
 
     def test_a_costly_fallback_fails_its_screen(self):
         rec = base()
-        scale_b(rec, 2, 1, 1.05)  # synthetic random: all fallback
+        scale(rec, 2, 1, 1.05)  # synthetic random: all fallback
         r = v.readings(rec)
         self.assertFalse(r["screen_fallback"]["pass"])
         self.assertEqual(r["Q1"], "STOP: a screen failed")
@@ -220,24 +270,40 @@ class Readings(unittest.TestCase):
         rec = base()
         for i, row in enumerate(rec["files"][4]["entry"]):  # synthetic pattern
             wide = 1.0 if i == 14 else 1.6 if i % 2 else 1 / 1.6
-            row[1][0] = row[0][0] * 1.01 * wide
+            row[2][0] = row[0][0] * 1.01 * wide
         r = v.readings(rec)
         pat = next(x for x in r["files"] if x["name"] == "synthetic pattern")
-        self.assertAlmostEqual(pat["R_stage"][0], 1.01, places=6)
-        self.assertLess(pat["R_stage"][1], 0.9)
-        self.assertGreater(pat["R_stage"][2], 1.1)
+        self.assertAlmostEqual(pat["R_direct"][0], 1.01, places=6)
+        self.assertLess(pat["R_direct"][1], 0.9)
+        self.assertGreater(pat["R_direct"][2], 1.1)
         self.assertTrue(r["screen_synthetic"]["pass"])
         self.assertTrue(any("not a noninferiority claim" in n for n in v.NOTES))
 
     def test_no_saving_reads_stop(self):
         rec = base()
-        scale_b(rec, 0, 0, 1 / 0.85)
+        scale(rec, 0, 0, 1 / 0.85)
         self.assertEqual(v.readings(rec)["Q1"], "STOP: no saving of 5% or more")
 
     def test_a_small_saving_reads_inconclusive(self):
+        # a 4% saving at the entry point, with a wide interval: neither the gate nor the stop
         rec = base()
-        scale_b(rec, 0, 0, 0.93 / 0.85)
-        self.assertEqual(v.readings(rec)["Q1"], "STOP, INCONCLUSIVE")
+        for i, row in enumerate(rec["files"][0]["entry"]):
+            wide = 1.0 if i == 14 else 1.1 if i % 2 else 1 / 1.1
+            a = row[0][0] + row[0][1]
+            row[2][0] = a * 0.96 * wide - row[2][1]
+        r = v.readings(rec)
+        g, lo, hi = r["files"][0]["R_direct"]
+        self.assertAlmostEqual(g, 0.96, places=6)
+        self.assertLess(lo, 0.95)
+        self.assertEqual(r["Q1"], "STOP, INCONCLUSIVE")
+
+    def test_the_gate_is_0_95(self):
+        # a saving just past the gate reads FEASIBLE; just short of it, INCONCLUSIVE
+        r = base()
+        scale(r, 0, 0, 0.92 / 0.85)
+        g = v.readings(r)
+        self.assertLessEqual(g["files"][0]["R_direct"][0], 0.95)
+        self.assertEqual(g["Q1"], "FEASIBLE")
 
     def test_the_cli(self):
         self.assertEqual(v.main(["verify", str(FIXTURE), "--head", HEAD, "--unjudged"]), 0)

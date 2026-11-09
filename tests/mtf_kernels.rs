@@ -145,6 +145,31 @@ fn runs_agree(
                 "{what}, max {}, {k:?}: the run-fed table",
                 b.max_len
             );
+            // the direct placement (C31) of the same records
+            let mut direct = TVector::new();
+            assert!(
+                run_stage::place(&recs, &c, wl.len(), &mut direct, k),
+                "{what}, max {}, {k:?}: placed",
+                b.max_len
+            );
+            assert!(
+                direct.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the direct table",
+                b.max_len
+            );
+            // and the direct stage, by the path it takes
+            let (n, by_runs) =
+                run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut direct, k).unwrap();
+            assert_eq!(
+                (n, by_runs),
+                (wl.len(), run_stage::takes_runs(b)),
+                "{what}: the direct stage's length and path"
+            );
+            assert!(
+                direct.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the direct stage's table",
+                b.max_len
+            );
         }
         Err(e) => {
             assert_eq!(r, Err(e.clone()), "{what}, max {}, {k:?}: runs", b.max_len);
@@ -155,6 +180,13 @@ fn runs_agree(
                 r.map(|x| x.0),
                 Err(e.clone()),
                 "{what}, max {}, {k:?}: the stage",
+                b.max_len
+            );
+            let r = run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut got, k);
+            assert_eq!(
+                r.map(|x| x.0),
+                Err(e.clone()),
+                "{what}, max {}, {k:?}: the direct stage",
                 b.max_len
             );
         }

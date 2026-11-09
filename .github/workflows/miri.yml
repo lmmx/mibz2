@@ -7,8 +7,8 @@ name: Miri
 # detector. And the pipelined worker's recovery from a run that panics outside its stages
 # (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
 # blocks' retirement, the team's reset and the reader, on tiny blocks. And the run-fed
-# research's sort, store reference and fill, the AVX2 fill included, with its unchecked
-# states refused (run_stage::tests::miri_*). Only on changes to the walks, the pool, the
+# research's sort, store reference, fill and direct placement (C31), the AVX2 fill and
+# placement included, with their unchecked states refused (run_stage::tests::miri_*). Only on changes to the walks, the pool, the
 # parallel decoder or its reader, or that research.
 on:
   pull_request:
@@ -56,8 +56,9 @@ jobs:
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
-      # the run-fed research's AVX2 fill under Miri: the build with AVX2 enabled, so
-      # detection reports it, and the tests assert they reached it (MIBZ2_EXPECT_AVX2)
+      # the run-fed research's AVX2 fill and placement under Miri: the build with AVX2
+      # enabled, so detection reports it, and the tests assert they reached it
+      # (MIBZ2_EXPECT_AVX2)
       - name: Miri, the run-fed AVX2 fill
         env:
           RUSTFLAGS: "-C target-feature=+avx2,+bmi1"

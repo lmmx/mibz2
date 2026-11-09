@@ -1,7 +1,8 @@
-//! The run-fed stage's diagnostic (docs/journal/2026-11-09-run-fed-stage.md): the MTF
-//! stage and the T-vector build as one stage, today's against the run records', on one
-//! thread, in decode order, paired by round. Research only, behind the `run-fed` feature;
-//! the decoder is unchanged.
+//! The run-fed stage's diagnostic (docs/journal/2026-11-09-run-fed-stage.md), extended for
+//! C31's direct placement (docs/journal/2026-11-09-run-fed-direct.md): the MTF stage and
+//! the T-vector build as one stage, today's against the run records', sorted and placed
+//! directly, on one thread, in decode order, paired by round. Research only, behind the
+//! `run-fed` feature; the decoder is unchanged.
 //!
 //! ```text
 //! run_fed_stage FILE.bz2 [ROUNDS] [GHZ]   (ROUNDS 2-31, default 15; GHZ the nominal clock
@@ -16,14 +17,15 @@
 //!
 //! The arms, each a decode of every block in decode order:
 //! - **A, the column** (`Plan::Workers`' stage, CI's): `mtf::mtf` into L, `bwt::build`;
-//! - **C, the column with checkpoints** (the pipelined leader's MTF): `mtf::mtf_checkpoints`,
-//!   then `bwt::build`;
-//! - **B, the run records:** `run_stage::build`, the entry point itself: its selector
+//! - **B, the run records (#269):** `run_stage::build`, the entry point itself: its selector
 //!   `takes_runs`, then on a block it accepts `mtf::mtf_runs` (emit), `run_stage::sort`,
 //!   `run_stage::fill`, and on any other the fallback, A's stage;
-//! - **D, the store reference** (a mechanism probe, no candidate): A's MTF, then
-//!   `run_stage::floor` (the table's n entries stored in order, nothing else), then
-//!   `bwt::build` over the buffer it pre-touched.
+//! - **D, the direct placement (C31):** `run_stage::build_direct`: B's selector, emitter and
+//!   fallback, and in place of the sort and the fill, `run_stage::place`, the records
+//!   placed in L order by resumed per-bucket cursors, with no sort and no F-order records.
+//!
+//! #269's other two arms, C (the column with checkpoints, its Q2) and its store reference
+//! (M1, M2), are dropped here: their readings stand in #269's record, at fd60fffa.
 //!
 //! **Two sweeps a round,** each over every arm in a rotated order, each block's stage
 //! followed by the walk, RLE1 and the CRC, untimed, on the arm's own table, the walk written
@@ -35,7 +37,8 @@
 //!    are the judged figures: `R_stage`, `R_acc` and `R_fb`. Every arm has one bracket a
 //!    block, so the clock's own cost is the same in each;
 //! 2. **the phase sweep,** for attribution only: each phase in its own bracket (`front`:
-//!    MTF or emit; `sort`; `build`: build or fill; `fallback`: the other blocks' stage).
+//!    MTF or emit; `sort`; `build`: build, fill or D's placement; `fallback`: the other
+//!    blocks' stage).
 //!    B takes three brackets on a records' block, A two, so the sum of phases is not the
 //!    entry point's cost: `R_phases` against `R_stage` shows the difference.
 //!
@@ -46,7 +49,8 @@
 //!
 //! **Validity**, checked on every block before any timing, a failure a panic (and then no
 //! record): B's table is A's word for word, from the records and through
-//! `run_stage::build`; B's counts are A's; its records are exactly L's maximal runs (closed
+//! `run_stage::build`; so is D's, from the records (`place`) and through
+//! `run_stage::build_direct`, its path `takes_runs`'s; B's counts are A's; its records are exactly L's maximal runs (closed
 //! by n), its cells fewer than 2r; the walk of B's table, then RLE1, gives the block's
 //! stored CRC; and the first file's whole output is `mibz2::decode`'s. Then every timed
 //! pass checks each block's CRC, and B's path is `takes_runs`'s.
@@ -78,10 +82,13 @@ const T95: [f64; 30] = [
 ];
 
 const PHASES: [&str; 4] = ["front", "sort", "build", "fallback"];
-/// D's phases 1 and 2: the store reference, then the build over the buffer it touched
-const PHASES_D: [&str; 4] = ["front", "floor", "pre-t bld", "fallback"];
-const ARMS: [&str; NARMS] = ["A column", "B records", "C column+ckpt", "D floor"];
-const NARMS: usize = 4;
+/// D's phases: its `build` is the placement, and it has no sort
+const PHASES_D: [&str; 4] = ["front", "-", "place", "fallback"];
+const ARMS: [&str; NARMS] = ["A column", "B records", "D direct"];
+const NARMS: usize = 3;
+/// #269's phase-sum gap less its sort, nominal c/B (docs/journal/2026-11-09-run-fed-
+/// stage-result.md: 4.228 − 3.693 − 0.317), the budget's fixed term
+const BUDGET_269: f64 = 0.218;
 /// A round's phase times: [arm][phase], seconds summed over the blocks
 type Round = [[f64; 4]; NARMS];
 /// A round's entry times: [arm][path], the records' blocks then the fallback's
@@ -94,7 +101,6 @@ type Interval = (f64, f64, f64);
 struct Bufs {
     ll: Vec<u8>,
     counts: [u32; 256],
-    ck: Vec<[u32; 256]>,
     recs: Vec<u32>,
     s: run_stage::Scratch,
     tt: TVector,
@@ -107,7 +113,6 @@ impl Default for Bufs {
         Bufs {
             ll: Vec::new(),
             counts: [0; 256],
-            ck: Vec::new(),
             recs: Vec::new(),
             s: run_stage::Scratch::default(),
             tt: TVector::new(),
@@ -125,8 +130,8 @@ fn walk_check(b: &Symbols, x: &mut Bufs, k: Kernels) {
     assert_eq!(crc::crc32(&x.out, k), b.crc, "a block's CRC");
 }
 
-/// Block `b`'s whole stage on arm `arm`, by its entry point; returns whether B took the
-/// records' path (false for the other arms)
+/// Block `b`'s whole stage on arm `arm`, by its entry point; returns whether B or D took
+/// the records' path (false for A)
 fn entry(arm: usize, b: &Symbols, x: &mut Bufs, k: Kernels) -> bool {
     match arm {
         0 => {
@@ -145,16 +150,17 @@ fn entry(arm: usize, b: &Symbols, x: &mut Bufs, k: Kernels) -> bool {
             } = x;
             run_stage::build(b, recs, s, ll, counts, tt, k).unwrap().1
         }
-        2 => {
-            mtf::mtf_checkpoints(b, &mut x.ll, &mut x.counts, &mut x.ck, k).unwrap();
-            build(&x.ll, &x.counts, &mut x.tt);
-            false
-        }
         _ => {
-            mtf::mtf(b, &mut x.ll, &mut x.counts, k).unwrap();
-            run_stage::floor(x.ll.len(), &mut x.tt, k);
-            build(&x.ll, &x.counts, &mut x.tt);
-            false
+            let Bufs {
+                ll,
+                counts,
+                recs,
+                tt,
+                ..
+            } = x;
+            run_stage::build_direct(b, recs, ll, counts, tt, k)
+                .unwrap()
+                .1
         }
     }
 }
@@ -172,7 +178,6 @@ fn stage(
     let Bufs {
         ll,
         counts,
-        ck,
         recs,
         s,
         tt,
@@ -191,29 +196,21 @@ fn stage(
             let t = sorted.expect("the records tile the block");
             time(2, &mut || run_stage::fill(&t, tt, k));
         }
-        (3, true) => {
-            time(0, &mut || {
-                mtf::mtf(b, ll, counts, k).unwrap();
-            });
-            time(1, &mut || run_stage::floor(ll.len(), tt, k));
-            time(2, &mut || build(ll, counts, tt));
+        (2, true) => {
+            let mut n = 0;
+            time(0, &mut || n = mtf::mtf_runs(b, recs, counts, k).unwrap());
+            let mut placed = false;
+            time(2, &mut || placed = run_stage::place(recs, counts, n, tt, k));
+            assert!(placed, "the records tile the block");
         }
         (_, true) => {
             time(0, &mut || {
-                if arm == 0 {
-                    mtf::mtf(b, ll, counts, k).unwrap();
-                } else {
-                    mtf::mtf_checkpoints(b, ll, counts, ck, k).unwrap();
-                }
+                mtf::mtf(b, ll, counts, k).unwrap();
             });
             time(2, &mut || build(ll, counts, tt));
         }
         (_, false) => time(3, &mut || {
-            if arm == 2 {
-                mtf::mtf_checkpoints(b, ll, counts, ck, k).unwrap();
-            } else {
-                mtf::mtf(b, ll, counts, k).unwrap();
-            }
+            mtf::mtf(b, ll, counts, k).unwrap();
             build(ll, counts, tt);
         }),
     }
@@ -273,6 +270,15 @@ fn validate(blocks: &[Symbols], k: Kernels) -> (Vec<u8>, Tally) {
             x.tt.as_slice() == a.tt.as_slice(),
             "block {i}: the run-fed table"
         );
+        // D: the same records placed directly, into the table B's fill left (dirty)
+        assert!(
+            run_stage::place(&x.recs, &x.counts, n, &mut x.tt, k),
+            "block {i}: placed"
+        );
+        assert!(
+            x.tt.as_slice() == a.tt.as_slice(),
+            "block {i}: the direct table"
+        );
         let r = x.recs.len() - 1;
         assert!(n == 0 || c < 2 * r, "block {i}: {c} cells, {r} runs");
         // and the stage as B runs it, by whichever path
@@ -291,6 +297,15 @@ fn validate(blocks: &[Symbols], k: Kernels) -> (Vec<u8>, Tally) {
         assert!(
             x.tt.as_slice() == a.tt.as_slice(),
             "block {i}: the stage's table"
+        );
+        // and D's stage, by whichever path
+        let (dn, d_runs) =
+            run_stage::build_direct(b, &mut x.recs, &mut x.ll, &mut x.counts, &mut x.tt, k)
+                .unwrap();
+        assert_eq!((dn, d_runs), (n, by_runs), "block {i}: D's length, path");
+        assert!(
+            x.tt.as_slice() == a.tt.as_slice(),
+            "block {i}: the direct stage's table"
         );
         if by_runs {
             tally.blocks_runs += 1;
@@ -389,6 +404,8 @@ fn proc_field(path: &str, key: &str) -> String {
 struct FileRecord {
     name: String,
     bytes: usize,
+    /// the decoded output's bytes, the c/B figures' denominator
+    output: usize,
     sha256: String,
     tally: Tally,
     order: Vec<[usize; NARMS]>,
@@ -417,7 +434,7 @@ fn record(run: &Run, files: &[FileRecord]) -> String {
     let mut o = String::new();
     let _ = write!(
         o,
-        "{{\"schema\": \"run_fed_stage/1\", \"head\": {}, \"rounds\": {rounds}, \
+        "{{\"schema\": \"run_fed_stage/2\", \"head\": {}, \"rounds\": {rounds}, \
          \"kernels\": {{\"avx2\": {}, \"clmul\": {}}}, \"ghz\": {}, \"host\": {}, \
          \"affinity\": {}, \"correctness\": \"passed\", \"arms\": [{}], \
          \"entry_paths\": [\"records\", \"fallback\"], \"phases\": [{}], \"files\": [",
@@ -434,13 +451,14 @@ fn record(run: &Run, files: &[FileRecord]) -> String {
         let t = &f.tally;
         let _ = write!(
             o,
-            "{}\n  {{\"name\": {}, \"bytes\": {}, \"sha256\": \"{}\", \"blocks\": {}, \
-             \"rows\": {}, \"blocks_runs\": {}, \"rows_runs\": {}, \"records\": {}, \
+            "{}\n  {{\"name\": {}, \"bytes\": {}, \"output\": {}, \"sha256\": \"{}\", \
+             \"blocks\": {}, \"rows\": {}, \"blocks_runs\": {}, \"rows_runs\": {}, \"records\": {}, \
              \"blocks_fallback\": {}, \"cells\": {}, \"slots\": {},\n   \"order\": [{}],\n   \
              \"entry\": [{}],\n   \"phases\": [{}]}}",
             if i == 0 { "" } else { "," },
             json_str(&f.name),
             f.bytes,
+            f.output,
             f.sha256,
             t.blocks,
             t.rows,
@@ -488,14 +506,17 @@ struct Reading {
     name: String,
     blocks_fallback: usize,
     stage: Option<Interval>,
-    fb: Option<Interval>,
-    lead: Option<Interval>,
-    floor: Option<Interval>,
-    warm: Option<Interval>,
-    fill_nominal_per_cell: f64,
-    fill_pmu_per_cell: Option<f64>,
-    cells_per_row: f64,
-    slots_per_row: f64,
+    direct: Option<Interval>,
+    fb_direct: Option<Interval>,
+    d_over_b: Option<Interval>,
+    /// the budget's terms, nominal c/B of output, medians of the paired rounds'
+    /// differences: δ_direct (D's placement less B's fill), e (B's emit less D's), f (B's
+    /// fallback less D's), and D's phase sum less A's
+    delta_direct: f64,
+    e: f64,
+    f: f64,
+    d_minus_a: f64,
+    b_gap_less_sort: f64,
 }
 
 fn main() {
@@ -624,7 +645,7 @@ fn main() {
         }
         println!("  phase sum");
         for (arm, an) in ARMS.iter().enumerate() {
-            if arm == 3 {
+            if arm == 2 {
                 print!("  {:14}  {:>9}", "", "");
                 for p in PHASES_D {
                     print!("  {p:>9}");
@@ -654,7 +675,7 @@ fn main() {
                  back-end stall %, counted % (below 100 multiplexed: exploratory)"
             );
             for (arm, an) in ARMS.iter().enumerate() {
-                let names = if arm == 3 { PHASES_D } else { PHASES };
+                let names = if arm == 2 { PHASES_D } else { PHASES };
                 for (p, pn) in names.iter().enumerate() {
                     let (e, rn) = cover[arm][p];
                     if rn == 0 {
@@ -681,75 +702,100 @@ fn main() {
         let ph = |a: usize, ps: &'static [usize]| {
             move |r: &Round| ps.iter().map(|&p| r[a][p]).sum::<f64>()
         };
-        let rows: [(&str, Option<Interval>); 10] = [
+        let rows: [(&str, Option<Interval>); 13] = [
             (
-                "R_stage  B/A, the entry point, every block (judged)",
+                "R_direct D/A, the entry point, every block (Q1, judged)",
+                ratio(&entry_t, &etot(2), &etot(0)),
+            ),
+            (
+                "R_stage  B/A, the entry point, every block (#269's Q1)",
                 ratio(&entry_t, &etot(1), &etot(0)),
+            ),
+            (
+                "R_DB     D/B, the entry point, every block",
+                ratio(&entry_t, &etot(2), &etot(1)),
+            ),
+            (
+                "R_acc_D  D/A, the entry point, records' blocks",
+                ratio(&entry_t, &epath(2, 0), &epath(0, 0)),
             ),
             (
                 "R_acc    B/A, the entry point, records' blocks",
                 ratio(&entry_t, &epath(1, 0), &epath(0, 0)),
             ),
             (
+                "R_fb_D   D/A, the entry point, fallback's blocks",
+                ratio(&entry_t, &epath(2, 1), &epath(0, 1)),
+            ),
+            (
                 "R_fb     B/A, the entry point, fallback's blocks",
                 ratio(&entry_t, &epath(1, 1), &epath(0, 1)),
+            ),
+            (
+                "R_phases_D D/A, the phases' sum (attribution)",
+                ratio(&times, &total(2), &total(0)),
             ),
             (
                 "R_phases B/A, the phases' sum (attribution)",
                 ratio(&times, &total(1), &total(0)),
             ),
             (
-                "R_front  B emit / A MTF, records' blocks",
-                ratio(&times, &ph(1, &[0]), &ph(0, &[0])),
+                "R_place  D place / A build",
+                ratio(&times, &ph(2, &[2]), &ph(0, &[2])),
             ),
             (
-                "R_build  B sort+fill / A build",
-                ratio(&times, &ph(1, &[1, 2]), &ph(0, &[2])),
+                "R_pf     D place / B fill",
+                ratio(&times, &ph(2, &[2]), &ph(1, &[2])),
             ),
             (
-                "R_lead   B emit+sort / C MTF+ckpt",
-                ratio(&times, &ph(1, &[0, 1]), &ph(2, &[0])),
+                "R_psf    D place / B sort+fill",
+                ratio(&times, &ph(2, &[2]), &ph(1, &[1, 2])),
             ),
             (
-                "R_emit   B emit / C MTF+ckpt",
-                ratio(&times, &ph(1, &[0]), &ph(2, &[0])),
-            ),
-            (
-                "R_floor  D store reference / A build",
-                ratio(&times, &ph(3, &[1]), &ph(0, &[2])),
-            ),
-            (
-                "R_warm   D build after pre-touch / A build",
-                ratio(&times, &ph(3, &[2]), &ph(0, &[2])),
+                "R_front  D emit / A MTF, records' blocks",
+                ratio(&times, &ph(2, &[0]), &ph(0, &[0])),
             ),
         ];
         for (label, r) in &rows {
             match r {
-                Some((g, lo, hi)) => println!("  {label:52} {g:.4} ({lo:.4}, {hi:.4})"),
-                None => println!("  {label:52} n/a (no such blocks, or times absent)"),
+                Some((g, lo, hi)) => println!("  {label:56} {g:.4} ({lo:.4}, {hi:.4})"),
+                None => println!("  {label:56} n/a (no such blocks, or times absent)"),
             }
         }
-        let (e, rn) = cover[1][2];
-        let fill_pmu_per_cell = counters
-            .as_ref()
-            .filter(|c| c.has(1) && rn > 0 && rn == e && tally.cells > 0)
-            .map(|_| counts[1][2][1] as f64 / tally.cells as f64);
+        // the budget's terms (the journal's §3), nominal c/B, the median of the rounds'
+        // paired differences
+        let diff = |f: &dyn Fn(&Round) -> f64| cr(median(&mut times.iter().map(f).collect()));
+        let delta_direct = diff(&|r| r[2][2] - r[1][2]);
+        let e = diff(&|r| r[1][0] - r[2][0]);
+        let f = diff(&|r| r[1][3] - r[2][3]);
+        let d_minus_a = diff(&|r| total(2)(r) - total(0)(r));
+        let b_gap_less_sort = diff(&|r| total(1)(r) - total(0)(r) - r[1][1]);
+        println!(
+            "  budget (nominal c/B, medians of paired differences): delta_direct {delta_direct:+.3} \
+             (D place - B fill), e {e:+.3} (B emit - D emit), f {f:+.3} (B fallback - D \
+             fallback); D - A phase sum {d_minus_a:+.3}; this run's B - A - sort \
+             {b_gap_less_sort:+.3} (#269's: {BUDGET_269:+.3}); {BUDGET_269:.3} + delta_direct - e \
+             - f = {:+.3}",
+            BUDGET_269 + delta_direct - e - f
+        );
         readings.push(Reading {
             name: name.clone(),
             blocks_fallback: tally.blocks_fallback,
-            stage: rows[0].1,
-            fb: rows[2].1,
-            lead: rows[6].1,
-            floor: rows[8].1,
-            warm: rows[9].1,
-            fill_nominal_per_cell: med_ph(1, 2) * ghz * 1e9 / tally.cells.max(1) as f64,
-            fill_pmu_per_cell,
-            cells_per_row: tally.cells as f64 / tally.rows_runs.max(1) as f64,
-            slots_per_row: tally.slots as f64 / tally.rows_runs.max(1) as f64,
+            stage: rows[1].1,
+            direct: rows[0].1,
+            fb_direct: rows[5].1,
+            d_over_b: rows[2].1,
+            delta_direct,
+            e,
+            f,
+            d_minus_a,
+            b_gap_less_sort,
         });
+
         recs_out.push(FileRecord {
             name: name.clone(),
             bytes: data.len(),
+            output: n,
             sha256: sha256::hex(data),
             tally,
             order,
@@ -772,7 +818,7 @@ fn main() {
         println!("record: {p}");
     }
 
-    // The registration's readings (docs/journal/2026-11-09-run-fed-stage.md), computed as
+    // The registration's readings (docs/journal/2026-11-09-run-fed-direct.md), computed as
     // the verifier computes them, but UNJUDGED: only `bench/run_fed_stage.py verify` on the
     // registered run's record judges. A required interval that is absent is INVALID here,
     // never a pass
@@ -781,11 +827,11 @@ fn main() {
     let w = &readings[0];
     let mut missing: Vec<String> = Vec::new();
     for r in &readings {
-        if r.stage.is_none() {
-            missing.push(format!("{}: R_stage", r.name));
+        if r.direct.is_none() || r.stage.is_none() {
+            missing.push(format!("{}: R_direct or R_stage", r.name));
         }
-        if r.blocks_fallback > 0 && r.fb.is_none() {
-            missing.push(format!("{}: R_fb", r.name));
+        if r.blocks_fallback > 0 && r.fb_direct.is_none() {
+            missing.push(format!("{}: R_fb_D", r.name));
         }
     }
     if !missing.is_empty() {
@@ -795,75 +841,59 @@ fn main() {
         );
         return;
     }
-    let (g, lo, hi) = w.stage.unwrap();
+    let (g, lo, hi) = w.direct.unwrap();
     let worst = |f: &dyn Fn(&Reading) -> Option<f64>, from: usize| {
         readings[from..]
             .iter()
             .filter_map(|r| f(r).map(|x| (r.name.clone(), x)))
             .max_by(|a, b| a.1.total_cmp(&b.1))
     };
-    let s_syn = worst(&|r| r.stage.map(|x| x.0), 1).unwrap();
-    let s_fb = worst(&|r| r.fb.map(|x| x.0), 0);
+    let s_syn = worst(&|r| r.direct.map(|x| x.0), 1).unwrap();
+    let s_fb = worst(&|r| r.fb_direct.map(|x| x.0), 0);
     let screens_ok = s_syn.1 <= 1.02 && !matches!(s_fb, Some((_, x)) if x > 1.02);
-    let q1 = if g <= 0.90 && hi < 1.0 && screens_ok {
-        "FEASIBLE: a one-worker production prototype may be registered (screens are point \
-         estimates, not a noninferiority claim)"
+    let q1 = if g <= 0.95 && hi < 1.0 && screens_ok {
+        "FEASIBLE: a one-worker production prototype of D may be registered (screens are \
+         point estimates, not a noninferiority claim)"
     } else if lo > 0.95 {
-        "STOP: no one-worker stage saving of 5% or more shown on this runner (an operational \
-         pause, not proof of no effect)"
-    } else if g <= 0.90 && hi < 1.0 {
+        "STOP: no one-worker saving of 5% or more by D shown on this runner (an operational \
+         pause for this implementation, not proof of no effect; PROTOCOL 11 applies)"
+    } else if g <= 0.95 && hi < 1.0 {
         "STOP: a screen failed (an operational pause, not proof of harm)"
     } else {
         "STOP, INCONCLUSIVE: no saving shown to the gate (an operational pause, not proof of \
          no effect; no re-run without a new registration)"
     };
-    println!("  Q1 R_stage {g:.4} ({lo:.4}, {hi:.4}); gate: geomean <= 0.90 and hi < 1");
+    println!("  Q1 R_direct {g:.4} ({lo:.4}, {hi:.4}); gate: geomean <= 0.95 and hi < 1");
     println!(
-        "  Q1 screen, synthetic whole stage: worst R_stage geomean {:.4} ({}); screen <= 1.02",
+        "  Q1 screen, synthetic whole stage: worst R_direct geomean {:.4} ({}); screen <= 1.02",
         s_syn.1, s_syn.0
     );
     match &s_fb {
         Some((nm, x)) => println!(
-            "  Q1 screen, fallback (entry point, selector charged): worst R_fb geomean {x:.4} \
-             ({nm}); screen <= 1.02"
+            "  Q1 screen, fallback (entry point, selector charged): worst R_fb_D geomean \
+             {x:.4} ({nm}); screen <= 1.02"
         ),
         None => println!("  Q1 screen, fallback: no corpus has fallback blocks (vacuous)"),
     }
     println!("  Q1 reading: {q1}");
-    let q2 = match w.lead {
-        Some((g, _, hi)) if g <= 0.90 && hi < 1.0 => "LEADER LEAD (exploratory)",
-        Some((_, lo, _)) if lo > 0.95 => "NO LEADER LEAD (exploratory)",
-        Some(_) => "NO LEADER LEAD, INCONCLUSIVE (exploratory)",
-        None => "n/a",
-    };
-    if let Some((g, lo, hi)) = w.lead {
-        println!("  Q2 R_lead {g:.4} ({lo:.4}, {hi:.4}), phases, exploratory");
-    }
-    println!("  Q2 reading: {q2}");
     let show = |r: Option<Interval>| match r {
         Some((g, lo, hi)) => format!("{g:.4} ({lo:.4}, {hi:.4})"),
         None => "n/a".into(),
     };
     println!(
-        "  M1 R_warm {} (exploratory: a pre-touch contrast; it does not isolate cold write \
-         misses)",
-        show(w.warm)
+        "  R_DB {} (exploratory: D over B, what removing the sort and its F order recovers)",
+        show(w.d_over_b)
     );
     println!(
-        "  M2 R_floor {} (exploratory: against a store-only reference, not a floor every \
-         build obeys; B stores {:.4} slots a row with its overstores)",
-        show(w.floor),
-        w.slots_per_row
-    );
-    println!(
-        "  M3 fill {:.1} nominal cycles a cell (wall time x {ghz} GHz, not counted cycles); \
-         counted: {}; cells/row {:.4} (exploratory)",
-        w.fill_nominal_per_cell,
-        w.fill_pmu_per_cell
-            .map_or("n/a (no full-coverage cycle counter)".into(), |c| format!(
-                "{c:.1} cycles a cell"
-            )),
-        w.cells_per_row
+        "  budget (exploratory, a sensitivity, not a reconstructed paired verdict): \
+         delta_direct {:+.3}, e {:+.3}, f {:+.3}; {BUDGET_269:.3} + delta_direct - e - f = \
+         {:+.3} against D - A's phase sum {:+.3}; this run's own B - A - sort {:+.3}",
+        w.delta_direct,
+        w.e,
+        w.f,
+        BUDGET_269 + w.delta_direct - w.e - w.f,
+        w.d_minus_a,
+        w.b_gap_less_sort
     );
 }
 
@@ -888,8 +918,9 @@ mod tests {
 
     /// The verifier's fixture (bench/fixtures/run_fed_stage.json), written by `record`
     /// itself, so the verifier's tests read this writer's format: a registered-shape run
-    /// whose times are a formula (B 0.85 of A on Wikidata, about 1 elsewhere), no
-    /// measurement. `RUN_FED_FIXTURE=write` rewrites it; otherwise it must match
+    /// whose times are a formula (on Wikidata's records' blocks, D 0.85 of A and B 1.16;
+    /// about 1 elsewhere), no measurement. `RUN_FED_FIXTURE=write` rewrites it; otherwise
+    /// it must match
     #[test]
     fn the_verifiers_fixture() {
         let names = [
@@ -906,7 +937,11 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, name)| {
-                let b_over_a = if i == 0 { 0.85 } else { 1.0 };
+                let over_a = |a: usize| match (i, a) {
+                    (0, 1) => 1.16,
+                    (0, 2) => 0.85,
+                    _ => 1.0,
+                };
                 let (blocks_runs, blocks_fallback) =
                     [(400, 31), (3, 0), (0, 3), (1, 0), (1, 0), (3, 0), (0, 3)][i];
                 let jitter =
@@ -915,6 +950,7 @@ mod tests {
                 FileRecord {
                     name: name.to_string(),
                     bytes: 1000 + i,
+                    output: 1_000_000 * (i + 1),
                     sha256: if i == 0 {
                         "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915".into()
                     } else {
@@ -936,7 +972,7 @@ mod tests {
                     entry: (0..rounds)
                         .map(|r| {
                             std::array::from_fn(|a| {
-                                let f = if a == 1 { b_over_a } else { 1.0 } * jitter(r, a);
+                                let f = over_a(a) * jitter(r, a);
                                 [
                                     0.5 * f * on(blocks_runs),
                                     0.25 * jitter(r, a) * on(blocks_fallback),
@@ -956,12 +992,7 @@ mod tests {
                                         0.2 * j * run,
                                         0.25 * j * fb,
                                     ],
-                                    3 => [
-                                        0.25 * j * run,
-                                        0.1 * j * run,
-                                        0.25 * j * run,
-                                        0.25 * j * fb,
-                                    ],
+                                    2 => [0.2 * j * run, 0.0, 0.18 * j * run, 0.25 * j * fb],
                                     _ => [0.25 * j * run, 0.0, 0.25 * j * run, 0.25 * j * fb],
                                 }
                             })
