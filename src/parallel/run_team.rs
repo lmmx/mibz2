@@ -31,11 +31,13 @@
 //! fix) touches only it.
 
 use super::{
-    finish_block, panic_message, take_out, try_job, Inverted, Job, Lead, Shared, Solo, Staged,
-    Staging, StreamDecoder,
+    finish_and_publish, finish_block, min_coop, panic_message, publish, take_out, try_job,
+    Inverted, Job, Lead, Shared, Solo, Staged, Staging, StreamDecoder,
 };
+#[cfg(test)]
+use super::{inject, Fault};
 use crate::block::Symbols;
-use crate::bwt::{self, SegScratch, TVector, FLAGGED_LANES, FLAGGED_SEGMENTS, MIN_COOP};
+use crate::bwt::{self, SegScratch, TVector, FLAGGED_LANES, FLAGGED_SEGMENTS};
 use crate::coop::{FusedBuild, Pool, RoomWalk, BARRIER_SPINS, MAX_SHARES};
 use crate::{mtf, ErrorKind, Kernels};
 use std::any::Any;
@@ -185,102 +187,6 @@ fn since(t: Instant) -> u64 {
 
 fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
-}
-
-/// `parallel::publish`: every block this module publishes, through here (under test, each
-/// recorded: `Faults::published`)
-fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind>, syms: Vec<u16>) {
-    #[cfg(test)]
-    faults(shared, |f| {
-        f.published.push((place, bit, res.as_ref().err().cloned()));
-    });
-    super::publish(shared, place, bit, res, syms)
-}
-
-/// `parallel::finish_and_publish`, through here (under test, the block recorded as finished,
-/// with no error of the run's: its RLE1 and CRC's result is the reader's to check)
-fn finish_and_publish(shared: &Shared, b: Inverted, inverted: &[u8], k: Kernels) -> bool {
-    #[cfg(test)]
-    faults(shared, |f| f.published.push((b.place, b.bit, None)));
-    super::finish_and_publish(shared, b, inverted, k)
-}
-
-// ---- Testing only: a fault in a run, outside its stages' own catches (D047/D049, M12) ----
-//
-// The twin of the shipped worker's hook (`parallel::Fault`, branch safety/pipeline-m12):
-// the same faults, points and records, kept here in a registry keyed by the decode's
-// `Shared` instead of a field of it, so that this module's copy and the shipped worker's
-// change different files.
-
-/// Testing only: where a run-fed team's run panics, outside every stage's own catch, so
-/// that the panic unwinds through the pool's run into `worker`'s outer `Err`
-#[cfg(test)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Fault {
-    /// the leader's part, on entry: the prior block it holds not yet finished
-    LeadStart,
-    /// the leader's part, on its way out: the prior published, the next job staged if one
-    /// was queued
-    LeadEnd,
-}
-
-/// Testing only: a decode's injected fault, and what it left
-#[cfg(test)]
-#[derive(Default)]
-struct Faults {
-    /// the run (its block's place) and the point to panic at, once
-    at: Option<(u64, Fault)>,
-    /// the blocks the team held when it panicked: the prior inverted, the next staged
-    held: Option<(Option<u64>, Option<u64>)>,
-    /// every block published, in order: its place, its bit, and its error if any (None for
-    /// a decoded block, or one `finish_and_publish` finished)
-    published: Vec<(u64, u64, Option<ErrorKind>)>,
-    /// the outer unwinds `worker` caught
-    recovered: u32,
-    /// a team's threshold in place of `MIN_COOP`, so that small blocks run the team
-    min_coop: Option<usize>,
-}
-
-/// Testing only: the faults of each decode under test, by its `Shared`'s address
-#[cfg(test)]
-static FAULTS: Mutex<Vec<(usize, Faults)>> = Mutex::new(Vec::new());
-
-/// Testing only: `f` on `shared`'s faults, if its decode registered any
-#[cfg(test)]
-fn faults<R>(shared: &Shared, f: impl FnOnce(&mut Faults) -> R) -> Option<R> {
-    let key = shared as *const Shared as usize;
-    lock(&FAULTS)
-        .iter_mut()
-        .find(|e| e.0 == key)
-        .map(|e| f(&mut e.1))
-}
-
-/// Testing only: the injected panic, if `place`'s run is to panic at `at`
-#[cfg(test)]
-fn inject(shared: &Shared, place: u64, at: Fault, l: &Lead) {
-    let fire = faults(shared, |f| {
-        let fire = f.at == Some((place, at));
-        if fire {
-            f.at = None;
-            f.held = Some((
-                l.inverted.as_ref().map(|b| b.place),
-                l.next.as_ref().map(|b| b.place),
-            ));
-        }
-        fire
-    });
-    if fire == Some(true) {
-        panic!("injected at block {place}, {at:?}");
-    }
-}
-
-/// The fewest rows a block runs on the team with (below, the leader decodes it alone)
-fn min_coop(_shared: &Shared) -> usize {
-    #[cfg(test)]
-    if let Some(Some(n)) = faults(_shared, |f| f.min_coop) {
-        return n;
-    }
-    MIN_COOP
 }
 
 // ---- The front set ----
@@ -1828,7 +1734,9 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
             }
             Err(p) => {
                 #[cfg(test)]
-                faults(shared, |f| f.recovered += 1);
+                {
+                    shared.faults.lock().unwrap().recovered += 1;
+                }
                 // the run itself panicked, outside its stages' catches: every block it held
                 // fails at its own place and bit, and the team is reset
                 let msg = panic_message(p);
@@ -1893,6 +1801,7 @@ mod unwind_tests;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bwt::MIN_COOP;
     use crate::run_fed;
 
     fn xorshift(mut x: u64) -> impl FnMut() -> u64 {

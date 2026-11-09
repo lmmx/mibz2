@@ -1,0 +1,25 @@
+baseline, Miri
+base: 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba + the working tree's src/ change
+src/parallel.rs sha256 60236bf519d08a62, unwind_tests.rs sha256 bb74157037d816bf
+date: 2026-11-09T02:38:26Z
+cmd: cargo +nightly miri test -j2 --lib -- parallel::unwind_tests::miri_ (rustc 1.101.0-nightly (16d1ffac1 2026-10-26), miri 0.1.0 (16d1ffac17 2026-10-26), MIRIFLAGS unset)
+
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 3 tests
+test parallel::unwind_tests::miri_run_panic_current ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 73.68s
+
+warning: 1 warning emitted
+
+
+real	0m38.714s
+user	0m38.304s
+sys	0m0.153s
+rc=0

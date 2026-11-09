@@ -81,6 +81,9 @@ struct Shared {
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
     overlap_errors: AtomicU64,
+    /// testing only: the pipelined team's injected faults, and what they left
+    #[cfg(test)]
+    faults: Mutex<Faults>,
 }
 
 impl Shared {
@@ -262,6 +265,8 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(test)]
+            faults: Mutex::default(),
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
@@ -752,6 +757,13 @@ fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind
         block: Some(place),
         bit: Some(bit),
     });
+    #[cfg(test)]
+    shared
+        .faults
+        .lock()
+        .unwrap()
+        .published
+        .push((place, res.as_ref().err().cloned()));
     let mut st = shared.lock();
     if !st.cancelled {
         st.ready.insert(place, res);
@@ -762,6 +774,58 @@ fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind
     drop(st);
     mark!(Ready, place);
     shared.cv.notify_all();
+}
+
+/// Testing only: where a pipelined team's run panics, outside every stage's own catch, so
+/// that the panic unwinds through the pool's run into `pipelined_worker`'s outer `Err`
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Fault {
+    /// the leader's part, on entry: the prior block it holds not yet finished
+    LeadStart,
+    /// the leader's part, on its way out: the prior published, the next job staged if one
+    /// was queued
+    LeadEnd,
+}
+
+/// Testing only (`Shared::faults`)
+#[cfg(test)]
+#[derive(Default)]
+struct Faults {
+    /// the run (its block's place) and the point to panic at, once
+    at: Option<(u64, Fault)>,
+    /// the blocks the team held when it panicked: the prior inverted, the next staged
+    held: Option<(Option<u64>, Option<u64>)>,
+    /// every block published (`publish`), in order, with its error if any
+    published: Vec<(u64, Option<Error>)>,
+    /// the outer unwinds `pipelined_worker` caught
+    recovered: u32,
+    /// a team's threshold in place of `MIN_COOP`, so that small blocks run the team
+    min_coop: Option<usize>,
+}
+
+/// Testing only: the injected panic, if `place`'s run is to panic at `at`
+#[cfg(test)]
+fn inject(shared: &Shared, place: u64, at: Fault, l: &Lead) {
+    let mut f = shared.faults.lock().unwrap();
+    if f.at == Some((place, at)) {
+        f.at = None;
+        f.held = Some((
+            l.inverted.as_ref().map(|b| b.place),
+            l.next.as_ref().map(|b| b.place),
+        ));
+        drop(f);
+        panic!("injected at block {place}, {at:?}");
+    }
+}
+
+/// The fewest rows a block runs on the team with (below, the leader decodes it alone)
+fn min_coop(_shared: &Shared) -> usize {
+    #[cfg(test)]
+    if let Some(n) = _shared.faults.lock().unwrap().min_coop {
+        return n;
+    }
+    super::bwt::MIN_COOP
 }
 
 /// An output buffer to reuse, or None once the decode is cancelled
@@ -878,7 +942,7 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
         front,
     };
     match r {
-        Ok(Ok(n)) if n >= super::bwt::MIN_COOP => Staging::Team(s),
+        Ok(Ok(n)) if n >= min_coop(shared) => Staging::Team(s),
         Ok(Ok(_)) => Staging::Small(s),
         Ok(Err(kind)) => {
             publish(shared, place, bit, Err(kind), s.symbols.syms);
@@ -980,8 +1044,12 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
         let (hb, lb) = if a == 0 { (b0, &*b1) } else { (b1, &*b0) };
         let lf = Mutex::new(lf);
         let small = Mutex::new(small);
+        #[cfg(test)]
+        let place = s.place;
         let leader = || {
             let mut l = lock_lead(&lead);
+            #[cfg(test)]
+            inject(shared, place, Fault::LeadStart, &l);
             if let Some(b) = l.inverted.take() {
                 l.rle_panicked = finish_and_publish(shared, b, lb, k);
             }
@@ -1015,6 +1083,8 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                     }
                 }
             }
+            #[cfg(test)]
+            inject(shared, place, Fault::LeadEnd, &l);
         };
         // (the run's own kinds, not `InvertStart`/`InvertEnd`: a worker's inversion inside
         // its `decode_block`, which a pipelined team never runs)
@@ -1057,6 +1127,10 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                 t.bufs = Default::default();
             }
             Err(p) => {
+                #[cfg(test)]
+                {
+                    shared.faults.lock().unwrap().recovered += 1;
+                }
                 // the run itself panicked (the leader's part catches its own stages', so a
                 // bug outside them): every block the run held fails, and the team is reset
                 let msg = panic_message(p);
@@ -1256,6 +1330,9 @@ fn l3_bytes() -> Option<u64> {
     #[cfg(not(target_os = "linux"))]
     None
 }
+
+#[cfg(test)]
+mod unwind_tests;
 
 #[cfg(test)]
 mod plan_tests {

@@ -5,10 +5,20 @@ three pipelined teams of three, with park and small, forced through each default
 In 4,706 of the 12,463 cases whose decoder could be counted, a leader took a job while its
 helpers inverted another block. Of 12 hand-made mutants of the pipeline's invariants:
 - the native suite (tests/pipelined.rs, coop's unit tests, the new fuzz) kills 8;
-- Miri's existing `coop::tests::miri_*` kills 3 more (data races that are harmless on x86);
+- Miri's existing `coop::tests::miri_*` kills 3 more: data races, which these native x86 runs
+  did not detect (a data race is undefined behaviour in Rust on x86 as anywhere else);
 - 1 survives: the run-panic recovery path, which no test reaches.
 
 No decoder bug was found, and the decoder is unchanged.
+
+**Corrections (Guardian D047, after this entry merged in #273).** Each is made in place below,
+and listed in §7:
+- the 14-minute fuzz ran at 2614d832, whose corpus differs from the merged head's (§2);
+- the final harness's CI smoke run is now recorded (§7);
+- the Miri and fuzz diagnostics behind M1–M5's verdicts are preserved, with the toolchain
+  and flags (§7);
+- M12 now has a deterministic worker-level test that kills it
+  (`2026-11-09-pipeline-m12-unwind.md`).
 
 **The input.** The Guardian's REVIEW (#145, comment 6729223027; decision D042 on
 team-state/guardian) holds back the B5 production-safety qualification of 0.2.6's default,
@@ -36,7 +46,11 @@ There is no change to the decoder. `tests/common/mod.rs` gains the following:
   - `StreamDecoder::pipelined_levers(1, 3, 4, .., PIPELINED_LEVERS)`: one team of three with
     the default's levers, which overlaps on far more blocks.
 
-  Each shape asserts `is_pipelined()`. The `StreamDecoder::new` shape also asserts 9 threads.
+  The two `StreamDecoder::new` shapes and the one-team shape assert `is_pipelined()`, and the
+  `StreamDecoder::new` shapes also assert 9 threads. The `BzReader::parallel` and
+  `decode_parallel` shapes keep their decoder private, so they assert neither: that they run
+  the pipeline rests on the source (the same constructor under the same forced plan), not on
+  an assertion of their own.
 - **`pipeline_corpus()`, multi-block inputs.** Text at levels 9 and 5, random bytes at level 3,
   binary records at level 4, runs at level 9, `ab` repeated at level 6, and text at level 1.
   There are also several streams (levels 9, 1, 9, 2, 1, 9, an empty stream, then level 3), and
@@ -79,8 +93,18 @@ this entry makes none.
 
 **Setup:**
 - **The commit:** 2614d83225083ee927ef91f1c8659b2e5f8c9c76 (this branch's first commit, on
-  master 6ea21e5b; `src/` is identical to master's). The branch's later commit only rewrites `pipeline_corpus`'s
-  pushes as one `vec![]`, for clippy: the same values, built in the same order.
+  master 6ea21e5b; `src/` is identical to master's). Every result in this section belongs
+  to that commit.
+- **Not the merged head's corpus.** The branch's later commit rewrote `pipeline_corpus`'s
+  pushes as one `vec![]`, for clippy, and in doing so deleted the "records level 4" entry.
+  So the corpus #273 merged has eight entries, not the nine these runs drew from. Since a
+  case's entry is chosen from the seed, the same seed picks different inputs at the merged
+  head, and these runs' case stream can't be reproduced there. This entry first called the
+  change formatting-only ("the same values, built in the same order"); that was wrong.
+  The runs stand at their pin: the decoder is unchanged between the two commits.
+- **The entry is restored** by the PR that makes these corrections
+  (`2026-11-09-pipeline-m12-unwind.md`), so the corpus is again the nine entries above, the
+  same values in the same order as at 2614d832.
 - **The build:** `cargo build --profile fuzz --example fuzz`, which has debug assertions and
   overflow checks on.
 - **The runs:** one job at a time on the shared 4-core machine.
@@ -146,7 +170,7 @@ and the fuzz with 0 failures.
 | mutant | invariant broken | tests/pipelined | coop unit | Miri coop | pipeline fuzz | verdict |
 |---|---|---|---|---|---|---|
 | M1 | build-to-walk ordering: `walk_ready` set before the build's end check and the walk's set-up | pass | pass | **UB: data race** (`miri_split_build_and_walk`) | pass | killed by Miri only |
-| M2 | `walk_ready`'s release store and acquire load weakened to relaxed | pass | pass | **UB: data race** (`miri_split_build_and_walk`) | pass | killed by Miri only (x86 is TSO) |
+| M2 | `walk_ready`'s release store and acquire load weakened to relaxed | pass | pass | **UB: data race** (`miri_split_build_and_walk`) | pass | killed by Miri only (not detected natively on x86) |
 | M3 | relay handoff: `walkers` starts at helpers − 1, so the last to leave the walk is early | **fail** (9 of 12 tests) | **fail** | **fail** | **fail** (panics in the walk, then SIGKILL: the machine's memory killer) | killed |
 | M4 | park: a parked waiter returns on any wake-up without re-checking the flag | pass | pass | **UB: data race** (`miri_split_build_and_walk`) | pass | killed by Miri only |
 | M5 | park/unpark ordering: the setter drains the sleepers before storing the flag (a yield in between widens the window) | **hang** | **hang** | **deadlock** (`miri_parked_wait_loses_no_wakeup`) | **hang** | killed |
@@ -159,11 +183,15 @@ and the fuzz with 0 failures.
 | M12 | panic completion: a run that panics outside its caught stages publishes none of its blocks | pass | pass | n/a | pass | **survived** |
 
 **Reading the table:**
-- **M1, M2 and M4 are UB without being wrong on x86.**
+- **M1, M2 and M4 are undefined behaviour that these native x86 runs did not detect.** A
+  data race is UB in Rust whatever the hardware: the language's synchronisation is missing,
+  and the compiler may reorder or remove the accesses accordingly. That the output came out
+  right here is an observation of these runs, not a property of the code.
   - **M1:** a waiter that sees the stage still `Build` skips the walk and leaves. The thread
-    that ended the build then walks every segment itself, and is the last to leave, so the
-    output is still right. But it is reached through a data race on the stage.
-  - **M2:** x86's stores are released and its loads acquired anyway.
+    that ended the build then walks every segment itself, and is the last to leave, so these
+    runs' output was right. But it is reached through a data race on the stage.
+  - **M2:** x86's ordering of plain loads and stores is why these runs didn't show it. It
+    doesn't make the relaxed accesses synchronise in the language's model.
   - **M4:** the waiter's early return is the same race as M1's.
 
   The CI Miri job (`.github/workflows/miri.yml`, `cargo miri test --lib -- miri_`, on PRs
@@ -172,7 +200,7 @@ and the fuzz with 0 failures.
 - **M5, M6, M8 and M9 are killed by a hang.** tests/pipelined.rs's plan at one slot,
   `(1, 2, 1)`, makes the never-wait rule (M8) a deadlock for certain, and
   `dropped_mid_stream`'s 60-second watchdog fails it.
-- **M12 is a test gap.**
+- **M12 is a test gap** (closed since: `2026-11-09-pipeline-m12-unwind.md`).
   - **Why nothing reaches it:** the leader's own stages each catch their panics
     (`finish_and_publish`, `stage`, `solo`), and a helper's panic is returned as the run's Err,
     not a panic. The `Err(p)` branch of `pipelined_worker`'s run is reached only by a bug
@@ -194,12 +222,14 @@ and the fuzz with 0 failures.
 **Its cost:** the 60 s of fuzz plus the build. On this machine the build took 20 s from a cold
 dependency build, so the build cost on a runner is about 1–2 minutes (unmeasured there). The
 job runs beside the others, not in series with them, and adds nothing to the bench. Its seeds
-are fixed, so it doesn't add flakiness. On CI's 2-core runners the 3 × 3 default runs 9
+are fixed, but that doesn't make it deterministic: the threads' scheduling, and how many
+cases fit in its 30 seconds, vary from run to run. On CI's 2-core runners the 3 × 3 default runs 9
 decoding threads, oversubscribed, which also tests the pipeline under preemption.
 
 ## 5. What is not covered
 
-- **The run-panic recovery path** (M12, above).
+- **The run-panic recovery path** (M12, above). Closed since by a deterministic worker-level
+  test (`2026-11-09-pipeline-m12-unwind.md`).
 - **Weak memory orderings on real hardware.** Everything here ran on x86, and only Miri
   checks the orderings, on coop's unit-level scenarios. There is no ARM run.
 - **The 3 × 3 plan's own topology.** The plan was forced on a 4-core machine, so its 9
@@ -226,3 +256,64 @@ decoding threads, oversubscribed, which also tests the pipeline under preemption
   0.763 (level 1) and 0.776 (level 2). That is about 23% lower throughput. In time, such a
   file takes 1/0.763 = 1.31 and 1/0.776 = 1.29 times as long: about 29–31% longer. Both
   readings are now stated.
+
+## 7. Provenance and verification (added for Guardian D047)
+
+**Where each result belongs:**
+- the fuzz runs of §2: 2614d832, with the nine-entry corpus;
+- the mutants of §3: applied at the same commit, in a detached worktree;
+- #273's merged head (44b0b1a3): the eight-entry corpus, checked only by CI's smoke run below.
+
+**The final harness's CI smoke run (verified by the Guardian, D047).**
+- **The job:** 128934955612, Test run 42547303818.
+- **What it checked out:** the PR's merge commit 83fe1bbfb9bddbd8a575bc13086b367678ee8a45.
+  That is not literally the reviewed head 898482b9, but its diff from that head touches
+  only bench/run-queue.sh, two documentation pages, PROTOCOL.md and zensical.toml. The
+  decoder, the fuzz's source and the Cargo inputs are the same.
+- **The result:** 84,142 classic cases and 1,020 pipeline cases, with zero failures. 215 of
+  the 612 countable pipeline cases reached the pipeline, 4 of them with an overlapped error.
+
+This verifies the final harness's smoke run. It doesn't relabel the longer campaign above,
+which belongs to 2614d832.
+
+**The diagnostics behind the verdicts.** These are the original logs of the §3 run, kept in
+`2026-11-09-pipeline-fuzz-and-mutation/mutants/logs/`:
+- **The toolchain:** `cargo +nightly miri test --lib -- coop::tests::miri_`, on rustc
+  1.101.0-nightly (16d1ffac1 2026-10-26), miri 0.1.0 (16d1ffac17 2026-10-26). That nightly
+  was installed on 27 October, and was the machine's only nightly through the run.
+- **The flags:** `MIRIFLAGS` was empty. The driver (`mutants.py`) passes the environment's
+  value or "", and the logs' hint to rerun "with `MIRIFLAGS=-Zmiri-backtrace=full`" is
+  Miri's default output. `CARGO_TARGET_DIR` was the worktree's `target-miri`.
+- **The profile:** the test profile (opt-level 3, which Miri ignores; debug assertions on).
+
+What each log shows:
+
+| mutant | log | Miri's diagnostic |
+|---|---|---|
+| M0 (the baseline) | `M0-miri.log` | 10 passed, 0 failed (276.81 s) |
+| M1 | `M1-miri.log` | `miri_split_build_and_walk`: "Undefined Behavior: Data race detected between (1) non-atomic write on thread `mibz2-coop-1` and (2) non-atomic read on thread `coop::tests::mi`". The read is the stage's (`src/coop.rs:1009`, `walk_and_leave`), the write the build's end replacing it (`:972`). |
+| M2 | `M2-miri.log` | the same test: a data race between the write `*stage = Stage::Walk(w)` on `mibz2-coop-1` (`:999`) and the walk's read of the stage (`:1009`) |
+| M4 | `M4-miri.log` | the same test: a data race between the walk's read of the stage (`:1009`) and a retag write of `coop::Stage` on `mibz2-coop-1` (`:968`, `end_build`) |
+| M5 | `M5-miri.log` | `miri_parked_wait_loses_no_wakeup`: "the evaluated program deadlocked", every thread stuck in a futex wait, the waiters spawned at `src/coop.rs:1964` |
+
+Line numbers are those of the mutated `src/coop.rs` at 2614d832.
+
+**M3's SIGKILL.** `M3-fuzz.log` ends in panics in the walk ("attempt to add with overflow",
+`src/coop.rs:1044`), and `results.json` has the fuzz's exit as −9.
+- **What the kernel logged:** `M3-dmesg-oom.txt` is the kernel log's out-of-memory lines from
+  that boot. It shows the memory cgroup's OOM killer ending a process named `fuzz` at uptime
+  3,820 s, about 00:50 UTC (the boot was at 23:46:39). That fits M3's fuzz, whose log was
+  last written at 00:49:47 (kernel timestamps drift from wall time). It is the only `fuzz`
+  process killed in that boot.
+- **Read as:** consistent with the memory killer, not proof that it was M3's process.
+
+**The restored baseline.** The driver restores the source in a `finally` after each mutant.
+That restores the file, but it is not itself evidence that the restored code passes. The
+baseline evidence is M0's run of all four suites, made before the mutants (`baseline-M0.json`,
+`M0-miri.log`). No post-restore run was made.
+
+**The timeouts.** The driver's timeout kills the direct subprocess (cargo, or the fuzz
+binary). It does not kill or reap the process group, so it doesn't show that cargo's test
+binaries ended before the next mutant. No leftover process was seen, and the recorded hangs
+stand as kills. The next hang-targeted run should use a watchdog that ends and reaps the
+whole process tree.

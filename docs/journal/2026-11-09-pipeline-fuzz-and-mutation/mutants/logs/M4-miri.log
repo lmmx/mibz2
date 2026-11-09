@@ -1,0 +1,72 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 10 tests
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+test coop::tests::miri_pool_caller_panic_wins ... ok
+test coop::tests::miri_pool_dropped_while_parked ... ok
+test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+test coop::tests::miri_pool_runs_every_index_once ... ok
+test coop::tests::miri_pool_writes_visible_after_run ... ok
+test coop::tests::miri_split_build_and_walk ... error: Undefined Behavior: Data race detected between (1) non-atomic read on thread `coop::tests::mi` and (2) retag write of type `coop::Stage<'_>` on thread `mibz2-coop-1` at alloc5008267+0x18
+    --> src/coop.rs:968:30
+     |
+ 968 |         let stage = unsafe { &mut *self.stage.get() };
+     |                              ^^^^^^^^^^^^^^^^^^^^^^ (2) just happened here
+     |
+help: and (1) occurred earlier here
+    --> src/coop.rs:1009:33
+     |
+1009 |         if let Stage::Walk(w) = unsafe { &*self.stage.get() } {
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = help: retags occur on all (re)borrows and as well as when references are copied or moved
+     = help: retags permit optimizations that insert speculative reads or writes
+     = help: therefore from the perspective of data races, a retag has the same implications as a read or write
+     = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+     = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+     = note: this is on thread `mibz2-coop-1`
+     = note: stack backtrace:
+             0: coop::Relay::<'_>::end_build
+                 at src/coop.rs:968:30: 968:52
+             1: coop::invert_pipelined_with::<8, true, 4>::{closure#0}
+                 at src/coop.rs:1169:22: 1169:39
+             2: coop::invert_pipelined_with::<8, true, 4>::{closure#1}
+                 at src/coop.rs:1192:17: 1192:30
+             3: coop::helper::{closure#0}
+                 at src/coop.rs:220:63: 220:72
+             4: <{closure@src/coop.rs:220:51: 220:53} as std::ops::FnOnce<()>>::call_once - shim
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/ops/function.rs:250:5: 250:71
+             5: <std::panic::AssertUnwindSafe<{closure@src/coop.rs:220:51: 220:53}> as std::ops::FnOnce<()>>::call_once
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/panic/unwind_safe.rs:272:9: 272:19
+             6: std::panicking::catch_unwind::do_call::<std::panic::AssertUnwindSafe<{closure@src/coop.rs:220:51: 220:53}>, ()>
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:573:43: 573:46
+             7: std::panicking::catch_unwind::<(), std::panic::AssertUnwindSafe<{closure@src/coop.rs:220:51: 220:53}>>
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:541:19: 541:77
+             8: std::panic::catch_unwind::<std::panic::AssertUnwindSafe<{closure@src/coop.rs:220:51: 220:53}>, ()>
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panic.rs:359:14: 359:40
+             9: coop::helper
+                 at src/coop.rs:220:21: 220:76
+             10: coop::Pool::named::{closure#0}
+                 at src/coop.rs:121:32: 121:52
+note: the last function in that backtrace got called indirectly due to this code
+    --> src/coop.rs:119:21
+     |
+ 119 |               let h = thread::Builder::new()
+     |  _____________________^
+ 120 | |                 .name(format!("{prefix}{idx}"))
+ 121 | |                 .spawn(move || helper(&shared, idx))?;
+     | |____________________________________________________^
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error; 1 warning emitted
+
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-mutants/target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7 'coop::tests::miri_'` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
