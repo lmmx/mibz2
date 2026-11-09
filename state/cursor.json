@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Pit-crew blog round 1 finished: REVISE follow-up; five reader goals recovered; factual and structural corrections published. Round 2 outstanding.",
+  "state": "Service diagnostic review finished: REVISE before C5; three attribution counterexamples and two admission probes published. Corrected diagnostic recommended for guarded integration.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -117,9 +117,10 @@
     6735725456,
     6736096739,
     6738933099,
-    6739269334
+    6739269334,
+    6739466190
   ],
-  "last_processed_comment_id": 6739269334,
+  "last_processed_comment_id": 6739466190,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1142,7 +1143,7 @@
     },
     {
       "trigger_comment_id": 6739466190,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1150,7 +1151,10 @@
       "report_path": "state/reports/service-diag-6739466190/report.md",
       "report_commit": "36159d2894f90b4af245513306c970ea51973960",
       "review_comment_pr": 145,
-      "disposition": "REVISE #293 before C5: sequence/timestamp overcount, released-credit misclassification and finish-priority causal overclaim reproduced. Port corrected diagnostic to guarded integration; no old-runtime trace recommended for adoption."
+      "disposition": "REVISE #293 before C5: sequence/timestamp overcount, released-credit misclassification and finish-priority causal overclaim reproduced. Port corrected diagnostic to guarded integration; no old-runtime trace recommended for adoption.",
+      "review_comment_id": 6739649705,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1170,10 +1174,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6739269334
+      6739466190
     ],
     "handled": [
-      6739269334
+      6739466190
     ],
     "skipped": [],
     "automation_modified": false
