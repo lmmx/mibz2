@@ -1,0 +1,100 @@
+{
+  "existing_tests": 21,
+  "mutations": {
+    "missing_output": {
+      "verdict": "VALID",
+      "readings": {
+        "nine": "LEAVES BOTH OPEN (unmasked 9 threads unresolved)",
+        "rule_a": "NOT FALSIFIED AT 8",
+        "rule_b": "FALSIFIED AT 8 (3x2's Bonferroni upper bound below 1.03 at all three 8-thread cells)",
+        "eight": "rule A NOT FALSIFIED AT 8; rule B FALSIFIED AT 8 (3x2's Bonferroni upper bound below 1.03 at all three 8-thread cells)",
+        "nine_core_mask": "UNRESOLVED: nothing follows"
+      }
+    },
+    "missing_wall": {
+      "verdict": "VALID",
+      "readings": {
+        "nine": "LEAVES BOTH OPEN (unmasked 9 threads unresolved)",
+        "rule_a": "NOT FALSIFIED AT 8",
+        "rule_b": "NEITHER FALSIFIED NOR SUPPORTED AT 8",
+        "eight": "NEITHER RESOLVED: the run could not separate the rules at 8 threads. This does not favour rule A; the default stays 0.2.6's because of the envelope, not because of this run",
+        "nine_core_mask": "UNRESOLVED: nothing follows"
+      }
+    },
+    "different_base_per_cell": {
+      "verdict": "VALID",
+      "readings": {
+        "wikidata-l1": "SLOWDOWN NOT SHOWN (both intervals lie wholly above the inferred 0.76-0.83)",
+        "wikidata-l2": "SLOWDOWN NOT SHOWN (both intervals lie wholly above the inferred 0.76-0.83)"
+      }
+    }
+  },
+  "independent_rule_a_cells": 528320,
+  "cliffs": {
+    "count": 57,
+    "min": 0.849133015148898,
+    "max": 0.9550055936041911,
+    "examples": [
+      [
+        8,
+        17,
+        18,
+        [
+          "teams",
+          2,
+          3,
+          true
+        ],
+        [
+          "teams",
+          4,
+          2,
+          false
+        ],
+        0.9550055936041911
+      ],
+      [
+        9,
+        17,
+        18,
+        [
+          "teams",
+          2,
+          3,
+          true
+        ],
+        [
+          "teams",
+          4,
+          2,
+          false
+        ],
+        0.9550055936041911
+      ],
+      [
+        10,
+        22,
+        23,
+        [
+          "teams",
+          3,
+          3,
+          true
+        ],
+        [
+          "teams",
+          5,
+          2,
+          false
+        ],
+        0.888338618412969
+      ]
+    ]
+  },
+  "published_low_level_wall_increase": {
+    "0.763": 0.31061598951507197,
+    "0.765": 0.30718954248366015,
+    "0.776": 0.28865979381443285,
+    "0.772": 0.2953367875647668
+  }
+}
