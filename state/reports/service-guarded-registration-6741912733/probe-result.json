@@ -1,0 +1,81 @@
+{
+  "positive": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "nonzero_exit_empty_err": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "boolean_round_zero": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "preflight_ok_without_evidence": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "contradictory_preflight": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "unbound_base_path": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "bad_output_positive_control": {
+    "valid": false,
+    "p1": null,
+    "problems": [
+      "more than one distinct output"
+    ]
+  },
+  "wrong_registered_size": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  },
+  "nonhex_output_digest": {
+    "valid": true,
+    "p1": {
+      "speed": "GAIN",
+      "cpu": "CPU SAVING",
+      "reading": "THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT"
+    },
+    "problems": []
+  }
+}
