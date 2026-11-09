@@ -53,7 +53,7 @@ a line; to the right of the line at 1 is faster.
 <figure class="bf-fig">
 <p class="bf-title">The service layout against the 0.2.6 default, and the admission threshold</p>
 <svg viewBox="0 0 720 856" role="img" aria-label="Speed ratios with 95% intervals. Against the 0.2.6 default at ten threads: one service thread with three teams 0.799, registered; two pipelined teams without service threads 0.866, registered; the service layout 1.045 reported in the first run, 1.045 registered in the second, 1.073 reported in the third. Below, against the service layout at admission threshold two: threshold three 0.992 and threshold four 0.979, both registered and inconclusive."><text x="0" y="24" class="bf-ts" style="font-size: 24px">Against the 0.2.6 default</text><path d="M122.5 44V454" class="bf-grid"/><text x="122.5" y="482" class="bf-tm" text-anchor="middle" style="font-size: 21px">0.80</text><path d="M287.5 44V454" class="bf-grid"/><text x="287.5" y="482" class="bf-tm" text-anchor="middle" style="font-size: 21px">0.90</text><path d="M452.5 44V454" class="bf-rule"/><text x="452.5" y="482" class="bf-tm" text-anchor="middle" style="font-size: 21px">1.00</text><path d="M617.5 44V454" class="bf-grid"/><text x="617.5" y="482" class="bf-tm" text-anchor="middle" style="font-size: 21px">1.10</text><text x="370" y="512" class="bf-tm" text-anchor="middle" style="font-size: 21px">speed against the default (above 1 is faster)</text><text x="0" y="66" class="bf-t" style="font-size: 23px">One service thread, 3 × 3 + 1 (pull request 251)</text><path d="M99.4 96H142.3" class="bf-cut"/><circle cx="120.9" cy="96" r="9" class="bf-dot-hi"/><text x="158.3" y="104" class="bf-t-strong" style="font-size: 22px">0.799 (0.786–0.812)</text><text x="0" y="150" class="bf-t" style="font-size: 23px">Two pipelined teams, no service threads (258)</text><path d="M206.7 180H256.2" class="bf-cut"/><circle cx="231.4" cy="180" r="9" class="bf-dot-hi"/><text x="272.2" y="188" class="bf-t-strong" style="font-size: 22px">0.866 (0.851–0.881)</text><text x="0" y="234" class="bf-t" style="font-size: 23px">Service layout, first run (251)</text><path d="M490.4 264H564.7" class="bf-cut"/><circle cx="526.8" cy="264" r="9" class="bf-dot-ready"/><text x="474.4" y="272" class="bf-t" text-anchor="end" style="font-size: 22px">1.045 (1.023–1.068)</text><text x="0" y="318" class="bf-t" style="font-size: 23px">Service layout, registered run (258)</text><path d="M480.5 348H573.0" class="bf-cut"/><circle cx="526.8" cy="348" r="9" class="bf-dot-hi"/><text x="464.5" y="356" class="bf-t-strong" text-anchor="end" style="font-size: 22px">1.045 (1.017–1.073)</text><text x="0" y="402" class="bf-t" style="font-size: 23px">Service layout, later run (271)</text><path d="M520.1 432H627.4" class="bf-cut"/><circle cx="573.0" cy="432" r="9" class="bf-dot-ready"/><text x="504.1" y="440" class="bf-t" text-anchor="end" style="font-size: 22px">1.073 (1.041–1.106)</text><path d="M0 530H720" class="bf-rule"/><text x="0" y="570" class="bf-ts" style="font-size: 24px">Against the service layout at threshold two</text><path d="M122.5 590V748" class="bf-grid"/><text x="122.5" y="776" class="bf-tm" text-anchor="middle" style="font-size: 21px">0.80</text><path d="M287.5 590V748" class="bf-grid"/><text x="287.5" y="776" class="bf-tm" text-anchor="middle" style="font-size: 21px">0.90</text><path d="M452.5 590V748" class="bf-rule"/><text x="452.5" y="776" class="bf-tm" text-anchor="middle" style="font-size: 21px">1.00</text><path d="M617.5 590V748" class="bf-grid"/><text x="617.5" y="776" class="bf-tm" text-anchor="middle" style="font-size: 21px">1.10</text><text x="370" y="806" class="bf-tm" text-anchor="middle" style="font-size: 21px">speed against threshold two (above 1 is faster)</text><text x="0" y="612" class="bf-t" style="font-size: 23px">Admission threshold three (271)</text><path d="M399.7 642H478.9" class="bf-cut"/><circle cx="439.3" cy="642" r="9" class="bf-dot-hi"/><text x="383.7" y="650" class="bf-t-strong" text-anchor="end" style="font-size: 22px">0.992 (0.968–1.016)</text><text x="0" y="696" class="bf-t" style="font-size: 23px">Admission threshold four (271)</text><path d="M371.7 726H465.7" class="bf-cut"/><circle cx="417.9" cy="726" r="9" class="bf-dot-hi"/><text x="355.7" y="734" class="bf-t-strong" text-anchor="end" style="font-size: 22px">0.979 (0.951–1.008)</text><circle cx="12" cy="835" r="9" class="bf-dot-hi"/><text x="30" y="842" class="bf-tm" style="font-size: 21px">registered, judged</text><circle cx="262" cy="835" r="9" class="bf-dot-ready"/><text x="280" y="842" class="bf-tm" style="font-size: 21px">reported, never judged</text></svg>
-<figcaption>Measured, the test machine, ten threads, 20 paired rounds each, with 95% intervals that describe the spread within each run. Green dots are comparisons registered as decisions before their run; amber dots were reported beside them and never judged. The numbers in brackets are the pull requests of the runs. The lower panel compares the service layout with itself, at a higher admission threshold, the number of blocks the service threads prepare ahead of the teams: both intervals span 1, so neither change is shown to help or hurt.</figcaption>
+<figcaption>Measured, the test machine, ten threads, 20 paired rounds each. Each dot is the geometric mean of a run's paired ratios, and its line the 95% interval of that estimate, within that run; it is not the range of individual rounds. Green dots are comparisons registered as decisions before their run; amber dots were reported beside them and never judged. The numbers in brackets are the pull requests of the runs. The lower panel compares the service layout with itself, at a higher admission threshold, the number of blocks the service threads prepare ahead of the teams: both intervals span 1, so neither change is shown to help or hurt.</figcaption>
 </figure>
 
 The next step is to make it mibz2's default, and three things stand between here and there. So
@@ -129,9 +129,10 @@ to it.
 **Why it might pay.** In 0.2.5's plain teams, a team's two helpers had nothing to do for roughly a
 third of each block, while the leader ran MTF and the finish alone. 0.2.6 fills that time by
 overlapping, but at a price: the leader leaves the build, so the shared part of each block runs on
-one thread fewer and gets slower. In the service layout no team member does the one-thread work,
-so all three threads of a team build and walk every block, and none of them waits for MTF or the
-finish.
+one thread fewer and gets slower. In the service layout no team member leaves the build and walk
+to run MTF or the finish, so all three threads of a team build and walk every block. The teams
+can still wait for those stages, for a prepared block or for free buffers, as
+[section 6](#6-what-still-holds-the-teams-back) shows.
 
 **Why it might not.** There are three costs. First, ten threads now make two teams, not three, so
 only two blocks are inverted at once instead of three. Second, all the one-thread work of every
@@ -155,8 +156,9 @@ arms taking turns in each round.
 
 "Speed" here and below is the reference's elapsed time over the arm's, paired round by round, so
 above 1 means the arm is faster. "CPU" is the reference's processor time over the arm's, all
-threads added up, so above 1 means the arm spends less. Each 95% interval describes the spread
-across the 20 rounds of one run, on one machine and one file.
+threads added up, so above 1 means the arm spends less. Each ratio is the geometric mean of the
+20 rounds' paired ratios. Its 95% interval is the uncertainty of that estimate within one run, on
+one machine and one file, not the range of the individual rounds.
 
 With one service thread beside three teams of three, ten decoding threads in all, the decoder was
 much slower than 0.2.6's default at ten threads: a speed of 0.799 (0.786–0.812). The trace showed
@@ -244,10 +246,11 @@ replace the registered 1.045. What it adds is that the direction held. Across th
 measured the layout against the default, it was faster each time, by 1.045, 1.045 and 1.073, and
 spent 12–15% less processor time each time. Its peak memory was 64 MB against 74 MB in all three.
 
-The three estimates also say something about the intervals. Each describes the spread within its
-own run. The registered 1.045 and the later 1.073 differ by about half the width of either
-interval. Neither interval says how much the figure moves from one run to the next, and the
-difference between them is a sign that it moves by a few points. The fair summary is a gain of a few per cent, measured on one machine, not a
+The three estimates also say something about the intervals. Each is the uncertainty of its own
+run's estimate. The registered 1.045 and the later 1.073 differ by about half the width of either
+interval. Neither interval says how much the figure moves from one run to the next. The two runs
+also differ in the prototype's commit and in the arms beside it, so their difference isn't a clean
+measure of repeatability, but it suggests the figure can move by a few points. The fair summary is a gain of a few per cent, measured on one machine, not a
 precise 4.5% or 7.3%.
 
 ## 6. What still holds the teams back?
@@ -273,7 +276,7 @@ the registered run. Neither was shown to be faster or slower:
 
 Both intervals include gains and losses of a few per cent, so neither change is shown to help or
 to hurt. The point estimate for four leans slower, and a loss of up to about 5% isn't excluded.
-The threshold alone is not the change that helps. Among the run's reported, unjudged arms, one
+Raising the threshold alone did not show a gain in this run. Among the run's reported, unjudged arms, one
 raised the threshold to four and also let more blocks be in flight at once, twelve instead of
 eight. Against four alone, it was 1.049 (1.017–1.082). That arm was picked out after the run, so it
 is a lead for a future registered comparison, not a result.
@@ -282,7 +285,7 @@ is a lead for a future registered comparison, not a result.
 its traces were read as showing that the bottleneck had moved, from waiting for prepared blocks
 to waiting for finishing. A review of the tracing code then showed that reading doesn't follow,
 and it was withdrawn ([the review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6736071231),
-and the correction in [pull request 289](https://github.com/lmmx/mibz2/pull/289), not yet merged).
+and the correction in [pull request 289](https://github.com/lmmx/mibz2/pull/289)).
 A team's wait is labelled once, by what it saw when it started. A wait that began with nothing
 prepared, and went on after a block had been prepared, still counts entirely as a wait for
 preparation. And a service thread's "busy" share is the time it was marked working, not processor
@@ -293,8 +296,11 @@ the moment a team takes the last prepared one, and a finish isn't interrupted, s
 the next block until one of them is done. Separately, the scanner may start a new block only when
 fewer than eight are in flight, and a block stops counting only when the reader takes it, in file
 order. Blocks that are ready but stuck behind an earlier, unfinished one can therefore hold up the
-scanner while the teams wait. Raising the threshold helps with neither. The next step is to count
-how often each one happens, without timing anything.
+scanner while the teams wait. A higher threshold doesn't change the finish-first rule, interrupt a finish
+or free a block's place among the eight. It could leave more prepared blocks in stock when both
+service threads start finishing, enough to cover a short finish, but this run didn't show that it
+does, and it doesn't pick between the two explanations. The next step is to count how often each
+one happens, without timing anything.
 
 ## 7. What does it cost, and where does it apply?
 
@@ -307,9 +313,10 @@ the processor time of all threads added up, and peak memory.
 <figcaption>Measured, the test machine, medians of 20 rounds of the registered run (pull request 258). The service layout (green) is the only arm both faster and cheaper than the default (blue); the two two-team arms without service threads are cheaper but slower.</figcaption>
 </figure>
 
-**Processor time and memory.** The service layout finishes sooner and does less work in total
-than 0.2.6's default: 12.7% less processor time in the registered run, and 64 against 74 MB of
-peak memory. Where the saving comes from isn't measured. The medians in
+**Processor time and memory.** The service layout finishes sooner than 0.2.6's default and uses
+less processor time, all threads added up: 12.7% less in the registered run, with 64 against 74 MB
+of peak memory. Processor seconds don't measure the work itself, in instructions or energy, and
+where the saving comes from isn't measured. The medians in
 [section 4](#4-did-two-service-threads-beat-the-default) show that every two-team arm spent less
 processor time than the default, between 0.85 and 0.90 s against 1.03 s, and that the service
 threads cost some of it back: the service layout spent about 6% more than plain two teams. Two
@@ -329,8 +336,10 @@ their margin in the registered run was the trace's 70%. Under other load on the 
 on a file with more small blocks or a different mix of stages, they could saturate first, where
 three teams might slow down more gently. None of that is measured.
 
-**Where it applies.** Everything here was measured on one processor shape: the i9-10900K, with 10
-cores and a 20 MiB last-level cache, at ten threads, decoding principally one file. The cloud
+**Where it applies.** Everything here was measured on one processor shape, the i9-10900K with 10
+cores and a 20 MiB last-level cache, decoding principally one file. The headline comparison is at
+ten threads; [section 3](#3-why-isnt-one-service-thread-enough) also reports three teams plus two
+service threads at twelve. The cloud
 machines that benchmark every change to mibz2 have four virtual CPUs, so they can't show the gain.
 They could show only that a change keyed to the ten-core shape leaves every other machine alone.
 
