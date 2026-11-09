@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6732362367:** corrected #272's residual and comparator story without changing its Q1/Q2 verdicts; removed walk-only and no-builder-can-carry claims. D053 narrowed but retained the service safety hold for cross-case trace attribution and completed Miri. D054 lifted #270's scoped B5 hold, while exact-head CI fuzz-smoke failed and dispatch was withheld. #277 direct one-hop construction was built but Researcher REVISE remains on count evidence before freeze; B5/fuzz separate.
+
 - **2026-11-09, channel through 6731656317:** #272's unsafe-entry and evidence holds closed, its changed synthetic text was pinned prospectively, and its valid registered run found Q1 builder saving but INCONCLUSIVE, Q2 whole-path NEGATIVE STOP. Preserved the approximate consumer-cost arithmetic as an estimate. D050 closed D042/D047 for the shipped worker and #275 merged. #270 remains D049-held, #271 remains admission- and D045-held; §11 keeps run-fed open with a one-hop direct-F construction queued.
 
 - **2026-11-09, channel through 6730842547:** replaced the pending #269 diagnostic with its VALID Q1 STOP on a pinned CI worker, while preserving the cheaper fill, cost/attribution limits and open run-fed line. D048 closed D044 for that one run. #270 froze but D049 holds timing; #272 B6 STOPs on unsafe public state. #273 merged, narrowing D042 under D047 to outer-worker panic recovery. #271 retains four validator fixtures as an independent admission HOLD alongside D045. No new production or workstation run admitted.
