@@ -1158,8 +1158,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6754182845,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "Statistical pass; HOLD cancelled docs-only head merge pending policy reconciliation; no fourth benchmark"
+      "status": "finished",
+      "disposition": "Statistical pass; HOLD cancelled docs-only head merge pending policy reconciliation; no fourth benchmark",
+      "comment": 6754250293
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1233,7 +1234,8 @@
     6750633358,
     6750771906,
     6750846374,
-    6752741658
+    6752741658,
+    6754250293
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1402,7 +1404,8 @@
     "fbbf539ad45db2ed1099f28dc015d49c8afd6399",
     "6435c2b84a9a0d13d5316e92396b33022c4b199f",
     "fd461f8ec917f43cba486c0f241974dcb9228a39",
-    "ec9b13f026392484b3e61847cb25aa87337f0320"
+    "ec9b13f026392484b3e61847cb25aa87337f0320",
+    "3e4e31f7a233cf1397c9be478154c15929d7b32a"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1559,9 +1562,10 @@
   },
   "current_execution": {
     "active_comment": 6754182845,
-    "status": "complete",
+    "status": "finished",
     "decision": "D076",
-    "work_commit": "ec9b13f026392484b3e61847cb25aa87337f0320"
+    "work_commit": "ec9b13f026392484b3e61847cb25aa87337f0320",
+    "review_comment_id": 6754250293
   },
   "duplicate_events": [
     {
@@ -2159,7 +2163,8 @@
       "sha": "2931694d1b331bb941a8c04e8f75bd2d51f63756",
       "evidence_digest": "registration:626781f53a3256bb6da1985e68edda95b23bc108;results:dfba5043b9b0c70892aa73b742f6f350137ba0ff;run:42714182022/1,2,3;cancel:42719052039",
       "decision": "D076",
-      "commit": "ec9b13f026392484b3e61847cb25aa87337f0320"
+      "commit": "ec9b13f026392484b3e61847cb25aa87337f0320",
+      "comment": 6754250293
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2686,10 +2691,13 @@
     {
       "comment_id": 6754182845,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D076",
       "receipt_commit": "fd461f8ec917f43cba486c0f241974dcb9228a39",
-      "work_commit": "ec9b13f026392484b3e61847cb25aa87337f0320"
+      "work_commit": "ec9b13f026392484b3e61847cb25aa87337f0320",
+      "review_comment_id": 6754250293,
+      "complete_cursor_commit": "3e4e31f7a233cf1397c9be478154c15929d7b32a",
+      "progress": "Exact REVIEW readback verified; sole pinned verifier limitation is coordinator-only FROM check; independent Guardian checks pass."
     }
   ],
   "migrated_from": {
