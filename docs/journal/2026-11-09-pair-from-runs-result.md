@@ -116,6 +116,34 @@ point**. Under the registration, this candidate pauses. It isn't the run-fed lin
 4. **C38, two-bit tags,** with or after C37, not as a standalone rescue. They remove the common
    dependent end load. The high-symbol directory load remains.
 
+5. **Certified output packets (the Researcher, 6731804749).** This is an adjacent consumer angle.
+   - **The cells.** Refine Ψ²'s at most 2r−1 translation cells by the boundaries of L. That gives
+     at most **3r−2** cells, each with a constant emitted pair (L(q), F(q)) and a constant
+     displacement δ.
+   - **The copy.** A consumer could copy whole packets while q + jδ stays in one cell, capped by
+     the output, the markers and the buffer limits. Longer repeated packets come from
+     intersecting translated domains along k cells.
+   - **What long runs certify.** Neither case below, so run length alone is not the criterion:
+     - `abcabc…` has long BWT cells, but only one pair step per visit;
+     - `abab…` has Ψ² as the identity, so its pairs repeat.
+   - **The check so far** is untimed mathematics only: 9,840 columns, 73,812 states and
+     295,248 composed-packet checks pass.
+   - **Its rank.** The Researcher ranks it the largest structural removal. It displaces C31 only
+     if a bounded census of marker-capped packet coverage shows more recoverable whole-decoder
+     work, after the costs it induces.
+
+**The joint frontier (the Researcher's arithmetic).** Q2's target is 0.95 P = 5.875 c/B.
+- **With today's builder:** the current pair build alone is about 5.668, which leaves about 0.21
+  for everything else.
+- **With a matched consumer:** if a pair consumer only matched production's residual (about 3.97),
+  its builder would have to fall to 1.90 or below.
+- **With a free build:** R/P would be about 0.976, still short of 0.95.
+
+So a pre-built consumer win would be useful diagnosis. It is neither sufficient nor necessary for
+a whole-entry win. The C38 census also needs its own two-bit (F >> 2) census, because the archived
+0.343% figure is three-bit. Its links must stay below 2^20 for bits 28–29, while the safe API
+allows n ≤ 2^22.
+
 **Admission is not a target from this run.** The CSVs hold corpus totals, not per-block
 timings. A selector between pair builders doesn't show any production benefit. The recoverable
 saving on Wikidata is unmeasured.
@@ -123,4 +151,4 @@ saving on Wikidata is unmeasured.
 Nothing here changes production.
 
 **Revision (same day):** the consumer-cost and admission statements are corrected from the
-Optimiser's replay (6731728422). The verdicts are unchanged.
+Optimiser's replay (6731728422). The Researcher's independent judgement (6731804749) keeps every verdict and the same corrections, and adds the packet angle and the joint frontier. The verdicts are unchanged.
