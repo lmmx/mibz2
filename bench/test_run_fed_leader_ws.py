@@ -621,7 +621,10 @@ def host_env(**machine):
     }
 
 
-def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sample")):
+OK_EXITS = "ab env --facts: exit 0\nlscpu: exit 0\nab sample: exit 0\n"
+
+
+def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sample"), exits=OK_EXITS):
     env = host_env() if env is None else env
     samples = (
         samples
@@ -639,6 +642,9 @@ def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sa
         if "sample" in files:
             with open(os.path.join(d, "preflight", "sample.jsonl"), "w") as f:
                 f.writelines(json.dumps(x) + "\n" for x in samples)
+        if exits is not None:
+            with open(os.path.join(d, "preflight", "exits.txt"), "w") as f:
+                f.write(exits)
         out = os.path.join(d, "preflight")
         p = subprocess.run(
             [
@@ -817,6 +823,37 @@ class Revision10(unittest.TestCase):
                 self.assertEqual(js["verdict"], "REFUSED")
                 self.assertIn(why, text)
                 self.assertNotIn("Traceback", text)
+
+    def test_the_preflight_admits_no_collector_that_did_not_complete(self):
+        # (§R12, the Researcher's REVISE 6746559255: a complete positive payload followed by
+        # a nonzero exit, a timeout or a kill is refused; so is a missing, malformed,
+        # duplicated or unregistered status. The payloads here are the passing host's)
+        for name in ("ab env --facts", "lscpu", "ab sample"):
+            for code, how in ((17, ""), (124, " (timed out)"), (137, " (killed)"), (1, "")):
+                with self.subTest(name=name, code=code):
+                    exits = OK_EXITS.replace(f"{name}: exit 0", f"{name}: exit {code}")
+                    rc, text, js = preflight(exits=exits)
+                    self.assertEqual(rc, 1, text)
+                    self.assertEqual(js["verdict"], "REFUSED")
+                    self.assertIn(f"{name} exited {code}{how}: its output is not admitted", text)
+        for exits, why in [
+            (None, "the collectors' exit statuses (preflight/exits.txt) are missing"),
+            ("", "ab env --facts: no exit status recorded"),
+            (OK_EXITS.replace("lscpu: exit 0\n", ""), "lscpu: no exit status recorded"),
+            (OK_EXITS + "lscpu: exit 0\n", "exits.txt: lscpu recorded twice"),
+            (OK_EXITS.replace("ab sample: exit 0", "ab sample: exit -1"), "an unregistered or malformed line 'ab sample: exit -1'"),
+            (OK_EXITS.replace("ab sample: exit 0", "ab sample: exit"), "an unregistered or malformed line"),
+            (OK_EXITS + "ab env: exit 0\n", "an unregistered or malformed line 'ab env: exit 0'"),
+        ]:
+            with self.subTest(why=why):
+                rc, text, js = preflight(exits=exits)
+                self.assertEqual(rc, 1, text)
+                self.assertEqual(js["verdict"], "REFUSED")
+                self.assertIn(why, text)
+                self.assertNotIn("Traceback", text)
+        # (the successful control: every status 0, the same payloads, PASS)
+        rc, text, js = preflight()
+        self.assertEqual((rc, js["verdict"]), (0, "PASS"), text)
 
     def test_the_diagnostics_count_pair_states_and_carryover(self):
         recs = records(post=lambda i: 2400 if i % 3 == 0 else 4900)

@@ -797,10 +797,49 @@ def snapshot_problems(st, allowed=None):
     return bad
 
 
+# The preflight's required collectors, by the name the recipe gives each in
+# `preflight/exits.txt` ("<name>: exit <status>", one line each, §R12). Each must have
+# completed successfully: a payload written before a nonzero exit, a timeout (124) or a
+# kill (137) is not a reading the declaration can rest on, however complete it looks.
+PREFLIGHT_COLLECTORS = ("ab env --facts", "lscpu", "ab sample")
+
+
+def collector_problems(text):
+    """The problems with the required collectors' recorded completion (§R12): absent,
+    malformed, duplicated or unregistered status lines, and any status but 0"""
+    if text is None:
+        return ["the collectors' exit statuses (preflight/exits.txt) are missing"]
+    bad, seen = [], {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        m = re.fullmatch(r"(.+): exit ([0-9]+)", line)
+        if not m or m.group(1) not in PREFLIGHT_COLLECTORS:
+            bad.append(f"exits.txt: an unregistered or malformed line {line!r}")
+            continue
+        if m.group(1) in seen:
+            bad.append(f"exits.txt: {m.group(1)} recorded twice")
+            continue
+        seen[m.group(1)] = int(m.group(2))
+    for name in PREFLIGHT_COLLECTORS:
+        if name not in seen:
+            bad.append(f"{name}: no exit status recorded")
+        elif seen[name] != 0:
+            how = {124: " (timed out)", 137: " (killed)"}.get(seen[name], "")
+            bad.append(f"{name} exited {seen[name]}{how}: its output is not admitted")
+    return bad
+
+
 def preflight(args):
     d = os.path.join(args.dir, "preflight")
     bad, facts = [], {}
     try:
+        try:
+            with open(os.path.join(d, "exits.txt")) as f:
+                exits = f.read()
+        except OSError:
+            exits = None
+        bad += collector_problems(exits)
         env, why = load_json(os.path.join(d, "env.json"), "ab env")
         if why:
             bad.append(why)

@@ -1790,6 +1790,51 @@ accepted the policy.
 - **`bench/test_run_fed_leader.py`:** the termination's refusals, and a record without one.
 - **`bench/test_run_fed_leader_recipe.py`:** 9 → 10. The passive, bounded readings.
 
+## R12. Revision, 2026-11-09: the preflight admits only collectors that completed (the Researcher's REVIEW 6746559255)
+
+The Researcher accepted R11's quota, passivity, termination and scientific answers, and asked
+for one narrow change. **The finding:** the recipe recorded each preflight collector's exit
+status in `preflight/exits.txt`, but `preflight()` never read it. A complete-looking payload
+followed by a nonzero exit, a timeout (124) or a kill (137) was admitted: the real checker,
+given a positive preflight directory with only the archived status changed, passed.
+
+**The change, prospectively, before any freeze:**
+- **Every required collector must have completed successfully.** The three are
+  `ab env --facts`, `lscpu` and `ab sample` (`PREFLIGHT_COLLECTORS` in
+  `bench/run_fed_leader_ws.py`).
+  - The judgement reads `preflight/exits.txt`, one `<name>: exit <status>` line each, and
+    refuses unless each collector appears exactly once with status 0.
+  - These refuse, each with its reason:
+    - a missing file;
+    - a missing, duplicated, unregistered or malformed line;
+    - any other status.
+  - A collector's output is never admitted on the strength of its looking complete.
+- **Each collector's stderr is kept apart** (`preflight/env.err`, `lscpu.err` and
+  `sample.err`), so the raw failure output is archived. The recipe also prints it beside the
+  statuses.
+- **Optional diagnostics are unchanged.** That covers the reading after the timing and the
+  occupancy captures. Their failures are archived and never gate. They never touch the
+  all-pairs timing verdict, which stays the full-data result (R11.4, Q4).
+
+No threshold, estimand, arm, grid or experiment changes.
+
+### R12.1 Tests
+
+- **`bench/test_run_fed_leader_ws.py`:** 33 → 34.
+  - **Statuses 17, 124, 137 and 1:** each refuses, for each of the three collectors, with
+    the passing host's payloads unchanged.
+  - **The record itself:** a missing file, an empty record, a missing line, a duplicate,
+    and malformed or unregistered lines each refuse.
+  - **The successful control** passes.
+- **`bench/test_run_fed_leader_recipe.py`:** 10 → 11.
+  - **Through the whole recipe:** a stand-in `ab sample` writes every sample and then exits
+    17, or 124. A stand-in `ab env --facts` writes its complete payload in the preflight's
+    call and then exits 137.
+  - **Each is REFUSED before any timed run:** no `runs.jsonl` and no `identity.json`, with
+    `exits.txt` and the payloads archived.
+- **A mutation check:** with the status check removed, all of the new cases fail. Restored,
+  all pass.
+
 ## Provenance and reproduction
 
 - **Base:** `research/run-fed-stage` at `fd60fffa` (#269 with its safety fix), itself on

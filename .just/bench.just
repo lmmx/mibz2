@@ -1066,15 +1066,18 @@ bench-run-fed-leader DRY="" CORPUS="":
     # clock or temperature to any value and waits for no state: PASS, or the attempt is
     # REFUSED here and archived, with no timed record. A DRY check records it and goes on
     mkdir "$W/preflight"
-    { timeout --kill-after=5 30 "$AB" env --facts > "$W/preflight/env.json"; echo "ab env --facts: exit $?"
-      timeout --kill-after=5 30 lscpu > "$W/preflight/lscpu.txt"; echo "lscpu: exit $?"
-      timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/preflight/sample.jsonl"; echo "ab sample: exit $?"
-    } > "$W/preflight/exits.txt" 2>&1 || true
+    # (each required collector's status, "<name>: exit <status>", and its stderr kept apart:
+    # the judgement admits nothing from a collector that did not complete successfully, §R12)
+    { timeout --kill-after=5 30 "$AB" env --facts > "$W/preflight/env.json" 2> "$W/preflight/env.err"; echo "ab env --facts: exit $?"
+      timeout --kill-after=5 30 lscpu > "$W/preflight/lscpu.txt" 2> "$W/preflight/lscpu.err"; echo "lscpu: exit $?"
+      timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/preflight/sample.jsonl" 2> "$W/preflight/sample.err"; echo "ab sample: exit $?"
+    } > "$W/preflight/exits.txt" || true
     set +e
     python3 bench/run_fed_leader_ws.py preflight "$W" --out "$W/preflight" > "$W/preflight.txt"
     pf=$?
     set -e
     cat "$W/preflight/exits.txt" "$W/preflight.txt"
+    for e in "$W"/preflight/*.err; do [ -s "$e" ] && { echo "--- $e"; cat "$e"; } || true; done
     preflight=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/preflight.json" 2>/dev/null || echo UNREAD)
     if [ "$pf" -ne 0 ] || [ "$preflight" != PASS ]; then
       if [ -n "$dry" ]; then

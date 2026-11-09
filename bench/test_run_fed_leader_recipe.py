@@ -53,10 +53,23 @@ if cmd == "env":
     if host == "other":
         env.update(cpus=4, cores=2)
     print(json.dumps(env))
+    # (FAKE_ENV_EXIT: the preflight's call, the second, prints its complete payload, then
+    # exits with that status, §R12)
+    code = int(os.environ.get("FAKE_ENV_EXIT", "0"))
+    if code:
+        c = os.environ["FAKE_COUNTER"]
+        n = int(open(c).read()) if os.path.exists(c) else 0
+        open(c, "w").write(str(n + 1))
+        if n >= 1:
+            sys.stdout.flush()
+            sys.exit(code)
 elif cmd == "sample":
     n = int(sys.argv[sys.argv.index("--count") + 1])
     for i in range(n):
         print(json.dumps({"sample": i, "count": n, "state": t.snapshot(800, temp=33.0, t=i)}))
+    # (FAKE_SAMPLE_EXIT: every sample written, then that status, §R12)
+    sys.stdout.flush()
+    sys.exit(int(os.environ.get("FAKE_SAMPLE_EXIT", "0")))
 elif cmd == "run":
     a = sys.argv
     assert "--sysfs-state" in a and "--machine-state" not in a, a
@@ -394,6 +407,25 @@ class EndToEnd(unittest.TestCase):
                     "preflight/sample.jsonl",
                     "bin/ab",
                 ):
+                    self.assertIn(n, names)
+                self.assertNotIn("runs.jsonl", names)
+                self.assertNotIn("identity.json", names)
+
+    def test_a_collector_failing_after_a_complete_payload_is_refused_untimed(self):
+        # (§R12, REVISE 6746559255: the payloads are the passing host's, complete; only the
+        # collector's status differs. REFUSED, nothing timed, the raw output kept)
+        for fake, why in (
+            ({"sample_exit": "17"}, "ab sample exited 17: its output is not admitted"),
+            ({"sample_exit": "124"}, "ab sample exited 124 (timed out)"),
+            ({"env_exit": "137", "counter": str(self.tmp / "env-calls")}, "ab env --facts exited 137 (killed)"),
+        ):
+            with self.subTest(fake=fake):
+                (self.tmp / "env-calls").unlink(missing_ok=True)
+                r, names, files, _ = self.run_recipe(**fake)
+                self.assertExit(r, 1, files, "REFUSED (preflight, before any timed run): REFUSED")
+                self.assertIn(why, files["outcome.txt"])
+                self.assertEqual(json.loads(files["preflight.json"])["verdict"], "REFUSED")
+                for n in ("preflight/exits.txt", "preflight/env.json", "preflight/sample.jsonl"):
                     self.assertIn(n, names)
                 self.assertNotIn("runs.jsonl", names)
                 self.assertNotIn("identity.json", names)
