@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [The runs, from the MTF codes](<https://lmmx.github.io/mibz2/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>): bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built.
+- [Reading the BWT's runs off the MTF codes](<https://lmmx.github.io/mibz2/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>): bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built.
 - [One shift per run](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>): The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.
 - [Technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>): Technical appendix to the post on inverse-BWT navigation: the select reduction, consecutive entries and sparse corrections, entropy and run-count space bounds, compact30's records, several steps at once, cycles and necklaces, the permutree thesis, and correctness oracles.
 - [Pipelined teams in mibz2 0.2.6](<https://lmmx.github.io/mibz2/blog/2026-11-07-pipelined-teams/index.md>): While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.
