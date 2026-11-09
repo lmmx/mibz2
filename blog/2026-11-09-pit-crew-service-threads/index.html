@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=40577792a681">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=40577792a681">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=40577792a681">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=40577792a681">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=40577792a681">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=64cf304a9a52">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=40577792a681">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2240,17 +2240,19 @@ its two helpers work on the shared part. This post is about the next step: takin
 work out of the teams altogether. Two threads of their own, which we call service threads, do it
 for every block, and the teams only do the shared part. They are the teams' pit crew, so the teams
 never have to leave the track.</p>
-<p><strong>Threads asked for, and threads that decode.</strong> A caller tells mibz2 how many threads it may use,
-and we call that number the thread setting. Not all of those threads work on blocks. One, the
-scanner, reads the file, and a few more do bookkeeping. The rest are the decoding threads, and the
-two layouts spend them differently. At a setting of ten, 0.2.6 decodes with nine threads, three
-teams of three. The service layout decodes with eight: two teams of three plus the two service
-threads. So it inverts two blocks at a time instead of three.</p>
+<p><strong>Threads asked for, and threads that decode.</strong> A caller gives mibz2 a thread setting, and the
+setting is the budget of the decoding plan. It counts the decoding threads, the team members and
+any service threads, and nothing else. The support threads come on top of it: the scanner, which
+reads the file, and a few others that pass blocks along. At a setting of ten, 0.2.6 uses nine
+decoding threads, three teams of three, since teams of three can't use the tenth. The service
+layout uses eight: two teams of three plus the two service threads. So it inverts two blocks at a
+time instead of three.</p>
 <p><strong>What we found.</strong> On the ten-core machine we test on, the service layout decoded our test file
 4.5% faster than 0.2.6's default and spent 12.7% less processor time. That comes from a registered
 run, one whose comparisons and decision rules were fixed before it ran. The simplest reading is
 that freeing every team member for the shared work more than pays for having one team fewer, as
-long as the pit crew keeps up. Two service threads did; one did not.</p>
+long as the pit crew keeps up. Two service threads did. One, tried only beside three teams, did
+not.</p>
 <p>Three limits come with it. The layout is a prototype on a research branch, not mibz2's default. It
 was measured on one processor, an Intel Core i9-10900K, and principally on one file, a sample of
 the Wikidata dump. And the gain belongs to the layout as a package. Two teams without service
@@ -2262,9 +2264,10 @@ and which of them earns the gain is not yet separated.</p>
   less peak memory. A later run, which didn't judge the comparison, measured 7.3%.</li>
 <li><strong>Two teams alone lose:</strong> without service threads, two teams were slower than the default, so the
   gain doesn't come simply from running fewer teams.</li>
-<li><strong>One service thread is too few:</strong> with one, the layout was 20% slower, because that thread
-  couldn't keep up. Adding threads instead, three teams plus two service threads at a setting of
-  twelve, bought speed with more processor time: a trade, not a win.</li>
+<li><strong>One service thread was too few for three teams:</strong> with one, three teams of three were 20%
+  slower than the default, because that thread couldn't keep up. A second service
+  thread beside the same three teams fixed that, but bought speed with more processor time: a
+  trade, not a win. No run tried one service thread with two teams.</li>
 <li><strong>Preparing further ahead didn't detectably help:</strong> letting the service threads prepare three or four blocks
   ahead, instead of two, was inconclusive. The teams still wait about a sixth of the time, and what
   they wait for isn't yet identified.</li>
@@ -2373,7 +2376,8 @@ one run. It is not the range of the individual rounds.</p>
 slower than the default, on ten decoding threads to its nine. The trace showed why. The service thread was marked busy 96% of the time,
 finished blocks backed up behind it, and the teams waited for it. Moving the one-thread work onto
 one thread had made that thread the bottleneck. The model had put the work at 0.8 of a core, but
-in practice one thread couldn't keep up.</p>
+in practice one thread couldn't keep up with three teams. No run tried one service thread with two
+teams. Two teams would change how much work reaches it, so that case is open.</p>
 <p>The run's judged comparisons with the default, each arm written as teams × team size + service
 threads:</p>
 <table>
@@ -2608,8 +2612,8 @@ competition for the processor's shared 20 MiB cache, with evidence from a simple
 Inverting two blocks at a time instead of three may help the service layout for that reason. These
 runs didn't measure it, and the comparison with two pipelined teams shows that fewer tables alone
 don't give the gain.</p>
-<p><strong>Fewer decoding threads.</strong> A caller who asks for ten threads gets eight decoding, two of them
-service threads, plus the feeder. The layout depends on the service threads not saturating, and
+<p><strong>Fewer decoding threads.</strong> At a setting of ten the layout runs eight decoding threads, two of
+them service threads. Its support threads, the feeder among them, come on top. The layout depends on the service threads not saturating, and
 their margin in the registered run was the trace's 70%. Under other load on the same machine, or on
 a file with more small blocks or a different mix of stages, they could saturate first. Three teams
 might then slow down more gently. None of that is measured.</p>
@@ -2646,8 +2650,8 @@ production candidate. A default would be new code, and needs its own review.</p>
 <h2 id="8-where-do-things-stand">8. Where do things stand?<a class="headerlink" href="#8-where-do-things-stand" title="Permanent link">&para;</a></h2>
 <p>The argument runs like this. In 0.2.6 a team's leader runs each block's one-thread work beside its
 helpers, which takes the leader out of the build. Moving that work onto threads of its own frees
-every team member for the shared part, at the cost of one team fewer. One service thread couldn't
-keep up. Two could: in a registered run, the layout was 4.5% faster than the default, on one
+every team member for the shared part, at the cost of one team fewer. Beside three teams, one
+service thread couldn't keep up. Beside two teams, two could. In a registered run, the layout was 4.5% faster than the default, on one
 decoding thread fewer and with 12.7% less processor time. Two teams without service threads were
 slower, so the service threads are part of the gain. Which part of the layout earns it isn't
 separated. Preparing further ahead didn't detectably help, and what the teams still wait for isn't
@@ -2656,8 +2660,8 @@ yet identified.</p>
 The second is the list of steps a default would need, starting with a rule that selects the layout
 only where it was measured.</p>
 <p>The general lesson: work that can't be shared can be moved off the threads that share the rest,
-but the threads it moves to then set the pace. Here one was too few and two were enough, and only
-measuring showed which.</p>
+but the threads it moves to then set the pace. Here one was too few for three teams and two were
+enough for two, and only measuring showed it.</p>
 <hr />
 <p><strong>Research records:</strong></p>
 <ul>
@@ -2847,19 +2851,19 @@ measuring showed which.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/bench.js?v=40577792a681"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/couriers.js?v=40577792a681"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/blog.js?v=40577792a681"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/frontier.js?v=40577792a681"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/observatory.js?v=40577792a681"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=64cf304a9a52"></script>
+        <script src="../../assets/javascripts/katex.js?v=40577792a681"></script>
       
     
   </body>
