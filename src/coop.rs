@@ -100,7 +100,7 @@ impl Pool {
         Self::named(k, PIPELINED_HELPER)
     }
 
-    fn named(k: usize, prefix: &str) -> std::io::Result<Pool> {
+    pub(crate) fn named(k: usize, prefix: &str) -> std::io::Result<Pool> {
         let k = k.max(1);
         let shared = Arc::new(Shared {
             epoch: AtomicUsize::new(0),
@@ -196,6 +196,8 @@ impl Drop for Wait<'_> {
 
 fn helper(s: &Shared, idx: usize) {
     let mut seen = 0;
+    // (recorded once, at its first task: `crate::threads`)
+    let mut ran = false;
     loop {
         let mut spins = 0u32;
         let e = loop {
@@ -223,6 +225,10 @@ fn helper(s: &Shared, idx: usize) {
                 if slot.is_none() {
                     *slot = Some(p);
                 }
+            }
+            if !ran {
+                ran = true;
+                crate::threads::ran();
             }
         }
         let caller = lock(&s.caller).clone();

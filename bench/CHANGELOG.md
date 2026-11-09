@@ -35,6 +35,22 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.3.0] - 2026-11-09
+
+### Added
+
+- **Each run's threads as the decoders ran them** (`examples/ab.rs`, `ran_threads`, from
+  `mibz2::threads`): every worker, as it starts, and every team helper, at its first task,
+  records itself by its own name; the child reads the record after its timing. The census
+  (`observed_threads`, polled from outside every 5 ms) is kept as it was. It can catch a
+  helper only in the instant after its birth, under its leader's inherited name, and miss
+  it after: the Guardian's D059 reproduced a false (4, 0, 5) plan on a 20 ms decode. The
+  record is complete by construction. A new figure beside the others: every existing
+  figure keeps its meaning. The record costs each decoder thread one relaxed load, and in
+  ab's children one lock and push a thread, once. The run-fed leader's workstation
+  admission (`bench/run_fed_leader_ws.py`) reads the plan from it; the CI reporter is
+  unchanged.
+
 ## [3.2.4] - 2026-11-09
 
 ### Added

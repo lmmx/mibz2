@@ -277,7 +277,10 @@ impl StreamDecoder {
             handles.push(
                 std::thread::Builder::new()
                     .name(format!("mibz2-{i}"))
-                    .spawn(move || work(&shared, &job_rx))
+                    .spawn(move || {
+                        super::threads::ran();
+                        work(&shared, &job_rx)
+                    })
                     .expect("spawn a bz2 worker"),
             );
         }

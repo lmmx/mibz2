@@ -93,6 +93,8 @@ mod run_fed;
 #[cfg(any(test, feature = "run-fed"))]
 pub mod run_stage;
 pub mod stream;
+#[doc(hidden)]
+pub mod threads;
 // (the `trace` feature's; compiled for the tests too, which check its footprint ledger)
 #[cfg(any(test, feature = "trace"))]
 pub mod trace;

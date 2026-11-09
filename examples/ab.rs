@@ -753,6 +753,10 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
 fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
+    // (the decoders' own record of the threads they ran, each under its own name: the plan
+    // as run, complete whatever the census's polling caught, src/threads.rs; read after the
+    // timing, empty for a program's arm)
+    mibz2::threads::record(true);
     let is_program = external.is_some();
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
         Some((cmd, ready)) => piped(cmd, ready, &mut h),
@@ -775,6 +779,10 @@ fn child(arm: &str, threads: usize, path: &str) {
             (res, wall, w.finish(true), 0.0)
         }
     };
+    mibz2::threads::record(false);
+    let mut ran = mibz2::threads::take();
+    ran.sort_unstable();
+    let ran = ran.join(" ").replace('"', "'");
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
@@ -795,7 +803,7 @@ fn child(arm: &str, threads: usize, path: &str) {
     #[cfg(not(feature = "run-fed"))]
     let phases = String::new();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"{phases}}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"ran_threads\":\"{ran}\",\"err\":\"{err}\"{phases}}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()

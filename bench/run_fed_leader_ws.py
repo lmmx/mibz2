@@ -11,9 +11,11 @@ timed records), and the two occupancy captures apart from the timing.
 VALID only if every predicate holds: the bundle's identity (the frozen commit, the source,
 recipe and admission digests at it, a clean tree, the build, one binary throughout, the
 registered corpus by digest before and after, the arms, threads and rounds), then every
-record's typed raw evidence (the CI reporter's own checks, `record_problems`, at 10
-threads: each run seen running three leaders and six pipelined helpers), every arm once a
-round in ab's rotation, and one output throughout. Then the reading, prospective and
+record's typed raw evidence (the CI reporter's own checks, `record_problems`), each run's
+plan three leaders and six pipelined helpers in the decoders' own record of the threads
+they ran (`ran_threads`, complete by construction; the census's polled `observed_threads`
+is reported, not judged: it can catch a helper only under its leader's inherited name,
+D059), every arm once a round in ab's rotation, and one output throughout. Then the reading, prospective and
 unchanged from §6: the primary (`dir`) over the incumbent (`default33`) at 10 threads,
 LEAD / STOP / INCONCLUSIVE, with its attribution, and the secondaries (`ls`, `hs`) and
 the control contrasts reported, never judged. Intervals are 95% t-intervals on the paired
@@ -147,8 +149,10 @@ def identity_problems(ident, dry):
     return bad
 
 
-def admit_records(recs, rounds):
-    """The records' problems (none: admitted), and the runs by (arm, round)"""
+def admit_records(recs, rounds, census_misreads=None):
+    """The records' problems (none: admitted), and the runs by (arm, round); the census's
+    plans other than the registered one into `census_misreads` (reported, not judged)"""
+    census_misreads = [] if census_misreads is None else census_misreads
     bad = []
     runs = {arm: {} for arm in ARMS}
     order = {}
@@ -169,8 +173,20 @@ def admit_records(recs, rounds):
             continue
         runs[arm][rnd] = rec
         order.setdefault(rnd, []).append(arm)
-        # (the CI reporter's typed checks, with the plan checked at this run's threads)
-        bad += rfl.record_problems(rec, where, THREADS)
+        # (the CI reporter's typed checks; the plan from the decoders' own record of the
+        # threads they ran, complete by construction, not from the census's polling, which
+        # can catch a helper only under its leader's inherited name: D059)
+        bad += rfl.record_problems(rec, where, None)
+        ran = rec.get("ran_threads")
+        if not isinstance(ran, str):
+            bad.append(f"{where}: no ran_threads (the decoders' record of the threads they ran)")
+        elif rfl.plan_of(ran) != rfl.PLAN:
+            bad.append(
+                f"{where}: ran {rfl.plan_of(ran)} (leaders, plain, pipelined helpers), not {rfl.PLAN}"
+            )
+        obs = rec.get("observed_threads")
+        if isinstance(obs, str) and rfl.plan_of(obs) != rfl.PLAN:
+            census_misreads.append(f"{where}: the census read {rfl.plan_of(obs)}")
     for arm in ARMS:
         missing = sorted(set(range(rounds)) - set(runs[arm]))
         if missing:
@@ -275,9 +291,11 @@ def admit(args):
         bad += identity_problems(ident, dry)
     recs, problems = rfl.load(os.path.join(d, "runs.jsonl"))
     bad += problems
-    b, runs = admit_records(recs, rounds)
+    census = []
+    b, runs = admit_records(recs, rounds, census)
     bad += b
     out = {
+        "census_misreads": census,
         "label": label,
         "threads": THREADS,
         "rounds": rounds,
@@ -305,6 +323,10 @@ def admit(args):
         x = out["cells"][f"{arm}/{REF}"]
         tag = " (PRIMARY)" if arm == PRIMARY else " (secondary)" if arm in SECONDARY else ""
         print(f"  {arm + tag:<36} wall {rfl.fmt(x['wall'])}  CPU {rfl.fmt(x['cpu'])}")
+    if out["census_misreads"]:
+        print(
+            f"  (the census misread {len(out['census_misreads'])} plans; the plan is the decoders' record: reported, not judged)"
+        )
     print("Control contrasts (reported, never judged):")
     for k, x in out["contrasts"].items():
         print(f"  {k:<44} wall {rfl.fmt(x['wall'])}  CPU {rfl.fmt(x['cpu'])}")

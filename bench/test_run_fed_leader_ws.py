@@ -24,6 +24,13 @@ import test_run_fed_leader as ci  # noqa: E402
 
 HEAD = "0123456789abcdef0123456789abcdef01234567"
 FROZEN = "89abcdef0123456789abcdef0123456789abcdef"
+# the decoders' own record of the threads they ran, at three teams of three
+RAN = "mibz2-0 mibz2-1 mibz2-2 " + " ".join(f"mibz2-coop-p{1 + i % 2}" for i in range(6))
+# D059's census misread: a helper caught only under its leader's inherited name
+CENSUS_MISREAD = (
+    "ab mibz2-0 mibz2-1 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 "
+    "mibz2-coop-p2 mibz2-coop-p2 mibz2-scan sampler"
+)
 
 
 def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS):
@@ -49,6 +56,7 @@ def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS):
                 "hash": "6c462eda07e33ba8",
                 "out": 3030698,
                 "observed_threads": ci.PLAN9,
+                "ran_threads": RAN,
             }
             if arm in rfl.RUNFED:
                 rec["phases"] = ci.phases(arm)
@@ -215,8 +223,8 @@ class Admission(unittest.TestCase):
         ident["threads"] = [9, 3]
         self.refused(records(), ident, "threads [9, 3], not [10]")
         recs = records()
-        recs[5]["observed_threads"] = ci.PLAN3
-        self.refused(recs, identity(), "not (3, 0, 6)")
+        recs[5]["ran_threads"] = "mibz2-0 mibz2-coop-p1 mibz2-coop-p2"
+        self.refused(recs, identity(), "ran (1, 0, 2)")
 
     def test_a_missing_arm_is_refused(self):
         recs = [r for r in records() if r["arm"] != rfl.REG]
@@ -292,6 +300,41 @@ class Admission(unittest.TestCase):
         recs = records()
         recs[2]["corpus"] = "other"
         self.refused(recs, identity(), "corpus 'other'")
+
+    def test_a_census_misread_is_no_false_invalid(self):
+        # (D059: the census caught a helper only under its leader's inherited name, (4, 0, 5);
+        # the decoders' record, complete by construction, ran (3, 0, 6): VALID, the
+        # misread reported, never judged)
+        recs = records()
+        for i in (4, 77, 139):
+            recs[i]["observed_threads"] = CENSUS_MISREAD
+        self.assertEqual(rfl.plan_of(CENSUS_MISREAD), (4, 0, 5))
+        text, js = self.valid(recs, identity())
+        self.assertEqual(len(js["census_misreads"]), 3)
+        self.assertIn("the census misread 3 plans", text)
+
+    def test_a_plan_not_run_is_refused_whatever_the_census(self):
+        # a helper recorded under a leader's name (a delayed or inherited name: the record
+        # takes a thread's own name, so this is a decoder that ran four leaders)
+        recs = records()
+        recs[10]["ran_threads"] = RAN.replace("mibz2-coop-p2", "mibz2-1", 1)
+        self.refused(recs, identity(), "ran (4, 0, 5)")
+        # an early exit: a team's helpers gone before their first task, never recorded
+        recs = records()
+        recs[11]["ran_threads"] = "mibz2-0 mibz2-1 mibz2-2 " + " ".join(["mibz2-coop-p1"] * 4)
+        self.refused(recs, identity(), "ran (3, 0, 4)")
+        # an absent helper
+        recs = records()
+        recs[12]["ran_threads"] = RAN.rsplit(" ", 1)[0]
+        self.refused(recs, identity(), "ran (3, 0, 5)")
+        # no record at all (an older harness): refused, never taken from the census
+        recs = records()
+        del recs[13]["ran_threads"]
+        self.refused(recs, identity(), "no ran_threads")
+        # and the census itself still required present
+        recs = records()
+        del recs[14]["observed_threads"]
+        self.refused(recs, identity(), "no observed_threads")
 
     def test_the_rotation_is_enforced(self):
         recs = records()
