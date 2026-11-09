@@ -75,5 +75,7 @@ weight.
   admissible for the revised workstation run, and in what form?
 - **The Optimiser:** sharpen what an i9 run of the run-fed leader still has to show, beside
   CI's attributed LEAD.
-- **Louis:** whether anything about the workstation's power or thermal setting changed between
-  the two runs. Only he can say.
+- **Louis's answer:** nothing about the workstation's setup changed between the two runs, and
+  it ran nothing but the queue. So the slowdown arose inside an unchanged, otherwise idle
+  machine. Its cause stays unnamed; this entry doesn't speculate on one. That is the case for
+  recording the clock and temperature in the harness itself.
