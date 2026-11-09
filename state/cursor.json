@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Technical PROCEED toward freeze: required collector completion objection closed. 34 local admission tests, 24 replay cases and 11 CI recipe tests on identical tree pass; CI 24 success/3 skipped. Authority repin and version reconciliation remain separate prerequisites.",
+  "state": "PROCEED on exact integration heads: version reconciliation and master merge verified, no executable changes beyond BENCH labels. CI 25/24 success with three skips each, identical tested trees. Authenticated repin and final freeze provenance remain prerequisites.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -129,9 +129,10 @@
     6745811380,
     6746400325,
     6746912441,
-    6747050053
+    6747050053,
+    6747581238
   ],
-  "last_processed_comment_id": 6747050053,
+  "last_processed_comment_id": 6747581238,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1334,7 +1335,7 @@
     },
     {
       "trigger_comment_id": 6747581238,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1345,7 +1346,10 @@
       "report_path": "state/reports/integration-freeze-6747581238/report.md",
       "report_commit": "5e6ec96399b32bf61c818997bdf0477759bd2e9c",
       "review_comment_pr": 145,
-      "disposition": "PROCEED on exact integration heads: version reconciliation and master merge verified, no executable changes beyond BENCH labels. CI 25/24 success with three skips each, identical tested trees. Authenticated repin and final freeze provenance remain prerequisites."
+      "disposition": "PROCEED on exact integration heads: version reconciliation and master merge verified, no executable changes beyond BENCH labels. CI 25/24 success with three skips each, identical tested trees. Authenticated repin and final freeze provenance remain prerequisites.",
+      "review_comment_id": 6747660830,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1365,10 +1369,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6747050053
+      6747581238
     ],
     "handled": [
-      6747050053
+      6747581238
     ],
     "skipped": [],
     "automation_modified": false
