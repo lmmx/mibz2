@@ -1110,12 +1110,15 @@
     },
     {
       "trigger_comment_id": 6738933099,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "0ce4dca4489c4a87b9658d6c2656290173113c99",
-      "report_path": "state/reports/c29-preflight-6738933099/report.md"
+      "report_path": "state/reports/c29-preflight-6738933099/report.md",
+      "report_commit": "77143028861a07df4b67ea1dbc3e738099527581",
+      "review_comment_pr": 145,
+      "disposition": "PROCEED to freeze R5 at 0ce4dca4489c4a87b9658d6c2656290173113c99 for one timed attempt; raw preflight verified, exact integer and hidden-parent checks pass; prior UNJUDGED result separate, stopping policy unchanged."
     }
   ],
   "active_delegations": [],
