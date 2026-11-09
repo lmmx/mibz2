@@ -1,0 +1,515 @@
+"""The service core's window on the workstation
+(docs/journal/2026-11-09-service-lookahead-registration.md, registered before any run): the
+report and its verdicts, each predicate checked here.
+
+    python3 bench/service_lookahead.py report RUNS.jsonl [--occupancy W/occupancy-*.json] [--out STEM]
+
+The question: does svc2@10 (the service core at 2 x 3 + 2, on a budget of 10 decode threads)
+gain from a wider window, 12 or 16 blocks in flight against the 8 it ran at in
+bench-service-2x3? Its trace there showed PREP STARVATION without saturation. The window is
+not the prepared queue's own lookahead (`teams` in src/parallel.rs, two blocks at 2 x 3,
+fixed): this run varies the blocks in flight alone, so a NULL here leaves that lookahead
+untested.
+
+A run is VALID only as the registered one, with bench/service_2x3.py's strict checks
+(imported unchanged): the registered 20 rounds, from the attempt's directory a clean tree, no
+`NOT-FROZEN.txt` or `DRY-RUN.txt`, `commit.txt` the checkout's head, the ten-core topology,
+every run's record usable (a hex digest, the registered decoded size, finite positive wall,
+CPU and peak RSS, the registered corpus), every run the same bytes as the reference's,
+`corpus.sha256` the registered corpus's, every registered cell's rounds once each with its
+registered plan, no other cell, all three registered traces complete and as registered (each
+at its own window), saturation resolved in each, and the noise control N1 within 1 +/- 0.03.
+
+The registered cells (ARM@BUDGET: team leaders, helpers, service threads; window):
+
+    mibz2@10                3, 6, 0   12   today's default (0.2.6): 3 x 3 pipelined, park and small
+    mibz2-svc2@10           2, 4, 2    8   the service core, as bench-service-2x3 ran it
+    mibz2-svc2-w12@10       2, 4, 2   12   the same, at a window of 12
+    mibz2-svc2-w16@10       2, 4, 2   16   the same, at a window of 16
+    mibz2-team3@10          3, 6, 0   12   3 x 3, plain
+    mibz2-team3-twin@10     3, 6, 0   12   mibz2-team3 under another name: the noise control
+
+The outcome map, the plan count from ab's per-thread CPU and the traces' failure modes with
+their thresholds are bench/service_core.py's, unchanged.
+"""
+
+import argparse
+import json
+import math
+import os
+import re
+import statistics
+import subprocess
+import sys
+from collections import defaultdict
+
+sys.path.insert(0, __file__.rsplit("/", 1)[0])
+from service_core import (  # noqa: E402
+    CONTROL_EQUIV,
+    failure_modes,
+    geo_ci,
+    is_gain,
+    outcome,
+    threads_of,
+)
+from service_2x3 import (  # noqa: E402
+    REGISTERED_CORPUS,
+    REGISTERED_CORPUS_SHA256,
+    REGISTERED_OUT,
+    TRACE_NONNEG,
+    TRACE_PLAN,
+    TRACE_SERVICES,
+    TRACE_SHARES,
+    TRACE_THREADS,
+    cell,
+    cpu_phrase,
+    decode_threads,
+    number,
+    row_problems,
+    speed_phrase,
+)
+
+REGISTERED_ROUNDS = 20
+# cell -> (leaders, helpers, service threads)
+CELLS = {
+    "mibz2@10": (3, 6, 0),
+    "mibz2-svc2@10": (2, 4, 2),
+    "mibz2-svc2-w12@10": (2, 4, 2),
+    "mibz2-svc2-w16@10": (2, 4, 2),
+    "mibz2-team3@10": (3, 6, 0),
+    "mibz2-team3-twin@10": (3, 6, 0),
+}
+# each cell's window (blocks in flight), as examples/ab.rs builds it at 10 threads
+WINDOW = {
+    "mibz2@10": 12,
+    "mibz2-svc2@10": 8,
+    "mibz2-svc2-w12@10": 12,
+    "mibz2-svc2-w16@10": 16,
+    "mibz2-team3@10": 12,
+    "mibz2-team3-twin@10": 12,
+}
+SVC2 = ["mibz2-svc2@10", "mibz2-svc2-w12@10", "mibz2-svc2-w16@10"]
+# the registered comparisons (name, arm, reference): judged, speed and CPU co-primary
+JUDGED = [
+    ("L1", "mibz2-svc2-w12@10", "mibz2-svc2@10"),
+    ("L2", "mibz2-svc2-w16@10", "mibz2-svc2@10"),
+]
+# reported, never judged
+SECONDARY = [
+    ("D8", "mibz2-svc2@10", "mibz2@10"),
+    ("D12", "mibz2-svc2-w12@10", "mibz2@10"),
+    ("D16", "mibz2-svc2-w16@10", "mibz2@10"),
+    ("L3", "mibz2-svc2-w16@10", "mibz2-svc2-w12@10"),
+    ("R1", "mibz2@10", "mibz2-team3@10"),
+]
+# the svc2 windows against the default, of which the best is reported (never judged)
+AGAINST_DEFAULT = ["D8", "D12", "D16"]
+# the noise control, as the service core's registration has it, unchanged
+CONTROL = ("N1", "mibz2-team3-twin@10", "mibz2-team3@10")
+REFERENCE = "mibz2@10"
+# the registered traces (the occupancy passes' names) -> their window; occupancy's
+# `--slots S` at 10 threads gives 2 teams a window of S * 2 / 10, so each pass's slots are
+# 5 x its window
+TRACES = {
+    "occupancy-t10-svc2-w8": 8,
+    "occupancy-t10-svc2-w12": 12,
+    "occupancy-t10-svc2-w16": 16,
+}
+TRACE_SLOTS = {name: 5 * w for name, w in TRACES.items()}
+
+
+def load_trace(paths, name, commit):
+    """A registered trace's timeline and its problems: bench/service_2x3.py's checks
+    (configuration, parity, output and every metric the report reads), and its slots the
+    registered ones for its window (an empty list: the trace is usable)"""
+    found = [x for x in paths if os.path.basename(x).removesuffix(".json") == name]
+    if len(found) != 1:
+        return {}, [f"{len(found)} files named `{name}.json` (one registered)"]
+    try:
+        o = json.load(open(found[0]))
+    except (OSError, ValueError) as e:
+        return {}, [f"unreadable: {e}"]
+    if not isinstance(o, dict):
+        return {}, ["not a trace report"]
+    p = []
+    res = o.get("results")
+    if not (isinstance(res, list) and len(res) == 1 and isinstance(res[0], dict)):
+        return {}, ["not exactly one result (one thread count registered)"]
+    r = res[0]
+    tl = r.get("timeline") if isinstance(r.get("timeline"), dict) else {}
+    st = o.get("settings") if isinstance(o.get("settings"), dict) else {}
+    meta = o.get("meta") if isinstance(o.get("meta"), dict) else {}
+    if r.get("threads") != TRACE_THREADS or st.get("threads") != [TRACE_THREADS]:
+        p.append(f"threads {r.get('threads')!r} / {st.get('threads')!r}, not {TRACE_THREADS}")
+    if st.get("teams") != TRACE_PLAN:
+        p.append(f"plan {st.get('teams')!r}, not {TRACE_PLAN!r}")
+    want = TRACE_SLOTS[name]
+    if r.get("slots") != want or st.get("slots") != want:
+        p.append(f"slots {r.get('slots')!r} / {st.get('slots')!r}, not {want} (a window of {TRACES[name]})")
+    if tl.get("svc.n.services") != TRACE_SERVICES:
+        p.append(f"service threads {tl.get('svc.n.services')!r}, not {TRACE_SERVICES}")
+    if not commit or meta.get("commit") != commit:
+        p.append(f"its commit {meta.get('commit')!r} not the run's ({commit})")
+    if o.get("parity") is not True:
+        p.append(f"parity {o.get('parity')!r}, not true")
+    if o.get("output_bytes") != REGISTERED_OUT:
+        p.append(f"output {o.get('output_bytes')!r} bytes, not the registered {REGISTERED_OUT}")
+    cr = tl.get("complete_rounds")
+    if not (number(cr) and float(cr).is_integer() and cr >= 1):
+        p.append(f"complete rounds {cr!r}, not at least 1")
+    bad = [k for k in TRACE_SHARES if not (number(tl.get(k)) and 0 <= tl[k] <= 1)]
+    bad += [k for k in TRACE_NONNEG if not (number(tl.get(k)) and tl[k] >= 0)]
+    if bad:
+        p.append("metrics absent or out of range: " + ", ".join(bad))
+    return {k: v for k, v in tl.items() if number(v)}, p
+
+
+def fig(c):
+    g, lo, hi = c["speed"]
+    return f"{c['name']} {g:.3f} [{lo:.3f}, {hi:.3f}], {speed_phrase(c['speed_outcome'])}; {cpu_phrase(c['cpu_outcome'])}"
+
+
+def readings(by):
+    """The registration's reading, mechanically, from L1 and L2 (svc2 at 12 and at 16
+    against svc2 at 8), in the registered order"""
+    l1, l2 = by["L1"], by["L2"]
+    both = [l1, l2]
+    words = [c["speed_outcome"] for c in both]
+    gains = [c for c in both if is_gain(c["speed_outcome"])]
+    regressions = [c for c in both if c["speed_outcome"] == "REGRESSION"]
+    figs = "; ".join(fig(c) for c in both)
+    note = (
+        "The window is the blocks in flight, not the prepared queue's own lookahead (`teams` in "
+        "src, two blocks at 2 × 3, not varied here)"
+    )
+    if gains and not regressions:
+        if any(c["cpu_outcome"] == "CPU COST" for c in gains):
+            overall = f"A WIDER WINDOW IS FASTER FOR A CPU COST (registered step 1b: {figs}): for Louis to weigh. {note}"
+        else:
+            at = " and ".join(f"{WINDOW[c['arm']]}" for c in gains)
+            overall = f"THE WINDOW BINDS SVC2@10 AT 8 (registered step 1a: a gain at {at}; {figs}). {note}"
+    elif gains and regressions:
+        overall = f"INCONCLUSIVE (registered step 2: MIXED, a gain at one window and a regression at the other; {figs})"
+    elif any(w.startswith("INCONCLUSIVE") for w in words):
+        overall = f"INCONCLUSIVE (registered step 3: {figs})"
+    elif all(w == "REGRESSION" for w in words):
+        overall = f"A WIDER WINDOW IS SLOWER (registered step 4: {figs}). {note}"
+    else:
+        overall = (
+            f"NO WINDOW GAIN DETECTED BEYOND 8 (registered step 5: {figs}). NULL is bounded uncertainty: "
+            f"a small effect is not excluded. {note}, so whether that lookahead binds is untested by this run"
+        )
+    return {"overall": overall}
+
+
+def best_window(sec):
+    """The svc2 window fastest against the default on the geometric mean (D8, D12, D16),
+    reported, never judged: chosen after the run from three, so its interval is optimistic"""
+    rows = [c for c in sec if c["name"] in AGAINST_DEFAULT and number(c["speed"][0])]
+    if not rows:
+        return "NOT AVAILABLE"
+    b = max(rows, key=lambda c: c["speed"][0])
+    g, lo, hi = b["speed"]
+    cg, clo, chi = b["cpu"]
+    return (
+        f"window {WINDOW[b['arm']]} (`{b['arm']}`): speed {g:.3f} [{lo:.3f}, {hi:.3f}], {outcome(g, lo, hi)}; "
+        f"CPU {cg:.3f} [{clo:.3f}, {chi:.3f}], {outcome(cg, clo, chi, gain='CPU SAVING', loss='CPU COST')} "
+        "against the default. Reported, never judged: the best of three chosen after the run, so its interval is optimistic"
+    )
+
+
+def mechanism(modes, overall):
+    """The traces read beside the reading: reported, never judged"""
+    starved = [w for w, m in modes.items() if m["prep"] == "PREP STARVATION"]
+    saturated = [w for w, m in modes.items() if m["saturated"] == "SATURATED"]
+    sat = f" SATURATED at window {', '.join(map(str, saturated))}." if saturated else ""
+    if overall.startswith(("THE WINDOW BINDS", "A WIDER WINDOW IS FASTER")):
+        if 8 in starved and any(w not in starved for w in (12, 16)):
+            return (
+                "PREP STARVATION AT 8, RELIEVED AT A WIDER WINDOW: consistent with the window bounding the "
+                f"prepared queue's supply at 8, not shown to be it.{sat}"
+            )
+        return f"PREP STARVATION at windows {starved or 'none'}: the traces and the gain don't line up simply.{sat}"
+    if overall.startswith(("NO WINDOW GAIN", "A WIDER WINDOW IS SLOWER")) and len(starved) == len(modes):
+        return (
+            "PREP STARVATION PERSISTS AT EVERY WINDOW: not relieved by the window. The prepared queue's own "
+            "lookahead (`teams`, fixed) and the service workers' order of work remain candidates, untested here."
+            f"{sat}"
+        )
+    return f"PREP STARVATION at windows {starved or 'none'}: reported, not read.{sat}"
+
+
+def report(a):
+    runs, unparsed = [], 0
+    for x in open(a.runs):
+        if x.strip():
+            try:
+                o = json.loads(x)
+            except ValueError:
+                o = None
+            if isinstance(o, dict):
+                runs.append(o)
+            else:
+                unparsed += 1
+    problems = {i: row_problems(r) for i, r in enumerate(runs)}
+    malformed = [(i, p) for i, p in problems.items() if p]
+    usable = [r for i, r in enumerate(runs) if not problems[i] and not r.get("err")]
+    bad = [r for r in runs if r.get("err")]
+    hashes = {r["hash"] for r in usable}
+    lengths = {r["out"] for r in usable}
+    ref_hashes = {r["hash"] for r in usable if cell(r) == REFERENCE}
+    by = defaultdict(dict)
+    dupes = defaultdict(int)
+    seen = defaultdict(set)
+    for i, r in enumerate(runs):
+        if "no arm" in problems[i] or any(x.startswith(("`threads`", "`round`")) for x in problems[i]):
+            continue
+        c = cell(r)
+        if r["round"] in seen[c]:
+            dupes[c] += 1
+            continue
+        seen[c].add(r["round"])
+        if not problems[i] and not r.get("err"):
+            by[c][r["round"]] = r
+    want = list(range(REGISTERED_ROUNDS))
+    w = os.path.dirname(os.path.abspath(a.runs))
+
+    def text(name):
+        try:
+            return open(os.path.join(w, name)).read().strip()
+        except OSError:
+            return None
+
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        head = None
+    rounds_seen = len({r.get("round") for r in runs})
+    lines = ["# The service core's window: the workstation run's report", ""]
+    checks = []
+    checks.append(
+        (f"the registered {REGISTERED_ROUNDS} rounds (seen: {rounds_seen})", rounds_seen == REGISTERED_ROUNDS)
+    )
+    checks.append(("a clean tree (`git-status.txt` present and empty)", text("git-status.txt") == ""))
+    checks.append(("no `NOT-FROZEN.txt` (the frozen inputs unchanged)", text("NOT-FROZEN.txt") is None))
+    checks.append(("no `DRY-RUN.txt` (not a dry run)", text("DRY-RUN.txt") is None))
+    commit = text("commit.txt")
+    checks.append((f"`commit.txt` ({commit}) is the checkout's head ({head})", bool(commit) and commit == head))
+    lscpu = text("lscpu.txt") or ""
+
+    def lscpu_field(name):
+        m = re.search(rf"^{name}:\s*(.+)$", lscpu, re.M)
+        return m.group(1).strip() if m else None
+
+    sockets, per_socket, l3 = lscpu_field("Socket\\(s\\)"), lscpu_field("Core\\(s\\) per socket"), lscpu_field("L3 cache") or lscpu_field("L3")
+    ten = sockets == "1" and per_socket == "10" and bool(l3) and l3.split()[0:2] in (["20", "MiB"], ["20"])
+    checks.append(
+        (
+            f"the ten-core topology, so `mibz2` is the pipelined default (lscpu: {sockets} socket, {per_socket} cores, L3 {l3})",
+            ten,
+        )
+    )
+    why = "; ".join(f"run {i}: {', '.join(p)}" for i, p in malformed[:3]) + ("; ..." if len(malformed) > 3 else "")
+    checks.append(
+        (
+            f"every run's record usable: a hex output digest, the registered {REGISTERED_OUT} bytes out, finite "
+            f"positive wall, CPU and peak RSS, the registered corpus `{REGISTERED_CORPUS}` "
+            f"({len(malformed)} unusable, {unparsed} unparsed{': ' + why if why else ''})",
+            bool(runs) and not malformed and not unparsed,
+        )
+    )
+    checks.append(
+        (
+            f"every run the same bytes as the reference `{REFERENCE}`'s, none failed "
+            f"(digests: {', '.join(sorted(hashes)) or 'none'})",
+            len(hashes) == 1 and hashes == ref_hashes and lengths == {REGISTERED_OUT} and not bad,
+        )
+    )
+    digest = (text("corpus.sha256") or "").split()
+    checks.append(
+        (
+            f"`corpus.sha256` the registered corpus's ({REGISTERED_CORPUS_SHA256[:12]}..., bench/wikidata.json; "
+            f"seen: {digest[0][:12] + '...' if digest else 'none'})",
+            bool(digest) and digest[0] == REGISTERED_CORPUS_SHA256,
+        )
+    )
+    for c, plan in CELLS.items():
+        rs = by.get(c, {})
+        plans = {threads_of(r.get("thread_cpu", "")) for r in rs.values()}
+        ok = sorted(rs) == want and not dupes[c] and plans == {plan}
+        seen_ = ", ".join(f"{p[0]} leaders, {p[1]} helpers, {p[2]} service" for p in sorted(plans)) or "none"
+        checks.append(
+            (
+                f"`{c}`: rounds 0-{REGISTERED_ROUNDS - 1} once each, every run {plan[0]} leaders, "
+                f"{plan[1]} helpers, {plan[2]} service threads (seen: {seen_})",
+                ok,
+            )
+        )
+    unexpected = sorted(set(by) - set(CELLS))
+    checks.append((f"no cell beyond the registered ones (seen: {', '.join(unexpected) or 'none'})", not unexpected))
+    tls, modes, unreadable = {}, {}, []
+    for name, win in TRACES.items():
+        tl, tp = load_trace(a.occupancy or [], name, commit)
+        tls[name] = tl
+        unreadable += [f"{name}: {x}" for x in tp if x.startswith("unreadable")]
+        checks.append(
+            (
+                f"the trace `{name}` complete and as registered ({TRACE_THREADS} threads, {TRACE_PLAN}, "
+                f"{TRACE_SERVICES} service threads, slots {TRACE_SLOTS[name]} (a window of {win}), the run's commit, "
+                f"parity, the registered output, every metric read finite and in range; rounds: "
+                f"{tl.get('complete_rounds', 0)}{'; ' + '; '.join(tp) if tp else ''})",
+                not tp,
+            )
+        )
+        modes[win] = failure_modes(tl)
+        checks.append(
+            (f"saturation resolved from `{name}` (seen: {modes[win]['saturated']})", modes[win]["saturated"] != "UNRESOLVED")
+        )
+    valid = all(ok for _, ok in checks)
+
+    def ratio(arm, ref, key="wall"):
+        x, y = by.get(arm, {}), by.get(ref, {})
+        rr = [y[i][key] / x[i][key] for i in want if i in x and i in y]
+        return (geo_ci(rr) if rr else (math.nan,) * 3), len(rr)
+
+    lines += ["## Validity", ""]
+    lines += [f"- {t}: **{'yes' if ok else 'NO'}**" for t, ok in checks]
+    (g, lo, hi), n = ratio(CONTROL[1], CONTROL[2])
+    control_ok = valid and 1 - CONTROL_EQUIV <= lo and hi <= 1 + CONTROL_EQUIV
+    lines.append(
+        f"- the noise control {CONTROL[0]}, `{CONTROL[1]}` against `{CONTROL[2]}` (the same plan): "
+        f"{g:.3f} [{lo:.3f}, {hi:.3f}] over {n} rounds, within 1 ± {CONTROL_EQUIV}: **{'yes' if control_ok else 'NO'}**"
+    )
+    verdict = "VALID" if valid and control_ok else "INVALID"
+    lines += ["", f"Run: **{verdict}**", ""]
+    out = {"verdict": verdict, "checks": checks, "judged": [], "secondary": [], "traces": {}}
+
+    lines += [
+        "## The registered comparisons (svc2 at 2 × 3 + 2 on 10, a wider window against 8; judged; speed and CPU co-primary)",
+        "",
+        "| | arm | against | window | speed [95% CI] | speed outcome | CPU [95% CI] | CPU outcome |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for name, arm, ref in JUDGED:
+        speed, n = ratio(arm, ref)
+        cpu, _ = ratio(arm, ref, "cpu")
+        if verdict == "VALID":
+            so = outcome(*speed)
+            co = outcome(*cpu, gain="CPU SAVING", loss="CPU COST")
+        else:
+            so = co = "NONE (the run is invalid)"
+        lines.append(
+            f"| {name} | `{arm}` | `{ref}` | {WINDOW[arm]} against {WINDOW[ref]} | {speed[0]:.3f} [{speed[1]:.3f}, {speed[2]:.3f}] | "
+            f"{so} | {cpu[0]:.3f} [{cpu[1]:.3f}, {cpu[2]:.3f}] | {co} |"
+        )
+        out["judged"].append(
+            {"name": name, "arm": arm, "ref": ref, "windows": [WINDOW[arm], WINDOW[ref]], "speed": list(speed),
+             "cpu": list(cpu), "rounds": n, "speed_outcome": so, "cpu_outcome": co}
+        )
+    jd = {c["name"]: c for c in out["judged"]}
+    for name, arm, ref in SECONDARY:
+        speed, n = ratio(arm, ref)
+        cpu, _ = ratio(arm, ref, "cpu")
+        out["secondary"].append({"name": name, "arm": arm, "ref": ref, "speed": list(speed), "cpu": list(cpu)})
+    show = verdict == "VALID"
+    if show:
+        out["readings"] = readings(jd)
+        out["best_window"] = best_window(out["secondary"])
+        out["mechanism"] = mechanism(modes, out["readings"]["overall"])
+    else:
+        out["readings"] = {"overall": "NONE (the run is invalid)"}
+        out["best_window"] = out["mechanism"] = "NONE (the run is invalid)"
+    lines += [
+        "",
+        f"**The reading, by the registered order:** **{out['readings']['overall']}**",
+        "",
+        "NULL is an interval inside [0.97, 1.03]: bounded uncertainty, not an effect shown to be zero. "
+        "CPU INCONCLUSIVE is no detected CPU cost, not a CPU cost shown to be absent.",
+        "",
+        f"**The best svc2 window against the default (reported, never judged):** {out['best_window']}",
+        "",
+        f"**The traces beside it (reported, never judged):** {out['mechanism']}",
+        "",
+        "## Reported, never judged",
+        "",
+        "| | arm | against | decode threads | window | speed [95% CI] | CPU [95% CI] |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for c in out["secondary"]:
+        arm, ref, speed, cpu = c["arm"], c["ref"], c["speed"], c["cpu"]
+        lines.append(
+            f"| {c['name']} | `{arm}` | `{ref}` | {decode_threads(CELLS[arm])} against {decode_threads(CELLS[ref])} | "
+            f"{WINDOW[arm]} against {WINDOW[ref]} | {speed[0]:.3f} [{speed[1]:.3f}, {speed[2]:.3f}] | "
+            f"{cpu[0]:.3f} [{cpu[1]:.3f}, {cpu[2]:.3f}] |"
+        )
+    lines += [
+        "",
+        "(Speed: the reference's wall over the arm's, > 1 the arm is faster. CPU: the reference's CPU over the arm's, > 1 the arm spends less.)",
+        "",
+        "## Every cell (medians)",
+        "",
+        "| cell | decode threads (leaders + helpers + service) | window | wall s | CPU s | peak RSS MB | rounds |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for c in sorted(by):
+        rs = list(by[c].values())
+        if not rs:
+            continue
+        plan = CELLS.get(c)
+        lines.append(
+            f"| `{c}`{'' if plan else ' (unregistered)'} | {'+'.join(map(str, plan)) if plan else '?'} | "
+            f"{WINDOW.get(c, '?')} | {statistics.median(r['wall'] for r in rs):.3f} | "
+            f"{statistics.median(r['cpu'] for r in rs):.3f} | {statistics.median(r['rss_kb'] for r in rs) / 1024:.0f} | {len(rs)} |"
+        )
+    lines += [
+        "",
+        "## The traces (occupancy, svc2 at 10 threads, one per window; medians over complete rounds)",
+        "",
+        "| trace | window | rounds | blocks | util (each; max) | prep wait median / p90 ms | finish wait median / p90 ms | job wait median ms | backlog prep / finish (mean; max) | teams idle: prep / back share | run wait ms | saturation | prep starvation | finish backlog |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for name, win in TRACES.items():
+        tl = tls[name]
+        if not tl:
+            continue
+        g = lambda k: tl.get(k, float("nan"))  # noqa: E731
+        fm = modes[win]
+        out["traces"][name] = {
+            "window": win,
+            "timeline": {k: v for k, v in tl.items() if k.startswith("svc.") or k in ("blocks", "complete_rounds")},
+            "modes": fm,
+        }
+        utils = sorted((k, v) for k, v in tl.items() if re.fullmatch(r"svc\.util\.\d+", k))
+        u = ", ".join(f"{v:.2f}" for _, v in utils)
+        lines.append(
+            f"| {name} | {win} | {g('complete_rounds')} | {g('blocks')} | {u}; max {g('svc.util.max'):.2f} | "
+            f"{g('svc.queue.prep.median_ms'):.3f} / {g('svc.queue.prep.p90_ms'):.3f} | "
+            f"{g('svc.queue.finish.median_ms'):.3f} / {g('svc.queue.finish.p90_ms'):.3f} | {g('svc.queue.job.median_ms'):.3f} | "
+            f"{g('svc.backlog.prep_mean'):.2f} / {g('svc.backlog.finish_mean'):.2f} ({g('svc.backlog.prep_max'):.0f}; {g('svc.backlog.finish_max'):.0f}) | "
+            f"{g('svc.team.idle_prep_share'):.3f} / {g('svc.team.idle_back_share'):.3f} | {g('svc.team.ms.run_wait'):.1f} | "
+            f"{fm['saturated'] if show else 'NONE'} | {fm['prep'] if show else 'NONE'} | {fm['finish'] if show else 'NONE'} |"
+        )
+    lines += [f"| {x} | | | | | | | | | | | | | |" for x in unreadable]
+    text_ = "\n".join(lines) + "\n"
+    print(text_)
+    if a.out:
+        open(a.out + ".md", "w").write(text_)
+        json.dump(out, open(a.out + ".json", "w"), indent=1)
+    return 0 if verdict == "VALID" else 1
+
+
+def main():
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers(dest="cmd", required=True)
+    r = sub.add_parser("report")
+    r.add_argument("runs")
+    r.add_argument("--occupancy", nargs="*", default=[])
+    r.add_argument("--out")
+    a = p.parse_args()
+    sys.exit(report(a))
+
+
+if __name__ == "__main__":
+    main()

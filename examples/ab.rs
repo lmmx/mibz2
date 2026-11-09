@@ -52,8 +52,10 @@
 //!   and teams of 3 that only build and walk, as many as fit THREADS after the K service
 //!   threads, at most 3: 3 x 3 + 1 at 10 or 12 threads, 2 x 3 + 2 at 10, 3 x 3 + 2 at 12),
 //!   and `mibz2-svc1-t2` (teams of 2: 3 x 2 + 1); each in the teamK arms' window
-//!   (SLOTS_PER_THREAD a team); and `mibz2-team3-twin`, `mibz2-team3` under another name
-//!   (the same decoder twice in one run: the service core's noise control);
+//!   (SLOTS_PER_THREAD a team); `mibz2-svc2-w12` and `-w16` (`mibz2-svc2`'s plan at a
+//!   fixed window of 12 or 16 blocks, the service core's window question); and
+//!   `mibz2-team3-twin`, `mibz2-team3` under another name (the same decoder twice in one
+//!   run: the service core's noise control);
 //! - `mibz2-team2x3` and `mibz2-pipe2x3` (research: two teams of three whatever THREADS,
 //!   in the teamK arms' window: the plain `Plan::Teams { teams: 2, k: 3 }`, and the
 //!   default's pipelined team with park and small, `parallel::PIPELINED_LEVERS`; what
@@ -626,14 +628,21 @@ fn decode(
         // the service core (research, `StreamDecoder::service`): K service threads, and
         // teams of T in what is left of THREADS, at most 3 teams (the three-table knee), so
         // the arm never runs more decoding threads than THREADS
-        "mibz2-svc1" | "mibz2-svc2" | "mibz2-svc1-t2" => {
+        // (`mibz2-svc2-w12`, `-w16`: `mibz2-svc2`'s plan at a fixed window of 12 or 16 blocks
+        // in flight rather than SLOTS_PER_THREAD a team, 8 at 2 x 3 + 2; research, the
+        // window's question, docs/journal/2026-11-09-service-lookahead-registration.md)
+        "mibz2-svc1" | "mibz2-svc2" | "mibz2-svc1-t2" | "mibz2-svc2-w12" | "mibz2-svc2-w16" => {
             let (services, k) = match arm {
                 "mibz2-svc1" => (1, 3),
-                "mibz2-svc2" => (2, 3),
+                "mibz2-svc2" | "mibz2-svc2-w12" | "mibz2-svc2-w16" => (2, 3),
                 _ => (1, 2),
             };
             let teams = (threads.saturating_sub(services) / k).clamp(1, 3);
-            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let slots = match arm {
+                "mibz2-svc2-w12" => 12,
+                "mibz2-svc2-w16" => 16,
+                _ => mibz2::parallel::SLOTS_PER_THREAD * teams,
+            };
             drain(
                 mibz2::BzReader::parallel_service(
                     open()?,
