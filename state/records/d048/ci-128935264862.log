@@ -1,0 +1,48 @@
+2026-11-09T01:47:31.0919615Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bfb2603026ba3579c199b392e2367573cac1b253:refs/remotes/pull/274/merge
+2026-11-09T01:47:31.7396668Z  * [new ref]         bfb2603026ba3579c199b392e2367573cac1b253 -> pull/274/merge
+2026-11-09T01:47:31.8326906Z HEAD is now at bfb2603 Merge 83970f68b309d9667f6fe8fbd4a70f50be5f73da into fd60fffada25d475bbcc2b54165b96cf5fd7a92f
+2026-11-09T01:47:31.8367691Z [command]/usr/bin/git log -1 --format=%H
+2026-11-09T01:47:31.8389367Z bfb2603026ba3579c199b392e2367573cac1b253
+2026-11-09T01:47:32.5831144Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:47:32.6201582Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:47:32.7936193Z rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:47:33.9005922Z ##[group]Run cargo fmt --all --check
+2026-11-09T01:47:34.2670361Z ##[group]Run cargo clippy --all-targets --all-features -- -D warnings
+2026-11-09T01:47:45.1510205Z ##[group]Run cargo test
+2026-11-09T01:50:04.4274775Z test result: ok. 53 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 108.49s
+2026-11-09T01:50:14.0032212Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.57s
+2026-11-09T01:50:19.6600828Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.65s
+2026-11-09T01:50:33.0584797Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.39s
+2026-11-09T01:50:35.4902586Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s
+2026-11-09T01:50:37.9485758Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.45s
+2026-11-09T01:50:41.9055552Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.96s
+2026-11-09T01:50:53.7817144Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.87s
+2026-11-09T01:50:53.8075220Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-09T01:50:53.9515782Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+2026-11-09T01:50:53.9543301Z ##[group]Run cargo test --features run-fed --test mtf_kernels
+2026-11-09T01:50:53.9546174Z [36;1mcargo test --features run-fed --test run_fed_b5[0m
+2026-11-09T01:50:53.9546486Z [36;1mcargo test --release --features run-fed --test run_fed_b5[0m
+2026-11-09T01:51:05.2642431Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.00s
+2026-11-09T01:51:11.1845138Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.02s
+2026-11-09T01:51:11.3253909Z test src/run_stage.rs - run_stage::Sorted (line 52) - compile fail ... ok
+2026-11-09T01:51:11.3257145Z test src/run_stage.rs - run_stage::Sorted (line 48) - compile fail ... ok
+2026-11-09T01:51:11.3341627Z test src/run_stage.rs - run_stage::Sorted (line 67) - compile fail ... ok
+2026-11-09T01:51:11.3372539Z test src/run_stage.rs - run_stage::Sorted (line 57) - compile fail ... ok
+2026-11-09T01:51:11.4030450Z test src/run_stage.rs - run_stage::Sorted (line 77) ... ok
+2026-11-09T01:51:11.4031139Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.12s
+2026-11-09T01:51:12.1016820Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-11-09T01:51:13.2033928Z test miri_emitter_kept_buffers ... ok
+2026-11-09T01:51:13.2034353Z test miri_emitter_exits ... ok
+2026-11-09T01:51:13.2034731Z test miri_emitter_seeded ... ok
+2026-11-09T01:51:14.2529126Z test representation_limit ... ok
+2026-11-09T01:51:15.5030001Z test fuzz_emit_sort_fill_fallback ... ok
+2026-11-09T01:51:15.5030452Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.30s
+2026-11-09T01:51:32.4724177Z test miri_emitter_kept_buffers ... ok
+2026-11-09T01:51:32.4724502Z test miri_emitter_exits ... ok
+2026-11-09T01:51:32.4728589Z test miri_emitter_seeded ... ok
+2026-11-09T01:51:33.4930003Z test representation_limit ... ok
+2026-11-09T01:51:34.2276747Z test fuzz_emit_sort_fill_fallback ... ok
+2026-11-09T01:51:34.2277434Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.76s
+2026-11-09T01:51:34.2448028Z ##[group]Run cargo test --example ab
+2026-11-09T01:51:38.2360141Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-09T01:51:38.2406728Z ##[group]Run cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null

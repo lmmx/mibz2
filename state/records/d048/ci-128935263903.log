@@ -1,0 +1,38 @@
+2026-11-09T01:47:31.4900664Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +bfb2603026ba3579c199b392e2367573cac1b253:refs/remotes/pull/274/merge
+2026-11-09T01:47:32.3948179Z  * [new ref]         bfb2603026ba3579c199b392e2367573cac1b253 -> pull/274/merge
+2026-11-09T01:47:32.4847247Z HEAD is now at bfb2603 Merge 83970f68b309d9667f6fe8fbd4a70f50be5f73da into fd60fffada25d475bbcc2b54165b96cf5fd7a92f
+2026-11-09T01:47:32.4879971Z [command]/usr/bin/git log -1 --format=%H
+2026-11-09T01:47:32.4902852Z bfb2603026ba3579c199b392e2367573cac1b253
+2026-11-09T01:47:42.3100739Z   nightly-x86_64-unknown-linux-gnu installed - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T01:47:42.3362332Z   nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T01:47:42.4379907Z rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T01:47:43.0594993Z ##[group]Run cargo miri setup
+2026-11-09T01:48:00.8422284Z ##[group]Run cargo miri test --lib -- miri_
+2026-11-09T01:52:00.2570217Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 40 filtered out; finished in 392.38s
+2026-11-09T01:52:00.3067663Z ##[group]Run cargo miri test --lib -- run_stage::tests::miri_
+2026-11-09T01:52:00.3097752Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1
+2026-11-09T01:52:00.3098096Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T01:52:00.3098418Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T01:52:21.8457285Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 52 filtered out; finished in 34.24s
+2026-11-09T01:52:21.8854364Z ##[group]Run cargo miri test --features run-fed --test run_fed_b5 -- miri_
+2026-11-09T01:52:21.8854883Z [36;1mcargo miri test --features run-fed --test run_fed_b5 -- miri_[0m
+2026-11-09T01:52:30.3266294Z test miri_emitter_exits ... ok
+2026-11-09T01:52:33.5329450Z test miri_emitter_kept_buffers ... ok
+2026-11-09T01:52:53.9945720Z test miri_emitter_seeded ... ok
+2026-11-09T01:52:54.0397125Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 70.47s
+2026-11-09T01:52:54.0665117Z ##[group]Run cargo miri test --features run-fed --test run_fed_b5 -- miri_
+2026-11-09T01:52:54.0665656Z [36;1mcargo miri test --features run-fed --test run_fed_b5 -- miri_[0m
+2026-11-09T01:52:54.0694524Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1
+2026-11-09T01:52:54.0694833Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T01:52:54.0695143Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T01:53:14.8614003Z test miri_emitter_exits ... ok
+2026-11-09T01:53:26.3090673Z test miri_emitter_kept_buffers ... ok
+2026-11-09T01:54:03.6303981Z test miri_emitter_seeded ... ok
+2026-11-09T01:54:03.6738755Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 128.83s
+2026-11-09T01:54:03.7021889Z ##[group]Run cargo test --features run-fed --doc run_stage
+2026-11-09T01:54:16.1226249Z test src/run_stage.rs - run_stage::Sorted (line 67) - compile fail ... ok
+2026-11-09T01:54:16.1234946Z test src/run_stage.rs - run_stage::Sorted (line 57) - compile fail ... ok
+2026-11-09T01:54:16.1239004Z test src/run_stage.rs - run_stage::Sorted (line 48) - compile fail ... ok
+2026-11-09T01:54:16.1240016Z test src/run_stage.rs - run_stage::Sorted (line 52) - compile fail ... ok
+2026-11-09T01:54:16.1902763Z test src/run_stage.rs - run_stage::Sorted (line 77) ... ok
+2026-11-09T01:54:16.1903596Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.09s

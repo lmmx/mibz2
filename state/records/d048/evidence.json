@@ -1,0 +1,98 @@
+{
+  "decision": "D048",
+  "inbox_comment": 6730455683,
+  "queued_comment": 6730312307,
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "review_head": "83970f68b309d9667f6fe8fbd4a70f50be5f73da",
+  "diagnostic_head": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
+  "ci_merge": "bfb2603026ba3579c199b392e2367573cac1b253",
+  "ci_merge_and_head_tree": "82dddcec77458c01b5c53bd8f13db61b8e3e3853",
+  "changed_files": [
+    ".github/workflows/miri.yml",
+    ".github/workflows/test.yml",
+    "docs/journal/2026-11-09-run-fed-b5-evidence.md",
+    "tests/run_fed_b5.rs"
+  ],
+  "sources": {
+    "src/mtf.rs": "2610fa7ed1a7ee2c7653db47402bb7b7e9e3bb73",
+    "src/run_stage.rs": "07a540a5dc2a4ce8f771badb0cbc4278324e31d1",
+    "tests/run_fed_b5.rs": "99ad4e78604b1940008bea856e87daea675eb6af",
+    "docs/journal/2026-11-09-run-fed-b5-evidence.md": "6882e6a7a7bef42b216986de6fbc196d76a61850",
+    ".github/workflows/miri.yml": "4fc92cc7fd04ea0449cccc8823374e41c9d29f95",
+    ".github/workflows/test.yml": "33ca49bf53407dd8899e0e0b622d1c05c8dc1ae5"
+  },
+  "ci": {
+    "miri_job": 128935263903,
+    "miri_run": 42547402221,
+    "rust_job": 128935264862,
+    "test_run": 42547402358,
+    "miri_toolchain": "rustc 1.102.0-nightly (5b7b37aef 2026-11-08)",
+    "native_toolchain": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "miri_emitter_scalar": 3,
+    "miri_emitter_avx2": 3,
+    "miri_sort_fill_avx2": 2,
+    "nightly_doc": 5,
+    "native_b5_debug": 5,
+    "native_b5_release": 5
+  },
+  "originating_objection_closed_by": 6729947501,
+  "freeze_record": 6729954664,
+  "validation_limits": [
+    "No fresh Rust/Miri/fuzz/mutant execution: cargo and rustc unavailable",
+    "CI success reproduced by reading complete job logs and checking tested merge tree equals reviewed head",
+    "Long 475-seed fuzz and five mutation-kill results are pinned journal reports, not independent reruns",
+    "Python finite model checks store bound and malformed-leading-run semantics only; no SIMD/provenance/allocator simulation"
+  ],
+  "routing_audit": {
+    "route": {
+      "issue": 145,
+      "type": "REVIEW",
+      "why": "a publication: the channel PR"
+    },
+    "audit": [
+      {
+        "issue": 145,
+        "comment": 6652503445,
+        "at": null,
+        "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+        "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+      },
+      {
+        "issue": 145,
+        "comment": 6653242752,
+        "at": null,
+        "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+        "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+      },
+      {
+        "issue": 145,
+        "comment": 6654146350,
+        "at": null,
+        "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+        "resolved": "a deliberate tripwire test; its first run could not comment on locked #145 (#187)"
+      },
+      {
+        "issue": 145,
+        "comment": 6654371320,
+        "at": null,
+        "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+        "resolved": "a deliberate tripwire test; its check run did not reopen the finished suite (#188)"
+      },
+      {
+        "issue": 145,
+        "comment": 6654531225,
+        "at": null,
+        "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+        "resolved": "a deliberate tripwire test; an in-progress check run did not reopen it either"
+      }
+    ],
+    "unresolved": []
+  },
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  }
+}
