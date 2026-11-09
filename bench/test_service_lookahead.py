@@ -45,14 +45,40 @@ def timeline(**kw):
     return tl
 
 
+ROUNDS = 6
+
+
+def raw_runs(name, tl, rounds=ROUNDS):
+    """The raw runs occupancy writes: each round's three children, exit status 0, and each
+    complete timeline round's line carrying the summary's values (so the summary is their
+    median exactly)"""
+    slots = s.TRACE_SLOTS[name]
+    t_kv = " ".join(f"t.{k}={v}" for k, v in tl.items() if k != "complete_rounds")
+    out = []
+    for r in range(rounds):
+        for mode in s.TRACE_MODES:
+            line = f"wall=1.0 cpu=6.0 out={s.REGISTERED_OUT} hash=0123456789abcdef err=-"
+            if mode == "timeline":
+                line += f" {t_kv} t.complete={'yes' if r < tl.get('complete_rounds', rounds) else 'no'}"
+            out.append({"round": r, "threads": 10, "slots": slots, "placement": "", "mode": mode, "status": 0, "line": line})
+    return out
+
+
 def trace_for(name, **kw):
     slots = s.TRACE_SLOTS[name]
+    tl = timeline(**kw)
     return {
         "meta": {"commit": HEAD},
-        "settings": {"threads": [10], "teams": s.TRACE_PLAN, "slots": slots, "admission": s.TRACE_ADMISSION[name]},
+        "settings": {
+            "threads": [10], "rounds": ROUNDS, "teams": s.TRACE_PLAN, "slots": slots,
+            "admission": s.TRACE_ADMISSION[name],
+        },
         "parity": True,
+        "children_ok": True,
+        "children_expected": ROUNDS * len(s.TRACE_MODES),
         "output_bytes": s.REGISTERED_OUT,
-        "results": [{"threads": 10, "slots": slots, "timeline": timeline(**kw)}],
+        "results": [{"threads": 10, "slots": slots, "timeline": tl}],
+        "runs": raw_runs(name, tl),
     }
 
 
@@ -125,6 +151,13 @@ def drop(key):
 
 
 A2W8, A3W8, A4W8, A2W12, A4W12 = s.TRACES
+
+
+def with_timeline(name, **kw):
+    """A trace whose summary and raw rounds both carry `kw` (consistent evidence)"""
+    def m(rows, traces, files):
+        traces[name] = trace_for(name, **kw)
+    return m
 
 
 def set_trace(name, **kw):
@@ -281,6 +314,98 @@ class Validity(unittest.TestCase):
         )
 
 
+class Revision(unittest.TestCase):
+    """The revision of 9 November (the Researcher's REVIEW 6730484783): H1 the prepared
+    counts against their invariant, H2 the children's status and inventory"""
+
+    def assertInvalidOn(self, mutate, needle):
+        Validity.assertInvalidOn(self, mutate, needle)
+
+    # H1: the Researcher's summary-only witnesses, and the same evidence in every raw round
+    def test_prepared_max_99_summary(self):
+        def m(rows, traces, files):
+            for tr in traces.values():
+                tr["results"][0]["timeline"]["svc.backlog.prep_max"] = 99
+        self.assertInvalidOn(m, "prepared count")
+
+    def test_prepared_max_99_every_round(self):
+        for name in s.TRACES:
+            self.assertInvalidOn(with_timeline(name, **{"svc.backlog.prep_max": 99}), "not 1 <= median <= max")
+
+    def test_prepared_median_above_max(self):
+        self.assertInvalidOn(
+            with_timeline(A3W8, **{"svc.backlog.prep_max": 2, "svc.backlog.prep_median": 3}), "not 1 <= median <= max"
+        )
+
+    def test_prepared_above_its_own_ceiling(self):
+        # 5 is within L 4's ceiling, not L 3's (4)
+        self.assertInvalidOn(with_timeline(A3W8, **{"svc.backlog.prep_max": 5}), "max <= 4")
+
+    def test_one_round_breaches(self):
+        # one round of six above the ceiling: invalid, though the summary's median is fine
+        def m(rows, traces, files):
+            x = next(r for r in traces[A2W8]["runs"] if r["mode"] == "timeline" and r["round"] == 2)
+            x["line"] = x["line"].replace("t.svc.backlog.prep_max=3", "t.svc.backlog.prep_max=7")
+        self.assertInvalidOn(m, "round 2: prepared count max 7.0")
+
+    def test_no_blocks(self):
+        self.assertInvalidOn(with_timeline(A4W8, blocks=0), "blocks")
+
+    def test_no_blocks_summary(self):
+        def m(rows, traces, files):
+            for tr in traces.values():
+                tr["results"][0]["timeline"]["blocks"] = 0
+        self.assertInvalidOn(m, "blocks")
+
+    # H2: the children
+    def test_raw_runs_empty(self):
+        def m(rows, traces, files):
+            for tr in traces.values():
+                tr["runs"] = []
+        self.assertInvalidOn(m, "no raw runs")
+
+    def test_child_nonzero_after_a_valid_line(self):
+        def m(rows, traces, files):
+            traces[A4W12]["runs"][4]["status"] = 101
+        self.assertInvalidOn(m, "exit status 101")
+
+    def test_child_killed(self):
+        def m(rows, traces, files):
+            traces[A2W8]["runs"][0]["status"] = -9
+            traces[A2W8]["children_ok"] = False
+        self.assertInvalidOn(m, "exit status -9")
+
+    def test_children_not_ok(self):
+        self.assertInvalidOn(set_trace(A3W8, children_ok=False), "children_ok")
+
+    def test_child_missing(self):
+        def m(rows, traces, files):
+            traces[A4W8]["runs"].pop()
+        self.assertInvalidOn(m, "not the 18 scheduled")
+
+    def test_child_duplicated(self):
+        def m(rows, traces, files):
+            traces[A4W8]["runs"].append(dict(traces[A4W8]["runs"][0]))
+        self.assertInvalidOn(m, "once each")
+
+    def test_summary_not_reconciled(self):
+        def m(rows, traces, files):
+            traces[A2W12]["results"][0]["timeline"]["svc.team.idle_prep_share"] = 0.01
+        self.assertInvalidOn(m, "not the median of its complete rounds")
+
+    def test_one_complete_round_still_valid(self):
+        # the inherited rule: at least one complete trace round, with every child accounted for
+        d = run(with_timeline(A3W8, complete_rounds=1))
+        self.assertEqual(d["verdict"], "VALID", failed(d))
+        self.assertEqual(len(d["traces"][A3W8]["rounds"]), 1)
+
+    def test_no_complete_round(self):
+        def m(rows, traces, files):
+            for x in traces[A2W8]["runs"]:
+                x["line"] = x["line"].replace("t.complete=yes", "t.complete=no")
+        self.assertInvalidOn(m, "no complete timeline round")
+
+
 def o(name, speed="GAIN", cpu="NULL", g=(1.05, 1.03, 1.07), arm=None):
     arm = arm or {"LA3": "mibz2-svc2-a3@10", "LA4": "mibz2-svc2-a4@10"}[name]
     return {"name": name, "arm": arm, "speed_outcome": speed, "cpu_outcome": cpu, "speed": list(g)}
@@ -332,27 +457,31 @@ class Readings(unittest.TestCase):
 
     def test_mechanism(self):
         cells = list(s.ADMISSION)
+        judged = [o("LA3"), o("LA4", "NULL", g=NULL)]
         t = s.mechanism(
-            {c: (STARVED if c == "mibz2-svc2@10" else FED) for c in cells}, "THE ADMISSION THRESHOLD BINDS SVC2@10 AT 2 (...)"
+            {c: (STARVED if c == "mibz2-svc2@10" else FED) for c in cells}, judged, "THE ADMISSION THRESHOLD BINDS SVC2@10 AT 2 (...)"
         )
-        self.assertTrue(t.startswith("PREP STARVATION AT THRESHOLD 2, RELIEVED"), t)
+        self.assertTrue(t.startswith("CONCORDANT AT a3 w8:"), t)
         self.assertIn("not shown to be it", t)
-        t = s.mechanism({c: STARVED for c in cells}, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
+        self.assertIn("Relieved of prep starvation (starved at a2 w8): a3 w8, a4 w8.", t)
+        null = [o("LA3", "NULL", g=NULL), o("LA4", "NULL", g=NULL)]
+        t = s.mechanism({c: STARVED for c in cells}, null, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
         self.assertTrue(t.startswith("PREP STARVATION PERSISTS AT EVERY THRESHOLD"), t)
         self.assertIn("untested here", t)
         modes = {c: STARVED for c in cells}
         modes["mibz2-svc2-a4-w12@10"] = dict(STARVED, saturated="SATURATED")
-        t = s.mechanism(modes, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
+        t = s.mechanism(modes, null, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
         self.assertIn("SATURATED at a4 w12", t)
 
     def test_full_run_threshold_binds(self):
         # svc2 at threshold 3 5% and at 4 4% faster than at 2, at the same CPU
         walls = {"mibz2-svc2-a3": 0.95, "mibz2-svc2-a4": 0.96}
-        fed = {"svc.team.idle_prep_share": 0.04, "svc.backlog.prep_max": 5, "svc.backlog.prep_median": 3}
+        # relieved at both, each prepared count within its own ceiling (L + 1: 4 at L 3, 5 at L 4)
+        fed = {"svc.team.idle_prep_share": 0.04}
 
         def m(rows, traces, files):
-            for n in (A3W8, A4W8):
-                traces[n]["results"][0]["timeline"].update(fed)
+            traces[A3W8] = trace_for(A3W8, **fed, **{"svc.backlog.prep_max": 4, "svc.backlog.prep_median": 3})
+            traces[A4W8] = trace_for(A4W8, **fed, **{"svc.backlog.prep_max": 5, "svc.backlog.prep_median": 3})
         d = run(m, walls=walls)
         self.assertEqual(d["verdict"], "VALID", failed(d))
         j = {c["name"]: c for c in d["judged"]}
@@ -361,16 +490,39 @@ class Readings(unittest.TestCase):
         self.assertEqual(j["LA3"]["admission"], [3, 2])
         self.assertEqual(j["LA3"]["windows"], [8, 8])
         self.assertTrue(d["readings"]["overall"].startswith("THE ADMISSION THRESHOLD BINDS"), d["readings"]["overall"])
-        self.assertTrue(d["mechanism"].startswith("PREP STARVATION AT THRESHOLD 2, RELIEVED"), d["mechanism"])
         self.assertIn("a3 w8", d["best_arm"])
         self.assertIn("Reported, never judged", d["best_arm"])
         self.assertIn("optimistic", d["best_arm"])
         self.assertEqual(d["traces"][A4W8]["p_max"], 5)
         self.assertEqual(d["traces"][A4W8]["p_ceiling"], 5)
-        self.assertIn("5 / 3.0 (5)", d["md"])
+        self.assertEqual(d["traces"][A3W8]["p_max"], 4)
+        self.assertEqual(d["traces"][A3W8]["p_ceiling"], 4)
+        self.assertEqual(len(d["traces"][A3W8]["rounds"]), 6)
+        self.assertIn("5 / 5.0 / 3.0 (5)", d["md"])
+        self.assertIn("CONCORDANT AT a3 w8, a4 w8", d["mechanism"])
         self.assertNoBanned(d["readings"]["overall"] + d["mechanism"])
         sec = {c["name"]: c for c in d["secondary"]}
         self.assertEqual(set(sec), {"W12", "J", "J4", "D-a2w8", "D-a3w8", "D-a4w8", "D-a2w12", "D-a4w12", "R1"})
+
+    def test_gain_and_relief_on_different_arms(self):
+        # the Researcher's fixture: LA3 a GAIN but still starved, LA4 NULL but relieved
+        d = run(with_timeline(A4W8, **{"svc.team.idle_prep_share": 0.04}), walls={"mibz2-svc2-a3": 0.95})
+        self.assertEqual(d["verdict"], "VALID", failed(d))
+        j = {c["name"]: c for c in d["judged"]}
+        self.assertEqual(j["LA3"]["speed_outcome"], "GAIN")
+        self.assertEqual(j["LA4"]["speed_outcome"], "NULL")
+        t = d["mechanism"]
+        self.assertTrue(t.startswith("NOT CONCORDANT"), t)
+        self.assertNotIn("RELIEVED AT A HIGHER THRESHOLD", t)
+        self.assertNotIn("CONCORDANT AT", t)
+        self.assertIn("Gaining: a3 w8.", t)
+        self.assertIn("Relieved of prep starvation (starved at a2 w8): a4 w8.", t)
+
+    def test_policy_effect_wording(self):
+        rd = s.readings({"LA3": o("LA3"), "LA4": o("LA4", "NULL", g=NULL)})
+        self.assertIn("effect of the implemented higher-threshold policy", rd["overall"])
+        self.assertIn("not proof that the prepared queue's supply is the bottleneck", rd["overall"])
+        self.assertIn("not a familywise claim", rd["overall"])
 
     def test_full_run_null(self):
         d = run()

@@ -890,13 +890,17 @@ bench-service-lookahead ROUNDS="20" DRY="" CORPUS="":
           > "$W/$name.txt" 2>&1; then
         occ+=("$o")
       else
-        echo "bench-service-lookahead: the occupancy pass at 10 threads, svc 2, threshold $adm, window $win, failed"
+        # (its JSON is kept in the bundle as evidence, but not given to the report: the trace is
+        # then missing, and the run INVALID)
+        echo "bench-service-lookahead: the occupancy pass at 10 threads, svc 2, threshold $adm, window $win, failed (a child exited nonzero, or parity failed)"
       fi
     done
     status=0
     python3 bench/service_lookahead.py report "$W/runs.jsonl" --occupancy "${occ[@]}" \
       --out "$W/service-lookahead" || status=$?
     verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/service-lookahead.json" 2>/dev/null || echo "")
+    # VALID only if the report also exited 0 (a VALID JSON beside a failed report is not VALID)
+    [ "$verdict" = VALID ] && [ "$status" -ne 0 ] && verdict=""
     case "$verdict" in
       VALID) outcome="VALID: see service-lookahead.md for the registered comparisons' outcomes" ;;
       INVALID) outcome="INVALID: see service-lookahead.md's validity checks" ;;

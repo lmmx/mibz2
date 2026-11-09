@@ -110,18 +110,35 @@ ab does:
 
 ## The model (before any run)
 
-Extrapolations, not measurements of these cells:
+Extrapolations and hypotheses, not measurements of these cells (revised 9 November, see the
+revision section):
 - svc2@10 at L = 2 ran 0.137 s (median); the default 0.144 s.
-- The teams' 16.5% prep idle is the most a higher threshold could recover, so at most about
-  1.20 for LA3 or LA4.
+- **The 0.165 prep idle is a modelled share, not removable wall time.** It is the teams' summed
+  idle waiting for a prepared block, over teams × the trace's span. Under a balanced-
+  utilisation model, removing all of it would give about 1/(1 − 0.165) ≈ 1.20. That is a
+  model, not a speed ceiling: which worker is critical, overlap and changed costs can each
+  break it.
 - **Against a large effect:**
   - Rule 3 comes after finishing. A higher threshold admits more preparations only when no
     walked block is waiting.
   - The service workers were busy 70% of the time. While both finish, no threshold prepares
     anything.
   - P already reached 3 at L = 2.
-- **For some effect:** in the 30% the service workers were idle, a higher threshold would have
-  let them prepare ahead.
+- **For some effect:** a higher threshold lets an idle service worker prepare ahead. The 30%
+  service idle doesn't show such chances existed, since a job and a free front had to be there
+  at the same moment, and the jobs' 0.158 ms median wait doesn't show jobs were there while the
+  teams starved. Both are hypotheses.
+- **Fronts aren't a second admission bottleneck** (the Researcher's bound, REVIEW 6730484783).
+  - Let F = T + L + K be the front sets, P the prepared blocks, A the other workers' fronts
+    held for a preparation, and U the teams' fronts.
+  - At an idle worker's decision under rule 3, P ≤ L − 1, A ≤ K − 1 and U ≤ T. So the free
+    fronts are F − P − A − U ≥ 2. Rule 1, with P = 0, gives the same.
+  - So a front is never what stops an eligible preparation, under the source's conservation of
+    fronts: a team returns its front when the walk ends, and walked blocks keep only their
+    back sets.
+  - A 5,040-state arithmetic check agrees. It checks the inequality, not Rust ownership.
+  - The extra fronts can still change allocation, reuse and cache costs, so a higher-L policy's
+    effect is broader than queue depth. No fixed-front arm is added.
 - **The model's expectation:** LA3 and LA4 a SMALL GAIN or a NULL; P's median rising with L;
   prep starvation falling but not below 0.10. The window alone (W12) a NULL, from the jobs'
   wait. A small peak RSS cost for the extra front sets.
@@ -148,7 +165,8 @@ apply):
 - **the best svc2 arm against the default:** the D- with the highest geometric-mean speed. It
   is chosen after the run from five, so its interval is optimistic, and it decides nothing;
 - **R1:** `mibz2@10` against team3@10, as before;
-- **per arm, from its trace:** P max and median (with its ceiling L + K − 1),
+- **per arm, from its trace:** P's max over complete rounds, the median of the round maxima and
+  the median of the round push-medians (with its ceiling L + K − 1), and each round's values,
   `team.idle_prep_share`, saturation, prep starvation and finish backlog, with the queue waits
   and backlogs.
 
@@ -181,15 +199,21 @@ In this order:
 5. **NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD:** otherwise (both NULL, or one NULL and
    one REGRESSION).
 
-Every reading says that the threshold admits preparations and doesn't cap the queue, which can
-hold up to L + 1 at two service threads, and points to each trace's prepared count.
+Every reading says three things (revised 9 November):
+- the threshold admits preparations and doesn't cap the queue, which can hold up to L + 1 at two
+  service threads; it points to each trace's prepared count;
+- a reading is the effect of the implemented higher-threshold policy, which also sizes more front
+  sets, not proof that the prepared queue's supply is the bottleneck;
+- each contrast is at its own nominal 95%, not a familywise claim for "either".
 
 **The traces beside it** (reported, never judged; the service core's thresholds unchanged: PREP
 STARVATION at `team.idle_prep_share` ≥ 0.10; FINISH BACKLOG at `queue.finish.median_ms` ≥ 0.5
 or `team.idle_back_share` ≥ 0.05; SATURATED at utilisation max ≥ 0.90 with either):
-- **PREP STARVATION AT THRESHOLD 2, RELIEVED AT A HIGHER THRESHOLD:** with reading 1,
-  starvation at L 2 (window 8) and not at L 3 or 4. Consistent with the threshold binding the
-  teams' supply at 2, not shown to be it.
+- The gaining arms (LA3 or LA4 a speed gain) and the relieved arms (starved at L 2, window 8, and
+  not starved at L 3 or 4) are always named separately (revised 9 November).
+- **CONCORDANT AT …:** with reading 1, only for arms that both gain and are relieved. Consistent
+  with the higher threshold acting on the teams' supply, not shown to be it.
+- **NOT CONCORDANT:** with reading 1, where no arm is both. No combined reading is printed.
 - **PREP STARVATION PERSISTS AT EVERY THRESHOLD:** with reading 4 or 5, starvation at L 2, 3
   and 4 (window 8). Not relieved by admitting more preparations. The service workers' order of
   work (finishing first) remains a candidate, untested here.
@@ -285,6 +309,42 @@ The report calls nothing VALID but the registered run.
 - **The panic scope:** the service core's stage catches don't cover a panic in a user's
   `Read`, as D045 notes.
 - Matching output hashes and green CI are not safety evidence.
+
+## Revision for the Researcher's HOLD (REVIEW 6730484783, 9 November 2026)
+
+Before any run, the Researcher's REVIEW 6730484783 held #271 from the queue, independently of
+D045 (report and witnesses: `state/reports/service-lookahead-6730378782/` at 99689cec on
+`team-state/researcher`). This revision closes H1–H3 at a new freeze.
+
+**Nothing judged changes.** The judged family (LA3, LA4), the outcome map's thresholds, N1 and
+its method (C6), the saturation and starvation thresholds and the registered order of the
+reading are as above. The changes are stricter evidence checks, the words the report prints and
+the model's labels. The correction is applied at this new freeze, not to an outcome: nothing
+ran under 4587b54b or 79e41419.
+
+| finding | correction | fixture (`bench/test_service_lookahead.py`) |
+|---|---|---|
+| H1: P checked only finite and nonnegative; max 99, median > max, and blocks 0 were VALID | **Stricter:** every complete timeline round's prepared count, read from the raw runs, must satisfy 1 ≤ median ≤ max ≤ L + K − 1 with the registered 431 blocks, before any aggregate is read. The summary is checked against the same invariant, and against the rounds it summarises (it must be their median) | `test_prepared_max_99_summary`, `test_prepared_max_99_every_round`, `test_prepared_median_above_max`, `test_prepared_above_its_own_ceiling`, `test_one_round_breaches`, `test_no_blocks`, `test_no_blocks_summary`, `test_summary_not_reconciled` |
+| H1: the positive fixture gave L = 3 a P max of 5, above its ceiling of 4 | the fixture was wrong, not the ceiling: L 3 now reaches 4, L 4 reaches 5 | `test_full_run_threshold_binds` |
+| H1: occupancy's `prep_max` is the median of the round maxima, and `prep_median` the median of the round medians | labelled so. The report prints the max over complete rounds, the median of round maxima and the median of round medians (which may be half-integral), and keeps each round's values in its JSON | `test_full_run_threshold_binds` |
+| H2: occupancy saved no child status; a child that printed a valid line and exited nonzero could pass | **Stricter, `examples/occupancy.rs`:** every child's exit status (its code, or −signal) goes into each raw run. `children_ok` and `children_expected` (rounds × 3 modes) go into the JSON, and the pass exits 1 on any nonzero child or a missing one. The report requires each scheduled (round, mode) once, each with status 0, and `children_ok` | `test_child_nonzero_after_a_valid_line`, `test_child_killed`, `test_children_not_ok`, `test_child_missing`, `test_child_duplicated` |
+| H2: empty raw runs were VALID | INVALID, as is a trace with no complete timeline round in its raw runs | `test_raw_runs_empty`, `test_no_complete_round` |
+| H2: the recipe trusted the JSON's VALID whatever the report's exit | the recipe writes VALID only when the report exited 0 *and* its JSON says VALID | (the recipe) |
+| H2: not a six-complete-round gate | the inherited rule is kept: at least one complete trace round, every scheduled child accounted for. Complete rounds are printed beside the requested ones, so fewer than six shows as lost precision, not invalidity. A summary inconsistent with its raw runs (complete rounds, or requested rounds, that disagree) is INVALID | `test_one_complete_round_still_valid` |
+| H3: the mechanism line joined a gain at one arm with relief at another | the gaining arms and the relieved arms are named separately. "CONCORDANT AT …" is printed only for arms that both gain and are relieved; otherwise "NOT CONCORDANT … No combined reading" | `test_gain_and_relief_on_different_arms` (LA3 a GAIN but starved, LA4 NULL but relieved), `test_mechanism` |
+| H3: "the threshold binds" read as a queue bottleneck | every reading says it is the effect of the implemented higher-threshold policy (which also sizes more fronts), not proof that the prepared queue's supply is the bottleneck. Each contrast is at its own nominal 95%, not a familywise claim for either | `test_policy_effect_wording` |
+| H3: the model's 0.165 and 1.20 | relabelled in "The model" above: a modelled share and a balanced-utilisation model, not removable time or a ceiling. The 30% service idle and the 0.158 ms job wait are hypotheses, not opportunity shown | (the registration) |
+| the front bound | recorded in "The model" above | (the registration) |
+
+**What reaching the ceiling means.** P reaching L + 1 in the dry run shows the threshold is
+reachable as implemented. It doesn't show that the threshold binds often. The push median
+samples arrivals, not time-weighted occupancy.
+
+**The budget.** 160 ab runs at about 2.17 s each is 5.8 minutes. The traces add 90 occupancy
+children (5 passes × 6 rounds × 3 modes) plus each pass's setup. About 8 minutes once built is
+an estimate, not a bound. Same-plan contrasts aren't guaranteed a smaller variance than #258's.
+
+**Still held:** under D045, for service-core timing, until its B5 evidence closes.
 
 ## Local runs
 

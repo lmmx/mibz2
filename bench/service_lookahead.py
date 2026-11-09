@@ -38,6 +38,19 @@ threshold; window):
 
 The outcome map, the plan count from ab's per-thread CPU and the traces' failure modes with
 their thresholds are bench/service_core.py's, unchanged.
+
+Revised 9 November for the Researcher's REVIEW 6730484783 (the registration's revision
+section), with stricter evidence checks and no changed threshold or N1:
+- H1: every complete timeline round's prepared count, from the raw runs, within
+  1 <= median <= max <= threshold + services - 1, with the registered 431 blocks, before any
+  aggregate is read; the summary reconciled with those rounds (it is the median of round
+  maxima and of round medians, so labelled); the per-round evidence kept in the JSON;
+- H2: every scheduled child (requested rounds x 3 modes) in the raw runs once, each with exit
+  status 0, and occupancy's own `children_ok`; empty raw runs INVALID; the inherited rule of at
+  least one complete trace round kept;
+- H3: the gaining arms and the relieved arms named separately, a concordant reading only
+  where they overlap; a reading is the effect of the implemented higher-threshold policy, not
+  proof of a queue bottleneck.
 """
 
 import argparse
@@ -146,29 +159,121 @@ TRACES = {f"occupancy-t10-svc2-a{ADMISSION[c]}-w{WINDOW[c]}": c for c in SVC2}
 TRACE_SLOTS = {name: 5 * WINDOW[c] for name, c in TRACES.items()}
 DEFAULT_ADMISSION = "teams (the service core's own)"
 TRACE_ADMISSION = {name: (ADMISSION[c] if ADMISSION[c] != 2 else DEFAULT_ADMISSION) for name, c in TRACES.items()}
-# the prepared count P, as the trace reads it: its max, and its median over every
-# preparation's push
+# the prepared count P, as the trace reads it, each round: its max, and its median over every
+# preparation's push; the trace's summary is the median of the complete rounds' values (the
+# median of round maxima, and the median of round medians), not the pass's max or a pooled
+# median, so the report checks every round's against the invariant before reading them
 TRACE_P = ["svc.backlog.prep_max", "svc.backlog.prep_median"]
+# the registered workload's blocks, as the scanner issues them (`t.blocks`; #258's trace)
+REGISTERED_BLOCKS = 431
+# the occupancy modes, each round's children (examples/occupancy.rs's MODES)
+TRACE_MODES = ("off", "timeline", "full")
+# the summary keys checked against the rounds they summarise (the medians of the complete
+# timeline rounds' values)
+RECONCILED = TRACE_SHARES + TRACE_NONNEG + TRACE_P
+
+
+def ceiling(c):
+    """The prepared count's invariant at a cell: threshold + service threads - 1 (Guardian
+    D045: the threshold admits, and preparations under way aren't counted)"""
+    return ADMISSION[c] + SERVICES - 1
+
+
+def line_kv(line):
+    return dict(x.split("=", 1) for x in line.split() if "=" in x) if isinstance(line, str) else {}
+
+
+def fnum(v):
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return math.nan
+    return x if math.isfinite(x) else math.nan
+
+
+def check_raw(o, name, tl):
+    """The trace's raw evidence (revision of 9 November, H1 and H2): every scheduled child
+    accounted for, once, with exit status 0; every complete timeline round's prepared count
+    within its invariant, its median at most its max, the registered blocks; and the summary
+    reconciled with those rounds. Returns (per-round evidence, problems)."""
+    p = []
+    st = o.get("settings") if isinstance(o.get("settings"), dict) else {}
+    req = st.get("rounds")
+    if not (number(req) and float(req).is_integer() and req >= 1):
+        return [], [f"requested rounds {req!r}, not a whole number of at least 1"]
+    req = int(req)
+    runs = o.get("runs")
+    if not isinstance(runs, list) or not runs:
+        return [], ["no raw runs"]
+    if o.get("children_ok") is not True:
+        p.append(f"children_ok {o.get('children_ok')!r}, not true")
+    if o.get("children_expected") != req * len(TRACE_MODES):
+        p.append(f"children expected {o.get('children_expected')!r}, not {req * len(TRACE_MODES)}")
+    want = {(r, m) for r in range(req) for m in TRACE_MODES}
+    seen = []
+    for x in runs:
+        if not isinstance(x, dict):
+            p.append("a raw run not a record")
+            continue
+        seen.append((x.get("round"), x.get("mode")))
+        if x.get("status") != 0:
+            p.append(f"round {x.get('round')!r} {x.get('mode')!r}: exit status {x.get('status')!r}, not 0")
+        if x.get("threads") != TRACE_THREADS or x.get("slots") != TRACE_SLOTS[name]:
+            p.append(f"round {x.get('round')!r} {x.get('mode')!r}: threads {x.get('threads')!r}, slots {x.get('slots')!r}")
+    if sorted(seen, key=repr) != sorted(want, key=repr) or len(seen) != len(set(seen)):
+        p.append(f"{len(seen)} raw runs, not the {len(want)} scheduled ({req} rounds x {len(TRACE_MODES)} modes) once each")
+    c = TRACES[name]
+    top = ceiling(c)
+    rounds = []
+    for x in runs:
+        if not isinstance(x, dict) or x.get("mode") != "timeline":
+            continue
+        kv = line_kv(x.get("line"))
+        if kv.get("t.complete") != "yes":
+            continue
+        pm, pmed, blocks = fnum(kv.get("t.svc.backlog.prep_max")), fnum(kv.get("t.svc.backlog.prep_median")), fnum(kv.get("t.blocks"))
+        rounds.append({"round": x.get("round"), "p_max": pm, "p_median": pmed, "blocks": blocks, "kv": kv})
+        if blocks != REGISTERED_BLOCKS:
+            p.append(f"round {x.get('round')!r}: {blocks!r} blocks, not the registered {REGISTERED_BLOCKS}")
+        if not (1 <= pmed <= pm <= top):
+            p.append(
+                f"round {x.get('round')!r}: prepared count max {pm!r}, median {pmed!r}, "
+                f"not 1 <= median <= max <= {top} (threshold {ADMISSION[c]} + {SERVICES} - 1)"
+            )
+    if not rounds:
+        p.append("no complete timeline round in the raw runs")
+    elif tl.get("complete_rounds") != len(rounds):
+        p.append(f"summary complete rounds {tl.get('complete_rounds')!r}, raw {len(rounds)}")
+    else:
+        for k in RECONCILED:
+            v = [fnum(r["kv"].get("t." + k)) for r in rounds]
+            v = [x for x in v if not math.isnan(x)]
+            m = statistics.median(v) if v else math.nan
+            if not (number(tl.get(k)) and not math.isnan(m) and abs(tl[k] - m) <= 1e-6 * max(1.0, abs(m))):
+                p.append(f"summary {k} {tl.get(k)!r}, not the median of its complete rounds ({m!r})")
+    for r in rounds:
+        r.pop("kv")
+    return rounds, p
 
 
 def load_trace(paths, name, commit):
-    """A registered trace's timeline and its problems: bench/service_2x3.py's checks
-    (configuration, parity, output and every metric the report reads), its slots the
-    registered ones for its window, its admission threshold the registered one, and its
-    prepared count P (an empty list: the trace is usable)"""
+    """A registered trace's timeline, its complete rounds' prepared counts, and its problems:
+    bench/service_2x3.py's checks (configuration, parity, output and every metric the report
+    reads), its slots the registered ones for its window, its admission threshold the
+    registered one, and its raw evidence (`check_raw`) (an empty list: the trace is usable)"""
     found = [x for x in paths if os.path.basename(x).removesuffix(".json") == name]
     if len(found) != 1:
-        return {}, [f"{len(found)} files named `{name}.json` (one registered)"]
+        return {}, [], [f"{len(found)} files named `{name}.json` (one registered)"]
     try:
         o = json.load(open(found[0]))
     except (OSError, ValueError) as e:
-        return {}, [f"unreadable: {e}"]
+        return {}, [], [f"unreadable: {e}"]
     if not isinstance(o, dict):
-        return {}, ["not a trace report"]
+        return {}, [], ["not a trace report"]
     p = []
     res = o.get("results")
     if not (isinstance(res, list) and len(res) == 1 and isinstance(res[0], dict)):
-        return {}, ["not exactly one result (one thread count registered)"]
+        return {}, [], ["not exactly one result (one thread count registered)"]
     r = res[0]
     tl = r.get("timeline") if isinstance(r.get("timeline"), dict) else {}
     st = o.get("settings") if isinstance(o.get("settings"), dict) else {}
@@ -197,7 +302,19 @@ def load_trace(paths, name, commit):
     bad += [k for k in TRACE_NONNEG + TRACE_P if not (number(tl.get(k)) and tl[k] >= 0)]
     if bad:
         p.append("metrics absent or out of range: " + ", ".join(bad))
-    return {k: v for k, v in tl.items() if number(v)}, p
+    if number(tl.get("blocks")) and tl["blocks"] != REGISTERED_BLOCKS:
+        p.append(f"blocks {tl['blocks']!r}, not the registered {REGISTERED_BLOCKS}")
+    pm, pmed = tl.get("svc.backlog.prep_max"), tl.get("svc.backlog.prep_median")
+    if number(pm) and number(pmed) and not (1 <= pmed <= pm <= ceiling(TRACES[name])):
+        p.append(f"summary prepared count: median of round maxima {pm!r}, median of round medians {pmed!r}, not within 1 <= median <= max <= {ceiling(TRACES[name])}")
+    rounds, rp = check_raw(o, name, tl)
+    p += rp
+    out = {k: v for k, v in tl.items() if number(v)}
+    # (the rounds asked for, reported beside the complete ones: at least one complete round
+    # is the inherited rule, and fewer than asked is lost precision, not invalidity)
+    if number(st.get("rounds")):
+        out["requested_rounds"] = st["rounds"]
+    return out, rounds, p
 
 
 def fig(c):
@@ -216,7 +333,9 @@ def readings(by):
     note = (
         "The threshold admits preparations (a service worker starts one while fewer than it are "
         f"prepared); it doesn't cap the queue, which can hold up to threshold + {SERVICES - 1}: "
-        "see each trace's prepared count"
+        "see each trace's prepared count. A reading is the effect of the implemented higher-threshold "
+        "policy (which also sizes more front sets), not proof that the prepared queue's supply is the "
+        "bottleneck; each contrast is at its own nominal 95%, not a familywise claim for either"
     )
     if gains and not regressions:
         if any(c["cpu_outcome"] == "CPU COST" for c in gains):
@@ -254,29 +373,41 @@ def best_arm(sec):
     )
 
 
-def mechanism(modes, overall):
-    """The traces read beside the reading (modes: cell -> failure modes): reported, never
-    judged"""
+def mechanism(modes, judged, overall):
+    """The traces read beside the reading (modes: cell -> failure modes; judged: LA3 and
+    LA4), reported, never judged. The gaining arms and the relieved arms are named
+    separately; concordant evidence is printed only for arms that are both (revision of
+    9 November, H3), and even then it is consistency, not mediation."""
+    base = "mibz2-svc2@10"
     starved = [c for c, m in modes.items() if m["prep"] == "PREP STARVATION"]
     saturated = [label(c) for c, m in modes.items() if m["saturated"] == "SATURATED"]
     sat = f" SATURATED at {', '.join(saturated)}." if saturated else ""
     at = ", ".join(label(c) for c in starved) or "none"
-    higher = ("mibz2-svc2-a3@10", "mibz2-svc2-a4@10")
+    higher = [j["arm"] for j in judged]
+    gaining = [j["arm"] for j in judged if is_gain(j["speed_outcome"])]
+    relieved = [c for c in higher if base in starved and c in modes and c not in starved]
+    both = [c for c in gaining if c in relieved]
+    names = lambda cs: ", ".join(label(c) for c in cs) or "none"  # noqa: E731
+    arms = f"Gaining: {names(gaining)}. Relieved of prep starvation (starved at a2 w8): {names(relieved)}."
     if overall.startswith(("THE ADMISSION THRESHOLD BINDS", "A HIGHER ADMISSION THRESHOLD IS FASTER")):
-        if "mibz2-svc2@10" in starved and any(c not in starved for c in higher):
+        if both:
             return (
-                "PREP STARVATION AT THRESHOLD 2, RELIEVED AT A HIGHER THRESHOLD: consistent with the admission "
-                f"threshold binding the teams' supply at 2, not shown to be it.{sat}"
+                f"CONCORDANT AT {names(both)}: a gain and relief of prep starvation in the same arm. {arms} "
+                "Consistent with the higher threshold acting on the teams' supply, not shown to be it "
+                f"(the policy also sizes more front sets).{sat}"
             )
-        return f"PREP STARVATION at {at}: the traces and the gain don't line up simply.{sat}"
+        return (
+            f"NOT CONCORDANT: no arm both gains and is relieved. {arms} No combined reading. "
+            f"PREP STARVATION at {at}.{sat}"
+        )
     if overall.startswith(("NO GAIN DETECTED", "A HIGHER ADMISSION THRESHOLD IS SLOWER")) and all(
-        c in starved for c in ("mibz2-svc2@10",) + higher
+        c in starved for c in [base] + higher
     ):
         return (
             "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The "
-            f"service workers' order of work (finishing first) remains a candidate, untested here.{sat}"
+            f"service workers' order of work (finishing first) remains a candidate, untested here. {arms}{sat}"
         )
-    return f"PREP STARVATION at {at}: reported, not read.{sat}"
+    return f"PREP STARVATION at {at}: reported, not read. {arms}{sat}"
 
 
 def report(a):
@@ -389,16 +520,19 @@ def report(a):
         )
     unexpected = sorted(set(by) - set(CELLS))
     checks.append((f"no cell beyond the registered ones (seen: {', '.join(unexpected) or 'none'})", not unexpected))
-    tls, modes, unreadable = {}, {}, []
+    tls, modes, unreadable, per_round = {}, {}, [], {}
     for name, c in TRACES.items():
-        tl, tp = load_trace(a.occupancy or [], name, commit)
+        tl, rounds_, tp = load_trace(a.occupancy or [], name, commit)
         tls[name] = tl
+        per_round[name] = rounds_
         unreadable += [f"{name}: {x}" for x in tp if x.startswith("unreadable")]
         checks.append(
             (
                 f"the trace `{name}` complete and as registered ({TRACE_THREADS} threads, {TRACE_PLAN}, "
                 f"{TRACE_SERVICES} service threads, slots {TRACE_SLOTS[name]} (a window of {WINDOW[c]}), admission "
-                f"{TRACE_ADMISSION[name]}, the prepared count P read, the run's commit, "
+                f"{TRACE_ADMISSION[name]}, the run's commit, every scheduled child once with exit status 0, every complete "
+                f"round's prepared count within 1 <= median <= max <= {ceiling(c)} and {REGISTERED_BLOCKS} blocks, the summary "
+                f"the median of those rounds, "
                 f"parity, the registered output, every metric read finite and in range; rounds: "
                 f"{tl.get('complete_rounds', 0)}{'; ' + '; '.join(tp) if tp else ''})",
                 not tp,
@@ -462,7 +596,7 @@ def report(a):
     if show:
         out["readings"] = readings(jd)
         out["best_arm"] = best_arm(out["secondary"])
-        out["mechanism"] = mechanism(modes, out["readings"]["overall"])
+        out["mechanism"] = mechanism(modes, out["judged"], out["readings"]["overall"])
     else:
         out["readings"] = {"overall": "NONE (the run is invalid)"}
         out["best_arm"] = out["mechanism"] = "NONE (the run is invalid)"
@@ -513,9 +647,12 @@ def report(a):
         "## The traces (occupancy, svc2 at 10 threads, one per arm; medians over complete rounds)",
         "",
         f"The prepared count P is what each preparation's push left; it can exceed the admission threshold by up to {SERVICES - 1} "
-        "(overlapping preparations), so its ceiling is threshold + services - 1.",
+        "(overlapping preparations), so its ceiling is threshold + services - 1, checked in every complete round. "
+        "P max is the most any complete round reached; the trace's own summaries are the median of the rounds' maxima "
+        "and the median of the rounds' push medians (not a pooled median, and it may be half-integral). Reaching the "
+        "ceiling shows it is reachable, not that it binds often.",
         "",
-        "| trace | threshold, window | P max / median (ceiling) | rounds | blocks | util (each; max) | prep wait median / p90 ms | finish wait median / p90 ms | job wait median ms | backlog prep / finish (mean; max) | teams idle: prep / back share | run wait ms | saturation | prep starvation | finish backlog |",
+        "| trace | threshold, window | P: max over rounds / median of round maxima / median of round medians (ceiling) | complete rounds of requested | blocks | util (each; max) | prep wait median / p90 ms | finish wait median / p90 ms | job wait median ms | backlog prep / finish (mean; max) | teams idle: prep / back share | run wait ms | saturation | prep starvation | finish backlog |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for name, c in TRACES.items():
@@ -524,21 +661,26 @@ def report(a):
             continue
         g = lambda k: tl.get(k, float("nan"))  # noqa: E731
         fm = modes[c]
+        pr = per_round.get(name, [])
+        p_max = max((r["p_max"] for r in pr), default=float("nan"))
         out["traces"][name] = {
             "cell": c,
             "admission": ADMISSION[c],
             "window": WINDOW[c],
-            "p_max": g("svc.backlog.prep_max"),
-            "p_median": g("svc.backlog.prep_median"),
-            "p_ceiling": ADMISSION[c] + SERVICES - 1,
+            "p_max": p_max,
+            "p_median_of_round_maxima": g("svc.backlog.prep_max"),
+            "p_median_of_round_medians": g("svc.backlog.prep_median"),
+            "p_ceiling": ceiling(c),
+            "rounds": pr,
+            "requested_rounds": g("requested_rounds"),
             "timeline": {k: v for k, v in tl.items() if k.startswith("svc.") or k in ("blocks", "complete_rounds")},
             "modes": fm,
         }
         utils = sorted((k, v) for k, v in tl.items() if re.fullmatch(r"svc\.util\.\d+", k))
         u = ", ".join(f"{v:.2f}" for _, v in utils)
         lines.append(
-            f"| {name} | {label(c)} | {g('svc.backlog.prep_max'):.0f} / {g('svc.backlog.prep_median'):.1f} ({ADMISSION[c] + SERVICES - 1}) | "
-            f"{g('complete_rounds')} | {g('blocks')} | {u}; max {g('svc.util.max'):.2f} | "
+            f"| {name} | {label(c)} | {p_max:.0f} / {g('svc.backlog.prep_max'):.1f} / {g('svc.backlog.prep_median'):.1f} ({ceiling(c)}) | "
+            f"{g('complete_rounds'):.0f} of {g('requested_rounds'):.0f} | {g('blocks')} | {u}; max {g('svc.util.max'):.2f} | "
             f"{g('svc.queue.prep.median_ms'):.3f} / {g('svc.queue.prep.p90_ms'):.3f} | "
             f"{g('svc.queue.finish.median_ms'):.3f} / {g('svc.queue.finish.p90_ms'):.3f} | {g('svc.queue.job.median_ms'):.3f} | "
             f"{g('svc.backlog.prep_mean'):.2f} / {g('svc.backlog.finish_mean'):.2f} ({g('svc.backlog.prep_max'):.0f}; {g('svc.backlog.finish_max'):.0f}) | "

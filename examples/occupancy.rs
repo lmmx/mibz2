@@ -1534,7 +1534,22 @@ fn parent(args: &[String]) {
                         kv.get("t.complete")
                             .map_or(String::new(), |c| format!("  trace complete: {c}"))
                     );
-                    raw.push((r, t, s, spec.clone(), mode, line));
+                    // the child's exit: its code, or -signal (Unix) when a signal ended it
+                    let status = o.status.code().map_or_else(
+                        || {
+                            #[cfg(unix)]
+                            {
+                                use std::os::unix::process::ExitStatusExt;
+                                -o.status.signal().unwrap_or(0) as i64
+                            }
+                            #[cfg(not(unix))]
+                            {
+                                i64::MIN
+                            }
+                        },
+                        i64::from,
+                    );
+                    raw.push((r, t, s, spec.clone(), mode, line, status));
                     runs.entry((t, spec.clone(), mode)).or_default().push(kv);
                     if gap > 0.0 {
                         std::thread::sleep(Duration::from_secs_f64(gap));
@@ -1544,6 +1559,9 @@ fn parent(args: &[String]) {
         }
     }
     let selftest = sched_selftest(m.allowed);
+    // every child's exit, kept: the pass fails on any that didn't exit 0, whatever it printed
+    let children_ok = raw.iter().all(|x| x.6 == 0);
+    let expected_children = rounds * threads.len() * specs.len() * MODES.len();
 
     // parity: one output for every run
     let outs: BTreeSet<(String, String)> = runs
@@ -1825,13 +1843,15 @@ fn parent(args: &[String]) {
             ]),
         ),
         ("parity".into(), J::B(parity)),
+        ("children_ok".into(), J::B(children_ok)),
+        ("children_expected".into(), J::N(expected_children as f64)),
         ("output_bytes".into(), J::N(out_bytes)),
         ("schedstat".into(), selftest.clone()),
         ("results".into(), J::A(results)),
         ("placement_comparisons".into(), J::A(comparisons)),
         (
             "runs".into(),
-            J::A(raw.iter().map(|(r, t, s, spec, mode, line)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("placement".into(), J::S(spec.clone())), ("mode".into(), J::S(mode.to_string())), ("line".into(), J::S(line.clone()))])).collect()),
+            J::A(raw.iter().map(|(r, t, s, spec, mode, line, status)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("placement".into(), J::S(spec.clone())), ("mode".into(), J::S(mode.to_string())), ("status".into(), J::N(*status as f64)), ("line".into(), J::S(line.clone()))])).collect()),
         ),
     ]);
     let out = out.unwrap_or_else(|| "occupancy.json".into());
@@ -1863,6 +1883,15 @@ fn parent(args: &[String]) {
     print!("{summary}");
     println!("Written: {out}");
     if !parity {
+        std::process::exit(1);
+    }
+    if !children_ok || raw.len() != expected_children {
+        eprintln!(
+            "occupancy: {} of {} children ran, {} exited nonzero",
+            raw.len(),
+            expected_children,
+            raw.iter().filter(|x| x.6 != 0).count()
+        );
         std::process::exit(1);
     }
 }
