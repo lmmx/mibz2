@@ -787,6 +787,184 @@ bench-service-2x3 ROUNDS="20" DRY="" CORPUS="":
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
 
+# The service core at two teams on the workstation, revision 2
+# (docs/journal/2026-11-09-service-2x3-r2-registration.md, registered before any run): #258's
+# registered cells, rounds, comparisons, gates and report (bench/service_2x3.py), unchanged,
+# with the machine's state recorded beside every run as diagnostic telemetry, under Guardian
+# D064's option (b):
+# - `ab run --machine-state`: each run's perf counters over its timed region, and its sysfs
+#   readings before and after, timestamped, raw and with their units (bench 3.4.0);
+# - one read-only preflight before round 0: the recorder's own untimed check (`ab
+#   telemetry-check`), a raw sysfs snapshot and exactly 10 readings 1 s apart (`ab sample`). It
+#   refuses, before any timed run, only if the telemetry tools themselves fail or the recorder's
+#   check FAILs; the same snapshot and readings after the last round, recorded only;
+# - bench/report.py's machine table, and bench/service_2x3_diag.py's run-order table and pair
+#   clock states.
+# Nothing it records feeds the report: every record enters the registered analysis as before.
+# There is no settling, no retry and no change to the machine's settings. About 7 minutes once
+# built (11 from a cold build). Close the browser and anything busy first.
+#   just submit bench-service-2x3-r2
+# DRY (the second argument, positional: `just bench-service-2x3-r2 20 1`) is the untimed check
+# of the recipe itself (one round, one trace round, no settling): never evidence, and the
+# report never calls it VALID. CORPUS (the third, positional) is a .bz2 to use instead of
+# building the bench's sample.
+
+# The service core at 2 x 3 + 2 against the plain and pipelined 2 x 3 and today's default, with the machine's state logged
+bench-service-2x3-r2 ROUNDS="20" DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/service-2x3-r2
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-service-2x3-r2: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal (the preflight's included), a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-service-2x3-r2: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-service-2x3-r2: $*"; exit 1; }
+    rounds={{ROUNDS}}; trace_rounds=6; busy=(); dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      rounds=1; trace_rounds=1; busy=(--max-busy 64 --settle 0.2)
+      echo "bench-service-2x3-r2: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/service-2x3-r2.frozen): everything the run is
+    # built, driven and judged from must be as it was there (tests/common: the harness's
+    # #[path] module; bench/report.py: the machine table)
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/service-2x3-r2.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/service-2x3-r2.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      tests/common bench/service_2x3.py bench/service_core.py bench/team_size.py bench/wikidata.py
+      bench/wikidata.json bench/bundle.sh bench/report.py bench/service_2x3_diag.py .just/bench.just
+      docs/journal/2026-11-08-service-2x3-registration.md
+      docs/journal/2026-11-09-service-2x3-r2-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
+    AB=$PWD/target/release/examples/ab
+    corpus="{{CORPUS}}"
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha256sum "$corpus" > "$W/corpus.sha256"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    # the machine's state, diagnostic only (the registration's "Telemetry"): read-only, nothing
+    # written outside $W, never a setting changed
+    M=$W/machine
+    mkdir "$M"
+    # a raw snapshot: each file's path and its contents as read, or UNREADABLE (a glob that
+    # matches nothing is listed as it was written, UNREADABLE)
+    snapshot() {
+      local out=$1 f v
+      {
+        printf '# read at %s (UTC); path<TAB>value, read-only\n' "$(date -u +%Y-%m-%dT%H:%M:%S.%NZ)"
+        for f in /sys/devices/system/cpu/cpufreq/policy*/{affected_cpus,related_cpus,scaling_driver,scaling_governor,energy_performance_preference,scaling_cur_freq,scaling_min_freq,scaling_max_freq,cpuinfo_min_freq,cpuinfo_max_freq,base_frequency} \
+            /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_cur_freq \
+            /sys/devices/system/cpu/intel_pstate/{status,no_turbo,min_perf_pct,max_perf_pct} \
+            /sys/devices/system/cpu/cpufreq/boost /sys/devices/system/cpu/smt/active \
+            /sys/firmware/acpi/platform_profile /sys/firmware/acpi/platform_profile_choices \
+            /sys/class/thermal/thermal_zone*/{type,temp} \
+            /sys/class/hwmon/hwmon*/name /sys/class/hwmon/hwmon*/temp*_label /sys/class/hwmon/hwmon*/temp*_input \
+            /proc/sys/kernel/perf_event_paranoid /proc/sys/kernel/nmi_watchdog; do
+          if [ -r "$f" ] && v=$(cat "$f" 2>/dev/null); then
+            printf '%s\t%s\n' "$f" "$v"
+          else
+            printf '%s\tUNREADABLE\n' "$f"
+          fi
+        done
+      } > "$out"
+    }
+    # (exactly 10 readings 1 s apart, whatever they read: `ab sample` never stops early, waits
+    # for no condition and never judges)
+    sample() { "$AB" sample --count 10 --interval 1 > "$1"; }
+    # the preflight: before any timed run, it refuses only where the telemetry tools themselves
+    # fail. A reading that is unavailable (null with its reason) is recorded, never refused on
+    refuse() {
+      outcome="REFUSED: PREFLIGHT: $*"
+      echo "REFUSED: $*" >> "$M/preflight.txt"
+      echo "bench-service-2x3-r2: preflight refused, before any timed run: $*"
+      exit 1
+    }
+    echo "preflight at $(date -u +%Y-%m-%dT%H:%M:%SZ): read-only, once; refuses only on F1-F4 (the registration's preflight)" > "$M/preflight.txt"
+    snapshot "$M/pre-sysfs.tsv" || refuse "F1: the sysfs snapshot could not be written"
+    echo "F1 pass: pre-sysfs.tsv, $(grep -vc '^#' "$M/pre-sysfs.tsv") entries, $(grep -c $'\tUNREADABLE$' "$M/pre-sysfs.tsv" || true) unreadable" >> "$M/preflight.txt"
+    python3 -c 'import json, sys; json.load(open(sys.argv[1]))["machine"]["perf"]' "$W/env.json" \
+      || refuse "F2: ab env gave no machine-state probe (not the telemetry build)"
+    echo "F2 pass: env.json's machine probe: $(python3 -c 'import json, sys; print(json.dumps(json.load(open(sys.argv[1]))["machine"]["perf"]))' "$W/env.json")" >> "$M/preflight.txt"
+    sample "$M/pre-sample.jsonl" || refuse "F3: ab sample failed"
+    python3 -c 'import json, sys; r = [json.loads(l) for l in open(sys.argv[1])]; assert len(r) == 10 and all("state" in x for x in r)' "$M/pre-sample.jsonl" \
+      || refuse "F3: ab sample did not give its 10 readings"
+    echo "F3 pass: pre-sample.jsonl, 10 readings" >> "$M/preflight.txt"
+    # the recorder's own check, untimed: a FAIL means it records wrongly on this machine; a
+    # case without the events it needs is UNAVAILABLE, recorded, never refused on
+    "$AB" telemetry-check > "$M/telemetry-check.jsonl" \
+      || refuse "F4: ab telemetry-check FAILed (see telemetry-check.jsonl)"
+    echo "F4 pass: telemetry-check.jsonl, no case FAILed; $(grep -c '"status":"UNAVAILABLE"' "$M/telemetry-check.jsonl" || true) UNAVAILABLE" >> "$M/preflight.txt"
+    echo "PASS" >> "$M/preflight.txt"
+    # one ab run at the budget of 10: every registered cell, interleaved by round, each run's
+    # machine state beside it
+    arms="mibz2,mibz2-svc2,mibz2-team2x3,mibz2-pipe2x3,mibz2-team3,mibz2-team3-twin"
+    "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10 --rounds "$rounds" --machine-state "${busy[@]}" "$W/wikidata.bz2"
+    # after the last round, the same readings: recorded only, never refused on
+    sample "$M/post-sample.jsonl" || echo "bench-service-2x3-r2: the post-run sample failed (recorded, not refused)" | tee "$M/post-sample-failed.txt"
+    snapshot "$M/post-sysfs.tsv" || echo "bench-service-2x3-r2: the post-run snapshot failed (recorded, not refused)" | tee "$M/post-sysfs-failed.txt"
+    "$AB" summary "$W/runs.jsonl" --ref mibz2 > "$W/summary.txt" || true
+    occ=()
+    name="occupancy-t10-svc2"
+    o="$W/$name.json"
+    if target/release/examples/occupancy "$W/wikidata.bz2" --threads 10 --svc 2 \
+        --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
+        > "$W/$name.txt" 2>&1; then
+      occ+=("$o")
+    else
+      echo "bench-service-2x3-r2: the occupancy pass at 10 threads, svc 2, failed"
+    fi
+    # the registered report, unchanged: it reads nothing of the machine state
+    status=0
+    python3 bench/service_2x3.py report "$W/runs.jsonl" --occupancy "${occ[@]}" \
+      --out "$W/service-2x3" || status=$?
+    # the machine table, run by run: diagnostic, never judged
+    python3 bench/report.py machine "$W/runs.jsonl" --md "$M/machine-state.md" > /dev/null \
+      || echo "bench-service-2x3-r2: the machine table failed (recorded; the report is unaffected)" | tee "$M/machine-state-failed.txt"
+    python3 bench/service_2x3_diag.py "$W/runs.jsonl" --out "$M/diagnostics" \
+      || echo "bench-service-2x3-r2: the diagnostics failed (recorded; the report is unaffected)" | tee "$M/diagnostics-failed.txt"
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/service-2x3.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see service-2x3.md for the registered comparisons' outcomes" ;;
+      INVALID) outcome="INVALID: see service-2x3.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
+
 # The machine-state recorder's untimed check on the workstation (bench 3.4.0): `ab
 # telemetry-check` (a failed enable and disable, a missing counter, multiplexing, the user-only
 # fallback, the task clock's modes, inheritance), with `ab env`, `ab sample` and lscpu, as one
