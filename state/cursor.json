@@ -1434,6 +1434,12 @@
       "review_comment_id": 6729223027,
       "complete_cursor_commit": "5b77fc3b6193aa3aab96ea9e073745d0f66947f6",
       "publication_reconciliation": "Existing D042 REVIEW 6729223027 explicitly cites this resume ID and links its completed scientific work; reused under SPEC step 6 to avoid a duplicate REVIEW."
+    },
+    {
+      "comment_id": 6729878093,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D044"
     }
   ],
   "migrated_from": {
