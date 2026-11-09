@@ -1,0 +1,16 @@
+{
+  "registered_fixture": {
+    "exit": 0,
+    "stdout": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  "explicit_non_AVX2_two_cpu": {
+    "exit": 0,
+    "stdout": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  "interval": {
+    "mean": 0.9699961199813758,
+    "lo": 0.9686796383265996,
+    "hi": 0.9713143907972727
+  },
+  "threshold_boundary": "LEAD"
+}
