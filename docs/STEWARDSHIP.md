@@ -41,6 +41,50 @@ merge only when all of these hold:
   beyond noise, meaning its 95% interval excludes zero in the beneficial direction;
 - no other figure regresses unacceptably.
 
+**Target-gated changes** (D071; effective from the commit that merges this paragraph, for
+registrations frozen after it, never for data collected before it). A change to measured code
+whose new behaviour is selected only by a *target predicate*, a pure function of discovered
+machine facts and the requested thread count, may merge by this route instead of the
+beneficial CI interval above. This route is not evidence-equivalent to a CI gain: it accepts
+a bounded slowdown off target (at most 2%) in exchange for a gain measured on target. Every
+condition must be met; missing or invalid evidence fails.
+
+1. **The predicate is frozen before data,** with its hardware rationale: which discovered facts
+   it reads, why each is needed, and how an unknown or unreadable fact is handled (it must
+   select the existing plan). A CI test evaluates it on every CI runner and finds it false,
+   and asserts that the public dispatch there builds master's plan. Equal plans establish
+   fallback selection only, not zero discovery, layout or shared-code cost; that cost is what
+   condition 2 bounds.
+2. **Off-target non-inferiority, on CI.** On the CI paired A/B bench, at every cell of the
+   end-to-end table the registration names (each corpus × thread count × the metrics wall
+   and CPU), the one-sided 95% upper bound of head over base is at most 1.02. Every cell must
+   pass: an intersection-union test at level 5% for the claim "no named cell is worse by more
+   than 2%". It is not simultaneous interval coverage, and it does not protect against
+   retries; there are none (condition 6).
+3. **On-target superiority, registered before data.** A frozen workstation A/B (RULES C5) on
+   a machine where the predicate is true measures the exact candidate against master through
+   the public entry point. At every registered budget where the predicate is true, wall speed
+   (base over head) has a two-sided 95% interval whose lower bound exceeds 1.02, and CPU's
+   one-sided 95% upper bound of head over base is at most 1.02. A Bonferroni correction
+   applies when there is more than one such budget: the family and its level are stated in
+   the registration.
+4. **On-target no harm at the fallback budgets.** In the same run, at every registered
+   neighbouring budget where the predicate is false, wall head over base has a one-sided upper
+   bound at most 1.02, Bonferroni over the registered family of those budgets at a family
+   level of 5%. Every one must be shown. NOT SHOWN fails qualification; it is not
+   demonstrated harm.
+5. **Coverage.** The adoption's reach is no wider than its evidence. Either the predicate is
+   narrowed to the facts every qualifying machine shares, or the registration names the
+   machines required (at least two distinct models) and the extrapolation to the rest of the
+   class is argued in it and reviewed. Release notes state the scope but never substitute for
+   this condition.
+6. **The protocol is fixed in the registration:** rounds, the stopping rule (one attempt per
+   registration), what makes a run invalid, and what follows an invalid run. No retry to
+   pass. A later registration for the same change discloses every earlier attempt and its
+   outcome and justifies its information value; all outcomes are retained.
+7. **Tests, parity and green CI** hold on the head that merges, and the remaining conditions
+   above (no other figure regressing unacceptably) apply as for any measured change.
+
 **Before opening a PR that changes the default decoding kernel,** account for the whole decoder,
 not only the part being optimised (RULES.md C4, S2).
 - **Count the instructions** executed in `decode_block` on master and on the candidate, split
