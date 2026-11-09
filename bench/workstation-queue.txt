@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-telemetry-check        master                    the machine-state recorder's own untimed check on the target PMU: failure paths, multiplexing, user-only, inheritance (#298, D068)
