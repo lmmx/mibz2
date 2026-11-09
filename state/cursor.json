@@ -33,7 +33,8 @@
     6693507432,
     6715370785,
     6729116363,
-    6729426658
+    6729426658,
+    6729932062
   ],
   "outgoing_comment_ids": [
     {
@@ -158,6 +159,13 @@
       "type": "REVIEW",
       "sha": "e071cb7c981589c02f305f1de5c28ebfe2c7d6fc",
       "checkpoint_comment_id": 6729426658
+    },
+    {
+      "pr": 145,
+      "id": 6729991838,
+      "type": "REVIEW",
+      "sha": "08abbe6821301fd26780ee1d8eb59dbe6e779ed2",
+      "checkpoint_comment_id": 6729932062
     }
   ],
   "reviews": [
@@ -574,13 +582,15 @@
     {
       "comment_id": 6729932062,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "f94551ab8c359ec28dca02956ddca150595cc7cb",
-      "progress": "Work complete; report and ledger committed, REVIEW pending.",
+      "progress": "Report and ledger committed; one REVIEW delivered and exact author/body/destination read back.",
       "report_path": "state/records/reviews/inbox-6729932062/report.md",
-      "report_commit": "08abbe6821301fd26780ee1d8eb59dbe6e779ed2"
+      "report_commit": "08abbe6821301fd26780ee1d8eb59dbe6e779ed2",
+      "reply_id": 6729991838,
+      "routing_verification": "Pinned route/check passed; verify has coordinator-only FROM check, so exact author/body/destination readback used without claiming verify pass."
     }
   ],
   "migrated_from": {
