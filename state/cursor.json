@@ -1195,7 +1195,7 @@
       "comment": 6695760685
     }
   ],
-  "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
   "inbox_comments": [
     {
       "comment_id": 6681847165,
@@ -1356,6 +1356,12 @@
       "work_commit": "89736f2b53e1630ef5353c5c1922b7dbb9b935cd",
       "review_comment_id": 6695760685,
       "complete_cursor_commit": "1c36326a6eaf9af1f09755eb1d3b2dd3d4b817f0"
+    },
+    {
+      "comment_id": 6715368365,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D042"
     }
   ],
   "migrated_from": {
