@@ -1,0 +1,15 @@
+{
+  "comment": 6730592712,
+  "issue": 145,
+  "ok": false,
+  "problems": [
+    "FROM is 'researcher', not coordinator"
+  ],
+  "role_aware_check": {
+    "ok": true,
+    "from": "researcher",
+    "to": "coordinator",
+    "type": "REVIEW",
+    "issue": 145
+  }
+}

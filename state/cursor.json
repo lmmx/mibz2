@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "General policy review finished; REVISE",
+  "state": "Run-fed leader #270 re-review finished; PROCEED to freeze, applicable B5 permission separate.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -92,9 +92,10 @@
     6729877063,
     6729957944,
     6730270019,
-    6730378782
+    6730378782,
+    6730501978
   ],
-  "last_processed_comment_id": 6730378782,
+  "last_processed_comment_id": 6730501978,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -739,7 +740,7 @@
     {
       "trigger_comment_id": 6730501978,
       "related_queued_comment_id": 6730425051,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -747,7 +748,10 @@
       "report_commit": "8805b00c96281aed4c764ded33719a7f34fafdbc",
       "report_path": "state/reports/run-fed-rereview-6730501978/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED to freeze revised #270 registration; prior material objections repaired. Fail-closed malformed-field JSON omission and census denominator corrections nonblocking. D048 closes #269 only; separate #270 B5 remains. 24 tests and 16,380 abstract partitions pass; no native timing."
+      "disposition": "PROCEED to freeze revised #270 registration; prior material objections repaired. Fail-closed malformed-field JSON omission and census denominator corrections nonblocking. D048 closes #269 only; separate #270 B5 remains. 24 tests and 16,380 abstract partitions pass; no native timing.",
+      "review_comment_id": 6730592712,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and independent role-aware check passed. Pinned coord.py verify rejects FROM researcher due to hard-coded Coordinator predicate; recorded."
     }
   ],
   "active_delegations": [],
