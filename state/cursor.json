@@ -722,11 +722,15 @@
     {
       "trigger_comment_id": 6730378782,
       "related_queued_comment_id": 6730279906,
-      "status": "in_progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "e64469f614f5d635a38de042741bdd344e61ae5c"
+      "source_commit": "e64469f614f5d635a38de042741bdd344e61ae5c",
+      "report_commit": "99689cecb7a149865750e5f2bdbe20b9c38f694a",
+      "report_path": "state/reports/service-lookahead-6730378782/report.md",
+      "review_comment_pr": 145,
+      "disposition": "HOLD admission independently of D045: prepared-count invariants unchecked, occupancy child status lost, cross-arm trace association; direct threshold contrast and freeze accepted, eight-minute warm estimate reasonable. 42 repository fixtures pass; false-VALID witnesses and front-pool bound recorded; no timing."
     }
   ],
   "active_delegations": [],
