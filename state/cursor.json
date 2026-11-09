@@ -864,6 +864,22 @@
       "status": "published; scoped PROCEED for registered CI sweep",
       "disposition": "PROCEED for #270 registered CI sweep; empty-block false refusal fixed; sentinel canonicality and replay provenance corrections recorded; #277 HOLD unchanged",
       "comment": 6732545801
+    },
+    {
+      "id": "D057",
+      "decision": [
+        "G1",
+        "G2",
+        "scoped resumption"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6732560627,
+      "sha": "fc0139272607314895201e075b9b8145834ce350",
+      "evidence_digest": "git-blob:62a737e2d48b4da2a8b1fcce284f739c080f9184;fuzz:e74174d558c1b88a1249c4e2f403f8714e5124c1;miri-job:128982297974",
+      "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
+      "status": "complete; awaiting REVIEW",
+      "disposition": "D045/D053 HOLD lifted for reviewed service-core/admission snapshots; exact build/walk intersection not established; ordinary registration, timing and integration gates remain"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1027,7 +1043,9 @@
     "f4ffe284b015c1f423cab40beadf51d8b2cb2b1e",
     "3f6594235eb041f97e695fd5072e64216fe043e4",
     "82aadf1b98cf63971b8e41c3c48f55100976c638",
-    "41af868c294772b8ddebfa351b6a8172cac9a55f"
+    "41af868c294772b8ddebfa351b6a8172cac9a55f",
+    "61d3b9d2de69680d6fd1f7016edd9dc7e140fd77",
+    "aa0538a305b51368e8274c1bb508d8316c30bd95"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1165,7 +1183,8 @@
   "current_execution": {
     "active_comment": 6732560627,
     "decision": "D057",
-    "status": "in_progress",
+    "status": "complete",
+    "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
     "queue_snapshot": [
       6732560627
     ]
@@ -1608,6 +1627,14 @@
       "decision": "D056",
       "commit": "82aadf1b98cf63971b8e41c3c48f55100976c638",
       "comment": 6732545801
+    },
+    {
+      "pr": 276,
+      "sha": "fc0139272607314895201e075b9b8145834ce350",
+      "evidence_digest": "git-blob:62a737e2d48b4da2a8b1fcce284f739c080f9184;fuzz:e74174d558c1b88a1249c4e2f403f8714e5124c1;miri-job:128982297974",
+      "decision": "D057",
+      "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
+      "comment": null
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1928,8 +1955,10 @@
     {
       "comment_id": 6732560627,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D057"
+      "status": "complete",
+      "decision": "D057",
+      "receipt_commit": "61d3b9d2de69680d6fd1f7016edd9dc7e140fd77",
+      "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95"
     }
   ],
   "migrated_from": {
