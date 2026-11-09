@@ -127,9 +127,10 @@
     6744588901,
     6745615244,
     6745811380,
-    6746400325
+    6746400325,
+    6746912441
   ],
-  "last_processed_comment_id": 6746400325,
+  "last_processed_comment_id": 6746912441,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1302,7 +1303,7 @@
     },
     {
       "trigger_comment_id": 6746912441,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1310,7 +1311,10 @@
       "report_path": "state/reports/service-guarded-r2-6746912441/report.md",
       "report_commit": "fed220d66ae55fd4f143393c3e7a06fd6f9b1731",
       "review_comment_pr": 145,
-      "disposition": "Technical PROCEED: child termination and required acquisition status gaps closed; 17 local tests/one native skip, 15 probes, exact-head CI native producer and 11 recipe tests verified. Authenticated C6 repin, freeze base integration and version reconciliation remain separate prerequisites."
+      "disposition": "Technical PROCEED: child termination and required acquisition status gaps closed; 17 local tests/one native skip, 15 probes, exact-head CI native producer and 11 recipe tests verified. Authenticated C6 repin, freeze base integration and version reconciliation remain separate prerequisites.",
+      "review_comment_id": 6747033214,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1330,10 +1334,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6746400325
+      6746912441
     ],
     "handled": [
-      6746400325
+      6746912441
     ],
     "skipped": [],
     "automation_modified": false
