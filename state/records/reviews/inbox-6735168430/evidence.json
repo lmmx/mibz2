@@ -1,0 +1,35 @@
+{
+  "brief": 6735168430,
+  "spec": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source": "1197bbcced86eae74c6d99eb8096b5c816a834d7",
+  "files": {
+    "src/parallel.rs": "b67d79e185017f8952c82f4605359ff05eefbc74",
+    "src/lib.rs": "30f227631c797b2243c9b5ef27624b7c4707bba8",
+    "bench/c29_checkpoints.py": "1e9e304e35f59576beaa662ac6cd71dcfb4e3f91",
+    ".github/workflows/bench.yml": "9faab8422efbaba9d528f9cd8e41ba13bc056f6e"
+  },
+  "read_rs": "37298d92fc678b635758416110cde32f99924458",
+  "journal": "8d0866d4f514c3e0811d5dd7b664055a3f3479c6",
+  "guardian_decision_commit": "471aabefdf20848d93d8baeff778ed1b9f67fb07",
+  "reported_result_comment": 6735159457,
+  "narrowing_comments": [
+    6735626248,
+    6735738288
+  ],
+  "raw_timing_replay": false,
+  "implementation": false,
+  "compilation": false,
+  "timing": false,
+  "routing": {
+    "pinned_script": "a4f97714cc14366984015869d9d094d89488ac57",
+    "resolved": 5,
+    "unresolved": 0
+  },
+  "migration": {
+    "branch": "review/compact30-instruction-ledger",
+    "sha": "e6eea5889432aef28f4d9e450cee87dd5bf7bacf",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "86d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde",
+    "date": "2026-11-06"
+  }
+}
