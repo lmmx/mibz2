@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "case": "numeric baseline",
+      "exit": 0,
+      "interpretable": true,
+      "stdout": "VALID (dir capture): no perturbation shown\n"
+    },
+    {
+      "case": "full genuinely perturbs",
+      "exit": 0,
+      "interpretable": false,
+      "stdout": "VALID (dir capture): its traced modes perturb: admitted, its timeline not to be interpreted\n"
+    },
+    {
+      "case": "missing perturbation",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  perturbation timeline: absent\n  perturbation full: absent\n"
+    },
+    {
+      "case": "unknown verdict",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  perturbation full: verdict 'unknown', not 'no perturbation shown (interval includes no change)' for (0.994989, 0.966754, 1.024049)\n"
+    },
+    {
+      "case": "too few rounds",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  perturbation full: interval (None, None, None), not finite\n"
+    },
+    {
+      "case": "18 copies of round zero off",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  run 1 (round 0, 'off'): twice\n  run 2 (round 0, 'off'): twice\n  run 3 (round 0, 'off'): twice\n  run 4 (round 0, 'off'): twice\n  run 5 (round 0, 'off'): twice\n  run 6 (round 0, 'off'): twice\n  run 7 (round 0, 'off'): twice\n  run 8 (round 0, 'off'): twice\n  run 9 (round 0, 'off'): twice\n  run 10 (round 0, 'off'): twice\n  run 11 (round 0, 'off'): twice\n  run 12 (round 0, 'off'): twice\n  run 13 (round 0, 'off'): twice\n  run 14 (round 0, 'off'): twice\n  run 15 (round 0, 'off'): twice\n  run 16 (round 0, 'off'): twice\n  run 17 (round 0, 'off'): twice\n  the grid lacks 17 of 18 observations: [(0, 'timeline'), (0, 'full'), (1, 'off'), (1, 'timeline'), (1, 'full'), (2, 'off')]\n"
+    },
+    {
+      "case": "NaN clocks",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  run 0 (round 0, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 1 (round 0, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 2 (round 0, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  run 3 (round 1, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 4 (round 1, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 5 (round 1, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  run 6 (round 2, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 7 (round 2, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 8 (round 2, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  run 9 (round 3, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 10 (round 3, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 11 (round 3, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  run 12 (round 4, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 13 (round 4, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 14 (round 4, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  run 15 (round 5, 'off'): wall 'NaN', out '3030698': not a finite positive clock\n  run 16 (round 5, 'timeline'): wall 'NaN', out '3030698': not a finite positive clock\n  run 17 (round 5, 'full'): wall 'NaN', out '3030698': not a finite positive clock\n  the grid lacks 18 of 18 observations: [(0, 'off'), (0, 'timeline'), (0, 'full'), (1, 'off'), (1, 'timeline'), (1, 'full')]\n"
+    },
+    {
+      "case": "missing cell",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  the grid lacks 1 of 18 observations: [(5, 'full')]\n"
+    },
+    {
+      "case": "incorrect interval",
+      "exit": 2,
+      "interpretable": null,
+      "stdout": "INVALID (dir capture)\n  perturbation full: reported (0.994989, 0.966754, 2), not the grid's (0.9949892257848227, 0.9667542961486537, 1.0240487819623327)\n"
+    }
+  ],
+  "independent_formula_cases": 100,
+  "max_abs_error": 4.440892098500626e-16
+}
