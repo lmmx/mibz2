@@ -762,8 +762,9 @@
       "sha": "89c36f929d9fb2c4c1615dd3a17569051502ddd2",
       "evidence_digest": "git-blob:ed4cc331e6b5f1e415883d7e72fae8bb7de29219",
       "commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528",
-      "status": "complete",
-      "disposition": "D047/M12 evidence HOLD lifted for shipped pipelined worker; B6 resumption recorded. Normal CI and D049 separate holds unchanged."
+      "status": "finished",
+      "disposition": "D047/M12 evidence HOLD lifted for shipped pipelined worker; B6 resumption recorded. Normal CI and D049 separate holds unchanged.",
+      "comment": 6731042100
     }
   ],
   "own_outgoing_comment_ids": [
@@ -811,7 +812,8 @@
     6730359769,
     6730448704,
     6730547798,
-    6730740928
+    6730740928,
+    6731042100
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -901,7 +903,8 @@
     "d5d6f292ac3e72089ce3336d1c6fdd1c85ad131d",
     "0eddcee0d7b3ce9727786bec1930a9df01dbbe39",
     "2dab9d62b85904737dd8956ee5a84ee2130bb87a",
-    "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528"
+    "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528",
+    "86d79f3c9df864f32cee381ab2ee82baebc5603c"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1036,7 +1039,7 @@
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
     "last_completed_incoming_comment": 6730988787,
     "last_decision": "D050",
-    "last_outgoing_comment": 6730740928,
+    "last_outgoing_comment": 6731042100,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
@@ -1045,12 +1048,12 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "Work completed; REVIEW pending.",
+    "source_app_reply": "D050 REVIEW #145 exact body/destination read back; route/header/inbox ID/head verified.",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
+    "active_comment_status": "finished",
     "queue_snapshot": [
       6645920904,
       6646249200,
@@ -1081,7 +1084,7 @@
       6730988787
     ],
     "active_incoming_comment": 6730988787,
-    "status": "complete"
+    "status": "finished"
   },
   "duplicate_events": [
     {
@@ -1471,7 +1474,8 @@
       "sha": "89c36f929d9fb2c4c1615dd3a17569051502ddd2",
       "evidence_digest": "git-blob:ed4cc331e6b5f1e415883d7e72fae8bb7de29219",
       "decision": "D050",
-      "commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528"
+      "commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528",
+      "comment": 6731042100
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1722,10 +1726,12 @@
     {
       "comment_id": 6730988787,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D050",
       "receipt_commit": "2dab9d62b85904737dd8956ee5a84ee2130bb87a",
-      "work_commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528"
+      "work_commit": "e85146b0d557ab48aa8728d4d6bf8d61f7bd0528",
+      "review_comment_id": 6731042100,
+      "complete_cursor_commit": "86d79f3c9df864f32cee381ab2ee82baebc5603c"
     }
   ],
   "migrated_from": {
