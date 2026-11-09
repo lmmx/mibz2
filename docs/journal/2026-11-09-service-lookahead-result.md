@@ -54,11 +54,17 @@ prep starvation to fall but not below 0.10. It also expected W12 alone to be NUL
 - **Every w8 trace still shows PREP STARVATION.** Only `a4 w12` relieved it (teams' prep-idle
   share 0.057, P's median of medians 3.0). It then showed a **FINISH BACKLOG** instead (backlog
   prep / finish 2.42 / 0.35).
-- **So the binding constraint moves:** at w8, raising the threshold barely raises how much is
-  prepared. With both threshold and window raised, preparation catches up and finishing becomes
-  the wait.
-  - This is read from six traced rounds per arm, as a description. No trace is a judged
-    comparison.
+- **Corrected (Researcher REVIEW
+  [6736071231](https://github.com/lmmx/mibz2/issues/145#issuecomment-6736071231)): these labels
+  don't identify the bottleneck.** This entry first said "the binding constraint moves". That is
+  withdrawn.
+  - `TeamIdleStart` records whether P is nonempty once, and occupancy charges the whole wait to
+    that initial label. A wait that starts with P = B = 0 and later has P > 0 stays counted as prep
+    starvation. The Researcher's nine-unit witness charges nine units to prep, though eight of them
+    occur with a prepared block available and no back set.
+  - "Busy" is marked thread life minus marked idle, over the trace's span. It is not CPU
+    utilisation. P's median samples pushes.
+  - The registered metrics stand as recorded. No mechanism is inferred from them.
 
 ## Reported, never judged
 
@@ -74,8 +80,8 @@ prep starvation to fall but not below 0.10. It also expected W12 alone to be NUL
 | D-a4w12 | svc2-a4-w12@10 | mibz2@10 | 1.102 [1.070, 1.135] | GAIN | 1.140 [1.112, 1.169] |
 | R1 | mibz2@10 | team3@10 | 1.047 [1.024, 1.071] | GAIN | 0.935 [0.912, 0.959] |
 
-- **J4 is a SMALL GAIN** for widening the window once the threshold is 4. It is consistent with
-  the trace's shift from prep starvation to finish backlog. It is chosen after the run and
+- **J4 is a SMALL GAIN** for widening the window once the threshold is 4. Its mechanism is not
+  identified (see the correction above). It is chosen after the run and
   unjudged, so it is a lead for a registration, not a result.
 - **D-a4w12, the best of five against the default,** was chosen after the run, so its interval
   is optimistic.
@@ -98,8 +104,11 @@ prep starvation to fall but not below 0.10. It also expected W12 alone to be NUL
 - **The finding that stands:** the service core beats the default on the i9, across two runs.
   The next value is in qualifying it, not tuning its admission.
 - **Open, as hypotheses for the follow-up:**
-  - where the prep starvation that survives every w8 arm comes from (preparation's own cost,
-    the service workers' 70% busy time, or the hand-off);
+  - what the waits labelled prep starvation actually wait on. The Researcher names two
+    surviving mechanisms. Both service workers can be finishing (non-preemptively) when a team
+    consumes the last prepared block. Separately, the scanner's window credit is released only on
+    the ordered take, so ready blocks behind a missing one can hold credits. An untimed
+    eligibility/credit diagnostic is to separate them;
   - whether the joint threshold-and-window change (J4) holds as a registered comparison;
   - whether finishing is the next bound once preparation keeps up.
 
