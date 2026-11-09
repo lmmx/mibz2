@@ -1502,6 +1502,23 @@ verdict, and **2** a bundle that could not be made.
   the diagnostics' counts, position and predecessor, and unknown states counted, never
   guessed.
 
+**The local DRY check** (untimed, never evidence; `just bench-run-fed-leader 1 CORPUS` at
+`9466cea4`, on this shared 4-core VM, with a 12 MB synthetic text corpus; records in
+`2026-11-09-run-fed-leader/dry-run/r10-valid-dry/`):
+- **The real builds:** `ab` and `windows` (`run-fed`) and `occupancy` (`trace,run-fed`), as
+  Cargo reported them.
+- **The preflight REFUSED, correctly, and the DRY check went on:** the VM is not the i9, has
+  4 CPUs, and has no cpufreq or package sensor. Each fact is listed in `preflight.txt`.
+- **VALID (DRY):** 14 records, both captures admitted, neither perturbing.
+- **The diagnostics:** "incomplete: 14 have no endpoint label", every pair unknown. The VM has
+  no `scaling_cur_freq`, so nothing is guessed.
+- **Offered as evidence, it is refused** (`admitted-as-evidence.txt`) for: DRY, unfrozen, the
+  sources not at a frozen commit, the corpus not the registered one, the preflight not PASS,
+  2 rounds, 14 records, and every record off the registered workload.
+- **A local check of the flag:** a debug `ab run --sysfs-state` on a scratch corpus recorded
+  `machine_pre`, `machine_post` and both timestamps, each field null with its reason on the
+  VM. The child's line had the same fields as without the flag.
+
 ### R10.7 What differs from the first attempt's harness, stated, not measured
 
 - **The harness is master's `examples/ab.rs`,** merged (bench 3.3.0 and 3.4.0, #290 and
