@@ -739,11 +739,15 @@
     {
       "trigger_comment_id": 6730501978,
       "related_queued_comment_id": 6730425051,
-      "status": "in_progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "ff6c2f74677af80ea9813bd081d34a68d07e6f1b"
+      "source_commit": "ff6c2f74677af80ea9813bd081d34a68d07e6f1b",
+      "report_commit": "8805b00c96281aed4c764ded33719a7f34fafdbc",
+      "report_path": "state/reports/run-fed-rereview-6730501978/report.md",
+      "review_comment_pr": 145,
+      "disposition": "PROCEED to freeze revised #270 registration; prior material objections repaired. Fail-closed malformed-field JSON omission and census denominator corrections nonblocking. D048 closes #269 only; separate #270 B5 remains. 24 tests and 16,380 abstract partitions pass; no native timing."
     }
   ],
   "active_delegations": [],
