@@ -645,10 +645,12 @@
       "duplicate_of": "D042",
       "sha": "a4f97714cc14366984015869d9d094d89488ac57",
       "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
-      "status": "complete",
+      "status": "finished",
       "receipt_commit": "fb3fa5862e12d617c88216b2977e3cad27513e51",
       "commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
-      "disposition": "Resume reconciled to completed D042; no reassessment or authority change"
+      "disposition": "Resume reconciled to completed D042; no reassessment or authority change",
+      "comment": 6729223027,
+      "publication": "D042 REVIEW already cites resume; reused, not posted twice."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -809,7 +811,8 @@
     6695438405,
     6695594055,
     6695685974,
-    6715368365
+    6715368365,
+    6729117187
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -891,7 +894,7 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6715368365,
+    "last_completed_incoming_comment": 6729117187,
     "last_decision": "D043",
     "last_outgoing_comment": 6729223027,
     "after_completion": "stop; await next event; no automation or subscription changes",
@@ -902,13 +905,13 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D042 REVIEW on #145",
+    "source_app_reply": "D042 REVIEW 6729223027 on #145 cites both original and resume; reconciled without duplicate",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
-    "queue_snapshot": "20 inbox comments; original assignment finished, resume notice being reconciled",
+    "active_comment_status": "finished",
+    "queue_snapshot": "20 inbox comments listed; all eligible comments through 6729117187 finished",
     "active_incoming_comment": 6729117187
   },
   "duplicate_events": [
@@ -937,6 +940,16 @@
         }
       ],
       "status": "same three pins and queue; no new Guardian evidence; no separate decision or outgoing review"
+    },
+    {
+      "incoming_comment": 6729117187,
+      "pr": 161,
+      "duplicate_of_incoming_comment": 6715368365,
+      "decision": "D043",
+      "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
+      "status": "finished; resume reconciled; D042 REVIEW reused because it already cites both IDs",
+      "commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
+      "comment": 6729223027
     }
   ],
   "reviewed_checkpoint_keys": [
@@ -1413,11 +1426,14 @@
     {
       "comment_id": 6729117187,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D043",
       "duplicate_of": 6715368365,
       "receipt_commit": "fb3fa5862e12d617c88216b2977e3cad27513e51",
-      "work_commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31"
+      "work_commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
+      "review_comment_id": 6729223027,
+      "complete_cursor_commit": "5b77fc3b6193aa3aab96ea9e073745d0f66947f6",
+      "publication_reconciliation": "Existing D042 REVIEW 6729223027 explicitly cites this resume ID and links its completed scientific work; reused under SPEC step 6 to avoid a duplicate REVIEW."
     }
   ],
   "migrated_from": {
