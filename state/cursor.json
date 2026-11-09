@@ -398,7 +398,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "AWAITING_REVIEW_PUBLICATION",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -769,12 +769,13 @@
     {
       "comment_id": 6735168430,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "1197bbcced86eae74c6d99eb8096b5c816a834d7",
-      "progress": "Pinned source, D060 and registration reviewed; transfer/campaign cost and adoption layout report committed; publication checks pending.",
-      "report_path": "state/records/reviews/inbox-6735168430/report.md"
+      "progress": "Report, ledger and provenance complete; REVIEW delivery pending.",
+      "report_path": "state/records/reviews/inbox-6735168430/report.md",
+      "report_commit": "6c82bea87137485383a20c11af2bcc87405195df"
     }
   ],
   "migrated_from": {
