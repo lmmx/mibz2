@@ -207,6 +207,13 @@
       "type": "REVIEW",
       "sha": "fd245921a0936a74b641e181932d441d0fc2aff1",
       "checkpoint_comment_id": 6733004424
+    },
+    {
+      "pr": 145,
+      "id": 6733249734,
+      "type": "REVIEW",
+      "sha": "ec8217f3d6a84205c0a9a1b7f9e49a6fda7ad939",
+      "checkpoint_comment_id": 6733116723
     }
   ],
   "reviews": [
@@ -717,12 +724,12 @@
     {
       "comment_id": 6733116723,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
       "result_commit": "c41ef38d7df2f596193c01d9adbb2f4893f1d217",
-      "progress": "Report, ledger, two raw pinned-copy records and replay committed. Awaiting deduplicated REVIEW publication.",
+      "progress": "Report, ledger and raw replay committed; REVIEW published and exact author/body/destination verified.",
       "report_commit": "ec8217f3d6a84205c0a9a1b7f9e49a6fda7ad939",
       "report_path": "state/records/reviews/inbox-6733116723/report.md",
       "audit_scope": {
@@ -733,7 +740,9 @@
         "raw_pinned_copies_replayed": 2,
         "full_corpus_validity_replay": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6733249734,
+      "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
     }
   ],
   "migrated_from": {
