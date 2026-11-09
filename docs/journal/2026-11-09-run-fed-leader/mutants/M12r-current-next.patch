@@ -1,8 +1,8 @@
 diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
-index 6a3572f1..f83dcedb 100644
+index 2785f58c..84af55cf 100644
 --- a/src/parallel/run_team.rs
 +++ b/src/parallel/run_team.rs
-@@ -1833,7 +1833,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
+@@ -1741,7 +1741,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
                  // fails at its own place and bit, and the team is reset
                  let msg = panic_message(p);
                  let held = [Some(s), l.next.take()];
