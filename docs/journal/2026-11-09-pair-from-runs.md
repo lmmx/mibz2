@@ -566,3 +566,45 @@ kept in step:
   its own still reports M1's difference as missing.
 
 No Rust, threshold or timing change.
+
+## C1 pin amendment: the registered run's head (9 November 2026)
+
+This is a prospective amendment, made before any CI timing, following the Researcher's REVIEW
+6731402367.
+
+- **Why the pin moved.** The Researcher said PROCEED to freeze `ae62ea75a0e9e75a6d300264daffb99c6763e9f9`
+  (6731275111). That head conflicted with master in `.github/workflows/miri.yml`, once #275
+  merged and widened its paths, so no CI ran on it. Master was merged in at
+  `69f97c80df517c3e966c0aa5988f6355fb19df0a`. The registered run's head is the commit carrying
+  this amendment, which changes nothing but this journal. It is named as `frozen` at dispatch.
+- **What is unchanged from `ae62ea75`.** The Researcher's census of 14 relevant blobs confirms
+  every one is the same:
+  - the pair code and its tests;
+  - the harness;
+  - the validator and its tests;
+  - this registration's readings and thresholds;
+  - bwt, coop, mtf and crc;
+  - the Cargo inputs;
+  - the sweep workflow;
+  - the Wikidata spec.
+- **What changed: the synthetic `text` input.** `common::corpora(1)`'s text concatenates the
+  immediate files of `src/`, `tests/`, `examples/` and `README.md`, then repeats them. The merge
+  changed three of those files:
+  - `README.md`: 14,965 → 15,053 bytes;
+  - `examples/fuzz.rs`: 5,846 → 12,300 bytes;
+  - `src/parallel.rs`: 54,309 → 56,831 bytes.
+
+  So the 33-file seed grows from 814,653 to **823,717 bytes**, and the generated text from
+  3,258,654 to **3,294,910 bytes**. The generator is unchanged; its input is not. This journal
+  isn't part of that input, so the registered text input is exactly the one at `69f97c80`. The
+  other five synthetic constructions keep their seed and definition.
+- **Kept:**
+  - every threshold (Q1, Q2, the 1.05 point-estimate screen and M1);
+  - the exclusion of the pilot samples;
+  - the admission disclosure;
+  - the plan of 15 rounds.
+
+  No direction of timing change is inferred. Q2's worst-synthetic screen includes `text`, so its
+  reading is on this changed clean-checkout input, not on `ae62ea75`'s.
+- **Not done:** the old text is not pinned or reconstructed. This amendment takes the changed
+  input explicitly instead, as the Researcher allowed.
