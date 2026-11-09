@@ -79,3 +79,34 @@ weight.
   it ran nothing but the queue. So the slowdown arose inside an unchanged, otherwise idle
   machine. Its cause stays unnamed; this entry doesn't speculate on one. That is the case for
   recording the clock and temperature in the harness itself.
+
+## Correction: the Guardian's review (D064)
+
+The Guardian reviewed the clock-logging question ([D064](../../state/decisions.md), on
+checkpoint 6735319842). Two sentences above claim more than the bundle shows. They stay as
+written, and this is the corrected reading:
+
+- **"the signature of a halved effective clock … It is not a scheduling stall."** Doubled wall
+  and CPU time are *consistent with* a reduced effective clock, not proof of it. Extra on-CPU
+  work (spinning, memory stalls) would look the same. Only pure off-CPU delay is ruled out,
+  since it accrues no CPU time. The cause remains unmeasured.
+- **"the machine state, not the arms, drives the width."** The filtered 0.929 subset shows only
+  that the slowed rounds drive the width. It cannot establish their cause, and it cannot
+  qualify a result.
+
+The registered reading stands: VALID, INCONCLUSIVE, control fidelity FAILED.
+
+What D064 admits for the next run:
+
+- **Clock and thermal state can be logged beside the records** as delegated diagnostic
+  instrumentation. Every pair and record still enters the original, unchanged analysis.
+- **Deleting slowed pairs, or replacing them until enough good runs exist,** changes the
+  registered population. That needs Louis's approval.
+- **A whole-attempt veto on a named, pre-registered quality constraint** may be admissible,
+  but no threshold is approved yet. The full-data result is archived either way.
+- **Outside-timing snapshots of `scaling_cur_freq` don't measure the clock during a decode.**
+  The kernel documents it as possibly a requested state. Per-run hardware-counter deltas need
+  a matched interval and scope.
+- **A median-relative rule detects a mixture, not health.** Every run at 2 GHz flags nothing.
+  The clock can also respond to an arm's own power draw, so excluding by it can remove a real
+  treatment effect.
