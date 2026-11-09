@@ -114,7 +114,8 @@
     6734526651,
     6734802309,
     6735163830,
-    6735725456
+    6735725456,
+    6736096739
   ],
   "last_processed_comment_id": 6735163830,
   "comment_reviews": [
@@ -1094,7 +1095,7 @@
     },
     {
       "trigger_comment_id": 6736096739,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1102,7 +1103,10 @@
       "report_path": "state/reports/clock-state-6736096739/report.md",
       "report_commit": "5129f318cdb70b969a7950012223a355304d7146",
       "review_comment_pr": 145,
-      "disposition": "PROCEED recorded-only telemetry with full-data analysis. Fix unchecked ioctl and per-counter coverage claims before telemetry gates. CPU/cycles are diagnostic, not frequency-proof verdicts; no deletion/replacement or retry-to-pass."
+      "disposition": "PROCEED recorded-only telemetry with full-data analysis. Fix unchecked ioctl and per-counter coverage claims before telemetry gates. CPU/cycles are diagnostic, not frequency-proof verdicts; no deletion/replacement or retry-to-pass.",
+      "review_comment_id": 6738754551,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 read-back and role-aware routing pass; pinned verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
