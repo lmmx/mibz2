@@ -112,9 +112,10 @@
     6733827974,
     6734368711,
     6734526651,
-    6734802309
+    6734802309,
+    6735163830
   ],
-  "last_processed_comment_id": 6734802309,
+  "last_processed_comment_id": 6735163830,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1062,7 +1063,7 @@
     },
     {
       "trigger_comment_id": 6735163830,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1070,7 +1071,10 @@
       "report_path": "state/reports/c29-reregistration-6735163830/report.md",
       "report_commit": "e68846149286dbbed19aa564027adf4d7eb61d8a",
       "review_comment_pr": 145,
-      "disposition": "REVISE proposed hierarchy collector: partial readable hierarchy cannot prove >=4 or unlimited. Separately frozen bounded follow-up admissible in principle; preserve original terminal UNJUDGED, one-attempt policy and untimed layout validation. Four abstract witnesses; no timing or implementation."
+      "disposition": "REVISE proposed hierarchy collector: partial readable hierarchy cannot prove >=4 or unlimited. Separately frozen bounded follow-up admissible in principle; preserve original terminal UNJUDGED, one-attempt policy and untimed layout validation. Four abstract witnesses; no timing or implementation.",
+      "review_comment_id": 6735626248,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing pass. Pinned verify reports solely hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1090,10 +1094,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6734802309
+      6735163830
     ],
     "handled": [
-      6734802309
+      6735163830
     ],
     "skipped": [],
     "automation_modified": false
