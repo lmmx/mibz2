@@ -94,9 +94,10 @@
     6730270019,
     6730378782,
     6730501978,
-    6730656466
+    6730656466,
+    6730894960
   ],
-  "last_processed_comment_id": 6730656466,
+  "last_processed_comment_id": 6730894960,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -772,10 +773,15 @@
     {
       "trigger_comment_id": 6730894960,
       "related_queued_comment_id": 6730770330,
-      "status": "in_progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
-      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57"
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
+      "report_commit": "40f58759e4554fa0e8e08122f4bab993f73076b0",
+      "report_path": "state/reports/adjacent-run-constructions-6730894960/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Research complete; retain #269 STOP and D049 timing HOLD. Ranked direct-F resumed cursors, LF orientation, geometry-aware admission, hybrids and compressed walkers. 9840 untimed table/text cases; no performance claim."
     }
   ],
   "active_delegations": [],
@@ -795,10 +801,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6730378782
+      6730894960
     ],
     "handled": [
-      6730378782
+      6730894960
     ],
     "skipped": [],
     "automation_modified": false
