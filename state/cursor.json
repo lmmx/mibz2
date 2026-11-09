@@ -1185,14 +1185,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "last_finished_comment": 6732560627,
-    "decision": "D057",
-    "status": "finished",
-    "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
-    "review_comment_id": 6732679972,
+    "active_comment": 6732894651,
+    "decision": "D058",
+    "status": "in progress",
     "queue_snapshot": [
-      6732560627
+      6732894651
     ],
     "remaining_in_snapshot": [],
     "automation": "unchanged; persistent task remains enabled"
@@ -1969,6 +1966,13 @@
       "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
       "complete_cursor_commit": "d51723b1b4921bbd5cf6e05c9970542aace04f24",
       "review_comment_id": 6732679972
+    },
+    {
+      "comment_id": 6732894651,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D058",
+      "progress": "Evidence read; correcting prior receipt commit, which inadvertently preserved the previous cursor without adding this ID. No work decision or REVIEW published."
     }
   ],
   "migrated_from": {
