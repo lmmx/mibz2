@@ -1,0 +1,86 @@
+[
+  {
+    "path": "src/pair_runs.rs",
+    "old": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+    "new": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+    "equal": true
+  },
+  {
+    "path": "src/pair_runs/tests.rs",
+    "old": "5ab1bc04eb3a85ec4c3f6c56e5908919b11e507d",
+    "new": "5ab1bc04eb3a85ec4c3f6c56e5908919b11e507d",
+    "equal": true
+  },
+  {
+    "path": "examples/pair_runs.rs",
+    "old": "f133c85dc25deefccb49eb231a9f35fc2ed5a20b",
+    "new": "f133c85dc25deefccb49eb231a9f35fc2ed5a20b",
+    "equal": true
+  },
+  {
+    "path": "bench/pair_runs_validity.py",
+    "old": "39c06f6bce921decb10f61a3e747d6d167165ca2",
+    "new": "39c06f6bce921decb10f61a3e747d6d167165ca2",
+    "equal": true
+  },
+  {
+    "path": "bench/test_pair_runs_validity.py",
+    "old": "d66e968ebfd076ac074ab399218713fead61aa1e",
+    "new": "d66e968ebfd076ac074ab399218713fead61aa1e",
+    "equal": true
+  },
+  {
+    "path": "docs/journal/2026-11-09-pair-from-runs.md",
+    "old": "0e2d1cad63e6beeed543f541cfc14ed6a649b8ea",
+    "new": "0e2d1cad63e6beeed543f541cfc14ed6a649b8ea",
+    "equal": true
+  },
+  {
+    "path": "src/bwt.rs",
+    "old": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+    "new": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+    "equal": true
+  },
+  {
+    "path": "src/coop.rs",
+    "old": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "new": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "equal": true
+  },
+  {
+    "path": "src/mtf.rs",
+    "old": "27716447766a2514e9cd0da34fe617a7143f62a3",
+    "new": "27716447766a2514e9cd0da34fe617a7143f62a3",
+    "equal": true
+  },
+  {
+    "path": "src/crc.rs",
+    "old": "40038b941362702d540ceeca39354ebbf03d6c40",
+    "new": "40038b941362702d540ceeca39354ebbf03d6c40",
+    "equal": true
+  },
+  {
+    "path": "Cargo.toml",
+    "old": "cf32c6527bf46a460de3b5a435984fe4b2d6faab",
+    "new": "cf32c6527bf46a460de3b5a435984fe4b2d6faab",
+    "equal": true
+  },
+  {
+    "path": "Cargo.lock",
+    "old": "451a9272c82d0565d63075e6d6498c5c6c16613e",
+    "new": "451a9272c82d0565d63075e6d6498c5c6c16613e",
+    "equal": true
+  },
+  {
+    "path": ".github/workflows/sweep.yml",
+    "old": "430a7a442111add3c9d50db331a0358e3fc227f5",
+    "new": "430a7a442111add3c9d50db331a0358e3fc227f5",
+    "equal": true
+  },
+  {
+    "path": "bench/wikidata.json",
+    "old": "8360bb5a60cb1b18da5c42b6c06822dd766c8b97",
+    "new": "8360bb5a60cb1b18da5c42b6c06822dd766c8b97",
+    "equal": true
+  }
+]

@@ -1,0 +1,275 @@
+{
+  "head": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+  "checks": [
+    {
+      "id": 128959462965,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128959462965",
+      "started_at": "2026-11-09T03:14:20Z",
+      "completed_at": "2026-11-09T03:14:20Z"
+    },
+    {
+      "id": 128959312000,
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110382/job/128959312000",
+      "started_at": "2026-11-09T03:13:50Z",
+      "completed_at": "2026-11-09T03:13:49Z"
+    },
+    {
+      "id": 128959310669,
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110382/job/128959310669",
+      "started_at": "2026-11-09T03:13:51Z",
+      "completed_at": "2026-11-09T03:14:33Z"
+    },
+    {
+      "id": 128959310391,
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110382/job/128959310391",
+      "started_at": "2026-11-09T03:13:51Z",
+      "completed_at": "2026-11-09T03:14:23Z"
+    },
+    {
+      "id": 128959014367,
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014367",
+      "started_at": "2026-11-09T03:12:49Z",
+      "completed_at": "2026-11-09T03:13:29Z"
+    },
+    {
+      "id": 128959014365,
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014365",
+      "started_at": "2026-11-09T03:12:49Z",
+      "completed_at": "2026-11-09T03:13:06Z"
+    },
+    {
+      "id": 128959014299,
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014299",
+      "started_at": "2026-11-09T03:12:49Z",
+      "completed_at": "2026-11-09T03:13:21Z"
+    },
+    {
+      "id": 128959014244,
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014244",
+      "started_at": "2026-11-09T03:12:49Z",
+      "completed_at": "2026-11-09T03:13:21Z"
+    },
+    {
+      "id": 128959014167,
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014167",
+      "started_at": "2026-11-09T03:12:50Z",
+      "completed_at": "2026-11-09T03:13:22Z"
+    },
+    {
+      "id": 128959014144,
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128959014144",
+      "started_at": "2026-11-09T03:12:49Z",
+      "completed_at": "2026-11-09T03:13:19Z"
+    },
+    {
+      "id": 128958985887,
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958985887",
+      "started_at": "2026-11-09T03:12:41Z",
+      "completed_at": "2026-11-09T03:12:41Z"
+    },
+    {
+      "id": 128958984521,
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984521",
+      "started_at": "2026-11-09T03:12:44Z",
+      "completed_at": "2026-11-09T03:13:36Z"
+    },
+    {
+      "id": 128958984464,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984464",
+      "started_at": "2026-11-09T03:12:43Z",
+      "completed_at": "2026-11-09T03:13:56Z"
+    },
+    {
+      "id": 128958984462,
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984462",
+      "started_at": "2026-11-09T03:12:43Z",
+      "completed_at": "2026-11-09T03:13:10Z"
+    },
+    {
+      "id": 128958984459,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984459",
+      "started_at": "2026-11-09T03:12:43Z",
+      "completed_at": "2026-11-09T03:14:20Z"
+    },
+    {
+      "id": 128958984442,
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984442",
+      "started_at": "2026-11-09T03:12:43Z",
+      "completed_at": "2026-11-09T03:14:14Z"
+    },
+    {
+      "id": 128958984435,
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958984435",
+      "started_at": "2026-11-09T03:12:43Z",
+      "completed_at": "2026-11-09T03:12:56Z"
+    },
+    {
+      "id": 128958961858,
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110720/job/128958961858",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:12:41Z"
+    },
+    {
+      "id": 128958961338,
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128958961338",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:12:58Z"
+    },
+    {
+      "id": 128958961244,
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128958961244",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:12:57Z"
+    },
+    {
+      "id": 128958961218,
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128958961218",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:14:03Z"
+    },
+    {
+      "id": 128958961090,
+      "name": "rust",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128958961090",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": null
+    },
+    {
+      "id": 128958961046,
+      "name": "miri",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110481/job/128958961046",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": null
+    },
+    {
+      "id": 128958961010,
+      "name": "bench",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110488/job/128958961010",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": null
+    },
+    {
+      "id": 128958960983,
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110382/job/128958960983",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:12:40Z"
+    },
+    {
+      "id": 128958960842,
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110379/job/128958960842",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:12:47Z"
+    },
+    {
+      "id": 128958960663,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "69f97c80df517c3e966c0aa5988f6355fb19df0a",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42555110382/job/128958960663",
+      "started_at": "2026-11-09T03:12:38Z",
+      "completed_at": "2026-11-09T03:13:49Z"
+    }
+  ]
+}

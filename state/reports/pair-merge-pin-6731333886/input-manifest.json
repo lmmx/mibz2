@@ -1,0 +1,605 @@
+{
+  "old": {
+    "seed_bytes": 814653,
+    "extra_copies": 3,
+    "total_bytes": 3258654,
+    "files": 33
+  },
+  "new": {
+    "seed_bytes": 823717,
+    "extra_copies": 3,
+    "total_bytes": 3294910,
+    "files": 33
+  },
+  "changes": [
+    {
+      "path": "README.md",
+      "old": {
+        "path": "README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "1affee2079f0fcf58def4bf5b358c13b5d9511b4",
+        "size": 14965,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/1affee2079f0fcf58def4bf5b358c13b5d9511b4"
+      },
+      "new": {
+        "path": "README.md",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "089ae1ba9a4832c2ce3e942bded55d1d527703ed",
+        "size": 15053,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/089ae1ba9a4832c2ce3e942bded55d1d527703ed"
+      }
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "old": {
+        "path": "examples/fuzz.rs",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "6eb8b7664c40e102df5479a7a73e996811b436db",
+        "size": 5846,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/6eb8b7664c40e102df5479a7a73e996811b436db"
+      },
+      "new": {
+        "path": "examples/fuzz.rs",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "c0074f18ce0993a7ed1e0561f4dde38f7ad60e6b",
+        "size": 12300,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/c0074f18ce0993a7ed1e0561f4dde38f7ad60e6b"
+      }
+    },
+    {
+      "path": "src/parallel.rs",
+      "old": {
+        "path": "src/parallel.rs",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "fcdd7cca5bda6706bf1869c5ebfc4a246740939d",
+        "size": 54309,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/fcdd7cca5bda6706bf1869c5ebfc4a246740939d"
+      },
+      "new": {
+        "path": "src/parallel.rs",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "a425a3cd3939f74d9091fca7906122766097e84a",
+        "size": 56831,
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/a425a3cd3939f74d9091fca7906122766097e84a"
+      }
+    }
+  ],
+  "old_inputs": [
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1affee2079f0fcf58def4bf5b358c13b5d9511b4",
+      "size": 14965,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/1affee2079f0fcf58def4bf5b358c13b5d9511b4"
+    },
+    {
+      "path": "examples/ab.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4592e3aa4bec6933754128d7402807dbc2f63dc3",
+      "size": 59473,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/4592e3aa4bec6933754128d7402807dbc2f63dc3"
+    },
+    {
+      "path": "examples/bzcat.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb28fc43a08872ccc6cbbc465c20a8aef1f1da19",
+      "size": 1983,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/fb28fc43a08872ccc6cbbc465c20a8aef1f1da19"
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6eb8b7664c40e102df5479a7a73e996811b436db",
+      "size": 5846,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/6eb8b7664c40e102df5479a7a73e996811b436db"
+    },
+    {
+      "path": "examples/mtf_two_level.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12cc473b146b58249e254e209b375925c33a867f",
+      "size": 29308,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/12cc473b146b58249e254e209b375925c33a867f"
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14412a2f04662929cb60593f842688a25de94626",
+      "size": 101649,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/14412a2f04662929cb60593f842688a25de94626"
+    },
+    {
+      "path": "examples/pair_runs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f133c85dc25deefccb49eb231a9f35fc2ed5a20b",
+      "size": 25094,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/f133c85dc25deefccb49eb231a9f35fc2ed5a20b"
+    },
+    {
+      "path": "examples/phases.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "403cfbbdd160559826793d173b673dad5bcac682",
+      "size": 8665,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/403cfbbdd160559826793d173b673dad5bcac682"
+    },
+    {
+      "path": "examples/stress.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8555f0fd1438b276370a8dcccac98ffd5202035f",
+      "size": 10015,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/8555f0fd1438b276370a8dcccac98ffd5202035f"
+    },
+    {
+      "path": "examples/sweep.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c437be580209ff88028c4a1adc445d788a0bde9",
+      "size": 19270,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/5c437be580209ff88028c4a1adc445d788a0bde9"
+    },
+    {
+      "path": "examples/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c87a2485586e77498233cc3034f7946794f8a3a9",
+      "size": 6448,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/c87a2485586e77498233cc3034f7946794f8a3a9"
+    },
+    {
+      "path": "src/bits.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3c91b12adba91ba801d1b48c5f59d5a3289beb6b",
+      "size": 9137,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/3c91b12adba91ba801d1b48c5f59d5a3289beb6b"
+    },
+    {
+      "path": "src/block.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748",
+      "size": 29286,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748"
+    },
+    {
+      "path": "src/bwt.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+      "size": 81719,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/ed3c6e1a5bc068c587bdd2697446485f62d6b590"
+    },
+    {
+      "path": "src/coop.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+      "size": 76285,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/563ad21329c24bddaf90ffbfa30a582d43210e1a"
+    },
+    {
+      "path": "src/crc.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40038b941362702d540ceeca39354ebbf03d6c40",
+      "size": 5437,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/40038b941362702d540ceeca39354ebbf03d6c40"
+    },
+    {
+      "path": "src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f6d5058eb04163cb82127f8c4852835b0c832ef",
+      "size": 19310,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/1f6d5058eb04163cb82127f8c4852835b0c832ef"
+    },
+    {
+      "path": "src/mtf.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27716447766a2514e9cd0da34fe617a7143f62a3",
+      "size": 18884,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/27716447766a2514e9cd0da34fe617a7143f62a3"
+    },
+    {
+      "path": "src/pair_runs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+      "size": 54753,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/f2a842552b3125d8226fe66ac7782f558b63ee86"
+    },
+    {
+      "path": "src/parallel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fcdd7cca5bda6706bf1869c5ebfc4a246740939d",
+      "size": 54309,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/fcdd7cca5bda6706bf1869c5ebfc4a246740939d"
+    },
+    {
+      "path": "src/python.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0731984c0fe00ae8c9c76714f0adda32eb2e0c76",
+      "size": 6721,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/0731984c0fe00ae8c9c76714f0adda32eb2e0c76"
+    },
+    {
+      "path": "src/read.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50c3cb3db31ce800de219acb1ecd532a423f3bcd",
+      "size": 12413,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/50c3cb3db31ce800de219acb1ecd532a423f3bcd"
+    },
+    {
+      "path": "src/rle.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f3bc36af1cc2f514d293f5c3b38be12413e78cb",
+      "size": 2835,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/5f3bc36af1cc2f514d293f5c3b38be12413e78cb"
+    },
+    {
+      "path": "src/run_fed.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "129cddc36fc7fe329374d61bec3b492c52fedf01",
+      "size": 29706,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/129cddc36fc7fe329374d61bec3b492c52fedf01"
+    },
+    {
+      "path": "src/stream.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9868f0f4d77bb07e05a0219c33281a8416d597f",
+      "size": 7099,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/e9868f0f4d77bb07e05a0219c33281a8416d597f"
+    },
+    {
+      "path": "src/trace.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b094a440a36aca3e3fdeaaa3f9ad029b1a5c66a0",
+      "size": 35239,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/b094a440a36aca3e3fdeaaa3f9ad029b1a5c66a0"
+    },
+    {
+      "path": "tests/cooperative.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae6c12dea33ff67509725f9f601dfe676be51378",
+      "size": 8678,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/ae6c12dea33ff67509725f9f601dfe676be51378"
+    },
+    {
+      "path": "tests/corpus.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40ad4ae1aa6b8d3a987980927c4c4da0f83e0f88",
+      "size": 4553,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/40ad4ae1aa6b8d3a987980927c4c4da0f83e0f88"
+    },
+    {
+      "path": "tests/decode.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "029980107c0ed1f5772645cc51081f9a70eda929",
+      "size": 19701,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/029980107c0ed1f5772645cc51081f9a70eda929"
+    },
+    {
+      "path": "tests/in_place.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "237a730c1e094b0b2d6d073c0e42a4f88a291e8e",
+      "size": 14001,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/237a730c1e094b0b2d6d073c0e42a4f88a291e8e"
+    },
+    {
+      "path": "tests/mtf_checkpoints.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4034c8ac9c8ed9738feeadefca4faa3afeb39d4a",
+      "size": 6246,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/4034c8ac9c8ed9738feeadefca4faa3afeb39d4a"
+    },
+    {
+      "path": "tests/mtf_kernels.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2233b2b8bcf97e698c331fb9d4b9d98cc49be6b6",
+      "size": 12103,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/2233b2b8bcf97e698c331fb9d4b9d98cc49be6b6"
+    },
+    {
+      "path": "tests/pipelined.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74f0c85cb2affad20d209d9e9b7dea49c1cd7059",
+      "size": 23522,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/74f0c85cb2affad20d209d9e9b7dea49c1cd7059"
+    }
+  ],
+  "new_inputs": [
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "089ae1ba9a4832c2ce3e942bded55d1d527703ed",
+      "size": 15053,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/089ae1ba9a4832c2ce3e942bded55d1d527703ed"
+    },
+    {
+      "path": "examples/ab.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4592e3aa4bec6933754128d7402807dbc2f63dc3",
+      "size": 59473,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/4592e3aa4bec6933754128d7402807dbc2f63dc3"
+    },
+    {
+      "path": "examples/bzcat.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb28fc43a08872ccc6cbbc465c20a8aef1f1da19",
+      "size": 1983,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/fb28fc43a08872ccc6cbbc465c20a8aef1f1da19"
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c0074f18ce0993a7ed1e0561f4dde38f7ad60e6b",
+      "size": 12300,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/c0074f18ce0993a7ed1e0561f4dde38f7ad60e6b"
+    },
+    {
+      "path": "examples/mtf_two_level.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12cc473b146b58249e254e209b375925c33a867f",
+      "size": 29308,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/12cc473b146b58249e254e209b375925c33a867f"
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14412a2f04662929cb60593f842688a25de94626",
+      "size": 101649,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/14412a2f04662929cb60593f842688a25de94626"
+    },
+    {
+      "path": "examples/pair_runs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f133c85dc25deefccb49eb231a9f35fc2ed5a20b",
+      "size": 25094,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/f133c85dc25deefccb49eb231a9f35fc2ed5a20b"
+    },
+    {
+      "path": "examples/phases.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "403cfbbdd160559826793d173b673dad5bcac682",
+      "size": 8665,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/403cfbbdd160559826793d173b673dad5bcac682"
+    },
+    {
+      "path": "examples/stress.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8555f0fd1438b276370a8dcccac98ffd5202035f",
+      "size": 10015,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/8555f0fd1438b276370a8dcccac98ffd5202035f"
+    },
+    {
+      "path": "examples/sweep.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c437be580209ff88028c4a1adc445d788a0bde9",
+      "size": 19270,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/5c437be580209ff88028c4a1adc445d788a0bde9"
+    },
+    {
+      "path": "examples/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c87a2485586e77498233cc3034f7946794f8a3a9",
+      "size": 6448,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/c87a2485586e77498233cc3034f7946794f8a3a9"
+    },
+    {
+      "path": "src/bits.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3c91b12adba91ba801d1b48c5f59d5a3289beb6b",
+      "size": 9137,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/3c91b12adba91ba801d1b48c5f59d5a3289beb6b"
+    },
+    {
+      "path": "src/block.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748",
+      "size": 29286,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748"
+    },
+    {
+      "path": "src/bwt.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+      "size": 81719,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/ed3c6e1a5bc068c587bdd2697446485f62d6b590"
+    },
+    {
+      "path": "src/coop.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+      "size": 76285,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/563ad21329c24bddaf90ffbfa30a582d43210e1a"
+    },
+    {
+      "path": "src/crc.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40038b941362702d540ceeca39354ebbf03d6c40",
+      "size": 5437,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/40038b941362702d540ceeca39354ebbf03d6c40"
+    },
+    {
+      "path": "src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1f6d5058eb04163cb82127f8c4852835b0c832ef",
+      "size": 19310,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/1f6d5058eb04163cb82127f8c4852835b0c832ef"
+    },
+    {
+      "path": "src/mtf.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "27716447766a2514e9cd0da34fe617a7143f62a3",
+      "size": 18884,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/27716447766a2514e9cd0da34fe617a7143f62a3"
+    },
+    {
+      "path": "src/pair_runs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+      "size": 54753,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/f2a842552b3125d8226fe66ac7782f558b63ee86"
+    },
+    {
+      "path": "src/parallel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a425a3cd3939f74d9091fca7906122766097e84a",
+      "size": 56831,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/a425a3cd3939f74d9091fca7906122766097e84a"
+    },
+    {
+      "path": "src/python.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0731984c0fe00ae8c9c76714f0adda32eb2e0c76",
+      "size": 6721,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/0731984c0fe00ae8c9c76714f0adda32eb2e0c76"
+    },
+    {
+      "path": "src/read.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "50c3cb3db31ce800de219acb1ecd532a423f3bcd",
+      "size": 12413,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/50c3cb3db31ce800de219acb1ecd532a423f3bcd"
+    },
+    {
+      "path": "src/rle.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f3bc36af1cc2f514d293f5c3b38be12413e78cb",
+      "size": 2835,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/5f3bc36af1cc2f514d293f5c3b38be12413e78cb"
+    },
+    {
+      "path": "src/run_fed.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "129cddc36fc7fe329374d61bec3b492c52fedf01",
+      "size": 29706,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/129cddc36fc7fe329374d61bec3b492c52fedf01"
+    },
+    {
+      "path": "src/stream.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9868f0f4d77bb07e05a0219c33281a8416d597f",
+      "size": 7099,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/e9868f0f4d77bb07e05a0219c33281a8416d597f"
+    },
+    {
+      "path": "src/trace.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b094a440a36aca3e3fdeaaa3f9ad029b1a5c66a0",
+      "size": 35239,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/b094a440a36aca3e3fdeaaa3f9ad029b1a5c66a0"
+    },
+    {
+      "path": "tests/cooperative.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ae6c12dea33ff67509725f9f601dfe676be51378",
+      "size": 8678,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/ae6c12dea33ff67509725f9f601dfe676be51378"
+    },
+    {
+      "path": "tests/corpus.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "40ad4ae1aa6b8d3a987980927c4c4da0f83e0f88",
+      "size": 4553,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/40ad4ae1aa6b8d3a987980927c4c4da0f83e0f88"
+    },
+    {
+      "path": "tests/decode.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "029980107c0ed1f5772645cc51081f9a70eda929",
+      "size": 19701,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/029980107c0ed1f5772645cc51081f9a70eda929"
+    },
+    {
+      "path": "tests/in_place.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "237a730c1e094b0b2d6d073c0e42a4f88a291e8e",
+      "size": 14001,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/237a730c1e094b0b2d6d073c0e42a4f88a291e8e"
+    },
+    {
+      "path": "tests/mtf_checkpoints.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4034c8ac9c8ed9738feeadefca4faa3afeb39d4a",
+      "size": 6246,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/4034c8ac9c8ed9738feeadefca4faa3afeb39d4a"
+    },
+    {
+      "path": "tests/mtf_kernels.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2233b2b8bcf97e698c331fb9d4b9d98cc49be6b6",
+      "size": 12103,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/2233b2b8bcf97e698c331fb9d4b9d98cc49be6b6"
+    },
+    {
+      "path": "tests/pipelined.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74f0c85cb2affad20d209d9e9b7dea49c1cd7059",
+      "size": 23522,
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/74f0c85cb2affad20d209d9e9b7dea49c1cd7059"
+    }
+  ]
+}
