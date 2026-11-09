@@ -1,0 +1,126 @@
+{
+  "decision": "D051",
+  "incoming_comment": 6731045923,
+  "queued_comment": 6731018894,
+  "pr": 272,
+  "head": "4c70dfc42536c32e9b55c6f2e95da5b1d8538b39",
+  "code_commit": "709613e541a455b1754300972bff4ebf36c9e9ce",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "receipt": "a363e93a6b389e59c9513bdc17411b1bb7d2f4c6",
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  },
+  "files": [
+    {
+      "path": "src/pair_runs.rs",
+      "blob": "f2a842552b3125d8226fe66ac7782f558b63ee86"
+    },
+    {
+      "path": "src/pair_runs/tests.rs",
+      "blob": "f74f17e8ab9b8931bb282f652d9621d141e1cadb"
+    },
+    {
+      "path": "docs/journal/2026-11-09-pair-from-runs.md",
+      "blob": "6635f786031c275089291699a881c6269f9a1609"
+    },
+    {
+      "path": "examples/pair_runs.rs",
+      "blob": "f133c85dc25deefccb49eb231a9f35fc2ed5a20b"
+    }
+  ],
+  "code_to_head_changed_files": [
+    "docs/journal/2026-11-09-pair-from-runs.md"
+  ],
+  "native": {
+    "run": 42552694282,
+    "job": 128951552827,
+    "conclusion": "success",
+    "checkout": "98f0ca9ce1d166197699b5b6feab7a981f05b519",
+    "pair_tests_passed": 13,
+    "fuzz_long": "ignored",
+    "blob_comparison": [
+      {
+        "path": "src/pair_runs.rs",
+        "candidate": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+        "tested": "f2a842552b3125d8226fe66ac7782f558b63ee86"
+      },
+      {
+        "path": "src/pair_runs/tests.rs",
+        "candidate": "f74f17e8ab9b8931bb282f652d9621d141e1cadb",
+        "tested": "f74f17e8ab9b8931bb282f652d9621d141e1cadb"
+      },
+      {
+        "path": "src/bwt.rs",
+        "candidate": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+        "tested": "ed3c6e1a5bc068c587bdd2697446485f62d6b590"
+      },
+      {
+        "path": ".github/workflows/miri.yml",
+        "candidate": "5b92703384e3ae05da5509e3fa1f1567489f7087",
+        "tested": "5b92703384e3ae05da5509e3fa1f1567489f7087"
+      }
+    ]
+  },
+  "miri": {
+    "run": 42552694267,
+    "job": 128951552061,
+    "observed_status": "in_progress",
+    "default_step": "success",
+    "avx2_step": "in_progress",
+    "negative_control": "pending",
+    "nightly_pair_docs": "pending",
+    "log_fetch": "404 BlobNotFound",
+    "polls": 0
+  },
+  "local_reported": {
+    "source": "709613e541a455b1754300972bff4ebf36c9e9ce",
+    "miri_sse2_passed": 6,
+    "miri_avx2_passed": 6,
+    "negative_control": "reported expected failure",
+    "fuzz_seed": "0xb5d046",
+    "seconds": 300,
+    "cases": 583803,
+    "mutants_reported_killed": 14,
+    "original_outputs_retrieved": false
+  },
+  "coverage_correction": {
+    "path": "src/pair_runs/tests.rs",
+    "line": 815,
+    "reported_in_place": 875508,
+    "meaning": "io initialized from a clone; setup reads distinct ll",
+    "actual_in_place_elsewhere": [
+      "miri_pair_runs",
+      "pair_walk_equals_plain",
+      "fuzz_pairs"
+    ]
+  },
+  "independent_probe": {
+    "scope": "Independent finite permutation/flag model; not Rust/SIMD/Miri",
+    "max_n": 6,
+    "prepared_cases": 148689,
+    "lane_segments": 307121,
+    "failures": 0,
+    "guard_witness": {
+      "n": 13,
+      "length": 13,
+      "baseline": "scalar",
+      "weakened_second_read": [
+        8,
+        16
+      ],
+      "input_end": 13
+    }
+  },
+  "execution_limits": "No local cargo/rustc; no fresh Rust, Miri, fuzz or mutation execution; no timing, dispatch, merge, implementation or automation changes.",
+  "audit": {
+    "unresolved_misroutes": 0,
+    "resolved_historical": 5,
+    "route": 145,
+    "verify_limitation": "pinned verify requires FROM coordinator; use its misrouted predicate plus exact Guardian headers/destination/incoming/queued/head"
+  },
+  "disposition": "Four D046 B6 defects fixed; narrower B5 timing evidence HOLD retained."
+}

@@ -1,0 +1,19 @@
+2026-11-09T02:45:50.0824511Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +98f0ca9ce1d166197699b5b6feab7a981f05b519:refs/remotes/pull/272/merge
+2026-11-09T02:45:51.0213133Z  * [new ref]         98f0ca9ce1d166197699b5b6feab7a981f05b519 -> pull/272/merge
+2026-11-09T02:45:51.1330687Z HEAD is now at 98f0ca9 Merge 4c70dfc42536c32e9b55c6f2e95da5b1d8538b39 into 66edecbe2b1924594e485e1f956dbee8ed9beda2
+2026-11-09T02:45:51.1407982Z 98f0ca9ce1d166197699b5b6feab7a981f05b519
+2026-11-09T02:46:31.5830460Z test pair_runs::tests::admission_heuristic_aliases ... ok
+2026-11-09T02:46:31.7570426Z test pair_runs::tests::fuzz_long ... ignored
+2026-11-09T02:46:31.9580673Z test pair_runs::tests::fuzz_smoke ... ok
+2026-11-09T02:46:31.9591369Z test pair_runs::tests::miri_fill_reached ... ok
+2026-11-09T02:46:31.9611443Z test pair_runs::tests::miri_pair_runs ... ok
+2026-11-09T02:46:31.9630388Z test pair_runs::tests::miri_rows_refused ... ok
+2026-11-09T02:46:31.9663157Z test pair_runs::tests::miri_witness_default_table_and_bad_row ... ok
+2026-11-09T02:46:31.9690099Z test pair_runs::tests::miri_witness_stale_state ... ok
+2026-11-09T02:46:31.9720248Z test pair_runs::tests::miri_witness_wrong_histogram_and_no_fallback ... ok
+2026-11-09T02:46:32.1800554Z test pair_runs::tests::pair_walk_equals_plain ... ok
+2026-11-09T02:46:32.3530313Z test pair_runs::tests::random_columns ... ok
+2026-11-09T02:46:32.4300735Z test pair_runs::tests::spare_bits_bounds ... ok
+2026-11-09T02:46:32.4301811Z test pair_runs::tests::too_long_refused ... ok
+2026-11-09T02:46:32.9080639Z test pair_runs::tests::exhaustive_small ... ok
+2026-11-09T02:48:53.3770854Z test result: ok. 62 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 144.58s

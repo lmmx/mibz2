@@ -1,0 +1,17 @@
+{
+  "scope": "Independent finite permutation/flag model; not Rust/SIMD/Miri",
+  "max_n": 6,
+  "prepared_cases": 148689,
+  "lane_segments": 307121,
+  "failures": 0,
+  "guard_witness": {
+    "n": 13,
+    "length": 13,
+    "baseline": "scalar",
+    "weakened_second_read": [
+      8,
+      16
+    ],
+    "input_end": 13
+  }
+}
