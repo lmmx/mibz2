@@ -6,13 +6,18 @@ name: Miri
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. And the pipelined worker's recovery from a run that panics outside its stages
 # (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
-# blocks' retirement, the team's reset and the reader, on tiny blocks. Only on changes to
-# the walks, the pool, the parallel decoder or its reader.
+# blocks' retirement, the team's reset and the reader, on tiny blocks. And C29's AVX2
+# stores (mtf::tests::miri_register_checkpoints: the register-list checkpoint kernel's
+# 64-byte run stores and its column's bound), in a second step built with AVX2 enabled so
+# that detection reports it. Only on changes to the walks, the pool, the MTF kernels, the
+# parallel decoder or its reader.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/mtf.rs"
+      - "src/mtf/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
@@ -22,6 +27,8 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/mtf.rs"
+      - "src/mtf/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
@@ -50,5 +57,14 @@ jobs:
         run: |
           cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+          grep -q '^mtf::tests::miri_register_checkpoints' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
+      # C29's AVX2 stores under Miri: the build with AVX2 enabled, so detection reports it,
+      # and the test asserts it (MIBZ2_EXPECT_AVX2); without it the test returns at once
+      - name: Miri, C29's AVX2 stores
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: cargo miri test --lib -- mtf::tests::miri_

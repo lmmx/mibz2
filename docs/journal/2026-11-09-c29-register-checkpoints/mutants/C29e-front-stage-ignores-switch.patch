@@ -1,0 +1,18 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index 42ec77c6..c1a56dfa 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -742,11 +742,8 @@ fn front_stage(
+     reg: bool,
+ ) -> Result<usize, ErrorKind> {
+     use super::mtf::{mtf_checkpoints, mtf_checkpoints_reg};
+-    let mtf = if reg {
+-        mtf_checkpoints_reg
+-    } else {
+-        mtf_checkpoints
+-    };
++    let _ = (reg, mtf_checkpoints_reg);
++    let mtf = mtf_checkpoints;
+     let n = mtf(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
+     if b.orig_ptr as usize >= n {
+         return Err(ErrorKind::BadOrigPtr);

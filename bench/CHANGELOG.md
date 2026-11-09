@@ -35,6 +35,58 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.4.0] - 2026-11-09
+
+### Added
+
+- **`ab env`'s CPU-bandwidth census** (`examples/cgroup/mod.rs`, `cgroup`; C29's follow-up
+  registration, docs/journal/2026-11-09-c29-follow-up-registration.md, a DRAFT). The cgroup
+  hierarchy is resolved from `/proc/self/cgroup` and `/proc/self/mountinfo`, and every level
+  from the leaf to the visible boundary is read, its raw files kept. The quota is known only
+  with complete coverage up to the hierarchy's real root. Beside it: the affinity's CPU IDs
+  (`cpus_allowed_ids`), the scheduling policy, the kernel and the runner image. This is a
+  change to what is stored.
+
+### Changed
+
+- **`ab env`'s `cpu_quota` and `cpu_quota_state` come from the census.** Before, they came from
+  the root `cpu.max` (or v1's root `cpu.cfs_quota_us`) alone. `unlimited` and `finite` now need
+  complete coverage, and a finite quota is the tightest level's. On a runner whose v2 root has
+  no `cpu.max` (by definition it has none), the old reading was `unknown`, null; it is now
+  `unlimited` where every level is read, null as before. bench.yml's report prints "no CPU
+  quota" for both. No measured figure changes meaning.
+
+## [3.3.0] - 2026-11-09
+
+### Added
+
+- **C29's arms and its exposed-path diagnostic** (docs/journal/2026-11-09-c29-register-checkpoints.md,
+  a DRAFT registration).
+  - `examples/ab.rs`'s `mibz2-pipe2-both-c29`, `-pipe3-both-c29` and `-pipe4-both-c29`: a
+    pipeK-both arm with `Levers::register_list` set, the pipelined leader's move-to-front by
+    the register-list checkpoint kernel. In one build each differs from its pipeK-both arm in
+    that kernel alone.
+  - `sweep.yml`'s `tool: c29` runs `mibz2-pipe3-both` against `mibz2-pipe3-both-c29` at 9 and
+    3 threads, and `bench/c29_checkpoints.py` admits and reads it (`bench/test_c29_checkpoints.py`
+    checks it).
+  - They're not in bench.yml's arms, and its default cells (1, 2 and 4 threads, which never
+    run the pipelined teams) don't reach the kernel.
+
+- **Each run's child's exit status** (`examples/ab.rs`, `exit`: 0, its code, or -1 for a
+  signal), as #270's research harness records it, so a reporter can refuse a run whose child
+  failed. This is a change to what is stored.
+
+- **Each run's executed environment** (`examples/ab.rs`, read by the child after its wall and
+  CPU, so untimed): `avx2`, as `Kernels::detect` reports it (what the move-to-front kernels
+  dispatch on), `cpus_allowed`, the affinity mask's CPUs, and `available_parallelism`. `ab env`
+  prints the same three. C29's reporter refuses a judged reading without them, or with other
+  than the registered AVX2 and 4 CPUs. This is a change to what is stored.
+
+- **`ab env`'s `cpu_quota_state`**: `unlimited`, `finite` or `unknown`, which `cpu_quota`'s null
+  alone can't tell apart (read and unlimited, or not read). `cpu_quota` is unchanged.
+
+Every existing figure is as it was: the new arms, the field and the diagnostic sit beside them.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added

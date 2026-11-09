@@ -130,6 +130,7 @@ fn child(a: &[String]) {
         park: lever == "park" || lever == "both",
         small: lever == "small" || lever == "both",
         spin2k: lever == "spin2k",
+        register_list: false,
     };
     let teams_of: Option<usize> = Some(team_arg)
         .filter(|k| *k != "auto")
