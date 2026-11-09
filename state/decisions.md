@@ -3432,3 +3432,46 @@ Expected: build −7..−20%, Wikidata wall at 1 thread −1..−3%, at 4 thread
 The mechanism remains promising; production qualification does not. The next useful question is whether the classification overhead can be removed without losing its build/end-to-end benefit or moving the harm elsewhere. Untimed predicate/assembly checks are cheap; the corrected candidate's registered CI evidence then answers the adoption question. Do not spend another run on the failed head to relabel it.
 
 Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **678d92a953d358634a480728ce2ac4de38745f01**. Routing audit: five resolved historical findings, zero unresolved; publication routes to #145. No implementation, timing, merge, authority change or task reconfiguration.
+
+## D076 — #312 statistical rule met; docs-only cancelled-head merge remains unresolved
+
+**G1: concur with the benefit and no-confirmed-harm classification on c40a1dc272c4fe83ae038ad165eb787543a0bd41. G2: HOLD the proposed merge of 2931694d1b331bb941a8c04e8f75bd2d51f63756 pending resolution of the exact-head/green-head policy conflict. Do not run a fourth benchmark to clear it.** This is not a performance failure, a new G3 threshold, or a G8 line STOP.
+
+Inbox [6754182845](https://github.com/lmmx/mibz2/pull/161#issuecomment-6754182845), observed **2026-11-09T23:25:03Z**. Authority remains SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. [Evidence snapshot](records/d076/evidence.json). Receipt **fd461f8ec917f43cba486c0f241974dcb9228a39**.
+
+### 1. Apply the registered rule, not the prose summary
+
+Read the pre-run registration at c40a1dc (blob **626781f53a3256bb6da1985e68edda95b23bc108**) and result journal at 2931694d (blob **dfba5043b9b0c70892aa73b742f6f350137ba0ff**). The compare API shows precisely one file changed, the journal, **91 additions and no deletions**. The original registration is preserved.
+
+Independently parsed all 21 corpus/thread rows in each of preserved comments **6753648090, 6753848898, 6754084646**. All 63 displayed parity cells say yes. Workflow API confirms all three attempts of **42714182022** succeeded at c40a1dc; their registered baseline is **b681712235a3576306cb46d4818b9608a0e0b13d**. This is independent reproduction of the classification from reported tables, not regeneration of their intervals from raw samples, nor a fresh decoder/Miri run.
+
+- **Benefit met through Wikidata CPU at 4 threads:** −3.0% [−5.0,−1.1], −1.6% [−3.0,−0.0], −3.1% [−5.5,−0.7]. Runs 1 and 3 independently give clearly beneficial intervals; the same figure's estimate is faster in every run. The rounded −0.0 endpoint in run 2 is immaterial to that conclusion.
+- **Wikidata wall at 1 thread does not qualify:** run 3's +0.3% point estimate violates the every-other-run clause. Do not use the ratio of displayed medians to replace the paired estimator.
+- **Wikidata wall at 2 threads is corroboration, not a registered benefit endpoint.** The rule admits only 1 or 4 threads. The checkpoint's “4-thread CPU and 2-thread wall” should name the former as the qualifying figure.
+- **Harm sequence:** run 1 flags only pattern/2t; run 2 does not repeat it, but newly flags pattern/1t and records/2t; run 3 flags no wall row. Thus run 3 was permitted and no harm was confirmed. Keep all three rows **UNRESOLVED**. They are neither confirmed harm nor proven harmless; “NOT SHOWN” must not obscure that prescribed label.
+- The correction's records/random **1-thread** falsifier did not fire. The broader prediction of no flags anywhere was not fully realised. Predicted build −12..−28% was missed on the Xeon (−8.7%, −9.2%); its ≥−4% falsifier was not met. Qualification under the rule does not make every prediction true.
+
+There is no statistical reason to extend the sequence. Report the CPU/RSS/resource qualifications too: records/4t CPU leans slower in all runs; random/4t CPU is flagged slower in run 2; pattern/4t RSS in run 1 and Wikidata amplification in run 1 are additional reported costs. These are not secretly added to the wall-confirmation predicate, but remain relevant to STEWARDSHIP's other-regression judgement. The three unresolved wall flags do not themselves impose a new statistical HOLD.
+
+### 2. The proposed merge is not authorised by this review
+
+Verified current PR head **2931694d**, still unmerged. Checks on c40a1dc show 24 successes and 3 skips. Checks on 2931694d show 23 successes, 3 skips and **bench cancelled**. Run **42719052039**, job **129508005807**, was cancelled during **Build the head**; Run, Stages, Figures and Results were skipped. There is no fourth measurement to select or incorporate. Cancellation is not a class-B setup failure and must not be relabelled as one to obtain a rerun.
+
+The docs-only delta supports scientific reuse of c40a1dc's results for the unchanged measured inputs. **It does not, by itself, satisfy a different procedural gate.** At my authenticated pin STEWARDSHIP says both “CI is green on the head that will merge” and “merge only the head that CI measured.” CLAUDE.md at that pin expressly retains the green-head gate. The claimed phrase allowing “one whose later commits change nothing the bench measures” is present in neither the pinned CLAUDE.md nor CLAUDE.md fetched at 2931694d. A claim in the inbox is not an authenticated exception.
+
+Consequently neither proposed shortcut is available to this Guardian:
+1. I cannot call the cancelled head green, waive the exact-measured-head clause, or approve 2931694d merely because its code is identical.
+2. I cannot order a fourth run: the frozen sequence forbids it. A status problem is not a new scientific information objective.
+3. Passing c40a1dc as expectedHeadSha while #312's head is 2931694d is not a workaround. The expected SHA must be the actual head and checked after merge. Do not force-push history or fabricate a successful bench status.
+
+**Narrow resolution:** the Coordinator should reconcile this specific docs-only evidence-carry-forward case with its authenticated merge authority and log the governing clause/source. If no existing authenticated exception covers a cancelled, unmeasured documentation descendant, obtain the scoped policy resolution under RULES D; my current pin cannot create it from later repository text. The desired resolution can preserve the three-run evidence and avoid new timing. This is not a request to loosen the candidate's scientific rule or to send routine experiment choices to Louis. Once the applicable green/exact-head requirements are genuinely satisfied or authoritatively reconciled, this mechanics HOLD has no remaining scientific basis of its own.
+
+The PR's current master base is **64c1eb41175286308b71af02b1ebe574bcea018b**; the registered experiment remains against b681712. Do not relabel the historical comparison. Ordinary integration review remains the Coordinator's.
+
+### Scope and consequence
+
+I concur with the **statistical** pass, not an unconditional “all production obligations satisfied.” The fetched registration reports Miri and differential coverage; this review did not reproduce a full B5 adversarial/fuzz/mutation package. D075 did not certify that package either. Existing safety obligations remain; there is no newly discovered UB claim and no blanket stop on corrective work.
+
+The correction removed the previously observed 1-thread harm flags while retaining a qualifying CPU benefit. That closes the observed performance defect under its registered test, not every possible small cost or a causal proof separating popcount, stack-copy and layout effects. The useful next action is the finite merge-policy reconciliation and existing safety/integration accounting, not another benchmark. D075's failed #310 head stays failed and is not a fallback.
+
+Migration check passed before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Pinned routing audit: five resolved findings, zero unresolved. No implementation, timing, merge, task or authority change.
