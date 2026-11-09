@@ -31,8 +31,8 @@
 //! fix) touches only it.
 
 use super::{
-    finish_and_publish, finish_block, panic_message, publish, take_out, try_job, Inverted, Job,
-    Lead, Shared, Solo, Staged, Staging, StreamDecoder,
+    finish_block, panic_message, take_out, try_job, Inverted, Job, Lead, Shared, Solo, Staged,
+    Staging, StreamDecoder,
 };
 use crate::block::Symbols;
 use crate::bwt::{self, SegScratch, TVector, FLAGGED_LANES, FLAGGED_SEGMENTS, MIN_COOP};
@@ -187,6 +187,102 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// `parallel::publish`: every block this module publishes, through here (under test, each
+/// recorded: `Faults::published`)
+fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind>, syms: Vec<u16>) {
+    #[cfg(test)]
+    faults(shared, |f| {
+        f.published.push((place, bit, res.as_ref().err().cloned()));
+    });
+    super::publish(shared, place, bit, res, syms)
+}
+
+/// `parallel::finish_and_publish`, through here (under test, the block recorded as finished,
+/// with no error of the run's: its RLE1 and CRC's result is the reader's to check)
+fn finish_and_publish(shared: &Shared, b: Inverted, inverted: &[u8], k: Kernels) -> bool {
+    #[cfg(test)]
+    faults(shared, |f| f.published.push((b.place, b.bit, None)));
+    super::finish_and_publish(shared, b, inverted, k)
+}
+
+// ---- Testing only: a fault in a run, outside its stages' own catches (D047/D049, M12) ----
+//
+// The twin of the shipped worker's hook (`parallel::Fault`, branch safety/pipeline-m12):
+// the same faults, points and records, kept here in a registry keyed by the decode's
+// `Shared` instead of a field of it, so that this module's copy and the shipped worker's
+// change different files.
+
+/// Testing only: where a run-fed team's run panics, outside every stage's own catch, so
+/// that the panic unwinds through the pool's run into `worker`'s outer `Err`
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Fault {
+    /// the leader's part, on entry: the prior block it holds not yet finished
+    LeadStart,
+    /// the leader's part, on its way out: the prior published, the next job staged if one
+    /// was queued
+    LeadEnd,
+}
+
+/// Testing only: a decode's injected fault, and what it left
+#[cfg(test)]
+#[derive(Default)]
+struct Faults {
+    /// the run (its block's place) and the point to panic at, once
+    at: Option<(u64, Fault)>,
+    /// the blocks the team held when it panicked: the prior inverted, the next staged
+    held: Option<(Option<u64>, Option<u64>)>,
+    /// every block published, in order: its place, its bit, and its error if any (None for
+    /// a decoded block, or one `finish_and_publish` finished)
+    published: Vec<(u64, u64, Option<ErrorKind>)>,
+    /// the outer unwinds `worker` caught
+    recovered: u32,
+    /// a team's threshold in place of `MIN_COOP`, so that small blocks run the team
+    min_coop: Option<usize>,
+}
+
+/// Testing only: the faults of each decode under test, by its `Shared`'s address
+#[cfg(test)]
+static FAULTS: Mutex<Vec<(usize, Faults)>> = Mutex::new(Vec::new());
+
+/// Testing only: `f` on `shared`'s faults, if its decode registered any
+#[cfg(test)]
+fn faults<R>(shared: &Shared, f: impl FnOnce(&mut Faults) -> R) -> Option<R> {
+    let key = shared as *const Shared as usize;
+    lock(&FAULTS)
+        .iter_mut()
+        .find(|e| e.0 == key)
+        .map(|e| f(&mut e.1))
+}
+
+/// Testing only: the injected panic, if `place`'s run is to panic at `at`
+#[cfg(test)]
+fn inject(shared: &Shared, place: u64, at: Fault, l: &Lead) {
+    let fire = faults(shared, |f| {
+        let fire = f.at == Some((place, at));
+        if fire {
+            f.at = None;
+            f.held = Some((
+                l.inverted.as_ref().map(|b| b.place),
+                l.next.as_ref().map(|b| b.place),
+            ));
+        }
+        fire
+    });
+    if fire == Some(true) {
+        panic!("injected at block {place}, {at:?}");
+    }
+}
+
+/// The fewest rows a block runs on the team with (below, the leader decodes it alone)
+fn min_coop(_shared: &Shared) -> usize {
+    #[cfg(test)]
+    if let Some(Some(n)) = faults(_shared, |f| f.min_coop) {
+        return n;
+    }
+    MIN_COOP
+}
+
 // ---- The front set ----
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -313,7 +409,7 @@ fn stage<const MODE: u8>(
         front,
     };
     match r {
-        Ok(Ok(n)) if n >= MIN_COOP => Staging::Team(s),
+        Ok(Ok(n)) if n >= min_coop(shared) => Staging::Team(s),
         Ok(Ok(_)) => Staging::Small(s),
         Ok(Err(kind)) => {
             publish(shared, place, bit, Err(kind), s.symbols.syms);
@@ -1012,6 +1108,8 @@ impl<'a> RunFill<'a> {
         t0: Instant,
         inject: u8,
     ) -> RunFill<'a> {
+        // (`invert`'s: 1 to MAX_SHARES shares, a bit each in `scattered`, `claimed`, `filled`)
+        debug_assert!((1..=MAX_SHARES).contains(&shares));
         let r = recs.len().saturating_sub(1);
         // the leader's sorted F order (read only), or the helpers' to scatter into
         let sorted = presorted && fo_hs.len() == r + 1;
@@ -1056,8 +1154,20 @@ impl<'a> RunFill<'a> {
         }
     }
 
-    /// Share j's records: C35's row cuts for C31, else equal records
+    /// Whether helper j has a share: a team of more than `MAX_SHARES` helpers has helpers
+    /// past the shares (`invert`'s `shares` is `helpers.min(MAX_SHARES)`), and theirs is no
+    /// share's work. Each share phase (`count`, `scatter`, `fill`) asks it first, before any
+    /// index into the shares' entries (`hist`, `cuts`, `census`) or bits (`1 << j`), as
+    /// `FusedBuild::share` returns for `j >= shares`; a surplus helper still passes every
+    /// gate (`Relay::build_share` calls the phases and the gates for every helper), so the
+    /// gates' counts, of all the helpers, stay whole (Guardian D049, B6).
+    fn owns(&self, j: usize) -> bool {
+        j < self.shares
+    }
+
+    /// Share j's records: C35's row cuts for C31, else equal records (j a share: `owns`)
     fn records_of(&self, j: usize) -> (usize, usize) {
+        debug_assert!(self.owns(j));
         if self.direct {
             (self.cuts[j], self.cuts[j + 1])
         } else {
@@ -1106,11 +1216,15 @@ impl<'a> RunFill<'a> {
         }
     }
 
-    /// Share j's count (the helpers' sort)
+    /// Share j's count (the helpers' sort); nothing for a helper past the shares
     fn count(&self, j: usize) {
+        if !self.owns(j) {
+            return;
+        }
         self.injected(INJECT_COUNT, j);
         let (lo, hi) = self.records_of(j);
-        // SAFETY: entry j is this share's alone until the counted gate
+        // SAFETY: j < shares (`owns`, above), so entry j is one of the `shares` allocated by
+        // `new`, and this share's alone until the counted gate
         let h = unsafe { &mut *self.hist.add(j) };
         let ok = if self.direct {
             count_rows(self.recs, lo, hi, h)
@@ -1142,14 +1256,14 @@ impl<'a> RunFill<'a> {
         }
     }
 
-    /// Share j's scatter, if the merge passed
+    /// Share j's scatter, if the merge passed; nothing for a helper past the shares
     fn scatter(&self, j: usize) {
-        if !self.sorted.load(Ordering::Relaxed) {
+        if !self.owns(j) || !self.sorted.load(Ordering::Relaxed) {
             return;
         }
         self.injected(INJECT_SCATTER, j);
         let (lo, hi) = self.records_of(j);
-        // SAFETY: entry j is this share's; its ranges are merge_shares', disjoint from
+        // SAFETY: entry j (j < shares: `owns`) is this share's; its ranges are merge_shares', disjoint from
         // every other share's and inside the r + 1 slots reserved
         let ok = unsafe { scatter_share(self.recs, lo, hi, &mut *self.hist.add(j), self.fo) };
         if ok {
@@ -1165,9 +1279,10 @@ impl<'a> RunFill<'a> {
         }
     }
 
-    /// Share j's rows of the table from the F order, if it is whole and checked
+    /// Share j's rows of the table from the F order, if it is whole and checked; nothing
+    /// for a helper past the shares
     fn fill(&self, j: usize, k: Kernels) {
-        if !self.sorted.load(Ordering::Relaxed) {
+        if !self.owns(j) || !self.sorted.load(Ordering::Relaxed) {
             return;
         }
         self.injected(INJECT_FILL, j);
@@ -1178,7 +1293,7 @@ impl<'a> RunFill<'a> {
         let mut tally = Tally::default();
         if self.direct {
             let (lo, hi) = self.records_of(j);
-            // SAFETY: entry j is this share's, merge_rows': its ranges are disjoint from
+            // SAFETY: entry j (j < shares: `owns`) is this share's, merge_rows': its ranges are disjoint from
             // every other share's and inside [0, n), the n rows reserved, the buffer held
             let ok = unsafe {
                 fill_direct(
@@ -1289,7 +1404,9 @@ impl Relay<'_> {
         self.failed.load(Ordering::Relaxed)
     }
 
-    /// One helper's build: its share of the fused build, or of the run-fed sort and fill
+    /// One helper's build: its share of the fused build, or of the run-fed sort and fill.
+    /// Every helper, j past the shares too, passes both sort gates (counted of `helpers`);
+    /// the share phases themselves do nothing for such a j (`RunFill::owns`).
     fn build_share(&self, j: usize, helpers: usize) {
         // SAFETY: the stage is shared read only until the built gate's last helper
         match unsafe { &*self.stage.get() } {
@@ -1635,8 +1752,12 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
         let (hb, lb) = if a == 0 { (b0, &*b1) } else { (b1, &*b0) };
         let lf = Mutex::new(lf);
         let small = Mutex::new(small);
+        #[cfg(test)]
+        let place = s.place;
         let leader = || {
             let mut l = lock(&lead);
+            #[cfg(test)]
+            inject(shared, place, Fault::LeadStart, &l);
             if let Some(b) = l.inverted.take() {
                 let t = Instant::now();
                 l.rle_panicked = finish_and_publish(shared, b, lb, k);
@@ -1667,6 +1788,8 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
                     }
                 }
             }
+            #[cfg(test)]
+            inject(shared, place, Fault::LeadEnd, &l);
         };
         let r = catch_unwind(AssertUnwindSafe(|| {
             invert(
@@ -1704,6 +1827,10 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
                 t.fronts[s.front] = Front::default();
             }
             Err(p) => {
+                #[cfg(test)]
+                faults(shared, |f| f.recovered += 1);
+                // the run itself panicked, outside its stages' catches: every block it held
+                // fails at its own place and bit, and the team is reset
                 let msg = panic_message(p);
                 let held = [Some(s), l.next.take()];
                 for b in held.into_iter().flatten() {
@@ -1759,6 +1886,9 @@ impl StreamDecoder {
         dec
     }
 }
+
+#[cfg(test)]
+mod unwind_tests;
 
 #[cfg(test)]
 mod tests {
@@ -2073,9 +2203,21 @@ mod tests {
         inject: u8,
         late: bool,
     ) -> Ran {
+        run_column_on::<MODE>(pool, ll, orig_ptr, tamper, inject, late, Kernels::detect())
+    }
+
+    /// `run_column` on kernels `k`
+    fn run_column_on<const MODE: u8>(
+        pool: &Pool,
+        ll: &[u8],
+        orig_ptr: u32,
+        tamper: bool,
+        inject: u8,
+        late: bool,
+        k: Kernels,
+    ) -> Ran {
         let b = symbols_of(ll, orig_ptr);
         let mut f = Front::default();
-        let k = Kernels::detect();
         let n = front_stage::<MODE>(&b, &mut f, k, &mut 0, &mut 0, &mut false).unwrap();
         assert_eq!(n, ll.len());
         assert_eq!(
@@ -2220,6 +2362,159 @@ mod tests {
             }));
             assert_eq!(*r.unwrap_err().downcast_ref::<&str>().unwrap(), "lead");
             assert!(run_column::<HS>(&p, &ll, 5, false, 0, false).unwrap() == w);
+        }
+    }
+
+    // ---- Helpers past the shares (Guardian D049, B6) ----
+
+    /// A share entry no share may touch: the sentinel in the shares' buffer past `shares`
+    const MARK: [[u32; 256]; 3] = [[0xa5a5_a5a5; 256]; 3];
+    /// The sentinel entries past the shares
+    const SPARE: usize = 4;
+
+    /// A run-fed build's phases by hand, on this thread, in the gates' order (every
+    /// helper's count, the merge, every helper's scatter, the check, every helper's fill),
+    /// for `helpers` helpers of `shares` shares (`invert`'s `helpers.min(MAX_SHARES)`), by
+    /// `mode` (LS: the leader's sort; HS: the helpers'; DIR: the direct fill): the table.
+    /// Asserts that the sort and fill took every share and no more (the bits), that no
+    /// helper past the shares counted itself in the census, and, with `exact` false, that
+    /// the shares' buffer past its `shares` entries still holds the sentinel. With `exact`,
+    /// the buffer is fresh (`shares` entries, nothing past them: Guardian D049's witness, a
+    /// fresh 64-entry histogram), where Miri reports any reference past it.
+    fn by_hand(
+        ll: &[u8],
+        mode: u8,
+        shares: usize,
+        helpers: usize,
+        k: Kernels,
+        exact: bool,
+    ) -> Vec<u32> {
+        let n = ll.len();
+        let counts = run_fed::counts_of(ll);
+        let recs = recs_of(ll);
+        let b = symbols_of(ll, 0);
+        let presorted = mode == LS;
+        let mut fo_hs = Vec::new();
+        if presorted {
+            assert!(sort_one_share(
+                &recs,
+                &counts,
+                n,
+                &mut Vec::new(),
+                &mut fo_hs
+            ));
+        }
+        let mut hist: Vec<[[u32; 256]; 3]> = if exact {
+            Vec::new()
+        } else {
+            vec![MARK; shares + SPARE]
+        };
+        let mut tt = TVector::new();
+        let what = format!("mode {mode}, {shares} shares, {helpers} helpers, {k:?}");
+        let table = {
+            let rf = RunFill::new(
+                &recs,
+                &counts,
+                n,
+                presorted,
+                &mut fo_hs,
+                &mut hist,
+                shares,
+                &mut tt,
+                mode == DIR,
+                Instant::now(),
+                0,
+            );
+            assert_eq!(rf.sorted.load(Ordering::Relaxed), presorted);
+            if !presorted {
+                (0..helpers).for_each(|j| rf.count(j));
+                rf.merge();
+                if !rf.direct {
+                    (0..helpers).for_each(|j| rf.scatter(j));
+                    assert_eq!(rf.scattered.load(Ordering::Relaxed), rf.all(), "{what}");
+                    rf.check_scattered();
+                }
+            }
+            assert!(rf.sorted.load(Ordering::Relaxed), "{what}: the sort");
+            (0..helpers).for_each(|j| rf.fill(j, k));
+            assert_eq!(rf.claimed.load(Ordering::Relaxed), rf.all(), "{what}");
+            assert_eq!(rf.filled.load(Ordering::Relaxed), rf.all(), "{what}");
+            for (j, c) in rf.census.iter().enumerate() {
+                let tallied = c.iter().any(|v| v.load(Ordering::Relaxed) != 0);
+                assert!(j < shares || !tallied, "{what}: helper {j}'s census");
+            }
+            rf.finish(&b, k).expect("the table").0.clone()
+        };
+        assert_eq!(hist.len(), shares, "{what}: the shares' entries");
+        if !exact {
+            // SAFETY: the SPARE entries past `shares` were written (the sentinel) before
+            // `RunFill::new` cut the vector to `shares`, which kept its capacity
+            let past = unsafe { std::slice::from_raw_parts(hist.as_ptr().add(shares), SPARE) };
+            assert!(
+                past.iter().all(|h| *h == MARK),
+                "{what}: an entry past the shares"
+            );
+        }
+        table
+    }
+
+    /// Every helper count about the shares': fewer (none past), as many, one and two past
+    fn surplus(ll: &[u8], shares: &[usize], kernels: &[Kernels], exact: bool) {
+        let want = run_fed::production(ll, &run_fed::counts_of(ll));
+        for &s in shares {
+            for helpers in [s, s + 1, s + 2] {
+                for mode in [LS, HS, DIR] {
+                    for &k in kernels {
+                        let got = by_hand(ll, mode, s, helpers, k, exact);
+                        assert!(got == want, "mode {mode}, {s} shares, {helpers} helpers");
+                    }
+                }
+            }
+        }
+    }
+
+    /// Helpers past the shares (a team of more than `MAX_SHARES` + 1 threads) do no share
+    /// work: every phase, at 1, 2, 63 and `MAX_SHARES` shares (k 2, 3, 64, 65; and their
+    /// first and second surplus helpers, k = 66 and 67 at the most shares), each kernel
+    #[test]
+    fn helpers_past_the_shares_share_nothing() {
+        let ll = runs_column(20_000, 9, &[1, 2, 8, 9, 40], 31);
+        surplus(&ll, &[1, 2, 63, MAX_SHARES], &kernels(), false);
+        surplus(&ll, &[MAX_SHARES], &kernels(), true);
+    }
+
+    /// The same under Miri, on a small column: two shares and their two surplus helpers, in
+    /// a fresh buffer of exactly the shares' entries (Miri reports a reference past it) and
+    /// in one with sentinels past it
+    #[test]
+    fn miri_helpers_past_the_shares() {
+        let ll = runs_column(300, 3, &[1, 2, 9, 17], 6);
+        surplus(&ll, &[2], &kernels(), true);
+        surplus(&ll, &[2], &[Kernels::scalar()], false);
+    }
+
+    /// Whole runs on pools of k = 64 (63 helpers), 65 (`MAX_SHARES` helpers, the most
+    /// shares), 66 (D049's witness: helper 64 past the shares), 67 and 80, every mode, each
+    /// kernel: the walk's output and table, the gates passed by every helper
+    #[test]
+    fn teams_past_the_shares_are_walk() {
+        let ll = runs_column(20_000, 9, &[1, 2, 8, 9, 40], 32);
+        let w = want(&ll, 77);
+        for k in [64, 65, 66, 67, 80] {
+            let p = Pool::new(k).unwrap();
+            assert_eq!(p.threads(), k);
+            for kern in kernels() {
+                let r = [
+                    run_column_on::<CTL>(&p, &ll, 77, false, 0, false, kern),
+                    run_column_on::<LS>(&p, &ll, 77, false, 0, false, kern),
+                    run_column_on::<HS>(&p, &ll, 77, false, 0, false, kern),
+                    run_column_on::<CTLR>(&p, &ll, 77, false, 0, false, kern),
+                    run_column_on::<DIR>(&p, &ll, 77, false, 0, false, kern),
+                ];
+                for (m, r) in r.into_iter().enumerate() {
+                    assert!(r.unwrap() == w, "k {k}, mode {m}, {kern:?}");
+                }
+            }
         }
     }
 
