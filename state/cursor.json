@@ -918,7 +918,7 @@
     },
     {
       "trigger_comment_id": 6732776600,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -927,7 +927,10 @@
       "report_commit": "64c9883b2b59009459fce7980ab4a397fe143854",
       "report_path": "state/reports/lookahead-admission-closure-6732776600/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED for #271 admission at exact runnable head 8a0fc8e0, input freeze 4ac25fcd. Four original witnesses now INVALID, positive and one-complete-round controls VALID; 71 tests pass. D057 separately lifts safety evidence hold. Ready tag must target runnable head, not input freeze. No native timing or implementation."
+      "disposition": "PROCEED for #271 admission at exact runnable head 8a0fc8e0, input freeze 4ac25fcd. Four original witnesses now INVALID, positive and one-complete-round controls VALID; 71 tests pass. D057 separately lifts safety evidence hold. Ready tag must target runnable head, not input freeze. No native timing or implementation.",
+      "review_comment_id": 6732841051,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned verifier hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
