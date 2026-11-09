@@ -85,9 +85,10 @@
     6699480548,
     6715369675,
     6729118037,
-    6729243943
+    6729243943,
+    6729371816
   ],
-  "last_processed_comment_id": 6729243943,
+  "last_processed_comment_id": 6729371816,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -625,9 +626,13 @@
       "related_queued_comment_id": 6729283573,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145"
+      "source_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
+      "report_commit": "f84cb1fd7d96531fc6373fa9645b40a485c53a74",
+      "report_path": "state/reports/run-fed-stage-6729371816/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE before freeze: unchecked safe fill permits invalid raw read; incumbent buffer lifetime and whole-stage accounting differ; admission/causal/cross-host claims narrowed. No native execution or timing."
     }
   ],
   "active_delegations": [],
@@ -647,10 +652,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6729243943
+      6729371816
     ],
     "handled": [
-      6729243943
+      6729371816
     ],
     "skipped": [],
     "automation_modified": false
