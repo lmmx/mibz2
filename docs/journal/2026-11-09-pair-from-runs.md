@@ -447,7 +447,7 @@ dense and a sparse segmented block (admission declined and taken) and a short on
 | cases | 583,803 (each kind 52,744-53,488), 914.9 M rows |
 | builds | 3,502,818 (the run builder's 1,751,409 all on the AVX2 fill: this machine has it) |
 | cells / vector cells / spills / scalar tails | 1,272,969,639 / 1,265,356,020 / 1,255,874,934 / 7,613,619 |
-| walks (in place) | 1,751,409 (875,508) |
+| walks (into a pre-filled output buffer, a copy of the column; not the same buffer, see D051) | 1,751,409 (875,508) |
 | segment ends at a start / at an LF row; buffer grows | 140,992,903 / 76,066,193; 317 |
 | more segments than rows | 342,388 |
 | refused invalid inputs | 2,335,212 |
@@ -508,3 +508,14 @@ pair_runs::tests::NAME --exact` with `MIBZ2_EXPECT_SSE2=1`; doc is the nightly d
 The fixture tests run in `test.yml` (`python3 bench/test_pair_runs_validity.py`): 28 tests, all
 passing locally.
 
+
+## D051 corrections (9 November 2026)
+
+- **The fuzz's "in place" counter was mislabelled.** In `fuzz_case`, the branch cloned `ll` into
+  `io` while `setup` read `&ll` and the walk wrote `io`, so it tested a pre-filled output buffer,
+  not an overwrite of the walk's own input. It is renamed `presized`, and the 875,508 is
+  relabelled. True in-place coverage is `miri_pair_runs` and `fuzz_pairs`, through
+  `Pairs::invert_in_place`. No larger direct-fuzz in-place coverage is claimed.
+- **Completed CI Miri on the reviewed head** `4c70dfc4` (job 128951552061): Miri, the pair builder's
+  AVX2 fill, the reachability assertion's negative control, and the nightly compile_fail doc
+  tests all succeeded.

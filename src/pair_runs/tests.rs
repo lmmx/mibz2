@@ -631,7 +631,7 @@ struct Reach {
     spills: usize,
     scalar_cells: usize,
     walks: usize,
-    in_place: usize,
+    presized: usize,
     start_ends: usize,
     lf_ends: usize,
     grows: usize,
@@ -724,7 +724,7 @@ fn length(rnd: &mut impl FnMut() -> u64, max: usize) -> usize {
 
 /// One fuzz case: both builders (the run one on a poisoned, reused table) against the
 /// oracle's words, LF rows, first rows and cells; refused wrong counts and rows; the walk
-/// on both builders, out of place and in place, at several lane and segment counts
+/// on both builders, into an empty or a pre-filled output buffer (never the column's own buffer: setup reads `ll` while the walk writes `io`), at several lane and segment counts
 fn fuzz_case(
     rnd: &mut impl FnMut() -> u64,
     max: usize,
@@ -812,8 +812,10 @@ fn fuzz_case(
             _ => 1 + (rnd() % 512) as usize,
         };
         reach.more_segments_than_rows += (segments > n) as usize;
-        let in_place = rnd() % 2 == 0;
-        let mut io = if in_place {
+        // a pre-filled output buffer (a copy of the column), not the same buffer: true
+        // in-place coverage is in miri_pair_runs and fuzz_pairs (`invert_in_place`)
+        let presized = rnd() % 2 == 0;
+        let mut io = if presized {
             ll.clone()
         } else {
             vec![0x5a; rnd() as usize % 64]
@@ -829,7 +831,7 @@ fn fuzz_case(
             "walk {build:?}, kind {kind}, n {n}, orig {orig}, {segments} segments"
         );
         reach.walks += 1;
-        reach.in_place += in_place as usize;
+        reach.presized += presized as usize;
         reach.start_ends += w.start_ends;
         reach.lf_ends += w.lf_ends;
         reach.grows += w.grows;
@@ -873,7 +875,7 @@ fn assert_reached(r: &Reach) {
         "spills and tails: {r:?}"
     );
     assert!(
-        r.start_ends > 0 && r.lf_ends > 0 && r.grows > 0 && r.in_place > 0,
+        r.start_ends > 0 && r.lf_ends > 0 && r.grows > 0 && r.presized > 0,
         "the walk's flags and growth: {r:?}"
     );
     assert!(r.more_segments_than_rows > 0 && r.refused > 0, "{r:?}");
