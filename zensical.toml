@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Service threads in mibz2" = "blog/2026-11-09-service-threads.md" },
     { "Reading the BWT's runs off the MTF codes" = "blog/2026-11-08-bwt-runs-from-mtf-codes.md" },
     { "Inverse-BWT navigation: the mathematics" = [
       { "One shift per run" = "blog/2026-11-08-inverse-bwt-navigation.md" },
@@ -245,6 +246,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-09-service-threads.md" = "Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default." },
   { "blog/2026-11-08-bwt-runs-from-mtf-codes.md" = "bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built." },
   { "blog/2026-11-08-inverse-bwt-navigation.md" = "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven." },
   { "blog/2026-11-08-inverse-bwt-navigation-notes.md" = "Technical appendix to the post on inverse-BWT navigation: the select reduction, consecutive entries and sparse corrections, entropy and run-count space bounds, compact30's records, several steps at once, cycles and necklaces, the permutree thesis, and correctness oracles." },

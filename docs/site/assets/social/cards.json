@@ -77,6 +77,12 @@
     "section": " · Research blog",
     "title": "The mathematical structure of inverse-BWT navigation"
   },
+  "assets/social/blog-2026-11-09-service-threads.png": {
+    "description": "Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default.",
+    "foot": "lmmx.github.io/mibz2 · 9 November 2026",
+    "section": " · Research blog",
+    "title": "Service threads: moving mibz2's serial work out of its teams"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
