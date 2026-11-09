@@ -205,7 +205,10 @@ def state(role, channel=None, inbox=None, cur=None):
                and header(c["body"]).get("FROM", "").lower() in r["aliases"]]
     unreviewed = [c["id"] for c in mine
                   if not any(str(c["id"]) in v["body"] for v in reviews)]
-    cited = " ".join(c["body"] for c in inbox)
+    # A QUEUED item is dispatched only by an inbox message whose RE line cites it
+    # ("dispatching QUEUED <id>"). A mention in a body ("next in your queue: …") is not a
+    # dispatch: counting it once dropped #271's queued re-review (6731064440) unsent.
+    cited = set(re.findall(r"\d{6,}", " ".join(header(c["body"]).get("RE", "") for c in inbox)))
     queued = [c["id"] for c in channel
               if header(c["body"]).get("TYPE", "").upper() == "QUEUED"
               and role in roles_named(header(c["body"]).get("TO", ""))
