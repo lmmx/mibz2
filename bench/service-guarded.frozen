@@ -4,3 +4,6 @@
 # the current default's commit, merged into the candidate: an ancestor of it) and
 # `base_fetched <YYYY-MM-DDTHH:MM:SSZ>` (the UTC time that master was fetched; ancestry alone
 # does not say the base was current). Until then `just bench-service-guarded` refuses.
+candidate d136df7e31903bb7c18c3f90d7fa499985adb544
+base a2da49638ac54d7763de1c167bd054f67ffdc763
+base_fetched 2026-11-09T18:10:21Z
