@@ -30,7 +30,9 @@
     6657883434,
     6659992544,
     6683037641,
-    6693507432
+    6693507432,
+    6715370785,
+    6729116363
   ],
   "outgoing_comment_ids": [
     {
@@ -140,6 +142,14 @@
       "type": "REVIEW",
       "sha": "9101edf77c28fc6d52af0951abbf76e4ec9df490",
       "checkpoint_comment_id": 6693507432
+    },
+    {
+      "pr": 145,
+      "id": 6729279647,
+      "type": "REVIEW",
+      "sha": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
+      "checkpoint_comment_id": 6715370785,
+      "resume_comment_id": 6729116363
     }
   ],
   "reviews": [
@@ -315,7 +325,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "AWAITING_REVIEW_PUBLICATION",
+  "status": "WAITING_FOR_INBOX",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -497,10 +507,10 @@
     {
       "comment_id": 6715370785,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Work committed; REVIEW pending. Check #145 before retrying publication.",
+      "progress": "Report/ledger committed; shared REVIEW citing assignment and resume published on #145 and exact body/author/destination verified.",
       "report_path": "state/records/reviews/inbox-6715370785/report.md",
       "report_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
       "audit_scope": {
@@ -509,15 +519,17 @@
         "raw_release_rows": 240,
         "raw_lever_traces": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6729279647,
+      "routing_verification": "Pinned route and check passed; exact readback passed. Pinned verify is coordinator-only (FROM hardcoded), so not claimed to pass for optimizer."
     },
     {
       "comment_id": 6729116363,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Work committed; REVIEW pending. Check #145 before retrying publication.",
+      "progress": "Report/ledger committed; shared REVIEW citing assignment and resume published on #145 and exact body/author/destination verified.",
       "resumes_comment_id": 6715370785,
       "report_path": "state/records/reviews/inbox-6715370785/report.md",
       "report_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
@@ -527,7 +539,9 @@
         "raw_release_rows": 240,
         "raw_lever_traces": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6729279647,
+      "routing_verification": "Pinned route and check passed; exact readback passed. Pinned verify is coordinator-only (FROM hardcoded), so not claimed to pass for optimizer."
     }
   ],
   "migrated_from": {
