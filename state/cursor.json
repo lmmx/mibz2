@@ -1074,8 +1074,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6750287351,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "Adoption not admissible as written; standing CI rule misstated; amended C6 absent from authenticated pin; reported arithmetic corrected"
+      "status": "finished",
+      "disposition": "Adoption not admissible as written; standing CI rule misstated; amended C6 absent from authenticated pin; reported arithmetic corrected",
+      "comment": 6750391425
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1143,7 +1144,8 @@
     6739925087,
     6740148831,
     6740291714,
-    6741390621
+    6741390621,
+    6750391425
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1293,7 +1295,8 @@
     "c5c7d84035b7cadf6cb5906698afc365577e7b16",
     "648cd0babb6fe7de4b4ea3e26648b6f0f7f0d5c2",
     "f40546c17655ee0647fa9ab3ca8f982a040a479d",
-    "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
+    "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
+    "1bd2cc941e5fcf4efcfd7005baafce100e2dda2a"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1363,7 +1366,8 @@
     6739842300,
     6739971921,
     6740161956,
-    6741180673
+    6741180673,
+    6750287351
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1443,9 +1447,10 @@
   },
   "current_execution": {
     "active_comment": 6750287351,
-    "status": "complete",
+    "status": "finished",
     "decision": "D070",
-    "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
+    "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
+    "review_comment_id": 6750391425
   },
   "duplicate_events": [
     {
@@ -1995,7 +2000,8 @@
       "sha": "2bab9aa544372a2dab7880157d192a4c99fc0acd",
       "evidence_digest": "registration:676f1b5cf7f6af59f7f8902612b82f1bc89f1493;result-comment:6750273151",
       "decision": "D070",
-      "commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
+      "commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
+      "comment": 6750391425
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2456,10 +2462,13 @@
     {
       "comment_id": 6750287351,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D070",
       "receipt_commit": "f40546c17655ee0647fa9ab3ca8f982a040a479d",
-      "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
+      "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
+      "review_comment_id": 6750391425,
+      "complete_cursor_commit": "1bd2cc941e5fcf4efcfd7005baafce100e2dda2a",
+      "progress": "Exact REVIEW readback verified; pinned verifier sole coordinator-header mismatch; independent Guardian checks pass."
     }
   ],
   "migrated_from": {
