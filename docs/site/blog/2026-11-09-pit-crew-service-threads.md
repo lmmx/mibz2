@@ -1,6 +1,6 @@
 ---
 title: "mibz2 gets a pit crew"
-image: assets/social/blog-2026-11-09-service-threads.png
+image: assets/social/blog-2026-11-09-pit-crew-service-threads.png
 description: "Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU."
 ---
 
