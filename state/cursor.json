@@ -987,10 +987,11 @@
       "sha": "378f0637e75378e36d9dff85b22a0bf4cd3086ab",
       "evidence_digest": "git-blob:2c49daab30d13c539c8236956ec32bf124e90344",
       "decision": "G1",
-      "status": "complete",
+      "status": "finished",
       "commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
       "receipt_commit": "781e9059c93891e14783833db83c43cd52845322",
-      "disposition": "All-observation diagnostic logging admissible; selective deletion not delegated; whole-attempt narrowing distinguished; C5/C6 reserved"
+      "disposition": "All-observation diagnostic logging admissible; selective deletion not delegated; whole-attempt narrowing distinguished; C5/C6 reserved",
+      "comment": 6737091245
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1052,7 +1053,8 @@
     6733356125,
     6733631922,
     6733983929,
-    6734295081
+    6734295081,
+    6737091245
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1184,7 +1186,8 @@
     "d3fa5845ff995ab6c798f7611ff001d1a1ffd790",
     "85bff2185c3ef9d35181f8c5617cad207e2a16ee",
     "781e9059c93891e14783833db83c43cd52845322",
-    "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
+    "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
+    "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1329,9 +1332,10 @@
   },
   "current_execution": {
     "active_comment": 6735319842,
-    "status": "complete",
+    "status": "finished",
     "decision": "D064",
-    "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
+    "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
+    "review_comment_id": 6737091245
   },
   "duplicate_events": [
     {
@@ -1827,6 +1831,14 @@
       "decision": "D063",
       "commit": "d3fa5845ff995ab6c798f7611ff001d1a1ffd790",
       "comment": 6734295081
+    },
+    {
+      "pr": 270,
+      "sha": "378f0637e75378e36d9dff85b22a0bf4cd3086ab",
+      "evidence_digest": "git-blob:2c49daab30d13c539c8236956ec32bf124e90344",
+      "decision": "D064",
+      "commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
+      "comment": 6737091245
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2222,10 +2234,13 @@
     {
       "comment_id": 6735319842,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D064",
       "receipt_commit": "781e9059c93891e14783833db83c43cd52845322",
-      "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
+      "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
+      "review_comment_id": 6737091245,
+      "complete_cursor_commit": "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa",
+      "progress": "Exact REVIEW readback verified; pinned verifier sole coordinator-header limitation, independent Guardian checks passed."
     }
   ],
   "migrated_from": {
