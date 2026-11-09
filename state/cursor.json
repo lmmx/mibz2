@@ -1077,59 +1077,12 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
-    "repository": "lmmx/mibz2",
-    "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6731180299,
-    "last_decision": "D052",
-    "last_outgoing_comment": 6731230049,
-    "after_completion": "stop; await next event; no automation or subscription changes",
-    "polling": false,
-    "timed_schedule": false,
-    "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
-    "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
-    "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "38a866b4e077f75876223088844aa503769c7938",
-    "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D052 REVIEW #145 exact body/destination read back; Guardian route/header/inbox ID/head verified.",
-    "input_pr": 161,
-    "output_pr": 145,
-    "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-    "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
+    "active_comment": 6731861816,
+    "decision": "D053",
+    "status": "in_progress",
     "queue_snapshot": [
-      6645920904,
-      6646249200,
-      6681847165,
-      6682032075,
-      6682106949,
-      6682260206,
-      6682936439,
-      6683783830,
-      6683967083,
-      6684935718,
-      6685165401,
-      6693599811,
-      6694151539,
-      6694803492,
-      6695276659,
-      6695438405,
-      6695594055,
-      6695685974,
-      6715368365,
-      6729117187,
-      6729878093,
-      6730002640,
-      6730271091,
-      6730370805,
-      6730455683,
-      6730599475,
-      6730988787,
-      6731045923,
-      6731180299
-    ],
-    "active_incoming_comment": 6731180299,
-    "status": "finished"
+      6731861816
+    ]
   },
   "duplicate_events": [
     {
@@ -1813,6 +1766,12 @@
       "work_commit": "38a866b4e077f75876223088844aa503769c7938",
       "review_comment_id": 6731230049,
       "complete_cursor_commit": "5130c60203fcde3bbcd2ea5582c2d717f800b22a"
+    },
+    {
+      "comment_id": 6731861816,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D053"
     }
   ],
   "migrated_from": {
