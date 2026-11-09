@@ -570,6 +570,22 @@
       "review_comment_id": 6699591835,
       "publication_verified": true,
       "verification_note": "Exact body and #145 destination read back; role-aware routing check passed. Pinned verify helper rejects non-Coordinator FROM. Audit records five Observer/Oracle name-table mismatches on #222 without changing routing."
+    },
+    {
+      "trigger_comment_id": 6715369675,
+      "status": "in_progress",
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "related_comment_id": 6729118037
+    },
+    {
+      "trigger_comment_id": 6729118037,
+      "status": "in_progress",
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "related_comment_id": 6715369675
     }
   ],
   "active_delegations": [],
