@@ -18,6 +18,14 @@ a later Coordinator decision: the pipelined default's, exactly); the recipe
 is exercised end to end past its refusals (answer 6); and the preflight-only entry
 (`2026-11-09-svc-target-registration.md`, answer 5) comes first.
 
+**Second revision, 9 November 2026 (the Researcher's REVISE, REVIEW 6746023579 on #145;
+report at `state/reports/service-guarded-rereview-6745811380/report.md` on ceb53e4f, reviewed at
+910fd5de):** see *Revision 2* below. In short, prospectively, before any freeze or run: every
+row must carry the child's termination as success; the diagnostics are passive, bounded and
+archived with their exits, never judged; the raw discovery facts are archived beside them; and
+the freeze records the fetched master's SHA and fetch time. No grid, threshold, arm or estimand
+changes.
+
 **What this does not presume.** D067 §5's adoption question (the change makes svc2 an
 automatic default on a class of machines CI can't exercise, and how CI's acceptance rule
 applies to that) is, under amended C6 (#306), a team decision, **made separately, after the
@@ -45,10 +53,12 @@ and CPU, the noise control N1, its report's evidence boundary), unchanged where 
   that would otherwise ship; a release comparison would answer a different, user-upgrade
   question and include unrelated changes. The freeze procedure: fetch master, merge it into
   `perf/service-guarded` (never a rebase), name that master commit as `base` and the merged
-  candidate as `candidate`. The recipe checks the base is an ancestor of the candidate; that
-  the base is *current* master at the freeze is the freeze's own check, recorded in the
-  freezing commit's message. The bundle records both commits (`commits.txt`), both
-  executables' digests and the toolchain (`inputs.txt`).
+  candidate as `candidate`, with `base_fetched`, the UTC time that master was fetched
+  (Revision 2, R4). The recipe checks the base is an ancestor of the candidate and refuses a
+  freeze without the fetch time; that the base was *current* master when fetched is the
+  freeze's own check, recorded in the frozen file and the freezing commit's message. The
+  bundle records both commits and the fetch time (`commits.txt`), both executables' digests
+  and the toolchain (`inputs.txt`).
 - **The runtime is not #258's.** #258's P1, 1.045 [1.017, 1.073], and #271's reported D-a2w8 are
   history on a different runtime: neither transfers, and this run does not pool with them.
 
@@ -114,8 +124,9 @@ Its preflight is sent TERM at 120 s and KILL 10 s later.
   minutes from built, 25 from cold.**
 - **No PMU telemetry:** `--machine-state` is not passed (`perf_event_paranoid=4` on the
   workstation; `telemetry-check/20261109T125938Z` found the #298 counters UNAVAILABLE).
-  `ab env`, `lscpu` and `ab sample` before and after the run go to `diagnostics/`, never judged
-  and never used to select runs (D064).
+  `ab env --facts`, `lscpu`, the raw discovery reads and `ab sample` before (and `ab sample`
+  after) the run go to `diagnostics/`, each bounded and its exit archived, never judged and
+  never used to select runs (D064; Revision 2, R2).
 - **The plans each build must run**, from every run's two thread records, as (leaders,
   plain helpers, pipelined helpers, service workers; the hub's feeder not counted):
 
@@ -145,11 +156,12 @@ its kind, and none is a reason to retry):
   `{"ok": true}`, or `ok` beside an unknown quota, an absent snapshot or missing observations,
   is refused);
 - **structural:** every row's arm one of `arms.txt`'s; `threads` and `round` integers, never
-  booleans; `err` present and empty (ab's failed child prints its error there; a child that
-  printed nothing is marked `broken`, refused); no `exit`/`status` other than 0 where a row
-  carries one (ab's rows carry none: the parent records no child exit status, so these two are
-  the producer's own failure encodings); finite positive wall, CPU and RSS; 20 rounds a cell,
-  each once; every run's plan as in the table;
+  booleans; `termination` exactly `"success"` (Revision 2, R1: ab's parent records how it
+  reaped each child; `"exit N"`, `"signal N"`, `"unknown"` or no field refuses); `err` present
+  and empty (ab's failed child prints its error there; a child that printed nothing is marked
+  `broken`, refused); no `exit`/`status` other than 0 where a row carries one (ab's rows carry
+  `termination`, not these); finite positive wall, CPU and RSS; 20 rounds a cell, each once;
+  every run's plan as in the table;
 - **N1:** the twin against the base at 10 threads, both bounds of its 95% interval within
   [0.97, 1.03] (the service-core control's method, unchanged; its placement at 10 only is decided by the Coordinator under amended C6 (#306), subject to the Researcher's review).
   **What changed in its implementation:** service-2x3's twin was the same decoder under two
@@ -220,6 +232,113 @@ one round of `ab run` (9 runs), the judge's report and the bundle (25 files). Ou
 outputs not the registered length, as it should be. The eventual frozen inputs were not
 edited for it.
 
+## Revision 2 (9 November 2026): the Researcher's REVISE, REVIEW 6746023579
+
+Prospective: written before any freeze, queueing or run, at a DRAFT that names no commits.
+The Researcher's report (inbox 6745811380, on `ceb53e4f`, reviewing 910fd5de) asked for two
+repairs and confirmed two things to keep. Each change below is to the harness, the recipe, the
+judge or the freeze record; **no grid, threshold, arm or estimand changes.**
+
+- **R1, the child's termination (report §1).** At 910fd5de the parent kept a child's stdout
+  and dropped its exit status, so a valid-looking record written before a nonzero exit or a
+  signal was indistinguishable from a successful run; the judge's `exit` check was reachable
+  only by a hand-injected field. Now:
+  - `ab run` records every child's `termination` as the parent reaped it: `"success"`,
+    `"exit N"`, `"signal N"` or `"unknown"` (the shared harness commit cb2c233e from #305,
+    cherry-picked; it also adds `ab env --facts`, below). The records carry `termination` and
+    no `exit` field.
+  - `bench/service_guarded.py` refuses any row whose `termination` is not exactly
+    `"success"`, a missing field included, as INVALID (structural).
+  - The producer is tested at its own boundary: `ab run` itself with stand-in children that
+    write a valid-looking record and then exit 0, exit 17, are killed by SIGKILL, or write
+    nothing (examples/ab.rs, `the_run_records_each_childs_termination`), and, in
+    `bench/test_service_guarded.py`'s `Producer`, each record that real `ab run` writes judged
+    in place of a clean attempt's row: success VALID; exit 17, signal 9 and the empty child
+    INVALID (structural). CI builds `ab` for it. The judge's own tests refuse a missing
+    termination, `"exit 17"`, `"signal 9"`, `"signal 15"`, `"unknown"` and non-canonical
+    spellings. The recipe's end-to-end test carries a row with `"exit 17"` to INVALID
+    (structural).
+  - The harness and the judge are frozen together, as `examples` and the judge are both
+    measured inputs.
+- **R2, the diagnostics' acquisition (report §2).** At 910fd5de the recipe ran `ab env` (which
+  starts spin workers and probes perf), `lscpu` and `ab sample` unbounded before the preflight.
+  Now:
+  - `ab env --facts` replaces `ab env`: procfs, sysfs, cgroupfs and `sched_getaffinity` only,
+    no thread started, nothing spun, no perf counter opened.
+  - Every external diagnostic outside the timed run (`ab env --facts`, `lscpu`, the raw
+    discovery reads, `ab sample` before and after) runs through one helper, bounded by
+    `timeout --kill-after=5 30` (TERM at 30 s, KILL 5 s after). Its stdout, stderr
+    (`NAME.stderr`) and exit (`diagnostics/exits.txt`) are archived.
+  - **The failure disposition:** a failing or timed-out diagnostic is archived as failed and
+    nothing else. It never refuses the attempt, never changes the outcome, and never deletes,
+    replaces or selects a timed row. (At 910fd5de, `ab sample` after the run failing would
+    have stopped the recipe before the judge.) It is not target evidence.
+  - **The preflight stays distinct:** `svc_target` keeps its own bound
+    (`timeout --kill-after=10 120`), its plan exercises and its whole-record check by
+    `bench/svc_target_check.py`, and its quota discovery (`parallel::cpu_quota_of`). The
+    Researcher found that discovery sound (report §3), and `ab env --facts`'s quota is not
+    made authoritative.
+  - The recipe's tests use a stand-in `ab` that refuses `env` without `--facts`, check every
+    diagnostic's exit is 0 in a clean run, check that failing diagnostics leave a VALID
+    outcome and all 420 rows, and check statically that every diagnostic goes through the
+    bounded helper and the preflight keeps its own bound.
+- **R3, the raw discovery provenance (report §3's archive question).** Diagnostics only, not a
+  new gate. `python3 bench/service_guarded.py discovery` (`diagnostics/discovery.json`)
+  archives:
+  - the process's `/proc/self/cgroup` and `/proc/self/mountinfo` as read;
+  - for each cgroup2 mount, and each v1 mount with the cpu controller, its membership line and
+    every directory from the mount point down the membership path, each with its existence and
+    its quota files (`cpu.max`; v1 `cpu.cfs_quota_us` and `cpu.cfs_period_us`) as read, absent,
+    or failed with the error;
+  - for v2, the mount top's `cgroup.type`.
+
+  It derives no quota verdict, and nothing judges it. Read by a child of the recipe's shell,
+  it is in the cgroup that `ab` and its children run in.
+- **R4, the base's currency at the freeze (report §4, Base).** Ancestry alone does not show the
+  base was current. `bench/service-guarded.frozen` now names `base_fetched <UTC time>` beside
+  `candidate` and `base`. The freeze is: fetch master, record `origin/master`'s SHA and the
+  fetch time, merge it into `perf/service-guarded` (a merge, never a rebase), and name the
+  merge as `candidate`.
+  - The recipe refuses a freeze without a well-formed fetch time and copies it into
+    `commits.txt`.
+  - The judge requires `commits.txt`'s `base_fetched` to be the frozen one (identity).
+  - Master moving after the freeze does not change this run's estimand; a later adoption
+    decision accounts for any intervening changes.
+
+**What the design does and does not claim** (report §4, recorded as the Researcher qualified
+it):
+- **Separate intervals.** P1's speed and CPU intervals are each a 95% interval. Together they
+  are not a joint or simultaneous 95% statement.
+- **CPU INCONCLUSIVE is not CPU non-inferiority.** It permits the registered product reading
+  and proves no CPU-cost bound.
+- **No harm, and its scope.** It is judged at 11, 12, 16 and 20 only (one-sided, Bonferroni
+  over the four, t at 19 df 2.4334, the usual paired-log assumptions across rounds). 8 and 9
+  are reported identity flags, not passed non-inferiority gates: **no result of this run is a
+  claim of "no harm at all fallback budgets"**. Failing to show the upper bound at most 1.02 is
+  not proof of a regression.
+- **N1 at 10.** It constrains same-binary run-to-run instability at that cell. It neither
+  validates every cell nor bounds head-specific instrumentation effects. The twins at the other
+  six budgets stay reported, and no row is deleted, and no gate added, after seeing them.
+- **Arm order.** At twenty rounds, a three-arm six-round rotation cycle is not perfectly
+  balanced. This is the declared harness design, and the observed order stays auditable in
+  `runs.jsonl`.
+- **The temporal limit.** A point-in-time TARGET does not certify unchanged quota or affinity
+  through 420 runs. The registration already states this, and it is not a new telemetry
+  requirement.
+
+**Authority.** The grid, the twin's placement, no replacement and adoption's separation are
+decided by the Coordinator under RULES C6 as amended in #306 (cc84bd5a), subject to the
+Researcher's review. The Researcher assessed them as scientifically sound (report §4).
+
+That assessment is not a certification of the authority newly delegated by #306. The
+Researcher's authenticated instruction still pins the specification at a4f97714, and a re-pin
+request (6745788393) is pending. **The Researcher has not accepted it**, and nothing here
+claims the pin changed.
+
+**Not done in this revision.** Moving the corpus build before the preflight, which would shorten
+the gap between the target observation and the measurements, was suggested in passing
+(report §2). It isn't made here: the order is unchanged.
+
 ## The model (before any run; not a prediction to be judged)
 
 From #258's runtime on this sample (history, not transfer): svc2@10 against the default at 10,
@@ -246,9 +365,10 @@ intervals of about ±2.2% and ±1.8% at 20 rounds; N1's 0.032, about ±1.5%. **R
 
 ## Still open before a freeze
 
-1. **The Researcher's re-review** of this revision: the grid, the twin arm, no replacement and
-   P1's rule are each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review.
-2. **The base's merge and SHA:** at the freeze (above).
+1. **The Researcher's re-review** of this revision (Revision 2's R1 to R4, at the exact
+   source): the grid, the twin arm, no replacement and P1's rule are each decided by the
+   Coordinator under amended C6 (#306), subject to the Researcher's review.
+2. **The base's merge, SHA and fetch time:** at the freeze (above; Revision 2, R4).
 3. **Adoption** (D067 §5): a team decision under amended C6, made separately after the
    evidence by a Guardian-reviewed decision-record entry; not this registration's to answer,
    and not presumed by it.
