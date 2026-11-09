@@ -966,12 +966,15 @@
     },
     {
       "trigger_comment_id": 6733159315,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "c41ef38d7df2f596193c01d9adbb2f4893f1d217",
-      "report_path": "state/reports/direct-result-6733159315/report.md"
+      "report_path": "state/reports/direct-result-6733159315/report.md",
+      "report_commit": "35604d85e231662d0abc1064a2979188c64cb3cf",
+      "disposition": "Concur Q1 STOP; narrow unisolated locality/CPU claims; identify B fallback anomaly and compact F-order run-index alternative",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
