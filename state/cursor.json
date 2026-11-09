@@ -1239,7 +1239,7 @@
     },
     {
       "trigger_comment_id": 6744588901,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1247,7 +1247,10 @@
       "report_commit": "1f742124940f54d67c59f3d9401ee2a0ebb0f75a",
       "report_path": "state/reports/svc-target-closure-6744588901/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED to freeze preflight-only entry: all six prior witnesses rejected, positive control preserved, fallback failure exposed. Nine local checker tests pass; CI 25 success/3 skipped and six end-to-end tests pass on identical merge tree. Huge integer parser overflow fails closed, nonblocking."
+      "disposition": "PROCEED to freeze preflight-only entry: all six prior witnesses rejected, positive control preserved, fallback failure exposed. Nine local checker tests pass; CI 25 success/3 skipped and six end-to-end tests pass on identical merge tree. Huge integer parser overflow fails closed, nonblocking.",
+      "review_comment_id": 6744735192,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
