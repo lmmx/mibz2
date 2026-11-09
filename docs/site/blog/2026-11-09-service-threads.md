@@ -232,7 +232,7 @@ and each a little beyond it: plain two teams slower, at 0.193 s, the gain over t
 
 ## 5. Has the result been seen again?
 
-A third run ([pull request 271](https://github.com/lmmx/mibz2/pull/271), section 6) asked another
+A third run ([pull request 271](https://github.com/lmmx/mibz2/pull/271)) asked another
 question, about the admission threshold. Beside its own comparisons, it ran the service layout
 against the default again, as a reported comparison: 1.073 (1.041–1.106) for speed, and 1.169
 (1.135–1.204) for processor time, so about 14.5% less. Its noise check came out at 0.994.
@@ -244,9 +244,9 @@ measured the layout against the default, it was faster each time, by 1.045, 1.04
 spent 12–15% less processor time each time. Its peak memory was 64 MB against 74 MB in all three.
 
 The three estimates also say something about the intervals. Each describes the spread within its
-own run. The registered 1.045 and the later 1.073 differ by about as much as half the width of
-either interval, which is a reminder that one run's interval understates how much a figure moves
-from run to run. The fair summary is a gain of a few per cent, measured on one machine, not a
+own run. The registered 1.045 and the later 1.073 differ by about half the width of either
+interval. Neither interval says how much the figure moves from one run to the next, and the
+difference between them is a sign that it moves by a few points. The fair summary is a gain of a few per cent, measured on one machine, not a
 precise 4.5% or 7.3%.
 
 ## 6. What still holds the teams back?
