@@ -73,3 +73,10 @@ preflight, `lscpu` and `gh`, every exit path through the bundle (TARGET, NOT TAR
 INVALID RECORD, INCOMPLETE by crash, REFUSED by dirty inputs and by an unfrozen file), and
 through `just submit`; and the record checker on its own witnesses
 (`bench/test_svc_target_check.py`). Both run in CI's submission-tests job.
+
+**The real path, exercised once (not evidence).** On the shared 4-core machine (Intel family
+6 model 173; not the target), in a throwaway clone with a pointer-only freeze at the
+recipe's commit (never pushed): the real release build of `svc_target`, Cargo's reported
+executable and its digest, the raw files, the record and its check, and the bundle.
+Outcome NOT TARGET, exit 4, as this machine's facts say (4 cores; quota established as
+unlimited). It shows the recipe runs past its refusals; it says nothing about the i9.
