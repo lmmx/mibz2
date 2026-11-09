@@ -1,0 +1,37 @@
+{
+  "total_cases": 40053,
+  "pipeline_cases": 20775,
+  "countable": 12463,
+  "reached": 4706,
+  "overlap_error_cases": 101,
+  "overlapped_jobs": 10252,
+  "candidates": {
+    "mibz2 default 3x3 StreamDecoder::new w1048576 r65536": 4152,
+    "mibz2 default 3x3 StreamDecoder::new w997 r509": 4156,
+    "mibz2 default 3x3 BzReader::parallel r4093": 4156,
+    "mibz2 default 3x3 decode_parallel": 4156,
+    "mibz2 pipelined 1x3 park+small s4 w100003 r65536": 4155
+  },
+  "mutation_blob_checks": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "M7",
+    "M8",
+    "M9",
+    "M10",
+    "M11",
+    "M12"
+  ],
+  "reported_survivors": [
+    "M12"
+  ],
+  "outer_panic_model": {
+    "baseline": "result",
+    "M12": "wait at missing place 5 despite later results and end 8"
+  },
+  "limits": "Archived-log arithmetic, exact mutation blob reconstruction, and abstract read predicate only; not a Rust/Miri/fuzz/mutation execution."
+}

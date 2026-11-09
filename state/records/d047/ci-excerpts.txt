@@ -1,0 +1,14 @@
+2026-11-09T01:46:23.1636780Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +83fe1bbfb9bddbd8a575bc13086b367678ee8a45:refs/remotes/pull/273/merge
+2026-11-09T01:46:24.3678627Z  * [new ref]         83fe1bbfb9bddbd8a575bc13086b367678ee8a45 -> pull/273/merge
+2026-11-09T01:46:24.4589861Z HEAD is now at 83fe1bb Merge 898482b99d545b14bfbcb27911cec8a70641a99d into d245a2d853209ccac9501d2724192e106d29c096
+2026-11-09T01:46:24.4658900Z 83fe1bbfb9bddbd8a575bc13086b367678ee8a45
+2026-11-09T01:46:47.4543595Z ##[group]Run target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
+2026-11-09T01:47:17.6708372Z 84142 cases in 30 s (seed 1, mode classic), 0 failures
+2026-11-09T01:47:17.6833019Z ##[group]Run target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+2026-11-09T01:47:48.7968762Z 1020 cases in 30 s (seed 1, mode pipeline), 0 failures
+2026-11-09T01:47:48.7976377Z pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+2026-11-09T01:47:48.7980792Z       204  mibz2 default 3x3 StreamDecoder::new w1048576 r65536: 48 of 204 reached, 2 with an overlapped error, 73 overlapped jobs
+2026-11-09T01:47:48.7981592Z       204  mibz2 default 3x3 StreamDecoder::new w997 r509: 58 of 204 reached, 0 with an overlapped error, 104 overlapped jobs
+2026-11-09T01:47:48.7982261Z       204  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)
+2026-11-09T01:47:48.7982858Z       204  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)
+2026-11-09T01:47:48.7983435Z       204  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 109 of 204 reached, 2 with an overlapped error, 294 overlapped jobs
