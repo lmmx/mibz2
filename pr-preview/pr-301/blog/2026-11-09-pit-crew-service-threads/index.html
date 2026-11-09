@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=e5c6b7507cec">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=e5c6b7507cec">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=e5c6b7507cec">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=e5c6b7507cec">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=e5c6b7507cec">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=2195acafa235">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=e5c6b7507cec">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2478,17 +2478,17 @@ each a little beyond it:</p>
 </thead>
 <tbody>
 <tr>
-<td>plain two teams, elapsed (s)</td>
+<td>plain two teams (s)</td>
 <td style="text-align: right;">0.180–0.188</td>
 <td style="text-align: right;">0.193</td>
 </tr>
 <tr>
-<td>service vs plain two teams, speed</td>
+<td>service vs plain (speed)</td>
 <td style="text-align: right;">near 1.33</td>
 <td style="text-align: right;">1.402</td>
 </tr>
 <tr>
-<td>two pipelined teams vs default, speed</td>
+<td>two pipelined vs default</td>
 <td style="text-align: right;">0.82–0.85</td>
 <td style="text-align: right;">0.866</td>
 </tr>
@@ -2503,40 +2503,33 @@ measured the layout against the default:</p>
 <thead>
 <tr>
 <th>run (pull request)</th>
-<th>status</th>
 <th style="text-align: right;">speed (95%)</th>
 <th style="text-align: right;">CPU (95%)</th>
-<th style="text-align: right;">peak memory (MB)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>first (251)</td>
-<td>reported</td>
+<td>first (251), reported</td>
 <td style="text-align: right;">1.045 (1.023–1.068)</td>
 <td style="text-align: right;">1.138 (1.118–1.158)</td>
-<td style="text-align: right;">64 vs 74</td>
 </tr>
 <tr>
-<td>second (258)</td>
-<td>registered</td>
+<td>second (258), registered</td>
 <td style="text-align: right;">1.045 (1.017–1.073)</td>
 <td style="text-align: right;">1.146 (1.123–1.170)</td>
-<td style="text-align: right;">64 vs 74</td>
 </tr>
 <tr>
-<td>third (271)</td>
-<td>reported</td>
+<td>third (271), reported</td>
 <td style="text-align: right;">1.073 (1.041–1.106)</td>
 <td style="text-align: right;">1.169 (1.135–1.204)</td>
-<td style="text-align: right;">64 vs 74</td>
 </tr>
 </tbody>
 </table>
 <p>The third run makes the same comparison as the registered one, on the same machine and file. But it
 is another run, at a later commit of the prototype, beside other arms. It was never judged, so it
 doesn't replace the registered 1.045. What it adds is that the direction held. In all three runs
-the layout was faster than the default and spent 12–15% less processor time.</p>
+the layout was faster than the default and spent 12–15% less processor time. Its peak memory, by
+the runs' medians, was 64 MB against the default's 74 each time.</p>
 <p>The three estimates also say something about the intervals. Each is the uncertainty of its own
 run's estimate. The registered 1.045 and the later 1.073 differ by about half the width of either
 interval. Neither interval says how much the figure moves from one run to the next. The two runs
@@ -2854,19 +2847,19 @@ measuring showed which.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/bench.js?v=e5c6b7507cec"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/couriers.js?v=e5c6b7507cec"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/blog.js?v=e5c6b7507cec"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/frontier.js?v=e5c6b7507cec"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/observatory.js?v=e5c6b7507cec"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=2195acafa235"></script>
+        <script src="../../assets/javascripts/katex.js?v=e5c6b7507cec"></script>
       
     
   </body>
