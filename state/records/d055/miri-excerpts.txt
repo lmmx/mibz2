@@ -1,0 +1,23 @@
+2026-11-09T04:27:29.2148297Z HEAD is now at c2b9aac Merge 7f88388b938528f22088df79387f309eb112fe1c into 6b36fd8c43c1b834e69ee62cd6b5054dc99c571c
+2026-11-09T04:27:38.1478817Z   nightly-x86_64-unknown-linux-gnu installed - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T04:27:38.1790552Z   nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T04:27:38.2946438Z rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T04:27:39.9059382Z ##[group]Run cargo miri setup
+2026-11-09T04:27:39.9059691Z [36;1mcargo miri setup[0m
+2026-11-09T04:27:58.6322072Z ##[group]Run cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
+2026-11-09T04:27:58.6322734Z [36;1mcargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt[0m
+2026-11-09T04:28:00.2990320Z ##[group]Run cargo miri test --lib -- miri_
+2026-11-09T04:28:00.2990716Z [36;1mcargo miri test --lib -- miri_[0m
+2026-11-09T04:31:48.5686598Z test run_stage::tests::miri_direct_unchecked_states_refused ... ok
+2026-11-09T04:32:17.0402296Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T04:32:17.2537289Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T04:32:17.3017203Z test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 41 filtered out; finished in 508.84s
+2026-11-09T04:32:17.3554175Z ##[group]Run cargo miri test --lib -- run_stage::tests::miri_
+2026-11-09T04:32:17.3554623Z [36;1mcargo miri test --lib -- run_stage::tests::miri_[0m
+2026-11-09T04:32:17.3586264Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1
+2026-11-09T04:32:17.3586561Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T04:32:17.3586868Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T04:32:20.7355961Z test run_stage::tests::miri_direct_unchecked_states_refused ... ok
+2026-11-09T04:32:58.4768874Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T04:32:58.7054743Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T04:32:58.7525463Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 119.07s

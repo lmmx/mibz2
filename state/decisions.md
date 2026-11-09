@@ -2344,3 +2344,53 @@ The disclosed unsupported-CPU forgeable Kernels issue remains outside this exper
 [Evidence and pin comparisons](records/d054/evidence.json), [source/log SHA-256 manifest](records/d054/sha256.json), [reproducible Python checks](records/d054/probes.py), [results](records/d054/results.json), [routing audit](records/d054/routing.json).
 
 Migration passed before receipt: old branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **8f3d7daa3dba0f6d80b9775c5022f1f4ce1eb1af**. Routing audit: five already-resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify assumes FROM coordinator; Guardian read-back uses its routing predicate plus exact sender/recipient/type/destination/incoming-ID/work-link checks. Task and subscriptions unchanged.
+
+## D055 — Direct-F placement: ownership argument supported; D-reached fuzz still missing
+
+Incoming [6732361106](https://github.com/lmmx/mibz2/pull/161#issuecomment-6732361106), dispatching QUEUED 6731991703. PR **#277**, reviewed head **7f88388b938528f22088df79387f309eb112fe1c**. Specs, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Independent Guardian source review, CI-log inspection and executable mathematical probes; no implementation contribution, local Rust/Miri execution, fuzz campaign or timing.
+
+**Disposition — G1/G2, RULES B5:** **HOLD the proposed D timing experiment and unsafe admission pending fuzz evidence that actually reaches D, and auditable mutation results.** The placement argument below survives review; no new unjustified access or B6 defect found. This is a scoped evidence HOLD, not a line STOP. Correctness testing, repair and registration preparation continue. No mandatory second reviewer or blanket production integration prerequisite is added.
+
+### 1. Allocation, ownership, and malformed records
+
+`place` clears the table before every result, rejects n≥2²⁴, reserves n slots, and exposes length n only after `place_rows` returns true. Empty n accepts exactly `[0]` with zero counts, with no store. For n>0, the first/closing starts are 0/n and there are at least two records.
+
+Count accumulation uses u64; even 256 maximal u32 counts fit. Prefix casts on invalid counts cannot authorize writes: total≠n returns before their use. With total=n, all prefixes and bucket ends lie in [0,n]. For a run, next>p is checked before subtraction; q0 is its bucket's current cursor. q0≤n and next−p<2²⁴, so their sum cannot overflow u32. e=q0+next−p must be ≤bucket end before the first store.
+
+The seeded record cursor is clamped below r, even when an unsorted input makes `partition_point` semantically meaningless. Its forward scan cannot pass the closing record: q<e≤n, and the closing start n is strictly above q. The resulting cell end min(e,next-record-start) is >q, proving progress. Malformed records can therefore produce wrong intermediate words inside reserved storage; later rejection leaves length zero. This is distinct from assuming sortedness before validation.
+
+**The essential AVX2 predicate is bucket ownership, not allocation alone.** An eight-word store requires w+8≤bucket end. Overstore past the current cell remains inside that bucket; subsequent cells/runs of the same byte overwrite it in increasing F-row order. No other bucket—possibly already finalized—can be overwritten. Near the bucket end, scalar stores stop at the cell end. Thus all physical stores are below n, without relying on slack or initialized old contents.
+
+On success, strict L starts telescope to n; counts also sum to n. Every bucket consumes at most its count, and all runs together consume n: all nonnegative deficits must be zero. Hence the final `a == end` check is mathematically redundant under the preceding checks. Removing it is an **equivalent mutant**, not a missed B6 target; retain the check as an explicit invariant. For valid records the resumed L predecessor supplies L[q], and stable bucket placement supplies Ψ(q)=p+(q−q0); their packed word is production's exact table. This argument assumes supported/detected kernels. The previously disclosed forgeable `Kernels` CPU-feature contract is neither repaired nor waived by this experiment.
+
+### 2. What was independently reproduced
+
+The source and integration tests are unchanged between queued head 705323290b5470dea4a31910c22522c342e9d064 and reviewed head 7f88388b; the comparison changes harness/verifier/fixtures/journal. Reviewed blobs: `src/run_stage.rs` **fee6d7a97b47259baa63466603a4e13604f57bc4**, `tests/mtf_kernels.rs` **d35c8b1e17233472c5076470db27b950625c4efe**.
+
+Actual completed [Miri job 128979999343](https://github.com/lmmx/mibz2/actions/runs/42561921128/job/128979999343): default subset **18 passed**, AVX2 run-stage subset **3 passed**, zero failures. The AVX2 step sets target features and `MIBZ2_EXPECT_AVX2=1`; the test asserts detection. Checkout is synthetic merge c2b9aac of this head into 6b36fd8c43c1b834e69ee62cd6b5054dc99c571c; both reviewed blobs were fetched at that merge and match exactly. This is PR-merge CI coverage, not a locally rebuilt exact-head binary. All five inspected current-head workflows report success. Miri is finite coverage, not a proof for all inputs.
+
+The committed Python probe independently constructs stable Ψ and models the physical eight-word writes: **9,889 valid columns agree**, including all 9,841 ternary columns of length 0..8 and 48 bucket-tail cases. Weakening the vector limit to n corrupts rows **10..15** for L=c¹⁰b¹⁰: b's late tail overwrites already-final c rows. This reproduces the ownership mechanism without claiming a Rust mutant execution. The probe uses a simpler predecessor search; it does not certify Rust's seeded cursor.
+
+The journal reports native exhaustive/random/bench/synthetic differential success and kills of the ownership-tail and Ψ off-by-one mutants. Their test code and witnesses support the design, but **the actual patch/kill/restoration transcripts were not retrieved**. Archive those small artifacts with exact source identity and commands for B5 closure. The equivalent final-check mutant needs its proof, not an artificial test failure.
+
+### 3. Empty blocks: already covered at placement, test the composition
+
+**Do not add a duplicate low-level [0] test.** `direct_cases` already checks the empty column; `miri_direct_unchecked_states_refused` explicitly accepts `place([0], zero_counts, 0)` from a dirty table and verifies emptiness, alongside invalid empty-record cases. The latter passed in the inspected scalar/default and AVX2 Miri runs.
+
+The useful regression is through **`build_direct`**: a minimal empty Symbols block that selects `takes_runs`, emits [0], returns (0,true), and leaves an empty table, on fresh and reused dirty buffers, scalar and detected AVX2. Reuse #270's saved stream where the composition permits; a decoder-level BadOrigPtr decision belongs downstream and must not be confused with a placement rejection. The new regression must show D was reached rather than hidden by fallback. #270's sort failure establishes the value of this composition check, not a demonstrated defect in D.
+
+### 4. Evidence needed before the proposed timing
+
+#270's run-fed “Direct” path uses its own team placement; its fuzz counts do **not** establish a call to `run_stage::place` or `build_direct`. D054's closed scope does not transfer automatically.
+
+Run bounded, reproducible differential fuzz against production's MTF-plus-build reference, **through `build_direct`**, covering scalar and detected AVX2, valid and malformed symbols, empty/near-empty inputs, fresh/reused buffers, and bucket sizes around eight. Compare tables/results/error classes; count D record-path and fallback execution separately. An unexpected refusal/debug assertion or silent release fallback on a valid emitted tiling must be observable, not hidden by a final byte comparison. Also mutate record starts/closure/counts/bytes and compare `place` acceptance and results with an independent tiling/table oracle; some altered tilings remain valid. Retain minimized failures and bounded Miri representatives.
+
+Archive source/harness/compiler/features, seeds, limits, input identities, actual path counts, commands and outcomes. No arbitrary duration quota is imposed; the missing evidence is reached-path and adversarial-input coverage. After any merged fix changes the relevant implementation/harness, identify the final tested source and any transferred evidence explicitly.
+
+Disassembly is useful to check that the intended vector stores and inlining survive in the measured binary; **its absence alone is not the B5 HOLD**. Once safety evidence closes, freeze the diagnostic's full head, corpus regeneration identities and rule before its registered CI sweep. The own-source text corpus changes when source/harness inputs change. The draft remains NOT FROZEN/NOT RUN; this review does not independently close the Researcher's verifier review.
+
+The serial entry-point diagnostic measures MTF plus table construction. It cannot qualify whole-decoder production performance, parallel D, or a workstation run. Its new 0.95 diagnostic criterion does not rewrite #269's historical verdict. No ready tag, queue entry, extra timing, merge or authority widening is authorized here.
+
+[Evidence](records/d055/evidence.json), [Miri excerpts](records/d055/miri-excerpts.txt), [Python probes](records/d055/probes.py), [results](records/d055/results.json), [routing audit](records/d055/routing.json).
+
+Migration passed before receipt: previous branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **971b8ff920ccf1c224f2a820a89d7462b4dfae0b**. Routing audit: five resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify assumes FROM coordinator; Guardian read-back additionally checks sender/recipient/type/destination/incoming-ID/work-link exactly. Task and subscriptions unchanged.
