@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Pair #272 merge-pin review finished; source-generated text change requires accurate prospective freeze record.",
+  "state": "Pit-crew blog round 1 finished: REVISE follow-up; five reader goals recovered; factual and structural corrections published. Round 2 outstanding.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -116,9 +116,10 @@
     6735163830,
     6735725456,
     6736096739,
-    6738933099
+    6738933099,
+    6739269334
   ],
-  "last_processed_comment_id": 6738933099,
+  "last_processed_comment_id": 6739269334,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1126,7 +1127,7 @@
     },
     {
       "trigger_comment_id": 6739269334,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1134,7 +1135,10 @@
       "report_path": "state/reports/pit-crew-round1-6739269334/report.md",
       "report_commit": "c00e65eaad4856a4ca50505f813e7d4d764db7d5",
       "review_comment_pr": 145,
-      "disposition": "REVISE published post through follow-up PRs: waiting/performing distinction, threshold inference, CI semantics, stale merge status and scope corrections; fresh reader recovers five goals. No publication hold, implementation or timing."
+      "disposition": "REVISE published post through follow-up PRs: waiting/performing distinction, threshold inference, CI semantics, stale merge status and scope corrections; fresh reader recovers five goals. No publication hold, implementation or timing.",
+      "review_comment_id": 6739432531,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass; pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1154,10 +1158,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6735163830
+      6739269334
     ],
     "handled": [
-      6735163830
+      6739269334
     ],
     "skipped": [],
     "automation_modified": false
