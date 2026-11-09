@@ -304,7 +304,8 @@ need not sum to the median of the total, and a gap between them is no missing ph
   change): whether placing the records directly, with no sort, makes the run-fed stage pay
   at one worker on one CI runner. Q1 judged, the rest exploratory.
 - **The baseline identities (full):**
-  - master `6b36fd8c43c1b834e69ee62cd6b5054dc99c571c`, merged into this branch. Arm A,
+  - master `6145b3a985302bb2b6629b12c8c0602426547544`, merged into this branch (since
+    §10; `6b36fd8c` before it, with the same `src/mtf.rs` and `src/bwt.rs`). Arm A,
     `mtf::mtf` then `bwt::build`, is its code, unchanged;
   - #269's frozen head `fd60fffada25d475bbcc2b54165b96cf5fd7a92f`. Arm B, `run_stage::build`
     with `mtf::mtf_runs`, `sort` and `fill`, is its code, unchanged: `src/mtf.rs` and
@@ -317,9 +318,9 @@ need not sum to the median of the total, and a gap between them is no missing ph
   `registered_head` input.
 - **The synthetic input is the frozen head's.** The text corpus is made from the head's
   `src/`, `tests/`, `examples/` and `README.md` (tests/common's `corpora(1)`), so any change
-  to those changes it. At this revision's sources (§10, §11) it is 3,344,914 bytes,
-  compressed at level 9 to 617,660 bytes, SHA-256
-  `7d03d9e0d60724f279b0cd457d1eae0e186f3063a42ad0db8a416ec575a89faa`, 4 blocks. (At §9's
+  to those changes it. At this revision's sources (§10, §11, with master `6145b3a9` merged)
+  it is 3,361,802 bytes, compressed at level 9 to 622,150 bytes, SHA-256
+  `bd9c715abcaca17a04247ba4007850574c1677b6bc15cf7c57fa8ffb6a07c1b2`, 4 blocks. (At §9's
   sources, `7f88388b`, it was 3,324,678 bytes, `b4c2767e…`; at §9.1's, `370a868f`,
   3,326,302 bytes, `5996a32d…`.) The other
   five don't depend on the head (§4's pinned values). A docs-only commit changes none of
@@ -619,6 +620,19 @@ at source `37c4ff24` (`src/run_stage.rs` blob `cb09d7da…`).
   the empty one) are production's through `build_direct`, by both kernels, on dirty
   buffers, each by records, no fallback hiding anything. What the decoder does with the
   empty block afterwards (`BadOrigPtr`) is a separate contract and isn't tested here.
+
+**The source of this evidence** is `37c4ff24`. Two commits followed:
+- master `6145b3a9` merged, which changes the reader (`src/read.rs`) and adds
+  `tests/reader_panic.rs`, nothing D, its harness or its tests call;
+- `d8a4c6f0`, the fuzz mode rewritten within the crate's MSRV (`repeat(c).take(n)` for
+  `repeat_n`) and with a precedence lint's parentheses: the same values, no change of
+  behaviour.
+
+At `d8a4c6f0` the run-fed lib tests (7), `mtf_kernels` (5), the example's (5) and the
+verifier's (51) tests pass, clippy is clean with and without `run-fed`, and a 30 s fuzz run
+at seed 1 found no failure in 187,832 cases (`fuzz/head-seed1-30s.txt`: 89,908 blocks,
+54,727 by records, 25,730 by the fallback). The 240 s runs and the mutants are
+`37c4ff24`'s.
 
 **What D055 still holds:** the timing waits on the Guardian's reading of this evidence. The
 forgeable `Kernels` contract (§1.3) is unchanged.

@@ -17,6 +17,7 @@ profile: release, with debug assertions and overflow checks). Each run:
 | `seed1-30s.txt` | `fuzz 30 1 … run-fed-direct` | CI's smoke shape |
 | `seed2-240s.txt` | `fuzz 240 2 … run-fed-direct` | |
 | `seed3-240s.txt` | `fuzz 240 3 … run-fed-direct` | |
+| `head-seed1-30s.txt` | `fuzz 30 1 - run-fed-direct` | at `d8a4c6f0` (master merged; the mode within MSRV), the rest at `37c4ff24` |
 | `inject-seed1-5s.txt` | `MIBZ2_FUZZ_INJECT=1 fuzz 5 1 … run-fed-direct` | failures made on purpose, to show saving and minimising |
 | `inject-witnesses/` | | the two injected failures' minimised witnesses |
 
