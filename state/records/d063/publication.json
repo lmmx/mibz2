@@ -1,0 +1,15 @@
+{
+  "input": 6734225080,
+  "review": 6734295081,
+  "output_pr": 145,
+  "work_commit": "d3fa5845ff995ab6c798f7611ff001d1a1ffd790",
+  "complete_cursor_commit": "85bff2185c3ef9d35181f8c5617cad207e2a16ee",
+  "exact_readback": true,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "passed"
+}
