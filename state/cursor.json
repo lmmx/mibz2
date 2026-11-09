@@ -847,6 +847,22 @@
       "status": "published; scoped B5 HOLD",
       "disposition": "scoped B5 HOLD on D timing/unsafe admission pending D-reached fuzz and auditable mutation results; ownership proof supported; existing empty placement tests confirmed; no new B6 defect",
       "comment": 6732441720
+    },
+    {
+      "id": "D056",
+      "decision": [
+        "G1",
+        "G2",
+        "B6 resumption"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6732477634,
+      "sha": "03e52206ac248737bc856f064928adf238265917",
+      "evidence_digest": "git-blob:8e5f2acad8426f7a349e33b41ebd96866c2a9e28;journal:590b02944c4915fdc4c1f2405f043f4e608e69b0",
+      "commit": "82aadf1b98cf63971b8e41c3c48f55100976c638",
+      "status": "complete",
+      "disposition": "PROCEED for #270 registered CI sweep; empty-block false refusal fixed; sentinel canonicality and replay provenance corrections recorded; #277 HOLD unchanged"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1006,7 +1022,9 @@
     "f972af2c2762b894c16365848465ff1efe0b4768",
     "971b8ff920ccf1c224f2a820a89d7462b4dfae0b",
     "fe03ad8836c1ada255438e92d70032b31b706178",
-    "f4ffe284b015c1f423cab40beadf51d8b2cb2b1e"
+    "f4ffe284b015c1f423cab40beadf51d8b2cb2b1e",
+    "3f6594235eb041f97e695fd5072e64216fe043e4",
+    "82aadf1b98cf63971b8e41c3c48f55100976c638"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1062,7 +1080,8 @@
     6731180299,
     6731861816,
     6731982223,
-    6732361106
+    6732361106,
+    6732477634
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1143,10 +1162,11 @@
   "current_execution": {
     "active_comment": 6732477634,
     "decision": "D056",
-    "status": "in_progress",
+    "status": "complete",
     "queue_snapshot": [
       6732477634
-    ]
+    ],
+    "work_commit": "82aadf1b98cf63971b8e41c3c48f55100976c638"
   },
   "duplicate_events": [
     {
@@ -1578,6 +1598,13 @@
       "decision": "D055",
       "commit": "fe03ad8836c1ada255438e92d70032b31b706178",
       "comment": 6732441720
+    },
+    {
+      "pr": 270,
+      "sha": "03e52206ac248737bc856f064928adf238265917",
+      "evidence_digest": "git-blob:8e5f2acad8426f7a349e33b41ebd96866c2a9e28;journal:590b02944c4915fdc4c1f2405f043f4e608e69b0",
+      "decision": "D056",
+      "commit": "82aadf1b98cf63971b8e41c3c48f55100976c638"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1888,8 +1915,10 @@
     {
       "comment_id": 6732477634,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D056"
+      "status": "complete",
+      "decision": "D056",
+      "receipt_commit": "3f6594235eb041f97e695fd5072e64216fe043e4",
+      "work_commit": "82aadf1b98cf63971b8e41c3c48f55100976c638"
     }
   ],
   "migrated_from": {
