@@ -3066,3 +3066,52 @@ No new unsafe primitive in the inspected repair: the existing descriptor ownersh
 Expected: honest failure-stage classification. Observed: typed provenance, correct precedence and reached negative tests. D065/D066's identified gap is closed. The next useful evidence is the one bounded target diagnostic, honestly allowing unavailable or incomplete results; another performance attempt cannot replace it.
 
 Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; exact manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **ccff1819752278b15d26e1cc249d16b59cc0501e**. Routing audit: five resolved historical findings, zero unresolved. Persistent task unchanged.
+
+
+## D069 — Guarded service repairs accepted; draft the registration, preserve admission boundary
+
+**G1:** D067's outer-unwind termination, fail-open discovery and premature completion-evidence objections are resolved at **6642faf43d817b8b045762045ea668d4a57e01cf** (#302). **G2:** lift the technical repair HOLD for these three objections. **PROCEED with drafting and reviewing the exact-candidate registration.** Drafting was already permitted by D067; it need not wait for a real-i9 preflight, timing, or an adoption-policy decision. This is not permission to time, queue, merge or qualify the automatic default. Those activities retain the registration/C5/CI requirements and D067 §5's unresolved reach/adoption boundary. No G3 relaxation or G8 line stop. D068 is unchanged.
+
+Inbox [6741180673](https://github.com/lmmx/mibz2/pull/161#issuecomment-6741180673). SPEC/SPEC.GUARDIAN/MODE/RULES/PROTOCOL pin **a4f97714cc14366984015869d9d094d89488ac57**. Independent source review, exact mutation reconstruction/digest checks and CI execution-log inspection; I did not implement the repair or execute Rust/Miri locally. [Evidence](records/d069/evidence.json), [CI excerpts](records/d069/ci-excerpts.txt).
+
+### 1. Ownership and terminal shutdown
+
+The live token now survives precisely the disputed interval. Acquisitions set Outer::held under the hub lock; hand-offs clear it with queue insertion; finish retains it across publish until retire_counted. The guard is declared before the pool and other locals. Locks unwind before the guard; helpers complete through the unchanged Pool protocol before their referenced buffers can be disposed of. Hub::fail never recycles another thread's active buffers.
+
+Hub::fail sets terminal error/cancelled and clears ready under the shared lock, then marks the hub failed, drains queued work and retires its own held token under the hub lock. Locks are sequential, not nested. Wait predicates test failed, so losing the last worker or a worker holding nothing no longer depends on a vanished consumer. Concurrent active stages own their tokens until retirement; successful late hand-offs use retired_on_failure instead of stranding work. Subsequent failures retire their own token without republishing a block. The first terminal error remains.
+
+This is terminal cancellation, not reconstruction of untrusted partial state. The reader retains bytes already returned; the full prior-block prefix is not promised. If EOF was already consumed, a later failure need not retroactively invalidate it. Cancel races may expose Cancelled. Abort/OOM abort and permanently blocked external input are excluded. The error-message allocation is not allocation-free unwind recovery; do not claim it survives allocator abort. No new obligation to recover arbitrary corrupted hub invariants follows from this repair.
+
+The negative evidence is relevant, not merely named: G1 removes the actual guard call and hangs at held/no-held/parked paths; G2 removes hub notification and hangs at parked waiters; G3 removes failed from termination predicates and hangs after feeder loss; G4 fabricates an extra retirement and is caught by taken/retired inequality; G5 disarms before publication and is caught with live=1 after AfterPublish. Reconstructed each mutation from the inspected base, checked its SHA-256 against the committed log, and inspected the failure reasons. Outcomes: **7, 4, 3, 3, 4 tests fail respectively; restored baseline 7 pass**. These are archived native runs, not newly executed mutants here. Base SHA256 **50f322da3395ba0ebe21e363e6b9e1ba4562781adb438c54c0ac246de7270333**; parallel.rs blob **a889bbf19aa66cc62a542687b143b17326e9becb**.
+
+Two coverage descriptions need precision, not another blanket HOLD:
+- The full-block test asserts pooled work in aggregate across every_point, not independently for each injection/shape. It establishes representative pooled execution, not that every fault was reached while helpers were active.
+- run samples published before join, then samples retirement/exit state after join. Thus its duplicate-publication assertion covers that captured history, not necessarily every publication before worker exit. Move that observation after join/drop when strengthening the test. The inspected production source still supplies the single-publication/held-token argument; no duplicate publication was demonstrated.
+
+The missing separate helper-fence mutant does not defeat reuse of the unchanged helper-completion proof. src/coop.rs matches fc013927 exactly, blob **b18f5ea2186601b151720e116441770b3a5005f0**. Retain D045/D053/D057 only for their unchanged premises. No AVX2/full-size Miri or universal-interleaving claim is made.
+
+### 2. Discovery and completion
+
+cpu_quota now propagates unreadable membership, parent control errors and malformed values to Unknown. It reads the resolved hierarchy, takes the tightest quota, rejects hidden-root ambiguity, and makes Unknown reject the target. Strict positive-integer parsing rejects the previous inf/max-garbage witnesses. The source fixtures exercise discovery and the predicate together, including a restrictive parent beneath an unlimited leaf and quotas below/at ten. This resolves D067's concrete fail-open paths.
+
+target_topology requires allowed/present/online lists and each selected CPU's identity, core/package and L3 facts; read/parse failures no longer become fictitious online cores or skipped physical cores. This is a consistent set of observations, **not an atomic kernel snapshot or a guarantee against later affinity/quota/hotplug changes**. The future preflight must record the actual facts and execution assumptions. A conservative Unknown on unsupported/container arrangements is fallback, not evidence that the hardware cannot run the algorithm.
+
+Each hub thread increments exited from its last guard; ended is read under the same hub lock. Native/default tests join before sampling. The fuzz reader explicitly joins parallel_decoder, so it no longer relies on dropping BzReader while its feeder can retain an Arc. EOF remains distinct from retirement. Preserve prepared=finished=4 for the successful fixture; counts on error are not “all blocks finished.”
+
+### 3. Execution evidence and what remains
+
+CI checkout **d89b1559c741d3543848003212ac27e45219365f** has no file differences from reviewed head 6642faf4. Inspected execution:
+- native job **129180166413**: library 73 pass/1 ignored; service 10, service_default 4, reader_panic 1 pass; discovery fixtures and outer-unwind tests reached;
+- Miri **129180166374**: 23 pass, including all three miri_outer fixtures;
+- occupancy **129180164790**: library 73 pass/1 ignored and occupancy 3 pass, including the formerly racing default assertion;
+- fuzz **129180166332**: service mode **811 cases, zero failures**, completion-fenced attribution shows pooled, finished, front/back reuse and error cases. This is bounded coverage, not per-case cancellation fuzzing; the targeted cancellation/racing-fault tests provide that separate evidence.
+
+Fresh overall check snapshot: **23 success, 3 skipped, 2 cancelled macOS wheel jobs**. The brief's queued jobs are now cancelled; all-green is not established. Coordinator owns CI incident resolution. No rerun initiated here. A successful off-class bench still cannot qualify svc2's target gain.
+
+**Repairs required before a registration can be drafted: none identified in these three D067 closure items.** Draft now: exact switched/default commits and public entry point; target preflight with actual Machine/quota/dispatch at 9/10/11; unchanged estimand/grid/acceptance boundary; bounded attempts and failure handling; whole-process CPU and per-arm/per-run process-isolated peak RSS. Preflight is a prospective prerequisite to the timed attempt, not an excuse to time an unregistered probe. A draft is not a frozen admitted recipe.
+
+The automatic class includes unmeasured members. One i9 outcome cannot establish them, and CI's off-path null interval supplies no svc2 performance qualification. Resolve that real policy/evidence boundary through the existing Louis/Coordinator route; no brand-string ritual, waiver or retrospective threshold change here. No timing/queue admission or production approval is granted by this decision.
+
+Expected: closed ownership/shutdown, truthful discovery and final evidence counts. Observed: source repairs plus reached falsifiers and clean relevant CI executions. The technical gap is closed at this pin; the next consequential work is the exact registration and adoption resolution, not another replay of old-runtime timing.
+
+Migration checked before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **837f7c9d7595855438e0a0f40121c400ec34d34c**. Routing audit: five resolved historical findings, zero unresolved. Persistent task unchanged.

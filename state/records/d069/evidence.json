@@ -1,0 +1,162 @@
+{
+  "decision": "D069",
+  "incoming_comment": 6741180673,
+  "head": "6642faf43d817b8b045762045ea668d4a57e01cf",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source_blob": "a889bbf19aa66cc62a542687b143b17326e9becb",
+  "scope_blob": "30719ae1b2e4046dd1b5c2e6b0e639581d431e45",
+  "checks": [
+    {
+      "name": "Release",
+      "id": 129187704796,
+      "conclusion": "skipped"
+    },
+    {
+      "name": "deploy-branch",
+      "id": 129181022570,
+      "conclusion": "skipped"
+    },
+    {
+      "name": "preview",
+      "id": 129181020794,
+      "conclusion": "success"
+    },
+    {
+      "name": "look",
+      "id": 129181020326,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.12)",
+      "id": 129180254210,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.13)",
+      "id": 129180254193,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.11)",
+      "id": 129180254099,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.15)",
+      "id": 129180254098,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.14)",
+      "id": 129180254042,
+      "conclusion": "success"
+    },
+    {
+      "name": "python (3.10)",
+      "id": 129180254009,
+      "conclusion": "success"
+    },
+    {
+      "name": "Publish crate",
+      "id": 129180203417,
+      "conclusion": "skipped"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "id": 129180199971,
+      "conclusion": "success"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "id": 129180199856,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "id": 129180199789,
+      "conclusion": "success"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "id": 129180199675,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "id": 129180199664,
+      "conclusion": "success"
+    },
+    {
+      "name": "sdist",
+      "id": 129180199632,
+      "conclusion": "success"
+    },
+    {
+      "name": "build",
+      "id": 129180171178,
+      "conclusion": "success"
+    },
+    {
+      "name": "pages",
+      "id": 129180170791,
+      "conclusion": "success"
+    },
+    {
+      "name": "submit",
+      "id": 129180166417,
+      "conclusion": "success"
+    },
+    {
+      "name": "rust",
+      "id": 129180166413,
+      "conclusion": "success"
+    },
+    {
+      "name": "miri",
+      "id": 129180166374,
+      "conclusion": "success"
+    },
+    {
+      "name": "fuzz-smoke",
+      "id": 129180166332,
+      "conclusion": "success"
+    },
+    {
+      "name": "typing",
+      "id": 129180166213,
+      "conclusion": "success"
+    },
+    {
+      "name": "get-python-versions",
+      "id": 129180165709,
+      "conclusion": "success"
+    },
+    {
+      "name": "bench",
+      "id": 129180165693,
+      "conclusion": "success"
+    },
+    {
+      "name": "check-commit",
+      "id": 129180165208,
+      "conclusion": "success"
+    },
+    {
+      "name": "occupancy",
+      "id": 129180164790,
+      "conclusion": "success"
+    }
+  ],
+  "ci_merge": "d89b1559c741d3543848003212ac27e45219365f",
+  "merge_files": [],
+  "coop_blob": "b18f5ea2186601b151720e116441770b3a5005f0",
+  "mutation_validation": "Each mutation reconstructed; unique substitution assertions and SHA256 compared with archived log; failures/reasons inspected, restored baseline passes. Not executed natively in this run.",
+  "coverage_limits": [
+    "pooled reach assertion aggregated across injection suite",
+    "publication observation precedes join",
+    "bounded scalar Miri, not all interleavings",
+    "no actual-target predicate observation or timing",
+    "cancelled macOS CI checks remain"
+  ],
+  "disposition": "D067 three technical repair objections closed; registration drafting PROCEED; no timing/queue/production admission"
+}

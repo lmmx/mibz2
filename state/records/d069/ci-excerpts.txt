@@ -1,0 +1,58 @@
+
+JOB 129180166413
+2026-11-09T13:10:46.9290287Z HEAD is now at d89b155 Merge 6642faf43d817b8b045762045ea668d4a57e01cf into 5133bdd2cd259539e525ae584a03498f90d56b69
+2026-11-09T13:11:37.4592850Z test parallel::plan_tests::discovery_fails_closed_quota ... ok
+2026-11-09T13:11:37.4602466Z test parallel::plan_tests::discovery_fails_closed_topology ... ok
+2026-11-09T13:11:37.5067414Z test parallel::plan_tests::the_service_default ... ok
+2026-11-09T13:11:37.7490693Z test parallel::service_unwind_tests::miri_outer_after_job ... ok
+2026-11-09T13:11:37.7503020Z test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+2026-11-09T13:11:37.7550584Z test parallel::service_unwind_tests::miri_outer_parked ... ok
+2026-11-09T13:13:23.8346790Z test result: ok. 73 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 109.00s
+2026-11-09T13:13:33.3176740Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.48s
+2026-11-09T13:13:38.5761625Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.25s
+2026-11-09T13:13:52.2491292Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.67s
+2026-11-09T13:13:54.7484848Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.48s
+2026-11-09T13:13:57.2109593Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.45s
+2026-11-09T13:14:01.1225798Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.91s
+2026-11-09T13:14:12.9697655Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.84s
+2026-11-09T13:14:13.6343434Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+2026-11-09T13:14:18.7681409Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.13s
+2026-11-09T13:14:20.0012201Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.21s
+2026-11-09T13:14:20.3847041Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+2026-11-09T13:14:23.4913767Z test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+JOB 129180166374
+2026-11-09T13:10:47.2014617Z HEAD is now at d89b155 Merge 6642faf43d817b8b045762045ea668d4a57e01cf into 5133bdd2cd259539e525ae584a03498f90d56b69
+2026-11-09T13:11:17.5613330Z [36;1mgrep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt[0m
+2026-11-09T13:11:19.3564207Z parallel::service_unwind_tests::miri_outer_after_job: test
+2026-11-09T13:11:19.3627888Z parallel::service_unwind_tests::miri_outer_after_publish: test
+2026-11-09T13:11:19.3691350Z parallel::service_unwind_tests::miri_outer_parked: test
+2026-11-09T13:17:21.9233874Z test parallel::service_unwind_tests::miri_outer_after_job ... ok
+2026-11-09T13:17:24.0019862Z test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+2026-11-09T13:17:26.6251072Z test parallel::service_unwind_tests::miri_outer_parked ... ok
+2026-11-09T13:18:06.5081930Z test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 668.25s
+
+JOB 129180166332
+2026-11-09T13:10:47.8024992Z HEAD is now at d89b155 Merge 6642faf43d817b8b045762045ea668d4a57e01cf into 5133bdd2cd259539e525ae584a03498f90d56b69
+2026-11-09T13:11:48.3611871Z 79453 cases in 30 s (seed 1, mode classic), 0 failures
+2026-11-09T13:12:19.6741459Z 837 cases in 30 s (seed 1, mode pipeline), 0 failures
+2026-11-09T13:12:50.9773959Z 811 cases in 30 s (seed 1, mode service), 0 failures
+2026-11-09T13:12:50.9784157Z       101  mibz2 default svc2 StreamDecoder::new w1048576 r65536: pooled 73, finished 86, fronts reused 18, backs reused 38, errors 91
+2026-11-09T13:12:50.9784767Z       102  mibz2 default svc2 StreamDecoder::new w997 r509: pooled 70, finished 81, fronts reused 14, backs reused 26, errors 94
+2026-11-09T13:12:50.9785335Z       102  mibz2 default svc2 BzReader::parallel r4093: pooled 72, finished 85, fronts reused 9, backs reused 25, errors 88
+2026-11-09T13:12:50.9785877Z       102  mibz2 default svc2 decode_parallel: pooled 65, finished 86, fronts reused 7, backs reused 23, errors 84
+2026-11-09T13:12:50.9786382Z       101  mibz2 service 1x3+1 s1: pooled 74, finished 87, fronts reused 39, backs reused 51, errors 91
+2026-11-09T13:12:50.9787133Z       101  mibz2 service 3x3+1 s12: pooled 65, finished 83, fronts reused 4, backs reused 7, errors 86
+2026-11-09T13:12:50.9787594Z       101  mibz2 service 1x4+2 s2: pooled 74, finished 91, fronts reused 26, backs reused 56, errors 84
+2026-11-09T13:12:50.9788067Z       101  mibz2 service 2x2+1 s3 scalar: pooled 74, finished 87, fronts reused 25, backs reused 32, errors 91
+
+JOB 129180164790
+2026-11-09T13:10:52.7129771Z HEAD is now at d89b1559 Merge 6642faf43d817b8b045762045ea668d4a57e01cf into 5133bdd2cd259539e525ae584a03498f90d56b69
+2026-11-09T13:11:47.3784595Z test parallel::plan_tests::discovery_fails_closed_quota ... ok
+2026-11-09T13:11:47.3805353Z test parallel::plan_tests::discovery_fails_closed_topology ... ok
+2026-11-09T13:11:47.4318481Z test parallel::plan_tests::the_service_default ... ok
+2026-11-09T13:11:47.7554195Z test parallel::service_unwind_tests::miri_outer_after_job ... ok
+2026-11-09T13:11:47.7656081Z test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+2026-11-09T13:11:47.7694544Z test parallel::service_unwind_tests::miri_outer_parked ... ok
+2026-11-09T13:14:02.9815493Z test result: ok. 73 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 138.10s
+2026-11-09T13:14:02.9908044Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
