@@ -40,7 +40,8 @@ fn main() {
         "mixed" => 8,
         "classic" => 0,
         "service" => 1,
-        m => panic!("MODE is mixed, classic or service, not {m}"),
+        "control" => return control(),
+        m => panic!("MODE is mixed, classic, service or control, not {m}"),
     };
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 
@@ -167,7 +168,8 @@ fn main() {
             } else {
                 format!(
                     "of {}: build {}, walk {}, finish {}, assemble {}, back reuse {}, \
-                     front reuse {}, prepared queue past teams {} (longest {})",
+                     front reuse {}, prepared queue past teams {} (longest {}), fence \
+                     waited {}",
                     st.counted,
                     st.pooled_build,
                     st.pooled_walk,
@@ -176,7 +178,8 @@ fn main() {
                     st.back_reuse,
                     st.front_reuse,
                     st.beyond_teams,
-                    st.max_prepared
+                    st.max_prepared,
+                    st.fenced
                 )
             };
             println!(
@@ -207,6 +210,46 @@ struct SvcStats {
     /// threshold, not a cap: D045), and the longest it grew in any case
     beyond_teams: u64,
     max_prepared: u64,
+    /// cases with a decoder thread still alive once the decode had returned (its reader
+    /// dropped), which the fence then waited for
+    fenced: u64,
+}
+
+/// The decoder threads alive in this process (Linux: the tasks in `/proc/self/task` whose
+/// name starts `mibz2`, as every decoder thread's does: `mibz2-scan`, `mibz2-read`,
+/// `mibz2-svc-*`, `mibz2-coop-*`, a team's `mibz2-N`); None where they can't be listed
+#[cfg(feature = "trace")]
+fn decoder_threads() -> Option<usize> {
+    let tasks = std::fs::read_dir("/proc/self/task").ok()?;
+    Some(
+        tasks
+            .flatten()
+            .filter(|t| {
+                std::fs::read_to_string(t.path().join("comm")).is_ok_and(|n| n.starts_with("mibz2"))
+            })
+            .count(),
+    )
+}
+
+/// The trace's fence (D053): wait, at most a minute, until no decoder thread is alive;
+/// whether none is. A thread's marks reach the trace's shared list in its thread-local
+/// destructor, which runs before the thread exits, and an exited thread leaves
+/// `/proc/self/task`; so once none is listed, every decoder thread that ever ran has
+/// published its marks, and none can publish after the trace is reset. Without it, a
+/// dropped `BzReader` whose feeder still holds the decoder (`BzReader::drop` joins the
+/// feeder only if it has finished) can end its threads after the next case's reset, and
+/// their marks count for that case.
+#[cfg(feature = "trace")]
+fn fence() -> bool {
+    let deadline = Instant::now() + Duration::from_secs(60);
+    loop {
+        match decoder_threads() {
+            Some(0) => return true,
+            None => panic!("the fence needs /proc/self/task (Linux)"),
+            Some(_) if Instant::now() > deadline => return false,
+            Some(_) => std::thread::sleep(Duration::from_millis(1)),
+        }
+    }
 }
 
 /// What one service run reached, from the decoder's marks (`trace`): helpers' shares of a
@@ -297,13 +340,36 @@ fn service_case(
     st.cancelled += how.cancel_after.is_some() as u64;
     let want = oracle(&t);
     let (plain_out, plain_res) = plain_parallel(&t);
+    // (the trace's fence, D053: no decoder thread of an earlier decode is left alive when
+    // the trace is reset for this one, and none of this one's when its marks are taken, so
+    // every case's counts are its own threads' alone; see `fence`)
     #[cfg(feature = "trace")]
-    mibz2::trace::set_level(1);
+    {
+        if !fence() {
+            *bad += 1;
+            report(out_dir, &t, case, "a decoder thread outlived its decode");
+            return "A DECODER THREAD OUTLIVED ITS DECODE (BEFORE)".into();
+        }
+        mibz2::trace::set_level(1);
+    }
     let got = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| c.run(&t, how)));
     #[cfg(feature = "trace")]
     {
+        let alive = decoder_threads().unwrap_or(0);
+        st.fenced += (alive > 0) as u64;
+        let fenced = fence();
         mibz2::trace::set_level(0);
         let traces = mibz2::trace::take();
+        if !fenced {
+            *bad += 1;
+            report(
+                out_dir,
+                &t,
+                case,
+                &format!("{}: a decoder thread outlived its decode", c.name()),
+            );
+            return "A DECODER THREAD OUTLIVED ITS DECODE".into();
+        }
         if got.is_ok() {
             reached(c, st, &traces);
         }
@@ -428,4 +494,117 @@ fn report(dir: &Option<String>, t: &[u8], case: u64, why: &str) {
         let _ = std::fs::create_dir_all(d);
         let _ = std::fs::write(format!("{d}/case-{case}.bz2"), t);
     }
+}
+
+/// MODE control: the fence's negative control (D053). A stand-in for a previous case's
+/// late decoder thread (named as one, `mibz2-late`, marking a pooled build at place
+/// 0xC0DE and then ending 300 ms after its case returned) must land in the next case's
+/// trace without the fence, and in its own case's alone with it. Then the real race: a
+/// `BzReader::parallel_service` read to its end and dropped, 40 times, counting the drops
+/// after which decoder threads were still alive (what the fence waits for). Exits 1 if the
+/// control fails either way.
+#[cfg(feature = "trace")]
+fn control() {
+    use mibz2::trace::{self, Kind};
+    let late = |ts: &[trace::ThreadTrace]| {
+        ts.iter().any(|t| {
+            t.name == "mibz2-late"
+                && t.marks
+                    .iter()
+                    .any(|m| m.kind == Kind::BuildStart && m.place == 0xC0DE)
+        })
+    };
+    let mut ok = true;
+    for fenced in [false, true] {
+        assert!(fence(), "no decoder thread before the control");
+        // case 1: the late thread starts, marks, and outlives the case's own return
+        trace::set_level(1);
+        std::thread::Builder::new()
+            .name("mibz2-late".into())
+            .spawn(|| {
+                trace::mark(Kind::BuildStart, 0xC0DE);
+                std::thread::sleep(Duration::from_millis(300));
+            })
+            .unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        if fenced {
+            assert!(fence());
+        }
+        trace::set_level(0);
+        let first = trace::take();
+        // case 2: reset, run (here: wait 600 ms), take
+        if fenced {
+            assert!(fence());
+        }
+        trace::set_level(1);
+        std::thread::sleep(Duration::from_millis(600));
+        if fenced {
+            assert!(fence());
+        }
+        trace::set_level(0);
+        let second = trace::take();
+        let (in1, in2) = (late(&first), late(&second));
+        println!(
+            "{}: the late thread's mark in its own case {in1}, in the next case {in2}",
+            if fenced { "fenced" } else { "unfenced" }
+        );
+        // unfenced, the late mark must be misattributed (the control is sensitive);
+        // fenced, it must be its own case's alone
+        ok &= if fenced { in1 && !in2 } else { !in1 && in2 };
+    }
+    // the real race: decoder threads alive after a reader's drop: a fuzz-sized input (one
+    // feeder chunk) read to its end and dropped after 1 MB, and an input of several of the
+    // feeder's 4 MiB chunks (8 MB of random bytes) dropped after 1 MB, its feeder then
+    // still writing
+    let corp = corpora(1);
+    let small = compress(&corp[0].1[..2_000_000], 3);
+    let big = compress(&corp[1].1.repeat(4), 1);
+    let n = 40;
+    for (z, stop) in [
+        (&small, None),
+        (&small, Some(1_000_000usize)),
+        (&big, Some(1_000_000)),
+    ] {
+        let mut alive = 0;
+        for _ in 0..n {
+            assert!(fence());
+            let mut r = mibz2::BzReader::parallel_service(
+                std::io::Cursor::new(z.clone()),
+                2,
+                3,
+                2,
+                8,
+                mibz2::Kernels::detect(),
+            );
+            match stop {
+                None => {
+                    std::io::Read::read_to_end(&mut r, &mut Vec::new()).unwrap();
+                }
+                Some(m) => {
+                    std::io::Read::read_exact(&mut r, &mut vec![0; m]).unwrap();
+                }
+            }
+            drop(r);
+            alive += (decoder_threads().unwrap_or(0) > 0) as u64;
+        }
+        let how = format!(
+            "{} kB input, {}",
+            z.len() / 1000,
+            if stop.is_none() {
+                "read to its end"
+            } else {
+                "dropped after 1 MB"
+            }
+        );
+        println!(
+            "decoder threads still alive just after a BzReader's drop ({how}): {alive} of {n}"
+        );
+    }
+    println!("control {}", if ok { "PASSED" } else { "FAILED" });
+    std::process::exit(if ok { 0 } else { 1 });
+}
+
+#[cfg(not(feature = "trace"))]
+fn control() {
+    panic!("MODE control needs --features trace");
 }
