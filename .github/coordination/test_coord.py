@@ -221,11 +221,23 @@ class Queue(unittest.TestCase):
         queued = comment(145, self.off + 5, msg(FROM="coordinator", TO="optimizer",
                                                 TYPE="QUEUED"))
         item = comment(160, self.off + 6, msg(FROM="coordinator", TO="optimizer",
-                                              TYPE="CHECKPOINT") + f" QUEUED {self.off + 5}")
+                                              RE=f"dispatching QUEUED {self.off + 5}",
+                                              TYPE="CHECKPOINT"))
         review = comment(145, self.off + 7, msg(FROM="astra", TYPE="REVIEW")
                          + f" {self.off + 6}")
         r = self.run_route([item], [queued, review], [self.off + 6])
         self.assertNotIn("queued", r)
+
+    def test_a_queued_item_mentioned_only_in_a_body_stays_queued(self):
+        queued = comment(145, self.off + 5, msg(FROM="coordinator", TO="optimizer",
+                                                TYPE="QUEUED"))
+        item = comment(160, self.off + 6, msg(FROM="coordinator", TO="optimizer",
+                                              RE="another item", TYPE="CHECKPOINT")
+                       + f" Next in your queue: QUEUED {self.off + 5}")
+        review = comment(145, self.off + 7, msg(FROM="astra", TYPE="REVIEW")
+                         + f" {self.off + 6}")
+        r = self.run_route([item], [queued, review], [self.off + 6])
+        self.assertEqual(r["queued"], [self.off + 5])
 
     def test_publications_always_go_to_the_channel(self):
         self.assertEqual(coord.route("optimizer", "ACK")["issue"], 145)
