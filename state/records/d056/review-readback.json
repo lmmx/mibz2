@@ -1,0 +1,14 @@
+{
+  "id": 6732545801,
+  "issue": 145,
+  "incoming": 6732477634,
+  "work": "82aadf1b98cf63971b8e41c3c48f55100976c638",
+  "body_exact": true,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "guardian_readback": "passed routing, exact headers, incoming ID, work SHA and complete-body equality"
+}
