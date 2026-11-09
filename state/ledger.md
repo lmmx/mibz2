@@ -281,3 +281,19 @@ Model T=U+max(L,P(L))+D: helper completion depends on leader arrival. Local E=.7
 **Scope correction:** #269 Q1 tests one worker; Q2 includes leader-side sort. Their negative results cannot close new helper-side formulations. Preserve all actual registered outcomes. Current floor needs compiled-store/observability inspection; nominal-GHz elapsed cycles are not PMU cycles.
 
 **Whole-decoder priority:** #258 is now explicitly HELD for admission (Researcher6729358962, Coordinator6729367020); resolve that evidence issue before a run. C25 remains a cheaper narrow alternative. D042's separate B5 HOLD is untouched. Zero new timing, implementation, safety certification, speed credit or automation changes.
+
+
+## Helper-side run-fed ranking: inbox 6729932062
+
+[Source review and prices](records/reviews/inbox-6729932062/report.md), #270 at **f94551ab8c359ec28dca02956ddca150595cc7cb**.
+
+- **C31 first helper candidate:** per-byte L cursors reduce predecessor searches to at most256/helpers' share, not r; previous r-search price superseded for this implementation. Eliminated scatters are F-order metadata versus hs. FusedBuild already uses bucket streams and16-row identical-byte runs. No45k production table stores eliminated.
+- **C35 row-aware partitioning next:** current equal-record split can imbalance row/cell work. Price max helper span, not summed timers; census r/n/m/W per helper before changing the partition.
+- **C32 exact tails:** W/n1.59 implies37.1% fewer written words if exact, not37.1% fewer store instructions. Masked tails generally retain vector-store count. Compare instructions, words and readiness.
+- **C36 optional leader build assistance:** ideal divisible equal-rate saving (B−L)/3 for two helpers finishing at B and leader arriving at L<B. Do not assign prefix or an unbounded byte class exclusively to the leader.
+- **Early walk deferred:** arbitrary Psi targets, table initialization, markers and overstores require new readiness/ownership machinery. Keep current global barrier.
+- **Counter correction:** build_ns starts before setup/dispatch; lead_ns starts inside pool entry. leader_late compares unlike origins and can undercount actual late completion. join_wait includes scheduling; CI wall/CPU are not pure work or i9 critical-path evidence.
+- **C29 independent narrow lead:** register-list checkpoint kernel can remove front work without new representation; plain workers already have register-list MTF. Selected-block smoke numbers are local indications only.
+- **Current economics:** service-2x3 now has submitted run6729877078 and reported result6729896575; earlier admission HOLD description is historical. Reported CPU ref/arm1.146 implies12.7% reduction, not14.6%. No bundle replay here. D044's B5 timing HOLD remains; no unsafe diagnostic authorization.
+
+No implementation, timing, tests, dispatch or measured speed credit. Prior registered outcomes unchanged.

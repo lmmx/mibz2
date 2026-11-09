@@ -578,7 +578,8 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "f94551ab8c359ec28dca02956ddca150595cc7cb",
-      "progress": "Source findings committed: amortized C31 cursors, existing FusedBuild run stores, tail-store instruction budget, leader_late origin mismatch, ranked helper proposals."
+      "progress": "Source findings committed: amortized C31 cursors, existing FusedBuild run stores, tail-store instruction budget, leader_late origin mismatch, ranked helper proposals.",
+      "report_path": "state/records/reviews/inbox-6729932062/report.md"
     }
   ],
   "migrated_from": {
