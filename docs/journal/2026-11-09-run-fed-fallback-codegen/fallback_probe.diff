@@ -1,0 +1,225 @@
+--- examples/run_fed_stage.rs	2026-11-09 05:52:26.682775977 +0000
++++ examples/fallback_probe.rs	2026-11-09 06:39:38.829901897 +0000
+@@ -75,6 +75,136 @@
+ use mibz2::stream::{Event, Scanner, SliceSource};
+ use mibz2::{crc, mtf, rle, run_stage, Kernels};
+ 
++
++// ---- fallback probe (untimed instrumentation; not part of the measured harness) ----
++mod probe {
++    use std::alloc::{GlobalAlloc, Layout, System};
++    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
++    pub static CALLS: AtomicU64 = AtomicU64::new(0);
++    pub static BYTES: AtomicU64 = AtomicU64::new(0);
++    pub struct Count;
++    unsafe impl GlobalAlloc for Count {
++        unsafe fn alloc(&self, l: Layout) -> *mut u8 {
++            CALLS.fetch_add(1, Relaxed);
++            BYTES.fetch_add(l.size() as u64, Relaxed);
++            unsafe { System.alloc(l) }
++        }
++        unsafe fn dealloc(&self, p: *mut u8, l: Layout) {
++            unsafe { System.dealloc(p, l) }
++        }
++        unsafe fn realloc(&self, p: *mut u8, l: Layout, n: usize) -> *mut u8 {
++            CALLS.fetch_add(1, Relaxed);
++            BYTES.fetch_add(n as u64, Relaxed);
++            unsafe { System.realloc(p, l, n) }
++        }
++    }
++    pub fn allocs() -> (u64, u64) {
++        (CALLS.load(Relaxed), BYTES.load(Relaxed))
++    }
++    /// minor and major page faults of this process, from /proc/self/stat
++    pub fn faults() -> (u64, u64) {
++        let s = std::fs::read_to_string("/proc/self/stat").unwrap();
++        let f: Vec<&str> = s[s.rfind(')').unwrap() + 2..].split(' ').collect();
++        (f[7].parse().unwrap(), f[9].parse().unwrap())
++    }
++    /// the mapping holding `a`, from /proc/self/maps
++    pub fn vma(a: usize) -> String {
++        for l in std::fs::read_to_string("/proc/self/maps").unwrap().lines() {
++            let r = l.split(' ').next().unwrap();
++            let (lo, hi) = r.split_once('-').unwrap();
++            let (lo, hi) = (usize::from_str_radix(lo, 16).unwrap(), usize::from_str_radix(hi, 16).unwrap());
++            if a >= lo && a < hi {
++                let name = l.split_whitespace().nth(5).unwrap_or("anon");
++                return format!("{name}[{lo:x}..{hi:x}]");
++            }
++        }
++        "?".into()
++    }
++    /// of [a, a+len): 4K pages present, and those backed by a transparent huge page
++    /// (/proc/self/pagemap's PFN, then /proc/kpageflags' THP bit 22; root only)
++    pub fn thp(a: usize, len: usize) -> (usize, usize) {
++        use std::io::{Read, Seek, SeekFrom};
++        let (Ok(mut pm), Ok(mut kf)) = (
++            std::fs::File::open("/proc/self/pagemap"),
++            std::fs::File::open("/proc/kpageflags"),
++        ) else {
++            return (0, 0);
++        };
++        let (mut present, mut huge) = (0, 0);
++        let mut v = a & !4095;
++        while v < a + len {
++            let mut e = [0u8; 8];
++            pm.seek(SeekFrom::Start((v / 4096 * 8) as u64)).unwrap();
++            pm.read_exact(&mut e).unwrap();
++            let e = u64::from_le_bytes(e);
++            if e >> 63 & 1 == 1 {
++                present += 1;
++                let pfn = e & ((1 << 55) - 1);
++                let mut f = [0u8; 8];
++                if pfn != 0 && kf.seek(SeekFrom::Start(pfn * 8)).is_ok() && kf.read_exact(&mut f).is_ok() {
++                    if u64::from_le_bytes(f) >> 22 & 1 == 1 {
++                        huge += 1;
++                    }
++                }
++            }
++            v += 4096;
++        }
++        (present, huge)
++    }
++}
++#[global_allocator]
++static GLOBAL: probe::Count = probe::Count;
++
++
++/// Over a block's MTF symbols (a replay of `mtf::mtf`'s list, untimed): literals, those
++/// with index >= 32 (`mtf_avx2`'s second level, its `rows` stores), and of those, the ones
++/// whose byte's `counts` slot lies in each window [lo, hi) of slots
++fn alias_census(b: &Symbols, wins: &[(usize, usize)]) -> (u64, u64, Vec<u64>, Vec<u64>, Vec<u64>) {
++    let mut list: Vec<u8> = b.seq_to_unseq.to_vec();
++    let (mut lit, mut deep) = (0u64, 0u64);
++    // per window: deep literals whose own byte's slot is in it (`self`); literals whose
++    // slot is in it followed by a deep literal (`pair`: its rows loads after that store);
++    // and literals in it at all (`any`)
++    let (mut own, mut pair, mut any) = (vec![0u64; wins.len()], vec![0u64; wins.len()], vec![0u64; wins.len()]);
++    let mut prev: Option<u8> = None;
++    for &s in &b.syms {
++        if s <= 1 { continue; }
++        if s == b.eob { break; }
++        let nn = (s as usize - 1).min(255);
++        let c = list[nn];
++        list.remove(nn);
++        list.insert(0, c);
++        lit += 1;
++        for (k, &(lo, hi)) in wins.iter().enumerate() {
++            let inw = (lo..hi).contains(&(c as usize));
++            if inw { any[k] += 1; }
++            if nn >= 32 && inw { own[k] += 1; }
++            if nn >= 32 && prev.is_some_and(|p| (lo..hi).contains(&(p as usize))) { pair[k] += 1; }
++        }
++        if nn >= 32 { deep += 1; }
++        prev = Some(c);
++    }
++    (lit, deep, own, pair, any)
++}
++
++fn probe_bufs(file: &str, arm: usize, x: &Bufs) {
++    let (llp, llc) = (x.ll.as_ptr() as usize, x.ll.capacity());
++    let ttp = x.tt.as_slice().as_ptr() as usize;
++    let ttl = x.tt.len();
++    let outp = x.out.as_ptr() as usize;
++    let cp = x.counts.as_ptr() as usize;
++    let (llpr, llh) = probe::thp(llp, llc);
++    let (ttpr, tth) = probe::thp(ttp, llc.max(ttl) * 4);
++    let (opr, oh) = probe::thp(outp, x.out.capacity());
++    println!(
++        "PROBE {file} arm {}: ll {llp:#x} cap {llc} (mod4K {:#x}, mod2M {:#x}) {} pages {llpr} thp {llh}; tt {ttp:#x} len {ttl} (mod4K {:#x}, mod2M {:#x}) {} pages {ttpr} thp {tth}; out {outp:#x} cap {} {} pages {opr} thp {oh}; counts {cp:#x} (mod4K {:#x}); tt-ll {:#x} mod4K",
++        ARMS[arm], llp % 4096, llp % (2 << 20), probe::vma(llp),
++        ttp % 4096, ttp % (2 << 20), probe::vma(ttp),
++        x.out.capacity(), probe::vma(outp), cp % 4096,
++        ttp.wrapping_sub(llp) % 4096,
++    );
++}
++
+ const T95: [f64; 30] = [
+     12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160,
+     2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056,
+@@ -610,6 +740,9 @@
+         ),
+         None => println!("counters: unavailable here ({})", pmu::why()),
+     }
++    if let Ok(f) = std::env::var("PROBE_FILES") {
++        files.retain(|(n, _)| f.split(',').any(|w| n.ends_with(w)));
++    }
+     let mut readings = Vec::new();
+     let mut recs_out = Vec::new();
+     for (fi, (name, data)) in files.iter().enumerate() {
+@@ -628,16 +761,39 @@
+         let n = decoded.len();
+         drop(decoded);
+         let paths: Vec<bool> = blocks.iter().map(run_stage::takes_runs).collect();
++        {
++            // B's windows in this binary (gdb, docs/journal/2026-11-09-run-fed-fallback-codegen.md):
++            // entry sweep slots [132, 188), phase sweep [68, 124); each shifted by up to 12 slots
++            // by the stack's alignment residue
++            let wins = [(132usize, 188usize), (68, 124)];
++            let (mut lit, mut deep) = (0u64, 0u64);
++            let (mut own, mut pair, mut any) = (vec![0u64; 2], vec![0u64; 2], vec![0u64; 2]);
++            for b in blocks.iter().filter(|b| !run_stage::takes_runs(b)) {
++                let (l, d, o, p, a) = alias_census(b, &wins);
++                lit += l; deep += d;
++                for k in 0..2 { own[k] += o[k]; pair[k] += p[k]; any[k] += a[k]; }
++            }
++            let pc = |x: u64| 100.0 * x as f64 / lit.max(1) as f64;
++            println!("ALIAS {name}: fallback literals {lit}, index>=32 {:.1}%; B entry window [132,188): any {:.2}% self {:.2}% pair {:.2}%; B phase window [68,124): any {:.2}% self {:.2}% pair {:.2}%",
++                pc(deep), pc(any[0]), pc(own[0]), pc(pair[0]), pc(any[1]), pc(own[1]), pc(pair[1]));
++            if std::env::var("PROBE_ALIAS_ONLY").is_ok() { continue; }
++        }
+ 
+         let mut entry_t: Vec<Entry> = vec![[[0f64; 2]; NARMS]; rounds];
+         let mut times: Vec<Round> = vec![[[0f64; 4]; NARMS]; rounds];
+         let mut order = Vec::with_capacity(rounds);
+         let mut bufs: [Bufs; NARMS] = Default::default();
++        let mut pf = [[0u64; 2]; NARMS];
++        let mut pa = [[0u64; 3]; NARMS];
++        let only: Option<usize> = std::env::var("PROBE_ARM").ok().map(|v| v.parse().unwrap());
+         for r in 0..rounds {
+             let ord: [usize; NARMS] = std::array::from_fn(|j| (j + r) % NARMS);
+-            order.push(ord);
++            let ordv: Vec<usize> = ord.iter().copied().filter(|&a| only.map_or(true, |o| o == a)).collect();
++            let ord = &ordv;
++            order.push(std::array::from_fn(|j| (j + r) % NARMS));
+             // the entry sweep: one bracket a block, the judged figures
+-            for &arm in &ord {
++            for &arm in ord {
++                let (f0, a0) = (probe::faults(), probe::allocs());
+                 let x = &mut bufs[arm];
+                 for (b, &runs) in blocks.iter().zip(&paths) {
+                     let s = Instant::now();
+@@ -652,9 +808,17 @@
+                     );
+                     walk_check(b, x, k);
+                 }
++                let (f1, a1) = (probe::faults(), probe::allocs());
++                pf[arm][0] += f1.0 - f0.0;
++                pa[arm][0] += a1.0 - a0.0;
++                pa[arm][1] += a1.1 - a0.1;
++                if r == 0 || r == rounds - 1 {
++                    probe_bufs(name, arm, &bufs[arm]);
++                }
+             }
+             // the phase sweep: attribution
+-            for &arm in &ord {
++            for &arm in ord {
++                let (f0, a0) = (probe::faults(), probe::allocs());
+                 let t = &mut times[r][arm];
+                 for b in &blocks {
+                     stage(arm, b, &mut bufs[arm], k, &mut |p, f| {
+@@ -663,8 +827,14 @@
+                         t[p] += s.elapsed().as_secs_f64();
+                     });
+                 }
++                let (f1, a1) = (probe::faults(), probe::allocs());
++                pf[arm][1] += f1.0 - f0.0;
++                pa[arm][2] += a1.0 - a0.0;
+             }
+         }
++        for arm in 0..NARMS {
++            println!("PROBE {name} arm {}: over {rounds} rounds, entry sweep: {} minor faults, {} alloc calls, {} bytes; phase sweep: {} minor faults, {} alloc calls", ARMS[arm], pf[arm][0], pa[arm][0], pa[arm][1], pf[arm][1], pa[arm][2]);
++        }
+         // counts[arm][phase][event], and the group's time enabled and running
+         let mut counts = [[[0u64; pmu::EVENTS]; 4]; NARMS];
+         let mut cover = [[(0u64, 0u64); 4]; NARMS];
