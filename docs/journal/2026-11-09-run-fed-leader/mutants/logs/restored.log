@@ -1,0 +1,44 @@
+restored: 7325d1e672e1b01444c063de464771c1b5b512bf, src/ as committed (git diff --quiet: clean); rustc 1.97.0 (2d8144b78 2026-07-07); 2026-11-09T03:36:31Z
+== cargo test -j2 -- --test-threads=2
+test result: ok. 82 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 128.57s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.29s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.95s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.62s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.09s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.42s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 16.65s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+[cap.py] rc=0 peak RSS 352 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --test mtf_kernels -- --test-threads=2
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.47s
+[cap.py] rc=0 peak RSS 297 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --lib run_stage -- --test-threads=2
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.07s
+[cap.py] rc=0 peak RSS 408 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --doc run_stage
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.16s
+[cap.py] rc=0 peak RSS 109 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --example run_fed_stage -- --test-threads=2
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+[cap.py] rc=0 peak RSS 186 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --lib run_team -- --test-threads=2
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.08s
+[cap.py] rc=0 peak RSS 195 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --test run_fed_leader -- --test-threads=2
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.01s
+[cap.py] rc=0 peak RSS 303 MB (6 GB address-space cap)
+== cargo test -j2 --example ab -- --test-threads=2
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+[cap.py] rc=0 peak RSS 199 MB (6 GB address-space cap)
+== cargo test -j2 --features run-fed --lib run_team, 10 more times
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.14s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.95s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.12s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.06s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.99s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.02s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.90s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 5.01s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.91s
+test result: ok. 29 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 4.99s

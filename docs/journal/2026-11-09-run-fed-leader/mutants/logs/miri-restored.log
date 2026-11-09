@@ -1,0 +1,26 @@
+b82a7abcc3aea84b891543f682ae1d0339b6ac2b; rustc 1.101.0-nightly (16d1ffac1 2026-10-26); miri 0.1.0 (16d1ffac17 2026-10-26); 2026-11-09T03:08:43Z
+== scalar/default selection: cap.py cargo +nightly miri test -j2 --lib -- run_team::tests::miri_ run_team::unwind_tests::miri_ --test-threads=2
+test parallel::run_team::tests::miri_parallel_footprint ... ok
+test parallel::run_team::tests::miri_register_checkpoints ... ok
+test parallel::run_team::tests::miri_helpers_past_the_shares ... ok
+test parallel::run_team::tests::miri_share_kernels ... ok
+test parallel::run_team::tests::miri_tampered_tilings ... ok
+test parallel::run_team::tests::miri_runs_are_walk ... ok
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current ... ok
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next ... ok
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior ... ok
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 426.26s
+[cap.py] rc=0 peak RSS 440 MB (6 GB address-space cap)
+wall 293 s
+== AVX2 selection (CI's step): RUSTFLAGS='-C target-feature=+avx2,+bmi1' MIBZ2_EXPECT_AVX2=1 MIRIFLAGS=-Zmiri-env-forward=MIBZ2_EXPECT_AVX2 cap.py cargo +nightly miri test -j2 --lib -- run_stage::tests::miri_ run_team::tests::miri_ --test-threads=2
+test parallel::run_team::tests::miri_helpers_past_the_shares ... ok
+test parallel::run_team::tests::miri_parallel_footprint ... ok
+test parallel::run_team::tests::miri_register_checkpoints ... ok
+test parallel::run_team::tests::miri_share_kernels ... ok
+test parallel::run_team::tests::miri_runs_are_walk ... ok
+test parallel::run_team::tests::miri_tampered_tilings ... ok
+test run_stage::tests::miri_unchecked_states_refused ... ok
+test run_stage::tests::miri_sort_and_floor ... ok
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 70 filtered out; finished in 352.86s
+[cap.py] rc=0 peak RSS 478 MB (6 GB address-space cap)
+wall 242 s

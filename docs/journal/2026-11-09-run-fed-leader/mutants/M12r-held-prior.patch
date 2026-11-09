@@ -1,0 +1,13 @@
+diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
+index 6a3572f1..8b85ee96 100644
+--- a/src/parallel/run_team.rs
++++ b/src/parallel/run_team.rs
+@@ -1837,7 +1837,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
+                     let kind = ErrorKind::Internal(msg.clone());
+                     publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                 }
+-                if let Some(b) = l.inverted.take() {
++                if let Some(b) = l.inverted.take().filter(|_| false) {
+                     let kind = ErrorKind::Internal(msg.clone());
+                     publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                 }

@@ -1,0 +1,10 @@
+mutant C29c-vector-store-bound (7325d1e6 + mutants/C29c-vector-store-bound.patch); 2026-11-09T03:36:06Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- register_checkpoints --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.92s
+running 3 tests
+double free or corruption (!prev)
+error: test failed, to rerun pass `--lib`
+Caused by:
+  process didn't exit successfully: `<worktree>/target/debug/deps/mibz2-45e4ffcd803e645f register_checkpoints --test-threads=2` (signal: 6, SIGABRT: process abort signal)
+[cap.py] rc=101 peak RSS 310 MB (6 GB address-space cap)
+rc=101

@@ -1,0 +1,18 @@
+B6a-owns-always helpers_past_the_shares_share_nothing: test result: FAILED 
+B6a-owns-always miri_helpers_past_the_shares: test result: FAILED 
+B6a-owns-always teams_past_the_shares_are_walk: SIGABRT 
+B6a-owns-always the_constructor_past_the_shares: test result: FAILED 
+B6b-count-unguarded helpers_past_the_shares_share_nothing: test result: FAILED 
+B6b-count-unguarded miri_helpers_past_the_shares: test result: FAILED 
+B6b-count-unguarded teams_past_the_shares_are_walk: test result: FAILED 
+B6b-count-unguarded the_constructor_past_the_shares: test result: FAILED 
+B6c-count-unguarded-no-assert helpers_past_the_shares_share_nothing: test result: FAILED 
+B6c-count-unguarded-no-assert miri_helpers_past_the_shares: SIGABRT 
+B6c-count-unguarded-no-assert teams_past_the_shares_are_walk: SIGABRT 
+B6c-count-unguarded-no-assert the_constructor_past_the_shares: SIGABRT 
+M12r-current-next: a_run_panic_retires_the_current_and_next_blocks ... FAILED;a_run_panic_retires_the_current_and_held_prior_blocks ... FAILED;miri_run_fed_panic_current ... FAILED;a_run_panic_retires_the_current_block ... FAILED;miri_run_fed_panic_current_and_held_prior ... FAILED;miri_run_fed_panic_current_and_next ... FAILED;the_constructor_past_the_shares ... ok;the_tiny_blocks ... ok;the_run_fed_decoder_recovers_from_a_run_panic ... FAILED;
+M12r-held-prior: a_run_panic_retires_the_current_and_next_blocks ... ok;a_run_panic_retires_the_current_block ... ok;miri_run_fed_panic_current ... ok;a_run_panic_retires_the_current_and_held_prior_blocks ... FAILED;miri_run_fed_panic_current_and_next ... ok;miri_run_fed_panic_current_and_held_prior ... FAILED;the_constructor_past_the_shares ... ok;the_tiny_blocks ... ok;the_run_fed_decoder_recovers_from_a_run_panic ... FAILED;
+C29a-checkpoint-before-part: miri_register_checkpoints ... FAILED;register_checkpoints_are_checkpoints ... FAILED;register_checkpoints_reach_every_class ... FAILED; 
+C29b-final-checkpoint: miri_register_checkpoints ... FAILED;register_checkpoints_are_checkpoints ... FAILED;register_checkpoints_reach_every_class ... FAILED; 
+C29c-vector-store-bound:  SIGABRT
+src restored

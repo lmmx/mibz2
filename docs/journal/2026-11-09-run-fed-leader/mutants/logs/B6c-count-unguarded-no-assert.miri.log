@@ -1,0 +1,40 @@
+mutant B6c-count-unguarded-no-assert (8db31b0e + mutants/B6c-count-unguarded-no-assert.patch); 2026-11-09T02:47:44Z
+cmd: RUST_BACKTRACE=0 cargo +nightly miri test -j2 --lib -- --exact parallel::run_team::tests::miri_helpers_past_the_shares
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+running 1 test
+test parallel::run_team::tests::miri_helpers_past_the_shares ... error: Undefined Behavior: constructing invalid value of type &mut [[u32; 256]; 3]: encountered a dangling reference (going beyond the bounds of its allocation)
+    --> src/parallel/run_team.rs:1224:26
+     |
+1224 |         let h = unsafe { &mut *self.hist.add(j) };
+     |                          ^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+     |
+     = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+     = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+     = note: this is on thread `parallel::run_t`
+     = note: stack backtrace:
+             0: parallel::run_team::RunFill::<'_>::count
+                 at src/parallel/run_team.rs:1224:26: 1224:48
+             1: parallel::run_team::tests::by_hand::{closure#0}
+                 at src/parallel/run_team.rs:2426:43: 2426:54
+             2: std::iter::Iterator::for_each::call::<usize, {closure@src/parallel/run_team.rs:2426:39: 2426:42}>::{closure#0}
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:898:29: 898:36
+             3: <std::ops::Range<usize> as std::iter::Iterator>::fold::<(), {closure@std::iter::Iterator::for_each::call<usize, {closure@src/parallel/run_team.rs:2426:39: 2426:42}>::{closure#0}}>
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2681:21: 2681:32
+             4: <std::ops::Range<usize> as std::iter::Iterator>::for_each::<{closure@src/parallel/run_team.rs:2426:39: 2426:42}>
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:901:9: 901:31
+             5: parallel::run_team::tests::by_hand
+                 at src/parallel/run_team.rs:2426:17: 2426:55
+             6: parallel::run_team::tests::surplus
+                 at src/parallel/run_team.rs:2464:35: 2464:74
+             7: parallel::run_team::tests::miri_helpers_past_the_shares
+                 at src/parallel/run_team.rs:2488:9: 2488:45
+             8: parallel::run_team::tests::miri_helpers_past_the_shares::{closure#0}
+                 at src/parallel/run_team.rs:2486:38: 2486:38
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+error: aborting due to 1 previous error; 1 warning emitted
+error: test failed, to rerun pass `--lib`
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner <worktree>/target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7 --exact 'parallel::run_team::tests::miri_helpers_past_the_shares'` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
+rc=1

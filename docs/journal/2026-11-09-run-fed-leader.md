@@ -1,8 +1,12 @@
-# 2026-11-09: The run-fed leader for the pipelined teams, built opt-in, and registered (DRAFT, NOT FROZEN)
+# 2026-11-09: The run-fed leader for the pipelined teams, built opt-in, and registered
 
-**Status: a draft registration, NOT FROZEN, NOT RUN** (RULES C1), revised once (§R1, the
-reviews of `f94551ab`). The coordinator freezes it, or doesn't. Guardian D044's HOLD on any
-CI timing dispatch stands until B5 closes (§3). Nothing here changes the default decoder, with or without the new feature:
+**Status: registered, NOT RUN** (RULES C1). Revised once (§R1, the reviews of `f94551ab`).
+The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
+headings below, which are kept as history. The Guardian's D049 then held the timing
+dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
+worker's M12). §R2 repairs and tests each obligation. Because `src/` changed, the
+registration needs a new exact run pin (§R2.5). Its question, primary, reference and
+thresholds are unchanged. The coordinator re-freezes it at the repaired head, or doesn't. Nothing here changes the default decoder, with or without the new feature:
 only `StreamDecoder::pipelined_run_fed` builds the new arm. Nothing here runs on the
 workstation, and no recipe is in the Justfile or the workstation queue.
 
@@ -467,6 +471,123 @@ finding, its fix and its test:
 - **C35's weight** is an untimed estimate; no equal-record `dir` arm is timed beside it.
 - **The workstation recipe** needs its own admission and freeze (§8).
 
+## R2. Revision, 2026-11-09: the Guardian's D049 on `ff6c2f74`
+
+D049 (#145 6730740928; `team-state/guardian` `d5d6f292`, `state/decisions.md` §D049, its
+records in `records/d049/`) accepted the physical ownership argument for valid share indices
+(C35 included). It held the dispatch on three obligations, and asked for a new exact run pin
+after any repair. Each obligation, its fix and its test follows. Every result below was
+**checked** on this machine (the shared 4-core box, `rustc 1.97.0`, nightly
+`1.101.0-nightly (16d1ffac1 2026-10-26)` for Miri, `MIRIFLAGS` unset apart from CI's AVX2
+forwarding), with each run's memory capped at 6 GB of address space. The logs are in
+`2026-11-09-run-fed-leader/`. Nothing here was timed, and nothing needed to be: these are
+correctness checks.
+
+This branch also merges master `66edecbe` (#273's pipeline fuzz candidates and the
+fuzz-smoke job, on which the run-fed candidates build). That merge changes no line of `src/`
+or Cargo.
+
+| # | D049's obligation | fix | test (all pass at the repaired head) | mutant (killed) |
+|---|---|---|---|---|
+| R2.1 | **B6:** the safe constructor takes k = 66. The pool runs 65 helpers, but `RunFill` holds 64 share entries, and helper 64 forms `&mut *self.hist.add(64)` (`count`) before any check | `RunFill::owns(j)` (`j < shares`), asked first by `count`, `scatter` and `fill`, before any index into `hist`, `cuts` or `census`, or any bit `1 << j`. This is how `FusedBuild::share` returns for `j >= shares`. A surplus helper still calls every phase and passes both sort gates and the built gate (`Relay::build_share`), so the gates' counts, of all the helpers, stay whole. `records_of` debug-asserts `owns`, and `RunFill::new` debug-asserts 1 ≤ shares ≤ 64. Rejecting k at construction was the alternative; the guard keeps `pipelined_run_fed` taking any k, as the shipped `pipelined` does | `helpers_past_the_shares_share_nothing`: every phase by hand at 1, 2, 63 and 64 shares, with 0, 1 and 2 surplus helpers (64 shares with 65 and 66 helpers is k = 66 and 67), in LS, HS and DIR, on each kernel. Each run checks: the table; the scatter, claim and fill bits exactly the shares'; no census from a surplus helper; and a sentinel past the shares untouched. It also runs a fresh exact 64-entry buffer, D049's witness. `miri_helpers_past_the_shares`: two shares with 2–4 helpers, the exact buffer under Miri. `teams_past_the_shares_are_walk`: whole runs on pools of 64, 65, 66, 67 and 80 threads, every mode, each kernel. `the_constructor_past_the_shares`: `pipelined_run_fed(1, k, ..)` at k = 64–67, every sort, each kernel, two run-heavy full blocks byte for byte, `threads() == k`, `team_records` reached | B6a (`owns` always true): all four fail (an index panic; a shift overflow; a heap-corruption abort on the pools). B6b (count's guard deleted): all four fail, at the `owns` debug assertion. B6c (count's guard **and** that assertion deleted): all four fail: a slice-bound panic, and heap-corruption aborts (`free(): invalid pointer`, `sysmalloc`): D049's invalid access, made real natively. **Under Miri, B6c is UB at the witness** ("constructing invalid value of type `&mut [[u32; 256]; 3]`: encountered a dangling reference", at count's `self.hist.add(j)`) |
+| R2.2 | **B5:** bounded, pinned fuzz/property evidence reaching the new constructor, the private sort and fills, and C29, against production; CI's fuzz job builds without `run-fed` | `examples/fuzz.rs` MODE `run-fed` (with `--features run-fed`): eleven `pipelined_run_fed` candidates (`tests/common`'s `run_fed_candidates`). Each case is held to the plain parallel decoder (bytes before any error, the error's kind, block and bit) and to libbzip2, on `run_fed_corpus` (the pipeline corpus, plus crafted run-heavy full and small blocks, and run-heavy and random full blocks alternating). Each case's reach is counted from the run-fed phases, and any rebuild after a refused check fails the run. CI's fuzz-smoke builds it and runs it 30 s at seed 1. For tilings valid emission can't make, an internal harness (`tampered_tilings_are_refused_or_tile`) checks them against an independent model | the fuzz runs below; the tilings harness and C29's (R2.3) | — (the harnesses' sensitivity: R2.3's mutants; the fuzz's is the pipeline harness's, #273) |
+| R2.3 | **C29:** targeted checks of `mtf_checkpoints_reg`'s checkpoints and raw stores, its errors included, against `mtf_checkpoints` | `register_checkpoints_reach_every_class`: 2,811 seeded streams. They are columns whose runs and bytes land on and about the checkpoints, each at bounds −65 to +65 about its length, plus 2,000 malformed streams (random symbols, alphabets and bounds; some run-heavy; some with no end-of-block symbol), on each kernel. It compares the result always, and the column and counts on errors too (both are `mtf`'s on every input), the checkpoints where Ok. Every class of an independent input model is asserted reached. `miri_register_checkpoints`: one stream a class, AVX2 only (without AVX2 the control *is* `mtf_checkpoints`' scalar twin) | classes reached (native, both kernels): a run split at a checkpoint 1,575; a run ending at one 211; a byte at one 861; a block ending at one 172; runs by the vector stores 761,427; runs ≤ 64 by bytes at the bound 627; runs > 64 12,621; Ok 1,439; BlockTooLong in a run 901, at a byte 317; RunTooLong 129; no end-of-block 25 | C29a (a split run's checkpoint taken before its part is counted): all three C29 tests fail. C29b (the final checkpoint at a block ending on one dropped): all three fail. C29c (the 64-byte vector run store taken while n < max, not n + 64 ≤ max): a heap-corruption abort natively; **under Miri's AVX2 selection, UB**: a 32-byte store 31 bytes from the allocation's end (`mtf.rs`'s `run_store!`) |
+| R2.4 | **M12 on the copied worker:** `panics_in_each_phase` calls `invert` directly. Reach the real outer `Err` with deterministic injection; current, current + next, and current + held prior; once-only publication at the right place and bit as `Internal`; a bounded reader, drop and join; kill the omission | A `cfg(test)` hook, the twin of the shipped worker's on `safety/pipeline-m12` (**reused from that branch's design**: it wasn't pushed when this was written, so it was read from its worktree). It has the same `Fault` (`LeadStart`, `LeadEnd`) at the same two points of the leader's part, the same `Faults` (the fault, what the team held, every publication, the outer recoveries, a lowered team threshold), and the same tests and checks. The one difference: the faults live in a registry keyed by the decode's `Shared` (`FAULTS`), not in a field of it. So this module and the shipped worker change different files: no merge conflict, no shared owner. This module's publications go through two thin wrappers (`publish`, `finish_and_publish`), which record under test and forward otherwise. Outside `cfg(test)` the one change is `min_coop(shared)`, which returns `MIN_COOP` | `parallel::run_team::unwind_tests`, every sub-arm's worker: the three states on four full run-heavy blocks taken by the records' rule (asserted), on teams of 2 and 3 (`a_run_panic_retires_*`); on four tiny blocks, natively every arm and under Miri the three record arms (`miri_run_fed_panic_*`); and `pipelined_run_fed` at 3×3 end to end from the scanner, every sort, three faults. Each checks the reader's prefix and its `Internal` error at the first held block's place and bit; that the fault fired in the asked state and the outer branch recovered exactly once; each block published exactly once at its own bit, every held one `Internal` and no other an error; the worker ending by itself; the blocks after the reset decoded right; and the join. Every wait is under a 60 s watchdog | M12r-current-next (the loop over current and next `.take(0)`: M12's own shape): 7 of 9 fail, every fault test, at the watchdog: "the reader is stuck at place 1, with places [3] ready" (D047's stranding case), "3 of 4 blocks published, places [0, 1, 3]". M12r-held-prior (the held prior's publication filtered out): the three held-prior tests fail at the watchdog ("stuck at place 1, with places [2, 3] ready"), and current and current + next pass, as they should |
+
+**R2.2's fuzz runs** (`2026-11-09-run-fed-leader/fuzz/`; the harness at `7325d1e6`, `src/`
+identical to the repaired head's; the fuzz profile, debug assertions and overflow checks on):
+
+| run | cases | failures | valid, same bytes | error kinds, each as the plain decoder | cases reaching the pipeline (a job taken overlapped) | with an overlapped job's error | team blocks by records | small blocks by records | rebuilds after a refused check |
+|---|---|---|---|---|---|---|---|---|---|
+| 30 s, seed 1 (CI's) | 875 | 0 | 112 | 16 | 418 | 9 | 519 | 336 | 0 |
+| 240 s, seed 2 | 6,615 | 0 | 885 | 19 | 3,135 | 67 | 3,928 | 2,983 | 0 |
+| 240 s, seed 3 | 6,721 | 0 | 861 | 18 | 3,208 | 58 | 3,993 | 3,312 | 0 |
+
+The figures in the last six columns are summed over the candidates. Per candidate, in each
+240 s run:
+- every record sort (Leader, Helpers, Direct, at each plan and on both kernel sets) reaches
+  team blocks by records (301–382), small blocks by records, and the column's team and small
+  blocks;
+- the controls reach none by records, as registered;
+- every candidate but one reaches overlapped jobs (182–364 cases) and overlapped errors
+  (1–13 cases).
+
+The exception is Helpers 1×2 in one slot, which never overlaps (one block in flight). It is
+there for the one-helper team on the scalar kernels, and it reaches records too.
+
+**R2.2's tampered tilings** (6,000 seeded cases, every sixth also as whole runs on a pool of
+three, by the helpers' sort and the direct fill; Miri: 20). Each tiling is checked by
+`run_stage::sort`, the leader's sort, and the helpers' sort and the direct fill in 1, 2, 3
+and 5 shares on each kernel. Each must take it iff the model says it tiles, and then make
+exactly that column's table; otherwise it must refuse it, and the whole run then rebuilds
+the untampered block from its symbols. All agreed:
+
+| tamper | refused | taken |
+|---|---|---|
+| a start moved; a record dropped; a record doubled; the closing record moved; the first start moved; a count moved | 600 each | 0 |
+| a byte changed | 599 | 1 |
+| two neighbours' bytes swapped | 535 | 65 |
+| two equal runs' bytes swapped (another column) | 0 | 600 |
+| a run split in two (the same column) | 0 | 600 |
+
+**Credited, not relabelled:** the fixed-seed share differential tests (`share_kernels`,
+`miri_share_kernels`), `runs_are_walk`, `panics_in_each_phase` and `tests/run_fed_leader.rs`
+(9 tests, five plans, every sort against the default decoder and libbzip2) remain
+component and differential evidence. They are not a composed campaign. The composed evidence
+is the fuzz runs and harnesses above. D048's emitter and `run_stage` evidence transfers as
+component evidence, as D049 §4 says.
+
+**Miri at the repaired head** (`mutants/logs/miri-restored.log`), both of CI's selections:
+- scalar/default, `run_team::tests::miri_` and `run_team::unwind_tests::miri_`: 9 passed,
+  293 s wall, 440 MB peak;
+- AVX2 (`+avx2,+bmi1`, `MIBZ2_EXPECT_AVX2=1`), `run_stage::tests::miri_` and
+  `run_team::tests::miri_`: 8 passed, 242 s wall, 478 MB peak.
+
+`miri.yml` now also triggers on `src/mtf.rs` and `src/parallel/run_team/**`. Its first step's
+`-- miri_` filter already selects the new unwind tests.
+
+**Native suites at the repaired head** (`mutants/logs/restored.log`): `cargo test` (the
+library 82 passed, 2 ignored; every integration and doc suite passed); every run-fed CI step
+(`run_team` 29 passed and one ignored census, then 10 more times; `run_fed_leader` 9; and
+the rest); `cargo test --example ab`. clippy `--all-targets -D warnings`, default and all
+features: clean. fmt: clean. Peak memory: under 0.6 GB for any run.
+
+**Mutants, restored:** every mutant's patch is in `mutants/`, and each was applied with
+`mutants/mutate.py` (an exact text replacement, applied once) and its log written. Each was then
+restored with `git checkout`, and `src/` checked identical to the commit. The suites above
+ran on the restored tree. The native mutant logs are at `7325d1e6`. The two Miri mutant logs
+are at `8db31b0e` (B6c) and `b82a7abc` (C29c); the lines they touch are unchanged since.
+
+### R2.5 The run pin
+
+- **Unchanged:** the question, the primary (`dir`), `hs` and `ls` secondary, the reference
+  (`mibz2-default33`), the threshold set, attribution, VALID, the seven arms, 15 rounds, the
+  corpus and its digest. `bench/` is unchanged since `ff6c2f74`.
+- **The implementation pin:** `7325d1e672e1b01444c063de464771c1b5b512bf`, the last commit to
+  change `src/`, `tests/`, `examples/`, `bench/` or Cargo (the run's identity checks a clean
+  tree in exactly those). The arms the dispatch times run code at that commit. Compared with
+  `ff6c2f74`, their decoding paths differ only in the surplus-helper guard, which no plan of
+  three or fewer helpers reaches, and in `stage`'s threshold, now `min_coop(shared)`, which
+  returns `MIN_COOP` outside tests.
+- **The frozen head:** this PR's head carrying this section. Every commit after the
+  implementation pin changes only `docs/`. The dispatch's `registered_head` is that full
+  40-character head, as the coordinator names it at the re-freeze: a run is judged only
+  at it (§6). `ff6c2f74` is no longer a valid pin: a run there would be at code D049 held.
+
+**Not closed here:**
+- **The unsupported-CPU forgeable `Kernels`** issue that D049 names is neither repaired nor
+  waived (unchanged).
+- **A panic outside the run** (the worker loop's own code between runs) is not injected,
+  as on the shipped worker's twin. Nor is one in `invert`'s set-up before the pool's run.
+- **Miri with the M12 mutants** was not run. Their native kills are deterministic, by a
+  bounded watchdog. Under Miri a stranded reader waits on a Miri clock of a day, and the
+  shipped twin's Miri M12 run was killed for memory on this machine.
+- **The duplicated `TINY` fixture** and the two hooks' storage: once `safety/pipeline-m12`
+  lands, this module's registry could move to `Shared::faults`, and `TINY` to one place.
+  That is a refactor for after both merge.
+- **No fuzz of k > 4 teams:** the 64–67-thread boundary is covered by R2.1's tests, not by
+  the fuzz loop.
+
 ## Provenance and reproduction
 
 - **Base:** `research/run-fed-stage` at `fd60fffa` (#269 with its safety fix), itself on
@@ -475,8 +596,12 @@ finding, its fix and its test:
   bench/test_run_fed_leader.py`; the census, `MIBZ2_RUN_FED_CENSUS=corpora/wikidata.bz2
   cargo test --release --features run-fed --lib census -- --ignored --nocapture`;
   `cargo test --features run-fed --test run_fed_leader`;
-  `cargo +nightly miri test --features run-fed --lib -- run_team::tests::miri_` (plus
-  `RUSTFLAGS="-C target-feature=+avx2,+bmi1"` for the AVX2 fills).
+  `cargo +nightly miri test --features run-fed --lib -- run_team::tests::miri_
+  run_team::unwind_tests::miri_` (plus `RUSTFLAGS="-C target-feature=+avx2,+bmi1"` for the
+  AVX2 fills and C29's stores).
+- **D049's (§R2):** the fuzz, `cargo build --profile fuzz --example fuzz --features
+  run-fed`, then `target/fuzz/examples/fuzz SECONDS SEED - run-fed`; the mutants,
+  `2026-11-09-run-fed-leader/mutants/*.patch` (`git apply`, then the named tests).
 - **The A/B:** `cargo build --release --features run-fed --example ab`, then
   `ab run R.jsonl --arms <the seven> --threads 9,3 --rounds 15 wikidata.bz2` and
   `python3 bench/run_fed_leader.py report R.jsonl --unjudged --rounds 15 --out rfl-9`

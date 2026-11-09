@@ -1,0 +1,45 @@
+head b82a7abcc3aea84b891543f682ae1d0339b6ac2b + the uncommitted harness (examples/fuzz.rs, tests/common/mod.rs, as committed next); rustc 1.97.0 (2d8144b78 2026-07-07); 2026-11-09T03:19:47Z
+cmd: cargo build --profile fuzz --example fuzz --features run-fed; cap.py target/fuzz/examples/fuzz 30 1 - run-fed
+875 cases in 30 s (seed 1, mode run-fed), 0 failures
+      112  pipeline: both decode, same bytes
+       77  pipeline: both fail (BadBlockMagic), as the plain decoder
+       85  pipeline: both fail (BadCodeLength), as the plain decoder
+       11  pipeline: both fail (BadGroups), as the plain decoder
+      125  pipeline: both fail (BadHuffmanCode), as the plain decoder
+       20  pipeline: both fail (BadOrigPtr), as the plain decoder
+       28  pipeline: both fail (BadSelector), as the plain decoder
+      174  pipeline: both fail (BlockCrc), as the plain decoder
+       14  pipeline: both fail (BlockTooLong), as the plain decoder
+        1  pipeline: both fail (NoSymbols), as the plain decoder
+        2  pipeline: both fail (NotBz2), as the plain decoder
+        4  pipeline: both fail (Randomised), as the plain decoder
+        1  pipeline: both fail (RunTooLong), as the plain decoder
+        6  pipeline: both fail (RunUnfinished), as the plain decoder
+       20  pipeline: both fail (SelectorOverrun), as the plain decoder
+       20  pipeline: both fail (StreamCrc), as the plain decoder
+      175  pipeline: both fail (Truncated), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+       79  mibz2 run-fed Control 1x3 s4 w100003 r65536 detected: 48 of 79 reached, 0 with an overlapped error, 140 overlapped jobs
+       80  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 detected: 43 of 80 reached, 0 with an overlapped error, 107 overlapped jobs
+       80  mibz2 run-fed Leader 1x3 s4 w100003 r65536 detected: 48 of 80 reached, 1 with an overlapped error, 100 overlapped jobs
+       80  mibz2 run-fed Helpers 1x3 s4 w100003 r65536 detected: 47 of 80 reached, 1 with an overlapped error, 135 overlapped jobs
+       80  mibz2 run-fed Direct 1x3 s4 w100003 r65536 detected: 45 of 80 reached, 2 with an overlapped error, 117 overlapped jobs
+       80  mibz2 run-fed Helpers 2x3 s6 w997 r509 detected: 39 of 80 reached, 0 with an overlapped error, 65 overlapped jobs
+       80  mibz2 run-fed Direct 2x3 s6 w997 r509 detected: 27 of 80 reached, 0 with an overlapped error, 46 overlapped jobs
+       79  mibz2 run-fed Leader 3x3 s12 w1048576 r4093 detected: 27 of 79 reached, 1 with an overlapped error, 44 overlapped jobs
+       79  mibz2 run-fed Helpers 1x2 s1 w100003 r65536 scalar: 0 of 79 reached, 0 with an overlapped error, 0 overlapped jobs
+       79  mibz2 run-fed Direct 1x4 s4 w100003 r65536 scalar: 45 of 79 reached, 3 with an overlapped error, 110 overlapped jobs
+       79  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 scalar: 49 of 79 reached, 1 with an overlapped error, 124 overlapped jobs
+run-fed reach: candidate, then its cases' blocks staged that the records' rule takes, the team's blocks by records and by the column, the small blocks by records and by the column, the cases with a team block by records, and the blocks rebuilt after a refused check (a bug: 0)
+       79  mibz2 run-fed Control 1x3 s4 w100003 r65536 detected: rule 70, team records 0 column 139, small records 0 column 197, cases with team records 0, rebuilt 0
+       80  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 detected: rule 58, team records 0 column 134, small records 0 column 153, cases with team records 0, rebuilt 0
+       80  mibz2 run-fed Leader 1x3 s4 w100003 r65536 detected: rule 47, team records 65 column 88, small records 20 column 23, cases with team records 35, rebuilt 0
+       80  mibz2 run-fed Helpers 1x3 s4 w100003 r65536 detected: rule 63, team records 45 column 93, small records 60 column 93, cases with team records 22, rebuilt 0
+       80  mibz2 run-fed Direct 1x3 s4 w100003 r65536 detected: rule 58, team records 43 column 85, small records 53 column 79, cases with team records 19, rebuilt 0
+       80  mibz2 run-fed Helpers 2x3 s6 w997 r509 detected: rule 28, team records 38 column 115, small records 41 column 113, cases with team records 17, rebuilt 0
+       80  mibz2 run-fed Direct 2x3 s6 w997 r509 detected: rule 17, team records 37 column 84, small records 41 column 102, cases with team records 18, rebuilt 0
+       79  mibz2 run-fed Leader 3x3 s12 w1048576 r4093 detected: rule 12, team records 46 column 106, small records 59 column 155, cases with team records 20, rebuilt 0
+       79  mibz2 run-fed Helpers 1x2 s1 w100003 r65536 scalar: rule 0, team records 31 column 87, small records 28 column 70, cases with team records 17, rebuilt 0
+       79  mibz2 run-fed Direct 1x4 s4 w100003 r65536 scalar: rule 40, team records 43 column 96, small records 34 column 58, cases with team records 23, rebuilt 0
+       79  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 scalar: rule 56, team records 0 column 145, small records 0 column 92, cases with team records 0, rebuilt 0
+[cap.py] rc=0 peak RSS 129 MB (6 GB address-space cap)

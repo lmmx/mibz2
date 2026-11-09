@@ -1,0 +1,10 @@
+mutant B6c-count-unguarded-no-assert (7325d1e6 + mutants/B6c-count-unguarded-no-assert.patch); 2026-11-09T03:29:37Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- --exact parallel::run_team::unwind_tests::the_constructor_past_the_shares --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.55s
+running 1 test
+free(): invalid pointer
+error: test failed, to rerun pass `--lib`
+Caused by:
+  process didn't exit successfully: `<worktree>/target/debug/deps/mibz2-45e4ffcd803e645f --exact 'parallel::run_team::unwind_tests::the_constructor_past_the_shares' --test-threads=2` (signal: 6, SIGABRT: process abort signal)
+[cap.py] rc=101 peak RSS 225 MB (6 GB address-space cap)
+rc=101

@@ -1,0 +1,20 @@
+mutant B6b-count-unguarded (7325d1e6 + mutants/B6b-count-unguarded.patch); 2026-11-09T03:29:25Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- --exact parallel::run_team::tests::teams_past_the_shares_are_walk --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.57s
+running 1 test
+test parallel::run_team::tests::teams_past_the_shares_are_walk ... FAILED
+failures:
+---- parallel::run_team::tests::teams_past_the_shares_are_walk stdout ----
+thread 'mibz2-coop-65' (13608) panicked at src/parallel/run_team.rs:1170:9:
+assertion failed: self.owns(j)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread 'mibz2-coop-65' (13608) panicked at src/parallel/run_team.rs:1170:9:
+assertion failed: self.owns(j)
+thread 'parallel::run_team::tests::teams_past_the_shares_are_walk' (13358) panicked at src/parallel/run_team.rs:2512:31:
+called `Result::unwrap()` on an `Err` value: Any { .. }
+failures:
+    parallel::run_team::tests::teams_past_the_shares_are_walk
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.26s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 226 MB (6 GB address-space cap)
+rc=101

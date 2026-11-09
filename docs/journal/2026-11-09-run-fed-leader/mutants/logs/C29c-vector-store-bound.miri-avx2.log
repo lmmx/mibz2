@@ -1,0 +1,38 @@
+mutant C29c-vector-store-bound (b82a7abc + mutants/C29c-vector-store-bound.patch); 2026-11-09T03:18:04Z
+cmd: RUST_BACKTRACE=0 cap.py cargo +nightly miri test -j2 --lib -- --exact parallel::run_team::tests::miri_register_checkpoints
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+running 1 test
+test parallel::run_team::tests::miri_register_checkpoints ... error: Undefined Behavior: memory access failed: attempting to access 32 bytes, but got alloc4442998+0x4004 which is only 31 bytes from the end of the allocation
+    --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/../../stdarch/crates/core_arch/src/x86/avx.rs:1743:5
+     |
+1743 |     mem_addr.write_unaligned(a);
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+     |
+     = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+     = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+help: alloc4442998 was allocated here:
+    --> src/mtf.rs:715:5
+     |
+ 715 |     ll.reserve(max);
+     |     ^^^^^^^^^^^^^^^
+     = note: this is on thread `parallel::run_t`
+     = note: stack backtrace:
+             0: std::arch::x86_64::_mm256_storeu_si256
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/../../stdarch/crates/core_arch/src/x86/avx.rs:1743:5: 1743:32
+             1: mtf::mtf_checkpoints_reg_avx2
+                 at src/mtf.rs:770:17: 770:72
+             2: mtf::mtf_checkpoints_reg
+                 at src/mtf.rs:694:29: 694:81
+             3: parallel::run_team::tests::miri_register_checkpoints
+                 at src/parallel/run_team.rs:3083:23: 3083:81
+             4: parallel::run_team::tests::miri_register_checkpoints::{closure#0}
+                 at src/parallel/run_team.rs:3052:35: 3052:35
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+error: aborting due to 1 previous error; 1 warning emitted
+error: test failed, to rerun pass `--lib`
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner <worktree>/target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/6a9a3154ce598d72/out/mibz2-6a9a3154ce598d72 --exact 'parallel::run_team::tests::miri_register_checkpoints'` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
+[cap.py] rc=1 peak RSS 256 MB (6 GB address-space cap)
+rc=1
