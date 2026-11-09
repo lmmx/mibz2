@@ -1,0 +1,9 @@
+{
+  "comment": 6729473179,
+  "issue": 145,
+  "ok": false,
+  "problems": [
+    "FROM is 'researcher', not coordinator"
+  ],
+  "independent_role_aware_check": true
+}

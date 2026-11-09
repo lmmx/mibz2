@@ -626,13 +626,16 @@
       "related_queued_comment_id": 6729283573,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
       "report_commit": "f84cb1fd7d96531fc6373fa9645b40a485c53a74",
       "report_path": "state/reports/run-fed-stage-6729371816/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: unchecked safe fill permits invalid raw read; incumbent buffer lifetime and whole-stage accounting differ; admission/causal/cross-host claims narrowed. No native execution or timing."
+      "disposition": "REVISE before freeze: unchecked safe fill permits invalid raw read; incumbent buffer lifetime and whole-stage accounting differ; admission/causal/cross-host claims narrowed. No native execution or timing.",
+      "review_comment_id": 6729473179,
+      "publication_verified": true,
+      "verification_note": "Exact comment body and #145 destination read back. Independent role-aware routing check passed. Pinned coord.py verify rejects FROM researcher due to hard-coded Coordinator predicate; failure retained."
     }
   ],
   "active_delegations": [],
