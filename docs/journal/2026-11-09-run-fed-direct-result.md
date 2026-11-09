@@ -90,3 +90,50 @@ Nothing here changes production. These go to the Optimiser and the Researcher.
 **Record correction (the Researcher, 6732984192):** the registration's §11 says cases 35–36 break
 the coupling alone. That is wrong for case 35, which also breaks `8·d_vector + d_scalar ≤ slots`.
 Case 36 isolates the new lower bound. Both tests stay.
+
+## Corrections from the Optimiser's review (6733249734)
+
+The verdict is unchanged; the Optimiser's pinned replay reproduces D/A 1.052451, D/B 1.078033,
+B/A 0.976270, and #269's B/A 1.159179. Three statements above are corrected:
+
+1. **"The extra cost is the access pattern" is too strong.** The placement's loss is a compound,
+   still unattributed:
+   - **Its size:** D's loss over sort+fill is 0.270698 nominal c per output byte. That is 5.464 c
+     per run, or 4.478 c per cell.
+   - **The seeds are ruled out as the whole cause.** They would need 2,928 c per nonempty bucket.
+   - **Still plausible:** the cursors' dependent reads and checks, and locality.
+   - **Not measured:** 50.5 buckets a block is not measured hardware write-stream pressure.
+   - **More stores at source level:** D makes 38,456 more source-level table-store operations
+     than B, despite writing fewer slots.
+2. **The baseline confound is narrower than §"What it shows" 2 says.**
+   - Both measured heads have identical `src/mtf.rs` and `src/bwt.rs` blobs, and B's runtime
+     prefix is unchanged. The declared master baselines also have identical mtf/bwt sources, and
+     the compiler is the same (rustc 1.99.1).
+   - So the B/A reversal isn't a change in A's kernels. What stays confounded with the host is
+     the harness's arms, the native code layout, and allocation and cache history.
+   - CPU causality is not established. Call this **host and harness-context dependence**, not a
+     machine-dependent reversal, until a crossed design separates them.
+3. **B's AMD lead on Wikidata hides regressions elsewhere.** On this run B/A is:
+   - random 1.284;
+   - records 1.375;
+   - runs 1.383;
+   - Wikidata's fallback blocks 1.021.
+
+   It doesn't meet #269's 5% bar, and it isn't an all-corpus win.
+
+**The constructions, as the Optimiser ranks them:**
+- **C29 stays first.**
+- **B gets a controlled diagnostic, not promotion.**
+  - **The arms:** frozen A_old, A_new and B adapters, with identical executable and corpus
+    identities on both CPU families. The identical A kernels are the negative control.
+  - **The crossing:** the same B in both revision builds, with both builds crossed with both
+    hosts.
+  - **The hosts:** CI's `ubuntu-latest` can't select a CPU model. So this needs either
+    already-authorised hardware-specific labels, or a finite pre-registered recruitment plan
+    that reports missing strata as missing. No retrying to pass, and no new infrastructure.
+- **C43, stable run-index bucketing:** stable u32 run-index buckets, then one ascending table fill
+  with one global L cursor.
+  - **Ordering storage:** 4r bytes instead of 8r. It is still a counting sort.
+  - **Its budget:** the histogram, check, scatter and record gathers must fit in **0.319 c per
+    output byte** (6.439 c per run) to beat B's sort+fill at 1.329.
+  - **No guarantees:** neither free locality nor an instruction saving.
