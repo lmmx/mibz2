@@ -573,6 +573,91 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
 
+# The machine-state recorder's own check on the workstation (bench 3.4.0;
+# docs/journal/2026-11-09-telemetry-check-registration.md, registered and frozen before use):
+# `ab telemetry-check`'s cases, with `ab env`, three `ab sample` readings and lscpu, as one
+# bundle. It times no decoder and is no performance evidence; it uses CPU-time budgets and
+# counters only to exercise the recorder. Read-only: it changes no setting. Run once; no retry.
+# Its exit: 0 CHECKED (no case FAILed or was INCOMPLETE), 1 FAILED or REFUSED, 3 INCOMPLETE,
+# kept through the bundle and `just submit`. About a minute once built (at most 5 minutes).
+#   just submit bench-telemetry-check
+
+# The machine-state recorder's failure paths and coverage, checked once
+bench-telemetry-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/telemetry-check
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-telemetry-check: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # the outcome decides the exit, whatever the last command's status: a FAIL or an
+    # INCOMPLETE check is bundled, and still exits nonzero
+    outcome="INCOMPLETE: stopped before the check finished (see console.log)"
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-telemetry-check: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W" || { echo "bench-telemetry-check: bundling failed"; exit 2; }
+      case "$outcome" in
+        CHECKED*) exit 0 ;;
+        FAILED*|REFUSED*) exit 1 ;;
+        *) exit 3 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-telemetry-check: $*"; exit 1; }
+    git rev-parse HEAD > "$W/commit.txt"
+    printf 'head %s\n' "$(cat "$W/commit.txt")" > "$W/commits.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/telemetry-check.frozen): what the check is built
+    # and driven from must be as it was there, and committed
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/telemetry-check.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/telemetry-check.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      tests/common bench/bundle.sh .just/bench.just
+      docs/journal/2026-11-09-telemetry-check-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    # the executable Cargo reports building, wherever its target directory is: never an
+    # older one at a guessed path
+    AB=$(cargo build -q --release --example ab --message-format=json-render-diagnostics \
+      | python3 -c 'import json, sys
+    got = [m["executable"] for m in map(json.loads, sys.stdin) if m.get("reason") == "compiler-artifact" and m.get("executable") and m["target"]["name"] == "ab" and "example" in m["target"]["kind"]]
+    sys.exit("cargo reported no ab executable") if len(got) != 1 else print(got[0])') \
+      || fail "the build reported no ab executable"
+    [ -x "$AB" ] || fail "cargo's reported $AB is not an executable"
+    { echo "executable $AB"; rustc -vV; cargo -V; } > "$W/build.txt"
+    sha256sum "$AB" | sed "s|$AB|ab|" > "$W/inputs.txt"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    "$AB" sample --count 3 --interval 1 > "$W/sample.jsonl"
+    # once, bounded: each case by its own deadline, the whole check by 300 s
+    status=0
+    timeout 300 "$AB" telemetry-check > "$W/telemetry-check.jsonl" || status=$?
+    [ "$(sha256sum "$AB" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$W/inputs.txt")" ] \
+      || { outcome="INCOMPLETE: the executable changed while the check ran"; exit 3; }
+    python3 -c 'import json, sys
+    for l in open(sys.argv[1]):
+        r = json.loads(l)
+        print(r["status"].ljust(12), r["case"].ljust(36), r["detail"])' "$W/telemetry-check.jsonl" | tee "$W/telemetry-check.txt" || true
+    counts=$(python3 -c 'import collections, json, sys
+    c = collections.Counter(json.loads(l)["status"] for l in open(sys.argv[1]))
+    print(", ".join(f"{k} {v}" for k, v in sorted(c.items())))' "$W/telemetry-check.jsonl" 2>/dev/null || echo "unreadable")
+    case "$status" in
+      0) outcome="CHECKED: no case FAILed or INCOMPLETE ($counts); see telemetry-check.txt" ;;
+      1) outcome="FAILED: a case FAILed ($counts); see telemetry-check.txt" ;;
+      3) outcome="INCOMPLETE: a case could not finish validly ($counts); see telemetry-check.txt" ;;
+      124) outcome="INCOMPLETE: the check passed its 300 s bound ($counts)" ;;
+      *) outcome="INCOMPLETE: the check exited $status ($counts); see console.log" ;;
+    esac
+
 # The pipelined team's two levers on the workstation
 # (docs/journal/2026-11-07-pipeline-levers-registration.md, registered before any run): at
 # 3 × 3 on 10 threads and 3 × 4 on 12, the registered pipe (mibz2-pipe3/4) against each lever

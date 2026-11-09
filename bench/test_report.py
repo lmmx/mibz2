@@ -360,13 +360,32 @@ class MachineState(unittest.TestCase):
         runs = with_machine(decodes(*builds()), slow_round=2)
         lines = report.run_lines(runs)
         self.assertEqual(len(lines), 2 + len(runs))
-        self.assertIn("eff. clock GHz", lines[0])
+        self.assertIn("cycles/task-clock GHz", lines[0])
+        self.assertIn("CPUs allowed / seen", lines[0])
         slow = next(l for l in lines[2:] if l.startswith("| 2 |"))
         self.assertIn("| 2.45 |", slow)
         self.assertIn("2450 → 2450", slow)
         # a run recorded without the flag: its wall and CPU, the rest blank
         bare = report.run_lines(decodes(*builds())[:1])[2]
-        self.assertIn("| – | – | – → – | – → – | – |", bare)
+        self.assertIn("| – | – | – | – | – → – | – → – | – | – / – | – |", bare)
+
+    def test_the_run_table_shows_3_4_0_fields(self):
+        runs = [
+            dict(r, ref_cycles=int(3.7e9), cpus_allowed="0-19", cpus_seen="0,2,4")
+            for r in with_machine(decodes(*builds()), slow_round=2)
+        ]
+        row = report.run_lines(runs)[2]
+        self.assertIn("| 3.700 | 1.000 |", row)
+        self.assertIn("| 0-19 / 0,2,4 |", row)
+        faulty = dict(
+            runs[0],
+            perf_ctl_errors=[{"counter": "instructions", "op": "enable", "errno": 25}],
+            perf_multiplexed=["ref_cycles"],
+        )
+        row = report.run_lines([faulty])[2]
+        self.assertIn("| instructions enable errno 25; ref_cycles multiplexed |", row)
+        clean = dict(runs[0], perf_ctl_errors=[], perf_multiplexed=[])
+        self.assertTrue(report.run_lines([clean])[2].endswith("| none |"))
 
 
 class Placement(unittest.TestCase):
