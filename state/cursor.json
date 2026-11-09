@@ -1158,12 +1158,15 @@
     },
     {
       "trigger_comment_id": 6739661717,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "5738616e58542cc7af2d6e5eeb906a4070abcb32",
-      "report_path": "state/reports/service-r2-value-6739661717/report.md"
+      "report_path": "state/reports/service-r2-value-6739661717/report.md",
+      "report_commit": "a96b42061b102203a2455fc140cbad0e5a21e56f",
+      "review_comment_pr": 145,
+      "disposition": "Recommend close #299, not queue a lower-priority old-runtime replication; guarded candidate has higher decision value. Conditional resolutions for counter perturbation, load-wait bounds, PMU absence and reference-rate bins."
     }
   ],
   "active_delegations": [],
