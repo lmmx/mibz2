@@ -6,3 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-svc-target             queue/svc-target          the guarded service default's target preflight on the i9, untimed: predicate, dispatch at 9/10/11 (#302, frozen 278f09ce)
+bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)
