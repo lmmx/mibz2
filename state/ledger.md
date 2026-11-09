@@ -314,3 +314,5 @@ No implementation, timing, tests, dispatch or measured speed credit. Prior regis
 **Corrections at this pin:** first_byte loads first[] then dependent f[c+1] even with zero corrections; .002 loop iterations do not bound the ordinary-path prize. Extra6.2Ir/row cannot by itself reject the archive's plus1c/B condition or imply IPC>6. Counts establish neither MET nor NOT MET. Q1/Q2 are expectations in the draft, not received results.
 
 Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-decoder further charges MTF, admission, synchronization and critical-worker effects. No new measured c/B or cumulative credit. C29/C31 remain preferable overall bets; D045 now holds service timing/admission pending targetedB5, separate from D042/D044. Prior registered results unchanged.
+
+**Publication update:** Guardian D046 / REVIEW6730359769 stops #272's exposed pair path and its proposed CI timing at this exact pin. Safe-entry/fallback/prepared-state repairs and targetedB5 evidence are required. C37–C40 remain research proposals; timing suggestions are conditional on closure. No independent reproduction of its witnesses in this report.
