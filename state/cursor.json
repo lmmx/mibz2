@@ -591,6 +591,15 @@
       "report_commit": "08abbe6821301fd26780ee1d8eb59dbe6e779ed2",
       "reply_id": 6729991838,
       "routing_verification": "Pinned route/check passed; verify has coordinator-only FROM check, so exact author/body/destination readback used without claiming verify pass."
+    },
+    {
+      "comment_id": 6730271993,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "280643cef83b09ac89707b747670e8198b21b68e",
+      "progress": "Receipt, migration verified; reviewing pair consumer, representation and whole-entry break-even."
     }
   ],
   "migrated_from": {
