@@ -881,7 +881,7 @@ The CI reporter's 24 tests still pass.
    naming `f6708567` as frozen, "HEAD's measured inputs differ from the frozen commit".
 
 5. **VALID (DRY) again after merging master** (`e16caf3b`, `dry-run/valid-dry-merged/`):
-   both captures admitted, neither perturbing. The merge (`91eeb657`) brings master's
+   both captures admitted, neither perturbing. The merge (`e16caf3b`, the head of that dry run) brings master's
    `#278` (`src/read.rs`: a reader whose source panics cancels the decode), `#279` and the
    run's result journals. Every arm decodes through that reader, the incumbent included,
    so the frozen run's reference is master's code, as §6 says.
