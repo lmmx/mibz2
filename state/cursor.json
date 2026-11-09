@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Pair #272 merge-pin review complete; awaiting publication.",
+  "state": "Pair #272 merge-pin review finished; source-generated text change requires accurate prospective freeze record.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -822,7 +822,7 @@
     },
     {
       "trigger_comment_id": 6731333886,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -830,7 +830,10 @@
       "report_commit": "729d145b31e1e336e008ff5a372015f965e42f33",
       "report_path": "state/reports/pair-merge-pin-6731333886/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE merge-only freeze record: 14 relevant blobs unchanged, but source-generated synthetic text changes 3,258,654 to 3,294,910 bytes. Record prospective C1 input/pin amendment before dispatch; no kernel revision or new performance experiment requested. CI snapshot pending."
+      "disposition": "REVISE merge-only freeze record: 14 relevant blobs unchanged, but source-generated synthetic text changes 3,258,654 to 3,294,910 bytes. Record prospective C1 input/pin amendment before dispatch; no kernel revision or new performance experiment requested. CI snapshot pending.",
+      "review_comment_id": 6731402367,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
