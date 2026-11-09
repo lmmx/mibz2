@@ -1,0 +1,63 @@
+{
+  "source": "9ef3c17d12b0fcfc7609322b1d78e63ede8acdd3",
+  "incoming": 6730002640,
+  "queued": 6729896881,
+  "spec": "a4f97714cc14366984015869d9d094d89488ac57",
+  "files": [
+    {
+      "path": "src/parallel.rs",
+      "blob": "f80d87caf23b66a4fc1041fab2b4807062713b5d"
+    },
+    {
+      "path": "src/coop.rs",
+      "blob": "b18f5ea2186601b151720e116441770b3a5005f0"
+    },
+    {
+      "path": "src/bwt.rs",
+      "blob": "ed3c6e1a5bc068c587bdd2697446485f62d6b590"
+    },
+    {
+      "path": "src/mtf.rs",
+      "blob": "27716447766a2514e9cd0da34fe617a7143f62a3"
+    },
+    {
+      "path": "src/read.rs",
+      "blob": "d5f60e40ab6b19bae411e5840ffd5ae84247fcf6"
+    },
+    {
+      "path": "src/trace.rs",
+      "blob": "0f897b72b40202f9eac6885b0f931c0ec1031da6"
+    },
+    {
+      "path": "src/lib.rs",
+      "blob": "e7f6896cbcf63b3d9c4f3df497f68a535651e75f"
+    },
+    {
+      "path": "tests/service.rs",
+      "blob": "b091b99633e01bafa2d56adcb8245a384ec7ed97"
+    },
+    {
+      "path": "tests/common/mod.rs",
+      "blob": "b7d5e4114fdbbd3aef8f0c7b04b47867db1d7c1e"
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "blob": "6eb8b7664c40e102df5479a7a73e996811b436db"
+    },
+    {
+      "path": ".github/workflows/miri.yml",
+      "blob": "92f083f7c28cb7a55a9e99165f777cfc3964d94c"
+    },
+    {
+      "path": "docs/journal/2026-11-07-service-core-registration.md",
+      "blob": "eecd59975aeefc106cf82160f6db05924722f817"
+    }
+  ],
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  }
+}

@@ -1,0 +1,769 @@
+{
+  "model": "Count-state abstraction of hub transitions; all jobs fed/closed; atomic mutex actions, finite stage completion; not Rust, weak-memory, Condvar, ordering or fairness verification",
+  "states": 21140,
+  "shapes": [
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 2,
+      "states": 21,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 3,
+      "states": 42,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 4,
+      "states": 63,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 5,
+      "states": 84,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 6,
+      "states": 105,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 7,
+      "states": 126,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 1,
+      "jobs": 8,
+      "states": 147,
+      "peak_prepared": 1,
+      "bound": 1,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 2,
+      "states": 26,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 3,
+      "states": 61,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 4,
+      "states": 108,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 5,
+      "states": 155,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 6,
+      "states": 202,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 7,
+      "states": 249,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 2,
+      "jobs": 8,
+      "states": 296,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 2,
+      "states": 26,
+      "peak_prepared": 2,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 3,
+      "states": 67,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 4,
+      "states": 132,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 5,
+      "states": 214,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 6,
+      "states": 296,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 7,
+      "states": 378,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 1,
+      "services": 3,
+      "jobs": 8,
+      "states": 460,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 2,
+      "states": 24,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 3,
+      "states": 61,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 4,
+      "states": 121,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 5,
+      "states": 190,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 6,
+      "states": 259,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 7,
+      "states": 328,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 1,
+      "jobs": 8,
+      "states": 397,
+      "peak_prepared": 2,
+      "bound": 2,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 2,
+      "states": 27,
+      "peak_prepared": 2,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 3,
+      "states": 76,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 4,
+      "states": 172,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 5,
+      "states": 314,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 6,
+      "states": 474,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 7,
+      "states": 634,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 2,
+      "jobs": 8,
+      "states": 794,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 2,
+      "states": 27,
+      "peak_prepared": 2,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 3,
+      "states": 80,
+      "peak_prepared": 3,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 4,
+      "states": 192,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 5,
+      "states": 381,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 6,
+      "states": 642,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 7,
+      "states": 932,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 2,
+      "services": 3,
+      "jobs": 8,
+      "states": 1222,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 2,
+      "states": 24,
+      "peak_prepared": 2,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 3,
+      "states": 64,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 4,
+      "states": 136,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 5,
+      "states": 247,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 6,
+      "states": 401,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 7,
+      "states": 567,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 1,
+      "jobs": 8,
+      "states": 733,
+      "peak_prepared": 3,
+      "bound": 3,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 2,
+      "states": 27,
+      "peak_prepared": 2,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 3,
+      "states": 77,
+      "peak_prepared": 3,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 4,
+      "states": 181,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 5,
+      "states": 358,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 6,
+      "states": 624,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 7,
+      "states": 977,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 2,
+      "jobs": 8,
+      "states": 1354,
+      "peak_prepared": 4,
+      "bound": 4,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 1,
+      "states": 7,
+      "peak_prepared": 1,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 2,
+      "states": 27,
+      "peak_prepared": 2,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 3,
+      "states": 81,
+      "peak_prepared": 3,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 4,
+      "states": 198,
+      "peak_prepared": 4,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 5,
+      "states": 418,
+      "peak_prepared": 5,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 6,
+      "states": 774,
+      "peak_prepared": 5,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 7,
+      "states": 1279,
+      "peak_prepared": 5,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    },
+    {
+      "teams": 3,
+      "services": 3,
+      "jobs": 8,
+      "states": 1925,
+      "peak_prepared": 5,
+      "bound": 5,
+      "deadlocks": [],
+      "terminal_states": 1
+    }
+  ],
+  "lookahead_counterexample": [
+    {
+      "action": "initial",
+      "preparing": 0,
+      "prepared": 0
+    },
+    {
+      "action": "service A starts",
+      "preparing": 1,
+      "prepared": 0
+    },
+    {
+      "action": "service B starts",
+      "preparing": 2,
+      "prepared": 0
+    },
+    {
+      "action": "A completes",
+      "preparing": 1,
+      "prepared": 1
+    },
+    {
+      "action": "A starts third",
+      "preparing": 2,
+      "prepared": 1
+    },
+    {
+      "action": "B completes",
+      "preparing": 1,
+      "prepared": 2
+    },
+    {
+      "action": "A completes",
+      "preparing": 0,
+      "prepared": 3
+    }
+  ],
+  "wake_test_escape": "With notify removed, service worker not scheduled until after team's pop: jobs.len()==1 before pop still holds; worker subsequently observes p=0 and processes the job without ever waiting. Finite yields do not assert parked state. Source-derived schedule, not an executed Rust mutant.",
+  "cpu_saving_percent": 12.739965095986028,
+  "cpu_saving_interval_percent": [
+    10.952804986642917,
+    14.529914529914523
+  ]
+}

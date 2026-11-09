@@ -1,0 +1,3 @@
+# D045 work in progress
+
+Source read at 9ef3c17d12b0fcfc7609322b1d78e63ede8acdd3. Ownership/ordering traced through hub and two pool runs. Count model: 21,140 states; no quiescent deadlock in 72 finite closed-input scenarios. Prepared queue may exceed lookahead by K-1; T=2,K=2 reaches 3. Fuzz candidate list misses service. Existing Miri successful on 223d93bb; log read pending. One notify-removal mutation kill reported in 6707523009; do not erase that evidence. Wake test uses yields, no parked handshake; not schedule-complete. Remaining B5 disposition being finalized. No native Rust/Miri run; toolchain unavailable.
