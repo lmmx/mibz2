@@ -1,0 +1,46 @@
+[
+  {
+    "observed": [
+      "max",
+      null
+    ],
+    "hidden_parent": 2,
+    "proposed": "unlimited",
+    "actual_cap": 2,
+    "proposed_admit": true,
+    "actual_admit": false
+  },
+  {
+    "observed": [
+      4,
+      null
+    ],
+    "hidden_parent": 2,
+    "proposed": 4,
+    "actual_cap": 2,
+    "proposed_admit": true,
+    "actual_admit": false
+  },
+  {
+    "observed": [
+      8,
+      null
+    ],
+    "hidden_parent": 2,
+    "proposed": 8,
+    "actual_cap": 2,
+    "proposed_admit": true,
+    "actual_admit": false
+  },
+  {
+    "observed": [
+      "max",
+      null
+    ],
+    "hidden_parent": 8,
+    "proposed": "unlimited",
+    "actual_cap": 8,
+    "proposed_admit": true,
+    "actual_admit": true
+  }
+]
