@@ -2713,3 +2713,54 @@ All seven arms use the hook, but **equal event counts do not imply equal cost or
 Expected: eliminate false plan rejection while preserving safe worker/pool completion. Observed: source provides a lifecycle-bounded record, fixtures pass and all 350 archived records resolve the sampled misses. Gap closed: plan-observation reliability in this harness, not cost neutrality or adoption performance. Next useful work: precise wording, current CI closure and exact freeze; not an unrelated kernel safety campaign.
 
 Migration verified before receipt: previous branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt ceee81200a876e004710d021d449db0743568572. Pinned routing audit: five resolved, no unresolved findings. Only this inbox item pending. [Results](records/d061/results.json). No local Rust/Miri run, timing, implementation, merge, infrastructure or automation changes.
+
+## D062 — D061 corrections mostly closed; join-before-take premise still unproved
+
+Input [6733879388](https://github.com/lmmx/mibz2/pull/161#issuecomment-6733879388), PR #270 at **14134d696ac4792e9e1980b83b782d514ec5c8bb**. Policy: team SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**, freshly read. Independent review, 2026-11-09.
+
+**G1: concur with the cost, CPU-formatting scope and hook-premise corrections; dispute unconditional closure of the completeness correction. REVISE the join claim before calling this freeze-ready.** No new unsafe-code B5 HOLD or mutation campaign; routine repair and CI continue. The pending existing CI gate remains. No B6 or G8 stop, no acceptance-threshold change, no workstation execution or authority expansion.
+
+### What closes
+
+The source delta since 28298a4ad5b155a0cc0804582c9c40fc85400688 leaves the production recorder and both hook call sites executable-identical; their changes are comments. The test adds caught helper panic plus reuse, alongside off/idle/two-task cases. It is now named `threads::tests::miri_helpers_record_their_own_names_once_they_ran`, selected by the generic `miri_` filter, and threads.rs triggers the Miri workflow.
+
+Cost disclosure now matches the mechanism: name allocation, occasional vector growth, one potentially contended process-wide mutex; helper registration before done can extend the critical path. Equal counts do not imply equal cost. Potentially differential, unmeasured instrumentation is acknowledged inside wall timing, and D059's outside-timing recommendation is explicitly replaced, not satisfied. This is an instrumented comparison, not an uninstrumented performance result.
+
+ab::child now executes record(false), rusage(0), rusage(-1), then take/sort/join/replace (examples/ab.rs:783–791). Record formatting is excluded from the already captured wall/CPU/RSS readings symmetrically. Recording during actual decode remains charged. This closes D061's formatting-accounting correction; it does not prove all teardown or all late recording is within those clocks.
+
+The non-unwinding premise is stated at the hook. Poison recovery and ordinary allocation-failure abort agree with the reviewed implementation; no new callable failure mechanism was introduced. The panic/reuse fixture tests a task panic caught before the hook, not a hypothetical unwind originating in the hook. D061's safe-owned-record and erased-task lifetime argument remains unchanged.
+
+### The remaining counterexample is ordering, not unsafe code
+
+R6 and ab.rs:758–759 infer “decoder's threads joined” from decode returning and BzReader being dropped. That implication is false. I also correct D061's own overly strong joined-before-take description.
+
+At this exact head:
+- src/read.rs::BzReader::on gives the feeder an Arc<StreamDecoder>. Its EOF path calls d.close() before the closure and its Arc finish.
+- BzReader::drop cancels and joins the feeder **only if h.is_finished()**; otherwise the handle is detached. Dropping the reader's Arc is not necessarily the last Arc.
+- StreamDecoder::read returns 0 when st.end == Some(st.taken); it does not join. close only removes the input sender.
+- StreamDecoder::drop performs join, but only at last-Arc destruction.
+
+Legal schedule even for a regular file: feeder closes input, is descheduled while still holding its Arc; scanner/workers finish output; consumer observes EOF and drops BzReader; is_finished is false, so it detaches; ab disables recording and takes resource readings and the record before the feeder resumes. “The file was read to EOF” does not imply “the feeder closure exited.” This is a source-level admissible interleaving, not a claimed observed failure or local Rust reproduction.
+
+Consequences must stay separate. This disproves an all-threads-joined guarantee and permits teardown CPU after the resource snapshot. It **does not by itself prove a missing required helper record**: helpers publish their record before done, so completed output can provide a narrower ordering argument. A delayed unused worker can be absent, but an absent tuple is refused, not repaired into VALID. The fresh child prevents an earlier decoder from supplying stale counts. Neither a fail-closed count nor finite good repeats proves the claimed join.
+
+**Narrow closure requested:** remove the unconditional join inference in ab, R6 and related scope wording. Then either demonstrate an actual quiescence boundary, or derive the weaker completion/count argument needed for the seven accepted arms and explicitly disclose the teardown/resource-snapshot boundary. A general-purpose blocking BzReader Drop is not prescribed: arbitrary Read can block forever. Keep the instrument, admission and reporting consistent; demonstrate the chosen boundary with a bounded scheduling test if relying on lifecycle behavior. Do not call plain EOF or a Miri pass proof of joining. No broader decoder rewrite is required by this finding.
+
+### Reproduced checks and CI evidence required
+
+Fetched current-head Python admission, reporter, tests and team_size dependency: **43 tests passed**, 19 workstation + 24 reporter. This includes R7's real-schema positive, genuinely perturbing/non-interpretable case, malformed comparisons and duplicate/missing/nonfinite raw grid refusals. It is synthetic admission evidence, not a physical worker-delay experiment or independent remeasurement of occupancy.
+
+Native rust job **129016681160** log shows recorder panic/reuse test passing; library **91 passed, 2 ignored**, run_team **29 passed, 1 ignored**, run_fed_leader **10 passed**, ab **4 passed**. Checkout **64554b4863469a09adc28d3366af5dceed09f000** has the **same full tree 33a63e500aad09cb5f2c1324445813dff109ed4c** as reviewed 14134d69; comparison has zero changed files. These are native results, including tests whose names begin miri_, not interpreter results.
+
+The fetched check snapshot had Miri **129016625474**, rust **129016681160** and bench **129016685193** in progress; fuzz-smoke and occupancy succeeded. Later native log sections above are available, but I do not infer aggregate job completion from them. Miri and bench log requests returned **404 BlobNotFound** at 06:39 UTC. No PASS or code-failure inference; no retry/poll/rerun.
+
+For completed current-source Miri evidence, retain job/run and checked-out SHA (or exact tree equivalence), toolchain and commands; show:
+1. Generic `cargo miri test --lib -- miri_` actually executes and passes the new enabled-recorder panic/reuse test, existing pool lifetime/panic tests, and both shipped/run-fed worker recovery families. Listing or native execution is insufficient. Selection guards currently cover recovery families; inspect the recorder's execution too.
+2. The AVX2 step actually succeeds with `RUSTFLAGS="-C target-feature=+avx2,+bmi1"`, `MIBZ2_EXPECT_AVX2=1` forwarded through MIRIFLAGS, and `run_stage::tests::miri_ run_team::tests::miri_` selected. Preserve the reached-path assertions; no silent skip or zero-test success.
+3. Both steps and the job complete without UB/race/provenance errors, timeout or cancellation. Finite interpreted executions supplement the source argument; they neither prove every schedule nor certify timing neutrality or workstation performance.
+
+The local Miri success reported in the checkpoint is attributed, not independently reproduced here. bench/run-fed-leader.frozen is still **frozen none**. Existing CI readiness, corrected registration/source identity and Louis's C5 run remain; no new performance gate introduced.
+
+Expected: close D061's scientific description of the repaired census. Observed: cost and formatting corrections close, stronger enabled test lands, but EOF was substituted for a join proof. Next: resolve that exact premise and complete existing CI, then freeze the exact measured inputs. No old INVALID result is reclassified.
+
+Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **b8bcbeef89b2f907e897d10bda806268eb481e00**. Pinned routing audit: five resolved, zero unresolved; route REVIEW → #145. [Evidence](records/d062/evidence.json). No implementation, local Rust/Miri run, timing, merge, infrastructure, spend or automation change.
