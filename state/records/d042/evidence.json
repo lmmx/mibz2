@@ -1,0 +1,62 @@
+{
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "release_squash": "0015de8c96127c6ea080097a6822c2a2ae5b09df",
+  "base": "e46f826379313b7a04d93005c349e2aada203582",
+  "incoming": [
+    6715368365,
+    6729117187
+  ],
+  "source_blobs": {
+    "src/parallel.rs": "fcdd7cca5bda6706bf1869c5ebfc4a246740939d",
+    "src/coop.rs": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "tests/pipelined.rs": "74f0c85cb2affad20d209d9e9b7dea49c1cd7059",
+    "src/read.rs": "50c3cb3db31ce800de219acb1ecd532a423f3bcd",
+    "src/lib.rs": "30f227631c797b2243c9b5ef27624b7c4707bba8",
+    "README.md": "1affee2079f0fcf58def4bf5b358c13b5d9511b4",
+    "CHANGELOG.md": "2368fc08813a7708425a8fd50df1837de7fb54f2",
+    ".github/workflows/miri.yml": "a988b1a39686ce09f0de7e56fe4aa4f79cfe7894",
+    "examples/fuzz.rs": "6eb8b7664c40e102df5479a7a73e996811b436db",
+    "docs/journal/2026-11-07-team-pipeline-result.md": "e6608256dad94e076088acf1ef08ff087a5911a4",
+    "docs/journal/2026-11-07-pipeline-levers-result.md": "7d9cd98dd2ec3c24e835e7c501a3c892192e1704",
+    "docs/journal/2026-11-07-pipelined-default-registration.md": "02fb88bdbcaeaf7c6c14ce737c55f5e34ad4940d"
+  },
+  "common_blob": "b7d5e4114fdbbd3aef8f0c7b04b47867db1d7c1e",
+  "unchanged_since_release": [
+    "src/parallel.rs",
+    "src/coop.rs",
+    "tests/pipelined.rs"
+  ],
+  "reviewed_prs": [
+    {
+      "number": 247,
+      "head": "7c59de46158786b49ab5bd7068c51e0ff1ae72a4",
+      "merge": "fadd331ab81ca4a1ee92baa89f33a65f3f435abe"
+    },
+    {
+      "number": 249,
+      "head": "7a5be722ac1162effa8bf079de885e6963f6f5a5",
+      "merge": "fdec630f75af5f5d2da7488e1eaf519a1957de82"
+    },
+    {
+      "number": 250,
+      "head": "369a030de362b8929f67de1fa28f7390c5c3194d",
+      "merge": "0015de8c96127c6ea080097a6822c2a2ae5b09df"
+    }
+  ],
+  "standin_log_ids": [
+    6700176780,
+    6700248400,
+    6704859777,
+    6705847596
+  ],
+  "channel_snapshot": {
+    "since": "2026-11-07T00:00:00Z",
+    "count": 94,
+    "last_id": 6729167954
+  },
+  "validation": {
+    "method": "static source review and repository comparison; no Rust execution",
+    "runtime": "cargo and rustc unavailable",
+    "benchmarks": "not run; bundles not replayed; recorded verdicts retained"
+  }
+}
