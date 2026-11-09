@@ -632,8 +632,9 @@
       "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
       "commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
       "receipt_commit": "533aa057ff156f3aea766de87c24e1b563346d87",
-      "status": "complete",
-      "disposition": "Default gate confirmed; pipeline B5 qualification HOLD for pipeline-specific fuzz/mutation evidence; no UB found in static review; CPU ratio wording disputed."
+      "status": "finished",
+      "disposition": "Default gate confirmed; pipeline B5 qualification HOLD for pipeline-specific fuzz/mutation evidence; no UB found in static review; CPU ratio wording disputed.",
+      "comment": 6729223027
     }
   ],
   "own_outgoing_comment_ids": [
@@ -674,7 +675,8 @@
     6695377829,
     6695575803,
     6695663002,
-    6695760685
+    6695760685,
+    6729223027
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -792,7 +794,8 @@
     6695276659,
     6695438405,
     6695594055,
-    6695685974
+    6695685974,
+    6715368365
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -874,9 +877,9 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6695685974,
+    "last_completed_incoming_comment": 6715368365,
     "last_decision": "D042",
-    "last_outgoing_comment": 6695760685,
+    "last_outgoing_comment": 6729223027,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
@@ -885,14 +888,14 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "one TYPE: REVIEW for D041 on #145",
+    "source_app_reply": "D042 REVIEW on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
-    "queue_snapshot": "18 inbox comments listed; all after offset finished",
-    "active_incoming_comment": 6715368365
+    "active_comment_status": "in_progress",
+    "queue_snapshot": "20 inbox comments; original assignment finished, resume notice being reconciled",
+    "active_incoming_comment": 6729117187
   },
   "duplicate_events": [
     {
@@ -1216,7 +1219,8 @@
       "sha": "a4f97714cc14366984015869d9d094d89488ac57",
       "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
       "decision": "D042",
-      "commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557"
+      "commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
+      "comment": 6729223027
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1384,11 +1388,20 @@
     {
       "comment_id": 6715368365,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D042",
       "receipt_commit": "533aa057ff156f3aea766de87c24e1b563346d87",
       "progress": "Review completed; scoped B5 evidence HOLD and documentation corrections recorded.",
-      "work_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557"
+      "work_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
+      "review_comment_id": 6729223027,
+      "complete_cursor_commit": "878b54328e0260b0df74e662d89508f8a6c6dc46"
+    },
+    {
+      "comment_id": 6729117187,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D043",
+      "duplicate_of": 6715368365
     }
   ],
   "migrated_from": {
