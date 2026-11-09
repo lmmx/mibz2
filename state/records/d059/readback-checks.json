@@ -1,0 +1,13 @@
+{
+  "pinned_verify": {
+    "comment": 6733239555,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "guardian_header_routing_pass": true,
+  "exact_body_id_destination_work_link_checked": true,
+  "limitation": "Pinned verifier requires coordinator sender; sole expected mismatch, not overridden or impersonated."
+}

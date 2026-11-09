@@ -909,10 +909,11 @@
       "sha": "e1765d092887959b2f8be75d5a0cea738f641982",
       "evidence_digest": "git-blob:3edc281c36a9b242d928a32e113e4976d07beed5;fuzz-job:129000380243",
       "decision": "G1",
-      "status": "complete",
+      "status": "finished",
       "commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b",
       "receipt_commit": "0db38a83a7b35820d80481fc125dc0c01c097f9d",
-      "disposition": "non-trace gate equivalence accepted; no extra mutation gate; normal CI/Miri pending; census repair recommended before freeze, no new B5 hold for false invalid"
+      "disposition": "non-trace gate equivalence accepted; no extra mutation gate; normal CI/Miri pending; census repair recommended before freeze, no new B5 hold for false invalid",
+      "comment": 6733239555
     }
   ],
   "own_outgoing_comment_ids": [
@@ -969,7 +970,8 @@
     6732441720,
     6732545801,
     6732679972,
-    6732989448
+    6732989448,
+    6733239555
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1086,7 +1088,8 @@
     "fa85f6b20d349c4b68dbb7384b7c592120652341",
     "dbcda95697fb3fd303929dbb91dbe14dc3431f2b",
     "0db38a83a7b35820d80481fc125dc0c01c097f9d",
-    "57ea33e36fb05f78887f7f9a61939c5e8858689b"
+    "57ea33e36fb05f78887f7f9a61939c5e8858689b",
+    "fa766ecca2c535ca3efad8c34f6ba30028621e6b"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1145,7 +1148,8 @@
     6732361106,
     6732477634,
     6732560627,
-    6732894651
+    6732894651,
+    6733174182
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1224,13 +1228,17 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6733174182,
-    "status": "complete",
+    "active_comment": null,
+    "last_finished_comment": 6733174182,
     "decision": "D059",
+    "status": "finished",
+    "work_commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b",
+    "review_comment_id": 6733239555,
     "queue_snapshot": [
       6733174182
     ],
-    "work_commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b"
+    "remaining_in_snapshot": [],
+    "automation": "unchanged; persistent task remains enabled"
   },
   "duplicate_events": [
     {
@@ -1692,7 +1700,8 @@
       "sha": "e1765d092887959b2f8be75d5a0cea738f641982",
       "evidence_digest": "git-blob:3edc281c36a9b242d928a32e113e4976d07beed5;fuzz-job:129000380243",
       "decision": "D059",
-      "commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b"
+      "commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b",
+      "comment": 6733239555
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2034,10 +2043,12 @@
     {
       "comment_id": 6733174182,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D059",
       "receipt_commit": "0db38a83a7b35820d80481fc125dc0c01c097f9d",
-      "work_commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b"
+      "work_commit": "57ea33e36fb05f78887f7f9a61939c5e8858689b",
+      "review_comment_id": 6733239555,
+      "complete_cursor_commit": "fa766ecca2c535ca3efad8c34f6ba30028621e6b"
     }
   ],
   "migrated_from": {
