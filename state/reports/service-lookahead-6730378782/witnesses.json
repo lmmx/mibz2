@@ -1,0 +1,123 @@
+{
+  "control": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "one_complete_trace_round": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "trace_requests_one_round": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "trace_raw_runs_empty": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "prepared_exceeds_ceiling": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "prepared_median_above_max": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "no_blocks_in_trace": {
+    "verdict": "VALID",
+    "exit": 0,
+    "readings": {
+      "overall": "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (registered step 5: LA3 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded); LA4 1.000 [0.998, 1.002], NULL: within \u00b13%, a small effect is not excluded; CPU NULL (within \u00b13%: a small difference is not excluded)). NULL is bounded uncertainty: a small effect is not excluded. The threshold admits preparations (a service worker starts one while fewer than it are prepared); it doesn't cap the queue, which can hold up to threshold + 1: see each trace's prepared count"
+    },
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here.",
+    "failed_checks": []
+  },
+  "gain_and_relief_on_different_arms": {
+    "verdict": "VALID",
+    "judged": [
+      {
+        "name": "LA3",
+        "arm": "mibz2-svc2-a3@10",
+        "ref": "mibz2-svc2@10",
+        "admission": [
+          3,
+          2
+        ],
+        "windows": [
+          8,
+          8
+        ],
+        "speed": [
+          1.0526315789473686,
+          1.0506117511547333,
+          1.0546552899102686
+        ],
+        "cpu": [
+          1.0,
+          0.9980811635969965,
+          1.0019225254147552
+        ],
+        "rounds": 20,
+        "speed_outcome": "GAIN",
+        "cpu_outcome": "NULL"
+      },
+      {
+        "name": "LA4",
+        "arm": "mibz2-svc2-a4@10",
+        "ref": "mibz2-svc2@10",
+        "admission": [
+          4,
+          2
+        ],
+        "windows": [
+          8,
+          8
+        ],
+        "speed": [
+          1.0,
+          0.9976504242901887,
+          1.002355109217222
+        ],
+        "cpu": [
+          1.0,
+          0.9976504242901886,
+          1.002355109217222
+        ],
+        "rounds": 20,
+        "speed_outcome": "NULL",
+        "cpu_outcome": "NULL"
+      }
+    ],
+    "mechanism": "PREP STARVATION AT THRESHOLD 2, RELIEVED AT A HIGHER THRESHOLD: consistent with the admission threshold binding the teams' supply at 2, not shown to be it."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "states": 5040,
+  "minimum_free_fronts_at_eligible_idle_worker": 2,
+  "premises": "Fronts held only by P prepared blocks, A<=K-1 other service workers preparing, U<=T teams; pool F=T+L+K; P<L.",
+  "not_proved": "Rust ownership, scheduling, cancellations, cache costs, or an end-to-end speed bound."
+}
