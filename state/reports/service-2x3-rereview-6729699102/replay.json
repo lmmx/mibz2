@@ -1,0 +1,270 @@
+{
+  "old_cases_on_original_control": {
+    "control": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "deleted_hash": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "deleted_size": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "deleted_wall": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "null_output": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "empty_output": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "negative_wall_and_cpu": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_corpus": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "absent_corpus_digest": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "absent_trace_metrics": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_trace_plan": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "different_base_arm": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "one_round_only": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "dry_marker": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "changed_freeze_marker": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "duplicate_round": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_plan": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    }
+  },
+  "old_cases_on_repaired_control": {
+    "control": {
+      "exit": 0,
+      "verdict": "VALID",
+      "overall": "NOT REPLICATED (registered step 1: P1 NULL: within \u00b13%, a small effect is not excluded; svc2@10 not shown to beat today's default)",
+      "saturation": "NOT SATURATED at 2 \u00d7 3 + 2 (PREP STARVATION without saturation: consistent with the prepared queue's lookahead binding, not shown to be it)"
+    },
+    "deleted_hash": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "deleted_size": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "deleted_wall": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "null_output": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "empty_output": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "negative_wall_and_cpu": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_corpus": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "absent_corpus_digest": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "absent_trace_metrics": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_trace_plan": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "different_base_arm": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "one_round_only": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "dry_marker": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "changed_freeze_marker": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "duplicate_round": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    },
+    "wrong_plan": {
+      "exit": 1,
+      "verdict": "INVALID",
+      "overall": "NONE (the run is invalid)",
+      "saturation": "NONE (the run is invalid)"
+    }
+  },
+  "additional_cases": {
+    "boolean_wall": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "nan_cpu": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "zero_rss": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "infinite_rss": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "nonhex_digest": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "trace_nan": {
+      "verdict": "INVALID",
+      "exit": 1
+    },
+    "round_list": {
+      "exception": "TypeError",
+      "detail": "unhashable type: 'list'"
+    }
+  },
+  "illustrative_readings": {
+    "product": "SVC2@10 BEATS THE DEFAULT (P1 GAIN; CPU NULL (within \u00b13%: a small difference is not excluded))",
+    "cause": "THE SERVICE BUNDLE BEATS THE PLAIN 2 \u00d7 3 (C1 GAIN, at the same teams and window; no one mechanism isolated)",
+    "two_teams": "TWO PIPELINED TEAMS BEAT THE DEFAULT (P2 GAIN)",
+    "versus_pipe2": "PIPE2X3@10 FASTER THAN SVC2@10 on the geometric mean (S1 0.947 [0.945, 0.950], REGRESSION; reported, not judged)",
+    "overall": "REGISTERED STEP 6 MET, BUT SVC2@10 NOT SHOWN BETTER THAN THE SIMPLER PIPE2X3@10 (P1 GAIN, CPU NULL (within \u00b13%: a small difference is not excluded), C1 GAIN; PIPE2X3@10 FASTER THAN SVC2@10 on the geometric mean (S1 0.947 [0.945, 0.950], REGRESSION; reported, not judged)). Against the default and the plain 2 \u00d7 3 the readings favour svc2@10; against two pipelined teams they don't: for Louis to weigh"
+  },
+  "decomposition": {
+    "speed": {
+      "P1": 1.0526315789473686,
+      "S1": 0.9473684210526316,
+      "P2": 1.1111111111111112,
+      "C1": 1.1578947368421053,
+      "S2": 0.9090909090909091,
+      "S1xP2": 1.0526315789473686,
+      "C1xS2": 1.0526315789473684,
+      "rounds": 20
+    },
+    "cpu": {
+      "P1": 1.0,
+      "S1": 1.0,
+      "P2": 1.0,
+      "C1": 1.0,
+      "S2": 1.0,
+      "S1xP2": 1.0,
+      "C1xS2": 1.0,
+      "rounds": 20
+    }
+  },
+  "scope": "Synthetic report records only. No decoder or timing. git HEAD mocked to the fixture SHA; corrected control changes only registered corpus digest and full trace."
+}
