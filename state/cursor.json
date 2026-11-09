@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "PROCEED to freeze preflight-only entry: all six prior witnesses rejected, positive control preserved, fallback failure exposed. Nine local checker tests pass; CI 25 success/3 skipped and six end-to-end tests pass on identical merge tree. Huge integer parser overflow fails closed, nonblocking.",
+  "state": "REVISE preflight quota evidence and acquisition description/bounds. 27 admission tests pass, four malformed preflight witnesses PASS. ab env conflates unknown/unlimited quota and spins/probes perf. Q1-Q6 answered; repeat authority remains outside pinned C6.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -124,7 +124,8 @@
     6740568118,
     6741912733,
     6742323424,
-    6744588901
+    6744588901,
+    6745615244
   ],
   "last_processed_comment_id": 6742323424,
   "comment_reviews": [
@@ -1254,11 +1255,15 @@
     },
     {
       "trigger_comment_id": 6745615244,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "5602dee5628d26e3142ab6a050b2e2ef5e7c53ae"
+      "source_commit": "5602dee5628d26e3142ab6a050b2e2ef5e7c53ae",
+      "report_commit": "a241afefb19b824afcdfe155cfd5aad9dc705c28",
+      "report_path": "state/reports/run-fed-r10-6745615244/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE preflight quota evidence and acquisition description/bounds. 27 admission tests pass, four malformed preflight witnesses PASS. ab env conflates unknown/unlimited quota and spins/probes perf. Q1-Q6 answered; repeat authority remains outside pinned C6."
     }
   ],
   "active_delegations": [],
@@ -1278,10 +1283,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6744588901
+      6745615244
     ],
     "handled": [
-      6744588901
+      6745615244
     ],
     "skipped": [],
     "automation_modified": false
