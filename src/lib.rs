@@ -84,6 +84,9 @@ pub mod bwt;
 mod coop;
 pub mod crc;
 pub mod mtf;
+// (research: the #34 pair table built from run intersections, the `pair-runs` feature's)
+#[cfg(any(test, feature = "pair-runs"))]
+pub mod pair_runs;
 pub mod parallel;
 mod read;
 pub mod rle;
