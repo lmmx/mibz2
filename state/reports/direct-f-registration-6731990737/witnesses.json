@@ -1,0 +1,37 @@
+[
+  {
+    "case": "ghz_negative",
+    "problems": [],
+    "Q1": "FEASIBLE",
+    "delta": 21.440000000000015
+  },
+  {
+    "case": "ghz_zero",
+    "problems": [],
+    "Q1": "FEASIBLE",
+    "delta": -0.0
+  },
+  {
+    "case": "ghz_bool",
+    "problems": [],
+    "Q1": "FEASIBLE",
+    "delta": -21.440000000000015
+  },
+  {
+    "case": "ghz_missing",
+    "problems": [],
+    "error": "KeyError('ghz')"
+  },
+  {
+    "case": "output_one",
+    "problems": [],
+    "Q1": "FEASIBLE",
+    "delta": -60032000.00000004
+  },
+  {
+    "case": "accepted_rows_impossible",
+    "problems": [],
+    "Q1": "FEASIBLE",
+    "delta": -60.03200000000004
+  }
+]
