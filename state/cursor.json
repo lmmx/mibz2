@@ -730,8 +730,9 @@
       "sha": "83970f68b309d9667f6fe8fbd4a70f50be5f73da",
       "evidence_digest": "git-blob:6882e6a7a7bef42b216986de6fbc196d76a61850",
       "commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
-      "status": "complete",
-      "disposition": "D044 B5 HOLD lifted for #269's frozen CI diagnostic at fd60fffa; repaired checked-state B6 resumption recorded; other safety holds unchanged."
+      "status": "finished",
+      "disposition": "D044 B5 HOLD lifted for #269's frozen CI diagnostic at fd60fffa; repaired checked-state B6 resumption recorded; other safety holds unchanged.",
+      "comment": 6730547798
     }
   ],
   "own_outgoing_comment_ids": [
@@ -777,7 +778,8 @@
     6729932417,
     6730103867,
     6730359769,
-    6730448704
+    6730448704,
+    6730547798
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -861,7 +863,8 @@
     "bab6f81695fe3b3c1e3ea738af66c8cfb1e3282b",
     "35ccf0fbd04aa6a2149d0d4b7c9e4100cf7caa31",
     "3f33c6bfd214bf04f5bd7971b7ba81edd3975b20",
-    "92a76292db9be1ed03baef192bc987b3af4c3526"
+    "92a76292db9be1ed03baef192bc987b3af4c3526",
+    "779bd13715cf73205507e5b9087f306d4942b561"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -994,7 +997,7 @@
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
     "last_completed_incoming_comment": 6730455683,
     "last_decision": "D048",
-    "last_outgoing_comment": 6730448704,
+    "last_outgoing_comment": 6730547798,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
@@ -1003,12 +1006,12 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D048 work complete; publication pending on #145",
+    "source_app_reply": "D048 REVIEW on #145; exact body read back; routing/header/inbox-ID/queued-ID/both-SHAs verified. Pinned verify() is coordinator-only; generic predicates used.",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
+    "active_comment_status": "finished",
     "queue_snapshot": [
       6681847165,
       6682032075,
@@ -1035,7 +1038,7 @@
       6730455683
     ],
     "active_incoming_comment": 6730455683,
-    "status": "complete"
+    "status": "finished"
   },
   "duplicate_events": [
     {
@@ -1409,7 +1412,8 @@
       "sha": "83970f68b309d9667f6fe8fbd4a70f50be5f73da",
       "evidence_digest": "git-blob:6882e6a7a7bef42b216986de6fbc196d76a61850",
       "decision": "D048",
-      "commit": "92a76292db9be1ed03baef192bc987b3af4c3526"
+      "commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
+      "comment": 6730547798
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1640,10 +1644,12 @@
     {
       "comment_id": 6730455683,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D048",
       "receipt_commit": "3f33c6bfd214bf04f5bd7971b7ba81edd3975b20",
-      "work_commit": "92a76292db9be1ed03baef192bc987b3af4c3526"
+      "work_commit": "92a76292db9be1ed03baef192bc987b3af4c3526",
+      "review_comment_id": 6730547798,
+      "complete_cursor_commit": "779bd13715cf73205507e5b9087f306d4942b561"
     }
   ],
   "migrated_from": {
