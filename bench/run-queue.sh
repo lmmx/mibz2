@@ -53,7 +53,8 @@ read_queue() {
   git fetch --quiet origin master || { say "could not fetch master"; return 1; }
   queue=$(git show origin/master:bench/workstation-queue.txt) || { say "no queue on master"; return 1; }
   git show origin/master:bench/await-submit.sh > "$waiter" || return 1
-  entries=$(grep -v '^[[:space:]]*#' <<<"$queue" | awk 'NF>=2 {print $1, $2}')
+  # grep exits 1 on a queue of comments only; that is an empty queue, not a failure
+  entries=$( { grep -v '^[[:space:]]*#' <<<"$queue" || true; } | awk 'NF>=2 {print $1, $2}')
 }
 # The entries whose ready tag is set, with no hold, at a commit not yet run on this machine
 # (no marker under ~/.cache/await-submit, which the waiter makes just before a run), and not
