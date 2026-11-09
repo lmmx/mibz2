@@ -39,11 +39,23 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
 
 ### Added
 
-Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0. The two
+Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0. The last two
 entries below were numbered 3.2.4 and 3.3.0 on that branch while master made its own 3.3.0
-and 3.4.0; merged after them, they are this version. Each is opt-in or a new field beside
-the others, as it was: no measured figure changes meaning.
+and 3.4.0; merged after them, they are this version. Each entry is opt-in or a new field
+beside the others: no measured figure changes meaning.
 
+- **`ab run --sysfs-state`** (`examples/ab.rs`): the parent's half of `--machine-state`
+  alone. The clock (each CPU's `scaling_cur_freq`, and their mean), the governor, EPP and
+  turbo of the policies holding the run's CPUs, and the package temperature, read from sysfs
+  in the parent before each run is spawned and after it exits (`machine_pre`,
+  `machine_post`, `t_spawn_unix_ns`, `t_exit_unix_ns`), exactly as 3.3.0's
+  `--machine-state` records them, each null with its reason where it can't be read. The child
+  is untouched: no counters are opened, its sampler records no CPU set, and `AB_MACHINE_STATE`
+  is cleared, as without either flag. The readings are endpoint snapshots outside the run's
+  every reading; they are not the clock during the decode (the kernel documents
+  `scaling_cur_freq` as possibly a requested state). For the run-fed leader's revised
+  workstation run (docs/journal/2026-11-09-run-fed-leader.md §R10), whose host has
+  `perf_event_paranoid=4`: recorded, never judged (D064).
 - **Each run's threads as the decoders ran them** (`examples/ab.rs`, `ran_threads`, from
   `mibz2::threads`): every worker, as it starts, and every team helper, at its first task,
   records itself by its own name; the child reads the record after its timing. The census
