@@ -2917,3 +2917,51 @@ Primary ABI reference consulted: [Linux perf_event_open manual](https://man7.org
 Expected: one small independent hardware check before a larger experiment. Observed: the production validity fixes are useful, but the wrapper loses failure and the checker overstates coverage. Gap closed: exact blockers now have deterministic witnesses. Next value: repair these paths, freeze the short diagnostic, collect its first honest target-machine bundle. No need to wait for or accelerate #299.
 
 Migration checked before receipt: previous branch **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **17c17dc22d04e247b9fc9b5e32818b531b931b0b**. Pinned routing audit: five resolved, zero unresolved; REVIEW routes to #145. [Evidence](records/d065/evidence.json). No implementation, merge, workstation execution, infrastructure, spending or automation changes.
+
+## D066 — REVISE only the remaining telemetry status paths
+
+Input [6739842300](https://github.com/lmmx/mibz2/pull/161#issuecomment-6739842300). #298 head **7678d34716db60dddf7c6e5a1a824a7909cd2bcc**; frozen inputs **9ef314e424d069dbcf201d94e9f41a8921a852f4**. Policy files SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL freshly read at **a4f97714cc14366984015869d9d094d89488ac57**. Independent review, 2026-11-09; no implementation involvement.
+
+**REVISE. D065's G2 queue-admission hold remains only for the two classification defects below.** Accept the demonstrated exit, identity, bound and coverage-scope repairs. The diagnostic remains independent of #299. No additional decoder gate, B6 stop or G8 line stop.
+
+### Repairs accepted
+
+- The recipe's finish function now returns from the recorded outcome, not the last shell status. Executed that exact function with a stub bundler: CHECKED→0, FAILED→1, REFUSED→1, INCOMPLETE→3.
+- CI submit job **129149773964** ran all three telemetry integration tests successfully: direct outcomes, dirty-input refusal, and FAIL/INCOMPLETE/PASS through submission into a scratch evidence remote. This is independent log inspection, not a local re-execution of the full integration suite.
+- Cargo's reported example executable is used; path/toolchain and SHA-256 are retained; the digest is checked again. Dirty/untracked measured inputs and frozen-input differences refuse.
+- The freeze commit changes only telemetry-check.frozen relative to 9ef314e4. The new registration states a diagnostic objective, statuses, limits, one attempt and no retry-to-pass. Each spin checks CPU accounting and has a ten-second wall deadline; the check has a 300-second outer timeout.
+- task-clock-modes now uses checked Perf collection, retains raw coverage and errors, reports user/system time, and labels its interpretation as consistency rather than identification. region-task-clock explicitly disclaims hardware region validation.
+- Per-counter inheritance comparisons replace the former task-clock-only hardware PASS. The negative-control unit test is a synthetic predicate test (80,000/500 versus 500/480), not an executed mutation of a live kernel event's inherit bit. The inside/before workload comparison supplies useful prospective per-counter evidence, with the limits the registration states.
+
+### Remaining contradictions with the frozen statuses
+
+**1. inherit_status classifies failed reads as UNAVAILABLE.** collect produces `Err("reading the counter: ...")`; inherit_status maps only errors beginning `"its "` to INCOMPLETE. Every other error becomes UNAVAILABLE. Thus an opened event whose read fails can leave the overall check exiting zero, contrary to the registration's explicit “failed control operation or read → INCOMPLETE.”
+
+Preserve the error stage: open failure → UNAVAILABLE; control/read failure after open → INCOMPLETE. Prefer typed provenance over string-prefix inference. Inspect both inside and before errors before choosing a status: the current first-error pattern can also hide a control failure in the second reading behind an unavailable first reading.
+
+**2. multiplex-live discards failed readings before assigning its status.** Its `partial` list contains only successful non-whole readings. With all reads/control operations failing, partial is empty and the case says OBSERVED, “every counter ran its whole enabled time.” With cycles failing and instructions successfully multiplexed, the consistency check can produce PASS. Both retain errors in fields but misclassify the case. Since exit_code aggregates case statuses, the failure can again become CHECKED.
+
+Before interpreting partial coverage, distinguish missing optional events from failed control/read operations on opened events. The latter must make the case INCOMPLETE under this registration. Preserve successful partial counts and all faults; do not erase useful observations. Only valid, actually exercised multiplexing should supply this case's PASS. Failed extra-stimulus enables already reduce the enabled count; absence of multiplexing must remain “not exercised,” never validation.
+
+Executed source-checked Python branch witnesses:
+- inheritance read EIO → UNAVAILABLE (required INCOMPLETE);
+- multiplex probe opened counters fail → OBSERVED (required INCOMPLETE);
+- cycles control failure plus partial instructions → PASS (required INCOMPLETE).
+
+These are constructed counterexamples to the inspected predicates, not observed workstation faults or local Rust execution. [Witnesses and evidence](records/d066/evidence.json). Add negative fixtures for these exact paths and verify the resulting overall exit is 3 when no independent FAIL is present. Keep the registered FAIL-over-INCOMPLETE precedence. This closes D065's existing failure-honesty requirement; it introduces no new scientific threshold.
+
+One smaller spec mismatch: task-clock-modes promises two nonzero readings but rejects only a zero denominator. Either enforce its stated numerator requirement or explicitly justify/document a legitimate zero-user observation before freezing. No performance interpretation follows from it.
+
+### Admission, CI and safety
+
+After these narrow corrections, freeze the corrected diagnostic inputs and complete existing exact-head CI/dry-run/queue requirements; do not add #299 as a prerequisite. The revised evidence should resolve this scoped hold. A later merge must preserve the reviewed inputs or receive an assessment of material changes. No ready tag or workstation execution was performed here.
+
+CI snapshot at this head: **23 completed successes, 3 skipped, bench attempt 2 in progress**. The checkpoint's earlier “24 success” is not the current all-clear. Rust job **129149774219** reports 15 example-ab tests passing. Its checkout **eb2d80e99ce3fcaee673de460f639cf814462244** and reviewed head have identical full tree **d74845243382cbc90761c9b4abd4275421e1f213**. Neither test names nor native success establish PMU availability or Miri coverage.
+
+The reported CPU regression remains a separate integration issue; this review neither diagnoses it as layout nor clears it. No polling or rerun was started. Missing target-PMU results remain missing.
+
+No new unjustified unsafe access found in the inspected delta: collect still transfers each owned descriptor once to File; thread_times checks the existing LP64 getrusage buffer call. The short-lived Perf raw-fd leak limitation remains recorded. This is not blanket B5 clearance, nor a new demand for unrelated decoder testing. The immediate defects concern truthful evidence classification. D064, #270's verdict and #299's separate registration review remain intact.
+
+Expected: D065 fully resolved. Observed: exit/identity/bounds repaired; two error-stage losses remain. Gap substantially closed. Highest-value next step is those focused status fixtures, then one honestly classified target-machine diagnostic, not another performance attempt.
+
+Migration checked before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **eeca52734cc0e882ea4d97ba8d47e2b9458cc734**. Routing audit: five resolved, zero unresolved. Task unchanged.
