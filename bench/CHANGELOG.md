@@ -46,7 +46,9 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   helper only in the instant after its birth, under its leader's inherited name, and miss
   it after: the Guardian's D059 reproduced a false (4, 0, 5) plan on a 20 ms decode. The
   record is complete for a fresh child that turns it on before the decode spawns any thread
-  and reads it once the decoder's threads are joined; it records a worker's start and a
+  and reads it once the decode's whole output is read: every worker that published a block,
+  and every helper of every team run that built one, recorded before that output, by the
+  order of completion, not by a join (the decoder's threads may still be ending); it records a worker's start and a
   helper's first task attempt (a caught panic included), not simultaneous occupancy or
   successful work. A new figure beside the others: every existing figure keeps its meaning.
   Its cost: off, one relaxed load a thread; on, in ab's children, each thread allocates its

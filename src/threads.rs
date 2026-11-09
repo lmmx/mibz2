@@ -6,14 +6,31 @@
 //! observer polling `/proc` can catch alone (Guardian D059: a helper read under its leader's
 //! name, or a short-lived pool not seen at all). `examples/ab.rs` reads it.
 //!
-//! **What it records, and its scope** (Guardian D061): a worker's start and a helper's first
-//! task *attempt* (a task that panicked, the panic caught by the pool, counts as attempted).
-//! It records neither that the threads ran at the same time nor that their work succeeded.
-//! It is complete for a decode that starts with recording on, before the decoder spawns any
-//! thread, in a process whose record is otherwise empty (ab's fresh child), and that is read
-//! (`take`) only once every recorded thread has been joined (the decoder dropped): a
-//! thread's push happens before its join returns, and nothing pushes after it. Read earlier,
-//! a thread not yet started is missing.
+//! **What it records, and its scope** (Guardian D061, D062): a worker's start and a
+//! helper's first task *attempt* (a task that panicked, the panic caught by the pool, counts
+//! as attempted). It records neither that the threads ran at the same time nor that their
+//! work succeeded. Every entry is a thread of a decode that ran while recording was on.
+//!
+//! **Complete for every thread that contributed to a complete output, by its completion
+//! order, not by any join** (D062):
+//! - a helper records before it counts its task's completion (`done`, in `coop::helper`),
+//!   and `Pool::run` returns only once every helper of the run has counted (`Wait`'s
+//!   acquire), so a run that ended had every helper's record first;
+//! - a worker records before its first job, so every block it publishes comes after its
+//!   record;
+//! - a block reaches the reader only through `publish` and the reader's own lock, so every
+//!   byte read comes after the record of every worker that published it and of every helper
+//!   of every team run that built it;
+//! - so a harness that reads the decode's whole output and then `take`s the record holds
+//!   every such thread's entry, in every arm: the shipped workers and the run-fed ones are
+//!   spawned by `parallel::launch`, and every team runs on `Pool::run`.
+//!
+//! A thread that contributed nothing (a worker that published no block, a pool that ran no
+//! task) may or may not be recorded. So the record can fall short of a plan that was set up
+//! but not run, never exceed the threads that ran. The record says nothing about teardown:
+//! the decoder's threads may still be ending, its join may come later (its last reference
+//! can be a detached feeder's, `BzReader::drop`), and a thread that records after `take` is
+//! simply not in it.
 //!
 //! **What it costs, and where:** off (unless a harness turns it on, `record`), one relaxed
 //! load a thread, once. On, each recorded thread copies its name into a new `String` and
@@ -66,6 +83,10 @@ pub(crate) fn ran() {
 mod tests {
     use crate::coop::Pool;
     use std::panic::{catch_unwind, AssertUnwindSafe};
+    use std::sync::Mutex;
+
+    /// (the record's switch is the process's: its tests take turns)
+    static TURN: Mutex<()> = Mutex::new(());
 
     /// The record of the threads a pool's helpers ran: each under its own name once it ran
     /// a task, none before (a pool dropped first), none while recording is off; a helper
@@ -75,6 +96,7 @@ mod tests {
     /// Miri too (its race detector on the record's lock and the pool's hand-offs)
     #[test]
     fn miri_helpers_record_their_own_names_once_they_ran() {
+        let _turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
         let mine = |v: &[String], p: &str| {
             let mut n: Vec<String> = v.iter().filter(|x| x.starts_with(p)).cloned().collect();
             n.sort();
@@ -123,5 +145,48 @@ mod tests {
             mine(&got, "mibz2-test-panic"),
             ["mibz2-test-panic1", "mibz2-test-panic2"]
         );
+    }
+
+    /// The record complete by completion, not by a join (D062): a pipelined team's decode
+    /// read to its end, the record taken while the decoder still lives (nothing joined),
+    /// holds its worker and both helpers
+    #[cfg(not(miri))]
+    #[test]
+    fn the_record_is_whole_once_the_output_is_read_before_any_join() {
+        use std::io::Write;
+        let _turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
+        let mut x = 7u64;
+        let mut chunk = |n: usize| -> Vec<u8> {
+            (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    b"abcdefgh"[(x % 8) as usize]
+                })
+                .collect()
+        };
+        let mut bz = Vec::new();
+        for _ in 0..3 {
+            let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(9));
+            e.write_all(&chunk(crate::bwt::MIN_COOP + 20_000)).unwrap();
+            bz.extend(e.finish().unwrap());
+        }
+        super::record(true);
+        let dec = crate::StreamDecoder::pipelined(1, 3, 2, crate::Kernels::detect());
+        dec.write(bz).unwrap();
+        dec.close();
+        let mut buf = vec![0u8; 1 << 16];
+        while dec.read(&mut buf).unwrap() > 0 {}
+        // (the whole output read; the decoder not dropped, nothing joined)
+        super::record(false);
+        let got = super::take();
+        drop(dec);
+        for name in ["mibz2-0", "mibz2-coop-p1", "mibz2-coop-p2"] {
+            assert!(
+                got.iter().any(|n| n == name),
+                "{name} not recorded: {got:?}"
+            );
+        }
     }
 }

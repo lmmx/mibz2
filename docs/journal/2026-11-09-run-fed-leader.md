@@ -2,9 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised seven times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+Revised eight times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
 CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
-decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review).
+decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review); §R8, the record's completeness by completion order (D062).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -477,11 +477,15 @@ an error of the admission itself is INVALID):
   - finite positive wall and CPU, and the corpus `wikidata`;
   - the plan (3, 0, 6), read from the decoders' own record of the threads they ran
     (`ran_threads`, §R5), not from the census's polling, which is kept, required present,
-    and reported, never judged. Its scope (§R6): it is complete for ab's fresh child, which
-    turns recording on before the decode spawns any thread and reads it once the decoder's
-    threads are joined. It records a worker's start and a helper's first task attempt (a
-    caught panic included), not that the threads ran at the same time, nor that their work
-    succeeded;
+    and reported, never judged. Its scope (§R8): ab's fresh child turns recording on before
+    the decode spawns any thread, and reads it once it has read the decode's whole output.
+    By the order of completion, not by any join, that output comes after the record of
+    every worker that published a block and of every helper of every team run that built
+    one. So the record holds every thread that contributed, in every arm, and never a
+    thread that didn't run. It records a worker's start and a helper's first task attempt
+    (a caught panic included), not that the threads ran at the same time, nor that their
+    work succeeded. It says nothing about teardown, which may still be running when it is
+    read;
   - for the run-fed arms, every registered phase once, as non-negative integers, with
     consistent counts, no fallback, and the controls with no records;
   - then threads 10 only, rounds 0–19, each arm once a round, in ab's rotation, and
@@ -1010,7 +1014,8 @@ at 10 threads, 50 rounds, 350 records, wall median 24.7 ms. Results:
 - every exit 0 and every error empty.
 
 The old race no longer gives a false plan. (Scope, D061: this is the record's completeness for
-ab's fresh children, read after their decoders' threads are joined. The admission's
+ab's fresh children, read once their whole output is read (§R8: by completion order, not
+by a join, as first claimed here). The admission's
 fixtures are synthetic records: they show what the admission refuses, not that a
 physically delayed or early-exiting Rust thread behaves as they model. The Rust test
 `threads::tests` covers the pool's idle, ran, panicked and reused cases, §R6.)
@@ -1041,15 +1046,17 @@ is made symmetrically, as D061 allowed.
 |---|---|
 | **cost:** the single mutex can contend; the name's copy and the vector's growth allocate; equal counts across arms don't make equal cost | `src/threads.rs`'s module doc; bench/CHANGELOG 3.3.0; §R5 (the correction beside the old "uncontended" claim); §8 |
 | **what CPU includes:** the record's take, sort, join and replace sat outside the wall but inside the reported CPU | changed, symmetrically: ab's child now reads the record after its CPU and RSS readings as well as its wall, in every arm's child alike. Each run's CPU includes the pushes during the decode, and none of the reading. Stated in §8, in the admission's output (`cpu_scope`, and a line with every VALID), and in ab's comment. Nothing is subtracted |
-| **completeness, scoped:** a fresh child, recording on before any spawn, and joined before the take; worker starts and helper task *attempts*, caught panics included, not simultaneous occupancy or successful work; the synthetic fixtures don't prove physically delayed or early-exit Rust behaviour | `src/threads.rs`'s module doc ("What it records, and its scope"); ab's comment (turned on before the decode spawns any thread, read once the decode has returned and its decoder's threads are joined); §8; §R5 |
+| **completeness, scoped:** a fresh child, recording on before any spawn, and joined before the take; worker starts and helper task *attempts*, caught panics included, not simultaneous occupancy or successful work; the synthetic fixtures don't prove physically delayed or early-exit Rust behaviour | `src/threads.rs`'s module doc ("What it records, and its scope"); ab's comment (turned on before the decode spawns any thread, read once the decode has returned and its decoder's threads are joined: the join claim withdrawn in §R8, replaced by the completion invariant); §8; §R5 |
 | **the hook's non-unwinding premise** | `src/threads.rs` ("It never unwinds": `ran` sits between a task and the helper's `done` count; a poisoned lock is taken as it is; an allocation failure aborts, it doesn't unwind); `ran`'s doc; the helper loop's comment in `src/coop.rs` |
 
-**The join before the take,** stated precisely. ab's child reads the record once `decode`
-has returned and dropped its reader. `BzReader`'s drop cancels the decoder. Its last
-reference then drops the decoder, whose drop joins every worker (`StreamDecoder::join`),
-and each worker's pool joins its helpers on drop. If the feeder thread still held the
-decoder, that join would come later. On a file the feeder has read to its end before the
-reader's last byte, and if not, the record could only miss a thread, never invent one.
+**The join before the take,** as first stated here, and **withdrawn in §R8** (D062: false
+as stated). ab's child reads the record once `decode` has returned and dropped its reader.
+`BzReader`'s drop cancels the decoder. Its last reference then drops the decoder, whose
+drop joins every worker (`StreamDecoder::join`), and each worker's pool joins its helpers
+on drop. If the feeder thread still held the decoder, that join would come later. On a
+file the feeder has read to its end before the reader's last byte. That last sentence is
+the false step: a regular file's EOF doesn't prove the feeder has exited, so the join can
+come after the take. §R8 replaces this with the completion invariant.
 
 **The optional hardening, done:** `threads::tests::miri_helpers_record_their_own_names_
 once_they_ran` now also has a helper whose task panics. The run resumes the panic, the
@@ -1135,6 +1142,81 @@ loop's comment in `src/coop.rs`, `launch`'s in `src/parallel.rs`, bench/CHANGELO
 - **Python:** `test_run_fed_leader_ws.py` (19) and `test_run_fed_leader.py` (24).
 - **Lint:** clippy (default, all features) and fmt clean.
 - **Miri:** the record's test, `threads::tests::miri_…`, passes (§R6).
+
+`bench/run-fed-leader.frozen` stays `frozen none`.
+
+## R8. Revision, 2026-11-09: the record's completeness, by completion order (the Guardian's D062)
+
+D062 (6733983929; `state/decisions.md` at `72a7dbc6`, L2717) closes D061's cost, CPU-scope
+and premise corrections, with no new B5 HOLD. It has one narrow REVISE: §R6's
+join-before-take claim is false as stated. The feeder can close the input and be
+descheduled while still holding its `Arc`. The decode reaches EOF, `BzReader::drop` sees
+the feeder unfinished and detaches it, and the decoder's last drop and its join then come
+after ab has turned recording off, read CPU and RSS, and taken the record.
+
+**The fix chosen: D062's (b), the invariant from completion and counts**, not a wait. It
+needed no change to code: the invariant already held. Only its statement changes. The
+`BzReader::drop` path is unchanged, as D062 asked.
+- **Helpers:** a helper records before it counts its task's completion
+  (`coop::helper`: `threads::ran()` before `done.fetch_add`). `Pool::run` returns only
+  once every helper of the run has counted (its `Wait`, an acquire load of `done`). So a
+  team run that ended was preceded by every one of its helpers' records.
+- **Workers:** a worker records before its first job (`parallel::launch`), so every block
+  it publishes comes after its record.
+- **To the reader:** a block's bytes reach the reader only through `publish` and the
+  reader's lock. So every byte the child reads comes after the records of the worker that
+  published it and of every helper of every team run that built it, and ab's child takes
+  the record only after reading the whole output.
+- **Every arm:**
+  - `mibz2-default33` and `mibz2-pipe3-both` run the shipped pipelined worker, and the five
+    run-fed arms run `run_team::worker`;
+  - every one is spawned by `parallel::launch`;
+  - every team runs on `Pool::run` (`coop::invert_pipelined_with`, `run_team::invert`).
+
+**So the record holds every thread that contributed to the output, and none that didn't
+run.** A thread that contributed nothing may be missing: a worker that published no block,
+or a pool that ran no task. The record can therefore fall short of a plan that was set up
+but not run, which is INVALID, as it should be. It can never exceed the threads that ran.
+The registered (3, 0, 6) is read only from contributors: three workers, each having
+published blocks, and two helpers in each of their pools, each having completed runs.
+
+**What it doesn't say:** nothing about teardown. The decoder's threads may still be ending
+when the record is read, its join may come later, and a thread recording after the take is
+not in it.
+
+**The resource snapshots:** the child's CPU and RSS (`getrusage`) are taken at that moment.
+Teardown still running then, a detached feeder's last decoder reference included, is in
+neither. That is so in every arm alike, and it is stated in ab's comment.
+
+**The wording**, now the completion invariant, in:
+- `src/threads.rs` ("Complete for every thread that contributed to a complete output, by its
+  completion order, not by any join");
+- ab's two comments;
+- §8;
+- the corrections beside §R5's and §R6's join claims;
+- bench/CHANGELOG 3.3.0.
+
+**The test** (`threads::tests::the_record_is_whole_once_the_output_is_read_before_any_join`):
+a pipelined team of three decodes three full blocks, its output is read to the end, and the
+record is taken **while the decoder still lives**, nothing joined. It holds `mibz2-0`,
+`mibz2-coop-p1` and `mibz2-coop-p2`. The record's two tests take turns on the process-wide
+switch.
+
+**Miri's evidence for the freeze** (`miri.yml`, for the coordinator to read in CI's log; no
+pass is claimed here):
+- **identity:** an "Identity" step prints the checkout (the pull request's merge commit, its
+  parents and its tree), fails on a dirty tree, and prints `rustc -vV` and
+  `cargo miri --version`;
+- **the default selection:** "The Miri selection" lists `--lib -- miri_` and fails unless
+  these are listed: the recorder's panic and reuse fixture
+  (`threads::tests::miri_helpers_record_their_own_names_once_they_ran`), the generic pool's
+  six lifetime, panic and wake-up tests (`coop::tests::miri_pool_*`), and all three of each
+  worker-recovery family (`parallel::unwind_tests::miri_run_panic*`,
+  `parallel::run_team::unwind_tests::miri_run_fed_panic*`). The guard was checked locally
+  against nightly `16d1ffac1`'s listing. "Miri" then runs that selection;
+- **the AVX2 step:** it prints `RUSTFLAGS` (`-C target-feature=+avx2,+bmi1`),
+  `MIBZ2_EXPECT_AVX2=1` and the `MIRIFLAGS` forwarding, lists its selection and fails unless
+  `miri_register_checkpoints` and `miri_share_kernels` are in it, then runs it.
 
 `bench/run-fed-leader.frozen` stays `frozen none`.
 

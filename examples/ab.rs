@@ -755,8 +755,9 @@ fn child(arm: &str, threads: usize, path: &str) {
     let external = program(arm, threads, path);
     // (the decoders' own record of the threads they ran, each under its own name: the plan
     // as run, which the census's polling can miss, src/threads.rs; turned on before the
-    // decode spawns any thread, and read once the decode has returned, its reader dropped and
-    // so its decoder's threads joined; empty for a program's arm)
+    // decode spawns any thread, and read once the decode has read its whole output, which
+    // every contributing thread recorded before, by the order of completion, not by a join:
+    // the decoder's threads may still be ending when it is read; empty for a program's arm)
     mibz2::threads::record(true);
     let is_program = external.is_some();
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
@@ -785,7 +786,9 @@ fn child(arm: &str, threads: usize, path: &str) {
     let (cpu_kids, rss_kids) = rusage(-1);
     // (the record read, sorted and joined after the CPU and RSS readings as well as the
     // wall, so neither counts it; its pushes during the decode are inside all three, as
-    // src/threads.rs says. Every arm's child runs this same code)
+    // src/threads.rs says. The CPU and RSS are snapshots at that moment: any teardown of the
+    // decoder's threads still running then, a detached feeder's last reference to it
+    // included, is in neither. Every arm's child runs this same code)
     let mut ran = mibz2::threads::take();
     ran.sort_unstable();
     let ran = ran.join(" ").replace('"', "'");
