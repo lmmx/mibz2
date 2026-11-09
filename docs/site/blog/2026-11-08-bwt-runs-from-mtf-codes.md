@@ -51,7 +51,7 @@ bytes, and it writes repeats of the last byte as a separate count. mibz2, our bz
 turns those codes back into all $n$ bytes of $L$, then reads $L$ again to build its table for
 the inverse BWT, the T-vector, at four bytes a row.
 
-Why would a decoder want the runs? [The previous post](2026-11-08-inverse-bwt-navigation.md)
+Why would a decoder want the runs? [An earlier post](2026-11-08-inverse-bwt-navigation.md)
 showed that the inverse BWT's next-row map needs only one record per run of $L$, rather than
 one entry per row. Published structures built from those records, *move structures*, step
 from row to row without a search. To build one, a decoder needs the runs.
@@ -198,7 +198,7 @@ each byte value as it writes, so $k$ is that count at the run's start. In `banan
 its byte's first, so every $k$ is 0; in `aababa`, below, two runs share a byte and $k$ is
 not 0.
 
-The previous post showed which rows a run takes over
+The inverse-BWT navigation post showed which rows a run takes over
 ([its section 2](2026-11-08-inverse-bwt-navigation.md#2-why-does-every-run-give-one-shift)).
 Write $C(c)$ for the number of bytes in the block smaller than $c$: the row where $c$'s rows
 begin in $F$, the sorted first column. Then the run's rows begin at $a=C(c)+k$, and the
@@ -243,7 +243,7 @@ Back in `banana`, a walk over the intervals needs one thing more. Each interval'
 go; its *anchor* names the interval that destination falls in. A walk that knows its current
 interval then finds the next one by stepping forward from the anchor, instead of searching all
 the interval starts
-([the previous post's section 1.1](2026-11-08-inverse-bwt-navigation.md#11-walking-the-intervals-without-a-search)).
+([section 1.1 of the inverse-BWT navigation post](2026-11-08-inverse-bwt-navigation.md#11-walking-the-intervals-without-a-search)).
 The records arrive in $L$ order, so their destinations rise. Sorted by byte, a counting sort
 over the $r$ records, their row starts rise too. One merge of the two lists finds every
 anchor. Brown and Langmead build a *length-capped* structure, which splits long intervals so
@@ -383,7 +383,7 @@ Block by block, $r/n$ ran from 0.053 to 0.200, with a median of 0.062. 71% of th
 runs of 256 or more
 ([the journal](https://github.com/lmmx/mibz2/blob/68d934b/docs/journal/2026-10-27-mlp-scheduling-and-run-structures.md),
 [issue #42](https://github.com/lmmx/mibz2/issues/42)). That was one local run, on one corpus.
-The previous post said $r$ had not been counted. It had, on that corpus. Its upper bound,
+The inverse-BWT navigation post said $r$ had not been counted. It had, on that corpus. Its upper bound,
 $r/n\le0.28$, is on a different one, the primary Wikidata corpus `wikidata-20261026.bz2` of 434
 blocks, where $r$ has still not been counted. That post now says so.
 
