@@ -1,0 +1,28 @@
+{
+ "schema": "run_fed_leader/identity/1",
+ "head": "03e52206ac248737bc856f064928adf238265917",
+ "tree_clean": true,
+ "features": [
+  "run-fed"
+ ],
+ "profile": "release",
+ "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+ "binary_sha256_before": "4bcbe3996070c991f9b9584d468af9b3f6c0f8a08c4a914ab0e4d8b63924f81b",
+ "binary_sha256_after": "4bcbe3996070c991f9b9584d468af9b3f6c0f8a08c4a914ab0e4d8b63924f81b",
+ "corpus_sha256_before": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+ "corpus_sha256_after": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+ "arms": [
+  "mibz2-default33",
+  "mibz2-pipe3-both",
+  "mibz2-pipe3-runfed-ctl",
+  "mibz2-pipe3-runfed-reg",
+  "mibz2-pipe3-runfed-ls",
+  "mibz2-pipe3-runfed-hs",
+  "mibz2-pipe3-runfed-dir"
+ ],
+ "threads": [
+  9,
+  3
+ ],
+ "rounds": 15
+}
