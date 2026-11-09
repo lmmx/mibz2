@@ -451,7 +451,21 @@ against 13d4e51d's fuzz files. Its hunks are unchanged; only their line offsets 
 
 ### 2. Miri, from CI
 
-(Pending: filled in from the completed CI run on this branch; see below.)
+The CI run is Miri [42562139133](https://github.com/lmmx/mibz2/actions/runs/42562139133),
+job 128980681083, on #276 at head 54dbf660a7f515693e3052fd44293d2e3cbc4bb6. Its `src/` is
+this note's final head's, which changes only this note. It ran `cargo miri test --lib --
+miri_` and **completed with conclusion success**. The pinned log lines:
+
+```
+2026-11-09T04:34:16.5435687Z test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+2026-11-09T04:34:16.6566665Z test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+2026-11-09T04:34:16.9546293Z test parallel::service_tests::miri_every_retirement_returns_its_buffers ... ok
+2026-11-09T04:34:34.3014841Z test parallel::service_tests::miri_service_core_hub ... ok
+2026-11-09T04:34:34.3373439Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 581.94s
+```
+
+This replaces §5's author-reported 4/4 as the evidence. The local run stands only as the
+mutants' Miri baseline.
 
 ### 3. The guard, separated
 
