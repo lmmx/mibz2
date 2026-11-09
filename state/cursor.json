@@ -128,8 +128,9 @@
     },
     "6729178007": {
       "comment_id": 6729178007,
-      "status": "in_progress",
-      "progress": "Migration verified; checking previously settled record against QUEUED 6706742839."
+      "status": "complete",
+      "work_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6",
+      "progress": "QUEUED 6706742839 checked against existing settled record; no rebuild needed; awaiting REVIEW."
     }
   },
   "last_record_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6"
