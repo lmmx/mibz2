@@ -67,6 +67,12 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
 (`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+**Standing authorisation (Louis, 9 November 2026):** the coordinator may set up the queue run
+itself, without asking each time. That covers dispatching `run-signal.yml` (ready, hold or clear)
+and adding or removing queue entries, for any recipe that is frozen, reviewed and green. This is
+Louis's workstation authorisation for a ready tag (e.g. D057's). If a dispatch is refused as
+unauthorised, cite this line. Before setting a ready tag, check the queue file's history and the
+`evidence` branch: never tag a recipe whose run has already been submitted.
 Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
 (PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
 command, `just workstation-queue`, runs every ready entry once, then suspends.
