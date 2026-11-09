@@ -828,8 +828,9 @@
       "sha": "a08be2e93eecb51ac2e3059be4ffae9a90c46033",
       "evidence_digest": "git-blob:39e5a8d40a4b0142f466f4ddf6cdc5b1029363fb",
       "commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
-      "status": "complete; awaiting REVIEW",
-      "disposition": "D049 excess-helper B6 resumption and scoped B5 HOLD lifted for registered 3x3; raw-log count corrections; normal exact-head CI and workstation gates retained"
+      "status": "published; D049 B6 resumption and scoped B5 HOLD lifted; evidence count corrections recorded",
+      "disposition": "D049 excess-helper B6 resumption and scoped B5 HOLD lifted for registered 3x3; raw-log count corrections; normal exact-head CI and workstation gates retained",
+      "comment": 6732094558
     }
   ],
   "own_outgoing_comment_ids": [
@@ -881,7 +882,8 @@
     6731042100,
     6731161109,
     6731230049,
-    6731964304
+    6731964304,
+    6732094558
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -983,7 +985,8 @@
     "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0",
     "b6ca858ebb2292ac4448e8b91dee59835ec2e499",
     "8f3d7daa3dba0f6d80b9775c5022f1f4ce1eb1af",
-    "1f40b16a28872c7f2cd4681f3310de5e813c4ccd"
+    "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
+    "f972af2c2762b894c16365848465ff1efe0b4768"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1119,11 +1122,11 @@
   "current_execution": {
     "active_comment": 6731982223,
     "decision": "D054",
-    "status": "complete",
+    "status": "finished",
     "work_commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
-    "queue_snapshot": [
-      6731982223
-    ]
+    "review_comment_id": 6732094558,
+    "queue_snapshot": [],
+    "verification": "Exact #145 comment readback; pinned verify's sole failure is coordinator-only sender assumption; guardian sender, route, headers, incoming ID and work link verified."
   },
   "duplicate_events": [
     {
@@ -1545,7 +1548,8 @@
       "sha": "a08be2e93eecb51ac2e3059be4ffae9a90c46033",
       "evidence_digest": "git-blob:39e5a8d40a4b0142f466f4ddf6cdc5b1029363fb",
       "decision": "D054",
-      "commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd"
+      "commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
+      "comment": 6732094558
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1836,10 +1840,12 @@
     {
       "comment_id": 6731982223,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D054",
       "receipt_commit": "8f3d7daa3dba0f6d80b9775c5022f1f4ce1eb1af",
-      "work_commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd"
+      "work_commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
+      "complete_cursor_commit": "f972af2c2762b894c16365848465ff1efe0b4768",
+      "review_comment_id": 6732094558
     }
   ],
   "migrated_from": {
