@@ -693,7 +693,7 @@
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
       "progress": "Report, arithmetic and ledger complete. Awaiting deduplicated REVIEW publication and exact readback.",
-      "report_commit": "6ff17b14c53316fc0ba204a3ce6d157c012f66d0",
+      "report_commit": "fd245921a0936a74b641e181932d441d0fc2aff1",
       "report_path": "state/records/reviews/inbox-6733004424/report.md",
       "audit_scope": {
         "source_pin": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
