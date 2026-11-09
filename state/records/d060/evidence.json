@@ -1,0 +1,275 @@
+{
+  "policy_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "incoming": 6733269661,
+  "reviewed_head": "08db6405a419c6ac594c99c762e819fa47eab699",
+  "ci_checkout": "038346f838386454b7d9a8d7cb256e3d7d241482",
+  "ci_compare": {
+    "repository_full_name": "lmmx/mibz2",
+    "base": "08db6405a419c6ac594c99c762e819fa47eab699",
+    "head": "038346f838386454b7d9a8d7cb256e3d7d241482",
+    "status": "ahead",
+    "ahead_by": 5,
+    "behind_by": 0,
+    "total_commits": 5,
+    "too_large": null,
+    "base_commit": {
+      "sha": "08db6405a419c6ac594c99c762e819fa47eab699",
+      "url": "https://api.github.com/repos/lmmx/mibz2/commits/08db6405a419c6ac594c99c762e819fa47eab699",
+      "html_url": "https://github.com/lmmx/mibz2/commit/08db6405a419c6ac594c99c762e819fa47eab699"
+    },
+    "merge_base_commit": {
+      "sha": "08db6405a419c6ac594c99c762e819fa47eab699",
+      "url": "https://api.github.com/repos/lmmx/mibz2/commits/08db6405a419c6ac594c99c762e819fa47eab699",
+      "html_url": "https://github.com/lmmx/mibz2/commit/08db6405a419c6ac594c99c762e819fa47eab699"
+    },
+    "files": [
+      {
+        "filename": "bench/packet_census.py",
+        "status": "added",
+        "additions": 153,
+        "deletions": 0,
+        "changes": 153,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-packet-census.md",
+        "status": "added",
+        "additions": 415,
+        "deletions": 0,
+        "changes": 415,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-packet-census/synthetic.jsonl.gz",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-packet-census/tables.md",
+        "status": "added",
+        "additions": 253,
+        "deletions": 0,
+        "changes": 253,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-packet-census/validate.jsonl",
+        "status": "added",
+        "additions": 3,
+        "deletions": 0,
+        "changes": 3,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-packet-census/wikidata.jsonl.gz",
+        "status": "added",
+        "additions": 0,
+        "deletions": 0,
+        "changes": 0,
+        "previous_filename": null
+      },
+      {
+        "filename": "docs/journal/2026-11-09-run-fed-direct-result.md",
+        "status": "added",
+        "additions": 92,
+        "deletions": 0,
+        "changes": 92,
+        "previous_filename": null
+      },
+      {
+        "filename": "examples/packet_census.rs",
+        "status": "added",
+        "additions": 688,
+        "deletions": 0,
+        "changes": 688,
+        "previous_filename": null
+      }
+    ]
+  },
+  "blobs": [
+    {
+      "filename": ".github/workflows/miri.yml",
+      "sha": "ca6993e00a15939ff82dec543620c982eddba5cd"
+    },
+    {
+      "filename": ".github/workflows/sweep.yml",
+      "sha": "2de2f8540c39663ff4775f8bebb15069a9d9bcbe"
+    },
+    {
+      "filename": ".github/workflows/test.yml",
+      "sha": "1fbe5dc068763cae717256ae7b29188d04c4ae50"
+    },
+    {
+      "filename": "bench/CHANGELOG.md",
+      "sha": "e7d6a068b5a5b31db818490f9df21486076e02ba"
+    },
+    {
+      "filename": "bench/c29_checkpoints.py",
+      "sha": "10356ffb102a9f9ea2e6c36e13613f45f5463315"
+    },
+    {
+      "filename": "bench/report.py",
+      "sha": "e2f88a566be4762d651fcdbc035e194476f97fbe"
+    },
+    {
+      "filename": "bench/test_c29_checkpoints.py",
+      "sha": "a72e21297c6bd0d5019e3fec5b437f9f2d23c29f"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints.md",
+      "sha": "6a56f69d1047d8ea88d6fd0c8e4c0d6205b468bd"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/fuzz/c29-180s-seed2.txt",
+      "sha": "3a4a6858a0f4812f788c533f68c7f89aea467e46"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/fuzz/c29-30s-seed1.txt",
+      "sha": "5834b4bc7f0b0ef5d0d8d22a9c26492d0c2318a8"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/fuzz/pipeline-30s-seed1.txt",
+      "sha": "5e7a493d848ff068db82c5d9805af1742c43d6f9"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/C29a-checkpoint-before-part.patch",
+      "sha": "93e723dc97db3c40c47da174a5fb43390350611c"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/C29b-final-checkpoint.patch",
+      "sha": "595c268058ebdc32dd18bc920dffd551c17570fb"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/C29c-vector-store-bound.patch",
+      "sha": "f78071874830b255ac07e30787171fda890fdafc"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/C29d-lever-dropped.patch",
+      "sha": "f85c3b8095da12e15449ed9645e0e7230c8be8ac"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/C29e-front-stage-ignores-switch.patch",
+      "sha": "6b19095fb088697a7152b20c0621e3f4f0ee8810"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/C29a-checkpoint-before-part.log",
+      "sha": "6e5ca0fa968dcd9dca354aa6e6c9aff1cae3f851"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/C29b-final-checkpoint.log",
+      "sha": "029d9396245daa654f5324cdd53f29f9dce8bb61"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/C29c-vector-store-bound.log",
+      "sha": "bcbcee61ac38e4c996cff4125542621c1beb5753"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/C29d-lever-dropped.log",
+      "sha": "711552525c35eae41e81d9e14f6d8d08277bf55a"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/C29e-front-stage-ignores-switch.log",
+      "sha": "5c672d7e44c6e1d7321edc0d5e7f4972d40c48b6"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/restored.log",
+      "sha": "8713505632e6d04fc0a646b4204b83a43b3d7330"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/logs/summary.txt",
+      "sha": "34c5d7a5af7092ac9a8d9f3030867f7310bcc3ce"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/mutants/mutants.sh",
+      "sha": "4853bdb3ab60e8a0d3a5009fcad95ef9c6a4dce7"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/tests/native-mtf-tests.log",
+      "sha": "c2cc4caf75ea7db72ca7689d6765fdcbf6d0bfe8"
+    },
+    {
+      "filename": "docs/journal/2026-11-09-c29-register-checkpoints/tests/pipelined.log",
+      "sha": "a9846a8cf93f26df085c2eb7bce46cf56025944a"
+    },
+    {
+      "filename": "examples/ab.rs",
+      "sha": "6b2c7d8a485d9228529fdf2c014970f03f114944"
+    },
+    {
+      "filename": "examples/fuzz.rs",
+      "sha": "6d20147b3ab9a007c960b38a9d0618e9e8364966"
+    },
+    {
+      "filename": "examples/occupancy.rs",
+      "sha": "cf303a2867ef2d28c470aef1d6770e9f3ab1317d"
+    },
+    {
+      "filename": "src/mtf.rs",
+      "sha": "95ee0e1dc5d512e6e740a5c1e5da38c6a6843335"
+    },
+    {
+      "filename": "src/mtf/tests.rs",
+      "sha": "ff5d8c82eb74cff70dbedd2b4967131f28dfcd95"
+    },
+    {
+      "filename": "src/parallel.rs",
+      "sha": "42ec77c64931bf4e7ec19a8a62a719efa3cf560e"
+    },
+    {
+      "filename": "src/parallel/unwind_tests.rs",
+      "sha": "33dd83ba09397ed492cfd4c17171db6e1925aa1f"
+    },
+    {
+      "filename": "tests/common/mod.rs",
+      "sha": "794e285490156ca98e7336b01b18b0e26fd94a18"
+    },
+    {
+      "filename": "tests/pipelined.rs",
+      "sha": "a14a786288aaea7e3a2ac1d976432f422156cae7"
+    }
+  ],
+  "ci_log_excerpts": {
+    "129002477622": [
+      "2026-11-09T05:46:43.6339207Z HEAD is now at 038346f Merge 08db6405a419c6ac594c99c762e819fa47eab699 into 00319083c20dae189f0571bc4d8a1c8ea99a0f8e",
+      "2026-11-09T05:47:11.8263711Z \u001b[36;1mgrep -q '^mtf::tests::miri_register_checkpoints' miri-list.txt\u001b[0m",
+      "2026-11-09T05:47:13.4160912Z mtf::tests::miri_register_checkpoints: test",
+      "2026-11-09T05:50:49.9241498Z test mtf::tests::miri_register_checkpoints ... ok",
+      "2026-11-09T05:51:28.8141902Z test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 41 filtered out; finished in 432.18s",
+      "2026-11-09T05:51:28.8750629Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1",
+      "2026-11-09T05:51:28.8750866Z   MIBZ2_EXPECT_AVX2: 1",
+      "2026-11-09T05:51:28.8751101Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2",
+      "2026-11-09T05:52:13.5825704Z test mtf::tests::miri_register_checkpoints ... ok",
+      "2026-11-09T05:52:13.6296440Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 66.61s"
+    ],
+    "129002476709": [
+      "2026-11-09T05:46:45.4817011Z HEAD is now at 038346f Merge 08db6405a419c6ac594c99c762e819fa47eab699 into 00319083c20dae189f0571bc4d8a1c8ea99a0f8e",
+      "2026-11-09T05:47:49.8141631Z 62016 cases in 30 s (seed 1, mode classic), 0 failures",
+      "2026-11-09T05:48:21.5278632Z 619 cases in 30 s (seed 1, mode pipeline), 0 failures",
+      "2026-11-09T05:48:53.1728489Z 621 cases in 30 s (seed 1, mode c29), 0 failures",
+      "2026-11-09T05:48:53.1739970Z C29 reach: candidate, cases with a block staged by C29, blocks so staged",
+      "2026-11-09T05:48:53.1740440Z       139  mibz2 pipelined 3x3 park+small+c29 s12 w1048576 r65536: 718 blocks",
+      "2026-11-09T05:48:53.1740888Z       133  mibz2 pipelined 3x3 park+small+c29 s12 w997 r509: 538 blocks",
+      "2026-11-09T05:48:53.1741327Z       134  mibz2 pipelined 3x3 park+small+c29 s12 w100003 r4093: 585 blocks",
+      "2026-11-09T05:48:53.1741778Z       135  mibz2 pipelined 1x3 park+small+c29 s4 w100003 r65536: 466 blocks"
+    ],
+    "129002476723": [
+      "2026-11-09T05:46:43.5548762Z HEAD is now at 038346f Merge 08db6405a419c6ac594c99c762e819fa47eab699 into 00319083c20dae189f0571bc4d8a1c8ea99a0f8e",
+      "2026-11-09T05:47:14.7167879Z test mtf::tests::miri_register_checkpoints ... ok",
+      "2026-11-09T05:48:34.9800242Z test result: ok. 61 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 82.27s",
+      "2026-11-09T05:48:42.5190884Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.53s",
+      "2026-11-09T05:48:46.6626000Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.13s",
+      "2026-11-09T05:48:57.6930776Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.02s",
+      "2026-11-09T05:48:59.5773076Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.87s",
+      "2026-11-09T05:49:01.6576725Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.07s",
+      "2026-11-09T05:49:04.8389012Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.18s",
+      "2026-11-09T05:49:16.5773086Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.74s",
+      "2026-11-09T05:49:17.1524965Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s",
+      "2026-11-09T05:49:17.5665581Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s",
+      "2026-11-09T05:49:18.3694935Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  "limits": "Retrieved logs and independently checked source/probes; no native/Miri/timing rerun."
+}

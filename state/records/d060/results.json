@@ -1,0 +1,63 @@
+{
+  "avx2_kernel_same_without_comments_whitespace": true,
+  "old_paths_identical": {
+    "mtf_checkpoints": true,
+    "mtf_checkpoints_avx2": true,
+    "mtf_checkpoints_scalar": true
+  },
+  "archived_test_source_same_as_reviewed_head": {
+    "src/mtf.rs": true,
+    "src/mtf/tests.rs": true,
+    "src/parallel.rs": true,
+    "tests/pipelined.rs": true,
+    "examples/fuzz.rs": true,
+    "tests/common/mod.rs": true
+  },
+  "routing_audit": [
+    {
+      "issue": 145,
+      "comment": 6652503445,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6653242752,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654146350,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its first run could not comment on locked #145 (#187)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654371320,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its check run did not reopen the finished suite (#188)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654531225,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; an in-progress check run did not reopen it either"
+    }
+  ],
+  "route": {
+    "issue": 145,
+    "type": "REVIEW",
+    "why": "a publication: the channel PR"
+  },
+  "fuzz_stages": {
+    "local_seed1": 2585,
+    "local_seed2": 15530,
+    "ci_seed1": 2307
+  }
+}
