@@ -106,3 +106,9 @@ recipe's commit (never pushed): the real release build of `svc_target`, Cargo's 
 executable and its digest, the raw files, the record and its check, and the bundle.
 Outcome NOT TARGET, exit 4, as this machine's facts say (4 cores; quota established as
 unlimited). It shows the recipe runs past its refusals; it says nothing about the i9.
+
+**Exercised again after this revision (not evidence)**, the same way: NOT TARGET, exit 4,
+every stage reached (`stages.txt`), `raw/reads.txt` with 24 reads, among them this machine's
+cgroup v2 levels (a hybrid layout, its v2 mount at `/sys/fs/cgroup/unified`: `cpu.max` and
+`cgroup.type` absent there, recorded as read errors, which the record's quota reading agrees
+with as the true root).

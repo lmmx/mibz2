@@ -52,7 +52,8 @@ and CPU, the noise control N1, its report's evidence boundary), unchanged where 
 
 `just submit bench-service-guarded` on the i9, at the frozen commit, in CLAUDE.md's
 workstation-recipe shape (one new directory an attempt, its console log in it, one tarball
-whatever the outcome). The recipe is `.just/service-guarded.just`.
+whatever the outcome). The recipe is `.just/service-guarded.just`, imported by the Justfile.
+Its preflight is sent TERM at 120 s and KILL 10 s later.
 
 - **Refusals before anything runs:** the frozen file unset; the base not an ancestor of the
   candidate; uncommitted changes, or untracked files among the measured inputs; HEAD's
