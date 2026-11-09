@@ -61,6 +61,9 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   prints the same three. C29's reporter refuses a judged reading without them, or with other
   than the registered AVX2 and 4 CPUs. This is a change to what is stored.
 
+- **`ab env`'s `cpu_quota_state`**: `unlimited`, `finite` or `unknown`, which `cpu_quota`'s null
+  alone can't tell apart (read and unlimited, or not read). `cpu_quota` is unchanged.
+
 Every existing figure is as it was: the new arms, the field and the diagnostic sit beside them.
 
 ## [3.2.3] - 2026-11-06

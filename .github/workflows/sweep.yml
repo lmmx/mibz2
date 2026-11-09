@@ -113,44 +113,17 @@ jobs:
             run_status=0
             $ab run c29-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> c29-progress.txt || run_status=$?
             bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
-            python3 - "$arms" > c29-identity.json <<EOF
-          import json, os, subprocess, sys
-          try:
-              env = json.load(open("c29-env.json"))
-          except (OSError, ValueError):
-              env = {}  # (the reporter then refuses a judged reading: no facts)
-          out = lambda *a: subprocess.check_output(a, text=True).strip()
-          print(json.dumps({
-              "schema": "c29_checkpoints/identity/2",
-              "head": out("git", "rev-parse", "HEAD"),
-              "tree_clean": json.loads("$tree_clean"),
-              "features": [],
-              "profile": "release",
-              "rustc": out("rustc", "--version"),
-              "toolchain": {"rustc_vV": out("rustc", "-vV"), "cargo": out("cargo", "--version"),
-                            "rustflags": os.environ.get("RUSTFLAGS"),
-                            "cargo_encoded_rustflags": os.environ.get("CARGO_ENCODED_RUSTFLAGS")},
-              "binary_sha256_before": "$bin0",
-              "binary_sha256_after": "$bin1",
-              "corpus_sha256_before": "$cor0",
-              "corpus_sha256_after": "$cor1",
-              "arms": sys.argv[1].split(","),
-              "threads": [9, 3],
-              "rounds": int("$ROUNDS"),
-              "avx2": env.get("avx2"),
-              "nproc": int(open("c29-nproc.txt").read()),
-              "cpus_allowed": env.get("cpus_allowed"),
-              "available_parallelism": env.get("available_parallelism"),
-              "cpu_quota": env.get("cpu_quota"),
-              "cpu_model": "$model",
-              "ab_run_status": $run_status,
-              "env": env,
-          }, indent=1))
-          EOF
+            # (bench/c29_identity.py: the mapping the reporter's tests build their identities
+            # with; an unread or absent quota is "unknown", never unlimited)
+            python3 bench/c29_identity.py --env c29-env.json --nproc c29-nproc.txt --arms "$arms" \
+              --rounds "$ROUNDS" --tree-clean "$tree_clean" --bin "$bin0" "$bin1" \
+              --corpus "$cor0" "$cor1" --model "$model" --run-status "$run_status" > c29-identity.json
             # judged only at the registered head and environment; any other run UNJUDGED.
             # The reporter exits 2 on an INVALID, 3 on a run whose AVX2 or CPU allocation is
-            # absent or not as registered (UNJUDGED (FALLBACK)). No re-run on either: the
-            # attempt is the registered one, kept and investigated, never retried to pass
+            # absent or not as registered, its quota unknown, or `ab run` failed (UNJUDGED
+            # (FALLBACK)). The step exits with `ab run`'s status if it failed, else the
+            # reporter's. No re-run on any: the attempt is the registered one, kept and
+            # investigated, never retried to pass
             if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
             status=0
             python3 bench/c29_checkpoints.py report c29-runs.jsonl "${judge[@]}" --identity c29-identity.json --out c29-report > c29-report.txt || status=$?
@@ -170,7 +143,7 @@ jobs:
               cat sweep-1.txt
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
-            [ "$status" = 0 ] && status=$run_status
+            if [ "$run_status" != 0 ]; then status=$run_status; fi
             exit $status
           fi
           bin=target/release/examples/$TOOL

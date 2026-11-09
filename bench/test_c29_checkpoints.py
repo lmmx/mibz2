@@ -15,17 +15,34 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import c29_checkpoints as c  # noqa: E402
+import c29_identity  # noqa: E402
 
 HEAD = "a" * 40
 # the registered environment's facts, as ab's child and the workflow record them
 RECORD_FACTS = {"avx2": True, "cpus_allowed": 4, "available_parallelism": 4, "cpus": "all"}
-IDENTITY_FACTS = {
+# `ab env`'s line on a registered runner: AVX2, 4 CPUs, a quota read and unlimited
+ENV = {
+    "cpus": 4,
     "avx2": True,
-    "nproc": 4,
     "cpus_allowed": 4,
     "available_parallelism": 4,
+    "cores": 2,
+    "core_cpus": ["0,1", "2,3"],
     "cpu_quota": None,
+    "cpu_quota_state": "unlimited",
 }
+# the identity's fields schema 1 lacked (the environment's, the toolchain's, the run status)
+IDENTITY_FACTS = (
+    "avx2",
+    "nproc",
+    "cpus_allowed",
+    "available_parallelism",
+    "cpu_quota",
+    "cpu_model",
+    "ab_run_status",
+    "toolchain",
+    "env",
+)
 
 
 def names(t):
@@ -63,25 +80,31 @@ def runs(ratio=0.97, cpu=1.0, rounds=c.ROUNDS, noise=0.004, facts=None):
     return out
 
 
-def identity(**kw):
-    d = {
-        "schema": c.IDENTITY_SCHEMA,
-        "head": HEAD,
-        "tree_clean": True,
-        "features": [],
-        "profile": "release",
-        "rustc": "rustc 1.97.0",
-        "binary_sha256_before": "b" * 64,
-        "binary_sha256_after": "b" * 64,
-        "corpus_sha256_before": c.CORPUS_SHA256,
-        "corpus_sha256_after": c.CORPUS_SHA256,
-        "arms": c.REGISTERED_ARMS,
-        "threads": [c.THREADS, c.REPORTED_THREADS],
-        "rounds": c.ROUNDS,
-        **IDENTITY_FACTS,
-    }
+def identity(env_text=None, nproc_text="4\n", run_status=0, **kw):
+    """The identity as the workflow builds it (bench/c29_identity.py's `build`), from `ab
+    env`'s line (default ENV's) and `nproc`'s output; then any field overridden"""
+    d = c29_identity.build(
+        json.dumps(ENV) if env_text is None else env_text,
+        nproc_text,
+        head=HEAD,
+        tree_clean=True,
+        rustc="rustc 1.97.0",
+        toolchain={"rustc_vV": "rustc 1.97.0", "cargo": "cargo 1.97.0", "rustflags": None},
+        binary=("b" * 64, "b" * 64),
+        corpus=(c.CORPUS_SHA256, c.CORPUS_SHA256),
+        arms=c.REGISTERED_ARMS,
+        rounds=c.ROUNDS,
+        model="AMD EPYC 7763 64-Core Processor",
+        run_status=run_status,
+    )
     d.update(kw)
     return d
+
+
+def env_line(**kw):
+    """ENV with fields replaced; a None value drops the field"""
+    e = {**ENV, **kw}
+    return json.dumps({k: v for k, v in e.items() if v is not None or k == "cpu_quota"})
 
 
 def report(recs, ident=None, judged=True):
@@ -197,7 +220,8 @@ class Environment(unittest.TestCase):
             runs(ratio=0.97, facts={**RECORD_FACTS, "available_parallelism": 2}), identity()
         )
         # a cgroup quota of 2 CPUs, the mask's 4: not the registered capacity
-        self.assertIn("cpu_quota 2.0", self.not_judged(runs(), identity(cpu_quota=2.0)))
+        two_quota = env_line(cpu_quota=2.0, cpu_quota_state="finite")
+        self.assertIn("cpu_quota 2.0 CPUs", self.not_judged(runs(), identity(two_quota)))
         # a pinned run is not the registered, unpinned setting
         self.not_judged(runs(facts={**RECORD_FACTS, "cpus": "0,1"}), identity())
 
@@ -207,9 +231,57 @@ class Environment(unittest.TestCase):
         self.assertTrue(out.startswith("VALID (JUDGED)"), out)
         self.assertIn("1.0000 [0.9986, 1.0014]", out)
         self.assertIn("Reading (JUDGED, 9 threads): STOP", out)
-        code, out = report(runs(ratio=0.97), identity(cpu_quota=4.0))
+        code, out = report(runs(ratio=0.97), identity())
         self.assertEqual(code, 0, out)
         self.assertIn("Reading (JUDGED, 9 threads): LEAD", out)
+
+    def test_quota_states(self):
+        # the producer's three states, through the workflow's mapping (c29_identity.build)
+        self.assertEqual(identity()["cpu_quota"], {"state": "unlimited"})
+        for q in (4.0, 8.0):
+            ident = identity(env_line(cpu_quota=q, cpu_quota_state="finite"))
+            self.assertEqual(ident["cpu_quota"], {"state": "finite", "cpus": q})
+            code, out = report(runs(ratio=0.97), ident)
+            self.assertEqual(code, 0, out)
+            self.assertIn("Reading (JUDGED, 9 threads): LEAD", out)
+        # negatives: the Researcher's (REVIEW 6734701311) and their kin, each not JUDGED
+        negatives = {
+            # ab env's quota not read (neither cgroup file, or unparsable): null, "unknown"
+            "failed detection": env_line(cpu_quota_state="unknown"),
+            # the quota keys absent from ab env's line (the review's
+            # workflow_absent_quota_mapped_to_null probe)
+            "absent key": json.dumps(
+                {k: v for k, v in ENV.items() if k not in ("cpu_quota", "cpu_quota_state")}
+            ),
+            # a null quota with no state (an older producer): never read as unlimited
+            "null": json.dumps({k: v for k, v in ENV.items() if k != "cpu_quota_state"}),
+            # a state that disagrees with its number
+            "unlimited with a number": env_line(cpu_quota=2.0, cpu_quota_state="unlimited"),
+            "finite without a number": env_line(cpu_quota_state="finite"),
+            # ab env's line absent or broken: every fact unknown
+            "no line": "",
+            "broken line": "{not json",
+        }
+        for what, text in negatives.items():
+            with self.subTest(what):
+                ident = identity(text)
+                if what not in ("no line", "broken line"):
+                    self.assertEqual(ident["cpu_quota"], {"state": "unknown"}, what)
+                self.assertIn("cpu_quota", self.not_judged(runs(ratio=1.0), ident))
+        # and the identity's own quota field absent, null or a bare number
+        for q in (None, 4.0, "unlimited"):
+            self.not_judged(runs(ratio=1.0), identity(cpu_quota=q))
+        ident = identity()
+        del ident["cpu_quota"]
+        self.not_judged(runs(ratio=1.0), ident)
+
+    def test_failed_ab_run(self):
+        # complete records, but `ab run` itself exited 101: the report refuses JUDGED too
+        out = self.not_judged(runs(ratio=1.0), identity(run_status=101))
+        self.assertIn("ab_run_status 101, not 0", out)
+        ident = identity()
+        del ident["ab_run_status"]
+        self.not_judged(runs(ratio=1.0), ident)
 
     def test_invalid_comes_first(self):
         # an INVALID run is INVALID whatever its environment

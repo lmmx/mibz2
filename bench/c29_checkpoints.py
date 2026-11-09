@@ -26,7 +26,8 @@ and no reading is given. A judged reading further needs the registered environme
 untimed, in the identity and in every record (`environment_problems`): AVX2 detected (as
 `Kernels::detect` reports it, the bool C29's and the control's kernels dispatch on: without
 it both are the same scalar kernel) and the registered CPU allocation (REGISTERED_CPUS, by
-`nproc`, the affinity mask and `available_parallelism`, no lower cgroup quota, unpinned).
+`nproc`, the affinity mask and `available_parallelism`, a cgroup quota known unlimited or
+at least that, unpinned), and `ab run` itself exited 0.
 A fact absent or other than registered refuses the judged reading: the run is kept as
 UNJUDGED (FALLBACK), its ratios printed under that label, exit 3, never re-run to pass.
 Every measurement is checked for presence and type before any arithmetic, so an absent or
@@ -59,7 +60,7 @@ THREADS = 9  # judged: three teams of three
 REPORTED_THREADS = 3  # one team of three: the same rule's reading, secondary, never judged
 CORPUS = "wikidata"
 CORPUS_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
-IDENTITY_SCHEMA = "c29_checkpoints/identity/2"
+IDENTITY_SCHEMA = "c29_checkpoints/identity/3"
 FEATURES = []
 PROFILE = "release"
 # (leaders, plain helpers, pipelined helpers) each run must be seen running
@@ -217,12 +218,21 @@ def environment_problems(ident, recs):
         v = ident.get(k)
         if not (is_int(v) and v == REGISTERED_CPUS):
             bad.append(f"identity: {k} {v!r}, not {REGISTERED_CPUS}")
-    if "cpu_quota" not in ident:
-        bad.append("identity: cpu_quota not recorded")
+    # the quota's three states (bench/c29_identity.py): unlimited, or finite at least
+    # REGISTERED_CPUS; unknown, absent, null or anything else is not shown
+    q = ident.get("cpu_quota")
+    qd = q if isinstance(q, dict) else {}
+    state, qcpus = qd.get("state"), qd.get("cpus")
+    if state == "unlimited":
+        pass
+    elif state == "finite" and isinstance(qcpus, (int, float)) and positive(qcpus):
+        if qcpus < REGISTERED_CPUS:
+            bad.append(f"identity: cpu_quota {qcpus!r} CPUs, below {REGISTERED_CPUS}")
     else:
-        q = ident["cpu_quota"]
-        if not (q is None or (positive(q) and q >= REGISTERED_CPUS)):
-            bad.append(f"identity: cpu_quota {q!r}, below {REGISTERED_CPUS} CPUs")
+        bad.append(f"identity: cpu_quota {q!r}: not known unlimited or finite")
+    # a failed `ab run` (its parent's status) is no judged attempt, its records complete or not
+    if not (is_int(ident.get("ab_run_status")) and ident["ab_run_status"] == 0):
+        bad.append(f"identity: ab_run_status {ident.get('ab_run_status')!r}, not 0")
     for rec in recs:
         where = (
             f"line {rec.get('_line')} ({rec.get('arm')} t{rec.get('threads')} r{rec.get('round')})"

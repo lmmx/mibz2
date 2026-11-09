@@ -29,7 +29,8 @@
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
-//!                                    quota, whether the run-queue counter counts, and
+//!                                    quota (and `cpu_quota_state`: unlimited, finite or
+//!                                    unknown), whether the run-queue counter counts, and
 //!                                    each run's facts (AVX2 as detected, the affinity
 //!                                    mask's CPUs, `available_parallelism`)
 //! ```
@@ -971,6 +972,17 @@ fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
 
+/// The cgroup CPU quota's state, which `cpu_quota`'s null alone can't tell apart: read and
+/// unlimited (`max`), read and a number of CPUs, or not read at all (neither cgroup file, or
+/// one that doesn't parse). C29's reporter judges only the first two (at least 4 CPUs)
+fn quota_state(quota: Option<Option<f64>>) -> &'static str {
+    match quota {
+        Some(None) => "unlimited",
+        Some(Some(_)) => "finite",
+        None => "unknown",
+    }
+}
+
 /// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
 /// checked, not assumed: twice as many threads as CPUs spin for 0.3 s, and it counts if
 /// their summed wait is at least a quarter of their summed time off a CPU (most of it
@@ -1041,7 +1053,7 @@ fn env() {
             .join(",")
     };
     println!(
-        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"cpu_quota_state\":\"{}\",\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
         run_facts(),
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
@@ -1049,6 +1061,7 @@ fn env() {
             Some(Some(q)) => format!("{q:.2}"),
             _ => "null".into(),
         },
+        quota_state(quota),
         throttled().is_some(),
         psi_cpu().is_some(),
     );
@@ -1410,6 +1423,13 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_unread_quota_is_unknown_not_unlimited() {
+        assert_eq!(quota_state(Some(None)), "unlimited");
+        assert_eq!(quota_state(Some(Some(2.0))), "finite");
+        assert_eq!(quota_state(None), "unknown");
+    }
 
     #[test]
     fn run_facts_are_the_kernels_detection_and_the_allocation() {

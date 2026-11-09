@@ -7,7 +7,8 @@ Wikidata cell 1.1% slower, on a path C29 never executes; §R1 investigates it wi
 hot code is instruction-identical to base, Ir is identical, and every hot function sits 16 bytes
 later mod 64) and revises the reach counter per the Guardian's D060. §R2 binds the judged reading
 to the executed kernel (AVX2 detected) and the runner's capacity (4 CPUs), per the Researcher's
-REVIEW 6734359855, and states the freeze's contents. Nothing here runs on the workstation, and no
+REVIEW 6734359855, and states the freeze's contents; §R3 keeps an unknown CPU quota apart from an
+unlimited one and refuses a judged reading on a failed `ab run`, per its re-review 6734701311. Nothing here runs on the workstation, and no
 recipe is in the Justfile or the workstation queue.
 
 **The input.** #270's registered run (`docs/journal/2026-11-09-run-fed-leader-result.md`) put
@@ -170,7 +171,7 @@ outputs equal. Its ratios mean nothing and are not reported.
 **VALID** (`bench/c29_checkpoints.py report`, shaped on #270's `bench/run_fed_leader.py`; its
 admission is checked on synthetic runs by `bench/test_c29_checkpoints.py`, in CI's test workflow).
 Every predicate must hold, else INVALID with its reasons, exit 2, and no reading:
-- the identity (written by the workflow around the run, schema `c29_checkpoints/identity/2`): the
+- the identity (written by the workflow around the run, schema `c29_checkpoints/identity/3`): the
   run's head the registered head (a full 40-character commit), a clean tree over the sources the
   build and the reporter read, no features, release, rustc recorded, the harness binary's SHA-256
   the same before and after, the corpus's the registered digest before and after, the registered
@@ -186,7 +187,8 @@ Every predicate must hold, else INVALID with its reasons, exit 2, and no reading
 if the identity and every one of the 80 records show it, untimed: AVX2 detected (`avx2` true, as
 `Kernels::detect` reports it: the bool `mtf_checkpoints_reg` and `mtf_checkpoints` dispatch on,
 without which both are the same scalar kernel); the identity's `nproc`, `cpus_allowed` (the affinity
-mask) and `available_parallelism` each 4, and its cgroup `cpu_quota` none or at least 4; each
+mask) and `available_parallelism` each 4, and its cgroup `cpu_quota` known unlimited or known
+finite at least 4 (an unknown quota is not shown, §R3); `ab run`'s own status 0 (§R3); each
 record's `cpus_allowed` and `available_parallelism` 4 and its `cpus` `all` (unpinned). A fact absent
 or other than registered refuses the judged reading: the run is **UNJUDGED (FALLBACK)**, its ratios
 printed under that label, exit 3. It is kept as the attempt's evidence, a fallback or other-setting
@@ -394,9 +396,14 @@ absent validation, not that any CI runner lacked AVX2; no C29 timing has been ru
   An INVALID from it is the attempt's outcome: the plans are never waived and rounds are never
   discarded after seeing it. (#270's timed recorder is not imported.)
 - **The off-path 1-thread cell (§R1) is an adoption question, not a blocker here.** The newer
-  +0.2% [−0.8%, +1.1%] on an EPYC 7763 does not reproduce R1's +1.1% on the EPYC 9V74, but its
+  +0.2% [−0.8%, +1.1%] on an EPYC 7763 (bench.yml run
+  [42572506720](https://github.com/lmmx/mibz2/actions/runs/42572506720), at `dab79fe7`) does not
+  reproduce R1's +1.1% on the EPYC 9V74 (run
+  [42569223731](https://github.com/lmmx/mibz2/actions/runs/42569223731), at `08db6405`), but its
   interval includes +1.1%: non-reproduction is not equivalence, nor proof of no regression.
-  Identical Ir does not fix alignment or timing. The placebo's +0.3% suggests layout sensitivity,
+  Identical Ir does not fix alignment or timing. The placebo's +0.3% (run
+  [42572691025](https://github.com/lmmx/mibz2/actions/runs/42572691025), at `2542d954`; the runs
+  as associated in Coordinator LOG 6733823754, not re-downloaded here) suggests layout sensitivity,
   not attribution of the whole earlier effect. It stays open for any adoption decision.
 - **What a LEAD means.** Wall ≤ 0.98 with its upper end < 1 is evidence of some wall improvement
   with a 2% point-estimate hurdle, **not** 95% confidence of a 2% gain (wall 0.98 [0.975, 0.985]
@@ -418,7 +425,7 @@ resolve to: the reporter checks the identity's `git rev-parse HEAD` against it) 
   `Cargo.lock` (built `--locked`), `.cargo/`;
 - the sweep workflow, `.github/workflows/sweep.yml` (`tool: c29`);
 - the reporter `bench/c29_checkpoints.py` and its t-table dependency `bench/team_size.py`
-  (`T975`), and its tests;
+  (`T975`), the identity's builder `bench/c29_identity.py` (§R3), and the reporter's tests;
 - the corpus recipe and digest: `bench/wikidata.json`, `bench/wikidata.py` and
   `examples/windows.rs`, and the registered SHA-256 `82f65ace…c29915` in the reporter.
 
@@ -441,6 +448,59 @@ The workflow was checked against this list and fixed where it fell short: the bu
 now records the status, writes both, and exits with it); and the identity had no toolchain detail,
 `nproc`, environment or CPU model. Any source or feature change after the freeze needs a new named
 registration, not reuse of this evidence.
+
+**The registration remains a DRAFT, NOT FROZEN.**
+
+## R3. Revision, 2026-11-09: an unknown quota is not unlimited; a failed `ab run` is not judged
+
+**The finding** (the Researcher's re-review 6734701311, REVISE narrowly; report and 24 probes at
+`state/reports/c29-environment-6734526651/` on commit `102bc509`). R2 closed the AVX2 and
+per-record capacity objections. One gap remained: `ab env` built the quota as an
+`Option<Option<f64>>`, `Some(None)` read and unlimited, `None` not read at all (neither cgroup file,
+or one that doesn't parse), and printed both as JSON null. The workflow's `env.get("cpu_quota")`
+also turned an absent key into null, and the reporter took null for "no quota". So an identity with
+the quota absent, mapped as the workflow mapped it, was VALID (JUDGED) STOP at 1.0000 [0.9986,
+1.0014], exit 0. (A synthetic counterexample, not evidence that any runner had too little capacity.)
+R2 promised "no quota or at least four": four reported CPU counts alone don't show that the quota
+was read, and the promise is kept, not narrowed.
+
+**The change:**
+- **Three states, from the producer** (`examples/ab.rs`, `quota_state`): `ab env` adds
+  `cpu_quota_state`, `unlimited` (read, `max`), `finite` (read, `cpu_quota` its CPUs) or `unknown`
+  (not read). `cpu_quota` itself is unchanged, so bench.yml's report reads it as before.
+- **Kept through the identity** (`bench/c29_identity.py`, schema `c29_checkpoints/identity/3`):
+  the workflow's inline identity script moved to this file, so the reporter's tests build their
+  identities with the workflow's own mapping (`build`). Its `cpu_quota` is `{"state":
+  "unlimited"}`, `{"state": "finite", "cpus": Q}`, or `{"state": "unknown"}`: unknown unless `ab
+  env`'s line says unlimited with a null quota, or finite with a number. A missing key, a null with
+  no state, a state at odds with its number, or an absent or broken `ab env` line are all unknown.
+- **Refused** (`bench/c29_checkpoints.py`): only unlimited, or finite at least 4, is shown; an
+  unknown, absent, null, bare-number or malformed quota is UNJUDGED (FALLBACK), exit 3.
+- **A failed `ab run` is not judged** (the re-review's secondary observation): complete records
+  with a nonzero `ab_run_status` printed JUDGED while the workflow exited nonzero. That took one
+  predicate: the reporter now requires the identity's `ab_run_status` to be 0, else UNJUDGED
+  (FALLBACK). The workflow exits with `ab run`'s status when it failed, else the reporter's; both
+  are read, and neither is re-run.
+- **Fixtures** (`bench/test_c29_checkpoints.py`, `test_quota_states`, `test_failed_ab_run`), each
+  identity built by `c29_identity.build` from an `ab env` line: the negatives are a failed
+  detection (`cpu_quota_state: unknown`), the quota keys absent (the review's
+  `workflow_absent_quota_mapped_to_null`), a null with no state, unlimited with a number, finite
+  without one, no `ab env` line and a broken one, and the identity's own quota absent, null, a bare
+  number or a string. Each one is not JUDGED. The positive controls are unlimited, finite 4 and
+  finite 8, each JUDGED. A nonzero or absent `ab_run_status` is not JUDGED.
+- **Unchanged:** the thresholds, the matched control, the single primary, 20 rounds, the corpus;
+  no performance run.
+
+**Closed by the re-review, recorded:**
+- **The stable toolchain, recorded rather than pinned, is acceptable** for this one-build paired
+  diagnostic: both arms share one binary, and `rustc -vV`, Cargo, the flags and the binary's
+  digests are kept. A later stable build of the same source is not an exact replication, and the
+  same source SHA must not be presented as the same generated code.
+- **`features: []` is acceptable provenance**: it means no optional mibz2 features, by
+  construction (Cargo's `default = []` and the frozen `cargo build --locked --release` with no
+  `--features`). It is not an independent measurement, nor a claim that dependencies have no
+  features (pbz2 enables `simd`).
+- **The run IDs** are in R2's figures above.
 
 **The registration remains a DRAFT, NOT FROZEN.**
 
