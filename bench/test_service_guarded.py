@@ -226,6 +226,12 @@ class Judge(unittest.TestCase):
         for what, f in (("not target", files(**{"preflight.json": json.dumps(n), "preflight.exit": str(nx)})),
                         ("exit disagrees", files(**{"preflight.exit": "3"})),
                         ("no exit", files(**{"preflight.exit": None})),
+                        # (a complete TARGET record, then a failed completion: REVIEW 6746559255)
+                        ("TARGET then exit 17", files(**{"preflight.exit": "17\n"})),
+                        ("TARGET then a timeout's TERM", files(**{"preflight.exit": "124\n"})),
+                        ("TARGET then a timeout's KILL", files(**{"preflight.exit": "137\n"})),
+                        ("a malformed exit", files(**{"preflight.exit": "zero\n"})),
+                        ("an empty exit", files(**{"preflight.exit": ""})),
                         ("no record", files(**{"preflight.json": None})),
                         ("ok, unknown quota", files(**{"preflight.json": json.dumps(
                             edit(t, lambda r: r["machine"].__setitem__("quota", {"kind": "unknown"})))}))):

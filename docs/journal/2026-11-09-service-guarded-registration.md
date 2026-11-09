@@ -21,7 +21,8 @@ is exercised end to end past its refusals (answer 6); and the preflight-only ent
 **Second revision, 9 November 2026 (the Researcher's REVISE, REVIEW 6746023579 on #145;
 report at `state/reports/service-guarded-rereview-6745811380/report.md` on ceb53e4f, reviewed at
 910fd5de):** see *Revision 2* below. In short, prospectively, before any freeze or run: every
-row must carry the child's termination as success; the diagnostics are passive, bounded and
+row must carry the child's termination as success; every required collector, the preflight
+included, gates on its own successful completion (R5, from REVIEW 6746559255); the diagnostics are passive, bounded and
 archived with their exits, never judged; the raw discovery facts are archived beside them; and
 the freeze records the fetched master's SHA and fetch time. No grid, threshold, arm or estimand
 changes.
@@ -304,6 +305,30 @@ judge or the freeze record; **no grid, threshold, arm or estimand changes.**
   - The judge requires `commits.txt`'s `base_fetched` to be the frozen one (identity).
   - Master moving after the freeze does not change this run's estimand; a later adoption
     decision accounts for any intervening changes.
+
+- **R5, required collectors gate on their own successful completion** (the Researcher's
+  narrow REVISE of #305's R11, REVIEW 6746559255, applied here: on #305 the bounded
+  collectors' exits were archived but never read by its admission, so output followed by exit
+  17, 124 or 137 was admitted). On #302, every collector whose output a gate uses is gated on
+  its successful completion; an absent, malformed or nonzero status refuses, and the raw
+  failure output is kept.
+  - **The preflight (`svc_target`).** The recipe proceeds only when `svc_target` exited 0, the
+    checker (`bench/svc_target_check.py`) exited 0, and its verdict is TARGET. A complete TARGET
+    record followed by exit 17, or a timeout's 124 (TERM) or 137 (KILL), is REFUSED (exit 4)
+    with no timed run. Its stdout (`preflight.json`), stderr (`preflight.stderr`), exit
+    (`preflight.exit`) and the checker's record and exit (`preflight-check.json`,
+    `preflight-check.exit`) are archived. Independently, the judge rechecks the record with
+    `preflight.exit` (TARGET only at exit 0; absent, empty or malformed refuses).
+  - **The others whose output a gate uses:** the builds (Cargo's reported executables), the
+    toolchain queries (each must succeed before the two are compared), the corpus build and its
+    digest, and `ab run` (a nonzero exit stops the attempt INCOMPLETE, never judged; every
+    row's child must have succeeded, R1).
+  - **Optional diagnostics** (R2) stay archived only: they never gate, and never delete or
+    replace a timed row.
+  - Tests: the recipe's stand-in preflight prints a complete TARGET record and then exits 17,
+    124 or 137, each REFUSED with no `runs.jsonl` and its raw output kept; the same record at
+    exit 0 is the successful control (VALID). The judge refuses a TARGET record beside exit 17,
+    124, 137, a malformed or an empty status.
 
 **What the design does and does not claim** (report §4, recorded as the Researcher qualified
 it):

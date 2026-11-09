@@ -92,6 +92,8 @@ else:
 FAKE_PREFLIGHT = r"""#!/usr/bin/env python3
 import os, sys
 sys.stdout.write(open(os.environ["FAKE_RECORD"]).read())
+sys.stdout.flush()
+print("stand-in preflight: exiting " + os.environ["FAKE_EXIT"], file=sys.stderr)
 sys.exit(int(os.environ["FAKE_EXIT"]))
 """
 
@@ -251,6 +253,9 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(self.member(b, "diagnostics/exits.txt").splitlines(), [
             "env.json: exit 0", "lscpu.txt: exit 0", "discovery.json: exit 0",
             "sample-before.jsonl: exit 0", "sample-after.jsonl: exit 0"])
+        # (the preflight's successful control: exit 0, checked TARGET, the checker's exit 0)
+        self.assertEqual(self.member(b, "preflight.exit").strip(), "0")
+        self.assertEqual(self.member(b, "preflight-check.exit").strip(), "0")
         disc = json.loads(self.member(b, "diagnostics/discovery.json"))
         self.assertEqual(disc["schema"], "mibz2.service_guarded.discovery/1")
         self.assertIn("base_fetched 2026-11-10T00:00:00Z", self.member(b, "commits.txt"))
@@ -290,6 +295,28 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertTrue(outcome.startswith("INVALID (structural)"), outcome)
         self.assertIn("termination 'exit 17'", outcome)
+
+    def test_a_complete_target_record_then_a_nonzero_exit_refuses(self):
+        # (REVIEW 6746559255's requirement for every required collector: the preflight is
+        # gated on its own successful completion. A stand-in prints a complete TARGET record
+        # and then exits 17, or as `timeout` would, 124 (TERM) or 137 (KILL): REFUSED before
+        # anything is timed, its raw output kept. The control: test_valid, the same record
+        # with exit 0, runs)
+        rec, ex = record(True)
+        self.assertEqual(ex, 0)
+        for status in (17, 124, 137):
+            with self.subTest(status):
+                env = dict(self.env_for("valid"), FAKE_EXIT=str(status))
+                r, got, outcome = self.run_recipe(env)
+                self.assertEqual(r.returncode, 4, r.stdout + r.stderr)
+                self.assertTrue(outcome.startswith("REFUSED: the preflight is"), outcome)
+                self.assertIn(f"(exit {status})", outcome)
+                self.assertNotIn("runs.jsonl", got)
+                b = max(self.bundles())
+                self.assertEqual(json.loads(self.member(b, "preflight.json")), rec)
+                self.assertEqual(self.member(b, "preflight.exit").strip(), str(status))
+                self.assertIn(f"exiting {status}", self.member(b, "preflight.stderr"))
+                self.assertNotEqual(json.loads(self.member(b, "preflight-check.json"))["verdict"], "TARGET")
 
     def test_n1_is_invalid_with_its_kind(self):
         r, _, outcome = self.run_recipe(self.env_for("n1"))

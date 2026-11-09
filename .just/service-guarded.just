@@ -98,7 +98,10 @@ bench-service-guarded DRY="" CORPUS="":
     only_base=$(configs "$(dirname "$B/build-$base")" "$PWD")
     [ -z "$only_base" ] || fail "Cargo configuration only the base build would read: $(echo $only_base)"
     tool() { (cd "$1" && rustc -vV && cargo -V); }
-    [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
+    # (a gated reading: each side's toolchain query must itself succeed before they're compared)
+    tool_head=$(tool "$PWD") || fail "the head checkout's toolchain query failed"
+    tool_base=$(tool "$B/build-$base") || fail "the base checkout's toolchain query failed"
+    [ "$tool_head" = "$tool_base" ] || fail "the two checkouts select different toolchains"
     mkdir "$W/bin"
     base_built=$(built "$B/build-$base" ab) || fail "the base build failed"
     cp "$base_built" "$W/bin/ab-base"
@@ -132,17 +135,23 @@ bench-service-guarded DRY="" CORPUS="":
     diag lscpu.txt lscpu
     diag discovery.json python3 bench/service_guarded.py discovery
     diag sample-before.jsonl "$AB" sample --count 5
-    # the actual-target preflight, before anything is measured, checked whole: a refusal
-    # unless TARGET (except in a DRY check), archived either way
+    # the actual-target preflight, before anything is measured, checked whole: a required
+    # collector, gated on its successful completion. It passes only when svc_target exited 0
+    # (a timeout's 124 or 137, or any other status, refuses even after a complete TARGET
+    # record), the checker exited 0, and the checker's verdict is TARGET; anything else, an
+    # unreadable check included, refuses (except in a DRY check). Its raw stdout
+    # (preflight.json), stderr (preflight.stderr) and exit (preflight.exit) are archived either way
     pf=0
-    timeout --kill-after=10 120 "$W/bin/svc_target" > "$W/preflight.json" || pf=$?
+    timeout --kill-after=10 120 "$W/bin/svc_target" > "$W/preflight.json" 2> "$W/preflight.stderr" || pf=$?
     echo "$pf" > "$W/preflight.exit"
     cat "$W/preflight.json"
-    set +e
-    python3 bench/svc_target_check.py "$W/preflight.json" --exit "$pf" --out "$W/preflight-check.json"
-    set -e
+    cat "$W/preflight.stderr" >&2
+    pc=0
+    python3 bench/svc_target_check.py "$W/preflight.json" --exit "$pf" --out "$W/preflight-check.json" || pc=$?
+    echo "$pc" > "$W/preflight-check.exit"
     verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/preflight-check.json" 2>/dev/null || echo "UNCHECKED")
-    if [ "$verdict" != TARGET ]; then
+    if [ "$pf" != 0 ] || [ "$pc" != 0 ] || [ "$verdict" != TARGET ]; then
+      [ "$verdict" != TARGET ] || verdict="TARGET-SHAPED BUT FAILED"
       if [ -n "$dry" ]; then
         echo "bench-service-guarded: DRY RUN: the preflight is $verdict (exit $pf), recorded; continuing"
       else
