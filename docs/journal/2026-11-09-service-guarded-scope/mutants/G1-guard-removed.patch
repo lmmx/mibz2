@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index a889bbf1..a29bde0a 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1413,7 +1413,7 @@ impl<'a> Outer<'a> {
+ 
+ impl Drop for Outer<'_> {
+     fn drop(&mut self) {
+-        if std::thread::panicking() {
++        if false && std::thread::panicking() {
+             self.hub.fail(self.shared, self.held.take(), self.what);
+         }
+         self.hub.lock().exited += 1;

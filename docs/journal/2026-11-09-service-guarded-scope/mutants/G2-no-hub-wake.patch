@@ -1,0 +1,12 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index a889bbf1..7f6dbe0d 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1577,7 +1577,6 @@ impl Hub {
+             }
+         }
+         shared.cv.notify_all();
+-        self.cv.notify_all();
+     }
+ }
+ 

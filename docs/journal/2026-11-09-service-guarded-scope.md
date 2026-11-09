@@ -1,350 +1,361 @@
 # 2026-11-09: The service core on current master, behind a narrow default (DRAFT)
 
 **Status: DRAFT. Untimed groundwork, not a registration.** Nothing here is a performance
-measurement, and no timing on the shared 4-core machine is evidence. This entry scopes the
-guarded integration the Optimiser's REVIEW asks for (#145, comment 6739420751; report
-`state/records/reviews/inbox-6739270804/report.md` at 79f6ece9) and records what this branch
-(`perf/service-guarded`) integrates, what its tests show, and what remains before a
-registration can be frozen.
+measurement, and no timing on the shared 4-core machine is evidence. No performance
+verdict of #258's runtime (3e201246) transfers to this one: its runtime, dispatch and
+wrappers have changed. Timing, qualification and production admission are HELD by the
+Guardian's D067 (#145, comment 6740148831; `state/decisions.md#d067` on team-state/guardian
+at d882543d); this revision makes the repairs D067 asks for and re-shows their evidence.
+
+This entry scopes the guarded integration the Optimiser's REVIEW asks for (#145, comment
+6739420751; report `state/records/reviews/inbox-6739270804/report.md` at 79f6ece9).
+
+**Revisions:**
+- 3c16b730: the first draft (port, predicate, reach tests, scoping);
+- this revision (D067): guard-and-fail outer unwind (§4), fail-closed discovery (§2), the
+  completion fence (§3), the service fuzz mode with fenced attribution (§5), and the
+  targeted mutants (§5).
 
 Labels:
-- **checked:** by a run on the shared machine, at this branch's head (correctness only);
+- **checked:** by a run on the shared machine, at the pinned source (correctness only);
 - **CI:** to be read from this PR's own CI run, not claimed here;
 - **not shown:** no evidence on this branch.
 
 ## 1. What is integrated
 
-**The service core's runtime, ported unchanged in its logic.** The source is the B5 branch
-`safety/service-core-b5` at fc013927, whose runtime equals #258's measured 3e201246 plus
-test-only wait counters (D057). Its diff from their common base dd939518 to fc013927 for
-`src/parallel.rs`, `src/coop.rs` (`invert_team`, its Miri test) and `src/trace.rs` (the
-service marks) applied cleanly to master a773853f; `tests/service.rs` came across whole.
-Master's changes to `src/parallel.rs` since dd939518 are #275's test-only fault hooks and
-`min_coop`, and `src/read.rs` has #278's feeder guard; neither touched the code the service
-core uses beyond `publish` (its test-only record of publications) and `Shared` (its
-test-only `faults` field, now set in the service core's constructor too).
+**The service core's runtime.** The source is the B5 branch `safety/service-core-b5` at
+fc013927, whose runtime equals #258's measured 3e201246 plus test-only wait counters (D057).
+Its diff from their common base dd939518 for `src/parallel.rs`, `src/coop.rs` (`invert_team`,
+its Miri test) and `src/trace.rs` (the service marks) applied cleanly to master a773853f;
+`tests/service.rs` came across whole. **`src/coop.rs` is byte-identical to fc013927's**
+(checked: `git diff fc013927 -- src/coop.rs` is empty), so the pool's two completed runs and
+its helper-completion fence are the reviewed code.
 
-**Changes to the ported runtime** (each a change to the measured code, so D057's "changed
-runtime" applies; none is believed to matter for speed, and none is measured):
-1. `HubState::counts` (`ServiceCounts`: prepared, pooled, finished): three plain integer
-   increments, each under the hub lock at a point where the lock is already held
-   (`prepare`'s queueing, `team_worker`'s hand-off, and `finish`'s retirement, through
-   `Hub::retire_counted`). No new lock acquisition and no atomic.
-2. `team_worker`'s pool threshold reads `min_coop(shared)` (master's #275 function) in place
-   of the constant `MIN_COOP`. Outside tests it returns `MIN_COOP`. Under test it lets a
-   tiny block reach the pooled path.
-3. `StreamDecoder` gains `hub: Option<Arc<Hub>>` (one more Arc reference on the hub, held
-   by the decoder, dropped with it after `join`).
-4. `BzReader::parallel_service` (the research constructor, as on the research branch) and
-   `BzReader::parallel_decoder` (hidden, for tests). With #278's guard, a source panic under
-   the service core cancels the decode as it does for every other parallel reader (§4).
+**Changes to the ported runtime** (each a change to the measured code; none measured):
+1. `ServiceCounts` (prepared, pooled, finished): plain increments under the hub lock where it
+   is already held, read through `Hub::counts`.
+2. `team_worker`'s pool threshold reads `min_coop(shared)` (master's #275 function; outside
+   tests, `MIN_COOP`).
+3. `StreamDecoder` holds the hub (`hub: Option<Arc<Hub>>`).
+4. `BzReader::parallel_decoder` (hidden, for tests); `parallel_service` as on fc013927; #278's
+   `CancelOnUnwind` from master.
+5. **The outer guard (`Outer`), `Hub::fail` and the terminal state (D067; §4):** a guard per
+   hub thread (feeder, service workers, teams), the hold it carries (`Outer::held`, set and
+   cleared under the hub lock at each acquisition, hand-off and retirement), `HubState::failed`
+   in the wait predicates and in `done`, a retirement on failure at the two hand-offs
+   (`retired_on_failure`), the feeder's dropping of jobs after a failure, and the reader's
+   terminal error (`State::terminal`, `State::stopped`).
+6. **The completion witness (§3):** `HubState::exited`, counted as each hub thread's guard
+   drops (one lock acquisition per thread exit), and `ServiceCounts::ended`.
 
-**Not ported:** the research branches' `examples/ab.rs` arms, `examples/occupancy.rs`, the
-B5 fuzz overlay (`examples/fuzz.rs`'s service candidates and `tests/common`'s `Serviced`).
-Master's fuzz harness has diverged (#273's pipeline candidates), and the overlay needs a
-re-port, not a mechanical merge (§5).
+The per-block cost of 5 and 6: one `Cell` store at each acquisition, hand-off and retirement
+(each inside a critical section the code already had), and one `failed` check in each wait
+loop and hand-off. Nothing per block takes a new lock.
 
-## 2. The default, and its predicate
+## 2. The default, its predicate and its discovery
 
 `StreamDecoder::new` builds the service core at `SERVICE_PLAN` (two teams of three, two
-service workers: 8 decoding threads) when, and only when, `service_target(threads, k,
-&Machine::here())` holds and no plan is forced with `with_plan`. Everything else is the
-existing dispatch, unchanged (`Plan::for_threads`, `window`, `defaulted`). `Plan` has no
-new variant: `Plan::for_threads` still answers three teams of three on the i9 at 10, which
-is the fallback, and external matches on `Plan` don't break.
+service workers: 8 decoding threads) when, and only when, no plan is forced with `with_plan`
+and `service_target(threads, k, &Machine::here())` holds. The machine is read only at the
+predicate's budget with its kernels (the cheap conditions are tested first). Everything else
+is the existing dispatch, unchanged. `Plan` has no new variant.
+
+**This is an automatic default on the supported class, not a dormant option** (D067 §5): on a
+machine where the predicate holds, `new(10, ..)`, `BzReader::parallel(.., 10)` and
+`decode_parallel(.., 10)` run svc2. CI's machines fail the predicate, so CI leaves it
+unexercised there; its bench prices only construction and discovery off-path.
 
 **The predicate (`parallel::service_target`), every condition required:**
 
-| condition | value | why |
-|---|---|---|
-| threads asked for | exactly 10 (`SERVICE_THREADS`) | the one budget measured; not "10 or more" |
-| kernels | `avx2 && clmul` | the kernels the run used (`Kernels::detect` on the i9); scalar or mixed kernels keep the existing plan |
-| platform | x86-64 Linux (`cfg!`) | the only topology readers |
-| CPU identity | `GenuineIntel`, family 6, model 165 (`/proc/cpuinfo`'s first processor) | Comet Lake-S, the i9-10900K's CPUID; *not* inherited from the 10-core/20 MiB rule, which any CPU of that shape meets |
-| physical cores in affinity | 10 | as the existing reader counts them |
-| logical CPUs in affinity, online | 20 | the measured SMT shape, all of it this process's |
-| L3 | 20 MiB (cpu0's index3) | as the existing reader reads it |
-| cgroup v2 CPU quota | none, or at least 10 CPUs (tightest `cpu.max` from the process's cgroup up) | a quota below the budget is not the measured machine; an unparseable `cpu.max` fails the predicate |
+| condition | value |
+|---|---|
+| threads asked for | exactly 10 (`SERVICE_THREADS`) |
+| kernels | `avx2 && clmul` |
+| platform | x86-64 Linux |
+| topology snapshot (`Machine::target`, `target_topology`) | every allowed online CPU `GenuineIntel`, family 6, model 165, a 20 MiB L3; 20 of them on 10 physical cores |
+| CPU quota (`Machine::quota`, `cpu_quota`) | established: none, or at least 10 CPUs |
 
-Any fact `Machine::here` cannot read is None, and None fails the predicate. The CPU's
-identity is read once (`OnceLock`); the others each call, as `physical_cores` already was.
-Model 165 is shared by other Comet Lake-S parts (i7/i5-10xxx), but the core, logical-CPU
-and L3 counts together exclude every one of them except the 10-core i9 parts (the
-i9-10900/10900F/10900KF/10900T/10850K and the 10-core Xeon W-1290 parts share all three, as
-far as their published specifications go: not checked on hardware). That is an explicit and documented reach of
-the predicate, narrower than today's, but still more than one SKU: a registration should
-either accept it or add a model-name check.
+**The class it admits** (D067 §5): family 6 model 165 with these counts is a
+microarchitecture and topology class (the 10-core Comet Lake-S parts: by published
+specifications the i9-10900K/KF/F/T, i9-10900, i9-10850K and 10-core Xeon W-1290 parts; not
+checked on hardware), not the one i9-10900K #258 measured. **Its other members are
+unmeasured, and one i9 result does not qualify them.** There is no brand-string gate: a name
+would prove neither power, clock nor quota equivalence, and D067 does not ask for one. A
+registration must either align the default's reach with the admitted evidence or obtain the
+coverage or authority for the class; and its preflight must read the actual target back
+(§9, item 4).
 
-**Lookahead and window.** The service constructor's lookahead is `teams`, so 2 (L2). The
-window is `window(SERVICE_PLAN.as_plan(), threads, slots)`, the same scaling a plan of two
-teams gets: at the 40 slots `BzReader::parallel` and `decode_parallel` give at 10 threads,
-8 blocks (W8). A caller's own window scales the same way, at least a block a team: 1→2,
-10→2, 20→4, 40→8, 80→16, 200→40.
+**Discovery fails closed (D067 §2).** The predicate reads only two facts, each established or
+refused:
+- **`target_topology`** (one coherent snapshot): the CPUs in `Cpus_allowed_list` that
+  `/sys/devices/system/cpu/present` and `online` list; CPUs those lists exclude are
+  positively offline or absent and are left out, not guessed. Each counted CPU's
+  `topology/core_id`, `physical_package_id`, `cache/index3/level` (must be 3) and `size`, and
+  its `/proc/cpuinfo` record (matched by `processor`) must all be read and parsed; any read
+  error, a CPU with no record, or any difference among them (vendor, family, model, L3 size)
+  is None. The plan policy's own readers (`physical_cores`, `l3_bytes`) are unchanged and
+  are not the predicate's.
+- **`cpu_quota`** (cgroup v2 only): the one `0::` entry of `/proc/self/cgroup`, the one
+  `cgroup2` mount of `/proc/self/mountinfo` (its root and mount point), and every directory
+  from the process's cgroup up to the mount point, each `cpu.max` parsed strictly (one line,
+  `max PERIOD` or `QUOTA PERIOD`, positive integers), the tightest kept. A level's `cpu.max`
+  may be absent (the controller not enabled there) only if its directory is there. The mount
+  point must be the true root (no `cgroup.type`, which every non-root cgroup has); a mount
+  below it (a cgroup namespace, most containers) hides ancestors whose limits can't be read,
+  so it is `Unknown`. Everything else (membership unreadable, a level unreadable, an I/O
+  error, an unparsable file, no v2 entry or cgroup v1 alone, several entries or mounts, a
+  relocated mount, an escaped path) is `Unknown`, and `Unknown` makes the predicate false.
+  `Quota::default()` is `Unknown`.
 
-**Test hooks, all hidden:** `with_machine(Machine, f)` substitutes the machine's facts on
-this thread (the plan policy reads them too, so the fallback is the real fallback on that
-machine); `observe_builds(f)` records each decoder `StreamDecoder::new` built on this thread
-during `f`, and the service core's counts once `f` returned; `StreamDecoder::is_service`,
-`window`, `service_counts`; `BzReader::parallel_decoder`.
+**Lookahead and window.** Lookahead `teams` (L2). Window
+`window(SERVICE_PLAN.as_plan(), threads, slots)`: 8 at the wrappers' 40 slots (W8); a
+caller's own scales the same way, at least a block a team (1→2, 10→2, 20→4, 40→8, 80→16,
+200→40).
 
-## 3. Reach (checked)
+**Hidden test hooks:** `with_machine` (substitutes `Machine::here` on this thread, so both
+the plan policy and the predicate see that machine), `observe_builds`, `is_service`, `window`,
+`service_counts`, `BzReader::parallel_decoder`.
 
-All at this branch's head on the shared machine (an Intel family 6 model 173 with AVX2 and
-CLMUL: not the target, so the target's facts come from `with_machine`, and every decoder
-then runs for real on 4 vCPUs).
+## 3. Reach, and the completion fence (checked)
 
-`src/parallel.rs`, `plan_tests`:
-- `the_service_target`: the predicate true at the target and false for each of: 0, 1, 4, 8,
-  9, 11, 12, 16, 20, 64 and `usize::MAX` threads; scalar, AVX2-only and CLMUL-only kernels;
-  9 or 11 cores, 19 or 10 logical CPUs, an L3 a byte short or 16 MiB, models 166 and 158,
-  family 15, AuthenticAMD, quotas of 9.5 and 2 CPUs, an unknown quota, and each fact unread.
-  True again at quotas of 10, 12.5 and 20. `cpu.max` parsing, including malformed lines.
-- `the_service_default`: `StreamDecoder::new(10, 40, ..)` on the target is the service core,
-  8 threads, window 8; custom windows as above; every other budget (1–20) is exactly what
-  `Plan::for_threads` says on that machine, with its pipelining and window; 10 threads on
-  scalar kernels is the pipelined three teams of three; an AMD CPU of the same shape is the
-  pipelined three teams of three, window 12; a small machine, 10 workers; three forced plans
-  win on the target. A decode through it: four streams, prepared 4, finished 4.
+**The fence (D067 §3).** CI's occupancy job 129157302740 failed `the_service_default` with
+`(prepared, finished) = (4, 3)` against `(4, 4)`: `finish` publishes the last block and wakes
+the reader before `retire_counted` counts it, so the reader's EOF can come first. EOF is not
+the workers' completion, and nor is dropping a `BzReader` (its feeder may hold the decoder's
+last reference). The repair keeps the equality and fences instead:
+- every hub thread's guard counts its exit under the hub lock, after the thread's last
+  retirement; `ServiceCounts::ended` is true only when all have exited;
+- each test joins the decoder (`StreamDecoder::join`, or the decoder's drop inside
+  `decode_parallel`) before reading the counts, and asserts `ended`.
 
-`tests/service_default.rs` (natural dispatch through the public entry points; each build
-observed):
-- `the_entry_points_reach_the_service_core`: `StreamDecoder::new(10, 40)`,
-  `BzReader::parallel(.., 10)`, `BzReader::parallel_with(.., 10, 40, ..)` and
-  `decode_parallel(.., 10)`, on three multi-block inputs (text at levels 9 and 3, records at
-  level 6): libbzip2's bytes; the service core, 8 threads, window 8; prepared and finished
-  both equal to the block count, and at least all but one block inverted on a team's pool.
-- `custom_windows_scale_to_the_teams`: `new` and `parallel_with` at 1, 10, 20, 40, 80 and
-  200 slots.
-- `the_existing_plan_otherwise`: 9, 11 and 20 threads on the target, 10 threads on a same-
-  shape Intel model 151 and on a 4-core machine, through all four entry points: not the
-  service core, the existing plan's pipelining and threads, libbzip2's bytes; and a forced
-  plan through all four on the target.
-- `errors_through_the_entry_points`: three blocks' stored CRCs flipped and two truncations,
-  through all four entry points on the target: the plain parallel decoder's error (kind,
-  block, bit), and its bytes before (the three streaming entry points).
+Counts are operational snapshots: a block failing in preparing or a team's run retires
+without finishing, so `finished` is not "every block retired" on error paths.
 
-`tests/reader_panic.rs`: `a_panicking_source` adds the explicit service core and
-`BzReader::parallel(.., 10)` on the target (asserted to be the service core), at the four
-panic positions, including after the feeder's first 4 MiB write.
+**Reach tests** (on this machine, not the target; the target's facts come from
+`with_machine`, and every decoder then runs for real on 4 vCPUs):
+- `plan_tests::the_service_target`: each condition flipped alone (budgets, kernels, each
+  topology fact, the snapshot absent, quotas 9.5/2/unknown, the default `Machine`).
+- `plan_tests::discovery_fails_closed_quota`: 18 fixtures through `cpu_quota` and the
+  predicate, among them unreadable membership, an unreadable restrictive parent, an I/O
+  error on a parent beneath an unlimited leaf, a restrictive parent beneath an unlimited
+  leaf (8 CPUs: false), inherited quotas of 10 (true) and 12 under 15, no and a relocated v2
+  mount, two mounts, cgroup v1 alone, a hidden ancestor, an unreadable root `cgroup.type`;
+  and strict `cpu.max` parsing (`max garbage`, `inf`, `1e6`, extra fields and more refused).
+- `plan_tests::discovery_fails_closed_topology`: a 20-CPU fixture reads as the target; an
+  unreadable or missing core id, package, L3, an L3 of another size, a non-level-3 index3,
+  unreadable `online`/`present`/status/cpuinfo, unparsable affinity, a CPU of another model,
+  a CPU with no cpuinfo record: None. Positively offline (19 CPUs) and masked (10 CPUs)
+  snapshots read as smaller machines; allowed-but-absent CPUs are left out.
+- `plan_tests::the_service_default`: dispatch, custom windows, fallbacks, forced plans, and a
+  decode through it with the fence (`ended`, then 4/4).
+- `tests/service_default.rs`, through the four public entry points by natural dispatch:
+  libbzip2's bytes, svc2 at 8 threads and window 8, `ended`, prepared = finished = blocks,
+  pooled ≥ blocks − 1; custom windows; the existing plan at 9, 11 and 20 threads, on a
+  same-shape Intel model 151, with an unknown quota, on a 4-core machine, and when forced;
+  errors (kind, block, bit, bytes before) as the plain decoder's.
+- `tests/reader_panic.rs`: #278's guard with the explicit service reader and the on-target
+  default, at four panic positions.
 
-`tests/service.rs` (ported) adds svc2's own shape (2, 3, 2, 8) to its shapes; the other
-seven are the research branch's.
+## 4. The outer unwind: guard-and-fail (D067 §1)
 
-## 4. Reconciling with #278 and M12
+**The stage catches stay.** A panic inside a stage (preparing, a team's run, finishing) is
+caught there and becomes that block's `Internal` error, with the ordered prefix before it; a
+partial front is discarded, never reused; a team's back set and table are replaced only after
+`Pool::run` has waited for every helper. These are fc013927's, unchanged.
 
-**#278 (the feeder guard).** The guard calls `StreamDecoder::cancel`, which the service core
-shares with every decoder: it closes the input, sets `cancelled` and wakes the reader and
-scanner. The service core then drains as D045 describes: the scanner sees the closed input
-and ends, the hub's feeder sees the closed jobs channel and closes the hub, and every stage
-sees `cancelled` (prepare and team retire, finish's `take_out` returns None). The reader's
-next read returns the guard's error. **Checked:** `a_panicking_source` on both service
-readers (§3). **Not shown:** the D045 caveat stands: cancellation reaches the hub only
-through that scanner→feeder close, not a direct notify, so its progress depends on the
-scanner not being stuck in a source.
+**What the guard covers:** everything outside those catches. Each hub thread makes an
+`Outer` first, so it drops last: after every lock guard the thread held, and (in a team)
+after its pool, whose drop joins its helpers. Its hold (`held`) is set when the thread takes
+a block (`take_job`, `take_prepared`, a walked block's selection) and cleared when it hands
+the block on (queued) or retires it, each in the same critical section as the queue's change
+or `live`'s. Between publication and retirement the hold stays set, so an unwind there
+retires the block once and never publishes it again.
 
-**M12 (#275's outer-unwind recovery).** The pipelined team has an outer region: the leader's
-closure runs outside its stages' catches while helpers walk, holding up to three blocks
-(the held prior, the current, the staged next), and M12 is about retiring all of them when
-that region unwinds. The service core's shape is different, and the mapping is:
+**On an unwind (`Hub::fail`), in order:**
+1. **the terminal error first:** `State::terminal` (`Internal`, naming the thread) and
+   `cancelled` are set, and the ready blocks dropped, under the shared lock, before any wake;
+2. **the hub fails:** `failed` set; the held block retired; every queued block (prepared,
+   walked) retired and its buffers dropped, never reused; the jobs not yet taken dropped. A
+   block another thread holds in a stage is that thread's to retire when its stage ends; at
+   its hand-off it sees `failed` and retires it instead of queueing it
+   (`retired_on_failure`);
+3. **both domains woken:** the shared condition (the reader, the scanner, which then ends and
+   closes the jobs, and the writers) and the hub's (every waiter sees `done`).
 
-| service-core state | buffers held | on a stage's panic (ported, unchanged) |
-|---|---|---|
-| preparing (a service worker) | a front, filling | caught; the partial front is *discarded*, a new one returned (never reused); `Internal` at the block's place and bit |
-| prepared, queued | a front | — (no code runs on it) |
-| in a team's run | a front (read only) + a back (filling) + the team's T-vector | caught, after `Pool::run` has waited for every helper; the front returned (unchanged), the back and the T-vector replaced; `Internal`; the pool kept |
-| walked, queued | a back | — |
-| finishing (a service worker) | a back + the worker's assembly buffer + an output buffer | caught; the back and the assembly buffer replaced; `Internal` |
+Counts saturate rather than panic during the unwind; the two locks are taken one after the
+other, never nested; nothing in it calls a trace hook. Losing the last service worker, the
+last team, the feeder, or a thread holding no block still ends the decode: the terminal
+predicate (`failed` in `done` and in each wait loop) does not wait for a consumer that is gone.
 
-There is no held prior and no staged next: no service-core thread holds more than one block,
-and every stage's code that touches a block's buffers runs inside its catch. So the M12
-states (current; current + next; current + held prior) have no direct counterpart, and the
-partial-front rule is "discard, never reuse", as in the pipelined `stage`.
+**The contract (documented on `Hub::fail` and below):** an outer unwind is a terminal
+failure. The reader keeps the bytes it already had and then gets the terminal `Internal`
+error (or, if the failure came after it had read the whole stream, the whole stream and EOF).
+**The full ordered prefix before the failure is not promised:** the failure clears `ready`,
+as a cancel does. A cancel racing the failure may give `Cancelled` instead. Abort (an
+out-of-memory one among them) and a forever-blocked external `Read` remain outside any
+promise.
 
-**The gap (not shown, a B5 obligation before registration):** code *outside* those catches.
-In each service-core thread it is the hub bookkeeping (taking a task under the lock, the
-pushes to `prepared`/`walked`, `publish`, `retire`), and in the team's loop, the stretch
-between `take_prepared` and the catch. None of it should panic but on a bug (an `expect`
-whose precondition is checked just before, a `live` underflow from a double retirement) or
-an allocation failure (an abort, outside any promise). If it did, the thread would end
-holding its block: that block is never retired, `live` never reaches zero, the reader waits
-at that place, and `join` (and `Drop`) waits for the other threads, which wait for the
-hub's end. That is a hang, not a wrong output, but it is the analogue of the stranding M12
-guards against. Two designs, for the Guardian:
-- **Outer guard per thread, retire and fail:** each service worker and team holds a drop
-  guard naming the block it holds (place, bit, which buffers); on unwind it publishes
-  `Internal` at that place (once: the guard is disarmed at the hand-off under the hub lock),
-  retires it with fresh buffers, and, if it was the last service worker or team, cancels
-  the decode so nothing waits on a thread that is gone. Tests in the shape of
-  `unwind_tests`: a cfg(test) injection at each outside-catch point, a watchdog, exactly-once
-  publication, and the M12-style mutant (the guard's retirement removed) killed.
-- **Catch the whole iteration and continue,** as `pipelined_worker` does. Needs the same
-  "held" bookkeeping, so it is not simpler, and a thread that keeps going after an
-  unexplained panic in bookkeeping is harder to argue for.
+**Tests** (`src/parallel/service_unwind_tests.rs`; cfg(test) injections, `outer_fault`, fired
+once):
+- all nine outer points (a service worker holding nothing; a job just taken; before and after
+  the prepared hand-off; a team before its pool is chosen; after the walked hand-off; a
+  walked block just taken; between publish and retire; the feeder) at block 1, on one team
+  and one service worker (the faulting thread the last of its kind) and on svc2's shape, on
+  tiny blocks (each team's first thread alone) and full blocks (a team's pool, asserted
+  reached);
+- a parked-state handshake (`HubState::parked`, counted under the hub lock around each wait):
+  the fault fires only once every other hub thread is parked and the jobs are closed, so only
+  `Hub::fail`'s wake can end them (a service worker's loss with two teams parked; the last
+  team's loss with its service worker parked);
+- a writer blocked on a one-block window while the reader waits, a cancel racing the fault,
+  the decoder dropped rather than joined;
+- each checks, under a 60-second watchdog: the fault fired; the hub failed; every hub thread
+  ended; `live` 0 and as many retirements as blocks taken; no block published twice; the
+  bytes a prefix of the stream; the result EOF with the whole stream, or the terminal error
+  (or `Cancelled` with the racing cancel).
+- Miri (`miri_outer_after_job`, `miri_outer_after_publish`, `miri_outer_parked`): tiny blocks,
+  scalar kernels, the last-of-its-kind and parked shapes.
 
-Neither is implemented here: it changes runtime code D057 reviewed, and it should be one
-reviewed change with its own tests rather than folded into the port.
+**No reuse before helper completion:** no outer point lies inside a team's pool run (the run
+is wholly inside the stage catch), the guard never touches a buffer, `Hub::fail` drops only
+queued buffers (no thread is using them), and a team's guard drops after its pool. This is
+argued from the source, not separately mutated.
 
 ## 5. Safety evidence: shown and not
 
-**Shown (checked, at this head):**
-- `cargo test` (every library and integration test; §8 lists the result), including the
-  ported `tests/service.rs` (corpora, every level, multi-stream, malformed CRC, primary
-  index, truncation, move-to-front errors, injected panics in a helper, a team's first
-  thread, preparing and finishing, cancellation and a dropped reader, all under a watchdog,
-  byte for byte and error for error against the plain decoder) at its eight shapes.
-- Miri, locally (nightly 2026-10-26): the four `parallel::service_tests::miri_*` fixtures
-  and `coop::tests::miri_team_run_and_its_panic` (§8).
-- The Miri workflow's selection check now fails if those fixtures are dropped by a rename.
+**Targeted mutants (checked; `2026-11-09-service-guarded-scope/mutants/`: the script, each
+patch and log headed by the mutated file's SHA-256, and `summary.txt`).** Each applied alone,
+the outer-unwind suite run natively, the file restored byte for byte:
 
-**Carried over, by scope only:** D045/D053/D057's ownership and memory-ordering argument,
-the wake and retirement fixtures, the targeted mutation records and the repaired fuzz
-reach are for 3e201246/fc013927's runtime. The ported runtime is that code with §1's four
-changes. Whether that reuse is accepted is the Guardian's call; this entry claims no more
-than the source identity and the passing tests.
+| mutant | obligation | result | detected by |
+|---|---|---|---|
+| G1 guard removed (`Outer`'s failure never runs: M12's analogue) | outer unwind fails the decode | KILLED, 7/7 tests fail | the watchdog: hangs at a held block (`AfterJob`, `AfterPublish`, `AfterPrepared` with a blocked writer), at `SvcIdle` and in every parked case |
+| G2 hub wake removed from `Hub::fail` | both domains woken | KILLED, 4 fail | the watchdog: the parked handshakes (both shapes, and Miri's fixture natively), `BeforePrepared` and `AfterFinishTake` |
+| G3 terminal predicate removed (`failed` out of `done` and the wait loops) | no wait for a consumer that is gone | KILLED, 3 fail | the watchdog: the feeder's loss (jobs never closed), `AfterPrepared` at svc2 |
+| G4 double retirement (the guard retires whether or not it holds a block) | each block retired once | KILLED, 3 fail | `blocks taken, retired` (`SvcIdle`, a blocked writer) |
+| G5 hold released at publication, not retirement | the publish→retire gap | KILLED, 4 fail | `a live block lost` (`AfterPublish`, both shapes, Miri's fixture natively, the drop case) |
+| restored | | 7/7 pass | |
+
+**The fuzz route, ported (checked).** `examples/fuzz.rs` MODE `service`
+(`tests/common::service_candidates`): svc2 as the default through `StreamDecoder::new` (two
+write/read sizes), `BzReader::parallel` and `decode_parallel` on the target's facts, and four
+explicit shapes (one service worker in a one-block window; three teams of three in 12; a team
+of four with two service workers; two teams of two on the scalar kernels). Inputs and edits
+are the pipeline cases' (`pipeline_corpus`, aimed at later blocks' headers and the stream's
+end); each case is held to the plain parallel decoder (bytes before any error; the error's
+kind, block and bit) and to libbzip2. **Attribution is completion-fenced:** counts are read
+only after the decoder is joined and `ended` holds (the run panics otherwise, and a panic is
+a failure). Per candidate, cases with a block pooled, finished, with more blocks prepared
+(finished) than the decoder has front (back) sets (so those sets were reused), and with an
+error. Seed 2, 120 s: **2,724 cases, 0 failures** (`fuzz-service-seed2.log`); each candidate
+reached pooled, finished, front reuse and back reuse in many cases (the log gives the
+counts). These are new-head results, not old counts relabelled. CI's fuzz job now runs
+`fuzz 30 1 .. service`. Not ported from the old overlay: per-case cancellation
+(`cancel_after`); `tests/service.rs` and the outer-unwind tests cover cancellation.
+
+**Native and Miri (checked; §8).** All native suites; Miri on the repaired source for the
+service hub fixtures, the outer-unwind fixtures, the team run and the M12 fixtures.
+
+**Reused by obligation (D067 §4):** D045's ownership and memory-ordering derivation, D053's
+controlled wake/retirement evidence and H3/O3 arguments, D057's repaired fuzz/Miri evidence,
+for the unchanged obligations and premises they covered (`src/coop.rs` byte-identical; the
+stage catches and buffer movements unchanged). Not re-run: the inherited mutants.
 
 **Not shown:**
-- **The fuzz route.** The B5 fuzz overlay is not ported. Its re-port onto master's
-  `examples/fuzz.rs` (beside #273's pipeline candidates) should select the default through
-  `with_machine` + `BzReader::parallel(.., 10)` and `decode_parallel(.., 10)`, as well as
-  the explicit shapes, and count reach with D057's fenced collector.
-- **The outer-unwind gap** (§4), and its mutant.
-- **Mutation testing** of anything new here (the predicate, the window scaling, the
-  counters). The predicate's tests flip each condition alone, which is a mutation-shaped
-  check of each clause, but no mutant was run.
-- **AVX2 under Miri**, full-size Miri, or every interleaving: as before, the Miri fixtures
-  are tiny blocks on the scalar kernels.
-- **Feature-off code removal:** the service core is compiled in every build (as on the
-  research branches); with no predicate true it is dead code at run time, not removed.
-- **The predicate on a real i9:** no test here ran on the target. The facts' readers are
-  checked on this machine only (`the_policy_here`); `cpu_id`, `logical_cpus` and
-  `cpu_quota` need a read-back on the workstation (a printout of `Machine::here()` and
-  `service_target(10, detect)` belongs in the registration's preflight).
+- AVX2 or full-size Miri (not required by D067), and every interleaving;
+- a mutation of the "no reuse before helper completion" argument (argued from the source);
+- the predicate on a real i9 (§9, item 4);
+- the service core is compiled into every build (dead at run time off the class, not
+  removed);
+- the CI results of this revision (to be read from the PR's checks).
 
 ## 6. Memory accounting, for a later registration (design; nothing measured)
 
-The figure to register is **whole-process peak RSS** (`/usr/bin/time`'s maximum resident
-set, or `getrusage(RUSAGE_SELF).ru_maxrss` read by the harness after the decoder's drop),
-for the exact switched default against the exact current default, through the same public
-entry point, on the same input and consumer. Not a sum over decoding threads: the scanner,
-the hub's feeder (`mibz2-svc-feed`), the reader's feeder (`mibz2-read`), the caller and the
-pool helpers are all in the process, and the eight "decoding threads" are two leaders, four
-helpers and two service workers.
+The figure to register is **whole-process peak RSS**, for the exact switched default against
+the exact current default, through the same public entry point, on the same input and
+consumer. **Each arm and run in its own process** (`/usr/bin/time`'s maximum resident set, or
+`ru_maxrss` read at that process's exit): `ru_maxrss` is a process's high-water mark and
+never resets, so reading it after one decoder's drop in a process that ran another says
+nothing about the second (D067 §5). Not a sum over decoding threads: the scanner, the hub's
+feeder, the reader's feeder, the caller and the pool helpers are all in the process.
 
-What the svc2 default holds, as a model to check the measurement against (block-size
-figures for a full 900 kB block; a high-expansion block's output is up to ~46 MB):
+A working model to check the measurement against (not a proved bound; a full 900 kB block;
+a high-expansion block's output is up to ~46 MB):
 
 | item | count at svc2 | each, about |
 |---|---|---|
-| front sets (`ll` + counts + checkpoints) | teams + L + services = 2 + 2 + 2 = 6 | 0.96 MB |
-| back sets (segments, bitmap, starts; or `direct`) | 2 × teams = 4 | ~1.0–1.1 MB |
-| T-vectors | one a team: 2 | 3.6 MB |
-| assembly buffers | one a service worker: 2 | up to the block's pre-RLE1 length |
-| window: symbols + decoded output, retained | W = 8 slots | 1.8 MB symbols at most; the output's size (JSON ~1 MB; ≤ ~46 MB) |
-| the reader's free list and current output | ≤ W | as above |
-| input: queued chunks + the scanner's window | 2 × the writer's chunk + ~2–4 MB | |
+| front sets | teams + L + services = 6 | 0.96 MB |
+| back sets | 2 × teams = 4 | ~1.0–1.1 MB |
+| T-vectors | 2 | 3.6 MB |
+| assembly buffers | 2 | up to the block's pre-RLE1 length |
+| window slots (symbols + output) | W = 8 | ≤ 1.8 MB symbols; the output's size |
+| input: queued chunks + the scanner's window | | 2 × the writer's chunk + ~2–4 MB |
 | thread stacks | 8 + scanner + hub feeder (+ reader feeder) | virtual; RSS as touched |
 
-Against the current default at 10 (three pipelined teams of three, W12): three T-vectors
-and twelve window slots, against svc2's two and eight, so one T-vector and four slots less;
-the front/back sets on each side need the pipelined default's own counts, read from its
-source at the registration's pin (not tallied here). #258's corpus medians (about 64 MB
-against 74 MB) agree in direction, for the old runtime on that corpus only, and are not a
-worst-case bound.
-
-How a registration would measure it, untimed or alongside the timed comparison:
-1. **Peak RSS per run**, both arms, every run, recorded beside wall and CPU (no new timed
-   work). Report the paired difference with an interval, as the CI bench does.
-2. **A high-water census in an untimed build** (`trace` feature): the service marks already
-   carry sizes (`Prepared`/`Walked` queue lengths; `RleEnd`'s output length and capacity),
-   and the window marks the scanner's buffer. A census pass reports the maximum live fronts,
-   backs, prepared queue (bounded by L + K − 1 = 3, D045), walked queue, and retained output
-   capacities. Untimed: the marks perturb the schedule.
-3. **Stress inputs, untimed:** high-expansion blocks (runs-only, so outputs near 46 MB),
-   small and mixed blocks, a slow consumer (the reader sleeping between reads, so the window
-   fills), cancellation mid-stream. Peak RSS of each against the current default. This is
-   where "W12 admits four extra blocks" and "L4 adds fronts" would show up, if those shapes
-   were ever proposed; at svc2 (L2/W8) they are not in play.
-4. **Thread census:** the live thread count of the process during the decode (procfs
-   `/proc/self/task`, as D057's collector does), both arms, so "one fewer decoding thread"
-   is not confused with one fewer process thread (svc2 adds the hub feeder; the pipelined
-   default has none).
+Against the current default at 10 (three pipelined teams of three, W12): one T-vector and
+four window slots less; the pipelined default's front and back counts are to be read from its
+source at the registration's pin. Untimed extras: a `trace` high-water census (prepared queue
+bounded by L + K − 1 = 3, D045), stress inputs (high-expansion, small and mixed blocks, a slow
+consumer, cancellation), and a `/proc/self/task` thread census for both arms.
 
 ## 7. The corrected diagnostic's hooks (#293, Researcher REVIEW 6739649705)
 
-The Researcher asks that #293's service-starvation diagnostic be corrected and ported to
-this guarded integration rather than run on the old runtime. It is **not** ported here.
-This integration keeps every hand-off in one place, so the hooks fit at these points, each
-named with the lock held:
+Not ported here. The hooks fit at these points, each with the lock it holds:
 
-| event | where | lock held |
+| event | where | lock |
 |---|---|---|
 | `Issued` | `scanner`, after `issued += 1` | `shared.state` |
 | `Enqueued` | `scanner`, after `jobs.send` | none (channel) |
-| `FeedRecv` | `feed`, after `rx.recv()` returns | none |
+| `FeedRecv` | `feed`, after `rx.recv()` | none |
 | `JobIn` | `feed`, after `jobs.push_back` | hub |
-| task chosen (`Prepare`/`Finish`), with the choice's inputs: P (prepared), A (preparing), C (finishing), J (jobs), free fronts and backs, and whether a preparation was eligible when a finish was chosen | `service_worker`'s selection loop, at each `break` | hub |
-| preparation queued; walked queued; block taken by a team | `prepare`, `team_worker`, `take_prepared`, at the push/pop | hub |
-| wait entered / woken (per thread, with the predicate that held at entry and at wake) | before and after each `hub.wait` | hub |
-| retire (and the kind: finished, error, cancel) | `Hub::retire_counted` | hub |
-| `SlotWait` / `SlotGot`, with `issued − taken` at both | `scanner`'s slot wait | `shared.state` |
-| `Taken` (credit released), with `issued − taken` after | `StreamDecoder::read` | `shared.state` |
+| task chosen (with P, A, C, J, free fronts and backs, and whether a preparation was eligible when a finish was chosen) | `service_worker`'s selection, at each `break` | hub |
+| prepared queued; walked queued; taken by a team | `prepare`, `team_worker`, `take_prepared` | hub |
+| wait entered and woken (with the predicate at each) | around each `hub.wait` (where `HubState::parked` now counts, under test) | hub |
+| retire (finished, error, cancel, failure) | `Hub::retire_counted`, `retired_on_failure`, `Hub::fail` | hub |
+| `SlotWait` / `SlotGot` with `issued − taken` | `scanner`'s slot wait | `shared.state` |
+| `Taken` with `issued − taken` after | `StreamDecoder::read` | `shared.state` |
 
-What the port needs, by the review's defects:
-1. **Ordering (R1).** Take the sequence number and the timestamp together under the lock
-   the event already holds (the hub's or `shared.state`'s), so each lock's events are
-   totally ordered in both; merge across the two locks only where a causal edge exists
-   (`Enqueued` → `FeedRecv` → `JobIn`; `publish` → `Taken`), and refuse, rather than clamp,
-   duration attribution where the merged timestamps go backwards. Check that each wait's
-   attributed parts sum to its endpoints and the scanner's partition to the span. There are
-   only two locks on these paths, so no global logging lock is needed; that keeps the
-   diagnostic's perturbation to the per-event cost.
-2. **Credit (R2).** Record `issued − taken` with `SlotWait`, `SlotGot` and `Taken`, so
-   "window full" is a current-occupancy fact (`issued − taken >= slots`), and the interval
-   from a `Taken` that frees credit to the scanner's `SlotGot` is labelled wake/hand-off.
-3. **Finish priority (R3).** The task-chosen event records whether a preparation was
-   eligible at that choice (jobs and a free front, P below L), so a finish-over-prep decision
-   is a recorded fact per wait, not inferred from occupancy. Split A>0 from A=K.
-4. **Admission (R4).** Bind the analysed TSV by digest to the run's validation output and
-   its plan (svc2, L2, W8 from `observe_builds`' record), refuse mixed plans, and treat an
-   incomplete log as failed evidence. `ServiceCounts` gives an independent per-run check of
-   prepared/finished against the log's counts.
+The port needs: (R1) sequence and timestamp taken together under the event's own lock,
+cross-lock merges only along causal edges, refusal (never clamping) where timestamps go
+backwards, and conservation checks; (R2) current occupancy with the slot events, the hand-off
+from `Taken` to `SlotGot` labelled separately; (R3) per-choice eligibility recorded, A>0 split
+from A=K; (R4) the TSV bound by digest to the run's validation and plan (from
+`observe_builds`), mixed plans and incomplete logs refused. `ServiceCounts`, read after the
+completion fence (`ended`), gives an independent per-run check of prepared and finished.
 
-## 8. Test results at this head (checked)
+## 8. Test results at the pinned source (checked)
 
-On the shared machine (Intel family 6 model 173, 4 vCPUs, AVX2 and CLMUL), stable rustc
-1.99.1, at this branch's source (the commit that adds this entry; this entry's own text
-changed nothing compiled):
-- `cargo test` (all targets): library 64 passed, 1 ignored (as on master); cooperative 4,
-  corpus 2, decode 14, in_place 7, mtf_checkpoints 3, mtf_kernels 4, pipelined 12,
-  reader_panic 1, service 10, service_default 4, doc-tests 1; zero failed. 3 min 45 s.
-- `cargo clippy --all-targets --all-features -- -D warnings`: clean. `cargo fmt --check`:
-  clean.
-- `cargo +nightly miri test --lib -- service_tests::miri_ coop::tests::miri_team_run_and_its_panic`
-  (rustc 1.101.0-nightly 16d1ffac1 2026-10-26, `MIRIFLAGS` unset): 5 passed, zero failed,
-  224 s of Miri's clock. The full `-- miri_` set CI runs was not run locally; read it from
-  this PR's Miri job.
+On the shared machine (Intel family 6 model 173, 4 vCPUs, AVX2 and CLMUL), at f747fe7a's
+source (`src/`, `tests/`, `examples/` as committed there; this revision's later commits
+change only this entry and its records):
+- `cargo test` (stable rustc 1.99.1, all targets): library 73 passed, 1 ignored (as on
+  master); cooperative 4, corpus 2, decode 14, in_place 7, mtf_checkpoints 3, mtf_kernels 4,
+  pipelined 12, reader_panic 1, service 10, service_default 4, doc-tests 1; zero failed.
+- The occupancy job's command, `cargo test --release --features trace --lib --example
+  occupancy`: 73 passed, 1 ignored; 3 passed. One local pass of a race is not evidence the
+  race is gone; the fence (§3) is the repair, and CI's run of this head is the read-back.
+- `cargo clippy --all-targets --all-features -- -D warnings` and `cargo fmt --check`: clean.
+- Miri (`cargo +nightly miri test --lib -- service_tests::miri_ service_unwind_tests::miri_
+  coop::tests::miri_team_run_and_its_panic unwind_tests::miri_`; nightly 1.101.0 16d1ffac1
+  2026-10-26, `MIRIFLAGS` unset): **11 passed, 0 failed** (the four service hub fixtures, the
+  three outer-unwind fixtures, the team run, the three M12 fixtures), 311 s of Miri's clock
+  (`2026-11-09-service-guarded-scope/miri.log`).
+- The outer-unwind mutants: §5's table (`mutants/summary.txt`).
+- The service fuzz: seed 2, 120 s, 2,724 cases, 0 failures (§5).
 
-Wall times above are the test runs' own, not measurements of the decoder.
+Wall times are the runs' own, not measurements of the decoder.
 
 ## 9. What remains before a registration
 
-In order, roughly:
-1. **The outer-unwind guard** (§4), its injection tests and its mutant: the one runtime
-   change this integration still needs. Small in code (a guard and a few hand-off points),
-   but it is unsafe-adjacent hub bookkeeping and needs its own Guardian review.
-2. **The B5 fuzz overlay re-ported** onto master's harness, through the default entry points
-   and the explicit shapes, with D057's fenced reach counts; a bounded run.
-3. **The Guardian's scope decision** on reusing D045/D053/D057's evidence for the ported
-   runtime with §1's changes, and an exact-head CI (native, Miri) read-back.
-4. **The predicate's read-back on the i9** (`Machine::here()` printed, the predicate true at
-   10 and false at 9/11), as part of the registration's preflight.
-5. **The CI bench** on this PR: the predicate is false on CI, so the bench prices only the
-   off-path cost (the `Machine::here` reads at construction; nothing per block). A null
-   there is not a win (the Optimiser's §4).
-6. **The registration itself** (Researcher assesses, Coordinator registers): the guarded
-   switched default against the current default at 10 on the i9, CPU and peak RSS (§6),
+1. **The Guardian's review of this revision** against D067's closure conditions, and an
+   exact-head CI read-back (native, the occupancy job, Miri, fuzz).
+2. **The adoption question D067 §5 raises:** the default's automatic reach on the supported
+   class against the admitted evidence, and how CI's unchanged acceptance rule applies when
+   CI can't exercise svc2. These are Louis's (RULES D/C6), not settled here.
+3. **The registration** (Researcher assesses, Coordinator registers): the exact switched
+   default against the current default at 10 on the i9, CPU and per-process peak RSS (§6),
    frozen; then Louis's C5 run.
-7. Optionally, the corrected diagnostic (§7), separately registered.
-
-An honest estimate: items 1–3 are one to two focused passes of implementation and review
-work; item 6 cannot start before them.
+4. **An actual-target preflight in that registration:** `Machine::here()` printed on the
+   workstation, `service_target(10, Kernels::detect(), ..)` true there and false at 9 and 11,
+   the quota and snapshot as read, before any timed run.
+5. Optionally, the corrected diagnostic (§7), separately registered.

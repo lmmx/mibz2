@@ -1,0 +1,12 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index a889bbf1..4bf9f012 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1932,6 +1932,7 @@ fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k
+     };
+     // (published, not yet retired: still `o`'s, so an unwind here retires it once, and
+     // `Hub::fail` never publishes it again)
++    o.held.set(None);
+     publish(shared, place, bit, res, symbols.syms);
+     #[cfg(test)]
+     outer_fault(hub, OuterAt::AfterPublish, Some(place));

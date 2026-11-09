@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index a889bbf1..6101d417 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1566,7 +1566,7 @@ impl Hub {
+             let mut st = self.lock();
+             st.failed = true;
+             let queued = st.prepared.len() + st.walked.len();
+-            let retired = queued + usize::from(held.is_some());
++            let retired = queued + 1;
+             st.prepared.clear();
+             st.walked.clear();
+             st.jobs.clear();
