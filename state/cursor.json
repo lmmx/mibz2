@@ -752,7 +752,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "adb16fb75cb7e25eb734aeebf4cc9e7bf28ff8c5",
-      "progress": "Migration source head and manifest hash verified. Pinned journal read; auditing alias mechanism, proposed controls and B/C43 economics.",
+      "progress": "Substantive report and ledger: revised alias hypothesis, 1KiB primary evidence, corrected control design, cost model and paired archival counterfactual. Publication checks pending.",
       "report_path": "state/records/reviews/inbox-6734039567/report.md"
     }
   ],

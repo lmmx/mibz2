@@ -390,3 +390,17 @@ Publication-time channel update: Coordinator LOG6733033907 reports that D058's c
 - Observed front and fill/build ratios both improve across archival runs; sort/build does not. Report seconds and within-host ratios; nominal GHz is not a comparable PMU-cycle measurement.
 
 No new measured credit, implementation, compilation, timing, safety certification or acceptance change.
+
+
+## Fallback layout control: inbox6734039567
+
+[Report](records/reviews/inbox-6734039567/report.md), source pin adb16fb75cb7e25eb734aeebf4cc9e7bf28ff8c5.
+
+- Layout is a live confound, not established 4KiB causality. Local shared kernels/equal simulated counts do not establish target-machine geometry or hardware behaviour.
+- Primary Zen4 measurements report false dependencies at1KiB spacing; A/D being clear modulo4KiB does not make them clean. Recompute actual access exposure modulo1KiB/4KiB. Fitted50 nominal c/literal is not measured event latency.
+- Shared callee does not equalise caller stack depth. Require common call-site diagnostic, unchanged-entry reference, reciprocal offset/backing-set controls, independent arm/set/order schedule and A/A′. A penalty following a set also fits physical placement.
+- Archive replay: B/A.976269848; equal-fallback counterfactual.970909695, difference.005360153 of A total. This is not causal correction. All2.373% lead remains potentially layout-confounded; observed fallback excess itself hurts B.
+- C29 first; corrected layout/host crossing before C43. C43 .318992c/outputB or6.43878/run allowance remains conditional on matched layout. D STOP unchanged.
+- Heap counts/preallocation/logged geometry recommended as proposals; align4096 is no cure and does not align Vec backing storage. Standalone counts padding about3KiB/set; extra call costs scale with fallback blocks, diagnostic replication with arm/offset/process factors. C5/C6 authority unchanged.
+
+No implementation, compilation, timing, safety certification, admission change or new measured credit.
