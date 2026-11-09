@@ -1,0 +1,8 @@
+{
+  "mutation": {
+    "ghz": -1,
+    "files[2].rows_runs": 123
+  },
+  "check_errors": [],
+  "primary_ratios_changed": false
+}
