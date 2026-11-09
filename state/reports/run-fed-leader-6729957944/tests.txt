@@ -1,0 +1,38 @@
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmprbueqxqt/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpfvskp2qa/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpdwjll6ql/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpj9zgggdr/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpmeeh4hwt/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpxe8m6swe/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmp7imgevbw/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpa9ov13hw/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpwssktbv5/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmpvo2bg6jq/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./workspace/scratch/5061ca8365a9/review6729957944/bench/test_run_fed_leader.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='/workspace/scratch/5061ca8365a9/tmp4aeo9n5i/rfl.json' mode='r' encoding='UTF-8'>
+  raw = json.load(open(out + ".json"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.
+----------------------------------------------------------------------
+Ran 7 tests in 0.477s
+
+OK

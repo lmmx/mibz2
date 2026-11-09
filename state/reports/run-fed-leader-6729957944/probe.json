@@ -1,0 +1,44 @@
+[
+  {
+    "case": "control",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): STOP: no 1% wall cut on the primary arm"
+  },
+  {
+    "case": "all output evidence missing",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): STOP: no 1% wall cut on the primary arm"
+  },
+  {
+    "case": "all CPU negative",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): STOP: no 1% wall cut on the primary arm"
+  },
+  {
+    "case": "negative counts and absent timing phases",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): STOP: no 1% wall cut on the primary arm"
+  },
+  {
+    "case": "corpus varies by round",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): STOP: no 1% wall cut on the primary arm"
+  },
+  {
+    "case": "control -20%, primary apparent gain against REF but loss against ctl",
+    "exit": 0,
+    "error": null,
+    "valid": true,
+    "reading": "Primary (mibz2-pipe3-runfed-hs): LEAD: the run-fed leader cuts decode wall at the plan"
+  }
+]
