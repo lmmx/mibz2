@@ -1,0 +1,33 @@
+{
+  "front_availability": {
+    "states": 5040,
+    "minimum_free_at_eligible_prep_decision": 2,
+    "assumptions": "T=1..4,L=1..8,K=1..4; P<L, other preparations A<K, walking teams U<=T; disjoint ownership, no lost buffers"
+  },
+  "finish_priority_witness": {
+    "initial": "P=1,J=1,Q=2; free front and back sets",
+    "choices": [
+      "finish",
+      "finish"
+    ],
+    "after_one_team_take": "P=0, both service workers nonpreemptively finishing"
+  },
+  "wait_label_witness": {
+    "recorded_prep_units": 9,
+    "actual_P_zero_units": 1,
+    "P_positive_B_zero_units": 8
+  },
+  "equal_marginals": {
+    "service_busy_fraction": [
+      0.7,
+      0.7
+    ],
+    "starvation_overlap_fraction_case_a": 1.0,
+    "case_b": 0.0
+  },
+  "fixed_split_bound": {
+    "positive_integer_cost_pairs_checked": 400,
+    "relation": "min(1/p,1/f) <= 2/(p+f)"
+  },
+  "scope": "Abstract witnesses and finite checks only. No claim these schedules occurred in #271; no Rust safety proof; no speedup estimate."
+}
