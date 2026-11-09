@@ -42,6 +42,10 @@ python = ["dep:pyo3"]
 # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
 # by default, and each mark a relaxed load when compiled in and not turned on
 trace = []
+# C29's reach counter (`StreamDecoder::c29_stages`), for the tests and the fuzz loop only:
+# off in every timed build, so the C29 arm carries nothing the control doesn't but its
+# kernel and the switch's branch (docs/journal/2026-11-09-c29-register-checkpoints.md)
+c29-reach = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

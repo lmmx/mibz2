@@ -18,7 +18,7 @@ git diff --quiet -- src || { echo "src/ has changes: refusing"; exit 1; }
 
 lib_c29='cargo test -j2 --lib mtf::tests -- --test-threads=2'
 miri_c29='env RUSTFLAGS="-C target-feature=+avx2,+bmi1" MIBZ2_EXPECT_AVX2=1 MIRIFLAGS=-Zmiri-env-forward=MIBZ2_EXPECT_AVX2 cargo +nightly miri test -j2 --lib -- --exact mtf::tests::miri_register_checkpoints'
-pipelined_reach='cargo test -j2 --test pipelined an_mtf_error_after_a_small_block -- --test-threads=2'
+pipelined_reach='cargo test -j2 --features c29-reach --test pipelined an_mtf_error_after_a_small_block -- --test-threads=2'
 switch='cargo test -j2 --lib parallel::c29_tests -- --test-threads=2'
 
 # each mutant's killing commands, in order

@@ -1,7 +1,3 @@
-   Compiling mibz2 v0.2.6 (<worktree>)
-    Finished `test` profile [optimized + debuginfo] target(s) in 10.79s
-     Running tests/pipelined.rs (target/debug/deps/pipelined-30dc416feec0764c)
-
 running 12 tests
 test a_bad_orig_ptr ... ok
 test an_mtf_error_after_a_small_block ... ok
@@ -16,5 +12,5 @@ test every_level_and_shape ... ok
 test the_corpora ... ok
 test truncated ... ok
 
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.12s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.01s
 

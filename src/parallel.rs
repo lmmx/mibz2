@@ -81,8 +81,10 @@ struct Shared {
     /// leader while its helpers inverted another block, and those of them that failed
     overlapped: AtomicU64,
     overlap_errors: AtomicU64,
-    /// the blocks a leader staged by C29's kernel (`Levers::register_list`), so that a
-    /// test or the fuzz loop can tell the switch reached them (`StreamDecoder::c29_stages`)
+    /// the stage attempts a leader made with C29 selected (`Levers::register_list`), so
+    /// that a test or the fuzz loop can tell the switch reached the stage
+    /// (`StreamDecoder::c29_stages`; the `c29-reach` feature only, never in a timed build)
+    #[cfg(feature = "c29-reach")]
     c29_stages: AtomicU64,
     /// testing only: the pipelined team's injected faults, and what they left
     #[cfg(test)]
@@ -248,9 +250,13 @@ impl StreamDecoder {
         )
     }
 
-    /// The blocks whose move-to-front a pipelined leader ran by C29's register-list
-    /// checkpoint kernel (`Levers::register_list`) so far, failed ones included: 0 with the
-    /// switch off, and for every other decoder. Research only.
+    /// The move-to-front stage attempts a pipelined leader made with C29 selected
+    /// (`Levers::register_list`) so far: every attempt, whether it returned Ok, an error or
+    /// panicked, and with whatever kernels (without AVX2, C29 is the scalar twin). It
+    /// counts that the switch reached the stage, not successful blocks or AVX2 kernel
+    /// calls. 0 with the switch off, and for every other decoder. Testing only: the
+    /// `c29-reach` feature.
+    #[cfg(feature = "c29-reach")]
     #[doc(hidden)]
     pub fn c29_stages(&self) -> u64 {
         self.shared.c29_stages.load(Ordering::Relaxed)
@@ -277,6 +283,7 @@ impl StreamDecoder {
             slots,
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
+            #[cfg(feature = "c29-reach")]
             c29_stages: AtomicU64::new(0),
             #[cfg(test)]
             faults: Mutex::default(),
@@ -957,6 +964,7 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels, reg
     let (place, bit, symbols) = job;
     mark!(MtfStart, place);
     let r = catch_unwind(AssertUnwindSafe(|| front_stage(&symbols, f, k, reg)));
+    #[cfg(feature = "c29-reach")]
     if reg {
         shared.c29_stages.fetch_add(1, Ordering::Relaxed);
     }

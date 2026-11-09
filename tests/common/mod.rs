@@ -558,8 +558,8 @@ pub struct PipeRun {
     pub out: Vec<u8>,
     pub res: Result<(), Error>,
     pub counts: Option<(u64, u64)>,
-    /// the blocks staged by C29's kernel (`StreamDecoder::c29_stages`), where the shape's
-    /// decoder is in reach
+    /// the stage attempts made with C29 selected (`StreamDecoder::c29_stages`), where the
+    /// shape's decoder is in reach and the `c29-reach` feature is on
     pub c29_stages: Option<u64>,
 }
 
@@ -597,7 +597,10 @@ impl Pipelined {
             assert!(dec.is_pipelined(), "{}: not pipelined", self.name());
             let (out, res) = drive(&dec, data, chunk, read);
             let counts = Some(dec.pipeline_counts());
+            #[cfg(feature = "c29-reach")]
             let c29_stages = Some(dec.c29_stages());
+            #[cfg(not(feature = "c29-reach"))]
+            let c29_stages = None;
             PipeRun {
                 out,
                 res,

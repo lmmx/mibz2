@@ -144,6 +144,7 @@ fn team(
         slots: n.max(1),
         overlapped: AtomicU64::new(0),
         overlap_errors: AtomicU64::new(0),
+        #[cfg(feature = "c29-reach")]
         c29_stages: AtomicU64::new(0),
         faults: Mutex::new(Faults {
             at: Some(fault),

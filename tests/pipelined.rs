@@ -111,7 +111,8 @@ fn pipe_with(
     let (out, res) = run(&dec, z);
     let counts = dec.pipeline_counts();
     // C29 reached exactly when it is selected: every block is staged, so a decode with
-    // output staged at least one
+    // output made at least one stage attempt (the `c29-reach` feature's counter)
+    #[cfg(feature = "c29-reach")]
     if !levers.register_list {
         assert_eq!(dec.c29_stages(), 0, "{levers:?}: C29 staged a block");
     } else if !out.is_empty() {
@@ -149,6 +150,7 @@ fn default_33_same(z: &[u8], want: &[u8], want_res: &Result<(), Error>, what: &s
     assert!(got == want, "{what}: the default at 3 × 3: the bytes");
     assert_eq!(&res, want_res, "{what}: the default at 3 × 3: the result");
     // (C29 is opt-in: the default never stages a block by it)
+    #[cfg(feature = "c29-reach")]
     assert_eq!(dec.c29_stages(), 0, "{what}: the default at 3 × 3 ran C29");
     let plain = StreamDecoder::planned(PIPELINED_PLAN, 12, Kernels::detect());
     assert!(!plain.is_pipelined());

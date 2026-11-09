@@ -28,6 +28,10 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # C29's reach (the `c29-reach` feature's counter, off in every timed build): the
+      # pipelined tests' assertions that the switch reaches the stage exactly when selected
+      - name: C29's reach
+        run: cargo test --features c29-reach --test pipelined
       # bench/alternatives has its own lock, on this crate by path, and master's benchmark
       # builds it --locked: a version bump that leaves it behind fails here, not only there
       - name: The benchmark alternatives' lock
@@ -46,7 +50,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Build
-        run: cargo build --profile fuzz --example fuzz
+        run: cargo build --profile fuzz --example fuzz --features c29-reach
       - name: Classic candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates

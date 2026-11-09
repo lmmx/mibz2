@@ -39,6 +39,10 @@ fn main() {
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
+        // (c29's reach is counted only with the `c29-reach` feature, and required)
+        "c29" if !cfg!(feature = "c29-reach") => {
+            panic!("MODE c29 needs a build with --features c29-reach")
+        }
         "pipeline" | "c29" => 1,
         m => panic!("MODE is mixed, classic, pipeline or c29, not {m}"),
     };
@@ -181,17 +185,17 @@ fn main() {
     if mode == "c29" {
         // the switch must have reached every candidate that ran: a case of each staged by
         // C29's kernel, or the run checked the shipped kernel alone
-        println!("C29 reach: candidate, cases with a block staged by C29, blocks so staged");
+        println!("C29 reach: candidate, cases with a stage attempt by C29, attempts in all");
         for (p, st) in pipes.iter().zip(&pipe_stats) {
             println!(
-                "{:>9}  {}: {} blocks",
+                "{:>9}  {}: {} attempts",
                 st.c29_cases,
                 p.name(),
                 st.c29_stages
             );
             if st.cases > 0 && st.c29_cases == 0 {
                 bad += 1;
-                println!("  NOT REACHED: no block of {} staged by C29", p.name());
+                println!("  NOT REACHED: no stage attempt of {} by C29", p.name());
             }
         }
     } else if pipe_stats.iter().any(|st| st.c29_stages > 0) {
@@ -209,7 +213,8 @@ struct PipeStats {
     reached: u64,
     overlap_error_cases: u64,
     overlapped_jobs: u64,
-    /// blocks staged by C29's kernel (`StreamDecoder::c29_stages`), and the cases with any
+    /// stage attempts made with C29 selected (`StreamDecoder::c29_stages`, the `c29-reach`
+    /// feature), and the cases with any
     c29_stages: u64,
     c29_cases: u64,
 }
