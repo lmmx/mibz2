@@ -27,7 +27,9 @@
     6735011014,
     6735179771
   ],
-  "in_progress": [],
+  "in_progress": [
+    6736936857
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -222,6 +224,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer route/header/citation verified.",
       "work_commit": "52d3c9143c3c42b501c7fa58632acfd0147766f3",
       "review_id": 6735248713
+    },
+    "6736936857": {
+      "comment_id": 6736936857,
+      "status": "in_progress",
+      "progress": "Migration verified; reconciling channel and referenced records."
     }
   },
   "last_record_commit": "52d3c9143c3c42b501c7fa58632acfd0147766f3"
