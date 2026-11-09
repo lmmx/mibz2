@@ -2241,6 +2241,13 @@
       "review_comment_id": 6737091245,
       "complete_cursor_commit": "6a161e8f01259d1c23b4eb6f60f7ae7258f75afa",
       "progress": "Exact REVIEW readback verified; pinned verifier sole coordinator-header limitation, independent Guardian checks passed."
+    },
+    {
+      "comment_id": 6739273655,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D065",
+      "progress": "Migration verified; receipt; reviewing telemetry-check admission at c754acc8180a08b1c92cf21c411bc6504a41c7c2."
     }
   ],
   "migrated_from": {
