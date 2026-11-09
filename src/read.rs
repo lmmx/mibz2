@@ -23,6 +23,13 @@ const COMPACT: usize = 4 << 20;
 /// Every block's CRC and every stream's combined CRC are checked; a bad stream is an
 /// `io::Error` of kind `InvalidData` wrapping this crate's `Error`, after every byte of
 /// the blocks before the bad one has been read.
+///
+/// A parallel reader reads `r` on a thread of its own, and a panic in `r`'s `read` is not
+/// caught there (this research snapshot, 3e201246's reader): that thread unwinds without
+/// closing the decoder's input or cancelling it, so the reader's next read can wait for
+/// ever. A caller whose source can panic must not rely on this reader's recovery from it
+/// (D045, D053). Nor is anything promised for an abort, an out-of-memory one among them,
+/// or a `read` that blocks for ever (dropping the reader leaves that thread to finish it).
 pub struct BzReader<R> {
     inner: Inner<R>,
 }

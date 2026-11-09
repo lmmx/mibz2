@@ -1,0 +1,131 @@
+diff -ru a/examples/fuzz.rs b/examples/fuzz.rs
+--- a/examples/fuzz.rs
++++ b/examples/fuzz.rs
+@@ -271,6 +271,8 @@
+         .filter(|t| !t.name.starts_with("mibz2-svc") && !t.name.starts_with("mibz2-coop"))
+         .map(|t| t.marks.iter().filter(|m| m.kind == Kind::TeamGot).count() as u64)
+         .sum();
++    // (the hub's front sets: a team's each, the admission threshold's, a service worker's)
++    let fronts = (c.teams + c.admission.unwrap_or(c.teams).max(1) + c.services) as u64;
+     let longest = traces
+         .iter()
+         .flat_map(|t| t.marks.iter())
+@@ -286,8 +288,7 @@
+     st.finished += (count("mibz2-svc-", Kind::RleStart) > 0) as u64;
+     st.assembled += (count("mibz2-svc-", Kind::AssembleStart) > 0) as u64;
+     st.back_reuse += (teams_got > 2 * c.teams as u64) as u64;
+-    st.front_reuse +=
+-        (count("mibz2-svc-", Kind::JobGot) > (2 * c.teams + c.services) as u64) as u64;
++    st.front_reuse += (count("mibz2-svc-", Kind::JobGot) > fronts) as u64;
+ }
+ 
+ /// One service case: a multi-block input, edited (or not), decoded by `c` at random write
+diff -ru a/tests/common/mod.rs b/tests/common/mod.rs
+--- a/tests/common/mod.rs
++++ b/tests/common/mod.rs
+@@ -567,6 +567,9 @@
+     pub slots: usize,
+     pub kernels: Kernels,
+     pub reader: bool,
++    /// the prepared queue's admission threshold (`StreamDecoder::service_admission`, #271),
++    /// or None for `service`'s own (`teams`)
++    pub admission: Option<usize>,
+ }
+ 
+ /// How a service case drives its decoder: write and read sizes, and where (if anywhere)
+@@ -590,8 +593,9 @@
+         } else {
+             "push"
+         };
++        let adm = self.admission.map_or(String::new(), |a| format!(" L{a}"));
+         format!(
+-            "mibz2 service {}x{} + {} in {} {k} {how}",
++            "mibz2 service {}x{} + {} in {}{adm} {k} {how}",
+             self.teams, self.k, self.services, self.slots
+         )
+     }
+@@ -601,25 +605,33 @@
+     /// result. Panics if the decoder built is not the service core's (its threads).
+     pub fn run(&self, data: &[u8], how: Drive) -> (Vec<u8>, Result<(), Error>) {
+         if !self.reader {
+-            let dec = mibz2::StreamDecoder::service(
+-                self.teams,
+-                self.k,
+-                self.services,
+-                self.slots,
+-                self.kernels,
+-            );
++            let dec = match self.admission {
++                None => mibz2::StreamDecoder::service(
++                    self.teams,
++                    self.k,
++                    self.services,
++                    self.slots,
++                    self.kernels,
++                ),
++                Some(a) => mibz2::StreamDecoder::service_admission(
++                    self.teams,
++                    self.k,
++                    self.services,
++                    self.slots,
++                    a,
++                    self.kernels,
++                ),
++            };
+             assert_eq!(dec.threads(), self.teams * self.k + self.services);
+             return drive(&dec, data, how.chunk, how.read, how.cancel_after);
+         }
+         use std::io::Read;
+-        let mut r = mibz2::BzReader::parallel_service(
+-            std::io::Cursor::new(data.to_vec()),
+-            self.teams,
+-            self.k,
+-            self.services,
+-            self.slots,
+-            self.kernels,
+-        );
++        let src = std::io::Cursor::new(data.to_vec());
++        let (t, k, sv, sl, kn) = (self.teams, self.k, self.services, self.slots, self.kernels);
++        let mut r = match self.admission {
++            None => mibz2::BzReader::parallel_service(src, t, k, sv, sl, kn),
++            Some(a) => mibz2::BzReader::parallel_service_admission(src, t, k, sv, sl, a, kn),
++        };
+         let mut out = Vec::new();
+         let mut buf = vec![0u8; how.read.max(1)];
+         let res = loop {
+@@ -654,22 +666,27 @@
+ /// on the scalar kernels in one slot, and svc2's plan through `BzReader::parallel_service`
+ pub fn service_candidates() -> Vec<Serviced> {
+     let (simd, scalar) = (Kernels::detect(), Kernels::scalar());
+-    let s = |teams, k, services, slots, kernels, reader| Serviced {
++    let s = |teams, k, services, slots, kernels, reader, admission| Serviced {
+         teams,
+         k,
+         services,
+         slots,
+         kernels,
+         reader,
++        admission,
+     };
++    // (#271's admission thresholds, at svc2's plan: 2 given explicitly (the default's
++    // value), 3 and 4, pushed and through the reader; and 3 and 4 at a tight one-service
++    // shape and on the scalar kernels)
+     vec![
+-        s(2, 3, 2, 8, simd, false),
+-        s(1, 3, 1, 1, simd, false),
+-        s(3, 3, 1, 12, simd, false),
+-        s(1, 4, 2, 2, simd, false),
+-        s(2, 2, 1, 3, scalar, false),
+-        s(1, 2, 1, 1, scalar, false),
+-        s(2, 3, 2, 8, simd, true),
++        s(2, 3, 2, 8, simd, false, None),
++        s(2, 3, 2, 8, simd, false, Some(2)),
++        s(2, 3, 2, 8, simd, false, Some(3)),
++        s(2, 3, 2, 8, simd, false, Some(4)),
++        s(2, 3, 2, 8, simd, true, Some(3)),
++        s(2, 3, 2, 8, simd, true, Some(4)),
++        s(1, 3, 1, 2, simd, false, Some(3)),
++        s(2, 2, 1, 3, scalar, false, Some(4)),
+     ]
+ }
+ 
