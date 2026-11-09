@@ -1,0 +1,58 @@
+M12.patch applied unchanged with git apply: 1130:                for b in held.into_iter().flatten().take(0) {
+base: 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba + the working tree's src/ change
+src/parallel.rs sha256 0ff4914e59050036, unwind_tests.rs sha256 bb74157037d816bf
+date: 2026-11-09T02:41:12Z
+cmd: cargo +nightly miri test -j2 --lib -- parallel::unwind_tests::miri_ (rustc 1.101.0-nightly (16d1ffac1 2026-10-26), miri 0.1.0 (16d1ffac17 2026-10-26), MIRIFLAGS unset)
+
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 3 tests
+test parallel::unwind_tests::miri_run_panic_current ... FAILED
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... FAILED
+test parallel::unwind_tests::miri_run_panic_current_and_next ... FAILED
+
+failures:
+
+---- parallel::unwind_tests::miri_run_panic_current stdout ----
+
+thread 'mibz2-0' (1002) panicked at src/parallel.rs:810:9:
+injected at block 3, LeadEnd
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+note: in Miri, you may have to set `MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE` for the environment variable to have an effect
+
+thread 'parallel::unwind_tests::miri_run_panic_current' (1001) panicked at src/parallel/unwind_tests.rs:206:13:
+tiny, current: watchdog: the reader is stuck at place 3, with places [] ready
+
+---- parallel::unwind_tests::miri_run_panic_current_and_held_prior stdout ----
+
+thread 'mibz2-0' (1006) panicked at src/parallel.rs:810:9:
+injected at block 2, LeadStart
+
+thread 'parallel::unwind_tests::miri_run_panic_current_and_held_prior' (1005) panicked at src/parallel/unwind_tests.rs:221:13:
+tiny, current + held prior: watchdog: 3 of 4 blocks published, places [0, 1, 3]
+
+---- parallel::unwind_tests::miri_run_panic_current_and_next stdout ----
+
+thread 'mibz2-0' (1011) panicked at src/parallel.rs:810:9:
+injected at block 1, LeadEnd
+
+thread 'parallel::unwind_tests::miri_run_panic_current_and_next' (1010) panicked at src/parallel/unwind_tests.rs:206:13:
+tiny, current + next: watchdog: the reader is stuck at place 1, with places [3] ready
+
+
+failures:
+    parallel::unwind_tests::miri_run_panic_current
+    parallel::unwind_tests::miri_run_panic_current_and_held_prior
+    parallel::unwind_tests::miri_run_panic_current_and_next
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 50 filtered out; finished in 1841.71s
+
+error: test failed, to rerun pass `--lib`
+
+real	0m50.430s
+user	0m49.552s
+sys	0m0.225s
+rc=101

@@ -713,6 +713,10 @@ pub fn pipeline_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
         ("text level 9".into(), compress(&text[..2_700_000], 9)),
         ("text level 5".into(), compress(&text[..1_600_000], 5)),
         ("random level 3".into(), compress(&rng.bytes(1_300_000), 3)),
+        (
+            "records level 4".into(),
+            compress(&corp[5].1[..1_700_000], 4),
+        ),
         ("runs level 9".into(), compress(&corp[4].1[..2_500_000], 9)),
         ("abab level 6".into(), compress(&b"ab".repeat(900_000), 6)),
         ("text level 1".into(), compress(&text[..600_000], 1)),

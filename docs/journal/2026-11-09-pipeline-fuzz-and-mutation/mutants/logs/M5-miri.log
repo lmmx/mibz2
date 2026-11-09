@@ -1,0 +1,107 @@
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 10 tests
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_parked_wait_loses_no_wakeup ... error: the evaluated program deadlocked
+  --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21
+   |
+83 |                     )
+   |                     ^ thread got stuck here
+   |
+   = note: this is on thread `main`
+   = note: stack backtrace:
+           0: std::sys::sync::futex::unix::futex_wait
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21: 83:22
+           1: std::sys::sync::thread_parking::futex::Parker::park
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/thread_parking/futex.rs:55:13: 55:50
+           2: std::thread::Thread::park
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/thread.rs:153:18: 153:53
+           3: std::sync::mpmc::context::Context::wait_until
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/context.rs:143:26: 143:50
+           4: std::sync::mpmc::list::Channel::<test::event::CompletedTest>::recv::{closure#1}
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/list.rs:453:36: 453:59
+           5: std::sync::mpmc::context::Context::with::<{closure@std::sync::mpmc::list::Channel<test::event::CompletedTest>::recv::{closure#1}}, ()>::{closure#0}
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/context.rs:49:13: 49:18
+           6: std::sync::mpmc::context::Context::with::<{closure@std::sync::mpmc::list::Channel<test::event::CompletedTest>::recv::{closure#1}}, ()>::{closure#1}
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/context.rs:57:31: 57:37
+           7: std::thread::LocalKey::<std::cell::Cell<std::option::Option<std::sync::mpmc::context::Context>>>::try_with::<{closure@std::sync::mpmc::context::Context::with<{closure@std::sync::mpmc::list::Channel<test::event::CompletedTest>::recv::{closure#1}}, ()>::{closure#1}}, ()>
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/local.rs:470:12: 470:27
+           8: std::sync::mpmc::context::Context::with::<{closure@std::sync::mpmc::list::Channel<test::event::CompletedTest>::recv::{closure#1}}, ()>
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/context.rs:52:9: 61:15
+           9: std::sync::mpmc::list::Channel::<test::event::CompletedTest>::recv
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/list.rs:442:13: 464:15
+           10: std::sync::mpmc::Receiver::<test::event::CompletedTest>::recv
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpmc/mod.rs:1025:43: 1025:58
+           11: std::sync::mpsc::Receiver::<test::event::CompletedTest>::recv
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sync/mpsc.rs:890:9: 890:26
+           12: test::run_tests::<{closure@test::run_tests_console::{closure#2}}>
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/test/src/lib.rs:414:38: 414:47
+           13: test::run_tests_console
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/test/src/console.rs:332:5: 332:93
+           14: test::test_main_inner
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/test/src/lib.rs:152:19: 152:59
+           15: test::test_main_env_args
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/test/src/lib.rs:179:5: 179:40
+           16: main
+               at no-location
+
+error: the evaluated program deadlocked
+  --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21
+   |
+83 |                     )
+   |                     ^ thread got stuck here
+   |
+   = note: this is on thread `coop::tests::mi`
+   = note: stack backtrace:
+           0: std::sys::sync::futex::unix::futex_wait
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21: 83:22
+           1: std::sys::sync::thread_parking::futex::Parker::park
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/thread_parking/futex.rs:55:13: 55:50
+           2: std::thread::Thread::park
+               at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/thread.rs:153:18: 153:53
+           3: coop::tests::miri_parked_wait_loses_no_wakeup
+               at src/coop.rs:1962:13: 1975:15
+           4: coop::tests::miri_parked_wait_loses_no_wakeup::{closure#0}
+               at src/coop.rs:1940:42: 1940:42
+
+error: the evaluated program deadlocked
+    --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21
+     |
+  83 |                     )
+     |                     ^ thread got stuck here
+     |
+     = note: this is on thread `unnamed-8`
+     = note: stack backtrace:
+             0: std::sys::sync::futex::unix::futex_wait
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/futex/unix.rs:83:21: 83:22
+             1: std::sys::sync::thread_parking::futex::Parker::park
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/sync/thread_parking/futex.rs:55:13: 55:50
+             2: std::thread::Thread::park
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/thread.rs:153:18: 153:53
+             3: std::thread::park
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/thread/functions.rs:536:9: 536:25
+             4: coop::Relay::<'_>::wait_walk_ready::<true, 4>
+                 at src/coop.rs:937:13: 937:27
+             5: coop::tests::miri_parked_wait_loses_no_wakeup::{closure#0}::{closure#0}
+                 at src/coop.rs:1965:25: 1965:71
+note: the last function in that backtrace got called indirectly due to this code
+    --> src/coop.rs:1964:21
+     |
+1964 | /                     sc.spawn(|| {
+1965 | |                         relay.wait_walk_ready::<true, BARRIER_SPINS>();
+1966 | |                         woke.fetch_add(1, Ordering::Relaxed);
+1967 | |                     });
+     | |______________________^
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 3 previous errors; 1 warning emitted
+
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-mutants/target-miri/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/90f08a54ac401ed7/out/mibz2-90f08a54ac401ed7 'coop::tests::miri_'` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
