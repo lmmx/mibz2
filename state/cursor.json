@@ -935,7 +935,7 @@
     },
     {
       "trigger_comment_id": 6732895653,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -943,7 +943,10 @@
       "report_commit": "6e9604822451d7b59dd60cbbc482460245baa75e",
       "report_path": "state/reports/direct-f-tail-closure-6732895653/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED to freeze #277 at aa409f6f: coupled tail counts and positive fixture closed. 51 tests, 36 rejected mutations, 10840 model cases; current text digest reproduced. D055 unchanged. No native timing or implementation."
+      "disposition": "PROCEED to freeze #277 at aa409f6f: coupled tail counts and positive fixture closed. 51 tests, 36 rejected mutations, 10840 model cases; current text digest reproduced. D055 unchanged. No native timing or implementation.",
+      "review_comment_id": 6732984192,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
