@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6735159457:** C29's registered CI diagnostic finished VALID, UNJUDGED (FALLBACK) because its runner's CPU quota state was unknown. The 0.9700 nine-thread wall ratio is reported, never judged. The root-only cgroup reader missed the process's hierarchy; Researcher and Optimiser follow-ups were requested, with no rerun dispatched. #270/#271 remain in Louis's workstation queue without results.
+
 - **2026-11-09, channel through 6735022394:** Louis's standing authorisation allowed reviewed exact-head ready tags for #270 and #271; #285 merged both workstation queue entries. Researcher PROCEED closed C29's unknown-quota admission objection, the registration froze at 1197bbcc, and the opt-in CI diagnostic began after exact-head checks. Default-on remains unqualified; no workstation result yet. The mistakenly set service-2x3 tag was cleared. The earlier QUEUED Observer checkpoint was dispatched as inbox 6735011014.
 
 - **2026-11-09, channel through 6734710350:** withdrew the earlier causal harness-layout attribution under Optimiser correction and #284; retained address geometry and process placement as untested alternatives. D063 and Researcher re-review closed #270's completion and occupancy objections; exact-source green CI/Miri enabled its pointer-only workstation freeze, but the ready tag needs Louis. C29 #281 remains DRAFT after an unknown-quota false-judgement witness. A busy-role CHECKPOINT was deleted and restaged as QUEUED, preserving the inbox cursor.

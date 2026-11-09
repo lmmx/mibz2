@@ -64,3 +64,5 @@
 
 - **1 — C29 unknown-quota admission closed for the diagnostic:** the revised producer distinguishes unknown, unlimited and finite quota; Researcher PROCEED closed the false-judged witness and the registration froze. This does not qualify the default-on path ([Researcher](https://github.com/lmmx/mibz2/pull/145#issuecomment-6734936140), [freeze](https://github.com/lmmx/mibz2/pull/145#issuecomment-6735022394)).
 - **4 — ready-tag barrier closed:** #270 and #271 have reviewed exact-head tags and merged queue entries. Neither has a new workstation result; the remaining execution is Louis's queue run and evidence ([queue merge](https://github.com/lmmx/mibz2/pull/285), [LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6735022394)).
+
+- **1 — C29 result is unjudged, not a lead:** the registered run was valid but fell back because CPU quota evidence was unknown. Its 0.9700 primary wall ratio is reported without a verdict; a corrected producer and separate freeze need review, while the original remains terminal ([result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6735159457)).
