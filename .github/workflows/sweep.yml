@@ -29,7 +29,7 @@ on:
         required: false
         default: "sweep"
       registered_head:
-        description: "run_fed_stage only: the frozen registration's full 40-character head, for the verifier's judged reading (empty: UNJUDGED)"
+        description: "run_fed_stage and run_fed_leader: the frozen registration's full 40-character head, for the judged reading (empty: UNJUDGED)"
         required: false
         default: ""
 
@@ -87,6 +87,7 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           TOOL: ${{ inputs.tool || 'sweep' }}
+          REGISTERED: ${{ inputs.registered_head }}
         run: |
           set -o pipefail
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
@@ -99,10 +100,38 @@ jobs:
             # ones (one team) reported
             ab=target/release/examples/ab
             arms=mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir
+            # the run's identity, for the reporter to check against the registration: the
+            # head, a clean tree, the build, and the binary's and corpus's digests before
+            # and after the run (one build, one corpus throughout)
+            # (the sources the build and the reporter read: the corpora and outputs aren't)
+            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench Cargo.toml Cargo.lock)" ] && echo true || echo false)
+            bin0=$(sha256sum "$ab" | cut -d' ' -f1); cor0=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
             $ab env > rfl-env.json
             $ab run rfl-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> rfl-progress.txt
+            bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            python3 - "$arms" > rfl-identity.json <<EOF
+          import json, subprocess, sys
+          print(json.dumps({
+              "schema": "run_fed_leader/identity/1",
+              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "tree_clean": json.loads("$tree_clean"),
+              "features": ["run-fed"],
+              "profile": "release",
+              "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "binary_sha256_before": "$bin0",
+              "binary_sha256_after": "$bin1",
+              "corpus_sha256_before": "$cor0",
+              "corpus_sha256_after": "$cor1",
+              "arms": sys.argv[1].split(","),
+              "threads": [9, 3],
+              "rounds": int("$ROUNDS"),
+          }, indent=1))
+          EOF
+            # judged only at the registered head; any other run UNJUDGED. No re-run on an
+            # INVALID: a failed admission is kept and investigated
+            if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
             status=0
-            python3 bench/run_fed_leader.py report rfl-runs.jsonl --rounds "$ROUNDS" --threads 9 --out rfl-9 > rfl-report.txt || status=$?
+            python3 bench/run_fed_leader.py report rfl-runs.jsonl "${judge[@]}" --identity rfl-identity.json --out rfl-9 > rfl-report.txt || status=$?
             {
               echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse HEAD); run_fed_leader, rounds $ROUNDS"
               echo "corpus sha256 $(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)"

@@ -46,8 +46,9 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   `mibz2-default33` (the default constructor with the three-teams-of-three plan forced,
   the shipped decoder through its own entry point, on any machine) and, in a build with the
   `run-fed` feature, `mibz2-pipeK-runfed-{ctl,reg,ls,hs,dir}`, whose lines carry their
-  `phases`. This is a change to what is stored. Every figure keeps its meaning: no arm the
-  bench runs changed.
+  `phases` (the leader's and the build's moments all from the run's start, and the record
+  fills' census by share). This is a change to what is stored. Every figure keeps its
+  meaning: no arm the bench runs changed.
 
 ## [3.2.3] - 2026-11-06
 

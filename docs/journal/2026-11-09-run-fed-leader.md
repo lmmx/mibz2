@@ -1,7 +1,8 @@
 # 2026-11-09: The run-fed leader for the pipelined teams, built opt-in, and registered (DRAFT, NOT FROZEN)
 
-**Status: a draft registration, NOT FROZEN, NOT RUN** (RULES C1). The coordinator freezes it,
-or doesn't. Nothing here changes the default decoder, with or without the new feature:
+**Status: a draft registration, NOT FROZEN, NOT RUN** (RULES C1), revised once (§R1, the
+reviews of `f94551ab`). The coordinator freezes it, or doesn't. Guardian D044's HOLD on any
+CI timing dispatch stands until B5 closes (§3). Nothing here changes the default decoder, with or without the new feature:
 only `StreamDecoder::pipelined_run_fed` builds the new arm. Nothing here runs on the
 workstation, and no recipe is in the Justfile or the workstation queue.
 
@@ -32,8 +33,10 @@ reviews of #269 and of this line:
   cancellations without a hang, panics in every phase, the tables word for word, Miri on the
   new unsafe code.
 - **The registration's question:** does the run-fed leader cut decode wall at three teams of
-  three? The primary arm is C30 (the sort on the helpers), the metric the paired wall ratio
-  against the shipped default, with CPU co-reported and capped.
+  three? The primary arm is `dir` (C31, no F-order array, its shares cut by C35), chosen
+  prospectively but informed by the 2-round local smoke (§5, §R1). `hs` (C30) is secondary.
+  The metric is the paired wall ratio against the shipped default, `mibz2-default33`, always,
+  with CPU co-reported and capped.
 - **The drafter's prior is STOP**, from the local smoke (§5): on that file the helpers, not
   the leader, end most runs, so a freed leader has little to release; and most of the
   emitter's gain over `mtf_checkpoints` is the list kernel (C29), not the records.
@@ -66,8 +69,8 @@ are.
 | `Control`, `mibz2-pipe3-runfed-ctl` | `mtf_checkpoints` (shipped) | `FusedBuild` | is this worker the shipped one? (against `mibz2-pipe3-both` and the incumbent) |
 | `RegControl`, `-reg` (C29) | `mtf::mtf_checkpoints_reg`: checkpoints on `mtf_avx2`'s register-list kernel | `FusedBuild` | how much of E < M is the list kernel? |
 | `Leader`, `-ls` | `mtf_runs`, then the stable counting sort, one share | fill shares | the sort where it is serial |
-| `Helpers`, `-hs` (C30, **primary**) | `mtf_runs` | count, prefix, scatter, fill shares | the sort parallelised |
-| `Direct`, `-dir` (C31) | `mtf_runs` | count rows, prefix, fill F intervals | no F-order array |
+| `Helpers`, `-hs` (C30, secondary) | `mtf_runs` | count, prefix, scatter, fill shares | the sort parallelised |
+| `Direct`, `-dir` (C31 + C35, **primary**) | `mtf_runs` | count rows, prefix, fill F intervals; shares cut by estimated work | no F-order array |
 
 `mibz2-default33` is the incumbent: `BzReader::parallel` with `PIPELINED_PLAN` forced
 (`parallel::with_plan`), the shipped default constructor on any machine, timed by `ab` from
@@ -110,10 +113,28 @@ opening the file to the last byte read, one process a run.
   consecutive L rows. No F-order array, no scatter, no run-count histogram, one gate. It
   pays up to 256 lookups a share, and 256 interleaved write streams a helper, against the
   fill's one stream a share.
-- **The fill's ownership (C32).** Every vector store ends at or before the rows its thread
-  owns (`cell`'s `end`): the share's last row in `fill_share`, the byte's range in
-  `fill_direct`. A store past its cell writes only the same thread's next cell, which
-  rewrites it. The entries stored, W, are counted (`stores`) against n (`rows`).
+- **C35, `Direct`'s partition (§R1).** Its shares are contiguous record ranges, as before,
+  so `merge_rows`' byte-then-share prefix and its ownership argument are unchanged (they
+  hold for any contiguous partition). But the cut is no longer equal records:
+  `row_cuts` puts cut j at the first record i whose key, its L start plus
+  `RECORD_WEIGHT` (8) · i, reaches j/h of n + 8r. The key rises with i, so each cut is one
+  binary search on the thread setting the run up (O(h log r)), and the cuts rise and span
+  [0, r) whatever the records hold. Weight 8 estimates the entries stored (W ≈ n + 7.6 r on
+  the corpus): rows alone (weight 0) balance n_h but skew cells and stores (§4).
+- **The fill's ownership and physical write footprint (C32, Guardian D044).** Every word a
+  fill writes is in [q, `end`): a vector store covers [w, w + 8) and is issued only while
+  w + 8 ≤ `end`, a scalar one writes w < stop ≤ `end`, and w only rises from q. `end` is the
+  end of the rows the thread owns: the share's q1 in `fill_share`; byte c's F range in the
+  share (`merge_rows`' hist[2][c]) in `fill_direct`, checked to contain the run before any
+  store. So the tail at every ownership edge is exact (scalar), not an 8-word overstore: a
+  range shorter than 8 rows, a one-row share among them, gets no vector store, and no store
+  reaches row n (none relies on n + 8 slack, unlike `run_stage::fill`'s whole-table
+  sweep). Those ranges are disjoint across threads by the prefix's construction, so no
+  store from one share lands in another's rows. Inside its own range a vector store's words
+  past `stop` are rows the same thread rewrites, as it fills the range in rising order to
+  its end (checked; a fill that stops short returns false and the table is never exposed).
+  The entries stored, W, are counted (`stores`) against the distinct words written, which
+  are exactly the rows (`rows`, and each share's `share_rows_max`).
 - **The checks before any fill.** The prefix makes `run_stage::sort`'s checks: the first
   run at row 0, the starts rising strictly (each share checks its records and the next
   share's first), the closing record n, each byte's rows summing to its count, and the
@@ -132,10 +153,17 @@ opening the file to the last byte read, one process a run.
 Per-process totals, two `Instant` reads a phase a block, reported on each `ab` line of a
 run-fed arm (`phases`):
 - the leader's work in runs, split into MTF/emitter, sort, RLE1 and CRC, and small blocks;
-- its wait for the build after its work (`join_wait_ns`);
-- the build's span (a run's start to its walk's set-up done) and the run's;
+- its wait for the build after its work (`join_wait_ns`: descheduling and wake-up
+  included, not construction alone);
+- one timeline a run, every moment from the same origin t0 (before the build is set up and
+  the pool dispatched): the leader's start (`lead_start_ns`, d), its work's end
+  (`lead_end_ns`, d + L), the build's end (`build_end_ns`, B), and the run's span;
 - the helpers' sort and fill, summed;
-- `leader_late`: runs whose leader ended its work after the build;
+- `leader_late`: runs whose leader ended its work after the build, d + L > B (§R1: it
+  compared L with B before);
+- the shares' census (C35), each run's largest share's records, rows, cells and entries
+  stored (`share_*_max`), and the readiness: t0 to the last share's fill end
+  (`ready_last_ns`) and its skew over the first's (`ready_skew_ns`);
 - like-for-like blocks (`rule_*`): the leader's MTF or emitter and sort on the blocks the
   rule takes, counted in every sub-arm, the controls' included, so the gross release
   M − E − sort is computed on the same blocks;
@@ -155,15 +183,27 @@ run-fed arm (`phases`):
 | the share kernels' unsafe writes, scalar and AVX2, and a whole run's hand-offs between helpers and leader (the race detector) | `cargo +nightly miri test --lib -- run_team::tests::miri_`, with and without `-C target-feature=+avx2,+bmi1` | pass, both (2 tests each, about 140 s); CI's AVX2 step also asserts AVX2 was detected (`MIBZ2_EXPECT_AVX2`) |
 | the default suites, unchanged code paths: `cargo test` (default features), and with `run-fed` | `cargo test` | pass |
 | clippy (`--all-targets`, all features and default), fmt | | clean |
-| VALID refuses a missing round, a failed child (exit, error, broken line), a different output, a fallback, a control with records, absent phases, a zero wall (a non-finite interval) | `bench/test_run_fed_leader.py` (CI's submit job) | pass |
+| the physical write footprint: each share of each fill (`hs`'s by rows; `dir`'s by equal records, by C35, one record a share) alone into a table padded with sentinels, both kernels: exactly its own rows changed, its distinct words its rows, the shares tiling [0, n); 1-row, 7-, 8-, 9-, 15-, 16-, 17-row shares | `fills_write_their_own_rows_only` | pass; the ownership bound moved 8 rows (`w + 8 <= end + 8`) fails it at once (n = 1, a word past the share) |
+| every share at once, a thread each, one table: one-row shares (h = n), one-record shares (h = r), shares at the vector store's edges, `hs` and `dir` | `miri_parallel_footprint` (natively, and under Miri's race detector and Stacked Borrows, scalar and `+avx2,+bmi1`) | pass, both; under Miri with AVX2 the same mutation is UB at once (a write outside the share's borrow) |
+| C35's cuts: rising, 0 and r at the ends, on any records (unrisen ones too); each share's work, rows + w a record, the h-th of the total give or take one record either side, w 0 and 8 | `row_cuts_partition_by_rows` | pass |
+| `dir`'s table at equal-record and C35 cuts the same, 1-5 shares; the rows written n | `share_kernels` (`direct_by_shares`) | pass |
+| the timeline: d = 20, L = 95, B = 100 is late (the duration's predicate called it early); a leader started 200 ms after t0 with no work is late, its duration under B | `leader_late_from_one_origin`, `a_late_started_leader_is_late` (`hs`, `dir`) | pass |
+| the reporter's phase list is this module's, in order | `phases_are_the_reporters` | pass |
+| the reporter's admission and reading: every probe of the Researcher's REVISE (all hash and output fields absent; every CPU negative; negative counts with the timing phases absent; the corpus label varying by round) refused at 15 rounds; absent and mistyped walls, CPUs, exits, rounds, outputs, NaN; malformed, duplicated, unregistered and negative phases; inconsistent counts; the plan not 3×3 seen; the arms out of ab's rotation; an unregistered arm or thread count; a missing round, failed child, different output, fallback, control with records, zero wall; the identity's head, tree, binary, corpus, features, profile, rustc, arms, rounds; a judged run without its head, identity or at other than 15 rounds. Each INVALID with its reason, none a crash. The Researcher's ctl ≈ 0.816, hs ≈ 0.945 fixture (dir too) reads LEAD with ATTRIBUTION FAILED, dir/ctl and hs/ctl ≈ 1.158 reported apart; an attributed LEAD; a STOP marked environment-specific; the primary dir, hs's reading only secondary | `bench/test_run_fed_leader.py` (24 tests, CI's submit job) | pass |
 
 A mutation check: the vector store's ownership bound moved 8 rows past its end
 (`w + 8 <= end + 8`) corrupts the heap at once in the parallel tests (`malloc(): invalid
-size`), so the bound is exercised.
+size`), fails the footprint test at its first case, and is UB under Miri at once, so the
+bound is exercised three ways.
 
-**Not covered:** an independent adversarial review of the new unsafe code (RULES B5),
-required before any production use and not before a diagnostic run, whose VALID compares
-every run's output hash with the incumbent's.
+**Not covered: B5.** An independent adversarial review of the new unsafe code (RULES B5) is
+required before **any** timing dispatch of this registration, CI's included (Guardian D044:
+B5 precedes a diagnostic, not only production). There is no diagnostic exemption: output
+equality and the fallback cannot repair undefined behaviour that already happened. Still
+owed for B5 (D044's list, beyond this PR's reach): source-pinned scalar and AVX2 Miri of
+the emitter's record stores with reachability and exit-path coverage, and reproducible
+emit/sort/fill/fallback fuzz and differential evidence. The share kernels' and the
+parallel fills' Miri runs above do not reach the emitter.
 
 ## 4. C31's census and C32's count
 
@@ -176,8 +216,35 @@ blocks by records), per decode:
 | C31's predecessor lookups | 2,614 (≈ 163 a block) | the r scatters and 8(r + 1) bytes of F-order array it removes (≈ 45,000 a full block) |
 | W / n, the fills' entries stored a row | 1.59 (`ls`, `hs`), 1.59 (`dir`) | 1: a cell averages about 6.6 rows, and its one vector stores 8 |
 
-So C31's lookups are negligible against the work it removes; its price, if any, is the 256
-interleaved write streams. And the vector fill overstores by about 59%: every overstore is
+So C31's lookups are few against the metadata it removes (at most one a byte a share:
+`lcur` resumes, §R1), though each is a dependent search and their cost is measured, not
+assumed; its other prices are the 256 interleaved write streams and coherence traffic
+where two helpers' ranges share a line (disjoint words are race-free, not free).
+
+**C35's census (§R1),** untimed (counts, not times), the bench corpus (`corpora/
+wikidata.bz2`, SHA-256 `82f65ace…`), its 186 team blocks by records of 431 (r/n 0.0620,
+mean n 899,995), each run's largest share over the mean share, summed over blocks
+(`run_team::tests::census`):
+
+| h (helpers) | cut | r_h | n_h | m_h (cells) | W_h | W / n | lookups a block |
+|---|---|---|---|---|---|---|---|
+| 2 (3×3's) | `dir`, equal records (as first built) | 1.000 | **1.356** | 1.010 | 1.234 | 1.474 | 164 |
+| 2 | `dir`, equal rows | 1.789 | 1.008 | 1.730 | 1.257 | 1.475 | 162 |
+| 2 | `dir`, **C35** (rows + 8 r) | 1.387 | 1.182 | 1.356 | **1.007** | 1.474 | 163 |
+| 2 | `hs`'s fill (rows by share) | 1.000 | 1.000 | 1.745 | 1.256 | 1.478 | 0 |
+| 3 | `dir`, equal records | 1.000 | **1.877** | 1.062 | 1.597 | 1.473 | 203 |
+| 3 | `dir`, equal rows | 1.627 | 1.002 | 1.618 | 1.210 | 1.474 | 229 |
+| 3 | `dir`, **C35** | 1.490 | 1.358 | 1.374 | **1.019** | 1.473 | 232 |
+| 3 | `hs`'s fill | 1.000 | 1.000 | 1.581 | 1.196 | 1.478 | 0 |
+
+So the Optimiser's straggler is real: at the plan's two helpers, equal records leave the
+larger share 36% more rows than the mean (88% at three). Equal rows fix n_h but skew cells
+and stores the other way, as the corpus's runs are longer at one end of L than the other.
+C35's weight balances the entries stored to within 1–2%. Which of rows, cells or stores
+binds a helper's time is a cost the census can't give; the run's readiness skew
+(`ready_skew_ns`, phases) is its measured check. `hs`'s fill, cut by rows, carries the same
+cell and store skew (1.75, 1.26), unchanged here. W, the entries stored with repeats, is
+1.47 n; the distinct words written are exactly n (the footprint tests). And the vector fill overstores by about 59%: every overstore is
 into a line the same store or the next touches, so it is store bandwidth to L1, not
 misses, but it is not free. A masked tail (`vpmaskmovd`) would make W = n; it is not
 built, as its cost differs by microarchitecture (slow on AMD's), and the registration
@@ -197,37 +264,32 @@ One smoke run, 2 rounds at 9 threads on the shared 4-core machine, of a 4 MB tes
   the list kernel.
 - **The critical path:** the leader waited for the build after its work in most runs (its
   work about 0.6–0.9 ms a run, its wait about 1.2–1.5 ms), and ended after the build in 10–18
-  of 70 runs. On that file and machine, the helpers are the run's critical path.
+  of 70 runs. That count used the old `leader_late`, its duration against the build's end
+  from t0 (§R1), so it undercounts late runs. On that file and machine, the helpers looked
+  like the run's critical path; a host and schedule observation, not an i9 result.
 
-**Set before it:** the question, the primary arm (C30, as briefed), the metric, the
-incumbent and the arms. **Set after it:** the thresholds' values below. None was
-registered before; the coordinator may make any stricter at freezing.
+**Set before it:** the question, the metric, the incumbent and the arms (the primary was
+then C30, as briefed). **Set after it:** the thresholds' values below, and (§R1) the
+primary `dir` with `hs` secondary, and C35's cut. The primary was changed after seeing the
+smoke, which showed `hs`'s sort on the helpers' side of a run the helpers already end, and
+the Researcher and the Optimiser both recommend C31 on that mechanism; it is disclosed
+here as smoke-informed, and the smoke is excluded from any judged sample. No judged data
+exists for any arm. The coordinator may make any threshold stricter at freezing.
 
 ## 6. The registration (RULES C1). DRAFT, NOT FROZEN
 
-- **The question:** does the run-fed leader cut decode wall in the pipelined plan, three
-  teams of three with park and small?
-- **The incumbent:** `mibz2-default33`, the shipped default constructor with that plan
-  forced, through its own entry point. Its baseline is master's code: this branch changes
-  no line it runs.
-- **The head:** this PR's head at freezing, named by the coordinator; the run is valid only
-  if its summary's head line is that commit.
-- **The run (CI):** `sweep.yml`, dispatched on this branch at the frozen commit, `tool:
-  run_fed_leader`, `rounds: 15`. One dispatch: `ab run` of the seven arms
-  (`bench/run_fed_leader.py`'s list), interleaved by round (`ab`'s rotation), at 9
-  threads (judged) and at 3 (reported), unpinned, on the bench's Wikidata corpus. A void
-  run (VALID fails, or the job fails before its report) may be re-dispatched once at the
-  same commit; no other re-run.
-- **The estimand:** each arm's per-round paired ratio over the incumbent's, wall and CPU,
-  the geometric mean and its 95% t-interval (df 14).
-- **VALID** (`bench/run_fed_leader.py`, every predicate, or INVALID with reasons and no
-  reading): every arm exactly 15 runs at 9 threads; every child exited 0 with no error;
-  every output's hash and length the incumbent's in the same round; every run-fed arm's
-  phases present, team runs > 0, no fallback, the record arms' team blocks by records > 0,
-  the controls' none; every interval present and finite. The raw paired timings are
-  written to `rfl-9.json` and the whole `rfl-runs.jsonl` archived as the run's artifact.
-
-**The reading, on the primary arm (`hs`) at 9 threads:**
+- **The question:** does the run-fed leader, with its helpers building the table directly
+  from the records (C31, no F-order array, shares cut by C35), cut decode wall in the
+  pipelined plan, three teams of three with park and small?
+- **The primary arm:** `mibz2-pipe3-runfed-dir`, chosen prospectively, before any judged
+  data, but informed by the 2-round local smoke (§5): disclosed as such. `hs` (C30) is a
+  fixed secondary, reported the same way and never judged. A win of `hs` or `ls` is not
+  this registration's result, and a `dir` result is a C31 result, not C30's.
+- **The reference, fixed:** `mibz2-default33`, the shipped default constructor
+  (`BzReader::parallel` with `PIPELINED_PLAN` forced) through its own entry point. Every
+  judged ratio is over it, whatever the controls show; no other denominator is ever
+  substituted. Its baseline is master's code: this branch changes no line it runs.
+- **One threshold set, on the primary at 9 threads** (unchanged from the draft):
 
 | reading | condition |
 |---|---|
@@ -235,44 +297,94 @@ registered before; the coordinator may make any stricter at freezing.
 | **STOP** | the wall ratio's low end > 0.99: no 1% cut |
 | **INCONCLUSIVE** | anything else |
 
-**Reported, never judged:** `ls` and `dir` (C31) the same way; `ctl` against the incumbent
-and `mibz2-pipe3-both` (the worker's own cost: an interval excluding [0.98, 1.02] means
-the instrumented worker differs from the shipped, and every other reading is then read
-against `ctl` instead); `reg` against `ctl` (C29: the list kernel's own effect); the gross
-leader release a rule block, against both controls; `leader_late` and `join_wait` (which
-side ends the runs); W / n and the lookups; the 3-thread cells (one team), against
-`mibz2-pipe3-both`.
+- **Attribution, stated with every reading, never a change of reference.** The control
+  contrasts are reported apart, paired by round: `dir`/`ctl`, `hs`/`ctl`, `ls`/`ctl` (the
+  records' and the construction's effect against the instrumented column path), `reg`/`ctl`
+  (C29, the list kernel's), and `ctl`/`pipe3-both` and `ctl`/`default33` (the instrumented
+  worker's fidelity). A LEAD is *attributed* to the run-fed construction only if `ctl`'s
+  wall interval over the incumbent lies wholly inside [0.98, 1.02] (an interval that merely
+  overlaps it is not equivalence) and `dir`/`ctl`'s wall interval's high end is below 1.
+  Otherwise the reading is printed as LEAD with **ATTRIBUTION FAILED** and its reasons.
+  `ctl` measures the worker's and its timers' cost on the column path; it does not subtract
+  the record arms' own sorting, barrier or counter overheads.
+- **The head, the build, the corpus:** this PR's full head at freezing, named by the
+  coordinator and passed to the dispatch as `registered_head`. The workflow writes
+  `rfl-identity.json` around the run (the head, a clean source tree, the build's features
+  and profile, rustc, and the `ab` binary's and the corpus's SHA-256 before and after), and
+  the reporter refuses the run unless the head is the registered one, the binary is one
+  build throughout, and the corpus is `82f65ace…c29915` before and after. A dispatch
+  without `registered_head` is reported UNJUDGED.
+- **The run (CI):** `sweep.yml`, dispatched on this branch at the frozen commit, `tool:
+  run_fed_leader`, `rounds: 15`, `registered_head: <the head>`. One dispatch: `ab run` of
+  the seven arms in the registered order, rotated by round (ab's `arm_order`), at 9 threads
+  (judged) and at 3 (reported, against `pipe3-both`: at 3 the incumbent is still three
+  teams, so it is no fair reference there), unpinned, on the bench's Wikidata corpus.
+- **VALID** (`bench/run_fed_leader.py report --head --identity`, every predicate, or INVALID
+  with its reasons and no reading; every measurement checked for presence and type before
+  any arithmetic):
+  - exactly 15 rounds, each arm once a round at 9 and at 3 threads, no other arm or thread
+    count, the arms in ab's rotation;
+  - each child exited 0, with an empty error and an unbroken line;
+  - each run's `hash` a non-empty string and `out` a positive integer, both equal to the
+    incumbent's in its round, the incumbent's one value throughout;
+  - each `wall` and `cpu` a finite positive number;
+  - each run's `corpus` `wikidata` (one corpus, every round), and the identity's digests;
+  - each 9-thread run seen running three leaders and six pipelined helpers;
+  - each run-fed arm's phases every registered name once, each a non-negative integer:
+    team runs > 0, team blocks by records and by the column summing to them, no fallback,
+    `leader_late` ≤ runs, the leader's, the build's and the run's timings present, the
+    leader's end after its start; the record arms' records, rows, shares, cells and
+    readiness present, W ≥ n; the controls' records none; `dir`'s lookups present;
+  - every judged interval present and finite.
+  The whole runs file, every record in file order (the arms' actual order), the identity and
+  the readings are written to `rfl-9.json`, and `rfl-*` archived as the run's artifact.
+- **No re-run to erase a failure.** An INVALID (a mismatch, a fallback, a violated
+  invariant, missing evidence) is kept and investigated, never re-dispatched to pass. Only
+  an infrastructure failure before `ab run` wrote any record (a class B setup failure,
+  docs/team/CI-INCIDENTS.md) may be re-run, once, at the same commit. A run after any code
+  repair is a new head, needing its own freeze.
+- **Reported, never judged:** `hs` and `ls` against the incumbent; the contrasts above; the
+  gross leader release a rule block, against both controls; the timeline (`lead_start`,
+  `lead_end`, `build_end`, `leader_late`) and `join_wait`; the census (each count's largest
+  share over the mean, readiness last and skew); W / n and the lookups; the 3-thread cells.
 
 **The stop criteria:**
-- **Positive:** LEAD on CI permits freezing the workstation run below, unchanged but for
-  its frozen commit, as the decision's evidence (CI's runners can't host the plan: §7). It
-  permits no production change. A production prototype needs its own registration, CI's
-  paired bench, and B5's review.
-- **Negative:** STOP on CI, with `ctl`'s `leader_late` under a quarter of its runs, closes
-  the run-fed leader as a wall lead for this plan: a journal entry, the queue issue's
-  Rejected list, the feature kept as research or removed at the coordinator's choice. It
-  reopens only if a workstation trace (the occupancy instrument, #39) shows the i9's
-  leader ending most runs, which CI can't show.
+- **Positive:** an attributed LEAD on CI permits freezing the workstation run below,
+  unchanged but for its frozen commit, as the decision's evidence (CI's runners can't host
+  the plan: §7). It permits no production change. A production prototype needs its own
+  registration, CI's paired bench, and B5's review. A LEAD with ATTRIBUTION FAILED permits
+  no freeze: it goes back for revision (what in the instrumented worker differs).
+- **Negative, environment-specific:** a STOP on CI is this runner's reading, under 9
+  threads on 4 vCPUs. It pauses this arm (C3's discretion against alternatives); it does
+  not close the run-fed line or the target machine's question (PROTOCOL §11, on master
+  since `6923ce43`: a STOP closes an arm, not a line Louis is pursuing). The Coordinator
+  sends the measured phases to the Optimiser and the idea to the Researcher, as §11 asks.
+  The draft's earlier rule (STOP with `ctl`'s `leader_late` under a quarter of its runs
+  closes the line, reopened only by one workstation trace) is withdrawn.
 - **Either way, C29 stands apart:** if `reg` is faster than `ctl` on the leader's MTF,
   that is a separate lead (the shipped `mtf_checkpoints_avx2` replaced by the register-list
-  kernel), with its own registration. It is a candidate only where the leader is critical.
+  kernel), with its own registration; whether the leader's front is exposed is measured
+  there, not assumed from the level.
 
 ## 7. What CI's 4-CPU Xeons can and cannot say about the i9
 
-- **The runner:** 4 vCPUs on 2 physical cores (SMT), an unknown Xeon a run. Three teams of
+- **The runner:** 4 vCPUs, an unknown Xeon a run; its cpuset, quota and topology are what
+  `ab env` records (`rfl-env.json`), not inferred from the count. Three teams of
   three is 9 decoding threads plus the scanner: 2.5 threads a CPU, 5 a core. The i9-10900K
   has 10 physical cores, and the plan was chosen there because 9 threads each get a core.
-- **It can say:** whether the arm is correct under heavy contention (VALID); whether its
-  total work is less (CPU, which oversubscription doesn't hide); what each phase costs in
-  isolation of the others' cores (roughly, since threads share cores); whether the parked
-  gates hold up when helpers are descheduled; C29's and C31's per-block costs.
-- **It cannot say:** the i9's critical path. With threads time-sharing cores, the wall is
-  closer to total work over 4 CPUs than to the longer of the leader's and helpers' sides;
-  a leader released on CI frees a CPU for a helper rather than ending a run sooner. So CI's
-  wall ratio tests "less total work at equal synchronisation", not "a shorter critical
-  path". `leader_late` on CI is a contention figure, not the i9's.
-- **Hence** the CI dispatch is a gate: LEAD there justifies the workstation run; STOP there
-  is decisive only together with the trace condition above.
+- **It can say:** whether the arm's output is right on this corpus under heavy contention
+  (VALID: not universal correctness or the absence of deadlock); the wall and CPU ratios on
+  this runner; the waits and the shares' readiness observed here.
+- **It cannot say:** the i9's critical path, nor invariant work. CPU is scheduled service:
+  spinning, SMT sharing, frequency and cache interference all change it. Every phase clock
+  includes descheduling. With threads time-sharing cores, a leader released on CI frees a
+  CPU for a helper rather than ending a run sooner, and `hs` and `dir` change the
+  synchronisation itself, so the wall is no clean "less total work" test either. A
+  construction can shorten the target's span while its total service is unchanged or
+  larger (the Researcher's example: L 10 → 8, helpers 6 → 7 each), and read as no gain or
+  a loss here. `leader_late` on CI is a contention figure, not the i9's.
+- **Hence** the CI dispatch is a bounded, environment-specific screen: an attributed LEAD
+  there justifies the workstation run; a STOP there pauses the arm, never closes the line.
 
 ## 8. The workstation recipe, drafted (NOT FROZEN: not in the Justfile, not in the queue)
 
@@ -295,8 +407,8 @@ bench-run-fed-leader corpus="bench/corpora/wikidata.bz2" rounds="20":
     target/release/examples/ab run "$DIR/runs.jsonl" \
       --arms mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir \
       --threads 10 --rounds "{{rounds}}" "{{corpus}}"
-    python3 bench/run_fed_leader.py report "$DIR/runs.jsonl" --rounds "{{rounds}}" \
-      --threads 10 --out "$DIR/report" > "$DIR/report.txt" || true
+    # (the reporter admits only the CI registration's thread counts, 9 and 3: the
+    # workstation run needs its own admission, at 10 threads, registered at its freeze)
     bash bench/bundle.sh "$DIR"
 ```
 
@@ -305,28 +417,68 @@ bench-run-fed-leader corpus="bench/corpora/wikidata.bz2" rounds="20":
   so CI and the workstation run the same arm.
 - The maintainer's command, once frozen: the branch's checkout at the frozen commit, then
   `just submit bench-run-fed-leader`. Until then, nothing to run.
-- To freeze: the occupancy traces of `ctl` and `hs` (one decode each) would be added, so
-  the i9's critical path is seen, not inferred.
+- To freeze: the occupancy traces of `ctl` and `dir` (one decode each) would be added, so
+  the i9's critical path is seen, not inferred; and its own admission (above). It is a
+  draft, not admitted: it needs its own freeze and C5's authorization. CI's success
+  authorizes no workstation run.
 
 ## 9. Limitations
 
 - **One corpus judged.** The rule's share of blocks, and of small blocks, is the corpus's.
 - **The rule is #269's,** decided before MTF from the symbols and the bound, so short
   blocks may take records at a loss on the leader (`lead_small_ns` shows it).
-- **The fill overstores** (W / n ≈ 1.6 on the smoke file); not cut (§4).
+- **The fill overstores** inside its own rows (W / n ≈ 1.47 on the corpus, 1.59 on the
+  smoke file); not cut (§4). C32's exact tails or masked residuals need their own matched
+  fill-and-walk contrast: fewer words stored is not fewer store instructions.
+- **C35's weight is an estimate** from an untimed census (§4), not a measured cost; the
+  readiness skew is its check. No equal-record `dir` arm is timed beside it.
 - **The instrumented worker** carries two clock reads a phase a block; `ctl` against the
   incumbent measures what that and the copy cost.
-- **No adversarial review** of the new unsafe code yet (B5).
+- **No adversarial review** of the new unsafe code yet (B5): it precedes any timing
+  dispatch (§3).
+
+## R1. Revision, 2026-11-09: the reviews of `f94551ab`
+
+Three reviews of the draft at `f94551ab8c359ec28dca02956ddca150595cc7cb`: the Researcher's
+REVISE (6730026367; report at `team-state/researcher` `245b375c`), the Optimiser's REVIEW
+(6729991838; `team-state/optimizer` `08abbe68`), and the Guardian's D044 (6729932417). Each
+finding, its fix and its test:
+
+| # | finding | fix | test |
+|---|---|---|---|
+| R.1 | VALID admits missing evidence: absent hash and output, negative CPU, negative counts with timing phases absent, varying corpus labels, all VALID at 15 rounds; the head, build and corpus not bound | `bench/run_fed_leader.py` rewritten: typed raw evidence per run before any arithmetic (§6's VALID); `report --head --identity` binds the frozen head, one binary, the registered corpus digest, 15 rounds, the arms and threads; any other run `--unjudged`; a reporter error is INVALID, never a crash or a VALID. The workflow writes the identity and passes `registered_head` | every probe as a fixture, refused with its reason, plus the identity's and the types' (`test_run_fed_leader.py`, 24 tests) |
+| R.2 | the journal substitutes `ctl` as the reference after a fidelity failure; the reporter never did; ctl ≈ 0.816, hs ≈ 0.945 read LEAD | the reference is `default33` always; the control contrasts reported apart; attribution stated with every reading, ATTRIBUTION FAILED where `ctl` isn't inside the band or the primary doesn't beat it (§6). The substitution sentence is withdrawn | `test_researcher_fixture_is_no_clean_lead` (dir and hs at 0.945, ctl at 0.816: LEAD, ATTRIBUTION FAILED, dir/ctl and hs/ctl ≈ 1.158), `test_attributed_lead` |
+| R.3 / O.counter | `leader_late` compared L (from the leader's start) with B (from t0): late is d + L > B | one timeline from t0 (`Timeline`: `lead_start`, `lead_end`, `build_end`), `leader_late` = `lead_end > build_end`; the phases `lead_start_ns`, `lead_end_ns`, `build_end_ns` replace `build_ns`. `join_wait` is reported as including scheduling (§2.3, the reporter's note) | `leader_late_from_one_origin` (d = 20, L = 95, B = 100: late; the old predicate: early), `a_late_started_leader_is_late` (a 200 ms delayed start through `invert`) |
+| R.4 | the diagnostic B5 exemption and the blanket re-dispatch after a VALID failure | both removed: B5 precedes any timing dispatch (§3); only a setup failure before any record may be re-run once (§6) | `test_no_retry_or_exemption_in_the_reporter` (the reporter has neither) |
+| R.5 | CI STOP cannot close the target line; CPU is scheduled service; phase clocks include descheduling | §6's negative criterion environment-specific (PROTOCOL §11), the old closing rule withdrawn; §7 rewritten; the reporter prints both notes | `test_stop_is_environment_specific` |
+| R.6 | choose `dir` prospectively, disclose the smoke, keep `hs` secondary | `PRIMARY` is `dir`, `hs` and `ls` secondary (never judged); §5 and §6 disclose the smoke-informed choice; one primary, one threshold set, one reference | `test_primary_is_dir_secondary_hs` |
+| O.C35 | equal records, not equal row work: a straggler can erase the saved sort | C35: `dir`'s shares cut by `row_cuts` (rows + 8 a record), contiguous, the byte-prefix ownership kept; the census by share in the phases (`share_*_max`, `ready_last_ns`, `ready_skew_ns`), and untimed on the corpus (§4: n_h 1.36 → 1.18, W_h 1.23 → 1.01 at two helpers) | `row_cuts_partition_by_rows`, `share_kernels` (`dir` the same table at both cuts), `census` |
+| O.C31 | lookups one a byte a share (`lcur`), not a run; the 45k scatters are F-order metadata, not table stores | §4's wording | (source) |
+| G.D044 | no unmasked overstore may cross into another share's rows; one-row shares; W the distinct words | the footprint argument (§2.2, `cell`'s doc): exact scalar tails at every ownership edge, no n + 8 slack; W (with repeats) and the distinct words (= rows) both counted | `fills_write_their_own_rows_only` (sentinels, each share alone, 1-row to 17-row shares, both kernels), `miri_parallel_footprint` (every share at once, one-row and one-record shares, Miri scalar and AVX2), the `end + 8` mutation failing all three |
+
+**Not closed here:**
+- **B5** (D044's list): the emitter's source-pinned scalar and AVX2 Miri with reachability
+  and exit-path coverage, and reproducible emit/sort/fill/fallback fuzz and differential
+  evidence. The HOLD on timing stands.
+- **The critical path:** an occupancy trace and matched interventions (the Researcher's §3);
+  the timeline gives completion order, not the recoverable wall.
+- **C32's tails, C36's leader help and early walking:** not built (the Optimiser's ranks 3, 4
+  and last).
+- **C35's weight** is an untimed estimate; no equal-record `dir` arm is timed beside it.
+- **The workstation recipe** needs its own admission and freeze (§8).
 
 ## Provenance and reproduction
 
 - **Base:** `research/run-fed-stage` at `fd60fffa` (#269 with its safety fix), itself on
   master `a4f97714`.
-- **Tests:** `cargo test --features run-fed --lib run_team`;
+- **Tests:** `cargo test --features run-fed --lib run_team`; `python3
+  bench/test_run_fed_leader.py`; the census, `MIBZ2_RUN_FED_CENSUS=corpora/wikidata.bz2
+  cargo test --release --features run-fed --lib census -- --ignored --nocapture`;
   `cargo test --features run-fed --test run_fed_leader`;
   `cargo +nightly miri test --features run-fed --lib -- run_team::tests::miri_` (plus
   `RUSTFLAGS="-C target-feature=+avx2,+bmi1"` for the AVX2 fills).
 - **The A/B:** `cargo build --release --features run-fed --example ab`, then
   `ab run R.jsonl --arms <the seven> --threads 9,3 --rounds 15 wikidata.bz2` and
-  `python3 bench/run_fed_leader.py report R.jsonl --rounds 15 --threads 9 --out rfl-9`.
-  On CI: Actions → Walk sweep → `tool: run_fed_leader`, `rounds: 15`.
+  `python3 bench/run_fed_leader.py report R.jsonl --unjudged --rounds 15 --out rfl-9`
+  (UNJUDGED: a judged report needs `--head` and the workflow's `--identity`). On CI:
+  Actions → Walk sweep → `tool: run_fed_leader`, `rounds: 15`, `registered_head`.

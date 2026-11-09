@@ -61,7 +61,9 @@ pub enum RunFedSort {
     /// kernel `mtf_runs` shares, then today's build (the matched control, C29)
     RegControl,
     /// no F-order array (C31): the helpers count their shares' rows a byte, a prefix, then
-    /// each fills its runs' F intervals directly, reading L by predecessor lookup
+    /// each fills its runs' F intervals directly, reading L by predecessor lookup; its
+    /// record shares cut by estimated work, rows plus `RECORD_WEIGHT` a record (C35,
+    /// `row_cuts`), not by equal records
     Direct,
 }
 
@@ -146,10 +148,12 @@ phases! {
     lead_sort_ns: "its sort, in runs",
     lead_rle_ns: "its RLE1 and CRC of the block before, in runs",
     lead_small_ns: "its small blocks' build, walk, RLE1 and CRC, in runs",
-    join_wait_ns: "the leader waiting for the build after its work",
-    build_ns: "a run's start to its walk's set-up done (the helpers' build)",
+    join_wait_ns: "the leader waiting for the build after its work (scheduling and wake-up included)",
+    lead_start_ns: "a run's start (t0) to its leader's start (d), summed",
+    lead_end_ns: "t0 to its leader's work's end (d + L), summed",
+    build_end_ns: "t0 to its build's end, the walk set up (B), summed",
     run_ns: "a run's whole span",
-    leader_late: "runs whose leader ended its work after the build",
+    leader_late: "runs whose leader ended its work after the build: d + L > B, one origin",
     helper_sort_ns: "the helpers' count, prefix and scatter (summed, waits included)",
     helper_fill_ns: "the helpers' fills from records (summed)",
     helper_fused_ns: "the helpers' column builds (summed)",
@@ -158,6 +162,14 @@ phases! {
     rows: "team blocks' rows by records (n, summed)",
     stores: "table entries the record fills stored (W, summed: n <= W)",
     lookups: "the direct fill's predecessor lookups (C31)",
+    cells: "the record fills' cells (m, summed: one store loop an L-run and F-interval piece)",
+    shares: "the record fills' shares (summed over team runs by records)",
+    share_records_max: "a run's largest share's records (r_h; summed over runs)",
+    share_rows_max: "a run's largest share's rows (n_h, its distinct words written)",
+    share_cells_max: "a run's largest share's cells (m_h)",
+    share_stores_max: "a run's largest share's entries stored (W_h)",
+    ready_last_ns: "t0 to a run's last share's fill end (summed)",
+    ready_skew_ns: "a run's last share's fill end less its first's (summed: the readiness skew)",
     rule_blocks: "blocks the records' rule takes, staged in runs (in every arm, the controls too)",
     rule_front_ns: "their MTF or emitter, in runs (the release's like-for-like blocks)",
     rule_sort_ns: "their sort on the leader, in runs",
@@ -467,10 +479,48 @@ unsafe fn scatter_share(
     hist[0] == hist[2]
 }
 
+/// A fill's counts (the census): C31's lookups, the entries stored (W, repeats counted),
+/// the cells (m: `cell` calls) and the rows written (n: the distinct words, every one inside
+/// the rows the thread owns)
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct Tally {
+    lookups: u64,
+    stores: u64,
+    cells: u64,
+    rows: u64,
+}
+
+impl Tally {
+    /// One cell's: rows [q, stop), `stored` entries stored
+    #[inline(always)]
+    fn cell(&mut self, q: u32, stop: u32, stored: u64) {
+        self.stores += stored;
+        self.cells += 1;
+        self.rows += (stop - q) as u64;
+    }
+}
+
 /// One cell, rows [q, stop): `T[q + i] = base + 256·i`; with `AVX`, 8 entries a store
 /// while a store ends at or before `end` (the rows this thread owns), then single entries.
 /// A store past `stop` writes rows of this thread's next cell, which that cell writes
 /// again (C32: never past `end`, another thread's). Returns the entries stored.
+///
+/// **The physical write footprint (Guardian D044).** Every word this writes is in
+/// [q, end): w starts at q and only rises; a vector store covers [w, w + 8) and is issued
+/// only while w + 8 <= end; a scalar one writes w < stop <= end. So the tail at an
+/// ownership edge is exact (scalar), not an 8-word overstore: a share of one row (or any
+/// range shorter than 8) gets no vector store at all, and no store reaches the table's
+/// n-th row (no n + 8 slack is relied on). The callers pass as `end` the end of the rows
+/// the thread owns: `fill_rows_at` its share's q1; `fill_direct_at` the end of byte c's
+/// F range in its share (`merge_rows`' hist[2][c]), checked to contain the run before
+/// any store. Those ranges are disjoint across threads by the prefix's construction, so
+/// no store from one share's fill lands in another's rows. Inside its own range, a vector
+/// store's words past `stop` are rows the same thread writes again later, because it
+/// fills that range in rising order to its end (checked: a fill that stops short
+/// returns false, and the table is then never exposed). Tests: `fills_write_their_own_
+/// rows_only` (each share alone into a table of sentinels: exactly its rows changed, its
+/// distinct words its rows), `miri_parallel_footprint` (every share at once, one-row and
+/// one-record shares among them, under Miri's race detector with AVX2).
 ///
 /// SAFETY: q <= stop <= end, and rows [q, end) of `t` are valid for writes and written by
 /// no other thread meanwhile (with `AVX`, AVX2 is available)
@@ -504,8 +554,8 @@ unsafe fn cell<const AVX: bool>(t: *mut u32, q: u32, stop: u32, end: u32, base: 
 /// Rows [q0, q1) of the table at `t` from L-order records and F-order ones whose tilings
 /// were checked: `run_stage::fill_rows`'s sweep, its iterators found by binary search, cut
 /// where either order's run ends. Returns whether every row was written (false only for
-/// records that don't tile, which the checks before it refuse); adds to `stores` the
-/// entries it stored (C32's W). A bad index panics.
+/// records that don't tile, which the checks before it refuse); adds its counts to `tally`
+/// (C32's W among them). A bad index panics.
 ///
 /// SAFETY: rows [q0, q1) of `t` are valid for writes and this thread's alone (with
 /// `AVX`, AVX2 is available)
@@ -516,7 +566,7 @@ unsafe fn fill_rows_at<const AVX: bool>(
     q0: u32,
     q1: u32,
     t: *mut u32,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     if q0 >= q1 {
         return true;
@@ -539,7 +589,7 @@ unsafe fn fill_rows_at<const AVX: bool>(
         let base = (x & 0xff) | (pf + (q - af)) << 8;
         let stop = end.min(q1);
         // SAFETY: q < stop <= q1, the rows this thread owns
-        *stores += unsafe { cell::<AVX>(t, q, stop, q1, base) };
+        tally.cell(q, stop, unsafe { cell::<AVX>(t, q, stop, q1, base) });
         f += (end == fe) as usize;
         l += (end == le) as usize;
         q = stop;
@@ -555,10 +605,10 @@ unsafe fn fill_rows_avx2(
     q0: u32,
     q1: u32,
     t: *mut u32,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     // SAFETY: the caller's contract
-    unsafe { fill_rows_at::<true>(recs, fo, q0, q1, t, stores) }
+    unsafe { fill_rows_at::<true>(recs, fo, q0, q1, t, tally) }
 }
 
 /// `fill_rows_at` on the kernels given: rows [q0, q1) into `out`, its q1 − q0 slots
@@ -569,7 +619,7 @@ fn fill_share(
     q1: u32,
     out: &mut [MaybeUninit<u32>],
     k: Kernels,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     assert_eq!(out.len(), q1.saturating_sub(q0) as usize);
     // (the rows' pointer, offset back by q0: only rows [q0, q1) are written through it)
@@ -579,12 +629,12 @@ fn fill_share(
         if k.avx2 {
             // SAFETY: `k.avx2` is set only when AVX2 was detected; rows [q0, q1) of t are
             // `out`'s, held mutably here
-            return unsafe { fill_rows_avx2(recs, fo, q0, q1, t, stores) };
+            return unsafe { fill_rows_avx2(recs, fo, q0, q1, t, tally) };
         }
     }
     let _ = k;
     // SAFETY: as above
-    unsafe { fill_rows_at::<false>(recs, fo, q0, q1, t, stores) }
+    unsafe { fill_rows_at::<false>(recs, fo, q0, q1, t, tally) }
 }
 
 /// The leader's sort (`RunFedSort::Leader`): the helpers' sort as one share, into `fo`
@@ -625,7 +675,6 @@ fn sort_one_share(
 fn fill_whole(recs: &[u32], fo: &[[u32; 2]], n: usize, tt: &mut TVector, k: Kernels) -> bool {
     tt.0.clear();
     tt.0.reserve(n);
-    let mut stores = 0;
     let ok = fill_share(
         recs,
         fo,
@@ -633,7 +682,7 @@ fn fill_whole(recs: &[u32], fo: &[[u32; 2]], n: usize, tt: &mut TVector, k: Kern
         n as u32,
         &mut tt.0.spare_capacity_mut()[..n],
         k,
-        &mut stores,
+        &mut Tally::default(),
     );
     if ok {
         // SAFETY: every row of [0, n) written (the fill's check)
@@ -686,12 +735,52 @@ fn merge_rows(recs: &[u32], counts: &[u32; 256], n: usize, hists: &mut [[[u32; 2
     start == n as u64
 }
 
+/// C35's record weight: a share's work estimated as its rows plus this a record, so the cut
+/// equalises the entries stored (W ≈ n + about 7.6 r on the bench corpus: each cell's
+/// vector store rounds up to 8, and a record makes about 1.2 cells), not records alone
+/// (C31 as first built) nor rows alone. An estimate from an untimed census, not a
+/// measured cost: the registration reports the shares' census and readiness to check it.
+const RECORD_WEIGHT: u64 = 8;
+
+/// C35's partition for C31: the records cut into `shares` contiguous ranges of about equal
+/// work, rows + `weight` a record: cut j the first record i whose key, its L start plus
+/// weight · i, is at least the total's (n + weight · r) j/shares share. The key rises with
+/// i on records that tile, so a binary search finds it (O(shares · log r), on the thread
+/// that sets the run up). The cuts rise, cuts[0] is 0 and cuts[shares] is r whatever the
+/// records hold (each search starts at the cut before), so they are a contiguous
+/// partition of [0, r) for `merge_rows`' byte-then-share prefix, whose ownership argument
+/// holds for any such partition; records that don't rise are refused by `count_rows`
+/// before any fill. With weight 0 it is the equal-rows cut.
+fn row_cuts(recs: &[u32], n: usize, shares: usize, weight: u64, cuts: &mut [usize]) {
+    let r = recs.len().saturating_sub(1);
+    let total = n as u64 + weight * r as u64;
+    cuts[0] = 0;
+    let mut i = 0;
+    for (j, cut) in cuts.iter_mut().enumerate().take(shares).skip(1) {
+        let target = total * j as u64 / shares as u64;
+        let key = |k: usize| (recs[k] >> 8) as u64 + weight * k as u64;
+        // (a binary search over [i, r) for the first key at least the target)
+        let (mut lo, mut hi) = (i, r);
+        while lo < hi {
+            let mid = lo + (hi - lo) / 2;
+            if key(mid) < target {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        i = lo;
+        *cut = i;
+    }
+    cuts[shares] = r;
+}
+
 /// C31's fill: share [lo, hi) of the records, each run's F interval [a, a + ℓ) written
 /// directly (a from `merge_rows`' cursor, advanced by ℓ), its bytes L[q] found by one
 /// predecessor lookup a byte (the first of its runs in the share: the byte's F rows in the
 /// share are consecutive, so the L rows they read are too) and then by walking the L runs
 /// on. Writes only inside each byte's range ([hist[1][c], hist[2][c]), the share's own);
-/// returns whether every range was filled exactly, and adds its lookups and stores.
+/// returns whether every range was filled exactly, and adds its counts to `tally`.
 ///
 /// SAFETY: `hist` is `merge_rows`' entry for this share, `t` valid for writes at every row
 /// of its ranges, which no other thread writes meanwhile (with `AVX`, AVX2 is available)
@@ -702,8 +791,7 @@ unsafe fn fill_direct_at<const AVX: bool>(
     hi: usize,
     hist: &mut [[u32; 256]; 3],
     t: *mut u32,
-    lookups: &mut u64,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     let mut lcur = [u32::MAX; 256];
     for i in lo..hi {
@@ -718,7 +806,7 @@ unsafe fn fill_direct_at<const AVX: bool>(
             return false;
         }
         let mut l = if lcur[c] == u32::MAX {
-            *lookups += 1;
+            tally.lookups += 1;
             match recs.partition_point(|&y| y >> 8 <= a).checked_sub(1) {
                 Some(l) => l,
                 None => return false,
@@ -735,7 +823,7 @@ unsafe fn fill_direct_at<const AVX: bool>(
             let stop = le.min(qe);
             let base = (y & 0xff) | (p + (q - a)) << 8;
             // SAFETY: a <= q < stop <= qe <= end: this share's range of byte c
-            *stores += unsafe { cell::<AVX>(t, q, stop, end, base) };
+            tally.cell(q, stop, unsafe { cell::<AVX>(t, q, stop, end, base) });
             l += (stop == le) as usize;
             q = stop;
         }
@@ -753,17 +841,15 @@ unsafe fn fill_direct_avx2(
     hi: usize,
     hist: &mut [[u32; 256]; 3],
     t: *mut u32,
-    lookups: &mut u64,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     // SAFETY: the caller's contract
-    unsafe { fill_direct_at::<true>(recs, lo, hi, hist, t, lookups, stores) }
+    unsafe { fill_direct_at::<true>(recs, lo, hi, hist, t, tally) }
 }
 
 /// `fill_direct_at` on the kernels given
 ///
 /// SAFETY: as `fill_direct_at`'s, but for AVX2's availability, which `k` says
-#[allow(clippy::too_many_arguments)]
 unsafe fn fill_direct(
     recs: &[u32],
     lo: usize,
@@ -771,19 +857,18 @@ unsafe fn fill_direct(
     hist: &mut [[u32; 256]; 3],
     t: *mut u32,
     k: Kernels,
-    lookups: &mut u64,
-    stores: &mut u64,
+    tally: &mut Tally,
 ) -> bool {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
             // SAFETY: the caller's, and AVX2 was detected
-            return unsafe { fill_direct_avx2(recs, lo, hi, hist, t, lookups, stores) };
+            return unsafe { fill_direct_avx2(recs, lo, hi, hist, t, tally) };
         }
     }
     let _ = k;
     // SAFETY: the caller's
-    unsafe { fill_direct_at::<false>(recs, lo, hi, hist, t, lookups, stores) }
+    unsafe { fill_direct_at::<false>(recs, lo, hi, hist, t, tally) }
 }
 
 // ---- A run of the team ----
@@ -848,6 +933,27 @@ const INJECT_COUNT: u8 = 1;
 const INJECT_MERGE: u8 = 2;
 const INJECT_SCATTER: u8 = 3;
 const INJECT_FILL: u8 = 4;
+/// the leader's start delayed (`LEAD_DELAY`), for the common-origin timeline's test
+const INJECT_LEAD_DELAY: u8 = 5;
+const LEAD_DELAY: std::time::Duration = std::time::Duration::from_millis(200);
+
+/// A run's moments, each in nanoseconds from the same origin, the run's start t0 (before
+/// its build is set up and the pool dispatched): the leader's start (d) and its work's end
+/// (d + L), and the build's end, its walk set up (B). The leader ended after the build iff
+/// d + L > B: comparing its duration L with B, as before, missed every run with
+/// L <= B < d + L (the Optimiser's and the Researcher's finding).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct Timeline {
+    lead_start: u64,
+    lead_end: u64,
+    build_end: u64,
+}
+
+impl Timeline {
+    fn leader_late(&self) -> bool {
+        self.lead_end > self.build_end
+    }
+}
 
 /// The run-fed build's shared state: the records and their F order, the table being
 /// filled by shares, and the helpers' sort's gates
@@ -877,6 +983,13 @@ struct RunFill<'a> {
     filled: AtomicU64,
     /// C31: no F-order array (`count_rows`, `merge_rows`, `fill_direct`)
     direct: bool,
+    /// C31's record shares, by rows (C35, `row_cuts`): share j is [cuts[j], cuts[j + 1])
+    cuts: [usize; MAX_SHARES + 1],
+    /// the run's start, the census's readiness origin (`Relay::t0`)
+    t0: Instant,
+    /// each share's census: its records, rows, cells, entries stored, and its fill's end
+    /// from t0; written by that share alone, read after the built gate
+    census: [[AtomicU64; 5]; MAX_SHARES],
     inject: u8,
 }
 // SAFETY: the raw pointers are into buffers the run holds (`_bufs`, `tt`): each share
@@ -896,6 +1009,7 @@ impl<'a> RunFill<'a> {
         shares: usize,
         tt: &'a mut TVector,
         direct: bool,
+        t0: Instant,
         inject: u8,
     ) -> RunFill<'a> {
         let r = recs.len().saturating_sub(1);
@@ -912,6 +1026,10 @@ impl<'a> RunFill<'a> {
         hist.resize(shares, [[0; 256]; 3]);
         tt.0.clear();
         tt.0.reserve(n);
+        let mut cuts = [0; MAX_SHARES + 1];
+        if direct {
+            row_cuts(recs, n, shares, RECORD_WEIGHT, &mut cuts);
+        }
         RunFill {
             recs,
             counts,
@@ -931,8 +1049,47 @@ impl<'a> RunFill<'a> {
             claimed: AtomicU64::new(0),
             filled: AtomicU64::new(0),
             direct,
+            cuts,
+            t0,
+            census: std::array::from_fn(|_| std::array::from_fn(|_| AtomicU64::new(0))),
             inject,
         }
+    }
+
+    /// Share j's records: C35's row cuts for C31, else equal records
+    fn records_of(&self, j: usize) -> (usize, usize) {
+        if self.direct {
+            (self.cuts[j], self.cuts[j + 1])
+        } else {
+            share(self.r, self.shares, j)
+        }
+    }
+
+    /// Share j's census, once its fill has ended
+    fn tally(&self, j: usize, records: usize, t: &Tally) {
+        let c = &self.census[j];
+        for (i, v) in [records as u64, t.rows, t.cells, t.stores, since(self.t0)]
+            .into_iter()
+            .enumerate()
+        {
+            c[i].store(v, Ordering::Relaxed);
+        }
+    }
+
+    /// The run's census into the phases: each count's largest share, the readiness skew
+    /// (on the build's last helper, past the built gate, every share's census written)
+    fn add_census(&self) {
+        let get = |j: usize, i: usize| self.census[j][i].load(Ordering::Relaxed);
+        let js = 0..self.shares;
+        let max = |i: usize| js.clone().map(|j| get(j, i)).max().unwrap_or(0);
+        let first = js.clone().map(|j| get(j, 4)).min().unwrap_or(0);
+        add(&PH.shares, self.shares as u64);
+        add(&PH.share_records_max, max(0));
+        add(&PH.share_rows_max, max(1));
+        add(&PH.share_cells_max, max(2));
+        add(&PH.share_stores_max, max(3));
+        add(&PH.ready_last_ns, max(4));
+        add(&PH.ready_skew_ns, max(4) - first);
     }
 
     fn all(&self) -> u64 {
@@ -952,7 +1109,7 @@ impl<'a> RunFill<'a> {
     /// Share j's count (the helpers' sort)
     fn count(&self, j: usize) {
         self.injected(INJECT_COUNT, j);
-        let (lo, hi) = share(self.r, self.shares, j);
+        let (lo, hi) = self.records_of(j);
         // SAFETY: entry j is this share's alone until the counted gate
         let h = unsafe { &mut *self.hist.add(j) };
         let ok = if self.direct {
@@ -991,7 +1148,7 @@ impl<'a> RunFill<'a> {
             return;
         }
         self.injected(INJECT_SCATTER, j);
-        let (lo, hi) = share(self.r, self.shares, j);
+        let (lo, hi) = self.records_of(j);
         // SAFETY: entry j is this share's; its ranges are merge_shares', disjoint from
         // every other share's and inside the r + 1 slots reserved
         let ok = unsafe { scatter_share(self.recs, lo, hi, &mut *self.hist.add(j), self.fo) };
@@ -1018,10 +1175,9 @@ impl<'a> RunFill<'a> {
         if self.claimed.fetch_or(bit, Ordering::Relaxed) & bit != 0 {
             return;
         }
-        let mut stores = 0;
+        let mut tally = Tally::default();
         if self.direct {
-            let (lo, hi) = share(self.r, self.shares, j);
-            let mut lookups = 0;
+            let (lo, hi) = self.records_of(j);
             // SAFETY: entry j is this share's, merge_rows': its ranges are disjoint from
             // every other share's and inside [0, n), the n rows reserved, the buffer held
             let ok = unsafe {
@@ -1032,12 +1188,13 @@ impl<'a> RunFill<'a> {
                     &mut *self.hist.add(j),
                     self.tt_p,
                     k,
-                    &mut lookups,
-                    &mut stores,
+                    &mut tally,
                 )
             };
-            add(&PH.lookups, lookups);
-            add(&PH.stores, stores);
+            add(&PH.lookups, tally.lookups);
+            add(&PH.stores, tally.stores);
+            add(&PH.cells, tally.cells);
+            self.tally(j, hi - lo, &tally);
             if ok {
                 self.filled.fetch_or(bit, Ordering::Release);
             }
@@ -1053,8 +1210,11 @@ impl<'a> RunFill<'a> {
         let out = unsafe {
             std::slice::from_raw_parts_mut(self.tt_p.add(q0) as *mut MaybeUninit<u32>, q1 - q0)
         };
-        let ok = fill_share(self.recs, fo, q0 as u32, q1 as u32, out, k, &mut stores);
-        add(&PH.stores, stores);
+        let ok = fill_share(self.recs, fo, q0 as u32, q1 as u32, out, k, &mut tally);
+        add(&PH.stores, tally.stores);
+        add(&PH.cells, tally.cells);
+        let (lo, hi) = self.records_of(j);
+        self.tally(j, hi - lo, &tally);
         if ok {
             self.filled.fetch_or(bit, Ordering::Release);
         }
@@ -1065,6 +1225,9 @@ impl<'a> RunFill<'a> {
     fn finish(self, b: &Symbols, k: Kernels) -> Result<&'a mut TVector, ErrorKind> {
         let ok = self.sorted.load(Ordering::Relaxed)
             && self.filled.load(Ordering::Acquire) == self.all();
+        if ok {
+            self.add_census();
+        }
         let tt = self.tt;
         if ok {
             // SAFETY: every share wrote every row of its range (its check), and the ranges
@@ -1103,7 +1266,8 @@ struct Relay<'a> {
     failed: AtomicBool,
     panic: Mutex<Option<Box<dyn Any + Send>>>,
     t0: Instant,
-    build_ns: AtomicU64,
+    /// t0 to the build's end (B)
+    build_end: AtomicU64,
 }
 // SAFETY: as `coop::Relay`: the stage is shared read only while its shares run, and changed
 // only by the thread that ends the build (the built gate's last) or the walk (the thread
@@ -1171,6 +1335,7 @@ impl Relay<'_> {
         let stage = unsafe { &mut *self.stage.get() };
         let old = std::mem::replace(stage, Stage::Over);
         if self.failed() {
+            self.build_end.store(since(self.t0), Ordering::Relaxed);
             return;
         }
         let r = catch_unwind(AssertUnwindSafe(|| {
@@ -1198,7 +1363,7 @@ impl Relay<'_> {
             };
             Some(RoomWalk::new(tt, self.orig_ptr, seg, self.segments))
         }));
-        self.build_ns.store(since(self.t0), Ordering::Relaxed);
+        self.build_end.store(since(self.t0), Ordering::Relaxed);
         match r {
             Ok(Some(w)) => *stage = Stage::Walk(w),
             Ok(None) => {}
@@ -1253,7 +1418,8 @@ impl Relay<'_> {
 
 /// One run of a run-fed team (`coop::invert_pipelined_with` at lever A's waits): the
 /// helpers build block `f` (by its path) and walk it into `out`, while the caller runs
-/// `lead`, then joins the walk if it is still going. Exactly `bwt::walk`'s output.
+/// `lead`, then joins the walk if it is still going. Exactly `bwt::walk`'s output; its
+/// timeline, each moment from the run's start.
 #[allow(clippy::too_many_arguments)]
 fn invert(
     pool: &Pool,
@@ -1266,7 +1432,7 @@ fn invert(
     lead: &(dyn Fn() + Sync),
     direct: bool,
     inject: u8,
-) -> Result<(), Box<dyn Any + Send>> {
+) -> Result<Timeline, Box<dyn Any + Send>> {
     let helpers = pool.threads().saturating_sub(1).max(1);
     let shares = helpers.min(MAX_SHARES);
     let t0 = Instant::now();
@@ -1309,6 +1475,7 @@ fn invert(
                 shares,
                 tt,
                 direct,
+                t0,
                 inject,
             );
             (Stage::Runs(rf, seg), None)
@@ -1327,10 +1494,10 @@ fn invert(
         failed: AtomicBool::new(false),
         panic: Mutex::new(None),
         t0,
-        build_ns: AtomicU64::new(0),
+        build_end: AtomicU64::new(0),
     };
     let relay = &relay;
-    let lead_ns = AtomicU64::new(0);
+    let (lead_start, lead_end) = (AtomicU64::new(0), AtomicU64::new(0));
     let helper = |j: usize| {
         relay.build_share(j, helpers);
         // SAFETY: the gate's last helper is the last to count in: every share has ended
@@ -1338,11 +1505,16 @@ fn invert(
         relay.walk_and_leave();
     };
     let leader = || {
+        if inject == INJECT_LEAD_DELAY {
+            thread::sleep(LEAD_DELAY);
+        }
+        // (both moments from t0, as the build's end is)
+        let start = since(t0);
         let t = Instant::now();
         lead();
-        let l = since(t);
-        add(&PH.lead_ns, l);
-        lead_ns.store(l, Ordering::Relaxed);
+        add(&PH.lead_ns, since(t));
+        lead_start.store(start, Ordering::Relaxed);
+        lead_end.store(since(t0), Ordering::Relaxed);
     };
     if pool.threads() < 2 {
         leader();
@@ -1358,12 +1530,20 @@ fn invert(
         });
     }
     add(&PH.run_ns, since(t0));
-    add(&PH.build_ns, relay.build_ns.load(Ordering::Relaxed));
-    if lead_ns.load(Ordering::Relaxed) > relay.build_ns.load(Ordering::Relaxed) {
+    // (the pool's run's end publishes every thread's stores to these)
+    let tl = Timeline {
+        lead_start: lead_start.load(Ordering::Relaxed),
+        lead_end: lead_end.load(Ordering::Relaxed),
+        build_end: relay.build_end.load(Ordering::Relaxed),
+    };
+    add(&PH.lead_start_ns, tl.lead_start);
+    add(&PH.lead_end_ns, tl.lead_end);
+    add(&PH.build_end_ns, tl.build_end);
+    if tl.leader_late() {
         add(&PH.leader_late, 1);
     }
     let caught = lock(&relay.panic).take();
-    caught.map_or(Ok(()), Err)
+    caught.map_or(Ok(tl), Err)
 }
 
 // ---- The worker ----
@@ -1504,7 +1684,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
         }));
         let mut l = lead.into_inner().unwrap_or_else(|e| e.into_inner());
         match r {
-            Ok(Ok(())) => {
+            Ok(Ok(_)) => {
                 inverted = Some(Inverted {
                     place: s.place,
                     bit: s.bit,
@@ -1701,7 +1881,79 @@ mod tests {
         Some(fo)
     }
 
-    /// C31 in `h` shares run one after another: the table, or None if refused
+    /// The record cuts of `h` shares: equal records (`by_rows` false, C31 as first built),
+    /// or C35's (`row_cuts` at `RECORD_WEIGHT`, the team's)
+    fn cuts_of(recs: &[u32], n: usize, h: usize, by_rows: bool) -> Vec<usize> {
+        cuts_weighted(recs, n, h, by_rows.then_some(RECORD_WEIGHT))
+    }
+
+    /// Equal records (None), or `row_cuts` at a record weight (0: equal rows)
+    fn cuts_weighted(recs: &[u32], n: usize, h: usize, weight: Option<u64>) -> Vec<usize> {
+        let r = recs.len().saturating_sub(1);
+        let Some(w) = weight else {
+            return (0..=h).map(|j| r * j / h).collect();
+        };
+        let mut cuts = vec![0; h + 1];
+        row_cuts(recs, n, h, w, &mut cuts);
+        cuts
+    }
+
+    /// C31's count and prefix in the shares `cuts` gives: each share's `merge_rows` entry,
+    /// or None if refused
+    fn direct_hists(
+        recs: &[u32],
+        counts: &[u32; 256],
+        n: usize,
+        cuts: &[usize],
+    ) -> Option<Vec<[[u32; 256]; 3]>> {
+        let h = cuts.len() - 1;
+        let mut hists = vec![[[0u32; 256]; 3]; h];
+        let mut rise = true;
+        for (j, hist) in hists.iter_mut().enumerate() {
+            rise &= count_rows(recs, cuts[j], cuts[j + 1], hist);
+        }
+        (rise && merge_rows(recs, counts, n, &mut hists)).then_some(hists)
+    }
+
+    /// C31 in the shares `cuts` gives, run one after another: the table, or None if refused
+    fn direct_by_cuts(
+        recs: &[u32],
+        counts: &[u32; 256],
+        n: usize,
+        cuts: &[usize],
+        k: Kernels,
+    ) -> Option<Vec<u32>> {
+        recs.len().checked_sub(1)?;
+        let h = cuts.len() - 1;
+        let mut hists = direct_hists(recs, counts, n, cuts)?;
+        let mut tt: Vec<u32> = Vec::with_capacity(n);
+        let (mut all, mut tally) = (true, Tally::default());
+        for (j, hist) in hists.iter_mut().enumerate() {
+            // SAFETY: merge_rows' ranges, inside the n reserved, one share at a time
+            all &= unsafe {
+                fill_direct(
+                    recs,
+                    cuts[j],
+                    cuts[j + 1],
+                    hist,
+                    tt.as_mut_ptr(),
+                    k,
+                    &mut tally,
+                )
+            };
+        }
+        assert!(tally.lookups <= 256 * h as u64);
+        if !all {
+            return None;
+        }
+        assert_eq!(tally.rows, n as u64, "the distinct words written");
+        // SAFETY: every row written (each range filled exactly, the ranges tiling [0, n))
+        unsafe { tt.set_len(n) };
+        Some(tt)
+    }
+
+    /// C31 in `h` shares of equal records, and of equal rows (C35): the table, or None if
+    /// either refused
     fn direct_by_shares(
         recs: &[u32],
         counts: &[u32; 256],
@@ -1709,41 +1961,11 @@ mod tests {
         h: usize,
         k: Kernels,
     ) -> Option<Vec<u32>> {
-        let r = recs.len().checked_sub(1)?;
-        let mut hists = vec![[[0u32; 256]; 3]; h];
-        let mut rise = true;
-        for (j, hist) in hists.iter_mut().enumerate() {
-            let (lo, hi) = share(r, h, j);
-            rise &= count_rows(recs, lo, hi, hist);
-        }
-        if !(rise && merge_rows(recs, counts, n, &mut hists)) {
-            return None;
-        }
-        let mut tt: Vec<u32> = Vec::with_capacity(n);
-        let (mut all, mut lookups, mut stores) = (true, 0, 0);
-        for (j, hist) in hists.iter_mut().enumerate() {
-            let (lo, hi) = share(r, h, j);
-            // SAFETY: merge_rows' ranges, inside the n reserved, one share at a time
-            all &= unsafe {
-                fill_direct(
-                    recs,
-                    lo,
-                    hi,
-                    hist,
-                    tt.as_mut_ptr(),
-                    k,
-                    &mut lookups,
-                    &mut stores,
-                )
-            };
-        }
-        assert!(lookups <= 256 * h as u64);
-        if !all {
-            return None;
-        }
-        // SAFETY: every row written (each range filled exactly, the ranges tiling [0, n))
-        unsafe { tt.set_len(n) };
-        Some(tt)
+        let a = direct_by_cuts(recs, counts, n, &cuts_of(recs, n, h, false), k);
+        let b = direct_by_cuts(recs, counts, n, &cuts_of(recs, n, h, true), k);
+        assert_eq!(a.is_some(), b.is_some());
+        assert!(a == b);
+        a
     }
 
     /// The share kernels on a column: the helpers' sort is `run_stage::sort`'s F order, in
@@ -1764,24 +1986,20 @@ mod tests {
             assert!(fo == oracle, "n {n}, {h} shares: the F order");
             for k in kernels() {
                 let mut tt: Vec<u32> = Vec::with_capacity(n);
-                let mut stores = 0;
+                let mut tally = Tally::default();
                 for j in 0..h {
                     let (q0, q1) = share(n, h, j);
                     let out = &mut tt.spare_capacity_mut()[q0..q1];
                     assert!(fill_share(
-                        &recs,
-                        &fo,
-                        q0 as u32,
-                        q1 as u32,
-                        out,
-                        k,
-                        &mut stores
+                        &recs, &fo, q0 as u32, q1 as u32, out, k, &mut tally
                     ));
                 }
                 // SAFETY: the shares tile [0, n), each filled whole (asserted)
                 unsafe { tt.set_len(n) };
                 assert!(tt == want, "n {n}, {h} shares, {k:?}: the table");
+                let stores = tally.stores;
                 assert!(stores >= n as u64 && stores <= n as u64 + 7 * 2 * recs.len() as u64);
+                assert_eq!(tally.rows, n as u64, "the distinct words written");
                 let direct = direct_by_shares(&recs, &counts, n, h, k).expect("C31");
                 assert!(direct == want, "n {n}, {h} shares, {k:?}: the direct table");
             }
@@ -2057,6 +2275,500 @@ mod tests {
             }
             for r in each_mode(&p, &ll, 7, true, 0, false) {
                 assert!(r.unwrap() == w);
+            }
+        }
+    }
+
+    // ---- The physical write footprint (Guardian D044) ----
+
+    /// No table entry: an entry's row is below n < 2^24 - 8, a vector lane's too
+    const SENT: u32 = u32::MAX;
+    /// Words of sentinel either side of the table, where a store past it would land
+    const PAD: usize = 16;
+
+    /// The footprint check: every word of `buf` (the table at PAD) inside `owned` holds
+    /// the production table's entry, and every other word is still the sentinel. Returns
+    /// the words written (distinct), which is then exactly `owned`'s size.
+    fn footprint(buf: &[u32], want: &[u32], owned: &[bool], what: &str) -> u64 {
+        let n = want.len();
+        assert_eq!(buf.len(), n + 2 * PAD);
+        let mut written = 0;
+        for (i, &w) in buf.iter().enumerate() {
+            let row = i.checked_sub(PAD).filter(|&q| q < n);
+            match row {
+                Some(q) if owned[q] => {
+                    assert_eq!(w, want[q], "{what}: row {q}");
+                    written += 1;
+                }
+                _ => assert_eq!(
+                    w, SENT,
+                    "{what}: word {i} (row {row:?}) is not this share's"
+                ),
+            }
+        }
+        written
+    }
+
+    /// The share counts the footprint tests use: every count up to 9, one-row shares
+    /// (h = n), and shares of about 7, 8, 9, 15, 16 and 17 rows (the vector store's edges)
+    fn share_counts(n: usize) -> Vec<usize> {
+        let mut hs: Vec<usize> = (1..=9.min(n.max(1))).collect();
+        if n <= 300 {
+            hs.push(n.max(1));
+        }
+        for len in [7, 8, 9, 15, 16, 17] {
+            hs.push((n / len).clamp(1, crate::coop::MAX_SHARES));
+        }
+        hs.sort_unstable();
+        hs.dedup();
+        hs
+    }
+
+    /// Each share of each fill run alone into a table of sentinels: its stores land in its
+    /// own rows only (the AVX2 kernel's included, whose 8-entry stores must stop at the
+    /// share's end and, in C31, at each byte's range end in the share), it writes every
+    /// one of them, and the shares' rows tile [0, n)
+    fn check_footprint(ll: &[u8]) {
+        let n = ll.len();
+        let counts = run_fed::counts_of(ll);
+        let want = run_fed::production(ll, &counts);
+        let recs = recs_of(ll);
+        let r = recs.len() - 1;
+        for h in share_counts(n) {
+            let fo = sort_by_shares(&recs, &counts, n, h).expect("the shares' sort");
+            for k in kernels() {
+                // C30's fill: share j's rows [q0, q1)
+                let mut cover = vec![0u32; n];
+                for j in 0..h {
+                    let (q0, q1) = share(n, h, j);
+                    let mut buf = vec![SENT; n + 2 * PAD];
+                    // (the share's slice of a bigger buffer: a store outside it would
+                    // change a sentinel, and under Miri leave the slice's borrow)
+                    let out = unsafe {
+                        std::slice::from_raw_parts_mut(
+                            buf.as_mut_ptr().add(PAD + q0) as *mut MaybeUninit<u32>,
+                            q1 - q0,
+                        )
+                    };
+                    let mut tally = Tally::default();
+                    assert!(fill_share(
+                        &recs, &fo, q0 as u32, q1 as u32, out, k, &mut tally
+                    ));
+                    let owned: Vec<bool> = (0..n).map(|q| q0 <= q && q < q1).collect();
+                    let what = format!("n {n}, hs, {h} shares, share {j}, {k:?}");
+                    let w = footprint(&buf, &want, &owned, &what);
+                    assert_eq!(w, (q1 - q0) as u64, "{what}: its distinct words");
+                    assert_eq!(tally.rows, w, "{what}: the tally's rows");
+                    cover[q0..q1].iter_mut().for_each(|c| *c += 1);
+                }
+                assert!(
+                    cover.iter().all(|&c| c == 1),
+                    "n {n}, hs, {h} shares: a tiling"
+                );
+                // C31's fill, cut by records, by rows (C35), and one record a share
+                let mut cuts_all = vec![cuts_of(&recs, n, h, false), cuts_of(&recs, n, h, true)];
+                if h == 1 {
+                    cuts_all.push((0..=r).collect());
+                }
+                for cuts in cuts_all {
+                    let hists = direct_hists(&recs, &counts, n, &cuts).expect("C31's prefix");
+                    let mut cover = vec![0u32; n];
+                    for (j, hist) in hists.iter().enumerate() {
+                        let mut owned = vec![false; n];
+                        for (&a, &e) in hist[1].iter().zip(&hist[2]) {
+                            for q in a as usize..e as usize {
+                                owned[q] = true;
+                                cover[q] += 1;
+                            }
+                        }
+                        let mut buf = vec![SENT; n + 2 * PAD];
+                        let mut hist = *hist;
+                        let mut tally = Tally::default();
+                        // SAFETY: the table is the buffer's n words after PAD, and this
+                        // share's ranges are inside [0, n) (`merge_rows`)
+                        let ok = unsafe {
+                            fill_direct(
+                                &recs,
+                                cuts[j],
+                                cuts[j + 1],
+                                &mut hist,
+                                buf.as_mut_ptr().add(PAD),
+                                k,
+                                &mut tally,
+                            )
+                        };
+                        let what = format!(
+                            "n {n}, dir, cuts {:?}.., share {j}, {k:?}",
+                            &cuts[..cuts.len().min(4)]
+                        );
+                        assert!(ok, "{what}");
+                        let w = footprint(&buf, &want, &owned, &what);
+                        assert_eq!(tally.rows, w, "{what}: its distinct words");
+                    }
+                    assert!(
+                        cover.iter().all(|&c| c == 1),
+                        "n {n}, dir: the byte ranges tile"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fills_write_their_own_rows_only() {
+        for len in [1usize, 2, 7, 8, 9, 16, 17, 23, 64, 300, 2049] {
+            for sigma in [1u64, 2, 5, 256] {
+                check_footprint(&runs_column(
+                    len,
+                    sigma,
+                    &[1, 7, 8, 9, 15, 16, 17, 40],
+                    len as u64,
+                ));
+                let mut r = xorshift(3 * sigma + len as u64);
+                let ll: Vec<u8> = (0..len).map(|_| (r() % sigma) as u8).collect();
+                check_footprint(&ll);
+            }
+        }
+    }
+
+    /// A pointer the share threads below write through, each its own rows
+    #[derive(Clone, Copy)]
+    struct Rows(*mut u32);
+    // SAFETY: each thread writes only its share's rows (the property under test)
+    unsafe impl Send for Rows {}
+    unsafe impl Sync for Rows {}
+
+    /// The fills' shares at once, a thread each, one table (Miri's race detector sees any
+    /// store of one share's into another's rows, AVX2's with `-C target-feature=+avx2`):
+    /// one-row shares, one-record shares, and shares at the vector store's edges
+    fn parallel_footprint(ll: &[u8]) {
+        let n = ll.len();
+        let counts = run_fed::counts_of(ll);
+        let want = run_fed::production(ll, &counts);
+        let recs = recs_of(ll);
+        let r = recs.len() - 1;
+        for k in kernels() {
+            for h in [n, n / 8, n / 9 + 1, 3] {
+                let h = h.max(1);
+                let fo = sort_by_shares(&recs, &counts, n, h).expect("the shares' sort");
+                let mut tt: Vec<u32> = Vec::with_capacity(n);
+                let t = Rows(tt.as_mut_ptr());
+                let ok = std::thread::scope(|sc| {
+                    let hs: Vec<_> = (0..h)
+                        .map(|j| {
+                            let (fo, recs) = (&fo, &recs);
+                            sc.spawn(move || {
+                                let t = t;
+                                let (q0, q1) = share(n, h, j);
+                                // SAFETY: rows [q0, q1) of the n reserved, this share's
+                                let out = unsafe {
+                                    std::slice::from_raw_parts_mut(
+                                        t.0.add(q0) as *mut MaybeUninit<u32>,
+                                        q1 - q0,
+                                    )
+                                };
+                                let mut tally = Tally::default();
+                                fill_share(recs, fo, q0 as u32, q1 as u32, out, k, &mut tally)
+                            })
+                        })
+                        .collect();
+                    hs.into_iter().all(|x| x.join().unwrap())
+                });
+                assert!(ok);
+                // SAFETY: every share filled its rows (asserted), and they tile [0, n)
+                unsafe { tt.set_len(n) };
+                assert!(tt == want, "hs, {h} shares at once, {k:?}");
+            }
+            for cuts in [
+                (0..=r).collect::<Vec<_>>(),
+                cuts_of(&recs, n, n, true),
+                cuts_of(&recs, n, 3, true),
+                cuts_of(&recs, n, (n / 8).max(1), false),
+            ] {
+                let hists = direct_hists(&recs, &counts, n, &cuts).expect("C31's prefix");
+                let mut tt: Vec<u32> = Vec::with_capacity(n);
+                let t = Rows(tt.as_mut_ptr());
+                let ok = std::thread::scope(|sc| {
+                    let hs: Vec<_> = hists
+                        .iter()
+                        .enumerate()
+                        .map(|(j, hist)| {
+                            let (recs, cuts, mut hist) = (&recs, &cuts, *hist);
+                            sc.spawn(move || {
+                                let t = t;
+                                let mut tally = Tally::default();
+                                // SAFETY: this share's byte ranges of the n reserved
+                                unsafe {
+                                    fill_direct(
+                                        recs,
+                                        cuts[j],
+                                        cuts[j + 1],
+                                        &mut hist,
+                                        t.0,
+                                        k,
+                                        &mut tally,
+                                    )
+                                }
+                            })
+                        })
+                        .collect();
+                    hs.into_iter().all(|x| x.join().unwrap())
+                });
+                assert!(ok);
+                // SAFETY: every share filled its ranges (asserted), which tile [0, n)
+                unsafe { tt.set_len(n) };
+                assert!(tt == want, "dir, {} shares at once, {k:?}", cuts.len() - 1);
+            }
+        }
+    }
+
+    #[test]
+    fn miri_parallel_footprint() {
+        if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
+            assert!(Kernels::detect().avx2, "AVX2 not detected");
+        }
+        let len = if cfg!(miri) { 40 } else { 200 };
+        parallel_footprint(&runs_column(len, 3, &[1, 7, 8, 9, 17], 31));
+        parallel_footprint(&runs_column(len, 1, &[len], 32));
+    }
+
+    /// The reporter (bench/run_fed_leader.py) admits a run-fed line only if its phases are
+    /// exactly its PHASES: this module's, in order
+    #[test]
+    fn phases_are_the_reporters() {
+        let py = include_str!("../../bench/run_fed_leader.py");
+        let start = py.find("\nPHASES = [").expect("the reporter's PHASES");
+        let end = start + py[start..].find(']').unwrap();
+        let listed: Vec<&str> = py[start..end].split('"').skip(1).step_by(2).collect();
+        let names: Vec<&str> = run_fed_phases().into_iter().map(|p| p.0).collect();
+        assert_eq!(listed, names);
+    }
+
+    // ---- C35's cuts ----
+
+    /// The row cuts rise, start at 0 and end at r, on any records (unrisen ones included);
+    /// on records that tile, each share's rows are n/h give or take one run either side
+    #[test]
+    fn row_cuts_partition_by_rows() {
+        let mut rng = xorshift(77);
+        for len in [1usize, 5, 64, 1000, 30_000] {
+            for lens in [&[1usize][..], &[1, 2, 40], &[500]] {
+                let ll = runs_column(len, 4, lens, len as u64);
+                let recs = recs_of(&ll);
+                let r = recs.len() - 1;
+                let longest = recs
+                    .windows(2)
+                    .map(|w| (w[1] >> 8) - (w[0] >> 8))
+                    .max()
+                    .unwrap();
+                for h in [1usize, 2, 3, 7, 64] {
+                    for w in [0, RECORD_WEIGHT] {
+                        let cuts = cuts_weighted(&recs, len, h, Some(w));
+                        assert_eq!((cuts[0], cuts[h]), (0, r));
+                        assert!(cuts.windows(2).all(|w| w[0] <= w[1]));
+                        // each share's work, rows + w a record, is the total's h-th give or
+                        // take one record's either side
+                        let key = |i: usize| (recs[i] >> 8) as u64 + w * i as u64;
+                        let total = len as u64 + w * r as u64;
+                        for j in 0..h {
+                            let work = key(cuts[j + 1]) - key(cuts[j]);
+                            let (j0, j1) = (j as u64, j as u64 + 1);
+                            let ideal = total * j1 / h as u64 - total * j0 / h as u64;
+                            let slack = 2 * (longest as u64 + w);
+                            assert!(
+                                work.abs_diff(ideal) <= slack,
+                                "len {len}, h {h}, w {w}, share {j}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        // records that don't rise: the cuts still a partition
+        let recs: Vec<u32> = (0..50).map(|_| (rng() as u32) & 0xffff_ff00).collect();
+        let mut cuts = vec![0; 6];
+        row_cuts(&recs, 1 << 20, 5, RECORD_WEIGHT, &mut cuts);
+        assert_eq!((cuts[0], cuts[5]), (0, recs.len() - 1));
+        assert!(cuts.windows(2).all(|w| w[0] <= w[1]));
+    }
+
+    // ---- The common-origin timeline ----
+
+    /// d = 20, L = 95, B = 100: the leader ends at 115, after the build at 100. Its
+    /// duration alone (95 < 100) called it early.
+    #[test]
+    fn leader_late_from_one_origin() {
+        let (d, l, b) = (20, 95, 100);
+        let tl = Timeline {
+            lead_start: d,
+            lead_end: d + l,
+            build_end: b,
+        };
+        assert!(tl.leader_late());
+        let by_duration = |l: u64, b: u64| l > b;
+        assert!(!by_duration(tl.lead_end - tl.lead_start, tl.build_end));
+        assert!(!Timeline {
+            lead_end: 100,
+            ..tl
+        }
+        .leader_late());
+        assert!(Timeline {
+            lead_end: 101,
+            ..tl
+        }
+        .leader_late());
+    }
+
+    /// A staggered start through `invert`: the leader starts LEAD_DELAY after t0 and does
+    /// nothing, so its duration is far below the build's end, yet it ends after it; the
+    /// run's timeline says late, from the same origin as the build's end
+    #[test]
+    fn a_late_started_leader_is_late() {
+        let ll = runs_column(30_000, 5, &[8, 16, 20], 14);
+        let b = symbols_of(&ll, 5);
+        let p = Pool::new(3).unwrap();
+        let k = Kernels::detect();
+        for direct in [false, true] {
+            let mut f = Front::default();
+            if direct {
+                front_stage::<DIR>(&b, &mut f, k, &mut 0, &mut 0, &mut false).unwrap();
+            } else {
+                front_stage::<HS>(&b, &mut f, k, &mut 0, &mut 0, &mut false).unwrap();
+            }
+            assert_eq!(f.path, Path::Records);
+            let (mut tt, mut seg, mut out) = (TVector::new(), SegScratch::default(), Vec::new());
+            let tl = invert(
+                &p,
+                &mut f,
+                &b,
+                k,
+                &mut tt,
+                &mut seg,
+                &mut out,
+                &|| {},
+                direct,
+                INJECT_LEAD_DELAY,
+            )
+            .unwrap();
+            assert!(tl.lead_start >= LEAD_DELAY.as_nanos() as u64, "{tl:?}");
+            assert!(
+                tl.lead_start <= tl.lead_end && tl.build_end < tl.lead_start,
+                "{tl:?}"
+            );
+            assert!(tl.leader_late(), "{tl:?}");
+            // (the old predicate, its duration against B, called this run early)
+            assert!(tl.lead_end - tl.lead_start < tl.build_end, "{tl:?}");
+            assert!(out == want(&ll, 5).0);
+        }
+    }
+
+    // ---- The census (untimed: counts, not times) ----
+
+    /// C35's census of a corpus's team blocks by records, at the plan's helpers (h = 2, a
+    /// team of three) and h = 3: each share's records r_h, rows n_h (its distinct words
+    /// written), cells m_h and entries stored W_h, under C31's first cut (equal records),
+    /// equal rows, C35's (rows + `RECORD_WEIGHT` a record), and C30's fill (equal rows by construction, its records the
+    /// count's equal shares). Reported as the largest share over the mean (1: balanced),
+    /// summed over blocks. `MIBZ2_RUN_FED_CENSUS=FILE.bz2 cargo test --release --features
+    /// run-fed --lib census -- --ignored --nocapture`
+    #[test]
+    #[ignore = "a corpus's census: MIBZ2_RUN_FED_CENSUS=FILE.bz2"]
+    fn census() {
+        use crate::stream::{Event, Scanner, SliceSource};
+        let Some(path) = std::env::var_os("MIBZ2_RUN_FED_CENSUS") else {
+            return;
+        };
+        let data = std::fs::read(path).unwrap();
+        let k = Kernels::detect();
+        let mut sc = Scanner::new(SliceSource(&data));
+        // [h][arm] -> (blocks, sum of max over shares, sum of totals) for r, n, m, W
+        let arms = [
+            "dir, equal records",
+            "dir, equal rows",
+            "dir, C35 (rows + 8 r)",
+            "hs's fill, rows",
+        ];
+        let weights = [None, Some(0), Some(RECORD_WEIGHT)];
+        let mut acc = [[[(0u64, 0u64); 4]; 4]; 2];
+        let (mut blocks, mut all, mut lookups) = (0u64, 0u64, [[0u64; 4]; 2]);
+        let mut sizes = (0u64, 0u64);
+        while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
+            all += 1;
+            if !api::takes_runs(&symbols) {
+                continue;
+            }
+            let (mut recs, mut counts) = (Vec::new(), [0; 256]);
+            let n = mtf::mtf_runs(&symbols, &mut recs, &mut counts, k).unwrap();
+            if n < MIN_COOP {
+                continue;
+            }
+            blocks += 1;
+            sizes.0 += n as u64;
+            sizes.1 += recs.len() as u64 - 1;
+            for (hi, h) in [2usize, 3].into_iter().enumerate() {
+                for (ai, acc) in acc[hi].iter_mut().enumerate() {
+                    let mut per: Vec<[u64; 4]> = Vec::new();
+                    if ai < 3 {
+                        let cuts = cuts_weighted(&recs, n, h, weights[ai]);
+                        let mut hists = direct_hists(&recs, &counts, n, &cuts).unwrap();
+                        let mut tt: Vec<u32> = Vec::with_capacity(n);
+                        for (j, hist) in hists.iter_mut().enumerate() {
+                            let mut t = Tally::default();
+                            // SAFETY: merge_rows' ranges, inside the n reserved
+                            assert!(unsafe {
+                                fill_direct(
+                                    &recs,
+                                    cuts[j],
+                                    cuts[j + 1],
+                                    hist,
+                                    tt.as_mut_ptr(),
+                                    k,
+                                    &mut t,
+                                )
+                            });
+                            lookups[hi][ai] += t.lookups;
+                            per.push([(cuts[j + 1] - cuts[j]) as u64, t.rows, t.cells, t.stores]);
+                        }
+                    } else {
+                        let fo = sort_by_shares(&recs, &counts, n, h).unwrap();
+                        let mut tt: Vec<u32> = Vec::with_capacity(n);
+                        let r = recs.len() - 1;
+                        for j in 0..h {
+                            let (q0, q1) = share(n, h, j);
+                            let mut t = Tally::default();
+                            let out = &mut tt.spare_capacity_mut()[q0..q1];
+                            assert!(fill_share(&recs, &fo, q0 as u32, q1 as u32, out, k, &mut t));
+                            let (lo, hi) = share(r, h, j);
+                            per.push([(hi - lo) as u64, t.rows, t.cells, t.stores]);
+                        }
+                    }
+                    for (i, a) in acc.iter_mut().enumerate() {
+                        a.0 += per.iter().map(|p| p[i]).max().unwrap();
+                        a.1 += per.iter().map(|p| p[i]).sum::<u64>();
+                    }
+                }
+            }
+        }
+        println!(
+            "census: {blocks} team blocks by records of {all} blocks; r/n {:.4}; mean n {:.0}",
+            sizes.1 as f64 / sizes.0.max(1) as f64,
+            sizes.0 as f64 / blocks.max(1) as f64
+        );
+        for (hi, h) in [2usize, 3].into_iter().enumerate() {
+            for (ai, arm) in arms.iter().enumerate() {
+                let a = acc[hi][ai];
+                let imb = |i: usize| a[i].0 as f64 * h as f64 / a[i].1.max(1) as f64;
+                println!(
+                    "h {h}, {arm:<22}: largest share / mean: r_h {:.4}, n_h {:.4}, m_h {:.4}, \
+                     W_h {:.4}; W/n {:.4}, m/n {:.4}, lookups a block {:.1}",
+                    imb(0),
+                    imb(1),
+                    imb(2),
+                    imb(3),
+                    a[3].1 as f64 / a[1].1.max(1) as f64,
+                    a[2].1 as f64 / a[1].1.max(1) as f64,
+                    lookups[hi][ai] as f64 / blocks.max(1) as f64,
+                );
             }
         }
     }
