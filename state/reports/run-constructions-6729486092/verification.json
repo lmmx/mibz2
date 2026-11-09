@@ -1,0 +1,16 @@
+{
+  "comment_id": 6729693845,
+  "comment_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6729693845",
+  "readback_exact_body": true,
+  "pinned_helper_verify": {
+    "comment": 6729693845,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "independent_role_aware_check": true,
+  "body_sha256": "3a18a68fadbbf712add69301186dfcd80575a21d1957bb5e9bd832ccee9b46be",
+  "note": "Pinned verify hard-codes FROM coordinator; genuine Researcher publication retained and failure recorded, not relabelled or treated as helper PASS."
+}
