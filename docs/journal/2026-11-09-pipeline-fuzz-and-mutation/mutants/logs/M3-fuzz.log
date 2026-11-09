@@ -1,0 +1,114 @@
+
+thread 'mibz2-2' (16818) panicked at src/coop.rs:1044:43:
+attempt to add with overflow
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic_const::panic_const_add_overflow
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:175:17
+   3: join<32, true, 4096>
+             at ./src/coop.rs:1044:43
+   4: {closure#1}<32, true, 4096>
+             at ./src/coop.rs:1190:23
+   5: {closure#0}
+             at ./src/coop.rs:164:52
+   6: call_once<mibz2::coop::{impl#1}::run::{closure_env#0}, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+   7: call_once<(), mibz2::coop::{impl#1}::run::{closure_env#0}>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panic/unwind_safe.rs:275:9
+   8: do_call<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:581:40
+   9: catch_unwind<(), core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:544:19
+  10: catch_unwind<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panic.rs:359:14
+  11: run
+             at ./src/coop.rs:164:19
+  12: invert_pipelined_with<32, true, 4096>
+             at ./src/coop.rs:1185:14
+  13: {closure#4}<true, true, 4096>
+             at ./src/parallel.rs:1015:13
+  14: call_once<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+  15: call_once<core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>, mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panic/unwind_safe.rs:275:9
+  16: do_call<core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>, core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:581:40
+  17: catch_unwind<core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>, core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:544:19
+  18: catch_unwind<core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>, core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panic.rs:359:14
+  19: pipelined_worker<true, true, 4096>
+             at ./src/parallel.rs:1014:17
+  20: {closure#3}
+             at ./src/parallel.rs:214:21
+  21: {closure#0}<mibz2::parallel::{impl#1}::pipelined_levers::{closure_env#3}>
+             at ./src/parallel.rs:275:36
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+thread 'mibz2-1' (16817) panicked at src/bwt.rs:467:31:
+index out of bounds: the len is 1023 but the index is 18446744073709551615
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic_bounds_check
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:271:5
+   3: index<alloc::vec::Vec<u8, alloc::alloc::Global>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/slice/index.rs:272:10
+   4: index<alloc::vec::Vec<u8, alloc::alloc::Global>, usize>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/slice/index.rs:19:15
+   5: index<alloc::vec::Vec<u8, alloc::alloc::Global>, usize, alloc::alloc::Global>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/alloc/src/vec/mod.rs:3864:9
+   6: assemble
+             at ./src/bwt.rs:467:31
+   7: {closure#1}<32>
+             at ./src/coop.rs:1023:27
+   8: call_once<(), mibz2::coop::{impl#10}::walk_and_leave::{closure_env#1}<32>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panic/unwind_safe.rs:275:9
+   9: do_call<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#10}::walk_and_leave::{closure_env#1}<32>>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:581:40
+  10: catch_unwind<(), core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#10}::walk_and_leave::{closure_env#1}<32>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:544:19
+  11: catch_unwind<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#10}::walk_and_leave::{closure_env#1}<32>>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panic.rs:359:14
+  12: walk_and_leave<32>
+             at ./src/coop.rs:1019:25
+  13: {closure#0}
+             at ./src/coop.rs:164:52
+  14: call_once<mibz2::coop::{impl#1}::run::{closure_env#0}, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+  15: call_once<(), mibz2::coop::{impl#1}::run::{closure_env#0}>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panic/unwind_safe.rs:275:9
+  16: do_call<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:581:40
+  17: catch_unwind<(), core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:544:19
+  18: catch_unwind<core::panic::unwind_safe::AssertUnwindSafe<mibz2::coop::{impl#1}::run::{closure_env#0}>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panic.rs:359:14
+  19: run
+             at ./src/coop.rs:164:19
+  20: invert_pipelined_with<32, true, 4096>
+             at ./src/coop.rs:1185:14
+  21: {closure#4}<true, true, 4096>
+             at ./src/parallel.rs:1015:13
+  22: call_once<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>, ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+  23: call_once<core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>, mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panic/unwind_safe.rs:275:9
+  24: do_call<core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>, core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:581:40
+  25: catch_unwind<core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>, core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:544:19
+  26: catch_unwind<core::panic::unwind_safe::AssertUnwindSafe<mibz2::parallel::pipelined_worker::{closure_env#4}<true, true, 4096>>, core::result::Result<(), alloc::boxed::Box<(dyn core::any::Any + core::marker::Send), alloc::alloc::Global>>>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panic.rs:359:14
+  27: pipelined_worker<true, true, 4096>
+             at ./src/parallel.rs:1014:17
+  28: {closure#3}
+             at ./src/parallel.rs:214:21
+  29: {closure#0}<mibz2::parallel::{impl#1}::pipelined_levers::{closure_env#3}>
+             at ./src/parallel.rs:275:36
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
