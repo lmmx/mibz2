@@ -1,0 +1,7 @@
+{
+  "comment_id": 6733290162,
+  "exact_body": true,
+  "issue": 145,
+  "role_aware_routing": true,
+  "pinned_verify_problem": "FROM is 'researcher', not coordinator"
+}
