@@ -870,7 +870,7 @@
     },
     {
       "trigger_comment_id": 6732258318,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -878,7 +878,10 @@
       "report_commit": "409907cace6fbc27dae93e5bcd661756f0e27d6a",
       "report_path": "state/reports/direct-f-closure-6732258318/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE narrowed to count admission and feasible fixtures. Original six witnesses rejected; timed D guard, per-round identity and corpus freeze identities accepted. 50 tests and 10840 census cases pass; four impossible records remain VALID. No implementation or timing."
+      "disposition": "REVISE narrowed to count admission and feasible fixtures. Original six witnesses rejected; timed D guard, per-round identity and corpus freeze identities accepted. 50 tests and 10840 census cases pass; four impossible records remain VALID. No implementation or timing.",
+      "review_comment_id": 6732362367,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
