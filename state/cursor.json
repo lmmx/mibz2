@@ -798,6 +798,21 @@
       "status": "finished",
       "disposition": "D046/D051 pair-path timing safety-evidence HOLD lifted; B6 resumption recorded. Researcher freeze and normal CI remain separate.",
       "comment": 6731230049
+    },
+    {
+      "id": "D053",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6731861816,
+      "sha": "1c7bac66a3157a0620573c769de718b7a3b85e56",
+      "evidence_digest": "git-blob:33d452dea4dfdf95daaab1f755ab0866feb1dcf6;fuzz:5b0448f78602bb21c2ebd083a98c5f249dd185da",
+      "commit": "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0",
+      "status": "complete; review pending",
+      "disposition": "D045 HOLD narrowed: per-case trace attribution gap and completed Miri evidence; guard separation advised"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -945,7 +960,9 @@
     "47d67ebcc5204a7a5d7a9cd6d7cdfccfe9338447",
     "f2e3d4a858adf54388f71b04c25cc1b4cf84d66a",
     "38a866b4e077f75876223088844aa503769c7938",
-    "5130c60203fcde3bbcd2ea5582c2d717f800b22a"
+    "5130c60203fcde3bbcd2ea5582c2d717f800b22a",
+    "e4327a49f804f6a6e0d989e08cee0e4df5114d88",
+    "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -998,7 +1015,8 @@
     6730599475,
     6730988787,
     6731045923,
-    6731180299
+    6731180299,
+    6731861816
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1079,7 +1097,8 @@
   "current_execution": {
     "active_comment": 6731861816,
     "decision": "D053",
-    "status": "in_progress",
+    "status": "complete; review pending",
+    "work_commit": "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0",
     "queue_snapshot": [
       6731861816
     ]
@@ -1490,6 +1509,13 @@
       "decision": "D052",
       "commit": "38a866b4e077f75876223088844aa503769c7938",
       "comment": 6731230049
+    },
+    {
+      "pr": 276,
+      "sha": "1c7bac66a3157a0620573c769de718b7a3b85e56",
+      "evidence_digest": "git-blob:33d452dea4dfdf95daaab1f755ab0866feb1dcf6;fuzz:5b0448f78602bb21c2ebd083a98c5f249dd185da",
+      "decision": "D053",
+      "commit": "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1770,10 +1796,10 @@
     {
       "comment_id": 6731861816,
       "pr": 161,
-      "status": "in_progress",
+      "status": "complete",
       "decision": "D053",
       "receipt_commit": "e4327a49f804f6a6e0d989e08cee0e4df5114d88",
-      "progress": "Source/CI review complete: trace lifetime attribution counterexample; D045 HOLD narrowed; guard separation advised."
+      "work_commit": "f2804bf83ab75bf42bde0fc2ccd1a5f68d6181b0"
     }
   ],
   "migrated_from": {
