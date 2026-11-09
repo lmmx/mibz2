@@ -90,3 +90,8 @@ required-features = ["trace"]
 [[example]]
 name = "run_fed_stage"
 required-features = ["run-fed"]
+
+# The run-fed leader's tests (docs/journal/2026-11-09-run-fed-leader.md)
+[[test]]
+name = "run_fed_leader"
+required-features = ["run-fed"]

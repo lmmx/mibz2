@@ -672,3 +672,177 @@ unsafe fn mtf_checkpoints_avx2(
     ll.set_len(n);
     result.map(|()| n)
 }
+
+/// Research, behind the `run-fed` feature (docs/journal/2026-11-09-run-fed-leader.md, the
+/// matched control C29): `mtf_checkpoints` on `mtf_avx2`'s register-list kernel, the one
+/// `mtf_runs` shares, instead of `mtf_checkpoints_avx2`'s memory list. So the run-fed
+/// leader's emitter can be compared with a checkpointed column made by the same list
+/// kernel, its output and checkpoints the only difference. Its result, `ll`, `counts` and
+/// checkpoints are `mtf_checkpoints`' on every input (the run-fed leader's tests).
+#[cfg(any(test, feature = "run-fed"))]
+pub fn mtf_checkpoints_reg(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    checkpoints: &mut Vec<[u32; 256]>,
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
+    #[cfg(target_arch = "x86_64")]
+    {
+        if k.avx2 {
+            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            return unsafe { mtf_checkpoints_reg_avx2(b, ll, counts, checkpoints) };
+        }
+    }
+    let _ = k;
+    mtf_checkpoints_scalar(b, ll, counts, checkpoints)
+}
+
+/// `mtf_avx2`'s list (`f0`, `f1`, `second`) and its byte and run stores, inside
+/// `mtf_checkpoints_avx2`'s outer loop: the inner loop's limit the nearer of the block's
+/// end and the next checkpoint, a run that crosses one split there
+#[cfg(all(target_arch = "x86_64", any(test, feature = "run-fed")))]
+#[target_feature(enable = "avx2")]
+unsafe fn mtf_checkpoints_reg_avx2(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    checkpoints: &mut Vec<[u32; 256]>,
+) -> Result<usize, ErrorKind> {
+    use std::arch::x86_64::*;
+    let max = b.max_len;
+    ll.clear();
+    ll.reserve(max);
+    *counts = [0; 256];
+    checkpoints.clear();
+    checkpoints.push([0; 256]);
+    let s2u = &b.seq_to_unseq;
+    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
+    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
+    #[repr(align(64))]
+    struct Rows([u8; 224]);
+    let mut rows = Rows([0u8; 224]);
+    rows.0.copy_from_slice(&s2u[32..]);
+    let tail = rows.0.as_mut_ptr();
+    let idx = _mm256_setr_epi8(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    );
+    let steps = STEPS.as_ptr();
+    let (mut run, mut weight) = (0u32, 1u32);
+    // `n` bytes written at `out`, every write checked against `max` (through the limit),
+    // which `ll`'s capacity holds
+    let out = ll.as_mut_ptr();
+    let mut n = 0usize;
+    let mut result = Ok(());
+    // `mtf_avx2`'s byte step: symbol $s's byte moved to the front and written at n
+    macro_rules! byte {
+        ($s:expr) => {{
+            let nn = (($s - 1) as usize).min(255);
+            if nn < 32 {
+                let t = steps.add(nn);
+                let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
+                let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
+                let m = _mm_load_si128((*t).m.as_ptr() as *const __m128i);
+                let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
+                f1 = _mm_blendv_epi8(f1, _mm_alignr_epi8::<15>(f1, f0), m);
+                f0 = g0;
+            } else {
+                let v = second(tail, nn - 32, f1, idx);
+                f1 = _mm_alignr_epi8::<15>(f1, f0);
+                f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
+            }
+            let c = _mm_cvtsi128_si32(f0) as u8;
+            counts[c as usize] += 1;
+            *out.add(n) = c;
+            n += 1;
+        }};
+    }
+    // `mtf_avx2`'s run store: `len` bytes of the front's byte at n
+    macro_rules! run_store {
+        ($len:expr) => {{
+            let len = $len;
+            let c = _mm_cvtsi128_si32(f0) as u8;
+            counts[c as usize] += len as u32;
+            if len <= 64 && n + 64 <= max {
+                let v = _mm256_broadcastb_epi8(f0);
+                _mm256_storeu_si256(out.add(n) as *mut __m256i, v);
+                _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, v);
+            } else {
+                std::ptr::write_bytes(out.add(n), c, len);
+            }
+            n += len;
+        }};
+    }
+    let mut next = CHECKPOINT;
+    let mut syms = b.syms.iter();
+    'block: loop {
+        let limit = max.min(next);
+        let mut at = None;
+        for &s in syms.by_ref() {
+            if s <= 1 {
+                if weight >= MAX_RUN_WEIGHT {
+                    result = Err(ErrorKind::RunTooLong);
+                    break 'block;
+                }
+                run += (s as u32 + 1) * weight;
+                weight <<= 1;
+                continue;
+            }
+            if run != 0 {
+                if n + run as usize > limit {
+                    at = Some(s);
+                    break;
+                }
+                run_store!(run as usize);
+                (run, weight) = (0, 1);
+            }
+            if s == b.eob {
+                break 'block;
+            }
+            if n >= limit {
+                at = Some(s);
+                break;
+            }
+            byte!(s);
+        }
+        let Some(s) = at else { break 'block };
+        if run != 0 {
+            if n + run as usize > max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+            let mut left = run as usize;
+            while n + left >= next {
+                let part = next - n;
+                run_store!(part);
+                left -= part;
+                checkpoints.push(*counts);
+                next += CHECKPOINT;
+            }
+            run_store!(left);
+            (run, weight) = (0, 1);
+            if s == b.eob {
+                break 'block;
+            }
+            if n >= max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+        } else {
+            if n >= max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+            checkpoints.push(*counts);
+            next += CHECKPOINT;
+        }
+        byte!(s);
+    }
+    if result.is_ok() && n == next {
+        checkpoints.push(*counts);
+    }
+    // SAFETY: the first n bytes were written above, n <= max <= capacity
+    ll.set_len(n);
+    result.map(|()| n)
+}

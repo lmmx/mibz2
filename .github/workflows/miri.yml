@@ -5,14 +5,17 @@ name: Miri
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
-# included, with its unchecked states refused (run_stage::tests::miri_*). Only on changes to the
-# walks, the pool or that research.
+# included, with its unchecked states refused (run_stage::tests::miri_*); and the run-fed
+# leader's share kernels (its sort, its fills, the AVX2 ones included) and a whole run's
+# hand-offs between helpers and leader (parallel::run_team::tests::miri_*). Only on changes
+# to the walks, the pool or that research.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/parallel/run_team.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -20,6 +23,7 @@ on:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/parallel/run_team.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -47,4 +51,4 @@ jobs:
           RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
           MIBZ2_EXPECT_AVX2: "1"
           MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
-        run: cargo miri test --lib -- run_stage::tests::miri_
+        run: cargo miri test --lib -- run_stage::tests::miri_ run_team::tests::miri_

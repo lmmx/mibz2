@@ -35,6 +35,20 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.4] - 2026-11-09
+
+### Added
+
+- **Each run's child's exit status** (`examples/ab.rs`, `exit`: its code, or -1 for a
+  signal), so a validity check can refuse a run whose child failed. Before, a child that
+  died after printing its line, or printed none, was recorded alike. And, for the run-fed
+  leader's research only (docs/journal/2026-11-09-run-fed-leader.md), the arms
+  `mibz2-default33` (the default constructor with the three-teams-of-three plan forced,
+  the shipped decoder through its own entry point, on any machine) and, in a build with the
+  `run-fed` feature, `mibz2-pipeK-runfed-{ctl,reg,ls,hs,dir}`, whose lines carry their
+  `phases`. This is a change to what is stored. Every figure keeps its meaning: no arm the
+  bench runs changed.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added

@@ -9,7 +9,12 @@
 # stages alone and with every CPU busy, as a multi-threaded decode runs them. With
 # `tool: run_fed_stage`, the run-fed stage's diagnostic (examples/run_fed_stage.rs, the
 # `run-fed` feature; docs/journal/2026-11-09-run-fed-stage.md) runs the same way, ROUNDS its
-# rounds.
+# rounds. With `tool: run_fed_leader`, the run-fed leader's whole-decode A/B instead
+# (docs/journal/2026-11-09-run-fed-leader.md, DRAFT, NOT FROZEN): `ab run` of the shipped
+# default at three teams of three (`mibz2-default33`, its own entry point) against the
+# run-fed teams' sub-arms, interleaved by round, ROUNDS rounds at 9 threads and at 3, on the
+# runner's every CPU, unpinned; then bench/run_fed_leader.py's validity and reading, and the
+# raw runs archived.
 name: Walk sweep
 
 on:
@@ -20,7 +25,7 @@ on:
         required: false
         default: "5"
       tool:
-        description: "sweep (the factorial), phases (the stages) or run_fed_stage (the run-fed stage)"
+        description: "sweep (the factorial), phases (the stages), run_fed_stage (the run-fed stage) or run_fed_leader (its pipelined A/B)"
         required: false
         default: "sweep"
       registered_head:
@@ -53,7 +58,7 @@ jobs:
       - name: Build
         run: |
           cargo build --release --example sweep --example phases --example windows
-          cargo build --release --features run-fed --example run_fed_stage
+          cargo build --release --features run-fed --example run_fed_stage --example ab
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -87,7 +92,35 @@ jobs:
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          case "$TOOL" in sweep|phases|run_fed_stage) ;; *) echo "tool: sweep, phases or run_fed_stage"; exit 1 ;; esac
+          case "$TOOL" in sweep|phases|run_fed_stage|run_fed_leader) ;; *) echo "tool: sweep, phases, run_fed_stage or run_fed_leader"; exit 1 ;; esac
+          if [ "$TOOL" = run_fed_leader ]; then
+            # whole decodes, one process a run (ab's), every arm's output hashed and paired
+            # by round; the 9-thread cells judged (the plan's own threads), the 3-thread
+            # ones (one team) reported
+            ab=target/release/examples/ab
+            arms=mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir
+            $ab env > rfl-env.json
+            $ab run rfl-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> rfl-progress.txt
+            status=0
+            python3 bench/run_fed_leader.py report rfl-runs.jsonl --rounds "$ROUNDS" --threads 9 --out rfl-9 > rfl-report.txt || status=$?
+            {
+              echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse HEAD); run_fed_leader, rounds $ROUNDS"
+              echo "corpus sha256 $(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)"
+              cat rfl-report.txt
+              echo
+              echo "(ab summary against mibz2-pipe3-both, at both thread counts: at 3 threads only that arm is a fair incumbent, one team like the run-fed arms; reported, never judged)"
+              $ab summary rfl-runs.jsonl --ref mibz2-pipe3-both || true
+            } > sweep-1.txt
+            cat sweep-1.txt
+            {
+              echo "## Run-fed leader A/B (DRAFT, NOT FROZEN): $model, $(nproc) CPUs"
+              echo
+              echo '```'
+              cat sweep-1.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
           bin=target/release/examples/$TOOL
           head=$(git rev-parse HEAD)
           if [ "$TOOL" = run_fed_stage ]; then
@@ -151,4 +184,5 @@ jobs:
           path: |
             sweep-*.txt
             run-fed-*.json
+            rfl-*
           if-no-files-found: ignore

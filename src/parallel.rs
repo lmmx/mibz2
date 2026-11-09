@@ -584,6 +584,14 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
         .unwrap_or_else(|| "a panic".into())
 }
 
+// The pipelined team with a run-fed leader (research, opt-in: the `run-fed` feature,
+// `StreamDecoder::pipelined_run_fed`; docs/journal/2026-11-09-run-fed-leader.md)
+#[cfg(any(test, feature = "run-fed"))]
+mod run_team;
+#[cfg(any(test, feature = "run-fed"))]
+#[doc(hidden)]
+pub use run_team::{run_fed_phases, RunFedSort};
+
 // ---- The pipelined team (research, opt-in: `StreamDecoder::pipelined`) ----
 //
 // A team of k threads whose leader overlaps its serial stages with the helpers' parallel
