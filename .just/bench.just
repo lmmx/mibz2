@@ -926,3 +926,154 @@ bench-pipelined-default DRY="" CORPUS="":
     else
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
+
+# The guarded service default's workstation A/B (docs/journal/2026-11-09-service-guarded-registration.md:
+# a DRAFT, not frozen, not queued; bench/service-guarded.frozen names no commits yet, so the
+# recipe refuses). The candidate build's default decoder (svc2 at exactly 10 threads on its
+# target) against the current default's build, both through `BzReader::parallel` (ab's
+# `mibz2`), at 9, 10 and 11 threads, 20 paired rounds on the bench's Wikidata sample, with the
+# base binary's byte-identical twin as the noise control, judged by bench/service_guarded.py.
+# An actual-target preflight (examples/svc_target.rs) reads the predicate's facts back first
+# and refuses before anything is measured if the predicate is false or a fact is unknown; the
+# refusal is archived in the bundle. No PMU telemetry (--machine-state is not passed); sysfs
+# snapshots (ab env, ab sample) are recorded as diagnostics, never judged (D064).
+#   just submit bench-service-guarded
+# A DRY value is the untimed check of the recipe itself (one round, no settling, a failed
+# preflight recorded and not refused), with optionally a CORPUS, both positional:
+#   just bench-service-guarded 1 [CORPUS]
+# never evidence, and the report never calls it VALID.
+
+# The service default (svc2 at 10 threads) against the current default, 9 to 11 threads
+bench-service-guarded DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/service-guarded
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-service-guarded: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-service-guarded: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        "VALID: "*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-service-guarded: $*"; exit 1; }
+    rounds=20; busy=(); dry="{{DRY}}"; corpus="{{CORPUS}}"
+    if [ -n "$dry" ]; then
+      rounds=1; busy=(--max-busy 64 --settle 0.2)
+      echo "bench-service-guarded: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    elif [ -n "$corpus" ]; then
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
+    fi
+    # the commits a freeze would name (bench/service-guarded.frozen): the candidate, whose build
+    # and workload inputs HEAD must match, and the base (the current default), an ancestor of it
+    frozen=bench/service-guarded.frozen
+    cand=$(awk '$1 == "candidate" {print $2}' "$frozen")
+    base=$(awk '$1 == "base" {print $2}' "$frozen")
+    [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base (the registration is a DRAFT); nothing to run"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples tests/common bench/service_guarded.py bench/wikidata.json bench/wikidata.py bench/bundle.sh .just/bench.just
+      docs/journal/2026-11-09-service-guarded-registration.md)
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so both builds and every arm run the same, registered way: $(echo $overrides)"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the build and workload inputs"
+    git cat-file -e "$cand^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch: the frozen commits are missing"
+    git merge-base --is-ancestor "$base" "$cand" || fail "the base $base is not an ancestor of the candidate $cand"
+    git diff --quiet "$cand" HEAD -- "${measured[@]}" || fail "HEAD's build or workload inputs differ from the frozen candidate $cand"
+    head=$(git rev-parse HEAD)
+    printf 'head %s\ncandidate %s\nbase %s\n' "$head" "$cand" "$base" | tee "$W/commits.txt"
+    [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
+    [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
+    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
+    built() {  # built DIR EXAMPLE...: build in DIR, print each example's executable, in order
+      local dir=$1; shift
+      local args=(); for e in "$@"; do args+=(--example "$e"); done
+      (cd "$dir" && cargo build -q --release --message-format=json-render-diagnostics "${args[@]}") \
+        | python3 -c 'import json,sys
+    want=sys.argv[1:]; got={}
+    for line in sys.stdin:
+        m=json.loads(line)
+        if m.get("reason")=="compiler-artifact" and m.get("executable") and m["target"]["name"] in want and "example" in m["target"]["kind"]:
+            got[m["target"]["name"]]=m["executable"]
+    missing=[w for w in want if w not in got]
+    if missing: sys.exit("no executable reported for: "+" ".join(missing))
+    print("\n".join(got[w] for w in want))' "$@"
+    }
+    configs() { local d=$1 stop=$2; while :; do for f in "$d/.cargo/config" "$d/.cargo/config.toml"; do [ -f "$f" ] && echo "$f"; done; [ "$d" = "$stop" ] && break; d=$(dirname "$d"); done; return 0; }
+    only_base=$(configs "$(dirname "$B/build-$base")" "$PWD")
+    [ -z "$only_base" ] || fail "Cargo configuration only the base build would read: $(echo $only_base)"
+    tool() { (cd "$1" && rustc -vV && cargo -V); }
+    [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
+    mkdir "$W/bin"
+    base_built=$(built "$B/build-$base" ab) || fail "the base build failed"
+    cp "$base_built" "$W/bin/ab-base"
+    # (the noise control's twin: the base's executable, byte for byte, under another path)
+    cp "$W/bin/ab-base" "$W/bin/ab-base-twin"
+    sha256sum "$W/bin/ab-base" "$W/bin/ab-base-twin" > "$W/bin/ab-base.sha256"
+    [ "$(awk '{print $1}' "$W/bin/ab-base.sha256" | sort -u | wc -l)" = 1 ] || fail "the twin is not the base's bytes"
+    head_built=$(built "$PWD" ab windows svc_target) || fail "the head build failed"
+    [ "$(printf '%s\n' "$head_built" | wc -l)" = 3 ] || fail "Cargo reported no executables for the head build"
+    cp "$(printf '%s\n' "$head_built" | sed -n 1p)" "$W/bin/ab-head"
+    cp "$(printf '%s\n' "$head_built" | sed -n 2p)" "$W/bin/windows"
+    cp "$(printf '%s\n' "$head_built" | sed -n 3p)" "$W/bin/svc_target"
+    sha256sum -c --quiet "$W/bin/ab-base.sha256" || fail "the base executable changed after it was copied"
+    AB=$W/bin/ab-head; BASEAB=$W/bin/ab-base; TWINAB=$W/bin/ab-base-twin; WINDOWS=$W/bin/windows
+    # diagnostics only, never judged (D064): the machine as ab sees it, and sysfs readings
+    mkdir "$W/diagnostics"
+    "$AB" env > "$W/diagnostics/env.json"
+    lscpu > "$W/diagnostics/lscpu.txt"
+    "$AB" sample --count 5 > "$W/diagnostics/sample-before.jsonl"
+    # the actual-target preflight, before anything is measured: the predicate's facts read
+    # back on this machine, and the default's dispatch at 9, 10 and 11 threads. A failure
+    # refuses the attempt (archived: preflight.json is in the bundle), except in a DRY check
+    set +e
+    "$W/bin/svc_target" > "$W/preflight.json"
+    pf=$?
+    set -e
+    cat "$W/preflight.json"
+    if [ "$pf" -ne 0 ]; then
+      if [ -n "$dry" ]; then
+        echo "bench-service-guarded: DRY RUN: the preflight failed (exit $pf), recorded; continuing untimed"
+      else
+        fail "the preflight failed (exit $pf): the predicate is false here, or a fact is unknown (preflight.json)"
+      fi
+    fi
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$WINDOWS" "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    {
+      sha256sum "$AB" "$BASEAB" "$TWINAB" "$WINDOWS" "$W/bin/svc_target" "$(realpath "$corpus")"
+      tool "$PWD"
+      { printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; configs "$(dirname "$PWD")" /; } \
+        | while IFS= read -r f; do if [ -f "$f" ]; then sha256sum "$f"; fi; done
+      echo "census every 5 ms (AB_CENSUS_MS unset); no --machine-state (no PMU telemetry)"
+    } > "$W/inputs.txt"
+    cat "$W/inputs.txt"
+    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB,mibz2@$TWINAB" \
+      --threads "9,10,11" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    "$AB" sample --count 5 > "$W/diagnostics/sample-after.jsonl"
+    set +e
+    python3 bench/service_guarded.py report "$W/runs.jsonl" --preflight "$W/preflight.json" --out "$W/service-guarded"
+    rc=$?
+    set -e
+    if [ "$rc" -le 1 ] && [ -s "$W/service-guarded.json" ] && [ -s "$W/service-guarded.md" ]; then
+      outcome=$(python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print("VALID: P1 " + v["p1"]["reading"] + " (speed " + v["p1"]["speed"] + ", CPU " + v["p1"]["cpu"] + ")" if v["valid"] else "INVALID: " + "; ".join(v["problems"]))' "$W/service-guarded.json")
+    else
+      outcome="REPORT ERROR: service_guarded.py exited $rc without writing its report"
+    fi

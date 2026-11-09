@@ -202,7 +202,9 @@ once):
   walked block just taken; between publish and retire; the feeder) at block 1, on one team
   and one service worker (the faulting thread the last of its kind) and on svc2's shape, on
   tiny blocks (each team's first thread alone) and full blocks (a team's pool, asserted
-  reached);
+  reached across the full-block suite as a whole, not in each injection's run: this shows
+  representative pooled execution, not that every fault fired while helpers were active,
+  D069);
 - a parked-state handshake (`HubState::parked`, counted under the hub lock around each wait):
   the fault fires only once every other hub thread is parked and the jobs are closed, so only
   `Hub::fail`'s wake can end them (a service worker's loss with two teams parked; the last
@@ -210,7 +212,9 @@ once):
 - a writer blocked on a one-block window while the reader waits, a cancel racing the fault,
   the decoder dropped rather than joined;
 - each checks, under a 60-second watchdog: the fault fired; the hub failed; every hub thread
-  ended; `live` 0 and as many retirements as blocks taken; no block published twice; the
+  ended; `live` 0 and as many retirements as blocks taken; no block published twice (the
+  publication history read after the join or drop, so every publication before the threads
+  ended; at 6642faf4 it was read before the join, D069); the
   bytes a prefix of the stream; the result EOF with the whole stream, or the terminal error
   (or `Cancelled` with the racing cancel).
 - Miri (`miri_outer_after_job`, `miri_outer_after_publish`, `miri_outer_parked`): tiny blocks,
@@ -352,7 +356,9 @@ Wall times are the runs' own, not measurements of the decoder.
 2. **The adoption question D067 §5 raises:** the default's automatic reach on the supported
    class against the admitted evidence, and how CI's unchanged acceptance rule applies when
    CI can't exercise svc2. These are Louis's (RULES D/C6), not settled here.
-3. **The registration** (Researcher assesses, Coordinator registers): the exact switched
+3. **The registration** (DRAFT: `2026-11-09-service-guarded-registration.md`, its recipe
+   `just bench-service-guarded`, judge `bench/service_guarded.py`, preflight
+   `examples/svc_target.rs`; D069 said to draft it; Researcher assesses, Coordinator registers): the exact switched
    default against the current default at 10 on the i9, CPU and per-process peak RSS (§6),
    frozen; then Louis's C5 run.
 4. **An actual-target preflight in that registration:** `Machine::here()` printed on the

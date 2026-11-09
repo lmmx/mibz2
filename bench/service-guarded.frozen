@@ -1,0 +1,4 @@
+# The guarded service default's workstation A/B (docs/journal/2026-11-09-service-guarded-registration.md).
+# DRAFT: not frozen. A freeze sets, in its own commit, `candidate <40-hex>` (the commit whose
+# build and workload inputs HEAD must match) and `base <40-hex>` (the current default's commit,
+# an ancestor of the candidate). Until then `just bench-service-guarded` refuses.

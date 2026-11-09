@@ -15,6 +15,11 @@
 //!    retirements as blocks taken), and no block published twice;
 //! 4. **the fault fired**, so the path was reached.
 //!
+//! The publication history (each `publish`, cfg(test)) is read after the decoder is joined
+//! or dropped, so the no-duplicate check covers every publication before its threads ended.
+//! The full-block suite asserts a team's pool was reached across all its runs together, not
+//! in each injection's run.
+//!
 //! Shapes: one team and one service worker (so the faulting thread is the last of its
 //! kind), and svc2's two and two; tiny blocks (each team's first thread alone) and full
 //! ones (a team's pool). And: a parked-state handshake (every other hub thread parked in
@@ -176,15 +181,9 @@ fn run(f: OuterFault, shape: (usize, usize, usize, usize), z: &[u8], how: How) -
             (out, res, wrote)
         });
         let (out, res, wrote) = r;
-        let published = dec
-            .shared
-            .faults
-            .lock()
-            .unwrap()
-            .published
-            .iter()
-            .map(|p| p.0)
-            .collect();
+        // (the publication history is read after the join or the drop below, so it holds
+        // every publication any of the decoder's threads made before it ended)
+        let shared = dec.shared.clone();
         if how.drop_only {
             // (the last reference: the drop joins every thread)
             let dec = Arc::try_unwrap(dec).ok().expect("the only reference");
@@ -192,6 +191,14 @@ fn run(f: OuterFault, shape: (usize, usize, usize, usize), z: &[u8], how: How) -
         } else {
             dec.join();
         }
+        let published = shared
+            .faults
+            .lock()
+            .unwrap()
+            .published
+            .iter()
+            .map(|p| p.0)
+            .collect();
         let st = hub.lock();
         let _ = tx.send(Ran {
             out,
@@ -270,7 +277,9 @@ fn every_point(input: (Vec<u8>, Vec<u8>)) -> u64 {
 #[cfg(not(miri))]
 #[test]
 fn every_outer_point_fails_the_decode_full_blocks() {
-    // (full blocks reach a team's pool, before or around the fault)
+    // (full blocks reach a team's pool: asserted across the whole suite, not for each
+    // injection, so this shows pooled execution in these runs, not that every fault fired
+    // while a team's helpers were active)
     assert!(every_point(full()) > 0, "no block on a team's pool");
 }
 
