@@ -24,12 +24,21 @@
 //!                      cores busy (default 1.5; sampled over 2 s while nothing of ours runs)
 //!     --settle S       that sample's length in seconds (default 2; CI's runners, which
 //!                      run nothing else, take a shorter one)
+//!     --machine-state  also record, beside each run, its cycles and instructions and the
+//!                      clock and package temperature before and after (`machine`: off by
+//!                      default, recorded and never judged)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
 //!                                    quota, and whether the run-queue counter counts
+//!                                    (and `machine`: the cpufreq driver, governor, EPP,
+//!                                    turbo, and what perf can count)
+//! ab settle [--seconds N] [--interval S]
+//!                                    untimed: sample the clock and the package temperature
+//!                                    until they hold within a registered tolerance or N
+//!                                    seconds pass, one JSON line (`machine::settle`)
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -82,6 +91,11 @@
 //! cores the other processes kept busy during the run (the machine's busy time less the
 //! run's own CPU), the steal, and the cgroup's CPU throttling and the CPU pressure stall
 //! time (PSI) over the run, where the kernel has them (null where not).
+//! With `--machine-state` only (bench 3.3.0; the `machine` module): the run's cycles,
+//! instructions and task clock (perf, inherited by its threads, over exactly the region its
+//! wall is), the effective clock (cycles over task clock), and the clock, governor, EPP,
+//! turbo and package temperature before and after it; each null with a reason where it
+//! can't be read.
 //!
 //! **Each thread's CPU is sampled from /proc every 10 ms** (and once more after the last
 //! byte is read, before an in-process decoder is dropped), so a thread that ends between
@@ -711,24 +725,48 @@ fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();
+    // (`ab run --machine-state` only: the counters, opened before and read after the timed
+    // region, enabled and disabled at its edges; None leaves every path as it was)
+    let counted = machine::requested();
+    let mut perf = None;
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
-        Some((cmd, ready)) => piped(cmd, ready, &mut h),
+        Some((cmd, ready)) => {
+            if counted {
+                perf = Some(machine::Perf::skipped("not counted for a program's arm"));
+            }
+            piped(cmd, ready, &mut h)
+        }
         // (a 1-thread in-process run has one thread to account for, so no sampler at all:
         // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
         // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
         None if threads == 1 => {
+            perf = counted.then(machine::Perf::open);
+            if let Some(p) = &perf {
+                p.enable();
+            }
             let t0 = Instant::now();
             let res = decode(arm, threads, path, &mut h, &|| ());
             let wall = t0.elapsed().as_secs_f64();
+            if let Some(p) = &perf {
+                p.disable();
+            }
             let wait = run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
             let main = format!("main={:.2}", rusage(1).0);
             (res, wall, (1, main, wait, 0.0, "none".into()), 0.0)
         }
         None => {
             let w = Threads::watch(std::process::id());
+            // (opened after the sampler starts, so it is never counted)
+            perf = counted.then(machine::Perf::open);
+            if let Some(p) = &perf {
+                p.enable();
+            }
             let t0 = Instant::now();
             let res = decode(arm, threads, path, &mut h, &|| w.sample());
             let wall = t0.elapsed().as_secs_f64();
+            if let Some(p) = &perf {
+                p.disable();
+            }
             (res, wall, w.finish(true), 0.0)
         }
     };
@@ -738,8 +776,9 @@ fn child(arm: &str, threads: usize, path: &str) {
     // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
+    let perf = perf.map(machine::Perf::finish).unwrap_or_default();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
@@ -983,7 +1022,7 @@ fn env() {
             .collect::<Vec<_>>()
             .join(",")
     };
-    println!(
+    let line = format!(
         "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
@@ -994,6 +1033,7 @@ fn env() {
         throttled().is_some(),
         psi_cpu().is_some(),
     );
+    println!("{}", machine::extend_env(&line));
 }
 
 fn json_str(line: &str, key: &str) -> Option<String> {
@@ -1023,6 +1063,7 @@ fn run(args: &[String]) {
     let mut settle = 2.0;
     let mut pin = "1".to_string();
     let mut spread = false;
+    let mut machine_state = false;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -1045,6 +1086,7 @@ fn run(args: &[String]) {
                 i += 1;
             }
             "--spread" => spread = true,
+            "--machine-state" => machine_state = true,
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -1113,6 +1155,21 @@ fn run(args: &[String]) {
                         None => Command::new(&exe),
                     };
                     cmd.args(["child", &name, &t.to_string(), file]);
+                    // (--machine-state: the child counts its cycles, and the clock and the
+                    // package temperature are read before and after, outside the run's
+                    // other readings; without it the variable is cleared, so an inherited
+                    // one never turns the counters on)
+                    let sysfs = machine_state.then(machine::Sysfs::live);
+                    let mask: Vec<usize> = match &cpus {
+                        Some(list) => cpu_list(list),
+                        None => cores.iter().flatten().copied().collect(),
+                    };
+                    if machine_state {
+                        cmd.env(machine::ENV, "1");
+                    } else {
+                        cmd.env_remove(machine::ENV);
+                    }
+                    let state_pre = sysfs.as_ref().map(|s| s.state(&mask).json());
                     let load = load1();
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
@@ -1131,6 +1188,13 @@ fn run(args: &[String]) {
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
+                    let state = match (&sysfs, state_pre) {
+                        (Some(s), Some(pre)) => format!(
+                            "\"machine_pre\":{pre},\"machine_post\":{},",
+                            s.state(&mask).json()
+                        ),
+                        _ => String::new(),
+                    };
                     let throttle = th0.zip(th1).map(|(a, b)| (b.0 - a.0, b.1 - a.1));
                     let psi_ms = psi0.zip(psi1).map(|(a, b)| (b - a) as f64 / 1000.0);
                     let line = String::from_utf8_lossy(&o.stdout);
@@ -1144,7 +1208,7 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{state}{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
@@ -1343,7 +1407,941 @@ fn main() {
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
         Some("env") => env(),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env"),
+        Some("settle") => {
+            let cpus: Vec<usize> = cores().into_iter().flatten().collect();
+            machine::settle(&args[1..], &cpus)
+        }
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S]"),
+    }
+}
+
+/// The machine's state beside a run (bench 3.3.0): recorded, never judged. Opt-in: `ab run
+/// --machine-state` reads it, and sets AB_MACHINE_STATE=1 on each child so the child counts
+/// its cycles; without the flag the parent clears that variable on its children, and
+/// neither the record nor any timed path changes.
+///
+/// - **The child's counters** (`Perf`): `perf_event_open` on this process (pid 0, any CPU),
+///   inherited by every thread and process it starts after the open, each counter opened
+///   disabled before the timed region, enabled just before its clock starts, disabled just
+///   after it stops, and read after that: hardware cycles and instructions, and the software
+///   task clock (the counted threads' CPU time over the same region). Cycles count user and
+///   kernel mode where `perf_event_paranoid` allows it (at most 1, or root), else user mode
+///   only (`perf_scope` says which). The sampler thread of a parallel run is started before
+///   the counters open, so it is never counted. A program's arm is not counted (its process
+///   is spawned inside the region, beside the sampler, and its start-up can't be separated).
+///   The effective clock is cycles over the task clock (GHz), null where a counter was
+///   multiplexed (counted less than the whole region).
+/// - **The clock and the package temperature** (`Sysfs`), read by the parent before the run
+///   starts and after it ends, outside every reading of the run: the mean `scaling_cur_freq`
+///   over the run's CPUs, each cpufreq policy's governor and energy-performance preference
+///   (over the policies holding the run's CPUs), the turbo state, and the package
+///   temperature.
+///
+/// Every field is null with a `_why` beside it where it can't be read: never a guess.
+mod machine {
+    use std::path::{Path, PathBuf};
+
+    /// Set on a child by `ab run --machine-state`: the child counts its cycles
+    pub const ENV: &str = "AB_MACHINE_STATE";
+
+    /// Whether this child was asked to count its cycles
+    pub fn requested() -> bool {
+        std::env::var(ENV).is_ok_and(|v| !v.is_empty() && v != "0")
+    }
+
+    /// A JSON string literal
+    pub fn js(s: &str) -> String {
+        let mut o = String::with_capacity(s.len() + 2);
+        o.push('"');
+        for c in s.chars() {
+            match c {
+                '"' => o.push_str("\\\""),
+                '\\' => o.push_str("\\\\"),
+                c if (c as u32) < 0x20 => o.push_str(&format!("\\u{:04x}", c as u32)),
+                c => o.push(c),
+            }
+        }
+        o.push('"');
+        o
+    }
+
+    /// `"key":value` and, where there's no value, `"key_why":reason` beside a null
+    fn field<T>(key: &str, v: &Result<T, String>, show: impl Fn(&T) -> String) -> String {
+        match v {
+            Ok(x) => format!("\"{key}\":{}", show(x)),
+            Err(why) => format!("\"{key}\":null,\"{key}_why\":{}", js(why)),
+        }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // sysfs
+
+    /// The sysfs (and procfs) tree the state is read from: `/` live, a fake tree in tests
+    pub struct Sysfs {
+        root: PathBuf,
+    }
+
+    /// The machine's state at one moment, each reading or why there's none
+    pub struct State {
+        /// the mean scaling_cur_freq (MHz) and how many of the CPUs it is over
+        pub freq_mhz: Result<(f64, usize), String>,
+        pub governor: Result<String, String>,
+        pub epp: Result<String, String>,
+        /// turbo allowed, and the file that says so
+        pub turbo: Result<(bool, String), String>,
+        /// °C, and where it was read
+        pub pkg_temp_c: Result<(f64, String), String>,
+    }
+
+    impl State {
+        pub fn json(&self) -> String {
+            let mut f = vec![
+                field("freq_mhz", &self.freq_mhz, |x| format!("{:.1}", x.0)),
+                field("governor", &self.governor, |x| js(x)),
+                field("epp", &self.epp, |x| js(x)),
+                field("turbo", &self.turbo, |x| x.0.to_string()),
+                field("pkg_temp_c", &self.pkg_temp_c, |x| format!("{:.1}", x.0)),
+            ];
+            if let Ok((_, n)) = &self.freq_mhz {
+                f.insert(1, format!("\"freq_cpus\":{n}"));
+            }
+            if let Ok((_, src)) = &self.turbo {
+                f.push(format!("\"turbo_src\":{}", js(src)));
+            }
+            if let Ok((_, src)) = &self.pkg_temp_c {
+                f.push(format!("\"temp_src\":{}", js(src)));
+            }
+            format!("{{{}}}", f.join(","))
+        }
+    }
+
+    impl Sysfs {
+        pub fn live() -> Self {
+            Sysfs::at("/")
+        }
+        pub fn at(root: impl AsRef<Path>) -> Self {
+            Sysfs {
+                root: root.as_ref().to_path_buf(),
+            }
+        }
+        fn path(&self, rel: &str) -> PathBuf {
+            self.root.join(rel.trim_start_matches('/'))
+        }
+        fn read(&self, rel: &str) -> Option<String> {
+            std::fs::read_to_string(self.path(rel))
+                .ok()
+                .map(|s| s.trim().to_string())
+        }
+        /// The entries of a directory whose names start with `prefix`, in numeric order of
+        /// what follows it (policy2 before policy10)
+        fn numbered(&self, dir: &str, prefix: &str) -> Vec<String> {
+            let mut v: Vec<(u64, String)> = std::fs::read_dir(self.path(dir))
+                .map(|d| {
+                    d.filter_map(|e| {
+                        let n = e.ok()?.file_name().to_string_lossy().to_string();
+                        Some((n.strip_prefix(prefix)?.parse().ok()?, n))
+                    })
+                    .collect()
+                })
+                .unwrap_or_default();
+            v.sort();
+            v.into_iter().map(|x| x.1).collect()
+        }
+
+        /// The mean scaling_cur_freq over `cpus`, in MHz, and how many it is over
+        pub fn freq_mhz(&self, cpus: &[usize]) -> Result<(f64, usize), String> {
+            let khz: Vec<f64> = cpus
+                .iter()
+                .filter_map(|c| {
+                    self.read(&format!(
+                        "sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq"
+                    ))?
+                    .parse()
+                    .ok()
+                })
+                .collect();
+            if khz.is_empty() {
+                return Err(format!(
+                    "no cpufreq/scaling_cur_freq for any of the {} CPUs (no cpufreq driver: a VM or container)",
+                    cpus.len()
+                ));
+            }
+            Ok((
+                khz.iter().sum::<f64>() / khz.len() as f64 / 1000.0,
+                khz.len(),
+            ))
+        }
+
+        /// The cpufreq policies holding any of `cpus` (every policy where None)
+        pub fn policies(&self, cpus: Option<&[usize]>) -> Vec<String> {
+            let dir = "sys/devices/system/cpu/cpufreq";
+            self.numbered(dir, "policy")
+                .into_iter()
+                .filter(|p| {
+                    let Some(cpus) = cpus else { return true };
+                    let held = self
+                        .read(&format!("{dir}/{p}/affected_cpus"))
+                        .or_else(|| self.read(&format!("{dir}/{p}/related_cpus")))
+                        .map(|s| {
+                            s.split_whitespace()
+                                .flat_map(super::cpu_list)
+                                .collect::<Vec<_>>()
+                        })
+                        .unwrap_or_default();
+                    held.iter().any(|c| cpus.contains(c))
+                })
+                .collect()
+        }
+
+        /// A policy attribute over the policies holding `cpus`: its one value, or each
+        /// distinct value with how many policies have it ("powersave (6), performance (2)")
+        pub fn policy_attr(&self, cpus: Option<&[usize]>, attr: &str) -> Result<String, String> {
+            let ps = self.policies(cpus);
+            if ps.is_empty() {
+                return Err("no cpufreq policies (sys/devices/system/cpu/cpufreq/policy*)".into());
+            }
+            let mut seen: Vec<(String, usize)> = Vec::new();
+            for p in &ps {
+                let v = self
+                    .read(&format!("sys/devices/system/cpu/cpufreq/{p}/{attr}"))
+                    .unwrap_or_else(|| "absent".into());
+                match seen.iter_mut().find(|x| x.0 == v) {
+                    Some(x) => x.1 += 1,
+                    None => seen.push((v, 1)),
+                }
+            }
+            if seen.len() == 1 && seen[0].0 == "absent" {
+                return Err(format!("no {attr} in any of {} cpufreq policies", ps.len()));
+            }
+            Ok(if seen.len() == 1 {
+                seen.remove(0).0
+            } else {
+                seen.iter()
+                    .map(|(v, n)| format!("{v} ({n})"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+        }
+
+        /// Whether turbo (boost) is allowed: intel_pstate's no_turbo, else cpufreq's boost
+        pub fn turbo(&self) -> Result<(bool, String), String> {
+            if let Some(v) = self.read("sys/devices/system/cpu/intel_pstate/no_turbo") {
+                return Ok((v == "0", format!("intel_pstate/no_turbo={v}")));
+            }
+            if let Some(v) = self.read("sys/devices/system/cpu/cpufreq/boost") {
+                return Ok((v == "1", format!("cpufreq/boost={v}")));
+            }
+            Err("neither intel_pstate/no_turbo nor cpufreq/boost".into())
+        }
+
+        /// The package temperature (°C; the hottest package's, where there are several):
+        /// a thermal zone of type x86_pkg_temp, else hwmon's coretemp "Package id N", else
+        /// k10temp's Tctl (AMD's nearest)
+        pub fn pkg_temp_c(&self) -> Result<(f64, String), String> {
+            let milli = |s: Option<String>| s?.parse::<f64>().ok().map(|m| m / 1000.0);
+            let mut best: Option<(f64, String)> = None;
+            let keep = |best: &mut Option<(f64, String)>, t: f64, src: String| {
+                if best.as_ref().map_or(true, |b| t > b.0) {
+                    *best = Some((t, src));
+                }
+            };
+            let tz = "sys/class/thermal";
+            for z in self.numbered(tz, "thermal_zone") {
+                if self.read(&format!("{tz}/{z}/type")).as_deref() == Some("x86_pkg_temp") {
+                    if let Some(t) = milli(self.read(&format!("{tz}/{z}/temp"))) {
+                        keep(&mut best, t, format!("{z} (x86_pkg_temp)"));
+                    }
+                }
+            }
+            if best.is_none() {
+                let hw = "sys/class/hwmon";
+                for h in self.numbered(hw, "hwmon") {
+                    let name = self.read(&format!("{hw}/{h}/name")).unwrap_or_default();
+                    let want = |label: &str| match name.as_str() {
+                        "coretemp" => label.starts_with("Package id"),
+                        "k10temp" => label == "Tctl",
+                        _ => false,
+                    };
+                    for i in 1..=64 {
+                        let Some(label) = self.read(&format!("{hw}/{h}/temp{i}_label")) else {
+                            continue;
+                        };
+                        if want(&label) {
+                            if let Some(t) = milli(self.read(&format!("{hw}/{h}/temp{i}_input"))) {
+                                keep(&mut best, t, format!("{h} ({name} {label})"));
+                            }
+                        }
+                    }
+                }
+            }
+            best.ok_or_else(|| {
+                "no x86_pkg_temp thermal zone and no coretemp or k10temp hwmon".into()
+            })
+        }
+
+        /// The state over the run's CPUs
+        pub fn state(&self, cpus: &[usize]) -> State {
+            State {
+                freq_mhz: self.freq_mhz(cpus),
+                governor: self.policy_attr(Some(cpus), "scaling_governor"),
+                epp: self.policy_attr(Some(cpus), "energy_performance_preference"),
+                turbo: self.turbo(),
+                pkg_temp_c: self.pkg_temp_c(),
+            }
+        }
+
+        /// `ab env`'s static fields, over every policy: the cpufreq driver, governor, EPP,
+        /// turbo, and perf's availability (`perf`: what `Perf::open` would count here)
+        pub fn env_json(&self, perf: &str) -> String {
+            let driver = self
+                .policies(None)
+                .first()
+                .and_then(|p| {
+                    self.read(&format!(
+                        "sys/devices/system/cpu/cpufreq/{p}/scaling_driver"
+                    ))
+                })
+                .ok_or_else(|| "no cpufreq policy's scaling_driver".to_string());
+            let paranoid = self
+                .read("proc/sys/kernel/perf_event_paranoid")
+                .and_then(|s| s.parse::<i64>().ok())
+                .ok_or_else(|| "no /proc/sys/kernel/perf_event_paranoid".to_string());
+            let f = [
+                field("cpufreq_driver", &driver, |x| js(x)),
+                field(
+                    "governor",
+                    &self.policy_attr(None, "scaling_governor"),
+                    |x| js(x),
+                ),
+                field(
+                    "epp",
+                    &self.policy_attr(None, "energy_performance_preference"),
+                    |x| js(x),
+                ),
+                field("turbo", &self.turbo(), |x| x.0.to_string()),
+                field("perf_event_paranoid", &paranoid, |x| x.to_string()),
+                perf.to_string(),
+            ];
+            format!("{{{}}}", f.join(","))
+        }
+    }
+
+    /// `ab env`'s line with the machine's static fields added as `"machine":{...}`
+    pub fn extend_env(line: &str) -> String {
+        let fields = Sysfs::live().env_json(&Perf::probe());
+        match line.trim_end().strip_suffix('}') {
+            Some(head) => format!("{head},\"machine\":{fields}}}"),
+            None => line.to_string(),
+        }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // the settle check
+
+    /// `ab settle`'s registered tolerance: the clock (the mean over the allowed CPUs) within
+    /// SETTLE_FREQ_REL of its window's mean, and the package temperature within
+    /// SETTLE_TEMP_C (max - min), over the last SETTLE_WINDOW samples
+    pub const SETTLE_FREQ_REL: f64 = 0.03;
+    pub const SETTLE_TEMP_C: f64 = 2.0;
+    pub const SETTLE_WINDOW: usize = 5;
+
+    /// Whether a window of readings is settled (None: nothing readable to judge by). A
+    /// reading absent from the whole window is left out; one absent in part of it is not
+    /// settled
+    pub fn settled(freqs: &[Option<f64>], temps: &[Option<f64>]) -> Option<bool> {
+        let steady = |v: &[Option<f64>], ok: &dyn Fn(f64, f64, f64) -> bool| -> Option<bool> {
+            if v.len() < SETTLE_WINDOW || v.iter().all(Option::is_none) {
+                return if v.iter().all(Option::is_none) {
+                    None
+                } else {
+                    Some(false)
+                };
+            }
+            let w = &v[v.len() - SETTLE_WINDOW..];
+            if w.iter().any(Option::is_none) {
+                return Some(false);
+            }
+            let w: Vec<f64> = w.iter().flatten().copied().collect();
+            let (lo, hi) = w
+                .iter()
+                .fold((f64::MAX, f64::MIN), |a, &x| (a.0.min(x), a.1.max(x)));
+            let mean = w.iter().sum::<f64>() / w.len() as f64;
+            Some(ok(lo, hi, mean))
+        };
+        let f = steady(freqs, &|lo, hi, m| {
+            (hi - m).abs().max((m - lo).abs()) <= SETTLE_FREQ_REL * m
+        });
+        let t = steady(temps, &|lo, hi, _| hi - lo <= SETTLE_TEMP_C);
+        match (f, t) {
+            (None, None) => None,
+            (a, b) => Some(a.unwrap_or(true) && b.unwrap_or(true)),
+        }
+    }
+
+    /// `ab settle [--seconds N] [--interval S]`: untimed; samples the clock and the package
+    /// temperature every S seconds (default 1) until settled or N seconds pass (default
+    /// 120), and prints one JSON line. It never fails a run: a caller decides what to do
+    pub fn settle(args: &[String], cpus: &[usize]) {
+        let mut seconds = 120.0;
+        let mut interval = 1.0;
+        let mut i = 0;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--seconds" => seconds = args[i + 1].parse().expect("--seconds N"),
+                "--interval" => interval = args[i + 1].parse().expect("--interval S"),
+                a => panic!("ab settle: unknown argument {a}"),
+            }
+            i += 2;
+        }
+        let s = Sysfs::live();
+        let t0 = std::time::Instant::now();
+        let (mut freqs, mut temps) = (Vec::new(), Vec::new());
+        let mut last = s.state(cpus);
+        let verdict = loop {
+            freqs.push(last.freq_mhz.as_ref().ok().map(|x| x.0));
+            temps.push(last.pkg_temp_c.as_ref().ok().map(|x| x.0));
+            let v = settled(&freqs, &temps);
+            if v != Some(false) || t0.elapsed().as_secs_f64() + interval > seconds {
+                break v;
+            }
+            std::thread::sleep(std::time::Duration::from_secs_f64(interval));
+            last = s.state(cpus);
+        };
+        let why = match verdict {
+            None => {
+                ",\"settled_why\":\"neither the clock nor the package temperature can be read\""
+            }
+            Some(false) => ",\"settled_why\":\"timed out\"",
+            Some(true) => "",
+        };
+        println!(
+            "{{\"settled\":{}{why},\"waited_s\":{:.1},\"samples\":{},\"state\":{},\"tolerance\":{{\"freq_rel\":{SETTLE_FREQ_REL},\"temp_c\":{SETTLE_TEMP_C},\"window\":{SETTLE_WINDOW},\"interval_s\":{interval}}},\"timeout_s\":{seconds}}}",
+            verdict.map_or("null".into(), |v| v.to_string()),
+            t0.elapsed().as_secs_f64(),
+            freqs.len(),
+            last.json(),
+        );
+    }
+
+    // ---------------------------------------------------------------------------------
+    // the child's counters
+
+    #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+    const SYS_PERF_EVENT_OPEN: Option<i64> = Some(298);
+    #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+    const SYS_PERF_EVENT_OPEN: Option<i64> = Some(241);
+    #[cfg(not(all(
+        target_os = "linux",
+        any(target_arch = "x86_64", target_arch = "aarch64")
+    )))]
+    const SYS_PERF_EVENT_OPEN: Option<i64> = None;
+
+    extern "C" {
+        // (libc's own signatures: the descriptors are read and closed through std's File)
+        fn syscall(num: std::ffi::c_long, ...) -> std::ffi::c_long;
+        fn ioctl(fd: std::ffi::c_int, request: std::ffi::c_ulong, ...) -> std::ffi::c_int;
+    }
+
+    const TYPE_HARDWARE: u64 = 0;
+    const TYPE_SOFTWARE: u64 = 1;
+    const HW_CPU_CYCLES: u64 = 0;
+    const HW_INSTRUCTIONS: u64 = 1;
+    const SW_TASK_CLOCK: u64 = 1;
+    const IOC_ENABLE: u64 = 0x2400;
+    const IOC_DISABLE: u64 = 0x2401;
+
+    /// A descriptor as a File, which closes it when dropped
+    ///
+    /// # Safety
+    /// `fd` is open, owned by the caller, and never used or closed again after this
+    unsafe fn owned(fd: i32) -> std::fs::File {
+        use std::os::fd::FromRawFd;
+        unsafe { std::fs::File::from_raw_fd(fd) }
+    }
+
+    /// One counter: an open descriptor, or why it couldn't be opened
+    type Counter = Result<i32, String>;
+
+    /// The child's counters, or why there are none
+    pub struct Perf {
+        cycles: Counter,
+        instructions: Counter,
+        task_clock: Counter,
+        /// "user+kernel" or "user"
+        scope: &'static str,
+    }
+
+    /// What an errno from perf_event_open means here
+    fn why(errno: i32, paranoid: &str) -> String {
+        match errno {
+            1 | 13 => format!("perf_event_open not permitted (perf_event_paranoid={paranoid})"),
+            2 | 95 => {
+                "no such event here (no hardware PMU: a VM or container without a virtual PMU)"
+                    .into()
+            }
+            38 => "perf_event_open not implemented by this kernel".into(),
+            e => format!("perf_event_open failed (errno {e})"),
+        }
+    }
+
+    fn open(kind: u64, config: u64, user_only: bool) -> Result<i32, i32> {
+        let Some(nr) = SYS_PERF_EVENT_OPEN else {
+            return Err(38);
+        };
+        // struct perf_event_attr, its first 64 bytes (PERF_ATTR_SIZE_VER0), the rest zero:
+        // type and size, config, sample period and type (none), read_format (the total
+        // times enabled and running, so a multiplexed count shows), then the flags:
+        // disabled, inherit, exclude_kernel where user only, exclude_hv
+        let mut attr = [0u64; 8];
+        attr[0] = kind | (64 << 32);
+        attr[1] = config;
+        attr[4] = 1 | 2;
+        attr[5] = 1 | 2 | if user_only { 1 << 5 } else { 0 } | 1 << 6;
+        // SAFETY: the attribute is a valid perf_event_attr of the size it declares; pid 0,
+        // any CPU, no group, close-on-exec (PERF_FLAG_FD_CLOEXEC)
+        let fd = unsafe {
+            syscall(
+                nr as std::ffi::c_long,
+                attr.as_ptr(),
+                0i64,
+                -1i64,
+                -1i64,
+                8u64,
+            )
+        };
+        if fd < 0 {
+            Err(std::io::Error::last_os_error().raw_os_error().unwrap_or(0))
+        } else {
+            Ok(fd as i32)
+        }
+    }
+
+    impl Perf {
+        /// The counters, opened disabled: user and kernel mode where allowed, else user only
+        pub fn open() -> Perf {
+            Perf::open_events(
+                (TYPE_HARDWARE, HW_CPU_CYCLES),
+                (TYPE_HARDWARE, HW_INSTRUCTIONS),
+            )
+        }
+        /// `open` with the events counted as cycles and instructions given (a test counts
+        /// software events in their place, where there's no hardware PMU)
+        fn open_events(cyc: (u64, u64), ins: (u64, u64)) -> Perf {
+            let paranoid = std::fs::read_to_string("/proc/sys/kernel/perf_event_paranoid")
+                .map_or("unreadable".into(), |s| s.trim().to_string());
+            let (cycles, scope) = match open(cyc.0, cyc.1, false) {
+                Ok(fd) => (Ok(fd), "user+kernel"),
+                Err(1 | 13) => (
+                    open(cyc.0, cyc.1, true).map_err(|e| why(e, &paranoid)),
+                    "user",
+                ),
+                Err(e) => (Err(why(e, &paranoid)), "user+kernel"),
+            };
+            let user = scope == "user";
+            let (instructions, task_clock) = if cycles.is_ok() {
+                (
+                    open(ins.0, ins.1, user).map_err(|e| why(e, &paranoid)),
+                    open(TYPE_SOFTWARE, SW_TASK_CLOCK, user).map_err(|e| why(e, &paranoid)),
+                )
+            } else {
+                let no = cycles.as_ref().err().cloned().unwrap_or_default();
+                (
+                    Err(format!("not opened: cycles {no}")),
+                    Err(format!("not opened: cycles {no}")),
+                )
+            };
+            Perf {
+                cycles,
+                instructions,
+                task_clock,
+                scope,
+            }
+        }
+        /// A child that wasn't asked to count, or can't (a program's arm): every field null
+        pub fn skipped(reason: &str) -> Perf {
+            Perf {
+                cycles: Err(reason.into()),
+                instructions: Err(reason.into()),
+                task_clock: Err(reason.into()),
+                scope: "user+kernel",
+            }
+        }
+        fn each(&self, req: u64) {
+            for fd in [&self.task_clock, &self.instructions, &self.cycles]
+                .into_iter()
+                .flatten()
+            {
+                // SAFETY: an open perf event descriptor; the request takes no argument
+                unsafe { ioctl(*fd, req as std::ffi::c_ulong, 0u64) };
+            }
+        }
+        /// Just before the timed region's clock starts
+        #[inline]
+        pub fn enable(&self) {
+            self.each(IOC_ENABLE);
+        }
+        /// Just after it stops
+        #[inline]
+        pub fn disable(&self) {
+            self.each(IOC_DISABLE);
+        }
+        /// The record's fields (after `disable`), the descriptors closed: a leading comma,
+        /// then cycles, instructions, the task clock (s), the scope, the least share of
+        /// the region a counter ran for, and the effective clock (GHz)
+        pub fn finish(self) -> String {
+            let get = |c: &Counter| -> Result<(u64, f64), String> {
+                let fd = *c.as_ref().map_err(Clone::clone)?;
+                // SAFETY: an open perf event descriptor this Perf owns, taken once: the File
+                // closes it when dropped
+                let mut file = unsafe { owned(fd) };
+                // (the value, time enabled and time running: read_format 3)
+                let mut raw = [0u8; 24];
+                std::io::Read::read_exact(&mut file, &mut raw)
+                    .map_err(|e| format!("reading the counter: {e}"))?;
+                let w = |i: usize| u64::from_ne_bytes(raw[8 * i..8 * i + 8].try_into().unwrap());
+                let b = [w(0), w(1), w(2)];
+                Ok((
+                    b[0],
+                    if b[1] == 0 {
+                        0.0
+                    } else {
+                        b[2] as f64 / b[1] as f64
+                    },
+                ))
+            };
+            let (cy, ins, tc) = (
+                get(&self.cycles),
+                get(&self.instructions),
+                get(&self.task_clock),
+            );
+            let running = [&cy, &ins, &tc]
+                .iter()
+                .filter_map(|r| r.as_ref().ok().map(|x| x.1))
+                .fold(None, |a: Option<f64>, x| Some(a.map_or(x, |a| a.min(x))));
+            let eff = match (&cy, &tc) {
+                (Ok(c), Ok(t)) if c.1 < 1.0 || t.1 < 1.0 => Err(format!(
+                    "multiplexed: counted {:.0}% of the region",
+                    100.0 * c.1.min(t.1)
+                )),
+                (Ok(c), Ok(t)) if t.0 > 0 => Ok(c.0 as f64 / t.0 as f64),
+                (Ok(_), Ok(_)) => Err("no task clock".into()),
+                (Err(e), _) => Err(format!("no cycles: {e}")),
+                (_, Err(e)) => Err(format!("no task clock: {e}")),
+            };
+            let measured = cy.is_ok();
+            let mut f = vec![
+                field("cycles", &cy, |x| x.0.to_string()),
+                field("instructions", &ins, |x| x.0.to_string()),
+                field("task_clock_s", &tc, |x| format!("{:.4}", x.0 as f64 * 1e-9)),
+            ];
+            if measured {
+                f.push(format!("\"perf_scope\":\"{}\"", self.scope));
+            }
+            f.push(format!(
+                "\"perf_running\":{}",
+                running.map_or("null".into(), |x| format!("{x:.3}"))
+            ));
+            f.push(field("eff_ghz", &eff, |x| format!("{x:.3}")));
+            format!(",{}", f.join(","))
+        }
+        /// `ab env`'s `perf` field: what the counters would count here
+        pub fn probe() -> String {
+            let p = Perf::open();
+            let r = match &p.cycles {
+                Ok(_) => format!(
+                    "\"perf\":{{\"cycles\":true,\"scope\":\"{}\",\"instructions\":{},\"task_clock\":{}}}",
+                    p.scope,
+                    p.instructions.is_ok(),
+                    p.task_clock.is_ok()
+                ),
+                Err(e) => format!("\"perf\":{{\"cycles\":false,\"why\":{}}}", js(e)),
+            };
+            for fd in [&p.task_clock, &p.instructions, &p.cycles]
+                .into_iter()
+                .flatten()
+            {
+                // SAFETY: an open descriptor this Perf owns, closed once (by the File's drop)
+                drop(unsafe { owned(*fd) });
+            }
+            r
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        /// A fake tree under the test's own directory, removed when dropped
+        struct Tree(PathBuf);
+        impl Tree {
+            fn new(name: &str) -> Tree {
+                let p =
+                    std::env::temp_dir().join(format!("ab-machine-{}-{name}", std::process::id()));
+                let _ = std::fs::remove_dir_all(&p);
+                std::fs::create_dir_all(&p).unwrap();
+                Tree(p)
+            }
+            fn put(&self, rel: &str, v: &str) -> &Self {
+                let p = self.0.join(rel);
+                std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+                std::fs::write(p, format!("{v}\n")).unwrap();
+                self
+            }
+        }
+        impl Drop for Tree {
+            fn drop(&mut self) {
+                let _ = std::fs::remove_dir_all(&self.0);
+            }
+        }
+
+        fn intel(t: &Tree) {
+            for c in 0..4 {
+                t.put(
+                    &format!("sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq"),
+                    &format!("{}", 4_000_000 + 100_000 * c),
+                );
+                let p = format!("sys/devices/system/cpu/cpufreq/policy{c}");
+                t.put(&format!("{p}/affected_cpus"), &c.to_string())
+                    .put(
+                        &format!("{p}/scaling_governor"),
+                        if c < 3 { "powersave" } else { "performance" },
+                    )
+                    .put(
+                        &format!("{p}/energy_performance_preference"),
+                        "balance_performance",
+                    )
+                    .put(&format!("{p}/scaling_driver"), "intel_pstate");
+            }
+            t.put("sys/devices/system/cpu/intel_pstate/no_turbo", "0")
+                .put("sys/class/thermal/thermal_zone0/type", "acpitz")
+                .put("sys/class/thermal/thermal_zone0/temp", "99000")
+                .put("sys/class/thermal/thermal_zone1/type", "x86_pkg_temp")
+                .put("sys/class/thermal/thermal_zone1/temp", "71000")
+                .put("proc/sys/kernel/perf_event_paranoid", "2");
+        }
+
+        #[test]
+        fn reads_an_intel_tree() {
+            let t = Tree::new("intel");
+            intel(&t);
+            let s = Sysfs::at(&t.0);
+            let (mhz, n) = s.freq_mhz(&[1, 2]).unwrap();
+            assert_eq!((mhz, n), (4150.0, 2));
+            assert_eq!(s.policies(Some(&[1, 2])), vec!["policy1", "policy2"]);
+            assert_eq!(
+                s.policy_attr(Some(&[0, 1]), "scaling_governor").unwrap(),
+                "powersave"
+            );
+            assert_eq!(
+                s.policy_attr(None, "scaling_governor").unwrap(),
+                "powersave (3), performance (1)"
+            );
+            assert_eq!(
+                s.policy_attr(Some(&[3]), "energy_performance_preference")
+                    .unwrap(),
+                "balance_performance"
+            );
+            assert_eq!(s.turbo().unwrap(), (true, "intel_pstate/no_turbo=0".into()));
+            // the package zone, never another (acpitz)
+            assert_eq!(
+                s.pkg_temp_c().unwrap(),
+                (71.0, "thermal_zone1 (x86_pkg_temp)".into())
+            );
+            let j = s.state(&[0, 1, 2, 3]).json();
+            assert!(j.contains("\"freq_mhz\":4150.0,\"freq_cpus\":4"), "{j}");
+            assert!(
+                j.contains("\"turbo\":true") && j.contains("\"pkg_temp_c\":71.0"),
+                "{j}"
+            );
+            assert!(!j.contains("_why"), "{j}");
+            let e = s.env_json("\"perf\":{}");
+            assert!(e.contains("\"cpufreq_driver\":\"intel_pstate\""), "{e}");
+            assert!(e.contains("\"perf_event_paranoid\":2"), "{e}");
+        }
+
+        #[test]
+        fn reads_hwmon_and_boost() {
+            let t = Tree::new("amd");
+            t.put("sys/devices/system/cpu/cpufreq/boost", "0")
+                .put("sys/class/hwmon/hwmon0/name", "nvme")
+                .put("sys/class/hwmon/hwmon0/temp1_label", "Composite")
+                .put("sys/class/hwmon/hwmon0/temp1_input", "40000")
+                .put("sys/class/hwmon/hwmon2/name", "coretemp")
+                .put("sys/class/hwmon/hwmon2/temp1_label", "Package id 0")
+                .put("sys/class/hwmon/hwmon2/temp1_input", "64000")
+                .put("sys/class/hwmon/hwmon2/temp2_label", "Core 0")
+                .put("sys/class/hwmon/hwmon2/temp2_input", "90000")
+                .put("sys/class/hwmon/hwmon10/name", "coretemp")
+                .put("sys/class/hwmon/hwmon10/temp1_label", "Package id 1")
+                .put("sys/class/hwmon/hwmon10/temp1_input", "66500");
+            let s = Sysfs::at(&t.0);
+            assert_eq!(s.turbo().unwrap(), (false, "cpufreq/boost=0".into()));
+            // the hotter package, never a core's reading
+            assert_eq!(
+                s.pkg_temp_c().unwrap(),
+                (66.5, "hwmon10 (coretemp Package id 1)".into())
+            );
+            let k = Tree::new("k10");
+            k.put("sys/class/hwmon/hwmon0/name", "k10temp")
+                .put("sys/class/hwmon/hwmon0/temp1_label", "Tctl")
+                .put("sys/class/hwmon/hwmon0/temp1_input", "55250");
+            assert_eq!(Sysfs::at(&k.0).pkg_temp_c().unwrap().0, 55.25);
+        }
+
+        #[test]
+        fn absent_is_null_with_a_reason() {
+            let t = Tree::new("empty");
+            let s = Sysfs::at(&t.0);
+            let j = s.state(&[0, 1]).json();
+            for k in ["freq_mhz", "governor", "epp", "turbo", "pkg_temp_c"] {
+                assert!(
+                    j.contains(&format!("\"{k}\":null,\"{k}_why\":\"")),
+                    "{k}: {j}"
+                );
+            }
+            assert!(!j.contains("freq_cpus") && !j.contains("temp_src"), "{j}");
+            // a driver with no EPP (acpi-cpufreq): the governor read, the EPP null
+            t.put(
+                "sys/devices/system/cpu/cpufreq/policy0/affected_cpus",
+                "0 1",
+            )
+            .put(
+                "sys/devices/system/cpu/cpufreq/policy0/scaling_governor",
+                "schedutil",
+            );
+            assert_eq!(
+                s.policy_attr(Some(&[1]), "scaling_governor").unwrap(),
+                "schedutil"
+            );
+            assert!(s
+                .policy_attr(Some(&[1]), "energy_performance_preference")
+                .is_err());
+            // CPUs outside every policy: none of the policies
+            assert!(s.policy_attr(Some(&[7]), "scaling_governor").is_err());
+            let e = s.env_json("\"perf\":{}");
+            assert!(
+                e.contains("\"perf_event_paranoid\":null,\"perf_event_paranoid_why\""),
+                "{e}"
+            );
+        }
+
+        #[test]
+        fn the_record_fields_exist_when_unavailable() {
+            let f = Perf::skipped("not measured for a program's arm").finish();
+            assert!(f.starts_with(','));
+            let rec: String = format!("{{\"wall\":1.0{f}}}");
+            for k in ["cycles", "instructions", "task_clock_s", "eff_ghz"] {
+                assert!(
+                    rec.contains(&format!("\"{k}\":null,\"{k}_why\":\"")),
+                    "{k}: {rec}"
+                );
+            }
+            assert!(rec.contains("\"perf_running\":null"), "{rec}");
+            assert!(!rec.contains("perf_scope"), "{rec}");
+            // whatever this machine allows, opening and reading gives the same fields: each
+            // a value or null with its reason
+            let p = Perf::open();
+            p.enable();
+            std::hint::black_box((0..100_000u64).sum::<u64>());
+            p.disable();
+            let f = p.finish();
+            for k in ["cycles", "instructions", "task_clock_s", "eff_ghz"] {
+                let present =
+                    f.contains(&format!("\"{k}\":")) && !f.contains(&format!("\"{k}\":null"));
+                let why = f.contains(&format!("\"{k}\":null,\"{k}_why\":\""));
+                assert!(present ^ why, "{k}: {f}");
+            }
+        }
+
+        /// The counters' mechanics where there's no hardware PMU: software events (the task
+        /// clock, the CPU clock) in place of cycles and instructions, so opening disabled,
+        /// inheriting into a thread started in the region, and counting nothing outside
+        /// it are checked on any Linux machine
+        #[test]
+        fn counts_threads_started_in_the_region_and_nothing_outside_it() {
+            // (spinning for `ms` of this thread's own CPU time, RUSAGE_THREAD, not wall
+            // time, so a preempted thread on a busy machine spins as long)
+            let spin = |ms: u64| {
+                let t = crate::rusage(1).0;
+                let mut x = 0u64;
+                while crate::rusage(1).0 - t < ms as f64 * 1e-3 {
+                    for _ in 0..10_000 {
+                        x = std::hint::black_box(x.wrapping_add(1));
+                    }
+                }
+            };
+            let p = Perf::open_events((TYPE_SOFTWARE, SW_TASK_CLOCK), (TYPE_SOFTWARE, 0));
+            if p.cycles.is_err() {
+                eprintln!("no software events here: {:?}", p.cycles);
+                return;
+            }
+            spin(60); // before the region: not counted
+            p.enable();
+            std::thread::spawn(move || spin(80)).join().unwrap();
+            spin(20);
+            p.disable();
+            spin(60); // after it: not counted
+            let f = p.finish();
+            let num = |k: &str| -> f64 {
+                let i = f.find(&format!("\"{k}\":")).unwrap() + k.len() + 3;
+                f[i..].split([',', '}']).next().unwrap().parse().unwrap()
+            };
+            // the "cycles" stand-in is the task clock in ns: the thread's 80 ms and the
+            // main thread's 20 ms, and none of the 120 ms outside
+            let ns = num("cycles");
+            assert!((95e6..115e6).contains(&ns), "{ns} ns: {f}");
+            assert!((0.095..0.115).contains(&num("task_clock_s")), "{f}");
+            assert_eq!(num("perf_running"), 1.0, "{f}");
+            // task clock over task clock: 1 cycle a ns
+            assert!((num("eff_ghz") - 1.0).abs() < 0.01, "{f}");
+        }
+
+        #[test]
+        fn env_line_gains_a_machine_field() {
+            let l = extend_env("{\"cpus\":4,\"runq\":{\"counts\":true}}");
+            assert!(
+                l.starts_with("{\"cpus\":4,\"runq\":{\"counts\":true},\"machine\":{"),
+                "{l}"
+            );
+            assert!(
+                l.ends_with("}}") && l.contains("\"perf\":{\"cycles\":"),
+                "{l}"
+            );
+        }
+
+        #[test]
+        fn settles_within_the_tolerance() {
+            let f = |v: &[f64]| v.iter().map(|&x| Some(x)).collect::<Vec<_>>();
+            let none = vec![None; 6];
+            // too few samples, then a steady window
+            assert_eq!(settled(&f(&[4000.0; 3]), &none), Some(false));
+            assert_eq!(settled(&f(&[4000.0; 5]), &none), Some(true));
+            // the clock moving more than 3%: not settled
+            assert_eq!(
+                settled(&f(&[4000.0, 4000.0, 4000.0, 4000.0, 4400.0]), &none),
+                Some(false)
+            );
+            // a settled clock with a rising temperature: not settled
+            assert_eq!(
+                settled(&f(&[4000.0; 5]), &f(&[60.0, 61.0, 62.0, 63.0, 64.0])),
+                Some(false)
+            );
+            assert_eq!(
+                settled(&f(&[4000.0; 5]), &f(&[63.0, 64.0, 63.5, 64.0, 63.0])),
+                Some(true)
+            );
+            // nothing readable: no verdict
+            assert_eq!(settled(&none, &none), None);
+            // a reading lost partway: not settled
+            let mut gap = f(&[4000.0; 5]);
+            gap[3] = None;
+            assert_eq!(settled(&gap, &none), Some(false));
+        }
+
+        #[test]
+        fn strings_are_escaped() {
+            assert_eq!(js("a\"b\\c\n"), "\"a\\\"b\\\\c\\u000a\"");
+        }
     }
 }
 

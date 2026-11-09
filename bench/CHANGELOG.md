@@ -35,6 +35,55 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.3.0] - 2026-11-09
+
+### Added
+
+- **The machine's state beside each run, recorded and never judged** (`examples/ab.rs`'s
+  `machine` module, `bench/report.py`'s `machine_state`). Opt-in: only `ab run
+  --machine-state` records it; without the flag no record, and no timed path, changes, and
+  `ab run` clears `AB_MACHINE_STATE` on its children so an inherited one never turns the
+  counters on. No frozen recipe passes the flag. Why: 41 of the 140 runs of
+  `run-fed-leader/20261109T080633Z` (#270) took twice the wall with every thread's CPU
+  doubled, consistent with a halved clock, and nothing recorded the clock.
+  - **In the child, over exactly the region its wall is:** `cycles` and `instructions`
+    (perf's hardware events) and `task_clock_s` (the counted threads' CPU time),
+    `perf_event_open` on the child, inherited by every thread it starts. They are opened
+    disabled before the region, enabled just before its clock starts, disabled just after it
+    stops, and read after. Cycles count user and kernel mode where `perf_event_paranoid`
+    allows it, else user mode only (`perf_scope`). `eff_ghz` is cycles over the task clock,
+    null where a counter was multiplexed (`perf_running` below 1). The parallel arms'
+    sampler starts before the counters open and is never counted. A program's arm
+    (`lbzip2`, `indexed_bzip2`, `bz2ng`) is not counted.
+  - **In the parent, before the run starts and after it ends,** outside the run's other
+    readings: `machine_pre` and `machine_post`, each with the mean `scaling_cur_freq` over
+    the run's CPUs, the governor and energy-performance preference of the cpufreq policies
+    holding them, the turbo state (`intel_pstate/no_turbo` or `cpufreq/boost`), and the
+    package temperature (thermal zone `x86_pkg_temp`, else hwmon `coretemp`'s package, else
+    `k10temp`'s Tctl).
+  - Every field is null with a `<field>_why` reason where it can't be read: never a guess.
+  - **Overhead, with the flag only:** a few syscalls in the child outside its region
+    (opening, enabling, disabling and reading the counters: in its process CPU, not its
+    wall; the counters count the tail of the enables and the head of the disables). Inside
+    the region: the kernel clones the three counters for each thread the decode starts,
+    and saves and restores them at each context switch of a counted thread. The parent's
+    sysfs reads fall outside every reading of the run.
+- **`ab env`'s `machine` field:** the cpufreq driver, governor, EPP and turbo state over
+  every policy, `perf_event_paranoid`, and whether perf can count cycles here (and in which
+  mode), or why not. Always printed; `ab env` times nothing.
+- **`ab settle [--seconds N] [--interval S]`:** untimed. It samples the clock (the mean over
+  the allowed CPUs) and the package temperature every S seconds (default 1) until both
+  hold within the registered tolerance over the last 5 samples: the clock within 3% of the
+  window's mean and the temperature within 2 °C (max − min). It stops after N seconds
+  (default 120), prints one JSON line, and never fails: `settled` is null with a reason
+  where neither can be read. Recipes may call it before round 0; no frozen recipe does.
+- **The report's machine-state table** (`summary`'s `machine_state`, and `report.py machine
+  RUNS.jsonl`, one row a run, for any recipe's runs file). It shows the measured cycles a
+  byte and the effective clock beside the wall, and the clock and temperature before and
+  after. It feeds no verdict: the assessment, the figures and the accounting read nothing
+  from it (bench/test_report.py checks they're unchanged). The existing "cycles a byte at
+  the reported clock" figures are unchanged and still modelled from `/proc/cpuinfo`'s clock.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added
