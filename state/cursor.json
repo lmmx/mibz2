@@ -902,7 +902,7 @@
     },
     {
       "trigger_comment_id": 6732660399,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -910,7 +910,10 @@
       "report_commit": "b11369d9877cce47f501720858f138e9609eda51",
       "report_path": "state/reports/run-fed-result-freeze-6732660399/report.md",
       "review_comment_pr": 145,
-      "disposition": "CI VALID attributed LEAD independently reproduced; REVISE workstation admission before freeze. Additional reg contrasts descriptive, not direct-fill causal isolation; one-team ls ranking reverses. No implementation or timing."
+      "disposition": "CI VALID attributed LEAD independently reproduced; REVISE workstation admission before freeze. Additional reg contrasts descriptive, not direct-fill causal isolation; one-team ls ranking reverses. No implementation or timing.",
+      "review_comment_id": 6732761085,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned verifier hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
