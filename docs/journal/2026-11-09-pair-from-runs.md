@@ -386,3 +386,125 @@ O/P and R/O are printed as references and are not gates.
 - Any change to #34's walk, or a port of the room walk's protocol to pairs. The REVIEW notes
   that this needs rephased segment starts, two-row marker tests, odd tails and periodic orbits.
 - Admission tuning, multi-threaded decode, and the workstation.
+
+## 10. Revision, 2026-11-09: Guardian D046 and the Researcher's REVISE
+
+**Still a DRAFT, NOT FROZEN.** This revision answers Guardian D046 (6730359769: the STOP on the
+exposed pair path's unsafe public state, and B5's evidence) and the Researcher's REVISE
+(6730363373, report 6730270019). It does not lift the STOP, freeze the registration, or
+pre-empt either reviewer: each decides on its own evidence. No timing was run.
+
+### D046: the safe boundary
+
+| D046 obligation | Fix | Test |
+|---|---|---|
+| 1. `pair_start(&[], &PairTable::default(), 0)` reaches `first.get_unchecked(0)`; an out-of-range `orig_ptr` on a built table likewise | The builders check `1 <= n <= MAX_N` and `orig_ptr < n` before anything unchecked, and on success alone return a `Built` token (private fields) borrowing the table and the column immutably. `pair_start` takes a `Built` and checks its row. `first_byte` is the private `unsafe fn first_byte_unchecked` with a `# Safety` contract | `miri_witness_default_table_and_bad_row`; doc tests: a `Built` forged (`compile_fail,E0451`), `pair_start` on a bare table (`E0308`), the table rebuilt under a `Built` (`E0499`) |
+| 2. `ll=[1]`, `counts[0]=1`: equal sum, valid buckets, `pair_steps` reads `ll[1]` | `build_pairs` checks each byte's count against the column, from the per-bucket histogram it makes anyway (summed over the buckets), before the scatter. The counts' sum is taken in u64. `pair_steps` is a private `unsafe fn` with a `# Safety` contract; each call site states why it holds | `miri_witness_wrong_histogram_and_no_fallback`: the witness, a u32 sum that wraps to n (`counts[0]=u32::MAX`, `counts[1]=2`), equal-sum moves near and far, a sum one more; each refused by both builders and by `setup` on both. The fuzz refuses an equal-sum wrong histogram on every case |
+| 3. `setup(Build::Runs)` falls back to the unchecked row builder on failed validation | The fallback is gone. Both builders return `Result<Built, PairError>`, and `setup` returns the error. A failed check is never a reason to try the other builder | The same test: `setup(Build::Runs)` returns `Counts`, and the scratch then builds and walks a good block |
+| 4. Replacing the public `scratch.t` leaves stale starts; `walk` reads the empty table | `PairScratch`'s fields are private. `setup` returns a `Prepared` token (private fields) borrowing the table, starts and LF marks immutably and the walk's buffers mutably. `walk` takes it by value. The walk's lanes are the private `unsafe fn walk_lanes`, whose contract is the prepared state | `miri_witness_stale_state` (a refused `setup` clears the state, and no `Prepared` exists for it); doc tests: the table replaced (`E0616`), a `Prepared` forged (`E0451`), the scratch prepared again under one (`E0499`) |
+| Size and overflow limits | `MAX_N` = 2^22 (links below 2^22, words below 2^30, bits 30 and 31 free; the table comment's "2^20" corrected); segments 1 to `MAX_SEGMENTS`; the LF rows strictly rising below n; a walk of 0 lanes is a compile error | `too_long_refused`, `miri_rows_refused`, `miri_witness_stale_state` (segments 0, `MAX_SEGMENTS + 1`, `usize::MAX`) |
+| Never parallelise adjacent cells with the spilling stores | A serial-only contract on `fill` and in the module's doc. Nothing runs the fill in parallel | (a contract: there is no parallel variant to test) |
+| A valid prepared fast path kept | The checks are per block, outside the loops: the bigram histogram's 256 × 256 totals, and an O(256 + rows) pass. The hot loops are unchanged | the existing word-for-word and walk tests |
+
+**The compile_fail doc tests' error codes** are checked on nightly (`miri.yml`'s doc-test step,
+`cargo test --features pair-runs --doc pair_runs`); all 8 doc tests pass locally on nightly.
+
+### D046: B5's evidence on the repaired code (local; CI's Miri run is the record)
+
+**Miri**, at source commit `709613e541a455b1754300972bff4ebf36c9e9ce` (the code as pushed; the
+later commit changes only this journal), `rustc 1.101.0-nightly (16d1ffac1 2026-10-26)`,
+`miri 0.1.0 (16d1ffac17 2026-10-26)`, `cargo +nightly miri test --lib -- pair_runs::tests::miri_`:
+
+| Run | Result | Reached |
+|---|---|---|
+| default target, `MIBZ2_EXPECT_SSE2=1` (forwarded) | 6 passed, 408 s | the SSE2 fill, asserted in every build the tests check (`expect_fill`) |
+| `-C target-feature=+avx2,+bmi1`, `MIBZ2_EXPECT_AVX2=1` (forwarded) | 6 passed, 407 s | the AVX2 fill, asserted likewise |
+| negative control: default target, `MIBZ2_EXPECT_AVX2=1`, `miri_fill_reached` | **failed, as it must**: "AVX2 fill expected, and the SSE2 one ran" | the assertion is not vacuous |
+
+The six tests cover both builders on short and long cells, vector spills and scalar tails
+(asserted against the oracle's classification, including a 13-row end cell in an exact
+allocation), buffer reuse, the setup/flagged walk in place and out of place, start and LF-row
+ends and buffer growth (asserted), more segments than rows, and the four witnesses' refusals.
+`miri.yml` runs the same three steps on CI, plus its existing `miri_*` set and the nightly doc
+tests. The scalar fill off x86_64 is not exercised (no such runner): a named limitation.
+
+**The differential fuzz** (`pair_runs::tests::fuzz_long`, seed `0xb5d046`, 300 s, the `fuzz`
+profile: release speed with debug assertions and overflow checks; source as above):
+`MIBZ2_PAIR_FUZZ_SECS=300 cargo test --profile fuzz --lib pair_runs::tests::fuzz_long --
+--ignored --nocapture`. Each case draws one of 11 column kinds (constant, alternating, periodic,
+runs around 8/16/64, random runs, small and full alphabets, the sampler-aliasing shape, a ramp,
+sparse insertions, the extreme bytes) at a boundary length (1-20, 23-25, 31-33, 47-49, 63-66,
+71-73, 127-129, 255-257, 511-513, 1023-1025) or a random one up to 6,000, with three primary
+indices and random LF rows. Both builders (the run builder on a reused table poisoned by another
+build) are compared with a stable-sort ψ² oracle: the words, the LF rows, the first row, and the
+fill's cells, vector cells, spills and scalar cells, cell by cell; equal-sum wrong counts and an
+out-of-range primary index are refused; the walk (1, 7 or 32 lanes, 1 to n + 8 segments, in place
+or not, either builder) is compared with the oracle's text; and every 64th case `Pairs` takes a
+dense and a sparse segmented block (admission declined and taken) and a short one.
+
+| | |
+|---|---|
+| cases | 583,803 (each kind 52,744-53,488), 914.9 M rows |
+| builds | 3,502,818 (the run builder's 1,751,409 all on the AVX2 fill: this machine has it) |
+| cells / vector cells / spills / scalar tails | 1,272,969,639 / 1,265,356,020 / 1,255,874,934 / 7,613,619 |
+| walks (in place) | 1,751,409 (875,508) |
+| segment ends at a start / at an LF row; buffer grows | 140,992,903 / 76,066,193; 317 |
+| more segments than rows | 342,388 |
+| refused invalid inputs | 2,335,212 |
+| `Pairs`: taken / declined / short | 9,266 / 9,266 / 9,266 |
+| failures | none |
+
+`fuzz_smoke`, a fixed-seed 400-case run of the same harness, is in every `cargo test`. The fuzz's
+fills ran AVX2 natively; the SSE2 fill's coverage is Miri's and the shared scalar classification.
+
+### D046: the mutation kills
+
+Each mutant was made on a throwaway local branch from the repaired commit, its commands run, and
+the branch deleted; the restored baseline then passed `cargo test --lib pair_runs` (13 passed)
+and the nightly doc tests (8 passed). Native is `cargo test --lib pair_runs` (the test profile:
+opt-level 3 with debug assertions); Miri is `cargo +nightly miri test --lib --
+pair_runs::tests::NAME --exact` with `MIBZ2_EXPECT_SSE2=1`; doc is the nightly doc tests.
+
+| Obligation | Mutant | Killed by |
+|---|---|---|
+| the physical read/write guard | `len <= room - 8` → `len <= room` | native: `fuzz_smoke` (the fill's cells against the oracle's classification, kind 3, n 1356) and `miri_fill_reached` (a 13-row end cell must be scalar); Miri `miri_fill_reached`: **UB**, an 8-byte read 5 bytes from the end of the column's allocation |
+| the spill repair | the F intervals filled in falling order (spills land on cells already written) | native: `exhaustive_small`, `fuzz_smoke`, `miri_fill_reached`, `miri_pair_runs` and others (the words) |
+| the final cell / initialisation | the last F interval never filled (`set_len` exposes it) | native: `exhaustive_small`, `fuzz_smoke` (its poisoned, reused table), `miri_fill_reached`, `pair_walk_equals_plain` and others; Miri `miri_fill_reached`: **UB**, uninitialised memory read |
+| the merge | `fo[j + 1].start <= p` → `< p` | native: `exhaustive_small`, `fuzz_smoke` and others (the words, or the fill's interval assertion) |
+| stable order | the runs' counting sort taken in reverse | native: `exhaustive_small`, `fuzz_smoke` and others |
+| the cell arithmetic | a cell's link base + 1 | native: `exhaustive_small`, `fuzz_smoke` and others |
+| input validation: the row builder's counts | its per-byte count check removed | native: `miri_witness_wrong_histogram_and_no_fallback` (the standard library's unchecked-index precondition, in `pair_steps`, on the D046 witness) and `fuzz_smoke`; Miri: the same, the precondition abort on the witness |
+| input validation: the run builder's counts | its per-byte count check removed | native: `miri_witness_wrong_histogram_and_no_fallback` (the fill's interval assertion), `fuzz_smoke` |
+| input validation: the primary index | the `orig_ptr < n` check removed | native: `fuzz_smoke` (the unchecked-index precondition in `first_byte_unchecked`); Miri `miri_witness_default_table_and_bad_row`: the same abort |
+| flag bit 31 | `take` keeps START in a start's link (`& !PAIR_LF`) | native: `take`'s link assertion (row below n) in `pair_walk_equals_plain`, `miri_pair_runs`, `fuzz_smoke` and others |
+| flag bit 30 | a start's LF row marked START only | native: the walk's join (no successor recorded) in `pair_walk_equals_plain`, `miri_pair_runs`, `fuzz_smoke` and others |
+| the stale-pointer refresh | `grow` does not refresh the lane's end pointer | native: the standard library's `offset_from` precondition in `admission_heuristic_aliases`; Miri `miri_pair_runs` (which asserts it grew): **UB**, `ptr_offset_from` across two allocations |
+| the state boundary: the table | `PairScratch.t` public again | doc: the `E0616` test compiles, so fails |
+| the state boundary: the token | `Prepared`'s fields public | doc: the `E0451` test compiles, so fails |
+
+### The Researcher's REVISE (6730270019)
+
+| Item | What changed | Where, and its check |
+|---|---|---|
+| Keep Q1/Q2's thresholds; exclude the pilot; disclose the revision | Thresholds unchanged. The pilot samples are excluded from every registered interval and verdict, and the candidate's revisions are disclosed | §6 "The candidate", §8 |
+| The admission in the fixed R candidate | R is the deployable hybrid (sampler, constant, strict `>`, fallback, taken/declined counts). The need for admission followed the records/random losses; 0.15 was picked from observed corpus counts. "Fixed before any timing" is removed from `ADMIT_DENSITY`'s doc, and "fixed before CI" from §2 | §2, §6, §8; `src/pair_runs.rs` |
+| Q1 a straight builder comparison; R/O not the builder | Q1 is (a), both builders over every segmented block with no admission. R/O is a policy contrast | §6; the harness's doc |
+| 17,511 | 17,520; `exhaustive_small` asserts the count | §3 |
+| The selector a heuristic | The sampler frozen as it is, documented as a heuristic, not a density bound. The witness is kept: 16,384 bytes sampling to 0 at a true 0.9375, admitted; at 65,536 bytes `Pairs` takes it and decodes it correctly | `admission_heuristic_aliases`; `run_density`'s doc |
+| VALID: M1's difference required, finite endpoints | Required in the harness and in the workflow's validity; `diff` returns no interval with a non-finite or unordered endpoint | `examples/pair_runs.rs`; `bench/pair_runs_validity.py`; fixtures `test_missing_m1`, `test_m1_difference_nonfinite_endpoints` |
+| VALID: a finite, positive clock | NaN or 0 GHz is NOT VALID (harness and plan) | fixtures `test_bad_clock_nan`, `test_bad_clock_zero` |
+| VALID: the planned copies and the exact inventory | `plan.json`, written before any copy, holds the copy set its CPUs imply; each planned copy needs exactly its status, output and raw files, and no unplanned copy may appear. No header-only raw CSV passes | fixtures `test_wholly_missing_child`, `test_all_concurrent_copies_missing`, `test_unplanned_copy`, `test_plan_copies_must_match_the_cpus`, `test_missing_plan`, `test_missing_status`, `test_failed_child`, `test_no_valid_line`, `test_empty_raw`, `test_header_only_raw` |
+| VALID: the complete corpus × round × arm matrix | Parsed and checked: every registered file, every round once, the six arms; no missing, duplicated or extra row; totals finite and positive (a build arm's exactly 0 only with no paired block); each file's counts constant. The single copy's intervals and readings are recomputed from it | fixtures `test_truncated_raw`, `test_truncated_row`, `test_duplicate_round`, `test_round_outside_the_matrix`, `test_unregistered_file`, `test_nonfinite_total`, `test_zero_total_on_a_paired_file`, `test_zero_build_arms_only_with_no_paired_block`, `test_counts_change_between_rows` |
+| Verdicts only after validity | The harness prints its readings only after its own VALID line, and none when NOT VALID; the workflow's validity prints recomputed readings only when VALID | every fixture asserts no reading when NOT VALID; `test_complete_run_is_valid_with_readings` |
+| Evidence bound to the frozen source and the corpus | The dispatch names the frozen head (`frozen`); VALID needs HEAD to be it. The corpus's SHA-256 must be the spec's and the plan's | fixtures `test_head_not_frozen`, `test_no_frozen_head`, `test_corpus_identity`, `test_plan_corpus_identity` |
+| A wholly missing child | Found from the plan, not from the files that survived | `test_wholly_missing_child` |
+| Statuses captured without errexit skipping the write | Each copy's status is taken by `if`, inside the group, and written whatever it did; a failed copy fails the Sweep step only after every file and the summary are written | `sweep.yml` |
+| Fairness: LF scratch | The row and run arms each have their own LF rows' vector (`lf_row`, `lf_run`) | `examples/pair_runs.rs` |
+| Fairness: Q2's scope | Q2 measures the inverse-BWT entry point, not the full decoder | §5, §6; the harness's doc |
+| Fairness: the 1.05 rule | A point-estimate screen, not an upper confidence bound | §6; the verdict's wording |
+| Fairness: M1 | Nominal clock-scaled wall time (seconds × one GHz reading), not measured cycles; the raw nanoseconds a row are printed beside it | §6; the harness |
+| Wording | The "IPC above 6" necessity is replaced: counts alone do not decide (12.4/4 − 6.2/2 = 0). A Q1 NEGATIVE STOP closes this registered candidate; a Q2 NEGATIVE STOP pauses this candidate, and reopening needs no different consumer (PROTOCOL §11, C3). A Q2 POSITIVE would challenge a transferred prediction, not #34's measurements | §1 summary, §4, §6, §7 |
+
+The fixture tests run in `test.yml` (`python3 bench/test_pair_runs_validity.py`): 28 tests, all
+passing locally.
+
