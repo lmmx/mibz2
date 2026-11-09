@@ -84,9 +84,10 @@
     6695669534,
     6699480548,
     6715369675,
-    6729118037
+    6729118037,
+    6729243943
   ],
-  "last_processed_comment_id": 6729118037,
+  "last_processed_comment_id": 6729243943,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -608,9 +609,13 @@
       "related_queued_comment_id": 6729027210,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "3e4477d035e96310eb4ac3d4014e01e13ffaa33c"
+      "source_commit": "3e4477d035e96310eb4ac3d4014e01e13ffaa33c",
+      "report_commit": "e64110299a42add5b5d19cee63857b7b9ea2dfa8",
+      "report_path": "state/reports/service-2x3-6729243943/report.md",
+      "review_comment_pr": 145,
+      "disposition": "HOLD workstation admission: malformed output/numeric/corpus/trace evidence accepted; narrow causal and capacity claims. Freeze, unchanged decoder source and CI verified; no timing or implementation."
     }
   ],
   "active_delegations": [],
@@ -630,11 +635,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6729118037
+      6729243943
     ],
     "handled": [
-      6715369675,
-      6729118037
+      6729243943
     ],
     "skipped": [],
     "automation_modified": false
