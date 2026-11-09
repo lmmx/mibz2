@@ -2284,3 +2284,63 @@ Keeping the guard on the research branch is technically possible, but creates a 
 [Evidence index](records/d053/evidence.json) and [native log excerpts](records/d053/native-excerpts.txt).
 
 Migration checked before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **e4327a49f804f6a6e0d989e08cee0e4df5114d88**. Observed 2026-11-09. Routing audit: five already-resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify assumes FROM coordinator; Guardian read-back uses its routing predicate plus exact sender/recipient/type/destination/incoming-ID/work-link checks. Persistent task and subscriptions unchanged.
+
+## D054 — D049 repair: B6 resumption; scoped B5 HOLD lifted
+
+Incoming [6731982223](https://github.com/lmmx/mibz2/pull/161#issuecomment-6731982223). PR **#270**, frozen head **a08be2e93eecb51ac2e3059be4ffae9a90c46033**, implementation **5a350c8469b9d19c96b4e8e4facbcbfc6274b7ad**. Specs, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Independent Guardian source review, archived-log reconciliation and Python arithmetic checks; no implementation contribution and no Rust, Miri or timed fuzz execution here.
+
+**Disposition — G1/G2, RULES B5/B6:** record resumption of the excess-helper line; D049's named out-of-bounds cause is fixed. Lift D049's B5 timing HOLD for this pinned run-fed implementation and its registered 3×3 experiment. **PROCEED within the existing registration**, with the ordinary exact-head green-CI, dry-run, ready-tag and Louis-run requirements of PROTOCOL §9/C5 still binding. This does not establish performance qualification, approve a merge, authorize an agent workstation run, waive unsupported-CPU kernel misuse, or close other lines' holds (including D053). No new standing prerequisite is introduced.
+
+### 1. Excess helpers: the access predicate precedes the access
+
+`owns(j) = j < shares` now dominates count's histogram reference, scatter's histogram and bit, and fill's bit/cuts/census/histogram access. Since shares ≤64, the predicate also implies j<64. Ownership is of the allocated entries, not merely of logical work. At D049's k=66 witness, j=64 previously formed a 3,072-byte reference at offset 196,608 of a 196,608-byte allocation; now it returns before forming that reference.
+
+The guard is inside the phase, not around the relay: excess helpers still contribute to each applicable gate's helper count. HS has count/scatter/build gates; direct and presorted paths need not execute every sort gate. A blanket “all three gates in every mode” is too broad, but no required participant is lost.
+
+Reviewed boundary tests exercise shares 1/2/63/64 with 0–2 surplus helpers, exact allocation and spare sentinels, pools k=64/65/66/67/80 and the constructor k=64–67. **Actual Miri surplus coverage is two shares with 2–4 helpers**, not every large-share case. Native boundary coverage plus the uniform dominating predicate closes the 64-entry witness. Python checks reproduced the ownership/bit arithmetic for 3,104 domains (shares 1..64, helpers shares..80); they do not simulate Rust or prove synchronization.
+
+B6a/b/c are detected in the archived native tests. B6c removes both count's guard and the debug assertion: its dedicated actual-Miri log reports an invalid dangling `&mut [[u32;256];3]` at `self.hist.add(j)`. This is the original failure mechanism, not an unrelated test panic. The restored tests pass.
+
+### 2. Fuzz and tilings: the composition is reached; correct the totals
+
+The 11 candidates use `pipelined_run_fed`; run-fed mode is selected explicitly and the feature is required. All record-producing candidate configurations reach both team and small record paths. Controls correctly report zero record blocks. Oracle comparison includes bytes, malformed-input error kind/block/bit, and the prefix against the plain decoder; libbzip2 comparison is also present. The one-slot Helpers 1×2 candidate intentionally cannot overlap.
+
+The counter scope survives adversarial inspection: candidates use borrowed push decoders, the scoped writer ends before drive returns, and the owned StreamDecoder drops/joins before the phase-after snapshot. No detached BzReader feeder participates in these 11 candidates. D053's previous-case attribution counterexample therefore does not transfer here. Parallel unit tests' global reach lower bounds remain weaker evidence than these sequential fuzz deltas.
+
+The committed raw logs show **875 / 6,615 / 6,721 cases**, zero failures and rebuilds, at seeds 1/2/3. Recomputed candidate-row totals:
+
+| seed | team record blocks | small record blocks |
+|---|---:|---:|
+| 1 | **348** | 336 |
+| 2 | **2,660** | 2,983 |
+| 3 | **2,719** | 3,312 |
+
+**G1 dispute:** R2.2's team-record totals **519 / 3,928 / 3,993** do not equal its archived rows. Record the correction beside the table under B4; do not rewrite logs. Positive per-candidate reach still holds, so the arithmetic correction does not restore the safety HOLD.
+
+The independent tiling oracle checks starts, closure, strict rise and reconstructed counts before accepting. The 6,000 native tamper cases cover ten categories, with whole-pool checks every sixth case and 20 small Miri cases. A byte swap or split can remain a valid tiling; accepting it is correct when the oracle accepts. This reaches invalid records that ordinary valid emission cannot generate.
+
+### 3. C29 and the real outer unwind
+
+C29's 2,811-stream differential suite covers 2,000 malformed streams, checkpoint splits/ends/bytes and vector/scalar boundary stores; its class assertions and complete error/result comparisons were inspected. C29a/b alter checkpoint placement and are detected. C29c admits a 64-byte physical store without 64 bytes of remaining allocation: its AVX2 Miri log reports a 32-byte store with only 31 bytes left. The repaired condition is `n+64<=max`, independently checked over 141,504 valid bounded cases; the weakened predicate admits 176,736 unsafe cases in the same finite domain. These arithmetic checks supplement, not replace, the actual archived Miri run.
+
+The run-fed worker now uses master's Fault/inject/Shared::faults/publish/min_coop hook. LeadStart precedes taking the held prior; LeadEnd follows prior publication and next staging. Both unwind through the actual outer catch. Tests assert the precise held state, one outer recovery, once-only Internal publication at each held place/bit, reader prefix, later bytes after reset, and termination. Full native cases cover k=2/3 across all arms; the constructor path covers 3×3. Miri covers the three record arms on tiny blocks and the shipped worker's twin: **six unwind tests pass at 5a350c84**.
+
+The current/next omission mutant fails seven tests; the held-prior omission fails three. **Raw final logs contain eight tests: 1 pass/7 fail and 5 pass/3 fail**, not nine as R2.4 states. Native tests named `miri_*` are not Miri execution. The mutants were killed natively; no claim of a new run-fed M12 Miri kill is made. B5 requires the complementary evidence, not every mutant under every runtime.
+
+Limitations are retained: there is no handshake proving a helper was active at the exact injected panic; “every wait under a watchdog” overstates the end-to-end writer.join; failures in the first native arm do not establish independent mutant kills for every later arm/k. These do not defeat the demonstrated outer-publication omission detection or the restored Miri evidence.
+
+### 4. Pin transfer, CI, and remaining exclusions
+
+The implementation-to-frozen-head comparison changes only docs. The older component-Miri pin b82a7abc differs from 5a350c84 in shared test-hook integration and inherited master work; run-fed count/scatter/fill and C29 implementation lines are unchanged. The post-integration six-test Miri log closes the changed hook's coverage. Archived restored Miri evidence includes the default run-fed subset (9 passed) and AVX2 subset (8 passed, including run-stage tests); native restored logs record all-arm recovery and repeated combined suites.
+
+Fuzz logs honestly identify an uncommitted harness subsequently committed, rather than a clean final-head binary. I credit them as archived execution with that provenance limitation, cross-checked against the committed harness and production-equivalent run-fed path, not as a freshly reproduced final-head run. Current-head CI was **in progress in the inspected snapshot** (Test/Miri/Benchmark); it is not reported as passed. No polling or waiting for CI was performed.
+
+Two further precision corrections:
+- miri.yml's selection guards match a prefix and prove **at least one test per worker**, not all six. The actual archived list/run contains all six. Require exact names/count if claiming future CI enforces all six.
+- “bench/ unchanged since ff6c2f74” is false: inherited `bench/run-queue.sh` changed. The comparison does not show a changed run-fed measured recipe. The implementation pin is nevertheless the full clean identity, including inherited changes.
+
+The disclosed unsupported-CPU forgeable Kernels issue remains outside this experiment's detected/supported-kernel scope, not repaired or waived for a general safe API. No injected between-run panic or invert-setup panic establishes a universal unwind contract; the three held states close D049's specific obligation. Fuzz k≤4 plus direct large-k boundary/Miri evidence is adequate for the registered 3×3 question; it does not claim arbitrary-size fuzz coverage. None of those disclosed limits adds a new block to that scoped timing experiment.
+
+[Evidence and pin comparisons](records/d054/evidence.json), [source/log SHA-256 manifest](records/d054/sha256.json), [reproducible Python checks](records/d054/probes.py), [results](records/d054/results.json), [routing audit](records/d054/routing.json).
+
+Migration passed before receipt: old branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **8f3d7daa3dba0f6d80b9775c5022f1f4ce1eb1af**. Routing audit: five already-resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify assumes FROM coordinator; Guardian read-back uses its routing predicate plus exact sender/recipient/type/destination/incoming-ID/work-link checks. Task and subscriptions unchanged.

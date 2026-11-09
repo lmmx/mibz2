@@ -1,0 +1,60 @@
+{
+  "ownership_domains": 3104,
+  "old_witness": {
+    "team_k": 66,
+    "helpers": 65,
+    "shares": 64,
+    "j": 64,
+    "entry_size": 3072,
+    "allocation_bytes": 196608,
+    "reference_offset": 196608
+  },
+  "vector_valid_cases": 141504,
+  "mutant_unsafe_cases": 176736,
+  "mutant_first_witness": {
+    "cap": 1,
+    "n": 0,
+    "length": 1,
+    "physical_end": 64
+  },
+  "fuzz": [
+    {
+      "file": "run-fed-240s-seed2.txt",
+      "cases": 6615,
+      "seed": 2,
+      "candidate_rows": 11,
+      "team_records": 2660,
+      "small_records": 2983,
+      "sha256": "73205dd130eec0c349ae6e38e2d3f0f38422e0f5965609ecd0cf2e0eafcfeb3d"
+    },
+    {
+      "file": "run-fed-240s-seed3.txt",
+      "cases": 6721,
+      "seed": 3,
+      "candidate_rows": 11,
+      "team_records": 2719,
+      "small_records": 3312,
+      "sha256": "90d05bdaa7177275aa5bba40589f7138819b539d33746e87bcb917a71da9fd70"
+    },
+    {
+      "file": "run-fed-30s-seed1.txt",
+      "cases": 875,
+      "seed": 1,
+      "candidate_rows": 11,
+      "team_records": 348,
+      "small_records": 336,
+      "sha256": "1779939a470bf1971ba3539b1e9ccdb238362ee052c322afb328b1f4d1297223"
+    }
+  ],
+  "m12_native": {
+    "M12r-current-next.log": {
+      "passed": 1,
+      "failed": 7
+    },
+    "M12r-held-prior.log": {
+      "passed": 5,
+      "failed": 3
+    }
+  },
+  "scope": "Python arithmetic and archived-log reconciliation only; no Rust/Miri execution or timing here."
+}
