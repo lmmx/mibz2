@@ -83,7 +83,9 @@ BUNDLED_BINARIES = ["ab", "occupancy"]
 # The preflight (§R10): the registered host, and its declared settings as
 # telemetry-check/20261109T125938Z read them before this revision was written. Read only;
 # nothing here is a clock or temperature threshold
-PREFLIGHT_SCHEMA = "run_fed_leader/preflight/1"
+PREFLIGHT_SCHEMA = "run_fed_leader/preflight/2"
+# the passive collector's line (examples/ab.rs `ab env --facts`, §R11): no spin, no counter
+FACTS_SCHEMA = "ab env --facts/1"
 HOST_MODEL = "i9-10900K"
 HOST_CPUS = 20
 HOST_CORES = 10
@@ -614,10 +616,19 @@ def admit_occupancy(args):
 # the preflight (§R10): read-only, bounded by the recipe, before anything is timed
 
 
+def exact_int(x):
+    """An integer, exactly: never a bool, never a float however whole"""
+    return type(x) is int
+
+
 def preflight_problems(env, lscpu, samples):
-    """The registered host, its declared settings and its readable diagnostics; any fact
-    missing or unreadable is a problem (fail closed). No clock or temperature value is held
-    to anything"""
+    """The registered host, its declared settings and its readable diagnostics (§R10, made
+    fail-closed by §R11). Every fact must be established, of its exact type, by the passive
+    collector (`ab env --facts`): any fact missing, unreadable, unknown or mistyped is a
+    problem. The CPU quota must be established unlimited through the process's effective
+    cgroup hierarchy (`cpu_quota.state` "unlimited", every level read), and each sample's
+    `cpu_khz` must cover exactly the CPUs the facts say are allowed. No clock or temperature
+    value is held to anything"""
     bad = []
     model = None
     for line in (lscpu or "").splitlines():
@@ -628,15 +639,45 @@ def preflight_problems(env, lscpu, samples):
         bad.append(f"lscpu's model {model!r}: not the registered {HOST_MODEL}")
     if not isinstance(env, dict):
         return bad + ["ab env: not an object"]
-    if env.get("cpus") != HOST_CPUS:
+    if env.get("facts") != FACTS_SCHEMA:
+        bad.append(
+            f"ab env: {env.get('facts')!r}, not the passive collector's {FACTS_SCHEMA!r} "
+            "(ab env --facts)"
+        )
+    if env.get("perf_probed") is not False or env.get("spin_threads") != 0:
+        bad.append(
+            f"ab env: perf_probed {env.get('perf_probed')!r}, spin_threads "
+            f"{env.get('spin_threads')!r}: not the passive reading"
+        )
+    if not (exact_int(env.get("cpus")) and env["cpus"] == HOST_CPUS):
         bad.append(f"ab env: {env.get('cpus')!r} CPUs allowed, not {HOST_CPUS}")
-    if env.get("cores") != HOST_CORES:
+    if not (exact_int(env.get("cores")) and env["cores"] == HOST_CORES):
         bad.append(f"ab env: {env.get('cores')!r} physical cores, not {HOST_CORES}")
-    if env.get("cpu_quota") is not None:
-        bad.append(f"ab env: a cgroup CPU quota {env.get('cpu_quota')!r}")
+    allowed = allowed_cpus(env)
+    if isinstance(allowed, str):
+        bad.append(f"ab env: {allowed}")
+        allowed = None
+    else:
+        cc = env.get("core_cpus")
+        groups = (
+            [g.split(",") for g in cc]
+            if isinstance(cc, list) and all(isinstance(g, str) for g in cc)
+            else None
+        )
+        flat = [x for g in groups or [] for x in g]
+        if not (
+            groups is not None
+            and len(groups) == HOST_CORES
+            and sorted(flat, key=lambda x: (len(x), x)) == [str(c) for c in allowed]
+        ):
+            bad.append(
+                f"ab env: core_cpus {cc!r} do not partition the allowed CPUs into "
+                f"{HOST_CORES} cores"
+            )
+    bad += quota_problems(env.get("cpu_quota"))
     m = env.get("machine") if isinstance(env.get("machine"), dict) else {}
     for k, want in DECLARED.items():
-        if m.get(k) != want:
+        if not (type(m.get(k)) is type(want) and m.get(k) == want):
             bad.append(f"ab env: {k} {m.get(k)!r}, not the declared {want!r}")
     if not (isinstance(samples, list) and len(samples) == PREFLIGHT_SAMPLES):
         n = len(samples) if isinstance(samples, list) else samples
@@ -646,23 +687,108 @@ def preflight_problems(env, lscpu, samples):
         if not isinstance(st, dict):
             bad.append(f"sample {i}: no state")
             continue
-        bad += [f"sample {i}: {x}" for x in snapshot_problems(st)]
+        bad += [f"sample {i}: {x}" for x in snapshot_problems(st, allowed)]
         for k in ("governor", "epp", "turbo"):
-            if st.get(k) != DECLARED[k]:
+            if not (type(st.get(k)) is type(DECLARED[k]) and st.get(k) == DECLARED[k]):
                 bad.append(f"sample {i}: {k} {st.get(k)!r}, not the declared {DECLARED[k]!r}")
+        bad += [f"sample {i}: {x}" for x in policy_problems(st.get("policies"), allowed)]
     return bad
 
 
-def snapshot_problems(st):
-    """What a sysfs snapshot lacks of the diagnostics §R10 records"""
+def policy_problems(policies, allowed):
+    """The declared settings, policy by policy (§R11, Q3): every allowed CPU in exactly one
+    cpufreq policy, and each such policy's own driver, governor and EPP the declared ones,
+    rather than an aggregate over whatever policies happen to be listed"""
+    if not (isinstance(policies, list) and policies):
+        return [f"no cpufreq policies listed ({policies!r})"]
+    bad, held = [], {}
+    for p in policies:
+        if not isinstance(p, dict):
+            return [f"a policy {p!r} is not an object"]
+        name = p.get("policy")
+        cpus = p.get("cpus")
+        ids = None
+        if isinstance(cpus, str):
+            ids = set()
+            for part in cpus.replace(",", " ").split():
+                a, _, b = part.partition("-")
+                if not (a.isdigit() and (b == "" or b.isdigit())):
+                    ids = None
+                    break
+                ids.update(range(int(a), int(b or a) + 1))
+        if not ids:
+            bad.append(f"policy {name!r}: its CPUs {cpus!r} are not read")
+            continue
+        for c in ids:
+            held.setdefault(c, []).append(name)
+        for k, want in (
+            ("driver", DECLARED["cpufreq_driver"]),
+            ("governor", DECLARED["governor"]),
+            ("epp", DECLARED["epp"]),
+        ):
+            if not (type(p.get(k)) is str and p.get(k) == want):
+                bad.append(f"policy {name!r}: {k} {p.get(k)!r}, not the declared {want!r}")
+    if allowed is not None:
+        lost = [c for c in allowed if len(held.get(c, [])) != 1]
+        if lost:
+            bad.append(f"CPUs {lost[:6]!r} are not each in exactly one listed policy")
+    return bad
+
+
+def allowed_cpus(env):
+    """The facts' allowed CPU ids, sorted, or why they can't be taken as established"""
+    a = env.get("cpus_allowed")
+    if not (isinstance(a, list) and a and all(exact_int(c) and c >= 0 for c in a)):
+        return f"no established allowed CPUs ({a!r}; {env.get('cpus_allowed_why')!r})"
+    if a != sorted(set(a)):
+        return f"the allowed CPUs {a!r} are not distinct and in order"
+    if len(a) != HOST_CPUS or env.get("cpus") != len(a):
+        return f"{len(a)} allowed CPU ids, not the {HOST_CPUS} CPUs counted"
+    return a
+
+
+def quota_problems(q):
+    """The CPU quota as `ab env --facts` establishes it: refused unless established
+    unlimited through every level of the effective hierarchy (§R11)"""
+    if not isinstance(q, dict):
+        return [
+            f"ab env: the cgroup CPU quota {q!r} is not established (no hierarchy's facts: "
+            "missing, or the legacy scalar, where null was both unknown and unlimited)"
+        ]
+    state, hier, levels = q.get("state"), q.get("hierarchy"), q.get("levels")
+    if state == "limited":
+        return [f"ab env: a cgroup CPU quota of {q.get('cpus')!r} CPUs ({hier!r})"]
+    if state != "unlimited":
+        return [f"ab env: the cgroup CPU quota is not established ({state!r}: {q.get('why')!r})"]
+    if not (
+        hier in ("v1", "v2")
+        and isinstance(levels, list)
+        and levels
+        and all(isinstance(x, str) and x.startswith("/") for x in levels)
+        and q.get("cpus") is None
+        and q.get("why") is None
+    ):
+        return [f"ab env: an unlimited CPU quota without its hierarchy's facts: {q!r}"]
+    return []
+
+
+def snapshot_problems(st, allowed=None):
+    """What a sysfs snapshot lacks of the diagnostics §R10 records; with `allowed`, its
+    `cpu_khz` must be keyed by exactly those CPU ids (§R11)"""
     bad = []
     khz = st.get("cpu_khz")
     if not isinstance(khz, dict) or len(khz) != HOST_CPUS:
         bad.append(
             f"scaling_cur_freq for {len(khz) if isinstance(khz, dict) else 0} CPUs, not {HOST_CPUS}"
         )
-    elif not all(rfl.is_int(v) and v > 0 for v in khz.values()):
+    elif not all(exact_int(v) and v > 0 for v in khz.values()):
         bad.append("an unreadable scaling_cur_freq: " + json.dumps(st.get("cpu_khz_why")))
+    if isinstance(khz, dict) and allowed is not None:
+        if sorted(khz, key=lambda k: (len(k), k)) != [str(c) for c in allowed]:
+            bad.append(
+                "scaling_cur_freq is not keyed by the allowed CPUs: "
+                + json.dumps(sorted(set(khz) ^ {str(c) for c in allowed})[:6])
+            )
     t = st.get("pkg_temp_c")
     if not (isinstance(t, (int, float)) and not isinstance(t, bool) and math.isfinite(t)):
         bad.append(f"package temperature {t!r} ({st.get('pkg_temp_c_why')!r})")
@@ -729,6 +855,26 @@ def num(x):
     )
 
 
+def lag1(xs):
+    """The descriptive lag-1 autocorrelation of one arm's ordered log ratios (§R11, the
+    Researcher's Q5 convention): sum over r = 1..n-1 of (x_r - m)(x_{r-1} - m), over the sum
+    over r = 0..n-1 of (x_r - m)^2, m the mean of all n. None (undefined) where any value is
+    missing or the series is constant (a zero denominator): never zero. No p-value, interval,
+    effective sample size or rule follows from it"""
+    if not xs or any(x is None for x in xs):
+        return None
+    m = sum(xs) / len(xs)
+    den = sum((x - m) ** 2 for x in xs)
+    if den == 0:
+        return None
+    return sum((xs[r] - m) * (xs[r - 1] - m) for r in range(1, len(xs))) / den
+
+
+def gap_s(a, b):
+    """b - a in seconds, for two ns timestamps, else None"""
+    return (b - a) / 1e9 if rfl.is_int(a) and rfl.is_int(b) else None
+
+
 def diagnose_records(recs):
     """Every record in run order, with its position, predecessor and snapshots"""
     rows, position = [], {}
@@ -764,6 +910,14 @@ def diagnose_records(recs):
                 "post_epp": (post or {}).get("epp"),
                 "post_turbo": (post or {}).get("turbo"),
                 "post_label": endpoint_label(post),
+                # (the label's raw readings, and when they were read: the post-exit snapshot's
+                # delay after the child's exit and its own read time, and the pre-spawn
+                # snapshot's lead before the spawn; §R11, Q2)
+                "post_cpu_khz": (post or {}).get("cpu_khz"),
+                "post_delay_s": gap_s(r.get("t_exit_unix_ns"), (post or {}).get("t_unix_ns")),
+                "post_read_s": num((post or {}).get("read_s")),
+                "pre_lead_s": gap_s((pre or {}).get("t_unix_ns"), r.get("t_spawn_unix_ns")),
+                "pre_read_s": num((pre or {}).get("read_s")),
                 "snapshots": pre is not None and post is not None,
             }
         )
@@ -775,18 +929,24 @@ def diagnose(args):
     recs, problems = rfl.load(os.path.join(args.dir, "runs.jsonl"))
     rows = diagnose_records(recs)
     by = {(x["arm"], x["round"]): x for x in rows}
-    pairs, counts = [], {}
+    pairs, counts, autocorr = [], {}, {}
+    rounds_all = sorted({x["round"] for x in rows if rfl.is_int(x["round"])})
     for arm in ARMS[1:]:
+        series = {"wall": [], "cpu": []}
         c = {"HH": 0, "HL": 0, "LH": 0, "LL": 0, "unknown": 0}
         for rnd in sorted({x["round"] for x in rows if x["arm"] == arm and rfl.is_int(x["round"])}):
             a, ref = by.get((arm, rnd)), by.get((REF, rnd))
             if ref is None or a is None:
+                series["wall"].append(None)
+                series["cpu"].append(None)
                 continue
             la, lr = a["post_label"], ref["post_label"]
             state = lr + la if la and lr else "unknown"
             c[state] += 1
             lw = math.log(a["wall"] / ref["wall"]) if a["wall"] and ref["wall"] else None
             lc = math.log(a["cpu"] / ref["cpu"]) if a["cpu"] and ref["cpu"] else None
+            series["wall"].append(lw)
+            series["cpu"].append(lc)
             pairs.append(
                 {
                     "arm": arm,
@@ -799,6 +959,10 @@ def diagnose(args):
                 }
             )
         counts[arm] = c
+        # (over every round any record has, in round order, so a missing pair is a gap)
+        if len(series["wall"]) != len(rounds_all):
+            series = {k: [None] for k in series}
+        autocorr[arm] = {k: lag1(v) for k, v in series.items()}
     total = {k: sum(c[k] for c in counts.values()) for k in ("HH", "HL", "LH", "LL", "unknown")}
     by_position, by_predecessor = {}, {}
     for x in rows:
@@ -808,6 +972,10 @@ def diagnose(args):
         by_predecessor[x["arm"]][str(x["predecessor"])] += 1
     lacking = [x["seq"] for x in rows if not x["snapshots"]]
     unknown_post = [x["seq"] for x in rows if x["post_label"] is None]
+    labels = {}
+    for x in rows:
+        c = labels.setdefault(x["arm"], {"H": 0, "L": 0, "unknown": 0})
+        c[x["post_label"] or "unknown"] += 1
     status = (
         "complete"
         if rows and not lacking and not unknown_post and not problems
@@ -823,6 +991,23 @@ def diagnose(args):
         "else unknown; a pair's state is the incumbent's label then the arm's. An endpoint "
         "label, not the clock during the decode",
         "status": status,
+        # (§R11, Q4: completeness is descriptive. A VALID timing reading stands whatever
+        # this says; an incomplete record marks only the diagnostic objective unmet)
+        "diagnostic_objective": "met" if status == "complete" else "unmet",
+        "objective_rule": "the diagnostics' completeness is descriptive: a VALID timing "
+        "reading stands as the full-data result whatever it is, and an incomplete record "
+        "marks the clock-diagnostic objective unmet, never the timing",
+        "post_labels": labels,
+        "post_labels_rule": "each record's post-exit endpoint label, counted (H, L or "
+        "unknown): a snapshot of the 20 logical CPUs after the child exits (idle CPUs and "
+        "siblings included), its raw readings, delay and read time beside it per record; "
+        "no active-core or within-decode clock is inferred from it",
+        "lag1": autocorr,
+        "lag1_rule": "descriptive lag-1 autocorrelation of each arm's ordered log ratios over "
+        "the incumbent, in round order: sum_{r=1..n-1} (x_r - m)(x_{r-1} - m) / sum_{r=0..n-1} "
+        "(x_r - m)^2, m the mean; undefined (null) for a constant series or any missing pair, "
+        "never zero. No p-value, interval, effective sample size or rule follows from it; at "
+        "n = 20 it is noisy, and the shared incumbent and the rotation can induce structure",
         "pair_states": counts,
         "pair_states_total": total,
         "arm_by_position": by_position,
@@ -836,7 +1021,8 @@ def diagnose(args):
         with open(args.out + ".md", "w") as f:
             f.write(diagnostics_md(out))
     print(
-        f"diagnostics {status}; pair states (counts only, never judged): "
+        f"diagnostics {status} (diagnostic objective {out['diagnostic_objective']}); "
+        "pair states (counts only, never judged): "
         + ", ".join(f"{k} {v}" for k, v in total.items())
     )
     return 0
@@ -851,7 +1037,8 @@ def diagnostics_md(out):
         "",
         out["never_judged"] + ".",
         "",
-        f"Status: {out['status']}.",
+        f"Status: {out['status']}. Diagnostic objective: {out['diagnostic_objective']} "
+        f"({out['objective_rule']}).",
         "",
         f"Endpoint label: {out['label_rule']}.",
         "",
@@ -872,17 +1059,41 @@ def diagnostics_md(out):
     )
     lines += [
         "",
+        "## Post-exit endpoint labels, counts only",
+        "",
+        out["post_labels_rule"] + ".",
+        "",
+        "| arm | H | L | unknown |",
+        "|---|---|---|---|",
+    ]
+    for arm, c in out["post_labels"].items():
+        lines.append(f"| `{arm}` | {c['H']} | {c['L']} | {c['unknown']} |")
+    lines += [
+        "",
+        "## Lag-1 autocorrelation of each arm's ordered log ratios (descriptive)",
+        "",
+        out["lag1_rule"] + ".",
+        "",
+        "| arm | wall | CPU |",
+        "|---|---|---|",
+    ]
+    for arm, v in out["lag1"].items():
+        w, c = ("undefined" if x is None else "{:+.3f}".format(x) for x in (v["wall"], v["cpu"]))
+        lines.append(f"| `{arm}` | {w} | {c} |")
+    lines += [
+        "",
         "## Every record, in run order",
         "",
-        "| seq | round | pos | arm | predecessor | gap s | wall | cpu | MHz pre | MHz post | °C pre | °C post | label |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| seq | round | pos | arm | predecessor | gap s | wall | cpu | MHz pre | MHz post | °C pre | °C post | label | post delay s | post read s |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for x in out["records"]:
         lines.append(
             f"| {x['seq']} | {x['round']} | {x['position']} | `{x['arm']}` | {cell(x['predecessor'])} | "
             f"{cell(x['gap_s'])} | {cell(x['wall'], '{:.4f}')} | {cell(x['cpu'], '{:.4f}')} | "
             f"{cell(x['pre_mhz'], '{:.0f}')} | {cell(x['post_mhz'], '{:.0f}')} | "
-            f"{cell(x['pre_temp_c'], '{:.0f}')} | {cell(x['post_temp_c'], '{:.0f}')} | {cell(x['post_label'])} |"
+            f"{cell(x['pre_temp_c'], '{:.0f}')} | {cell(x['post_temp_c'], '{:.0f}')} | {cell(x['post_label'])} | "
+            f"{cell(x['post_delay_s'], '{:.4f}')} | {cell(x['post_read_s'], '{:.4f}')} |"
         )
     lines += [
         "",

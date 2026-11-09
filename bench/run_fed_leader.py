@@ -209,6 +209,10 @@ def record_problems(rec, where, judged_threads):
         return [f"{where}: a broken line (the child printed none)"]
     if not (is_int(rec.get("exit")) and rec["exit"] == 0):
         bad.append(f"{where}: exit {rec.get('exit')!r}")
+    # (the child's termination as the parent reaped it, bench 3.5.0: output written before
+    # a nonzero exit or a signal is never a successful run; a record without it refuses)
+    if rec.get("termination") != "success":
+        bad.append(f"{where}: termination {rec.get('termination')!r}, not 'success'")
     if rec.get("err") != "":
         bad.append(f"{where}: err {rec.get('err')!r}")
     if not (isinstance(rec.get("hash"), str) and rec["hash"]):

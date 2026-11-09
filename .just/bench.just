@@ -934,9 +934,11 @@ bench-pipelined-default DRY="" CORPUS="":
 # at a requested 10 threads (140 timed records, every run three teams of three), judged by its
 # own fail-closed admission, bench/run_fed_leader_ws.py; then one occupancy capture each of
 # ctl and dir, admitted apart from the timing. §R10 adds, none of it judged: one read-only
-# preflight before anything is timed (the registered i9 and its declared cpufreq settings,
-# its sysfs readable; no clock or temperature threshold, no waiting), which refuses the
-# attempt, archived, if any fact is not so; each run's sysfs snapshots before and after it
+# preflight after the build and corpus and before anything is timed (the registered i9, its
+# CPU quota established unlimited and its declared cpufreq settings exactly, its sysfs
+# readable for exactly the allowed CPUs; no clock or temperature threshold, no waiting; read
+# passively by `ab env --facts` and `ab sample`, no spin and no counter, §R11), which refuses
+# the attempt, archived, if any fact is not established so; each run's sysfs snapshots before and after it
 # (ab's --sysfs-state: no PMU counters); and the diagnostics (run order, position,
 # predecessor, endpoint clock labels as counts only). One attempt; no retry to pass. NOT
 # FROZEN until bench/run-fed-leader.frozen names its commit. About 15 minutes; it ends with
@@ -1054,16 +1056,19 @@ bench-run-fed-leader DRY="" CORPUS="":
       echo "sysfs snapshots: ab run --sysfs-state (no --machine-state: no PMU counters)"
     } > "$W/inputs.txt"
     cat "$W/inputs.txt"
-    "$AB" env > "$W/env.json"
-    lscpu > "$W/lscpu.txt" || true
-    # the preflight (§R10): read-only and bounded (each reading by its own timeout, three
-    # sysfs samples a second apart, then one judgement), before anything is timed. It holds
-    # no clock or temperature to any value and waits for no state: PASS, or the attempt is
+    # (the machine's facts, passively: `ab env --facts` starts no thread, spins nothing and
+    # opens no perf counter, §R11; bounded, TERM at 30 s and KILL 5 s after)
+    timeout --kill-after=5 30 "$AB" env --facts > "$W/env.json"
+    timeout --kill-after=5 30 lscpu > "$W/lscpu.txt" || true
+    # the preflight (§R10, §R11): read-only, passive and bounded (each reading by its own
+    # timeout with a forced kill after it, three sysfs samples a second apart, then one
+    # judgement), after the build and the corpus and before anything is timed. It holds no
+    # clock or temperature to any value and waits for no state: PASS, or the attempt is
     # REFUSED here and archived, with no timed record. A DRY check records it and goes on
     mkdir "$W/preflight"
-    { timeout 30 "$AB" env > "$W/preflight/env.json"; echo "ab env: exit $?"
-      timeout 30 lscpu > "$W/preflight/lscpu.txt"; echo "lscpu: exit $?"
-      timeout 30 "$AB" sample --count 3 --interval 1 > "$W/preflight/sample.jsonl"; echo "ab sample: exit $?"
+    { timeout --kill-after=5 30 "$AB" env --facts > "$W/preflight/env.json"; echo "ab env --facts: exit $?"
+      timeout --kill-after=5 30 lscpu > "$W/preflight/lscpu.txt"; echo "lscpu: exit $?"
+      timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/preflight/sample.jsonl"; echo "ab sample: exit $?"
     } > "$W/preflight/exits.txt" 2>&1 || true
     set +e
     python3 bench/run_fed_leader_ws.py preflight "$W" --out "$W/preflight" > "$W/preflight.txt"
@@ -1088,7 +1093,7 @@ bench-run-fed-leader DRY="" CORPUS="":
     ab_rc=$?
     # (diagnostics only, never judged: three sysfs samples after the timing)
     mkdir "$W/diagnostics"
-    timeout 30 "$AB" sample --count 3 --interval 1 > "$W/diagnostics/sample-after.jsonl"
+    timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/diagnostics/sample-after.jsonl"
     echo "ab sample after the timing: exit $?"
     for sub in ctl dir; do
       "$OCC" "$W/wikidata.bz2" --threads 10 --pipe 3 --run-fed "$sub" --rounds "$occ_rounds" \

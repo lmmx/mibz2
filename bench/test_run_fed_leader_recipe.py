@@ -1,7 +1,8 @@
 """`just bench-run-fed-leader` end to end (docs/journal/2026-11-09-run-fed-leader.md §R10),
 untimed, with stand-ins for Cargo, the harness (`ab`), the occupancy instrument, the corpus
 builder, rustc, lscpu and gh, in a scratch repository with a freeze: the builds as Cargo
-reports them, copied and hashed into the bundle; the preflight and its refusal; the run
+reports them, copied and hashed into the bundle; the preflight (its readings passive and
+bounded, §R11) and its refusal; the run
 with `--sysfs-state` and never `--machine-state`; the identity, the admission, the captures'
 admissions and the diagnostics; and the bundle, on every exit path:
 - VALID (0), every file the registration lists in the bundle;
@@ -47,6 +48,7 @@ sys.path.insert(0, os.environ["FAKE_BENCH"])
 import test_run_fed_leader_ws as t
 cmd, host = sys.argv[1], os.environ.get("FAKE_HOST", "i9")
 if cmd == "env":
+    assert sys.argv[2:] == ["--facts"], sys.argv  # (only the passive collector, §R11)
     env = t.host_env(governor="performance") if host == "governor" else t.host_env()
     if host == "other":
         env.update(cpus=4, cores=2)
@@ -351,6 +353,18 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(json.loads(files["preflight.json"])["verdict"], "PASS")
         diag = json.loads(files["diagnostics/diagnostics.json"])
         self.assertEqual(sum(diag["pair_states_total"].values()), 120)
+
+    def test_every_env_reading_is_passive_and_bounded(self):
+        # (§R11: both of the recipe's `ab env` calls are the facts-only collector, and every
+        # reading outside the timed run has a TERM timeout with a forced kill after it)
+        body = recipe_body()
+        calls = re.findall(r"^.*\"\$AB\" env\b.*$", body, re.M)
+        self.assertEqual(len(calls), 2, calls)
+        for c in calls:
+            self.assertRegex(c, r'^\s*(\{ )?timeout --kill-after=\d+ \d+ "\$AB" env --facts > ')
+        for c in re.findall(r"^.*(?:\"\$AB\" sample|\blscpu >).*$", body, re.M):
+            self.assertRegex(c, r"timeout --kill-after=\d+ \d+ ", c)
+        self.assertNotIn("timeout 30", body)
 
     def test_invalid_off_the_registered_workload(self):
         r, _, files, _ = self.run_recipe(run="wrongout")

@@ -13,6 +13,7 @@ predecessor, the endpoint labels' pair states as counts only).
     python3 bench/test_run_fed_leader_ws.py
 """
 
+import copy
 import hashlib
 import json
 import math
@@ -52,7 +53,16 @@ def snapshot(mhz, temp=45.0, t=0, cpus=ws.HOST_CPUS, unread=()):
         "t_unix_ns": t,
         "read_s": 0.0028,
         "cpu_khz": khz,
-        "policies": [],
+        "policies": [
+            {
+                "policy": f"policy{c}",
+                "cpus": str(c),
+                "driver": "intel_pstate",
+                "governor": "powersave",
+                "epp": "balance_performance",
+            }
+            for c in range(cpus)
+        ],
         "platform_profile": None,
         "platform_profile_why": "no sys/firmware/acpi/platform_profile",
     }
@@ -91,6 +101,7 @@ def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS, post=None):
                 "threads": threads,
                 "arm": arm,
                 "exit": 0,
+                "termination": "success",
                 "err": "",
                 "wall": base * f * noise,
                 "cpu": 3 * base * f * noise,
@@ -570,20 +581,44 @@ class Occupancy(unittest.TestCase):
 
 
 # the preflight's inputs, as the recipe collects them (telemetry-check/20261109T125938Z's)
+# `ab sample`'s CPU list on the i9: the allowed CPUs, grouped by core
+I9_CPUS = ",".join(f"{c},{c + 10}" for c in range(10))
 LSCPU_I9 = "Architecture: x86_64\nModel name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n"
 
 
 def host_env(**machine):
+    """`ab env --facts`'s line on the registered i9 (examples/ab.rs `facts::line`): 20 CPUs
+    allowed on 10 cores (siblings c and c + 10), the quota established unlimited through
+    every level of the v2 hierarchy, and no counter probed"""
     m = {
         "cpufreq_driver": "intel_pstate",
         "governor": "powersave",
         "epp": "balance_performance",
         "turbo": True,
         "perf_event_paranoid": 4,
-        "perf": {"cycles": False, "why": "perf_event_open not permitted (perf_event_paranoid=4)"},
+        "perf": None,
+        "perf_why": "not probed: ab env --facts opens no counter",
     }
     m.update(machine)
-    return {"cpus": 20, "cores": 10, "cpu_quota": None, "throttling": False, "machine": m}
+    return {
+        "facts": ws.FACTS_SCHEMA,
+        "cpus": 20,
+        "cpus_allowed": list(range(20)),
+        "cores": 10,
+        "core_cpus": [f"{c},{c + 10}" for c in range(10)],
+        "cpu_quota": {
+            "state": "unlimited",
+            "cpus": None,
+            "hierarchy": "v2",
+            "levels": ["/sys/fs/cgroup", "/sys/fs/cgroup/user.slice"],
+            "why": None,
+        },
+        "throttling": False,
+        "psi_cpu": True,
+        "spin_threads": 0,
+        "perf_probed": False,
+        "machine": m,
+    }
 
 
 def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sample")):
@@ -591,7 +626,7 @@ def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sa
     samples = (
         samples
         if samples is not None
-        else [{"sample": i, "count": 3, "state": snapshot(800, temp=32.0, t=i)} for i in range(3)]
+        else [{"sample": i, "cpus": I9_CPUS, "count": 3, "state": snapshot(800, temp=32.0, t=i)} for i in range(3)]
     )
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, "preflight"))
@@ -734,32 +769,33 @@ class Revision10(unittest.TestCase):
         self.assertEqual(js["problems"], [])
         # (an idle 800 MHz, a hot package, a fast clock: no clock or temperature is held)
         hot = [
-            {"sample": i, "state": snapshot(5300 if i else 800, temp=97.0, t=i)} for i in range(3)
+            {"sample": i, "cpus": I9_CPUS, "state": snapshot(5300 if i else 800, temp=97.0, t=i)} for i in range(3)
         ]
         code, text, _ = preflight(samples=hot)
         self.assertEqual(code, 0, text)
 
     def test_the_preflight_refuses_on_each_fact(self):
         bad_sample = [
-            {"sample": i, "state": snapshot(800, t=i, unread=(7,) if i == 1 else ())}
+            {"sample": i, "cpus": I9_CPUS, "state": snapshot(800, t=i, unread=(7,) if i == 1 else ())}
             for i in range(3)
         ]
         no_temp = [
             {
                 "sample": i,
+                "cpus": I9_CPUS,
                 "state": {**snapshot(800, t=i), "pkg_temp_c": None, "pkg_temp_c_why": "no zone"},
             }
             for i in range(3)
         ]
         perf_gov = [
-            {"sample": i, "state": {**snapshot(800, t=i), "governor": "performance"}}
+            {"sample": i, "cpus": I9_CPUS, "state": {**snapshot(800, t=i), "governor": "performance"}}
             for i in range(3)
         ]
         for kw, why in [
             ({"lscpu": "Model name: AMD EPYC 7763\n"}, "not the registered i9-10900K"),
             ({"env": {**host_env(), "cpus": 16}}, "16 CPUs allowed, not 20"),
             ({"env": {**host_env(), "cores": 8}}, "8 physical cores, not 10"),
-            ({"env": {**host_env(), "cpu_quota": 4.0}}, "a cgroup CPU quota"),
+            ({"env": {**host_env(), "cpu_quota": 4.0}}, "the cgroup CPU quota 4.0 is not established"),
             ({"env": host_env(governor="performance")}, "governor 'performance', not the declared"),
             ({"env": host_env(epp="performance")}, "epp 'performance'"),
             ({"env": host_env(turbo=False)}, "turbo False"),
@@ -826,6 +862,169 @@ class Revision10(unittest.TestCase):
         )
         self.assertEqual(js["pair_states_total"]["unknown"], 6 + 2)
         self.assertEqual(sum(js["pair_states_total"].values()), 120)
+
+
+class Revision11(unittest.TestCase):
+    """§R11: the preflight's facts established, not presumed (the Researcher's REVIEW
+    6745760175), and the diagnostics' descriptive additions (Q2, Q4, Q5)"""
+
+    BASE = staticmethod(
+        lambda: (
+            host_env(),
+            LSCPU_I9,
+            [{"state": snapshot(4900, t=i)} for i in range(3)],
+        )
+    )
+
+    def verdict(self, mutate):
+        env, lscpu, samples = (copy.deepcopy(x) for x in self.BASE())
+        mutate(env, samples)
+        return ws.preflight_problems(env, lscpu, samples)
+
+    def test_the_researchers_probe_now_refuses_each_mutation(self):
+        # the probe (state/reports/run-fed-r10-6745615244/probe.py), each of its single-field
+        # mutations of the positive fixture, called on the preflight itself
+        self.assertEqual(self.verdict(lambda e, s: None), [])
+
+        def turbo_1(e, s):
+            e["machine"]["turbo"] = 1
+            for x in s:
+                x["state"]["turbo"] = 1
+
+        def invented(e, s):
+            for x in s:
+                x["state"]["cpu_khz"] = {f"not-a-cpu-{i}": 4900000 for i in range(20)}
+
+        for name, mutate, why in [
+            ("missing_quota", lambda e, s: e.pop("cpu_quota"), "is not established"),
+            ("float_cpu_counts", lambda e, s: e.update(cpus=20.0, cores=10.0), "20.0 CPUs"),
+            ("integer_turbo", turbo_1, "turbo 1, not the declared True"),
+            ("invented_cpu_ids", invented, "not keyed by the allowed CPUs"),
+        ]:
+            with self.subTest(name=name):
+                bad = self.verdict(mutate)
+                self.assertTrue(bad, name)
+                self.assertTrue(any(why in b for b in bad), bad)
+
+    def test_the_quota_must_be_established_unlimited(self):
+        def quota(q):
+            return lambda e, s: e.update(cpu_quota=q)
+
+        unlimited = host_env()["cpu_quota"]
+        # positive: established unlimited, v2 or v1
+        self.assertEqual(self.verdict(quota(unlimited)), [])
+        self.assertEqual(self.verdict(quota({**unlimited, "hierarchy": "v1"})), [])
+        for name, q, why in [
+            # unknown: not established, however it is written
+            ("legacy null", None, "is not established"),
+            ("legacy unlimited-or-unknown", "max", "is not established"),
+            ("unknown", {**unlimited, "state": "unknown", "why": "cpu.max: EACCES"}, "EACCES"),
+            ("no state", {k: v for k, v in unlimited.items() if k != "state"}, "not established"),
+            ("unlimited, no levels", {**unlimited, "levels": []}, "without its hierarchy"),
+            ("unlimited, no hierarchy", {**unlimited, "hierarchy": None}, "without its hierarchy"),
+            ("unlimited, with a why", {**unlimited, "why": "partial"}, "without its hierarchy"),
+            ("unlimited, a relative level", {**unlimited, "levels": ["cgroup"]}, "without"),
+            # negative: established, and limited (the child under an unlimited root)
+            ("limited", {**unlimited, "state": "limited", "cpus": 4.0}, "a cgroup CPU quota of 4.0"),
+            ("limited at 20", {**unlimited, "state": "limited", "cpus": 20.0}, "quota of 20.0"),
+        ]:
+            with self.subTest(name=name):
+                bad = self.verdict(quota(q))
+                self.assertTrue(any(why in b for b in bad), bad)
+
+    def test_types_are_exact_and_the_facts_are_the_passive_collectors(self):
+        for name, mutate, why in [
+            ("bool cores", lambda e, s: e.update(cores=True), "True physical cores"),
+            ("string cpus", lambda e, s: e.update(cpus="20"), "'20' CPUs"),
+            ("float khz", lambda e, s: s[0]["state"]["cpu_khz"].update({"3": 4900000.0}),
+             "an unreadable scaling_cur_freq"),
+            ("bool khz", lambda e, s: s[1]["state"]["cpu_khz"].update({"3": True}),
+             "an unreadable scaling_cur_freq"),
+            ("sample turbo 1", lambda e, s: s[2]["state"].update(turbo=1), "sample 2: turbo 1"),
+            ("active env", lambda e, s: e.pop("facts"), "not the passive collector's"),
+            ("perf probed", lambda e, s: e.update(perf_probed=True), "not the passive reading"),
+            ("spun", lambda e, s: e.update(spin_threads=40), "not the passive reading"),
+            ("no allowed list", lambda e, s: e.update(cpus_allowed=None), "no established allowed"),
+            ("float ids", lambda e, s: e.update(cpus_allowed=[float(c) for c in range(20)]),
+             "no established allowed"),
+            ("duplicate ids", lambda e, s: e.update(cpus_allowed=[0] + list(range(19))),
+             "not distinct"),
+            ("19 ids", lambda e, s: e.update(cpus_allowed=list(range(19))), "19 allowed CPU ids"),
+            # (another 20 CPUs than the samples read: the keys bind to these ids)
+            ("other ids", lambda e, s: e.update(
+                cpus_allowed=list(range(4, 24)),
+                core_cpus=[f"{c},{c + 10}" for c in range(4, 14)]), "not keyed by the allowed"),
+            ("a padded key", lambda e, s: s[0]["state"].update(
+                cpu_khz={**{str(c): 4900000 for c in range(1, 20)}, "00": 4900000}),
+             "not keyed by the allowed"),
+            ("cores not a partition", lambda e, s: e.update(core_cpus=["0,1"] * 10),
+             "do not partition"),
+            # (Q3: the declared settings policy by policy, every allowed CPU covered once)
+            ("a policy off", lambda e, s: s[1]["state"]["policies"][7].update(
+                governor="performance"), "sample 1: policy 'policy7': governor 'performance'"),
+            ("a policy unread", lambda e, s: s[0]["state"]["policies"][3].update(epp=None),
+             "policy 'policy3': epp None"),
+            ("a CPU in no policy", lambda e, s: s[2]["state"]["policies"].pop(),
+             "CPUs [19] are not each in exactly one"),
+            ("a CPU in two", lambda e, s: s[2]["state"]["policies"][0].update(cpus="0-1"),
+             "CPUs [1] are not each in exactly one"),
+            ("no policies", lambda e, s: s[0]["state"].update(policies=[]),
+             "no cpufreq policies listed"),
+        ]:
+            with self.subTest(name=name):
+                bad = self.verdict(mutate)
+                self.assertTrue(any(why in b for b in bad), bad)
+
+    def test_every_record_must_carry_a_successful_termination(self):
+        # (the producer's termination, bench 3.5.0: output before a failure is refused, and
+        # a record without its termination is refused)
+        for val in ("exit 17", "signal 9", None):
+            with self.subTest(termination=val):
+                recs = records()
+                if val is None:
+                    del recs[5]["termination"]
+                else:
+                    recs[5]["termination"] = val
+                Admission.refused(self, recs, identity(), f"termination {val!r}")
+
+    def test_lag1_is_the_registered_formula_and_undefined_when_constant(self):
+        xs = [0.01, -0.02, 0.03, 0.0, 0.015, -0.01]
+        m = sum(xs) / len(xs)
+        num_ = sum((xs[r] - m) * (xs[r - 1] - m) for r in range(1, len(xs)))
+        self.assertAlmostEqual(ws.lag1(xs), num_ / sum((x - m) ** 2 for x in xs), places=12)
+        self.assertAlmostEqual(ws.lag1([1.0, -1.0] * 10), -0.95, places=12)
+        self.assertIsNone(ws.lag1([0.02] * 20))  # constant: undefined, never zero
+        self.assertIsNone(ws.lag1([0.01, None, 0.02]))
+        self.assertIsNone(ws.lag1([]))
+
+    def test_the_diagnostics_keep_raw_readings_lag1_and_mark_the_objective(self):
+        recs = records(post=lambda i: 2400 if i % 3 == 0 else 4900)
+        code, text, js, md = diagnose(recs)
+        self.assertEqual(code, 0, text)
+        self.assertEqual(js["diagnostic_objective"], "met")
+        for arm in ws.ARMS:
+            self.assertEqual(sum(js["post_labels"][arm].values()), 20)
+        row = js["records"][3]
+        self.assertEqual(len(row["post_cpu_khz"]), ws.HOST_CPUS)
+        self.assertIn("post_delay_s", row)
+        self.assertIn("post_read_s", row)
+        by = {(r["arm"], r["round"]): r for r in recs}
+        for arm in ws.ARMS[1:]:
+            xs = [math.log(by[(arm, k)]["wall"] / by[(ws.REF, k)]["wall"]) for k in range(20)]
+            want = ws.lag1(xs)
+            got = js["lag1"][arm]["wall"]
+            self.assertTrue((got is None and want is None) or abs(got - want) < 1e-12, arm)
+        self.assertIn("Lag-1 autocorrelation", md)
+        self.assertIn("never zero", js["lag1_rule"])
+        # Q4: an incomplete record marks the objective unmet, and the timing stands
+        recs = records()
+        for r in recs[:100]:
+            del r["machine_post"]
+        code, text, js, _ = diagnose(recs)
+        self.assertEqual(code, 0, text)
+        self.assertEqual(js["diagnostic_objective"], "unmet")
+        self.assertIn("unmet", text)
+        Admission.valid(self, recs, identity())
 
 
 if __name__ == "__main__":
