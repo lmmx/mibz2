@@ -620,6 +620,15 @@
       },
       "reply_id": 6730372937,
       "routing_verification": "Pinned route/check passed; exact readback passed. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6730769410,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
+      "progress": "Receipt; migration head and manifest digest verified. Reviewing measured stage losses and source attribution."
     }
   ],
   "migrated_from": {
