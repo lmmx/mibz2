@@ -635,6 +635,20 @@
       "status": "finished",
       "disposition": "Default gate confirmed; pipeline B5 qualification HOLD for pipeline-specific fuzz/mutation evidence; no UB found in static review; CPU ratio wording disputed.",
       "comment": 6729223027
+    },
+    {
+      "id": "D043",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6729117187,
+      "duplicate_of": "D042",
+      "sha": "a4f97714cc14366984015869d9d094d89488ac57",
+      "evidence_digest": "sha256:b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79",
+      "status": "complete",
+      "receipt_commit": "fb3fa5862e12d617c88216b2977e3cad27513e51",
+      "commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
+      "disposition": "Resume reconciled to completed D042; no reassessment or authority change"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -878,7 +892,7 @@
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
     "last_completed_incoming_comment": 6715368365,
-    "last_decision": "D042",
+    "last_decision": "D043",
     "last_outgoing_comment": 6729223027,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
@@ -886,14 +900,14 @@
     "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "a5e18e46dfdd41ed6a5e9e706049d3c247d53557",
+    "last_decision_commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "D042 REVIEW on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "in_progress",
+    "active_comment_status": "complete",
     "queue_snapshot": "20 inbox comments; original assignment finished, resume notice being reconciled",
     "active_incoming_comment": 6729117187
   },
@@ -1399,9 +1413,11 @@
     {
       "comment_id": 6729117187,
       "pr": 161,
-      "status": "in_progress",
+      "status": "complete",
       "decision": "D043",
-      "duplicate_of": 6715368365
+      "duplicate_of": 6715368365,
+      "receipt_commit": "fb3fa5862e12d617c88216b2977e3cad27513e51",
+      "work_commit": "8fd0f2eebc563591c71c29b22f4f40560746cd31"
     }
   ],
   "migrated_from": {
