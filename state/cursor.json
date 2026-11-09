@@ -2280,6 +2280,12 @@
       "work_commit": "0cd0fe9678f724e4b872353e330b3a7da62c34f5",
       "review_comment_id": 6739426262,
       "complete_cursor_commit": "941ceb0fa83678f92e316ec5d0b3798adb8f89c8"
+    },
+    {
+      "comment_id": 6739842300,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D066"
     }
   ],
   "migrated_from": {
