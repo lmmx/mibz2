@@ -1,0 +1,167 @@
+runner: AMD EPYC 9V74 80-Core Processor, 4 CPUs, 3.6937 GHz reported; rustc 1.99.1 (58cf8f9c3 2026-10-13); head aa409f6f2ebce9f41dc7902789f0ab8d6958b020; run_fed_stage, rounds 15
+run_fed_stage: 15 rounds, kernels Kernels { avx2: true, clmul: true }, head aa409f6f2ebce9f41dc7902789f0ab8d6958b020; nominal c/B of output (wall time x 3.6937 GHz, not counted cycles); ratios are arm over arm, paired by round, geometric mean (95% interval); below 1 the first is cheaper
+counters: unavailable here (no PMU exposed to this machine)
+
+corpora/wikidata.bz2: 431 blocks, 209.7 MB of output, 11854933 bytes, SHA-256 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915; by records 384 blocks (79.8% of rows), r/n 0.0621 there, fill slots/row 1.4778; fallback 47 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 30877916 vector (8 slots) and 84059 one-slot, 0.1849 table stores a row, 1.4761 slots written a row (B's fill: 1.4778); 19388 nonempty destination buckets (not measured hardware streams), 50.5 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column            3.280      1.085      0.000      1.357      0.835      3.276
+  B records           3.196      1.020      0.319      1.010      0.861      3.211
+                                 front          -      place   fallback
+  D direct            3.453      1.020      0.000      1.600      0.834      3.454
+  R_direct D/A, the entry point, every block (Q1, judged)  1.0525 (1.0506, 1.0543)
+  R_stage  B/A, the entry point, every block (#269's Q1)   0.9763 (0.9713, 0.9813)
+  R_DB     D/B, the entry point, every block               1.0780 (1.0727, 1.0834)
+  R_acc_D  D/A, the entry point, records' blocks           1.0708 (1.0686, 1.0731)
+  R_acc    B/A, the entry point, records' blocks           0.9610 (0.9562, 0.9657)
+  R_fb_D   D/A, the entry point, fallback's blocks         0.9986 (0.9972, 1.0000)
+  R_fb     B/A, the entry point, fallback's blocks         1.0211 (1.0147, 1.0275)
+  R_phases_D D/A, the phases' sum (attribution)            1.0547 (1.0533, 1.0561)
+  R_phases B/A, the phases' sum (attribution)              0.9801 (0.9793, 0.9808)
+  R_place  D place / A build                               1.1803 (1.1782, 1.1824)
+  R_pf     D place / B fill                                1.5858 (1.5833, 1.5883)
+  R_psf    D place / B sort+fill                           1.2045 (1.2024, 1.2067)
+  R_front  D emit / A MTF, records' blocks                 0.9401 (0.9382, 0.9421)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 7.22e-16; medians: D - A +0.178, K -0.385 (#269's: +0.218), delta_direct +0.590, e +0.001, f +0.027; 0.218 + delta_i - e_i - f_i +0.782
+
+synthetic text: 4 blocks, 3.4 MB of output, 622150 bytes, SHA-256 bd9c715abcaca17a04247ba4007850574c1677b6bc15cf7c57fa8ffb6a07c1b2; by records 0 blocks (0.0% of rows), r/n 0.0000 there, fill slots/row 0.0000; fallback 4 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 0 vector (8 slots) and 0 one-slot, 0.0000 table stores a row, 0.0000 slots written a row (B's fill: 0.0000); 0 nonempty destination buckets (not measured hardware streams), 0.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column           10.377      0.000      0.000      0.000     10.361     10.361
+  B records          11.007      0.000      0.000      0.000     10.398     10.398
+                                 front          -      place   fallback
+  D direct           10.347      0.000      0.000      0.000     10.357     10.357
+  R_direct D/A, the entry point, every block (Q1, judged)  1.0017 (0.9949, 1.0086)
+  R_stage  B/A, the entry point, every block (#269's Q1)   1.0637 (1.0587, 1.0687)
+  R_DB     D/B, the entry point, every block               0.9418 (0.9375, 0.9460)
+  R_acc_D  D/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_acc    B/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_fb_D   D/A, the entry point, fallback's blocks         1.0017 (0.9949, 1.0086)
+  R_fb     B/A, the entry point, fallback's blocks         1.0637 (1.0587, 1.0687)
+  R_phases_D D/A, the phases' sum (attribution)            0.9994 (0.9965, 1.0023)
+  R_phases B/A, the phases' sum (attribution)              1.0033 (1.0006, 1.0060)
+  R_place  D place / A build                               n/a (no such blocks, or times absent)
+  R_pf     D place / B fill                                n/a (no such blocks, or times absent)
+  R_psf    D place / B sort+fill                           n/a (no such blocks, or times absent)
+  R_front  D emit / A MTF, records' blocks                 n/a (no such blocks, or times absent)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 1.39e-17; medians: D - A +0.004, K +0.006 (#269's: +0.218), delta_direct +0.000, e +0.000, f +0.056; 0.218 + delta_i - e_i - f_i +0.162
+
+synthetic random: 3 blocks, 2.0 MB of output, 1774781 bytes, SHA-256 69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198; by records 0 blocks (0.0% of rows), r/n 0.0000 there, fill slots/row 0.0000; fallback 3 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 0 vector (8 slots) and 0 one-slot, 0.0000 table stores a row, 0.0000 slots written a row (B's fill: 0.0000); 0 nonempty destination buckets (not measured hardware streams), 0.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column           30.278      0.000      0.000      0.000     30.265     30.265
+  B records          38.968      0.000      0.000      0.000     39.002     39.002
+                                 front          -      place   fallback
+  D direct           30.426      0.000      0.000      0.000     30.290     30.290
+  R_direct D/A, the entry point, every block (Q1, judged)  1.0061 (1.0004, 1.0117)
+  R_stage  B/A, the entry point, every block (#269's Q1)   1.2842 (1.2759, 1.2926)
+  R_DB     D/B, the entry point, every block               0.7834 (0.7749, 0.7920)
+  R_acc_D  D/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_acc    B/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_fb_D   D/A, the entry point, fallback's blocks         1.0061 (1.0004, 1.0117)
+  R_fb     B/A, the entry point, fallback's blocks         1.2842 (1.2759, 1.2926)
+  R_phases_D D/A, the phases' sum (attribution)            0.9996 (0.9966, 1.0026)
+  R_phases B/A, the phases' sum (attribution)              1.2850 (1.2767, 1.2933)
+  R_place  D place / A build                               n/a (no such blocks, or times absent)
+  R_pf     D place / B fill                                n/a (no such blocks, or times absent)
+  R_psf    D place / B sort+fill                           n/a (no such blocks, or times absent)
+  R_front  D emit / A MTF, records' blocks                 n/a (no such blocks, or times absent)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 3.14e-15; medians: D - A +0.038, K +8.748 (#269's: +0.218), delta_direct +0.000, e +0.000, f +8.681; 0.218 + delta_i - e_i - f_i -8.463
+
+synthetic one byte: 1 blocks, 5.0 MB of output, 49 bytes, SHA-256 fe83f12dd7b68f263d44f27080c7c21168eaca3ef9c5f54a73a061b262068bb8; by records 1 blocks (100.0% of rows), r/n 0.0000 there, fill slots/row 1.0002; fallback 0 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 12255 vector (8 slots) and 8 one-slot, 0.1251 table stores a row, 1.0001 slots written a row (B's fill: 1.0002); 3 nonempty destination buckets (not measured hardware streams), 3.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column            0.018      0.002      0.000      0.017      0.000      0.018
+  B records           0.006      0.000      0.000      0.005      0.000      0.006
+                                 front          -      place   fallback
+  D direct            0.006      0.000      0.000      0.006      0.000      0.006
+  R_direct D/A, the entry point, every block (Q1, judged)  0.3519 (0.3274, 0.3782)
+  R_stage  B/A, the entry point, every block (#269's Q1)   0.3153 (0.2951, 0.3369)
+  R_DB     D/B, the entry point, every block               1.1160 (0.9972, 1.2489)
+  R_acc_D  D/A, the entry point, records' blocks           0.3519 (0.3274, 0.3782)
+  R_acc    B/A, the entry point, records' blocks           0.3153 (0.2951, 0.3369)
+  R_fb_D   D/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_fb     B/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_phases_D D/A, the phases' sum (attribution)            0.3369 (0.3241, 0.3502)
+  R_phases B/A, the phases' sum (attribution)              0.3234 (0.3120, 0.3352)
+  R_place  D place / A build                               0.3583 (0.3438, 0.3734)
+  R_pf     D place / B fill                                1.1246 (1.0646, 1.1881)
+  R_psf    D place / B sort+fill                           1.0595 (1.0012, 1.1212)
+  R_front  D emit / A MTF, records' blocks                 0.1068 (0.0851, 0.1339)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 5.20e-18; medians: D - A -0.012, K -0.013 (#269's: +0.218), delta_direct +0.001, e +0.000, f +0.000; 0.218 + delta_i - e_i - f_i +0.218
+
+synthetic pattern: 6 blocks, 4.9 MB of output, 314 bytes, SHA-256 bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3; by records 6 blocks (100.0% of rows), r/n 0.0000 there, fill slots/row 1.0000; fallback 0 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 612499 vector (8 slots) and 50 one-slot, 0.1250 table stores a row, 1.0000 slots written a row (B's fill: 1.0000); 42 nonempty destination buckets (not measured hardware streams), 7.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column            0.800      0.052      0.000      0.761      0.000      0.813
+  B records           0.218      0.002      0.002      0.226      0.000      0.230
+                                 front          -      place   fallback
+  D direct            0.223      0.002      0.000      0.228      0.000      0.231
+  R_direct D/A, the entry point, every block (Q1, judged)  0.2805 (0.2738, 0.2873)
+  R_stage  B/A, the entry point, every block (#269's Q1)   0.2771 (0.2659, 0.2887)
+  R_DB     D/B, the entry point, every block               1.0123 (0.9658, 1.0611)
+  R_acc_D  D/A, the entry point, records' blocks           0.2805 (0.2738, 0.2873)
+  R_acc    B/A, the entry point, records' blocks           0.2771 (0.2659, 0.2887)
+  R_fb_D   D/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_fb     B/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_phases_D D/A, the phases' sum (attribution)            0.2818 (0.2746, 0.2893)
+  R_phases B/A, the phases' sum (attribution)              0.2798 (0.2735, 0.2863)
+  R_place  D place / A build                               0.2987 (0.2907, 0.3069)
+  R_pf     D place / B fill                                1.0164 (0.9943, 1.0389)
+  R_psf    D place / B sort+fill                           1.0078 (0.9859, 1.0303)
+  R_front  D emit / A MTF, records' blocks                 0.0351 (0.0315, 0.0390)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 2.22e-16; medians: D - A -0.582, K -0.585 (#269's: +0.218), delta_direct +0.006, e +0.000, f +0.000; 0.218 + delta_i - e_i - f_i +0.224
+
+synthetic runs: 1 blocks, 2.5 MB of output, 9955 bytes, SHA-256 24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec; by records 1 blocks (100.0% of rows), r/n 0.1804 there, fill slots/row 3.0301; fallback 0 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 22249 vector (8 slots) and 1761 one-slot, 0.3789 table stores a row, 2.8365 slots written a row (B's fill: 3.0301); 252 nonempty destination buckets (not measured hardware streams), 252.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column            0.173      0.118      0.000      0.050      0.000      0.168
+  B records           0.241      0.120      0.033      0.093      0.000      0.248
+                                 front          -      place   fallback
+  D direct            0.232      0.078      0.000      0.144      0.000      0.224
+  R_direct D/A, the entry point, every block (Q1, judged)  1.2826 (1.2070, 1.3629)
+  R_stage  B/A, the entry point, every block (#269's Q1)   1.3831 (1.3260, 1.4426)
+  R_DB     D/B, the entry point, every block               0.9274 (0.8962, 0.9596)
+  R_acc_D  D/A, the entry point, records' blocks           1.2826 (1.2070, 1.3629)
+  R_acc    B/A, the entry point, records' blocks           1.3831 (1.3260, 1.4426)
+  R_fb_D   D/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_fb     B/A, the entry point, fallback's blocks         n/a (no such blocks, or times absent)
+  R_phases_D D/A, the phases' sum (attribution)            1.3548 (1.2997, 1.4122)
+  R_phases B/A, the phases' sum (attribution)              1.4759 (1.4431, 1.5094)
+  R_place  D place / A build                               2.8639 (2.7740, 2.9567)
+  R_pf     D place / B fill                                1.5415 (1.4928, 1.5919)
+  R_psf    D place / B sort+fill                           1.1369 (1.1036, 1.1712)
+  R_front  D emit / A MTF, records' blocks                 0.7044 (0.6442, 0.7703)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 3.47e-17; medians: D - A +0.051, K +0.046 (#269's: +0.218), delta_direct +0.051, e +0.041, f +0.000; 0.218 + delta_i - e_i - f_i +0.224
+
+synthetic records: 3 blocks, 2.4 MB of output, 2397517 bytes, SHA-256 616e54bd727b056d7ff6fedb2a13c9eb411f2c512cca52ac4a419c131b135c2b; by records 0 blocks (0.0% of rows), r/n 0.0000 there, fill slots/row 0.0000; fallback 3 blocks
+  D's predicted table stores on the records' blocks (its source's store loops, not machine code): 0 vector (8 slots) and 0 one-slot, 0.0000 table stores a row, 0.0000 slots written a row (B's fill: 0.0000); 0 nonempty destination buckets (not measured hardware streams), 0.0 a block
+  nominal c/B         entry      front       sort      build   fallback  phase sum
+  A column           25.037      0.000      0.000      0.000     25.060     25.060
+  B records          34.498      0.000      0.000      0.000     34.222     34.222
+                                 front          -      place   fallback
+  D direct           25.002      0.000      0.000      0.000     25.109     25.109
+  R_direct D/A, the entry point, every block (Q1, judged)  0.9974 (0.9940, 1.0007)
+  R_stage  B/A, the entry point, every block (#269's Q1)   1.3749 (1.3682, 1.3817)
+  R_DB     D/B, the entry point, every block               0.7254 (0.7226, 0.7281)
+  R_acc_D  D/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_acc    B/A, the entry point, records' blocks           n/a (no such blocks, or times absent)
+  R_fb_D   D/A, the entry point, fallback's blocks         0.9974 (0.9940, 1.0007)
+  R_fb     B/A, the entry point, fallback's blocks         1.3749 (1.3682, 1.3817)
+  R_phases_D D/A, the phases' sum (attribution)            1.0018 (0.9992, 1.0043)
+  R_phases B/A, the phases' sum (attribution)              1.3616 (1.3501, 1.3731)
+  R_place  D place / A build                               n/a (no such blocks, or times absent)
+  R_pf     D place / B fill                                n/a (no such blocks, or times absent)
+  R_psf    D place / B sort+fill                           n/a (no such blocks, or times absent)
+  R_front  D emit / A MTF, records' blocks                 n/a (no such blocks, or times absent)
+  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + delta_i - e_i - f_i reconstructed, largest residual 2.79e-15; medians: D - A +0.058, K +9.123 (#269's: +0.218), delta_direct +0.000, e +0.000, f +9.067; 0.218 + delta_i - e_i - f_i -8.849
+
+record: run-fed-1.json
+
+readings (UNJUDGED: the verifier judges the registered run's record):
+  Q1 R_direct 1.0525 (1.0506, 1.0543); gate: geomean <= 0.95 and hi < 1
+  Q1 screen, synthetic whole stage: worst R_direct geomean 1.2826 (synthetic runs); screen <= 1.02
+  Q1 screen, fallback (entry point, selector charged): worst R_fb_D geomean 1.0061 (synthetic random); screen <= 1.02
+  Q1 reading: STOP: no one-worker saving of 5% or more by D shown on this runner (an operational pause for this implementation, not proof of no effect; PROTOCOL 11 applies)
+  R_DB 1.0780 (1.0727, 1.0834) (exploratory: D over B, what removing the sort and its F order recovers)
+  budget (exploratory, a sensitivity on the phase sweep, not the judged figure): medians of each round's terms: delta_direct +0.590, e +0.001, f +0.027 (measured controls); 0.218 + delta_i - e_i - f_i +0.782, against D - A's phase sum +0.178; this run's own K -0.385
