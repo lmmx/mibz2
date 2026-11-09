@@ -1,7 +1,7 @@
 ---
-title: "Service threads: moving mibz2's serial work out of its teams"
+title: "mibz2 gets a pit crew"
 image: assets/social/blog-2026-11-09-service-threads.png
-description: "Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5% on ten cores with 13% less processor time. It is not the default."
+description: "Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU."
 ---
 
 <div class="post-hero" markdown>
@@ -11,10 +11,10 @@ description: "Two teams of three, fed by two threads that only prepare and finis
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Service threads: moving mibz2's serial work out of its teams
+# mibz2 gets a pit crew
 
-Two teams of three, fed by two threads that only prepare and finish blocks, beat 0.2.6 by 4.5%
-on ten cores with 13% less processor time. It is not the default.
+Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win,
+decoding 4.5% faster on ten cores with 13% less CPU.
 {: .post-dek }
 
 9 November 2026 · 15 min read · [Research in progress](#8-where-do-things-stand)
@@ -33,8 +33,8 @@ step before the shared part, and the finish after it, run on one thread. The
 work, by having each team's leader do it while the other two threads work on another block. This
 post is about the next step: taking that work out of the teams altogether. Two threads of their
 own, which we call service threads, do the one-thread work of every block, and the teams only do
-the shared part. On ten threads that makes two teams of three plus two service threads, where
-0.2.6 runs three teams of three.
+the shared part. They are the teams' pit crew, so the teams never have to leave the track. On ten threads that makes two teams of three plus two service
+threads, where 0.2.6 runs three teams of three.
 
 On the ten-core machine we test on, this layout decoded our test file faster than 0.2.6's default
 and spent less processor time doing it. In a run whose comparisons and decision rules were fixed
@@ -56,11 +56,12 @@ a line; to the right of the line at 1 is faster.
 <figcaption>Measured, the test machine, ten threads, 20 paired rounds each, with 95% intervals that describe the spread within each run. Green dots are comparisons registered as decisions before their run; amber dots were reported beside them and never judged. The numbers in brackets are the pull requests of the runs. The lower panel compares the service layout with itself, at a higher admission threshold, the number of blocks the service threads prepare ahead of the teams: both intervals span 1, so neither change is shown to help or hurt.</figcaption>
 </figure>
 
-The service layout is not the decoder's default, and is not in any release. There are three
-reasons. It has been measured on one processor, an Intel Core i9-10900K, and principally one file,
-a sample of the Wikidata dump. What causes its gain is not separated: the runs measure the layout
-as a whole. And an independent safety review has accepted the evidence only for the two research
-versions that were measured, and states that this does not qualify a version for release.
+The next step is to make it mibz2's default, and three things stand between here and there. So
+far it has been measured on one processor, an Intel Core i9-10900K, and principally one file, a
+sample of the Wikidata dump; other machines and other files come next. The runs measure the
+layout as a whole, so which part of it earns the gain is still to be separated. And the
+independent safety review has accepted the evidence for the two research versions we measured;
+a release version needs its own.
 
 [Section 1](#1-what-does-a-service-thread-do) shows what a service thread does, and
 [section 2](#2-why-might-it-pay-and-why-might-it-not) why that might pay and why it might not.

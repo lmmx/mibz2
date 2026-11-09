@@ -27,6 +27,9 @@ brief names:
   - the key takeaways, as a short list.
 
   The PR body says where in the post each takeaway first lands.
+- **The dek and the sentences:** `write-blog-post`, "The dek, and the sentences". The dek must
+  pass `docs/scripts/check_prose.py` and carry a little joy. The PR reports the body's flagged
+  share.
 - **Visuals:** a figure for each result, comparison, architecture and trade-off, and for
   the key takeaways where it helps. Dense prose where a figure would carry it is a
   failure mode.

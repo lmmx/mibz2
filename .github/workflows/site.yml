@@ -150,6 +150,11 @@ jobs:
           uv run --no-project -p 3.13 --with playwright==1.56.0 playwright install --with-deps chromium
           if [ -n "$BASE" ]; then pages="--changed $BASE"; else pages="--blog"; fi
           uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/look_pages.py $pages
+      - name: Check the changed posts' deks and sentence complexity
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ format('origin/{0}', github.base_ref) }}
+        run: python3 docs/scripts/check_prose.py --changed "$BASE"
       - if: always()
         run: test -f site-shots/report.md && cat site-shots/report.md >> "$GITHUB_STEP_SUMMARY" || true
       - if: always()
