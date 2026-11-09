@@ -39,7 +39,7 @@
     "6730190055": 6730252800,
     "6730895951": 6730945007
   },
-  "last_rebuilt_from": 6730842547,
+  "last_rebuilt_from": 6731656317,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -155,9 +155,10 @@
     },
     "6731658540": {
       "comment_id": 6731658540,
-      "status": "in_progress",
-      "progress": "Migration verified; reconciling #272 result and channel."
+      "status": "complete",
+      "progress": "Record committed through channel 6731656317; REVIEW pending.",
+      "work_commit": "063a7650fcc918d5de3ba33cdf55ad2243e1ef67"
     }
   },
-  "last_record_commit": "5b225f1a2a512b50876cc06072dd1959022f38d1"
+  "last_record_commit": "063a7650fcc918d5de3ba33cdf55ad2243e1ef67"
 }
