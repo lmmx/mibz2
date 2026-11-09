@@ -645,11 +645,13 @@
     {
       "comment_id": 6731656628,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "1c4d0f0714183f83798a0b746463ae34535fbc50",
-      "progress": "Receipt; migration verified. Inspecting raw-artifact access and whether consumer cost is identifiable from recorded intervals."
+      "progress": "Raw replay, residual identification limits, construction budgets and admission correction complete; pending REVIEW.",
+      "report_commit": "8382072cecf5d2932e3bb4c5548b05a9512d1162",
+      "report_path": "state/records/reviews/inbox-6731656628/report.md"
     }
   ],
   "migrated_from": {
