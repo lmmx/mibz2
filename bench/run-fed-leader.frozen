@@ -6,4 +6,4 @@
 # The first attempt's freeze, cccdfdf74d50ab3d37cab51d904deff4f3c39cdb (its bundle
 # run-fed-leader/20261109T080633Z: VALID, INCONCLUSIVE, control fidelity FAILED), does not
 # carry over to §R10: its revision needs a freeze of its own.
-frozen none
+frozen 2fab12cacca8c5235d30ca832ce0df2d53b8ceaf
