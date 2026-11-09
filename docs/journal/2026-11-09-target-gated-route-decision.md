@@ -20,7 +20,7 @@ It applies forward only, from the commit that merges it.
 
 A 2% margin against each change's immediate parent is not a lifetime bound. Ten genuine 1% slowdowns, each admitted against its own parent, compound to 1.01^10 ≈ 1.105. So:
 
-- **A drift check at every release.** The release runbook's paired run of the previous release's tag against master (RELEASING.md §1) is read, for every release that contains a change admitted by this route, as an off-target drift check against the last release. That is a fixed anchor, not the immediate parent.
+- **A drift check at every release.** The release runbook's paired run of the last tag against master (RELEASING.md §3, item 2) is read, for every release that contains a change admitted by this route, as an off-target drift check against the last release. That is a fixed anchor, not the immediate parent.
 - **What follows a regression there.** If any standing CI cell shows head over base with a one-sided 95% upper bound above 1.02 against the last release, two things follow:
   - the release notes state it;
   - the route is suspended for new merges until a reviewed decision record either attributes the regression and accepts it explicitly, or reverts the cause.
