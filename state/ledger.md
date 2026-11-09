@@ -417,3 +417,17 @@ No implementation, compilation, timing, safety certification, admission change o
 - Cross semantics×build/layout, explicit/default entry, target environment; record data geometry and unchanged-path controls. Stable src and mixed flags do not prove harmless layout. No best-padding selection or changed estimand/grid.
 - Critical-path model f(1-r)=.03; aggregate front CPU is not exposed fraction. Hypothetical3% exposed gain vs1.1% off-path loss needs26.83% baseline-time exposed share merely to break even; not a gate or observed deployment estimate.
 - C43 below C29 transfer; existing B layout inquiry stays diagnostic. No new measured credit or default-on clearance.
+
+## Service core adoption versus J4: inbox6739270804
+
+[Report and run budget](records/reviews/inbox-6739270804/report.md). Brief baseline a773853f05fa9e12bb65fb93bf5c07e1bc7fea11; r2 separately reviewed 5738616e58542cc7af2d6e5eeb906a4070abcb32.
+
+- #271 remains VALID/INCONCLUSIVE. J4 is window-only at threshold4; joint J vs a2w8 is1.027 [.993,1.063], reported only. .979×1.049≈1.027; no interval multiplication or qualification.
+- Trace-label correction removes the claimed demonstrated prep→finish bottleneck transition. #293 remains the mechanism dependency; backlog and thread-life-minus-idle are not CPU/critical-path proof.
+- Prefer guarded current-default service qualification to #299's third old-runtime replication. #299 remains draft,120 decodes plus6 trace rounds; counters change measurement conditions. D064 full-data/no clock-conditioned verdict preserved.
+- Narrow proposed exposure: exact budget10 and explicitly bounded target predicate, L2/window8; no inherited≥10 or all-machine service claim. Master has no Service dispatch. Prove public constructors, window scaling, guard/M12 and whole-thread/resource accounting.
+- D057 resolved D045/D053 within its stated old-runtime scope. Reconcile/reuse evidence on exact candidate; no old performance transfer or fresh safety certification here.
+- Minimum adoption cost: ≥1 target C5 campaign plus≥1 ordinary CI package, after untimed safety/reach/memory checks. No guarantee of passing unchanged CI acceptance. Extra exposed budgets/hosts need their own approved coverage.
+- J tuning optional: bare40 decodes; proposed A/A′+joint60, withJ4 80, fullfactorial100, plusdefault120 at20rounds. Cell/family/repeat/workload changes remain C6 proposals.
+- Ranking: service first for adoption closure; C29 first bounded kernel investigation; J4 after diagnostic; C43 behind layout/host. C29 UNJUDGED and D060 unchanged; gains not additive.
+- No raw-bundle replay, timing, implementation, admission change or measured credit.
