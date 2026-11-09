@@ -1011,6 +1011,15 @@
       "review_comment_id": 6734359855,
       "publication_verified": true,
       "verification_note": "Exact body/#145 and role-aware routing pass; pinned verify reports only its hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6734368711,
+      "status": "in progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "cccdfdf74d50ab3d37cab51d904deff4f3c39cdb",
+      "report_path": "state/reports/occupancy-closure-6734368711/report.md"
     }
   ],
   "active_delegations": [],
