@@ -599,9 +599,9 @@
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "280643cef83b09ac89707b747670e8198b21b68e",
-      "progress": "Completed source audit, ranked C37–C40, flag-compatible tag derivation, latency/MLP and whole-entry prices; awaiting one REVIEW publication.",
+      "progress": "Complete: source findings, ranking, prices and D046 timing STOP recorded; awaiting REVIEW.",
       "report_path": "state/records/reviews/inbox-6730271993/report.md",
-      "report_commit": "ae726c077a6b0ae2d685acdf273961a56c986deb",
+      "report_commit": "cb3283a21466b9f025446a9bfda7da62afc74a7d",
       "audit_scope": {
         "source_pin": "280643cef83b09ac89707b747670e8198b21b68e",
         "implementation": false,
