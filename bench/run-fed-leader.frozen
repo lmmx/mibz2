@@ -1,0 +1,6 @@
+# The run-fed leader's workstation run (docs/journal/2026-11-09-run-fed-leader.md §8, §R4).
+# The commit the registration, the implementation, the recipe, the admission and the
+# reporter are frozen at: `just bench-run-fed-leader`'s measured inputs must match it
+# exactly. NOT FROZEN until the coordinator names it here, in a commit of its own: until
+# then the recipe refuses every run but a DRY one.
+frozen none

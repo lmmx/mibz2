@@ -33,6 +33,13 @@
 //! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
 //! `mibz2-pipeK-LEVER` arms do.
 //!
+//! `--run-fed ctl|reg|ls|hs|dir` (with `--pipe`, built with `--features trace,run-fed`;
+//! research, docs/journal/2026-11-09-run-fed-leader.md) runs the run-fed teams instead
+//! (`BzReader::parallel_pipelined_run_fed`), built as ab's `mibz2-pipeK-runfed-SUB` arm
+//! builds them: t / K teams, `SLOTS_PER_THREAD` slots a team (`--slots` is refused). Their
+//! worker and relay mark the shipped pipelined team's kinds at the same points, so they are
+//! read the same way.
+//!
 //! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
 //! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
 //! the workers), so a difference is the decoder's placement, not the workers' alone.
@@ -126,6 +133,13 @@ fn child(a: &[String]) {
     let (team_arg, lever) = a
         .get(4)
         .map_or(("auto", ""), |k| k.split_once('-').unwrap_or((k, "")));
+    // ("rfSUB": a run-fed sub-arm, `--run-fed`, in a build with the feature only)
+    let run_fed = lever.strip_prefix("rf");
+    #[cfg(not(feature = "run-fed"))]
+    assert!(
+        run_fed.is_none(),
+        "a run-fed sub-arm needs the build's --features run-fed"
+    );
     let levers = mibz2::parallel::Levers {
         park: lever == "park" || lever == "both",
         small: lever == "small" || lever == "both",
@@ -148,6 +162,28 @@ fn child(a: &[String]) {
         .map_err(|e| e.to_string())
         .and_then(|f| {
             let reader = match plan {
+                #[cfg(feature = "run-fed")]
+                Plan::Teams { teams, k } if pipe && run_fed.is_some() => {
+                    use mibz2::parallel::RunFedSort;
+                    let sort = match run_fed.unwrap() {
+                        "ctl" => RunFedSort::Control,
+                        "reg" => RunFedSort::RegControl,
+                        "ls" => RunFedSort::Leader,
+                        "hs" => RunFedSort::Helpers,
+                        "dir" => RunFedSort::Direct,
+                        s => panic!("unknown run-fed sub-arm {s}"),
+                    };
+                    // (ab's `mibz2-pipeK-runfed-SUB` arm's window)
+                    let window = mibz2::parallel::SLOTS_PER_THREAD * teams;
+                    BzReader::parallel_pipelined_run_fed(
+                        f,
+                        teams,
+                        k,
+                        window,
+                        Kernels::detect(),
+                        sort,
+                    )
+                }
                 Plan::Teams { teams, k } if pipe => {
                     let window = (slots * teams / threads).max(teams);
                     BzReader::parallel_pipelined_levers(
@@ -1044,6 +1080,7 @@ fn parent(args: &[String]) {
     let mut teams: Option<usize> = None;
     let mut pipe = false;
     let mut lever: Option<String> = None;
+    let mut run_fed_sub: Option<String> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
     let mut it = args.iter();
@@ -1114,9 +1151,20 @@ fn parent(args: &[String]) {
                 );
                 lever = Some(l.clone());
             }
+            "--run-fed" => {
+                let sub = it.next().expect("--run-fed ctl|reg|ls|hs|dir");
+                assert!(
+                    ["ctl", "reg", "ls", "hs", "dir"].contains(&sub.as_str()),
+                    "--run-fed takes ctl, reg, ls, hs or dir"
+                );
+                if !cfg!(feature = "run-fed") {
+                    panic!("--run-fed needs the build's --features run-fed");
+                }
+                run_fed_sub = Some(sub.clone());
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both]] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both | --run-fed ctl|reg|ls|hs|dir]] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -1124,6 +1172,12 @@ fn parent(args: &[String]) {
     }
     let file = file.expect("occupancy FILE.bz2 [...]");
     assert!(lever.is_none() || pipe, "--levers needs --pipe K");
+    if let Some(sub) = run_fed_sub {
+        assert!(pipe, "--run-fed needs --pipe K");
+        assert!(lever.is_none(), "--run-fed and --levers are different arms");
+        assert!(slots.is_none(), "--run-fed takes ab's window: no --slots");
+        lever = Some(format!("rf{sub}"));
+    }
     let m = machine();
     let threads = threads.unwrap_or_else(|| {
         let mut v: Vec<usize> = std::iter::successors(Some(1usize), |t| Some(t * 2))

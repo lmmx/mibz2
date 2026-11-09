@@ -189,6 +189,18 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+/// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only: the
+/// shipped pipelined team's kinds at the same points (`coop::invert_pipelined_with`'s), so
+/// the occupancy instrument reads a run-fed team as it reads the shipped one
+macro_rules! tmark {
+    ($kind:ident, $place:expr) => {
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::$kind, $place);
+        #[cfg(not(feature = "trace"))]
+        let _ = $place;
+    };
+}
+
 // ---- The front set ----
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -294,9 +306,11 @@ fn stage<const MODE: u8>(
 ) -> Staging {
     let (place, bit, symbols) = job;
     let (mut tf, mut ts, mut rule) = (0, 0, false);
+    mark!(MtfStart, place);
     let r = catch_unwind(AssertUnwindSafe(|| {
         front_stage::<MODE>(&symbols, f, k, &mut tf, &mut ts, &mut rule)
     }));
+    mark!(MtfEnd, place);
     if in_run {
         add(&PH.lead_front_ns, tf);
         add(&PH.lead_sort_ns, ts);
@@ -379,9 +393,14 @@ fn solo(shared: &Shared, f: &mut Front, sc: &mut Solo, s: Staged, k: Kernels) ->
         return false;
     };
     let r = catch_unwind(AssertUnwindSafe(|| {
+        mark!(RunStart, s.place);
         table_one_core(&s.symbols, f, &mut sc.tt, k)?;
         bwt::walk_segments_room(&mut sc.tt, s.symbols.orig_ptr, &mut sc.buf, &mut sc.seg);
-        finish_block(&sc.buf, s.symbols.crc, k, &mut out)
+        mark!(RunEnd, s.place);
+        mark!(RleStart, s.place);
+        let r = finish_block(&sc.buf, s.symbols.crc, k, &mut out);
+        mark!(RleEnd, s.place, out.len(), out.capacity());
+        r
     }));
     let (res, panicked) = match r {
         Ok(Ok(())) => (Ok(out), false),
@@ -922,10 +941,16 @@ impl Gate {
         }
     }
 
+    /// Count this thread in, of `of`: whether it is the last (which then opens the gate,
+    /// `set`; every other `wait`s)
+    fn arrive(&self, of: usize) -> bool {
+        self.arrived.fetch_add(1, Ordering::AcqRel) + 1 == of
+    }
+
     /// Count this thread in, of `of`; the last runs `last` (which must not unwind), then
     /// opens the gate; every other waits until it is open
     fn pass(&self, of: usize, last: impl FnOnce()) {
-        if self.arrived.fetch_add(1, Ordering::AcqRel) + 1 == of {
+        if self.arrive(of) {
             last();
             self.set();
         } else {
@@ -1293,6 +1318,9 @@ struct Relay<'a> {
     t0: Instant,
     /// t0 to the build's end (B)
     build_end: AtomicU64,
+    /// the block's place, for the trace's marks only
+    #[cfg_attr(not(feature = "trace"), allow(dead_code))]
+    place: u64,
 }
 // SAFETY: as `coop::Relay`: the stage is shared read only while its shares run, and changed
 // only by the thread that ends the build (the built gate's last) or the walk (the thread
@@ -1365,6 +1393,7 @@ impl Relay<'_> {
             self.build_end.store(since(self.t0), Ordering::Relaxed);
             return;
         }
+        tmark!(WalkSetupStart, self.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
             let (tt, seg) = match old {
                 Stage::Fused(b, seg) => {
@@ -1390,6 +1419,7 @@ impl Relay<'_> {
             };
             Some(RoomWalk::new(tt, self.orig_ptr, seg, self.segments))
         }));
+        tmark!(WalkSetupEnd, self.place);
         self.build_end.store(since(self.t0), Ordering::Relaxed);
         match r {
             Ok(Some(w)) => *stage = Stage::Walk(w),
@@ -1402,14 +1432,17 @@ impl Relay<'_> {
         // SAFETY: the built gate was passed, and the stage changes again only when the
         // last walker leaves, which this thread has not
         if let Stage::Walk(w) = unsafe { &*self.stage.get() } {
+            tmark!(WalkStart, self.place);
             self.caught(catch_unwind(AssertUnwindSafe(|| {
                 w.share::<FLAGGED_LANES>()
             })));
+            tmark!(WalkEnd, self.place);
         }
         if self.walkers.fetch_sub(1, Ordering::AcqRel) == 1 {
             // SAFETY: every other walker has left, and none can join (walkers is 0)
             let stage = unsafe { &mut *self.stage.get() };
             if let Stage::Walk(w) = std::mem::replace(stage, Stage::Over) {
+                tmark!(AssembleStart, self.place);
                 let r = catch_unwind(AssertUnwindSafe(|| {
                     let (_, s) = w.finish();
                     if !self.failed() {
@@ -1417,6 +1450,7 @@ impl Relay<'_> {
                         s.assemble(unsafe { &mut *self.out.get() });
                     }
                 }));
+                tmark!(AssembleEnd, self.place);
                 self.caught(r);
             }
         }
@@ -1424,7 +1458,9 @@ impl Relay<'_> {
 
     fn join(&self) {
         let t = Instant::now();
+        tmark!(BuildWaitStart, self.place);
         self.built.wait();
+        tmark!(BuildWaitEnd, self.place);
         add(&PH.join_wait_ns, since(t));
         let mut v = self.walkers.load(Ordering::Acquire);
         loop {
@@ -1459,11 +1495,13 @@ fn invert(
     lead: &(dyn Fn() + Sync),
     direct: bool,
     inject: u8,
+    place: u64,
 ) -> Result<Timeline, Box<dyn Any + Send>> {
     let helpers = pool.threads().saturating_sub(1).max(1);
     let shares = helpers.min(MAX_SHARES);
     let t0 = Instant::now();
     add(&PH.runs, 1);
+    tmark!(BuildSetupStart, place);
     let Front {
         ll,
         counts,
@@ -1508,6 +1546,7 @@ fn invert(
             (Stage::Runs(rf, seg), None)
         }
     };
+    tmark!(BuildSetupEnd, place);
     let relay = Relay {
         stage: std::cell::UnsafeCell::new(stage),
         col,
@@ -1522,14 +1561,26 @@ fn invert(
         panic: Mutex::new(None),
         t0,
         build_end: AtomicU64::new(0),
+        place,
     };
     let relay = &relay;
     let (lead_start, lead_end) = (AtomicU64::new(0), AtomicU64::new(0));
     let helper = |j: usize| {
+        tmark!(HelperStart, place);
+        tmark!(BuildStart, place);
         relay.build_share(j, helpers);
-        // SAFETY: the gate's last helper is the last to count in: every share has ended
-        relay.built.pass(helpers, || unsafe { relay.end_build() });
+        tmark!(BuildEnd, place);
+        if relay.built.arrive(helpers) {
+            // SAFETY: the gate's last helper is the last to count in: every share has ended
+            unsafe { relay.end_build() };
+            relay.built.set();
+        } else {
+            tmark!(BuildWaitStart, place);
+            relay.built.wait();
+            tmark!(BuildWaitEnd, place);
+        }
         relay.walk_and_leave();
+        tmark!(HelperEnd, place);
     };
     let leader = || {
         if inject == INJECT_LEAD_DELAY {
@@ -1538,7 +1589,9 @@ fn invert(
         // (both moments from t0, as the build's end is)
         let start = since(t0);
         let t = Instant::now();
+        tmark!(LeadStart, place);
         lead();
+        tmark!(LeadEnd, place);
         add(&PH.lead_ns, since(t));
         lead_start.store(start, Ordering::Relaxed);
         lead_end.store(since(t0), Ordering::Relaxed);
@@ -1586,6 +1639,37 @@ struct Team {
     small: Solo,
 }
 
+impl Team {
+    /// The worker's buffers at its end, for the occupancy instrument's ledger
+    /// (`parallel::Team::buffers`', with this module's fronts: the records' too)
+    #[cfg(feature = "trace")]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let [f0, f1] = &self.fronts;
+        let s = &self.seg;
+        vec![
+            Buffer::of("ll", &f0.ll),
+            Buffer::of("ll.b", &f1.ll),
+            Buffer::of("checkpoints", &f0.checkpoints),
+            Buffer::of("checkpoints.b", &f1.checkpoints),
+            Buffer::of("recs", &f0.recs),
+            Buffer::of("recs.b", &f1.recs),
+            Buffer::of("fo_hs", &f0.fo_hs),
+            Buffer::of("fo_hs.b", &f1.fo_hs),
+            Buffer::of("rle", &self.bufs[0]),
+            Buffer::of("rle.b", &self.bufs[1]),
+            Buffer::of("tt", &self.tt.0),
+            Buffer::of("small.tt", &self.small.tt.0),
+            Buffer::of("small.rle", &self.small.buf),
+            Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            },
+        ]
+    }
+}
+
 fn solo_on(shared: &Shared, t: &mut Team, s: Staged, k: Kernels) {
     let i = s.front;
     if solo(shared, &mut t.fronts[i], &mut t.small, s, k) {
@@ -1609,13 +1693,20 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
                 }
                 continue;
             }
+            mark!(JobLock);
             let job = {
                 let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
+                mark!(JobRecv);
                 rx.recv()
             };
             let Ok(job) = job else {
+                #[cfg(feature = "trace")]
+                if crate::trace::level() > 0 {
+                    crate::trace::buffers(&t.buffers());
+                }
                 return;
             };
+            mark!(JobGot, job.0);
             if shared.lock().cancelled {
                 continue;
             }
@@ -1675,6 +1766,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
             }
             let mut next_job = try_job(jobs);
             while let Some(job) = next_job.take() {
+                mark!(JobGot, job.0);
                 shared.overlapped.fetch_add(1, Ordering::Relaxed);
                 if shared.lock().cancelled {
                     return;
@@ -1701,6 +1793,8 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
             #[cfg(test)]
             inject(shared, place, Fault::LeadEnd, &l);
         };
+        // (the run's own kinds, as the shipped worker's)
+        mark!(RunStart, s.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
             invert(
                 pool,
@@ -1713,8 +1807,10 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
                 &leader,
                 MODE == DIR,
                 0,
+                s.place,
             )
         }));
+        mark!(RunEnd, s.place);
         let mut l = lead.into_inner().unwrap_or_else(|e| e.into_inner());
         match r {
             Ok(Ok(_)) => {
@@ -2163,6 +2259,7 @@ mod tests {
             &lead,
             MODE == DIR,
             inject,
+            0,
         )?;
         // (the table too: a random column is no BWT, so its walk visits only one cycle)
         Ok((out, tt.0))
@@ -2270,6 +2367,7 @@ mod tests {
                     &mut out,
                     &|| panic!("lead"),
                     false,
+                    0,
                     0,
                 )
             }));
@@ -2731,6 +2829,7 @@ mod tests {
                     &mut out,
                     &|| {},
                     direct,
+                    0,
                     0,
                 )
                 .unwrap();
@@ -3448,6 +3547,7 @@ mod tests {
                 &|| {},
                 direct,
                 INJECT_LEAD_DELAY,
+                0,
             )
             .unwrap();
             assert!(tl.lead_start >= LEAD_DELAY.as_nanos() as u64, "{tl:?}");

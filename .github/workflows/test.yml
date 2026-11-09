@@ -93,6 +93,10 @@ jobs:
       # the run-fed leader's VALID (bench/run_fed_leader.py), on synthetic runs
       - name: Run-fed leader VALID tests
         run: python3 bench/test_run_fed_leader.py
+      # the run-fed leader's workstation admission (bench/run_fed_leader_ws.py), on synthetic
+      # bundles: its refusals and its captures' (docs/journal/2026-11-09-run-fed-leader.md §R4)
+      - name: Run-fed leader workstation admission tests
+        run: python3 bench/test_run_fed_leader_ws.py
 
   get-python-versions:
     runs-on: ubuntu-latest
