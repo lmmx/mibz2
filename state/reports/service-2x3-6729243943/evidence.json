@@ -1,0 +1,175 @@
+{
+  "head": "3e4477d035e96310eb4ac3d4014e01e13ffaa33c",
+  "frozen": "21cf20a49e3a90817e718a14abcc254679de6b2a",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "trigger": 6729243943,
+  "queued": 6729027210,
+  "pr": {
+    "base": "a97e5b2a4bdbc83245975a6ef50fb4a72b039fd7",
+    "files": [
+      ".just/bench.just",
+      "bench/service-2x3.frozen",
+      "bench/service_2x3.py",
+      "docs/journal/2026-11-08-service-2x3-registration.md",
+      "examples/ab.rs"
+    ]
+  },
+  "freeze_compare": {
+    "commits": [
+      "3e4477d035e96310eb4ac3d4014e01e13ffaa33c"
+    ],
+    "files": [
+      "bench/service-2x3.frozen"
+    ]
+  },
+  "src_compare": {
+    "base": "9ef3c17d12b0fcfc7609322b1d78e63ede8acdd3",
+    "files": [
+      ".just/bench.just",
+      "bench/service-2x3.frozen",
+      "bench/service-core.frozen",
+      "bench/service_2x3.py",
+      "docs/journal/2026-11-08-service-2x3-registration.md",
+      "docs/journal/2026-11-08-service-core-first-attempt.md",
+      "docs/journal/2026-11-08-service-core-result.md",
+      "examples/ab.rs"
+    ]
+  },
+  "checks": [
+    {
+      "id": 128717294143,
+      "name": "Release",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128717294143"
+    },
+    {
+      "id": 128716948423,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716948423"
+    },
+    {
+      "id": 128716943525,
+      "name": "check-commit",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716943525"
+    },
+    {
+      "id": 128716940331,
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716940331"
+    },
+    {
+      "id": 128716939999,
+      "name": "sdist",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716939999"
+    },
+    {
+      "id": 128716912780,
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716912780"
+    },
+    {
+      "id": 128716912490,
+      "name": "Publish crate",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716912490"
+    },
+    {
+      "id": 128716912168,
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716912168"
+    },
+    {
+      "id": 128716911476,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361875/job/128716911476"
+    },
+    {
+      "id": 128715399602,
+      "name": "python (3.10)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399602"
+    },
+    {
+      "id": 128715399547,
+      "name": "python (3.11)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399547"
+    },
+    {
+      "id": 128715399535,
+      "name": "python (3.12)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399535"
+    },
+    {
+      "id": 128715399519,
+      "name": "python (3.14)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399519"
+    },
+    {
+      "id": 128715399512,
+      "name": "python (3.13)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399512"
+    },
+    {
+      "id": 128715399471,
+      "name": "python (3.15)",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715399471"
+    },
+    {
+      "id": 128715357351,
+      "name": "submit",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715357351"
+    },
+    {
+      "id": 128715357313,
+      "name": "get-python-versions",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715357313"
+    },
+    {
+      "id": 128715357248,
+      "name": "typing",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715357248"
+    },
+    {
+      "id": 128715356949,
+      "name": "rust",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361929/job/128715356949"
+    },
+    {
+      "id": 128715356789,
+      "name": "bench",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361894/job/128715356789"
+    },
+    {
+      "id": 128715356688,
+      "name": "occupancy",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42475361884/job/128715356688"
+    }
+  ],
+  "failed_job": {
+    "id": 128715377975,
+    "run": 42475361875,
+    "attempt": 1,
+    "stage": "Install maturin",
+    "error": "gzip: stdin: not in gzip format; tar: Child returned status 1; docker exit code 2",
+    "interpretation": "Tool acquisition/install failure before crate build; supports class B. Not a measured performance rerun."
+  },
+  "dry_run_attribution": "PR body reports DRY at reviewed head, INVALID as expected, six arms byte-equal and trace complete. No dry bundle independently replayed."
+}

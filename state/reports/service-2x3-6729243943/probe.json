@@ -1,0 +1,125 @@
+{
+  "control": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "deleted_hash": {
+    "error": "KeyError",
+    "detail": "'hash'"
+  },
+  "deleted_size": {
+    "error": "KeyError",
+    "detail": "'out'"
+  },
+  "deleted_wall": {
+    "error": "KeyError",
+    "detail": "'wall'"
+  },
+  "null_output": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "empty_output": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "negative_wall_and_cpu": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "wrong_corpus": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "absent_corpus_digest": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "absent_trace_metrics": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "UNRESOLVED (svc2@10's trace missing or incomplete)"
+  },
+  "wrong_trace_plan": {
+    "exit": 0,
+    "verdict": "VALID",
+    "overall": "NOT REPLICATED (P1: svc2@10 doesn't beat today's default)",
+    "saturation": "NOT SATURATED at 2 x 3 + 2"
+  },
+  "different_base_arm": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "one_round_only": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "dry_marker": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "changed_freeze_marker": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "duplicate_round": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "wrong_plan": {
+    "exit": 1,
+    "verdict": "INVALID",
+    "overall": "NONE (the run is invalid)",
+    "saturation": "NONE (the run is invalid)"
+  },
+  "both_mechanisms_gain": {
+    "product": "SVC2@10 BEATS THE DEFAULT",
+    "cause": "THE SERVICE THREADS EARN THEIR KEEP",
+    "two_teams": "TWO PIPELINED TEAMS BEAT THE DEFAULT",
+    "overall": "FOR SVC2@10 (P1 a gain, CPU not a CPU COST, and C1 a gain: the service threads cause it)"
+  },
+  "cpu_inconclusive": {
+    "product": "SVC2@10 BEATS THE DEFAULT",
+    "cause": "THE SERVICE THREADS EARN THEIR KEEP",
+    "two_teams": "TWO PIPELINED TEAMS DON'T BEAT THE DEFAULT (REGRESSION)",
+    "overall": "FOR SVC2@10 (P1 a gain, CPU not a CPU COST, and C1 a gain: the service threads cause it)"
+  },
+  "synthetic_mechanisms": {
+    "wall": {
+      "default": 1.0,
+      "plain2": 1.1,
+      "pipe2": 0.9,
+      "svc2": 0.95
+    },
+    "ratios": {
+      "P1": 1.0526315789473684,
+      "C1": 1.1578947368421053,
+      "P2": 1.1111111111111112,
+      "S1": 0.9473684210526316
+    },
+    "meaning": "P1, C1, P2 gains coexist with svc2 slower than pipe2; illustrative values, not timing evidence."
+  }
+}
