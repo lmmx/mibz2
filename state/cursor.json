@@ -100,9 +100,10 @@
     6731216735,
     6731333886,
     6731657578,
-    6731990737
+    6731990737,
+    6732258318
   ],
-  "last_processed_comment_id": 6731990737,
+  "last_processed_comment_id": 6732258318,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -869,11 +870,15 @@
     },
     {
       "trigger_comment_id": 6732258318,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "7f88388b938528f22088df79387f309eb112fe1c"
+      "source_commit": "7f88388b938528f22088df79387f309eb112fe1c",
+      "report_commit": "409907cace6fbc27dae93e5bcd661756f0e27d6a",
+      "report_path": "state/reports/direct-f-closure-6732258318/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE narrowed to count admission and feasible fixtures. Original six witnesses rejected; timed D guard, per-round identity and corpus freeze identities accepted. 50 tests and 10840 census cases pass; four impossible records remain VALID. No implementation or timing."
     }
   ],
   "active_delegations": [],
@@ -893,10 +898,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6731990737
+      6732258318
     ],
     "handled": [
-      6731990737
+      6732258318
     ],
     "skipped": [],
     "automation_modified": false
