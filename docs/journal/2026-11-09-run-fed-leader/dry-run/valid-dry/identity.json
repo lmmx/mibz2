@@ -1,0 +1,59 @@
+{
+ "schema": "run_fed_leader/workstation-identity/1",
+ "dry": true,
+ "head": "53901b3fb1c820a66fa6595eaf9727aa97ae5cfb",
+ "frozen": null,
+ "inputs_match_frozen": false,
+ "tree_clean": true,
+ "sources": {
+  "recipe": {
+   "path": ".just/bench.just",
+   "sha256": "05d33d980dc8d806160e97cf559dbc12c7b4e92277d1b58a6f5613db8755dd35",
+   "at_frozen": null
+  },
+  "admission": {
+   "path": "bench/run_fed_leader_ws.py",
+   "sha256": "837e3077d4592783f6dfe2c92aac50080fa03914928ab46803e894b920200870",
+   "at_frozen": null
+  },
+  "reporter": {
+   "path": "bench/run_fed_leader.py",
+   "sha256": "573633850e1d849decf1b8026973677a2f5578c4992662b34d00e4fbf8a12b8f",
+   "at_frozen": null
+  },
+  "registration": {
+   "path": "docs/journal/2026-11-09-run-fed-leader.md",
+   "sha256": "d6fd32232324d97ef89bf414f0b53cc98b21908c3e976eecac202c71130077bf",
+   "at_frozen": null
+  }
+ },
+ "features": [
+  "run-fed"
+ ],
+ "occupancy_features": [
+  "trace",
+  "run-fed"
+ ],
+ "profile": "release",
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+ "ab_sha256_before": "77097598c5a6afbb9326fe784e70384e37ef82701775b6d75498f2947690d766",
+ "ab_sha256_after": "77097598c5a6afbb9326fe784e70384e37ef82701775b6d75498f2947690d766",
+ "occupancy_sha256_before": "30ed743500cd35c244c9412c7f169090d051b5082c08969aa57592006e3df749",
+ "occupancy_sha256_after": "30ed743500cd35c244c9412c7f169090d051b5082c08969aa57592006e3df749",
+ "corpus_sha256_before": "1bd6c1a4fd3300b0f7eb080311a27e43cd8a35845e22f79d2b495671c3d76166",
+ "corpus_sha256_after": "1bd6c1a4fd3300b0f7eb080311a27e43cd8a35845e22f79d2b495671c3d76166",
+ "arms": [
+  "mibz2-default33",
+  "mibz2-pipe3-both",
+  "mibz2-pipe3-runfed-ctl",
+  "mibz2-pipe3-runfed-reg",
+  "mibz2-pipe3-runfed-ls",
+  "mibz2-pipe3-runfed-hs",
+  "mibz2-pipe3-runfed-dir"
+ ],
+ "threads": [
+  10
+ ],
+ "rounds": 2,
+ "ab_exit": 0
+}

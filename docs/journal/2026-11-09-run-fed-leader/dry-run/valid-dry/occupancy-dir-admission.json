@@ -1,0 +1,25 @@
+{
+ "sub": "dir",
+ "dry": true,
+ "invalid": [],
+ "perturbation": {
+  "timeline": {
+   "throughput_ratio": {
+    "ratio": 1.014036,
+    "lo": 0.706358,
+    "hi": 1.455734
+   },
+   "verdict": "no perturbation shown (interval includes no change)"
+  },
+  "full": {
+   "throughput_ratio": {
+    "ratio": 1.030877,
+    "lo": 0.656358,
+    "hi": 1.619098
+   },
+   "verdict": "no perturbation shown (interval includes no change)"
+  }
+ },
+ "perturbing_modes": [],
+ "interpretable": true
+}

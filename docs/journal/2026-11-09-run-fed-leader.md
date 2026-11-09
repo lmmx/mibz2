@@ -1,7 +1,9 @@
 # 2026-11-09: The run-fed leader for the pipelined teams, built opt-in, and registered
 
-**Status: registered, NOT RUN** (RULES C1). Revised three times: §R1, the reviews of
-`f94551ab`; §R2, D049; §R3, an empty block, from CI's fuzz-smoke.
+**Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
+`2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
+Revised four times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+CI's fuzz-smoke; §R4, the workstation run made freeze-ready.
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -391,41 +393,140 @@ exists for any arm. The coordinator may make any threshold stricter at freezing.
 - **Hence** the CI dispatch is a bounded, environment-specific screen: an attributed LEAD
   there justifies the workstation run; a STOP there pauses the arm, never closes the line.
 
-## 8. The workstation recipe, drafted (NOT FROZEN: not in the Justfile, not in the queue)
+## 8. The workstation run: its registration, recipe and admission (§R4; NOT FROZEN)
 
-The shape, following CLAUDE.md's "one tarball back" and `just submit`:
+CI's run at `03e52206` was VALID (JUDGED), an attributed LEAD: `dir`/`default33` wall
+0.9669 [0.9594, 0.9744] at 9 threads (run 42564217298;
+`2026-11-09-run-fed-leader-result.md`). Under §6's positive criterion, that permits
+freezing this run, unchanged but for its frozen commit. The Researcher's review
+(6732761085) asked for this section to be revised first, and it is (§R4).
 
-```just
-# NOT FROZEN (docs/journal/2026-11-09-run-fed-leader.md §8): the run-fed leader on the i9
-bench-run-fed-leader corpus="bench/corpora/wikidata.bz2" rounds="20":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    DIR="bench/runs/run-fed-leader-$(date -u +%Y%m%dT%H%M%SZ)"
-    mkdir "$DIR"
-    exec > >(tee -a "$DIR/console.log") 2>&1
-    git rev-parse HEAD > "$DIR/commit.txt"
-    git status --porcelain > "$DIR/git-status.txt"
-    echo "NOT FROZEN: a draft recipe, not evidence" > "$DIR/NOT-FROZEN.txt"
-    sha256sum "{{corpus}}" > "$DIR/corpus.sha256"
-    cargo build --release --features run-fed --example ab
-    target/release/examples/ab env > "$DIR/env.json"
-    target/release/examples/ab run "$DIR/runs.jsonl" \
-      --arms mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir \
-      --threads 10 --rounds "{{rounds}}" "{{corpus}}"
-    # (the reporter admits only the CI registration's thread counts, 9 and 3: the
-    # workstation run needs its own admission, at 10 threads, registered at its freeze)
-    bash bench/bundle.sh "$DIR"
-```
+This section is **NOT FROZEN** until `bench/run-fed-leader.frozen` names its commit. Until
+then the recipe refuses every run but a DRY one. CI's success authorizes no workstation
+run; Louis's own run of the frozen recipe, submitted by digest, remains necessary under C5.
+Nothing here authorizes a C6 choice.
 
-- At 10 threads (the i9's plan selection, as `bench-pipeline-levers` ran it), every arm is
-  three teams of three; the incumbent selects it by itself there, and is forced here only
-  so CI and the workstation run the same arm.
-- The maintainer's command, once frozen: the branch's checkout at the frozen commit, then
-  `just submit bench-run-fed-leader`. Until then, nothing to run.
-- To freeze: the occupancy traces of `ctl` and `dir` (one decode each) would be added, so
-  the i9's critical path is seen, not inferred; and its own admission (above). It is a
-  draft, not admitted: it needs its own freeze and C5's authorization. CI's success
-  authorizes no workstation run.
+**The arms, unchanged:** the seven, in this order, with the reference fixed:
+
+| # | arm | role |
+|---|---|---|
+| 0 | `mibz2-default33` | the incumbent, the fixed reference of every judged ratio |
+| 1 | `mibz2-pipe3-both` | the shipped worker through the research constructor |
+| 2 | `mibz2-pipe3-runfed-ctl` | the instrumented control (attribution) |
+| 3 | `mibz2-pipe3-runfed-reg` | the register-list control (C29) |
+| 4 | `mibz2-pipe3-runfed-ls` | secondary, never judged |
+| 5 | `mibz2-pipe3-runfed-hs` | secondary, never judged |
+| 6 | `mibz2-pipe3-runfed-dir` | **the primary** |
+
+**The run:**
+- exactly **20 paired rounds at a requested 10 threads**: 140 timed records, the arms
+  rotated by round (ab's `arm_order`);
+- every run observed running three leaders and six pipelined helpers;
+- `--settle 0.25`, ab's default busy gate, unpinned;
+- the bench's Wikidata sample, built by `bench/wikidata.py` from `bench/wikidata.json`, its
+  SHA-256 `82f65ace…c29915` (CI's corpus) checked when it is built and before and after
+  the run.
+
+At 10 threads every arm is three teams of three: the incumbent selects that plan by itself
+there, and is forced here only so that CI and the workstation run the same arm. There are
+no 3-thread cells. The Researcher's recomputation found that CI's one-team cells don't
+rank the arms as the 9-thread cells do, which supports measuring the target, not
+predicting it.
+
+**The reading, prospective, on the primary at 10 threads.** These are §6's tables
+unchanged. Each ratio is the geometric mean of the 20 paired ratios over the incumbent,
+with its 95% t-interval on the logs (df = 19):
+
+| reading | condition |
+|---|---|
+| **LEAD** | wall ratio ≤ 0.97, its interval's high end < 1, and the CPU ratio's high end ≤ 1.05 |
+| **STOP** | the wall ratio's low end > 0.99: no 1% cut |
+| **INCONCLUSIVE** | anything else |
+
+**Attribution, stated with every reading, never a change of reference:**
+- A LEAD is *attributed* only if `ctl`/`default33`'s wall interval lies wholly inside
+  [0.98, 1.02] and `dir`/`ctl`'s wall interval's high end is below 1. Otherwise it is LEAD
+  with **ATTRIBUTION FAILED** and its reasons.
+- Reported apart, never judged: `ls` and `hs` over the incumbent (with their readings),
+  and the control contrasts `ls`/`ctl`, `hs`/`ctl`, `dir`/`ctl`, `reg`/`ctl` and
+  `ctl`/`pipe3-both`.
+- The post-run descriptive contrasts the Researcher noted (`dir`/`reg`, `ls`/`reg`) stay
+  descriptive: they are no gate. Nor is "direct fill adds 0.8%" a causal reading: `reg`
+  uses C29 on every block, while the record arms keep the old kernel on blocks the rule
+  doesn't take.
+
+**VALID** (`bench/run_fed_leader_ws.py admit DIR`, every predicate, or INVALID with its
+reasons and no reading; fail-closed: a missing, mistyped or extra field is a reason, and
+an error of the admission itself is INVALID):
+- **the identity** (`identity.json`, `run_fed_leader/workstation-identity/1`):
+  - the run's head;
+  - the frozen commit, with HEAD's measured inputs identical to it;
+  - a clean tree before and after;
+  - the recipe's, the admission's, the reporter's and this registration's SHA-256 at the
+    head, each equal to the file's at the frozen commit;
+  - features `run-fed` (and `trace,run-fed` for the captures), profile `release`, rustc;
+  - the `ab` and `occupancy` binaries' SHA-256 before and after the run, each one build;
+  - the corpus's SHA-256 before and after, equal to `82f65ace…`;
+  - the arms in this order, threads `[10]`, 20 rounds, and `ab run` exiting 0;
+- **the records** (`runs.jsonl`): CI's typed checks of each record, reused
+  (`record_problems`):
+  - exit 0, empty error, an unbroken line;
+  - a hash and positive output, each equal to the incumbent's in its round, and the
+    incumbent's one value throughout;
+  - finite positive wall and CPU, and the corpus `wikidata`;
+  - the plan (3, 0, 6);
+  - for the run-fed arms, every registered phase once, as non-negative integers, with
+    consistent counts, no fallback, and the controls with no records;
+  - then threads 10 only, rounds 0–19, each arm once a round, in ab's rotation, and
+    exactly 140 records;
+- every judged interval present and finite.
+
+**The occupancy captures, admitted apart** (`admit-occupancy DIR ctl|dir`). They are made
+after the timing and never enter its judgement. Each is one capture of
+`examples/occupancy.rs --threads 10 --pipe 3 --run-fed SUB --rounds 6`: its three modes,
+off, timeline and full, each twice, with ab's run-fed arm's window. Each is admitted only
+if:
+- it is the instrument's format;
+- it shows the sub-arm at 10 threads in three teams of three, with 6 rounds;
+- every round is complete in both traced modes, with blocks and team runs traced;
+- each team's buffers are recorded (3);
+- all 18 runs' outputs are one, each the timing's incumbent's bytes and hash, with no
+  error;
+- its commit and corpus are the identity's.
+
+Its perturbation verdicts are reported, not judged: a capture whose traced modes perturb is
+admitted, marked "its timeline not to be interpreted". The captures' purpose is the i9's
+critical path, seen rather than inferred: who ends each run, the leader or the helpers.
+
+**The bundle** (one directory per attempt, `target/run-fed-leader/<UTC>`, packed by
+`bench/bundle.sh` however the attempt ends):
+- `console.log`, `outcome.txt`, `commits.txt`;
+- `identity.json`, `inputs.txt` (every digest and the toolchain), `env.json`, `lscpu.txt`;
+- `runs.jsonl` (partial if the run stopped);
+- the two captures with their text summaries;
+- the admissions (`admission.*`, `occupancy-*-admission.*`);
+- the binaries that ran (`bin/`).
+
+Partial and failing evidence is kept, never cleaned up. The outcome is one line: the
+timing's VALID or INVALID, then each capture's. The exit status is 0 for VALID, 1 for
+INVALID or REFUSED, and anything else for an attempt stopped before its verdict.
+
+**No re-run to erase a failure**, as §6 says. An INVALID is kept and investigated, never
+re-run to pass. Only a failure before `ab run` wrote any record may be re-run once, at the
+same commit. A run after any code change is a new head, needing its own freeze.
+
+**The maintainer's commands, once frozen:**
+`git fetch origin research/run-fed-leader && git checkout <the frozen head>`, then
+`just submit bench-run-fed-leader`. This section's commit is not frozen: there is nothing
+to run until the coordinator names the frozen commit in `bench/run-fed-leader.frozen` and
+queues it. It is not in `bench/workstation-queue.txt`, and no tag is set.
+
+**Stop criteria:**
+- an attributed LEAD on the workstation is the decision evidence §6 named. It permits no
+  production change by itself: a production prototype needs its own registration, CI's
+  paired bench and B5's review;
+- a STOP closes this arm on the target machine (PROTOCOL §11: not the line);
+- INCONCLUSIVE, or a LEAD with ATTRIBUTION FAILED, goes back for revision.
 
 ## 9. Limitations
 
@@ -692,6 +793,105 @@ No unsafe code changed, so Miri was not rerun for R3. §R2's Miri results stand 
   D054's PROCEED was for `a08be2e9`: this source fix needs its review.
 - **Unchanged:** the question, the primary, the reference, the thresholds, VALID, the arms,
   the rounds and the corpus.
+
+## R4. Revision, 2026-11-09: the workstation run made freeze-ready (the Researcher's 6732761085)
+
+CI's registered run at `03e52206` was VALID (JUDGED), an attributed LEAD. The Researcher
+reproduced it from the artifact, and asked for a REVISE of §8 before it is frozen as
+workstation decision evidence. Each ask, and where it is met:
+
+| ask | met by | checked |
+|---|---|---|
+| keep the seven arms, their order, `default33` the reference, `dir` primary, `ls`/`hs` secondary | §8's table; the recipe's `--arms`; the admission's `ARMS` (the CI reporter's `REGISTERED_ARMS`, imported) | the identity's arms and every round's rotation are checked |
+| exactly 20 paired rounds at a requested 10 threads, 140 timed records, three leaders and six pipelined helpers seen | the recipe (`--threads 10 --rounds 20`); the admission's `ROUNDS`, `THREADS` and its count of 140; CI's plan check at 10 threads | fixtures refuse 19 and 21 rounds, threads 9, a (3, 0, 6) plan not seen, a 139-record bundle |
+| a separate, fail-closed admission, not the CI reporter's 15 rounds at [9, 3] nor its UNJUDGED mode | `bench/run_fed_leader_ws.py` (`admit`, `admit-occupancy`): its own predicates and constants; it imports only the CI reporter's typed record checks and interval code, and leaves the CI reporter itself unchanged | `bench/test_run_fed_leader_ws.py`: 14 tests (below), in CI's submit job |
+| the thresholds and attribution stated prospectively; §6's tables at df = 19 | §8: the reading's table, the attribution rule, the contrasts reported apart, the post-run contrasts kept descriptive | the fixtures read LEAD (attributed), LEAD with ATTRIBUTION FAILED (ctl far from the incumbent), and STOP; `df` is 19 |
+| frozen identities: the source, recipe, admission, and binary and corpus digests, recorded and checked | `bench/run-fed-leader.frozen` (`frozen none` until the coordinator names it); the recipe's measured-inputs check against it; `identity.json`'s sources (the recipe, admission, reporter and registration at the head and at the frozen commit), binaries and corpus before and after | fixtures refuse each mismatched digest, each source changed since the freeze, an unfrozen run, inputs off the frozen commit, a dirty tree; the recipe refuses an unfrozen registered run and a HEAD off the frozen commit (both seen, below) |
+| define the ctl and dir occupancy captures and admit them apart | §8's captures; `examples/occupancy.rs --run-fed SUB` | fixtures refuse each capture defect (12 kinds), admit a perturbing capture marked as such; the dry run's captures admitted |
+| keep partial and failing evidence | the recipe's `finish` trap packs every attempt, its outcome stated | the first dry run's failure (below) was packed with its partial files |
+| the house shape: one new directory an attempt (`mkdir`, not `-p`), the console teed, `bench/bundle.sh`, `just submit bench-run-fed-leader` | `.just/bench.just`'s `bench-run-fed-leader` | the bundles land at `target/run-fed-leader/<UTC>.tar.gz`, where `just submit` finds exactly one |
+
+**The captures needed two small changes in `src/` and an instrument option:**
+- **Trace marks in the copied worker and relay.** The copied worker and relay emitted none
+  of the shipped pipelined team's trace marks: no MTF, job, run, lead, build, build-wait,
+  walk-set-up, walk or assemble marks. Now they emit each at the same point as
+  `coop::invert_pipelined_with` and `pipelined_worker`. They also report their buffers at
+  the end of the worker (`Team::buffers`, with the records' buffers). All of this is with
+  the `trace` feature only, as the shipped team's marks are.
+- **What the timed build changes.** The timed build has no `trace`, so the marks compile
+  out. Its code differs from the CI-judged commit's in three trivial ways:
+  - `invert` takes the block's place;
+  - `Relay` holds it;
+  - the helpers' built gate is `Gate::arrive`, then `set` or `wait`, which is `pass` split
+    in two so that the wait can be marked. The behaviour is unchanged.
+
+  The workstation run measures the frozen commit's code, not `03e52206`'s. These changes
+  are not separately benched: they add no work on any decode path.
+- **`occupancy --pipe 3 --run-fed SUB`** (`--features trace,run-fed`) builds the run-fed
+  teams exactly as ab's `mibz2-pipeK-runfed-SUB` arm does. A local capture of the shipped
+  team (`--pipe 3 --levers both`) and of `dir` on the same file read alike, with the team
+  workers' buffers recorded in both. Both also say "events reconciled: NO" on decoded
+  bytes: that is the instrument's existing approximation for pipelined teams, not a gap of
+  the copy.
+
+**The admission's fixture tests** (`bench/test_run_fed_leader_ws.py`, 14, all pass):
+- a clean 140-record bundle is VALID (JUDGED), df 19, LEAD attributed;
+- LEAD with ATTRIBUTION FAILED; STOP;
+- a tiny DRY bundle is VALID only as DRY: refused as evidence, and a registered bundle
+  refused as DRY;
+- wrong rounds (19, 21, an identity saying 15) and wrong threads (9, `[9, 3]`, a plan not
+  seen) are refused;
+- a missing arm (records or identity) is refused;
+- partial records are refused: 139 records, a truncated line, a broken record, `ab run`
+  exiting 101, a missing identity;
+- mismatched digests are refused: ab, occupancy, the corpus within a run, the corpus not
+  the registered one, each of the four sources at the frozen commit, an output differing
+  from the incumbent's;
+- an unfrozen run, inputs off the frozen commit, a dirty tree and wrong features are
+  refused;
+- bad evidence inside a record (negative wall, a fallback, the corpus label) and a broken
+  rotation are refused;
+- the captures: both admitted; a perturbing one admitted and marked; 12 capture defects
+  each refused; an unregistered sub-arm and a missing capture refused.
+
+The CI reporter's 24 tests still pass.
+
+**The local dry runs** (untimed, `just bench-run-fed-leader 1 CORPUS`, on this shared
+4-core machine, under a 6 GB address-space cap; records in
+`2026-11-09-run-fed-leader/dry-run/`):
+1. **Stopped, and packed.** `rustc -vV | head -1` failed the recipe under `pipefail`
+   (SIGPIPE). The attempt was still packed with its partial files and an INCOMPLETE
+   outcome, which is the partial-evidence path working. Fixed (`rustc -V`, `53901b3f`).
+2. **INVALID, rightly, on a corpus of mixed text** (`dry-run/refused-census/`):
+   - no team block by records: the corpus's blocks fail the records' rule;
+   - one record's thread census caught a pool helper before it named itself. ab saw
+     `mibz2-1` twice and one `mibz2-coop-p2` fewer, so the plan read (4, 0, 5). A thread
+     carries its parent's name until it names itself. On a 20 ms decode the census can land
+     in that window. On the registered corpus's multi-second decodes it is far less likely,
+     and CI's 210 records never showed it. But if the workstation run shows it, the run is
+     INVALID, by design: §8 admits no exception.
+3. **VALID (DRY), on a run-heavy corpus** (`dry-run/valid-dry/`):
+   - 14 records, every arm with team blocks by records;
+   - both captures admitted, every capture run's output the timing's incumbent's;
+   - the same bundle offered as evidence is refused, with every reason listed (DRY, not
+     frozen, the sources not at a frozen commit, the corpus not the registered one, 2
+     rounds not 20, 14 records not 140).
+4. **The recipe's refusals, seen:** an unfrozen registered run ("names no frozen commit
+   yet"), a CORPUS without DRY, a dirty checkout, and, through a throwaway local commit
+   naming `f6708567` as frozen, "HEAD's measured inputs differ from the frozen commit".
+
+**The suites:**
+- native: `run_team` with both workers' unwind tests, 37 passed;
+- clippy (default, all features, and `occupancy` with `trace` alone) and fmt: clean;
+- ruff check and format on the new scripts: clean.
+
+**To freeze** (the coordinator's, not done here):
+1. A commit of its own sets `bench/run-fed-leader.frozen` to the PR head carrying this
+   section. The `.frozen` file is not among the measured inputs, so that commit changes
+   nothing measured.
+2. Review, and then the queue entry.
+
+Not done here: no queue entry, no tag, no dispatch.
 
 ## Provenance and reproduction
 
