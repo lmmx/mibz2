@@ -1,0 +1,10 @@
+== M3-final-check-removed:  1 file changed, 1 insertion(+), 1 deletion(-)
+== native tests
+test run_stage::tests::miri_direct_empty_block_by_records ... ok
+test run_stage::tests::miri_direct_unchecked_states_refused ... ok
+test run_stage::tests::miri_sort_and_floor ... ok
+test run_stage::tests::direct_cases ... ok
+test run_stage::tests::tables_from_records_random ... ok
+test run_stage::tests::miri_unchecked_states_refused ... ok
+test run_stage::tests::tables_from_records_small ... ok
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 0.09s

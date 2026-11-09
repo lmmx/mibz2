@@ -1,0 +1,5 @@
+case 15: Kernels { avx2: false, clmul: false }: the table differs (INJECTED)
+syms: [1, 0, 0, 0, 2, 0, 0, 0, 3]
+eob: 3
+seq_to_unseq: [169, 243]
+max_len: 900000

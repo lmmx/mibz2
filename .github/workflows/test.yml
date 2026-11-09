@@ -46,7 +46,8 @@ jobs:
   # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
   # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
-  # and C31's direct placement (MODE run-fed-direct), 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
+  # and C31's direct placement (MODE run-fed-direct), 30 s each at fixed seeds, on the
+  # fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
   fuzz-smoke:
     runs-on: ubuntu-latest

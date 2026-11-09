@@ -278,29 +278,25 @@ need not sum to the median of the total, and a gap between them is no missing ph
 | the named cases: the empty block and the tiny ones (a, ab, ba, aa, abba, bba, aab); one symbol at every length 1–40 and at 70,000; all 256 symbols, once each (r = n) forward and reversed, and as runs of 1–20; r = n by alternation and by a 3-cycle; runs crossing bucket boundaries; the ownership tail, `c^len b^len` for len 1–24, with and without later runs of b | `run_stage::tests::direct_cases` | pass |
 | the states D must never accept: no records for n 0 and 1, the closing record alone, the empty block's records for one row, n at 2²⁴, another block's n (0, 1, 3, 5), records out of order, two runs at one row, a first run past row 0, an uncounted byte, counts that wrap a u32, a run past its bucket's end; each refused with an empty table, by both kernels; the empty block accepted with an empty table | `run_stage::tests::miri_direct_unchecked_states_refused` | pass, natively and under Miri |
 | `place`'s stores under Miri: `miri_sort_and_floor` (ternary columns to 4 rows, 121, now through `direct` too) and the test above, scalar, then with `-C target-feature=+avx2,+bmi1` and `MIBZ2_EXPECT_AVX2` asserting the AVX2 kernel was reached | `cargo +nightly miri test --lib -- run_stage::tests::miri_`, both of `miri.yml`'s steps | pass, both (3 tests each) |
-| `place` and `build_direct` on every stream of `tests/mtf_kernels.rs`: the table on success; on a corrupt stream, `build_direct`'s error kind is `mtf::mtf`'s; its path is `takes_runs`'s | `cargo test --features run-fed --test mtf_kernels` (4 tests) | pass |
+| `place` and `build_direct` on every stream of `tests/mtf_kernels.rs`: the table on success; on a corrupt stream, `build_direct`'s error kind is `mtf::mtf`'s; its path is `takes_runs`'s; since §10, #270's saved stream (seed 1 case 596) through `build_direct`, its empty block by records | `cargo test --features run-fed --test mtf_kernels` (5 tests) | pass |
 | all 431 blocks of the bench corpus (`wikidata.bz2`, SHA-256 `82f65ace…`) and the six synthetic corpora: D's table by `place` and through `build_direct`, path, length, the CRC after the room walk; D's census cells equal to B's, its stores between its rows and B's slots, its one-slot stores at most 7 a stream; the Wikidata file's output = `decode`'s; then, over 2 timed rounds, B's and D's path on every timed block and each round's budget identity | the diagnostic's validation pass, run twice here (§7) | pass |
-| the record writer against the verifier's fixture, byte for byte (rewritten for schema 2, with real corpus identities since §9); D's census on two hand-counted cases (`direct_census_counts_the_tails`) | `cargo test --features run-fed --example run_fed_stage` (5 tests) | pass |
-| the verifier: the fixture VALID against its evidence; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; since §9 and §9.1, the 31 counterexamples of `bench/fixtures/run_fed_stage_counterexamples.json` (the Researcher's six and the closure review's four among them) each INVALID, and the first six by the CLI with no reading printed; the Wikidata file's own digest and blocks against the spec; no corpus evidence; the regenerated synthetic corpora equal to the pinned five; the CLI VALID only once the text corpus is this checkout's; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms | `python3 bench/test_run_fed_stage.py` (50 tests) | pass |
+| the record writer against the verifier's fixture, byte for byte (rewritten for schema 2, with real corpus identities since §9); D's census on two hand-counted cases (`direct_census_counts_the_tails`); since §11, the fixture's counts are the committed census's | `cargo test --features run-fed --example run_fed_stage` (5 tests) | pass |
+| the verifier: the fixture VALID against its evidence; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; since §9, §9.1 and §11, the 36 counterexamples of `bench/fixtures/run_fed_stage_counterexamples.json` (the Researcher's six, the closure review's four and the tail-coupling review's three among them) each INVALID, and the first six by the CLI with no reading printed; the Wikidata file's own digest and blocks against the spec; no corpus evidence; the regenerated synthetic corpora equal to the pinned five; the CLI VALID only once the text corpus is this checkout's; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms; since §11, the fixture's counts equal to the census | `python3 bench/test_run_fed_stage.py` (51 tests) | pass |
 | the real record of the local validation run, against the verifier's own evidence (the Wikidata file, the synthetic corpora regenerated from this checkout) and every count relation | `bench/run_fed_stage.py verify` | INVALID only for its 2 rounds and its 4-CPU affinity, as expected |
-| the existing run-fed tests, unchanged: `sort`, `fill`, the shares, the refusals | `cargo test --features run-fed --lib run_stage` (6 tests, 2 of them new) | pass |
+| the existing run-fed tests, unchanged: `sort`, `fill`, the shares, the refusals; since §10, `miri_direct_empty_block_by_records` (also under Miri, scalar and AVX2) | `cargo test --features run-fed --lib run_stage` (7 tests, 3 of them new) | pass |
+| D, fuzzed (§10): `build_direct` against production, `place` against an independent tiling oracle | `fuzz 30 1 … run-fed-direct`, and 240 s at seeds 2 and 3 | 0 failures in 3,398,724 cases |
 | clippy (`--all-targets --features run-fed`, `-D warnings`), rustfmt, ruff | locally | clean |
 
-**Mutation (checked):**
-1. The ownership tail removed (vector stores up to n instead of the bucket's end): caught by
-   5 of 6 `run_stage` tests.
-2. Ψ off by one on the run whose interval starts at F row 40: caught by `direct_cases` and
-   `tables_from_records_random`.
-3. The final tiling check removed: survives. This is an equivalent mutant: the check is
-   implied by the ones before it (§1.1), and is kept as the tiling stated once.
+**Mutation (checked):** the patches, the script and the logs are in
+`docs/journal/2026-11-09-run-fed-direct/mutants/` (§10).
 
 **Not covered:**
-- **No fuzzing.** `examples/fuzz.rs` on this base has no `run-fed` mode. #270's branch adds
-  one, and #270 is held under D049; it is not ported here.
+- **Fuzzing is bounded** (§10): three seeds, 510 s, no coverage instrumentation.
 - **No disassembly.** Whether `place_avx2`'s `#[inline(always)]` core has its intrinsics
   inlined, as `memchr`'s pattern does, has not been checked in the fat-LTO build. If it had
   not, D would be slower than its design, not wrong.
-- **The B5 review of `place`** (§1.3).
+- **The B5 review of `place`** (§1.3): D055 (§10) holds the timing on the evidence §10
+  now adds.
 
 ## 5. The registration (RULES C1, diagnostic form). DRAFT, NOT FROZEN
 
@@ -321,10 +317,11 @@ need not sum to the median of the total, and a gap between them is no missing ph
   `registered_head` input.
 - **The synthetic input is the frozen head's.** The text corpus is made from the head's
   `src/`, `tests/`, `examples/` and `README.md` (tests/common's `corpora(1)`), so any change
-  to those changes it. At this revision's sources (§9.1) it is 3,326,302 bytes, compressed
-  at level 9 to 612,142 bytes, SHA-256
-  `5996a32dcec1cb7899cd2dd2e2cb122a3de7eeead4c2096729575e3aec79e6ff`, 4 blocks. (At §9's
-  sources, `7f88388b`, it was 3,324,678 bytes, `b4c2767e…`.) The other
+  to those changes it. At this revision's sources (§10, §11) it is 3,344,914 bytes,
+  compressed at level 9 to 617,660 bytes, SHA-256
+  `7d03d9e0d60724f279b0cd457d1eae0e186f3063a42ad0db8a416ec575a89faa`, 4 blocks. (At §9's
+  sources, `7f88388b`, it was 3,324,678 bytes, `b4c2767e…`; at §9.1's, `370a868f`,
+  3,326,302 bytes, `5996a32d…`.) The other
   five don't depend on the head (§4's pinned values). A docs-only commit changes none of
   them. The workflow refuses to run if the checkout's sources differ from the head, and the
   verifier regenerates every synthetic corpus from that checkout, so the judged record
@@ -359,8 +356,9 @@ schema 2:
   blocks (at most 2r − 1 a block); B's slots a multiple of 8, from its rows to its rows + 7
   a cell, and at least 8 a cell; D's written slots from its rows to B's slots, with at
   least one predicted table store a cell and at most 7 one-slot rows a bucket; 1 to 256
-  nonempty buckets a block, and no more than its runs; RLE1's 4–259 bytes for 5 rows,
-  with each block's last 4 rows unpaired at most;
+  nonempty buckets a block, and no more than its runs; since §11, the tails coupled:
+  t = slots/8 − d_vector, ⌈d_scalar/7⌉ ≤ t ≤ min(d_scalar, cells); RLE1's 4–259 bytes for
+  5 rows, with each block's last 4 rows unpaired at most;
 - D's census (`d_vector`, `d_scalar`, `d_streams`) recorded;
 - otherwise #269's: the record exists; the full head, equal to the registered one; 15
   rounds; AVX2; correctness passed; the host; one CPU; the seven corpora by name and
@@ -495,7 +493,8 @@ natural) is not measured.
 - **The freeze and the dispatch** are the coordinator's, after review.
 - **The B5 adversarial review** of `place` (§1.3) is the Guardian's or an independent
   reviewer's to make, and the Guardian decides its timing.
-- **Fuzzing:** there is no `run-fed` mode in `examples/fuzz.rs` on this base (§4).
+- **More fuzzing:** §10's three bounded seeds are the evidence; longer campaigns, coverage
+  instrumentation and a stream-level D decoder are not built.
 - **Disassembly** of the inlined AVX2 core (§4).
 - **A pipelined or helper-side D** (#270's question, held under D049): not built, not
   measured.
@@ -545,6 +544,109 @@ infeasible.
 
 The wording changed `examples/run_fed_stage.rs`, so the synthetic text corpus changed with
 it; §5 names the new one.
+
+## 10. Revision, 2026-11-09: the Guardian's B5 review, D055 (a scoped HOLD on timing)
+
+D055 (#161 comment 6732441720; `state/decisions.md` at `fe03ad88`) reviewed `7f88388b`. It
+found no new defect: the ownership argument survives its independent physical-store model
+on 9,889 columns, and CI's Miri job 128979999343 passed. It held the timing on two missing
+pieces of evidence, fuzz that reaches D and auditable mutants, and asked for a composition
+regression. The archive is `docs/journal/2026-11-09-run-fed-direct/` (its README lists the
+commands, the seeds, the compiler and the source).
+
+**The fuzz (D055 item 1).** `examples/fuzz.rs` on this base had no run-fed mode. #270's
+(`research/run-fed-leader` at `03e52206`) fuzzes its own team decoder at the stream level,
+so its reach does not show a call to `place` or `build_direct` (D055 §4). Its shape is
+ported, not its code (#270 stays held): a case's input is its seed's and its index's alone
+(`MIBZ2_FUZZ_CASE=N` replays one case), reach is counted and printed, and every failure's
+input is saved. The new mode, `run-fed-direct` (`examples/support/fuzz_direct.rs`, built
+with `--features run-fed`, on the fuzz profile: debug assertions and overflow checks on):
+- **Three sources a case:**
+  - edited streams, classic and crafted run-heavy, scanned, each block;
+  - columns shaped for the edges, as MTF symbols at limits around their length: one
+    symbol, all 256, r = n, the empty block, buckets of about a multiple of 8 rows with
+    runs ending near their ends, a run past libbzip2's weight spliced in;
+  - tampered tilings: a column's records, maximal or split, then starts moved, records
+    swapped, dropped, duplicated or rewritten, the closing record or a count moved, or n
+    off by one, against an independent oracle of acceptance (`tiling_ok`) and of the
+    table (the column the records spell, through `bwt::build`). Some altered tilings stay
+    valid, and are counted.
+- **Each block** goes through `build_direct` on the scalar kernel and the detected one, each
+  with buffers kept dirty from case to case, and every fourth case on fresh ones too,
+  against production's `mtf::mtf` then `bwt::build`: the same result and error kind, the
+  same table, and the path `takes_runs`'s. A records' block returned by the column (a hidden
+  fallback) is a failure, and so is a panic, `build_direct`'s debug assertion included.
+- **Reach,** counted apart: blocks by records (the empty ones, and those with one-slot tail
+  stores, among them), by the fallback, refused as production refuses them, and tilings
+  valid, tampered but valid, and refused.
+- **Failures** are saved and minimised: symbols, or the column's bytes with the tampering
+  replayed. `MIBZ2_FUZZ_INJECT=1` makes the comparison fail on purpose, to show it working:
+  2 failures in 5 s, each saved and minimised (one to 9 symbols,
+  `fuzz/inject-witnesses/`).
+
+| run (source `37c4ff24`) | cases | blocks through `build_direct` | by records (empty; with tail stores) | by the fallback | refused, as production | tilings: valid / tampered valid / refused | failures |
+|---|---|---|---|---|---|---|---|
+| 30 s, seed 1 (CI's smoke) | 191,613 | 91,692 | 55,834 (1,711; 45,882) | 26,215 | BlockTooLong 7,442, RunTooLong 2,201 | 16,064 / 6,955 / 40,485 | 0 |
+| 240 s, seed 2 | 1,599,373 | 758,086 | 462,635 (14,592; 387,700) | 215,059 | 61,633, 18,759 | 133,317 / 58,156 / 341,733 | 0 |
+| 240 s, seed 3 | 1,607,738 | 766,479 | 469,887 (14,809; 394,319) | 215,703 | 61,957, 18,932 | 134,009 / 58,425 / 343,482 | 0 |
+
+Each block runs on both kernels (scalar; AVX2, detected here), so each count is twice that
+in calls. No unexpected refusal or fallback was met, so there is no minimised witness of a
+real failure; the injected ones show the path. **CI** runs the mode for 30 s at seed 1 in
+`fuzz-smoke`, after the two existing steps, with its failures uploaded.
+
+**The mutants (D055 item 2).** `mutants/`: one patch a mutant, `run.sh` (applies each,
+runs the run-fed lib tests, Miri on the direct tests with AVX2 where named, the D fuzz
+mode for 20 s where named, reverses it, and runs the restored tree's tests), and its logs,
+at source `37c4ff24` (`src/run_stage.rs` blob `cb09d7da…`).
+
+| mutant | the change | native tests | Miri (AVX2) | D fuzz, 20 s | reading |
+|---|---|---|---|---|---|
+| M1, the ownership tail removed | vector stores to the cell's end, whatever the bucket's | the test process aborts (`realloc(): invalid next size`, SIGABRT): heap corruption | UB: a 32-byte access with 16 bytes left in the allocation | — | killed |
+| M2, Ψ off by one | the run whose interval starts at F row 40 gets Ψ + 1 | 2 of 7 fail (`direct_cases`, `tables_from_records_random`) | — | 3,472 failures in 20 s | killed |
+| M3, the final tiling check removed | `a == end` → `true` | all 7 pass | — | — | survives: equivalent, the check is implied by the earlier ones (§1.1; D055 §1 proves it independently) |
+| M4, an allocation-only bound | vector stores while `w + 8 ≤ n`, not the bucket's end (D055's weakening: c¹⁰b¹⁰'s rows 10–15 corrupted) | 5 of 7 fail | — | 4,860 failures in 20 s | killed |
+| restored | the patches reversed, the tree clean | 7 of 7 pass | | | |
+
+**The composition (D055 item 3).**
+- `run_stage::tests::miri_direct_empty_block_by_records`: an empty block (its symbols the
+  end of block alone) that `takes_runs` sends to the records gives `(0, true)`, the
+  tiling `[0]` and an empty table, on fresh buffers and on buffers dirty from a block
+  before, by both kernels. Natively and under Miri, scalar and AVX2: pass.
+- `tests/mtf_kernels.rs::the_empty_block_by_records_through_build_direct`: #270's saved
+  stream, copied to `tests/regressions/run-fed-seed1-case596.bz2` (SHA-256
+  `3c69e8a3…789f8632`, from `03e52206`). Its two scanned blocks (599,981 rows of runs, then
+  the empty one) are production's through `build_direct`, by both kernels, on dirty
+  buffers, each by records, no fallback hiding anything. What the decoder does with the
+  empty block afterwards (`BadOrigPtr`) is a separate contract and isn't tested here.
+
+**What D055 still holds:** the timing waits on the Guardian's reading of this evidence. The
+forgeable `Kernels` contract (§1.3) is unchanged.
+
+## 11. Revision, 2026-11-09: the Researcher's tail-coupling review (#162 comment 6732495591)
+
+The report: `state/reports/direct-f-tail-coupling-6732447649/report.md` at `72c50c2c`. §9.1's
+four bounds, its 31 counterexamples, the 50 tests and the text identity were closed and
+are kept.
+- **The coupled check.** For a cell of ℓ rows, B stores ⌈ℓ/8⌉ vectors. D stores as many
+  unless the cell has a tail, and then one fewer, with 1 to 7 one-slot rows (its last
+  store's room, b − q ≥ ℓ, rules out 8). So t = slots/8 − d_vector counts the cells with a
+  tail, and admission requires ⌈d_scalar/7⌉ ≤ t ≤ min(d_scalar, cells), t a whole number
+  (slots is a multiple of 8). The old fixture broke it on three corpora, now counterexamples
+  32–34: Wikidata (t = 500,000 from 60,000 one-slot rows), text (100,000 from 2,000) and
+  runs (1,000 from 500). Cases 35–36 break it alone: t negative, and t below
+  ⌈d_scalar/7⌉ with every other bound kept.
+- **The positive fixture is a real run's census.** A local 2-round validity run of the
+  diagnostic, its timing fields dropped before the record was read (no timing read), gave
+  `census.json`: each corpus's identity, path counts and D's predicted table-store census.
+  The writer's fixture table and `bench/fixtures/run_fed_stage.json` take their counts and
+  identities from it, and `test_the_fixture_counts_are_the_census` holds them equal. Only
+  the fixture's times are made up. On it, Wikidata's t is 45,603 from 84,059 one-slot rows
+  in 12,676,540 cells. The census's text corpus is all by the fallback, as on the real
+  runs, so three tests that used the text corpus for a records' path now use the
+  one-byte and pattern corpora.
+- **Which round each fix answers:** §9, the Researcher's REVISE (6732062626); §9.1, the
+  closure review (6732362367); §10, D055; §11, the tail-coupling review (6732495591).
 
 ## Provenance and reproduction
 
