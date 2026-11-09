@@ -1,7 +1,8 @@
 # mibz2
 
 Publishing a page of the site (a blog post above all): use the `publish-page` skill
-(`.claude/skills/publish-page/SKILL.md`).
+(`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
+two rounds of review by the Researcher: the `coordinate-blog-post` skill.
 
 The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162
 Researcher, #222 Observer): route every message with `.github/coordination/coord.py`, never from memory.
