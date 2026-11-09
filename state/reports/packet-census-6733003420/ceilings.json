@@ -1,0 +1,40 @@
+{
+  "tandem_scan_bruteforce_checks": 13116,
+  "non_tandem_copy": {
+    "text": "abcdXabcdY",
+    "L": "ddYXaabbcc",
+    "psi": [
+      3,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      0,
+      1
+    ],
+    "states": [
+      4,
+      6,
+      8,
+      0,
+      3,
+      5,
+      7,
+      9,
+      1,
+      2
+    ],
+    "period_le64_covered": 0,
+    "source_position": 0,
+    "destination_position": 5,
+    "source_row": 4,
+    "destination_row": 5,
+    "word": "abc",
+    "source_end": 0,
+    "destination_end": 1,
+    "certificate": "same three-step affine itinerary on rows [4,6), endpoint q-4"
+  }
+}

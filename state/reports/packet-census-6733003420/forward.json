@@ -1,0 +1,37 @@
+{
+  "affine_class_row_checks": 85296,
+  "bound": "cells <= 1+2*s*(r-1), s=1..4; ternary length1..7",
+  "nonadjacent_reuse_example": {
+    "L": [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "origin": 3,
+    "s": 3,
+    "source_offset": 0,
+    "destination_offset": 4,
+    "source_row": 3,
+    "destination_row": 4,
+    "word": [
+      0,
+      0,
+      1
+    ],
+    "output": [
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    "source_end_row": 2,
+    "destination_end_row": 3
+  }
+}

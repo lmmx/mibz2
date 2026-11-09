@@ -1,0 +1,59 @@
+{
+  "counts": {
+    "columns": 3279,
+    "packets": 309678,
+    "lce_certificates": 85170,
+    "lf_offset_certificates": 13452
+  },
+  "equal_displacement_is_not_equal_output": {
+    "L": [
+      1,
+      0,
+      0
+    ],
+    "q": 0,
+    "states": [
+      0,
+      1,
+      2
+    ],
+    "labels": [
+      1,
+      0,
+      0
+    ],
+    "delta": 1
+  },
+  "uncapped_repeat_but_no_two_copies_before_marker": {
+    "L": [
+      1,
+      0
+    ],
+    "q": 0,
+    "remaining": 2,
+    "step_bytes": 1,
+    "packet": {
+      "k": 2,
+      "reps": 1000000000,
+      "m": 1,
+      "length": 2,
+      "delta": 0,
+      "word": [
+        1,
+        0
+      ],
+      "path": [
+        0,
+        1
+      ],
+      "domain": [
+        0,
+        1
+      ]
+    },
+    "output": [
+      1,
+      0
+    ]
+  }
+}

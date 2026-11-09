@@ -1,0 +1,174 @@
+{
+  "full": {
+    "blocks": 233,
+    "rows": 209697662,
+    "decoded": 209691304,
+    "pair_walk_loads": 104878688,
+    "pair_walk_loads_per_row": 0.5001423811773352,
+    "tandem": [
+      0.060077021745716934,
+      0.061003589062428365,
+      0.10000039962295812,
+      0.10006520721246763,
+      0.1000728849327848
+    ],
+    "models": {
+      "pair_k1": {
+        "packets": 104878688,
+        "lookups": 104878688,
+        "packets_per_row": 0.5001423811773352,
+        "bytes_ge": [
+          209637948,
+          0,
+          0,
+          0,
+          0
+        ],
+        "saved_against_pair": 0,
+        "descriptors": 12407508
+      },
+      "pair_k4r": {
+        "packets": 104878431,
+        "lookups": 104878529,
+        "packets_per_row": 0.5001411556033467,
+        "bytes_ge": [
+          209637948,
+          618,
+          618,
+          54,
+          0
+        ],
+        "saved_against_pair": 257,
+        "descriptors": 12407472
+      },
+      "pair_k8r": {
+        "packets": 104878374,
+        "lookups": 104878487,
+        "packets_per_row": 0.5001408837834348,
+        "bytes_ge": [
+          209637948,
+          738,
+          738,
+          174,
+          0
+        ],
+        "saved_against_pair": 314,
+        "descriptors": 12407470
+      },
+      "single_k16r": {
+        "packets": 209696696,
+        "lookups": 209697075,
+        "packets_per_row": 0.9999953933678097,
+        "bytes_ge": [
+          1071,
+          977,
+          965,
+          299,
+          0
+        ],
+        "saved_against_pair": -104818008,
+        "descriptors": 18477617
+      },
+      "pair_k4path": {
+        "packets": 26264465,
+        "lookups": 104878619,
+        "packets_per_row": 0.1252492028261145,
+        "bytes_ge": [
+          209682553,
+          209608448,
+          209280767,
+          36,
+          0
+        ],
+        "saved_against_pair": 78614223,
+        "descriptors": 6791285
+      }
+    }
+  },
+  "short": {
+    "blocks": 198,
+    "rows": 8895,
+    "decoded": 8892,
+    "pair_walk_loads": 4494,
+    "pair_walk_loads_per_row": 0.5052276559865093,
+    "tandem": [
+      0.06790331646992692,
+      0.06790331646992692,
+      0.09218662169758292,
+      0.09218662169758292,
+      0.09218662169758292
+    ],
+    "models": {
+      "pair_k1": {
+        "packets": 4494,
+        "lookups": 4494,
+        "packets_per_row": 0.5052276559865093,
+        "bytes_ge": [
+          8802,
+          0,
+          0,
+          0,
+          0
+        ],
+        "saved_against_pair": 0,
+        "descriptors": 4233
+      },
+      "pair_k4r": {
+        "packets": 4449,
+        "lookups": 4494,
+        "packets_per_row": 0.500168634064081,
+        "bytes_ge": [
+          8802,
+          132,
+          56,
+          0,
+          0
+        ],
+        "saved_against_pair": 45,
+        "descriptors": 4188
+      },
+      "pair_k8r": {
+        "packets": 4319,
+        "lookups": 4494,
+        "packets_per_row": 0.48555368184373243,
+        "bytes_ge": [
+          8802,
+          440,
+          364,
+          48,
+          0
+        ],
+        "saved_against_pair": 175,
+        "descriptors": 4060
+      },
+      "single_k16r": {
+        "packets": 8202,
+        "lookups": 8875,
+        "packets_per_row": 0.9220910623946037,
+        "bytes_ge": [
+          780,
+          760,
+          601,
+          48,
+          0
+        ],
+        "saved_against_pair": -3708,
+        "descriptors": 6763
+      },
+      "pair_k4path": {
+        "packets": 1196,
+        "lookups": 4494,
+        "packets_per_row": 0.1344575604272063,
+        "bytes_ge": [
+          8868,
+          8758,
+          8200,
+          0,
+          0
+        ],
+        "saved_against_pair": 3298,
+        "descriptors": 1184
+      }
+    }
+  }
+}
