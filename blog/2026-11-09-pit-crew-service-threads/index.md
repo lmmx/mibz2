@@ -40,7 +40,7 @@ Work moves between the two kinds of thread through two queues. A service thread 
 
 A block's path through the service layout
 
-A sketch of the stages and queues, not timing. Blue boxes are work on a service thread, green work on a team, grey a queue. A service thread that becomes free finishes a walked block first, unless the prepared queue is empty, in which case it prepares one.
+A sketch of the stages and queues, not timing: the car is one block, and its drive shows the order of its stops, not how long each takes. Coral is work on a service thread (the pit crew), blue work on a team (on the track), green the scanner, the queues and the reader. A service thread that becomes free finishes a walked block first, unless the prepared queue is empty, in which case it prepares one.
 
 A free service thread has to choose between preparing and finishing. Its rule is to finish first, because finishing frees buffers and gets output to the reader, but never to leave the prepared queue empty while a block could be prepared, because an idle team wastes three threads. It also stops preparing once a set number of blocks are waiting in the prepared queue, so that preparing can't run far ahead and hold buffers that finishing needs. That number is the **admission threshold**, and it is two, one a team. [Section 6](<#6-what-still-holds-the-teams-back>) comes back to it.
 
