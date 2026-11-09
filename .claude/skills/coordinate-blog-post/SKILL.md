@@ -27,6 +27,9 @@ brief names:
   - the key takeaways, as a short list.
 
   The PR body says where in the post each takeaway first lands.
+- **Visuals:** a figure for each result, comparison, architecture and trade-off, and for
+  the key takeaways where it helps. Dense prose where a figure would carry it is a
+  failure mode.
 - **The plan's goal questions and held-out goal,** recorded in the PR body for the
   reviewer.
 - **The rules:** Louis's identity on commits, no AI attribution, the footer stripped from the
@@ -44,6 +47,10 @@ Once the PR is up, route a CHECKPOINT to the Researcher with `coord.py route` (Q
    - The takeaways belong in the opening or section 1, as soon as they can be stated.
      They are never withheld for a later section.
 3. **The simulated-reader pass** (`write-blog-post`, the protocol's steps 5 and 6):
+   - **dense prose:** each passage that carries a comparison, numbers, a structure or a
+     trade-off in words alone, where a figure would make it land (`write-blog-post`,
+     "Dense prose without visuals is a failure mode"). Each one is a finding, with the
+     figure proposed;
    - the goal questions answered from the rendered text alone;
    - stuck points recorded by level (`symbol`, `statement`, `step`, `chain`, `beyond`);
    - fragmentation, collapse and missing steps;

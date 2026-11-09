@@ -283,6 +283,20 @@ Fix every "assumed" and every "late" before publishing.
 - **Every process or structure gets a diagram,** and the central idea gets a worked
   example small enough to follow by hand. A post about Huffman decoding shows a toy code
   being read before it shows a lookup table.
+- **Dense prose without visuals is a failure mode** (Louis, 9 November 2026). When a
+  passage carries a comparison, a set of numbers, a structure, a sequence or a trade-off,
+  the substance lands faster as a figure, with prose leading into it and drawing the point
+  out. Read each section of the draft and ask whether a figure would carry it better.
+  - **Results:** a chart of the ratios with their intervals, the reference line at 1 and
+    "registered" against "reported, never judged" marked.
+  - **Architectures:** a before/after diagram of who does what.
+  - **Trade-offs:** speed against CPU or memory, on one figure.
+  - **Timelines and sequences:** a timeline or a swim-lane.
+
+  A paragraph that lists four or more numbers, or walks through a structure in words, is
+  the signal. The figure doesn't replace the explanation; it is what the explanation
+  points at. The key takeaways in particular should each have a visual where one helps
+  them land, and early.
 - **Prose, not bullets, for explanation.** A bullet list strips out the connecting words
   ("because", "so", "then") that carry an explanation. Use bullets only for parallel,
   self-contained items whose concepts the reader already has: results, rule clauses, a
@@ -596,6 +610,9 @@ Before `publish-page`:
       introduction's own figures is left open there.
 - [ ] The domain is explained before the routine, with a diagram for each process or
       structure and a worked example for the central idea.
+- [ ] No section is dense prose where a figure would carry it. Results, comparisons,
+      architectures and trade-offs each have a figure, and the key takeaways have visuals
+      where they help.
 - [ ] Each mechanism appears first on the toy example, worked through in full, before the
       real one. No sentence packs a cause, a consequence and a list of cases together.
 - [ ] Every interactive figure has a lead-in saying what one press does, a key inside the
