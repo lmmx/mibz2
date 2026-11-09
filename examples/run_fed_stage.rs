@@ -229,6 +229,50 @@ struct Tally {
     cells: usize,
     /// the u32 slots B's AVX2 fill stores on the records' blocks, overstores included
     slots: usize,
+    /// D's AVX2 placement on the records' blocks (`direct_census`): its 8-slot vector
+    /// stores, its one-slot stores (the ownership tails), and its write streams, the
+    /// nonempty buckets, summed over the blocks
+    d_vector: usize,
+    d_scalar: usize,
+    d_streams: usize,
+}
+
+/// D's AVX2 stores on a checked block, counted independently of `run_stage::place` (safe
+/// code, the same rule): its cells (each run's F interval cut where an L run ends), and
+/// for a cell of ℓ rows from q in a bucket ending at b, `v = min(⌈ℓ/8⌉, ⌊(b − q)/8⌋)`
+/// vector stores and `ℓ − 8v` one-slot ones where positive; and the buckets with rows,
+/// its write streams. Returns (cells, vector, scalar, streams)
+fn direct_census(recs: &[u32], counts: &[u32; 256]) -> (usize, usize, usize, usize) {
+    let (mut next, mut end) = ([0u32; 256], [0u32; 256]);
+    let mut rows = 0u32;
+    for c in 0..256 {
+        next[c] = rows;
+        rows += counts[c];
+        end[c] = rows;
+    }
+    let streams = counts.iter().filter(|&&c| c > 0).count();
+    let (mut cells, mut vector, mut scalar) = (0, 0, 0);
+    for w in recs.windows(2) {
+        let (c, len) = ((w[0] & 0xff) as usize, (w[1] >> 8) - (w[0] >> 8));
+        let (q0, b) = (next[c], end[c]);
+        let e = q0 + len;
+        let mut q = q0;
+        let mut l = recs.partition_point(|&x| x >> 8 <= q) - 1;
+        while q < e {
+            while recs[l + 1] >> 8 <= q {
+                l += 1;
+            }
+            let ce = e.min(recs[l + 1] >> 8);
+            let n = (ce - q) as usize;
+            let v = n.div_ceil(8).min(((b - q) / 8) as usize);
+            vector += v;
+            scalar += n.saturating_sub(8 * v);
+            cells += 1;
+            q = ce;
+        }
+        next[c] = e;
+    }
+    (cells, vector, scalar, streams)
 }
 
 /// Every block checked (the module doc's validity), before any timing; returns the decoded
@@ -308,11 +352,20 @@ fn validate(blocks: &[Symbols], k: Kernels) -> (Vec<u8>, Tally) {
             "block {i}: the direct stage's table"
         );
         if by_runs {
+            let (dc, dv, ds, dst) = direct_census(&x.recs, &x.counts);
+            assert_eq!(dc, c, "block {i}: D's cells are B's");
+            assert!(
+                8 * dv + ds >= n && 8 * dv + ds <= slots && ds <= 7 * dst,
+                "block {i}: D's stores"
+            );
             tally.blocks_runs += 1;
             tally.rows_runs += n;
             tally.records += r;
             tally.cells += c;
             tally.slots += slots;
+            tally.d_vector += dv;
+            tally.d_scalar += ds;
+            tally.d_streams += dst;
         } else {
             tally.blocks_fallback += 1;
         }
@@ -453,7 +506,8 @@ fn record(run: &Run, files: &[FileRecord]) -> String {
             o,
             "{}\n  {{\"name\": {}, \"bytes\": {}, \"output\": {}, \"sha256\": \"{}\", \
              \"blocks\": {}, \"rows\": {}, \"blocks_runs\": {}, \"rows_runs\": {}, \"records\": {}, \
-             \"blocks_fallback\": {}, \"cells\": {}, \"slots\": {},\n   \"order\": [{}],\n   \
+             \"blocks_fallback\": {}, \"cells\": {}, \"slots\": {}, \"d_vector\": {}, \
+             \"d_scalar\": {}, \"d_streams\": {},\n   \"order\": [{}],\n   \
              \"entry\": [{}],\n   \"phases\": [{}]}}",
             if i == 0 { "" } else { "," },
             json_str(&f.name),
@@ -468,6 +522,9 @@ fn record(run: &Run, files: &[FileRecord]) -> String {
             t.blocks_fallback,
             t.cells,
             t.slots,
+            t.d_vector,
+            t.d_scalar,
+            t.d_streams,
             f.order
                 .iter()
                 .map(|r| format!("{r:?}"))
@@ -517,6 +574,8 @@ struct Reading {
     f: f64,
     d_minus_a: f64,
     b_gap_less_sort: f64,
+    /// the median over the rounds of .218 + δ_i − e_i − f_i
+    budget: f64,
 }
 
 fn main() {
@@ -582,7 +641,13 @@ fn main() {
                     let s = Instant::now();
                     let by_runs = entry(arm, b, x, k);
                     entry_t[r][arm][!runs as usize] += s.elapsed().as_secs_f64();
-                    assert!(arm != 1 || by_runs == runs, "B's path is takes_runs'");
+                    // B's and D's actual path, every timed pass: a block's time is billed
+                    // to the path it took, never to the preselected one alone
+                    assert!(
+                        arm == 0 || by_runs == runs,
+                        "{}'s path is takes_runs'",
+                        ARMS[arm]
+                    );
                     walk_check(b, x, k);
                 }
             }
@@ -631,6 +696,19 @@ fn main() {
             tally.records as f64 / tally.rows_runs.max(1) as f64,
             tally.slots as f64 / tally.rows_runs.max(1) as f64,
             tally.blocks_fallback
+        );
+        let rr = tally.rows_runs.max(1) as f64;
+        println!(
+            "  D's stores on the records' blocks: {} vector (8 slots) and {} one-slot, {:.4} \
+             store instructions a row, {:.4} slots written a row (B's fill: {:.4}); {} write \
+             streams (nonempty buckets), {:.1} a block",
+            tally.d_vector,
+            tally.d_scalar,
+            (tally.d_vector + tally.d_scalar) as f64 / rr,
+            (8 * tally.d_vector + tally.d_scalar) as f64 / rr,
+            tally.slots as f64 / rr,
+            tally.d_streams,
+            tally.d_streams as f64 / tally.blocks_runs.max(1) as f64
         );
         let cr = |s: f64| s * ghz * 1e9 / n.max(1) as f64;
         let median = |v: &mut Vec<f64>| {
@@ -762,22 +840,40 @@ fn main() {
                 None => println!("  {label:56} n/a (no such blocks, or times absent)"),
             }
         }
-        // the budget's terms (the journal's §3), nominal c/B, the median of the rounds'
-        // paired differences
-        let diff = |f: &dyn Fn(&Round) -> f64| cr(median(&mut times.iter().map(f).collect()));
-        let delta_direct = diff(&|r| r[2][2] - r[1][2]);
-        let e = diff(&|r| r[1][0] - r[2][0]);
-        let f = diff(&|r| r[1][3] - r[2][3]);
-        let d_minus_a = diff(&|r| total(2)(r) - total(0)(r));
-        let b_gap_less_sort = diff(&|r| total(1)(r) - total(0)(r) - r[1][1]);
+        // the budget's terms (the journal's §3), nominal c/B, each round's own: K_i = (B −
+        // A)_i − B's sort_i, δ_i = D's placement_i − B's fill_i, e_i = B's emit_i − D's,
+        // f_i = B's fallback_i − D's. Then (D − A)_i = K_i + δ_i − e_i − f_i exactly (D's
+        // sort is 0), reconstructed a round at a time and checked, before any summary: a
+        // median of the total is not the sum of the terms' medians
+        let per =
+            |f: &dyn Fn(&Round) -> f64| -> Vec<f64> { times.iter().map(|r| cr(f(r))).collect() };
+        let k_i = per(&|r| total(1)(r) - total(0)(r) - r[1][1]);
+        let delta_i = per(&|r| r[2][2] - r[1][2]);
+        let e_i = per(&|r| r[1][0] - r[2][0]);
+        let f_i = per(&|r| r[1][3] - r[2][3]);
+        let da_i = per(&|r| total(2)(r) - total(0)(r));
+        let resid = (0..rounds)
+            .map(|i| (da_i[i] - (k_i[i] + delta_i[i] - e_i[i] - f_i[i])).abs())
+            .fold(0f64, f64::max);
+        let med = |v: &[f64]| median(&mut v.to_vec());
+        let budget_i: Vec<f64> = (0..rounds)
+            .map(|i| BUDGET_269 + delta_i[i] - e_i[i] - f_i[i])
+            .collect();
+        let (delta_direct, e, f, d_minus_a, b_gap_less_sort) =
+            (med(&delta_i), med(&e_i), med(&f_i), med(&da_i), med(&k_i));
         println!(
-            "  budget (nominal c/B, medians of paired differences): delta_direct {delta_direct:+.3} \
-             (D place - B fill), e {e:+.3} (B emit - D emit), f {f:+.3} (B fallback - D \
-             fallback); D - A phase sum {d_minus_a:+.3}; this run's B - A - sort \
-             {b_gap_less_sort:+.3} (#269's: {BUDGET_269:+.3}); {BUDGET_269:.3} + delta_direct - e \
-             - f = {:+.3}",
-            BUDGET_269 + delta_direct - e - f
+            "  budget (nominal c/B, each round's own terms, then medians): (D - A)_i = K_i + \
+             delta_i - e_i - f_i reconstructed, largest residual {resid:.2e}; medians: D - A \
+             {d_minus_a:+.3}, K {b_gap_less_sort:+.3} (#269's: {BUDGET_269:+.3}), delta_direct \
+             {delta_direct:+.3}, e {e:+.3}, f {f:+.3}; {BUDGET_269:.3} + delta_i - e_i - f_i \
+             {:+.3}",
+            med(&budget_i)
         );
+        assert!(
+            resid <= 1e-6 * da_i.iter().map(|x| x.abs()).fold(1.0, f64::max),
+            "the budget's identity a round"
+        );
+        let budget = med(&budget_i);
         readings.push(Reading {
             name: name.clone(),
             blocks_fallback: tally.blocks_fallback,
@@ -790,6 +886,7 @@ fn main() {
             f,
             d_minus_a,
             b_gap_less_sort,
+            budget,
         });
 
         recs_out.push(FileRecord {
@@ -885,15 +982,11 @@ fn main() {
         show(w.d_over_b)
     );
     println!(
-        "  budget (exploratory, a sensitivity, not a reconstructed paired verdict): \
-         delta_direct {:+.3}, e {:+.3}, f {:+.3}; {BUDGET_269:.3} + delta_direct - e - f = \
-         {:+.3} against D - A's phase sum {:+.3}; this run's own B - A - sort {:+.3}",
-        w.delta_direct,
-        w.e,
-        w.f,
-        BUDGET_269 + w.delta_direct - w.e - w.f,
-        w.d_minus_a,
-        w.b_gap_less_sort
+        "  budget (exploratory, a sensitivity on the phase sweep, not the judged figure): \
+         medians of each round's terms: delta_direct {:+.3}, e {:+.3}, f {:+.3} (measured \
+         controls); {BUDGET_269:.3} + delta_i - e_i - f_i {:+.3}, against D - A's phase sum \
+         {:+.3}; this run's own K {:+.3}",
+        w.delta_direct, w.e, w.f, w.budget, w.d_minus_a, w.b_gap_less_sort
     );
 }
 
@@ -914,6 +1007,24 @@ mod tests {
         assert_eq!(cells(&recs, &fo), (3, 24));
         // one run of 20: one cell, 24 slots
         assert_eq!(cells(&[b'a' as u32, 20 << 8], &[[0, 0], [20, 0]]), (1, 24));
+    }
+
+    /// D's stores, counted: within 8 rows of a bucket's end, one slot at a time
+    #[test]
+    fn direct_census_counts_the_tails() {
+        // one run of 20 in its own bucket: 2 vector stores, then 4 one-slot ones
+        let mut counts = [0u32; 256];
+        counts[b'a' as usize] = 20;
+        assert_eq!(
+            direct_census(&[b'a' as u32, 20 << 8], &counts),
+            (1, 2, 4, 1)
+        );
+        // L = c^10 b^10: b's bucket is [0, 10), c's [10, 20); each run one cell, one
+        // vector store and 2 one-slot stores; 2 streams
+        let mut counts = [0u32; 256];
+        (counts[b'b' as usize], counts[b'c' as usize]) = (10, 10);
+        let recs = [b'c' as u32, 10 << 8 | b'b' as u32, 20 << 8];
+        assert_eq!(direct_census(&recs, &counts), (2, 2, 4, 2));
     }
 
     /// The verifier's fixture (bench/fixtures/run_fed_stage.json), written by `record`
@@ -942,29 +1053,52 @@ mod tests {
                     (0, 2) => 0.85,
                     _ => 1.0,
                 };
-                let (blocks_runs, blocks_fallback) =
-                    [(400, 31), (3, 0), (0, 3), (1, 0), (1, 0), (3, 0), (0, 3)][i];
+                // the corpora's identities and sizes are real: Wikidata's from its spec
+                // (bench/wikidata.json), the synthetic ones as `bench/run_fed_stage.py`
+                // regenerates them (the text's at the head that drafted C31); the path
+                // counts are made up, but keep `count_relations`
+                #[rustfmt::skip]
+                let (blocks_runs, blocks_fallback, rows, rows_runs, records, cells, slots,
+                     d_vector, d_scalar, d_streams, bytes, output, sha) = [
+                    (384, 47, 205_000_000, 163_600_000, 10_150_000, 15_200_000, 176_000_000,
+                     21_500_000, 60_000, 30_000, 11_854_933, 209_700_196,
+                     "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"),
+                    (4, 0, 3_300_000, 3_300_000, 900_000, 1_500_000, 5_000_000, 560_000, 2_000,
+                     400, 601_160, 3_297_858,
+                     "e9a9ff6f51a236719aafd843998a92bc22eb751aed11e09fc77461fa05a9b4bf"),
+                    (0, 3, 2_000_000, 0, 0, 0, 0, 0, 0, 0, 1_774_781, 2_000_000,
+                     "69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198"),
+                    (1, 0, 96_530, 96_530, 1, 1, 96_536, 12_066, 2, 1, 49, 5_000_000,
+                     "fe83f12dd7b68f263d44f27080c7c21168eaca3ef9c5f54a73a061b262068bb8"),
+                    (6, 0, 4_900_000, 4_900_000, 60, 100, 4_900_400, 612_520, 200, 42, 314,
+                     4_900_000,
+                     "bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3"),
+                    (1, 0, 90_000, 90_000, 16_000, 24_000, 160_000, 12_000, 500, 200, 9_955,
+                     2_500_444,
+                     "24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec"),
+                    (0, 3, 2_400_000, 0, 0, 0, 0, 0, 0, 0, 2_397_517, 2_400_000,
+                     "616e54bd727b056d7ff6fedb2a13c9eb411f2c512cca52ac4a419c131b135c2b"),
+                ][i];
                 let jitter =
                     |r: usize, a: usize| 1.0 + 0.004 * (((r * 7 + a * 3 + i) % 5) as f64 - 2.0);
                 let on = |c: usize| if c > 0 { 1.0 } else { 0.0 };
                 FileRecord {
                     name: name.to_string(),
-                    bytes: 1000 + i,
-                    output: 1_000_000 * (i + 1),
-                    sha256: if i == 0 {
-                        "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915".into()
-                    } else {
-                        format!("{:064x}", i)
-                    },
+                    bytes,
+                    output,
+                    sha256: sha.into(),
                     tally: Tally {
                         blocks: blocks_runs + blocks_fallback,
-                        rows: 900_000 * (blocks_runs + blocks_fallback),
+                        rows,
                         blocks_runs,
-                        rows_runs: 900_000 * blocks_runs,
-                        records: 50_000 * blocks_runs,
+                        rows_runs,
+                        records,
                         blocks_fallback,
-                        cells: 90_000 * blocks_runs,
-                        slots: 1_100_000 * blocks_runs,
+                        cells,
+                        slots,
+                        d_vector,
+                        d_scalar,
+                        d_streams,
                     },
                     order: (0..rounds)
                         .map(|r| std::array::from_fn(|j| (j + r) % NARMS))

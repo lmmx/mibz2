@@ -8,18 +8,32 @@ VALID only if every registered figure is there, whole and finite, at the registe
 rounds, kernels and corpus; then the readings, recomputed here from the raw times, not
 taken from the binary's printout.
 
-    python3 bench/run_fed_stage.py verify RECORD --head SHA [--wikidata FILE] [--unjudged]
+    python3 bench/run_fed_stage.py verify RECORD --head SHA [--wikidata FILE]
+        [--sources DIR] [--unjudged]
 
 Exit 0 for VALID, 1 for INVALID. `--unjudged` labels the readings so: for a run that is
 not the registered one (any run before the freeze).
+
+The corpus evidence is the verifier's own, never the record's: the Wikidata corpus's
+identity, sizes and blocks from its pinned spec (bench/wikidata.json), and from the file
+itself where given (its SHA-256, size, and blocks counted from their headers); the six
+synthetic corpora regenerated here from the head's sources (`--sources`, the checkout:
+tests/common's `corpora(1)` ported, then compressed at level 9), their SHA-256, size,
+decoded size and blocks. Every count the record makes must also fit the representation's
+relations between them (`count_relations`). All of it is decided before any reading.
 """
 
 import argparse
+import bz2
 import hashlib
 import json
 import math
+import os
 import re
 import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
 
 ROUNDS = 15
 WIKIDATA_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
@@ -36,6 +50,10 @@ ARMS = ["A column", "B records", "D direct"]
 PHASES = ["front", "sort", "build", "fallback"]
 ENTRY_PATHS = ["records", "fallback"]
 NARMS = 3
+# bzip2's block limit: at most 900,000 rows (BWT symbols) a block, at level 9
+MAX_ROWS = 900_000
+# the sampled clock's plausible range, GHz (`sweep.yml` passes the reported MHz / 1000)
+GHZ_RANGE = (0.1, 10.0)
 # #269's phase-sum gap less its sort, nominal c/B (4.228 - 3.693 - 0.317): the budget's
 # fixed term (docs/journal/2026-11-09-run-fed-direct.md, section 3)
 BUDGET_269 = 0.218
@@ -110,8 +128,14 @@ def ratio(rounds, num, den):
     return interval([math.log(num(r) / den(r)) for r in rounds])
 
 
-def check(rec, head, wikidata_sha256=None, primary=True):
-    """The record's problems, each a reason it is INVALID (none: VALID)"""
+def check(rec, head, corpora, wikidata_file=None, primary=True):
+    """The record's problems, each a reason it is INVALID (none: VALID).
+
+    `corpora` is the verifier's own evidence a corpus, in the registered order: a dict of
+    its sha256, bytes, output (decoded bytes) and blocks (`expected_corpora`).
+    `wikidata_file`, where the file was given, is the same measured from it
+    (`file_evidence`), and must agree with both the record and the pinned spec.
+    """
     p = []
     if not isinstance(rec, dict):
         return ["the record is not an object"]
@@ -126,6 +150,17 @@ def check(rec, head, wikidata_sha256=None, primary=True):
         p.append(f"the record's head {rh} is not the registered {head}")
     if not (_is_int(rec.get("rounds")) and rec["rounds"] == ROUNDS):
         p.append(f"rounds {rec.get('rounds')!r}, not {ROUNDS}")
+    ghz = rec.get("ghz")
+    if not (
+        isinstance(ghz, (int, float))
+        and not isinstance(ghz, bool)
+        and math.isfinite(ghz)
+        and GHZ_RANGE[0] <= ghz <= GHZ_RANGE[1]
+    ):
+        p.append(
+            f"ghz {ghz!r}: the sampled clock must be a finite number in "
+            f"[{GHZ_RANGE[0]}, {GHZ_RANGE[1]}] GHz"
+        )
     k = rec.get("kernels")
     if not (isinstance(k, dict) and k.get("avx2") is True):
         p.append(f"kernels {k!r}: AVX2 not selected")
@@ -145,13 +180,59 @@ def check(rec, head, wikidata_sha256=None, primary=True):
         n = len(files) if isinstance(files, list) else None
         p.append(f"{n} files, not the registered {1 + len(SYNTHETIC)}")
         return p
+    if not (isinstance(corpora, list) and len(corpora) == len(files)):
+        p.append(
+            "no corpus evidence: the verifier's own evidence for the seven corpora is required"
+        )
+        return p
+    if wikidata_file is not None:
+        for key in ("sha256", "bytes", "blocks"):
+            if wikidata_file.get(key) != corpora[0].get(key):
+                p.append(
+                    f"the Wikidata file's {key} {wikidata_file.get(key)!r} is not the pinned "
+                    f"spec's {corpora[0].get(key)!r}"
+                )
     rounds = rec.get("rounds") if _is_int(rec.get("rounds")) else ROUNDS
     for i, f in enumerate(files):
-        p += check_file(i, f, rounds, wikidata_sha256)
+        p += check_file(i, f, rounds, corpora[i])
     return p
 
 
-def check_file(i, f, rounds, wikidata_sha256):
+def count_relations(f):
+    """The relations a corpus's counts must keep, as the representation fixes them (each
+    a block's sum): a block has 1 to MAX_ROWS rows; a block by records has 1 to its rows'
+    runs (records), its cells are at least its runs and at most 2r - 1, B's fill stores 8
+    for each started 8 of a cell's rows (so a multiple of 8, from its rows to its rows plus
+    7 a cell); D's stores write its rows exactly or more, no more than B's fill, with at
+    most 7 one-slot rows a write stream, and 1 to 256 streams a block; RLE1 turns 5 rows
+    into 4 to 259 bytes, and each block's last 4 rows at most may be unpaired. Returns the
+    problems"""
+    p = []
+    b, br, bf = f["blocks"], f["blocks_runs"], f["blocks_fallback"]
+    rows, rr, r, c, sl = f["rows"], f["rows_runs"], f["records"], f["cells"], f["slots"]
+    dv, ds, dst = f["d_vector"], f["d_scalar"], f["d_streams"]
+    rel = [
+        ("blocks_runs + blocks_fallback = blocks", br + bf == b),
+        ("blocks <= rows <= 900,000 a block", b <= rows <= MAX_ROWS * b),
+        ("blocks_runs <= rows_runs <= 900,000 a block by records", br <= rr <= MAX_ROWS * br),
+        ("the fallback's rows at least its blocks", rows - rr >= bf),
+        ("blocks_runs <= records <= rows_runs", br <= r <= rr),
+        ("records <= cells <= 2 records - blocks_runs", r <= c <= 2 * r - br),
+        ("rows_runs <= slots <= rows_runs + 7 cells", rr <= sl <= rr + 7 * c),
+        ("slots a multiple of 8", sl % 8 == 0),
+        ("blocks_runs <= d_streams <= 256 blocks_runs", br <= dst <= 256 * br),
+        ("rows_runs <= 8 d_vector + d_scalar <= slots", rr <= 8 * dv + ds <= sl),
+        ("d_scalar <= 7 d_streams", ds <= 7 * dst),
+        ("RLE1: 5 output >= 4 (rows - 4 blocks)", 5 * f["output"] >= 4 * (rows - 4 * b)),
+        ("RLE1: 5 output <= 259 rows", 5 * f["output"] <= 259 * rows),
+    ]
+    for what, ok in rel:
+        if not ok:
+            p.append(f"the counts break: {what}")
+    return p
+
+
+def check_file(i, f, rounds, want):
     p = []
     if not isinstance(f, dict):
         return [f"file {i} is not an object"]
@@ -160,13 +241,15 @@ def check_file(i, f, rounds, wikidata_sha256):
     if i == 0:
         if f.get("sha256") != WIKIDATA_SHA256:
             p.append(f"{where}: SHA-256 {f.get('sha256')!r}, not the registered {WIKIDATA_SHA256}")
-        if wikidata_sha256 is not None and f.get("sha256") != wikidata_sha256:
-            p.append(f"{where}: SHA-256 {f.get('sha256')!r}, not the file's {wikidata_sha256}")
     else:
         if name != SYNTHETIC[i - 1]:
             p.append(f"{where}: not the registered {SYNTHETIC[i - 1]!r}")
         if not (isinstance(f.get("sha256"), str) and HEX64.fullmatch(f["sha256"])):
             p.append(f"{where}: SHA-256 {f.get('sha256')!r} not recorded")
+    # the corpus's identity and sizes against the verifier's own evidence
+    for key in ("sha256", "bytes", "output", "blocks"):
+        if f.get(key) != want.get(key):
+            p.append(f"{where}: {key} {f.get(key)!r}, not the evidence's {want.get(key)!r}")
     counts = [
         "bytes",
         "output",
@@ -178,6 +261,9 @@ def check_file(i, f, rounds, wikidata_sha256):
         "blocks_fallback",
         "cells",
         "slots",
+        "d_vector",
+        "d_scalar",
+        "d_streams",
     ]
     if not all(_is_int(f.get(c)) and f[c] >= 0 for c in counts):
         p.append(f"{where}: path counts missing or not whole: {[f.get(c) for c in counts]}")
@@ -186,13 +272,7 @@ def check_file(i, f, rounds, wikidata_sha256):
         p.append(f"{where}: an empty corpus")
     if f["blocks_runs"] + f["blocks_fallback"] != f["blocks"]:
         p.append(f"{where}: {f['blocks_runs']} + {f['blocks_fallback']} blocks, not {f['blocks']}")
-    if f["blocks_runs"] > 0 and not (
-        0 < f["rows_runs"] <= f["rows"]
-        and f["records"] > 0
-        and f["cells"] > 0
-        and f["slots"] >= f["rows_runs"]
-    ):
-        p.append(f"{where}: the records' path counts are inconsistent")
+    p += [f"{where}: {x}" for x in count_relations(f)]
     order = f.get("order")
     want = [[(j + r) % NARMS for j in range(NARMS)] for r in range(rounds)]
     if order != want:
@@ -288,16 +368,32 @@ def readings(rec):
             row["R_place"] = ratio(ph, lambda r: r[2][2], lambda r: r[0][2])
             row["R_pf"] = ratio(ph, lambda r: r[2][2], lambda r: r[1][2])
             row["R_psf"] = ratio(ph, lambda r: r[2][2], lambda r: r[1][1] + r[1][2])
-            # the budget's terms, nominal c/B of output: medians of the rounds' paired
-            # differences (a sensitivity, not a reconstructed paired verdict)
+            # the budget's terms, nominal c/B of output, each round's own: K_i, delta_i,
+            # e_i, f_i; then (D - A)_i = K_i + delta_i - e_i - f_i reconstructed a round at
+            # a time (D's sort is 0) and its largest residual kept, before any summary. The
+            # medians below are each term's own: their sum is not the total's median
             cb = rec["ghz"] * 1e9 / f["output"]
-            med = lambda g: _median([g(r) for r in ph]) * cb  # noqa: E731
-            row["delta_direct"] = med(lambda r: r[2][2] - r[1][2])
-            row["e"] = med(lambda r: r[1][0] - r[2][0])
-            row["f"] = med(lambda r: r[1][3] - r[2][3])
-            row["D_minus_A"] = med(lambda r: sum(r[2]) - sum(r[0]))
-            row["B_minus_A_less_sort"] = med(lambda r: sum(r[1]) - sum(r[0]) - r[1][1])
-            row["budget"] = BUDGET_269 + row["delta_direct"] - row["e"] - row["f"]
+            per = lambda g: [g(r) * cb for r in ph]  # noqa: E731
+            k_i = per(lambda r: sum(r[1]) - sum(r[0]) - r[1][1])
+            d_i = per(lambda r: r[2][2] - r[1][2])
+            e_i = per(lambda r: r[1][0] - r[2][0])
+            f_i = per(lambda r: r[1][3] - r[2][3])
+            da_i = per(lambda r: sum(r[2]) - sum(r[0]))
+            row["identity_residual"] = max(
+                abs(da - (k + d - e - fb)) for da, k, d, e, fb in zip(da_i, k_i, d_i, e_i, f_i)
+            )
+            row["delta_direct"] = _median(d_i)
+            row["e"] = _median(e_i)
+            row["f"] = _median(f_i)
+            row["D_minus_A"] = _median(da_i)
+            row["B_minus_A_less_sort"] = _median(k_i)
+            row["budget"] = _median([BUDGET_269 + d - e - fb for d, e, fb in zip(d_i, e_i, f_i)])
+            # D's stores, from the record's census (reported, exploratory)
+            rr = f["rows_runs"]
+            row["d_stores_per_row"] = (f["d_vector"] + f["d_scalar"]) / rr
+            row["d_slots_per_row"] = (8 * f["d_vector"] + f["d_scalar"]) / rr
+            row["b_slots_per_row"] = f["slots"] / rr
+            row["d_streams_per_block"] = f["d_streams"] / f["blocks_runs"]
         out["files"].append(row)
     w = out["files"][0]
     g, lo, hi = w["R_direct"]
@@ -344,6 +440,120 @@ NOTES = [
 ]
 
 
+BLOCK_MAGIC = bytes.fromhex("314159265359")
+
+
+def count_blocks(data):
+    """A bzip2 file's blocks, counted from their 48-bit headers at any bit offset (the
+    blocks are bit-aligned; the streams' own headers are byte-aligned and not counted)"""
+    big, n, seen = int.from_bytes(data, "big"), len(data), set()
+    for s in range(8):
+        b = (big << s).to_bytes(n + 1, "big")
+        j = b.find(BLOCK_MAGIC)
+        while j >= 0:
+            seen.add(8 * j - 8 + s)
+            j = b.find(BLOCK_MAGIC, j + 1)
+    return len(seen)
+
+
+def file_evidence(data):
+    return {
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "bytes": len(data),
+        "blocks": count_blocks(data),
+    }
+
+
+def wikidata_expected(spec_path=HERE / "wikidata.json"):
+    """The Wikidata corpus's evidence from its pinned spec; its SHA-256 must be the
+    registered one"""
+    with open(spec_path) as f:
+        spec = json.load(f)
+    if spec.get("corpus_sha256") != WIKIDATA_SHA256:
+        raise ValueError(f"{spec_path}: corpus_sha256 is not the registered {WIKIDATA_SHA256}")
+    return {
+        "name": "wikidata",
+        "sha256": spec["corpus_sha256"],
+        "bytes": spec["corpus_bytes"],
+        "output": spec["decoded_bytes"],
+        "blocks": sum(w["blocks"] for w in spec["windows"]),
+    }
+
+
+class _Rng:
+    """tests/common's xorshift Rng"""
+
+    M = (1 << 64) - 1
+
+    def __init__(self, x):
+        self.x = x
+
+    def next(self):
+        x = self.x
+        x ^= (x << 13) & self.M
+        x ^= x >> 7
+        x ^= (x << 17) & self.M
+        self.x = x
+        return x
+
+    def below(self, n):
+        return self.next() % max(n, 1)
+
+    def bytes(self, n):
+        return bytes(self.next() & 0xFF for _ in range(n))
+
+
+def synthetic_inputs(root):
+    """tests/common/mod.rs's `corpora(1)`, ported: the six synthetic inputs, by name, the
+    text corpus read from `root`'s sources as the binary reads them"""
+    text = bytearray()
+    for d in ("src", "tests", "examples"):
+        for f in sorted(os.listdir(os.path.join(root, d))):
+            path = os.path.join(root, d, f)
+            if os.path.isfile(path):
+                with open(path, "rb") as h:
+                    text += h.read()
+    with open(os.path.join(root, "README.md"), "rb") as h:
+        text += h.read()
+    one, i = bytes(text), 0
+    while len(text) < 3_000_000:
+        text += f"\n-- copy {i} --\n".encode() + one
+        i += 1
+    rng = _Rng(0xFEED_BEEF_DEAD_CAFE)
+    records = b"".join(
+        ((((i * 2_654_435_761) & 0xFFFFFFFF) >> 12) | ((i << 20) & 0xFFFFFFFF)).to_bytes(
+            4, "little"
+        )
+        for i in range(600_000)
+    )
+    runs = bytearray()
+    while len(runs) < 2_500_000:
+        n = 1 + rng.below(600)
+        runs += bytes([b"xyz"[rng.below(3)]]) * n
+    return [
+        ("synthetic text", bytes(text)),
+        ("synthetic random", rng.bytes(2_000_000)),
+        ("synthetic one byte", b"a" * 5_000_000),
+        ("synthetic pattern", b"0123456" * 700_000),
+        ("synthetic runs", bytes(runs)),
+        ("synthetic records", records),
+    ]
+
+
+def synthetic_expected(root):
+    """Each synthetic corpus's evidence: its input regenerated, compressed at level 9 as
+    tests/common's `compress` (libbzip2), then its SHA-256, size, decoded size and blocks"""
+    out = []
+    for name, data in synthetic_inputs(root):
+        c = bz2.compress(data, 9)
+        out.append({"name": name, "output": len(data), **file_evidence(c)})
+    return out
+
+
+def expected_corpora(root):
+    return [wikidata_expected()] + synthetic_expected(root)
+
+
 def fmt(x):
     return "n/a" if x is None else f"{x[0]:.4f} ({x[1]:.4f}, {x[2]:.4f})"
 
@@ -354,7 +564,13 @@ def main(argv=None):
     v = sub.add_parser("verify")
     v.add_argument("record")
     v.add_argument("--head", required=True, help="the registered (frozen) 40-character head")
-    v.add_argument("--wikidata", help="the Wikidata file, to hash and compare")
+    v.add_argument("--wikidata", help="the Wikidata file, to hash, size and count")
+    v.add_argument(
+        "--sources",
+        default=str(HERE.parent),
+        help="the head's checkout, whose sources the synthetic text is made from (default: "
+        "this verifier's own)",
+    )
     v.add_argument("--unjudged", action="store_true", help="not the registered run")
     v.add_argument(
         "--contended",
@@ -367,11 +583,16 @@ def main(argv=None):
     except (OSError, ValueError) as e:
         print(f"INVALID: the record does not load: {e}")
         return 1
-    sha = None
+    wfile = None
     if a.wikidata:
         with open(a.wikidata, "rb") as f:
-            sha = hashlib.sha256(f.read()).hexdigest()
-    problems = check(rec, a.head, sha, primary=not a.contended)
+            wfile = file_evidence(f.read())
+    try:
+        corpora = expected_corpora(a.sources)
+    except (OSError, ValueError, KeyError) as e:
+        print(f"INVALID: no corpus evidence: {e}")
+        return 1
+    problems = check(rec, a.head, corpora, wfile, primary=not a.contended)
     if problems:
         print(f"INVALID ({len(problems)} problems):")
         for x in problems:
@@ -388,12 +609,20 @@ def main(argv=None):
     w = r["files"][0]
     for key in ("R_phases_D", "R_place", "R_pf", "R_psf"):
         print(f"  {key} {fmt(w.get(key))}")
+    if "d_stores_per_row" in w:
+        print(
+            f"  D's stores a row: {w['d_stores_per_row']:.4f} store instructions, "
+            f"{w['d_slots_per_row']:.4f} slots written (B's fill {w['b_slots_per_row']:.4f}); "
+            f"{w['d_streams_per_block']:.1f} write streams a block"
+        )
     if "budget" in w:
         print(
-            f"  budget (exploratory, nominal c/B): delta_direct {w['delta_direct']:+.3f}, "
-            f"e {w['e']:+.3f}, f {w['f']:+.3f}; {BUDGET_269} + delta_direct - e - f = "
-            f"{w['budget']:+.3f}, against D - A's phase sum {w['D_minus_A']:+.3f}; this "
-            f"run's B - A - sort {w['B_minus_A_less_sort']:+.3f}"
+            f"  budget (exploratory, nominal c/B, medians of each round's own terms): "
+            f"delta_direct {w['delta_direct']:+.3f}, e {w['e']:+.3f}, f {w['f']:+.3f} "
+            f"(measured controls); {BUDGET_269} + delta_i - e_i - f_i {w['budget']:+.3f}, "
+            f"against D - A's phase sum {w['D_minus_A']:+.3f} (the identity's largest "
+            f"residual a round {w['identity_residual']:.2e}); this run's own K "
+            f"{w['B_minus_A_less_sort']:+.3f}"
         )
     print(f"  screen, synthetic whole stage: {r['screen_synthetic']}")
     print(f"  screen, fallback (entry point, selector charged): {r['screen_fallback']}")

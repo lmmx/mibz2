@@ -1,7 +1,7 @@
 # 2026-11-09: C31, the direct placement (arm D): production's one-hop T-vector from the run records, with no sort. A diagnostic registered (DRAFT, NOT FROZEN)
 
-**Status: a draft registration, DRAFT, NOT FROZEN, NOT RUN.** The coordinator freezes it
-after review, or doesn't. Nothing here changes the decoder, with or without the `run-fed`
+**Status: a draft registration, DRAFT, NOT FROZEN, NOT RUN,** revised for the
+Researcher's REVISE (§9). The coordinator freezes it after review, or doesn't. Nothing here changes the decoder, with or without the `run-fed`
 feature. Nothing here runs on the workstation.
 
 **The input.** PROTOCOL §11 on #269's STOP (`2026-11-09-run-fed-stage-result.md`): the
@@ -34,6 +34,9 @@ O(256) state.
   Wikidata. FEASIBLE at ≤ 0.95 with hi < 1 and both screens; STOP at lo > 0.95.
 - **The drafter's prior is STOP.** The budget says D must place 16% cheaper than B's
   sequential fill only to break even on the phase scale (§3).
+- **What Q1 times:** the MTF stage and the table's construction, at the entry point. The
+  room walk, RLE1 and the CRC that follow are untimed, so a change in what the walk costs
+  after D's table is not in Q1 (§3).
 
 Labels as in #266 and #269: **proved**, a short argument given here; **checked**, by
 tests, as counts; **model**, an estimate with its assumptions; **local, indicative**, never
@@ -60,8 +63,9 @@ row.
   a nonempty bucket, narrowed from the last), and resumed run after run.
   - **Proved: a bucket's cursor only moves forward, and stays inside its bucket.** Its
     runs own rising rows, all in `[C(c), C(c+1))`. So the cursors cross disjoint row
-    ranges: at most r − 1 advances in all, plus at most 256 seeds, and 3 × 256 words of
-    state.
+    ranges: at most r − 1 advances in all after seeding, and 3 × 256 words of state. The
+    seeds are at most σ ≤ 256 binary searches, O(σ log r) probes, so the whole cursor work
+    is O(σ log r + r), not O(r + 256).
 - **The stores** are #269's 8-lane AVX2 stores (base + 0, 256, …, 1792; then + 2048), or one
   slot at a time on the scalar kernel.
   - A vector store past a cell's end lands on rows of the same bucket above the cursor.
@@ -93,19 +97,34 @@ row.
 | `sort`'s first pass over the records, counting runs a byte | gone |
 | `sort`'s scatter into an F-order array, `[a, p]` a run: 8 bytes a run written, about 0.50 B a row at Wikidata's r/n of 0.062 | gone: no F-order array, and no `Scratch` |
 | the fill's F iterator: two loads of the F order a cell | gone: the run's own p and its bucket's `a[c]` |
-| one sequential sweep of the rows | 256 interleaved write streams, one a bucket, in L order (as `build_one_pass` scatters) |
+| one sequential sweep of the rows | up to 256 interleaved write streams, one a nonempty bucket, in L order (as `build_one_pass` scatters); the record counts the streams D uses |
 
 **What D keeps, as the handoff specifies:** the checked counts, the prefixes, the resumed
 cursors, the F/L intersections (the cells: the same cuts as B's, so the same cells, at most
-2r − 1), the stores and the ownership tails.
+2r − 1; the validation checks the counts equal on every block), the stores and the
+ownership tails.
+
+**The same cells are not the same stores.** B overstores across bucket boundaries, since
+its sweep rises through every row and repairs them. D can't, so near a bucket's end it
+trades vector overstores for one-slot stores. For a D cell of ℓ rows from q in a bucket
+ending at b:
+- `v = min(⌈ℓ/8⌉, ⌊(b − q)/8⌋)` vector stores;
+- `max(0, ℓ − 8v)` one-slot stores, at most 7 rows a bucket.
+
+So D may write fewer slots than B while issuing more store instructions, and a narrow
+bucket can be all one-slot stores. `Tally.slots` stays B's fill's count. The record now
+holds D's own census too (`direct_census`, independent of `place`, the same rule): its
+vector stores, its one-slot stores and its write streams (the nonempty buckets), summed
+over the records' blocks. The binary and the verifier report D's store instructions a
+row, its slots written a row against B's, and its streams a block.
 
 **What D adds:**
 - per-run bucket state, `a[c]`, `end[c]` and `cur[c]`: loads and stores that chain through
   memory when a byte's runs follow closely;
 - the cursor's reads of the L records at the bucket's position, 256 read streams over the
   records instead of one;
-- the seeds: at most 256 binary searches a block;
-- the scalar tails within 8 rows of each bucket's end.
+- the seeds: at most σ ≤ 256 binary searches a block;
+- the one-slot tails within 8 rows of each bucket's end, measured by the census.
 
 Whether that costs less than what it removes is the question. No model here answers it.
 
@@ -147,7 +166,16 @@ Guardian decides whether it must come before the diagnostic run.
   (the column's stage on the blocks `takes_runs` refuses). Its `sort` is exactly 0, and the
   verifier requires it to be.
 - **The record** gains each corpus's decoded `output` size, the c/B figures' denominator,
-  so the verifier can compute the budget's terms (§3) from the raw times itself.
+  so the verifier can compute the budget's terms (§3) from the raw times itself, and D's
+  store census (§1.2): `d_vector`, `d_scalar`, `d_streams`.
+- **The timed paths (since §9):** on every timed pass, entry and phase sweeps alike, B's
+  and D's actual path must be `takes_runs`'s, block by block. So a D fallback in any
+  round, a failed placement for instance, stops the run instead of being billed to the
+  records' bin. Every timed pass also checks every block's CRC.
+- **What is timed:** each bracket holds the arm's MTF stage and its table construction,
+  at the entry point (the selector, the checks and the fallback included). The room walk,
+  RLE1 and the CRC after each block are outside every bracket. They keep the caches in
+  decode order; they are not measured.
 - **Validity, before any timing:** #269's checks, plus, on every block:
   - D's table, from the records by `place`, is A's word for word;
   - D's stage, through `build_direct`, has A's length, its path is `takes_runs`'s, and its
@@ -161,7 +189,9 @@ Guardian decides whether it must come before the diagnostic run.
 - From the entry sweep:
   - `R_direct`, D / A, every block (Q1);
   - `R_stage`, B / A, #269's Q1, repeated on this run;
-  - `R_DB`, D / B;
+  - `R_DB`, D / B. It compares two whole constructions: B's sort and sequential fill
+    against D's placement, with its checks, seeds, cursor schedule, stores and tails. It
+    is not an isolated treatment of removing the sort or the F array;
   - `R_acc_D` and `R_fb_D`, D / A on the records' and the fallback's blocks.
 - From the phase sweep, attribution only:
   - `R_phases_D`, D / A, the phases' sum;
@@ -169,8 +199,9 @@ Guardian decides whether it must come before the diagnostic run.
   - `R_pf`, D's placement / B's fill;
   - `R_psf`, D's placement / B's sort and fill;
   - `R_front`, D's emitter / A's MTF.
-- **The budget's terms,** in nominal c/B of output, each the median of the rounds' paired
-  differences (§3).
+- **The budget's terms,** in nominal c/B of output, each round's own, reconstructed a
+  round at a time, then summarised (§3).
+- **D's store census** (§1.2), reported.
 
 ## 3. The budget
 
@@ -191,10 +222,25 @@ D replaces B's sort and fill with its placement. So, on the phase sweep's scale:
   everything the sort did that D still does: the prefixes and checks, now inline; the
   cursors and their seeds; the 256 destination streams; and the ownership tails. Its sign
   is open: negative if the removed F order and its iterator cost more than what D adds.
-- **e** is the emitter's recovery, B's front less D's. D uses #269's emitter, so e is 0 by
-  construction; the run measures it as a control.
-- **f** is the fallback's recovery, B's fallback less D's. D's fallback is #269's, so f is
-  0 by construction; measured likewise.
+- **e** is the emitter's recovery, B's front less D's.
+- **f** is the fallback's recovery, B's fallback less D's.
+
+**e and f are measured controls, not invariants.** D runs #269's emitter and fallback code,
+but identical code does not make their times identical: a different table write before
+them, other retained buffers, code layout, the caches and the arms' history can all move
+the next emitter's or fallback's time. Zero is the reference model's assumption, and the
+run measures both.
+
+**Each round's identity, before any summary.** With D's sort exactly 0, each round i of the
+phase sweep satisfies, exactly:
+
+    (D − A)_i = K_i + δ_i − e_i − f_i,   K_i = (B − A)_i − B's sort_i,
+
+where δ_i, e_i and f_i are that round's own terms. The binary and the verifier reconstruct
+the right side a round at a time, check it against the left (the binary asserts it, the
+verifier reports the largest residual), and only then summarise: the median of each term,
+the median of (D − A)_i, and the median of .218 + δ_i − e_i − f_i. The medians of the terms
+need not sum to the median of the total, and a gap between them is no missing phase.
 
 **What that requires of D, on the phase scale (a sensitivity, not a prediction):**
 - **To break even** (Δ_D ≤ 0): δ_direct ≤ −.218, a placement at or below 1.114 c/B. That is
@@ -210,8 +256,12 @@ D replaces B's sort and fill with its placement. So, on the phase sweep's scale:
 - It doesn't transplant #272's phase costs, which came from a different runner, a different
   consumer and different admission.
 - This run's own figures replace #269's where they differ. The binary and the verifier
-  print δ_direct, e, f and D − A from this run's raw times, beside .218 + δ_direct − e − f,
-  and this run's own B − A less its sort, for comparison with .218.
+  print δ, e, f and D − A from this run's raw times, beside .218 + δ_i − e_i − f_i, and this
+  run's own K, for comparison with .218.
+- **It is not the walk.** Q1 and the budget time MTF and the table's construction. The
+  room walk, RLE1 and the CRC are untimed. If D's table leaves the caches in a different
+  state for the walk that follows, that cost or saving is not in Q1. A production
+  comparison must charge it.
 
 ## 4. Correctness (checked)
 
@@ -223,9 +273,10 @@ D replaces B's sort and fill with its placement. So, on the phase sweep's scale:
 | the states D must never accept: no records for n 0 and 1, the closing record alone, the empty block's records for one row, n at 2²⁴, another block's n (0, 1, 3, 5), records out of order, two runs at one row, a first run past row 0, an uncounted byte, counts that wrap a u32, a run past its bucket's end; each refused with an empty table, by both kernels; the empty block accepted with an empty table | `run_stage::tests::miri_direct_unchecked_states_refused` | pass, natively and under Miri |
 | `place`'s stores under Miri: `miri_sort_and_floor` (ternary columns to 4 rows, 121, now through `direct` too) and the test above, scalar, then with `-C target-feature=+avx2,+bmi1` and `MIBZ2_EXPECT_AVX2` asserting the AVX2 kernel was reached | `cargo +nightly miri test --lib -- run_stage::tests::miri_`, both of `miri.yml`'s steps | pass, both (3 tests each) |
 | `place` and `build_direct` on every stream of `tests/mtf_kernels.rs`: the table on success; on a corrupt stream, `build_direct`'s error kind is `mtf::mtf`'s; its path is `takes_runs`'s | `cargo test --features run-fed --test mtf_kernels` (4 tests) | pass |
-| all 431 blocks of the bench corpus (`wikidata.bz2`, SHA-256 `82f65ace…`) and the six synthetic corpora: D's table by `place` and through `build_direct`, path, length, the CRC after the room walk; the Wikidata file's output = `decode`'s | the diagnostic's validation pass, run once here (§7) | pass |
-| the record writer against the verifier's fixture, byte for byte (rewritten for schema 2) | `cargo test --features run-fed --example run_fed_stage` (4 tests) | pass |
-| the verifier: the fixture VALID; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms | `python3 bench/test_run_fed_stage.py` (45 tests) | pass |
+| all 431 blocks of the bench corpus (`wikidata.bz2`, SHA-256 `82f65ace…`) and the six synthetic corpora: D's table by `place` and through `build_direct`, path, length, the CRC after the room walk; D's census cells equal to B's, its stores between its rows and B's slots, its one-slot stores at most 7 a stream; the Wikidata file's output = `decode`'s; then, over 2 timed rounds, B's and D's path on every timed block and each round's budget identity | the diagnostic's validation pass, run twice here (§7) | pass |
+| the record writer against the verifier's fixture, byte for byte (rewritten for schema 2, with real corpus identities since §9); D's census on two hand-counted cases (`direct_census_counts_the_tails`) | `cargo test --features run-fed --example run_fed_stage` (5 tests) | pass |
+| the verifier: the fixture VALID against its evidence; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; since §9, the 25 counterexamples of `bench/fixtures/run_fed_stage_counterexamples.json` (the Researcher's six among them) each INVALID, and the first six by the CLI with no reading printed; the Wikidata file's own digest and blocks against the spec; no corpus evidence; the regenerated synthetic corpora equal to the pinned five; the CLI VALID only once the text corpus is this checkout's; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms | `python3 bench/test_run_fed_stage.py` (50 tests) | pass |
+| the real record of the local validation run, against the verifier's own evidence (the Wikidata file, the synthetic corpora regenerated from this checkout) and every count relation | `bench/run_fed_stage.py verify` | INVALID only for its 2 rounds and its 4-CPU affinity, as expected |
 | the existing run-fed tests, unchanged: `sort`, `fill`, the shares, the refusals | `cargo test --features run-fed --lib run_stage` (6 tests, 2 of them new) | pass |
 | clippy (`--all-targets --features run-fed`, `-D warnings`), rustfmt, ruff | locally | clean |
 
@@ -250,10 +301,27 @@ D replaces B's sort and fill with its placement. So, on the phase sweep's scale:
 - **The information objective** (C1's diagnostic option: it can never qualify a production
   change): whether placing the records directly, with no sort, makes the run-fed stage pay
   at one worker on one CI runner. Q1 judged, the rest exploratory.
-- **The baseline:** master at this PR's merge base. Arm A is master's code, unchanged. Arm
-  B is #269's, at `fd60fffa`, unchanged.
-- **The head:** this PR's head at freezing. The coordinator names it as a full
-  40-character SHA, and dispatches it as `sweep.yml`'s `registered_head` input.
+- **The baseline identities (full):**
+  - master `6b36fd8c43c1b834e69ee62cd6b5054dc99c571c`, merged into this branch. Arm A,
+    `mtf::mtf` then `bwt::build`, is its code, unchanged;
+  - #269's frozen head `fd60fffada25d475bbcc2b54165b96cf5fd7a92f`. Arm B, `run_stage::build`
+    with `mtf::mtf_runs`, `sort` and `fill`, is its code, unchanged: `src/mtf.rs` and
+    `src/bwt.rs` are byte-identical to fd60fffa's on this branch, and `run_stage.rs` only
+    adds D;
+  - #269's judged reading stays its own: the 0.90 gate and the STOP it read at fd60fffa.
+    The 0.95 gate below is this registration's, for D, and is not applied to B.
+- **The head:** this PR's head at freezing, which the coordinator names in full (a
+  registration can't name its own commit) and dispatches as `sweep.yml`'s
+  `registered_head` input.
+- **The synthetic input is the frozen head's.** The text corpus is made from the head's
+  `src/`, `tests/`, `examples/` and `README.md` (tests/common's `corpora(1)`), so any change
+  to those changes it. At this revision's sources it is 3,324,678 bytes, compressed at
+  level 9 to 611,579 bytes, SHA-256
+  `b4c2767e731f9be033d841e2f23d3bcbb7ba11335a60404a4a3af51c458916a5`, 4 blocks. The other
+  five don't depend on the head (§4's pinned values). A docs-only commit changes none of
+  them. The workflow refuses to run if the checkout's sources differ from the head, and the
+  verifier regenerates every synthetic corpus from that checkout, so the judged record
+  must carry the frozen head's own.
 - **The run:** `sweep.yml`, dispatched on this branch at the frozen commit: `tool:
   run_fed_stage`, `rounds: 15`, `registered_head` the frozen SHA. One dispatch.
 - **The primary condition** is the one copy pinned to one CPU. The contended run is
@@ -269,12 +337,30 @@ schema 2:
 - every corpus's decoded output size recorded and positive;
 - D's front and placement positive wherever its corpus has records' blocks, and D's sort
   exactly 0, as A's is;
+- **the clock (since §9):** `ghz` a finite number, not a boolean, in [0.1, 10];
+- **the corpus evidence (since §9), the verifier's own, never the record's:**
+  - Wikidata's SHA-256, size, decoded size and blocks equal to its pinned spec,
+    `bench/wikidata.json` (corpus_bytes 11,854,933, decoded_bytes 209,700,196, 431
+    blocks, its SHA-256 the registered one); and the file given by `--wikidata` (its
+    SHA-256, size, and blocks counted from their 48-bit headers) equal to the spec;
+  - each synthetic corpus's SHA-256, size, decoded size and blocks equal to its
+    regeneration from the checkout (`--sources`; tests/common's `corpora(1)` ported to
+    Python, compressed at level 9 with libbzip2, as `common::compress` does);
+- **the count relations (since §9),** each a sum of per-block bounds the representation
+  fixes (`count_relations`): 1 to 900,000 rows a block; on the records' blocks, records
+  from their blocks to their rows, cells from r to 2r − blocks (at most 2r − 1 a block),
+  B's slots a multiple of 8 from its rows to its rows + 7 a cell, D's written slots from
+  its rows to B's slots, D's one-slot stores at most 7 a stream, 1 to 256 streams a
+  block; the fallback's rows at least its blocks; RLE1's 4–259 bytes for 5 rows, with
+  each block's last 4 rows unpaired at most;
+- D's census (`d_vector`, `d_scalar`, `d_streams`) recorded;
 - otherwise #269's: the record exists; the full head, equal to the registered one; 15
   rounds; AVX2; correctness passed; the host; one CPU; the seven corpora by name and
   SHA-256, Wikidata's the registered `82f65ace…c29915` and the file's own; consistent path
   counts; every registered interval present.
 
-An INVALID record has no reading.
+An INVALID record has no reading: the verifier decides admission, every check above
+included, before it computes or prints any reading.
 
 **Q1, the gate (judged).** R_direct = D / A at the entry point, every block, on the
 Wikidata file:
@@ -304,13 +390,20 @@ registration (C6).
   drafting a production prototype's own registration, which sets its own end-to-end
   threshold. FEASIBLE licenses nothing more.
 - **Set before any timed run of D.** No timing of D has been seen (§7).
+- **What FEASIBLE means.** Some saving at the stage's entry point, with a 5% point estimate
+  and an interval below 1; not a confident 5% lower bound, not a whole-decoder claim, and
+  not production acceptance. It only motivates another registration. A real 4% saving may
+  properly read STOP for this 5% objective: "no saving of 5% shown" is not "no speedup".
 
 **The exploratory readings,** each reported with its interval, and none judged:
 - **R_DB, D / B at the entry point:** "D CHEAPER THAN B" if hi < 1; "D NOT CHEAPER THAN B" if
-  lo ≥ 1; else "D AGAINST B, INCONCLUSIVE". This is what removing the sort and its F order
-  recovered, on this runner.
-- **The budget's terms** (§3): δ_direct, e and f, with D − A's phase sum beside .218 +
-  δ_direct − e − f, and this run's own B − A less its sort beside #269's .218.
+  lo ≥ 1; else "D AGAINST B, INCONCLUSIVE". It compares D's whole placement with B's sort
+  and fill on this runner, not the sort's removal in isolation (§2).
+- **The budget's terms** (§3), each round's own and their medians: δ, e and f (e and f
+  measured controls), the identity's largest residual, D − A's phase sum beside the median
+  of .218 + δ_i − e_i − f_i, and this run's own K beside #269's .218.
+- **D's store census** (§1.2): store instructions a row, slots written a row against B's,
+  and write streams a block.
 - `R_place`, `R_pf`, `R_psf`, `R_phases_D`, `R_front` and `R_stage` on this run.
 
 **Voids and failures** are #269's:
@@ -376,6 +469,11 @@ natural) is not measured.
 - **Miri, the tests and the mutations** are correctness runs. Their times are not
   measurements.
 - **The thresholds** (§5) were written before any timed run of D.
+- **A second local run, for §9's validity only,** the same way: 2 rounds, its output
+  filtered to the validation and path-count lines (the same 431 blocks, 384 by records, 47
+  fallback; the six synthetic corpora's SHA-256s, each equal to the verifier's
+  regeneration), its record checked by the verifier for problems only (its 2 rounds and 4
+  CPUs, nothing else), then deleted. No timing figure was read.
 
 ## 8. Not done, and why
 
@@ -389,16 +487,43 @@ natural) is not measured.
 - **The emitter and the fallback,** the Optimiser's items 2 and 3, are unchanged here by
   design. D isolates the sort's removal.
 
+## 9. Revision, 2026-11-09: the Researcher's REVISE (#162 comment 6732062626)
+
+The review of head `705323290b5470dea4a31910c22522c342e9d064` (report:
+`state/reports/direct-f-registration-6731990737/report.md` at `6bc26d28`). It accepted the
+construction, the budget's arithmetic, the 0.95 gate and dropping arm C and the store
+reference. Each finding, its fix and the test that holds it. No timing was run for the
+revision.
+
+| # | finding | fix | test |
+|---|---|---|---|
+| 1a | ghz −1, 0 or `true` admitted, and read FEASIBLE with wrong budget terms; a missing ghz passed `check()` and raised a KeyError in the readings | `ghz` must be a finite, non-boolean number in [0.1, 10] GHz; checked with the rest, before any reading | counterexamples 1–4, 7, 8 (`bench/fixtures/run_fed_stage_counterexamples.json`), each INVALID; 1–6 also through the CLI, with no reading printed |
+| 1b | output = 1 admitted, scaling δ to about −60,032,000 c/B | every corpus's SHA-256, size, decoded size and blocks checked against the verifier's own evidence: Wikidata's pinned spec and file, the synthetic corpora regenerated from the checkout (§5) | counterexamples 5, 10–13; `test_the_wikidata_files_own_digest`, `test_the_wikidata_files_blocks`, `test_no_corpus_evidence`, `test_the_regeneration_matches`, `test_the_cli` |
+| 1c | rows_runs = 1 with 999,999,999 records and cells admitted | the count relations, per-block bounds summed (§5, `count_relations`) | counterexamples 6, 9, 14–25 |
+| 1d | INVALID decided before any reading | it is: `main` prints problems and returns before `readings`, and every field `readings` reads is now checked | `test_the_counterexamples_print_no_reading` |
+| 2 | the timed sweep reconciled only B's path | B's and D's actual path asserted on every block of every timed pass (§2) | the validation run: 2 timed rounds, every block |
+| 3a | Q1 times MTF and construction, not the walk | said so (In short, §2, §3) | — |
+| 3b | D/B is no isolated sort-removal treatment | said so (§2, §5) | — |
+| 3c | identical code doesn't force e = f = 0 in time | e and f are measured controls (§3) | — |
+| 3d | a sum of medians is not the median of the total | each round's identity reconstructed and checked before any summary, then each term's median and the total's (§3); the binary asserts the identity a round, the verifier reports its largest residual | `test_the_budget_terms` |
+| 4 | the same cells are not the same stores; `Tally.slots` is B's | D's census: vector stores, one-slot stores and write streams, counted independently of `place` and recorded; checked against B's cells and slots on every block; reported a row and a block (§1.2) | `direct_census_counts_the_tails`; the validation pass; counterexamples 19–22 |
+| 5 | the freeze identities | the full baseline identities, #269's own rule kept for B, and the frozen head's synthetic input named (§5) | — |
+| — | the seeds' cost | O(σ log r) probes for the seeds, then at most r − 1 advances (§1.1) | — |
+
+**Still open:** the B5 review of `place` (the Guardian's, queued), and fuzzing (§4, Not
+covered).
+
 ## Provenance and reproduction
 
 - **Branch:** `research/run-fed-direct`, from `research/run-fed-stage` at `fd60fffa`, with
-  master merged in (`miri.yml`'s path filters and comment were reconciled by hand).
+  master merged in (`miri.yml`'s path filters and comment were reconciled by hand), and
+  master `6b36fd8c` merged again for §9 (a journal-only change).
 - **Corpus:** `wikidata.bz2`, SHA-256
   `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`, as #266's and #269's.
 - **The code:** `src/run_stage.rs` (`place`, `place_avx2`, `place_rows`, `build_direct`, and
   their tests); `tests/mtf_kernels.rs` (`runs_agree`); `examples/run_fed_stage.rs` (arms A,
   B, D; schema 2); `bench/run_fed_stage.py` and `bench/test_run_fed_stage.py`;
-  `bench/fixtures/run_fed_stage.json`.
+  `bench/fixtures/run_fed_stage.json` and `bench/fixtures/run_fed_stage_counterexamples.json`.
 - **Tests:**
   - `cargo test --features run-fed --lib run_stage`;
   - `cargo test --features run-fed --test mtf_kernels`;
@@ -411,6 +536,7 @@ natural) is not measured.
   `registered_head` the frozen SHA. Locally, `cargo build --release --features run-fed
   --example run_fed_stage`, then `RUN_FED_RECORD=run-fed-1.json RUN_FED_HEAD=$(git rev-parse
   HEAD) target/release/examples/run_fed_stage wikidata.bz2 15`, then `python3
-  bench/run_fed_stage.py verify run-fed-1.json --head <SHA> --wikidata wikidata.bz2`.
+  bench/run_fed_stage.py verify run-fed-1.json --head <SHA> --wikidata wikidata.bz2` from
+  the same checkout (its `--sources` default).
 - **#269's record** is schema 1, and this verifier refuses it. #269 is judged by the
   verifier at `fd60fffa`.

@@ -7,6 +7,7 @@ defect the registration guards against failing it.
     python3 bench/test_run_fed_stage.py
 """
 
+import bz2
 import copy
 import json
 import os
@@ -21,15 +22,82 @@ sys.path.insert(0, str(HERE))
 import run_fed_stage as v  # noqa: E402
 
 FIXTURE = HERE / "fixtures" / "run_fed_stage.json"
+COUNTEREXAMPLES = HERE / "fixtures" / "run_fed_stage_counterexamples.json"
 HEAD = "0123456789abcdef0123456789abcdef01234567"
+# the five synthetic corpora whose inputs don't depend on the head, as the verifier
+# regenerates them (and as the binary's own record names them): SHA-256, compressed size,
+# decoded size, blocks. `test_the_regeneration_matches` holds the port to them
+PINNED = {
+    "synthetic random": (
+        "69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198",
+        1_774_781,
+        2_000_000,
+        3,
+    ),
+    "synthetic one byte": (
+        "fe83f12dd7b68f263d44f27080c7c21168eaca3ef9c5f54a73a061b262068bb8",
+        49,
+        5_000_000,
+        1,
+    ),
+    "synthetic pattern": (
+        "bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3",
+        314,
+        4_900_000,
+        6,
+    ),
+    "synthetic runs": (
+        "24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec",
+        9_955,
+        2_500_444,
+        1,
+    ),
+    "synthetic records": (
+        "616e54bd727b056d7ff6fedb2a13c9eb411f2c512cca52ac4a419c131b135c2b",
+        2_397_517,
+        2_400_000,
+        3,
+    ),
+}
 
 
 def base():
     return v.load(FIXTURE)
 
 
+def evidence(rec=None):
+    """The corpus evidence the fixture is checked against: Wikidata's pinned spec, the five
+    pinned synthetic corpora, and the text corpus's as the fixture states it (the text is
+    made from the head's sources, so its real evidence moves with every head; the CLI
+    tests regenerate it)"""
+    rec = rec or base()
+    out = [v.wikidata_expected()]
+    for f in rec["files"][1:]:
+        if f["name"] in PINNED:
+            sha, b, o, n = PINNED[f["name"]]
+            out.append({"name": f["name"], "sha256": sha, "bytes": b, "output": o, "blocks": n})
+        else:
+            text = base()["files"][1]
+            out.append({k: text[k] for k in ("sha256", "bytes", "output", "blocks")})
+    return out
+
+
 def problems(rec, head=HEAD, **kw):
-    return v.check(rec, head, **kw)
+    return v.check(rec, head, evidence(), **kw)
+
+
+def apply(rec, case):
+    for path, value in case.get("set", []):
+        node = rec
+        for k in path[:-1]:
+            node = node[k]
+        node[path[-1]] = value
+    for path in case.get("delete", []):
+        node = rec
+        for k in path[:-1]:
+            node = node[k]
+        del node[path[-1]]
+    return rec
 
 
 def scale(rec, file, path, factor, arm=2):
@@ -171,7 +239,54 @@ class Admission(unittest.TestCase):
         self.assertInvalid(r, "not the registered 82f65ace")
 
     def test_the_wikidata_files_own_digest(self):
-        self.assertInvalid(base(), "not the file's", wikidata_sha256="1" * 64)
+        w = v.wikidata_expected()
+        other = {"sha256": "1" * 64, "bytes": w["bytes"], "blocks": w["blocks"]}
+        self.assertInvalid(base(), "not the pinned spec's", wikidata_file=other)
+        same = {k: w[k] for k in ("sha256", "bytes", "blocks")}
+        self.assertEqual(problems(base(), wikidata_file=same), [])
+
+    def test_the_wikidata_files_blocks(self):
+        w = v.wikidata_expected()
+        other = {"sha256": w["sha256"], "bytes": w["bytes"], "blocks": 430}
+        self.assertInvalid(base(), "blocks 430", wikidata_file=other)
+
+    def test_no_corpus_evidence(self):
+        p = v.check(base(), HEAD, None)
+        self.assertTrue(any("no corpus evidence" in x for x in p), p)
+
+    def test_the_counterexamples(self):
+        # each mutation INVALID, by check() and by the CLI, which prints no reading
+        cases = json.loads(COUNTEREXAMPLES.read_text())["cases"]
+        self.assertGreaterEqual(len(cases), 6)
+        for case in cases:
+            with self.subTest(case["name"]):
+                self.assertInvalid(apply(base(), case), case["expect"])
+
+    def test_the_counterexamples_print_no_reading(self):
+        cases = json.loads(COUNTEREXAMPLES.read_text())["cases"]
+        for case in cases[:6]:
+            with self.subTest(case["name"]):
+                rec = apply(base(), case)
+                out = self.run_cli(rec, evidence(rec))
+                self.assertEqual(out[0], 1)
+                self.assertNotIn("VALID;", out[1])
+                self.assertNotIn("Q1", out[1])
+
+    def run_cli(self, rec, corpora):
+        import contextlib
+        import io
+        from unittest import mock
+
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(rec, f)
+        buf = io.StringIO()
+        try:
+            with mock.patch.object(v, "expected_corpora", lambda root: corpora):
+                with contextlib.redirect_stdout(buf):
+                    code = v.main(["verify", f.name, "--head", HEAD, "--unjudged"])
+        finally:
+            os.unlink(f.name)
+        return code, buf.getvalue()
 
     def test_a_synthetic_digest_missing(self):
         r = base()
@@ -240,7 +355,9 @@ class Readings(unittest.TestCase):
         # passes and the synthetic whole-stage screen is what fails
         rec = base()
         f = rec["files"][1]
-        f["blocks_fallback"], f["blocks"] = 1, f["blocks"] + 1
+        # one of its blocks by records made a fallback block, its rows with it
+        f["blocks_runs"], f["blocks_fallback"] = f["blocks_runs"] - 1, 1
+        f["rows_runs"] -= 900_000
         for row in f["entry"]:
             for a in range(3):
                 row[a][1] = 0.5
@@ -248,7 +365,7 @@ class Readings(unittest.TestCase):
         for row in f["phases"]:
             for a in range(3):
                 row[a][3] = 0.25
-        self.assertEqual(v.check(rec, HEAD), [])
+        self.assertEqual(problems(rec), [])
         r = v.readings(rec)
         text = next(x for x in r["files"] if x["name"] == "synthetic text")
         self.assertAlmostEqual(text["R_fb_D"][0], 1.0, places=6)
@@ -306,8 +423,50 @@ class Readings(unittest.TestCase):
         self.assertEqual(g["Q1"], "FEASIBLE")
 
     def test_the_cli(self):
-        self.assertEqual(v.main(["verify", str(FIXTURE), "--head", HEAD, "--unjudged"]), 0)
-        self.assertEqual(v.main(["verify", str(FIXTURE), "--head", "e" * 40]), 1)
+        # the verifier's own evidence: the text corpus regenerated from this checkout. The
+        # fixture's text is another head's, so it is INVALID as it stands, and VALID once
+        # its text entry is this checkout's
+        ev = synthetic()
+        self.assertEqual(v.main(["verify", str(FIXTURE), "--head", HEAD, "--unjudged"]), 1)
+        rec = base()
+        text = next(x for x in ev if x["name"] == "synthetic text")
+        for k in ("sha256", "bytes", "output", "blocks"):
+            rec["files"][1][k] = text[k]
+        rec["files"][1]["rows"] = rec["files"][1]["rows_runs"] = text["output"]
+        rec["files"][1]["blocks_runs"] = text["blocks"]
+        rec["files"][1]["blocks_fallback"] = 0
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(rec, f)
+        try:
+            self.assertEqual(v.main(["verify", f.name, "--head", HEAD, "--unjudged"]), 0)
+            self.assertEqual(v.main(["verify", f.name, "--head", "e" * 40]), 1)
+        finally:
+            os.unlink(f.name)
+
+    def test_the_regeneration_matches(self):
+        # the port of tests/common's corpora(1) and its compression: the five head-free
+        # corpora as pinned (each also the binary's own record's figure when it ran), and
+        # the text at least its 3,000,000 bytes, of this checkout's sources
+        ev = {x["name"]: x for x in synthetic()}
+        for name, (sha, b, o, n) in PINNED.items():
+            self.assertEqual(
+                (ev[name]["sha256"], ev[name]["bytes"], ev[name]["output"], ev[name]["blocks"]),
+                (sha, b, o, n),
+                name,
+            )
+        self.assertGreaterEqual(ev["synthetic text"]["output"], 3_000_000)
+        self.assertEqual(v.count_blocks(bz2.compress(b"x" * 10, 9)), 1)
+        self.assertEqual(v.count_blocks(bz2.compress(b"x" * 10, 9) * 3), 3)
+
+
+_SYNTHETIC = []
+
+
+def synthetic():
+    """The verifier's regenerated synthetic evidence, made once for the tests"""
+    if not _SYNTHETIC:
+        _SYNTHETIC.extend(v.synthetic_expected(str(HERE.parent)))
+    return _SYNTHETIC
 
 
 class Copies(unittest.TestCase):
