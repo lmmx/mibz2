@@ -929,8 +929,30 @@
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
     "active_comment_status": "finished",
-    "queue_snapshot": "21 comments listed; all eligible inbox comments through 6729878093 finished",
-    "active_incoming_comment": 6729878093
+    "queue_snapshot": [
+      6681847165,
+      6682032075,
+      6682106949,
+      6682260206,
+      6682936439,
+      6683783830,
+      6683967083,
+      6684935718,
+      6685165401,
+      6693599811,
+      6694151539,
+      6694803492,
+      6695276659,
+      6695438405,
+      6695594055,
+      6695685974,
+      6715368365,
+      6729117187,
+      6729878093,
+      6730002640
+    ],
+    "active_incoming_comment": 6730002640,
+    "status": "in_progress"
   },
   "duplicate_events": [
     {
@@ -1470,6 +1492,12 @@
       "work_commit": "24bf0264417dff742fab1074bc64222aa233d431",
       "review_comment_id": 6729932417,
       "complete_cursor_commit": "d6a495510034462c08e4c61fb78ebef6bf4e5d28"
+    },
+    {
+      "comment_id": 6730002640,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D045"
     }
   ],
   "migrated_from": {
