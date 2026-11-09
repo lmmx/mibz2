@@ -1,0 +1,5 @@
+# The phrase-knee diagnostic (docs/journal/2026-11-09-phrase-structure.md, section 6).
+# The commit the registration, the harness and the recipe are frozen at: just
+# bench-phrase-knee's measured inputs must match it exactly. Re-frozen if review changes them,
+# before any run.
+frozen 26416d4ac35271e93c7673dd7fca04ef4e4adb2b
