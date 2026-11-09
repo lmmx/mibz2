@@ -1059,6 +1059,15 @@
       "review_comment_id": 6734936140,
       "publication_verified": true,
       "verification_note": "Exact body/#145 and role-aware routing pass. Pinned verify reports only hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6735163830,
+      "status": "in progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "1197bbcced86eae74c6d99eb8096b5c816a834d7",
+      "report_path": "state/reports/c29-reregistration-6735163830/report.md"
     }
   ],
   "active_delegations": [],
