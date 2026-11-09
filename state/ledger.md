@@ -341,3 +341,18 @@ Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-dec
 - C31 one-hop direct-F remains first: remove pair composition/directory/fi/js and L scan only with emitted records; keep checked counts/prefix/cursor/cell/store costs. Compare #269 budget separately.
 - Admission correction: one byte run/ONE2.27402, pattern1.00913; .343/.239 were versus ROW pair builder. No aggregate corpus demonstrates run-pair build beating production ONE. Per-block gain cannot be inferred from corpus totals; no threshold or Wikidata recovery claimed.
 - No implementation, timing, safety certification or new speed credit. D052 registration closure recorded; new consumer requires own evidence. #270 restrictions not lifted.
+
+
+## Run-fed leader attribution: inbox6732659575
+
+[Raw replay, source audit and ranked registrations](records/reviews/inbox-6732659575/report.md). Measured03e52206ac248737bc856f064928adf238265917; production/resultd1260c59047846401ed0e717ba6c66d33b699f70.
+
+- Artifact13650328398 digest verified; pinned reporter reproduces VALID attributed LEAD: dir/default33 .966859 [.959421,.974355]. Existing verdict unchanged.
+- C29 first: reg/ctl .973935 at9 and .958780 at3. This replaces list kernel AND short-run stores; not list-only attribution. Record arms still use old checkpoints on rejected blocks. Pure records/leader-release causal shares unidentified.
+- LS primary next only in a NEW matched-C29 registration. ls/reg .974647 [.969726,.979593] at9, but1.015168 [1.001754,1.028762] at3. At3 its run-span saving10.874ms is outweighed by18.239ms extra drained-front work; whole+6.980ms. Aggregate helper clocks cannot price target span.
+- DIR helper_sort .754ms is summed count/prefix/gate waiting, not F sorting. It skips scatter.163 lookups/block do not price that entire term.
+- Standard bench default1/2/4 never enters a pipelined-only C29 replacement. Expected direct gain0; no canonical grid change. Targeted diagnostic and target-machine evidence required; neutral unexposed CI is not changed-path qualification.
+- C42 proposed: choose leader sort for in-run successor preparation, direct fill for drained fronts, charging transition costs and carrying checked path identity. Not implemented; not added to existing frozen transfer.
+- Existing workstation transfer keeps DIR primary, LS secondary. No percentage extrapolation9-on-4 to i9; freeze10-thread admission and retain C5 authorization. C29 B5 covers checkpoint boundaries, raw short-run stores and shipped worker integration. D055 still holds#277; D056/D057 scoped dispositions recorded.
+
+No implementation, compilation, timing, merge, safety certification or automation change. Proposal thresholds are prospective diagnostics, not new production gates.

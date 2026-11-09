@@ -1,0 +1,59 @@
+VALID (JUDGED): 15 rounds at 9 threads, against mibz2-default33 (fixed)
+arm / mibz2-default33              wall ratio [95%]           CPU ratio [95%]           
+mibz2-pipe3-both                   0.9936 [0.9866, 1.0006]    1.0009 [0.9935, 1.0083]   
+mibz2-pipe3-runfed-ctl             1.0006 [0.9931, 1.0081]    1.0017 [0.9959, 1.0076]   
+mibz2-pipe3-runfed-reg             0.9745 [0.9675, 0.9816]    0.9719 [0.9659, 0.9780]   
+mibz2-pipe3-runfed-ls (secondary)  0.9498 [0.9435, 0.9562]    0.9521 [0.9474, 0.9568]   
+mibz2-pipe3-runfed-hs (secondary)  0.9794 [0.9698, 0.9891]    0.9780 [0.9728, 0.9832]   
+mibz2-pipe3-runfed-dir (PRIMARY)   0.9669 [0.9594, 0.9744]    0.9640 [0.9602, 0.9677]   
+
+Control contrasts (mechanism, never the judged estimand):
+  mibz2-pipe3-runfed-ls/mibz2-pipe3-runfed-ctl wall 0.9492 [0.9437, 0.9548]  CPU 0.9505 [0.9459, 0.9551]
+  mibz2-pipe3-runfed-hs/mibz2-pipe3-runfed-ctl wall 0.9788 [0.9704, 0.9874]  CPU 0.9763 [0.9723, 0.9803]
+  mibz2-pipe3-runfed-dir/mibz2-pipe3-runfed-ctl wall 0.9663 [0.9601, 0.9725]  CPU 0.9623 [0.9576, 0.9670]
+  mibz2-pipe3-runfed-reg/mibz2-pipe3-runfed-ctl wall 0.9739 [0.9682, 0.9797]  CPU 0.9703 [0.9673, 0.9733]
+  mibz2-pipe3-runfed-ctl/mibz2-pipe3-both      wall 1.0071 [1.0011, 1.0131]  CPU 1.0008 [0.9942, 1.0076]
+
+Phases, 9 threads (mean over rounds; ms a team run unless a count):
+                                ctl      reg       ls       hs      dir
+lead_ns                       0.962    0.766    1.034    0.802    0.823
+lead_front_ns                 0.656    0.476    0.532    0.518    0.533
+lead_sort_ns                  0.000    0.000    0.215    0.000    0.000
+lead_rle_ns                   0.279    0.265    0.256    0.263    0.267
+lead_small_ns                 0.025    0.024    0.029    0.018    0.018
+lead_start_ns                 0.434    0.415    0.338    0.317    0.302
+lead_end_ns                   1.396    1.181    1.371    1.119    1.125
+build_end_ns                  1.874    1.808    1.621    1.963    1.867
+join_wait_ns                  1.632    1.709    1.458    1.837    1.769
+run_ns                        4.769    4.681    4.435    4.712    4.628
+helper_sort_ns                0.000    0.000    0.000    1.270    0.754
+helper_fill_ns                0.000    0.000    0.638    0.614    0.840
+helper_fused_ns               1.300    1.306    0.289    0.284    0.281
+leader_late / runs            0.257    0.209    0.295    0.179    0.192
+team_records / runs           0.000    0.000    0.798    0.798    0.798
+ready_last_ns (by recs)           -        -    1.377    1.823    1.695
+ready_skew_ns (by recs)           -        -    0.753    0.452    0.561
+records_h largest / mean          -        -    1.000    1.000    1.387
+rows_h largest / mean             -        -    1.000    1.000    1.182
+cells_h largest / mean            -        -    1.745    1.745    1.356
+stores_h largest / mean           -        -    1.256    1.256    1.007
+W / n                             -        -    1.477    1.477    1.474
+lookups a block                   -        -    0.000    0.000  163.097
+  (join_wait is the leader's wait for the build after its work: descheduling and
+  wake-up included, not construction alone. Every phase clock includes descheduling
+  on an oversubscribed runner; CPU is scheduled service (spinning, SMT, frequency
+  and cache interference included), not invariant work. leader_late compares the
+  leader's end with the build's end, both from the run's start.)
+
+Primary (mibz2-pipe3-runfed-dir / mibz2-default33, JUDGED): LEAD; attributed: ctl matches the incumbent, and the primary beats ctl
+  secondary (mibz2-pipe3-runfed-hs, never judged): INCONCLUSIVE
+  secondary (mibz2-pipe3-runfed-ls, never judged): LEAD
+  (environment-specific: a CI reading is this runner's; a STOP pauses, it cannot close
+  the target-machine line, PROTOCOL §11)
+
+3-thread cells (one team), against mibz2-pipe3-both, reported, never judged:
+  mibz2-pipe3-runfed-ctl         wall 1.0028 [0.9947, 1.0110]  CPU 0.9998 [0.9960, 1.0037]
+  mibz2-pipe3-runfed-reg         wall 0.9615 [0.9550, 0.9680]  CPU 0.9728 [0.9690, 0.9766]
+  mibz2-pipe3-runfed-ls          wall 0.9761 [0.9614, 0.9910]  CPU 0.9504 [0.9411, 0.9598]
+  mibz2-pipe3-runfed-hs          wall 0.9836 [0.9684, 0.9991]  CPU 0.9643 [0.9547, 0.9739]
+  mibz2-pipe3-runfed-dir         wall 0.9609 [0.9522, 0.9696]  CPU 0.9647 [0.9610, 0.9683]
