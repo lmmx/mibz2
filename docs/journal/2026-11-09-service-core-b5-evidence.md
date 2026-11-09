@@ -17,14 +17,10 @@ near the cap. No timing was taken.
    `svc_waits` and `team_waits`. A service worker and a team's first thread each bump
    theirs under the hub's lock, just before `Condvar::wait`. Release builds have neither the
    fields nor the increments. There are also two new tests in `service_tests` (below).
-2. **`src/read.rs`, production.** The parallel `BzReader`'s feeder thread holds a guard
-   (`CancelOnUnwind`). If the source's `read` panics, the thread unwinds and the guard's
-   drop then:
-   - records `io::Error::other("the input's reader panicked")` as the read error;
-   - cancels the decode.
-
-   The guard does nothing on any other exit: its drop checks `thread::panicking()` once,
-   per reader, not per chunk. `BzReader`'s documentation now states this scope.
+2. **`src/read.rs`, docs only (since 13d4e51d, D053).** `BzReader`'s documentation states
+   the source-panic exclusion of this unguarded research snapshot (§4). Up to 1c7bac66 this
+   branch carried a feeder guard. D053 moved it out to its own safety PR to master, #278,
+   and this branch's `src/read.rs` is again 3e201246's code.
 
 None of these changes is in a measured input of #258 or of #271.
 
@@ -33,7 +29,8 @@ Outside `src/`:
   candidates (`Serviced`, `service_candidates`, `Drive`) and `multi_block_corpus`.
 - `examples/fuzz.rs` gains MODE `service` (and `mixed`, which makes every 8th case a
   service case). It also counts what each case reached.
-- `tests/service.rs` gains `a_panicking_source`.
+- `tests/service.rs` gained `a_panicking_source` up to 1c7bac66; it moved to #278 with the
+  guard.
 
 The pipeline-fuzz work for D042 (`safety/pipeline-fuzz`, 2614d832) exists only as a local
 branch: it is not pushed, and it is based on master rather than on this research line. Its
@@ -289,10 +286,22 @@ The finite-yield test reproduces the earlier reported kill: W1 fails it 19 times
 under Miri. It survives once in 20, which is the schedule D045 identified, and it never
 kills W2.
 
-## 4. The panic scope: a guard, with a test
+## 4. The panic scope: excluded here, guarded on master (#278)
 
+**Since D053, this branch is evidence-only.** The guard and its test have moved to #278
+(`safety/bzreader-feeder-panic`, against master). The research snapshot 3e201246, which
+this branch keeps, has no guard. Its contract, now stated in `BzReader`'s docs, is:
+- a panic in the source's `read` is not caught: the feeder unwinds without closing or
+  cancelling the decoder, so the reader's next read can wait for ever;
+- nothing is promised for an abort (including out of memory), or for a `read` that blocks
+  for ever.
+
+The service-core performance verdict at 3e201246 was measured without the guard. Adding
+the guard to the research line would be a new measured implementation (D053).
+
+What follows is the record as it was up to 1c7bac66, when the guard was on this branch.
 The guard was small, so it was added rather than only scoping the contract in the docs.
-`a_panicking_source` covers these cases:
+`a_panicking_source` covered these cases:
 - a source whose `read` panics at once;
 - one that panics after 10 bytes;
 - one that panics half way through the stream;
@@ -303,7 +312,7 @@ Each case runs through `BzReader::parallel_service(2, 3, 2, 8)` and through
 `BzReader::parallel(.., 3)`, all under the one-minute watchdog. Each must end with an
 `io::Error` saying the input's reader panicked. Without the guard (P1) the test hangs.
 
-**The contract now stated** (in `BzReader`'s documentation):
+**The contract the guard gives** (now #278's, for master's readers):
 - A panic in the source's `read` cancels the decode, and the next read fails with that
   error. The bytes of earlier blocks may or may not already have been delivered.
 - Nothing more is promised. An abort, an out-of-memory one included, ends the process. A
@@ -338,5 +347,121 @@ block sizes (B7: that coverage remains the fuzz's, natively, above). CI's Miri j
   wall-clock shutdown bound.
 - **The `trace` build is not the release binary.** It adds relaxed loads, and marks at
   level 1. The service code it exercises is otherwise the same source.
-- **Pass B tests #271's src as it stands at e64469f6.** If #271's src changes, the pass
-  must be re-run.
+- **Pass B tests #271's src as it stands at e64469f6.** The Guardian found #271's current
+  8a0fc8e has identical `src/`. If #271's src changes again, the pass must be re-run.
+
+## D053 repairs (the Guardian's ruling on 1c7bac66, comment 6731964304)
+
+**The HOLD stays, narrowed.** D053 accepted:
+- the wake and retirement fixtures;
+- the H3 and O3 equivalence arguments.
+
+It asked for three repairs.
+
+### 1. Trace attribution: the fence, its negative control, the corrected passes
+
+**The defect.** The reach counts were attributed by thread name from the trace's global
+list. `BzReader::drop` joins its feeder only if the feeder has finished. So a dropped
+reader can return while its feeder still holds the decoder. That decoder's threads then
+end later, and their marks (published in each thread's thread-local destructor) could land
+after the next case's `set_level(1)` reset, where they counted for that case. The byte and
+error comparisons were unaffected. The reach counts of passes A (10,870) and B (5,340)
+can't certify per-case reach, and they are kept above only as the record of what was
+claimed.
+
+**The fence** (`examples/fuzz.rs`, `fence` and `decoder_threads`) guarantees that every
+decoder thread that ever ran has published its marks. It relies on three facts:
+- every decoder thread's name starts with `mibz2`: `mibz2-scan`, `mibz2-read`,
+  `mibz2-svc-*`, `mibz2-coop-*`, and a team's `mibz2-N`;
+- a thread's marks are published in its thread-local destructor, before it exits;
+- an exited thread leaves `/proc/self/task`.
+
+So once `/proc/self/task` lists no thread named `mibz2*`, every decoder thread has
+published. Each service case waits, up to a minute, for no decoder thread at two points:
+- before the trace is reset for it;
+- after its decode returns and before its marks are taken.
+
+A timeout at either point is a failure, reported as "a decoder thread outlived its
+decode". None occurred.
+
+**The negative control** (`fuzz 0 1 - control`, run at 13d4e51d). A stand-in for a
+previous case's late decoder thread is named as one (`mibz2-late`). It marks a pooled
+build at place 0xC0DE and ends 300 ms after its case has returned.
+- **Without the fence:** its mark landed in the next case ("its own case false, the next
+  case true"). The control is sensitive to the defect.
+- **With the fence:** its mark was in its own case alone ("true, false").
+- **The race in the real decoder:** decoder threads were alive just after a
+  `BzReader::parallel_service` drop (svc2's plan) in:
+  - 0 of 40 drops for a fuzz-sized input (one feeder chunk), read to its end;
+  - 0 of 40 for the same input dropped after 1 MB;
+  - for a 7.4 MB input (several feeder chunks) dropped after 1 MB, its feeder still
+    writing: 1 of 40 in the first run, 0 of 40 in the recorded run.
+
+  So the race is real but rare at the fuzz's input sizes.
+- **Push forms:** the corrected passes' "fence waited" column also counts a few
+  push-form cases. There, `StreamDecoder::drop` has already joined every decoder thread,
+  so their marks were already published. The waits are joined threads still listed
+  briefly while the kernel releases them, which is harmless.
+
+**The corrected passes** (shorter seeds; the old results above are kept):
+
+| pass | commit | runs (seed, s) | service cases | reached pooled build/walk | failures | fence waited (cases) |
+|---|---|---|---|---|---|---|
+| A, old (unfenced) | 7e403c8e | 101/102/103 × 240, 104 × 60 mixed | 15,532 | 10,870 (not certified) | 0 | — |
+| **A, corrected** | **13d4e51d** | 101/102/103 × 120 | **7,010** | **4,909** | 0 | 15 |
+| B, old (unfenced) | e64469f6 + overlay | 201/202 × 180 | 7,619 | 5,340 (not certified) | 0 | — |
+| **B, corrected** | **e64469f6** + overlay (13d4e51d's fuzz files) | 201/202 × 90 | **3,694** | **2,603** | 0 | 8 |
+
+Each corrected service case's reach is certified. Its marks are its own decoder threads'
+alone, and its outcome was compared exactly as before (0 failures; the classes are as in
+the old passes: Truncated 1461, BlockCrc 1370, both decode 834, and so on, for A).
+
+Corrected reach, pass A, by candidate:
+
+| candidate | cases | cancelled | pooled build | pooled walk | service finish | service assembly | back reuse | front reuse | queue > teams | longest |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2x3 + 2 in 8 simd push | 1000 | 121 | 675 | 675 | 840 | 789 | 303 | 170 | 106 | 3 |
+| 1x3 + 1 in 1 simd push | 1003 | 136 | 714 | 714 | 872 | 825 | 487 | 350 | 0 | 1 |
+| 3x3 + 1 in 12 simd push | 1002 | 129 | 704 | 704 | 842 | 804 | 158 | 119 | 0 | 3 |
+| 1x4 + 2 in 2 simd push | 1002 | 118 | 698 | 698 | 846 | 802 | 492 | 270 | 61 | 2 |
+| 2x2 + 1 in 3 scalar push | 1001 | 123 | 692 | 692 | 864 | 821 | 297 | 206 | 0 | 2 |
+| 1x2 + 1 in 1 scalar push | 1001 | 130 | 707 | 707 | 856 | 828 | 511 | 386 | 0 | 1 |
+| 2x3 + 2 in 8 simd reader | 1001 | 134 | 719 | 719 | 853 | 818 | 358 | 193 | 110 | 3 |
+| **all** | **7,010** | 891 | **4,909** | 4,909 | 5,973 | 5,687 | 2,606 | 1,694 | 277 | |
+
+Corrected reach, pass B, by candidate:
+
+| candidate | cases | cancelled | pooled build | pooled walk | service finish | service assembly | back reuse | front reuse | queue > teams | longest |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2x3 + 2 in 8 simd push | 461 | 64 | 336 | 336 | 389 | 370 | 153 | 82 | 42 | 3 |
+| 2x3 + 2 in 8 L2 simd push | 463 | 57 | 323 | 323 | 397 | 381 | 140 | 82 | 45 | 3 |
+| 2x3 + 2 in 8 L3 simd push | 463 | 70 | 314 | 314 | 389 | 365 | 138 | 56 | 85 | 4 |
+| 2x3 + 2 in 8 L4 simd push | 462 | 59 | 316 | 316 | 390 | 363 | 157 | 43 | 77 | 5 |
+| 2x3 + 2 in 8 L3 simd reader | 462 | 55 | 334 | 334 | 398 | 373 | 157 | 64 | 94 | 4 |
+| 2x3 + 2 in 8 L4 simd reader | 461 | 79 | 336 | 336 | 398 | 381 | 149 | 43 | 91 | 5 |
+| 1x3 + 1 in 2 L3 simd push | 461 | 56 | 327 | 327 | 393 | 377 | 238 | 90 | 44 | 2 |
+| 2x2 + 1 in 3 L4 scalar push | 461 | 44 | 317 | 317 | 394 | 374 | 125 | 42 | 3 | 3 |
+| **all** | **3,694** | 484 | **2,603** | 2,603 | 3,148 | 2,984 | 1,257 | 502 | 481 | |
+
+The admission bound holds under the fence too. The longest prepared queue was L + K − 1 at
+svc2's plan: 3 at L = 2, 4 at L = 3, 5 at L = 4.
+
+Pass B's overlay (`2026-11-09-service-core-b5-admission.patch`) has been regenerated
+against 13d4e51d's fuzz files. Its hunks are unchanged; only their line offsets moved.
+
+### 2. Miri, from CI
+
+(Pending: filled in from the completed CI run on this branch; see below.)
+
+### 3. The guard, separated
+
+- **#278** (`safety/bzreader-feeder-panic`, against master) carries the guard, its doc
+  paragraph and `tests/reader_panic.rs::a_panicking_source`. The test covers master's
+  readers: `parallel(.., 3)`, `parallel_planned` at 2 teams of 2, and
+  `parallel_pipelined_levers`. Results there:
+  - the test passes, 1/1;
+  - with the guard deleted it fails: "panic at 0, workers: hung (a minute)".
+- **On this branch** the guard is reverted, and the research snapshot's exclusion is
+  documented (§4).
+- **Mutant P1** (the guard deleted) in §2's table was run here at 1c7bac66, when the guard
+  was on this branch. It is now #278's record.

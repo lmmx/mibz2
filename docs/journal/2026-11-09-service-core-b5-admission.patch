@@ -1,7 +1,7 @@
 diff -ru a/examples/fuzz.rs b/examples/fuzz.rs
 --- a/examples/fuzz.rs
 +++ b/examples/fuzz.rs
-@@ -228,6 +228,8 @@
+@@ -271,6 +271,8 @@
          .filter(|t| !t.name.starts_with("mibz2-svc") && !t.name.starts_with("mibz2-coop"))
          .map(|t| t.marks.iter().filter(|m| m.kind == Kind::TeamGot).count() as u64)
          .sum();
@@ -10,7 +10,7 @@ diff -ru a/examples/fuzz.rs b/examples/fuzz.rs
      let longest = traces
          .iter()
          .flat_map(|t| t.marks.iter())
-@@ -243,8 +245,7 @@
+@@ -286,8 +288,7 @@
      st.finished += (count("mibz2-svc-", Kind::RleStart) > 0) as u64;
      st.assembled += (count("mibz2-svc-", Kind::AssembleStart) > 0) as u64;
      st.back_reuse += (teams_got > 2 * c.teams as u64) as u64;
