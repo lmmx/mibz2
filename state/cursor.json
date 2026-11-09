@@ -1255,7 +1255,7 @@
     },
     {
       "trigger_comment_id": 6745615244,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1263,7 +1263,10 @@
       "report_commit": "a241afefb19b824afcdfe155cfd5aad9dc705c28",
       "report_path": "state/reports/run-fed-r10-6745615244/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE preflight quota evidence and acquisition description/bounds. 27 admission tests pass, four malformed preflight witnesses PASS. ab env conflates unknown/unlimited quota and spins/probes perf. Q1-Q6 answered; repeat authority remains outside pinned C6."
+      "disposition": "REVISE preflight quota evidence and acquisition description/bounds. 27 admission tests pass, four malformed preflight witnesses PASS. ab env conflates unknown/unlimited quota and spins/probes perf. Q1-Q6 answered; repeat authority remains outside pinned C6.",
+      "review_comment_id": 6745760175,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
