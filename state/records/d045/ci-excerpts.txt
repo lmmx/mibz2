@@ -1,0 +1,34 @@
+2026-11-07T13:13:15.3531129Z ##[group]Run cargo miri test --lib -- miri_
+2026-11-07T13:13:15.3531803Z [36;1mcargo miri test --lib -- miri_[0m
+2026-11-07T13:13:16.9624192Z running 15 tests
+2026-11-07T13:13:25.3889744Z test bwt::tests::miri_build_one_pass ... ok
+2026-11-07T13:14:06.0058799Z test bwt::tests::miri_room_walk_handoffs ... ok
+2026-11-07T13:14:37.6442304Z test coop::tests::miri_build_fused ... ok
+2026-11-07T13:14:38.1645506Z test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+2026-11-07T13:14:38.3962147Z test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+2026-11-07T13:14:38.5914040Z test coop::tests::miri_pool_caller_panic_wins ... ok
+2026-11-07T13:14:38.8431405Z test coop::tests::miri_pool_dropped_while_parked ... ok
+2026-11-07T13:14:39.0884301Z test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+2026-11-07T13:14:39.5265811Z test coop::tests::miri_pool_runs_every_index_once ... ok
+2026-11-07T13:14:39.8285087Z test coop::tests::miri_pool_writes_visible_after_run ... ok
+2026-11-07T13:17:02.9245554Z test coop::tests::miri_split_build_and_walk ... ok
+2026-11-07T13:19:24.0856383Z test coop::tests::miri_team_run_and_its_panic ... ok
+2026-11-07T13:19:47.9050257Z test coop::tests::miri_walk_room_handoffs ... ok
+2026-11-07T13:19:48.0910070Z test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+2026-11-07T13:20:14.4647365Z test parallel::service_tests::miri_service_core_hub ... ok
+2026-11-07T13:20:14.5204638Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 581.24s
+
+Rust service tests (same CI head):
+2026-11-07T13:16:50.6688171Z test every_level_and_shape ... ok
+2026-11-07T13:16:50.6689028Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.65s
+2026-11-07T13:16:51.0189352Z test a_bad_orig_ptr ... ok
+2026-11-07T13:16:51.2636306Z test an_mtf_error ... ok
+2026-11-07T13:16:51.4219047Z test dropped_and_cancelled ... ok
+2026-11-07T13:16:51.7230543Z test one_block_and_none ... ok
+2026-11-07T13:16:52.2169819Z test a_block_crc_in_the_middle ... ok
+2026-11-07T13:16:52.5526581Z test injected_panics ... ok
+2026-11-07T13:16:52.8269890Z test small_blocks_among_large_and_streams ... ok
+2026-11-07T13:16:53.6670524Z test truncated ... ok
+2026-11-07T13:16:55.7729962Z test the_corpora ... ok
+2026-11-07T13:16:56.8358552Z test every_level_and_shape ... ok
+2026-11-07T13:16:56.8359361Z test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.14s

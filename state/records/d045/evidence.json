@@ -59,5 +59,25 @@
     "manifest": "state/MANIFEST.md",
     "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
     "date": "2026-11-06"
+  },
+  "ci": {
+    "head": "223d93bb2e431dd8f46598348b2f71321d4c46d9",
+    "diff_from_source": [
+      "bench/service-core.frozen"
+    ],
+    "miri_run": 42375890438,
+    "miri_job": 128413317492,
+    "miri_result": "15 passed, 0 failed, 33 filtered",
+    "rust_run": 42375890480,
+    "rust_job": 128413310912,
+    "service_tests": "10 passed, 0 failed",
+    "local_toolchain": "cargo/rustc unavailable"
+  },
+  "measured_head": "3e201246cf1266d4b2a984cb19eb9fdba5b9835d",
+  "measured_head_src_diff": [],
+  "recorded_mutation": {
+    "comment": 6707523009,
+    "claim": "notify-less take_prepared fails wake-up regression",
+    "status": "reported kill; exact command/log/seed not supplied in reviewed record"
   }
 }
