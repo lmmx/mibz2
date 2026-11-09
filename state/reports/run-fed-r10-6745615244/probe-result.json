@@ -1,0 +1,22 @@
+{
+  "positive": {
+    "verdict": "PASS",
+    "problems": []
+  },
+  "missing_quota": {
+    "verdict": "PASS",
+    "problems": []
+  },
+  "float_cpu_counts": {
+    "verdict": "PASS",
+    "problems": []
+  },
+  "integer_turbo": {
+    "verdict": "PASS",
+    "problems": []
+  },
+  "invented_cpu_ids": {
+    "verdict": "PASS",
+    "problems": []
+  }
+}
