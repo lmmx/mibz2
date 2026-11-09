@@ -1,6 +1,6 @@
 ---
 name: coordinate-blog-post
-description: Use when the coordinator commissions, reviews or publishes a mibz2 blog post written by another agent: briefing the drafting agent, routing two rounds of simulated-reader (exegenius) review to the Researcher, the revision between rounds, and the merge. The writing itself is write-blog-post's; the render check is publish-page's.
+description: Use when the coordinator commissions, publishes or revises a mibz2 blog post written by another agent: briefing the drafting agent, publishing as soon as the post is fact-checked and renders, then two rounds of simulated-reader (exegenius) review by the Researcher, revised in flight on the live post. The writing itself is write-blog-post's; the render check is publish-page's.
 ---
 
 # Coordinating a blog post
@@ -10,6 +10,12 @@ rendered. This skill is the coordinator's side: who does each step, in what orde
 each one is given. It records Louis's instruction of 9 November 2026: every post gets two
 rounds of exegenius review by the Researcher, and the review must check that the simplest
 understanding and the key takeaways land in the opening.
+
+**Publication is not blocked on review** (Louis, 9 November 2026: "i want this asap … the
+researcher reviews do not block publication, we re-write in flight (it goes out before
+finalisation)"). The post is published as soon as its facts are checked against the records,
+`publish-page` passes and CI is green. The two review rounds then run on the live post, and
+their revisions land as follow-up PRs.
 
 ## 1. Brief the drafting agent
 
@@ -40,7 +46,7 @@ brief names:
 
 ## 2. Two rounds of review by the Researcher
 
-Once the PR is up, route a CHECKPOINT to the Researcher with `coord.py route` (QUEUED on
+Once the post is published (§4), route a CHECKPOINT to the Researcher with `coord.py route` (QUEUED on
 #145 while it is busy). Each round asks for:
 1. **The independent baseline, before reading the post:** from the primary records alone,
    the simplest correct explanation of the result and the key takeaways.
@@ -60,7 +66,7 @@ Once the PR is up, route a CHECKPOINT to the Researcher with `coord.py route` (Q
    - every fact checked against its source.
 4. **A verdict:** PROCEED, REVISE (with the findings) or STOP.
 
-**Between the rounds,** the drafting agent revises for the findings. It restructures rather
+**Between the rounds,** the drafting agent revises the live post for the findings, in a follow-up PR (merged on green, with publish-page rerun). It restructures rather
 than appending, reruns `publish-page`, and replies in the PR with where each finding was
 addressed.
 
@@ -81,14 +87,23 @@ that every later section reads as support, not as suspense.
 - **Later sections** show how each takeaway is known. They add detail and evidence, not new
   conclusions the reader needed earlier.
 
-## 4. Publish
+## 4. Publish first, then revise in flight
 
-Merge only when all of these hold:
-- the Researcher's latest round is PROCEED;
-- `publish-page` was rerun on the final head, and the PR records which commit was looked at
-  and what was found;
+Merge the post's PR as soon as all of these hold. Don't wait for the Researcher:
+- every figure is checked against its primary record, and any that can't be traced is
+  flagged in the PR, never printed as established;
+- `publish-page` was run on the final head, and the PR records which commit was looked at and
+  what was found;
 - CI is green on that head.
 
-Then merge with `coord.py head-sha` before and after (`expectedHeadSha`). Check the live
-page once it is deployed, and tell Louis it is out. If the post reports a result, send the
-Observer a CHECKPOINT.
+Merge with `coord.py head-sha` before and after (`expectedHeadSha`), check the live page once
+deployed, and tell Louis it is out. If the post reports a result, send the Observer a
+CHECKPOINT.
+
+Then the review rounds of §2 run on the published post:
+- **Each round's findings land as a follow-up PR** to the same post, restructured rather than
+  appended. Merge it on green with publish-page rerun. Don't wait for the next round.
+- **A factual error a review finds is fixed at once,** in its own small PR, ahead of any
+  structural revision.
+- **The post is finalised** when a round returns PROCEED. Nothing marks it as unfinished
+  before then.
