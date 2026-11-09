@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index fcdd7cca..d15da4d7 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1053,7 +1053,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
+                 // bug outside them): every block the run held fails, and the team is reset
+                 let msg = panic_message(p);
+                 let held = [Some(s), l.next.take()];
+-                for b in held.into_iter().flatten() {
++                for b in held.into_iter().flatten().take(0) {
+                     let kind = ErrorKind::Internal(msg.clone());
+                     publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                 }

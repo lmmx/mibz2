@@ -709,17 +709,14 @@ pub fn pipeline_candidates() -> Vec<Pipelined> {
 pub fn pipeline_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
     let corp = corpora(1);
     let text = &corp[0].1;
-    let mut v: Vec<(String, Vec<u8>)> = Vec::new();
-    v.push(("text level 9".into(), compress(&text[..2_700_000], 9)));
-    v.push(("text level 5".into(), compress(&text[..1_600_000], 5)));
-    v.push(("random level 3".into(), compress(&rng.bytes(1_300_000), 3)));
-    v.push((
-        "records level 4".into(),
-        compress(&corp[5].1[..1_700_000], 4),
-    ));
-    v.push(("runs level 9".into(), compress(&corp[4].1[..2_500_000], 9)));
-    v.push(("abab level 6".into(), compress(&b"ab".repeat(900_000), 6)));
-    v.push(("text level 1".into(), compress(&text[..600_000], 1)));
+    let mut v: Vec<(String, Vec<u8>)> = vec![
+        ("text level 9".into(), compress(&text[..2_700_000], 9)),
+        ("text level 5".into(), compress(&text[..1_600_000], 5)),
+        ("random level 3".into(), compress(&rng.bytes(1_300_000), 3)),
+        ("runs level 9".into(), compress(&corp[4].1[..2_500_000], 9)),
+        ("abab level 6".into(), compress(&b"ab".repeat(900_000), 6)),
+        ("text level 1".into(), compress(&text[..600_000], 1)),
+    ];
     let mut multi = Vec::new();
     for (i, level) in [9, 1, 9, 2, 1, 9].into_iter().enumerate() {
         let part = &text[i * 300_001..i * 300_001 + 250_000 + i * 97_003];

@@ -1,0 +1,29 @@
+[
+ {
+  "id": "M0",
+  "invariant": "none (the unmutated baseline)",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   0,
+   12
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "miri": [
+   0,
+   192
+  ],
+  "fuzz": [
+   0,
+   46
+  ],
+  "fuzz_tail": [
+   "      234  mibz2 default 3x3 StreamDecoder::new w997 r509: 59 of 234 reached, 1 with an overlapped error, 101 overlapped jobs",
+   "      234  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      234  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      233  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 132 of 233 reached, 4 with an overlapped error, 356 overlapped jobs"
+  ]
+ }
+]

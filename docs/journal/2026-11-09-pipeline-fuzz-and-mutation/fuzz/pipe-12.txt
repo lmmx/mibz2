@@ -1,0 +1,26 @@
+4468 cases in 180 s (seed 12, mode pipeline), 0 failures
+      578  pipeline: both decode, same bytes
+      351  pipeline: both fail (BadBlockMagic), as the plain decoder
+      490  pipeline: both fail (BadCodeLength), as the plain decoder
+       75  pipeline: both fail (BadGroups), as the plain decoder
+      266  pipeline: both fail (BadHuffmanCode), as the plain decoder
+       86  pipeline: both fail (BadOrigPtr), as the plain decoder
+      194  pipeline: both fail (BadSelector), as the plain decoder
+        4  pipeline: both fail (BadSelectors), as the plain decoder
+      914  pipeline: both fail (BlockCrc), as the plain decoder
+      111  pipeline: both fail (BlockTooLong), as the plain decoder
+        2  pipeline: both fail (NoSymbols), as the plain decoder
+       10  pipeline: both fail (NotBz2), as the plain decoder
+       14  pipeline: both fail (Randomised), as the plain decoder
+        5  pipeline: both fail (RunTooLong), as the plain decoder
+       24  pipeline: both fail (RunUnfinished), as the plain decoder
+      125  pipeline: both fail (SelectorOverrun), as the plain decoder
+      122  pipeline: both fail (StreamCrc), as the plain decoder
+        2  pipeline: both fail (TrailingData), as the plain decoder
+     1095  pipeline: both fail (Truncated), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+      893  mibz2 default 3x3 StreamDecoder::new w1048576 r65536: 239 of 893 reached, 0 with an overlapped error, 407 overlapped jobs
+      894  mibz2 default 3x3 StreamDecoder::new w997 r509: 261 of 894 reached, 5 with an overlapped error, 434 overlapped jobs
+      894  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)
+      894  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)
+      893  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 502 of 893 reached, 15 with an overlapped error, 1340 overlapped jobs

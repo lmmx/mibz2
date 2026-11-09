@@ -1,0 +1,283 @@
+[
+ {
+  "id": "M1",
+  "invariant": "build-to-walk ordering: walk_ready published before the build's end check and walk set-up",
+  "file": "src/coop.rs",
+  "pipelined": [
+   0,
+   12
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "miri": [
+   1,
+   34
+  ],
+  "fuzz": [
+   0,
+   46
+  ],
+  "fuzz_tail": [
+   "      218  mibz2 default 3x3 StreamDecoder::new w997 r509: 54 of 218 reached, 2 with an overlapped error, 92 overlapped jobs",
+   "      218  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      218  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      218  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 126 of 218 reached, 4 with an overlapped error, 339 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M2",
+  "invariant": "walk_ready's release/acquire weakened to relaxed (the stage's publication)",
+  "file": "src/coop.rs",
+  "pipelined": [
+   0,
+   14
+  ],
+  "coop_unit": [
+   0,
+   2
+  ],
+  "miri": [
+   1,
+   36
+  ],
+  "fuzz": [
+   0,
+   46
+  ],
+  "fuzz_tail": [
+   "      212  mibz2 default 3x3 StreamDecoder::new w997 r509: 56 of 212 reached, 0 with an overlapped error, 96 overlapped jobs",
+   "      212  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      212  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      212  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 120 of 212 reached, 5 with an overlapped error, 323 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M3",
+  "invariant": "relay handoff: the walk's count starts one short, so its last-to-leave is early",
+  "file": "src/coop.rs",
+  "pipelined": [
+   101,
+   20
+  ],
+  "coop_unit": [
+   101,
+   1
+  ],
+  "miri": [
+   101,
+   61
+  ],
+  "fuzz": [
+   -9,
+   36
+  ],
+  "fuzz_tail": [
+   "             at ./src/parallel.rs:214:21",
+   "  29: {closure#0}<mibz2::parallel::{impl#1}::pipelined_levers::{closure_env#3}>",
+   "             at ./src/parallel.rs:275:36",
+   "note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace."
+  ]
+ },
+ {
+  "id": "M4",
+  "invariant": "park: a parked waiter returns on any wake-up, without re-checking the flag",
+  "file": "src/coop.rs",
+  "pipelined": [
+   0,
+   14
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "miri": [
+   1,
+   46
+  ],
+  "fuzz": [
+   0,
+   46
+  ],
+  "fuzz_tail": [
+   "      217  mibz2 default 3x3 StreamDecoder::new w997 r509: 52 of 217 reached, 2 with an overlapped error, 94 overlapped jobs",
+   "      217  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      216  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      216  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 122 of 216 reached, 5 with an overlapped error, 324 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M5",
+  "invariant": "park/unpark ordering: the setter drains the sleepers before storing the flag (lost wake-up)",
+  "file": "src/coop.rs",
+  "pipelined": [
+   "TIMEOUT",
+   300
+  ],
+  "coop_unit": [
+   "TIMEOUT",
+   300
+  ],
+  "miri": [
+   1,
+   27
+  ],
+  "fuzz": [
+   "TIMEOUT",
+   285
+  ],
+  "fuzz_tail": []
+ },
+ {
+  "id": "M6",
+  "invariant": "error placement: a move-to-front error published one place late",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   "TIMEOUT",
+   300
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "fuzz": [
+   "TIMEOUT",
+   285
+  ],
+  "fuzz_tail": []
+ },
+ {
+  "id": "M7",
+  "invariant": "error propagation: a move-to-front error swallowed, the block decoded anyway",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   101,
+   15
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "fuzz": [
+   1,
+   46
+  ],
+  "fuzz_tail": [
+   "      213  mibz2 default 3x3 StreamDecoder::new w997 r509: 55 of 213 reached, 0 with an overlapped error, 104 overlapped jobs",
+   "      213  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      213  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      212  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 124 of 212 reached, 0 with an overlapped error, 333 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M8",
+  "invariant": "never-wait: the leader waits for the next job inside a run (holding an unpublished block)",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   "TIMEOUT",
+   300
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "fuzz": [
+   "TIMEOUT",
+   285
+  ],
+  "fuzz_tail": []
+ },
+ {
+  "id": "M9",
+  "invariant": "small-block priming boundary: lever B keeps staging after a block for the team, into the same front set",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   "TIMEOUT",
+   300
+  ],
+  "coop_unit": [
+   0,
+   2
+  ],
+  "fuzz": [
+   "TIMEOUT",
+   285
+  ],
+  "fuzz_tail": [
+   "             at ./src/coop.rs:220:21",
+   "  21: {closure#0}",
+   "             at ./src/coop.rs:121:32",
+   "note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace."
+  ]
+ },
+ {
+  "id": "M10",
+  "invariant": "buffer reuse: the helpers assemble block i into the buffer block i - 1 is finished from",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   101,
+   5
+  ],
+  "coop_unit": [
+   0,
+   3
+  ],
+  "fuzz": [
+   1,
+   47
+  ],
+  "fuzz_tail": [
+   "      167  mibz2 default 3x3 StreamDecoder::new w997 r509: 51 of 167 reached, 2 with an overlapped error, 88 overlapped jobs",
+   "      167  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      167  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      167  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 97 of 167 reached, 2 with an overlapped error, 200 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M11",
+  "invariant": "front-set ownership: the next block labelled with the front set the helpers are reading",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   101,
+   2
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "fuzz": [
+   1,
+   46
+  ],
+  "fuzz_tail": [
+   "      213  mibz2 default 3x3 StreamDecoder::new w997 r509: 50 of 213 reached, 1 with an overlapped error, 89 overlapped jobs",
+   "      213  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      213  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      213  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 125 of 213 reached, 4 with an overlapped error, 304 overlapped jobs"
+  ]
+ },
+ {
+  "id": "M12",
+  "invariant": "panic completion: a run that panics publishes none of the blocks it held",
+  "file": "src/parallel.rs",
+  "pipelined": [
+   0,
+   12
+  ],
+  "coop_unit": [
+   0,
+   1
+  ],
+  "fuzz": [
+   0,
+   46
+  ],
+  "fuzz_tail": [
+   "      213  mibz2 default 3x3 StreamDecoder::new w997 r509: 52 of 213 reached, 1 with an overlapped error, 97 overlapped jobs",
+   "      213  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      213  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)",
+   "      213  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 121 of 213 reached, 6 with an overlapped error, 331 overlapped jobs"
+  ]
+ }
+]
