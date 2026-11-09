@@ -1,0 +1,18 @@
+{
+ "tool": "pair_runs",
+ "rounds": 15,
+ "ghz": 3.3091,
+ "nproc": 4,
+ "copies": [
+  "1",
+  "4-cpu0",
+  "4-cpu1",
+  "4-cpu2",
+  "4-cpu3"
+ ],
+ "head": "1c4d0f0714183f83798a0b746463ae34535fbc50",
+ "frozen": "1c4d0f0714183f83798a0b746463ae34535fbc50",
+ "corpus": "corpora/wikidata.bz2",
+ "spec": "bench/wikidata.json",
+ "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+}

@@ -1,0 +1,8 @@
+plan: head 1c4d0f0714183f83798a0b746463ae34535fbc50, frozen 1c4d0f0714183f83798a0b746463ae34535fbc50, copies ['1', '4-cpu0', '4-cpu1', '4-cpu2', '4-cpu3'], GHZ 3.3091
+VALID
+readings (UNJUDGED unless this is the registered run):
+  Q1 R_build 0.6865 (0.6845, 0.6886): INCONCLUSIVE
+  M1 run - one-hop 3.46 nominal c/B at 3.3091 GHz (3.45, 3.46): NOT MET (exploratory; clock-scaled wall time, not cycles)
+  Q2 R_whole 1.895 (1.885, 1.905); worst synthetic 1.648 (synthetic one byte): NEGATIVE STOP (pauses this candidate)
+  ref O/P 2.328 (2.323, 2.334)
+  ref R/O 0.8139 (0.8108, 0.817)
