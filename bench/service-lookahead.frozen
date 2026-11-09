@@ -1,0 +1,5 @@
+# The service core's window on the workstation
+# (docs/journal/2026-11-09-service-lookahead-registration.md).
+# The commit the registration, the harness, the recipe and the report are frozen at:
+# just bench-service-lookahead's measured inputs must match it exactly.
+frozen 4587b54bedabe5026205aeb60e9a217ee5fe67e6
