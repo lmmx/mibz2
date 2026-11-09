@@ -1,0 +1,61 @@
+{
+  "positive": [
+    "TARGET",
+    []
+  ],
+  "infinite_quota": [
+    "INVALID RECORD",
+    [
+      "machine.quota.cpus not a finite positive number"
+    ]
+  ],
+  "missing_team_shape": [
+    "INVALID RECORD",
+    [
+      "at 9: plan incomplete or malformed"
+    ]
+  ],
+  "float_budget": [
+    "INVALID RECORD",
+    [
+      "at: not the integer budgets 9, 10, 11 in order"
+    ]
+  ],
+  "float_service_plan": [
+    "INVALID RECORD",
+    [
+      "service_plan {'teams': 2.0, 'k': 3, 'services': 2}, not svc2's integers"
+    ]
+  ],
+  "negative_pooled": [
+    "INVALID RECORD",
+    [
+      "at 10: built malformed"
+    ]
+  ],
+  "missing_plan_negative_control": [
+    "INVALID RECORD",
+    [
+      "at 9: fields ['builds', 'built', 'decoded', 'predicate', 'threads']"
+    ]
+  ],
+  "unknown_quota_negative_control": [
+    "INVALID RECORD",
+    [
+      "at 10: the predicate's answer True disagrees with the facts",
+      "at 10: the service core built where the predicate is false"
+    ]
+  ],
+  "json_1e309_quota": [
+    "INVALID RECORD",
+    [
+      "machine.quota.cpus not a finite positive number"
+    ]
+  ],
+  "non_target_decode_failure": [
+    "FAILED",
+    [
+      "at 9: the decode did not give back the input"
+    ]
+  ]
+}
