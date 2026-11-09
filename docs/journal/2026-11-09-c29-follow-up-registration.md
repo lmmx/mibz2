@@ -1,7 +1,10 @@
 # 2026-11-09: C29's follow-up registration, a cgroup quota collector with coverage
 
-**Status: DRAFT, NOT FROZEN** (RULES C1). This is not a registration yet. Nothing here has
-been timed, and no preflight has been dispatched. The first registration
+**Status: FROZEN registration, NOT RUN** (RULES C1). The frozen commit is the one carrying
+this line; the one timed dispatch names it as `registered_head`. It differs from the reviewed
+head `0ce4dca4489c4a87b9658d6c2656290173113c99` only in this file (`git diff 0ce4dca4 <frozen>`
+lists nothing else): no code, workflow, fixture or reporter changes. The code comments that
+still say "DRAFT, NOT FROZEN" are left as reviewed. The first registration
 (`docs/journal/2026-11-09-c29-register-checkpoints.md`, frozen at
 `1197bbcced86eae74c6d99eb8096b5c816a834d7`) is untouched and stays closed. This file is its
 section **R5**. It is kept apart so the frozen journal's text doesn't change.
@@ -219,7 +222,7 @@ After the run it reads `ab env` again, for `cpu_quota_after` and `cgroup_stable`
 - **The status of the outcomes:** UNJUDGED (FALLBACK) is terminal, there is no retry to pass,
   and the readings permit what the first registration's §3 says.
 
-### R5.7 Before a freeze
+### R5.7 Before a freeze, and the freeze
 
 1. This PR's CI is green at its exact head. That covers `cargo test --example ab`, which
    includes the fixtures, and the reporter's tests.
@@ -229,7 +232,28 @@ After the run it reads `ab env` again, for `cpu_quota_after` and `cgroup_stable`
 4. The registration is frozen at a named head, and dispatched once (`tool: c29`, `rounds: 20`,
    `registered_head` that head).
 
-None of these steps has been taken. Local checks, untimed (this session's 4-core machine,
-a hybrid v1/v2 host): its census read v1 `cpu` at `/` as `-1` in the initial namespace, which
-is unlimited with complete coverage, and the preflight block passed there. That is not the
-runner's evidence.
+**The chronology:**
+1. **CI at the reviewed head `0ce4dca4`:** complete, 27 success and 3 expected skips, none
+   failed or pending.
+2. **The untimed preflight:** [run 42589756805](https://github.com/lmmx/mibz2/actions/runs/42589756805),
+   `tool: c29-preflight` at `0ce4dca4`: PASS, unlimited with complete coverage, the
+   configuration stable. Its artifact 13660767430 is archived with the run (ZIP SHA-256
+   `ff50767ab52c399137cf4830a17ae0f17dd1b05460dd10b53714b4745022206f`).
+3. **The Researcher's REVIEW
+   [6739117701](https://github.com/lmmx/mibz2/issues/145#issuecomment-6739117701): PROCEED**
+   to freeze R5 at `0ce4dca4` for one timed attempt. Its assessment and audit are at
+   `state/reports/c29-preflight-6738933099/report.md` on commit
+   `77143028861a07df4b67ea1dbc3e738099527581`. The review bounds the claim:
+   - the identity re-parses the quota files and the path chain independently, but mount
+     selection still depends on the Rust collector;
+   - an unlimited quota does not mean exclusive CPU service;
+   - equal endpoints don't prove the configuration stayed stable in between.
+
+   The timed job runs its own preflight and keeps its after-sample (R5.4).
+4. **The freeze:** this commit, after CI is green at it. Then one dispatch: `tool: c29`,
+   `rounds: 20`, `registered_head` this commit's full SHA. The attempt answers an unjudged
+   performance question. This freeze establishes no speedup and no production qualification.
+
+Earlier, local and untimed (this session's 4-core machine, a hybrid v1/v2 host): its census
+read v1 `cpu` at `/` as `-1` in the initial namespace, which is unlimited with complete
+coverage, and the preflight block passed there. That is not the runner's evidence.
