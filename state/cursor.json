@@ -1035,6 +1035,19 @@
       "status": "finished",
       "disposition": "HOLD guarded service timing/admission; outer unwind, fail-open discovery, completion fence; scoped B5 reuse accepted",
       "comment": 6740148831
+    },
+    {
+      "pr": 298,
+      "sha": "7356898c4cc5b10bc2b49b40b2a015361b917a56",
+      "evidence_digest": "git-blob:198ff4dcb964a26b07e04a1772047cb5a627713b;ab:f7f4dfbfa7b84d656b388f88dd09c49360519d13;native-job:129158716451",
+      "decision": "D068",
+      "commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+      "id": "D068",
+      "incoming_pr": 161,
+      "incoming_comment": 6740161956,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "D065/D066 diagnostic HOLD lifted; one frozen telemetry check PROCEED under existing exact-commit queue conditions; D067 unchanged"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1242,7 +1255,9 @@
     "d37723b7f80e9912edea65395b383ac75693d8a0",
     "fd56b1a6b01564595faf8f479f4099d73c0e54fe",
     "d882543d9a75b68f99f9a56beb6bcb96f933cc1d",
-    "fc514f956aafec71829f1e59eaa9cc3bdd07f18d"
+    "fc514f956aafec71829f1e59eaa9cc3bdd07f18d",
+    "ccff1819752278b15d26e1cc249d16b59cc0501e",
+    "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1390,8 +1405,9 @@
   },
   "current_execution": {
     "active_comment": 6740161956,
-    "status": "in progress",
-    "decision": "D068"
+    "status": "complete",
+    "decision": "D068",
+    "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
   },
   "duplicate_events": [
     {
@@ -1919,6 +1935,13 @@
       "decision": "D067",
       "commit": "d882543d9a75b68f99f9a56beb6bcb96f933cc1d",
       "comment": 6740148831
+    },
+    {
+      "pr": 298,
+      "sha": "7356898c4cc5b10bc2b49b40b2a015361b917a56",
+      "evidence_digest": "git-blob:198ff4dcb964a26b07e04a1772047cb5a627713b;ab:f7f4dfbfa7b84d656b388f88dd09c49360519d13;native-job:129158716451",
+      "decision": "D068",
+      "commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2357,8 +2380,10 @@
     {
       "comment_id": 6740161956,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D068"
+      "status": "complete",
+      "decision": "D068",
+      "receipt_commit": "ccff1819752278b15d26e1cc249d16b59cc0501e",
+      "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
     }
   ],
   "migrated_from": {
