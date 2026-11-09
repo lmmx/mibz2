@@ -1,0 +1,44 @@
+test_all_concurrent_copies_missing (test_pair_runs_validity.Validity.test_all_concurrent_copies_missing) ... ok
+test_bad_clock_nan (test_pair_runs_validity.Validity.test_bad_clock_nan) ... ok
+test_bad_clock_zero (test_pair_runs_validity.Validity.test_bad_clock_zero) ... ok
+test_common_mode_csv_against_log (test_pair_runs_validity.Validity.test_common_mode_csv_against_log) ... ok
+test_common_mode_csv_and_log_against_spec (test_pair_runs_validity.Validity.test_common_mode_csv_and_log_against_spec) ... ok
+test_common_mode_synthetic_output_against_log (test_pair_runs_validity.Validity.test_common_mode_synthetic_output_against_log) ... ok
+test_complete_run_is_valid_with_readings (test_pair_runs_validity.Validity.test_complete_run_is_valid_with_readings) ... ok
+test_corpus_identity (test_pair_runs_validity.Validity.test_corpus_identity) ... ok
+test_counts_change_between_rows (test_pair_runs_validity.Validity.test_counts_change_between_rows) ... ok
+test_duplicate_round (test_pair_runs_validity.Validity.test_duplicate_round) ... ok
+test_empty_raw (test_pair_runs_validity.Validity.test_empty_raw) ... ok
+test_failed_child (test_pair_runs_validity.Validity.test_failed_child) ... ok
+test_head_not_frozen (test_pair_runs_validity.Validity.test_head_not_frozen) ... ok
+test_header_only_raw (test_pair_runs_validity.Validity.test_header_only_raw) ... ok
+test_logged_blocks_against_spec (test_pair_runs_validity.Validity.test_logged_blocks_against_spec) ... ok
+test_logged_identity_against_spec (test_pair_runs_validity.Validity.test_logged_identity_against_spec) ... ok
+test_m1_difference_nonfinite_endpoints (test_pair_runs_validity.Validity.test_m1_difference_nonfinite_endpoints) ... ok
+test_missing_census_line (test_pair_runs_validity.Validity.test_missing_census_line) ... ok
+test_missing_m1 (test_pair_runs_validity.Validity.test_missing_m1) ... ok
+test_missing_plan (test_pair_runs_validity.Validity.test_missing_plan) ... ok
+test_missing_status (test_pair_runs_validity.Validity.test_missing_status) ... ok
+test_no_frozen_head (test_pair_runs_validity.Validity.test_no_frozen_head) ... ok
+test_no_valid_line (test_pair_runs_validity.Validity.test_no_valid_line) ... ok
+test_nonfinite_total (test_pair_runs_validity.Validity.test_nonfinite_total) ... ok
+test_paired_blocks_without_rows (test_pair_runs_validity.Validity.test_paired_blocks_without_rows) ... ok
+test_plan_copies_must_match_the_cpus (test_pair_runs_validity.Validity.test_plan_copies_must_match_the_cpus) ... ok
+test_plan_corpus_identity (test_pair_runs_validity.Validity.test_plan_corpus_identity) ... ok
+test_rereview_concurrent_copy_output_bytes (test_pair_runs_validity.Validity.test_rereview_concurrent_copy_output_bytes) ... ok
+test_rereview_concurrent_copy_paired_rows (test_pair_runs_validity.Validity.test_rereview_concurrent_copy_paired_rows) ... ok
+test_rereview_negative_paired_blocks_every_copy (test_pair_runs_validity.Validity.test_rereview_negative_paired_blocks_every_copy) ... ok
+test_rereview_single_copy_denominator_times_100 (test_pair_runs_validity.Validity.test_rereview_single_copy_denominator_times_100) ... ok
+test_round_outside_the_matrix (test_pair_runs_validity.Validity.test_round_outside_the_matrix) ... ok
+test_truncated_raw (test_pair_runs_validity.Validity.test_truncated_raw) ... ok
+test_truncated_row (test_pair_runs_validity.Validity.test_truncated_row) ... ok
+test_unplanned_copy (test_pair_runs_validity.Validity.test_unplanned_copy) ... ok
+test_unregistered_file (test_pair_runs_validity.Validity.test_unregistered_file) ... ok
+test_wholly_missing_child (test_pair_runs_validity.Validity.test_wholly_missing_child) ... ok
+test_zero_build_arms_only_with_no_paired_block (test_pair_runs_validity.Validity.test_zero_build_arms_only_with_no_paired_block) ... ok
+test_zero_total_on_a_paired_file (test_pair_runs_validity.Validity.test_zero_total_on_a_paired_file) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.104s
+
+OK

@@ -1,0 +1,16 @@
+{
+  "candidate": "ae62ea75a0e9e75a6d300264daffb99c6763e9f9",
+  "inbox": 6731216735,
+  "spec": "a4f97714cc14366984015869d9d094d89488ac57",
+  "files": {
+    "report.md": "c2927676ac44783763648cfd64570a0b2bf4d4295c9c0a894879ced3d39a877e",
+    "probes.py": "f0896767b5bf01a0cae9df3caaa76a57ffb4099089aae37515b5962389ea1ba5",
+    "probe-results.json": "69b62d1bf9a3d9fcfe477c61b79d33625d4e28b7f62ffbb3bf936511f17c66b4",
+    "tests.txt": "a8861898aed03becca8426545d56d635c8622fd467b4cb706263a79ad20a672b",
+    "audit.json": "a4c8b5a2af7ce2511d976c8e9278260ac7bfa06ceff54729def0307a55d7b81b",
+    "unchanged.json": "8a5ebf5452f151198591a21eaf1be67469c68734d0f67d2071a0e1e7d7936c34",
+    "bench/pair_runs_validity.py": "b7817d5e63bd67bdd76164b80a517a7b3357da2ee507bff0cc024bd6cec792bf",
+    "bench/test_pair_runs_validity.py": "167b6fd409ffaf127eb791a16b13a660697c8cc2c1e122c9d13a863d0983a646"
+  },
+  "scope": "39 Python fixtures; independent count probes; source/AST inspection. No decoder timing or native execution."
+}

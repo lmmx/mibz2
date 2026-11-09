@@ -1,0 +1,7 @@
+{
+  "ratio": true,
+  "diff": true,
+  "readings": true,
+  "check_plan": true,
+  "check_inventory": true
+}
