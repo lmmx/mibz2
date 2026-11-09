@@ -954,7 +954,7 @@ bench-run-fed-leader DRY="" CORPUS="":
     ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
     sha() { sha256sum "$1" | cut -d' ' -f1; }
     ab0=$(sha "$AB"); occ0=$(sha "$OCC"); cor0=$(sha "$W/wikidata.bz2")
-    tool="$(rustc -vV | head -1)"
+    tool="$(rustc -V)"
     { sha256sum "$AB" "$OCC" "$W/bin/windows" "$(realpath "$corpus")"; rustc -vV; cargo -V; } > "$W/inputs.txt"
     cat "$W/inputs.txt"
     "$AB" env > "$W/env.json"
