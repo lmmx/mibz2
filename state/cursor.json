@@ -688,11 +688,21 @@
     {
       "comment_id": 6733004424,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
-      "progress": "Source/count audit and Precopy history complete; pair-step and detector budgets derived. Ranked report and ledger committed; publication pending."
+      "progress": "Report, arithmetic and ledger complete. Awaiting deduplicated REVIEW publication and exact readback.",
+      "report_commit": "6ff17b14c53316fc0ba204a3ce6d157c012f66d0",
+      "report_path": "state/records/reviews/inbox-6733004424/report.md",
+      "audit_scope": {
+        "source_pin": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "raw_census_replay": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
