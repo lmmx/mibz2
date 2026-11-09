@@ -831,6 +831,21 @@
       "status": "published; D049 B6 resumption and scoped B5 HOLD lifted; evidence count corrections recorded",
       "disposition": "D049 excess-helper B6 resumption and scoped B5 HOLD lifted for registered 3x3; raw-log count corrections; normal exact-head CI and workstation gates retained",
       "comment": 6732094558
+    },
+    {
+      "id": "D055",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6732361106,
+      "sha": "7f88388b938528f22088df79387f309eb112fe1c",
+      "evidence_digest": "git-blob:fee6d7a97b47259baa63466603a4e13604f57bc4;journal:5bd6f84b5f850ad26d37836abe3984c64aeae830;miri-job:128979999343",
+      "commit": "fe03ad8836c1ada255438e92d70032b31b706178",
+      "status": "complete",
+      "disposition": "scoped B5 HOLD on D timing/unsafe admission pending D-reached fuzz and auditable mutation results; ownership proof supported; existing empty placement tests confirmed; no new B6 defect"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -986,7 +1001,9 @@
     "b6ca858ebb2292ac4448e8b91dee59835ec2e499",
     "8f3d7daa3dba0f6d80b9775c5022f1f4ce1eb1af",
     "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
-    "f972af2c2762b894c16365848465ff1efe0b4768"
+    "f972af2c2762b894c16365848465ff1efe0b4768",
+    "971b8ff920ccf1c224f2a820a89d7462b4dfae0b",
+    "fe03ad8836c1ada255438e92d70032b31b706178"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1041,7 +1058,8 @@
     6731045923,
     6731180299,
     6731861816,
-    6731982223
+    6731982223,
+    6732361106
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1122,10 +1140,11 @@
   "current_execution": {
     "active_comment": 6732361106,
     "decision": "D055",
-    "status": "in_progress",
+    "status": "complete",
     "queue_snapshot": [
       6732361106
-    ]
+    ],
+    "work_commit": "fe03ad8836c1ada255438e92d70032b31b706178"
   },
   "duplicate_events": [
     {
@@ -1549,6 +1568,13 @@
       "decision": "D054",
       "commit": "1f40b16a28872c7f2cd4681f3310de5e813c4ccd",
       "comment": 6732094558
+    },
+    {
+      "pr": 277,
+      "sha": "7f88388b938528f22088df79387f309eb112fe1c",
+      "evidence_digest": "git-blob:fee6d7a97b47259baa63466603a4e13604f57bc4;journal:5bd6f84b5f850ad26d37836abe3984c64aeae830;miri-job:128979999343",
+      "decision": "D055",
+      "commit": "fe03ad8836c1ada255438e92d70032b31b706178"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1849,8 +1875,10 @@
     {
       "comment_id": 6732361106,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D055"
+      "status": "complete",
+      "decision": "D055",
+      "receipt_commit": "971b8ff920ccf1c224f2a820a89d7462b4dfae0b",
+      "work_commit": "fe03ad8836c1ada255438e92d70032b31b706178"
     }
   ],
   "migrated_from": {
