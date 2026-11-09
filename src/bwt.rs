@@ -250,9 +250,10 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
     }
 }
 
-/// A block's T-vector. Built only by `build`, or by `coop::build_fused` once its end check
-/// has passed, so every link in it is below its length, which the walks rely on to read
-/// it unchecked.
+/// A block's T-vector. Built only by `build`, by `coop::build_fused` once its end check
+/// has passed, or (research, the `run-fed` feature) by `run_stage::fill` once
+/// `run_stage::sort` has checked its tilings, so every link in it is below its length,
+/// which the walks rely on to read it unchecked.
 #[derive(Default)]
 pub struct TVector(pub(crate) Vec<u32>);
 
@@ -265,6 +266,11 @@ impl TVector {
     }
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+    /// Its entries, for comparing tables (research, the `run-fed` feature)
+    #[cfg(feature = "run-fed")]
+    pub fn as_slice(&self) -> &[u32] {
+        &self.0
     }
 }
 

@@ -25,6 +25,16 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the run-fed research (the `run-fed` feature: mtf::mtf_runs, src/run_stage.rs): its
+      # emitter against the reference on every MTF test stream, its table's own tests, the
+      # doc tests that show no unchecked `Sorted` can be made, and the diagnostic's own
+      # (its record writer against the verifier's fixture)
+      - name: Run-fed research tests
+        run: |
+          cargo test --features run-fed --test mtf_kernels
+          cargo test --features run-fed --lib run_stage
+          cargo test --features run-fed --doc run_stage
+          cargo test --features run-fed --example run_fed_stage
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
@@ -41,6 +51,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # the run-fed diagnostic's admission verifier and contended-copy statuses, on fixtures
+      - name: Run-fed verifier tests
+        run: python3 bench/test_run_fed_stage.py
 
   get-python-versions:
     runs-on: ubuntu-latest
