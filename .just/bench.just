@@ -573,6 +573,91 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
 
+# The machine-state recorder's own check on the workstation (bench 3.4.0;
+# docs/journal/2026-11-09-telemetry-check-registration.md, registered and frozen before use):
+# `ab telemetry-check`'s cases, with `ab env`, three `ab sample` readings and lscpu, as one
+# bundle. It times no decoder and is no performance evidence; it uses CPU-time budgets and
+# counters only to exercise the recorder. Read-only: it changes no setting. Run once; no retry.
+# Its exit: 0 CHECKED (no case FAILed or was INCOMPLETE), 1 FAILED or REFUSED, 3 INCOMPLETE,
+# kept through the bundle and `just submit`. About a minute once built (at most 5 minutes).
+#   just submit bench-telemetry-check
+
+# The machine-state recorder's failure paths and coverage, checked once
+bench-telemetry-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/telemetry-check
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-telemetry-check: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # the outcome decides the exit, whatever the last command's status: a FAIL or an
+    # INCOMPLETE check is bundled, and still exits nonzero
+    outcome="INCOMPLETE: stopped before the check finished (see console.log)"
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-telemetry-check: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W" || { echo "bench-telemetry-check: bundling failed"; exit 2; }
+      case "$outcome" in
+        CHECKED*) exit 0 ;;
+        FAILED*|REFUSED*) exit 1 ;;
+        *) exit 3 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-telemetry-check: $*"; exit 1; }
+    git rev-parse HEAD > "$W/commit.txt"
+    printf 'head %s\n' "$(cat "$W/commit.txt")" > "$W/commits.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/telemetry-check.frozen): what the check is built
+    # and driven from must be as it was there, and committed
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/telemetry-check.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/telemetry-check.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      tests/common bench/bundle.sh .just/bench.just
+      docs/journal/2026-11-09-telemetry-check-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    # the executable Cargo reports building, wherever its target directory is: never an
+    # older one at a guessed path
+    AB=$(cargo build -q --release --example ab --message-format=json-render-diagnostics \
+      | python3 -c 'import json, sys
+    got = [m["executable"] for m in map(json.loads, sys.stdin) if m.get("reason") == "compiler-artifact" and m.get("executable") and m["target"]["name"] == "ab" and "example" in m["target"]["kind"]]
+    sys.exit("cargo reported no ab executable") if len(got) != 1 else print(got[0])') \
+      || fail "the build reported no ab executable"
+    [ -x "$AB" ] || fail "cargo's reported $AB is not an executable"
+    { echo "executable $AB"; rustc -vV; cargo -V; } > "$W/build.txt"
+    sha256sum "$AB" | sed "s|$AB|ab|" > "$W/inputs.txt"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    "$AB" sample --count 3 --interval 1 > "$W/sample.jsonl"
+    # once, bounded: each case by its own deadline, the whole check by 300 s
+    status=0
+    timeout 300 "$AB" telemetry-check > "$W/telemetry-check.jsonl" || status=$?
+    [ "$(sha256sum "$AB" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$W/inputs.txt")" ] \
+      || { outcome="INCOMPLETE: the executable changed while the check ran"; exit 3; }
+    python3 -c 'import json, sys
+    for l in open(sys.argv[1]):
+        r = json.loads(l)
+        print(r["status"].ljust(12), r["case"].ljust(36), r["detail"])' "$W/telemetry-check.jsonl" | tee "$W/telemetry-check.txt" || true
+    counts=$(python3 -c 'import collections, json, sys
+    c = collections.Counter(json.loads(l)["status"] for l in open(sys.argv[1]))
+    print(", ".join(f"{k} {v}" for k, v in sorted(c.items())))' "$W/telemetry-check.jsonl" 2>/dev/null || echo "unreadable")
+    case "$status" in
+      0) outcome="CHECKED: no case FAILed or INCOMPLETE ($counts); see telemetry-check.txt" ;;
+      1) outcome="FAILED: a case FAILed ($counts); see telemetry-check.txt" ;;
+      3) outcome="INCOMPLETE: a case could not finish validly ($counts); see telemetry-check.txt" ;;
+      124) outcome="INCOMPLETE: the check passed its 300 s bound ($counts)" ;;
+      *) outcome="INCOMPLETE: the check exited $status ($counts); see console.log" ;;
+    esac
+
 # The pipelined team's two levers on the workstation
 # (docs/journal/2026-11-07-pipeline-levers-registration.md, registered before any run): at
 # 3 × 3 on 10 threads and 3 × 4 on 12, the registered pipe (mibz2-pipe3/4) against each lever
@@ -842,14 +927,23 @@ bench-pipelined-default DRY="" CORPUS="":
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
 
-# The run-fed leader's workstation run (docs/journal/2026-11-09-run-fed-leader.md §8, §R4):
-# the seven arms of CI's attributed LEAD (the incumbent mibz2-default33, the shipped
-# pipelined worker, the instrumented control, the register-list control C29, and the
-# records' sorts: ls and hs secondary, dir the primary), 20 paired rounds at a requested 10
-# threads (140 timed records, every run three teams of three), judged by its own fail-closed
-# admission, bench/run_fed_leader_ws.py; then one occupancy capture each of ctl and dir,
-# admitted apart from the timing. NOT FROZEN until bench/run-fed-leader.frozen names its
-# commit. About 15 minutes; it ends with one .tar.gz, kept whatever the outcome.
+# The run-fed leader's workstation run (docs/journal/2026-11-09-run-fed-leader.md §8, §R4,
+# and §R10 for its second attempt): the seven arms of CI's attributed LEAD (the incumbent
+# mibz2-default33, the shipped pipelined worker, the instrumented control, the register-list
+# control C29, and the records' sorts: ls and hs secondary, dir the primary), 20 paired rounds
+# at a requested 10 threads (140 timed records, every run three teams of three), judged by its
+# own fail-closed admission, bench/run_fed_leader_ws.py; then one occupancy capture each of
+# ctl and dir, admitted apart from the timing. §R10 adds, none of it judged: one read-only
+# preflight after the build and corpus and before anything is timed (the registered i9, its
+# CPU quota established unlimited and its declared cpufreq settings exactly, its sysfs
+# readable for exactly the allowed CPUs; no clock or temperature threshold, no waiting; read
+# passively by `ab env --facts` and `ab sample`, no spin and no counter, §R11), which refuses
+# the attempt, archived, if any fact is not established so; each run's sysfs snapshots before and after it
+# (ab's --sysfs-state: no PMU counters); and the diagnostics (run order, position,
+# predecessor, endpoint clock labels as counts only). One attempt; no retry to pass. NOT
+# FROZEN until bench/run-fed-leader.frozen names its commit. About 15 minutes; it ends with
+# one .tar.gz, kept whatever the outcome. Exit: 0 VALID, 1 INVALID or REFUSED (the
+# preflight's included), anything else stopped before its verdict.
 #   just submit bench-run-fed-leader
 # A DRY value is the untimed check of the recipe itself (two rounds, the captures at three,
 # no settling), with optionally a CORPUS, a .bz2 to use instead of building the bench's
@@ -870,20 +964,22 @@ bench-run-fed-leader DRY="" CORPUS="":
     # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends,
     # its partial records and failing evidence included
     outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    # (the exit follows the outcome, whatever the last command's status: 0 VALID, 1 INVALID
+    # or REFUSED, 3 anything that stopped the attempt before its verdict, a report error
+    # among them; a bundle that couldn't be made is 2)
     finish() {
-      status=$?
       echo "$outcome" > "$W/outcome.txt"
       echo "bench-run-fed-leader: OUTCOME: $outcome"
-      bash bench/bundle.sh "$W"
+      bash bench/bundle.sh "$W" || { echo "bench-run-fed-leader: bundling failed"; exit 2; }
       case "$outcome" in
         "VALID "*) exit 0 ;;
-        INVALID*) exit 1 ;;
-        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+        INVALID*|REFUSED*) exit 1 ;;
+        *) exit 3 ;;
       esac
     }
     trap finish EXIT
     fail() { outcome="REFUSED: $*"; echo "bench-run-fed-leader: $*"; exit 1; }
-    rounds=20; occ_rounds=6; busy=(--settle 0.25); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryarg=()
+    rounds=20; occ_rounds=6; busy=(--settle 0.25); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryarg=(); preflight=none
     if [ -n "$dry" ]; then
       rounds=2; occ_rounds=3; busy=(--max-busy 64 --settle 0.2); dryarg=(--dry)
       echo "bench-run-fed-leader: DRY RUN: two rounds, untimed; not evidence" | tee "$W/DRY-RUN.txt"
@@ -955,15 +1051,53 @@ bench-run-fed-leader DRY="" CORPUS="":
     sha() { sha256sum "$1" | cut -d' ' -f1; }
     ab0=$(sha "$AB"); occ0=$(sha "$OCC"); cor0=$(sha "$W/wikidata.bz2")
     tool="$(rustc -V)"
-    { sha256sum "$AB" "$OCC" "$W/bin/windows" "$(realpath "$corpus")"; rustc -vV; cargo -V; } > "$W/inputs.txt"
+    {
+      sha256sum "$AB" "$OCC" "$W/bin/windows" "$(realpath "$corpus")"; rustc -vV; cargo -V
+      echo "sysfs snapshots: ab run --sysfs-state (no --machine-state: no PMU counters)"
+    } > "$W/inputs.txt"
     cat "$W/inputs.txt"
-    "$AB" env > "$W/env.json"
-    lscpu > "$W/lscpu.txt" || true
+    # (the machine's facts, passively: `ab env --facts` starts no thread, spins nothing and
+    # opens no perf counter, §R11; bounded, TERM at 30 s and KILL 5 s after)
+    timeout --kill-after=5 30 "$AB" env --facts > "$W/env.json"
+    timeout --kill-after=5 30 lscpu > "$W/lscpu.txt" || true
+    # the preflight (§R10, §R11): read-only, passive and bounded (each reading by its own
+    # timeout with a forced kill after it, three sysfs samples a second apart, then one
+    # judgement), after the build and the corpus and before anything is timed. It holds no
+    # clock or temperature to any value and waits for no state: PASS, or the attempt is
+    # REFUSED here and archived, with no timed record. A DRY check records it and goes on
+    mkdir "$W/preflight"
+    # (each required collector's status, "<name>: exit <status>", and its stderr kept apart:
+    # the judgement admits nothing from a collector that did not complete successfully, §R12)
+    { timeout --kill-after=5 30 "$AB" env --facts > "$W/preflight/env.json" 2> "$W/preflight/env.err"; echo "ab env --facts: exit $?"
+      timeout --kill-after=5 30 lscpu > "$W/preflight/lscpu.txt" 2> "$W/preflight/lscpu.err"; echo "lscpu: exit $?"
+      timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/preflight/sample.jsonl" 2> "$W/preflight/sample.err"; echo "ab sample: exit $?"
+    } > "$W/preflight/exits.txt" || true
+    set +e
+    python3 bench/run_fed_leader_ws.py preflight "$W" --out "$W/preflight" > "$W/preflight.txt"
+    pf=$?
+    set -e
+    cat "$W/preflight/exits.txt" "$W/preflight.txt"
+    for e in "$W"/preflight/*.err; do [ -s "$e" ] && { echo "--- $e"; cat "$e"; } || true; done
+    preflight=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/preflight.json" 2>/dev/null || echo UNREAD)
+    if [ "$pf" -ne 0 ] || [ "$preflight" != PASS ]; then
+      if [ -n "$dry" ]; then
+        echo "bench-run-fed-leader: DRY RUN: the preflight did not pass (exit $pf), recorded; continuing untimed"
+      else
+        why=$(head -1 "$W/preflight.txt" 2>/dev/null || true)
+        outcome="REFUSED (preflight, before any timed run): ${why:-its judgement wrote nothing (exit $pf)}"
+        echo "bench-run-fed-leader: the preflight refused the attempt; nothing was timed"
+        exit 1
+      fi
+    fi
     arms=mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir
     # the timing first, alone; then the captures, which never enter its judgement
     set +e
-    "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10 --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10 --rounds "$rounds" "${busy[@]}" --sysfs-state "$W/wikidata.bz2"
     ab_rc=$?
+    # (diagnostics only, never judged: three sysfs samples after the timing)
+    mkdir "$W/diagnostics"
+    timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/diagnostics/sample-after.jsonl"
+    echo "ab sample after the timing: exit $?"
     for sub in ctl dir; do
       "$OCC" "$W/wikidata.bz2" --threads 10 --pipe 3 --run-fed "$sub" --rounds "$occ_rounds" \
         --out "$W/occupancy-$sub.json" --meta "commit=$head" --meta "corpus_sha256=$cor0" --meta "rustc=$tool" \
@@ -975,6 +1109,8 @@ bench-run-fed-leader DRY="" CORPUS="":
     at_frozen() { [ -n "$frozen" ] && git show "$frozen:$1" | sha256sum | cut -d' ' -f1 || true; }
     python3 - "$W/identity.json" <<PY
     import json, sys
+    sys.path.insert(0, "bench")
+    import run_fed_leader_ws as ws
     src = {}
     for k, p, f in [("recipe", ".just/bench.just", "$(at_frozen .just/bench.just)"),
                     ("admission", "bench/run_fed_leader_ws.py", "$(at_frozen bench/run_fed_leader_ws.py)"),
@@ -983,7 +1119,7 @@ bench-run-fed-leader DRY="" CORPUS="":
         import hashlib
         src[k] = {"path": p, "sha256": hashlib.sha256(open(p, "rb").read()).hexdigest(), "at_frozen": f or None}
     json.dump({
-        "schema": "run_fed_leader/workstation-identity/1",
+        "schema": "run_fed_leader/workstation-identity/2",
         "dry": bool("$dry"),
         "head": "$head",
         "frozen": "$frozen" or None,
@@ -1001,6 +1137,10 @@ bench-run-fed-leader DRY="" CORPUS="":
         "threads": [10],
         "rounds": $rounds,
         "ab_exit": $ab_rc,
+        "sysfs_state": True,
+        "preflight": "$preflight",
+        "workload": ws.WORKLOAD,
+        "registered_corpus_sha256": ws.CORPUS_SHA256,
     }, open(sys.argv[1], "w"), indent=1)
     PY
     [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout changed during the run"
@@ -1015,9 +1155,13 @@ bench-run-fed-leader DRY="" CORPUS="":
       cat "$W/occupancy-$sub-admission.txt"
       occ="$occ; $sub capture: $(head -1 "$W/occupancy-$sub-admission.txt")"
     done
+    # the diagnostics (§R10), after every verdict and read by none of them
+    python3 bench/run_fed_leader_ws.py diagnose "$W" --out "$W/diagnostics/diagnostics" > "$W/diagnostics/diagnostics.txt"
+    cat "$W/diagnostics/diagnostics.txt"
+    diag="; $(head -1 "$W/diagnostics/diagnostics.txt" 2>/dev/null || echo "diagnostics wrote nothing")"
     set -e
     if [ "$rc" -le 2 ] && [ -s "$W/admission.json" ]; then
-      outcome="$(head -1 "$W/admission.txt")$occ"
+      outcome="$(head -1 "$W/admission.txt")$occ$diag"
     else
-      outcome="REPORT ERROR: run_fed_leader_ws.py exited $rc without writing its admission$occ"
+      outcome="REPORT ERROR: run_fed_leader_ws.py exited $rc without writing its admission$occ$diag"
     fi

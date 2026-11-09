@@ -1,0 +1,66 @@
+{
+ "schema": "run_fed_leader/workstation-identity/2",
+ "dry": true,
+ "head": "9466cea4024e43f94e9c45706af735b4affdc8f8",
+ "frozen": null,
+ "inputs_match_frozen": false,
+ "tree_clean": true,
+ "sources": {
+  "recipe": {
+   "path": ".just/bench.just",
+   "sha256": "db9f3668c4d292a9e4c9bdeb7b8463f9e5c6b54273fee7801f73a4b425ddbeed",
+   "at_frozen": null
+  },
+  "admission": {
+   "path": "bench/run_fed_leader_ws.py",
+   "sha256": "8aecbe796c05edf3af0394ad3c4433f16131d5fd367e884296b65d8eab3dd65f",
+   "at_frozen": null
+  },
+  "reporter": {
+   "path": "bench/run_fed_leader.py",
+   "sha256": "573633850e1d849decf1b8026973677a2f5578c4992662b34d00e4fbf8a12b8f",
+   "at_frozen": null
+  },
+  "registration": {
+   "path": "docs/journal/2026-11-09-run-fed-leader.md",
+   "sha256": "4f4f15ca2c8b7c9a465017c219a68a0b4c5d53b15fc105e97c64b1a4f2f78205",
+   "at_frozen": null
+  }
+ },
+ "features": [
+  "run-fed"
+ ],
+ "occupancy_features": [
+  "trace",
+  "run-fed"
+ ],
+ "profile": "release",
+ "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+ "ab_sha256_before": "567fa0545145ee0799df39f82f4476d7b5a4ebb3cddf61ceb0f61cb81362d2bd",
+ "ab_sha256_after": "567fa0545145ee0799df39f82f4476d7b5a4ebb3cddf61ceb0f61cb81362d2bd",
+ "occupancy_sha256_before": "90d9f3514e72c126cc722f5887a13b662fc809c4b8ba010be6a3ae10b97e2d20",
+ "occupancy_sha256_after": "90d9f3514e72c126cc722f5887a13b662fc809c4b8ba010be6a3ae10b97e2d20",
+ "corpus_sha256_before": "25bbba9e6bbe37f1bfbf2fd5dd733dd85a30eaa64a737262e4a71d5c18f63876",
+ "corpus_sha256_after": "25bbba9e6bbe37f1bfbf2fd5dd733dd85a30eaa64a737262e4a71d5c18f63876",
+ "arms": [
+  "mibz2-default33",
+  "mibz2-pipe3-both",
+  "mibz2-pipe3-runfed-ctl",
+  "mibz2-pipe3-runfed-reg",
+  "mibz2-pipe3-runfed-ls",
+  "mibz2-pipe3-runfed-hs",
+  "mibz2-pipe3-runfed-dir"
+ ],
+ "threads": [
+  10
+ ],
+ "rounds": 2,
+ "ab_exit": 0,
+ "sysfs_state": true,
+ "preflight": "REFUSED",
+ "workload": {
+  "out": 209700196,
+  "hash": "a8830caee5c511a6"
+ },
+ "registered_corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+}

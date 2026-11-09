@@ -1,0 +1,5 @@
+# The machine-state recorder's own check (docs/journal/2026-11-09-telemetry-check-registration.md).
+# The commit the registration, the harness and the recipe are frozen at: just
+# bench-telemetry-check's measured inputs must match it exactly. Re-frozen by the Coordinator
+# if review changes them.
+frozen 37bd85af502d0306b27afaf041501ce67df97d37

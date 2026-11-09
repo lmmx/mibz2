@@ -1,0 +1,20 @@
+INVALID
+  the identity's dry True: a DRY run is not evidence
+  the frozen commit None is not a full 40-character commit
+  the head's measured inputs do not match the frozen commit's
+  source recipe (.just/bench.just): 'db9f3668c4d292a9e4c9bdeb7b8463f9e5c6b54273fee7801f73a4b425ddbeed' at the head, None at the frozen commit
+  source admission (bench/run_fed_leader_ws.py): '8aecbe796c05edf3af0394ad3c4433f16131d5fd367e884296b65d8eab3dd65f' at the head, None at the frozen commit
+  source reporter (bench/run_fed_leader.py): '573633850e1d849decf1b8026973677a2f5578c4992662b34d00e4fbf8a12b8f' at the head, None at the frozen commit
+  source registration (docs/journal/2026-11-09-run-fed-leader.md): '4f4f15ca2c8b7c9a465017c219a68a0b4c5d53b15fc105e97c64b1a4f2f78205' at the head, None at the frozen commit
+  the corpus's SHA-256 25bbba9e6bbe37f1bfbf2fd5dd733dd85a30eaa64a737262e4a71d5c18f63876, not the registered 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+  the preflight 'REFUSED', not PASS
+  the identity's rounds 2, not 20
+  mibz2-default33: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-both: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-ctl: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-reg: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-ls: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-hs: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-dir: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  14 timed records admitted, not 140
+  14 records did not decode the registered workload (209700196 bytes, hash a8830caee5c511a6): ['mibz2-default33 r0', 'mibz2-pipe3-both r0', 'mibz2-pipe3-runfed-ctl r0', 'mibz2-pipe3-runfed-reg r0', 'mibz2-pipe3-runfed-ls r0', 'mibz2-pipe3-runfed-hs r0']

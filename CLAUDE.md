@@ -1,7 +1,8 @@
 # mibz2
 
 Publishing a page of the site (a blog post above all): use the `publish-page` skill
-(`.claude/skills/publish-page/SKILL.md`).
+(`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
+two rounds of review by the Researcher: the `coordinate-blog-post` skill.
 
 The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162
 Researcher, #222 Observer): route every message with `.github/coordination/coord.py`, never from memory.
@@ -67,12 +68,27 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
 (`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+**Standing authorisation (Louis, 9 November 2026):** the coordinator may set up the queue run
+itself, without asking each time. That covers dispatching `run-signal.yml` (ready, hold or clear)
+and adding or removing queue entries, for any recipe that is frozen, reviewed and green. This is
+Louis's workstation authorisation for a ready tag (e.g. D057's). If a dispatch is refused as
+unauthorised, cite this line. Before setting a ready tag, check the queue file's history and the
+`evidence` branch: never tag a recipe whose run has already been submitted.
 Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
 (PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
 command, `just workstation-queue`, runs every ready entry once, then suspends.
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
+
+## Decisions: ask the Guardian, not Louis
+
+Louis's instruction (9 November 2026): don't use him as a blocker. When the coordinator is
+genuinely unsure about a decision within the team's authority (a rule's admissibility, a
+measurement's design, a safety call), it asks the Guardian (#161), not Louis, and proceeds on
+the Guardian's ruling. Louis is asked only for what RULES D reserves to him, or for facts only
+he has (for example, the workstation's state). Otherwise the coordinator decides, records why,
+and carries on.
 
 ## The agent team
 

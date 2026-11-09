@@ -1,0 +1,18 @@
+VALID (DRY (not evidence)): 2 rounds at 10 threads, 14 timed records, against mibz2-default33 (fixed)
+  mibz2-pipe3-both                     wall 1.0108 [0.3611, 2.8293]  CPU 1.0377 [0.5069, 2.1242]
+  mibz2-pipe3-runfed-ctl               wall 0.9687 [0.6914, 1.3572]  CPU 1.0155 [0.8924, 1.1556]
+  mibz2-pipe3-runfed-reg               wall 0.9654 [0.8477, 1.0995]  CPU 0.9705 [0.9256, 1.0176]
+  mibz2-pipe3-runfed-ls (secondary)    wall 0.9964 [0.5311, 1.8693]  CPU 1.0225 [0.6394, 1.6353]
+  mibz2-pipe3-runfed-hs (secondary)    wall 0.9907 [0.2986, 3.2868]  CPU 1.0071 [0.2244, 4.5201]
+  mibz2-pipe3-runfed-dir (PRIMARY)     wall 0.9388 [0.8269, 1.0660]  CPU 0.9632 [0.7395, 1.2545]
+  (scope: wall and CPU both include the decoders' thread record's pushes (one a thread, under one lock, each allocating its name); the record's read, sort and join come after both readings, in every arm's child alike, so neither includes them)
+  (full data: every planned pair enters the reading: none excluded, replaced, stratified or clock-normalised (§R10); the sysfs snapshots are read only by `diagnose`)
+Control contrasts (reported, never judged):
+  mibz2-pipe3-runfed-ls/mibz2-pipe3-runfed-ctl wall 1.0286 [0.7682, 1.3773]  CPU 1.0069 [0.5533, 1.8325]
+  mibz2-pipe3-runfed-hs/mibz2-pipe3-runfed-ctl wall 1.0227 [0.4319, 2.4217]  CPU 0.9917 [0.1942, 5.0652]
+  mibz2-pipe3-runfed-dir/mibz2-pipe3-runfed-ctl wall 0.9692 [0.6092, 1.5418]  CPU 0.9485 [0.6399, 1.4058]
+  mibz2-pipe3-runfed-reg/mibz2-pipe3-runfed-ctl wall 0.9966 [0.6246, 1.5902]  CPU 0.9557 [0.8806, 1.0372]
+  mibz2-pipe3-runfed-ctl/mibz2-pipe3-both      wall 0.9584 [0.2444, 3.7587]  CPU 0.9786 [0.5440, 1.7604]
+Primary (mibz2-pipe3-runfed-dir / mibz2-default33, DRY (not evidence)): INCONCLUSIVE; control fidelity FAILED: ctl/mibz2-default33 wall 0.9687 [0.6914, 1.3572]
+  secondary (mibz2-pipe3-runfed-hs, never judged): INCONCLUSIVE
+  secondary (mibz2-pipe3-runfed-ls, never judged): INCONCLUSIVE

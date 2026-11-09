@@ -65,6 +65,7 @@ def clean(rounds=rfl.ROUNDS, factors=None):
                     "threads": t,
                     "arm": arm,
                     "exit": 0,
+                    "termination": "success",
                     "err": "",
                     "wall": base * f * noise,
                     "cpu": 3 * base * f * noise,
@@ -225,12 +226,22 @@ class Admission(unittest.TestCase):
         for key, val, why in (
             ("exit", 1, "exit 1"),
             ("exit", None, "exit None"),
+            # (output written, then a failure: the producer's termination, bench 3.5.0)
+            ("termination", "exit 17", "termination 'exit 17'"),
+            ("termination", "signal 9", "termination 'signal 9'"),
+            ("termination", "unknown", "termination 'unknown'"),
+            ("termination", None, "termination None"),
             ("err", "boom", "err 'boom'"),
             ("broken", 1, "broken"),
         ):
             recs = clean()
             recs[3][key] = val
             self.refused(recs, why)
+
+    def test_a_record_without_its_termination_refuses(self):
+        recs = clean()
+        del recs[3]["termination"]
+        self.refused(recs, "termination None")
 
     def test_different_output(self):
         recs = clean()
