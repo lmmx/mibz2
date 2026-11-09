@@ -794,7 +794,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "a773853f05fa9e12bb65fb93bf5c07e1bc7fea11",
-      "progress": "Migration checked; received J4/service-core default economics brief.",
+      "progress": "Initial findings committed: J versus J4 distinction, trace-label limitation, old-runtime r2 versus guarded default evidence. Run budget and ranking in progress.",
       "report_path": "state/records/reviews/inbox-6739270804/report.md"
     }
   ],
