@@ -1088,8 +1088,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6750412724,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "Prospective target-gated route defensible; revise evidence contract before enactment; current pin permits advice only"
+      "status": "finished",
+      "disposition": "Prospective target-gated route defensible; revise evidence contract before enactment; current pin permits advice only",
+      "comment": 6750520217
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1158,7 +1159,8 @@
     6740148831,
     6740291714,
     6741390621,
-    6750391425
+    6750391425,
+    6750520217
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1311,7 +1313,8 @@
     "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
     "1bd2cc941e5fcf4efcfd7005baafce100e2dda2a",
     "5afaeab9bb66d1cb8706eff4a0214942c1d0286b",
-    "10355dc63786883a8c3e9bd93bfe537539c403cd"
+    "10355dc63786883a8c3e9bd93bfe537539c403cd",
+    "66234a70a159accc458f94dd872b70d5dc734c16"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1463,9 +1466,10 @@
   },
   "current_execution": {
     "active_comment": 6750412724,
-    "status": "complete",
+    "status": "finished",
     "decision": "D071",
-    "work_commit": "10355dc63786883a8c3e9bd93bfe537539c403cd"
+    "work_commit": "10355dc63786883a8c3e9bd93bfe537539c403cd",
+    "review_comment_id": 6750520217
   },
   "duplicate_events": [
     {
@@ -2023,7 +2027,8 @@
       "sha": "97eb8edf51c558a7f74da595c152ab75288f531e",
       "evidence_digest": "policy-proposal:6750412724;stewardship:2096fbb6ccbf3b34c122101fbed05b14ad5ccfe7",
       "decision": "D071",
-      "commit": "10355dc63786883a8c3e9bd93bfe537539c403cd"
+      "commit": "10355dc63786883a8c3e9bd93bfe537539c403cd",
+      "comment": 6750520217
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2495,10 +2500,13 @@
     {
       "comment_id": 6750412724,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D071",
       "receipt_commit": "5afaeab9bb66d1cb8706eff4a0214942c1d0286b",
-      "work_commit": "10355dc63786883a8c3e9bd93bfe537539c403cd"
+      "work_commit": "10355dc63786883a8c3e9bd93bfe537539c403cd",
+      "review_comment_id": 6750520217,
+      "complete_cursor_commit": "66234a70a159accc458f94dd872b70d5dc734c16",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier has sole coordinator-header limitation; independent Guardian checks pass."
     }
   ],
   "migrated_from": {
