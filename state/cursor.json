@@ -36,7 +36,8 @@
     6729426658,
     6729932062,
     6730271993,
-    6730769410
+    6730769410,
+    6731656628
   ],
   "outgoing_comment_ids": [
     {
@@ -182,6 +183,13 @@
       "type": "REVIEW",
       "sha": "d62dda3166a4af57f801f05b0e41be554fc3334c",
       "checkpoint_comment_id": 6730769410
+    },
+    {
+      "pr": 145,
+      "id": 6731728422,
+      "type": "REVIEW",
+      "sha": "8382072cecf5d2932e3bb4c5548b05a9512d1162",
+      "checkpoint_comment_id": 6731656628
     }
   ],
   "reviews": [
@@ -645,13 +653,15 @@
     {
       "comment_id": 6731656628,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "1c4d0f0714183f83798a0b746463ae34535fbc50",
-      "progress": "Raw replay, residual identification limits, construction budgets and admission correction complete; pending REVIEW.",
+      "progress": "Artifact digest verified, raw replay/report/ledger committed; REVIEW exact readback verified. Consumer-only interval and per-block recovery identified as absent measurements.",
       "report_commit": "8382072cecf5d2932e3bb4c5548b05a9512d1162",
-      "report_path": "state/records/reviews/inbox-6731656628/report.md"
+      "report_path": "state/records/reviews/inbox-6731656628/report.md",
+      "reply_id": 6731728422,
+      "routing_verification": "Pinned route/check passed; exact author/body/destination verified. Pinned verify hardcodes coordinator; optimizer verify-pass not claimed."
     }
   ],
   "migrated_from": {
