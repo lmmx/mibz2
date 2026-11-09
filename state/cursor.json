@@ -1014,12 +1014,15 @@
     },
     {
       "trigger_comment_id": 6734368711,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "cccdfdf74d50ab3d37cab51d904deff4f3c39cdb",
-      "report_path": "state/reports/occupancy-closure-6734368711/report.md"
+      "report_path": "state/reports/occupancy-closure-6734368711/report.md",
+      "report_commit": "9ff654ab3e53e6469e12fd8b3a7c8684b8560edd",
+      "disposition": "PROCEED toward pointer-only freeze; occupancy REVISE closed. 43 tests, original counterexamples refused, positive/perturbing controls retained, 100 independent interval vectors agree. Exact-source CI/Miri remain separate.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
