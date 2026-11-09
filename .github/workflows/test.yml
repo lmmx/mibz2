@@ -50,6 +50,8 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      - name: Service candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/service service
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7

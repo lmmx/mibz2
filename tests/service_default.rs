@@ -60,7 +60,9 @@ fn entry(e: Entry, z: &[u8], threads: usize) -> (Vec<u8>, Result<(), Error>) {
     match e {
         Entry::New { slots } => {
             let dec = StreamDecoder::new(threads, slots, k);
-            drive(&dec, z, 1 << 20, 1 << 16)
+            let r = drive(&dec, z, 1 << 20, 1 << 16);
+            dec.join(); // (the completion fence)
+            r
         }
         Entry::Parallel | Entry::ParallelWith { .. } => {
             let src = std::io::Cursor::new(z.to_vec());
@@ -71,8 +73,12 @@ fn entry(e: Entry, z: &[u8], threads: usize) -> (Vec<u8>, Result<(), Error>) {
             assert!(r.parallel_decoder().is_some());
             let mut out = Vec::new();
             let res = r.read_to_end(&mut out).map(|_| ()).map_err(unwrap_io);
+            // (the completion fence before the counts are read: EOF is not the workers'
+            // end, and dropping the reader may leave its feeder holding the decoder)
+            r.parallel_decoder().unwrap().join();
             (out, res)
         }
+        // (decode_parallel's decoder is dropped, so joined, before it returns)
         Entry::Whole => match mibz2::decode_parallel(z, threads) {
             Ok(v) => (v, Ok(())),
             // (decode_parallel returns no bytes with its error: the test compares only the
@@ -130,6 +136,7 @@ fn the_entry_points_reach_the_service_core() {
             assert!(b.service && !b.pipelined, "{name}: {e:?}: {b:?}");
             assert_eq!((b.threads, b.window), (8, 8), "{name}: {e:?}");
             let c = b.counts.expect("the service core's counts");
+            assert!(c.ended, "{name}: {e:?}: the completion fence");
             assert_eq!((c.prepared, c.finished), (blocks, blocks), "{name}: {e:?}");
             assert!(c.pooled >= blocks - 1, "{name}: {e:?}: {c:?}");
         }
@@ -170,13 +177,15 @@ fn the_existing_plan_otherwise() {
     let data = corp[0].1[..2_000_000].to_vec();
     let z = compress(&data, 9);
     let i9 = Machine::service_target();
-    let same_shape = Machine {
-        cpu: Some(("GenuineIntel".into(), 6, 151)),
-        ..i9.clone()
-    };
+    let mut same_shape = i9.clone();
+    same_shape.target.as_mut().unwrap().cpu = ("GenuineIntel".into(), 6, 151);
     let small = Machine {
         phys: Some(4),
-        logical: Some(8),
+        target: None,
+        ..i9.clone()
+    };
+    let unknown_quota = Machine {
+        quota: mibz2::parallel::Quota::Unknown,
         ..i9.clone()
     };
     // (machine, threads, pipelined, decoding threads)
@@ -185,6 +194,7 @@ fn the_existing_plan_otherwise() {
         (i9.clone(), 11, true, 9),
         (i9.clone(), 20, true, 9),
         (same_shape, 10, true, 9),
+        (unknown_quota, 10, true, 9),
         (small, 10, false, 10),
     ];
     for (m, t, pipelined, threads) in cases {

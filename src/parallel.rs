@@ -71,6 +71,20 @@ struct State {
     /// buffers to reuse: decoded blocks' and symbols'
     free_out: Vec<Vec<u8>>,
     free_syms: Vec<Vec<u16>>,
+    /// the decode's terminal failure, if it failed as a whole (the service core's outer
+    /// unwind, `Hub::fail`): set with `cancelled`, before either is announced, and the
+    /// reader's error in place of `Cancelled`
+    terminal: Option<Error>,
+}
+
+impl State {
+    /// The reader's error once the decode is cancelled: the terminal failure, if the decode
+    /// failed as a whole, else `Cancelled`
+    fn stopped(&self) -> Error {
+        self.terminal
+            .clone()
+            .unwrap_or_else(|| Error::new(ErrorKind::Cancelled))
+    }
 }
 
 struct Shared {
@@ -139,7 +153,13 @@ impl StreamDecoder {
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let forced = FORCED.with(|c| c.get()).is_some();
-        let dec = if !forced && service_target(threads, k, &Machine::here()) {
+        // (the cheap conditions first: the machine is read only at the target's budget)
+        let dec = if !forced
+            && threads == SERVICE_THREADS
+            && k.avx2
+            && k.clmul
+            && service_target(threads, k, &Machine::here())
+        {
             let p = SERVICE_PLAN;
             let slots = window(p.as_plan(), threads, slots);
             Self::service(p.teams, p.k, p.services, slots, k)
@@ -167,7 +187,7 @@ impl StreamDecoder {
     /// inverted on a team's pool, and finished. Research and tests only.
     #[doc(hidden)]
     pub fn service_counts(&self) -> Option<ServiceCounts> {
-        self.hub.as_ref().map(|h| h.lock().counts)
+        self.hub.as_ref().map(|h| h.counts())
     }
 
     /// The default decoder for `plan` (`new`'s): the pipelined teams with
@@ -299,6 +319,7 @@ impl StreamDecoder {
                 cancelled: false,
                 free_out: Vec::new(),
                 free_syms: Vec::new(),
+                terminal: None,
             }),
             cv: Condvar::new(),
             slots,
@@ -380,8 +401,11 @@ impl StreamDecoder {
     /// after), or after `cancel`.
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
-        if !r.done && r.failed.is_none() && self.shared.lock().cancelled {
-            r.failed = Some(Error::new(ErrorKind::Cancelled));
+        if !r.done && r.failed.is_none() {
+            let st = self.shared.lock();
+            if st.cancelled {
+                r.failed = Some(st.stopped());
+            }
         }
         loop {
             if let Some(e) = &r.failed {
@@ -405,7 +429,7 @@ impl StreamDecoder {
             mark!(ReadWait);
             loop {
                 if st.cancelled {
-                    r.failed = Some(Error::new(ErrorKind::Cancelled));
+                    r.failed = Some(st.stopped());
                     break;
                 }
                 let taken = st.taken;
@@ -1288,6 +1312,17 @@ struct HubState {
     /// prepared and queued, blocks a team inverted on its pool (not alone), blocks
     /// finished (published, any result); counted under this lock where it is already held
     counts: ServiceCounts,
+    /// the decode failed as a whole (`Hub::fail`): every thread ends at its next look at
+    /// the hub, whatever is left
+    failed: bool,
+    /// the hub's threads that have ended (`Outer`'s drop, the last thing each does), of
+    /// `Hub::threads`: the completion fence for `counts` (each thread's last retirement
+    /// comes before its end, both under this lock)
+    exited: usize,
+    /// (tests only: live tokens taken (a job taken to prepare) and retired (published or
+    /// dropped, by a stage or by `Hub::fail`), so a test sees none lost and none twice)
+    #[cfg(test)]
+    tokens: (u64, u64),
     /// (tests only: the waits a service worker and a team's first thread have entered,
     /// each counted under this lock just before its `Condvar::wait`, so a test holding the
     /// lock and seeing the count knows that thread is parked, not merely slow)
@@ -1295,11 +1330,33 @@ struct HubState {
     svc_waits: usize,
     #[cfg(test)]
     team_waits: usize,
+    /// (tests only: the threads in `Condvar::wait` now, counted in under this lock before
+    /// the wait and out after it, for `OuterFault::parked`'s handshake)
+    #[cfg(test)]
+    parked: usize,
 }
 
 impl HubState {
+    /// After the decode failed (`Hub::fail`), a block a stage has done with is not handed
+    /// on (no thread would take it from the queue): it retires here, with `o`'s hold, its
+    /// buffers dropped by the caller. Whether it did.
+    fn retired_on_failure(&mut self, o: &Outer) -> bool {
+        if !self.failed {
+            return false;
+        }
+        self.live = self.live.saturating_sub(1);
+        o.held.set(None);
+        #[cfg(test)]
+        {
+            self.tokens.1 += 1;
+        }
+        true
+    }
+
+    /// The decode's end for the hub's threads: every job taken and every block taken
+    /// retired after the scanner's end, or the decode failed as a whole
     fn done(&self) -> bool {
-        self.closed && self.jobs.is_empty() && self.live == 0
+        self.failed || (self.closed && self.jobs.is_empty() && self.live == 0)
     }
 }
 
@@ -1308,6 +1365,125 @@ struct Hub {
     cv: Condvar,
     lookahead: usize,
     fault: Option<ServiceFault>,
+    /// its threads: the feeder, the service workers and the teams' first threads
+    threads: usize,
+    /// (tests only: a panic outside every stage's catch, `outer_fault`; fired once)
+    #[cfg(test)]
+    outer: Option<OuterFault>,
+    #[cfg(test)]
+    fired: std::sync::atomic::AtomicBool,
+}
+
+/// A service-core thread's outer guard (D067's guard-and-fail). Each stage's own catch
+/// recovers its block alone (an `Internal` error at its place and bit, its buffers
+/// replaced), and stays the recovery for everything a stage runs. The guard covers what
+/// runs outside those catches: acquiring a block and a buffer set under the hub's lock,
+/// the hand-offs, a team's pool set-up, and the gap between a block's publication and its
+/// retirement. Should a thread unwind there (a bug: nothing there should panic), the
+/// hub's state can't be trusted to be repaired in place, so the decode fails as a whole
+/// (`Hub::fail`) rather than continuing.
+///
+/// `held` is the live block this thread is responsible for (its place): set when it takes
+/// one (a job to prepare, a prepared block to walk, a walked block to finish) and cleared
+/// when it hands it on (queued for the next stage) or retires it, each under the hub's
+/// lock, in the same critical section as the queue's change or `live`'s. So the guard
+/// retires exactly the blocks no queue and no other thread holds, once each.
+///
+/// The guard is the first thing each thread makes, so it drops last: every lock the thread
+/// held is released before it runs, and a team's pool (whose drop joins its helpers) has
+/// ended before it. It allocates only its error's message and takes the two locks one
+/// after the other, never nested.
+struct Outer<'a> {
+    shared: &'a Shared,
+    hub: &'a Hub,
+    held: std::cell::Cell<Option<u64>>,
+    what: &'static str,
+}
+
+impl<'a> Outer<'a> {
+    fn new(shared: &'a Shared, hub: &'a Hub, what: &'static str) -> Self {
+        Outer {
+            shared,
+            hub,
+            held: std::cell::Cell::new(None),
+            what,
+        }
+    }
+}
+
+impl Drop for Outer<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            self.hub.fail(self.shared, self.held.take(), self.what);
+        }
+        self.hub.lock().exited += 1;
+    }
+}
+
+/// Testing only: where a service-core thread panics outside every stage's catch
+/// (`Outer`), once
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OuterAt {
+    /// a service worker, at its loop's top, holding nothing
+    SvcIdle,
+    /// a service worker, a job and a front set just taken, before preparing it
+    AfterJob,
+    /// a service worker, a block prepared, before queueing it for the teams
+    BeforePrepared,
+    /// a service worker, a block just queued for the teams (held by the queue)
+    AfterPrepared,
+    /// a team, a prepared block and a back set just taken, before its pool is chosen
+    AfterTake,
+    /// a team, a block just queued for finishing (held by the queue)
+    AfterWalked,
+    /// a service worker, a walked block just taken, before finishing it
+    AfterFinishTake,
+    /// a service worker, a block's result published, before it is retired
+    AfterPublish,
+    /// the hub's feeder, a job just moved into the hub
+    Feeder,
+}
+
+/// Testing only: an outer fault: where, at which block (None: the first time `at` is
+/// reached), and how many of the hub's threads must be parked in its wait now
+/// (`HubState::parked`), with the jobs closed, before it fires (a parked-state handshake, so a waiter is known to be
+/// parked in `Condvar::wait` when the decode fails; 0 for none)
+#[cfg(test)]
+#[derive(Clone, Copy, Debug)]
+struct OuterFault {
+    at: OuterAt,
+    place: Option<u64>,
+    parked: usize,
+}
+
+/// Testing only: panic here if the hub's outer fault is `at` this block (once)
+#[cfg(test)]
+fn outer_fault(hub: &Hub, at: OuterAt, place: Option<u64>) {
+    let Some(f) = hub.outer else { return };
+    if f.at != at || (f.place.is_some() && f.place != place) {
+        return;
+    }
+    if hub.fired.swap(true, Ordering::AcqRel) {
+        return;
+    }
+    if f.parked > 0 {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
+        loop {
+            {
+                let st = hub.lock();
+                if st.closed && st.parked >= f.parked {
+                    break;
+                }
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "the handshake: never parked"
+            );
+            std::thread::yield_now();
+        }
+    }
+    panic!("an injected outer panic at {at:?}, block {place:?}");
 }
 
 impl Hub {
@@ -1323,19 +1499,84 @@ impl Hub {
         self.cv.wait(g).unwrap_or_else(|e| e.into_inner())
     }
 
-    /// A block left the decode (published or dropped): its buffers back, if any
-    fn retire(&self, front: Option<Front>, back: Option<Back>) {
-        self.retire_counted(front, back, false);
+    /// A block left the decode (published or dropped): its buffers back, if any, and the
+    /// thread's hold on it (`Outer::held`) released under the same lock
+    fn retire(&self, o: &Outer, front: Option<Front>, back: Option<Back>) {
+        self.retire_counted(o, front, back, false);
     }
 
     /// `retire`, counting a finished block (`ServiceCounts::finished`) under the same lock
-    fn retire_counted(&self, front: Option<Front>, back: Option<Back>, finished: bool) {
+    fn retire_counted(&self, o: &Outer, front: Option<Front>, back: Option<Back>, finished: bool) {
         let mut st = self.lock();
         st.live -= 1;
+        o.held.set(None);
+        #[cfg(test)]
+        {
+            st.tokens.1 += 1;
+        }
         st.counts.finished += u64::from(finished);
         st.fronts.extend(front);
         st.backs.extend(back);
         drop(st);
+        self.cv.notify_all();
+    }
+}
+
+impl Hub {
+    /// Its counts, and whether they are final (`ServiceCounts::ended`)
+    fn counts(&self) -> ServiceCounts {
+        let st = self.lock();
+        ServiceCounts {
+            ended: st.exited >= self.threads,
+            ..st.counts
+        }
+    }
+
+    /// The decode fails as a whole (`Outer`): a thread unwound outside every stage's
+    /// catch. In this order:
+    /// 1. the terminal error (`Internal`, naming the thread) is recorded, with `cancelled`,
+    ///    before anything is woken, so the reader's next look sees it, not `Cancelled`; the
+    ///    blocks ready but not yet read are dropped, as a cancel drops them, so **the bytes
+    ///    before the failure are not all delivered**: only those the reader already had;
+    /// 2. the hub fails: `held` (the block the unwinding thread was responsible for, if
+    ///    any) is retired, and so is every block a queue holds (prepared, walked), their
+    ///    buffers dropped, never reused; the jobs not yet taken are dropped. A block another
+    ///    thread holds in a stage is that thread's to retire as its stage ends (a team's
+    ///    pool waits for its helpers first);
+    /// 3. both domains are woken: the reader, scanner and writers (`Shared::cv`; the
+    ///    scanner then ends, closing the jobs), and every hub waiter (`Hub::cv`), each of
+    ///    which sees `done` and ends.
+    ///
+    /// The first failure's error stands; a second (another thread unwinding meanwhile)
+    /// changes nothing but its own block's retirement. Counts saturate rather than panic:
+    /// this runs during an unwind, on state a bug may have left inconsistent.
+    fn fail(&self, shared: &Shared, held: Option<u64>, what: &str) {
+        {
+            let mut st = shared.lock();
+            if st.terminal.is_none() {
+                st.terminal = Some(Error::new(ErrorKind::Internal(format!(
+                    "the service core's {what} thread panicked outside its stages; the \
+                     decode is stopped"
+                ))));
+            }
+            st.cancelled = true;
+            st.ready.clear();
+        }
+        {
+            let mut st = self.lock();
+            st.failed = true;
+            let queued = st.prepared.len() + st.walked.len();
+            let retired = queued + usize::from(held.is_some());
+            st.prepared.clear();
+            st.walked.clear();
+            st.jobs.clear();
+            st.live = st.live.saturating_sub(retired);
+            #[cfg(test)]
+            {
+                st.tokens.1 += retired as u64;
+            }
+        }
+        shared.cv.notify_all();
         self.cv.notify_all();
     }
 }
@@ -1368,6 +1609,28 @@ impl StreamDecoder {
         kernels: Kernels,
         fault: Option<ServiceFault>,
     ) -> StreamDecoder {
+        Self::service_built(
+            teams,
+            k,
+            services,
+            slots,
+            kernels,
+            fault,
+            #[cfg(test)]
+            None,
+        )
+    }
+
+    /// `service_with_fault`, with (tests only) an outer fault (`OuterFault`)
+    fn service_built(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+        fault: Option<ServiceFault>,
+        #[cfg(test)] outer: Option<OuterFault>,
+    ) -> StreamDecoder {
         let (teams, team_k, services) = (teams.max(1), k.clamp(1, 4), services.max(1));
         let slots = slots.max(teams) as u64;
         let shared = Arc::new(Shared {
@@ -1379,6 +1642,7 @@ impl StreamDecoder {
                 cancelled: false,
                 free_out: Vec::new(),
                 free_syms: Vec::new(),
+                terminal: None,
             }),
             cv: Condvar::new(),
             slots,
@@ -1400,14 +1664,25 @@ impl StreamDecoder {
                 backs: (0..2 * teams).map(|_| Back::default()).collect(),
                 live: 0,
                 counts: ServiceCounts::default(),
+                failed: false,
+                exited: 0,
+                #[cfg(test)]
+                tokens: (0, 0),
                 #[cfg(test)]
                 svc_waits: 0,
                 #[cfg(test)]
                 team_waits: 0,
+                #[cfg(test)]
+                parked: 0,
             }),
             cv: Condvar::new(),
             lookahead,
             fault,
+            threads: 1 + services + teams,
+            #[cfg(test)]
+            outer,
+            #[cfg(test)]
+            fired: Default::default(),
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
@@ -1418,10 +1693,10 @@ impl StreamDecoder {
                 .spawn(f)
                 .expect("spawn a bz2 service-core thread")
         };
-        let h = hub.clone();
+        let (s, h) = (shared.clone(), hub.clone());
         handles.push(spawn(
             "mibz2-svc-feed".into(),
-            Box::new(move || feed(&h, job_rx)),
+            Box::new(move || feed(&s, &h, job_rx)),
         ));
         for i in 0..services {
             let (s, h) = (shared.clone(), hub.clone());
@@ -1454,11 +1729,24 @@ impl StreamDecoder {
     }
 }
 
-/// The scanner's jobs into the hub, then its end (the jobs' channel closed)
-fn feed(hub: &Hub, rx: Receiver<Job>) {
+/// The scanner's jobs into the hub, then its end (the jobs' channel closed). It holds no
+/// block (a job is no one's until a service worker takes it), but its loss would leave the
+/// jobs never closed, so it is guarded too. Once the decode has failed it drops the jobs
+/// it is given.
+fn feed(shared: &Shared, hub: &Hub, rx: Receiver<Job>) {
+    let _o = Outer::new(shared, hub, "feeder");
     while let Ok(job) = rx.recv() {
-        hub.lock().jobs.push_back(job);
+        #[cfg(test)]
+        let place = job.0;
+        {
+            let mut st = hub.lock();
+            if !st.failed {
+                st.jobs.push_back(job);
+            }
+        }
         hub.cv.notify_all();
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::Feeder, Some(place));
     }
     hub.lock().closed = true;
     hub.cv.notify_all();
@@ -1473,16 +1761,22 @@ enum SvcTask {
 }
 
 fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
+    let o = Outer::new(shared, hub, "service");
     // the assembly's buffer, this worker's own
     let mut asm: Vec<u8> = Vec::new();
     loop {
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::SvcIdle, None);
         let task = {
             let mut st = hub.lock();
             let mut idle = false;
             let task = loop {
+                if st.failed {
+                    break None;
+                }
                 let can_prepare = !st.jobs.is_empty() && !st.fronts.is_empty();
                 if can_prepare && st.prepared.is_empty() {
-                    break Some(take_job(&mut st));
+                    break Some(take_job(&mut st, &o));
                 }
                 if !st.walked.is_empty() {
                     // (the earliest place: the reader's next)
@@ -1490,11 +1784,12 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
                         .min_by_key(|&i| st.walked[i].place)
                         .unwrap_or(0);
                     let w = st.walked.swap_remove(i);
+                    o.held.set(Some(w.place));
                     mark!(SvcGot, w.place, st.walked.len(), 0);
                     break Some(SvcTask::Finish(w));
                 }
                 if can_prepare && st.prepared.len() < hub.lookahead {
-                    break Some(take_job(&mut st));
+                    break Some(take_job(&mut st, &o));
                 }
                 if st.done() {
                     break None;
@@ -1506,8 +1801,13 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
                 #[cfg(test)]
                 {
                     st.svc_waits += 1;
+                    st.parked += 1;
                 }
                 st = hub.wait(st);
+                #[cfg(test)]
+                {
+                    st.parked -= 1;
+                }
             };
             if idle {
                 mark!(SvcIdleEnd);
@@ -1516,27 +1816,40 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
         };
         match task {
             None => return,
-            Some(SvcTask::Prepare(job, front)) => prepare(shared, hub, job, front, k),
-            Some(SvcTask::Finish(w)) => finish(shared, hub, w, &mut asm, k),
+            Some(SvcTask::Prepare(job, front)) => {
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterJob, Some(job.0));
+                prepare(shared, hub, &o, job, front, k)
+            }
+            Some(SvcTask::Finish(w)) => {
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterFinishTake, Some(w.place));
+                finish(shared, hub, &o, w, &mut asm, k)
+            }
         }
     }
 }
 
-/// The next job and a front set, taken (the block live from here)
-fn take_job(st: &mut HubState) -> SvcTask {
+/// The next job and a front set, taken (the block live from here, and `o`'s)
+fn take_job(st: &mut HubState, o: &Outer) -> SvcTask {
     let job = st.jobs.pop_front().expect("a job");
     let front = st.fronts.pop().expect("a front set");
     st.live += 1;
+    o.held.set(Some(job.0));
+    #[cfg(test)]
+    {
+        st.tokens.0 += 1;
+    }
     SvcTask::Prepare(job, front)
 }
 
 /// A block's move-to-front (and its primary index's check) into `front`, then queued for
 /// the teams; its error published, or its panic made its `Internal` error
-fn prepare(shared: &Shared, hub: &Hub, job: Job, mut front: Front, k: Kernels) {
+fn prepare(shared: &Shared, hub: &Hub, o: &Outer, job: Job, mut front: Front, k: Kernels) {
     let (place, bit, symbols) = job;
     mark!(JobGot, place);
     if shared.lock().cancelled {
-        return hub.retire(Some(front), None);
+        return hub.retire(o, Some(front), None);
     }
     mark!(MtfStart, place);
     let r = catch_unwind(AssertUnwindSafe(|| {
@@ -1548,7 +1861,12 @@ fn prepare(shared: &Shared, hub: &Hub, job: Job, mut front: Front, k: Kernels) {
     mark!(MtfEnd, place);
     match r {
         Ok(Ok(rows)) => {
+            #[cfg(test)]
+            outer_fault(hub, OuterAt::BeforePrepared, Some(place));
             let mut st = hub.lock();
+            if st.retired_on_failure(o) {
+                return;
+            }
             st.prepared.push_back(Prepared {
                 place,
                 bit,
@@ -1556,26 +1874,29 @@ fn prepare(shared: &Shared, hub: &Hub, job: Job, mut front: Front, k: Kernels) {
                 front,
                 rows,
             });
+            o.held.set(None);
             st.counts.prepared += 1;
             mark!(Prepared, place, st.prepared.len(), 0);
             drop(st);
             hub.cv.notify_all();
+            #[cfg(test)]
+            outer_fault(hub, OuterAt::AfterPrepared, Some(place));
         }
         Ok(Err(kind)) => {
             publish(shared, place, bit, Err(kind), symbols.syms);
-            hub.retire(Some(front), None);
+            hub.retire(o, Some(front), None);
         }
         Err(p) => {
             let kind = ErrorKind::Internal(panic_message(p));
             publish(shared, place, bit, Err(kind), symbols.syms);
-            hub.retire(Some(Front::default()), None);
+            hub.retire(o, Some(Front::default()), None);
         }
     }
 }
 
 /// A walked block's assembly, RLE1 and CRC, and its result published; a panic made its
 /// `Internal` error, its back set and the assembly's buffer replaced
-fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) {
+fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k: Kernels) {
     let Walked {
         place,
         bit,
@@ -1583,7 +1904,7 @@ fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) 
         back,
     } = w;
     let Some(mut out) = take_out(shared) else {
-        return hub.retire(None, Some(back)); // (cancelled)
+        return hub.retire(o, None, Some(back)); // (cancelled)
     };
     let r = catch_unwind(AssertUnwindSafe(|| {
         let inverted: &[u8] = if back.segmented {
@@ -1609,8 +1930,12 @@ fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) 
             (Err(ErrorKind::Internal(panic_message(p))), Back::default())
         }
     };
+    // (published, not yet retired: still `o`'s, so an unwind here retires it once, and
+    // `Hub::fail` never publishes it again)
     publish(shared, place, bit, res, symbols.syms);
-    hub.retire_counted(None, Some(back), true);
+    #[cfg(test)]
+    outer_fault(hub, OuterAt::AfterPublish, Some(place));
+    hub.retire_counted(o, None, Some(back), true);
 }
 
 /// A team's next prepared block and a back set to walk it into, waiting until both are
@@ -1618,13 +1943,17 @@ fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) 
 /// a service worker waiting with the prepared queue at its lookahead (its rule 3) may now
 /// prepare again. (`notify_all`: teams and service workers share the one condition, so a
 /// single wake-up could go to a team that can't use it.)
-fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
+fn take_prepared(hub: &Hub, o: &Outer) -> Option<(Prepared, Back)> {
     let mut st = hub.lock();
     let mut idle = false;
     let got = loop {
+        if st.failed {
+            break None;
+        }
         if !st.prepared.is_empty() && !st.backs.is_empty() {
             let p = st.prepared.pop_front().expect("a prepared block");
             let b = st.backs.pop().expect("a back set");
+            o.held.set(Some(p.place));
             mark!(TeamGot, p.place, st.prepared.len(), 0);
             break Some((p, b));
         }
@@ -1643,8 +1972,13 @@ fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
         #[cfg(test)]
         {
             st.team_waits += 1;
+            st.parked += 1;
         }
         st = hub.wait(st);
+        #[cfg(test)]
+        {
+            st.parked -= 1;
+        }
     };
     drop(st);
     if idle {
@@ -1661,12 +1995,16 @@ fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
 /// back set, then queues it for finishing
 fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
     use super::bwt::FLAGGED_LANES;
+    // (made first, so dropped last: after the pool, whose drop joins its helpers)
+    let o = Outer::new(shared, hub, "team");
     let mut tt = super::bwt::TVector::default();
     let mut pool: Option<std::io::Result<super::coop::Pool>> = None;
     loop {
-        let Some((p, mut back)) = take_prepared(hub) else {
+        let Some((p, mut back)) = take_prepared(hub, &o) else {
             return;
         };
+        #[cfg(test)]
+        outer_fault(hub, OuterAt::AfterTake, Some(p.place));
         let Prepared {
             place,
             bit,
@@ -1675,7 +2013,7 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
             rows,
         } = p;
         if shared.lock().cancelled {
-            hub.retire(Some(front), Some(back));
+            hub.retire(&o, Some(front), Some(back));
             continue;
         }
         let team = if team_k >= 2 && rows >= min_coop(shared) {
@@ -1724,6 +2062,9 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
         match r {
             Ok(()) => {
                 let mut st = hub.lock();
+                if st.retired_on_failure(&o) {
+                    continue;
+                }
                 st.counts.pooled += u64::from(team.is_some());
                 st.fronts.push(front);
                 st.walked.push(Walked {
@@ -1732,9 +2073,12 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
                     symbols,
                     back,
                 });
+                o.held.set(None);
                 mark!(Walked, place, st.walked.len(), 0);
                 drop(st);
                 hub.cv.notify_all();
+                #[cfg(test)]
+                outer_fault(hub, OuterAt::AfterWalked, Some(place));
             }
             Err(p) => {
                 // a team thread's stage panicked: the block fails, the table and the back
@@ -1743,7 +2087,7 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
                 tt = Default::default();
                 let kind = ErrorKind::Internal(panic_message(p));
                 publish(shared, place, bit, Err(kind), symbols.syms);
-                hub.retire(Some(front), Some(Back::default()));
+                hub.retire(&o, Some(front), Some(Back::default()));
             }
         }
     }
@@ -1857,7 +2201,14 @@ pub struct ServiceCounts {
     /// blocks a team inverted on its pool (`coop::invert_team`), not its first thread alone
     pub pooled: u64,
     /// blocks a service worker finished (assembly, RLE1, CRC) and published, any result
+    /// (blocks failing in preparing or a team's run retire without finishing)
     pub finished: u64,
+    /// whether every one of the hub's threads (feeder, service workers, teams) had ended
+    /// when these were read: only then are they final. A reader's EOF is not that fence
+    /// (the last block is published, and read, before its finisher retires it), nor is
+    /// dropping a `BzReader` (its feeder may hold the decoder's last reference); joining
+    /// the decoder (`StreamDecoder::join`) is.
+    pub ended: bool,
 }
 
 /// The service core's shape: `teams` teams of `k` threads that only build and walk, and
@@ -1907,32 +2258,54 @@ const SERVICE_CPU: (&str, u32, u32) = ("GenuineIntel", 6, 165);
 const SERVICE_LOGICAL: usize = 20;
 
 /// What the plan policy and the service core's target predicate read of the machine
-/// (`Machine::here`), each None where the OS doesn't say
+/// (`Machine::here`). The plan policy's two facts are as it has always read them (`phys`,
+/// `l3`: None where the OS doesn't say). The predicate reads only `target` and `quota`,
+/// each read to fail closed: None, or `Quota::Unknown`, wherever a fact it needs can't be
+/// established.
 #[doc(hidden)]
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Machine {
-    /// physical cores of the CPUs this process may use (`physical_cores`)
+    /// the plan policy's: physical cores of the CPUs this process may use
+    /// (`physical_cores`)
     pub phys: Option<usize>,
-    /// the L3's bytes (`l3_bytes`)
+    /// the plan policy's: the L3's bytes (`l3_bytes`)
     pub l3: Option<u64>,
-    /// logical CPUs this process may use that are online
-    pub logical: Option<usize>,
-    /// the CPU's vendor, family and model (`/proc/cpuinfo`'s first processor)
-    pub cpu: Option<(String, u32, u32)>,
-    /// the CPU quota this process's cgroup sets, in CPUs (cgroup v2's `cpu.max`)
+    /// the predicate's: the CPUs this process may use, as one coherent snapshot
+    /// (`target_topology`), None if any of it can't be read or the CPUs differ
+    pub target: Option<Topology>,
+    /// the predicate's: the CPU quota of this process's cgroup and every ancestor
+    /// (`cpu_quota`)
     pub quota: Quota,
 }
 
-/// A cgroup's CPU quota, as `Machine` reads it
+/// The CPUs this process may use and that are online, read together (`target_topology`):
+/// every one of them with its core, package and L3 read, and all of one vendor, family,
+/// model and L3 size
+#[doc(hidden)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Topology {
+    /// distinct (package, core) pairs among them
+    pub phys: usize,
+    /// how many CPUs
+    pub logical: usize,
+    /// each one's L3, in bytes (all the same)
+    pub l3: u64,
+    /// each one's vendor, family and model (all the same)
+    pub cpu: (String, u32, u32),
+}
+
+/// A cgroup's CPU quota, as `cpu_quota` establishes it
 #[doc(hidden)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Quota {
-    /// none set (`max`), or no cgroup v2 file to read
-    #[default]
+    /// established: no `cpu.max` limit on this process's cgroup or any ancestor, up to and
+    /// including the hierarchy's true root
     Unlimited,
-    /// a quota of this many CPUs' time
+    /// established: the tightest limit on the way up is this many CPUs' time
     Cpus(f64),
-    /// a file there, but not one this reader understands
+    /// not established (unreadable, unparsable, a hidden ancestor, cgroup v1 or no cgroup
+    /// v2 mount): the predicate is false
+    #[default]
     Unknown,
 }
 
@@ -1957,9 +2330,8 @@ impl Machine {
         Machine {
             phys: physical_cores(),
             l3: l3_bytes(),
-            logical: logical_cpus(),
-            cpu: cpu_id(),
-            quota: cpu_quota(),
+            target: target_topology(&RealFs),
+            quota: cpu_quota(&RealFs),
         }
     }
 
@@ -1969,8 +2341,12 @@ impl Machine {
         Machine {
             phys: Some(TEN_CORES.0),
             l3: Some(TEN_CORES.1),
-            logical: Some(SERVICE_LOGICAL),
-            cpu: Some((SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2)),
+            target: Some(Topology {
+                phys: TEN_CORES.0,
+                logical: SERVICE_LOGICAL,
+                l3: TEN_CORES.1,
+                cpu: (SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2),
+            }),
             quota: Quota::Unlimited,
         }
     }
@@ -2026,7 +2402,7 @@ pub fn observe_builds<T>(f: impl FnOnce() -> T) -> (T, Vec<Built>) {
     let got = got
         .into_iter()
         .map(|(mut b, hub)| {
-            b.counts = hub.map(|h| h.lock().counts);
+            b.counts = hub.map(|h| h.counts());
             b
         })
         .collect();
@@ -2057,26 +2433,28 @@ fn record_built(dec: &StreamDecoder) {
 /// - the kernels the run used: AVX2 (with BMI1) and the CLMUL CRC, as `Kernels::detect`
 ///   finds them there (the scalar kernels, or any other mix, keep the existing plan);
 /// - an x86-64 Linux machine (the only OS whose topology this reads);
-/// - the CPU's identity: `GenuineIntel`, family 6, model 165 (Comet Lake-S), not merely its
-///   cache size: the existing 10-core / 20 MiB rule's reach (any CPU of that shape) is not
-///   inherited;
-/// - its shape, all of it this process's to use: 10 physical cores and 20 logical CPUs in
-///   this process's affinity, online, and a 20 MiB L3;
-/// - no cgroup CPU quota below 10 CPUs, and none this reader can't parse.
+/// - the CPUs this process may use, online, read as one coherent snapshot
+///   (`target_topology`): every one `GenuineIntel`, family 6, model 165, with a 20 MiB L3,
+///   20 of them on 10 physical cores. This is a microarchitecture and topology class (the
+///   10-core Comet Lake-S parts), not the one i9-10900K measured: its other members are
+///   unmeasured, and that one result does not qualify them. The existing 10-core / 20 MiB
+///   rule's wider reach (any CPU of that shape) is not inherited;
+/// - an established cgroup CPU quota (`cpu_quota`) of none, or at least 10 CPUs.
 ///
-/// Anything unread (a fact `Machine` can't find) fails the predicate. On any other machine
-/// or budget the decoder is exactly what it was.
+/// Discovery fails closed: any fact that can't be established (`Machine::target` None,
+/// `Quota::Unknown`) makes the predicate false. On any other machine or budget the decoder
+/// is exactly what it was.
 pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
     threads == SERVICE_THREADS
         && k.avx2
         && k.clmul
         && cfg!(all(target_os = "linux", target_arch = "x86_64"))
-        && m.cpu
-            .as_ref()
-            .is_some_and(|(v, f, model)| (v.as_str(), *f, *model) == SERVICE_CPU)
-        && m.phys == Some(TEN_CORES.0)
-        && m.logical == Some(SERVICE_LOGICAL)
-        && m.l3 == Some(TEN_CORES.1)
+        && m.target.as_ref().is_some_and(|t| {
+            (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
+                && t.phys == TEN_CORES.0
+                && t.logical == SERVICE_LOGICAL
+                && t.l3 == TEN_CORES.1
+        })
         && match m.quota {
             Quota::Unlimited => true,
             Quota::Cpus(c) => c >= SERVICE_THREADS as f64,
@@ -2232,12 +2610,19 @@ mod service_tests {
                 backs: (0..backs).map(|_| Back::default()).collect(),
                 live: 0,
                 counts: ServiceCounts::default(),
+                failed: false,
+                exited: 0,
+                tokens: (0, 0),
                 svc_waits: 0,
                 team_waits: 0,
+                parked: 0,
             }),
             cv: Condvar::new(),
             lookahead,
             fault,
+            threads: 0,
+            outer: None,
+            fired: Default::default(),
         }
     }
 
@@ -2252,6 +2637,7 @@ mod service_tests {
                 cancelled,
                 free_out: Vec::new(),
                 free_syms: Vec::new(),
+                terminal: None,
             }),
             cv: Condvar::new(),
             slots: 4,
@@ -2309,9 +2695,10 @@ mod service_tests {
             st.jobs.push_back(job(1));
         }
         let secs = if cfg!(miri) { 120 } else { 10 };
+        let o = Outer::new(&shared, &h, "test");
         std::thread::scope(|s| {
             // a team's first thread, parked: a prepared block, but no back set to walk into
-            let team = s.spawn(|| take_prepared(&h));
+            let team = s.spawn(|| take_prepared(&h, &Outer::new(&shared, &h, "test")));
             assert!(
                 until(&h, secs, |st| st.team_waits == 1),
                 "the team never parked"
@@ -2331,14 +2718,14 @@ mod service_tests {
                 // parked above is not told of it)
                 st.backs.push(Back::default());
                 drop(st);
-                take_prepared(&h).expect("block 0")
+                take_prepared(&h, &o).expect("block 0")
             };
             assert_eq!(p.place, 0);
             let woke = until(&h, secs, |st| st.jobs.is_empty());
             // (end it either way: block 1's empty symbols fail their move-to-front, so it
             // retires; block 0 retires here, then the hub is closed: the close's own
             // wake-up ends both threads even where the pop's was missing)
-            h.retire(Some(p.front), Some(back));
+            h.retire(&o, Some(p.front), Some(back));
             h.lock().closed = true;
             h.cv.notify_all();
             svc.join().unwrap();
@@ -2385,15 +2772,17 @@ mod service_tests {
             ("preparing cancelled", None, true),
         ] {
             let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            let o = Outer::new(&sh, &h, "test");
             let task = {
                 let mut st = h.lock();
                 st.jobs.push_back(job(3));
-                take_job(&mut st)
+                take_job(&mut st, &o)
             };
             let SvcTask::Prepare(j, front) = task else {
                 unreachable!()
             };
-            prepare(&sh, &h, j, front, k);
+            prepare(&sh, &h, &o, j, front, k);
+            assert_eq!(o.held.get(), None, "{what}: released");
             home(&h, what);
             let r = published(&sh, 3);
             if cancelled {
@@ -2474,7 +2863,10 @@ mod service_tests {
                     ..back
                 },
             };
-            finish(&sh, &h, w, &mut Vec::new(), k);
+            let o = Outer::new(&sh, &h, "test");
+            o.held.set(Some(5));
+            finish(&sh, &h, &o, w, &mut Vec::new(), k);
+            assert_eq!(o.held.get(), None, "{what}: released");
             home(&h, what);
             let r = published(&sh, 5);
             match (cancelled, want) {
@@ -2515,6 +2907,7 @@ mod service_tests {
                 cancelled: false,
                 free_out: Vec::new(),
                 free_syms: Vec::new(),
+                terminal: None,
             }),
             cv: Condvar::new(),
             slots: 4,
@@ -2537,6 +2930,7 @@ mod service_tests {
             });
             st.jobs.push_back(job(1));
         }
+        let o = Outer::new(&shared, &h, "test");
         std::thread::scope(|s| {
             let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
             // the service worker can't prepare yet: wait until it is parked on the hub (it
@@ -2545,7 +2939,7 @@ mod service_tests {
                 std::thread::yield_now();
             }
             assert_eq!(h.lock().jobs.len(), 1, "prepared beyond the lookahead");
-            let (p, back) = take_prepared(&h).expect("block 0");
+            let (p, back) = take_prepared(&h, &o).expect("block 0");
             assert_eq!(p.place, 0);
             // the service takes the job only if the pop woke it
             let wait = std::time::Duration::from_secs(if cfg!(miri) { 120 } else { 10 });
@@ -2561,7 +2955,7 @@ mod service_tests {
             // (block 1's empty symbols fail their move-to-front: its error published, and
             // it retires; block 0 retires here, then the hub is closed and both end, the
             // close's own wake-up ending the service worker even if the pop's was missing)
-            h.retire(Some(p.front), Some(back));
+            h.retire(&o, Some(p.front), Some(back));
             h.lock().closed = true;
             h.cv.notify_all();
             svc.join().unwrap();
@@ -2635,106 +3029,224 @@ mod service_tests {
     }
 }
 
-/// The online logical CPUs in this process's affinity (Linux: `Cpus_allowed_list`, less
-/// those sysfs says are offline)
-fn logical_cpus() -> Option<usize> {
-    #[cfg(target_os = "linux")]
-    {
-        let status = std::fs::read_to_string("/proc/self/status").ok()?;
-        let allowed = status
-            .lines()
-            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?
-            .trim()
-            .to_string();
-        let mut n = 0;
-        for part in allowed.split(',') {
-            let (a, b) = part.split_once('-').unwrap_or((part, part));
-            let (a, b): (usize, usize) = (a.parse().ok()?, b.parse().ok()?);
-            for c in a..=b {
-                // (cpu0 has no `online` file on many kernels: online)
-                let online =
-                    std::fs::read_to_string(format!("/sys/devices/system/cpu/cpu{c}/online"))
-                        .map_or(true, |s| s.trim() == "1");
-                let present =
-                    std::path::Path::new(&format!("/sys/devices/system/cpu/cpu{c}")).exists();
-                n += usize::from(online && present);
-            }
-        }
-        (n > 0).then_some(n)
+/// The files discovery reads (`RealFs`, or a test's fixture): a file's text, or why not
+trait Fs {
+    fn read(&self, path: &str) -> std::io::Result<String>;
+    fn is_dir(&self, path: &str) -> bool;
+}
+
+struct RealFs;
+
+impl Fs for RealFs {
+    fn read(&self, path: &str) -> std::io::Result<String> {
+        std::fs::read_to_string(path)
     }
-    #[cfg(not(target_os = "linux"))]
-    None
+    fn is_dir(&self, path: &str) -> bool {
+        std::path::Path::new(path).is_dir()
+    }
 }
 
-/// The CPU's vendor, family and model, where the OS says (Linux: `/proc/cpuinfo`'s first
-/// processor); read once, since it doesn't change
-fn cpu_id() -> Option<(String, u32, u32)> {
-    static ID: std::sync::OnceLock<Option<(String, u32, u32)>> = std::sync::OnceLock::new();
-    ID.get_or_init(|| {
-        #[cfg(target_os = "linux")]
-        {
-            let s = std::fs::read_to_string("/proc/cpuinfo").ok()?;
-            let first = s.split("\n\n").next()?;
-            let field = |name: &str| {
-                first.lines().find_map(|l| {
-                    let (k, v) = l.split_once(':')?;
-                    (k.trim() == name).then(|| v.trim().to_string())
-                })
-            };
-            Some((
-                field("vendor_id")?,
-                field("cpu family")?.parse().ok()?,
-                field("model")?.parse().ok()?,
-            ))
+/// A CPU list (`0-3,8,10-11`), strictly: None for anything else
+fn cpu_list(s: &str) -> Option<std::collections::BTreeSet<usize>> {
+    let s = s.trim();
+    let mut v = std::collections::BTreeSet::new();
+    if s.is_empty() {
+        return Some(v);
+    }
+    for part in s.split(',') {
+        let (a, b) = part.split_once('-').unwrap_or((part, part));
+        let (a, b): (usize, usize) = (a.parse().ok()?, b.parse().ok()?);
+        if a > b || b > 1 << 16 {
+            return None;
         }
-        #[cfg(not(target_os = "linux"))]
-        None
-    })
-    .clone()
+        v.extend(a..=b);
+    }
+    Some(v)
 }
 
-/// This process's cgroup v2 CPU quota (`cpu.max`: `max` or `quota period`, in µs)
-fn cpu_quota() -> Quota {
-    #[cfg(target_os = "linux")]
-    {
-        let Ok(cg) = std::fs::read_to_string("/proc/self/cgroup") else {
-            return Quota::Unlimited;
+/// The predicate's topology (`Topology`), read to fail closed (Linux): the CPUs in this
+/// process's affinity (`Cpus_allowed_list`) that sysfs lists online; CPUs it lists absent
+/// (not `present`) or offline are positively excluded, not guessed. Each counted CPU's core
+/// and package ids, its L3 (`cache/index3`, of level 3) and its `/proc/cpuinfo` record (by
+/// `processor`) must all be read; one unreadable or unparsable is None, and so is any
+/// difference among them (a mixed vendor, model or L3 size).
+fn target_topology(fs: &dyn Fs) -> Option<Topology> {
+    if !cfg!(target_os = "linux") {
+        return None;
+    }
+    let status = fs.read("/proc/self/status").ok()?;
+    let allowed = cpu_list(
+        status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?,
+    )?;
+    let sys = "/sys/devices/system/cpu";
+    let online = cpu_list(&fs.read(&format!("{sys}/online")).ok()?)?;
+    let present = cpu_list(&fs.read(&format!("{sys}/present")).ok()?)?;
+    let cpus: Vec<usize> = allowed
+        .iter()
+        .copied()
+        .filter(|c| present.contains(c) && online.contains(c))
+        .collect();
+    if cpus.is_empty() {
+        return None;
+    }
+    // (cpuinfo's records by processor)
+    let info = fs.read("/proc/cpuinfo").ok()?;
+    let mut ids = std::collections::BTreeMap::new();
+    for rec in info.split("\n\n").filter(|r| !r.trim().is_empty()) {
+        let field = |name: &str| {
+            rec.lines().find_map(|l| {
+                let (k, v) = l.split_once(':')?;
+                (k.trim() == name).then(|| v.trim().to_string())
+            })
         };
-        // (the v2 line, `0::/path`; a v1-only machine has none, and no `cpu.max`)
-        let Some(path) = cg.lines().find_map(|l| l.strip_prefix("0::")) else {
-            return Quota::Unlimited;
-        };
-        // (the tightest quota on the way up: a parent's limits its children)
-        let mut q = Quota::Unlimited;
-        let mut dir = std::path::PathBuf::from(format!("/sys/fs/cgroup{}", path.trim()));
-        loop {
-            if let Ok(max) = std::fs::read_to_string(dir.join("cpu.max")) {
-                q = match (q, parse_cpu_max(&max)) {
-                    (Quota::Unknown, _) | (_, Quota::Unknown) => Quota::Unknown,
+        let n: usize = field("processor")?.parse().ok()?;
+        let id = (
+            field("vendor_id")?,
+            field("cpu family")?.parse::<u32>().ok()?,
+            field("model")?.parse::<u32>().ok()?,
+        );
+        if ids.insert(n, id).is_some() {
+            return None;
+        }
+    }
+    let num = |p: String| p.trim().parse::<u64>().ok();
+    let (mut cores, mut l3, mut cpu) = (std::collections::BTreeSet::new(), None, None);
+    for c in &cpus {
+        let t = format!("{sys}/cpu{c}");
+        let core = num(fs.read(&format!("{t}/topology/core_id")).ok()?)?;
+        let pkg = num(fs.read(&format!("{t}/topology/physical_package_id")).ok()?)?;
+        cores.insert((pkg, core));
+        if num(fs.read(&format!("{t}/cache/index3/level")).ok()?)? != 3 {
+            return None;
+        }
+        let size = cache_size(&fs.read(&format!("{t}/cache/index3/size")).ok()?)?;
+        if *l3.get_or_insert(size) != size {
+            return None;
+        }
+        let id = ids.get(c)?;
+        if cpu.get_or_insert_with(|| id.clone()) != id {
+            return None;
+        }
+    }
+    Some(Topology {
+        phys: cores.len(),
+        logical: cpus.len(),
+        l3: l3?,
+        cpu: cpu?,
+    })
+}
+
+/// A sysfs cache size (`20480K`), strictly
+fn cache_size(s: &str) -> Option<u64> {
+    let s = s.trim();
+    let (num, mult) = match s.as_bytes().last()? {
+        b'K' => (&s[..s.len() - 1], 1u64 << 10),
+        b'M' => (&s[..s.len() - 1], 1 << 20),
+        _ => (s, 1),
+    };
+    num.parse::<u64>().ok()?.checked_mul(mult)
+}
+
+/// This process's CPU quota, established or `Unknown` (Linux, cgroup v2 only). From
+/// `/proc/self/cgroup`'s one v2 entry (`0::path`) and the one `cgroup2` mount in
+/// `/proc/self/mountinfo` (its root and mount point), the process's cgroup directory, then
+/// every directory up to the mount point, each `cpu.max` parsed strictly and the tightest
+/// kept. A level's `cpu.max` may be absent (the cpu controller not enabled there: no limit
+/// at that level) only if its directory is there. The mount point must be the hierarchy's
+/// true root (no `cgroup.type`, which every non-root cgroup has): a mount of a cgroup below
+/// the root (a cgroup namespace, a container) hides ancestors whose limits can't be read,
+/// so it is `Unknown`. Any other read failure, any unparsable or ambiguous file (no v2
+/// entry, cgroup v1 alone, several entries or mounts, an escaped path), is `Unknown`.
+fn cpu_quota(fs: &dyn Fs) -> Quota {
+    if !cfg!(target_os = "linux") {
+        return Quota::Unknown;
+    }
+    cpu_quota_of(fs).unwrap_or(Quota::Unknown)
+}
+
+fn cpu_quota_of(fs: &dyn Fs) -> Option<Quota> {
+    use std::io::ErrorKind::NotFound;
+    let cg = fs.read("/proc/self/cgroup").ok()?;
+    let mut v2 = cg.lines().filter_map(|l| l.strip_prefix("0::"));
+    let path = v2.next()?.trim().to_string();
+    if v2.next().is_some() || !path.starts_with('/') || path.contains("..") || path.contains(' ') {
+        return None;
+    }
+    let info = fs.read("/proc/self/mountinfo").ok()?;
+    let mut mounts = info.lines().filter_map(|l| {
+        let (pre, post) = l.split_once(" - ")?;
+        (post.split_whitespace().next()? == "cgroup2").then_some(pre)
+    });
+    let pre = mounts.next()?;
+    if mounts.next().is_some() {
+        return None;
+    }
+    let f: Vec<&str> = pre.split_whitespace().collect();
+    let (root, point) = (*f.get(3)?, *f.get(4)?);
+    if root.contains('\\') || point.contains('\\') || !point.starts_with('/') {
+        return None;
+    }
+    // the process's cgroup under the mount's root, as a path under the mount point
+    let rel = if root == "/" {
+        path.as_str()
+    } else {
+        let r = path.strip_prefix(root)?;
+        if !(r.is_empty() || r.starts_with('/')) {
+            return None;
+        }
+        r
+    };
+    let point = point.trim_end_matches('/');
+    let mut levels = vec![point.to_string()];
+    let mut at = String::from(point);
+    for part in rel.split('/').filter(|p| !p.is_empty()) {
+        at = format!("{at}/{part}");
+        levels.push(at.clone());
+    }
+    let mut q = Quota::Unlimited;
+    for dir in &levels {
+        if !fs.is_dir(dir) {
+            return None;
+        }
+        match fs.read(&format!("{dir}/cpu.max")) {
+            Ok(text) => {
+                q = match (q, parse_cpu_max(&text)) {
+                    (_, Quota::Unknown) => return None,
                     (Quota::Cpus(a), Quota::Cpus(b)) => Quota::Cpus(a.min(b)),
-                    (Quota::Cpus(a), Quota::Unlimited) | (Quota::Unlimited, Quota::Cpus(a)) => {
-                        Quota::Cpus(a)
-                    }
-                    (Quota::Unlimited, Quota::Unlimited) => Quota::Unlimited,
+                    (Quota::Unlimited, b) => b,
+                    (a, Quota::Unlimited) => a,
+                    (Quota::Unknown, _) => return None,
                 };
             }
-            if dir == std::path::Path::new("/sys/fs/cgroup") || !dir.pop() {
-                return q;
-            }
+            Err(e) if e.kind() == NotFound => {}
+            Err(_) => return None,
         }
     }
-    #[cfg(not(target_os = "linux"))]
-    Quota::Unlimited
+    // the top must be the true root: `cgroup.type` absent there, positively
+    match fs.read(&format!("{point}/cgroup.type")) {
+        Err(e) if e.kind() == NotFound => Some(q),
+        _ => None,
+    }
 }
 
-/// A `cpu.max` line's quota
+/// A `cpu.max` file's quota, strictly: one line, `max PERIOD` or `QUOTA PERIOD`, each a
+/// positive integer (in µs); anything else is `Unknown`
 fn parse_cpu_max(s: &str) -> Quota {
-    let mut it = s.split_whitespace();
-    match (it.next(), it.next().map(str::parse::<f64>)) {
-        (Some("max"), _) => Quota::Unlimited,
-        (Some(q), Some(Ok(period))) if period > 0.0 => match q.parse::<f64>() {
-            Ok(q) if q > 0.0 => Quota::Cpus(q / period),
-            _ => Quota::Unknown,
+    let line = s.strip_suffix('\n').unwrap_or(s);
+    let f: Vec<&str> = line.split(' ').collect();
+    let pos = |t: &str| {
+        (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| t.parse::<u64>().ok())
+            .flatten()
+            .filter(|&n| n > 0)
+    };
+    match f.as_slice() {
+        [q, p] => match (pos(p), *q) {
+            (Some(_), "max") => Quota::Unlimited,
+            (Some(p), q) => pos(q).map_or(Quota::Unknown, |q| Quota::Cpus(q as f64 / p as f64)),
+            (None, _) => Quota::Unknown,
         },
         _ => Quota::Unknown,
     }
@@ -2742,6 +3254,9 @@ fn parse_cpu_max(s: &str) -> Quota {
 
 #[cfg(test)]
 mod unwind_tests;
+
+#[cfg(test)]
+mod service_unwind_tests;
 
 #[cfg(test)]
 mod plan_tests {
@@ -2897,104 +3412,28 @@ mod plan_tests {
         ] {
             assert!(!service_target(10, k, &i9), "{k:?}");
         }
-        // each fact of the machine off by a little, or unread
+        // each fact of the topology off by a little, or the snapshot unread
         let mib = 1u64 << 20;
+        let with = |f: &dyn Fn(&mut Topology)| {
+            let mut m = i9.clone();
+            f(m.target.as_mut().unwrap());
+            m
+        };
         let off: Vec<(&str, Machine)> = vec![
+            ("9 cores", with(&|t| t.phys = 9)),
+            ("11 cores", with(&|t| t.phys = 11)),
+            ("19 CPUs", with(&|t| t.logical = 19)),
+            ("10 CPUs (no SMT)", with(&|t| t.logical = 10)),
+            ("L3 a byte less", with(&|t| t.l3 = 20 * mib - 1)),
+            ("L3 16 MiB", with(&|t| t.l3 = 16 * mib)),
+            ("model 166", with(&|t| t.cpu.2 = 166)),
+            ("model 158", with(&|t| t.cpu.2 = 158)),
+            ("family 15", with(&|t| t.cpu.1 = 15)),
+            ("AMD", with(&|t| t.cpu.0 = "AuthenticAMD".into())),
             (
-                "9 cores",
+                "no snapshot",
                 Machine {
-                    phys: Some(9),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "11 cores",
-                Machine {
-                    phys: Some(11),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "no cores read",
-                Machine {
-                    phys: None,
-                    ..i9.clone()
-                },
-            ),
-            (
-                "19 CPUs",
-                Machine {
-                    logical: Some(19),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "10 CPUs (no SMT)",
-                Machine {
-                    logical: Some(10),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "no CPUs read",
-                Machine {
-                    logical: None,
-                    ..i9.clone()
-                },
-            ),
-            (
-                "L3 a byte less",
-                Machine {
-                    l3: Some(20 * mib - 1),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "L3 16 MiB",
-                Machine {
-                    l3: Some(16 * mib),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "no L3 read",
-                Machine {
-                    l3: None,
-                    ..i9.clone()
-                },
-            ),
-            (
-                "model 166",
-                Machine {
-                    cpu: Some(("GenuineIntel".into(), 6, 166)),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "model 158",
-                Machine {
-                    cpu: Some(("GenuineIntel".into(), 6, 158)),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "family 15",
-                Machine {
-                    cpu: Some(("GenuineIntel".into(), 15, 165)),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "AMD",
-                Machine {
-                    cpu: Some(("AuthenticAMD".into(), 6, 165)),
-                    ..i9.clone()
-                },
-            ),
-            (
-                "no CPU read",
-                Machine {
-                    cpu: None,
+                    target: None,
                     ..i9.clone()
                 },
             ),
@@ -3019,10 +3458,18 @@ mod plan_tests {
                     ..i9.clone()
                 },
             ),
+            ("the default machine", Machine::default()),
         ];
         for (what, m) in &off {
             assert!(!service_target(10, both, m), "{what}");
         }
+        // the plan policy's own facts are not the predicate's
+        let m = Machine {
+            phys: None,
+            l3: None,
+            ..i9.clone()
+        };
+        assert_eq!(service_target(10, both, &m), here);
         // a quota of 10 CPUs or more leaves it on
         for q in [10.0, 12.5, 20.0] {
             let m = Machine {
@@ -3031,14 +3478,361 @@ mod plan_tests {
             };
             assert_eq!(service_target(10, both, &m), here, "quota {q}");
         }
-        // `cpu.max`
+        assert_eq!(Quota::default(), Quota::Unknown);
+        assert_eq!(SERVICE_PLAN.threads(), 8);
+    }
+
+    /// A machine's files for discovery's tests: each path's text, or the error reading it;
+    /// a path not given is not found, and a directory is there if listed
+    #[derive(Default, Clone)]
+    struct FakeFs {
+        files: std::collections::BTreeMap<String, Result<String, std::io::ErrorKind>>,
+        dirs: std::collections::BTreeSet<String>,
+    }
+
+    impl FakeFs {
+        fn file(mut self, p: &str, s: &str) -> Self {
+            self.files.insert(p.into(), Ok(s.into()));
+            self
+        }
+        fn fails(mut self, p: &str, e: std::io::ErrorKind) -> Self {
+            self.files.insert(p.into(), Err(e));
+            self
+        }
+        fn dir(mut self, p: &str) -> Self {
+            self.dirs.insert(p.into());
+            self
+        }
+        fn without(mut self, p: &str) -> Self {
+            self.files.remove(p);
+            self.dirs.remove(p);
+            self
+        }
+    }
+
+    impl Fs for FakeFs {
+        fn read(&self, p: &str) -> std::io::Result<String> {
+            match self.files.get(p) {
+                Some(Ok(s)) => Ok(s.clone()),
+                Some(Err(e)) => Err((*e).into()),
+                None => Err(std::io::ErrorKind::NotFound.into()),
+            }
+        }
+        fn is_dir(&self, p: &str) -> bool {
+            self.dirs.contains(p)
+        }
+    }
+
+    /// A desktop's cgroup v2 hierarchy: the process in /user.slice/u/app, the true root
+    /// mounted at /sys/fs/cgroup, no `cpu.max` anywhere (the controller enabled nowhere)
+    fn hierarchy() -> FakeFs {
+        let root = "/sys/fs/cgroup";
+        FakeFs::default()
+            .file("/proc/self/cgroup", "0::/user.slice/u/app\n")
+            .file(
+                "/proc/self/mountinfo",
+                "22 1 0:21 / / rw - ext4 /dev/vda rw\n\
+                 30 22 0:26 / /sys/fs/cgroup rw,nosuid - cgroup2 cgroup2 rw\n",
+            )
+            .dir(root)
+            .dir("/sys/fs/cgroup/user.slice")
+            .dir("/sys/fs/cgroup/user.slice/u")
+            .dir("/sys/fs/cgroup/user.slice/u/app")
+            .file("/sys/fs/cgroup/user.slice/cgroup.type", "domain\n")
+    }
+
+    /// Discovery's quota fails closed: unreadable membership, an unreadable or restrictive
+    /// parent, no or a relocated v2 mount, cgroup v1 alone, a hidden ancestor (a cgroup
+    /// namespace) are `Unknown` or the limit; an established unlimited hierarchy, and
+    /// inherited quotas below and at ten, are what they are
+    #[test]
+    fn discovery_fails_closed_quota() {
+        let (leaf, parent) = (
+            "/sys/fs/cgroup/user.slice/u/app/cpu.max",
+            "/sys/fs/cgroup/user.slice/cpu.max",
+        );
+        let i9 = Machine::service_target();
+        let both = Kernels {
+            avx2: true,
+            clmul: true,
+        };
+        let here = cfg!(all(target_os = "linux", target_arch = "x86_64"));
+        let on = |fs: &FakeFs| {
+            service_target(
+                10,
+                both,
+                &Machine {
+                    quota: cpu_quota(fs),
+                    ..i9.clone()
+                },
+            )
+        };
+        let unlimited = if here {
+            Quota::Unlimited
+        } else {
+            Quota::Unknown
+        };
+        let cases: Vec<(&str, FakeFs, Quota)> = vec![
+            ("established unlimited", hierarchy(), unlimited),
+            (
+                "a leaf's max",
+                hierarchy().file(leaf, "max 100000\n"),
+                unlimited,
+            ),
+            (
+                "membership unreadable",
+                hierarchy().fails("/proc/self/cgroup", std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "membership missing",
+                hierarchy().without("/proc/self/cgroup"),
+                Quota::Unknown,
+            ),
+            (
+                "a parent's cpu.max unreadable",
+                hierarchy().fails(parent, std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "a parent's cpu.max an I/O error, beneath an unlimited leaf",
+                hierarchy()
+                    .file(leaf, "max 100000\n")
+                    .fails(parent, std::io::ErrorKind::Other),
+                Quota::Unknown,
+            ),
+            (
+                "a restrictive parent beneath an unlimited leaf",
+                hierarchy()
+                    .file(leaf, "max 100000\n")
+                    .file(parent, "800000 100000\n"),
+                if here {
+                    Quota::Cpus(8.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "an inherited quota of ten",
+                hierarchy().file(parent, "1000000 100000\n"),
+                if here {
+                    Quota::Cpus(10.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "the tightest of two",
+                hierarchy()
+                    .file(leaf, "1500000 100000\n")
+                    .file(parent, "1200000 100000\n"),
+                if here {
+                    Quota::Cpus(12.0)
+                } else {
+                    Quota::Unknown
+                },
+            ),
+            (
+                "a parent's cpu.max unparsable",
+                hierarchy().file(parent, "max garbage\n"),
+                Quota::Unknown,
+            ),
+            (
+                "a level's directory missing",
+                hierarchy().without("/sys/fs/cgroup/user.slice/u"),
+                Quota::Unknown,
+            ),
+            (
+                "no cgroup2 mount",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "22 1 0:21 / / rw - ext4 /dev/vda rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "mountinfo unreadable",
+                hierarchy().fails("/proc/self/mountinfo", std::io::ErrorKind::PermissionDenied),
+                Quota::Unknown,
+            ),
+            (
+                "a relocated mount (its root not the process's ancestor)",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "30 22 0:26 /system.slice /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "two cgroup2 mounts",
+                hierarchy().file(
+                    "/proc/self/mountinfo",
+                    "30 22 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n\
+                     31 22 0:26 / /mnt/cg rw - cgroup2 cgroup2 rw\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "cgroup v1 alone",
+                hierarchy().file(
+                    "/proc/self/cgroup",
+                    "4:cpu,cpuacct:/user.slice\n1:name=systemd:/x\n",
+                ),
+                Quota::Unknown,
+            ),
+            (
+                "a hidden ancestor (the mount's top not the true root)",
+                hierarchy().file("/sys/fs/cgroup/cgroup.type", "domain\n"),
+                Quota::Unknown,
+            ),
+            (
+                "the root's cgroup.type unreadable",
+                hierarchy().fails(
+                    "/sys/fs/cgroup/cgroup.type",
+                    std::io::ErrorKind::PermissionDenied,
+                ),
+                Quota::Unknown,
+            ),
+        ];
+        for (what, fs, want) in &cases {
+            assert_eq!(cpu_quota(fs), *want, "{what}");
+            let admits =
+                matches!(want, Quota::Unlimited) || matches!(want, Quota::Cpus(c) if *c >= 10.0);
+            assert_eq!(on(fs), here && admits, "{what}: the predicate");
+        }
+        // `cpu.max`, strictly
         assert_eq!(parse_cpu_max("max 100000\n"), Quota::Unlimited);
         assert_eq!(parse_cpu_max("200000 100000\n"), Quota::Cpus(2.0));
         assert_eq!(parse_cpu_max("1000000 100000"), Quota::Cpus(10.0));
-        for bad in ["", "x 100000", "100000 0", "100000", "-5 100000"] {
+        for bad in [
+            "",
+            "\n",
+            "x 100000",
+            "100000 0",
+            "100000",
+            "-5 100000",
+            "max garbage",
+            "max",
+            "inf 100000",
+            "1e6 100000",
+            "max 100000 5",
+            "max  100000",
+            "+5 100000",
+            "max 100000\n\n",
+            "0 100000",
+        ] {
             assert_eq!(parse_cpu_max(bad), Quota::Unknown, "{bad:?}");
         }
-        assert_eq!(SERVICE_PLAN.threads(), 8);
+    }
+
+    /// A ten-core, twenty-CPU Comet Lake-S as sysfs and cpuinfo show it, CPU n on core
+    /// n % 10
+    fn cpus() -> FakeFs {
+        let sys = "/sys/devices/system/cpu";
+        let mut fs = FakeFs::default()
+            .file("/proc/self/status", "Name:\tx\nCpus_allowed_list:\t0-19\n")
+            .file(&format!("{sys}/online"), "0-19\n")
+            .file(&format!("{sys}/present"), "0-19\n");
+        let mut info = String::new();
+        for c in 0..20 {
+            let t = format!("{sys}/cpu{c}");
+            fs = fs
+                .file(&format!("{t}/topology/core_id"), &format!("{}\n", c % 10))
+                .file(&format!("{t}/topology/physical_package_id"), "0\n")
+                .file(&format!("{t}/cache/index3/level"), "3\n")
+                .file(&format!("{t}/cache/index3/size"), "20480K\n");
+            info += &format!(
+                "processor\t: {c}\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n"
+            );
+        }
+        fs.file("/proc/cpuinfo", &info)
+    }
+
+    /// Discovery's topology fails closed: a read error is never an offline CPU, and the CPUs
+    /// must agree; CPUs positively offline or absent are left out
+    #[test]
+    fn discovery_fails_closed_topology() {
+        if !cfg!(target_os = "linux") {
+            assert_eq!(target_topology(&cpus()), None);
+            return;
+        }
+        let sys = "/sys/devices/system/cpu";
+        let i9 = Machine::service_target().target;
+        assert_eq!(target_topology(&cpus()), i9);
+        let pd = std::io::ErrorKind::PermissionDenied;
+        let none: Vec<(&str, FakeFs)> = vec![
+            (
+                "a core id unreadable",
+                cpus().fails(&format!("{sys}/cpu7/topology/core_id"), pd),
+            ),
+            (
+                "a core id missing",
+                cpus().without(&format!("{sys}/cpu7/topology/core_id")),
+            ),
+            (
+                "a package unreadable",
+                cpus().fails(&format!("{sys}/cpu3/topology/physical_package_id"), pd),
+            ),
+            (
+                "an L3 unreadable",
+                cpus().fails(&format!("{sys}/cpu12/cache/index3/size"), pd),
+            ),
+            (
+                "an L3 of another size",
+                cpus().file(&format!("{sys}/cpu12/cache/index3/size"), "16384K\n"),
+            ),
+            (
+                "index3 not level 3",
+                cpus().file(&format!("{sys}/cpu0/cache/index3/level"), "2\n"),
+            ),
+            (
+                "online unreadable",
+                cpus().fails(&format!("{sys}/online"), pd),
+            ),
+            (
+                "present unreadable",
+                cpus().without(&format!("{sys}/present")),
+            ),
+            ("status unreadable", cpus().fails("/proc/self/status", pd)),
+            (
+                "affinity unparsable",
+                cpus().file("/proc/self/status", "Cpus_allowed_list:\t0-x\n"),
+            ),
+            ("cpuinfo unreadable", cpus().fails("/proc/cpuinfo", pd)),
+            ("a CPU of another model", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                    "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165",
+                    "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 166",
+                    1,
+                );
+                fs.file("/proc/cpuinfo", &info)
+            }),
+            ("a CPU with no cpuinfo record", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                        "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n",
+                        "",
+                        1,
+                    );
+                fs.file("/proc/cpuinfo", &info)
+            }),
+        ];
+        for (what, fs) in &none {
+            assert_eq!(target_topology(fs), None, "{what}");
+        }
+        // positively offline (sysfs's online list) and absent CPUs are left out, not errors:
+        // the snapshot then is a smaller machine, not the target
+        let offline = cpus().file(&format!("{sys}/online"), "0-18\n");
+        let t = target_topology(&offline).unwrap();
+        assert_eq!((t.logical, t.phys), (19, 10));
+        let absent = cpus()
+            .file("/proc/self/status", "Cpus_allowed_list:\t0-63\n")
+            .fails(&format!("{sys}/cpu40/topology/core_id"), pd);
+        assert_eq!(target_topology(&absent), i9, "CPUs allowed but not present");
+        let masked = cpus().file("/proc/self/status", "Cpus_allowed_list:\t0-9\n");
+        let t = target_topology(&masked).unwrap();
+        assert_eq!((t.logical, t.phys), (10, 10));
     }
 
     /// `StreamDecoder::new`'s own dispatch on the target machine (`with_machine`): the
@@ -3100,15 +3894,13 @@ mod plan_tests {
         // of three (the existing 10-core rule), or the plan for that machine
         let dec = build(&i9, 10, 40, Kernels::scalar());
         assert!(!dec.is_service() && dec.is_pipelined() && dec.threads() == 9);
-        let amd = Machine {
-            cpu: Some(("AuthenticAMD".into(), 25, 33)),
-            ..i9.clone()
-        };
+        let mut amd = i9.clone();
+        amd.target.as_mut().unwrap().cpu = ("AuthenticAMD".into(), 25, 33);
         let dec = build(&amd, 10, 40, both);
         assert!(!dec.is_service() && dec.is_pipelined() && dec.window() == 12);
         let small = Machine {
             phys: Some(4),
-            logical: Some(8),
+            target: None,
             ..i9.clone()
         };
         let dec = build(&small, 10, 40, both);
@@ -3137,7 +3929,11 @@ mod plan_tests {
             }
         }
         assert_eq!(out, service_tests::want());
+        // (EOF is not the workers' end: the last block is read once published, before its
+        // finisher retires it, D067; join is the fence, and `ended` its witness)
+        dec.join();
         let c = dec.service_counts().unwrap();
+        assert!(c.ended, "{c:?}");
         assert_eq!((c.prepared, c.finished), (4, 4));
         // (none of these blocks is big enough for a team's pool: tests/service_default.rs
         // reaches it, on full blocks)
