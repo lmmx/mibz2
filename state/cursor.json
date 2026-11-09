@@ -818,6 +818,14 @@
       "review_comment_id": 6731275111,
       "publication_verified": true,
       "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
+    },
+    {
+      "trigger_comment_id": 6731333886,
+      "status": "in_progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "69f97c80df517c3e966c0aa5988f6355fb19df0a"
     }
   ],
   "active_delegations": [],
