@@ -1,0 +1,52 @@
+{
+  "parallel_sha256": "60236bf519d08a621c68f1702f4d1cbb7bebb68ef93243a799f0c80d063318a4",
+  "tests_sha256": "bb74157037d816bfc9aa4614da5c8a40794e6f9d720b4e9e862d57d431f87536",
+  "mutant_sha256": "0ff4914e59050036e11b116ac4ec28f4e84c7a246e08d26ab32eade5ce555c35",
+  "patch_byte_identical": true,
+  "tiny_bz2_bytes": 539,
+  "tiny_decoded_bytes": 960,
+  "log_expectations_pass": true,
+  "routing": {
+    "issue": 145,
+    "type": "REVIEW",
+    "why": "a publication: the channel PR"
+  },
+  "audit": [
+    {
+      "issue": 145,
+      "comment": 6652503445,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6653242752,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654146350,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its first run could not comment on locked #145 (#187)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654371320,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its check run did not reopen the finished suite (#188)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654531225,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; an in-progress check run did not reopen it either"
+    }
+  ],
+  "scope": "Python hash/mutation reconstruction, fixture decompression, log consistency and routing only; no Rust execution"
+}

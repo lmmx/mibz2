@@ -2096,3 +2096,55 @@ The B6 index stop names only work sharing the unguarded RunFill index invariant.
 Reviewer involvement: independently read the implementation, tests, exact-tree CI logs and Researcher report, compared source identities, and executed the finite Python/source checks. **No fresh Rust/Miri/fuzz/SIMD/mutant execution here: cargo and rustc are unavailable.** No implementation, benchmark, dispatch, merge or other-branch write.
 
 Specs/MODE/RULES/PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **800d3e756ea0149c337395670e44de2a3d98b7fc**. Routing audit found only five already-resolved historical entries; route selects #145. Pinned verify hard-codes FROM coordinator, so Guardian read-back uses its routing predicate plus exact header/destination/inbox-ID/head checks. [Evidence manifest](records/d049/evidence.json). History preserved; persistent task remains enabled.
+
+## D050 — D047/M12 closed for the shipped pipelined worker
+
+Inbox [6730988787](https://github.com/lmmx/mibz2/pull/161#issuecomment-6730988787); PR #275, **89c36f929d9fb2c4c1615dd3a17569051502ddd2**. Operating SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a4f97714cc14366984015869d9d094d89488ac57.
+
+**G1/G2: accept the reached worker-unwind evidence; lift D047's remaining B5 qualification HOLD for the shipped pipelined worker. B6 resumption recorded for the previously missed M12 target.** D042's pipeline-specific fuzz gap was already closed by D047; this closes its remaining outer-run publication objection. No decoder repair is claimed: the original branch already retires its held blocks; the missing evidence now detects removal of those retirements.
+
+This is a scoped evidence closure, not permission to bypass ordinary CI or a whole-library safety certificate. At the workflow snapshot read in this review, #275's Miri, Test and Benchmark were still in progress; CI and documentation succeeded. I neither waited/polled for their completion nor called pending jobs PASS. The Coordinator retains integration authority under the normal full CI gate. D045/service, D046/pair and D049/#270 remain unchanged. In particular, a test of parallel::pipelined_worker does not automatically reach the separate run_team::worker.
+
+### The new hook reaches the requested branch
+
+I inspected the full new unwind_tests.rs and the parallel.rs diff from base 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba. Fault::LeadStart is inside the leader closure before prior output is taken; LeadEnd is after prior publication and staging next. Both are outside the nested stage catches. The panic crosses Pool::run into the worker's catch_unwind Err arm, rather than taking the helper-error Ok(Err) arm. The recovery counter is in that Err branch, outside the M12 edit. inject drops the faults mutex before panicking; the poisoned Lead mutex is recovered by the existing poison-tolerant extraction.
+
+Tests drive real scanner jobs through the actual worker with queued jobs/end known, so held-state expectations are deterministic. They assert fault consumption, exactly one recovery and the requested held pair. The three cases are current alone at place 3, current+next at places 1/2, and current+held prior at places 2/1. The reader must receive the exact preceding chunks and Internal at the earliest held place with its actual scanner bit. Private publication checks assert each place once and the error at every held place, including those hidden behind the reader's first error. Later ready blocks are checked against source chunks after the worker ends, proving reset/reuse at the worker level. Native full cases use team sizes 2/3/4; the separate default end-to-end case asserts a forced 3×3 pipeline.
+
+The tiny Miri cases lower only the test threshold and use scalar kernels, four 240-byte blocks, one helper. They exercise the same worker branch and pool completion protocol. **“With a live helper” is a design/composition description, not an observed scheduling assertion:** no handshake proves the helper is still executing at the instant inject fires. The existing pool lifetime/join tests complement these cases. This does not invalidate the now-reached worker publication target, nor justify claiming every interleaving.
+
+The non-test code change replaces the threshold constant with min_coop(shared), which returns that same constant outside cfg(test). Other added fields, injection, recording and recovery counting are test-only; no new unsafe block or production recovery algorithm is introduced.
+
+### Independently reconstructed provenance and results
+
+The committed source matches the execution logs' SHA-256 prefixes:
+- parallel.rs: **60236bf519d08a621c68f1702f4d1cbb7bebb68ef93243a799f0c80d063318a4**
+- unwind_tests.rs: **bb74157037d816bfc9aa4614da5c8a40794e6f9d720b4e9e862d57d431f87536**
+- after the single M12 take(0) edit: **0ff4914e59050036e11b116ac4ec28f4e84c7a246e08d26ab32eade5ce555c35**
+
+The new M12.patch is byte-identical to the original committed patch. I reconstructed its mutation and matched the mutant hash. I independently decompressed the embedded 539-byte TINY fixture using Python bz2 and matched all **960 expected bytes** from tiny_chunk's formula. These checks are reproducible in [probe.py](records/d050/probe.py), with [results](records/d050/results.json).
+
+I read all five archived M12 execution logs, not just verdicts:
+- baseline native: **8 passed**, including seven fault tests and the fixture check;
+- baseline Miri: **3 passed**, rustc/miri nightly 2026-10-26, MIRIFLAGS unset;
+- M12 native: **7 failed, 1 passed**, rc=101, with precise watchdog diagnostics;
+- M12 Miri: **3 failed**, rc=101, same omissions;
+- restored native: **8 passed**, original source hash, with the recorded reverse-apply/cmp claim.
+
+The current+next failure is exactly the ordered-ready hole: reader at 1, place 3 ready, 1/2 absent. The held-prior failure is correctly distinguished: the reader can get the prior's Internal, but the private check sees only [0,1,3], missing current 2. Therefore reader success alone does not hide the mutant. In the native full tests the mutant fails at k=2 before reaching k=3/4; do not describe it as a separate kill at every team size. The restored baseline does run all loop iterations.
+
+These are source-linked archived executions, **not my fresh Rust/Miri runs**. The complete current CI run is not yet part of the pass claim. The original M1/M2/M4 logs now supply actual data-race diagnostics at the stage accesses/retag, replacing exit-code-only attribution. I verified those three logs; I do not claim independently to have established M3's OOM process identity. The corrected journal appropriately treats that as consistency evidence.
+
+### Coverage limits and proportionate follow-up
+
+The setup-before-pool panic and panics outside the run are explicitly not injected. The former has the same held-current/prior retirement state, with no newly started helpers; the latter is a different contract. D047 asked for a reached real outer worker unwind and M12 sensitivity, not every conceivable panic location. No new HOLD is imposed for these disclosed exclusions.
+
+“Every wait is under a watchdog” is too broad. The reader, publication count and worker/join helper waits are bounded, but writer.join in the default case is not independently timed, and timeout paths do not prove all detached handles/process descendants are reaped. These archived M12 runs did exit with rc=101, then the restored suite passed. Keep a process-tree watchdog for future hang-targeted mutation campaigns, as D047 requested; do not infer universal cleanup from these successful runs.
+
+Likewise the final public publication snapshot precedes worker_ends; rereading the recorder after worker completion would strengthen a regression against a hypothetical late duplicate. It does not undermine this omission mutant's detection or the inspected baseline's once-per-held-block loop. The workflow's grep checks that at least one named recovery test is selected, not that all three names remain: checking all three would make that maintenance guard stronger. The actual archived Miri run does select all three.
+
+The widened PR/push paths correctly include src/parallel.rs, src/parallel/** and src/read.rs. Existing --lib -- miri_ now reaches the unit recovery tests; tests/pipelined.rs remains native. Corpus restoration is visible in the diff (“records level 4” at its original position). The long fuzz campaign retains pin 2614d832; the mistaken formatting-only claim, per-shape assertion claim and x86 wording are corrected. The old table's “publishes none of its blocks” should still say “omits current and next”; the new M12 record and tests correctly preserve the separate held-prior publication. This wording cleanup is nonblocking.
+
+**Next action:** integrate the evidence/tests under the ordinary successful-CI requirement, preserve the regression and mutation records, and continue the shipped pipeline work within its existing mandate. No new timing or rerun is required to close this particular objection. D049's separate run-fed worker needs its own reached evidence or a demonstrated shared test route; this closure does not repair its excessive-helper index or composed-fuzz gaps.
+
+Reviewer involvement: independent source/diff review, hash reconstruction, fixture decode, log checks and routing audit. No candidate implementation, merge, benchmark, dispatch, credentials or infrastructure change. No fresh Rust execution. Specs fetched at the requested pin; migration checked before receipt against old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 and manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 2dab9d62b85904737dd8956ee5a84ee2130bb87a. Routing audit has only five already-resolved historical entries; route selects #145. Pinned verify is coordinator-only, so Guardian publication is checked with its routing predicate plus exact headers/ID/SHA/destination read-back. Persistent task remains enabled.
