@@ -87,9 +87,10 @@
     6729118037,
     6729243943,
     6729371816,
-    6729486092
+    6729486092,
+    6729699102
   ],
-  "last_processed_comment_id": 6729486092,
+  "last_processed_comment_id": 6729699102,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -658,9 +659,14 @@
       "related_queued_comment_id": 6729516361,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "3e201246cf1266d4b2a984cb19eb9fdba5b9835d"
+      "source_commit": "3e201246cf1266d4b2a984cb19eb9fdba5b9835d",
+      "report_commit": "4334f8a55dc33e735ecfa1fab44926fb8c45d0d5",
+      "report_path": "state/reports/service-2x3-rereview-6729699102/report.md",
+      "review_comment_pr": 145,
+      "disposition": "PROCEED for #258 workstation queue at 3e201246cf1266d4b2a984cb19eb9fdba5b9835d, frozen 7aeb5bf9b63355b4bc56691fec5da30b7fb3ff10. H1-H3 resolved: 30 repository tests pass; repaired control VALID, 16 old mutations INVALID. Fail-closed round-array exception noted as nonblocking. D042 unchanged.",
+      "review_comment_id": null
     }
   ],
   "active_delegations": [],
