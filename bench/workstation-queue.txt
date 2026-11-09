@@ -7,3 +7,5 @@
 #
 # recipe                       branch                    what it measures
 bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)
+bench-service-guarded        perf/service-guarded      the guarded service default, timed A/B on the i9 (#302, frozen at d136df7e, bench 3.5.0)
+bench-run-fed-leader         research/run-fed-leader-ws2  the run-fed leader's second attempt (#305 §R10–R12, frozen at 2fab12ca, bench 3.6.0)
