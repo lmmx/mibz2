@@ -1,0 +1,42 @@
+{
+  "missing_synthetic_intervals": {
+    "reading": "FEASIBLE",
+    "meaning": "All six absent intervals are silently omitted by the max predicate."
+  },
+  "uncertain_synthetic_cost": {
+    "reading": "FEASIBLE",
+    "meaning": "Point estimates pass although each upper bound permits >2% harm."
+  },
+  "fallback_label_counterexample": {
+    "A_accepted": 1,
+    "B_accepted": 1.2,
+    "A_fallback": 1,
+    "B_fallback": 1,
+    "R_stage": 1.1,
+    "R_fb": 1.0,
+    "reading": "STOP: fallback label",
+    "meaning": "Whole-corpus regression can be entirely on accepted run-path blocks, with zero fallback regression."
+  },
+  "nominal_cycles": {
+    "seconds": 1e-06,
+    "cells": 100,
+    "GHZ_header": 2.8,
+    "actual_GHZ_example": 3.5,
+    "displayed_cycles_per_cell": 28.0,
+    "actual_cycles_per_cell_if_constant": 35.0,
+    "meaning": "Displayed M3 uses wall seconds times a sampled/default frequency, not PMU cycles."
+  },
+  "overshoot_bound": {
+    "cell_lengths": [
+      1,
+      1,
+      1
+    ],
+    "n": 3,
+    "cells": 3,
+    "stored_u32_slots": 24,
+    "unique_table_slots": 3,
+    "meaning": "Each short cell emits a whole AVX2 store; identical final 4n-byte tables need not have identical store work."
+  },
+  "modelled_instruction_ratio": 0.9615384615384615
+}

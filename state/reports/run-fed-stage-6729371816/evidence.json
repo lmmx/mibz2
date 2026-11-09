@@ -1,0 +1,229 @@
+{
+  "head": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "assignment": 6729371816,
+  "queued": 6729283573,
+  "checks": [
+    {
+      "id": 128911987834,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911987834"
+    },
+    {
+      "id": 128911927311,
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641776/job/128911927311"
+    },
+    {
+      "id": 128911926319,
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641776/job/128911926319"
+    },
+    {
+      "id": 128911925997,
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641776/job/128911925997"
+    },
+    {
+      "id": 128911516762,
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516762"
+    },
+    {
+      "id": 128911516743,
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516743"
+    },
+    {
+      "id": 128911516742,
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516742"
+    },
+    {
+      "id": 128911516736,
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516736"
+    },
+    {
+      "id": 128911516726,
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516726"
+    },
+    {
+      "id": 128911516708,
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911516708"
+    },
+    {
+      "id": 128911504973,
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504973"
+    },
+    {
+      "id": 128911504153,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504153"
+    },
+    {
+      "id": 128911504120,
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504120"
+    },
+    {
+      "id": 128911504094,
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504094"
+    },
+    {
+      "id": 128911504089,
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504089"
+    },
+    {
+      "id": 128911504082,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504082"
+    },
+    {
+      "id": 128911504060,
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911504060"
+    },
+    {
+      "id": 128911477175,
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641942/job/128911477175"
+    },
+    {
+      "id": 128911477093,
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641776/job/128911477093"
+    },
+    {
+      "id": 128911476815,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641776/job/128911476815"
+    },
+    {
+      "id": 128911476740,
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911476740"
+    },
+    {
+      "id": 128911476671,
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911476671"
+    },
+    {
+      "id": 128911476583,
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911476583"
+    },
+    {
+      "id": 128911476542,
+      "name": "miri",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641689/job/128911476542"
+    },
+    {
+      "id": 128911476363,
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641688/job/128911476363"
+    },
+    {
+      "id": 128911476135,
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42539641676/job/128911476135"
+    }
+  ],
+  "files": [
+    ".github/workflows/miri.yml",
+    ".github/workflows/sweep.yml",
+    ".github/workflows/test.yml",
+    "Cargo.toml",
+    "docs/journal/2026-11-09-run-fed-stage.md",
+    "examples/run_fed_stage.rs",
+    "examples/support/pmu.rs",
+    "examples/sweep.rs",
+    "src/bwt.rs",
+    "src/lib.rs",
+    "src/mtf.rs",
+    "src/run_stage.rs",
+    "tests/mtf_kernels.rs"
+  ],
+  "execution": {
+    "rust_available": false,
+    "cargo_available": false,
+    "diagnostic_dispatched": false,
+    "decoder_executed": false,
+    "unsafe_witness_executed": false,
+    "probe": "Python transcription/algebra of read source predicates; shell false/true background wait reproducer only"
+  },
+  "sources_read": [
+    "docs/journal/2026-11-09-run-fed-stage.md",
+    "docs/journal/2026-11-08-run-fed-tvector-and-psi2-census.md",
+    "examples/run_fed_stage.rs",
+    "examples/support/pmu.rs",
+    "src/run_stage.rs",
+    "src/mtf.rs",
+    "src/bwt.rs",
+    "tests/common/mod.rs",
+    "tests/mtf_kernels.rs",
+    "Cargo.toml",
+    ".github/workflows/sweep.yml",
+    ".github/workflows/miri.yml",
+    ".github/workflows/test.yml (diff)",
+    "src/lib.rs (diff)"
+  ]
+}
