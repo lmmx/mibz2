@@ -1191,7 +1191,7 @@
     },
     {
       "trigger_comment_id": 6740568118,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1199,7 +1199,10 @@
       "report_commit": "c16b9bdf64d79e3126d743b5a60b308512e253b0",
       "report_path": "state/reports/c29-r5-result-6740568118/report.md",
       "review_comment_pr": 145,
-      "disposition": "Concur VALID/JUDGED/INCONCLUSIVE after artifact digest, raw identity and independent paired-statistics replay. Correct effect-size bound and equal-RSS wording. Close registered timing; bounded transfer audit conditional, guarded service adoption first."
+      "disposition": "Concur VALID/JUDGED/INCONCLUSIVE after artifact digest, raw identity and independent paired-statistics replay. Correct effect-size bound and equal-RSS wording. Close registered timing; bounded transfer audit conditional, guarded service adoption first.",
+      "review_comment_id": 6740726156,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
