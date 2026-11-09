@@ -30,7 +30,7 @@
     "6698816282": 6698900123,
     "6699490637": 6699543678
   },
-  "last_rebuilt_from": 6699486962,
+  "last_rebuilt_from": 6729116055,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -111,14 +111,16 @@
     },
     "6699652203": {
       "comment_id": 6699652203,
-      "status": "in_progress",
-      "progress": "Migration verified; rebuilding against current record after resumed assignment."
+      "status": "complete",
+      "work_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6",
+      "progress": "Record rebuilt through 6729116055; awaiting deduplicated REVIEW."
     },
     "6729118948": {
       "comment_id": 6729118948,
-      "status": "in_progress",
-      "progress": "Migration verified; rebuilding against current record after resumed assignment."
+      "status": "complete",
+      "work_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6",
+      "progress": "Record rebuilt through 6729116055; awaiting deduplicated REVIEW."
     }
   },
-  "last_record_commit": "87b7cd8b0d67e570e62c8b8b97d291ccd36d3ee8"
+  "last_record_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6"
 }
