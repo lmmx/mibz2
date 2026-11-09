@@ -1175,7 +1175,7 @@
     },
     {
       "trigger_comment_id": 6740021640,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1183,7 +1183,10 @@
       "report_commit": "93a6e73ebcbd186dbea44ea8e4cf4d0b7e7f8d83",
       "report_path": "state/reports/pit-crew-round2-6740021640/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE two local factual statements: thread-setting budget excludes support threads; one-service failure scoped to three-team layout. Fresh reader answers and transfer succeed centrally; source-only review, rendering unavailable."
+      "disposition": "REVISE two local factual statements: thread-setting budget excludes support threads; one-service failure scoped to three-team layout. Fresh reader answers and transfer succeed centrally; source-only review, rendering unavailable.",
+      "review_comment_id": 6740217442,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
