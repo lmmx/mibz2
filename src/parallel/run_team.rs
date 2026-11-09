@@ -2558,6 +2558,258 @@ mod tests {
         }
     }
 
+    // ---- C29's control against `mtf_checkpoints`: its checkpoints and raw stores (D049 §4) ----
+
+    /// The input classes a symbol stream reaches in `mtf`'s semantics (`classify`), each
+    /// one a branch of `mtf_checkpoints_reg_avx2`: a run split at a checkpoint, a run
+    /// ending at one, a byte written at one, a block ending at one; a run of 64 or fewer
+    /// by the two 32-byte stores, or by the byte store at the block's bound (n + 64 past
+    /// `max_len`), or a longer run; and each error and where it fires
+    #[derive(Debug, Default)]
+    struct Reach {
+        run_split: u64,
+        run_to_checkpoint: u64,
+        byte_at_checkpoint: u64,
+        end_at_checkpoint: u64,
+        run_vector: u64,
+        run_bytes_at_bound: u64,
+        run_long: u64,
+        ok: u64,
+        too_long_in_run: u64,
+        too_long_at_byte: u64,
+        run_too_long: u64,
+        no_eob: u64,
+    }
+
+    impl Reach {
+        fn each(&self) -> [(&'static str, u64); 12] {
+            [
+                ("run split at a checkpoint", self.run_split),
+                ("run ending at a checkpoint", self.run_to_checkpoint),
+                ("byte at a checkpoint", self.byte_at_checkpoint),
+                ("block ending at a checkpoint", self.end_at_checkpoint),
+                ("run by the vector stores", self.run_vector),
+                (
+                    "run of <= 64 by bytes at the bound",
+                    self.run_bytes_at_bound,
+                ),
+                ("run of > 64", self.run_long),
+                ("Ok", self.ok),
+                ("BlockTooLong in a run", self.too_long_in_run),
+                ("BlockTooLong at a byte", self.too_long_at_byte),
+                ("RunTooLong", self.run_too_long),
+                ("no end-of-block symbol", self.no_eob),
+            ]
+        }
+    }
+
+    /// `b`'s classes in `mtf`'s semantics (an independent model of the input, not of the
+    /// kernel): the length so far, each run and byte as it lands, the bound checked
+    fn classify(b: &Symbols, r: &mut Reach) {
+        // (mtf.rs's MAX_RUN_WEIGHT)
+        const MAX_RUN_WEIGHT: u64 = 2 * 1024 * 1024;
+        let (cp, max) = (mtf::CHECKPOINT, b.max_len);
+        let (mut n, mut run, mut w) = (0usize, 0u64, 1u64);
+        for &s in &b.syms {
+            if s <= 1 {
+                if w >= MAX_RUN_WEIGHT {
+                    r.run_too_long += 1;
+                    return;
+                }
+                run += (s as u64 + 1) * w;
+                w <<= 1;
+                continue;
+            }
+            if run != 0 {
+                let len = run as usize;
+                if n + len > max {
+                    r.too_long_in_run += 1;
+                    return;
+                }
+                let end = n + len;
+                r.run_split += ((n / cp + 1) * cp < end) as u64;
+                r.run_to_checkpoint += (end % cp == 0) as u64;
+                if len > 64 {
+                    r.run_long += 1;
+                } else if n + 64 <= max {
+                    r.run_vector += 1;
+                } else {
+                    r.run_bytes_at_bound += 1;
+                }
+                (n, run, w) = (end, 0, 1);
+            }
+            if s == b.eob {
+                r.ok += 1;
+                r.end_at_checkpoint += (n > 0 && n % cp == 0) as u64;
+                return;
+            }
+            if n >= max {
+                r.too_long_at_byte += 1;
+                return;
+            }
+            r.byte_at_checkpoint += (n > 0 && n % cp == 0) as u64;
+            n += 1;
+        }
+        r.no_eob += 1;
+    }
+
+    /// `mtf_checkpoints_reg` against `mtf_checkpoints` on `b`, each kernel: the result, and
+    /// the column, counts and checkpoints (on errors too: both are `mtf`'s on every input),
+    /// from buffers holding another block's
+    fn same_checkpoints(b: &Symbols, r: &mut Reach) {
+        classify(b, r);
+        for k in kernels() {
+            let (mut ll, mut c, mut p) = (Vec::new(), [0; 256], Vec::new());
+            let want = mtf::mtf_checkpoints(b, &mut ll, &mut c, &mut p, k);
+            let (mut ll2, mut c2, mut p2) = (vec![1, 2, 3], [9; 256], vec![[3; 256]; 2]);
+            let got = mtf::mtf_checkpoints_reg(b, &mut ll2, &mut c2, &mut p2, k);
+            let what = format!("{} symbols, max_len {}, {k:?}", b.syms.len(), b.max_len);
+            assert_eq!(got, want, "{what}: the result");
+            assert!(ll == ll2, "{what}: the column");
+            assert!(c == c2, "{what}: the counts");
+            if want.is_ok() {
+                assert!(p == p2, "{what}: the checkpoints");
+            }
+        }
+    }
+
+    /// A column's symbols at its length's bounds about `d` (BlockTooLong below its length,
+    /// the byte store at the bound just above it)
+    fn at_bounds(ll: &[u8], ds: &[isize], out: &mut Vec<Symbols>) {
+        for &d in ds {
+            let mut b = symbols_of(ll, 0);
+            b.max_len = (ll.len() as isize + d).max(1) as usize;
+            out.push(b);
+        }
+    }
+
+    /// The columns whose runs and bytes land on and about the checkpoints: a run to a
+    /// checkpoint, a run across one and two, a byte at one (and a block's last byte there),
+    /// runs of 63, 64 and 65 at the bound
+    fn checkpoint_columns() -> Vec<Vec<u8>> {
+        let cp = mtf::CHECKPOINT;
+        let mut v = vec![
+            vec![7u8; cp],
+            vec![7u8; cp + 100],
+            [vec![1u8], vec![2u8; 2 * cp - 1]].concat(),
+            [vec![1u8; cp - 1], vec![2u8], vec![3u8; 40]].concat(),
+            [vec![1u8; cp], vec![2u8; 3]].concat(),
+            [vec![7u8; cp], vec![8u8]].concat(),
+        ];
+        for tail in [63usize, 64, 65] {
+            v.push([vec![4u8; cp - 30], vec![5u8], vec![6u8; tail]].concat());
+        }
+        v
+    }
+
+    /// C29's control on the inputs about its checkpoints and its raw stores, valid and
+    /// not, each reaching every class (`Reach`), against `mtf_checkpoints`: seeded
+    /// (xorshift), bounded (about 3,000 streams), printed
+    #[test]
+    fn register_checkpoints_reach_every_class() {
+        let cp = mtf::CHECKPOINT;
+        let mut cases: Vec<Symbols> = Vec::new();
+        let bounds = [-65isize, -64, -63, -1, 0, 1, 31, 63, 64, 65];
+        for ll in checkpoint_columns() {
+            at_bounds(&ll, &bounds, &mut cases);
+        }
+        let mut r = xorshift(0xc29);
+        let lens = [
+            1usize,
+            2,
+            3,
+            31,
+            32,
+            33,
+            63,
+            64,
+            65,
+            100,
+            1000,
+            cp / 2 + 3,
+            cp + 5,
+        ];
+        for i in 0..120 {
+            let len = [cp - 1, cp, cp + 1, 2 * cp, 2 * cp + 63, 3 * cp + 5][i % 6];
+            let sigma = [1u64, 2, 3, 9, 200][i % 5];
+            let ll = runs_column(len, sigma, &lens, r());
+            at_bounds(&ll, &bounds[(i % 4)..(i % 4) + 6], &mut cases);
+        }
+        // malformed streams: random symbols, a random alphabet and bound, some without
+        // their end-of-block symbol; and the longest runs' weights
+        for i in 0..2_000 {
+            let eob = 2 + (r() % 256) as u16;
+            let len = (r() % (3 * cp as u64)) as usize;
+            let run_heavy = i % 3 == 0;
+            let mut syms: Vec<u16> = (0..len)
+                .map(|_| {
+                    if run_heavy && r() % 4 != 0 {
+                        (r() % 2) as u16
+                    } else {
+                        (r() % eob as u64) as u16
+                    }
+                })
+                .collect();
+            if i % 50 != 7 {
+                syms.push(eob);
+            }
+            let mut perm: Vec<u8> = (0..=255).collect();
+            for j in (1..256).rev() {
+                perm.swap(j, (r() % (j as u64 + 1)) as usize);
+            }
+            cases.push(Symbols {
+                crc: 0,
+                orig_ptr: 0,
+                seq_to_unseq: perm.try_into().unwrap(),
+                syms,
+                eob,
+                max_len: [cp, 2 * cp, 3 * cp + 7, 900_000][i % 4] - (r() % 70) as usize,
+            });
+        }
+        let mut long = symbols_of(&[1, 2], 0);
+        long.syms = [vec![0u16; 22], vec![257]].concat();
+        cases.push(long);
+        let mut reach = Reach::default();
+        for b in &cases {
+            same_checkpoints(b, &mut reach);
+        }
+        eprintln!(
+            "C29 control: {} streams, kernels {:?}",
+            cases.len(),
+            kernels()
+        );
+        for (what, n) in reach.each() {
+            eprintln!("{n:>9}  {what}");
+            assert!(n > 0, "class not reached: {what}");
+        }
+    }
+
+    /// The same under Miri (the AVX2 kernel with `-C target-feature=+avx2`): each class
+    /// about one checkpoint, on short streams
+    #[test]
+    fn miri_register_checkpoints() {
+        if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
+            assert!(Kernels::detect().avx2, "AVX2 not detected");
+        }
+        let mut cases: Vec<Symbols> = Vec::new();
+        for ll in checkpoint_columns() {
+            at_bounds(&ll, &[-1, 0, 1, 64], &mut cases);
+        }
+        let mut long = symbols_of(&[1, 2], 0);
+        long.syms = [vec![0u16; 22], vec![257]].concat();
+        cases.push(long);
+        let mut short = symbols_of(&[3, 3, 3, 4], 0);
+        short.syms.pop();
+        cases.push(short);
+        let mut reach = Reach::default();
+        for b in &cases {
+            same_checkpoints(b, &mut reach);
+        }
+        for (what, n) in reach.each() {
+            assert!(n > 0, "class not reached: {what}");
+        }
+    }
+
     /// The run's hand-offs under Miri (its race detector): every mode, a small column
     #[test]
     fn miri_runs_are_walk() {
