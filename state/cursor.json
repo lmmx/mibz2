@@ -307,7 +307,7 @@
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
-  "wake": "Scan inbox #160 oldest first after 6646251725 under docs/team SPEC at a6a703cefcc40ac4115803f44a8a29ad76a3a7ef.",
+  "wake": "Scan inbox #160 oldest first after 6646251725 under docs/team SPEC at a4f97714cc14366984015869d9d094d89488ac57.",
   "next_trigger": "Next unfinished inbox #160 comment after offset 6646251725.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
@@ -315,8 +315,8 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
-  "published_evidence_commit": "9101edf77c28fc6d52af0951abbf76e4ec9df490",
+  "status": "AWAITING_REVIEW_PUBLICATION",
+  "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -497,21 +497,37 @@
     {
       "comment_id": 6715370785,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Report, source audit, archived release replay and ranked proposals complete; awaiting publication checkpoint.",
-      "report_path": "state/records/reviews/inbox-6715370785/report.md"
+      "progress": "Work committed; REVIEW pending. Check #145 before retrying publication.",
+      "report_path": "state/records/reviews/inbox-6715370785/report.md",
+      "report_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
+      "audit_scope": {
+        "implementation": false,
+        "new_timing": false,
+        "raw_release_rows": 240,
+        "raw_lever_traces": false,
+        "safety_certification": false
+      }
     },
     {
       "comment_id": 6729116363,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Report, source audit, archived release replay and ranked proposals complete; awaiting publication checkpoint.",
+      "progress": "Work committed; REVIEW pending. Check #145 before retrying publication.",
       "resumes_comment_id": 6715370785,
-      "report_path": "state/records/reviews/inbox-6715370785/report.md"
+      "report_path": "state/records/reviews/inbox-6715370785/report.md",
+      "report_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
+      "audit_scope": {
+        "implementation": false,
+        "new_timing": false,
+        "raw_release_rows": 240,
+        "raw_lever_traces": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
