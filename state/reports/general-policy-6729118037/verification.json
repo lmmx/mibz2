@@ -1,0 +1,15 @@
+{
+  "comment": 6729233463,
+  "issue": 145,
+  "ok": false,
+  "problems": [
+    "FROM is 'researcher', not coordinator"
+  ],
+  "role_aware": {
+    "exact_body_readback": true,
+    "destination": 145,
+    "from": "researcher",
+    "type": "REVIEW",
+    "misrouting": null
+  }
+}
