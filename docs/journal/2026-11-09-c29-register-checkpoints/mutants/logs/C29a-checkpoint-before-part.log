@@ -1,7 +1,7 @@
-mutant C29a-checkpoint-before-part on 2153cd40e04489155c1cdaf26df41e7b3ef94701 + mutants/C29a-checkpoint-before-part.patch; 2026-11-09T05:35:18Z
+mutant C29a-checkpoint-before-part on 8ee51ac7d5c8d5a97a53236862940a3d2cb1c47c + mutants/C29a-checkpoint-before-part.patch; 2026-11-09T06:02:31Z
 cmd: cargo test -j2 --lib mtf::tests -- --test-threads=2
    Compiling mibz2 v0.2.6 (<worktree>)
-    Finished `test` profile [optimized + debuginfo] target(s) in 1.26s
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.62s
      Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
 
 running 3 tests
@@ -13,18 +13,18 @@ failures:
 
 ---- mtf::tests::miri_register_checkpoints stdout ----
 
-thread 'mtf::tests::miri_register_checkpoints' (9691) panicked at src/mtf/tests.rs:369:13:
+thread 'mtf::tests::miri_register_checkpoints' (7527) panicked at src/mtf/tests.rs:369:13:
 assertion failed: p == p2
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 ---- mtf::tests::register_checkpoints_are_checkpoints stdout ----
 
-thread 'mtf::tests::register_checkpoints_are_checkpoints' (9692) panicked at src/mtf/tests.rs:189:13:
+thread 'mtf::tests::register_checkpoints_are_checkpoints' (7528) panicked at src/mtf/tests.rs:189:13:
 3431 symbols, max_len 900000, Kernels { avx2: true, clmul: true }: the checkpoints
 
 ---- mtf::tests::register_checkpoints_reach_every_class stdout ----
 
-thread 'mtf::tests::register_checkpoints_reach_every_class' (9693) panicked at src/mtf/tests.rs:189:13:
+thread 'mtf::tests::register_checkpoints_reach_every_class' (7529) panicked at src/mtf/tests.rs:189:13:
 16 symbols, max_len 16484, Kernels { avx2: true, clmul: true }: the checkpoints
 
 

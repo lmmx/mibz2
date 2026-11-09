@@ -1,7 +1,7 @@
-mutant C29c-vector-store-bound on 2153cd40e04489155c1cdaf26df41e7b3ef94701 + mutants/C29c-vector-store-bound.patch; 2026-11-09T05:35:22Z
+mutant C29c-vector-store-bound on 8ee51ac7d5c8d5a97a53236862940a3d2cb1c47c + mutants/C29c-vector-store-bound.patch; 2026-11-09T06:02:35Z
 cmd: cargo test -j2 --lib mtf::tests -- --test-threads=2
    Compiling mibz2 v0.2.6 (<worktree>)
-    Finished `test` profile [optimized + debuginfo] target(s) in 1.17s
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.39s
      Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
 
 running 3 tests
@@ -20,10 +20,10 @@ cmd: env RUSTFLAGS="-C target-feature=+avx2,+bmi1" MIBZ2_EXPECT_AVX2=1 MIRIFLAGS
    Compiling shlex v2.0.1
    Compiling syn v3.0.9
    Compiling cc v1.10.0
-   Compiling pkg-config v0.3.34
    Compiling thiserror v2.0.21
-   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling pkg-config v0.3.34
    Compiling thiserror-impl v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
    Compiling libc v0.2.191
    Compiling fearless_simd v1.2.0
    Compiling bytemuck v1.25.2
@@ -31,7 +31,7 @@ cmd: env RUSTFLAGS="-C target-feature=+avx2,+bmi1" MIBZ2_EXPECT_AVX2=1 MIRIFLAGS
    Compiling pbz2-core v0.2.0
    Compiling pbz2 v0.2.0
    Compiling mibz2 v0.2.6 (<worktree>)
-    Finished `test` profile [optimized + debuginfo] target(s) in 10.10s
+    Finished `test` profile [optimized + debuginfo] target(s) in 10.47s
      Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/6a9a3154ce598d72/out/mibz2-6a9a3154ce598d72)
 warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
 
