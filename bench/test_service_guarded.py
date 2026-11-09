@@ -4,14 +4,25 @@ failure. Among them, the Researcher's admission witnesses (REVIEW 6742157313, pr
 b365250e), each of which the draft at 3c9df670 accepted: an output length of 1, a non-hex
 digest, a preflight of only {"ok": true}, ok=true beside an unknown quota and no
 observations, a row with exit 17 and an empty err, round 0 as false, a base path outside the
-attempt's registered arms.
+attempt's registered arms. And the Researcher's termination witness (REVIEW 6746023579):
+every row must carry ab's `termination` as "success"; the producer itself, `ab run`, is driven
+with stand-in children that write a valid-looking record and then exit 0, exit 17, are killed,
+or write nothing, and its records are judged (`Producer`, given a built `ab`). The raw
+discovery diagnostics are read from fake trees.
 
     python3 bench/test_service_guarded.py
+
+`Producer` needs ab's executable: SG_AB names it (CI builds it: `cargo build --example ab`),
+else target/debug/examples/ab if built; it skips without one unless SG_REQUIRE_AB=1.
 """
 
 import json
+import os
 import random
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -24,8 +35,9 @@ W = "/w/target/service-guarded/20261110T000000Z"
 BASE = f"mibz2@{W}/bin/ab-base"
 TWIN = f"mibz2@{W}/bin/ab-base-twin"
 CAND, BASESHA = "c" * 40, "b" * 40
+FETCHED = "2026-11-10T00:00:00Z"
 REG = {"corpus_sha256": "a" * 64, "decoded_bytes": 209700196,
-       "frozen": {"candidate": CAND, "base": BASESHA}}
+       "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED}}
 HASH = "0123456789abcdef"
 
 
@@ -71,6 +83,7 @@ def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3, harm=1.0):
                     "hash": "fedcba9876543210" if case == "wrong bytes" and (b, t, rnd) == ("head", 10, 1) else HASH,
                     "thread_cpu": names(plan, True), "observed_threads": names(plan, False),
                     "err": "boom" if case == "failed run" and (b, t, rnd) == ("twin", 9, 0) else "",
+                    "termination": "success",
                 })
     return out
 
@@ -78,7 +91,7 @@ def rows(case=None, speed=1.05, cpu=1.13, twin=1.0, seed=3, harm=1.0):
 def files(**over):
     rec, status = record(True)
     f = {
-        "commits.txt": f"head {CAND}\ncandidate {CAND}\nbase {BASESHA}\n",
+        "commits.txt": f"head {CAND}\ncandidate {CAND}\nbase {BASESHA}\nbase_fetched {FETCHED}\n",
         "arms.txt": f"mibz2\n{BASE}\n{TWIN}\n",
         "inputs.txt": f"{'1' * 64}  {W}/bin/ab-head\n{'2' * 64}  {W}/bin/ab-base\n{'2' * 64}  {W}/bin/ab-base-twin\n",
         "corpus.sha256": f"{'a' * 64}  /w/target/service-guarded/wikidata.bz2\n",
@@ -165,11 +178,31 @@ class Judge(unittest.TestCase):
                 self.assertRefused(judge(r=[bad] + r[1:]), "structural", what)
         self.assertRefused(judge(r=[{k: v for k, v in r[0].items() if k != "err"}] + r[1:]), "structural", "no err")
 
+    def test_every_row_must_terminate_successfully(self):
+        # (the Researcher's termination witness, REVIEW 6746023579: a valid-looking record
+        # written before a nonzero exit or a signal; ab's records carry `termination`, no `exit`)
+        for what, val in (("missing", None), ("exit 17", "exit 17"), ("signal 9", "signal 9"),
+                          ("signal 15", "signal 15"), ("unknown", "unknown"), ("exit 0 spelled out", "exit 0"),
+                          ("not a string", 0)):
+            with self.subTest(what):
+                r = rows()
+                r[5] = {k: v for k, v in r[5].items() if k != "termination"}
+                if val is not None:
+                    r[5]["termination"] = val
+                v = judge(r=r)
+                self.assertRefused(v, "structural", what)
+                self.assertTrue(any("termination" in p for p in v["problems"]), v["problems"])
+        self.assertTrue(judge()["valid"])
+
     def test_identity(self):
         cases = {
             "not frozen": sg.judge(files(), rows(), (), dict(REG, frozen={})),
-            "another candidate": judge(files(**{"commits.txt": f"candidate {'d' * 40}\nbase {BASESHA}\n"})),
-            "another base": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {'d' * 40}\n"})),
+            "another candidate": judge(files(**{"commits.txt": f"candidate {'d' * 40}\nbase {BASESHA}\nbase_fetched {FETCHED}\n"})),
+            "another base": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {'d' * 40}\nbase_fetched {FETCHED}\n"})),
+            # (base currency: the time master was fetched at the freeze, beside its SHA)
+            "no fetch time frozen": sg.judge(files(), rows(), (), dict(REG, frozen={"candidate": CAND, "base": BASESHA})),
+            "no fetch time recorded": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\n"})),
+            "another fetch time": judge(files(**{"commits.txt": f"candidate {CAND}\nbase {BASESHA}\nbase_fetched 2026-11-11T00:00:00Z\n"})),
             "a dry run": judge(files(**{"DRY-RUN.txt": "DRY RUN"})),
             "arms missing": judge(files(**{"arms.txt": None})),
             "a fourth arm": judge(files(**{"arms.txt": f"mibz2\n{BASE}\n{TWIN}\nmibz2@/x\n"})),
@@ -231,6 +264,129 @@ class Judge(unittest.TestCase):
         manifest = json.loads((HERE / "wikidata.json").read_text())
         self.assertEqual(reg["decoded_bytes"], manifest["decoded_bytes"])
         self.assertEqual(reg["corpus_sha256"], manifest["corpus_sha256"])
+
+
+def ab_exe():
+    exe = os.environ.get("SG_AB") or str(HERE.parent / "target" / "debug" / "examples" / "ab")
+    return exe if os.access(exe, os.X_OK) else None
+
+
+class Producer(unittest.TestCase):
+    """`ab run` itself, the producer, with stand-in children (ARM@EXE) that each write the clean
+    fixture's head row at 10 threads, round 0 (the child's own fields), and then exit 0, exit
+    17, are killed by SIGKILL, or write nothing at all. Each record ab writes takes that row's
+    place in the clean attempt, with only the arm and the observed thread names (a shell's,
+    here) put back as the fixture's; everything else is ab's, `termination` included. Success
+    is VALID; every other ending is INVALID (structural), named by its termination"""
+
+    def setUp(self):
+        self.ab = ab_exe()
+        if not self.ab:
+            if os.environ.get("SG_REQUIRE_AB") == "1":
+                self.fail("SG_REQUIRE_AB=1 and no ab executable (SG_AB, or target/debug/examples/ab)")
+            self.skipTest("no ab executable: build it with `cargo build --example ab`, or set SG_AB")
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success(self):
+        clean = rows()
+        at = next(i for i, r in enumerate(clean) if (r["arm"], r["threads"], r["round"]) == ("mibz2", 10, 0))
+        theirs = ("round", "corpus", "threads", "arm", "observed_threads")
+        child = json.dumps({k: v for k, v in clean[at].items() if k not in theirs + ("termination",)})
+        arms = []
+        for name, tail in (("ok", "exit 0"), ("seventeen", "exit 17"), ("killed", "kill -KILL $$"), ("empty", None)):
+            p = self.tmp / name
+            body = "exit 0\n" if tail is None else f"printf '%s\\n' '{child}'\n{tail}\n"
+            p.write_text("#!/bin/sh\n" + body)
+            p.chmod(0o755)
+            arms.append(f"{name}@{p}")
+        corpus = self.tmp / "wikidata.bz2"
+        corpus.write_bytes(b"BZh9")
+        out = self.tmp / "runs.jsonl"
+        r = subprocess.run([self.ab, "run", str(out), "--arms", ",".join(arms), "--threads", "10", "--rounds", "1",
+                            "--max-busy", "64", "--settle", "0.2", str(corpus)],
+                           capture_output=True, text=True, timeout=300)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        recs = {json.loads(l)["arm"].split("@")[0]: json.loads(l) for l in out.read_text().splitlines() if l.strip()}
+        self.assertEqual(set(recs), {"ok", "seventeen", "killed", "empty"})
+        want = {"ok": "success", "seventeen": "exit 17", "killed": "signal 9", "empty": "success"}
+        for name, term in want.items():
+            with self.subTest(name):
+                rec = recs[name]
+                self.assertEqual(rec["termination"], term)
+                self.assertNotIn("exit", rec)
+                self.assertEqual((rec["round"], rec["threads"], rec["corpus"]), (0, 10, "wikidata"))
+                got = dict(rec, arm="mibz2", observed_threads=clean[at]["observed_threads"])
+                v = judge(r=clean[:at] + [got] + clean[at + 1:])
+                if name == "ok":
+                    self.assertTrue(v["valid"], v["problems"])
+                    continue
+                self.assertFalse(v["valid"], name)
+                self.assertEqual(v["failure"], "structural", v["problems"])
+                if name == "empty":
+                    self.assertTrue(any("broken" in p for p in v["problems"]), v["problems"])
+                else:
+                    self.assertTrue(any(f"termination '{term}'" in p for p in v["problems"]), v["problems"])
+
+
+class Discovery(unittest.TestCase):
+    """The raw discovery diagnostics on fake trees: each read's contents, absence or error
+    archived as such, and no quota verdict"""
+
+    def tree(self, membership, mountinfo, files):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, root, True)
+        (root / "proc" / "self").mkdir(parents=True)
+        (root / "proc" / "self" / "cgroup").write_text(membership)
+        (root / "proc" / "self" / "mountinfo").write_text(mountinfo)
+        for rel, text in files.items():
+            p = root / rel.lstrip("/")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if text is None:
+                p.mkdir()  # (unreadable as a file: a read error)
+            else:
+                p.write_text(text)
+        return str(root)
+
+    def test_v2_every_level_with_absence_and_errors(self):
+        root = self.tree("0::/a/b\n", "30 1 0:26 / /sys/fs/cgroup rw - cgroup2 cgroup2 rw\n"
+                         "31 1 0:27 / /proc rw - proc proc rw\n",
+                         {"/sys/fs/cgroup/a/cpu.max": "800000 100000\n", "/sys/fs/cgroup/a/b/cpu.max": None})
+        d = sg.discovery(root)
+        keys = set()
+
+        def walk(x):
+            if isinstance(x, dict):
+                keys.update(x)
+                for v in x.values():
+                    walk(v)
+            elif isinstance(x, list):
+                for v in x:
+                    walk(v)
+        walk(d)
+        self.assertFalse(keys & {"verdict", "quota", "kind", "target", "cpus"}, keys)
+        [h] = d["hierarchies"]
+        self.assertEqual(h["membership"], "0::/a/b")
+        self.assertEqual(h["top_cgroup_type"]["state"], "absent")
+        self.assertEqual([lv["dir"] for lv in h["levels"]], ["/sys/fs/cgroup", "/sys/fs/cgroup/a", "/sys/fs/cgroup/a/b"])
+        states = [lv["files"][0]["state"] for lv in h["levels"]]
+        self.assertEqual(states, ["absent", "read", "error"])
+        self.assertEqual(h["levels"][1]["files"][0]["value"], "800000 100000\n")
+
+    def test_v1_cpu_and_a_path_outside_the_mount(self):
+        root = self.tree("4:cpu,cpuacct:/x\n", "40 1 0:30 /y /sys/fs/cgroup/cpu rw - cgroup cgroup rw,cpu,cpuacct\n", {})
+        [h] = sg.discovery(root)["hierarchies"]
+        self.assertEqual(h["levels"], [])
+        self.assertIn("not under the mount's root", h["notes"][0])
+
+    def test_unreadable_membership_is_archived(self):
+        root = self.tree("", "", {})
+        os.remove(os.path.join(root, "proc", "self", "cgroup"))
+        d = sg.discovery(root)
+        self.assertEqual(d["membership"]["state"], "absent")
+        self.assertEqual(d["hierarchies"], [])
 
 
 if __name__ == "__main__":

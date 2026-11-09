@@ -9,7 +9,8 @@ Wikidata sample, paired by round. It judges an attempt's directory, as the recip
 
 **What it admits, and how** (the earlier service-2x3 report's evidence boundary, at
 3e201246's bench/service_2x3.py, restored; the Researcher's REVIEW 6742157313):
-- **identity:** `commits.txt`'s candidate and base are `bench/service-guarded.frozen`'s, and
+- **identity:** `commits.txt`'s candidate, base and base fetch time (`base_fetched`, the UTC
+  time the base was fetched as master at the freeze) are `bench/service-guarded.frozen`'s, and
   the base is an ancestor of the candidate; no `DRY-RUN.txt`; `arms.txt` names exactly the
   three arms the recipe ran (`mibz2`, `mibz2@<attempt>/bin/ab-base`, `mibz2@<attempt>/bin/ab-base-twin`)
   and `inputs.txt` gives a SHA-256 for both base paths, the same digest;
@@ -17,8 +18,11 @@ Wikidata sample, paired by round. It judges an attempt's directory, as the recip
   is the registered corpus (`wikidata`), its output exactly the registered decoded bytes
   (209700196), its digest a hex string, one digest across every run;
 - **rows:** every row a JSON object with the arm one of `arms.txt`'s; `threads` and `round`
-  integers (never booleans); `err` present and empty; no `broken` (ab's mark for a child that
-  printed no record: a crash), and no `exit`/`status` other than 0 where a row carries one;
+  integers (never booleans); `termination` exactly "success" (ab's record of how the parent
+  reaped the child, bench 3.5.0: "exit N", "signal N", "unknown" or no field at all refuses, so
+  a valid-looking record written before a nonzero exit or a signal is never a successful run);
+  `err` present and empty; no `broken` (ab's mark for a child that printed no record), and no
+  `exit`/`status` other than 0 where a row carries one;
   finite positive wall, CPU and peak RSS; both thread records;
 - **the preflight:** `preflight.json` and its exit status (`preflight.exit`) checked whole by
   bench/svc_target_check.py: TARGET, not merely `ok`;
@@ -49,6 +53,14 @@ reported. P1 keeps the service-core outcome map, not the pipelined default's 1.0
 (Each decided by the Coordinator under amended C6 (#306), subject to the Researcher's review.)
 Adoption is not this report's: it is decided separately, after the evidence, by a
 Guardian-reviewed decision-record entry.
+
+`discovery` prints the raw cgroup discovery facts as diagnostics only (the recipe archives them
+as diagnostics/discovery.json): the process's cgroup membership, the mounts, and for each CPU
+hierarchy every directory from its mount point down the membership path with its quota files'
+contents, absence or read error. It gives no quota verdict and is never judged; the target
+evidence is svc_target's record and bench/svc_target_check.py's check of it.
+
+    python3 bench/service_guarded.py discovery
 """
 
 import argparse
@@ -94,6 +106,8 @@ N1_BAND = (0.97, 1.03)
 CORPUS = "wikidata"
 HASH = re.compile(r"[0-9a-f]{16,}")
 BASE_SUFFIX, TWIN_SUFFIX = "/bin/ab-base", "/bin/ab-base-twin"
+# the time master was fetched at the freeze (UTC), beside the base it names
+FETCHED = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ")
 
 
 def registered(root=None):
@@ -108,6 +122,8 @@ def registered(root=None):
     for line in lines:
         f = line.split()
         if len(f) == 2 and f[0] in ("candidate", "base") and re.fullmatch(r"[0-9a-f]{40}", f[1]):
+            frozen[f[0]] = f[1]
+        if len(f) == 2 and f[0] == "base_fetched" and FETCHED.fullmatch(f[1]):
             frozen[f[0]] = f[1]
     return {"corpus_sha256": w["corpus_sha256"], "decoded_bytes": w["decoded_bytes"], "frozen": frozen}
 
@@ -197,7 +213,7 @@ def bundle_problems(files, reg):
     if "DRY-RUN.txt" in files:
         p.append(("identity", "a DRY run: never evidence"))
     commits = dict(l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2)
-    for k in ("candidate", "base"):
+    for k in ("candidate", "base", "base_fetched"):
         if not reg["frozen"].get(k):
             p.append(("identity", f"bench/service-guarded.frozen names no {k}"))
         elif commits.get(k) != reg["frozen"][k]:
@@ -242,6 +258,8 @@ def row_problems(rows, arms, reg):
             q.append(f"threads {r.get('threads')!r}")
         if not (is_int(r.get("round")) and 0 <= r["round"] < ROUNDS):
             q.append(f"round {r.get('round')!r} not an integer in 0..{ROUNDS - 1}")
+        if r.get("termination") != "success":
+            q.append(f"termination {r.get('termination')!r}, not 'success'")
         if r.get("err") != "":
             q.append(f"err {r.get('err')!r}: a failed run (or no err field)")
         if "broken" in r:
@@ -454,13 +472,94 @@ def load(attempt):
     return files, rows, unreadable
 
 
+def raw_read(path, limit=1 << 20):
+    """One file read as it is: its contents (at most `limit` characters), its absence, or the
+    error reading it, never a parsed value"""
+    try:
+        with open(path, errors="replace") as f:
+            return {"path": path, "state": "read", "value": f.read(limit)}
+    except FileNotFoundError:
+        return {"path": path, "state": "absent"}
+    except OSError as e:
+        return {"path": path, "state": "error", "error": f"{type(e).__name__}: {e.strerror or e}"}
+
+
+def unescape(field):
+    """mountinfo's octal escapes (a space is \\040)"""
+    return re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), field)
+
+
+def discovery(root="/"):
+    """The raw cgroup discovery facts, diagnostics only: no quota verdict. `root` prefixes
+    every path read (a fake tree in the tests). For each cgroup2 mount, and each v1 mount with
+    the cpu controller: the membership line that names it, and every directory from the mount
+    point down the membership path, each one's existence and quota files (cpu.max for v2,
+    cpu.cfs_quota_us and cpu.cfs_period_us for v1) as read; for v2, the mount top's
+    cgroup.type (absent at a true root). Anything that doesn't line up is said, not resolved"""
+    at = lambda p: os.path.join(root, p.lstrip("/"))  # noqa: E731
+    membership = raw_read(at("/proc/self/cgroup"))
+    mountinfo = raw_read(at("/proc/self/mountinfo"))
+    lines = []
+    for line in (membership.get("value") or "").splitlines():
+        hid, _, rest = line.partition(":")
+        ctrl, _, path = rest.partition(":")
+        lines.append((hid, ctrl.split(",") if ctrl else [], path, line))
+    hierarchies = []
+    for line in (mountinfo.get("value") or "").splitlines():
+        left, sep, right = line.partition(" - ")
+        f, r = left.split(), right.split()
+        if not sep or len(f) < 5 or not r:
+            continue
+        opts = r[2].split(",") if len(r) > 2 else []
+        v2 = r[0] == "cgroup2"
+        if not (v2 or (r[0] == "cgroup" and "cpu" in opts)):
+            continue
+        h = {"mountinfo": line, "fstype": r[0], "root": unescape(f[3]), "mount_point": unescape(f[4]),
+             "membership": None, "levels": [], "notes": []}
+        hierarchies.append(h)
+        mine = [x for x in lines if (x[0] == "0" and not x[1] if v2 else "cpu" in x[1])]
+        if len(mine) != 1:
+            h["notes"].append(f"{len(mine)} membership lines for this hierarchy")
+            continue
+        h["membership"] = mine[0][3]
+        path, mroot = mine[0][2], h["root"]
+        if mroot == "/":
+            rel = path
+        elif path == mroot or path.startswith(mroot.rstrip("/") + "/"):
+            rel = path[len(mroot.rstrip("/")):]
+        else:
+            h["notes"].append("the membership path is not under the mount's root")
+            continue
+        parts = [x for x in rel.split("/") if x]
+        if v2:
+            h["top_cgroup_type"] = raw_read(at(os.path.join(h["mount_point"], "cgroup.type")))
+        files = ("cpu.max",) if v2 else ("cpu.cfs_quota_us", "cpu.cfs_period_us")
+        for i in range(len(parts) + 1):
+            d = os.path.join(h["mount_point"], *parts[:i])
+            h["levels"].append({"dir": d, "exists": os.path.isdir(at(d)),
+                                "files": [raw_read(at(os.path.join(d, n))) for n in files]})
+    return {
+        "schema": "mibz2.service_guarded.discovery/1",
+        "note": "raw facts, diagnostics only: no quota verdict, never judged; the target evidence "
+        "is svc_target's record. Read by this process, a child of the recipe's shell, in its cgroup",
+        "membership": membership,
+        "mountinfo": mountinfo,
+        "hierarchies": hierarchies,
+    }
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("report")
     r.add_argument("attempt")
     r.add_argument("--out", required=True)
+    sub.add_parser("discovery")
     a = p.parse_args(argv)
+    if a.cmd == "discovery":
+        json.dump(discovery(), sys.stdout, indent=1, sort_keys=True)
+        print()
+        return 0
     files, rows, unreadable = load(a.attempt)
     v = judge(files, rows, unreadable)
     with open(a.out + ".json", "w") as f:

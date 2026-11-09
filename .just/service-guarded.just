@@ -7,8 +7,10 @@
 # from the attempt's directory. An actual-target preflight (examples/svc_target.rs, checked
 # whole by bench/svc_target_check.py) runs first and refuses before anything is measured
 # unless it is TARGET; the refusal is archived in the bundle. No PMU telemetry
-# (--machine-state is not passed); sysfs snapshots (ab env, ab sample) are diagnostics only,
-# never judged (D064). One attempt; no replacement is registered, and no retry-to-pass.
+# (--machine-state is not passed); the diagnostics (`ab env --facts`, lscpu, `ab sample` and
+# the raw cgroup discovery reads) are passive, each bounded (TERM at 30 s, KILL 5 s after),
+# each one's exit archived, never judged (D064), and a failing one never refuses the attempt
+# or touches a timed row. One attempt; no replacement is registered, and no retry-to-pass.
 #   just submit bench-service-guarded
 # A DRY value is the recipe's own check (one round, no settling, a failed preflight recorded
 # and not refused), with optionally a CORPUS, both positional:
@@ -52,12 +54,15 @@ bench-service-guarded DRY="" CORPUS="":
     git rev-parse HEAD > "$W/commit.txt"
     git status --porcelain --untracked-files=no > "$W/git-status.txt"
     # the commits the freeze names (bench/service-guarded.frozen): the candidate, whose build
-    # and workload inputs HEAD must match, and the base (master at the freeze, by SHA, merged
-    # into the candidate before it), an ancestor of it
+    # and workload inputs HEAD must match, and the base (master as fetched at the freeze, by
+    # SHA, merged into the candidate before it), an ancestor of it, with the time that master
+    # was fetched (UTC): ancestry alone does not say the base was current
     frozen=bench/service-guarded.frozen
     cand=$(awk '$1 == "candidate" {print $2}' "$frozen")
     base=$(awk '$1 == "base" {print $2}' "$frozen")
-    [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base (the registration is a DRAFT); nothing to run"
+    fetched=$(awk '$1 == "base_fetched" {print $2}' "$frozen")
+    [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ && $fetched =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]] \
+      || fail "$frozen names no frozen candidate, base and base fetch time (the registration is a DRAFT); nothing to run"
     measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples tests/common
       bench/service_guarded.py bench/svc_target_check.py bench/wikidata.json bench/wikidata.py bench/bundle.sh
       Justfile .just/service-guarded.just docs/journal/2026-11-09-service-guarded-registration.md)
@@ -71,7 +76,7 @@ bench-service-guarded DRY="" CORPUS="":
       echo "the measured inputs differ from the frozen candidate $cand" > "$W/NOT-FROZEN.txt"
       fail "HEAD's build or workload inputs differ from the frozen candidate $cand"
     fi
-    printf 'head %s\ncandidate %s\nbase %s\n' "$(cat "$W/commit.txt")" "$cand" "$base" | tee "$W/commits.txt"
+    printf 'head %s\ncandidate %s\nbase %s\nbase_fetched %s\n' "$(cat "$W/commit.txt")" "$cand" "$base" "$fetched" | tee "$W/commits.txt"
     [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
     [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
     [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
@@ -108,11 +113,25 @@ bench-service-guarded DRY="" CORPUS="":
     cp "$(printf '%s\n' "$head_built" | sed -n 3p)" "$W/bin/svc_target"
     sha256sum -c --quiet "$W/bin/ab-base.sha256" || fail "the base executable changed after it was copied"
     AB=$W/bin/ab-head; BASEAB=$W/bin/ab-base; TWINAB=$W/bin/ab-base-twin; WINDOWS=$W/bin/windows
-    # diagnostics only, never judged (D064)
+    # diagnostics only, never judged (D064), and passive: `ab env --facts` starts no thread,
+    # spins nothing and opens no perf counter; lscpu and `ab sample` only read; the raw
+    # discovery reads are the cgroup membership, the mounts and the ancestor quota files, with
+    # each read's absence or error, and no quota verdict (svc_target's record below is the
+    # target evidence). Each is bounded, TERM at 30 s and KILL 5 s after; its exit and stderr
+    # are archived (diagnostics/exits.txt, NAME.stderr). A failing diagnostic is recorded as
+    # failed and nothing else: it never refuses the attempt, and never deletes, replaces or
+    # selects a timed row
     mkdir "$W/diagnostics"
-    "$AB" env > "$W/diagnostics/env.json"
-    lscpu > "$W/diagnostics/lscpu.txt"
-    "$AB" sample --count 5 > "$W/diagnostics/sample-before.jsonl"
+    diag() {  # diag FILE COMMAND...: one bounded diagnostic reading into diagnostics/FILE
+      local file=$1 rc=0; shift
+      timeout --kill-after=5 30 "$@" > "$W/diagnostics/$file" 2> "$W/diagnostics/$file.stderr" || rc=$?
+      echo "$file: exit $rc" >> "$W/diagnostics/exits.txt"
+      [ "$rc" = 0 ] || echo "bench-service-guarded: the diagnostic $file failed (exit $rc), archived; not judged"
+    }
+    diag env.json "$AB" env --facts
+    diag lscpu.txt lscpu
+    diag discovery.json python3 bench/service_guarded.py discovery
+    diag sample-before.jsonl "$AB" sample --count 5
     # the actual-target preflight, before anything is measured, checked whole: a refusal
     # unless TARGET (except in a DRY check), archived either way
     pf=0
@@ -154,7 +173,7 @@ bench-service-guarded DRY="" CORPUS="":
     cat "$W/inputs.txt"
     "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB,mibz2@$TWINAB" \
       --threads "8,9,10,11,12,16,20" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
-    "$AB" sample --count 5 > "$W/diagnostics/sample-after.jsonl"
+    diag sample-after.jsonl "$AB" sample --count 5
     set +e
     python3 bench/service_guarded.py report "$W" --out "$W/service-guarded"
     rc=$?

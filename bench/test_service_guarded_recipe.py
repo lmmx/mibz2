@@ -5,8 +5,12 @@ scratch repository with a base commit, a candidate and a freeze naming both; bot
 and its check, the corpus and its digest, the arms, the run, the judge's report, and the
 bundle, on every exit path: VALID, INVALID (N1), REFUSED by the preflight, a DRY check
 (refused by the judge as a DRY run), INCOMPLETE (the harness crashing mid-run), REFUSED by an
-unfrozen file and by dirty inputs; and through `just submit`. Nothing here is a measurement:
-the stand-in harness writes synthetic rows.
+unfrozen file, by a freeze without the base's fetch time, and by dirty inputs; INVALID
+(structural) by a child whose recorded termination is not success; and through `just submit`.
+The diagnostics (REVIEW 6746023579): the stand-in harness refuses `env` without `--facts`
+(the passive collector), every diagnostic is bounded by a timeout with a forced kill after it,
+each one's exit is archived, and a failing one leaves the outcome and every timed row as they
+are. Nothing here is a measurement: the stand-in harness writes synthetic rows.
 
     python3 bench/test_service_guarded_recipe.py
 """
@@ -37,8 +41,14 @@ FAKE_AB = r"""#!/usr/bin/env python3
 import json, os, random, sys
 cmd = sys.argv[1]
 if cmd == "env":
-    print(json.dumps({"cpus": 20, "stand_in": True}))
+    if sys.argv[2:] != ["--facts"]:
+        sys.exit("the stand-in refuses `ab env` without --facts: only the passive collector")
+    if os.environ.get("FAKE_DIAG") == "fail":
+        sys.exit(3)
+    print(json.dumps({"facts": "stand-in", "cpus": 20}))
 elif cmd == "sample":
+    if os.environ.get("FAKE_DIAG") == "fail":
+        print("a sample failing", file=sys.stderr); sys.exit(3)
     for i in range(int(sys.argv[sys.argv.index("--count") + 1])):
         print(json.dumps({"sample": i}))
 elif cmd == "run":
@@ -70,7 +80,8 @@ elif cmd == "run":
                     f.write(json.dumps({"round": rnd, "corpus": corpus, "threads": t, "arm": arm,
                         "wall": wall, "cpu": rng.gauss(1, 0.01) / (1.1 if b == "head" and t == 10 else 1),
                         "rss_kb": 70000, "out": int(os.environ["FAKE_OUT"]), "hash": "0123456789abcdef",
-                        "thread_cpu": names(p, True), "observed_threads": names(p, False), "err": ""}) + "\n")
+                        "thread_cpu": names(p, True), "observed_threads": names(p, False), "err": "",
+                        "termination": "exit 17" if mode == "exit17" and n == 4 else "success"}) + "\n")
                     n += 1
                     if mode == "crash" and n == 7:
                         sys.exit("the stand-in harness crashing mid-run")
@@ -99,7 +110,7 @@ print(json.dumps({"reason": "build-finished", "success": True}))
 """
 
 FAKE_RUSTC = "#!/bin/sh\necho 'rustc 0.0.0 (stand-in)'\n"
-FAKE_LSCPU = "#!/bin/sh\necho 'CPU(s): 20'\n"
+FAKE_LSCPU = "#!/bin/sh\n[ \"$FAKE_DIAG\" = fail ] && exit 5\necho 'CPU(s): 20'\n"
 
 FAKE_GH = r"""#!/usr/bin/env python3
 import json, os, sys
@@ -168,7 +179,8 @@ class EndToEnd(unittest.TestCase):
         (w / "src" / "lib.rs").write_text("// the candidate\n")
         git(w, "commit", "-q", "-am", "candidate")
         self.cand = git(w, "rev-parse", "HEAD")
-        (w / "bench" / "service-guarded.frozen").write_text(f"candidate {self.cand}\nbase {self.base}\n")
+        (w / "bench" / "service-guarded.frozen").write_text(
+            f"candidate {self.cand}\nbase {self.base}\nbase_fetched 2026-11-10T00:00:00Z\n")
         git(w, "commit", "-q", "-am", "freeze (test fixture)")
         bin_ = self.tmp / "bin"
         bin_.mkdir()
@@ -202,6 +214,11 @@ class EndToEnd(unittest.TestCase):
     def bundles(self):
         return sorted((self.work / "target" / "service-guarded").glob("*.tar.gz"))
 
+    def member(self, tarball, name):
+        with tarfile.open(tarball) as t:
+            stamp = tarball.name[: -len(".tar.gz")]
+            return t.extractfile(f"{stamp}/{name}").read().decode()
+
     def names(self, tarball):
         with tarfile.open(tarball) as t:
             stamp = tarball.name[: -len(".tar.gz")]
@@ -226,8 +243,53 @@ class EndToEnd(unittest.TestCase):
                   "preflight-check.json", "runs.jsonl", "service-guarded.json", "service-guarded.md",
                   "bin/ab-base", "bin/ab-base-twin", "bin/ab-head", "bin/svc_target", "bin/ab-base.sha256",
                   "diagnostics/env.json", "diagnostics/sample-before.jsonl", "diagnostics/sample-after.jsonl",
+                  "diagnostics/lscpu.txt", "diagnostics/discovery.json", "diagnostics/exits.txt",
                   "console.log", "outcome.txt"):
             self.assertIn(n, got)
+        [b] = self.bundles()
+        # (every diagnostic ran and exited 0: `env` with --facts, which the stand-in insists on)
+        self.assertEqual(self.member(b, "diagnostics/exits.txt").splitlines(), [
+            "env.json: exit 0", "lscpu.txt: exit 0", "discovery.json: exit 0",
+            "sample-before.jsonl: exit 0", "sample-after.jsonl: exit 0"])
+        disc = json.loads(self.member(b, "diagnostics/discovery.json"))
+        self.assertEqual(disc["schema"], "mibz2.service_guarded.discovery/1")
+        self.assertIn("base_fetched 2026-11-10T00:00:00Z", self.member(b, "commits.txt"))
+
+    def test_a_failing_diagnostic_is_archived_and_changes_nothing_timed(self):
+        env = dict(self.env_for("valid"), FAKE_DIAG="fail")
+        r, got, outcome = self.run_recipe(env)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertTrue(outcome.startswith("VALID: P1"), outcome)
+        [b] = self.bundles()
+        exits = self.member(b, "diagnostics/exits.txt").splitlines()
+        self.assertEqual(exits, ["env.json: exit 3", "lscpu.txt: exit 5", "discovery.json: exit 0",
+                                 "sample-before.jsonl: exit 3", "sample-after.jsonl: exit 3"])
+        self.assertIn("a sample failing", self.member(b, "diagnostics/sample-before.jsonl.stderr"))
+        self.assertEqual(len(self.member(b, "runs.jsonl").splitlines()), 420)
+
+    def test_every_diagnostic_is_passive_and_bounded(self):
+        # (REVIEW 6746023579 §2: `ab env` only as the facts-only collector; every external
+        # diagnostic outside the timed run through `diag`, whose one command is bounded by a
+        # TERM timeout with a forced kill after it; the preflight keeps its own, longer bound)
+        body = recipe_body()
+        [d] = re.findall(r"^diag\(\) \{.*?^\}", body, re.M | re.S)
+        self.assertRegex(d, r'\n\s*timeout --kill-after=5 30 "\$@" > ')
+        rest = body.replace(d, "")
+        envs = re.findall(r'^.*"\$AB" env\b.*$', rest, re.M)
+        self.assertEqual(envs, ['diag env.json "$AB" env --facts'])
+        for pat in (r'"\$AB" sample', r"\blscpu\b(?! and)", r"service_guarded\.py discovery"):
+            calls = [c for c in re.findall(rf"^.*{pat}.*$", rest, re.M) if not c.lstrip().startswith("#")]
+            self.assertTrue(calls, pat)
+            for c in calls:
+                self.assertRegex(c, r"^diag \S+ ", c)
+        self.assertIn('timeout --kill-after=10 120 "$W/bin/svc_target"', rest)
+        self.assertNotRegex(rest, r"timeout (?!--kill-after)")
+
+    def test_a_child_that_did_not_succeed_is_invalid(self):
+        r, _, outcome = self.run_recipe(self.env_for("exit17"))
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertTrue(outcome.startswith("INVALID (structural)"), outcome)
+        self.assertIn("termination 'exit 17'", outcome)
 
     def test_n1_is_invalid_with_its_kind(self):
         r, _, outcome = self.run_recipe(self.env_for("n1"))
@@ -261,6 +323,13 @@ class EndToEnd(unittest.TestCase):
         r, _, outcome = self.run_recipe(self.env_for())
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertIn("names no frozen candidate", outcome)
+        git(self.work, "reset", "-q", "--hard", "HEAD~1")
+        # (a freeze naming the base without the time master was fetched)
+        (self.work / "bench" / "service-guarded.frozen").write_text(f"candidate {self.cand}\nbase {self.base}\n")
+        git(self.work, "commit", "-q", "-am", "a freeze without the fetch time")
+        r, _, outcome = self.run_recipe(self.env_for())
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertIn("base fetch time", outcome)
         git(self.work, "reset", "-q", "--hard", "HEAD~1")
         p = self.work / "bench" / "service_guarded.py"
         p.write_text(p.read_text() + "\n# dirty\n")
