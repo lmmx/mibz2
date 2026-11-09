@@ -1,0 +1,48 @@
+{
+  "timestamp_inversion": {
+    "wait_endpoint_length": 9,
+    "attributed_length": 16,
+    "defects": {}
+  },
+  "released_credit": {
+    "outstanding": 2,
+    "slots": 3,
+    "wrong_window_credit_ns": 5,
+    "defects": {}
+  },
+  "no_finish_priority_choice": {
+    "finish_over_prep": 0,
+    "finish_first_ns": 5,
+    "defects": {}
+  },
+  "empty_incomplete": {
+    "blocks": 0,
+    "defects": {}
+  },
+  "mixed_plan": {
+    "plans": [
+      {
+        "teams": 2,
+        "services": 2,
+        "lookahead": 2,
+        "window": 8,
+        "fronts": 6
+      },
+      {
+        "teams": 2,
+        "services": 2,
+        "lookahead": 2,
+        "window": 12,
+        "fronts": 6
+      }
+    ],
+    "reported_plan": {
+      "teams": 2,
+      "services": 2,
+      "lookahead": 2,
+      "window": 8,
+      "fronts": 6
+    },
+    "defects": {}
+  }
+}
