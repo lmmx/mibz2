@@ -2498,3 +2498,65 @@ Expected: the repaired collector distinguishes real service reach from late TLS 
 Independent work: source/diff review, overlay application check, table arithmetic, finite publication-order model and archived CI inspection. No implementation, Rust rerun, timing, merge or infrastructure change. [Evidence index](records/d057/evidence.json), [results](records/d057/results.json), [CI excerpts](records/d057/ci-excerpts.txt), [routing audit](records/d057/routing.json).
 
 Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **61d3b9d2de69680d6fd1f7016edd9dc7e140fd77**. Five resolved historical routing findings, zero unresolved; REVIEW routes to #145. Observed 2026-11-09. Only this inbox item remained unfinished in the queue snapshot. Persistent task/subscriptions unchanged.
+
+
+## D058 — #277 direct-F: D055 evidence objections resolved; timing release conditional on freeze and green CI
+
+Inbox **6732894651** on #161; candidate **aa409f6f2ebce9f41dc7902789f0ab8d6958b020**. Operating SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL: **a4f97714cc14366984015869d9d094d89488ac57**. Observed 2026-11-09.
+
+**G1 concur with the repaired evidence; G2 resolve D055's three material evidence objections. D055's timing HOLD lifts for the registered #277 sweep once the Researcher's freeze and the ordinary green-CI conditions are satisfied.** The completed CI must include the new empty-composition Miri test on the scalar/default and AVX2 configurations; the currently unfinished job is not a PASS (B7). No additional Guardian approval ceremony is required when those objective conditions are met. At this observation the candidate is **not ready to time**: CI is red/incomplete, and this review does not establish the Researcher's freeze.
+
+This disposition concerns the existing bounded serial MTF-to-table diagnostic, under D055's valid input/kernel premises. It does not qualify production, approve a merge, authorize workstation timing, widen the experiment to a whole-decoder or parallel claim, alter a frozen acceptance rule, or repair forgeable public Kernels. No new G3 rule or G8 line stop. Resumption is conditional, not recorded as an already executed run.
+
+### Evidence pin and independent involvement
+
+The archived runs identify source **37c4ff246e449e392ade2ced4f94488c358de087**, rustc 1.97.0, x86_64 with AVX2. Reviewed source `src/run_stage.rs` blob **cb09d7da817fa467cbdc4664ddf2289e68157d1f** is identical at that source and aa409f6f. Relative to D055, its only change is the empty-composition test, not D's runtime implementation. The later harness edits replace repeat_n with repeat().take() for MSRV and add precedence-preserving parentheses. Master integration adds the reader fix and associated repository changes; it does not change D. The head note is on tested **d8a4c6f042578f84fdd1609555587d4ed6b946d5**.
+
+I reviewed the implementation, harness, four mutation patches, archived outputs, test additions and source comparisons independently of the implementer. I reproduced archive arithmetic, applied and reversed each mutant exactly on the reviewed source, audited routing, and retrieved CI output. No Rust/Miri execution, unsafe mutant execution, decoder fuzz run or timing was performed locally. D055's written ownership/conservation proof and its independently tested physical-store model remain the safety argument; finite fuzz counts do not replace that proof.
+
+### 1. Fuzz now reaches D
+
+`Ctx.block` invokes `build_direct` for scalar and detected kernels, compares production scalar MTF+BWT table/length/error, checks the selected path against `takes_runs`, catches panics and fails on unexpected fallback. It retains dirty buffers and adds fresh-buffer block checks every fourth outer case. Tampered tilings separately exercise `place` against a u64 histogram/strict-start/closure acceptance oracle and a spelled-column table oracle.
+
+The three archived unmutated runs sum to **3,398,724 cases, zero failures** (191,613 + 1,599,373 + 1,607,738). The head-source smoke adds **187,832**, zero failures; it is not included in that three-run total. Injection output records two failures in 18 cases with committed minimized witnesses.
+
+Independent CI job **128994104250**, successful, records **191,450** outer cases, zero failures:
+- sources: 64,012 streams + 63,985 columns + 63,453 tilings;
+- **91,606 blocks through build_direct** = 55,782 by records + 26,187 fallback + 7,438 BlockTooLong + 2,199 RunTooLong;
+- by-records blocks include **1,707 empty**, and **45,840** inputs satisfying the tail-store predicate;
+- tilings: 16,052 untampered valid + 6,949 tampered still valid + 40,452 refused.
+
+This is direct reached-path evidence, unlike the ordinary production fuzzing rejected as insufficient in D055. CI checked out **52e54813a1dc4f8022f32cfd579cdb51628f1d18**; its tree **64256a600971d89b112b218ec801e3da62272cbf** exactly equals aa409f6f's tree.
+
+Keep the units honest: outer cases, reached blocks and physical kernel invocations differ. A stream case can yield no block; the harness caps its scan at four blocks. Each counted block runs on each available kernel, with extra fresh runs on selected cases. The tail number is computed from the scalar reference column and unchanged placement predicate, not instrumented hardware-store telemetry. These are MTF/table and tiling tests, not full-decoder differential coverage.
+
+Nonblocking harness limits: case-index replay reconstructs the input but skips earlier dirty-buffer history, so it does not promise identical stateful replay; fresh minimization can miss a dirty-only reproducer. That does not negate the actual dirty-buffer checks or the observed kills. Preserve full preceding state/sequence if such a failure appears.
+
+### 2. Mutation evidence is auditable
+
+All four patches apply and reverse byte-for-byte against the reviewed run_stage source. Archived native/fuzz/Miri output gives:
+- **M1**, removes ownership tail: native heap-corruption SIGABRT; AVX2 Miri reports a 32-byte access with only 16 bytes left. The named empty-composition test first runs a nonempty dirtying block: this kill must not be described as an unsafe zero-byte write.
+- **M2**, Psi off by one: native 2/7 failures; D fuzz **3,472 failures / 55,851 cases**.
+- **M3**, removes final cursor equality check: survives 7/7. Accept the equivalent-mutant explanation already established in D055: complete tiling, per-bucket upper bounds and conserved total imply equality. This is not an unexplained missed safety target.
+- **M4**, replaces per-bucket bound with allocation-only `w + 8 <= n`: native 5/7 failures; D fuzz **4,860 / 21,893**.
+- Restored source: **7/7**, including the empty-composition regression.
+
+These are archived implementer executions, independently inspected, not re-executions here. The mutation script does not use pipefail and filters output; do not equate its shell exit status with universal success. The explicit build, failure and restoration lines carry the evidence. Existing source proof and the M4 witness explain why allocation capacity alone is insufficient ownership.
+
+### 3. Empty composition is now tested
+
+`miri_direct_empty_block_by_records` constructs an actual empty Symbols block, calls `build_direct`, asserts **Ok((0,true)), recs [0], empty table**, and exercises fresh and previously nonempty dirty buffers on both available kernels. This closes the test-design gap; the old low-level empty `place` fixture alone did not.
+
+The integration regression `the_empty_block_by_records_through_build_direct` scans the saved two-block fixture, compares both tables to production, requires by-records for both, and checks the second block's empty symbol stream/table. It tests the requested composition without concealing fallback.
+
+D055's completed Miri evidence **128979999343** remains scoped evidence for unchanged runtime (default 18 tests and AVX2 run-stage 3 tests). The checkpoint additionally claims the new test passed scalar/AVX2 Miri locally, but the retrieved archive supplies no complete restored-Miri transcript for that claim. At the reviewed head job **128994104024** was in progress; fetching its log returned **404 BlobNotFound**. Neither this fetch failure nor the mutant's Miri failure proves an unmutated pass. Hence the explicit completed-Miri condition in the release above, within the requested green-CI condition.
+
+### CI state and consequence
+
+At the single status observation: 27 checks, including successful fuzz-smoke; Miri, Rust and bench unfinished; Linux aarch64 packaging **128994130951** failed. Its log fails during **Install maturin**: the download returns 92 bytes, gzip says “not in gzip format”, tar exits, Docker exits 2. This is a tool-install failure before wheel build, not evidence of a D regression and not a successful ARM build. Coordinator owns the CI incident; no rerun or waiver was initiated.
+
+Expected: close direct-path fuzz, auditable mutation and empty-composition gaps. Observed: the gaps' substantive test/argument repairs are present and direct fuzz is independently confirmed; final-head completed Miri/green CI remain unestablished. The next useful step is the registered diagnostic once its freeze and those checks are satisfied. No performance gap was measured or claimed closed; no extra safety loop or local timing is requested.
+
+[Independent probes](records/d058/probes.py), [results](records/d058/results.json), [evidence/CI snapshot](records/d058/evidence.json), [routing audit](records/d058/routing.json). Archive inputs are immutable under aa409f6f in `docs/journal/2026-11-09-run-fed-direct/`.
+
+Migration was verified before writes: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **20619365c570c41d42b089cf23fa9bb3c0c2a795** corrects the earlier attempted receipt **4d7d44d7e39be25b859fee6ca9ffe77163b49a3a**, which inadvertently retained the prior cursor; no decision or REVIEW preceded that correction. Five historical routing findings are resolved, zero unresolved. Only this checkpoint remained pending in the inbox snapshot. Persistent task and subscriptions unchanged.

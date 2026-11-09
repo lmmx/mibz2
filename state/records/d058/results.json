@@ -1,0 +1,43 @@
+{
+  "scope": "independent archive arithmetic, patch application/reversal and routing audit; no local Rust or Miri execution",
+  "archived_runs": {
+    "head-seed1-30s.txt": {
+      "cases": 187832,
+      "failures": 0
+    },
+    "inject-seed1-5s.txt": {
+      "cases": 18,
+      "failures": 2
+    },
+    "seed1-30s.txt": {
+      "cases": 191613,
+      "failures": 0
+    },
+    "seed2-240s.txt": {
+      "cases": 1599373,
+      "failures": 0
+    },
+    "seed3-240s.txt": {
+      "cases": 1607738,
+      "failures": 0
+    }
+  },
+  "patches": {
+    "M1-tail-removed.patch": "applies and reverses exactly on reviewed run_stage blob",
+    "M2-psi-off-by-one.patch": "applies and reverses exactly on reviewed run_stage blob",
+    "M3-final-check-removed.patch": "applies and reverses exactly on reviewed run_stage blob",
+    "M4-allocation-bound.patch": "applies and reverses exactly on reviewed run_stage blob"
+  },
+  "ci_fuzz": {
+    "cases": 191450,
+    "build_direct_blocks": 91606,
+    "by_records": 55782,
+    "empty_records_blocks": 1707,
+    "tail_predicate_blocks": 45840,
+    "fallback": 26187,
+    "refused": 9637,
+    "tilings": 63453,
+    "failures": 0
+  },
+  "audit_unresolved": 0
+}

@@ -1,0 +1,205 @@
+{
+  "checks": [
+    {
+      "id": 128994771534,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 128994462971,
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 128994461852,
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994461695,
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149638,
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149635,
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149618,
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149566,
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149562,
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994149551,
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994132368,
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 128994130965,
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994130955,
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994130951,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "id": 128994130918,
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994130896,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994130879,
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994104680,
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994104622,
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994104490,
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994104470,
+      "name": "rust",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 128994104250,
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994104024,
+      "name": "miri",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 128994103800,
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994103604,
+      "name": "bench",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 128994103599,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 128994103544,
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "excerpts": [
+    {
+      "id": 128994104250,
+      "lines": [
+        "2026-11-09T05:18:28.7365824Z HEAD is now at 52e5481 Merge aa409f6f2ebce9f41dc7902789f0ab8d6958b020 into 6145b3a985302bb2b6629b12c8c0602426547544",
+        "2026-11-09T05:19:25.5113732Z 85128 cases in 30 s (seed 1, mode classic), 0 failures",
+        "2026-11-09T05:19:56.8387423Z 856 cases in 30 s (seed 1, mode pipeline), 0 failures",
+        "2026-11-09T05:20:39.2220762Z 191450 cases in 30 s (seed 1, mode run-fed-direct, kernels [Kernels { avx2: false, clmul: false }, Kernels { avx2: true, clmul: true }]), 0 failures",
+        "2026-11-09T05:20:39.2221384Z   by source: streams 64012, columns 63985, tilings 63453",
+        "2026-11-09T05:20:39.2222470Z   blocks through build_direct (each on every kernel): 91606; by records 55782 (empty 1707, with one-slot tail stores 45840), by the fallback 26187; refused, as production: {\"BlockTooLong\": 7438, \"RunTooLong\": 2199}",
+        "2026-11-09T05:20:39.2223454Z   tilings through place: untampered valid 16052, tampered still valid 6949, refused 40452 (each as the oracle says)"
+      ]
+    },
+    {
+      "id": 128994130951,
+      "lines": [
+        "2026-11-09T05:18:35.4582954Z HEAD is now at 52e5481 Merge aa409f6f2ebce9f41dc7902789f0ab8d6958b020 into 6145b3a985302bb2b6629b12c8c0602426547544",
+        "2026-11-09T05:19:47.1266153Z ##[group]Install maturin",
+        "2026-11-09T05:19:58.1782935Z gzip: stdin: not in gzip format",
+        "2026-11-09T05:19:58.1786121Z tar: Child returned status 1",
+        "2026-11-09T05:19:58.1786474Z tar: Error is not recoverable: exiting now",
+        "2026-11-09T05:20:02.6181289Z Error: The process '/usr/bin/docker' failed with exit code 2",
+        "2026-11-09T05:20:02.6208875Z ##[error]The process '/usr/bin/docker' failed with exit code 2"
+      ]
+    }
+  ],
+  "miri_log": {
+    "job": 128994104024,
+    "result": "404 BlobNotFound; not PASS"
+  },
+  "ci_checkout": "52e54813a1dc4f8022f32cfd579cdb51628f1d18",
+  "reviewed_head": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
+  "identical_tree": "64256a600971d89b112b218ec801e3da62272cbf",
+  "incoming_comment": 6732894651,
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "run_stage_blob": "cb09d7da817fa467cbdc4664ddf2289e68157d1f",
+  "archive_readme_blob": "2cdbe3be4f49ac2c66f96edfdc9306b04bbbb49b",
+  "journal_blob": "5eed3ea4b1505f0a82fd50eece86eb80414025b4",
+  "limits": "No local Rust/Miri execution; archive/native/mutant outcomes reported, CI fuzz independently retrieved. In-progress Miri is not PASS."
+}
