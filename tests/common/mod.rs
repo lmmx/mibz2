@@ -533,6 +533,18 @@ pub enum PipeShape {
         chunk: usize,
         read: usize,
     },
+    /// Research (the `run-fed` feature): `StreamDecoder::pipelined_run_fed` at `teams` teams
+    /// of `k` in `slots`, its sort `sort`, on the scalar kernels or the detected ones
+    #[cfg(feature = "run-fed")]
+    RunFed {
+        sort: mibz2::parallel::RunFedSort,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        chunk: usize,
+        read: usize,
+        scalar: bool,
+    },
 }
 
 /// A pipelined decoder under test (`PipeShape`)
@@ -565,6 +577,19 @@ impl Pipelined {
                 chunk,
                 read,
             } => format!("mibz2 pipelined {teams}x{k} park+small s{slots} w{chunk} r{read}"),
+            #[cfg(feature = "run-fed")]
+            PipeShape::RunFed {
+                sort,
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+                scalar,
+            } => {
+                let kern = if scalar { "scalar" } else { "detected" };
+                format!("mibz2 run-fed {sort:?} {teams}x{k} s{slots} w{chunk} r{read} {kern}")
+            }
         }
     }
 
@@ -601,6 +626,25 @@ impl Pipelined {
                     Kernels::detect(),
                     PIPELINED_LEVERS,
                 );
+                pushed(dec, chunk, read)
+            }
+            #[cfg(feature = "run-fed")]
+            PipeShape::RunFed {
+                sort,
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+                scalar,
+            } => {
+                let kern = if scalar {
+                    Kernels::scalar()
+                } else {
+                    Kernels::detect()
+                };
+                let dec = mibz2::StreamDecoder::pipelined_run_fed(teams, k, slots, kern, sort);
+                assert_eq!(dec.threads(), teams * k);
                 pushed(dec, chunk, read)
             }
             PipeShape::Reader { read } => {
@@ -745,4 +789,87 @@ pub fn pipeline_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
 /// A candidate's decode, a panic caught and reported as one
 pub fn try_decode(c: &dyn Candidate, data: &[u8]) -> Result<Result<Vec<u8>, String>, String> {
     catch_unwind(AssertUnwindSafe(|| c.decode(data))).map_err(|_| "PANIC".to_string())
+}
+
+/// The run-fed candidates the fuzz loop checks (examples/fuzz.rs, MODE run-fed; research,
+/// docs/journal/2026-11-09-run-fed-leader.md): every sort at one team of three; the
+/// helpers' sort and the direct fill at two teams of three, small writes and reads; the
+/// leader's sort at the registered plan's three teams of three; and on the scalar kernels
+/// the helpers' sort at one team of two, the direct fill at one team of four, and the
+/// register-list control
+#[cfg(feature = "run-fed")]
+pub fn run_fed_candidates() -> Vec<Pipelined> {
+    use mibz2::parallel::RunFedSort::*;
+    let at = |sort, teams, k, slots, chunk, read, scalar| Pipelined {
+        shape: PipeShape::RunFed {
+            sort,
+            teams,
+            k,
+            slots,
+            chunk,
+            read,
+            scalar,
+        },
+    };
+    let mut v: Vec<Pipelined> = [Control, RegControl, Leader, Helpers, Direct]
+        .into_iter()
+        .map(|s| at(s, 1, 3, 4, 100_003, 1 << 16, false))
+        .collect();
+    v.push(at(Helpers, 2, 3, 6, 997, 509, false));
+    v.push(at(Direct, 2, 3, 6, 997, 509, false));
+    v.push(at(Leader, 3, 3, 12, 1 << 20, 4093, false));
+    v.push(at(Helpers, 1, 2, 1, 100_003, 1 << 16, true));
+    v.push(at(Direct, 1, 4, 4, 100_003, 1 << 16, true));
+    v.push(at(RegControl, 1, 3, 4, 100_003, 1 << 16, true));
+    v
+}
+
+/// Multi-block inputs for the run-fed teams: `pipeline_corpus`'s (mostly blocks the
+/// records' rule doesn't take: those go by the column), and crafted run-heavy streams the
+/// rule takes, full blocks (the team, by records) among small ones (the leader alone, by
+/// records), and a stream of full run-heavy and full random blocks alternating (records
+/// and column on the same team)
+pub fn run_fed_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
+    let mut v = pipeline_corpus(rng);
+    let runs = |n: usize, seed: u64| -> Vec<u8> {
+        let mut r = Rng(seed);
+        let mut ll = Vec::with_capacity(n + 128);
+        while ll.len() < n {
+            let c = b"abcdefghijklmnop"[r.below(9) as usize];
+            let len = [16usize, 24, 40, 64, 100][r.below(5) as usize];
+            ll.extend(std::iter::repeat(c).take(len));
+        }
+        ll.truncate(n);
+        ll
+    };
+    let valid = |ll: Vec<u8>, orig: u32| {
+        let o = (orig..)
+            .map(|o| o % ll.len() as u32)
+            .find(|&o| reference(&ll, o).is_some())
+            .unwrap();
+        Spec::of(ll, o)
+    };
+    let mut specs = Vec::new();
+    for i in 0..3u64 {
+        specs.push(valid(runs(300_000 + 977 * i as usize, 70 + i), 4_321));
+        specs.push(valid(runs(3_000 + 61 * i as usize, 80 + i), 17));
+    }
+    v.push((
+        "crafted run-heavy full and small".into(),
+        craft(9, &specs, None),
+    ));
+    let mut mixed = Vec::new();
+    for i in 0..2u64 {
+        mixed.push(valid(runs(280_000, 90 + i), 999));
+        let mut r = Rng(95 + i);
+        let col: Vec<u8> = (0..280_000)
+            .map(|_| b"abcdefgh"[r.below(8) as usize])
+            .collect();
+        mixed.push(valid(col, 999));
+    }
+    v.push((
+        "crafted run-heavy and random full alternating".into(),
+        craft(9, &mixed, None),
+    ));
+    v
 }

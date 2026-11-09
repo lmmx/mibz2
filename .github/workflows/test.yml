@@ -46,8 +46,8 @@ jobs:
       - name: The benchmark alternatives' lock
         run: cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null
 
-  # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
-  # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
+  # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel), the run-fed
+  # research's (below) and the pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
   # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
@@ -63,6 +63,14 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      # the run-fed research's candidates (StreamDecoder::pipelined_run_fed at each sort,
+      # several plans, both kernel sets; docs/journal/2026-11-09-run-fed-leader.md, Guardian
+      # D049), on the run-fed corpus, each case's reach counted (blocks by records and by
+      # the column, on the team and alone; a rebuild after a refused check fails the run)
+      - name: Build, with the run-fed research
+        run: cargo build --profile fuzz --example fuzz --features run-fed
+      - name: Run-fed candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/run-fed run-fed
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7

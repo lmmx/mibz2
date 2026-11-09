@@ -7,8 +7,10 @@ name: Miri
 # detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
 # included, with its unchecked states refused (run_stage::tests::miri_*); and the run-fed
 # leader's share kernels (its sort, its fills, the AVX2 ones included) and a whole run's
-# hand-offs between helpers and leader (parallel::run_team::tests::miri_*). Only on changes
-# to the walks, the pool or that research.
+# hand-offs between helpers and leader, its helpers past the shares, its tampered tilings
+# and C29's AVX2 stores (parallel::run_team::tests::miri_*), and its worker's outer unwind
+# (parallel::run_team::unwind_tests::miri_*). Only on changes to the walks, the pool, the
+# MTF kernels or that research.
 on:
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - "src/coop.rs"
       - "src/run_stage.rs"
       - "src/parallel/run_team.rs"
+      - "src/parallel/run_team/**"
+      - "src/mtf.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -24,6 +28,8 @@ on:
       - "src/coop.rs"
       - "src/run_stage.rs"
       - "src/parallel/run_team.rs"
+      - "src/parallel/run_team/**"
+      - "src/mtf.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 

@@ -15,8 +15,16 @@
 //! and bit) as well as to libbzip2, and counted as reaching the pipeline when a leader took
 //! a job while its helpers inverted another block (`pipeline_counts`).
 //!
+//! The run-fed cases (MODE run-fed, built with `--features run-fed`: tests/common's
+//! `run_fed_candidates`, `StreamDecoder::pipelined_run_fed` at each sort, several plans and
+//! both kernel sets, research: docs/journal/2026-11-09-run-fed-leader.md): the pipeline
+//! cases' checks on `run_fed_corpus` (the pipeline corpus and crafted run-heavy streams the
+//! records' rule takes), each case's reach counted from the run-fed phases (blocks by
+//! records and by the column, on the team and alone, and the rebuilds after a refused
+//! check, a bug: any is a failure).
+//!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
-//! MODE: mixed (the default: every 8th case a pipeline case), classic, or pipeline
+//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline or run-fed
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -34,9 +42,14 @@ fn main() {
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
-        "pipeline" => 1,
-        m => panic!("MODE is mixed, classic or pipeline, not {m}"),
+        "pipeline" | "run-fed" => 1,
+        m => panic!("MODE is mixed, classic, pipeline or run-fed, not {m}"),
     };
+    let run_fed = mode == "run-fed";
+    assert!(
+        !run_fed || cfg!(feature = "run-fed"),
+        "MODE run-fed needs the build's --features run-fed"
+    );
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 
     let mut corpus: Vec<Vec<u8>> = Vec::new();
@@ -63,12 +76,20 @@ fn main() {
         }
     }
     let cands = candidates();
-    let pipes = pipeline_candidates();
+    let pipes = if run_fed {
+        run_fed_pipes()
+    } else {
+        pipeline_candidates()
+    };
     let pipe_corpus: Vec<(Vec<u8>, Vec<u64>)> = if every == 0 {
         Vec::new()
     } else {
-        pipeline_corpus(&mut rng)
-            .into_iter()
+        let c = if run_fed {
+            run_fed_corpus(&mut rng)
+        } else {
+            pipeline_corpus(&mut rng)
+        };
+        c.into_iter()
             .map(|(_, z)| {
                 let starts = block_starts(&z);
                 (z, starts)
@@ -76,6 +97,7 @@ fn main() {
             .collect()
     };
     let mut pipe_stats = vec![PipeStats::default(); pipes.len()];
+    let mut reach = vec![Reach::default(); pipes.len()];
     let deadline = Instant::now() + Duration::from_secs(secs);
     let (mut cases, mut bad) = (0u64, 0u64);
     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
@@ -83,6 +105,7 @@ fn main() {
         if every != 0 && (cases + 1) % every == 0 {
             cases += 1;
             let i = (cases / every) as usize % pipes.len();
+            let before = phases_now();
             let outcome = pipeline_case(
                 &pipes[i],
                 &mut pipe_stats[i],
@@ -93,6 +116,24 @@ fn main() {
                 cases,
                 &mut bad,
             );
+            if run_fed {
+                let d: Vec<u64> = phases_now()
+                    .iter()
+                    .zip(&before)
+                    .map(|(a, b)| a - b)
+                    .collect();
+                reach[i].add(&d);
+                if d[REBUILT] > 0 {
+                    bad += 1;
+                    let why = format!(
+                        "{}: {} blocks rebuilt after a refused check",
+                        pipes[i].name(),
+                        d[REBUILT]
+                    );
+                    // (the case is the seed's: rerun at it to get its input)
+                    eprintln!("case {cases}: {why}");
+                }
+            }
             *outcomes.entry(format!("pipeline: {outcome}")).or_default() += 1;
             continue;
         }
@@ -169,7 +210,91 @@ fn main() {
             println!("{:>9}  {}: {reach}", st.cases, p.name());
         }
     }
+    if run_fed {
+        println!(
+            "run-fed reach: candidate, then its cases' blocks staged that the records' rule \
+             takes, the team's blocks by records and by the column, the small blocks by \
+             records and by the column, the cases with a team block by records, and the \
+             blocks rebuilt after a refused check (a bug: 0)"
+        );
+        for (p, r) in pipes.iter().zip(&reach) {
+            println!(
+                "{:>9}  {}: rule {}, team records {} column {}, small records {} column {}, \
+                 cases with team records {}, rebuilt {}",
+                r.cases,
+                p.name(),
+                r.sum[RULE],
+                r.sum[TEAM_RECORDS],
+                r.sum[TEAM_COLUMN],
+                r.sum[SMALL_RECORDS],
+                r.sum[SMALL_COLUMN],
+                r.team_record_cases,
+                r.sum[REBUILT]
+            );
+        }
+    }
     std::process::exit(if bad == 0 { 0 } else { 1 });
+}
+
+/// The run-fed phases a case's reach is counted from, by index in `phases_now`
+const PHASES: [&str; 6] = [
+    "rule_blocks",
+    "team_records",
+    "team_column",
+    "small_records",
+    "small_column",
+    "fallbacks",
+];
+const RULE: usize = 0;
+const TEAM_RECORDS: usize = 1;
+const TEAM_COLUMN: usize = 2;
+const SMALL_RECORDS: usize = 3;
+const SMALL_COLUMN: usize = 4;
+const REBUILT: usize = 5;
+
+/// The run-fed phases now (`PHASES`; this process's totals, one decode at a time here, so
+/// a case's are the difference across it); zeros without the feature
+fn phases_now() -> Vec<u64> {
+    #[cfg(feature = "run-fed")]
+    {
+        let all = mibz2::parallel::run_fed_phases();
+        PHASES
+            .iter()
+            .map(|n| all.iter().find(|p| p.0 == *n).expect("a run-fed phase").2)
+            .collect()
+    }
+    #[cfg(not(feature = "run-fed"))]
+    {
+        vec![0; PHASES.len()]
+    }
+}
+
+/// A run-fed candidate's reach over the run
+#[derive(Clone, Default)]
+struct Reach {
+    cases: u64,
+    sum: [u64; PHASES.len()],
+    team_record_cases: u64,
+}
+
+impl Reach {
+    fn add(&mut self, d: &[u64]) {
+        self.cases += 1;
+        for (s, v) in self.sum.iter_mut().zip(d) {
+            *s += v;
+        }
+        self.team_record_cases += (d[TEAM_RECORDS] > 0) as u64;
+    }
+}
+
+#[cfg(feature = "run-fed")]
+fn run_fed_pipes() -> Vec<Pipelined> {
+    run_fed_candidates()
+}
+
+#[cfg(not(feature = "run-fed"))]
+fn run_fed_pipes() -> Vec<Pipelined> {
+    Vec::new()
 }
 
 /// A pipelined candidate's counts over the run
