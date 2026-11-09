@@ -1075,6 +1075,15 @@
       "review_comment_id": 6735626248,
       "publication_verified": true,
       "verification_note": "Exact body/#145 and role-aware routing pass. Pinned verify reports solely hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6735725456,
+      "status": "in progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "c0a3b0d34210873b6389f8991dea2a4e94e99389",
+      "report_path": "state/reports/service-starvation-6735725456/report.md"
     }
   ],
   "active_delegations": [],
