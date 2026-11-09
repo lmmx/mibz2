@@ -35,6 +35,11 @@ jobs:
           cargo test --features run-fed --lib run_stage
           cargo test --features run-fed --doc run_stage
           cargo test --features run-fed --example run_fed_stage
+          # B5 (Guardian D044): the emitter → sort → fill → fallback fuzz, seeded, and in a
+          # release build too, where build's refused records take the column's path
+          # rather than its debug_assert
+          cargo test --features run-fed --test run_fed_b5
+          cargo test --release --features run-fed --test run_fed_b5
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
