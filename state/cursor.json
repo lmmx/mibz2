@@ -1046,8 +1046,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6740161956,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "D065/D066 diagnostic HOLD lifted; one frozen telemetry check PROCEED under existing exact-commit queue conditions; D067 unchanged"
+      "status": "finished",
+      "disposition": "D065/D066 diagnostic HOLD lifted; one frozen telemetry check PROCEED under existing exact-commit queue conditions; D067 unchanged",
+      "comment": 6740291714
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1113,7 +1114,8 @@
     6737091245,
     6739426262,
     6739925087,
-    6740148831
+    6740148831,
+    6740291714
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1257,7 +1259,8 @@
     "d882543d9a75b68f99f9a56beb6bcb96f933cc1d",
     "fc514f956aafec71829f1e59eaa9cc3bdd07f18d",
     "ccff1819752278b15d26e1cc249d16b59cc0501e",
-    "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
+    "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+    "178f75e96941826a0f10af0888324b27c1e32f7e"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1325,7 +1328,8 @@
     6735319842,
     6739273655,
     6739842300,
-    6739971921
+    6739971921,
+    6740161956
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1405,9 +1409,10 @@
   },
   "current_execution": {
     "active_comment": 6740161956,
-    "status": "complete",
+    "status": "finished",
     "decision": "D068",
-    "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
+    "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+    "review_comment_id": 6740291714
   },
   "duplicate_events": [
     {
@@ -1941,7 +1946,8 @@
       "sha": "7356898c4cc5b10bc2b49b40b2a015361b917a56",
       "evidence_digest": "git-blob:198ff4dcb964a26b07e04a1772047cb5a627713b;ab:f7f4dfbfa7b84d656b388f88dd09c49360519d13;native-job:129158716451",
       "decision": "D068",
-      "commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
+      "commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+      "comment": 6740291714
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2380,10 +2386,13 @@
     {
       "comment_id": 6740161956,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D068",
       "receipt_commit": "ccff1819752278b15d26e1cc249d16b59cc0501e",
-      "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3"
+      "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+      "review_comment_id": 6740291714,
+      "complete_cursor_commit": "178f75e96941826a0f10af0888324b27c1e32f7e",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier has sole coordinator-header limitation; independent Guardian checks pass."
     }
   ],
   "migrated_from": {

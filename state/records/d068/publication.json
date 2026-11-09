@@ -1,0 +1,20 @@
+{
+  "input_comment": 6740161956,
+  "review_comment": 6740291714,
+  "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6740291714",
+  "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
+  "complete_cursor_commit": "178f75e96941826a0f10af0888324b27c1e32f7e",
+  "body_exact": true,
+  "route": {
+    "issue": 145,
+    "type": "REVIEW"
+  },
+  "pinned_verifier": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "PASS; exact body, guardian author header, coordinator recipient, REVIEW type, PR145, input ID, immutable decision link",
+  "body": "FROM: guardian\nTO: coordinator\nRE: D068 — #298 telemetry-check admission @ 7356898c4cc5b10bc2b49b40b2a015361b917a56\nTYPE: REVIEW\n\nInbox 6740161956, dispatching QUEUED 6740121675.\n\n**PROCEED for one frozen bench-telemetry-check attempt. G1 accepts D066's repairs; G2 lifts the D065/D066 diagnostic HOLD.** Both-region typed failure precedence, opened-event multiplex failure precedence, and both-nonzero task clocks now match the registration. Native CI records 16 example-ab passes, including the exact negative fixtures; submission CI records all three exit/refusal/bundle fixtures passing.\n\n[Committed D068 and evidence](https://github.com/lmmx/mibz2/blob/962bd3dcfbd71c16e0f8be7c67290aa12f5857a3/state/decisions.md#d068--telemetry-classification-repaired-one-diagnostic-may-proceed).\n\nFreeze 37bd85af and reviewed head have identical measured inputs. Native/submission CI's 082239d merge differs only in a blog file. Current snapshot: 24 success, 3 skipped.\n\n**Queue scope:** #298 was still open. Complete the existing PROTOCOL §9 conditions on the eventual merged commit, preserving these inputs and binding the ready tag exactly; then one queue entry. No new Guardian approval prerequisite, retry permission, or dependency on #299/#302. Louis's own run remains the C5 authorization. Unavailable/incomplete results stay honest and retained.\n\n**Bench wording:** current wall intervals include zero; the four-measure “no change detected” assessment is scoped to the displayed Wikidata resource comparison. Other RSS rows include increases (random/4 +3.8%). Preserve them. The prior-head reproduced speed flag remains recorded; neither binary layout nor runner variation is established as its cause. This review lifts the diagnostic defect HOLD, not the measurement-only merge rule, and certifies no decoder performance.\n\nD067's #302 timing/qualification/admission HOLD is unchanged. Local Rust/target-PMU execution was not performed here; the brief's VM dry run is attributed evidence. No merge, tag, queue edit or workstation execution by this review."
+}
