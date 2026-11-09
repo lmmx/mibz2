@@ -108,9 +108,10 @@
     6732895653,
     6733003420,
     6733159315,
-    6733569628
+    6733569628,
+    6733827974
   ],
-  "last_processed_comment_id": 6733569628,
+  "last_processed_comment_id": 6733827974,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -998,7 +999,7 @@
     },
     {
       "trigger_comment_id": 6733827974,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1006,7 +1007,10 @@
       "report_path": "state/reports/c29-registration-6733827974/report.md",
       "report_commit": "57b3ecf2bd0af8b633bea062048ccc5cd54e3a9e",
       "disposition": "REVISE environment admission before freeze; thresholds and matched control supported. Four reporter tests pass; judged STOP lacks AVX2/capacity evidence. No production approval.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6734359855,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing pass; pinned verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
