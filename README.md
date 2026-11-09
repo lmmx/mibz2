@@ -123,8 +123,9 @@ since 0.2.6:
 - **two-socket machines** with 10 physical cores in all and 20 MiB of L3 behind cpu0;
 - **virtual machines** that report 10 cores and a 20 MiB L3.
 
-**Low compression levels.** On the ten-core topology, at 10 threads or more, 0.2.6 is about 23%
-slower than 0.2.4 on files compressed at bzip2 levels 1 and 2 (`bzip2 -1`/`-2`, `--fast`). Their
+**Low compression levels.** On the ten-core topology, at 10 threads or more, 0.2.6 has about 23%
+lower throughput than 0.2.4 on files compressed at bzip2 levels 1 and 2 (`bzip2 -1`/`-2`,
+`--fast`): speed ratios of 0.763 and 0.776, so such a file takes about 29–31% longer. Their
 blocks are small, and the three teams leave six of the ten threads waiting on them. Forcing
 `Plan::Teams { teams: 4, k: 2 }` recovers all of it. At levels 3–9 the default is faster than
 0.2.4's, so Wikidata's level-9 dumps are unaffected. The fix is being registered

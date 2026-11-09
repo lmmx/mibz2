@@ -1,0 +1,27 @@
+baseline
+base: 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba + the working tree's src/ change
+src/parallel.rs sha256 60236bf519d08a62, unwind_tests.rs sha256 bb74157037d816bf
+date: 2026-11-09T02:38:20Z
+cmd: RUST_BACKTRACE=0 cargo test -j2 --lib unwind_tests
+
+   Compiling mibz2 v0.2.6 (<scratch>/wt-m12)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.26s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 8 tests
+test parallel::unwind_tests::miri_run_panic_current ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks ... ok
+test parallel::unwind_tests::the_tiny_blocks ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_block ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks ... ok
+test parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.38s
+
+
+real	0m6.659s
+user	0m9.000s
+sys	0m0.545s
+rc=0

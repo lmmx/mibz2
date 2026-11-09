@@ -8,8 +8,11 @@ name: Miri
 # pair builders, #34's pair walk and the states D046 named refused, once with the SSE2 fill
 # and once with the AVX2 one, each asserted reached (MIBZ2_EXPECT_SSE2, MIBZ2_EXPECT_AVX2),
 # with a negative control (AVX2 expected of a build without it must fail), and its doc tests
-# on nightly, where the compile_fail tests' error codes are checked. Only on changes to the
-# walks, the pool or that module.
+# on nightly, where the compile_fail tests' error codes are checked.
+# And the pipelined worker's recovery from a run that panics outside its stages
+# (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
+# blocks' retirement, the team's reset and the reader, on tiny blocks. Only on changes to
+# the walks, the pool, the parallel decoder, its reader or the pair module.
 on:
   pull_request:
     paths:
@@ -17,6 +20,9 @@ on:
       - "src/coop.rs"
       - "src/pair_runs.rs"
       - "src/pair_runs/**"
+      - "src/parallel.rs"
+      - "src/parallel/**"
+      - "src/read.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -25,6 +31,9 @@ on:
       - "src/coop.rs"
       - "src/pair_runs.rs"
       - "src/pair_runs/**"
+      - "src/parallel.rs"
+      - "src/parallel/**"
+      - "src/read.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -43,6 +52,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Miri setup
         run: cargo miri setup
+      # (`--lib -- miri_` reaches only the library's unit tests named miri_: the worker's
+      # recovery tests are among them, which this step checks, so that a rename can't drop
+      # them silently; tests/pipelined.rs's integration tests stay native)
+      - name: The worker recovery tests are selected
+        run: |
+          cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
+          grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
       - name: Miri
         env:
           MIBZ2_EXPECT_SSE2: "1"

@@ -1,0 +1,18 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index fcdd7cca..4817fc47 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -989,7 +989,12 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
+                 }
+                 let mut f = lf.lock().unwrap_or_else(|e| e.into_inner());
+                 match stage(shared, job, &mut f, other, k) {
+-                    Staging::Team(next) => l.next = Some(next),
++                    Staging::Team(next) => {
++                        l.next = Some(next);
++                        if SMALL {
++                            next_job = try_job(jobs);
++                        }
++                    }
+                     Staging::Small(b) => {
+                         // a block below `MIN_COOP`: decoded whole here, overlapped too
+                         let mut sc = small.lock().unwrap_or_else(|e| e.into_inner());

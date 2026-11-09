@@ -1,0 +1,27 @@
+4495 cases in 180 s (seed 13, mode pipeline), 0 failures
+      619  pipeline: both decode, same bytes
+      336  pipeline: both fail (BadBlockMagic), as the plain decoder
+      530  pipeline: both fail (BadCodeLength), as the plain decoder
+       86  pipeline: both fail (BadGroups), as the plain decoder
+      276  pipeline: both fail (BadHuffmanCode), as the plain decoder
+       84  pipeline: both fail (BadOrigPtr), as the plain decoder
+      185  pipeline: both fail (BadSelector), as the plain decoder
+        1  pipeline: both fail (BadSelectors), as the plain decoder
+      866  pipeline: both fail (BlockCrc), as the plain decoder
+      119  pipeline: both fail (BlockTooLong), as the plain decoder
+        1  pipeline: both fail (NoSymbols), as the plain decoder
+        8  pipeline: both fail (NotBz2), as the plain decoder
+       18  pipeline: both fail (Randomised), as the plain decoder
+        8  pipeline: both fail (RunTooLong), as the plain decoder
+       30  pipeline: both fail (RunUnfinished), as the plain decoder
+      155  pipeline: both fail (SelectorOverrun), as the plain decoder
+      122  pipeline: both fail (StreamCrc), as the plain decoder
+        6  pipeline: both fail (TrailingData), as the plain decoder
+     1044  pipeline: both fail (Truncated), as the plain decoder
+        1  pipeline: libbzip2 decodes, this refuses (Randomised), as the plain decoder
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+      899  mibz2 default 3x3 StreamDecoder::new w1048576 r65536: 236 of 899 reached, 2 with an overlapped error, 387 overlapped jobs
+      899  mibz2 default 3x3 StreamDecoder::new w997 r509: 272 of 899 reached, 5 with an overlapped error, 488 overlapped jobs
+      899  mibz2 default 3x3 BzReader::parallel r4093: not countable (the decoder is not in reach; the constructor is the counted one's)
+      899  mibz2 default 3x3 decode_parallel: not countable (the decoder is not in reach; the constructor is the counted one's)
+      899  mibz2 pipelined 1x3 park+small s4 w100003 r65536: 500 of 899 reached, 13 with an overlapped error, 1377 overlapped jobs
