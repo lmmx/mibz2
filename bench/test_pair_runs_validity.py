@@ -28,7 +28,13 @@ def make_run(d, nproc=2, rounds=3, ghz=2.8, seed=1):
     data = b"BZh9 a stand-in corpus"
     (d / CORPUS).write_bytes(data)
     sha = hashlib.sha256(data).hexdigest()
-    (d / "bench/wikidata.json").write_text(json.dumps({"corpus_sha256": sha}))
+    spec = {
+        "corpus_sha256": sha,
+        "corpus_bytes": len(data),
+        "decoded_bytes": 900_000_000,
+        "windows": [{"blocks": 200}, {"blocks": 231}],
+    }
+    (d / "bench/wikidata.json").write_text(json.dumps(spec))
     copies = v.copies_for(nproc)
     plan = {
         "tool": "pair_runs",
@@ -55,8 +61,35 @@ def make_run(d, nproc=2, rounds=3, ghz=2.8, seed=1):
                     lines.append(f"{f},{r},{arm},{sec:.9f},233,200000000,900000000")
         (d / f"raw-{c}.csv").write_text("\n".join(lines) + "\n")
         (d / f"status-{c}.txt").write_text("0\n")
-        (d / f"sweep-{c}.txt").write_text("runner: x\nVALID (this process's part): ...\n")
+        log = [f"runner: x", f"corpus identity: {len(data)} bytes, 900000000 decoded; spec (..)"]
+        log += [census(f, 233, 200_000_000) for f in files]
+        log += ["VALID (this process's part): ..."]
+        (d / f"sweep-{c}.txt").write_text("\n".join(log) + "\n")
     return d
+
+
+def census(f, paired, rows, out_mb="900.0"):
+    """examples/pair_runs.rs's census line for a file"""
+    return (f"{f}: 431 blocks, {out_mb} MB of output, 210000000 rows; paired {paired} blocks "
+            f"({rows} rows): r/n 0.0722, cells/n 0.0881, cells/r 1.220 (all < 2r)")
+
+
+def edit_log(d, copy, fn):
+    p = Path(d) / f"sweep-{copy}.txt"
+    p.write_text("\n".join(fn(p.read_text().splitlines())) + "\n")
+
+
+def set_counts(d, copy, f, field, value):
+    """One file's count (4 paired blocks, 5 paired rows, 6 output bytes) in a copy's raw CSV"""
+    def edit(lines):
+        out = [lines[0]]
+        for line in lines[1:]:
+            row = line.split(",")
+            if row[0] == f:
+                row[field] = str(value)
+            out.append(",".join(row))
+        return out
+    edit_raw(d, copy, edit)
 
 
 def edit_plan(d, **kw):
@@ -184,6 +217,9 @@ class Validity(unittest.TestCase):
 
         for c in v.copies_for(2):
             edit_raw(self.d, c, nopaired)
+            edit_log(self.d, c, lambda ls: [
+                census("synthetic one byte", 0, 0) if x.startswith("synthetic one byte:") else x for x in ls
+            ])
         ok, lines = v.validate(self.d)
         self.assertTrue(ok, "\n".join(lines))
         # and Wikidata itself with no paired block is not
@@ -207,18 +243,85 @@ class Validity(unittest.TestCase):
         self.invalid("GHZ 0 is not finite and positive")
 
     def test_missing_m1(self):
-        # M1's registered difference: missing when the paired rows make no c/B
+        # M1's registered difference: missing when the paired rows make no c/B; such counts
+        # are refused before any reading, and the readings refuse it on their own too
         for c in v.copies_for(2):
             edit_raw(self.d, c, lambda ls: [ls[0]] + [
                 x.replace(",233,200000000,", ",233,0,") if x.startswith(CORPUS) else x for x in ls[1:]
             ])
-        self.invalid("interval M1 difference missing")
+        self.invalid("233 paired blocks but 0 paired rows")
+        problems = []
+        matrix = {CORPUS: [[1.0, 0.8, 0.4, 2.0, 2.2, 2.6]] * 3}
+        matrix.update({f"synthetic {s}": matrix[CORPUS] for s in v.SYNTHETIC})
+        self.assertEqual(v.readings(matrix, {CORPUS: (233, 0, 1)}, CORPUS, 2.8, problems), [])
+        self.assertIn(f"{CORPUS}: interval M1 difference missing", problems)
 
     def test_m1_difference_nonfinite_endpoints(self):
         self.assertIsNone(v.diff([[1, 2], [1, 2]], 0, 1, math.nan))
         self.assertIsNone(v.diff([[1, 2], [1, 2]], 0, 1, 0.0))
         self.assertIsNone(v.diff([[1e308, -1e308], [-1e308, 1e308]], 0, 1, 10.0))
         self.assertIsNotNone(v.diff([[1, 2], [1.1, 2]], 0, 1, 1.0))
+
+    # The Researcher's re-review (6731167553): the counts, the readings' denominators
+
+    def test_rereview_concurrent_copy_paired_rows(self):
+        set_counts(self.d, "2-cpu1", CORPUS, 5, 400_000_000)
+        self.invalid("in copy 2-cpu1")
+
+    def test_rereview_single_copy_denominator_times_100(self):
+        # it would turn M1 from NOT MET (5.64) to MET (0.0564)
+        set_counts(self.d, "1", CORPUS, 5, 20_000_000_000)
+        self.invalid("not 2^16 to 900,000 a block")
+
+    def test_rereview_negative_paired_blocks_every_copy(self):
+        for c in v.copies_for(2):
+            set_counts(self.d, c, CORPUS, 4, -233)
+        self.invalid("outside their domain")
+
+    def test_rereview_concurrent_copy_output_bytes(self):
+        set_counts(self.d, "2-cpu1", CORPUS, 6, 1)
+        self.invalid("in copy 2-cpu1")
+
+    def test_common_mode_csv_against_log(self):
+        # every copy's CSV changed alike (so they agree), each log unchanged
+        for c in v.copies_for(2):
+            set_counts(self.d, c, CORPUS, 5, 100_000_000)
+        self.invalid("raw counts (233, 100000000), its log (233, 200000000)")
+
+    def test_common_mode_synthetic_output_against_log(self):
+        for c in v.copies_for(2):
+            set_counts(self.d, c, "synthetic text", 6, 450_000_000)
+        self.invalid("raw output 450000000 bytes, its log 900.0 MB")
+
+    def test_common_mode_csv_and_log_against_spec(self):
+        # CSV and log changed alike in every copy: the pinned spec still disagrees
+        for c in v.copies_for(2):
+            set_counts(self.d, c, CORPUS, 6, 800_000_000)
+            edit_log(self.d, c, lambda ls: [
+                census(CORPUS, 233, 200_000_000, "800.0") if x.startswith(CORPUS + ":") else x for x in ls
+            ])
+        self.invalid("raw output 800000000, the spec's 900000000")
+
+    def test_logged_identity_against_spec(self):
+        edit_log(self.d, "2-cpu0", lambda ls: [
+            x.replace("900000000 decoded", "800000000 decoded") if x.startswith("corpus identity") else x
+            for x in ls
+        ])
+        self.invalid("copy 2-cpu0: logged corpus identity")
+
+    def test_logged_blocks_against_spec(self):
+        for c in v.copies_for(2):
+            edit_log(self.d, c, lambda ls: [x.replace(CORPUS + ": 431 blocks", CORPUS + ": 430 blocks") for x in ls])
+        self.invalid("430 blocks logged, the spec's windows 431")
+
+    def test_missing_census_line(self):
+        edit_log(self.d, "1", lambda ls: [x for x in ls if not x.startswith("synthetic runs:")])
+        self.invalid("copy 1: synthetic runs: no census line")
+
+    def test_paired_blocks_without_rows(self):
+        for c in v.copies_for(2):
+            set_counts(self.d, c, "synthetic records", 5, 0)
+        self.invalid("233 paired blocks but 0 paired rows")
 
     def test_head_not_frozen(self):
         edit_plan(self.d, frozen="b" * 40)

@@ -519,3 +519,50 @@ passing locally.
 - **Completed CI Miri on the reviewed head** `4c70dfc4` (job 128951552061): Miri, the pair builder's
   AVX2 fill, the reachability assertion's negative control, and the nightly compile_fail doc
   tests all succeeded.
+
+## The Researcher's re-review: count reconciliation (9 November 2026)
+
+**The gap (6731167553, fixtures at `3b063b1e`).** `read_raw` checked each file's counts within
+one copy, but `validate` discarded the concurrent copies' counts, so "the same in every row and
+every copy" was not enforced. Four mutations of the valid fixture still read VALID:
+- one concurrent copy's paired rows changed from 200M to 400M;
+- the single copy's paired rows changed from 200M to 20B, with the timings unchanged. This turns
+  M1 from NOT MET (5.64) to MET (0.0564) through its denominator;
+- every copy's paired blocks changed from 233 to −233;
+- one concurrent copy's output bytes changed from 900M to 1.
+
+These were fixture counterexamples, not bad counts from the harness.
+
+**The fix (`bench/pair_runs_validity.py`).** Each file's counts (paired blocks, paired rows,
+output bytes), which the readings divide by, are now checked four ways:
+- **in their domains:** whole and non-negative, the output positive, paired rows 0 exactly when
+  the paired blocks are, and each paired block between 2^16 (`MIN_SEGMENTED`) and 900,000 rows;
+- **across copies:** the same in every planned copy;
+- **against each copy's own log:** the census line the harness prints for the file (its
+  blocks, output in MB, rows, paired blocks and paired rows). A change made alike to every
+  copy's CSV, a common-mode disagreement, is caught here;
+- **against the pinned spec, for Wikidata:** its output must equal `bench/wikidata.json`'s
+  `decoded_bytes`, its logged blocks the spec's windows' blocks, and each copy's logged corpus
+  identity the spec's `corpus_bytes` and `decoded_bytes`. This catches a change made alike to
+  the CSV and the log.
+
+Every failure prints NOT VALID and no reading.
+
+**Fixtures.** 11 new, 39 in all, every one passing:
+- the Researcher's four mutations;
+- a common-mode CSV change, against the log;
+- a common-mode change to a synthetic file's output, against the log;
+- a common-mode change to the CSV and the log together, against the spec;
+- the logged corpus identity, against the spec;
+- the logged blocks, against the spec;
+- a missing census line;
+- paired blocks with no paired rows.
+
+**Adjusted fixtures.** The valid control now writes the census and identity lines the harness
+prints, and a spec with `corpus_bytes`, `decoded_bytes` and windows. Two existing fixtures were
+kept in step:
+- `test_zero_build_arms_only_with_no_paired_block` edits the log with the CSV;
+- `test_missing_m1` is now refused by the domain check first, and asserts that `readings` on
+  its own still reports M1's difference as missing.
+
+No Rust, threshold or timing change.

@@ -17,6 +17,13 @@ copy's `sweep-ID.txt`, `status-ID.txt` and `raw-ID.csv`. The run is VALID only i
   positive, but a build arm's (row, run, one) exactly 0 on a file with no paired block; the
   file's paired blocks, paired rows and output bytes the same in every row and every copy,
   and Wikidata with paired blocks;
+- the counts (each file's paired blocks, paired rows and output bytes, which the readings
+  divide by): in their domains (whole numbers, paired rows 0 exactly when paired blocks are,
+  each paired block 2^16 to 900,000 rows, output positive); the same in every planned copy;
+  equal to the census each copy logged for the file (its blocks, output, rows, paired blocks
+  and paired rows); and, for Wikidata, its output the spec's decoded bytes, its blocks the
+  spec's windows' blocks, and its logged corpus identity the spec's. So no denominator can
+  differ between copies, from the copy's own log, or (for Wikidata) from the pinned spec;
 - the readings: from the single copy's raw timings, every registered interval and difference
   present with finite, ordered endpoints.
 
@@ -43,6 +50,16 @@ BUILD_ARMS = {"row", "run", "one"}
 # examples/pair_runs.rs's files: the corpus it is given, then tests/common's synthetic ones
 SYNTHETIC = ["text", "random", "one byte", "pattern", "runs", "records"]
 HEX40 = re.compile(r"[0-9a-f]{40}")
+# bwt::MIN_SEGMENTED, and bzip2's largest block: a paired (segmented) block's rows lie between
+MIN_SEGMENTED = 1 << 16
+MAX_BLOCK = 900_000
+# examples/pair_runs.rs's census line, one a file
+CENSUS = re.compile(
+    r"^(?P<file>.+): (?P<blocks>\d+) blocks, (?P<mb>\d+\.\d) MB of output, (?P<rows>\d+) rows; "
+    r"paired (?P<paired>\d+) blocks \((?P<paired_rows>\d+) rows\)",
+    re.M,
+)
+IDENTITY = re.compile(r"^corpus identity: (?P<bytes>\d+) bytes, (?P<decoded>\d+) decoded", re.M)
 
 
 def copies_for(nproc):
@@ -202,8 +219,16 @@ def read_raw(path, rounds, corpus, problems):
                     problems.append(f"{label}: {f}: round {r} arm {arm} total {sec}")
     if meta.get(corpus, (0, 0, 0))[0] == 0:
         problems.append(f"{label}: {corpus}: no paired block")
-    if any(meta.get(f, (0, 0, 0))[2] <= 0 for f in files):
-        problems.append(f"{label}: a file with no output")
+    for f in files:
+        if f not in meta:
+            continue
+        pb, pr, ob = meta[f]
+        if pb < 0 or pr < 0 or ob <= 0:
+            problems.append(f"{label}: {f}: counts {meta[f]} outside their domain")
+        elif (pb == 0) != (pr == 0):
+            problems.append(f"{label}: {f}: {pb} paired blocks but {pr} paired rows")
+        elif not (pb * MIN_SEGMENTED <= pr <= pb * MAX_BLOCK):
+            problems.append(f"{label}: {f}: {pr} paired rows over {pb} paired blocks, not 2^16 to 900,000 a block")
     if bad:
         return None
     return {f: [m[f][r] for r in sorted(m[f])] for f in files}, meta
@@ -257,6 +282,55 @@ def readings(matrix, meta, corpus, ghz, problems):
     return out
 
 
+def check_counts(d, plan, metas, files, problems):
+    """Each file's counts the same in every copy, equal to each copy's logged census, and
+    Wikidata's to the pinned spec"""
+    corpus = plan.get("corpus", "")
+    try:
+        spec = json.loads((d / plan["spec"]).read_text())
+    except (KeyError, OSError, ValueError) as e:
+        problems.append(f"spec: {e!r}")
+        spec = {}
+    first = None
+    for c, meta in metas.items():
+        if first is None:
+            first = (c, meta)
+        for f in files:
+            if meta.get(f) != first[1].get(f):
+                problems.append(f"{f}: counts {meta.get(f)} in copy {c}, {first[1].get(f)} in copy {first[0]}")
+        sw = d / f"sweep-{c}.txt"
+        text = sw.read_text() if sw.is_file() else ""
+        census = {}
+        for m in CENSUS.finditer(text):
+            if m["file"] in census:
+                problems.append(f"copy {c}: {m['file']}: two census lines")
+            census[m["file"]] = m
+        for f in files:
+            m = census.get(f)
+            if m is None:
+                problems.append(f"copy {c}: {f}: no census line in its log")
+                continue
+            if f not in meta:
+                continue
+            pb, pr, ob = meta[f]
+            logged = (int(m["paired"]), int(m["paired_rows"]))
+            if (pb, pr) != logged:
+                problems.append(f"copy {c}: {f}: raw counts {(pb, pr)}, its log {logged}")
+            if abs(ob / 1e6 - float(m["mb"])) > 0.05 + 1e-9:
+                problems.append(f"copy {c}: {f}: raw output {ob} bytes, its log {m['mb']} MB")
+            if pb > int(m["blocks"]) or pr > int(m["rows"]):
+                problems.append(f"copy {c}: {f}: more paired than logged blocks or rows")
+        ident = IDENTITY.search(text)
+        want = (spec.get("corpus_bytes"), spec.get("decoded_bytes"))
+        if ident is None or (int(ident["bytes"]), int(ident["decoded"])) != want:
+            problems.append(f"copy {c}: logged corpus identity {ident and ident.group(0)!r}, the spec's {want}")
+        if corpus in meta and meta[corpus][2] != spec.get("decoded_bytes"):
+            problems.append(f"copy {c}: {corpus}: raw output {meta[corpus][2]}, the spec's {spec.get('decoded_bytes')}")
+        blocks = sum(w.get("blocks", 0) for w in spec.get("windows", []))
+        if corpus in census and int(census[corpus]["blocks"]) != blocks:
+            problems.append(f"copy {c}: {corpus}: {census[corpus]['blocks']} blocks logged, the spec's windows {blocks}")
+
+
 def validate(d):
     """(VALID, the lines to print)"""
     d = Path(d)
@@ -269,12 +343,17 @@ def validate(d):
     rounds = plan.get("rounds") if isinstance(plan.get("rounds"), int) else 0
     corpus = plan.get("corpus", "")
     single = None
+    metas = {}
     for c in copies:
         p = d / f"raw-{c}.csv"
         if p.is_file():
             got = read_raw(p, rounds, corpus, problems)
+            if got is not None:
+                metas[c] = got[1]
             if c == "1":
                 single = got
+    files = [corpus] + [f"synthetic {s}" for s in SYNTHETIC]
+    check_counts(d, plan, metas, files, problems)
     lines = [f"plan: head {plan.get('head')}, frozen {plan.get('frozen')}, copies {copies}, GHZ {plan.get('ghz')}"]
     out = []
     if single is not None and not problems:
