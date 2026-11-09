@@ -341,7 +341,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING_FOR_INBOX",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -599,7 +599,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "280643cef83b09ac89707b747670e8198b21b68e",
-      "progress": "Receipt, migration verified; reviewing pair consumer, representation and whole-entry break-even."
+      "progress": "Source findings committed: bit30 collision, two-load symbol path, room gap. Completing cost model and ranked falsifiers."
     }
   ],
   "migrated_from": {
