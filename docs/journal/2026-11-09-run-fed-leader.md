@@ -1060,8 +1060,7 @@ under Miri (passed locally, nightly `16d1ffac1`), and `miri.yml` now triggers on
 **Master merged** (`#280`'s `examples/packet_census.rs` and `bench/packet_census.py`, and
 the journals since). `examples/` is a measured input, so the frozen head includes them.
 
-**The checks at the merged head** are listed in the commit that records them;
-`bench/run-fed-leader.frozen` stays `frozen none`.
+**The checks** at the merged head are §R7's (`84ccdd73`).
 
 ## R7. Revision, 2026-11-09: the occupancy admission (the Researcher's freeze review, 6733680620)
 
@@ -1124,6 +1123,20 @@ loop's comment in `src/coop.rs`, `launch`'s in `src/parallel.rs`, bench/CHANGELO
   and so what they contend with, differs by arm, and its cost is not measured;
 - D059's recommendation of observation outside the timed region was replaced by a record
   taken inside it, not met.
+
+**Checked at `84ccdd73`:**
+- **A DRY bundle:** VALID (DRY), and both real captures (ctl, dir) admitted by the new
+  admission, interpretable. Their reported intervals equal their recomputation from their
+  raw grids, so the recomputation reads the instrument's real output as the instrument
+  does.
+- **Rust:** `cargo test` (the library 91, 2 ignored; every integration and doc suite); the
+  run-fed CI steps (`run_team` 29, `run_fed_leader` 10, `ab` 4); `run_team`, both workers'
+  unwind tests, `threads` and `coop` together (58).
+- **Python:** `test_run_fed_leader_ws.py` (19) and `test_run_fed_leader.py` (24).
+- **Lint:** clippy (default, all features) and fmt clean.
+- **Miri:** the record's test, `threads::tests::miri_…`, passes (§R6).
+
+`bench/run-fed-leader.frozen` stays `frozen none`.
 
 ## Provenance and reproduction
 
