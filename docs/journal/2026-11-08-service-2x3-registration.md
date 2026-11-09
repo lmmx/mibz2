@@ -144,6 +144,9 @@ CPU each:
 
 ## The readings (registered, computed mechanically by the report)
 
+*Revised 9 November 2026 (see "Revision for HOLD 6729358962" below): the order and the
+judged family below are unchanged; the words the report prints for them are narrowed there.*
+
 **The product (P1):**
 - **SVC2@10 BEATS THE DEFAULT:** a speed GAIN or SMALL GAIN, with CPU not a CPU COST;
 - **A TRADE:** a speed gain with a CPU COST;
@@ -188,7 +191,8 @@ registration's thresholds unchanged:
   at 0.05 or more;
 - **SATURATED:** utilisation max at 0.90 or more, and PREP STARVATION or FINISH BACKLOG.
 
-**Reading it with C1:**
+**Reading it with C1** (the flag unchanged; its capacity reading is a hypothesis, see the
+revision below):
 - **SATURATION BINDS:** SATURATED, and C1 NULL or REGRESSION. Two service threads can't feed
   two teams. The null is the service's capacity, not the idea.
 - **SATURATED, A GAIN NONETHELESS:** SATURATED, and C1 a gain. More service capacity might
@@ -204,7 +208,8 @@ as in the service core's report.
 
 ## Validity (the report checks each)
 
-The run is VALID only if all of these hold:
+The run is VALID only if all of these hold (and, since the revision below, the usable-evidence,
+workload and trace-configuration checks it adds):
 - the registered 20 rounds;
 - a clean tree;
 - the frozen inputs unchanged (no `NOT-FROZEN.txt`);
@@ -259,3 +264,37 @@ is registered before it runs, and a question about N1's method goes to Louis (C6
 Local runs on the shared 4-core machine are correctness checks only, never timing evidence.
 The recipe's DRY run (`just bench-service-2x3 20 1`) is untimed, and the report never calls
 it VALID.
+
+## Revision for HOLD 6729358962 (9 November 2026)
+
+Before any run, the Researcher's REVIEW 6729358962 held the recipe from the workstation queue
+(report and probe: `state/reports/service-2x3-6729243943/` at e6411029 on
+`team-state/researcher`). This revision closes its three findings. **Nothing judged changes:**
+the judged family (P1, C1, P2), the outcome map's thresholds (GAIN lo > 1.02, NULL within
+[0.97, 1.03], REGRESSION hi < 1), the extra-thread rule, N1 and its method (C6), the
+saturation thresholds and the registered order of the overall reading are as above. The
+changes are the report's validity checks (evidence it must have, not new statistics) and
+the words it prints. The recipe is unchanged; the freeze moves to the revised commit.
+
+| finding | fix (`bench/service_2x3.py`; `bench/service_core.py` unchanged) | fixture (`bench/test_service_2x3.py`) |
+|---|---|---|
+| H1: all-null output, empty hash with zero output passed VALID | every run's record must be usable: `hash` a hex digest, `out` the registered sample's 209,700,196 decoded bytes (`bench/wikidata.json`), every hash equal to the reference `mibz2@10`'s | `test_null_output`, `test_empty_hash_zero_output`, `test_hashes_differ` |
+| H1: deleted `hash`, `out` or `wall` raised KeyError | an unusable record is INVALID with its reason, never an exception | `test_deleted_hash`, `test_deleted_size`, `test_deleted_wall` |
+| H1: negative wall and CPU passed | wall, CPU and peak RSS finite and positive | `test_negative_wall_and_cpu`, `test_nonfinite_wall` |
+| H1: a wrong corpus name, or no corpus digest, passed | every run's `corpus` is `wikidata`, and `corpus.sha256` is the registered corpus's digest (82f65ace…, `bench/wikidata.json`); so a `CORPUS=` override can't pass as the registered workload unless it is the same bytes | `test_wrong_corpus`, `test_absent_corpus_digest`, `test_other_corpus_digest` |
+| H1: a trace of only `complete_rounds: 1` was VALID with saturation UNRESOLVED | the trace must carry every metric the report reads, finite and in range, and saturation must be resolved, as "UNRESOLVED (and then the run is INVALID)" above always said | `test_trace_complete_rounds_only`, `test_trace_metric_out_of_range` |
+| H1: the trace's configuration was not checked | the trace's own record must be the registered one: one result at 10 threads, the plan "the service core, mibz2-svc2's plan", 2 service threads, its `commit` the run's, parity true, the registered output size | `test_trace_wrong_configuration`, `test_trace_wrong_plan`, `test_trace_other_commit`, `test_trace_no_parity` |
+| H1: the rejection controls | kept | `test_one_round`, `test_duplicate_round`, `test_wrong_threads`, `test_unregistered_arm`, `test_dry`, `test_not_frozen` |
+| H2: P2 never entered the overall reading; illustrative walls (default 1, plain2 1.10, pipe2 0.90, svc2 0.95) printed "FOR SVC2@10 … the service threads cause it" while svc2 loses to pipe2 | P1, C1, P2 and S1 are each printed as a finding of its own (S1 reported, never judged). The overall reading follows the registered order, but prints FOR SVC2@10 only where S1 shows svc2@10 faster than pipe2x3@10; otherwise it prints "REGISTERED STEP 6 MET, BUT SVC2@10 NOT SHOWN BETTER THAN THE SIMPLER PIPE2X3@10 …, for Louis to weigh". No reading names the service threads as the cause | `test_illustrative_walls`, `test_for_svc2_only_when_s1_shows_it`, `test_without_s1_never_for_svc2` |
+| H2: C1 read as the service threads' effect | C1 is the service **bundle** against the plain 2 × 3 at the same teams and window: the two service threads, the serial work they take, the feeding, the hub's synchronisation and hand-offs, together. Its words: THE SERVICE BUNDLE BEATS THE PLAIN 2 × 3, A SMALL GAIN OF THE SERVICE BUNDLE, NO SERVICE-BUNDLE GAIN DETECTED, THE SERVICE BUNDLE IS SLOWER. Step 3 reads "P1 A GAIN WITHOUT A DETECTED SERVICE-BUNDLE GAIN", the plan's and the service's roles unresolved | `test_illustrative_walls`, `test_null_is_bounded` |
+| H2: the decomposition | on the common paired rounds' geometric means, P1 = S1 × P2 = C1 × S2 (exact round by round, so on the log-scale means), printed for speed and CPU; a decomposition of comparisons, not of causes; the intervals' endpoints are never multiplied | `test_illustrative_walls` |
+| H2: NULL and CPU INCONCLUSIVE | NULL is printed as bounded uncertainty ("within ±3%, a small effect is not excluded"), CPU INCONCLUSIVE as "no CPU cost detected, not shown to cost nothing" | `test_null_is_bounded`, `test_without_s1_never_for_svc2` |
+| H3: "SATURATION BINDS: the null is the service's capacity, not the idea" | the numeric flag SATURATION BINDS is kept (`saturation_flag` in the JSON); its capacity reading is printed as a hypothesis the figures are consistent with, with load imbalance between the service threads and queue or scheduling effects still possible. Prep starvation without saturation is "consistent with the prepared queue's lookahead binding, not shown to be it" | `test_saturation_is_a_hypothesis`, `test_saturated_trace_flag_kept` |
+
+**What this does not close.** The report's VALID is a statement about its predicates on the
+attempt's directory. It checks `commit.txt` against the checkout and the absence of
+`NOT-FROZEN.txt`; the recipe makes the frozen-tree comparison. So the bundle's admission
+still rests on the recipe, the head, the frozen commit and the corpus digest together, as
+before. Guardian D042's scoped production-safety HOLD on the composed pipeline stands; this
+run can't discharge it, and nothing here is a production qualification.
+

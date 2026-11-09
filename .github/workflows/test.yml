@@ -41,6 +41,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench/service_2x3.py's validity and readings on synthetic records (no decoder run)
+      - name: The service 2 x 3 report's fixtures
+        run: python3 bench/test_service_2x3.py
 
   get-python-versions:
     runs-on: ubuntu-latest
