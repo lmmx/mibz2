@@ -324,7 +324,7 @@ ran under 4587b54b or 79e41419.
 
 | finding | correction | fixture (`bench/test_service_lookahead.py`) |
 |---|---|---|
-| H1: P checked only finite and nonnegative; max 99, median > max, and blocks 0 were VALID | **Stricter:** every complete timeline round's prepared count, read from the raw runs, must satisfy 1 ≤ median ≤ max ≤ L + K − 1 with the registered 431 blocks, before any aggregate is read. The summary is checked against the same invariant, and against the rounds it summarises (it must be their median) | `test_prepared_max_99_summary`, `test_prepared_max_99_every_round`, `test_prepared_median_above_max`, `test_prepared_above_its_own_ceiling`, `test_one_round_breaches`, `test_no_blocks`, `test_no_blocks_summary`, `test_summary_not_reconciled` |
+| H1: P checked only finite and nonnegative; max 99, median > max, and blocks 0 were VALID | **Stricter:** every complete timeline round's prepared count, read from the raw runs, must satisfy 1 ≤ median ≤ max ≤ L + K − 1 with the registered 431 blocks (an expected scanner count tied to the corpus digest, from earlier traces; see the second revision), before any aggregate is read. The summary is checked against the same invariant, and against the rounds it summarises (it must be their median) | `test_prepared_max_99_summary`, `test_prepared_max_99_every_round`, `test_prepared_median_above_max`, `test_prepared_above_its_own_ceiling`, `test_one_round_breaches`, `test_no_blocks`, `test_no_blocks_summary`, `test_summary_not_reconciled` |
 | H1: the positive fixture gave L = 3 a P max of 5, above its ceiling of 4 | the fixture was wrong, not the ceiling: L 3 now reaches 4, L 4 reaches 5 | `test_full_run_threshold_binds` |
 | H1: occupancy's `prep_max` is the median of the round maxima, and `prep_median` the median of the round medians | labelled so. The report prints the max over complete rounds, the median of round maxima and the median of round medians (which may be half-integral), and keeps each round's values in its JSON | `test_full_run_threshold_binds` |
 | H2: occupancy saved no child status; a child that printed a valid line and exited nonzero could pass | **Stricter, `examples/occupancy.rs`:** every child's exit status (its code, or −signal) goes into each raw run. `children_ok` and `children_expected` (rounds × 3 modes) go into the JSON, and the pass exits 1 on any nonzero child or a missing one. The report requires each scheduled (round, mode) once, each with status 0, and `children_ok` | `test_child_nonzero_after_a_valid_line`, `test_child_killed`, `test_children_not_ok`, `test_child_missing`, `test_child_duplicated` |
@@ -345,6 +345,32 @@ children (5 passes × 6 rounds × 3 modes) plus each pass's setup. About 8 minut
 an estimate, not a bound. Same-plan contrasts aren't guaranteed a smaller variance than #258's.
 
 **Still held:** under D045, for service-core timing, until its B5 evidence closes.
+
+## Second revision, for the Researcher's narrowed HOLD (REVIEW 6730774618, 9 November 2026)
+
+The Researcher accepted the first revision's H1 ceiling and labels, H3's same-arm reading and
+wording, the native child status and the recipe's exit check
+(`state/reports/lookahead-rereview-6730656466/` at bab88d74 on `team-state/researcher`). It
+narrowed the HOLD to four contradictory traces that still read VALID. This revision closes them.
+
+**Unchanged:** LA3, LA4, N1 and its method, and every numerical threshold. These are stricter
+evidence checks only.
+
+| witness | correction (`bench/service_lookahead.py`) | fixture |
+|---|---|---|
+| one requested round, three children, truncated and reconciled, was VALID | **Stricter:** each pass must request the registered 6 rounds, so 18 children, each (round, mode) once with status 0. This is not a six-complete-round gate: at least one complete timeline round is still the rule | `test_three_children_instead_of_eighteen`; the control `test_one_complete_round_six_requested` (6 requested, 18 children, 1 complete round) stays VALID |
+| an off child with hash BAD and err failed, beside parity true and status 0, was VALID | **Stricter:** parity, output and error are recomputed from every child's own line. Each needs a hex digest, the registered output size and no error, and all digests must be equal. The summary's `parity` flag is no longer trusted alone | `test_raw_hash_and_error_disagree_with_parity`, `test_raw_hashes_differ`, `test_raw_output_size` |
+| one complete round with idle_prep_share 99 was hidden by the median | **Stricter:** in each complete timeline round, every required metric must be present, finite and in its domain before reconciliation. Shares and utilisations (`svc.util.max`, `.0`, `.1`, `team.idle_prep_share`, `team.idle_back_share`) lie in [0, 1]. Waits, backlogs, run wait, blocks and P are at least 0. Blocks must be 431, P within its invariant, and `svc.n.services` 2 | `test_one_complete_round_share_99`, `test_one_complete_round_util_above_one`, `test_one_complete_round_negative_wait` |
+| one complete round with idle_prep_share NaN was dropped from the median while still counted complete | **Stricter:** a NaN or absent metric in a complete round makes the trace INVALID, and is never dropped. A genuinely incomplete round (`t.complete=no`) is still not read | `test_one_complete_round_share_nan`, `test_one_complete_round_metric_absent`, `test_incomplete_round_nan_ignored` |
+
+**The 431 blocks** is an explicit expected scanner count (`t.blocks`) for the registered corpus,
+whose digest (82f65ace…) is fixed. It comes from earlier traces: #258's workstation trace and
+this registration's dry runs all read 431. `bench/wikidata.json` doesn't supply it; it fixes the
+corpus, and so the count.
+
+**The reconciliation tolerance** is 1e-6 × max(1, |median|): absolute below one, relative above.
+It covers the six-digit formatting of the children's lines. It doesn't replace the per-round
+domain checks above.
 
 ## Local runs
 

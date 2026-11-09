@@ -48,6 +48,10 @@ section), with stricter evidence checks and no changed threshold or N1:
 - H2: every scheduled child (requested rounds x 3 modes) in the raw runs once, each with exit
   status 0, and occupancy's own `children_ok`; empty raw runs INVALID; the inherited rule of at
   least one complete trace round kept;
+- the second revision (REVIEW 6730774618): every pass the registered 6 rounds (18 children);
+  parity, output and error recomputed from each child's own line; every required metric of
+  every complete round present, finite and in its domain before reconciliation (tolerance
+  1e-6 x max(1, |median|)), a NaN never dropped;
 - H3: the gaining arms and the relieved arms named separately, a concordant reading only
   where they overlap; a reading is the effect of the implemented higher-threshold policy, not
   proof of a queue bottleneck.
@@ -73,6 +77,7 @@ from service_core import (  # noqa: E402
     threads_of,
 )
 from service_2x3 import (  # noqa: E402
+    HASH,
     REGISTERED_CORPUS,
     REGISTERED_CORPUS_SHA256,
     REGISTERED_OUT,
@@ -164,10 +169,16 @@ TRACE_ADMISSION = {name: (ADMISSION[c] if ADMISSION[c] != 2 else DEFAULT_ADMISSI
 # median of round maxima, and the median of round medians), not the pass's max or a pooled
 # median, so the report checks every round's against the invariant before reading them
 TRACE_P = ["svc.backlog.prep_max", "svc.backlog.prep_median"]
-# the registered workload's blocks, as the scanner issues them (`t.blocks`; #258's trace)
+# the registered workload's blocks, as the scanner issues them (`t.blocks`): an explicit
+# expected count for the corpus whose digest is fixed (REGISTERED_CORPUS_SHA256), from earlier
+# traces (#258's workstation trace, this registration's dry runs); bench/wikidata.json doesn't
+# hold it
 REGISTERED_BLOCKS = 431
 # the occupancy modes, each round's children (examples/occupancy.rs's MODES)
 TRACE_MODES = ("off", "timeline", "full")
+# the rounds each pass is registered to request (the recipe's trace_rounds), so 18 children a
+# pass; at least one of them a complete timeline round is the inherited rule, unchanged
+TRACE_ROUNDS = 6
 # the summary keys checked against the rounds they summarise (the medians of the complete
 # timeline rounds' values)
 RECONCILED = TRACE_SHARES + TRACE_NONNEG + TRACE_P
@@ -202,6 +213,8 @@ def check_raw(o, name, tl):
     if not (number(req) and float(req).is_integer() and req >= 1):
         return [], [f"requested rounds {req!r}, not a whole number of at least 1"]
     req = int(req)
+    if req != TRACE_ROUNDS:
+        p.append(f"requested rounds {req}, not the registered {TRACE_ROUNDS} ({TRACE_ROUNDS * len(TRACE_MODES)} children)")
     runs = o.get("runs")
     if not isinstance(runs, list) or not runs:
         return [], ["no raw runs"]
@@ -209,8 +222,9 @@ def check_raw(o, name, tl):
         p.append(f"children_ok {o.get('children_ok')!r}, not true")
     if o.get("children_expected") != req * len(TRACE_MODES):
         p.append(f"children expected {o.get('children_expected')!r}, not {req * len(TRACE_MODES)}")
-    want = {(r, m) for r in range(req) for m in TRACE_MODES}
+    want = {(r, m) for r in range(TRACE_ROUNDS) for m in TRACE_MODES}
     seen = []
+    hashes = set()
     for x in runs:
         if not isinstance(x, dict):
             p.append("a raw run not a record")
@@ -220,8 +234,21 @@ def check_raw(o, name, tl):
             p.append(f"round {x.get('round')!r} {x.get('mode')!r}: exit status {x.get('status')!r}, not 0")
         if x.get("threads") != TRACE_THREADS or x.get("slots") != TRACE_SLOTS[name]:
             p.append(f"round {x.get('round')!r} {x.get('mode')!r}: threads {x.get('threads')!r}, slots {x.get('slots')!r}")
+        # parity, output and error from the child's own line, not the summary's flag
+        kv = line_kv(x.get("line"))
+        h = kv.get("hash")
+        if not (isinstance(h, str) and HASH.fullmatch(h)):
+            p.append(f"round {x.get('round')!r} {x.get('mode')!r}: hash {h!r} not a hex digest")
+        else:
+            hashes.add(h)
+        if fnum(kv.get("out")) != REGISTERED_OUT:
+            p.append(f"round {x.get('round')!r} {x.get('mode')!r}: out {kv.get('out')!r}, not the registered {REGISTERED_OUT}")
+        if kv.get("err") != "-":
+            p.append(f"round {x.get('round')!r} {x.get('mode')!r}: err {kv.get('err')!r}, not none")
     if sorted(seen, key=repr) != sorted(want, key=repr) or len(seen) != len(set(seen)):
-        p.append(f"{len(seen)} raw runs, not the {len(want)} scheduled ({req} rounds x {len(TRACE_MODES)} modes) once each")
+        p.append(f"{len(seen)} raw runs, not the {len(want)} scheduled ({TRACE_ROUNDS} rounds x {len(TRACE_MODES)} modes) once each")
+    if len(hashes) > 1:
+        p.append(f"the children's output digests differ ({', '.join(sorted(hashes))})")
     c = TRACES[name]
     top = ceiling(c)
     rounds = []
@@ -233,6 +260,14 @@ def check_raw(o, name, tl):
             continue
         pm, pmed, blocks = fnum(kv.get("t.svc.backlog.prep_max")), fnum(kv.get("t.svc.backlog.prep_median")), fnum(kv.get("t.blocks"))
         rounds.append({"round": x.get("round"), "p_max": pm, "p_median": pmed, "blocks": blocks, "kv": kv})
+        # every required metric present, finite and in its domain in this complete round,
+        # before any median: shares and utilisations in [0, 1], the rest at least 0
+        bad = [k for k in TRACE_SHARES if not (0 <= fnum(kv.get("t." + k)) <= 1)]
+        bad += [k for k in TRACE_NONNEG + TRACE_P if not (fnum(kv.get("t." + k)) >= 0)]
+        if fnum(kv.get("t.svc.n.services")) != TRACE_SERVICES:
+            bad.append("svc.n.services")
+        if bad:
+            p.append(f"round {x.get('round')!r}: metrics absent, not finite or out of domain: {', '.join(bad)}")
         if blocks != REGISTERED_BLOCKS:
             p.append(f"round {x.get('round')!r}: {blocks!r} blocks, not the registered {REGISTERED_BLOCKS}")
         if not (1 <= pmed <= pm <= top):
@@ -247,8 +282,8 @@ def check_raw(o, name, tl):
     else:
         for k in RECONCILED:
             v = [fnum(r["kv"].get("t." + k)) for r in rounds]
-            v = [x for x in v if not math.isnan(x)]
-            m = statistics.median(v) if v else math.nan
+            # (a NaN in a complete round is already its own problem above; never dropped here)
+            m = statistics.median(v) if v and not any(math.isnan(x) for x in v) else math.nan
             if not (number(tl.get(k)) and not math.isnan(m) and abs(tl[k] - m) <= 1e-6 * max(1.0, abs(m))):
                 p.append(f"summary {k} {tl.get(k)!r}, not the median of its complete rounds ({m!r})")
     for r in rounds:

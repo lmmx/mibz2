@@ -406,6 +406,92 @@ class Revision(unittest.TestCase):
         self.assertInvalidOn(m, "no complete timeline round")
 
 
+class Rereview(unittest.TestCase):
+    """The Researcher's re-review (REVIEW 6730774618, its probe.py): four contradictory
+    traces, each INVALID, and its genuine one-complete-round control, VALID"""
+
+    def assertInvalidOn(self, mutate, needle):
+        Validity.assertInvalidOn(self, mutate, needle)
+
+    def test_three_children_instead_of_eighteen(self):
+        def m(rows, traces, files):
+            for tr in traces.values():
+                tr["settings"]["rounds"] = 1
+                tr["children_expected"] = 3
+                tr["runs"] = [r for r in tr["runs"] if r["round"] == 0]
+                tr["results"][0]["timeline"]["complete_rounds"] = 1
+        self.assertInvalidOn(m, "not the registered 6 (18 children)")
+
+    def test_raw_hash_and_error_disagree_with_parity(self):
+        def m(rows, traces, files):
+            tr = traces[A3W8]
+            tr["runs"][0]["line"] = tr["runs"][0]["line"].replace("hash=0123456789abcdef", "hash=BAD").replace("err=-", "err=failed")
+        d = run(m)
+        self.assertEqual(d["verdict"], "INVALID")
+        bad = [t for t in failed(d) if f"`{A3W8}`" in t]
+        self.assertTrue(bad and "hash 'BAD' not a hex digest" in bad[0] and "err 'failed'" in bad[0], bad)
+
+    def test_raw_hashes_differ(self):
+        def m(rows, traces, files):
+            tr = traces[A2W12]
+            tr["runs"][3]["line"] = tr["runs"][3]["line"].replace("hash=0123456789abcdef", "hash=fedcba9876543210")
+        self.assertInvalidOn(m, "output digests differ")
+
+    def test_raw_output_size(self):
+        def m(rows, traces, files):
+            tr = traces[A4W8]
+            tr["runs"][2]["line"] = tr["runs"][2]["line"].replace(f"out={s.REGISTERED_OUT}", "out=0")
+        self.assertInvalidOn(m, "out '0'")
+
+    def test_one_complete_round_share_99(self):
+        def m(rows, traces, files):
+            x = next(r for r in traces[A3W8]["runs"] if r["mode"] == "timeline")
+            x["line"] = x["line"].replace("t.svc.team.idle_prep_share=0.15", "t.svc.team.idle_prep_share=99")
+        self.assertInvalidOn(m, "out of domain: svc.team.idle_prep_share")
+
+    def test_one_complete_round_share_nan(self):
+        def m(rows, traces, files):
+            x = next(r for r in traces[A3W8]["runs"] if r["mode"] == "timeline")
+            x["line"] = x["line"].replace("t.svc.team.idle_prep_share=0.15", "t.svc.team.idle_prep_share=NaN")
+        self.assertInvalidOn(m, "out of domain: svc.team.idle_prep_share")
+
+    def test_one_complete_round_metric_absent(self):
+        def m(rows, traces, files):
+            x = next(r for r in traces[A4W12]["runs"] if r["mode"] == "timeline")
+            x["line"] = x["line"].replace(" t.svc.util.1=0.65", "")
+        self.assertInvalidOn(m, "out of domain: svc.util.1")
+
+    def test_one_complete_round_util_above_one(self):
+        def m(rows, traces, files):
+            x = next(r for r in traces[A2W8]["runs"] if r["mode"] == "timeline" and r["round"] == 4)
+            x["line"] = x["line"].replace("t.svc.util.max=0.7", "t.svc.util.max=1.4")
+        self.assertInvalidOn(m, "out of domain: svc.util.max")
+
+    def test_one_complete_round_negative_wait(self):
+        def m(rows, traces, files):
+            x = next(r for r in traces[A2W8]["runs"] if r["mode"] == "timeline" and r["round"] == 1)
+            x["line"] = x["line"].replace("t.svc.queue.prep.median_ms=0.2", "t.svc.queue.prep.median_ms=-0.2")
+        self.assertInvalidOn(m, "out of domain: svc.queue.prep.median_ms")
+
+    def test_incomplete_round_nan_ignored(self):
+        # a genuinely incomplete round (t.complete=no) is not read, whatever it carries
+        def m(rows, traces, files):
+            traces[A3W8] = trace_for(A3W8, complete_rounds=5)
+            x = next(r for r in traces[A3W8]["runs"] if r["mode"] == "timeline" and r["round"] == 5)
+            x["line"] = x["line"].replace("t.svc.team.idle_prep_share=0.15", "t.svc.team.idle_prep_share=NaN")
+        d = run(m)
+        self.assertEqual(d["verdict"], "VALID", failed(d))
+        self.assertEqual(len(d["traces"][A3W8]["rounds"]), 5)
+
+    def test_one_complete_round_six_requested(self):
+        # the Researcher's control: six requested, eighteen children, one complete timeline round
+        d = run(with_timeline(A3W8, complete_rounds=1))
+        self.assertEqual(d["verdict"], "VALID", failed(d))
+        self.assertEqual(d["exit"], 0)
+        self.assertEqual(len(d["traces"][A3W8]["rounds"]), 1)
+        self.assertEqual(d["traces"][A3W8]["requested_rounds"], 6)
+
+
 def o(name, speed="GAIN", cpu="NULL", g=(1.05, 1.03, 1.07), arm=None):
     arm = arm or {"LA3": "mibz2-svc2-a3@10", "LA4": "mibz2-svc2-a4@10"}[name]
     return {"name": name, "arm": arm, "speed_outcome": speed, "cpu_outcome": cpu, "speed": list(g)}
