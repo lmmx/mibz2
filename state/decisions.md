@@ -2394,3 +2394,54 @@ The serial entry-point diagnostic measures MTF plus table construction. It canno
 [Evidence](records/d055/evidence.json), [Miri excerpts](records/d055/miri-excerpts.txt), [Python probes](records/d055/probes.py), [results](records/d055/results.json), [routing audit](records/d055/routing.json).
 
 Migration passed before receipt: previous branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **971b8ff920ccf1c224f2a820a89d7462b4dfae0b**. Routing audit: five resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify assumes FROM coordinator; Guardian read-back additionally checks sender/recipient/type/destination/incoming-ID/work-link exactly. Task and subscriptions unchanged.
+
+## D056 — #270 empty-block repair: scoped PROCEED at 03e52206
+
+Incoming [6732477634](https://github.com/lmmx/mibz2/pull/161#issuecomment-6732477634), dispatching QUEUED [6732365462](https://github.com/lmmx/mibz2/pull/145#issuecomment-6732365462). Reviewed PR **#270** head **03e52206ac248737bc856f064928adf238265917**, implementation **f67085670ee696340337aa37377afab886dded3a**. Specs, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Independent source review, CI and archived-log reconciliation, Python predicate probes; no implementation contribution, local Rust/Miri execution or timing.
+
+**Disposition — G1/G2, B6 resumption:** **PROCEED for #270's already registered CI sweep at this exact frozen head.** The empty-block false refusal that stopped the earlier dispatch is repaired and its regression detects restoration of the faulty guard. D054's scoped B5 clearance transfers with this reviewed delta. The normal registration and validity conditions remain; this is not production qualification, merge approval, a workstation authorization or a new run recipe. D055's HOLD on #277 and other lines' holds are unchanged.
+
+### 1. The changed domain is safe, and the real failure is closed
+
+The source delta since D054 changes two production predicates in `src/parallel/run_team.rs`: `merge_shares` and `merge_rows` reject zero records instead of fewer than two. Remaining source changes are tests; the fuzz harness adds replay and saves rebuild witnesses. The implementation-to-frozen-head comparison changes only docs. Reviewed run-team blob: **8e5f2acad8426f7a349e33b41ebd96866c2a9e28**.
+
+For one record, r=0. The start/closing checks force n=0 and the word's upper 24 bits to zero. Each freshly counted share has zero runs and rows; the prefix checks require all supplied counts zero. No slot/row ownership range is nonempty. Count and scatter windows are empty. `sort_one_share` reserves one F-order entry and initializes its closing [0,0] before exposing length one. `fill_rows_at` returns at q0≥q1 before predecessor lookup; the direct fill's lo..hi loop is empty and its start/end arrays agree. Table length is zero. Thus the enlarged domain introduces neither an uninitialized exposed row nor an out-of-bounds raw access.
+
+In the real front stage, Leader sorts the emitted [0], preserves `Path::Sorted`, then the ordinary orig_ptr≥n check returns BadOrigPtr. The other modes encounter that error before a sort. There is no cooperative empty block. The original defect was a false refusal/rebuild counter, not wrong bytes or an unsafe store. D055's shorthand “#270's sort failure” refers to this leader/helper merge path; `run_stage::sort` already accepted [0].
+
+**G1 precision correction:** “takes exactly [0]” and “no other tiling's treatment changes” overstate the patch. Both new predicates accept **[c] for every 0≤c<256**, n=0 and zero counts, since they test `word >> 8`. The canonical `run_stage::sort`/updated `tiled` oracle accepts only literal [0]. Reproduced in 15,360 singleton predicate cases across positions, counts, n and 1–5 shares; 1,280 accepted combinations (256 words × five share counts). This is a Python model plus source derivation, not a Rust execution.
+
+The extra low byte is an ignored closing-sentinel byte: these private paths still perform no table stores and return the same empty semantics. The emitter's canonical witness is [0]. Therefore this discrepancy does **not** restore the timing HOLD or establish UB/output corruption. Record it beside the “exactly” claim; when tightening canonical-input checks, include [1] and [255] negative cases in both prefixes. No new scientific gate is created by that recommendation.
+
+### 2. The witness and mutation evidence are specific
+
+Fetched the saved input in base64, decoded it and independently hashed it: **1,352 bytes**, SHA-256 **3c69e8a3c6477d983669c53dc93db479031045a8b49c6630eb3d4846789f8632**. `an_empty_block_by_records` compares prefix bytes and complete error result with the default decoder for five sorts × five plans, then requires zero fallbacks. These end-to-end regressions use detected kernels. The lower-level empty test exercises helper/direct paths in 1–5 shares with the available scalar/detected kernels; do not describe every front-stage combination as separately scalar-tested.
+
+R3a's archived patch restores **merge_shares'** old guard. Its native library log fails `the_empty_block_tiles` at the leader sort assertion; the integration log fails with five fallbacks. The restored logs show 90 library tests passed, two ignored; 29 run-team passed, one ignored; ten run-fed integration tests passed; the 37-test combined subset passes five repetitions. The mutant does not independently test restoration of merge_rows' guard, but the direct empty positive assertion and the zero-domain argument cover that change.
+
+**Replay provenance correction:** `r3-case596-replay.txt` is a **post-fix** f6708567 run with 20 decoded repeats and zero failures/rebuilds. Its “596 cases” header is the generated index, not 596 decoded cases. The brief's “20 of 20 before the fix” is not demonstrated by that archived file. The actual pre-fix failure mechanism is independently supported by the retained R3a failures; no need to recreate a harmless refusal just to repair the prose.
+
+### 3. Fresh source, CI, fuzz, and Miri
+
+The current PR API head matches the frozen SHA. Check-runs show **24 success, 3 skipped, no failure/pending**. Skipped deployment/release jobs are not reported as executed. Actual CI logs at merge **d85293d** (03e52206 into 6b36fd8c43c1b834e69ee62cd6b5054dc99c571c) show both new regressions passing. Fetched merge blobs for run_team, integration tests, fuzz harness and tests/common match the reviewed head exactly.
+
+Recomputed archived fuzz rows:
+- seed 1: **727 cases**, **239 team / 295 small** record blocks;
+- seed 2: **6,386 cases**, **2,397 team / 2,741 small** record blocks;
+- case-596 replay: **20 decoded repeats**, **20 team** record blocks.
+
+All report zero failures and rebuilds. Current-head CI [fuzz-smoke job 128982210125](https://github.com/lmmx/mibz2/actions/runs/42562642615/job/128982210125) additionally reports **959 run-fed cases**, zero failures, with independently summed **327 team / 433 small** record blocks and zero rebuilds.
+
+The changed harness preserves the RNG input-generation sequence for run-fed replay (every case is a pipeline case), skips decoding earlier generated cases, repeats the target with its saved RNG state, and saves a rebuild-triggering input via the existing report path. This does not establish replay identity across different corpus versions or mixed-mode skipping; the checked case is run-fed. Pinning the fixture fixes the earlier #275 corpus-change problem for this regression.
+
+Actual completed **Miri job 128982210615** now shows **26 default tests and 8 AVX2 tests passed**. It includes the run-team ownership, surplus-helper, C29, walk, share and tampered suites, and default-mode run-fed unwind tests. The new `the_empty_block_tiles` test is **not** selected by the miri_ filter; do not claim direct empty-case Miri coverage. “No unsafe text changed” alone would not justify transfer: a safe guard can admit new unsafe paths. Here the explicit r=0 argument establishes the newly admitted path's writes/reads, native regression verifies it, and existing raw-operation Miri coverage remains applicable. No additional Miri prerequisite is imposed.
+
+### 4. Scope and historical evidence
+
+D054's count and test-selection corrections are recorded beside their original claims. The seven-arm/15-round registered CI question, thresholds, corpus, primary and reference are unchanged by this delta. Continue only at 03e52206 with the existing validity assertions; any new correctness/refusal failure triggers investigation, not a blind retry. The proposed sweep itself was not run by this review.
+
+The prior unsupported-CPU Kernels limitation, finite Miri/fuzz coverage and untested unwind locations remain disclosed. No global release from B5 or B6 is implied. Ordinary maintenance and evidence gathering need no extra Guardian approval.
+
+[Evidence](records/d056/evidence.json), [reproducible probes](records/d056/probes.py), [results](records/d056/results.json), [routing audit](records/d056/routing.json).
+
+Migration passed before receipt: previous branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **3f6594235eb041f97e695fd5072e64216fe043e4**. Audit: five resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify hardcodes FROM coordinator; its sole sender mismatch is retained alongside exact Guardian read-back checks. Task/subscriptions unchanged.

@@ -1,0 +1,35 @@
+{
+  "fixture_bytes": 1352,
+  "fixture_sha256": "3c69e8a3c6477d983669c53dc93db479031045a8b49c6630eb3d4846789f8632",
+  "fuzz_totals": {
+    "r3-run-fed-30s-seed1.txt": {
+      "team": 239,
+      "small": 295,
+      "rebuilt": 0,
+      "candidates": 11
+    },
+    "r3-run-fed-240s-seed2.txt": {
+      "team": 2397,
+      "small": 2741,
+      "rebuilt": 0,
+      "candidates": 11
+    },
+    "r3-case596-replay.txt": {
+      "team": 20,
+      "small": 0,
+      "rebuilt": 0,
+      "candidates": 11
+    }
+  },
+  "singleton_cases": 15360,
+  "accepted": 1280,
+  "newly_accepted_words_at_n0_zero_counts": "0..255; one per supplied share count",
+  "canonical_oracle": "literal [0] only; 255 other low-byte sentinels differ",
+  "scope": "Python prefix arithmetic and log reconciliation; no Rust execution",
+  "ci_fuzz_totals": {
+    "team": 327,
+    "small": 433,
+    "rebuilt": 0,
+    "candidates": 11
+  }
+}
