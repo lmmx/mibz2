@@ -111,9 +111,10 @@
     6733569628,
     6733827974,
     6734368711,
-    6734526651
+    6734526651,
+    6734802309
   ],
-  "last_processed_comment_id": 6734526651,
+  "last_processed_comment_id": 6734802309,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1046,7 +1047,7 @@
     },
     {
       "trigger_comment_id": 6734802309,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1054,7 +1055,10 @@
       "report_path": "state/reports/c29-quota-closure-6734802309/report.md",
       "report_commit": "5d1a672b371f618db9d202ce57981b8b4b6a054c",
       "review_comment_pr": 145,
-      "disposition": "PROCEED toward freeze: quota unknown-state and failed-parent admission closed. 12 repository tests and 59 independent probes pass; missing legacy value with explicit unlimited is a wording clarification, not a blocker. No native timing or implementation."
+      "disposition": "PROCEED toward freeze: quota unknown-state and failed-parent admission closed. 12 repository tests and 59 independent probes pass; missing legacy value with explicit unlimited is a wording clarification, not a blocker. No native timing or implementation.",
+      "review_comment_id": 6734936140,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing pass. Pinned verify reports only hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1074,10 +1078,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6734526651
+      6734802309
     ],
     "handled": [
-      6734526651
+      6734802309
     ],
     "skipped": [],
     "automation_modified": false
