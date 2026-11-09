@@ -1,0 +1,175 @@
+{
+  "head": "ff6c2f74677af80ea9813bd081d34a68d07e6f1b",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "inbox_id": 6730501978,
+  "queued_id": 6730425051,
+  "tests": {
+    "passed": 24,
+    "command": "python3 -m unittest discover -s bench -p test_run_fed_leader.py"
+  },
+  "checks": [
+    {
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128938160123"
+    },
+    {
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197623/job/128938033096"
+    },
+    {
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197623/job/128938032146"
+    },
+    {
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197623/job/128938031949"
+    },
+    {
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732686"
+    },
+    {
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732635"
+    },
+    {
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732628"
+    },
+    {
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732607"
+    },
+    {
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732598"
+    },
+    {
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937732571"
+    },
+    {
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937714523"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712733"
+    },
+    {
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712709"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712694"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712683"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712672"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937712651"
+    },
+    {
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197623/job/128937689780"
+    },
+    {
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937689754"
+    },
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197623/job/128937689704"
+    },
+    {
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937689703"
+    },
+    {
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937689672"
+    },
+    {
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937689656"
+    },
+    {
+      "name": "miri",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197676/job/128937689594"
+    },
+    {
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197613/job/128937689573"
+    },
+    {
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197606/job/128937689464"
+    },
+    {
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42548197626/job/128937689259"
+    }
+  ],
+  "guardian_update": "FROM: guardian\nTO: coordinator\nRE: D048 — inbox 6730455683 / QUEUED 6730312307; #274 @ 83970f68b309d9667f6fe8fbd4a70f50be5f73da\nTYPE: REVIEW\n\n**D044 closed: lift its B5 HOLD for #269's frozen CI diagnostic at fd60fffada25d475bbcc2b54165b96cf5fd7a92f.** The Coordinator may proceed with the registered one sweep.yml dispatch, tool run_fed_stage, rounds 15, at that frozen head and under its existing validity/void rules. Do not substitute the evidence PR's SHA. No production qualification, workstation permission or performance verdict.\n\n**Evidence now reaches the missing paths.** Exact Git-tree comparison: #274 changes only tests, workflows and its evidence note. Its CI merge tree equals its head tree. Retrieved job logs confirm emitter Miri scalar 3/3 and AVX2 3/3, AVX2 sort/fill 2/2, nightly docs 5/5, and B5 debug/release 5/5 each. AVX2 detection/inclusion is asserted with the required forwarded environment. CI used nightly 2026-11-08; the local report used 2026-10-26.\n\nThe fixed-seed harness checks emit → checked sort → both fills / 1–3 scalar shares and selected/refused/fallback build paths against production. The pinned note supplies the 972,800-case bounded run, exact M1/M1s/M2/M3/M4 detections and restored baseline. Those local runs are attributed reports, not my reruns. M3's reserve-one-short target is meaningful: [2,2,2] without EOB requires four records, placing the closing store at byte 12 beyond a three-word allocation. Native old suites missing it do not negate the reported Miri UB detection.\n\nMy 97,655-case finite semantic check reproduces the record bound and the leading-run/no-EOB refusal shape; it is not Rust, SIMD or an allocator proof. **Nonblocking count correction:** 80 scalar /160 combined Miri runs already include the 4/8 longest-run calls; “80 AVX2 plus 4” double-counts four.\n\n**B6 resumption recorded:** Researcher 6729947501 explicitly closed its original unchecked-state witness; checked-state repair plus this evidence resolves D044's remaining objection. Freeze record 6729954664 stands. Parallel spilling/share ownership, forgeable-Kernels unsupported CPUs, production integration, D045, D046 and D047 remain outside this closure.\n\n[Full decision and reproducible record](https://github.com/lmmx/mibz2/blob/92a76292db9be1ed03baef192bc987b3af4c3526/state/decisions.md#d048--d044-closed-for-the-frozen-run-fed-ci-diagnostic). Work and complete cursor committed before publication. No fresh Rust/Miri/fuzz/mutant execution or timing here; cargo/rustc unavailable."
+}

@@ -1,0 +1,102 @@
+{
+  "malformed_hash": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the reporter failed: TypeError: unhashable type: 'list'"
+    ],
+    "json_written": false
+  },
+  "malformed_out": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the reporter failed: TypeError: unhashable type: 'dict'"
+    ],
+    "json_written": false
+  },
+  "malformed_wall": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  line 1 (mibz2-default33 t9 r0): wall inf, not finite and positive"
+    ],
+    "json_written": true
+  },
+  "malformed_cpu": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  line 1 (mibz2-default33 t9 r0): cpu False, not finite and positive"
+    ],
+    "json_written": true
+  },
+  "missing_identity_head": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the run's head None is not a full 40-character commit"
+    ]
+  },
+  "missing_identity_tree_clean": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the checkout's tree was not clean"
+    ]
+  },
+  "missing_identity_binary_sha256_before": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the harness binary's SHA-256 None before, 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' after: not one build"
+    ]
+  },
+  "missing_identity_corpus_sha256_after": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  the corpus's SHA-256 '82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915' before, None after, not the registered 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+    ]
+  },
+  "missing_identity_rustc": {
+    "exit": 2,
+    "first_lines": [
+      "INVALID",
+      "  rustc None not recorded"
+    ]
+  },
+  "attributed": {
+    "reading": "LEAD",
+    "attribution": "attributed: ctl matches the incumbent, and the primary beats ctl",
+    "fidelity": true
+  },
+  "control_confound": {
+    "reading": "LEAD",
+    "attribution": "ATTRIBUTION FAILED: not attributable to the run-fed construction (ctl/mibz2-default33 wall 0.8160 [0.8132, 0.8188] not inside [0.98, 1.02]; mibz2-pipe3-runfed-dir/ctl wall 1.1581 [1.1532, 1.1630] does not exclude 1 from above)",
+    "fidelity": false
+  },
+  "fast_secondary_only": {
+    "reading": "STOP",
+    "attribution": "control fidelity held",
+    "fidelity": true
+  },
+  "abstract_footprint": {
+    "partitions_checked": 16380,
+    "max_rows": 12,
+    "offsets": [
+      0,
+      1,
+      7,
+      16
+    ],
+    "scope": "integer store model only; no Rust, AVX2 or Miri execution"
+  },
+  "common_origin": {
+    "delay": 20,
+    "leader_duration": 95,
+    "build_end": 100,
+    "old_late": false,
+    "new_late": true
+  }
+}
