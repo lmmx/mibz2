@@ -4,11 +4,16 @@ identities) is VALID and read against the incumbent; a tiny DRY bundle is admitt
 DRY; and every failure it must refuse is refused, INVALID with its reason and never a crash:
 wrong rounds, wrong threads, a missing arm, partial records, a mismatched digest (binary,
 corpus, frozen source), an unfrozen or dirty run, a DRY bundle offered as evidence. The
-occupancy captures are admitted apart, each refusal with its reason.
+occupancy captures are admitted apart, each refusal with its reason. §R10's additions: the
+registered workload (length and hash) in every record, the bundle's own binaries rehashed,
+the preflight (PASS, or REFUSED on each fact, never on a clock or temperature value), the
+reading unchanged by anything the sysfs snapshots say, and the diagnostics (position,
+predecessor, the endpoint labels' pair states as counts only).
 
     python3 bench/test_run_fed_leader_ws.py
 """
 
+import hashlib
 import json
 import math
 import os
@@ -25,6 +30,37 @@ import run_fed_leader_ws as ws  # noqa: E402
 import test_run_fed_leader as ci  # noqa: E402
 
 HEAD = "0123456789abcdef0123456789abcdef01234567"
+# the bundle's binaries (bin/), as the stand-in bundles write them
+BIN = {"ab": b"stand-in ab\n", "occupancy": b"stand-in occupancy\n"}
+BIN_SHA = {k: hashlib.sha256(v).hexdigest() for k, v in BIN.items()}
+OUT, HASH = ws.WORKLOAD["out"], ws.WORKLOAD["hash"]
+
+
+def snapshot(mhz, temp=45.0, t=0, cpus=ws.HOST_CPUS, unread=()):
+    """One sysfs snapshot in ab's `machine_pre`/`machine_post` schema (examples/ab.rs's
+    `State::json`): every CPU at `mhz`, those in `unread` unreadable"""
+    khz = {str(c): (None if c in unread else int(mhz * 1000)) for c in range(cpus)}
+    st = {
+        "freq_mhz": float(mhz),
+        "freq_cpus": cpus - len(unread),
+        "governor": "powersave",
+        "epp": "balance_performance",
+        "turbo": True,
+        "pkg_temp_c": temp,
+        "turbo_src": "intel_pstate/no_turbo=0",
+        "temp_src": "thermal_zone1 (x86_pkg_temp)",
+        "t_unix_ns": t,
+        "read_s": 0.0028,
+        "cpu_khz": khz,
+        "policies": [],
+        "platform_profile": None,
+        "platform_profile_why": "no sys/firmware/acpi/platform_profile",
+    }
+    if unread:
+        st["cpu_khz_why"] = {str(c): "unreadable" for c in unread}
+    return st
+
+
 FROZEN = "89abcdef0123456789abcdef0123456789abcdef"
 # the decoders' own record of the threads they ran, at three teams of three
 RAN = "mibz2-0 mibz2-1 mibz2-2 " + " ".join(f"mibz2-coop-p{1 + i % 2}" for i in range(6))
@@ -35,11 +71,14 @@ CENSUS_MISREAD = (
 )
 
 
-def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS):
+def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS, post=None):
     """Every arm once a round at 10 threads, in ab's rotation; each arm's wall
-    `factors[arm]` times the incumbent's, with a little noise a round"""
+    `factors[arm]` times the incumbent's, with a little noise a round; each with its sysfs
+    snapshots (`--sysfs-state`), the one after it at `post(seq)` MHz (4900 by default)"""
     factors = factors or {}
+    post = post or (lambda seq: 4900)
     recs = []
+    t = 1_794_229_198_000_000_000
     for rnd in range(rounds):
         base = 1.0 + 0.01 * ((rnd * 7) % 5)
         for i in rfl.arm_order(rnd, len(ws.ARMS)):
@@ -55,11 +94,16 @@ def records(rounds=ws.ROUNDS, factors=None, threads=ws.THREADS):
                 "err": "",
                 "wall": base * f * noise,
                 "cpu": 3 * base * f * noise,
-                "hash": "6c462eda07e33ba8",
-                "out": 3030698,
+                "hash": HASH,
+                "out": OUT,
                 "observed_threads": ci.PLAN9,
                 "ran_threads": RAN,
+                "machine_pre": snapshot(800, t=t),
+                "t_spawn_unix_ns": t + 3_000_000,
+                "t_exit_unix_ns": t + 200_000_000,
+                "machine_post": snapshot(post(len(recs)), t=t + 200_000_001),
             }
+            t += 1_500_000_000
             if arm in rfl.RUNFED:
                 rec["phases"] = ci.phases(arm)
             recs.append(rec)
@@ -88,16 +132,19 @@ def identity(dry=False):
         "occupancy_features": ["trace", "run-fed"],
         "profile": "release",
         "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
-        "ab_sha256_before": "a" * 64,
-        "ab_sha256_after": "a" * 64,
-        "occupancy_sha256_before": "b" * 64,
-        "occupancy_sha256_after": "b" * 64,
+        "ab_sha256_before": BIN_SHA["ab"],
+        "ab_sha256_after": BIN_SHA["ab"],
+        "occupancy_sha256_before": BIN_SHA["occupancy"],
+        "occupancy_sha256_after": BIN_SHA["occupancy"],
         "corpus_sha256_before": "d" * 64 if dry else rfl.CORPUS_SHA256,
         "corpus_sha256_after": "d" * 64 if dry else rfl.CORPUS_SHA256,
         "arms": ws.ARMS,
         "threads": [10],
         "rounds": ws.DRY_ROUNDS if dry else ws.ROUNDS,
         "ab_exit": 0,
+        "sysfs_state": True,
+        "preflight": "PASS",
+        "workload": dict(ws.WORKLOAD),
     }
 
 
@@ -126,7 +173,7 @@ def capture(sub, dry=False, ident=None, slow=None):
     rounds = ws.DRY_OCC_ROUNDS if dry else ws.OCC_ROUNDS
     ident = ident or identity(dry)
     mode_sum = {"complete_rounds": rounds, "blocks": 4, "pipe.n.run": 4, "f.w.recorded": 3}
-    out = 3030698
+    out = OUT
     walls = {}
     for r in range(rounds):
         base = 0.027 * (1 + 0.04 * ((r * 5) % 3))
@@ -141,7 +188,7 @@ def capture(sub, dry=False, ident=None, slow=None):
             "slots": 12,
             "placement": "",
             "mode": m,
-            "line": f"wall={walls[(r, m)]:.6f} cpu=0.059 rss_kb=33628 out={out} hash=6c462eda07e33ba8 err=- plan=pipe3x3-rf{sub}",
+            "line": f"wall={walls[(r, m)]:.6f} cpu=0.059 rss_kb=33628 out={out} hash={HASH} err=- plan=pipe3x3-rf{sub}",
         }
         for r in range(rounds)
         for m in ("off", "timeline", "full")
@@ -174,7 +221,12 @@ def capture(sub, dry=False, ident=None, slow=None):
     }
 
 
-def bundle(d, recs, ident, raw_lines=None, caps=None):
+def bundle(d, recs, ident, raw_lines=None, caps=None, bins=True):
+    if bins:
+        os.makedirs(os.path.join(d, "bin"), exist_ok=True)
+        for k, v in BIN.items():
+            with open(os.path.join(d, "bin", k), "wb") as f:
+                f.write(v)
     with open(os.path.join(d, "runs.jsonl"), "w") as f:
         for r in recs:
             f.write(json.dumps(r) + "\n")
@@ -188,9 +240,9 @@ def bundle(d, recs, ident, raw_lines=None, caps=None):
             json.dump(cap, f)
 
 
-def run(recs, ident, dry=False, raw_lines=None, cmd="admit", sub=None, caps=None):
+def run(recs, ident, dry=False, raw_lines=None, cmd="admit", sub=None, caps=None, bins=True):
     with tempfile.TemporaryDirectory() as d:
-        bundle(d, recs, ident, raw_lines, caps)
+        bundle(d, recs, ident, raw_lines, caps, bins)
         out = os.path.join(d, "out")
         argv = [sys.executable, "-I", os.path.join(HERE, "run_fed_leader_ws.py"), cmd, d]
         argv += [sub] if sub else []
@@ -494,7 +546,7 @@ class Occupancy(unittest.TestCase):
         self.refused(
             "not the incumbent's",
             lambda c: c["runs"][4].update(
-                line=c["runs"][4]["line"].replace("hash=6c46", "hash=0000")
+                line=c["runs"][4]["line"].replace(f"hash={HASH}", "hash=0000")
             ),
         )
         self.refused("the grid lacks 1 of 18", lambda c: c["runs"].pop())
@@ -515,6 +567,265 @@ class Occupancy(unittest.TestCase):
         code, text, _ = run(records(), identity(), cmd="admit-occupancy", sub="dir")
         self.assertEqual(code, 2, text)
         self.assertIn("dir capture does not load", text)
+
+
+# the preflight's inputs, as the recipe collects them (telemetry-check/20261109T125938Z's)
+LSCPU_I9 = "Architecture: x86_64\nModel name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n"
+
+
+def host_env(**machine):
+    m = {
+        "cpufreq_driver": "intel_pstate",
+        "governor": "powersave",
+        "epp": "balance_performance",
+        "turbo": True,
+        "perf_event_paranoid": 4,
+        "perf": {"cycles": False, "why": "perf_event_open not permitted (perf_event_paranoid=4)"},
+    }
+    m.update(machine)
+    return {"cpus": 20, "cores": 10, "cpu_quota": None, "throttling": False, "machine": m}
+
+
+def preflight(env=None, lscpu=LSCPU_I9, samples=None, files=("env", "lscpu", "sample")):
+    env = host_env() if env is None else env
+    samples = (
+        samples
+        if samples is not None
+        else [{"sample": i, "count": 3, "state": snapshot(800, temp=32.0, t=i)} for i in range(3)]
+    )
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "preflight"))
+        if "env" in files:
+            with open(os.path.join(d, "preflight", "env.json"), "w") as f:
+                f.write(env if isinstance(env, str) else json.dumps(env))
+        if "lscpu" in files:
+            with open(os.path.join(d, "preflight", "lscpu.txt"), "w") as f:
+                f.write(lscpu)
+        if "sample" in files:
+            with open(os.path.join(d, "preflight", "sample.jsonl"), "w") as f:
+                f.writelines(json.dumps(x) + "\n" for x in samples)
+        out = os.path.join(d, "preflight")
+        p = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                os.path.join(HERE, "run_fed_leader_ws.py"),
+                "preflight",
+                d,
+                "--out",
+                out,
+            ],
+            capture_output=True,
+            text=True,
+        )
+        with open(out + ".json") as f:
+            return p.returncode, p.stdout + p.stderr, json.load(f)
+
+
+def diagnose(recs):
+    with tempfile.TemporaryDirectory() as d:
+        bundle(d, recs, identity())
+        out = os.path.join(d, "diagnostics")
+        p = subprocess.run(
+            [
+                sys.executable,
+                "-I",
+                os.path.join(HERE, "run_fed_leader_ws.py"),
+                "diagnose",
+                d,
+                "--out",
+                out,
+            ],
+            capture_output=True,
+            text=True,
+        )
+        with open(out + ".json") as f:
+            js = json.load(f)
+        with open(out + ".md") as f:
+            md = f.read()
+        return p.returncode, p.stdout + p.stderr, js, md
+
+
+class Revision10(unittest.TestCase):
+    """§R10: the second attempt's additions, none of which touches the reading"""
+
+    refused = Admission.refused
+    valid = Admission.valid
+
+    def test_every_record_must_decode_the_registered_workload(self):
+        recs = records()
+        for r in recs:  # (one output throughout, but not the registered one)
+            r["out"], r["hash"] = 3030698, "6c462eda07e33ba8"
+        self.refused(recs, identity(), "140 records did not decode the registered workload")
+        ident = identity()
+        ident["workload"] = {"out": 1, "hash": "x"}
+        self.refused(records(), ident, "the identity's workload")
+        # (a DRY check runs on any corpus: its workload is never held to the registered one)
+        recs = records(rounds=ws.DRY_ROUNDS)
+        for r in recs:
+            r["out"], r["hash"] = 3030698, "6c462eda07e33ba8"
+        self.valid(recs, identity(dry=True), dry=True)
+
+    def test_the_bundled_binaries_are_rehashed(self):
+        code, text, _ = run(records(), identity(), bins=False)
+        self.assertEqual(code, 2, text)
+        self.assertIn("bin/ab: not in the bundle", text)
+        self.assertIn("bin/occupancy: not in the bundle", text)
+        ident = identity()
+        ident["occupancy_sha256_before"] = ident["occupancy_sha256_after"] = "e" * 64
+        self.refused(records(), ident, "bin/occupancy: SHA-256")
+
+    def test_the_preflight_and_the_snapshots_are_required_of_the_identity(self):
+        for key, value, why in [
+            ("preflight", "REFUSED", "the preflight 'REFUSED', not PASS"),
+            ("sysfs_state", False, "did not record its snapshots"),
+        ]:
+            ident = identity()
+            ident[key] = value
+            self.refused(records(), ident, why)
+        ident = identity()
+        ident["schema"] = "run_fed_leader/workstation-identity/1"
+        self.refused(records(), ident, "identity schema")
+
+    def test_the_reading_is_the_full_data_whatever_the_snapshots_say(self):
+        # 41 of 140 runs at twice the wall and CPU, each with a slow endpoint label, as the
+        # first attempt's were: every pair still enters, unweighted, and the reading is the
+        # same with the snapshots removed or contradicting the timing
+        slow = {i for i in range(140) if (i * 7) % 24 < 7}
+        self.assertEqual(len(slow), 41)
+        recs = records(factors={ws.PRIMARY: 0.97}, post=lambda i: 2400 if i in slow else 4900)
+        for i in slow:
+            recs[i]["wall"] *= 2
+            recs[i]["cpu"] *= 2
+        _, js = self.valid(recs, identity())
+        by = {(r["arm"], r["round"]): r for r in recs}
+        for arm in ws.ARMS[1:]:
+            # (every one of the 20 pairs, computed here: t(0.975, df 19) = 2.093)
+            logs = [math.log(by[(arm, k)]["wall"] / by[(ws.REF, k)]["wall"]) for k in range(20)]
+            m = sum(logs) / 20
+            h = 2.093 * math.sqrt(sum((x - m) ** 2 for x in logs) / 19) / math.sqrt(20)
+            got = js["cells"][f"{arm}/{ws.REF}"]["wall"]
+            for a, b in zip(got, (math.exp(m), math.exp(m - h), math.exp(m + h))):
+                self.assertAlmostEqual(a, b, places=4)
+        self.assertIn("none excluded, replaced, stratified or clock-normalised", js["full_data"])
+        for mutate in (
+            lambda r: [r.pop(k) for k in ("machine_pre", "machine_post")],
+            lambda r: r.update(machine_post=snapshot(800)),
+            lambda r: r.update(machine_post=snapshot(5300, temp=99.0)),
+        ):
+            other = json.loads(json.dumps(recs))
+            for r in other:
+                mutate(r)
+            _, js2 = self.valid(other, identity())
+            for k in (
+                "cells",
+                "contrasts",
+                "reading",
+                "attribution",
+                "fidelity",
+                "secondary_readings",
+            ):
+                self.assertEqual(js2[k], js[k], k)
+
+    def test_the_preflight_passes_the_registered_host_whatever_its_clock(self):
+        code, text, js = preflight()
+        self.assertEqual(code, 0, text)
+        self.assertEqual(js["verdict"], "PASS")
+        self.assertEqual(js["problems"], [])
+        # (an idle 800 MHz, a hot package, a fast clock: no clock or temperature is held)
+        hot = [
+            {"sample": i, "state": snapshot(5300 if i else 800, temp=97.0, t=i)} for i in range(3)
+        ]
+        code, text, _ = preflight(samples=hot)
+        self.assertEqual(code, 0, text)
+
+    def test_the_preflight_refuses_on_each_fact(self):
+        bad_sample = [
+            {"sample": i, "state": snapshot(800, t=i, unread=(7,) if i == 1 else ())}
+            for i in range(3)
+        ]
+        no_temp = [
+            {
+                "sample": i,
+                "state": {**snapshot(800, t=i), "pkg_temp_c": None, "pkg_temp_c_why": "no zone"},
+            }
+            for i in range(3)
+        ]
+        perf_gov = [
+            {"sample": i, "state": {**snapshot(800, t=i), "governor": "performance"}}
+            for i in range(3)
+        ]
+        for kw, why in [
+            ({"lscpu": "Model name: AMD EPYC 7763\n"}, "not the registered i9-10900K"),
+            ({"env": {**host_env(), "cpus": 16}}, "16 CPUs allowed, not 20"),
+            ({"env": {**host_env(), "cores": 8}}, "8 physical cores, not 10"),
+            ({"env": {**host_env(), "cpu_quota": 4.0}}, "a cgroup CPU quota"),
+            ({"env": host_env(governor="performance")}, "governor 'performance', not the declared"),
+            ({"env": host_env(epp="performance")}, "epp 'performance'"),
+            ({"env": host_env(turbo=False)}, "turbo False"),
+            ({"env": host_env(cpufreq_driver="acpi-cpufreq")}, "cpufreq_driver 'acpi-cpufreq'"),
+            ({"env": host_env(turbo=None)}, "turbo None"),
+            ({"samples": bad_sample}, "sample 1: an unreadable scaling_cur_freq"),
+            ({"samples": no_temp}, "package temperature None"),
+            ({"samples": perf_gov}, "sample 0: governor 'performance'"),
+            ({"samples": bad_sample[:2]}, "2 sysfs samples, not 3"),
+            ({"files": ("lscpu", "sample")}, "the ab env does not load"),
+            ({"files": ("env", "sample")}, "lscpu:"),
+            ({"files": ("env", "lscpu")}, "the sysfs samples do not load"),
+            ({"env": "not json"}, "the ab env does not load"),
+            ({"env": []}, "ab env: not an object"),
+        ]:
+            with self.subTest(why=why):
+                code, text, js = preflight(**kw)
+                self.assertEqual(code, 1, text)
+                self.assertEqual(js["verdict"], "REFUSED")
+                self.assertIn(why, text)
+                self.assertNotIn("Traceback", text)
+
+    def test_the_diagnostics_count_pair_states_and_carryover(self):
+        recs = records(post=lambda i: 2400 if i % 3 == 0 else 4900)
+        code, text, js, md = diagnose(recs)
+        self.assertEqual(code, 0, text)
+        self.assertEqual(js["status"], "complete")
+        total = js["pair_states_total"]
+        self.assertEqual(sum(total.values()), 120)
+        self.assertEqual(total["unknown"], 0)
+        # each pair's state is the incumbent's label, then the arm's, recomputed here
+        lab = {(r["arm"], r["round"]): ("L" if i % 3 == 0 else "H") for i, r in enumerate(recs)}
+        want = {"HH": 0, "HL": 0, "LH": 0, "LL": 0, "unknown": 0}
+        for arm in ws.ARMS[1:]:
+            for k in range(20):
+                want[lab[(ws.REF, k)] + lab[(arm, k)]] += 1
+        self.assertEqual(total, want)
+        # position and predecessor, in run order
+        rows = js["records"]
+        self.assertIsNone(rows[0]["predecessor"])
+        self.assertEqual(rows[8]["predecessor"], recs[7]["arm"])
+        self.assertEqual(rows[8]["position"], 1)
+        self.assertAlmostEqual(rows[8]["gap_s"], 1.303, places=3)
+        for arm in ws.ARMS:
+            self.assertEqual(sum(js["arm_by_position"][arm].values()), 20)
+            self.assertEqual(sum(js["arm_by_predecessor"][arm].values()), 20)
+        self.assertIn("counts only", text)
+        self.assertIn("| all |", md)
+        # never a verdict, and nothing it reads enters the admission
+        self.assertIn("never judged", md)
+
+    def test_unknown_states_are_counted_never_guessed(self):
+        recs = records()
+        del recs[0]["machine_post"]  # (r0's first record: the incumbent)
+        recs[12]["machine_post"] = snapshot(4900, unread=(3,))  # (r1: two arms' pairs)
+        recs[9]["machine_post"] = snapshot(4900, cpus=12)
+        code, text, js, _ = diagnose(recs)
+        self.assertEqual(code, 0, text)
+        self.assertTrue(
+            js["status"].startswith(
+                "incomplete: 1 of 140 records lack a snapshot, 3 have no endpoint label"
+            ),
+            js["status"],
+        )
+        self.assertEqual(js["pair_states_total"]["unknown"], 6 + 2)
+        self.assertEqual(sum(js["pair_states_total"].values()), 120)
 
 
 if __name__ == "__main__":

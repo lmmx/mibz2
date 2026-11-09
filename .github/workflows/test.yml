@@ -107,6 +107,10 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      # the run-fed leader's workstation recipe end to end, every exit path, through the bundle
+      # and `just submit` (stand-ins, untimed; docs/journal/2026-11-09-run-fed-leader.md §R10)
+      - name: Run-fed leader workstation recipe, end to end (stand-ins, untimed)
+        run: python3 bench/test_run_fed_leader_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest

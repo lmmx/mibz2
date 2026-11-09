@@ -2,9 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised nine times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+Revised ten times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
 CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
-decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review); §R8, the record's completeness by completion order (D062); §R9, its two qualifications (D063).
+decoders' own record (D059); §R6, that hook's claims corrected (D061); §R7, the occupancy admission (the Researcher's freeze review); §R8, the record's completeness by completion order (D062); §R9, its two qualifications (D063); §R10, the second workstation attempt after the first's INCONCLUSIVE (D064; a DRAFT, not frozen, one C6 question pending).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -395,6 +395,13 @@ exists for any arm. The coordinator may make any threshold stricter at freezing.
   there justifies the workstation run; a STOP there pauses the arm, never closes the line.
 
 ## 8. The workstation run: its registration, recipe and admission (§R4; NOT FROZEN)
+
+> **§R10 revises this section for the second attempt.** The first attempt (frozen
+> `cccdfdf7`) was VALID, INCONCLUSIVE, control fidelity FAILED. Its estimand, arms, grid,
+> repeats, multiplicity and thresholds are unchanged. §R10 adds a read-only preflight, each
+> run's sysfs snapshots, the workload and binary checks, and the diagnostics. Where the two
+> differ (the identity's schema, the bundle's contents, the exit codes and the no-rerun
+> wording), §R10 governs.
 
 CI's run at `03e52206` was VALID (JUDGED), an attributed LEAD: `dir`/`default33` wall
 0.9669 [0.9594, 0.9744] at 9 threads (run 42564217298;
@@ -1250,6 +1257,308 @@ the same, are in its record.
 
 No code path, predicate or threshold changes. `bench/run-fed-leader.frozen` stays
 `frozen none`.
+
+## R10. Revision, 2026-11-09: the second workstation attempt (after the first's INCONCLUSIVE; D064)
+
+**Status: a DRAFT for review. NOT FROZEN, not queued, no tag.** `bench/run-fed-leader.frozen`
+reads `frozen none`: the first attempt's freeze (`cccdfdf7`) does not carry over. One item
+waits on Louis under C6 (Q1 below); until he decides it, this revision is not to be frozen as
+decision evidence.
+
+### R10.1 Why
+
+The first attempt, `run-fed-leader/20261109T080633Z` (frozen `cccdfdf7`, run at `e7885568`),
+is **VALID, INCONCLUSIVE, control fidelity FAILED**
+(`2026-11-09-run-fed-leader-workstation-result.md`, with its D064 correction). Its intervals
+were about twenty times CI's. 41 of its 140 runs took about twice the wall with every thread's
+CPU about doubled, in clustered rounds. That is consistent with a reduced effective clock but
+does not identify one: nothing recorded the clock, and extra on-CPU work would look the same
+(D064). §8 sends an INCONCLUSIVE back for revision. This is that revision, as new work beside
+the first attempt, never in its place: the first bundle and its reading stand as recorded.
+
+What it draws on:
+- **D064** (the Guardian, `state/decisions.md`): clock and thermal state may be logged beside
+  the records as diagnostics (its option (b)), with every pair in the original analysis.
+  Deleting or replacing slowed pairs needs Louis. A whole-attempt quality veto may be
+  admissible, but no threshold is approved, and none is proposed here. Endpoint
+  `scaling_cur_freq` snapshots do not measure the clock during a decode.
+- **The Researcher's REVIEW** (`state/reports/clock-state-6736096739/report.md`): its §4 is
+  the template for this revision's rules 1 to 6, followed point by point below. It also asks
+  for both members' states (HH, HL, LH, LL, unknown) rather than one label a pair, and warns
+  that clock can be a consequence of the arm, so conditioning on it can remove a real effect.
+- **The host:** `telemetry-check/20261109T125938Z` (CHECKED; PASS 2, UNAVAILABLE 13) found
+  `perf_event_paranoid=4` on the i9. Every perf_event counter is UNAVAILABLE there. So
+  **nothing here depends on PMU telemetry**: no counter is opened, and `--machine-state` is
+  not passed. The same bundle read the sysfs fields as available: `intel_pstate`, governor
+  `powersave`, EPP `balance_performance`, turbo on, `x86_pkg_temp`, and all 20 CPUs'
+  `scaling_cur_freq`.
+- **The Optimiser's ask:** sharpen what an i9 run still has to show beside CI's attributed
+  LEAD. That is R10.2.
+
+### R10.2 What the i9 run still has to show, beside CI's attributed LEAD
+
+CI's LEAD (`03e52206`: `dir`/`default33` wall 0.9669 [0.9594, 0.9744]) was read with nine
+decode threads plus the scanner on 4 vCPUs (§7). There a construction can win by cutting
+total CPU demand, since every thread time-shares a core. The Optimiser's REVIEW 6735168430
+makes the same point for C29: oversubscribed CI is not the i9. On the i9 each of the nine
+team threads has a core, so the wall falls only if the leader's MTF is on the critical
+path, and the helpers' build is not what ends each run. The drafter's prior (§5) is that the
+helpers end most runs.
+
+So the i9 run must show, under the unchanged §6/§8 rule, all of the following at once:
+1. **The wall cut survives without oversubscription:** `dir`/`default33`'s wall ratio is at
+   most 0.97, with its interval's high end below 1.
+2. **It is not bought with CPU:** the CPU ratio's high end is at most 1.05.
+3. **It is the construction, not the instrumented worker:** `ctl`/`default33`'s wall
+   interval lies wholly inside [0.98, 1.02], and `dir`/`ctl`'s high end is below 1. The first
+   attempt failed this control. Its interval [0.8442, 1.2017] was as wide as the primary's,
+   so the fidelity control can pass only if the run's paired variance is near CI's.
+4. **Where it comes from (descriptive):** the ctl and dir captures show who ends each run,
+   the leader or the helpers, on the i9.
+
+A STOP on the i9 closes this arm on the target, and an INCONCLUSIVE goes back for revision,
+as §8 says. Neither touches CI's reading, which stays CI's.
+
+### R10.3 Unchanged
+
+Each of these is §8's, byte for byte in the admission's constants and the recipe's
+arguments. The admission's tests hold each one.
+
+| what | as registered (§6, §8) |
+|---|---|
+| the estimand | the geometric mean of the 20 paired wall (and CPU) ratios of each arm over `mibz2-default33`, with a 95% t-interval on the logs, df = 19 |
+| the reference | `mibz2-default33`, fixed, the denominator of every judged ratio |
+| the arms and their order | the seven, in §8's order: `default33`, `pipe3-both`, `runfed-ctl`, `runfed-reg`, `runfed-ls`, `runfed-hs`, `runfed-dir` |
+| the primary and secondaries | `dir` primary; `ls`, `hs` secondary, never judged |
+| the grid | 20 paired rounds at a requested 10 threads, 140 timed records, every run three leaders and six pipelined helpers (`ran_threads`) |
+| the order of runs | ab's `arm_order` rotation, round by round |
+| the conditions | unpinned; ab's busy gate with `--settle 0.25`; the bench's Wikidata sample, SHA-256 `82f65ace…c29915` |
+| the repeats | one attempt: 140 timed records, no extra rounds, no replacement |
+| the multiplicity | one judged reading (the primary); the secondaries and the control contrasts (`ls`/`ctl`, `hs`/`ctl`, `dir`/`ctl`, `reg`/`ctl`, `ctl`/`pipe3-both`) reported, never judged |
+| the thresholds | LEAD: wall ≤ 0.97, high end < 1, CPU high end ≤ 1.05; STOP: wall low end > 0.99; INCONCLUSIVE otherwise |
+| the attribution | ctl/`default33` wall inside [0.98, 1.02] and `dir`/ctl's high end < 1, or ATTRIBUTION FAILED with its reasons |
+| VALID | every §8 predicate: identity, records, plan, phases, rotation, 140 records, finite intervals |
+| the captures | one each of ctl and dir, 6 rounds, admitted apart, never in the timing's judgement |
+| the stop criteria | §8's three |
+
+**The code measured.** `src/` is unchanged since `cccdfdf7`, as are Cargo's files, the
+corpus's builder and manifest, the CI reporter and `bench/team_size.py`. Of the measured
+inputs, only `examples/ab.rs` (the harness), the admission, the recipe and this registration
+change.
+
+### R10.4 Added (the Researcher's rules 1 to 6, in turn)
+
+**1. Every pair, the full-data analysis.** All 140 records and all 20 pairs of every arm enter
+the reading exactly as §8 computes it. No pair is excluded, replaced, stratified, reweighted
+or clock-normalised, and no subset is ever offered as a result. The sysfs snapshots are read
+only by `diagnose`, never by `admit`. The admission states this with every reading
+(`full_data`). A test gives 41 of 140 runs double the wall and CPU, with slow labels. It
+checks that each cell equals the full-data geometric mean computed independently. It then
+checks that the reading is identical with the snapshots removed or made to contradict the
+timing.
+
+**2. A frozen telemetry schema, recorded only.**
+- **Per run:** ab's new `--sysfs-state` (bench 3.5.0) records each run's `machine_pre` and
+  `machine_post`, with `t_spawn_unix_ns` and `t_exit_unix_ns`. These are 3.3.0's
+  `--machine-state` parent readings, unchanged: each CPU's `scaling_cur_freq` (kHz) and their
+  mean, each policy's id, CPUs, driver, governor and EPP, the turbo state and its source, the
+  package temperature and its sensor, each reading's timestamp and duration, and every
+  unreadable field null with its reason.
+- **What `--sysfs-state` leaves unchanged:** it reads in the parent, before the child is
+  spawned and after it exits, so it is outside the child's wall, CPU and RSS. It opens no
+  counter. The child is exactly as without either flag: `AB_MACHINE_STATE` is cleared, so
+  the sampler records no CPU set. A local check confirms the child's line has the same
+  fields with and without the flag; the record gains only the four parent fields.
+- **Per attempt:** `ab env`, lscpu, and three `ab sample` readings before (the preflight's)
+  and three after the timing (`diagnostics/sample-after.jsonl`).
+- **What it is not:** these are endpoint snapshots. The kernel documents `scaling_cur_freq`
+  as possibly a requested state. The first telemetry check read 4,992 MHz just after a
+  build and 800 MHz a second later, at idle. No snapshot, and no mean of snapshots, is called
+  "the clock during the run". Missing or unreadable values stay null with their reasons.
+
+**3. One bounded, read-only, outcome-independent preflight; one attempt.**
+`bench/run_fed_leader_ws.py preflight`. It runs after the build and the corpus and before
+anything is timed. It reads `ab env`, lscpu and three `ab sample` readings a second apart,
+each under a 30 s timeout. It then judges once: PASS, or the attempt is **REFUSED** with
+every reason. The refusal is archived in the bundle (`preflight.json`, `preflight/`, the
+binaries), and no timed record exists. It refuses unless all of these hold:
+- the host is the registered one: lscpu's model contains `i9-10900K`; `ab env` shows 20 CPUs
+  allowed, 10 physical cores and no cgroup CPU quota;
+- the declared settings, as `telemetry-check/20261109T125938Z` read them before this
+  revision: driver `intel_pstate`, governor `powersave`, EPP `balance_performance` and turbo
+  on, in `ab env` and in every sample;
+- the diagnostics are readable: in each sample, all 20 CPUs' `scaling_cur_freq`, the package
+  temperature and a timestamp.
+
+It holds no clock or temperature to any value, waits for no state, and never retries. An idle
+800 MHz, a 97 °C package or a 5.3 GHz reading all pass (tested). It changes no setting. It
+cannot show that conditions stay stable during the run, and it does not claim to. Since it
+reads no outcome and sees no timed record, it cannot select on the result. A DRY check
+records a preflight that does not pass and goes on.
+
+**One attempt, no retry to pass.** A preflight refusal ends the attempt before any timed
+record. Any later submission is a new decision of the coordinator's, and a new C5 run by
+Louis at the same frozen commit, with the refusal's cause recorded. It is never automatic.
+Once `ab run` has written a record, the attempt is the one attempt: its full-data result is
+the result. §6's single exception is not broadened: a class B failure before `ab run` wrote
+any record may be re-run once, at the same commit. INVALID, INCONCLUSIVE and a failed
+diagnostic objective all go back to review, never to another run. A new commit or a new
+recipe name is not a new justification.
+
+**4. A chronological table, counts only for the clock states.** `diagnose` writes
+`diagnostics/diagnostics.{json,md}` after every verdict. No verdict reads it. It contains:
+- **Every record in run order:** its sequence number, round, position in its round, arm,
+  **predecessor** (the arm run just before it, across rounds too), the gap since that
+  predecessor's exit, its wall and CPU, the clock and temperature before and after, the
+  governor, EPP and turbo after, and its endpoint label.
+- **Each pair's log wall and CPU ratio over the incumbent**, in run order, as descriptive
+  numbers.
+- **The arms by position and by predecessor, as counts,** for carryover inspection. With 20
+  rounds of 7 arms the rotation is not perfectly balanced (20 = 2 × 7 + 6). The counts show
+  how it falls, and nothing is inferred from them.
+- **Each pair's clock state, as counts only:** HH, HL, LH, LL or unknown. The first letter is
+  the incumbent's run's label, the second the arm's. The counts are given per arm and in
+  total. No ratio, interval or reading is ever given by state.
+
+**Whether the sysfs data allows clock states: only as an endpoint label, and it is named so.**
+The snapshot before a run follows ab's idle gate, so it reads an idle CPU and labels nothing.
+The snapshot after a run follows the child's exit by a few milliseconds. It is the nearest
+the sysfs data comes to the run, and it is still not the clock during the decode.
+
+The registered label, fixed before any data: a run is **H** if at least 10 of its 20 CPUs
+(the requested thread count) read `scaling_cur_freq` at or above 3,700 MHz in that post-exit
+snapshot. 3,700 MHz is the i9-10900K's nominal base clock: an external reference, not one
+taken from the timings. A run is **L** if every CPU was read and fewer than 10 did. It is
+**unknown** if the snapshot is missing or any CPU is unread. A pair is unknown if either label
+is. The counts may still be uninformative: idle CPUs decay, and threads end at different
+times. Q2 asks the Researcher whether the label should be reported at all. If it should not,
+every state reads "unknown", and the record keeps the raw snapshots.
+
+**5. No numeric quality veto.** None is added. No threshold on clock, temperature, or
+the share of slow runs gates the attempt or its qualification. The diagnostics' completeness
+is reported ("complete", or "incomplete: n of 140 records lack a snapshot, m have no
+endpoint label") and touches no verdict.
+
+**6. Authority.** Every actual attempt is Louis's C5 run, of the exact frozen recipe, through
+`just submit`. Deletion, replacement, new repeated references, frequency-normalised
+estimands or changed multiplicity would each need his explicit C6 approval. This revision
+proposes none of them.
+
+### R10.5 The bundle's identity, and the judge's checks of the workload
+
+`identity.json` is now `run_fed_leader/workstation-identity/2`. It holds §8's fields, plus
+`sysfs_state`, `preflight`, `workload` and `registered_corpus_sha256`. The admission (`admit`)
+now also checks:
+- **The commit:** the run's `head`, a full 40-character commit whose measured inputs equal
+  the **frozen commit**'s (the recipe refuses otherwise, and the identity records it). The
+  four frozen sources (recipe, admission, reporter, registration) each have the same SHA-256
+  at the head and at the frozen commit.
+- **The binaries:** `ab` and `occupancy` as Cargo reported building them, copied into the
+  attempt's `bin/`. Their SHA-256 must agree before and after the run. **The judge also
+  rehashes the bundle's own `bin/ab` and `bin/occupancy`** and refuses a missing or
+  different one.
+- **The corpus:** its SHA-256 before and after the run, equal to the registered
+  `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`.
+- **The workload, in every record:** each of the 140 must decode exactly **209,700,196
+  bytes with hash `a8830caee5c511a6`**. That is the incumbent's output on that corpus: all
+  140 records of the first attempt, and the i9's release-scaling runs of 2026-11-06, read
+  it. This is beside §8's checks that every arm matches the incumbent in its round and that
+  the incumbent has one output throughout. A DRY check, on any corpus, is not held to it.
+- **The preflight** read PASS, and the snapshots were recorded (`sysfs_state`).
+
+### R10.6 The recipe, in the workstation shape
+
+`just bench-run-fed-leader` keeps its shape: one new directory per attempt (`mkdir`), the
+console teed, `bench/bundle.sh` however the attempt ends, `just submit bench-run-fed-leader`,
+refusal on a dirty or unfrozen checkout or on inputs off the frozen commit, and each
+executable as Cargo reports building it, copied and hashed. It adds the preflight,
+`--sysfs-state`, the after-samples and `diagnose`.
+
+The outcome line is the timing's verdict, then each capture's, then the diagnostics' status.
+The exit is now the outcome's, whatever the last command's status: **0** VALID, **1** INVALID
+or REFUSED (the preflight's included), **3** anything that stopped the attempt before its
+verdict, and **2** a bundle that could not be made.
+
+**Its tests, in CI** (`test.yml`'s submit job):
+- `bench/test_run_fed_leader_recipe.py` (new, 9 tests): the recipe's own script, end to end,
+  with stand-ins for Cargo, ab, occupancy, the corpus builder, rustc, lscpu and gh, in a
+  scratch repository with a freeze. It covers every exit path:
+  - VALID, with every listed file in the bundle and the identity's digests equal to the
+    bundled binaries';
+  - INVALID: off the registered workload, and a harness crashing mid-run with its partial
+    records kept;
+  - REFUSED by the preflight, for a host that is not the i9 and for a declared setting off,
+    with no timed record;
+  - a DRY check going on past a refused preflight, never JUDGED;
+  - REFUSED: a CORPUS without DRY, a failed build, a build override in the environment, a
+    dirty checkout, inputs off the frozen commit, an unfrozen file, and a corpus off its
+    digest;
+  - INCOMPLETE (3): the corpus builder failing;
+  - `just submit`: the exit kept and both a refusal and a VALID archived.
+
+  The stand-in ab asserts that the run passes `--sysfs-state` and never `--machine-state`.
+- `bench/test_run_fed_leader_ws.py`, 19 → 27 tests: the workload, the rehashed binaries, the
+  identity's new fields, the full-data invariance, the preflight's PASS and each refusal,
+  the diagnostics' counts, position and predecessor, and unknown states counted, never
+  guessed.
+
+### R10.7 What differs from the first attempt's harness, stated, not measured
+
+- **The harness is master's `examples/ab.rs`,** merged (bench 3.3.0 and 3.4.0, #290 and
+  #298), with the branch's `ran_threads`, `exit` and `phases`, and `--sysfs-state`. Without
+  `--machine-state`, the machine module opens no counter, and the child's line is as before
+  (3.3.0 says no timed path changes without the flag). That claim is master's, and it is not
+  re-measured here.
+- **The parent's sysfs reads** take a few milliseconds before each spawn and after each exit.
+  They are outside the child's wall, CPU and RSS, but they shift when each run starts.
+  Applied alike in every arm, they can still interact with whatever state the machine is in.
+  This cost is not measured.
+- **The preflight's three samples** come a few seconds before round 0, after the corpus
+  build. They change nothing the timing reads.
+
+Nothing here claims that these leave the two attempts comparable as one population. They are
+two attempts: this one is read alone (subject to Q1), and the first stays as recorded.
+
+### R10.8 Pending Louis (C6)
+
+- **Q1: a second attempt of the same registered comparison.** §8 sends an INCONCLUSIVE back
+  for revision, and this is that revision. But taking a second attempt's reading as the i9's
+  decision evidence, after the first was INCONCLUSIVE, is a repeat-policy question, which
+  RULES C6 reserves to Louis (D064: "Any proposed new repeat policy is reserved"). The rule
+  proposed for his decision:
+  - the second attempt is read alone, under §8's unchanged rule;
+  - the first is reported beside it;
+  - the two are never pooled or combined;
+  - no third attempt follows from either result.
+
+  It is **PENDING**. Until Louis approves it or another rule, this revision is not to be
+  frozen as decision evidence.
+
+Nothing else here changes a C6 dimension (workload, grid, estimand, repeats, multiplicity,
+acceptance). The preflight's host and settings refusal is a read-only check that narrows
+admissibility before any measurement, within D064's delegation of pre-run checks.
+
+### R10.9 Open questions for the Researcher
+
+- **Q2, the endpoint label.**
+  - Is the post-exit label (10 of 20 CPUs at or above 3,700 MHz) informative enough to
+    report, given decay at idle and staggered thread ends?
+  - Or should every pair read "unknown", with only the raw snapshots kept?
+  - If it is reported, should the label use the 10 CPUs the run's threads ran on? Only
+    `--machine-state`'s child sampler records those, and it is not used here.
+- **Q3, the declared settings.** Should the preflight require `powersave` and
+  `balance_performance` as the telemetry check read them? Or should it require only that the
+  settings are readable and the same at the start and end of the attempt? The first form
+  refuses if Louis changes his power profile. The second admits any profile, recorded.
+- **Q4, completeness.** The diagnostics' completeness is reported, not required. Should a
+  registered attempt whose snapshots are mostly missing still be decision evidence? (Today it
+  is, if VALID: the timing does not depend on them.)
+- **Q5, serial dependence.** The first attempt's slow runs clustered by round. Should the
+  diagnostics add the pair log ratios' lag-1 autocorrelation, labelled descriptive? Nothing
+  here computes it.
+- **Q6, the preflight's place.** It runs after the build and the corpus, nearest the timing.
+  Is the build's heat a reason to move it before the build? It reads no clock value, so the
+  order changes only what its samples happen to show.
 
 ## Provenance and reproduction
 

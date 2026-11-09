@@ -1,11 +1,19 @@
 """The run-fed leader's workstation admission (docs/journal/2026-11-09-run-fed-leader.md
-§8, §R4): fail-closed, on one attempt's directory from `just bench-run-fed-leader`.
+§8, §R4, revised by §R10 for the second attempt): fail-closed, on one attempt's directory
+from `just bench-run-fed-leader`.
 Separate from the CI reporter (bench/run_fed_leader.py), whose judged run is 15 rounds at
 9 and 3 threads: this one admits exactly 20 paired rounds at a requested 10 threads (140
 timed records), and the two occupancy captures apart from the timing.
 
+    python3 bench/run_fed_leader_ws.py preflight DIR [--out STEM]
     python3 bench/run_fed_leader_ws.py admit DIR [--dry] [--out STEM]
     python3 bench/run_fed_leader_ws.py admit-occupancy DIR SUB [--dry] [--out STEM]
+    python3 bench/run_fed_leader_ws.py diagnose DIR [--out STEM]
+
+`preflight` (§R10) reads what the recipe collected read-only before any timing
+(DIR/preflight/: `ab env`, lscpu, three `ab sample` readings) and refuses unless the host is
+the registered one with its declared settings and its sysfs diagnostics readable. It holds
+no clock or temperature to any value and waits for nothing: one pass, PASS or REFUSED.
 
 `admit` reads DIR/identity.json (the recipe's, `schema` IDENTITY_SCHEMA) and DIR/runs.jsonl.
 VALID only if every predicate holds: the bundle's identity (the frozen commit, the source,
@@ -15,7 +23,8 @@ record's typed raw evidence (the CI reporter's own checks, `record_problems`), e
 plan three leaders and six pipelined helpers in the decoders' own record of the threads
 they ran (`ran_threads`, complete by construction; the census's polled `observed_threads`
 is reported, not judged: it can catch a helper only under its leader's inherited name,
-D059), every arm once a round in ab's rotation, and one output throughout. Then the reading, prospective and
+D059), every arm once a round in ab's rotation, and one output throughout, the registered
+workload's (WORKLOAD: its length and hash, §R10). Then the reading, prospective and
 unchanged from §6: the primary (`dir`) over the incumbent (`default33`) at 10 threads,
 LEAD / STOP / INCONCLUSIVE, with its attribution, and the secondaries (`ls`, `hs`) and
 the control contrasts reported, never judged. Intervals are 95% t-intervals on the paired
@@ -29,6 +38,12 @@ buffers recorded, and the commit and corpus the identity's. Its perturbation ver
 reported, not judged: a capture whose traced modes perturb is admitted as a capture whose
 timeline is not to be interpreted, and says so.
 
+`diagnose` (§R10) writes the diagnostics, never read by `admit` and never a verdict: every
+record in run order with its position, its predecessor and the gap since it, the sysfs
+snapshots before and after it, and each pair's log ratios; the arms by position and by
+predecessor, as counts; and each pair's endpoint clock labels (HH, HL, LH, LL or unknown)
+as counts only. Every pair enters `admit`'s reading whatever its label.
+
 `--dry` admits a DRY bundle (`just bench-run-fed-leader 1`): DRY_ROUNDS rounds, the
 occupancy at DRY_OCC_ROUNDS, a corpus other than the registered one allowed, and no
 frozen commit required. Its label is DRY, never JUDGED, and it is never evidence.
@@ -38,6 +53,7 @@ itself is INVALID with its reason, never a crash and never a VALID.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -56,7 +72,34 @@ REF = rfl.REF
 PRIMARY = rfl.PRIMARY
 SECONDARY = rfl.SECONDARY
 CORPUS_SHA256 = rfl.CORPUS_SHA256
-IDENTITY_SCHEMA = "run_fed_leader/workstation-identity/1"
+IDENTITY_SCHEMA = "run_fed_leader/workstation-identity/2"
+# The registered workload (§R10): the incumbent's decoded length and hash on the corpus
+# (CORPUS_SHA256), as every one of the first attempt's 140 records read
+# (run-fed-leader/20261109T080633Z) and the i9's release-scaling runs of 2026-11-06 before it.
+# Every record of a registered run must decode exactly this
+WORKLOAD = {"out": 209700196, "hash": "a8830caee5c511a6"}
+# the binaries the bundle keeps (bin/), each rehashed here against the identity's digests
+BUNDLED_BINARIES = ["ab", "occupancy"]
+# The preflight (§R10): the registered host, and its declared settings as
+# telemetry-check/20261109T125938Z read them before this revision was written. Read only;
+# nothing here is a clock or temperature threshold
+PREFLIGHT_SCHEMA = "run_fed_leader/preflight/1"
+HOST_MODEL = "i9-10900K"
+HOST_CPUS = 20
+HOST_CORES = 10
+DECLARED = {
+    "cpufreq_driver": "intel_pstate",
+    "governor": "powersave",
+    "epp": "balance_performance",
+    "turbo": True,
+}
+PREFLIGHT_SAMPLES = 3
+# The diagnostics' endpoint label (§R10): a run's post-exit sysfs snapshot is "H" when at least
+# STATE_CPUS of its CPUs read scaling_cur_freq at or above BASE_MHZ (the i9-10900K's nominal
+# base clock), "L" when it read every CPU and fewer did, else unknown. A label of a moment
+# after the run, not the clock during it
+BASE_MHZ = 3700
+STATE_CPUS = THREADS
 FEATURES = ["run-fed"]
 OCC_FEATURES = ["trace", "run-fed"]
 PROFILE = "release"
@@ -84,6 +127,12 @@ CPU_SCOPE = (
     "wall and CPU both include the decoders' thread record's pushes (one a thread, under one "
     "lock, each allocating its name); the record's read, sort and join come after both "
     "readings, in every arm's child alike, so neither includes them"
+)
+
+
+FULL_DATA = (
+    "every planned pair enters the reading: none excluded, replaced, stratified or "
+    "clock-normalised (§R10); the sysfs snapshots are read only by `diagnose`"
 )
 
 
@@ -155,6 +204,15 @@ def identity_problems(ident, dry):
         bad.append(f"arms {ident.get('arms')!r}, not the registered {ARMS}")
     if ident.get("threads") != [THREADS]:
         bad.append(f"threads {ident.get('threads')!r}, not [{THREADS}]")
+    if ident.get("sysfs_state") is not True:
+        bad.append(
+            f"sysfs_state {ident.get('sysfs_state')!r}: the run did not record its snapshots"
+        )
+    if not dry:
+        if ident.get("preflight") != "PASS":
+            bad.append(f"the preflight {ident.get('preflight')!r}, not PASS")
+        if ident.get("workload") != WORKLOAD:
+            bad.append(f"the identity's workload {ident.get('workload')!r}, not {WORKLOAD}")
     if not (rfl.is_int(ident.get("ab_exit")) and ident["ab_exit"] == 0):
         bad.append(f"ab run exited {ident.get('ab_exit')!r}: the timing did not finish")
     rounds = DRY_ROUNDS if dry else ROUNDS
@@ -163,7 +221,34 @@ def identity_problems(ident, dry):
     return bad
 
 
-def admit_records(recs, rounds, census_misreads=None):
+def sha256_of(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def binary_problems(d, ident):
+    """The bundle's own copies of the binaries that ran, rehashed against the identity"""
+    bad = []
+    if not isinstance(ident, dict):
+        return bad
+    for b in BUNDLED_BINARIES:
+        p = os.path.join(d, "bin", b)
+        try:
+            got = sha256_of(p)
+        except OSError as e:
+            bad.append(f"bin/{b}: not in the bundle ({e.strerror})")
+            continue
+        if got != ident.get(f"{b}_sha256_before"):
+            bad.append(
+                f"bin/{b}: SHA-256 {got}, not the identity's {ident.get(f'{b}_sha256_before')!r}"
+            )
+    return bad
+
+
+def admit_records(recs, rounds, census_misreads=None, workload=None):
     """The records' problems (none: admitted), and the runs by (arm, round); the census's
     plans other than the registered one into `census_misreads` (reported, not judged)"""
     census_misreads = [] if census_misreads is None else census_misreads
@@ -223,6 +308,17 @@ def admit_records(recs, rounds, census_misreads=None):
                 ref.get("out"),
             ):
                 bad.append(f"{arm} r{rnd}: output differs from the incumbent's")
+    if workload is not None:
+        wrong = [
+            f"{r.get('arm')} r{r.get('round')}"
+            for r in recs
+            if (r.get("out"), r.get("hash")) != (workload["out"], workload["hash"])
+        ]
+        if wrong:
+            bad.append(
+                f"{len(wrong)} records did not decode the registered workload "
+                f"({workload['out']} bytes, hash {workload['hash']}): {wrong[:6]}"
+            )
     return bad, runs
 
 
@@ -303,10 +399,11 @@ def admit(args):
         bad.append(why)
     else:
         bad += identity_problems(ident, dry)
+        bad += binary_problems(d, ident)
     recs, problems = rfl.load(os.path.join(d, "runs.jsonl"))
     bad += problems
     census = []
-    b, runs = admit_records(recs, rounds, census)
+    b, runs = admit_records(recs, rounds, census, None if dry else WORKLOAD)
     bad += b
     out = {
         "cpu_scope": CPU_SCOPE,
@@ -314,6 +411,8 @@ def admit(args):
         "label": label,
         "threads": THREADS,
         "rounds": rounds,
+        "workload": None if dry else WORKLOAD,
+        "full_data": FULL_DATA,
         "identity": ident,
         "invalid": bad,
         "records": len(recs),
@@ -343,6 +442,7 @@ def admit(args):
             f"  (the census misread {len(out['census_misreads'])} plans; the plan is the decoders' record: reported, not judged)"
         )
     print(f"  (scope: {CPU_SCOPE})")
+    print(f"  (full data: {FULL_DATA})")
     print("Control contrasts (reported, never judged):")
     for k, x in out["contrasts"].items():
         print(f"  {k:<44} wall {rfl.fmt(x['wall'])}  CPU {rfl.fmt(x['cpu'])}")
@@ -510,9 +610,303 @@ def admit_occupancy(args):
     return 0
 
 
+# ---------------------------------------------------------------------------------------
+# the preflight (§R10): read-only, bounded by the recipe, before anything is timed
+
+
+def preflight_problems(env, lscpu, samples):
+    """The registered host, its declared settings and its readable diagnostics; any fact
+    missing or unreadable is a problem (fail closed). No clock or temperature value is held
+    to anything"""
+    bad = []
+    model = None
+    for line in (lscpu or "").splitlines():
+        k, _, v = line.partition(":")
+        if k.strip() == "Model name":
+            model = v.strip()
+    if not (isinstance(model, str) and HOST_MODEL in model):
+        bad.append(f"lscpu's model {model!r}: not the registered {HOST_MODEL}")
+    if not isinstance(env, dict):
+        return bad + ["ab env: not an object"]
+    if env.get("cpus") != HOST_CPUS:
+        bad.append(f"ab env: {env.get('cpus')!r} CPUs allowed, not {HOST_CPUS}")
+    if env.get("cores") != HOST_CORES:
+        bad.append(f"ab env: {env.get('cores')!r} physical cores, not {HOST_CORES}")
+    if env.get("cpu_quota") is not None:
+        bad.append(f"ab env: a cgroup CPU quota {env.get('cpu_quota')!r}")
+    m = env.get("machine") if isinstance(env.get("machine"), dict) else {}
+    for k, want in DECLARED.items():
+        if m.get(k) != want:
+            bad.append(f"ab env: {k} {m.get(k)!r}, not the declared {want!r}")
+    if not (isinstance(samples, list) and len(samples) == PREFLIGHT_SAMPLES):
+        n = len(samples) if isinstance(samples, list) else samples
+        return bad + [f"{n!r} sysfs samples, not {PREFLIGHT_SAMPLES}"]
+    for i, smp in enumerate(samples):
+        st = smp.get("state") if isinstance(smp, dict) else None
+        if not isinstance(st, dict):
+            bad.append(f"sample {i}: no state")
+            continue
+        bad += [f"sample {i}: {x}" for x in snapshot_problems(st)]
+        for k in ("governor", "epp", "turbo"):
+            if st.get(k) != DECLARED[k]:
+                bad.append(f"sample {i}: {k} {st.get(k)!r}, not the declared {DECLARED[k]!r}")
+    return bad
+
+
+def snapshot_problems(st):
+    """What a sysfs snapshot lacks of the diagnostics §R10 records"""
+    bad = []
+    khz = st.get("cpu_khz")
+    if not isinstance(khz, dict) or len(khz) != HOST_CPUS:
+        bad.append(
+            f"scaling_cur_freq for {len(khz) if isinstance(khz, dict) else 0} CPUs, not {HOST_CPUS}"
+        )
+    elif not all(rfl.is_int(v) and v > 0 for v in khz.values()):
+        bad.append("an unreadable scaling_cur_freq: " + json.dumps(st.get("cpu_khz_why")))
+    t = st.get("pkg_temp_c")
+    if not (isinstance(t, (int, float)) and not isinstance(t, bool) and math.isfinite(t)):
+        bad.append(f"package temperature {t!r} ({st.get('pkg_temp_c_why')!r})")
+    if not rfl.is_int(st.get("t_unix_ns")):
+        bad.append("no timestamp")
+    return bad
+
+
+def preflight(args):
+    d = os.path.join(args.dir, "preflight")
+    bad, facts = [], {}
+    try:
+        env, why = load_json(os.path.join(d, "env.json"), "ab env")
+        if why:
+            bad.append(why)
+        try:
+            with open(os.path.join(d, "lscpu.txt")) as f:
+                lscpu = f.read()
+        except OSError as e:
+            lscpu = None
+            bad.append(f"lscpu: {e.strerror}")
+        samples = []
+        try:
+            with open(os.path.join(d, "sample.jsonl")) as f:
+                samples = [json.loads(line) for line in f if line.strip()]
+        except (OSError, ValueError) as e:
+            bad.append(f"the sysfs samples do not load: {e}")
+        bad += preflight_problems(env, lscpu, samples)
+        facts = {"env": env, "samples": samples}
+    except Exception as e:  # (the preflight's own failure refuses; it never passes)
+        bad.append(f"the preflight failed: {type(e).__name__}: {e}")
+    verdict = "REFUSED" if bad else "PASS"
+    out = {
+        "schema": PREFLIGHT_SCHEMA,
+        "verdict": verdict,
+        "problems": bad,
+        "host": HOST_MODEL,
+        "declared": DECLARED,
+        "facts": facts,
+    }
+    write(out, args.out)
+    print(verdict + ("" if not bad else ": " + "; ".join(bad)))
+    return 0 if not bad else 1
+
+
+# ---------------------------------------------------------------------------------------
+# the diagnostics (§R10): descriptive, never read by `admit`, never a verdict
+
+
+def endpoint_label(st):
+    """H, L or None (unknown) for one post-exit snapshot (BASE_MHZ, STATE_CPUS)"""
+    khz = st.get("cpu_khz") if isinstance(st, dict) else None
+    if not isinstance(khz, dict) or len(khz) != HOST_CPUS:
+        return None
+    if not all(rfl.is_int(v) and v > 0 for v in khz.values()):
+        return None
+    high = sum(1 for v in khz.values() if v >= BASE_MHZ * 1000)
+    return "H" if high >= STATE_CPUS else "L"
+
+
+def num(x):
+    return (
+        x if isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) else None
+    )
+
+
+def diagnose_records(recs):
+    """Every record in run order, with its position, predecessor and snapshots"""
+    rows, position = [], {}
+    prev = None
+    for i, r in enumerate(recs):
+        rnd = r.get("round")
+        pos = position.get(rnd, 0)
+        position[rnd] = pos + 1
+        pre = r.get("machine_pre") if isinstance(r.get("machine_pre"), dict) else None
+        post = r.get("machine_post") if isinstance(r.get("machine_post"), dict) else None
+        gap = None
+        if (
+            prev is not None
+            and rfl.is_int(r.get("t_spawn_unix_ns"))
+            and rfl.is_int(prev.get("t_exit_unix_ns"))
+        ):
+            gap = (r["t_spawn_unix_ns"] - prev["t_exit_unix_ns"]) / 1e9
+        rows.append(
+            {
+                "seq": i,
+                "round": rnd,
+                "position": pos,
+                "arm": r.get("arm"),
+                "predecessor": None if prev is None else prev.get("arm"),
+                "gap_s": gap,
+                "wall": num(r.get("wall")),
+                "cpu": num(r.get("cpu")),
+                "pre_mhz": num((pre or {}).get("freq_mhz")),
+                "post_mhz": num((post or {}).get("freq_mhz")),
+                "pre_temp_c": num((pre or {}).get("pkg_temp_c")),
+                "post_temp_c": num((post or {}).get("pkg_temp_c")),
+                "post_governor": (post or {}).get("governor"),
+                "post_epp": (post or {}).get("epp"),
+                "post_turbo": (post or {}).get("turbo"),
+                "post_label": endpoint_label(post),
+                "snapshots": pre is not None and post is not None,
+            }
+        )
+        prev = r
+    return rows
+
+
+def diagnose(args):
+    recs, problems = rfl.load(os.path.join(args.dir, "runs.jsonl"))
+    rows = diagnose_records(recs)
+    by = {(x["arm"], x["round"]): x for x in rows}
+    pairs, counts = [], {}
+    for arm in ARMS[1:]:
+        c = {"HH": 0, "HL": 0, "LH": 0, "LL": 0, "unknown": 0}
+        for rnd in sorted({x["round"] for x in rows if x["arm"] == arm and rfl.is_int(x["round"])}):
+            a, ref = by.get((arm, rnd)), by.get((REF, rnd))
+            if ref is None or a is None:
+                continue
+            la, lr = a["post_label"], ref["post_label"]
+            state = lr + la if la and lr else "unknown"
+            c[state] += 1
+            lw = math.log(a["wall"] / ref["wall"]) if a["wall"] and ref["wall"] else None
+            lc = math.log(a["cpu"] / ref["cpu"]) if a["cpu"] and ref["cpu"] else None
+            pairs.append(
+                {
+                    "arm": arm,
+                    "round": rnd,
+                    "ref_seq": ref["seq"],
+                    "seq": a["seq"],
+                    "state": state,
+                    "log_wall_ratio": lw,
+                    "log_cpu_ratio": lc,
+                }
+            )
+        counts[arm] = c
+    total = {k: sum(c[k] for c in counts.values()) for k in ("HH", "HL", "LH", "LL", "unknown")}
+    by_position, by_predecessor = {}, {}
+    for x in rows:
+        by_position.setdefault(x["arm"], {}).setdefault(str(x["position"]), 0)
+        by_position[x["arm"]][str(x["position"])] += 1
+        by_predecessor.setdefault(x["arm"], {}).setdefault(str(x["predecessor"]), 0)
+        by_predecessor[x["arm"]][str(x["predecessor"])] += 1
+    lacking = [x["seq"] for x in rows if not x["snapshots"]]
+    unknown_post = [x["seq"] for x in rows if x["post_label"] is None]
+    status = (
+        "complete"
+        if rows and not lacking and not unknown_post and not problems
+        else f"incomplete: {len(lacking)} of {len(rows)} records lack a snapshot, "
+        f"{len(unknown_post)} have no endpoint label"
+        + (f", {len(problems)} unreadable lines" if problems else "")
+    )
+    out = {
+        "never_judged": "descriptive only: no pair is excluded, replaced or reweighted by "
+        "anything here, and `admit`'s reading reads none of it (§R10)",
+        "label_rule": f"post-exit snapshot: H if at least {STATE_CPUS} of {HOST_CPUS} CPUs "
+        f"read scaling_cur_freq >= {BASE_MHZ} MHz, L if every CPU was read and fewer did, "
+        "else unknown; a pair's state is the incumbent's label then the arm's. An endpoint "
+        "label, not the clock during the decode",
+        "status": status,
+        "pair_states": counts,
+        "pair_states_total": total,
+        "arm_by_position": by_position,
+        "arm_by_predecessor": by_predecessor,
+        "records": rows,
+        "pairs": pairs,
+        "unreadable": problems,
+    }
+    write(out, args.out)
+    if args.out:
+        with open(args.out + ".md", "w") as f:
+            f.write(diagnostics_md(out))
+    print(
+        f"diagnostics {status}; pair states (counts only, never judged): "
+        + ", ".join(f"{k} {v}" for k, v in total.items())
+    )
+    return 0
+
+
+def diagnostics_md(out):
+    def cell(x, f="{:.3f}"):
+        return "-" if x is None else f.format(x) if isinstance(x, float) else str(x)
+
+    lines = [
+        "# The run-fed leader's workstation diagnostics (descriptive, never judged)",
+        "",
+        out["never_judged"] + ".",
+        "",
+        f"Status: {out['status']}.",
+        "",
+        f"Endpoint label: {out['label_rule']}.",
+        "",
+        "## Pair states, counts only",
+        "",
+        "| arm | HH | HL | LH | LL | unknown |",
+        "|---|---|---|---|---|---|",
+    ]
+    for arm, c in out["pair_states"].items():
+        lines.append(
+            f"| `{arm}` | "
+            + " | ".join(str(c[k]) for k in ("HH", "HL", "LH", "LL", "unknown"))
+            + " |"
+        )
+    t = out["pair_states_total"]
+    lines.append(
+        "| all | " + " | ".join(str(t[k]) for k in ("HH", "HL", "LH", "LL", "unknown")) + " |"
+    )
+    lines += [
+        "",
+        "## Every record, in run order",
+        "",
+        "| seq | round | pos | arm | predecessor | gap s | wall | cpu | MHz pre | MHz post | °C pre | °C post | label |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for x in out["records"]:
+        lines.append(
+            f"| {x['seq']} | {x['round']} | {x['position']} | `{x['arm']}` | {cell(x['predecessor'])} | "
+            f"{cell(x['gap_s'])} | {cell(x['wall'], '{:.4f}')} | {cell(x['cpu'], '{:.4f}')} | "
+            f"{cell(x['pre_mhz'], '{:.0f}')} | {cell(x['post_mhz'], '{:.0f}')} | "
+            f"{cell(x['pre_temp_c'], '{:.0f}')} | {cell(x['post_temp_c'], '{:.0f}')} | {cell(x['post_label'])} |"
+        )
+    lines += [
+        "",
+        "## Each pair's log ratios over the incumbent, in run order (descriptive)",
+        "",
+        "| arm | round | state | log wall ratio | log CPU ratio |",
+        "|---|---|---|---|---|",
+    ]
+    for p in sorted(out["pairs"], key=lambda p: p["seq"]):
+        lines.append(
+            f"| `{p['arm']}` | {p['round']} | {p['state']} | {cell(p['log_wall_ratio'], '{:+.4f}')} | {cell(p['log_cpu_ratio'], '{:+.4f}')} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
+    pf = sub.add_parser("preflight")
+    pf.add_argument("dir")
+    pf.add_argument("--out")
+    dg = sub.add_parser("diagnose")
+    dg.add_argument("dir")
+    dg.add_argument("--out")
     a = sub.add_parser("admit")
     a.add_argument("dir")
     a.add_argument("--dry", action="store_true")
@@ -523,6 +917,15 @@ def main():
     o.add_argument("--dry", action="store_true")
     o.add_argument("--out")
     args = ap.parse_args()
+    if args.cmd == "preflight":
+        sys.exit(preflight(args))
+    if args.cmd == "diagnose":
+        try:
+            code = diagnose(args)
+        except Exception as e:  # (the diagnostics' failure is stated; it judges nothing)
+            print(f"diagnostics FAILED: {type(e).__name__}: {e}")
+            code = 3
+        sys.exit(code)
     try:
         code = admit(args) if args.cmd == "admit" else admit_occupancy(args)
     except Exception as e:  # (an admission's bug is never a VALID)
