@@ -102,9 +102,10 @@
     6731657578,
     6731990737,
     6732258318,
-    6732447649
+    6732447649,
+    6732660399
   ],
-  "last_processed_comment_id": 6732447649,
+  "last_processed_comment_id": 6732660399,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -901,11 +902,15 @@
     },
     {
       "trigger_comment_id": 6732660399,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "d1260c59047846401ed0e717ba6c66d33b699f70"
+      "source_commit": "d1260c59047846401ed0e717ba6c66d33b699f70",
+      "report_commit": "b11369d9877cce47f501720858f138e9609eda51",
+      "report_path": "state/reports/run-fed-result-freeze-6732660399/report.md",
+      "review_comment_pr": 145,
+      "disposition": "CI VALID attributed LEAD independently reproduced; REVISE workstation admission before freeze. Additional reg contrasts descriptive, not direct-fill causal isolation; one-team ls ranking reverses. No implementation or timing."
     }
   ],
   "active_delegations": [],
