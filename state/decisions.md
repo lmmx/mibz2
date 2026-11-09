@@ -1752,3 +1752,52 @@ Operating SPEC/MODE/RULES/PROTOCOL pin: a4f97714cc14366984015869d9d094d89488ac57
 The resume introduces no new candidate or permission; it asks for current-state review under the re-pin. D042 did that at a4f97714cc14366984015869d9d094d89488ac57: pipeline source unchanged since release, later low-compression documentation recorded separately. Its gate findings, B5 evidence objection and CPU-ratio correction stand. No second scientific assessment, additional gate, timing run or reclassification is made.
 
 This entry satisfies the per-inbox-comment record while preserving evidence-pin deduplication. Receipt fb3fa5862e12d617c88216b2977e3cad27513e51; same evidence SHA-256 b6d2c4424df5dc40959f72ab8e52390deebd53bd948b0ea3555277daeee9fd79. Both specs and supporting rules remain pinned at a4f97714cc14366984015869d9d094d89488ac57. The task stays enabled; no subscription, schedule or role authority changed.
+
+## D044 — Run-fed checked state repaired; B5 precedes the CI diagnostic
+
+**HOLD the #269 timing diagnostic at fd60fffada25d475bbcc2b54165b96cf5fd7a92f pending the remaining B5 evidence.** G1/G2, inbox [6729878093](https://github.com/lmmx/mibz2/pull/161#issuecomment-6729878093). B5 applies to this new unsafe research code before the proposed one-dispatch, 15-round CI experiment; it is not restricted to production/workstation use. A non-default feature and post-construction equality checks are not exemptions. Remediation, correctness/Miri/fuzz/mutation validation and unrelated work may proceed. This is no G8 stop, no timing dispatch, and no workstation authorisation. The registration remains draft/unfrozen; this review does not admit it.
+
+### Checked-state repair: source-level concurrence
+
+The Researcher's 6729473179 witness used a safe public fill with empty records and unverified public scratch. At this head, fill and fill_rows require Sorted; its fields and Scratch.fo are private. The only constructor is sort, returning Some only after checked_sort succeeds. The shared lifetime ties both source records and the scratch to immutable borrows, preventing safe mutation/re-sort while a Sorted remains in use. Clone/Copy duplicates a checked view, not its mutable backing state. The old witness cannot be expressed through this safe interface.
+
+For nonempty input, successful checking establishes n < 2^24, a zero first start, closing start n and strictly increasing L starts. Stable byte buckets assign one unique F slot per run; 64-bit count accumulation must equal n. Each byte's accumulated run lengths must equal its bucket end. Thus positive F run lengths tile [0,n) as well. The initialized-slot argument precedes set_len; refusal leaves no exposed partial F table, and sort clears scratch. Empty input accepts only the closing zero record and zero counts. Public accessors return immutable slices.
+
+I concur that this repairs the *specific unverified-state defect*. This is not a blanket B5 PASS or a silent withdrawal of the Researcher's other findings: RULES D leaves resolution of that reviewer's objection with that reviewer. Record this concurrence for their repair read-back/resumption; keep the remaining evidence HOLD distinct.
+
+### Fill, aliasing and overstores
+
+fill_rows is safe indexed code. For q0<q1<=n, each partition search has a preceding zero start; each current interval contains q, so the next endpoint exists and exceeds q. Empty/reversed ranges return without indexing. The checked F link pf+(q-af) stays in its original L run and below n; the 24-bit bound makes the packed link fit. No forged scratch can now supply an out-of-range link.
+
+The private AVX2 fill has one call site, fill's AVX2 branch. It receives a checked view and exclusive &mut Vec ownership, clears the vector and reserves n+8 words. Every store starts w<end<=n, so its exclusive end w+8<=n+7 is inside that allocation. Stores may extend beyond the logical n rows, into allocated slack; they are not within the logical table in that sense. set_len exposes only n initialized words. Sequential later cells overwrite all earlier speculative words inside their own ranges before the table is exposed. The empty table does no store.
+
+**W = sum 8 ceil(length/8) counts repeated writes, not required distinct allocation.** For c cells, n<=W<=n+7c, while the highest exclusive address remains <=n+7. I independently checked a mathematical sweep transcription against a stable-sort oracle on all **9,841 ternary columns of length 0–8**, including scalar cell endpoints and vector overstores. It matched every final table and the bounds. This is a Python model, not an execution of the Rust/AVX2 implementation.
+
+**No transfer of this whole-table store contract to parallel shares.** A left share owning [0,1) but issuing the same 8-word store writes [0,8), overlapping a right share [1,3). Concurrent writes are not made safe by writing the same value or by eventually overwriting it. The current fill_rows appends scalar values to its exclusively borrowed output and does not do this. C30/C31 or any future shared-table implementation must establish disjoint *physical write footprints* (for example bounded tails or private scratch followed by a safe copy); a row partition alone is insufficient. Such work is a new reviewed implementation, not covered by this verdict.
+
+### MTF emitter
+
+Compared mtf_runs_scalar and mtf_runs_avx2 with the existing list kernels and second helper. The AVX2 front loads cover the fixed 256-byte mapping; its 224-byte tail is 64-byte aligned and accessed as seven 32-byte rows. The clamped nn<=255 bounds second's index to 223; low indices select existing aligned shuffle entries. These are the existing mtf_avx2 list mechanics.
+
+The new raw record writes have a separate bound: at most one record per literal symbol, at most one initial record for a leading run symbol, plus the closing record. An initial run consumes a nonliteral symbol, so total <= syms.len()+1, reserved after clear. No subsequent allocation invalidates the raw output pointer; set_len exposes only written records, including on an error exit. RUNA/B weight and block-limit checks precede row/count updates as in the incumbent. Scalar writes use Vec::push. Packed positions are meaningful only below 2^24; build's selector enforces its small-bound path, while the public emitter documents that representation limit. Malformed symbols outside the scanner contract need explicit fuzz coverage; scalar indexing and AVX2 clamping should not be assumed equivalent for every hand-made Symbols value.
+
+The CPU prerequisite remains **conditional**: detected/scalar Kernels on supported hardware. Public forgeable Kernels fields are a pre-existing crate-wide unsound dispatch boundary, not proved away by this PR. It prevents calling this an unconditional safe-public-API proof. Keep that known issue tracked separately; this review neither repairs nor widens it. A guarded CI runner with detected AVX2 does not exercise that unsupported-CPU case.
+
+### Remaining evidence and closure
+
+The journal's sections 3 and 7 explicitly say **no reached-path fuzzing and no emitter Miri**. The Miri workflow runs --lib miri_ and a second run_stage::tests::miri_ pass with AVX2 flags/expectation. That covers sort/fill test paths, not tests/mtf_kernels.rs or mtf_runs_avx2. Intrinsic reuse does not validate the new record pointer/capacity/set_len operations. Integration differential tests and the two reported killed mutations (emitter position and fill step) are valuable, but not substitutes for the absent categories.
+
+To lift this B5 HOLD:
+- supply source-pinned Miri results reaching the new emitter's scalar and AVX2 record paths, including success, leading runs, empty/EOB and error/limit exits; show actual AVX2 reachability, and report unsupported/partial execution honestly;
+- supply bounded reproducible fuzz/differential results reaching emit -> checked sort -> both fills and fallback, with seeds/case counts, malformed states and path assertions; test failures before any timing are investigation inputs;
+- retain the mutation evidence with exact mutant, failing check and restored baseline, and the negative-state/doc-test evidence at the repaired source.
+
+No new performance run is needed to close those obligations. This independent review supplies the adversarial source analysis; I did not implement the code or perform the reported tests. After the evidence and the originating review's material objections are resolved, the Coordinator can complete the freeze/admission under the existing rules. No personal Guardian signature is a standing prerequisite for routine work; the present explicit evidence objection binds this unsafe diagnostic.
+
+### Reproduction and limits
+
+[Probe](records/d044/probe.py) and [result](records/d044/results.json) contain the executed finite mathematical check and parallel-write counterexample. No Rust build/test, Miri, fuzz, native AVX2, disassembly or benchmark was executed here: cargo and rustc remain unavailable. Journal passes are attributed reports, not my passes. No new concrete invalid access was found in the repaired source under its checked-state and hardware premises.
+
+Expected: checked state removes the reported forged-input route, and full B5 evidence supports the experiment. Observed: the source repair meets that first objective; two explicitly missing evidence categories prevent the second. The next useful work is those bounded checks, not timing first. Production and future parallel composition remain unqualified.
+
+Specs, MODE, RULES and PROTOCOL read at a4f97714cc14366984015869d9d094d89488ac57. Migration rechecked: prior head f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt c0e0ec78944dbd7cf6053e0a12b0384ab4ea46fc. Evidence key: PR269 / fd60fffada25d475bbcc2b54165b96cf5fd7a92f / journal blob b7de7275d4cba9ee60e98102d236f20775de6c2f. run_stage blob 07a540a5dc2a4ce8f771badb0cbc4278324e31d1; mtf blob 2610fa7ed1a7ee2c7653db47402bb7b7e9e3bb73. Twenty-one inbox comments listed; earlier eligible items finished.
