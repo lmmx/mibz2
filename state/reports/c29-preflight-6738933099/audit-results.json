@@ -1,0 +1,51 @@
+{
+  "raw_membership_mount_namespace_ancestor_chain": "pass",
+  "artifact_preflight": {
+    "state": "unlimited",
+    "coverage": "complete"
+  },
+  "stability": {
+    "stable": true,
+    "differences": []
+  },
+  "raw_error_at_each_level": [
+    {
+      "level": 0,
+      "state": "unknown"
+    },
+    {
+      "level": 1,
+      "state": "unknown"
+    },
+    {
+      "level": 2,
+      "state": "unknown"
+    }
+  ],
+  "exact_boundary": [
+    {
+      "quota": 399999,
+      "period": 100000,
+      "rounded": 4.0,
+      "admitted": false
+    },
+    {
+      "quota": 400000,
+      "period": 100000,
+      "rounded": 4.0,
+      "admitted": true
+    },
+    {
+      "quota": 1199999,
+      "period": 300000,
+      "rounded": 4.0,
+      "admitted": false
+    },
+    {
+      "quota": 1200000,
+      "period": 300000,
+      "rounded": 4.0,
+      "admitted": true
+    }
+  ]
+}

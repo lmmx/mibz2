@@ -1,0 +1,242 @@
+[
+  {
+    "name": "Release",
+    "status": "completed",
+    "conclusion": "skipped",
+    "id": 129068530090,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129068530090"
+  },
+  {
+    "name": "deploy-branch",
+    "status": "completed",
+    "conclusion": "skipped",
+    "id": 129068478529,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614868/job/129068478529"
+  },
+  {
+    "name": "preview",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129068476259,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614868/job/129068476259"
+  },
+  {
+    "name": "look",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129068475710,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614868/job/129068475710"
+  },
+  {
+    "name": "sweep",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129068227533,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589756805/job/129068227533"
+  },
+  {
+    "name": "python (3.13)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801629,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801629"
+  },
+  {
+    "name": "python (3.10)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801586,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801586"
+  },
+  {
+    "name": "python (3.15)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801548,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801548"
+  },
+  {
+    "name": "python (3.11)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801486,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801486"
+  },
+  {
+    "name": "python (3.12)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801452,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801452"
+  },
+  {
+    "name": "python (3.14)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067801444,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067801444"
+  },
+  {
+    "name": "Publish crate",
+    "status": "completed",
+    "conclusion": "skipped",
+    "id": 129067779830,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067779830"
+  },
+  {
+    "name": "macos (macos-15, aarch64)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777992,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777992"
+  },
+  {
+    "name": "linux (ubuntu-22.04, x86_64, auto)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777763,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777763"
+  },
+  {
+    "name": "macos (macos-15, x86_64)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777703,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777703"
+  },
+  {
+    "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777660,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777660"
+  },
+  {
+    "name": "sdist",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777657,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777657"
+  },
+  {
+    "name": "windows (windows-latest, x64)",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067777627,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067777627"
+  },
+  {
+    "name": "pages",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742678,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614868/job/129067742678"
+  },
+  {
+    "name": "bench",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742592,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614817/job/129067742592"
+  },
+  {
+    "name": "check-commit",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742486,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614787/job/129067742486"
+  },
+  {
+    "name": "miri",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742468,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614814/job/129067742468"
+  },
+  {
+    "name": "build",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742403,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614868/job/129067742403"
+  },
+  {
+    "name": "c29-reporter",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742311,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067742311"
+  },
+  {
+    "name": "fuzz-smoke",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742261,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067742261"
+  },
+  {
+    "name": "typing",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742217,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067742217"
+  },
+  {
+    "name": "rust",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742124,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067742124"
+  },
+  {
+    "name": "submit",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067742115,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067742115"
+  },
+  {
+    "name": "get-python-versions",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067741802,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614751/job/129067741802"
+  },
+  {
+    "name": "occupancy",
+    "status": "completed",
+    "conclusion": "success",
+    "id": 129067741426,
+    "head_sha": "0ce4dca4489c4a87b9658d6c2656290173113c99",
+    "html_url": "https://github.com/lmmx/mibz2/actions/runs/42589614779/job/129067741426"
+  }
+]
