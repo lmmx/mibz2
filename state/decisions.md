@@ -3347,3 +3347,34 @@ No further changes to the scientific target/fallback/CI thresholds or coverage c
 Expected: exact D072 incorporation plus a credible cost/drift rationale. Observed: D072 incorporated, with new record claims conflating tolerance with precision and inconclusiveness with regression. The useful next action is that limited record repair; no experiment is needed to settle these logical distinctions.
 
 Migration checked before receipt: f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **47245622b6b899dcb64f9448b112550832ecddf5**. Routing audit: five resolved historical findings, zero unresolved. No timing, build, policy enactment or task reconfiguration.
+
+
+## D074 — #309 final text ADMISSIBLE, pending authority
+
+**ADMISSIBLE AS TEXT.** Both reviewed files at **552d1d3c4f61aec835ce140be3b96a61a9c11315** close D073's remaining objections. **No further exact edit is required.** This is substantive advice within SPEC.GUARDIAN's RULES D bound, not enactment, a merge PROCEED, timing admission or production qualification.
+
+Inbox [6750788493](https://github.com/lmmx/mibz2/pull/161#issuecomment-6750788493), observed **2026-11-09T20:36:16Z**. Authority remains SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. [Frozen evidence and diff](records/d074/evidence.json).
+
+### Evidence and closure
+
+Read both full files at the requested head and compared **6680a438cc6a65c412818fe1a02e2a2857b0eb73...552d1d3c4f61aec835ce140be3b96a61a9c11315**. The comparison changes only the two reviewed documents. PR #309 was still draft and unmerged at observation.
+
+| Item | Verified result |
+|---|---|
+| docs/STEWARDSHIP.md, blob **9a295edc2c239461ce4a69cfc135cce22caf1c6f** | The seven acceptance conditions accepted in D073 are unchanged. The amended-C6 delegation paragraph is now outside the maintainer-reserved list; its first reserved bullet explicitly concerns an already registered rule, gate or minimum. The placement ambiguity is closed. |
+| docs/journal/2026-11-09-target-gated-route-decision.md, blob **15dfd31352e0468080dddfb5a36917e34782787a** | The rationale now treats 2% as a prospective tolerance choice, not a fixed bench resolution or evidence of acceptable cost everywhere. It separates power, tolerance, all-pass inference and interval coverage. |
+| Release-anchor contract | Exact head/base and bench, complete matrix, estimator, unrounded one-sided bounds, pre-observation method and invalidity rules, and raw evidence are required. The actual docs/RELEASING.md path is linked correctly. No extra run is authorised by the analysis requirement. |
+| Trigger and resumption | U >1.02 or unavailable valid bounds causes disclosure and suspension of new route merges. Inconclusive/missing evidence is distinguished from demonstrated harm. The unresolved anchor survives new tags, and resumption preserves frozen verdicts and the prohibition on retry-to-pass. |
+| Scope | The anchor measures all intervening changes, not automatically the route candidate's causal effect. No target benefit is netted off, no fleet gain is inferred, no lifetime cumulative bound is claimed, and no blanket release prohibition is invented. Prospectivity and the exclusion of #302's existing data remain. |
+
+These are the requested repairs, not a new round of conditions. D072's substantive policy-text objections and D073's record/placement objections are now closed at this head. The proposed tradeoff remains an explicit policy judgement, limited by its stated coverage and evidence requirements; admissibility of that judgement does not establish any candidate has met them.
+
+### What this ruling permits and what remains
+
+The final text review is complete. It can be cited as the Guardian's substantive review in the authorised enactment record. The already specified authority transition and reviewed/logged enactment procedure remain; my current a4f97714 pin does not confer amended-C6 enactment authority. This review neither silently changes that pin nor asks for another scientific rewrite to compensate for it. A later material change to the policy would be a different text; routine provenance/status updates recording authorised enactment are not a new scientific objection.
+
+No existing experiment is reclassified. #302's service-guarded result remains ineligible under the proposed forward-only route, with its original verdicts intact; any future qualification must satisfy the new policy's prospective registration and evidence contract once enacted. D069's technical closures stand. D070's restriction on adoption does not disappear merely because this policy draft is now coherent.
+
+Expected: the finite D073 repairs. Observed: all incorporated, with the accepted seven-condition contract preserved. The textual gap is closed. Next consequential action belongs to the existing authority/enactment process, not another benchmark, another tolerance change or another policy-edit loop.
+
+Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **a4d7c9c0455bb17f4098b85d0a96a829db8e43c3**. Pinned routing audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No build, timing, raw-bundle replay, merge, authority change or task reconfiguration.
