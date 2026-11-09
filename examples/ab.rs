@@ -52,8 +52,10 @@
 //!   and teams of 3 that only build and walk, as many as fit THREADS after the K service
 //!   threads, at most 3: 3 x 3 + 1 at 10 or 12 threads, 2 x 3 + 2 at 10, 3 x 3 + 2 at 12),
 //!   and `mibz2-svc1-t2` (teams of 2: 3 x 2 + 1); each in the teamK arms' window
-//!   (SLOTS_PER_THREAD a team); `mibz2-svc2-w12` and `-w16` (`mibz2-svc2`'s plan at a
-//!   fixed window of 12 or 16 blocks, the service core's window question); and
+//!   (SLOTS_PER_THREAD a team); `mibz2-svc2-w12` (`mibz2-svc2`'s plan at a fixed window
+//!   of 12 blocks), `mibz2-svc2-a3` and `-a4` (its prepared queue's admission threshold 3 or 4
+//!   rather than `teams`, `BzReader::parallel_service_admission`) and `mibz2-svc2-a4-w12`
+//!   (both): the service core's admission-threshold question; and
 //!   `mibz2-team3-twin`, `mibz2-team3` under another name (the same decoder twice in one
 //!   run: the service core's noise control);
 //! - `mibz2-team2x3` and `mibz2-pipe2x3` (research: two teams of three whatever THREADS,
@@ -628,23 +630,32 @@ fn decode(
         // the service core (research, `StreamDecoder::service`): K service threads, and
         // teams of T in what is left of THREADS, at most 3 teams (the three-table knee), so
         // the arm never runs more decoding threads than THREADS
-        // (`mibz2-svc2-w12`, `-w16`: `mibz2-svc2`'s plan at a fixed window of 12 or 16 blocks
-        // in flight rather than SLOTS_PER_THREAD a team, 8 at 2 x 3 + 2; research, the
-        // window's question, docs/journal/2026-11-09-service-lookahead-registration.md)
-        "mibz2-svc1" | "mibz2-svc2" | "mibz2-svc1-t2" | "mibz2-svc2-w12" | "mibz2-svc2-w16" => {
+        // (`mibz2-svc2-w12`: `mibz2-svc2`'s plan at a fixed window of 12 blocks in flight
+        // rather than SLOTS_PER_THREAD a team, 8 at 2 x 3 + 2; `mibz2-svc2-a3`, `-a4`: its
+        // plan and window with the prepared queue's admission threshold 3 or 4 rather than
+        // `teams`, 2, `BzReader::parallel_service_admission`; `mibz2-svc2-a4-w12`: both;
+        // research,
+        // docs/journal/2026-11-09-service-lookahead-registration.md)
+        "mibz2-svc1" | "mibz2-svc2" | "mibz2-svc1-t2" | "mibz2-svc2-w12" | "mibz2-svc2-a3"
+        | "mibz2-svc2-a4" | "mibz2-svc2-a4-w12" => {
             let (services, k) = match arm {
                 "mibz2-svc1" => (1, 3),
-                "mibz2-svc2" | "mibz2-svc2-w12" | "mibz2-svc2-w16" => (2, 3),
-                _ => (1, 2),
+                "mibz2-svc1-t2" => (1, 2),
+                _ => (2, 3),
             };
             let teams = (threads.saturating_sub(services) / k).clamp(1, 3);
             let slots = match arm {
-                "mibz2-svc2-w12" => 12,
-                "mibz2-svc2-w16" => 16,
+                "mibz2-svc2-w12" | "mibz2-svc2-a4-w12" => 12,
                 _ => mibz2::parallel::SLOTS_PER_THREAD * teams,
             };
-            drain(
-                mibz2::BzReader::parallel_service(
+            let admission = match arm {
+                "mibz2-svc2-a3" => Some(3),
+                "mibz2-svc2-a4" | "mibz2-svc2-a4-w12" => Some(4),
+                _ => None,
+            };
+            let reader = match admission {
+                // (the default threshold, `teams`: `parallel_service` itself, unchanged)
+                None => mibz2::BzReader::parallel_service(
                     open()?,
                     teams,
                     k,
@@ -652,9 +663,17 @@ fn decode(
                     slots,
                     mibz2::Kernels::detect(),
                 ),
-                h,
-                last,
-            )
+                Some(admission) => mibz2::BzReader::parallel_service_admission(
+                    open()?,
+                    teams,
+                    k,
+                    services,
+                    slots,
+                    admission,
+                    mibz2::Kernels::detect(),
+                ),
+            };
+            drain(reader, h, last)
         }
         // two teams of three, whatever THREADS (research: the service core's 2 x 3 controls,
         // docs/journal/2026-11-08-service-2x3-registration.md), in the teamK arms' window

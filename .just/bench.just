@@ -787,23 +787,24 @@ bench-service-2x3 ROUNDS="20" DRY="" CORPUS="":
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
 
-# The service core's window on the workstation
-# (docs/journal/2026-11-09-service-lookahead-registration.md, registered before any run): at a
-# budget of 10 decode threads, in one ab run interleaved by round, the service core at
-# 2 x 3 + 2 at its window of 8 as bench-service-2x3 ran it (mibz2-svc2), at 12
-# (mibz2-svc2-w12) and at 16 (mibz2-svc2-w16), today's default (mibz2: 0.2.6's pipelined
-# 3 x 3 with park and small, on the ten-core topology), and the plain 3 x 3 with its twin
-# (mibz2-team3, mibz2-team3-twin: the noise control); then an occupancy trace of svc2 at 10
-# at each window (--slots 40, 60, 80: windows 8, 12, 16) with its t.svc.* figures; then
-# bench/service_lookahead.py's report and verdict. About 6 minutes once built (10 from a cold
-# build). Close the browser and anything busy first.
+# The service core's prepared-queue admission threshold on the workstation
+# (docs/journal/2026-11-09-service-lookahead-registration.md, registered before any run; HELD
+# under Guardian D045 until the service core's targeted B5 evidence closes): at a budget of
+# 10 decode threads, in one ab run interleaved by round, the service core at 2 x 3 + 2 as
+# bench-service-2x3 ran it (mibz2-svc2: threshold 2, window 8), at threshold 3 and 4
+# (mibz2-svc2-a3, -a4), at window 12 alone (mibz2-svc2-w12) and at both (mibz2-svc2-a4-w12),
+# today's default (mibz2: 0.2.6's pipelined 3 x 3 with park and small, on the ten-core
+# topology), and the plain 3 x 3 with its twin (mibz2-team3, mibz2-team3-twin: the noise
+# control); then an occupancy trace of each svc2 arm at 10 with its t.svc.* figures and its
+# prepared count; then bench/service_lookahead.py's report and verdict. About 8 minutes once
+# built (12 from a cold build). Close the browser and anything busy first.
 #   just submit bench-service-lookahead
 # DRY (the second argument, positional: `just bench-service-lookahead 20 1`) is the untimed
 # check of the recipe itself (one round, one trace round, no settling): never evidence, and
 # the report never calls it VALID. CORPUS (the third, positional) is a .bz2 to use instead of
 # building the bench's sample.
 
-# The service core at 2 x 3 + 2 at windows 8, 12 and 16, against today's default
+# The service core at 2 x 3 + 2 at admission thresholds 2, 3 and 4 (and window 12), against today's default
 bench-service-lookahead ROUNDS="20" DRY="" CORPUS="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -872,20 +873,24 @@ bench-service-lookahead ROUNDS="20" DRY="" CORPUS="":
     "$AB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
     # one ab run at the budget of 10: every registered cell, interleaved by round
-    arms="mibz2,mibz2-svc2,mibz2-svc2-w12,mibz2-svc2-w16,mibz2-team3,mibz2-team3-twin"
+    arms="mibz2,mibz2-svc2,mibz2-svc2-a3,mibz2-svc2-a4,mibz2-svc2-w12,mibz2-svc2-a4-w12,mibz2-team3,mibz2-team3-twin"
     "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10 --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
     "$AB" summary "$W/runs.jsonl" --ref mibz2 > "$W/summary.txt" || true
-    # one occupancy trace of svc2 at 10 a window: 2 teams get a window of slots x 2 / 10
+    # one occupancy trace of svc2 at 10 an arm (threshold, window): 2 teams get a window of
+    # slots x 2 / 10; --admission only where the threshold isn't the default's 2 (teams), so
+    # those passes run parallel_service itself, as their arms do
     occ=()
-    for win in 8 12 16; do
-      name="occupancy-t10-svc2-w$win"
+    for aw in 2:8 3:8 4:8 2:12 4:12; do
+      adm=${aw%%:*}; win=${aw##*:}
+      name="occupancy-t10-svc2-a$adm-w$win"
       o="$W/$name.json"
+      extra=(); [ "$adm" = 2 ] || extra=(--admission "$adm")
       if target/release/examples/occupancy "$W/wikidata.bz2" --threads 10 --svc 2 --slots $((5 * win)) \
-          --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
+          "${extra[@]}" --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
           > "$W/$name.txt" 2>&1; then
         occ+=("$o")
       else
-        echo "bench-service-lookahead: the occupancy pass at 10 threads, svc 2, window $win, failed"
+        echo "bench-service-lookahead: the occupancy pass at 10 threads, svc 2, threshold $adm, window $win, failed"
       fi
     done
     status=0

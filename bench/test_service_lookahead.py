@@ -1,8 +1,9 @@
 """bench/service_lookahead.py's validity and readings on synthetic records, no decoder run: a
 clean fixture is VALID; each of bench/test_service_2x3.py's counterexamples (the Researcher's
-HOLD 6729358962) is INVALID on the check that guards it here too; each of the three traces is
-checked at its own window; and the registered order's readings come out as registered, never
-naming the window as the prepared queue's lookahead.
+HOLD 6729358962) is INVALID on the check that guards it here too; each of the five traces is
+checked at its own admission threshold and window, with its prepared count P; and the
+registered order's readings come out as registered, speaking of an admission threshold, never
+of a queue length.
 
     python3 bench/test_service_lookahead.py        (or python3 -m pytest bench/test_service_lookahead.py)
 """
@@ -37,7 +38,8 @@ def timeline(**kw):
         "svc.queue.prep.median_ms": 0.2, "svc.queue.prep.p90_ms": 0.5,
         "svc.queue.finish.median_ms": 0.1, "svc.queue.finish.p90_ms": 0.2, "svc.queue.job.median_ms": 0.1,
         "svc.backlog.prep_mean": 0.5, "svc.backlog.finish_mean": 0.1,
-        "svc.backlog.prep_max": 3, "svc.backlog.finish_max": 2, "svc.team.ms.run_wait": 1.0,
+        "svc.backlog.prep_max": 3, "svc.backlog.prep_median": 1, "svc.backlog.finish_max": 2,
+        "svc.team.ms.run_wait": 1.0,
     }
     tl.update(kw)
     return tl
@@ -47,7 +49,7 @@ def trace_for(name, **kw):
     slots = s.TRACE_SLOTS[name]
     return {
         "meta": {"commit": HEAD},
-        "settings": {"threads": [10], "teams": s.TRACE_PLAN, "slots": slots},
+        "settings": {"threads": [10], "teams": s.TRACE_PLAN, "slots": slots, "admission": s.TRACE_ADMISSION[name]},
         "parity": True,
         "output_bytes": s.REGISTERED_OUT,
         "results": [{"threads": 10, "slots": slots, "timeline": timeline(**kw)}],
@@ -56,7 +58,7 @@ def trace_for(name, **kw):
 
 def fixture(walls=None, cpus=None):
     """A clean attempt directory's records: every registered cell's 20 rounds, the registered
-    digest, the three complete as-registered traces"""
+    digest, the five complete as-registered traces"""
     rows = []
     for r in range(s.REGISTERED_ROUNDS):
         for k, (c, (leaders, helpers, svc)) in enumerate(s.CELLS.items()):
@@ -122,7 +124,7 @@ def drop(key):
     return lambda rows, traces, files: [r.pop(key) for r in rows]
 
 
-W8, W12, W16 = s.TRACES
+A2W8, A3W8, A4W8, A2W12, A4W12 = s.TRACES
 
 
 def set_trace(name, **kw):
@@ -135,7 +137,7 @@ class Validity(unittest.TestCase):
         self.assertEqual(d["verdict"], "INVALID")
         self.assertEqual(d["exit"], 1)
         self.assertEqual(d["readings"]["overall"], "NONE (the run is invalid)")
-        self.assertEqual(d["best_window"], "NONE (the run is invalid)")
+        self.assertEqual(d["best_arm"], "NONE (the run is invalid)")
         bad = failed(d)
         self.assertTrue(any(needle in t for t in bad), (needle, bad))
 
@@ -144,7 +146,10 @@ class Validity(unittest.TestCase):
         self.assertEqual(d["verdict"], "VALID", failed(d))
         self.assertEqual(d["exit"], 0)
         self.assertEqual(sorted(d["traces"]), sorted(s.TRACES))
-        self.assertEqual({t["window"] for t in d["traces"].values()}, {8, 12, 16})
+        self.assertEqual(
+            sorted((t["admission"], t["window"]) for t in d["traces"].values()), [(2, 8), (2, 12), (3, 8), (4, 8), (4, 12)]
+        )
+        self.assertEqual({t["p_ceiling"] for t in d["traces"].values()}, {3, 4, 5})
 
     # bench/test_service_2x3.py's counterexamples, each INVALID on its own check here too
     def test_null_output(self):
@@ -192,10 +197,10 @@ class Validity(unittest.TestCase):
         self.assertInvalidOn(lambda r, t, f: r[0].update(thread_cpu="mibz2-0=.1"), "once each")
 
     def test_unregistered_arm(self):
-        self.assertInvalidOn(lambda r, t, f: r[0].update(arm="mibz2-svc2-w24"), "beyond the registered")
+        self.assertInvalidOn(lambda r, t, f: r[0].update(arm="mibz2-svc2-a8"), "beyond the registered")
 
     def test_missing_window_arm(self):
-        self.assertInvalidOn(lambda r, t, f: r.__setitem__(slice(None), [x for x in r if x["arm"] != "mibz2-svc2-w16"]), "`mibz2-svc2-w16@10`")
+        self.assertInvalidOn(lambda r, t, f: r.__setitem__(slice(None), [x for x in r if x["arm"] != "mibz2-svc2-a4"]), "`mibz2-svc2-a4@10`")
 
     def test_dry(self):
         self.assertInvalidOn(lambda r, t, f: f.update({"DRY-RUN.txt": "dry"}), "`DRY-RUN.txt`")
@@ -222,134 +227,155 @@ class Validity(unittest.TestCase):
         self.assertEqual(d["verdict"], "INVALID")
         self.assertIn("noise control N1", d["md"])
 
-    # the three traces, each at its own window
+    # the five traces, each at its own threshold and window
     def test_trace_missing(self):
         for name in s.TRACES:
             self.assertInvalidOn(lambda r, t, f, n=name: t.update({n: None}), f"`{name}`")
 
     def test_trace_wrong_window(self):
-        # the w12 pass run at the default's slots (a window of 8): not the registered window
+        # the a2-w12 pass run at the default's slots (a window of 8): not the registered window
         self.assertInvalidOn(
-            set_trace(W12, results=[{"threads": 10, "slots": 40, "timeline": timeline()}]), f"`{W12}`"
+            set_trace(A2W12, results=[{"threads": 10, "slots": 40, "timeline": timeline()}]), f"`{A2W12}`"
         )
 
     def test_trace_slots_as_default_text(self):
         # no --slots given: occupancy records the default's text, not the registered number
-        self.assertInvalidOn(
-            set_trace(W8, settings={"threads": [10], "teams": s.TRACE_PLAN, "slots": "SLOTS_PER_THREAD (4) x threads"}),
-            f"`{W8}`",
-        )
+        st = {"threads": [10], "teams": s.TRACE_PLAN, "slots": "SLOTS_PER_THREAD (4) x threads", "admission": s.DEFAULT_ADMISSION}
+        self.assertInvalidOn(set_trace(A2W8, settings=st), f"`{A2W8}`")
+
+    def test_trace_wrong_admission(self):
+        # the a4 pass run without --admission (the default's threshold), and the a2 pass with one
+        st = {"threads": [10], "teams": s.TRACE_PLAN, "slots": 40, "admission": s.DEFAULT_ADMISSION}
+        self.assertInvalidOn(set_trace(A4W8, settings=st), f"`{A4W8}`")
+        st = {"threads": [10], "teams": s.TRACE_PLAN, "slots": 40, "admission": 2}
+        self.assertInvalidOn(set_trace(A2W8, settings=st), f"`{A2W8}`")
+
+    def test_trace_no_prepared_count(self):
+        tl = timeline()
+        del tl["svc.backlog.prep_median"]
+        self.assertInvalidOn(set_trace(A3W8, results=[{"threads": 10, "slots": 40, "timeline": tl}]), f"`{A3W8}`")
 
     def test_trace_complete_rounds_only(self):
-        d = run(set_trace(W16, results=[{"threads": 10, "slots": 80, "timeline": {"complete_rounds": 1}}]))
+        d = run(set_trace(A4W12, results=[{"threads": 10, "slots": 60, "timeline": {"complete_rounds": 1}}]))
         self.assertEqual(d["verdict"], "INVALID")
-        self.assertTrue(any(f"saturation resolved from `{W16}`" in t for t in failed(d)), failed(d))
+        self.assertTrue(any(f"saturation resolved from `{A4W12}`" in t for t in failed(d)), failed(d))
 
     def test_trace_wrong_plan(self):
-        self.assertInvalidOn(set_trace(W8, settings={"threads": [10], "teams": "3 of 3, forced", "slots": 40}), f"`{W8}`")
+        st = {"threads": [10], "teams": "3 of 3, forced", "slots": 40, "admission": s.DEFAULT_ADMISSION}
+        self.assertInvalidOn(set_trace(A2W8, settings=st), f"`{A2W8}`")
 
     def test_trace_wrong_services(self):
         self.assertInvalidOn(
-            set_trace(W12, results=[{"threads": 10, "slots": 60, "timeline": timeline(**{"svc.n.services": 1})}]), f"`{W12}`"
+            set_trace(A3W8, results=[{"threads": 10, "slots": 40, "timeline": timeline(**{"svc.n.services": 1})}]), f"`{A3W8}`"
         )
 
     def test_trace_other_commit(self):
-        self.assertInvalidOn(set_trace(W16, meta={"commit": "0" * 40}), f"`{W16}`")
+        self.assertInvalidOn(set_trace(A4W8, meta={"commit": "0" * 40}), f"`{A4W8}`")
 
     def test_trace_no_parity(self):
-        self.assertInvalidOn(set_trace(W8, parity=False), f"`{W8}`")
+        self.assertInvalidOn(set_trace(A2W12, parity=False), f"`{A2W12}`")
 
     def test_trace_metric_out_of_range(self):
         self.assertInvalidOn(
-            set_trace(W12, results=[{"threads": 10, "slots": 60, "timeline": timeline(**{"svc.util.max": 1.5})}]), f"`{W12}`"
+            set_trace(A3W8, results=[{"threads": 10, "slots": 40, "timeline": timeline(**{"svc.util.max": 1.5})}]), f"`{A3W8}`"
         )
 
 
 def o(name, speed="GAIN", cpu="NULL", g=(1.05, 1.03, 1.07), arm=None):
-    arm = arm or {"L1": "mibz2-svc2-w12@10", "L2": "mibz2-svc2-w16@10"}[name]
+    arm = arm or {"LA3": "mibz2-svc2-a3@10", "LA4": "mibz2-svc2-a4@10"}[name]
     return {"name": name, "arm": arm, "speed_outcome": speed, "cpu_outcome": cpu, "speed": list(g)}
 
 
 NULL = (1.0, 0.98, 1.02)
 SLOW = (0.95, 0.93, 0.97)
+STARVED = {"saturated": "not saturated", "prep": "PREP STARVATION", "finish": "no finish backlog"}
+FED = dict(STARVED, prep="no prep starvation")
 
 
 class Readings(unittest.TestCase):
-    # the window is never named as the lookahead, nor the cause shown
-    BANNED = ("THE LOOKAHEAD BINDS", "LOOKAHEAD BINDS SVC2", "the window is the lookahead", "cause")
+    # the threshold is never read as a queue length, nor the cause shown
+    BANNED = ("QUEUE LENGTH", "queue length", "THE LOOKAHEAD BINDS", "cause")
 
     def assertNoBanned(self, text):
         for b in self.BANNED:
             self.assertNotIn(b, text)
 
-    def test_window_binds(self):
-        rd = s.readings({"L1": o("L1"), "L2": o("L2", "NULL", g=NULL)})
-        self.assertTrue(rd["overall"].startswith("THE WINDOW BINDS SVC2@10 AT 8"), rd["overall"])
-        self.assertIn("a gain at 12", rd["overall"])
-        self.assertIn("not the prepared queue's own lookahead", rd["overall"])
+    def test_threshold_binds(self):
+        rd = s.readings({"LA3": o("LA3"), "LA4": o("LA4", "NULL", g=NULL)})
+        self.assertTrue(rd["overall"].startswith("THE ADMISSION THRESHOLD BINDS SVC2@10 AT 2"), rd["overall"])
+        self.assertIn("a gain at 3", rd["overall"])
+        self.assertIn("doesn't cap the queue", rd["overall"])
+        self.assertIn("threshold + 1", rd["overall"])
         self.assertNoBanned(rd["overall"])
 
-    def test_wider_window_trade(self):
-        rd = s.readings({"L1": o("L1", cpu="CPU COST"), "L2": o("L2", "GAIN")})
-        self.assertTrue(rd["overall"].startswith("A WIDER WINDOW IS FASTER FOR A CPU COST"), rd["overall"])
+    def test_higher_threshold_trade(self):
+        rd = s.readings({"LA3": o("LA3", cpu="CPU COST"), "LA4": o("LA4", "GAIN")})
+        self.assertTrue(rd["overall"].startswith("A HIGHER ADMISSION THRESHOLD IS FASTER FOR A CPU COST"), rd["overall"])
 
     def test_mixed(self):
-        rd = s.readings({"L1": o("L1"), "L2": o("L2", "REGRESSION", g=SLOW)})
+        rd = s.readings({"LA3": o("LA3"), "LA4": o("LA4", "REGRESSION", g=SLOW)})
         self.assertTrue(rd["overall"].startswith("INCONCLUSIVE (registered step 2: MIXED"), rd["overall"])
 
     def test_inconclusive(self):
-        rd = s.readings({"L1": o("L1", "NULL", g=NULL), "L2": o("L2", "INCONCLUSIVE (the interval spans gain and harm)", g=(1.0, 0.96, 1.04))})
+        rd = s.readings({"LA3": o("LA3", "NULL", g=NULL), "LA4": o("LA4", "INCONCLUSIVE (the interval spans gain and harm)", g=(1.0, 0.96, 1.04))})
         self.assertTrue(rd["overall"].startswith("INCONCLUSIVE (registered step 3"), rd["overall"])
 
     def test_slower(self):
-        rd = s.readings({"L1": o("L1", "REGRESSION", g=SLOW), "L2": o("L2", "REGRESSION", g=SLOW)})
-        self.assertTrue(rd["overall"].startswith("A WIDER WINDOW IS SLOWER"), rd["overall"])
+        rd = s.readings({"LA3": o("LA3", "REGRESSION", g=SLOW), "LA4": o("LA4", "REGRESSION", g=SLOW)})
+        self.assertTrue(rd["overall"].startswith("A HIGHER ADMISSION THRESHOLD IS SLOWER"), rd["overall"])
 
-    def test_null_leaves_lookahead_untested(self):
-        rd = s.readings({"L1": o("L1", "NULL", g=NULL), "L2": o("L2", "NULL", g=NULL)})
-        self.assertTrue(rd["overall"].startswith("NO WINDOW GAIN DETECTED BEYOND 8"), rd["overall"])
+    def test_null(self):
+        rd = s.readings({"LA3": o("LA3", "NULL", g=NULL), "LA4": o("LA4", "NULL", g=NULL)})
+        self.assertTrue(rd["overall"].startswith("NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD"), rd["overall"])
         self.assertIn("a small effect is not excluded", rd["overall"])
-        self.assertIn("untested by this run", rd["overall"])
         self.assertNoBanned(rd["overall"])
 
     def test_mechanism(self):
-        starved = {"saturated": "not saturated", "prep": "PREP STARVATION", "finish": "no finish backlog"}
-        fed = dict(starved, prep="no prep starvation")
-        t = s.mechanism({8: starved, 12: fed, 16: fed}, "THE WINDOW BINDS SVC2@10 AT 8 (...)")
-        self.assertTrue(t.startswith("PREP STARVATION AT 8, RELIEVED"), t)
+        cells = list(s.ADMISSION)
+        t = s.mechanism(
+            {c: (STARVED if c == "mibz2-svc2@10" else FED) for c in cells}, "THE ADMISSION THRESHOLD BINDS SVC2@10 AT 2 (...)"
+        )
+        self.assertTrue(t.startswith("PREP STARVATION AT THRESHOLD 2, RELIEVED"), t)
         self.assertIn("not shown to be it", t)
-        t = s.mechanism({8: starved, 12: starved, 16: starved}, "NO WINDOW GAIN DETECTED BEYOND 8 (...)")
-        self.assertTrue(t.startswith("PREP STARVATION PERSISTS AT EVERY WINDOW"), t)
+        t = s.mechanism({c: STARVED for c in cells}, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
+        self.assertTrue(t.startswith("PREP STARVATION PERSISTS AT EVERY THRESHOLD"), t)
         self.assertIn("untested here", t)
-        sat = dict(starved, saturated="SATURATED")
-        t = s.mechanism({8: starved, 12: starved, 16: sat}, "NO WINDOW GAIN DETECTED BEYOND 8 (...)")
-        self.assertIn("SATURATED at window 16", t)
+        modes = {c: STARVED for c in cells}
+        modes["mibz2-svc2-a4-w12@10"] = dict(STARVED, saturated="SATURATED")
+        t = s.mechanism(modes, "NO GAIN DETECTED FROM A HIGHER ADMISSION THRESHOLD (...)")
+        self.assertIn("SATURATED at a4 w12", t)
 
-    def test_full_run_window_binds(self):
-        # svc2 at 12 5% and at 16 4% faster than at 8, at the same CPU
-        walls = {"mibz2-svc2-w12": 0.95, "mibz2-svc2-w16": 0.96}
-        fed = {"svc.team.idle_prep_share": 0.04}
+    def test_full_run_threshold_binds(self):
+        # svc2 at threshold 3 5% and at 4 4% faster than at 2, at the same CPU
+        walls = {"mibz2-svc2-a3": 0.95, "mibz2-svc2-a4": 0.96}
+        fed = {"svc.team.idle_prep_share": 0.04, "svc.backlog.prep_max": 5, "svc.backlog.prep_median": 3}
 
         def m(rows, traces, files):
-            for n in (W12, W16):
+            for n in (A3W8, A4W8):
                 traces[n]["results"][0]["timeline"].update(fed)
         d = run(m, walls=walls)
         self.assertEqual(d["verdict"], "VALID", failed(d))
         j = {c["name"]: c for c in d["judged"]}
-        self.assertEqual(j["L1"]["speed_outcome"], "GAIN")
-        self.assertEqual(j["L2"]["speed_outcome"], "GAIN")
-        self.assertEqual(j["L1"]["windows"], [12, 8])
-        self.assertTrue(d["readings"]["overall"].startswith("THE WINDOW BINDS"), d["readings"]["overall"])
-        self.assertTrue(d["mechanism"].startswith("PREP STARVATION AT 8, RELIEVED"), d["mechanism"])
-        self.assertIn("window 12", d["best_window"])
-        self.assertIn("Reported, never judged", d["best_window"])
-        self.assertIn("optimistic", d["best_window"])
+        self.assertEqual(j["LA3"]["speed_outcome"], "GAIN")
+        self.assertEqual(j["LA4"]["speed_outcome"], "GAIN")
+        self.assertEqual(j["LA3"]["admission"], [3, 2])
+        self.assertEqual(j["LA3"]["windows"], [8, 8])
+        self.assertTrue(d["readings"]["overall"].startswith("THE ADMISSION THRESHOLD BINDS"), d["readings"]["overall"])
+        self.assertTrue(d["mechanism"].startswith("PREP STARVATION AT THRESHOLD 2, RELIEVED"), d["mechanism"])
+        self.assertIn("a3 w8", d["best_arm"])
+        self.assertIn("Reported, never judged", d["best_arm"])
+        self.assertIn("optimistic", d["best_arm"])
+        self.assertEqual(d["traces"][A4W8]["p_max"], 5)
+        self.assertEqual(d["traces"][A4W8]["p_ceiling"], 5)
+        self.assertIn("5 / 3.0 (5)", d["md"])
         self.assertNoBanned(d["readings"]["overall"] + d["mechanism"])
+        sec = {c["name"]: c for c in d["secondary"]}
+        self.assertEqual(set(sec), {"W12", "J", "J4", "D-a2w8", "D-a3w8", "D-a4w8", "D-a2w12", "D-a4w12", "R1"})
 
     def test_full_run_null(self):
         d = run()
         self.assertEqual(d["verdict"], "VALID", failed(d))
-        self.assertTrue(d["readings"]["overall"].startswith("NO WINDOW GAIN DETECTED"), d["readings"]["overall"])
+        self.assertTrue(d["readings"]["overall"].startswith("NO GAIN DETECTED"), d["readings"]["overall"])
         self.assertTrue(d["mechanism"].startswith("PREP STARVATION PERSISTS"), d["mechanism"])
 
 

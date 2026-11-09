@@ -1237,6 +1237,35 @@ impl StreamDecoder {
         kernels: Kernels,
         fault: Option<ServiceFault>,
     ) -> StreamDecoder {
+        Self::service_full(teams, k, services, slots, None, kernels, fault)
+    }
+
+    /// Research, opt-in: `service` with the prepared queue's admission threshold given (at
+    /// least 1) rather than `teams`: the hub's `lookahead`, below which a service worker
+    /// starts another preparation (rule 3). It is not a cap: preparations under way are
+    /// not counted, so up to `admission + services - 1` blocks can be prepared at once.
+    /// The front sets are sized to it as `service` sizes them to `teams`.
+    #[doc(hidden)]
+    pub fn service_admission(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        admission: usize,
+        kernels: Kernels,
+    ) -> StreamDecoder {
+        Self::service_full(teams, k, services, slots, Some(admission), kernels, None)
+    }
+
+    fn service_full(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        admission: Option<usize>,
+        kernels: Kernels,
+        fault: Option<ServiceFault>,
+    ) -> StreamDecoder {
         let (teams, team_k, services) = (teams.max(1), k.clamp(1, 4), services.max(1));
         let slots = slots.max(teams) as u64;
         let shared = Arc::new(Shared {
@@ -1254,7 +1283,7 @@ impl StreamDecoder {
             overlapped: AtomicU64::new(0),
             overlap_errors: AtomicU64::new(0),
         });
-        let lookahead = teams;
+        let lookahead = admission_for(teams, admission);
         let hub = Arc::new(Hub {
             st: Mutex::new(HubState {
                 jobs: Default::default(),
@@ -1313,6 +1342,12 @@ impl StreamDecoder {
             pipelined: false,
         }
     }
+}
+
+/// The prepared queue's admission threshold (the hub's `lookahead`): `teams` (a block a
+/// team), unless one is given
+fn admission_for(teams: usize, asked: Option<usize>) -> usize {
+    asked.map_or(teams, |l| l.max(1))
 }
 
 /// The scanner's jobs into the hub, then its end (the jobs' channel closed)
@@ -1927,6 +1962,27 @@ mod service_tests {
         let st = h.lock();
         assert!(st.done() && st.prepared.is_empty());
         assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
+    }
+
+    /// The admission threshold's default is `teams`, as before the parameter; a given one
+    /// changes no byte of the output
+    #[test]
+    fn service_admission_default_unchanged() {
+        for teams in 1..=4 {
+            assert_eq!(admission_for(teams, None), teams);
+            assert_eq!(admission_for(teams, Some(teams + 2)), teams + 2);
+        }
+        assert_eq!(admission_for(3, Some(0)), 1);
+        let k = Kernels::scalar();
+        let (base, res) = run(&StreamDecoder::service(2, 3, 2, 8, k), Z);
+        res.unwrap();
+        assert!(base == want());
+        for admission in [1, 2, 3, 4] {
+            let dec = StreamDecoder::service_admission(2, 3, 2, 8, admission, k);
+            let (got, res) = run(&dec, Z);
+            res.unwrap();
+            assert!(got == base, "admission {admission}");
+        }
     }
 
     #[test]
