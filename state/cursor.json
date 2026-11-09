@@ -71,7 +71,7 @@
     "6750294901": 6750366440,
     "6750373225": 6750435765
   },
-  "last_rebuilt_from": 6750366440,
+  "last_rebuilt_from": 6750852151,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -299,9 +299,10 @@
     },
     "6750858679": {
       "comment_id": 6750858679,
-      "status": "in_progress",
-      "progress": "Migration verified; reconciling adoption refusal and proposed route."
+      "status": "complete",
+      "progress": "Account and levels committed; REVIEW pending.",
+      "work_commit": "18cfbe87abfe28582c8276967665f4f5b1f656e9"
     }
   },
-  "last_record_commit": "3f7515f8d15030599a8d061fd3738ea384f90ecc"
+  "last_record_commit": "18cfbe87abfe28582c8276967665f4f5b1f656e9"
 }
