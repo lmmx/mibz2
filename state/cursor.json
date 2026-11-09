@@ -110,9 +110,10 @@
     6733159315,
     6733569628,
     6733827974,
-    6734368711
+    6734368711,
+    6734526651
   ],
-  "last_processed_comment_id": 6734368711,
+  "last_processed_comment_id": 6734526651,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1030,7 +1031,7 @@
     },
     {
       "trigger_comment_id": 6734526651,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1038,7 +1039,10 @@
       "report_path": "state/reports/c29-environment-6734526651/report.md",
       "report_commit": "102bc5093d064642576c3b25a31bde7337423f25",
       "disposition": "REVISE quota evidence encoding before freeze: unknown and unlimited collapse to null. AVX2/per-record capacity objections closed; 10 tests and 24 probes pass. Toolchain/build provenance acceptable with scope; no native timing or implementation.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6734701311,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.verify's only error is its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1058,10 +1062,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6732447649
+      6734526651
     ],
     "handled": [
-      6732447649
+      6734526651
     ],
     "skipped": [],
     "automation_modified": false

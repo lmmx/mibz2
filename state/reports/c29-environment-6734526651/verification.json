@@ -1,0 +1,15 @@
+{
+  "trigger_comment_id": 6734526651,
+  "review_comment_id": 6734701311,
+  "report_commit": "102bc5093d064642576c3b25a31bde7337423f25",
+  "issue": 145,
+  "exact_body_readback": true,
+  "role_aware_routing": true,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "automation_modified": false
+}
