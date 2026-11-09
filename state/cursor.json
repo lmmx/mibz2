@@ -1126,12 +1126,15 @@
     },
     {
       "trigger_comment_id": 6739269334,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "a773853f05fa9e12bb65fb93bf5c07e1bc7fea11",
-      "report_path": "state/reports/pit-crew-round1-6739269334/report.md"
+      "report_path": "state/reports/pit-crew-round1-6739269334/report.md",
+      "report_commit": "c00e65eaad4856a4ca50505f813e7d4d764db7d5",
+      "review_comment_pr": 145,
+      "disposition": "REVISE published post through follow-up PRs: waiting/performing distinction, threshold inference, CI semantics, stale merge status and scope corrections; fresh reader recovers five goals. No publication hold, implementation or timing."
     }
   ],
   "active_delegations": [],
