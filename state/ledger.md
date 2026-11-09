@@ -329,3 +329,15 @@ Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-dec
 - Emitter:4r≈.248n stored bytes on accepted rows, not4n. Keep cheap u32 indexable records pending instruction/spill evidence; literal-stream/extension hybrid must pay reconstruction. Three bytes cannot hold20-bit start+8-bit byte.
 - C41 admission: actual n/literals/run extensions/length bins, acquired in existing symbol production if economical. Current syms/max_len predicate is notr/n. Freeze model prospectively; no threshold fitting passed off as qualification.
 - #270 helper critical max differs from serial stage sum. D049 timing HOLD remains. R_floor/R_warm do not uniquely identify the binding resource. No implementation, timing, safety certification or measured speed credit.
+
+
+## Pair measured STOP sharpening: inbox6731656628
+
+[Raw replay and ranked constructions](records/reviews/inbox-6731656628/report.md), run42556998342 at1c4d0f0714183f83798a0b746463ae34535fbc50. Artifact digest verified; all five CSVs replayed.
+
+- Q1.686538 [.684484,.688598] INCONCLUSIVE; Q2 1.894994 [1.885046,1.904994] NEGATIVE STOP retained. M1 extra3.457402 [3.451597,3.463207] nominal c/paired row.
+- Paired cross-sweep residuals: R-run6.07213 [6.02397,6.12029], P-one3.98378 [3.96314,4.00443]; gap2.08834 [2.03103,2.14566] nominal c/output byte. NOT consumer-only measurements: differing admission/block sets/setup/cache state. Pre-built walk interval absent.
+- C37 then C38: proxy34.4% residual reduction needed to match room; even that does not repay current build premium. C38 retains high-symbol directory lookup. No compiled-loop budget verified.
+- C31 one-hop direct-F remains first: remove pair composition/directory/fi/js and L scan only with emitted records; keep checked counts/prefix/cursor/cell/store costs. Compare #269 budget separately.
+- Admission correction: one byte run/ONE2.27402, pattern1.00913; .343/.239 were versus ROW pair builder. No aggregate corpus demonstrates run-pair build beating production ONE. Per-block gain cannot be inferred from corpus totals; no threshold or Wikidata recovery claimed.
+- No implementation, timing, safety certification or new speed credit. D052 registration closure recorded; new consumer requires own evidence. #270 restrictions not lifted.
