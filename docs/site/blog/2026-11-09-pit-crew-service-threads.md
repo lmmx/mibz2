@@ -35,18 +35,20 @@ work out of the teams altogether. Two threads of their own, which we call servic
 for every block, and the teams only do the shared part. They are the teams' pit crew, so the teams
 never have to leave the track.
 
-**Threads asked for, and threads that decode.** A caller tells mibz2 how many threads it may use,
-and we call that number the thread setting. Not all of those threads work on blocks. One, the
-scanner, reads the file, and a few more do bookkeeping. The rest are the decoding threads, and the
-two layouts spend them differently. At a setting of ten, 0.2.6 decodes with nine threads, three
-teams of three. The service layout decodes with eight: two teams of three plus the two service
-threads. So it inverts two blocks at a time instead of three.
+**Threads asked for, and threads that decode.** A caller gives mibz2 a thread setting, and the
+setting is the budget of the decoding plan. It counts the decoding threads, the team members and
+any service threads, and nothing else. The support threads come on top of it: the scanner, which
+reads the file, and a few others that pass blocks along. At a setting of ten, 0.2.6 uses nine
+decoding threads, three teams of three, since teams of three can't use the tenth. The service
+layout uses eight: two teams of three plus the two service threads. So it inverts two blocks at a
+time instead of three.
 
 **What we found.** On the ten-core machine we test on, the service layout decoded our test file
 4.5% faster than 0.2.6's default and spent 12.7% less processor time. That comes from a registered
 run, one whose comparisons and decision rules were fixed before it ran. The simplest reading is
 that freeing every team member for the shared work more than pays for having one team fewer, as
-long as the pit crew keeps up. Two service threads did; one did not.
+long as the pit crew keeps up. Two service threads did. One, tried only beside three teams, did
+not.
 
 Three limits come with it. The layout is a prototype on a research branch, not mibz2's default. It
 was measured on one processor, an Intel Core i9-10900K, and principally on one file, a sample of
@@ -60,9 +62,10 @@ The results in brief:
   less peak memory. A later run, which didn't judge the comparison, measured 7.3%.
 - **Two teams alone lose:** without service threads, two teams were slower than the default, so the
   gain doesn't come simply from running fewer teams.
-- **One service thread is too few:** with one, the layout was 20% slower, because that thread
-  couldn't keep up. Adding threads instead, three teams plus two service threads at a setting of
-  twelve, bought speed with more processor time: a trade, not a win.
+- **One service thread was too few for three teams:** with one, three teams of three were 20%
+  slower than the default, because that thread couldn't keep up. A second service
+  thread beside the same three teams fixed that, but bought speed with more processor time: a
+  trade, not a win. No run tried one service thread with two teams.
 - **Preparing further ahead didn't detectably help:** letting the service threads prepare three or four blocks
   ahead, instead of two, was inconclusive. The teams still wait about a sixth of the time, and what
   they wait for isn't yet identified.
@@ -187,7 +190,8 @@ With one service thread beside three teams of three, at a setting of ten, the de
 slower than the default, on ten decoding threads to its nine. The trace showed why. The service thread was marked busy 96% of the time,
 finished blocks backed up behind it, and the teams waited for it. Moving the one-thread work onto
 one thread had made that thread the bottleneck. The model had put the work at 0.8 of a core, but
-in practice one thread couldn't keep up.
+in practice one thread couldn't keep up with three teams. No run tried one service thread with two
+teams. Two teams would change how much work reaches it, so that case is open.
 
 The run's judged comparisons with the default, each arm written as teams × team size + service
 threads:
@@ -376,8 +380,8 @@ Inverting two blocks at a time instead of three may help the service layout for 
 runs didn't measure it, and the comparison with two pipelined teams shows that fewer tables alone
 don't give the gain.
 
-**Fewer decoding threads.** A caller who asks for ten threads gets eight decoding, two of them
-service threads, plus the feeder. The layout depends on the service threads not saturating, and
+**Fewer decoding threads.** At a setting of ten the layout runs eight decoding threads, two of
+them service threads. Its support threads, the feeder among them, come on top. The layout depends on the service threads not saturating, and
 their margin in the registered run was the trace's 70%. Under other load on the same machine, or on
 a file with more small blocks or a different mix of stages, they could saturate first. Three teams
 might then slow down more gently. None of that is measured.
@@ -419,8 +423,8 @@ production candidate. A default would be new code, and needs its own review.
 
 The argument runs like this. In 0.2.6 a team's leader runs each block's one-thread work beside its
 helpers, which takes the leader out of the build. Moving that work onto threads of its own frees
-every team member for the shared part, at the cost of one team fewer. One service thread couldn't
-keep up. Two could: in a registered run, the layout was 4.5% faster than the default, on one
+every team member for the shared part, at the cost of one team fewer. Beside three teams, one
+service thread couldn't keep up. Beside two teams, two could. In a registered run, the layout was 4.5% faster than the default, on one
 decoding thread fewer and with 12.7% less processor time. Two teams without service threads were
 slower, so the service threads are part of the gain. Which part of the layout earns it isn't
 separated. Preparing further ahead didn't detectably help, and what the teams still wait for isn't
@@ -431,8 +435,8 @@ The second is the list of steps a default would need, starting with a rule that 
 only where it was measured.
 
 The general lesson: work that can't be shared can be moved off the threads that share the rest,
-but the threads it moves to then set the pace. Here one was too few and two were enough, and only
-measuring showed which.
+but the threads it moves to then set the pace. Here one was too few for three teams and two were
+enough for two, and only measuring showed it.
 
 ---
 
