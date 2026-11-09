@@ -175,8 +175,18 @@ check, refused by the judge as DRY; INCOMPLETE by a crashing harness; REFUSED un
 and changed-after-freeze) and through `just submit`. `bench/test_service_guarded.py` (CI) holds
 the judge to the Researcher's witnesses and the rest of its admission. **A DRY run still reads
 clocks (one round of `ab run`); its numbers are excluded from evidence and the judge refuses
-it.** The real builds' path is to be exercised once more before readiness, on a throwaway
-clone with a pointer-only freeze, untimed, without editing the eventual frozen inputs.
+it.**
+
+**The real path, exercised once (not evidence):** on the shared 4-core machine (not the
+target), in a throwaway clone (never pushed) of 1e635647 with the recipe imported and a
+pointer-only freeze (base: master 5c98d423; candidate: the clone's commit), `just
+bench-service-guarded 1 <a small .bz2>`: the base's real release build in its worktree and the
+head's, the copied and hashed binaries and the twin, the real preflight (NOT TARGET, exit 3,
+recorded; the DRY check continued), the manifest (`corpus.sha256`, `arms.txt`, `inputs.txt`),
+one round of `ab run` (9 runs), the judge's report and the bundle (25 files). Outcome INVALID
+(identity): a DRY run, the corpus not the registered one, the preflight NOT TARGET, the
+outputs not the registered length, as it should be. The eventual frozen inputs were not
+edited for it.
 
 ## The model (before any run; not a prediction to be judged)
 
