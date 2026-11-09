@@ -108,7 +108,10 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
       a thread started inside the region must be at least 10 times the count with it in a thread
       started before, so a counter whose inheritance is removed fails.
 
-    The hardware counters' region coverage is not validated. Each spin has a 10 s wall-time
+    Where a reading failed decides its case's status (Guardian D066): an event that couldn't be
+    opened is UNAVAILABLE, but a control or read failure after opening is INCOMPLETE. That holds
+    in either inheritance region, and in `multiplex-live` before multiplexing is judged. Each
+    failed reading carries its stage. The hardware counters' region coverage is not validated. Each spin has a 10 s wall-time
     deadline, with checked CPU accounting. A case without its events is UNAVAILABLE, never
     PASS.
   - **`just bench-telemetry-check`:** that check once, on a workstation, as one bundle.

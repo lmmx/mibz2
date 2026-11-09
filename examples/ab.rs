@@ -2200,6 +2200,32 @@ mod machine {
         pub running: u64,
     }
 
+    /// Where a counter's reading failed (D066): it couldn't be opened here (UNAVAILABLE in
+    /// the check), or it was opened and then its enable, disable or read failed (INCOMPLETE)
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum Stage {
+        Open,
+        Control,
+        Read,
+    }
+
+    /// A failed reading: its stage and its reason
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Fault {
+        pub stage: Stage,
+        pub why: String,
+    }
+
+    /// A counter's reading, or where and why it failed
+    pub type Got = Result<Reading, Fault>;
+
+    fn fault(stage: Stage, why: impl Into<String>) -> Fault {
+        Fault {
+            stage,
+            why: why.into(),
+        }
+    }
+
     impl Reading {
         /// Whether it counted the whole of the time it was enabled (not multiplexed)
         pub fn whole(&self) -> bool {
@@ -2407,7 +2433,7 @@ mod machine {
         /// `finish`, with each counter's reading beside the record's fields: cycles,
         /// instructions, reference cycles and the task clock, in that order
         #[allow(clippy::type_complexity)]
-        pub fn collect(self) -> (Vec<(&'static str, Result<Reading, String>)>, String) {
+        pub fn collect(self) -> (Vec<(&'static str, Got)>, String) {
             let ctl = self.ctl.take();
             let failed = |name: &str| -> Option<String> {
                 let v: Vec<String> = ctl
@@ -2417,19 +2443,22 @@ mod machine {
                     .collect();
                 (!v.is_empty()).then(|| v.join(", "))
             };
-            let get = |name: &str| -> Result<Reading, String> {
-                let fd = *self.counter(name).as_ref().map_err(Clone::clone)?;
+            let get = |name: &str| -> Got {
+                let fd = *self
+                    .counter(name)
+                    .as_ref()
+                    .map_err(|e| fault(Stage::Open, e.clone()))?;
                 // SAFETY: an open perf event descriptor this Perf owns, taken once: the File
                 // closes it when dropped
                 let mut file = unsafe { owned(fd) };
                 // (a counter whose enable or disable failed is invalid, whatever it reads)
                 if let Some(why) = failed(name) {
-                    return Err(format!("its {why}"));
+                    return Err(fault(Stage::Control, format!("its {why}")));
                 }
                 // (the value, time enabled and time running: read_format 3)
                 let mut raw = [0u8; 24];
                 std::io::Read::read_exact(&mut file, &mut raw)
-                    .map_err(|e| format!("reading the counter: {e}"))?;
+                    .map_err(|e| fault(Stage::Read, format!("reading the counter: {e}")))?;
                 let w = |i: usize| u64::from_ne_bytes(raw[8 * i..8 * i + 8].try_into().unwrap());
                 Ok(Reading {
                     value: w(0),
@@ -2437,11 +2466,18 @@ mod machine {
                     running: w(2),
                 })
             };
+            let got = [
+                ("cycles", get("cycles")),
+                ("instructions", get("instructions")),
+                ("ref_cycles", get("ref_cycles")),
+                ("task_clock", get("task_clock")),
+            ];
+            let why = |g: &Got| g.clone().map_err(|f| f.why);
             let (cy, ins, rc, tc) = (
-                get("cycles"),
-                get("instructions"),
-                get("ref_cycles"),
-                get("task_clock"),
+                why(&got[0].1),
+                why(&got[1].1),
+                why(&got[2].1),
+                why(&got[3].1),
             );
             let all = [
                 ("cycles", &cy),
@@ -2509,15 +2545,7 @@ mod machine {
                 running.map_or("null".into(), |x| format!("{x:.6}"))
             ));
             f.push(field("eff_ghz", &eff, |x| format!("{x:.3}")));
-            (
-                vec![
-                    ("cycles", cy),
-                    ("instructions", ins),
-                    ("ref_cycles", rc),
-                    ("task_clock", tc),
-                ],
-                format!(",{}", f.join(",")),
-            )
+            (got.into_iter().collect(), format!(",{}", f.join(",")))
         }
         /// `ab env`'s `perf` field: what the counters would count here
         pub fn probe() -> String {
@@ -2607,13 +2635,17 @@ mod machine {
     }
 
     /// A reading's JSON: raw value, enabled and running, or null with its reason
-    fn reading_json(name: &str, r: &Result<Reading, String>) -> String {
+    fn reading_json(name: &str, r: &Got) -> String {
         match r {
             Ok(x) => format!(
                 "\"{name}\":{{\"value\":{},\"enabled_ns\":{},\"running_ns\":{}}}",
                 x.value, x.enabled, x.running
             ),
-            Err(e) => format!("\"{name}\":null,\"{name}_why\":{}", js(e)),
+            Err(e) => format!(
+                "\"{name}\":null,\"{name}_why\":{},\"{name}_stage\":\"{:?}\"",
+                js(&e.why),
+                e.stage
+            ),
         }
     }
 
@@ -2633,33 +2665,105 @@ mod machine {
     /// open (`before`), with the opener idle in both. A counter passes only if both readings
     /// are valid and whole, and `inside` is at least ten times `before` (and nonzero):
     /// removing that counter's inheritance makes `inside` the opener's idle count, and fails
-    pub fn inherit_status(
-        inside: &Result<Reading, String>,
-        before: &Result<Reading, String>,
-    ) -> (&'static str, String) {
-        match (inside, before) {
-            (Err(e), _) | (_, Err(e)) if e.starts_with("its ") => {
-                ("INCOMPLETE", format!("a control operation failed: {e}"))
-            }
-            (Err(e), _) | (_, Err(e)) => ("UNAVAILABLE", e.clone()),
-            (Ok(a), Ok(b)) if !a.whole() || !b.whole() => (
+    pub fn inherit_status(inside: &Got, before: &Got) -> (&'static str, String) {
+        // (both regions' faults first: a control or read failure after a successful open is
+        // INCOMPLETE, whichever region it is in and whatever the other shows; only then an
+        // event that couldn't be opened is UNAVAILABLE)
+        let faults: Vec<(&str, &Fault)> = [("inside", inside), ("before", before)]
+            .into_iter()
+            .filter_map(|(k, r)| r.as_ref().err().map(|f| (k, f)))
+            .collect();
+        let say = |fs: &[(&str, &Fault)]| {
+            fs.iter()
+                .map(|(k, f)| format!("{k}: {:?}: {}", f.stage, f.why))
+                .collect::<Vec<_>>()
+                .join("; ")
+        };
+        if faults.iter().any(|(_, f)| f.stage != Stage::Open) {
+            return ("INCOMPLETE", say(&faults));
+        }
+        if !faults.is_empty() {
+            return ("UNAVAILABLE", say(&faults));
+        }
+        let (Ok(a), Ok(b)) = (inside, before) else {
+            unreachable!("no faults, so both readings are valid")
+        };
+        if !a.whole() || !b.whole() {
+            (
                 "INCOMPLETE",
                 "multiplexed: the counts don't cover their enabled time".into(),
-            ),
-            (Ok(a), Ok(b)) if a.value > 0 && a.value >= 10 * b.value.max(1) => (
+            )
+        } else if a.value > 0 && a.value >= 10 * b.value.max(1) {
+            (
                 "PASS",
                 format!(
                     "{} counted with the work in a thread started in the region, {} with it in a thread started before",
                     a.value, b.value
                 ),
-            ),
-            (Ok(a), Ok(b)) => (
+            )
+        } else {
+            (
                 "FAIL",
                 format!(
                     "{} counted with the work in a thread started in the region, {} with it in a thread started before: no inheritance shown",
                     a.value, b.value
                 ),
-            ),
+            )
+        }
+    }
+
+    /// The live multiplexing case's status, from the record's readings and its fields
+    /// (D066): any control or read failure on an opened counter is INCOMPLETE, before
+    /// multiplexing is judged; a counter that couldn't be opened is left out. Then: no
+    /// multiplexed counter is OBSERVED ("not exercised"), never a pass; a multiplexed
+    /// counter is PASS only if the record lists it and eff_ghz follows its rule
+    pub fn multiplex_status(rs: &[(&'static str, Got)], f: &str) -> (&'static str, String) {
+        let broken: Vec<String> = rs
+            .iter()
+            .filter_map(|(n, r)| match r {
+                Err(x) if x.stage != Stage::Open => Some(format!("{n}: {:?}: {}", x.stage, x.why)),
+                _ => None,
+            })
+            .collect();
+        if !broken.is_empty() {
+            return (
+                "INCOMPLETE",
+                format!("a control or read failed: {}", broken.join("; ")),
+            );
+        }
+        let partial: Vec<&str> = rs
+            .iter()
+            .filter(|r| r.1.as_ref().is_ok_and(|x| !x.whole()))
+            .map(|r| r.0)
+            .collect();
+        if partial.is_empty() {
+            return (
+                "OBSERVED",
+                "multiplexing not exercised: every valid counter ran its whole enabled time".into(),
+            );
+        }
+        let mux = f
+            .split_once("\"perf_multiplexed\":[")
+            .and_then(|x| x.1.split_once(']'))
+            .map_or("", |x| x.0);
+        let listed = partial.iter().all(|n| mux.contains(&format!("\"{n}\"")));
+        let divides = partial.iter().any(|n| *n == "cycles" || *n == "task_clock");
+        if listed && (!divides || f.contains("\"eff_ghz\":null")) {
+            (
+                "PASS",
+                format!(
+                    "multiplexed: {}; the record lists them and eff_ghz follows",
+                    partial.join(", ")
+                ),
+            )
+        } else {
+            (
+                "FAIL",
+                format!(
+                    "multiplexed: {}; the record doesn't say so",
+                    partial.join(", ")
+                ),
+            )
         }
     }
 
@@ -2670,7 +2774,7 @@ mod machine {
     fn inherit_region(
         open: &dyn Fn() -> Perf,
         before: bool,
-    ) -> Result<Vec<(&'static str, Result<Reading, String>)>, String> {
+    ) -> Result<Vec<(&'static str, Got)>, String> {
         let (go, wait) = std::sync::mpsc::channel::<()>();
         let early = before.then(|| {
             std::thread::spawn(move || {
@@ -2688,7 +2792,7 @@ mod machine {
                 .collect()
                 .0
                 .into_iter()
-                .map(|(n, _)| (n, Err(e.clone())))
+                .map(|(n, _)| (n, Err(fault(Stage::Open, e.clone()))))
                 .collect());
         }
         p.enable();
@@ -2856,36 +2960,16 @@ mod machine {
                     drop(unsafe { owned(*fd) });
                 }
                 let (rs, f) = p.collect();
-                let partial: Vec<&str> = rs
-                    .iter()
-                    .filter(|r| r.1.as_ref().is_ok_and(|x| !x.whole()))
-                    .map(|r| r.0)
-                    .collect();
-                let mux = f
-                    .split_once("\"perf_multiplexed\":[")
-                    .and_then(|x| x.1.split_once(']'))
-                    .map_or("", |x| x.0);
-                let listed = partial.iter().all(|n| mux.contains(&format!("\"{n}\"")));
-                let divides = partial.iter().any(|n| *n == "cycles" || *n == "task_clock");
-                let consistent = listed && (!divides || f.contains("\"eff_ghz\":null"));
                 let counts = format!(
                     "{attempted} extra cycle counters attempted, {} opened, {enabled} enabled",
                     opened.len()
                 );
                 let (st, d) = match s {
                     Err(e) => ("INCOMPLETE", format!("{counts}; {e}")),
-                    Ok(()) if partial.is_empty() => (
-                        "OBSERVED",
-                        format!("{counts}; multiplexing not exercised: every counter ran its whole enabled time"),
-                    ),
-                    Ok(()) if consistent => (
-                        "PASS",
-                        format!("{counts}; multiplexed: {}; the record lists them and eff_ghz follows", partial.join(", ")),
-                    ),
-                    Ok(()) => (
-                        "FAIL",
-                        format!("{counts}; multiplexed: {}; the record doesn't say so", partial.join(", ")),
-                    ),
+                    Ok(()) => {
+                        let (st, d) = multiplex_status(&rs, &f);
+                        (st, format!("{counts}; {d}"))
+                    }
                 };
                 out(st, case("multiplex-live", st, &d, &f));
             }
@@ -2996,12 +3080,20 @@ mod machine {
                 );
                 let (st, d) = match (&work, &u, &a, &times) {
                     (Err(e), ..) => ("INCOMPLETE", e.clone()),
-                    (_, Err(e), _, _) | (_, _, Err(e), _) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e), _, _) | (_, _, Err(e), _) => {
+                        ("INCOMPLETE", format!("{:?}: {}", e.stage, e.why))
+                    }
                     (_, _, _, Err(e)) => ("INCOMPLETE", e.clone()),
-                    (_, Ok(x), Ok(y), _) if !x.whole() || !y.whole() || y.value == 0 => (
-                        "INCOMPLETE",
-                        "a reading was multiplexed or zero: no ratio".into(),
-                    ),
+                    // (both nonzero, as registered: over 50 ms of this thread's CPU, a zero
+                    // either way is no reading of the flag)
+                    (_, Ok(x), Ok(y), _)
+                        if !x.whole() || !y.whole() || x.value == 0 || y.value == 0 =>
+                    {
+                        (
+                            "INCOMPLETE",
+                            "a reading was multiplexed or zero: no ratio".into(),
+                        )
+                    }
                     (_, Ok(x), Ok(y), Ok((us, ss))) => {
                         let r = x.value as f64 / y.value as f64;
                         let sys = ss / (us + ss).max(1e-9);
@@ -3073,7 +3165,7 @@ mod machine {
                 let tc = rs[3].1.clone();
                 let (st, d) = match (&s, &tc) {
                     (Err(e), _) => ("INCOMPLETE", e.clone()),
-                    (_, Err(e)) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e)) => ("INCOMPLETE", format!("{:?}: {}", e.stage, e.why)),
                     (_, Ok(x)) if !x.whole() => ("INCOMPLETE", "multiplexed".into()),
                     (_, Ok(x)) => {
                         let v = x.value as f64 * 1e-9;
@@ -3485,23 +3577,114 @@ mod machine {
         /// or a multiplexed reading
         #[test]
         fn inheritance_witness_negative_controls() {
-            let r = |value, running| -> Result<Reading, String> {
+            let r = |value, running| -> Got {
                 Ok(Reading {
                     value,
                     enabled: 100,
                     running,
                 })
             };
+            let f = |stage, why: &str| -> Got { Err(fault(stage, why)) };
             assert_eq!(inherit_status(&r(80_000, 100), &r(500, 100)).0, "PASS");
             // inheritance removed: inside is the opener's idle count, as before
             assert_eq!(inherit_status(&r(500, 100), &r(480, 100)).0, "FAIL");
             assert_eq!(inherit_status(&r(0, 100), &r(0, 100)).0, "FAIL");
-            // a null, a failed control, a multiplexed reading: never PASS
-            let null: Result<Reading, String> = Err("no such event here".into());
-            let ctl: Result<Reading, String> = Err("its enable failed (errno 25)".into());
-            assert_eq!(inherit_status(&null, &r(1, 100)).0, "UNAVAILABLE");
+            // never a pass on a missing, failed or multiplexed reading
+            let unopened = f(Stage::Open, "no such event here");
+            assert_eq!(inherit_status(&unopened, &r(1, 100)).0, "UNAVAILABLE");
+            let ctl = f(Stage::Control, "its enable failed (errno 25)");
             assert_eq!(inherit_status(&r(80_000, 100), &ctl).0, "INCOMPLETE");
             assert_eq!(inherit_status(&r(80_000, 50), &r(1, 100)).0, "INCOMPLETE");
+            // D066's witnesses: a failed read is INCOMPLETE, not UNAVAILABLE; and an
+            // unavailable first reading can't hide a control failure in the second
+            let eio = f(
+                Stage::Read,
+                "reading the counter: Input/output error (os error 5)",
+            );
+            assert_eq!(inherit_status(&eio, &r(1, 100)).0, "INCOMPLETE");
+            assert_eq!(inherit_status(&r(80_000, 100), &eio).0, "INCOMPLETE");
+            let (st, why) = inherit_status(&unopened, &ctl);
+            assert_eq!(st, "INCOMPLETE");
+            assert!(
+                why.contains("inside: Open") && why.contains("before: Control"),
+                "{why}"
+            );
+            // with no independent FAIL, those make the check's exit 3
+            let statuses = [
+                "PASS",
+                "UNAVAILABLE",
+                inherit_status(&eio, &r(1, 100)).0,
+                inherit_status(&unopened, &ctl).0,
+            ];
+            assert_eq!(exit_code(&statuses), 3);
+        }
+
+        /// D066's multiplexing witnesses: failed controls or reads on opened counters are
+        /// INCOMPLETE before multiplexing is judged; only valid, exercised multiplexing
+        /// listed in the record passes; none exercised is OBSERVED
+        #[test]
+        fn multiplex_status_negative_controls() {
+            let whole = |v| -> Got {
+                Ok(Reading {
+                    value: v,
+                    enabled: 100,
+                    running: 100,
+                })
+            };
+            let half = |v| -> Got {
+                Ok(Reading {
+                    value: v,
+                    enabled: 100,
+                    running: 50,
+                })
+            };
+            let f = |stage, why: &str| -> Got { Err(fault(stage, why)) };
+            let names = ["cycles", "instructions", "ref_cycles", "task_clock"];
+            let rec =
+                |v: [Got; 4]| -> Vec<(&'static str, Got)> { names.into_iter().zip(v).collect() };
+            // every opened counter's control failed: INCOMPLETE, never "whole enabled time"
+            let all_failed = rec([
+                f(Stage::Control, "its enable failed (errno 9)"),
+                f(Stage::Control, "its enable failed (errno 9)"),
+                f(Stage::Read, "reading the counter: os error 5"),
+                f(Stage::Control, "its enable failed (errno 9)"),
+            ]);
+            let none = "\"perf_multiplexed\":[],\"eff_ghz\":null";
+            assert_eq!(multiplex_status(&all_failed, none).0, "INCOMPLETE");
+            // cycles' control failed while instructions multiplexed: INCOMPLETE, not PASS
+            let mixed = rec([
+                f(Stage::Control, "its disable failed (errno 9)"),
+                half(50),
+                whole(10),
+                whole(10),
+            ]);
+            let listed = "\"perf_multiplexed\":[\"instructions\"],\"eff_ghz\":null";
+            assert_eq!(multiplex_status(&mixed, listed).0, "INCOMPLETE");
+            // a counter that couldn't be opened is left out
+            let unopened = rec([
+                whole(10),
+                half(50),
+                f(Stage::Open, "no such event here"),
+                whole(10),
+            ]);
+            assert_eq!(multiplex_status(&unopened, listed).0, "PASS");
+            // nothing multiplexed: OBSERVED, not exercised
+            let clean = rec([whole(1), whole(1), whole(1), whole(1)]);
+            let (st, d) = multiplex_status(&clean, none);
+            assert_eq!(st, "OBSERVED");
+            assert!(d.contains("not exercised"), "{d}");
+            // multiplexed but not listed, or cycles multiplexed with eff_ghz standing: FAIL
+            assert_eq!(multiplex_status(&unopened, none).0, "FAIL");
+            let cyc = rec([half(5), whole(1), whole(1), whole(1)]);
+            let standing = "\"perf_multiplexed\":[\"cycles\"],\"eff_ghz\":1.000";
+            assert_eq!(multiplex_status(&cyc, standing).0, "FAIL");
+            // with no independent FAIL, the two D066 witnesses make the exit 3
+            let statuses = [
+                "PASS",
+                multiplex_status(&all_failed, none).0,
+                multiplex_status(&mixed, listed).0,
+            ];
+            assert_eq!(exit_code(&statuses), 3);
         }
 
         #[test]
