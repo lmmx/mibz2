@@ -573,6 +573,117 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
 
+# The service core on the workstation (docs/journal/2026-11-07-service-core-registration.md,
+# registered before any run): at budgets of 10 and 12 decode threads, today's default (mibz2:
+# 0.2.6's pipelined 3 x 3 with park and small, on the ten-core topology), the plain team
+# (mibz2-team3, and at 10 its twin, the noise control) and the service core (mibz2-svc1,
+# mibz2-svc2, mibz2-svc1-t2), each budget its own ab run, interleaved by round;
+# then occupancy traces of every service arm with its t.svc.* figures; then
+# bench/service_core.py's report and verdict. About 40 minutes. Close the browser and
+# anything busy first.
+#   just submit bench-service-core
+# DRY (the second argument, positional: `just bench-service-core 20 1`) is the untimed check
+# of the recipe itself (one round, one trace round, no settling): never evidence, and the
+# report never calls it VALID. CORPUS (the third, positional) is a .bz2 to use instead of
+# building the bench's sample.
+
+# The service core (svc1, svc2, svc1-t2) against the plain team and today's pipelined default
+bench-service-core ROUNDS="20" DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/service-core
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-service-core: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-service-core: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-service-core: $*"; exit 1; }
+    rounds={{ROUNDS}}; trace_rounds=6; busy=(); dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      rounds=1; trace_rounds=1; busy=(--max-busy 64 --settle 0.2)
+      echo "bench-service-core: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/service-core.frozen): everything the run is
+    # built, driven and judged from must be as it was there
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/service-core.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/service-core.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/service_core.py bench/team_size.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-service-core-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
+    AB=$PWD/target/release/examples/ab
+    corpus="{{CORPUS}}"
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha256sum "$corpus" > "$W/corpus.sha256"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    # one ab run a budget (each comparison is within its own budget), appended to one file
+    for t in 10 12; do
+      # (the noise control's twin at 10 only)
+      if [ "$t" = 10 ]; then twin=",mibz2-team3-twin"; else twin=""; fi
+      arms="mibz2,mibz2-team3$twin,mibz2-svc1,mibz2-svc2,mibz2-svc1-t2"
+      "$AB" run "$W/runs.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    done
+    "$AB" summary "$W/runs.jsonl" --ref mibz2-team3 > "$W/summary.txt" || true
+    occ=()
+    for ts in 10:1 10:2 10:1t2 12:1 12:2 12:1t2; do
+      IFS=: read -r t s <<< "$ts"
+      name="occupancy-t$t-svc$s"
+      o="$W/$name.json"
+      if target/release/examples/occupancy "$W/wikidata.bz2" --threads "$t" --svc "$s" \
+          --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
+          > "$W/$name.txt" 2>&1; then
+        occ+=("$o")
+      else
+        echo "bench-service-core: the occupancy pass at $t threads, svc $s, failed"
+      fi
+    done
+    status=0
+    python3 bench/service_core.py report "$W/runs.jsonl" --occupancy "${occ[@]}" \
+      --out "$W/service-core" || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/service-core.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see service-core.md for the registered comparisons' outcomes" ;;
+      INVALID) outcome="INVALID: see service-core.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
+
 # The pipelined team's two levers on the workstation
 # (docs/journal/2026-11-07-pipeline-levers-registration.md, registered before any run): at
 # 3 × 3 on 10 threads and 3 × 4 on 12, the registered pipe (mibz2-pipe3/4) against each lever

@@ -1197,6 +1197,76 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
     caught.map_or(Ok(()), Err)
 }
 
+/// A service-core team's run (`parallel`'s service core, research, opt-in): `bwt::Cooperative`'s
+/// cooperative inversion on the pool's k threads, `build_fused` and `walk_room` as they are
+/// (each a pool run of `FusedBuild`'s and `RoomWalk`'s shares, the pool's own waits between),
+/// with the trace's per-thread marks, and without the walk's assembly: the segments are left
+/// in `seg` for `SegScratch::assemble`, which the service worker runs. So a team's threads
+/// only build and walk, exactly as a `Cooperative<k>` team's do, and `seg` then holds what
+/// `walk_room` leaves.
+///
+/// If the fused build refuses its inputs or fails its end check (a bug in their maker, as
+/// `bwt::Cooperative` says), the table is built on this thread instead, so the output is
+/// still right (and a debug build stops at the assertion). A panic in any thread's share is
+/// resumed here once the pool's threads have ended (`Pool::run`); then the table and `seg`
+/// are not to be trusted, and the caller resets them. `panic_on` is the tests' fault hook:
+/// the pool thread of that index panics in its walk share.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn invert_team<const L: usize>(
+    pool: &Pool,
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    stride: usize,
+    orig_ptr: u32,
+    tt: &mut TVector,
+    seg: &mut SegScratch,
+    place: u64,
+    panic_on: Option<usize>,
+) {
+    let _ = place;
+    let shares = pool.threads().min(MAX_SHARES);
+    let tt = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
+        Ok(b) => {
+            pool.run(&|j| {
+                tmark!(BuildStart, place);
+                b.share(j);
+                tmark!(BuildEnd, place);
+            });
+            match b.finish() {
+                (Ok(()), tt) => tt,
+                (Err(e), tt) => {
+                    debug_assert!(false, "the cooperative build failed its check: {}", e.0);
+                    crate::bwt::build(ll, counts, tt);
+                    tt
+                }
+            }
+        }
+        Err((e, tt)) => {
+            debug_assert!(
+                false,
+                "the cooperative build refused its checkpoints: {}",
+                e.0
+            );
+            crate::bwt::build(ll, counts, tt);
+            tt
+        }
+    };
+    tmark!(WalkSetupStart, place);
+    let segments = crate::bwt::FLAGGED_SEGMENTS * pool.threads();
+    let w = RoomWalk::new(tt, orig_ptr, seg, segments);
+    tmark!(WalkSetupEnd, place);
+    pool.run(&|j| {
+        tmark!(WalkStart, place);
+        if panic_on == Some(j) {
+            panic!("an injected panic in team thread {j}'s walk");
+        }
+        w.share::<L>();
+        tmark!(WalkEnd, place);
+    });
+    w.finish();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1972,6 +2042,67 @@ mod tests {
             assert_eq!(woke.load(Ordering::Relaxed), 3);
             // (a waiter that listed itself after the setter's unparks found the flag set
             // and never parked: its entry is left in the list, dropped with the run's relay)
+        }
+    }
+
+    /// The service core's team run (`invert_team`): the segments it leaves assemble to
+    /// `walk`'s output, at every pool size, run after run on one pool; a thread's injected
+    /// panic is resumed once the pool's threads have ended, and the pool and fresh buffers
+    /// still give the right output afterwards (under Miri: its race detector on the shares'
+    /// writes and the hand-offs between the two runs)
+    #[test]
+    fn miri_team_run_and_its_panic() {
+        let mut r = xorshift(37);
+        let n = if cfg!(miri) {
+            1300
+        } else {
+            crate::bwt::MIN_COOP + 777
+        };
+        let stride = if cfg!(miri) { 64 } else { CP };
+        let ll: Vec<u8> = (0..n).map(|_| (r() % 6) as u8).collect();
+        let counts = counts_of(&ll);
+        let cps = checkpoints_of(&ll, stride);
+        let mut want_tt = TVector::new();
+        crate::bwt::build(&ll, &counts, &mut want_tt);
+        for k in [1, 2, 3] {
+            let p = Pool::new(k).unwrap();
+            let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+            for op in [0, n as u32 / 2, n as u32 - 1] {
+                let mut want = Vec::new();
+                crate::bwt::walk(&want_tt, op, &mut want);
+                invert_team::<8>(
+                    &p, &ll, &counts, &cps, stride, op, &mut tt, &mut seg, 0, None,
+                );
+                let mut out = vec![9; 5];
+                seg.assemble(&mut out);
+                assert!(out == want, "k {k}, orig_ptr {op}");
+                assert!(tt.0 == want_tt.0, "k {k}: the table");
+            }
+            let bad = k - 1;
+            let r = catch_unwind(AssertUnwindSafe(|| {
+                invert_team::<8>(
+                    &p,
+                    &ll,
+                    &counts,
+                    &cps,
+                    stride,
+                    3,
+                    &mut tt,
+                    &mut seg,
+                    0,
+                    Some(bad),
+                )
+            }));
+            let msg = r.unwrap_err();
+            assert!(msg.downcast_ref::<String>().unwrap().contains("injected"));
+            let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+            invert_team::<8>(
+                &p, &ll, &counts, &cps, stride, 3, &mut tt, &mut seg, 0, None,
+            );
+            let (mut want, mut out) = (Vec::new(), Vec::new());
+            crate::bwt::walk(&want_tt, 3, &mut want);
+            seg.assemble(&mut out);
+            assert!(out == want, "k {k}: after the panic");
         }
     }
 
