@@ -1408,11 +1408,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6740161956,
-    "status": "finished",
-    "decision": "D068",
-    "work_commit": "962bd3dcfbd71c16e0f8be7c67290aa12f5857a3",
-    "review_comment_id": 6740291714
+    "active_comment": 6741180673,
+    "status": "in progress",
+    "decision": "D069"
   },
   "duplicate_events": [
     {
@@ -2393,6 +2391,12 @@
       "review_comment_id": 6740291714,
       "complete_cursor_commit": "178f75e96941826a0f10af0888324b27c1e32f7e",
       "progress": "Exact REVIEW readback verified on #145; pinned verifier has sole coordinator-header limitation; independent Guardian checks pass."
+    },
+    {
+      "comment_id": 6741180673,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D069"
     }
   ],
   "migrated_from": {
