@@ -1,0 +1,36 @@
+{
+  "positive": {
+    "verdict": "PASS",
+    "problems": []
+  },
+  "missing_quota": {
+    "verdict": "REFUSED",
+    "problems": [
+      "ab env: the cgroup CPU quota None is not established (no hierarchy's facts: missing, or the legacy scalar, where null was both unknown and unlimited)"
+    ]
+  },
+  "float_cpu_counts": {
+    "verdict": "REFUSED",
+    "problems": [
+      "ab env: 20.0 CPUs allowed, not 20",
+      "ab env: 10.0 physical cores, not 10"
+    ]
+  },
+  "integer_turbo": {
+    "verdict": "REFUSED",
+    "problems": [
+      "ab env: turbo 1, not the declared True",
+      "sample 0: turbo 1, not the declared True",
+      "sample 1: turbo 1, not the declared True",
+      "sample 2: turbo 1, not the declared True"
+    ]
+  },
+  "invented_cpu_ids": {
+    "verdict": "REFUSED",
+    "problems": [
+      "sample 0: scaling_cur_freq is not keyed by the allowed CPUs: [\"0\", \"1\", \"10\", \"11\", \"12\", \"13\"]",
+      "sample 1: scaling_cur_freq is not keyed by the allowed CPUs: [\"0\", \"1\", \"10\", \"11\", \"12\", \"13\"]",
+      "sample 2: scaling_cur_freq is not keyed by the allowed CPUs: [\"0\", \"1\", \"10\", \"11\", \"12\", \"13\"]"
+    ]
+  }
+}

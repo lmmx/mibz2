@@ -1,0 +1,22 @@
+[
+  {
+    "collector_exit": 0,
+    "checker_exit": 0,
+    "verdict": "PASS"
+  },
+  {
+    "collector_exit": 17,
+    "checker_exit": 0,
+    "verdict": "PASS"
+  },
+  {
+    "collector_exit": 124,
+    "checker_exit": 0,
+    "verdict": "PASS"
+  },
+  {
+    "collector_exit": 137,
+    "checker_exit": 0,
+    "verdict": "PASS"
+  }
+]
