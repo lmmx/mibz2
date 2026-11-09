@@ -671,7 +671,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "03e52206ac248737bc856f064928adf238265917",
-      "progress": "Receipt: migration exact head and manifest digest verified; replay and production-path source audit pending."
+      "progress": "Artifact13650328398 SHA256 verified; pinned reporter replays VALID attributed LEAD. Source audit finds mixed C29(list+run stores), nonmatched rejected-block kernels, no default1/2/4 exposure, and ls/reg rank reversal at3 versus9 threads. Final derivation and registrations pending."
     }
   ],
   "migrated_from": {
