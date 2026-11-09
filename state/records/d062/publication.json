@@ -1,0 +1,15 @@
+{
+  "input": 6733879388,
+  "review_comment_id": 6733983929,
+  "output_pr": 145,
+  "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+  "complete_cursor_commit": "ea09a7084da0a1de032c553b8749ef20951c479d",
+  "body_verified_exact": true,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_verification": "passed: exact body, destination, headers, input citation, immutable work link"
+}

@@ -957,10 +957,11 @@
       "sha": "14134d696ac4792e9e1980b83b782d514ec5c8bb",
       "evidence_digest": "git-blob:ae399a7014ebdcf8f1a4b73446410975f242d490",
       "decision": "G1",
-      "status": "complete",
+      "status": "finished",
       "commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
       "receipt_commit": "b8bcbeef89b2f907e897d10bda806268eb481e00",
-      "disposition": "Cost/CPU-formatting corrections close; revise unsupported join-before-take claim; existing CI pending, no new B5 hold"
+      "disposition": "Cost/CPU-formatting corrections close; revise unsupported join-before-take claim; existing CI pending, no new B5 hold",
+      "comment": 6733983929
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1020,7 +1021,8 @@
     6732989448,
     6733239555,
     6733356125,
-    6733631922
+    6733631922,
+    6733983929
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1146,7 +1148,8 @@
     "ffff8b8635127a61daad79056179c97ea696af37",
     "71d2a1bc57f170eabec2bd1e57fd77d678a6d095",
     "b8bcbeef89b2f907e897d10bda806268eb481e00",
-    "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47"
+    "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+    "ea09a7084da0a1de032c553b8749ef20951c479d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1289,9 +1292,10 @@
   },
   "current_execution": {
     "active_comment": 6733879388,
-    "status": "complete",
+    "status": "finished",
     "decision": "D062",
-    "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47"
+    "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+    "review_comment_id": 6733983929
   },
   "duplicate_events": [
     {
@@ -1771,6 +1775,14 @@
       "decision": "D061",
       "commit": "ffff8b8635127a61daad79056179c97ea696af37",
       "comment": 6733631922
+    },
+    {
+      "pr": 270,
+      "sha": "14134d696ac4792e9e1980b83b782d514ec5c8bb",
+      "evidence_digest": "git-blob:ae399a7014ebdcf8f1a4b73446410975f242d490",
+      "decision": "D062",
+      "commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+      "comment": 6733983929
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2144,11 +2156,13 @@
     {
       "comment_id": 6733879388,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D062",
       "receipt_commit": "b8bcbeef89b2f907e897d10bda806268eb481e00",
       "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
-      "progress": "D062 work committed; join-before-take claim disputed, other corrections close; REVIEW pending."
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier has sole coordinator-header limitation; independent Guardian checks passed.",
+      "review_comment_id": 6733983929,
+      "complete_cursor_commit": "ea09a7084da0a1de032c553b8749ef20951c479d"
     }
   ],
   "migrated_from": {
