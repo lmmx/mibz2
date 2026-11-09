@@ -42,6 +42,10 @@ python = ["dep:pyo3"]
 # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
 # by default, and each mark a relaxed load when compiled in and not turned on
 trace = []
+# Research: the T-vector from MTF run records, sorted or placed directly (src/run_stage.rs,
+# mtf::mtf_runs), for examples/run_fed_stage.rs's diagnostic only; nothing in the decoder
+# calls it
+run-fed = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -82,3 +86,8 @@ unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 [[example]]
 name = "occupancy"
 required-features = ["trace"]
+
+# The run-fed stage's diagnostic (docs/journal/2026-11-09-run-fed-stage.md)
+[[example]]
+name = "run_fed_stage"
+required-features = ["run-fed"]

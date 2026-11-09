@@ -15,11 +15,20 @@
 //! and bit) as well as to libbzip2, and counted as reaching the pipeline when a leader took
 //! a job while its helpers inverted another block (`pipeline_counts`).
 //!
+//! The run-fed direct cases (MODE run-fed-direct, built with `--features run-fed`;
+//! research, docs/journal/2026-11-09-run-fed-direct.md §10): C31's `build_direct` and
+//! `place` held to production's MTF and build, and to an independent tiling oracle
+//! (examples/support/fuzz_direct.rs).
+//!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
-//! MODE: mixed (the default: every 8th case a pipeline case), classic, or pipeline
+//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline or
+//! run-fed-direct
 
 #[path = "../tests/common/mod.rs"]
 mod common;
+#[cfg(feature = "run-fed")]
+#[path = "support/fuzz_direct.rs"]
+mod fuzz_direct;
 
 use common::*;
 use std::collections::BTreeMap;
@@ -31,11 +40,17 @@ fn main() {
     let seed: u64 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
     let out_dir = args.get(3).cloned().filter(|d| d != "-");
     let mode = args.get(4).map_or("mixed", |s| s.as_str());
+    if mode == "run-fed-direct" {
+        #[cfg(feature = "run-fed")]
+        std::process::exit((fuzz_direct::run(secs, seed, &out_dir) > 0) as i32);
+        #[cfg(not(feature = "run-fed"))]
+        panic!("MODE run-fed-direct needs the build's --features run-fed");
+    }
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
         "pipeline" => 1,
-        m => panic!("MODE is mixed, classic or pipeline, not {m}"),
+        m => panic!("MODE is mixed, classic, pipeline or run-fed-direct, not {m}"),
     };
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 

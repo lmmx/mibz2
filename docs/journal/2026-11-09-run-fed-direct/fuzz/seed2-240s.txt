@@ -1,0 +1,9 @@
+1599373 cases in 240 s (seed 2, mode run-fed-direct, kernels [Kernels { avx2: false, clmul: false }, Kernels { avx2: true, clmul: true }]), 0 failures
+  by source: streams 532475, columns 533692, tilings 533206
+  blocks through build_direct (each on every kernel): 758086; by records 462635 (empty 14592, with one-slot tail stores 387700), by the fallback 215059; refused, as production: {"BlockTooLong": 61633, "RunTooLong": 18759}
+  tilings through place: untampered valid 133317, tampered still valid 58156, refused 341733 (each as the oracle says)
+
+real	4m0.082s
+user	3m59.086s
+sys	0m0.051s
+exit 0

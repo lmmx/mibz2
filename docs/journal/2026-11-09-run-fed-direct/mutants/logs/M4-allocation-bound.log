@@ -1,0 +1,23 @@
+== M4-allocation-bound:  1 file changed, 1 insertion(+), 1 deletion(-)
+== native tests
+test run_stage::tests::miri_direct_empty_block_by_records ... ok
+test run_stage::tests::miri_direct_unchecked_states_refused ... FAILED
+test run_stage::tests::direct_cases ... FAILED
+test run_stage::tests::miri_unchecked_states_refused ... ok
+test run_stage::tests::miri_sort_and_floor ... FAILED
+test run_stage::tests::tables_from_records_random ... FAILED
+test run_stage::tests::tables_from_records_small ... FAILED
+thread 'run_stage::tests::miri_direct_unchecked_states_refused' (7484) panicked at src/run_stage.rs:632:13:
+thread 'run_stage::tests::direct_cases' (7482) panicked at src/run_stage.rs:632:13:
+thread 'run_stage::tests::miri_sort_and_floor' (7485) panicked at src/run_stage.rs:632:13:
+thread 'run_stage::tests::tables_from_records_random' (7487) panicked at src/run_stage.rs:632:13:
+thread 'run_stage::tests::tables_from_records_small' (7488) panicked at src/run_stage.rs:632:13:
+test result: FAILED. 2 passed; 5 failed; 0 ignored; 0 measured; 58 filtered out; finished in 0.09s
+== the D fuzz mode, 20 s, seed 1
+    Finished `fuzz` profile [optimized + debuginfo] target(s) in 16.23s
+case 21889: Kernels { avx2: true, clmul: true }: an accepted tiling's table differs
+case 21893: Kernels { avx2: true, clmul: true }: an accepted tiling's table differs
+21893 cases in 20 s (seed 1, mode run-fed-direct, kernels [Kernels { avx2: false, clmul: false }, Kernels { avx2: true, clmul: true }]), 4860 failures
+  by source: streams 7323, columns 7318, tilings 7252
+  blocks through build_direct (each on every kernel): 10521; by records 2949 (empty 206, with one-slot tail stores 1726), by the fallback 2916; refused, as production: {"BlockTooLong": 885, "RunTooLong": 248}
+  tilings through place: untampered valid 861, tampered still valid 424, refused 4630 (each as the oracle says)

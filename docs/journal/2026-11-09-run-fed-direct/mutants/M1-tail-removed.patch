@@ -1,0 +1,13 @@
+diff --git a/src/run_stage.rs b/src/run_stage.rs
+index cb09d7da..a3d36d2b 100644
+--- a/src/run_stage.rs
++++ b/src/run_stage.rs
+@@ -493,7 +493,7 @@ unsafe fn place_rows<const V: bool>(
+                 let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
+                 let step = _mm256_set1_epi32(2048);
+                 let mut v = _mm256_add_epi32(_mm256_set1_epi32(base as i32), lanes);
+-                while w < ce && w + 8 <= bend {
++                while w < ce {
+                     // SAFETY: w + 8 <= bend <= n: the slots are the bucket's, written
+                     // again by its later cells and runs past ce
+                     _mm256_storeu_si256(out.add(w as usize) as *mut __m256i, v);

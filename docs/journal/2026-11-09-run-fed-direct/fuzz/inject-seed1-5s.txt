@@ -1,0 +1,7 @@
+case 15: Kernels { avx2: false, clmul: false }: the table differs (INJECTED)
+case 18: Kernels { avx2: false, clmul: false }: the table differs (INJECTED)
+18 cases in 5 s (seed 1, mode run-fed-direct, kernels [Kernels { avx2: false, clmul: false }, Kernels { avx2: true, clmul: true }], INJECTED failures), 2 failures
+  by source: streams 7, columns 3, tilings 8
+  blocks through build_direct (each on every kernel): 6; by records 4 (empty 0, with one-slot tail stores 4), by the fallback 0; refused, as production: {}
+  tilings through place: untampered valid 1, tampered still valid 2, refused 5 (each as the oracle says)
+exit 1

@@ -285,6 +285,187 @@ unsafe fn mtf_avx2(
     result.map(|()| n)
 }
 
+/// `mtf` with run records out instead of the last column: research, behind the `run-fed`
+/// feature (`run_stage`; docs/journal/2026-11-09-run-fed-stage.md). The same loop, the same
+/// checks, errors and counts, but no n-byte column: a literal stores one record,
+/// `p << 8 | c` (its byte c, its first row p), and a RUNA/RUNB count stores nothing (it
+/// extends the run the last literal opened, whose byte is the list's front). A block that
+/// begins with a count opens its first run at row 0 with the list's initial front. On
+/// success the records are in L order, each run's length the next record's p less its
+/// own, and a last record `n << 8` closes them; on an error they are unspecified.
+///
+/// The records are the block's maximal runs: a literal's byte is never the open run's
+/// (its index is at least 1, so it is not the list's front). They are exact for a block
+/// below 2^24 rows (`p` has 24 bits); `run_stage` takes the column's path for any other.
+/// At most `syms.len() + 1` records are written, the closing one included.
+#[cfg(any(test, feature = "run-fed"))]
+pub fn mtf_runs(
+    b: &Symbols,
+    recs: &mut Vec<u32>,
+    counts: &mut [u32; 256],
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
+    #[cfg(target_arch = "x86_64")]
+    {
+        if k.avx2 {
+            // SAFETY: `k.avx2` is set only when AVX2 was detected
+            return unsafe { mtf_runs_avx2(b, recs, counts) };
+        }
+    }
+    let _ = k;
+    mtf_runs_scalar(b, recs, counts)
+}
+
+/// `mtf_scalar`'s loop with `mtf_runs`' records out
+#[cfg(any(test, feature = "run-fed"))]
+pub fn mtf_runs_scalar(
+    b: &Symbols,
+    recs: &mut Vec<u32>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
+    recs.clear();
+    *counts = [0; 256];
+    let mut list: [u8; 256] = std::array::from_fn(|i| i as u8);
+    let (mut run, mut weight) = (0u32, 1u32);
+    let mut n = 0usize;
+    if b.syms.first().is_some_and(|&s| s <= 1) {
+        recs.push(b.seq_to_unseq[0] as u32);
+    }
+    for &s in &b.syms {
+        if s <= 1 {
+            if weight >= MAX_RUN_WEIGHT {
+                return Err(ErrorKind::RunTooLong);
+            }
+            run += (s as u32 + 1) * weight;
+            weight <<= 1;
+            continue;
+        }
+        if run != 0 {
+            if n + run as usize > b.max_len {
+                return Err(ErrorKind::BlockTooLong);
+            }
+            let c = b.seq_to_unseq[list[0] as usize];
+            counts[c as usize] += run;
+            n += run as usize;
+            (run, weight) = (0, 1);
+        }
+        if s == b.eob {
+            break;
+        }
+        if n >= b.max_len {
+            return Err(ErrorKind::BlockTooLong);
+        }
+        let nn = (s - 1) as usize;
+        let v = list[nn];
+        list.copy_within(0..nn, 1);
+        list[0] = v;
+        let c = b.seq_to_unseq[v as usize];
+        counts[c as usize] += 1;
+        recs.push((n as u32) << 8 | c as u32);
+        n += 1;
+    }
+    recs.push((n as u32) << 8);
+    Ok(n)
+}
+
+/// `mtf_avx2`'s loop with `mtf_runs`' records out: the list's moves, the checks and the
+/// counts exactly as there; only the stores differ. A literal's one-byte store at row n
+/// becomes a four-byte record store at record m (one more register, one more increment);
+/// a run's two 32-byte stores or memset go, and the run is `n += run` alone.
+#[cfg(all(target_arch = "x86_64", any(test, feature = "run-fed")))]
+#[target_feature(enable = "avx2")]
+unsafe fn mtf_runs_avx2(
+    b: &Symbols,
+    recs: &mut Vec<u32>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
+    use std::arch::x86_64::*;
+    let max = b.max_len;
+    recs.clear();
+    // a record for each literal symbol, one for a block that begins with a count, and the
+    // closing one: at most syms.len() + 1, since a block that begins with a count begins
+    // with a symbol that is no literal
+    recs.reserve(b.syms.len() + 1);
+    *counts = [0; 256];
+    let s2u = &b.seq_to_unseq;
+    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
+    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
+    #[repr(align(64))]
+    struct Rows([u8; 224]);
+    let mut rows = Rows([0u8; 224]);
+    rows.0.copy_from_slice(&s2u[32..]);
+    let tail = rows.0.as_mut_ptr();
+    let idx = _mm256_setr_epi8(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    );
+    let steps = STEPS.as_ptr();
+    let (mut run, mut weight) = (0u32, 1u32);
+    // `m` records written at `out`, at most one a symbol (above), within the capacity
+    let out = recs.as_mut_ptr();
+    let mut m = 0usize;
+    if b.syms.first().is_some_and(|&s| s <= 1) {
+        *out = s2u[0] as u32;
+        m = 1;
+    }
+    let mut n = 0usize;
+    let mut result = Ok(());
+    for &s in &b.syms {
+        if s <= 1 {
+            if weight >= MAX_RUN_WEIGHT {
+                result = Err(ErrorKind::RunTooLong);
+                break;
+            }
+            run += (s as u32 + 1) * weight;
+            weight <<= 1;
+            continue;
+        }
+        if run != 0 {
+            if n + run as usize > max {
+                result = Err(ErrorKind::BlockTooLong);
+                break;
+            }
+            let c = _mm_cvtsi128_si32(f0) as u8;
+            counts[c as usize] += run;
+            n += run as usize;
+            (run, weight) = (0, 1);
+        }
+        if s == b.eob {
+            break;
+        }
+        if n >= max {
+            result = Err(ErrorKind::BlockTooLong);
+            break;
+        }
+        let nn = ((s - 1) as usize).min(255);
+        if nn < 32 {
+            let t = steps.add(nn);
+            let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
+            let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
+            let mm = _mm_load_si128((*t).m.as_ptr() as *const __m128i);
+            let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
+            f1 = _mm_blendv_epi8(f1, _mm_alignr_epi8::<15>(f1, f0), mm);
+            f0 = g0;
+        } else {
+            let v = second(tail, nn - 32, f1, idx);
+            f1 = _mm_alignr_epi8::<15>(f1, f0);
+            f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
+        }
+        let c = _mm_cvtsi128_si32(f0) as u8;
+        counts[c as usize] += 1;
+        *out.add(m) = (n as u32) << 8 | c as u32;
+        m += 1;
+        n += 1;
+    }
+    if result.is_ok() {
+        *out.add(m) = (n as u32) << 8;
+        m += 1;
+    }
+    // SAFETY: the first m records were written above, m <= syms.len() + 1 <= capacity
+    recs.set_len(m);
+    result.map(|()| n)
+}
+
 /// The rows a count checkpoint spans: `mtf_checkpoints` records the byte counts at every
 /// multiple of it, so a build that splits the rows among threads at those points knows
 /// each range's first slot in every bucket without counting it (the cooperative

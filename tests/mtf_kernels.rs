@@ -82,8 +82,115 @@ fn agree(b: &Symbols, what: &str) -> bool {
             }
             Err(e) => assert_eq!(r, Err(e.clone()), "{what}, max {}, {k:?}", b.max_len),
         }
+        #[cfg(feature = "run-fed")]
+        runs_agree(b, &want, k, what);
     }
     want.is_ok()
+}
+
+/// `mtf::mtf_runs` (research, the `run-fed` feature) on `b` against the reference: the
+/// same result, error kind included; on success the same counts, and the records the
+/// column's maximal runs, closed by its length; and `run_stage::build`'s table
+/// `bwt::build`'s word for word, by whichever path it takes
+#[cfg(feature = "run-fed")]
+fn runs_agree(
+    b: &Symbols,
+    want: &Result<(Vec<u8>, [u32; 256]), ErrorKind>,
+    k: Kernels,
+    what: &str,
+) {
+    use mibz2::bwt::{build, TVector};
+    use mibz2::run_stage;
+    let (mut recs, mut c) = (vec![7u32; 100], [3u32; 256]);
+    let r = mtf::mtf_runs(b, &mut recs, &mut c, k);
+    match want {
+        Ok((wl, wc)) => {
+            assert_eq!(
+                r,
+                Ok(wl.len()),
+                "{what}, max {}, {k:?}: runs' result",
+                b.max_len
+            );
+            assert!(c == *wc, "{what}, max {}, {k:?}: runs' counts", b.max_len);
+            let mut runs = Vec::new();
+            for (i, &x) in wl.iter().enumerate() {
+                if i == 0 || x != wl[i - 1] {
+                    runs.push((i as u32) << 8 | x as u32);
+                }
+            }
+            runs.push((wl.len() as u32) << 8);
+            assert!(
+                recs == runs,
+                "{what}, max {}, {k:?}: the records",
+                b.max_len
+            );
+            let mut tt = TVector::new();
+            build(wl, wc, &mut tt);
+            // the records' path, whatever `takes_runs` would choose
+            let (mut got, mut s, mut ll) =
+                (TVector::new(), run_stage::Scratch::default(), Vec::new());
+            let t = run_stage::sort(&recs, &c, wl.len(), &mut s).expect("sort");
+            run_stage::fill(&t, &mut got, k);
+            assert!(
+                got.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the records' table",
+                b.max_len
+            );
+            // the stage, by the path it takes
+            let (n, _) =
+                run_stage::build(b, &mut recs, &mut s, &mut ll, &mut c, &mut got, k).unwrap();
+            assert_eq!(n, wl.len());
+            assert!(
+                got.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the run-fed table",
+                b.max_len
+            );
+            // the direct placement (C31) of the same records
+            let mut direct = TVector::new();
+            assert!(
+                run_stage::place(&recs, &c, wl.len(), &mut direct, k),
+                "{what}, max {}, {k:?}: placed",
+                b.max_len
+            );
+            assert!(
+                direct.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the direct table",
+                b.max_len
+            );
+            // and the direct stage, by the path it takes
+            let (n, by_runs) =
+                run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut direct, k).unwrap();
+            assert_eq!(
+                (n, by_runs),
+                (wl.len(), run_stage::takes_runs(b)),
+                "{what}: the direct stage's length and path"
+            );
+            assert!(
+                direct.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the direct stage's table",
+                b.max_len
+            );
+        }
+        Err(e) => {
+            assert_eq!(r, Err(e.clone()), "{what}, max {}, {k:?}: runs", b.max_len);
+            let (mut got, mut s, mut ll) =
+                (TVector::new(), run_stage::Scratch::default(), Vec::new());
+            let r = run_stage::build(b, &mut recs, &mut s, &mut ll, &mut c, &mut got, k);
+            assert_eq!(
+                r.map(|x| x.0),
+                Err(e.clone()),
+                "{what}, max {}, {k:?}: the stage",
+                b.max_len
+            );
+            let r = run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut got, k);
+            assert_eq!(
+                r.map(|x| x.0),
+                Err(e.clone()),
+                "{what}, max {}, {k:?}: the direct stage",
+                b.max_len
+            );
+        }
+    }
 }
 
 /// A block of `syms` over `n_in_use` bytes (a random ascending choice, as the stream's
@@ -348,4 +455,47 @@ fn real_blocks() {
         }
     }
     assert!(blocks > 10);
+}
+
+/// #270's saved stream, fuzz seed 1 case 596 (copied from `research/run-fed-leader` at
+/// 03e52206, SHA-256 3c69e8a3…789f8632): a full block of runs, an empty block (its symbols
+/// the end-of-block alone, which the records' rule takes), then a broken one. Through
+/// `build_direct` (Guardian D055) each scanned block is production's, by both kernels and
+/// on buffers kept dirty from block to block, its path `takes_runs`'s, so no fallback hides
+/// a refusal; the empty block gives (0, true) and an empty table. What the decoder does
+/// with an empty block afterwards (`BadOrigPtr`) is a separate contract, not tested here
+#[cfg(feature = "run-fed")]
+#[test]
+fn the_empty_block_by_records_through_build_direct() {
+    use mibz2::bwt::{build, TVector};
+    use mibz2::run_stage;
+    let z = include_bytes!("regressions/run-fed-seed1-case596.bz2");
+    let mut blocks = Vec::new();
+    let mut sc = Scanner::new(SliceSource(z));
+    while let Ok(Event::Block { symbols, .. }) = sc.next(Vec::new()) {
+        blocks.push(symbols);
+    }
+    assert_eq!(blocks.len(), 2, "two blocks before the broken one");
+    for k in kernels() {
+        let (mut recs, mut ll, mut c, mut tt) =
+            (Vec::new(), Vec::new(), [0u32; 256], TVector::new());
+        for (i, b) in blocks.iter().enumerate() {
+            let (wl, wc) = reference(b).unwrap();
+            let mut want = TVector::new();
+            build(&wl, &wc, &mut want);
+            let got = run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut tt, k).unwrap();
+            assert_eq!(
+                got,
+                (wl.len(), run_stage::takes_runs(b)),
+                "{k:?}, block {i}"
+            );
+            assert!(got.1, "{k:?}, block {i}: by records");
+            assert!(
+                tt.as_slice() == want.as_slice(),
+                "{k:?}, block {i}: the table"
+            );
+        }
+        assert!(blocks[1].syms == [blocks[1].eob], "block 1 is empty");
+        assert!(tt.as_slice().is_empty(), "{k:?}: the empty block's table");
+    }
 }
