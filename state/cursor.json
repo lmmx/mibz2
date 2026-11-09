@@ -23,11 +23,10 @@
     6732661221,
     6733118155,
     6734040806,
-    6734267218
-  ],
-  "in_progress": [
+    6734267218,
     6735011014
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -49,7 +48,8 @@
     "6732661221": 6732711502,
     "6733118155": 6733161491,
     "6734040806": 6734092516,
-    "6734267218": 6734957937
+    "6734267218": 6734957937,
+    "6735011014": 6735158741
   },
   "last_rebuilt_from": 6735022394,
   "migrated_from": {
@@ -209,9 +209,10 @@
     },
     "6735011014": {
       "comment_id": 6735011014,
-      "status": "complete",
-      "progress": "Account and levels published; REVIEW pending.",
-      "work_commit": "c103aa8250aeeb5252f674e9b2ebe01319947229"
+      "status": "finished",
+      "progress": "Account and levels published; REVIEW read back with Observer route/header/citation verified.",
+      "work_commit": "c103aa8250aeeb5252f674e9b2ebe01319947229",
+      "review_id": 6735158741
     }
   },
   "last_record_commit": "c103aa8250aeeb5252f674e9b2ebe01319947229"
