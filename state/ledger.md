@@ -297,3 +297,20 @@ Model T=U+max(L,P(L))+D: helper completion depends on leader arrival. Local E=.7
 - **Current economics:** service-2x3 now has submitted run6729877078 and reported result6729896575; earlier admission HOLD description is historical. Reported CPU ref/arm1.146 implies12.7% reduction, not14.6%. No bundle replay here. D044's B5 timing HOLD remains; no unsafe diagnostic authorization.
 
 No implementation, timing, tests, dispatch or measured speed credit. Prior registered outcomes unchanged.
+
+
+## Pair consumer constructions: inbox 6730271993
+
+[Source audit, cost model and falsifiers](records/reviews/inbox-6730271993/report.md), #272 at **280643cef83b09ac89707b747670e8198b21b68e**.
+
+| Rank | Proposal / disposition | Price and falsifier |
+|---|---|---|
+| 1 / C37 | Shared-offset staged pair rooms, conditional | Already32 lanes/flags/prefetch. Remove per-lane pointer/capacity work; 256-byte tile is128 pair rounds. Charge flushes, odd LF handoffs and tails; native common-path/counted-work falsifier first |
+| 2 / C38 | Flag-compatible symbol tags, conditional | Bit30 is PAIR_LF: only2 immediately spare bits. Two-bit tag +3,516B directory; at most63 exceptional256-row blocks. Three bits need marker-kind redesign. Count actual segmented exceptions |
+| 3 | Pair latency/MLP hypothesis | Same32 lanes do not give64 independent misses. Half the navigation cost only when latency/occupancy remain comparable and that term binds; issue cost may erase it |
+| 4 / C39 | Wide full-pair word, lower priority | Eliminates symbol lookup, but38 bits needed;8-byte words double resident table. Logical4B/output does not establish physical traffic |
+| 5 / C40 | Pair/one-hop trajectory hybrid, census first | Long cells are not consecutive trajectories. Psi²-only word cannot supply one-hop fallback; charge mixed semantics/metadata/switching |
+
+**Corrections at this pin:** first_byte loads first[] then dependent f[c+1] even with zero corrections; .002 loop iterations do not bound the ordinary-path prize. Extra6.2Ir/row cannot by itself reject the archive's plus1c/B condition or imply IPC>6. Counts establish neither MET nor NOT MET. Q1/Q2 are expectations in the draft, not received results.
+
+Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-decoder further charges MTF, admission, synchronization and critical-worker effects. No new measured c/B or cumulative credit. C29/C31 remain preferable overall bets; D045 now holds service timing/admission pending targetedB5, separate from D042/D044. Prior registered results unchanged.
