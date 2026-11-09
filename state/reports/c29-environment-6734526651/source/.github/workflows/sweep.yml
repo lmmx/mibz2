@@ -1,0 +1,213 @@
+# The walk's mechanisms taken apart on the Wikidata blocks, on one runner
+# (examples/sweep.rs): the lane count (the interleaved chains), the prefetch (none, L1, L2,
+# non-temporal) and the scheduling (the room walk against the flagged walk), each against the
+# settings Segmented uses, paired by round; alone on one CPU, then with a copy on every CPU;
+# with hardware counters where the runner exposes them. A diagnostic for choosing settings to try, from the Actions tab only: its
+# figures are the run's summary and artifact, never recorded, and a setting it favours is
+# decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
+# stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: c29`, C29's exposed-path diagnostic instead (docs/journal/2026-11-09-c29-register-
+# checkpoints.md, DRAFT, NOT FROZEN): `ab run` of the shipped pipelined teams
+# (`mibz2-pipe3-both`, the default's levers) against the same with the register-list
+# checkpoint kernel selected (`mibz2-pipe3-both-c29`), one build, interleaved by round,
+# ROUNDS rounds at 9 threads (3 teams of 3) and at 3 (1 team of 3), on the runner's every
+# CPU, unpinned; then bench/c29_checkpoints.py's validity and reading, and the raw runs
+# archived.
+name: Walk sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Rounds (each walks every block at every setting); for phases, its passes"
+        required: false
+        default: "5"
+      tool:
+        description: "sweep (the factorial), phases (the stages) or c29 (C29's exposed-path A/B)"
+        required: false
+        default: "sweep"
+      registered_head:
+        description: "c29: the frozen registration's full 40-character head, for the judged reading (empty: UNJUDGED)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # lbzip2: examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        # (--locked: the committed Cargo.lock, as the registration freezes it; no features)
+        run: cargo build --locked --release --example sweep --example phases --example windows --example ab
+
+      # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          mkdir -p corpora
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+
+      # Counters where the runner exposes a PMU: let this process count its own events
+      - name: Counters
+        run: sudo sysctl -w kernel.perf_event_paranoid=1 || true
+
+      # One copy pinned to one CPU, then a copy on each CPU at once: a setting that wins
+      # alone can lose when four walks share the caches and the memory system
+      - name: Sweep
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          TOOL: ${{ inputs.tool || 'sweep' }}
+          REGISTERED: ${{ inputs.registered_head }}
+        run: |
+          mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
+          model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
+          ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          case "$TOOL" in sweep|phases|c29) ;; *) echo "tool: sweep, phases or c29"; exit 1 ;; esac
+          if [ "$TOOL" = c29 ]; then
+            set -o pipefail
+            # whole decodes, one process a run (ab's), both arms' outputs hashed and paired
+            # by round; the 9-thread cell judged, the 3-thread one (one team) secondary
+            ab=target/release/examples/ab
+            arms=mibz2-pipe3-both,mibz2-pipe3-both-c29
+            # the run's identity, for the reporter to check against the registration: the
+            # head, a clean tree (the sources the build and the reporter read), the build,
+            # the binary's and corpus's digests before and after the run, and the executed
+            # environment (untimed): AVX2 as the harness's own detection reports it (ab env,
+            # `Kernels::detect`, what the kernels dispatch on) and the CPU allocation (nproc,
+            # the affinity mask, available_parallelism, the cgroup quota). Each record
+            # carries its child's own AVX2 and allocation too
+            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench .cargo Cargo.toml Cargo.lock)" ] && echo true || echo false)
+            bin0=$(sha256sum "$ab" | cut -d' ' -f1); cor0=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            nproc > c29-nproc.txt
+            $ab env > c29-env.json
+            # (a failed run is kept, its records so far and its progress archived, the identity
+            # still written: its status is the step's)
+            run_status=0
+            $ab run c29-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> c29-progress.txt || run_status=$?
+            bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            python3 - "$arms" > c29-identity.json <<EOF
+          import json, os, subprocess, sys
+          try:
+              env = json.load(open("c29-env.json"))
+          except (OSError, ValueError):
+              env = {}  # (the reporter then refuses a judged reading: no facts)
+          out = lambda *a: subprocess.check_output(a, text=True).strip()
+          print(json.dumps({
+              "schema": "c29_checkpoints/identity/2",
+              "head": out("git", "rev-parse", "HEAD"),
+              "tree_clean": json.loads("$tree_clean"),
+              "features": [],
+              "profile": "release",
+              "rustc": out("rustc", "--version"),
+              "toolchain": {"rustc_vV": out("rustc", "-vV"), "cargo": out("cargo", "--version"),
+                            "rustflags": os.environ.get("RUSTFLAGS"),
+                            "cargo_encoded_rustflags": os.environ.get("CARGO_ENCODED_RUSTFLAGS")},
+              "binary_sha256_before": "$bin0",
+              "binary_sha256_after": "$bin1",
+              "corpus_sha256_before": "$cor0",
+              "corpus_sha256_after": "$cor1",
+              "arms": sys.argv[1].split(","),
+              "threads": [9, 3],
+              "rounds": int("$ROUNDS"),
+              "avx2": env.get("avx2"),
+              "nproc": int(open("c29-nproc.txt").read()),
+              "cpus_allowed": env.get("cpus_allowed"),
+              "available_parallelism": env.get("available_parallelism"),
+              "cpu_quota": env.get("cpu_quota"),
+              "cpu_model": "$model",
+              "ab_run_status": $run_status,
+              "env": env,
+          }, indent=1))
+          EOF
+            # judged only at the registered head and environment; any other run UNJUDGED.
+            # The reporter exits 2 on an INVALID, 3 on a run whose AVX2 or CPU allocation is
+            # absent or not as registered (UNJUDGED (FALLBACK)). No re-run on either: the
+            # attempt is the registered one, kept and investigated, never retried to pass
+            if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
+            status=0
+            python3 bench/c29_checkpoints.py report c29-runs.jsonl "${judge[@]}" --identity c29-identity.json --out c29-report > c29-report.txt || status=$?
+            {
+              echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse HEAD); c29, rounds $ROUNDS"
+              echo "corpus sha256 $(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)"
+              cat c29-report.txt
+              echo
+              echo "(ab summary against mibz2-pipe3-both, at both thread counts: reported, never judged)"
+              $ab summary c29-runs.jsonl --ref mibz2-pipe3-both || true
+            } > sweep-1.txt
+            cat sweep-1.txt
+            {
+              echo "## C29 exposed-path A/B (DRAFT, NOT FROZEN): $model, $(nproc) CPUs"
+              echo
+              echo '```'
+              cat sweep-1.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            [ "$status" = 0 ] && status=$run_status
+            exit $status
+          fi
+          bin=target/release/examples/$TOOL
+          start=$SECONDS
+          # each file names its runner: runners differ in CPU model, and so in the figures
+          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
+          alone=$((SECONDS - start)); start=$SECONDS
+          cpus=$(nproc)
+          for c in $(seq 0 $((cpus - 1))); do
+            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS; this copy on CPU $c"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
+          done
+          wait
+          together=$((SECONDS - start))
+          {
+            echo "## Walk sweep ($TOOL): $model, $cpus cores, at its reported clock (${ghz} GHz)"
+            echo
+            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
+            echo
+            echo "### One copy, pinned to one CPU (${alone} s)"
+            echo
+            echo '```'
+            cat sweep-1.txt
+            echo '```'
+            echo
+            echo "### $cpus copies at once, one a CPU (${together} s): the copy on CPU 0 (the others are in the artifact)"
+            echo
+            echo '```'
+            cat "sweep-$cpus-cpu0.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-${{ github.sha }}
+          path: |
+            sweep-*.txt
+            c29-*
+          if-no-files-found: ignore
