@@ -1,0 +1,237 @@
+{
+  "head": "e1765d092887959b2f8be75d5a0cea738f641982",
+  "incoming": 6733174182,
+  "src_delta": [
+    {
+      "sha": "3edc281c36a9b242d928a32e113e4976d07beed5",
+      "filename": "src/parallel/run_team.rs",
+      "status": "modified",
+      "additions": 104,
+      "deletions": 4,
+      "changes": 108,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/e1765d092887959b2f8be75d5a0cea738f641982/src%2Fparallel%2Frun_team.rs",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/e1765d092887959b2f8be75d5a0cea738f641982/src%2Fparallel%2Frun_team.rs",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/src%2Fparallel%2Frun_team.rs?ref=e1765d092887959b2f8be75d5a0cea738f641982",
+      "patch": "@@ -189,6 +189,18 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {\n     m.lock().unwrap_or_else(|e| e.into_inner())\n }\n \n+/// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only: the\n+/// shipped pipelined team's kinds at the same points (`coop::invert_pipelined_with`'s), so\n+/// the occupancy instrument reads a run-fed team as it reads the shipped one\n+macro_rules! tmark {\n+    ($kind:ident, $place:expr) => {\n+        #[cfg(feature = \"trace\")]\n+        crate::trace::mark(crate::trace::Kind::$kind, $place);\n+        #[cfg(not(feature = \"trace\"))]\n+        let _ = $place;\n+    };\n+}\n+\n // ---- The front set ----\n \n #[derive(Clone, Copy, PartialEq, Eq, Debug)]\n@@ -294,9 +306,11 @@ fn stage<const MODE: u8>(\n ) -> Staging {\n     let (place, bit, symbols) = job;\n     let (mut tf, mut ts, mut rule) = (0, 0, false);\n+    mark!(MtfStart, place);\n     let r = catch_unwind(AssertUnwindSafe(|| {\n         front_stage::<MODE>(&symbols, f, k, &mut tf, &mut ts, &mut rule)\n     }));\n+    mark!(MtfEnd, place);\n     if in_run {\n         add(&PH.lead_front_ns, tf);\n         add(&PH.lead_sort_ns, ts);\n@@ -379,9 +393,14 @@ fn solo(shared: &Shared, f: &mut Front, sc: &mut Solo, s: Staged, k: Kernels) ->\n         return false;\n     };\n     let r = catch_unwind(AssertUnwindSafe(|| {\n+        mark!(RunStart, s.place);\n         table_one_core(&s.symbols, f, &mut sc.tt, k)?;\n         bwt::walk_segments_room(&mut sc.tt, s.symbols.orig_ptr, &mut sc.buf, &mut sc.seg);\n-        finish_block(&sc.buf, s.symbols.crc, k, &mut out)\n+        mark!(RunEnd, s.place);\n+        mark!(RleStart, s.place);\n+        let r = finish_block(&sc.buf, s.symbols.crc, k, &mut out);\n+        mark!(RleEnd, s.place, out.len(), out.capacity());\n+        r\n     }));\n     let (res, panicked) = match r {\n         Ok(Ok(())) => (Ok(out), false),\n@@ -922,10 +941,16 @@ impl Gate {\n         }\n     }\n \n+    /// Count this thread in, of `of`: whether it is the last (which then opens the gate,\n+    /// `set`; every other `wait`s)\n+    fn arrive(&self, of: usize) -> bool {\n+        self.arrived.fetch_add(1, Ordering::AcqRel) + 1 == of\n+    }\n+\n     /// Count this thread in, of `of`; the last runs `last` (which must not unwind), then\n     /// opens the gate; every other waits until it is open\n     fn pass(&self, of: usize, last: impl FnOnce()) {\n-        if self.arrived.fetch_add(1, Ordering::AcqRel) + 1 == of {\n+        if self.arrive(of) {\n             last();\n             self.set();\n         } else {\n@@ -1293,6 +1318,9 @@ struct Relay<'a> {\n     t0: Instant,\n     /// t0 to the build's end (B)\n     build_end: AtomicU64,\n+    /// the block's place, for the trace's marks only\n+    #[cfg_attr(not(feature = \"trace\"), allow(dead_code))]\n+    place: u64,\n }\n // SAFETY: as `coop::Relay`: the stage is shared read only while its shares run, and changed\n // only by the thread that ends the build (the built gate's last) or the walk (the thread\n@@ -1365,6 +1393,7 @@ impl Relay<'_> {\n             self.build_end.store(since(self.t0), Ordering::Relaxed);\n             return;\n         }\n+        tmark!(WalkSetupStart, self.place);\n         let r = catch_unwind(AssertUnwindSafe(|| {\n             let (tt, seg) = match old {\n                 Stage::Fused(b, seg) => {\n@@ -1390,6 +1419,7 @@ impl Relay<'_> {\n             };\n             Some(RoomWalk::new(tt, self.orig_ptr, seg, self.segments))\n         }));\n+        tmark!(WalkSetupEnd, self.place);\n         self.build_end.store(since(self.t0), Ordering::Relaxed);\n         match r {\n             Ok(Some(w)) => *stage = Stage::Walk(w),\n@@ -1402,29 +1432,35 @@ impl Relay<'_> {\n         // SAFETY: the built gate was passed, and the stage changes again only when the\n         // last walker leaves, which this thread has not\n         if let Stage::Walk(w) = unsafe { &*self.stage.get() } {\n+            tmark!(WalkStart, self.place);\n             self.caught(catch_unwind(AssertUnwindSafe(|| {\n                 w.share::<FLAGGED_LANES>()\n             })));\n+            tmark!(WalkEnd, self.place);\n         }\n         if self.walkers.fetch_sub(1, Ordering::AcqRel) == 1 {\n             // SAFETY: every other walker has left, and none can join (walkers is 0)\n             let stage = unsafe { &mut *self.stage.get() };\n             if let Stage::Walk(w) = std::mem::replace(stage, Stage::Over) {\n+                tmark!(AssembleStart, self.place);\n                 let r = catch_unwind(AssertUnwindSafe(|| {\n                     let (_, s) = w.finish();\n                     if !self.failed() {\n                         // SAFETY: only the thread ending the walk touches `out`\n                         s.assemble(unsafe { &mut *self.out.get() });\n                     }\n                 }));\n+                tmark!(AssembleEnd, self.place);\n                 self.caught(r);\n             }\n         }\n     }\n \n     fn join(&self) {\n         let t = Instant::now();\n+        tmark!(BuildWaitStart, self.place);\n         self.built.wait();\n+        tmark!(BuildWaitEnd, self.place);\n         add(&PH.join_wait_ns, since(t));\n         let mut v = self.walkers.load(Ordering::Acquire);\n         loop {\n@@ -1459,11 +1495,13 @@ fn invert(\n     lead: &(dyn Fn() + Sync),\n     direct: bool,\n     inject: u8,\n+    place: u64,\n ) -> Result<Timeline, Box<dyn Any + Send>> {\n     let helpers = pool.threads().saturating_sub(1).max(1);\n     let shares = helpers.min(MAX_SHARES);\n     let t0 = Instant::now();\n     add(&PH.runs, 1);\n+    tmark!(BuildSetupStart, place);\n     let Front {\n         ll,\n         counts,\n@@ -1508,6 +1546,7 @@ fn invert(\n             (Stage::Runs(rf, seg), None)\n         }\n     };\n+    tmark!(BuildSetupEnd, place);\n     let relay = Relay {\n         stage: std::cell::UnsafeCell::new(stage),\n         col,\n@@ -1522,14 +1561,26 @@ fn invert(\n         panic: Mutex::new(None),\n         t0,\n         build_end: AtomicU64::new(0),\n+        place,\n     };\n     let relay = &relay;\n     let (lead_start, lead_end) = (AtomicU64::new(0), AtomicU64::new(0));\n     let helper = |j: usize| {\n+        tmark!(HelperStart, place);\n+        tmark!(BuildStart, place);\n         relay.build_share(j, helpers);\n-        // SAFETY: the gate's last helper is the last to count in: every share has ended\n-        relay.built.pass(helpers, || unsafe { relay.end_build() });\n+        tmark!(BuildEnd, place);\n+        if relay.built.arrive(helpers) {\n+            // SAFETY: the gate's last helper is the last to count in: every share has ended\n+            unsafe { relay.end_build() };\n+            relay.built.set();\n+        } else {\n+            tmark!(BuildWaitStart, place);\n+            relay.built.wait();\n+            tmark!(BuildWaitEnd, place);\n+        }\n         relay.walk_and_leave();\n+        tmark!(HelperEnd, place);\n     };\n     let leader = || {\n         if inject == INJECT_LEAD_DELAY {\n@@ -1538,7 +1589,9 @@ fn invert(\n         // (both moments from t0, as the build's end is)\n         let start = since(t0);\n         let t = Instant::now();\n+        tmark!(LeadStart, place);\n         lead();\n+        tmark!(LeadEnd, place);\n         add(&PH.lead_ns, since(t));\n         lead_start.store(start, Ordering::Relaxed);\n         lead_end.store(since(t0), Ordering::Relaxed);\n@@ -1586,6 +1639,37 @@ struct Team {\n     small: Solo,\n }\n \n+impl Team {\n+    /// The worker's buffers at its end, for the occupancy instrument's ledger\n+    /// (`parallel::Team::buffers`', with this module's fronts: the records' too)\n+    #[cfg(feature = \"trace\")]\n+    fn buffers(&self) -> Vec<crate::trace::Buffer> {\n+        use crate::trace::Buffer;\n+        let [f0, f1] = &self.fronts;\n+        let s = &self.seg;\n+        vec![\n+            Buffer::of(\"ll\", &f0.ll),\n+            Buffer::of(\"ll.b\", &f1.ll),\n+            Buffer::of(\"checkpoints\", &f0.checkpoints),\n+            Buffer::of(\"checkpoints.b\", &f1.checkpoints),\n+            Buffer::of(\"recs\", &f0.recs),\n+            Buffer::of(\"recs.b\", &f1.recs),\n+            Buffer::of(\"fo_hs\", &f0.fo_hs),\n+            Buffer::of(\"fo_hs.b\", &f1.fo_hs),\n+            Buffer::of(\"rle\", &self.bufs[0]),\n+            Buffer::of(\"rle.b\", &self.bufs[1]),\n+            Buffer::of(\"tt\", &self.tt.0),\n+            Buffer::of(\"small.tt\", &self.small.tt.0),\n+            Buffer::of(\"small.rle\", &self.small.buf),\n+            Buffer {\n+                name: \"seg.bufs\",\n+                len: s.bufs.iter().map(Vec::len).sum(),\n+                cap: s.bufs.iter().map(Vec::capacity).sum(),\n+            },\n+        ]\n+    }\n+}\n+\n fn solo_on(shared: &Shared, t: &mut Team, s: Staged, k: Kernels) {\n     let i = s.front;\n     if solo(shared, &mut t.fronts[i], &mut t.small, s, k) {\n@@ -1609,13 +1693,20 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne\n                 }\n                 continue;\n             }\n+            mark!(JobLock);\n             let job = {\n                 let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());\n+                mark!(JobRecv);\n                 rx.recv()\n             };\n             let Ok(job) = job else {\n+                #[cfg(feature = \"trace\")]\n+                if crate::trace::level() > 0 {\n+                    crate::trace::buffers(&t.buffers());\n+                }\n                 return;\n             };\n+            mark!(JobGot, job.0);\n             if shared.lock().cancelled {\n                 continue;\n             }\n@@ -1675,6 +1766,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne\n             }\n             let mut next_job = try_job(jobs);\n             while let Some(job) = next_job.take() {\n+                mark!(JobGot, job.0);\n                 shared.overlapped.fetch_add(1, Ordering::Relaxed);\n                 if shared.lock().cancelled {\n                     return;\n@@ -1701,6 +1793,8 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne\n             #[cfg(test)]\n             inject(shared, place, Fault::LeadEnd, &l);\n         };\n+        // (the run's own kinds, as the shipped worker's)\n+        mark!(RunStart, s.place);\n         let r = catch_unwind(AssertUnwindSafe(|| {\n             invert(\n                 pool,\n@@ -1713,8 +1807,10 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne\n                 &leader,\n                 MODE == DIR,\n                 0,\n+                s.place,\n             )\n         }));\n+        mark!(RunEnd, s.place);\n         let mut l = lead.into_inner().unwrap_or_else(|e| e.into_inner());\n         match r {\n             Ok(Ok(_)) => {\n@@ -2163,6 +2259,7 @@ mod tests {\n             &lead,\n             MODE == DIR,\n             inject,\n+            0,\n         )?;\n         // (the table too: a random column is no BWT, so its walk visits only one cycle)\n         Ok((out, tt.0))\n@@ -2271,6 +2368,7 @@ mod tests {\n                     &|| panic!(\"lead\"),\n                     false,\n                     0,\n+                    0,\n                 )\n             }));\n             assert_eq!(*r.unwrap_err().downcast_ref::<&str>().unwrap(), \"lead\");\n@@ -2732,6 +2830,7 @@ mod tests {\n                     &|| {},\n                     direct,\n                     0,\n+                    0,\n                 )\n                 .unwrap();\n                 assert!((out, tt.0) == expect, \"{what}, direct {direct}: the run\");\n@@ -3448,6 +3547,7 @@ mod tests {\n                 &|| {},\n                 direct,\n                 INJECT_LEAD_DELAY,\n+                0,\n             )\n             .unwrap();\n             assert!(tl.lead_start >= LEAD_DELAY.as_nanos() as u64, \"{tl:?}\");"
+    },
+    {
+      "sha": "582f3903f7de36105261b409cf93b0f334a4fe52",
+      "filename": "src/read.rs",
+      "status": "modified",
+      "additions": 26,
+      "deletions": 0,
+      "changes": 26,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/e1765d092887959b2f8be75d5a0cea738f641982/src%2Fread.rs",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/e1765d092887959b2f8be75d5a0cea738f641982/src%2Fread.rs",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/src%2Fread.rs?ref=e1765d092887959b2f8be75d5a0cea738f641982",
+      "patch": "@@ -23,6 +23,13 @@ const COMPACT: usize = 4 << 20;\n /// Every block's CRC and every stream's combined CRC are checked; a bad stream is an\n /// `io::Error` of kind `InvalidData` wrapping this crate's `Error`, after every byte of\n /// the blocks before the bad one has been read.\n+///\n+/// A parallel reader reads `r` on a thread of its own. If `r`'s `read` panics, that thread\n+/// cancels the decode as it unwinds, and the next read fails with an `io::Error` saying the\n+/// input's reader panicked (the bytes of the blocks before may or may not have been read).\n+/// Nothing is promised past that: an abort (an out-of-memory one among them) ends the\n+/// process, and a `read` that blocks for ever is never interrupted (dropping the reader\n+/// leaves that thread to finish it).\n pub struct BzReader<R> {\n     inner: Inner<R>,\n }\n@@ -161,6 +168,10 @@ impl<R: Read + Send + 'static> BzReader<R> {\n         let feeder = std::thread::Builder::new()\n             .name(\"mibz2-read\".into())\n             .spawn(move || {\n+                // (a panic in `r`'s read unwinds this thread: the guard then records it as\n+                // the read's error and cancels the decode, so the reader is not left\n+                // waiting for input that will never come)\n+                let _unwind = CancelOnUnwind(&d, &e);\n                 loop {\n                     let mut buf = vec![0u8; CHUNK];\n                     let n = match read_full(&mut r, &mut buf) {\n@@ -192,6 +203,21 @@ impl<R: Read + Send + 'static> BzReader<R> {\n     }\n }\n \n+/// A parallel reader's feeder's guard: if the feeder unwinds (its source's `read`\n+/// panicked), the decode is cancelled and the reader's next read fails with an\n+/// `io::Error` saying so, instead of waiting for input that will never come\n+struct CancelOnUnwind<'a>(&'a StreamDecoder, &'a Mutex<Option<io::Error>>);\n+\n+impl Drop for CancelOnUnwind<'_> {\n+    fn drop(&mut self) {\n+        if std::thread::panicking() {\n+            *self.1.lock().unwrap_or_else(|p| p.into_inner()) =\n+                Some(io::Error::other(\"the input's reader panicked\"));\n+            self.0.cancel();\n+        }\n+    }\n+}\n+\n /// Fill `buf` as far as `r` goes (fewer bytes only at its end)\n fn read_full<R: Read>(r: &mut R, buf: &mut [u8]) -> io::Result<usize> {\n     let mut n = 0;"
+    }
+  ],
+  "ci_merge_files": [
+    "bench/packet_census.py",
+    "docs/journal/2026-11-09-packet-census.md",
+    "docs/journal/2026-11-09-packet-census/synthetic.jsonl.gz",
+    "docs/journal/2026-11-09-packet-census/tables.md",
+    "docs/journal/2026-11-09-packet-census/validate.jsonl",
+    "docs/journal/2026-11-09-packet-census/wikidata.jsonl.gz",
+    "docs/journal/2026-11-09-run-fed-direct-result.md",
+    "examples/packet_census.rs"
+  ],
+  "checks": [
+    {
+      "id": 129001135188,
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 129000943255,
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 129000941945,
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000941800,
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755978,
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755916,
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755901,
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755871,
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755835,
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000755791,
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000382099,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000381910,
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000380589,
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000380469,
+      "name": "rust",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 129000380465,
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000380438,
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000380243,
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000357984,
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 129000356445,
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000356422,
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000356351,
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000356347,
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000356332,
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000356328,
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000341789,
+      "name": "miri",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 129000333958,
+      "name": "bench",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 129000307187,
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 129000306852,
+      "name": "occupancy",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "logs": {
+    "129000380243": [
+      "2026-11-09T05:39:40.6627016Z HEAD is now at 0f97d67 Merge e1765d092887959b2f8be75d5a0cea738f641982 into 7ee30859f4fb671f0ec960a3c23432072cfb78c9",
+      "2026-11-09T05:40:42.5377938Z 64272 cases in 30 s (seed 1, mode classic), 0 failures",
+      "2026-11-09T05:41:14.2103100Z 623 cases in 30 s (seed 1, mode pipeline), 0 failures",
+      "2026-11-09T05:42:03.9763455Z 724 cases in 30 s (seed 1, mode run-fed), 0 failures",
+      "2026-11-09T05:42:03.9787821Z        65  mibz2 run-fed Control 1x3 s4 w100003 r65536 detected: rule 29, team records 0 column 103, small records 0 column 80, cases with team records 0, rebuilt 0",
+      "2026-11-09T05:42:03.9788993Z        66  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 detected: rule 43, team records 0 column 110, small records 0 column 106, cases with team records 0, rebuilt 0",
+      "2026-11-09T05:42:03.9789990Z        66  mibz2 run-fed Leader 1x3 s4 w100003 r65536 detected: rule 21, team records 25 column 87, small records 26 column 78, cases with team records 16, rebuilt 0",
+      "2026-11-09T05:42:03.9790948Z        66  mibz2 run-fed Helpers 1x3 s4 w100003 r65536 detected: rule 31, team records 25 column 81, small records 30 column 57, cases with team records 13, rebuilt 0",
+      "2026-11-09T05:42:03.9791896Z        66  mibz2 run-fed Direct 1x3 s4 w100003 r65536 detected: rule 22, team records 19 column 95, small records 25 column 65, cases with team records 10, rebuilt 0",
+      "2026-11-09T05:42:03.9792838Z        66  mibz2 run-fed Helpers 2x3 s6 w997 r509 detected: rule 27, team records 39 column 92, small records 47 column 58, cases with team records 16, rebuilt 0",
+      "2026-11-09T05:42:03.9793762Z        66  mibz2 run-fed Direct 2x3 s6 w997 r509 detected: rule 15, team records 33 column 66, small records 40 column 81, cases with team records 15, rebuilt 0",
+      "2026-11-09T05:42:03.9794702Z        66  mibz2 run-fed Leader 3x3 s12 w1048576 r4093 detected: rule 6, team records 33 column 115, small records 37 column 123, cases with team records 15, rebuilt 0",
+      "2026-11-09T05:42:03.9795824Z        66  mibz2 run-fed Helpers 1x2 s1 w100003 r65536 scalar: rule 0, team records 34 column 81, small records 36 column 100, cases with team records 17, rebuilt 0",
+      "2026-11-09T05:42:03.9796780Z        66  mibz2 run-fed Direct 1x4 s4 w100003 r65536 scalar: rule 46, team records 31 column 102, small records 51 column 92, cases with team records 15, rebuilt 0",
+      "2026-11-09T05:42:03.9797725Z        65  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 scalar: rule 52, team records 0 column 115, small records 0 column 85, cases with team records 0, rebuilt 0"
+    ],
+    "129000306852": [
+      "2026-11-09T05:39:23.2960055Z HEAD is now at 0f97d67f Merge e1765d092887959b2f8be75d5a0cea738f641982 into 7ee30859f4fb671f0ec960a3c23432072cfb78c9",
+      "2026-11-09T05:39:30.3135467Z ##[group]Run cargo test --release --features trace --lib --example occupancy",
+      "2026-11-09T05:39:30.3135928Z \u001b[36;1mcargo test --release --features trace --lib --example occupancy\u001b[0m",
+      "2026-11-09T05:41:36.6893617Z test result: ok. 90 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 104.89s",
+      "2026-11-09T05:41:36.7039359Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+    ]
+  },
+  "miri": "129000341789 unfinished at observation; log 404"
+}

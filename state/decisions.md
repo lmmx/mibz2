@@ -2560,3 +2560,60 @@ Expected: close direct-path fuzz, auditable mutation and empty-composition gaps.
 [Independent probes](records/d058/probes.py), [results](records/d058/results.json), [evidence/CI snapshot](records/d058/evidence.json), [routing audit](records/d058/routing.json). Archive inputs are immutable under aa409f6f in `docs/journal/2026-11-09-run-fed-direct/`.
 
 Migration was verified before writes: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **20619365c570c41d42b089cf23fa9bb3c0c2a795** corrects the earlier attempted receipt **4d7d44d7e39be25b859fee6ca9ffe77163b49a3a**, which inadvertently retained the prior cursor; no decision or REVIEW preceded that correction. Five historical routing findings are resolved, zero unresolved. Only this checkpoint remained pending in the inbox snapshot. Persistent task and subscriptions unchanged.
+
+
+## D059 — #270 source delta: barrier equivalence; census risk before freeze
+
+Inbox **6733174182**, reviewed **e1765d092887959b2f8be75d5a0cea738f641982**, against D056's **03e52206ac248737bc856f064928adf238265917**. SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Observed 2026-11-09.
+
+**G1: concur with functional equivalence of the non-trace barrier refactor, not with an unqualified “no behaviour change” for the whole delta. No new B5 HOLD solely for the arrive/wait extraction or place argument; D056's scoped safety argument transfers with the reasoning below.** The trace build adds real work and changes scheduling. The reader adds real panic recovery. No performance verdict transfers to the new binary; the requested workstation experiment measures a new exact source.
+
+**Before timing:** finish the ordinary exact-pin CI/Miri checks, freeze the actual measured inputs under the Researcher's registration, and preserve C5: only Louis's own submitted run authorizes workstation evidence. The file still says `frozen none`. This review authorizes no run or merge. No G3 tightening or G8 line stop.
+
+### Barrier proof and what evidence is needed
+
+The source delta is exactly two `src/` files: run_team **104 additions / 4 deletions** (not 108 additions), and read.rs **26 additions**. Reviewed run_team blob **3edc281c36a9b242d928a32e113e4976d07beed5**.
+
+Old helper: build_share; pass(helpers, end_build); walk_and_leave.
+New helper without trace: build_share; if arrive(helpers), end_build then set; otherwise wait; walk_and_leave.
+
+An independent textual expansion of old pass, with trace calls/comments/whitespace removed, equals the new helper body. `arrive` is the identical `fetch_add(1, AcqRel)+1==of`. The RMW chain acquires all arrivals' preceding writes; exactly the last helper mutates stage. It performs end_build before the same release store in set. Other helpers and the joining leader observe the same acquire flag before accessing Walk. Sleeper registration, flag recheck, park/unpark and walkers' AcqRel decrement are unchanged. No count, ownership interval, raw pointer, stage transition or panic-capture target changed. The premise remains exactly one arrival per dispatched helper, and no uncaught unwind between arrival and opening the gate.
+
+`place` is a copied u64 from s.place, stored in Relay and used only as a trace tag. Test calls use zero. It is not an index into the table or a synchronization input. Without trace, tmark expands to `let _ = place`; this is a side-effect-free read here. The extra field/signature can still alter layout, register allocation or generated code. Source equivalence is not machine-code equality or a transferred timing result.
+
+With trace, marks surround build/wait/walk/setup and leader work. They occur outside some existing catch_unwind regions. I inspected trace::mark_sized: level zero returns; otherwise it uses a thread-local RefCell, creates a buffer and appends a mark; no user callback or recursive mark is introduced on these paths. try_with tolerates TLS destruction, poisoned epoch locks are recovered. This review does not extend recovery to arbitrary instrumentation panics, allocator abort or reentrant tracing. A hypothetical injected panic in the last-helper trace call before set would strand waiters; that is why the non-unwinding premise must stay explicit rather than claiming all instrumentation is harmless. No reachable ordinary reentrancy defect was established.
+
+**Evidence proportionate to this delta:**
+- Targeted current-source native run-team/panic/pool-reuse regressions and a reached run-fed fuzz rerun are appropriate. The CI rerun below now supplies direct reached-path evidence.
+- Let the existing current-head Miri suite complete and inspect its relevant results; do not count test names beginning miri_ in a native cargo test as interpreter execution. It was unfinished here.
+- No mandatory new mutant just because a function was extracted: existing gate/worker mutation evidence and the explicit equivalence argument cover the unchanged obligation. If changing ordering, arrival count, last-helper opening or panic handling later, target that change (premature gate-open/missing arrival must be detected by visibility/deadlock fixtures with bounded timeouts). Do not ask a deterministic native test to prove detection of Relaxed ordering on x86.
+- Trace-on tests/captures establish trace coverage separately; do not infer the new run-fed tags were exercised just from a generic occupancy job's success.
+
+The reader guard is the #278 change reviewed in D057: store the I/O error, then cancel on unwind; recovered poisoned error mutex. It applies to all these reader arms. Its source-panic contract remains scoped to an unfinished decode observing cancellation, not retroactive failure, abort recovery or interruption of a permanently blocked source.
+
+### Fresh CI evidence; exact checkout
+
+At a single check snapshot, fuzz-smoke and occupancy succeeded; Rust, Miri and bench were still in progress. Miri **129000341789** log fetch returned 404 BlobNotFound: unavailable, not PASS. No rerun or polling initiated.
+
+Fuzz **129000380243** built with run-fed and ran seed 1 for 30 seconds: **724 cases, zero failures**. Reached team-record blocks for Leader/Helpers/Direct across its record-path candidates: **25,25,19,39,33,33,34,31** across the eight rows (including separate plans/scalar); sum **239**. Cases with team records: **16,13,10,16,15,15,17,15**, sum **117**. All rebuilt counts zero. Controls correctly report zero team-record blocks; scalar Helpers 1x2 reports zero overlap but 34 team-record blocks, so lack of overlap is not lack of build coverage. These are finite reached tests, not every interleaving.
+
+CI checkout **0f97d67f2c8c14a74c5d894f501ec21d9b0c1cbb**, a merge of the reviewed head with master, differs from the head in packet-census additions, not src/ or the reviewed fuzz/gate implementation. Entire trees differ; I do not claim identical trees. The successful occupancy job **129000306852** includes native release/trace library results **90 passed, 2 ignored**, including run_team and unwind fixtures. Its generic capture checks a teams2x2 plan, not proof of every new ctl/dir tag on the requested workstation configuration.
+
+### Census: fix is prudent, not a new safety prerequisite
+
+I reproduced the reporter classification using its actual plan_of function:
+- three `mibz2-N` leaders and six `mibz2-coop-pN` helpers → **(3,0,6)**;
+- one helper sampled only under its inherited leader name → **(4,0,5)**;
+- overwrite that TID with a later observed helper name → **(3,0,6)**.
+
+The existing latest-name map repairs a sampled rename, not a rename never sampled. Census polls procfs every 5 ms by default, silently skips failed comm reads and stops when the child exits. A multi-second run reduces the opportunity for this particular miss but does not establish completeness; 210 clean records are not proof. The known misclassification is rejected by the unchanged admission predicate. Do not waive it, infer missing helpers from the requested plan, filter bad rounds, or rerun after records to obtain a pass.
+
+**Recommendation: repair census readiness/completeness before freezing this one-shot C5 recipe.** Prefer an explicit registered-thread census/ready handshake, with timeout recorded as invalid, and a negative fixture delaying a helper's naming past the sampler window. Include unsampled exit and absent-helper cases; a unit test that only supplies a later name is insufficient. Apply observation symmetrically to all arms and keep any wait outside the measured interval, with its scope documented. Faster polling or a sleep is mitigation, not proof. Such mechanics need their own untimed dry-run and exact freeze; changes to the scientific workload/statistics remain reserved.
+
+**Is it mandatory to repair before C5? Not from this false-INVALID alone.** No unsafe decoder invariant is shown violated, so I impose no B6 STOP or new B5 hold for a fail-closed observation loss. The Coordinator may freeze the unchanged recipe with the disclosed chance of an irrevocably INVALID attempt; Louis's own run remains necessary. My engineering choice is to repair it first because the failure is known and the recipe forbids retry-to-pass. Separately, sampled names certify only observed identities, not simultaneous activity or exhaustive thread creation. Do not strengthen “observed plan” into either claim.
+
+Expected: determine whether new synchronization needs a fresh safety campaign and whether census can spoil the target run. Observed: the non-trace helper sequence is equivalent; reached CI fuzz is positive; completed current Miri remains unavailable; the census counterexample is reproducible. Next useful work: close normal CI and fix/pre-register observation reliability, not invent another decoder prototype or repeat the earlier timing verdict.
+
+Independent work: source/diff review, helper expansion, reporter counterexample, retrieved CI logs and routing audit; no local Rust/Miri/timing, implementation, merge or infrastructure changes. [Probes](records/d059/probes.py), [results](records/d059/results.json), [evidence](records/d059/evidence.json).
+
+Migration checked before receipt: old branch **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**; exact manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488** (local patch transport's extra trailing newline excluded). Receipt **0db38a83a7b35820d80481fc125dc0c01c097f9d**. Five resolved routing findings, zero unresolved. Only this checkpoint pending in the snapshot. Persistent automation unchanged.
