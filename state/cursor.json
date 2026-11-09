@@ -1062,12 +1062,15 @@
     },
     {
       "trigger_comment_id": 6735163830,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "1197bbcced86eae74c6d99eb8096b5c816a834d7",
-      "report_path": "state/reports/c29-reregistration-6735163830/report.md"
+      "report_path": "state/reports/c29-reregistration-6735163830/report.md",
+      "report_commit": "e68846149286dbbed19aa564027adf4d7eb61d8a",
+      "review_comment_pr": 145,
+      "disposition": "REVISE proposed hierarchy collector: partial readable hierarchy cannot prove >=4 or unlimited. Separately frozen bounded follow-up admissible in principle; preserve original terminal UNJUDGED, one-attempt policy and untimed layout validation. Four abstract witnesses; no timing or implementation."
     }
   ],
   "active_delegations": [],
