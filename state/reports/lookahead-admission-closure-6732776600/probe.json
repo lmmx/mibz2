@@ -1,0 +1,50 @@
+{
+  "control": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  },
+  "three_children_instead_of_eighteen": {
+    "verdict": "INVALID",
+    "exit": 1,
+    "mechanism": "NONE (the run is invalid)",
+    "failed_checks": [
+      "the trace `occupancy-t10-svc2-a2-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission teams (the service core's own), the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 3 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 1; requested rounds 1, not the registered 6 (18 children); 3 raw runs, not the 18 scheduled (6 rounds x 3 modes) once each)",
+      "the trace `occupancy-t10-svc2-a3-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission 3, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 4 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 1; requested rounds 1, not the registered 6 (18 children); 3 raw runs, not the 18 scheduled (6 rounds x 3 modes) once each)",
+      "the trace `occupancy-t10-svc2-a4-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission 4, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 5 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 1; requested rounds 1, not the registered 6 (18 children); 3 raw runs, not the 18 scheduled (6 rounds x 3 modes) once each)",
+      "the trace `occupancy-t10-svc2-a2-w12` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 60 (a window of 12), admission teams (the service core's own), the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 3 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 1; requested rounds 1, not the registered 6 (18 children); 3 raw runs, not the 18 scheduled (6 rounds x 3 modes) once each)",
+      "the trace `occupancy-t10-svc2-a4-w12` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 60 (a window of 12), admission 4, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 5 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 1; requested rounds 1, not the registered 6 (18 children); 3 raw runs, not the 18 scheduled (6 rounds x 3 modes) once each)"
+    ]
+  },
+  "raw_hash_and_error_disagree_with_parity": {
+    "verdict": "INVALID",
+    "exit": 1,
+    "mechanism": "NONE (the run is invalid)",
+    "failed_checks": [
+      "the trace `occupancy-t10-svc2-a3-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission 3, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 4 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 6; round 0 'off': hash 'BAD' not a hex digest; round 0 'off': err 'failed', not none)"
+    ]
+  },
+  "one_complete_round_share_99": {
+    "verdict": "INVALID",
+    "exit": 1,
+    "mechanism": "NONE (the run is invalid)",
+    "failed_checks": [
+      "the trace `occupancy-t10-svc2-a3-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission 3, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 4 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 6; round 0: metrics absent, not finite or out of domain: svc.team.idle_prep_share)"
+    ]
+  },
+  "one_complete_round_share_NaN": {
+    "verdict": "INVALID",
+    "exit": 1,
+    "mechanism": "NONE (the run is invalid)",
+    "failed_checks": [
+      "the trace `occupancy-t10-svc2-a3-w8` complete and as registered (10 threads, the service core, mibz2-svc2's plan, 2 service threads, slots 40 (a window of 8), admission 3, the run's commit, every scheduled child once with exit status 0, every complete round's prepared count within 1 <= median <= max <= 4 and 431 blocks, the summary the median of those rounds, parity, the registered output, every metric read finite and in range; rounds: 6; round 0: metrics absent, not finite or out of domain: svc.team.idle_prep_share; summary svc.team.idle_prep_share 0.15, not the median of its complete rounds (nan))"
+    ]
+  },
+  "one_complete_round_six_requested": {
+    "verdict": "VALID",
+    "exit": 0,
+    "mechanism": "PREP STARVATION PERSISTS AT EVERY THRESHOLD: not relieved by admitting more preparations. The service workers' order of work (finishing first) remains a candidate, untested here. Gaining: none. Relieved of prep starvation (starved at a2 w8): none.",
+    "failed_checks": []
+  }
+}

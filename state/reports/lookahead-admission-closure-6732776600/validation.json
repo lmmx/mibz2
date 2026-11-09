@@ -1,0 +1,217 @@
+{
+  "inbox": 6732776600,
+  "source_head": "8a0fc8e099f932c14cd746c4c5d81aaef8dcc75d",
+  "input_freeze": "4ac25fcd1a3c6a898221d23fbcf7d3a904deb2c5",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source_files": [
+    {
+      "path": "bench/service_lookahead.py",
+      "blob_sha": "031dbf89f744d23b3ca8c95ad7b821af991a2810"
+    },
+    {
+      "path": "bench/test_service_lookahead.py",
+      "blob_sha": "9693fa5f2528095b33f6e9b53c0e94bed5773c1a"
+    },
+    {
+      "path": "bench/service_core.py",
+      "blob_sha": "d3dcd2befda5105476ef9953971fd034ca82a253"
+    },
+    {
+      "path": "bench/service_2x3.py",
+      "blob_sha": "e03f62c439d5a4f27c558b54bdb5f7884a5154f2"
+    },
+    {
+      "path": "bench/team_size.py",
+      "blob_sha": "3d8b22de49f3ae33aac575159fb4e5aa5d6d5bae"
+    },
+    {
+      "path": "bench/wikidata.py",
+      "blob_sha": "1e4898462209873f03c78b1d6233635f4d5b768c"
+    },
+    {
+      "path": "bench/wikidata.json",
+      "blob_sha": "8360bb5a60cb1b18da5c42b6c06822dd766c8b97"
+    }
+  ],
+  "freeze_diff": [
+    "bench/service-lookahead.frozen"
+  ],
+  "runtime_diff": [
+    ".just/bench.just",
+    "bench/service-lookahead.frozen",
+    "bench/service_lookahead.py",
+    "bench/test_service_lookahead.py",
+    "docs/journal/2026-11-09-service-lookahead-registration.md",
+    "examples/occupancy.rs"
+  ],
+  "ci": [
+    {
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128953013677"
+    },
+    {
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984380/job/128952791732"
+    },
+    {
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984380/job/128952789782"
+    },
+    {
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984380/job/128952789431"
+    },
+    {
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487545"
+    },
+    {
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487410"
+    },
+    {
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487408"
+    },
+    {
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487394"
+    },
+    {
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487374"
+    },
+    {
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952487373"
+    },
+    {
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952469432"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467816"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467770"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467752"
+    },
+    {
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467736"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467725"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952467723"
+    },
+    {
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952441930"
+    },
+    {
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952441922"
+    },
+    {
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952441921"
+    },
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984380/job/128952441891"
+    },
+    {
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984406/job/128952441844"
+    },
+    {
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984380/job/128952441815"
+    },
+    {
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984428/job/128952441731"
+    },
+    {
+      "name": "occupancy",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984448/job/128952441511"
+    },
+    {
+      "name": "miri",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984390/job/128952441425"
+    },
+    {
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42552984385/job/128952441277"
+    }
+  ],
+  "guardian": {
+    "comment": 6732679972,
+    "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
+    "decision": "D057"
+  },
+  "scope": "Python reporter fixtures and original witnesses executed; frozen recipe and source diffs read. No native Rust, timing, fuzz, Miri or workstation execution. Claimed native dry/six-round pass not independently rerun."
+}
