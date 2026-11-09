@@ -61,6 +61,8 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
     (`ab telemetry-check`'s `task-clock-modes`).
   - **Cycles over `eff_ghz` is the task clock again.** It is no independent frequency
     correction, and is never presented as one.
+  - **The wording:** the counters are enabled, and disabled, one after another at the wall's
+    edges, not "over exactly the region". A multiplexed counter's raw count is partial.
 
 ### Added
 
@@ -89,18 +91,33 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
     (default 10) S seconds apart (default 1), one JSON line each. Unlike `ab settle` it
     judges nothing: it never stops early, waits for no condition, and never fails, so its
     length is fixed before it starts.
-  - **`ab telemetry-check`:** untimed. It exercises the recorder's failure paths and its
-    coverage, one JSON line a case, and exits 1 if any case FAILs. The cases:
+  - **`ab telemetry-check`:** the recorder's own check, registered and frozen
+    (`docs/journal/2026-11-09-telemetry-check-registration.md`; Guardian D065). One JSON line
+    a case: PASS, FAIL, OBSERVED, UNAVAILABLE or INCOMPLETE. It exits 1 if any case FAILs,
+    else 3 if any is INCOMPLETE, else 0. The cases:
     - a failed enable and disable;
     - a counter that can't be opened;
-    - the multiplexing predicate, and live multiplexing under 24 extra cycle counters;
+    - the multiplexing predicate;
+    - live multiplexing, with the extra counters attempted, opened and enabled counted, and
+      "not exercised" where none was multiplexed;
     - the user-only fallback, forced;
-    - the task clock's user-only semantics on this kernel;
-    - inheritance: a thread started before the counters open is not counted, one started in
-      the region is, and nothing outside it is.
+    - the task clock's modes, every control and read checked, a ratio only from valid whole
+      readings, beside the thread's own system-time share;
+    - the software task clock's region coverage;
+    - each counter's inheritance on its own, software and hardware. The count with the work in
+      a thread started inside the region must be at least 10 times the count with it in a thread
+      started before, so a counter whose inheritance is removed fails.
 
-    A case without the events it needs is UNAVAILABLE, never PASS. `just
-    bench-telemetry-check` runs it on a workstation, untimed, as one bundle.
+    The hardware counters' region coverage is not validated. Each spin has a 10 s wall-time
+    deadline, with checked CPU accounting. A case without its events is UNAVAILABLE, never
+    PASS.
+  - **`just bench-telemetry-check`:** that check once, on a workstation, as one bundle.
+    - Its exit follows the check (CHECKED 0; FAILED or REFUSED 1; INCOMPLETE 3) through the
+      bundle and `just submit`, which still submit it. `bench/test_telemetry_check.py` checks
+      this end to end with stand-ins, in CI's `submit` job.
+    - It runs the executable Cargo reports building, never a guessed path, and records its
+      SHA-256 and the toolchain.
+    - It refuses uncommitted or unfrozen inputs, and is bounded by `timeout 300`.
   - **`report.py machine`** shows the reference cycles, the counters' least share running,
     the allowed and seen CPUs, and each run's counter faults. Its labels say what each column
     is ("cycles/task-clock GHz", "scaling_cur_freq mean"), not "the effective clock".

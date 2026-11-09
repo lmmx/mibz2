@@ -103,8 +103,9 @@
 //! run's own CPU), the steal, and the cgroup's CPU throttling and the CPU pressure stall
 //! time (PSI) over the run, where the kernel has them (null where not).
 //! With `--machine-state` only (bench 3.3.0; the `machine` module): the run's cycles,
-//! instructions and task clock (perf, inherited by its threads, over exactly the region its
-//! wall is), the effective clock (cycles over task clock), and the clock, governor, EPP,
+//! instructions and task clock (perf, inherited by its threads, enabled one after another
+//! just before the wall's clock starts and disabled one after another just after it stops:
+//! `perf_skew_ns` bounds the difference), cycles over the task clock, and the clock, governor, EPP,
 //! turbo and package temperature before and after it; each null with a reason where it
 //! can't be read.
 //!
@@ -2401,6 +2402,12 @@ mod machine {
         /// then cycles, instructions, the task clock (s), the scope, the least share of
         /// the region a counter ran for, and the effective clock (GHz)
         pub fn finish(self) -> String {
+            self.collect().1
+        }
+        /// `finish`, with each counter's reading beside the record's fields: cycles,
+        /// instructions, reference cycles and the task clock, in that order
+        #[allow(clippy::type_complexity)]
+        pub fn collect(self) -> (Vec<(&'static str, Result<Reading, String>)>, String) {
             let ctl = self.ctl.take();
             let failed = |name: &str| -> Option<String> {
                 let v: Vec<String> = ctl
@@ -2502,7 +2509,15 @@ mod machine {
                 running.map_or("null".into(), |x| format!("{x:.6}"))
             ));
             f.push(field("eff_ghz", &eff, |x| format!("{x:.3}")));
-            format!(",{}", f.join(","))
+            (
+                vec![
+                    ("cycles", cy),
+                    ("instructions", ins),
+                    ("ref_cycles", rc),
+                    ("task_clock", tc),
+                ],
+                format!(",{}", f.join(",")),
+            )
         }
         /// `ab env`'s `perf` field: what the counters would count here
         pub fn probe() -> String {
@@ -2529,31 +2544,59 @@ mod machine {
     }
 
     // ---------------------------------------------------------------------------------
-    // the recorder's own check
+    // the recorder's own check (bench 3.4.0; its specification:
+    // docs/journal/2026-11-09-telemetry-check-registration.md)
 
-    /// Spin for `ms` of this thread's own CPU time (RUSAGE_THREAD), not wall time, so a
-    /// preempted thread on a busy machine spins as long
-    pub fn spin(ms: u64) {
-        let t = crate::rusage(1).0;
+    /// This thread's own (user, system) CPU seconds, RUSAGE_THREAD, or why not: a failed
+    /// call is an error, never a zero
+    pub fn thread_times() -> Result<(f64, f64), String> {
+        let mut r = crate::Rusage::default();
+        // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
+        let rc = unsafe { crate::getrusage(1, &mut r) };
+        if rc != 0 {
+            return Err(format!(
+                "getrusage(RUSAGE_THREAD) failed (errno {})",
+                std::io::Error::last_os_error().raw_os_error().unwrap_or(0)
+            ));
+        }
+        let t = |tv: [i64; 2]| tv[0] as f64 + tv[1] as f64 * 1e-6;
+        Ok((t(r.utime), t(r.stime)))
+    }
+
+    /// The wall-time bound on each spin: whatever its CPU budget, a spin gives up after this
+    /// long, and its case is INCOMPLETE (a machine too busy to give it the CPU, or failed
+    /// accounting, never a pass)
+    pub const SPIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
+
+    /// Spin for `ms` of this thread's own CPU time, checked, within SPIN_DEADLINE of wall
+    /// time
+    pub fn spin(ms: u64) -> Result<(), String> {
+        let deadline = std::time::Instant::now() + SPIN_DEADLINE;
+        let cpu = || thread_times().map(|t| t.0 + t.1);
+        let t0 = cpu()?;
         let mut x = 0u64;
-        while crate::rusage(1).0 - t < ms as f64 * 1e-3 {
+        while cpu()? - t0 < ms as f64 * 1e-3 {
+            if std::time::Instant::now() > deadline {
+                return Err(format!(
+                    "{ms} ms of CPU not reached within {} s of wall time",
+                    SPIN_DEADLINE.as_secs()
+                ));
+            }
             for _ in 0..10_000 {
                 x = std::hint::black_box(x.wrapping_add(1));
             }
         }
-    }
-
-    /// A number in a record's fields, or None
-    fn num(f: &str, k: &str) -> Option<f64> {
-        let i = f.find(&format!("\"{k}\":"))? + k.len() + 3;
-        f[i..].split([',', '}', ']']).next()?.parse().ok()
+        Ok(())
     }
 
     const SW_CPU_CLOCK: u64 = 0;
     const SW: (u64, u64) = (TYPE_SOFTWARE, SW_TASK_CLOCK);
 
-    /// One case's line: its name, PASS, FAIL, OBSERVED (real hardware's behaviour, shown,
-    /// with nothing to compare it against) or UNAVAILABLE (with why), and what it saw
+    /// One case's line: its name, its status, what it saw, and its fields. The statuses:
+    /// PASS (the property checked holds), FAIL (it doesn't: the recorder is wrong here),
+    /// OBSERVED (a behaviour shown, with nothing it is checked against), UNAVAILABLE (the
+    /// events it needs can't be opened here, with why) and INCOMPLETE (it started but
+    /// couldn't finish validly: a failed control or read, multiplexing, a deadline)
     fn case(name: &str, status: &str, detail: &str, fields: &str) -> String {
         format!(
             "{{\"case\":{},\"status\":\"{status}\",\"detail\":{},\"fields\":{{{}}}}}",
@@ -2563,42 +2606,126 @@ mod machine {
         )
     }
 
-    /// `ab telemetry-check`: untimed. It exercises the recorder's failure paths and its
-    /// coverage, one JSON line a case, and exits 1 if any case FAILs (bench 3.4.0):
-    /// - `control-failure`: an enable and disable that fail (a descriptor that isn't a perf
-    ///   event's) are recorded, and that counter is invalid;
-    /// - `missing-counter`: an event that can't be opened leaves every field null with its
-    ///   reason;
-    /// - `multiplex-predicate`: `eff_ghz` refuses multiplexed cycles or task clock, and only
-    ///   those (instructions' validity is reported on its own);
-    /// - `multiplex-live`: with 24 more hardware cycle counters running, whether the
-    ///   record's counters were multiplexed, and that the record says so;
-    /// - `user-only-fallback`: the fallback forced, its `eff_ghz` null with its reason;
-    /// - `task-clock-modes`: a task clock opened user-only beside one opened in both modes,
-    ///   over syscall-heavy work: whether this kernel's task clock honours the user-only
-    ///   flag (OBSERVED: why `eff_ghz` stays null in user mode);
-    /// - `inheritance`: a thread started before the counters open is not counted, one
-    ///   started inside the region is, and nothing outside the region is (software events,
-    ///   then the real counters where there are any)
-    pub fn check() -> i32 {
-        let mut fails = 0;
-        let mut out = |line: String| {
-            if line.contains("\"status\":\"FAIL\"") {
-                fails += 1;
+    /// A reading's JSON: raw value, enabled and running, or null with its reason
+    fn reading_json(name: &str, r: &Result<Reading, String>) -> String {
+        match r {
+            Ok(x) => format!(
+                "\"{name}\":{{\"value\":{},\"enabled_ns\":{},\"running_ns\":{}}}",
+                x.value, x.enabled, x.running
+            ),
+            Err(e) => format!("\"{name}\":null,\"{name}_why\":{}", js(e)),
+        }
+    }
+
+    /// The case statuses' exit code: 1 if any FAILs, else 3 if any is INCOMPLETE, else 0
+    pub fn exit_code(statuses: &[&str]) -> i32 {
+        if statuses.contains(&"FAIL") {
+            1
+        } else if statuses.contains(&"INCOMPLETE") {
+            3
+        } else {
+            0
+        }
+    }
+
+    /// The per-counter inheritance witness: counts with the work in a thread started inside
+    /// the region (`inside`) against the same work in a thread started before the counters
+    /// open (`before`), with the opener idle in both. A counter passes only if both readings
+    /// are valid and whole, and `inside` is at least ten times `before` (and nonzero):
+    /// removing that counter's inheritance makes `inside` the opener's idle count, and fails
+    pub fn inherit_status(
+        inside: &Result<Reading, String>,
+        before: &Result<Reading, String>,
+    ) -> (&'static str, String) {
+        match (inside, before) {
+            (Err(e), _) | (_, Err(e)) if e.starts_with("its ") => {
+                ("INCOMPLETE", format!("a control operation failed: {e}"))
             }
+            (Err(e), _) | (_, Err(e)) => ("UNAVAILABLE", e.clone()),
+            (Ok(a), Ok(b)) if !a.whole() || !b.whole() => (
+                "INCOMPLETE",
+                "multiplexed: the counts don't cover their enabled time".into(),
+            ),
+            (Ok(a), Ok(b)) if a.value > 0 && a.value >= 10 * b.value.max(1) => (
+                "PASS",
+                format!(
+                    "{} counted with the work in a thread started in the region, {} with it in a thread started before",
+                    a.value, b.value
+                ),
+            ),
+            (Ok(a), Ok(b)) => (
+                "FAIL",
+                format!(
+                    "{} counted with the work in a thread started in the region, {} with it in a thread started before: no inheritance shown",
+                    a.value, b.value
+                ),
+            ),
+        }
+    }
+
+    /// One inheritance region: `before` true runs the work (80 ms of CPU) in a thread
+    /// started before the counters open, else in one started inside the region; the opener
+    /// only waits. The readings, or why the region couldn't be run
+    #[allow(clippy::type_complexity)]
+    fn inherit_region(
+        open: &dyn Fn() -> Perf,
+        before: bool,
+    ) -> Result<Vec<(&'static str, Result<Reading, String>)>, String> {
+        let (go, wait) = std::sync::mpsc::channel::<()>();
+        let early = before.then(|| {
+            std::thread::spawn(move || {
+                wait.recv().map_err(|_| "never started".to_string())?;
+                spin(80)
+            })
+        });
+        let p = open();
+        if let Err(e) = p.cycles.clone() {
+            drop(go);
+            if let Some(h) = early {
+                let _ = h.join();
+            }
+            return Ok(p
+                .collect()
+                .0
+                .into_iter()
+                .map(|(n, _)| (n, Err(e.clone())))
+                .collect());
+        }
+        p.enable();
+        let r = match early {
+            Some(h) => {
+                let _ = go.send(());
+                h.join()
+            }
+            None => std::thread::spawn(|| spin(80)).join(),
+        };
+        p.disable();
+        let readings = p.collect().0;
+        r.map_err(|_| "the worker panicked".to_string())??;
+        Ok(readings)
+    }
+
+    /// `ab telemetry-check`: one JSON line a case (statuses at `case`), then exit 1 if any
+    /// case FAILs, else 3 if any is INCOMPLETE, else 0. Every case is bounded: each spin by
+    /// SPIN_DEADLINE, the whole check by the recipe's outer timeout
+    pub fn check() -> i32 {
+        let mut statuses: Vec<&'static str> = Vec::new();
+        let mut out = |status: &'static str, line: String| {
+            statuses.push(status);
             println!("{line}");
         };
 
-        // control-failure
+        // control-failure: a descriptor that isn't a perf event's, so its enable and disable
+        // fail; that counter must be invalid, the rest valid
         {
             let mut p = Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW);
-            if p.cycles.is_err() {
-                out(case(
-                    "control-failure",
+            if let Err(e) = &p.cycles {
+                let e = e.clone();
+                drop(p.finish());
+                out(
                     "UNAVAILABLE",
-                    "no software events here",
-                    "",
-                ));
+                    case("control-failure", "UNAVAILABLE", &e, ""),
+                );
             } else {
                 use std::os::fd::IntoRawFd;
                 if let Ok(fd) = &p.instructions {
@@ -2609,7 +2736,7 @@ mod machine {
                     .map(|f| f.into_raw_fd())
                     .map_err(|e| e.to_string());
                 p.enable();
-                spin(5);
+                let s = spin(5);
                 p.disable();
                 let f = p.finish();
                 let ok = f.contains(
@@ -2618,12 +2745,19 @@ mod machine {
                     && f.contains("{\"counter\":\"instructions\",\"op\":\"enable\"")
                     && f.contains("{\"counter\":\"instructions\",\"op\":\"disable\"")
                     && !f.contains("\"cycles\":null");
-                out(case(
-                    "control-failure",
-                    if ok { "PASS" } else { "FAIL" },
-                    "a failed enable and disable are recorded, and only that counter is invalid",
-                    &f,
-                ));
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", e),
+                    Ok(()) if ok => (
+                        "PASS",
+                        "a failed enable and disable are recorded, and only that counter is invalid"
+                            .into(),
+                    ),
+                    Ok(()) => (
+                        "FAIL",
+                        "a failed enable or disable was not recorded as such".into(),
+                    ),
+                };
+                out(st, case("control-failure", st, &d, &f));
             }
         }
 
@@ -2648,264 +2782,356 @@ mod machine {
             .all(|k| f.contains(&format!("\"{k}\":null,\"{k}_why\":\"")))
                 && f.contains("\"perf_running\":null")
                 && !f.contains("perf_scope");
-            out(case(
-                "missing-counter",
-                if ok { "PASS" } else { "FAIL" },
-                "an event that can't be opened: every field null with its reason, never zero",
-                &f,
-            ));
+            let st = if ok { "PASS" } else { "FAIL" };
+            out(
+                st,
+                case(
+                    "missing-counter",
+                    st,
+                    "an event that can't be opened: every field null with its reason, never zero",
+                    &f,
+                ),
+            );
         }
 
         // multiplex-predicate
         {
-            let whole = Reading {
-                value: 4_000,
+            let r = |value, running| Reading {
+                value,
                 enabled: 1_000,
-                running: 1_000,
+                running,
             };
-            let clock = Reading {
-                value: 1_000,
-                enabled: 1_000,
-                running: 1_000,
-            };
-            let half = Reading {
-                value: 2_000,
-                enabled: 1_000,
-                running: 500,
-            };
-            let a = eff_ghz(&Ok(half), &Ok(whole), false);
-            let b = eff_ghz(&Ok(whole), &Ok(half), false);
-            let c = eff_ghz(&Ok(whole), &Ok(clock), false);
-            let d = eff_ghz(&Ok(whole), &Ok(clock), true);
+            let a = eff_ghz(&Ok(r(2_000, 500)), &Ok(r(1_000, 1_000)), false);
+            let b = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 500)), false);
+            let c = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 1_000)), false);
+            let d = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 1_000)), true);
             let ok = a.as_ref().is_err_and(|e| e.starts_with("multiplexed"))
                 && b.as_ref().is_err_and(|e| e.starts_with("multiplexed"))
                 && c == Ok(4.0)
                 && d.as_ref().is_err_and(|e| e.contains("user mode only"));
-            out(case(
-                "multiplex-predicate",
-                if ok { "PASS" } else { "FAIL" },
-                "eff_ghz: null for multiplexed cycles or task clock, and in user mode only",
-                &format!(
-                    "\"a\":{},\"b\":{},\"c\":{},\"d\":{}",
-                    js(&format!("{a:?}")),
-                    js(&format!("{b:?}")),
-                    js(&format!("{c:?}")),
-                    js(&format!("{d:?}"))
+            let st = if ok { "PASS" } else { "FAIL" };
+            let q = |x: &Result<f64, String>| js(&format!("{x:?}"));
+            out(
+                st,
+                case(
+                    "multiplex-predicate",
+                    st,
+                    "eff_ghz: null for multiplexed cycles or task clock, and in user mode only",
+                    &format!(
+                        "\"a\":{},\"b\":{},\"c\":{},\"d\":{}",
+                        q(&a),
+                        q(&b),
+                        q(&c),
+                        q(&d)
+                    ),
                 ),
-            ));
+            );
         }
 
-        // multiplex-live
+        // multiplex-live: 24 more cycle counters, each opened and enabled with its result
+        // checked; whether the record's counters were in fact multiplexed, and if so that
+        // the record says so
         {
             let p = Perf::open();
             if let Err(e) = &p.cycles {
-                out(case(
-                    "multiplex-live",
-                    "UNAVAILABLE",
-                    &format!("no hardware cycles: {e}"),
-                    "",
-                ));
+                let e = format!("no hardware cycles: {e}");
                 drop(p.finish());
+                out("UNAVAILABLE", case("multiplex-live", "UNAVAILABLE", &e, ""));
             } else {
                 let user = p.scope == "user";
-                let extra: Vec<i32> = (0..24)
+                let attempted = 24;
+                let opened: Vec<i32> = (0..attempted)
                     .filter_map(|_| open(TYPE_HARDWARE, HW_CPU_CYCLES, user).ok())
                     .collect();
-                for fd in &extra {
+                let enabled = opened
+                    .iter()
                     // SAFETY: an open perf event descriptor; the request takes no argument
-                    unsafe { ioctl(*fd, IOC_ENABLE as std::ffi::c_ulong, 0u64) };
-                }
+                    .filter(|fd| unsafe { ioctl(**fd, IOC_ENABLE as std::ffi::c_ulong, 0u64) } == 0)
+                    .count();
                 p.enable();
-                spin(50);
+                let s = spin(50);
                 p.disable();
-                for fd in extra.iter() {
+                for fd in &opened {
                     // SAFETY: an open descriptor owned here, closed once
                     drop(unsafe { owned(*fd) });
                 }
-                let f = p.finish();
-                let listed = !f.contains("\"perf_multiplexed\":[]");
+                let (rs, f) = p.collect();
+                let partial: Vec<&str> = rs
+                    .iter()
+                    .filter(|r| r.1.as_ref().is_ok_and(|x| !x.whole()))
+                    .map(|r| r.0)
+                    .collect();
                 let mux = f
                     .split_once("\"perf_multiplexed\":[")
                     .and_then(|x| x.1.split_once(']'))
                     .map_or("", |x| x.0);
-                // (cycles or the task clock multiplexed: eff_ghz must be null; instructions
-                // or reference cycles alone don't touch it)
-                let divides = mux.contains("\"cycles\"") || mux.contains("\"task_clock\"");
-                let consistent = !divides || f.contains("\"eff_ghz\":null");
-                out(case(
-                    "multiplex-live",
-                    if consistent { "OBSERVED" } else { "FAIL" },
-                    &format!(
-                        "{} extra cycle counters running; the record's counters {}",
-                        extra.len(),
-                        if listed {
-                            "were multiplexed, and say so"
-                        } else {
-                            "were not multiplexed"
-                        }
+                let listed = partial.iter().all(|n| mux.contains(&format!("\"{n}\"")));
+                let divides = partial.iter().any(|n| *n == "cycles" || *n == "task_clock");
+                let consistent = listed && (!divides || f.contains("\"eff_ghz\":null"));
+                let counts = format!(
+                    "{attempted} extra cycle counters attempted, {} opened, {enabled} enabled",
+                    opened.len()
+                );
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", format!("{counts}; {e}")),
+                    Ok(()) if partial.is_empty() => (
+                        "OBSERVED",
+                        format!("{counts}; multiplexing not exercised: every counter ran its whole enabled time"),
                     ),
-                    &f,
-                ));
+                    Ok(()) if consistent => (
+                        "PASS",
+                        format!("{counts}; multiplexed: {}; the record lists them and eff_ghz follows", partial.join(", ")),
+                    ),
+                    Ok(()) => (
+                        "FAIL",
+                        format!("{counts}; multiplexed: {}; the record doesn't say so", partial.join(", ")),
+                    ),
+                };
+                out(st, case("multiplex-live", st, &d, &f));
             }
         }
 
-        // user-only-fallback
+        // user-only-fallback: the fallback forced; no matched ratio may be claimed
         {
             let p = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, true);
-            if p.cycles.is_err() {
-                out(case(
-                    "user-only-fallback",
+            if let Err(e) = &p.cycles {
+                let e = e.clone();
+                drop(p.finish());
+                out(
                     "UNAVAILABLE",
-                    "no software events here",
-                    "",
-                ));
+                    case("user-only-fallback", "UNAVAILABLE", &e, ""),
+                );
             } else {
                 p.enable();
-                spin(5);
+                let s = spin(5);
                 p.disable();
                 let f = p.finish();
                 let ok = f.contains("\"perf_scope\":\"user\"")
                     && f.contains(
                         "\"eff_ghz\":null,\"eff_ghz_why\":\"cycles counted in user mode only",
                     );
-                out(case(
-                    "user-only-fallback",
-                    if ok { "PASS" } else { "FAIL" },
-                    "the fallback forced: scope user, no matched ratio claimed",
-                    &f,
-                ));
-            }
-            let h = Perf::open_mode(
-                (TYPE_HARDWARE, HW_CPU_CYCLES),
-                (TYPE_HARDWARE, HW_INSTRUCTIONS),
-                (TYPE_HARDWARE, HW_REF_CPU_CYCLES),
-                true,
-            );
-            if let Err(e) = &h.cycles {
-                out(case(
-                    "user-only-fallback-hardware",
-                    "UNAVAILABLE",
-                    &format!("no hardware cycles in user mode: {e}"),
-                    "",
-                ));
-                drop(h.finish());
-            } else {
-                h.enable();
-                spin(20);
-                h.disable();
-                let f = h.finish();
-                out(case(
-                    "user-only-fallback-hardware",
-                    "OBSERVED",
-                    "real counters, user mode only, over 20 ms of this thread's CPU",
-                    &f,
-                ));
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", e),
+                    Ok(()) if ok => (
+                        "PASS",
+                        "the fallback forced: scope user, no matched ratio claimed".into(),
+                    ),
+                    Ok(()) => (
+                        "FAIL",
+                        "the forced fallback claimed a ratio or lost its scope".into(),
+                    ),
+                };
+                out(st, case("user-only-fallback", st, &d, &f));
             }
         }
 
-        // task-clock-modes
+        // task-clock-modes: a task clock in user mode only beside one in both modes, over
+        // syscall-heavy work, every control and read checked, with this thread's own user
+        // and system time over the same work. A ratio only from two valid, whole readings
         {
-            match (
-                open(TYPE_SOFTWARE, SW_TASK_CLOCK, true),
-                open(TYPE_SOFTWARE, SW_TASK_CLOCK, false),
-            ) {
-                (Ok(u), Ok(a)) => {
-                    for fd in [u, a] {
-                        // SAFETY: an open perf event descriptor; the request takes no argument
-                        unsafe { ioctl(fd, IOC_ENABLE as std::ffi::c_ulong, 0u64) };
+            let pu = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, true);
+            let pa = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, false);
+            if pu.cycles.is_err() || pa.cycles.is_err() || pa.scope != "user+kernel" {
+                let why = match (&pu.cycles, &pa.cycles) {
+                    (Err(e), _) | (_, Err(e)) => e.clone(),
+                    _ => "a both-mode task clock is not permitted here".into(),
+                };
+                drop(pu.finish());
+                drop(pa.finish());
+                out(
+                    "UNAVAILABLE",
+                    case("task-clock-modes", "UNAVAILABLE", &why, ""),
+                );
+            } else {
+                let t0 = thread_times();
+                pu.enable();
+                pa.enable();
+                let deadline = std::time::Instant::now() + SPIN_DEADLINE;
+                let mut work: Result<(), String> = Ok(());
+                match std::fs::File::open("/dev/zero") {
+                    Err(e) => work = Err(format!("/dev/zero: {e}")),
+                    Ok(mut z) => {
+                        let mut b = [0u8; 64];
+                        loop {
+                            match (thread_times(), t0.clone()) {
+                                (Ok(t), Ok(s)) if (t.0 + t.1) - (s.0 + s.1) >= 0.05 => break,
+                                (Err(e), _) | (_, Err(e)) => {
+                                    work = Err(e.clone());
+                                    break;
+                                }
+                                _ => {}
+                            }
+                            if std::time::Instant::now() > deadline {
+                                work = Err("50 ms of CPU not reached within the deadline".into());
+                                break;
+                            }
+                            if let Err(e) = std::io::Read::read(&mut z, &mut b) {
+                                work = Err(format!("reading /dev/zero: {e}"));
+                                break;
+                            }
+                        }
                     }
-                    // (kernel-heavy work: small reads of /dev/zero)
-                    let t = crate::rusage(1).0;
-                    let mut z = std::fs::File::open("/dev/zero").unwrap();
-                    let mut b = [0u8; 64];
-                    while crate::rusage(1).0 - t < 0.05 {
-                        let _ = std::io::Read::read(&mut z, &mut b);
-                    }
-                    let read = |fd: i32| -> u64 {
-                        // SAFETY: an open perf event descriptor; the request takes no argument
-                        unsafe { ioctl(fd, IOC_DISABLE as std::ffi::c_ulong, 0u64) };
-                        // SAFETY: an open descriptor owned here, closed once
-                        let mut f = unsafe { owned(fd) };
-                        let mut raw = [0u8; 24];
-                        std::io::Read::read_exact(&mut f, &mut raw)
-                            .map_or(0, |_| u64::from_ne_bytes(raw[..8].try_into().unwrap()))
-                    };
-                    let (nu, na) = (read(u), read(a));
-                    let r = if na == 0 {
-                        f64::NAN
-                    } else {
-                        nu as f64 / na as f64
-                    };
-                    out(case(
-                        "task-clock-modes",
-                        "OBSERVED",
-                        &format!("over kernel-heavy work, the user-only task clock read {:.3} of the both-mode one{}", r,
-                            if r > 0.9 { ": this kernel's task clock doesn't exclude kernel time" } else { "" }),
-                        &format!("\"user_only_ns\":{nu},\"both_ns\":{na}"),
-                    ));
                 }
-                (u, a) => {
-                    for fd in [u.ok(), a.ok()].into_iter().flatten() {
-                        // SAFETY: an open descriptor owned here, closed once
-                        drop(unsafe { owned(fd) });
+                pa.disable();
+                pu.disable();
+                let t1 = thread_times();
+                let (ru, fu) = pu.collect();
+                let (ra, fa) = pa.collect();
+                let (u, a) = (ru[0].1.clone(), ra[0].1.clone());
+                let times = match (&t0, &t1) {
+                    (Ok(s), Ok(e)) => Ok((e.0 - s.0, e.1 - s.1)),
+                    (Err(x), _) | (_, Err(x)) => Err(x.clone()),
+                };
+                let fields = format!(
+                    "{},{},{},\"user_only_record\":{{{}}},\"both_record\":{{{}}}",
+                    reading_json("user_only", &u),
+                    reading_json("both", &a),
+                    match &times {
+                        Ok((us, ss)) =>
+                            format!("\"thread_user_s\":{us:.4},\"thread_system_s\":{ss:.4}"),
+                        Err(e) => format!("\"thread_user_s\":null,\"thread_times_why\":{}", js(e)),
+                    },
+                    fu.trim_start_matches(','),
+                    fa.trim_start_matches(',')
+                );
+                let (st, d) = match (&work, &u, &a, &times) {
+                    (Err(e), ..) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e), _, _) | (_, _, Err(e), _) => ("INCOMPLETE", e.clone()),
+                    (_, _, _, Err(e)) => ("INCOMPLETE", e.clone()),
+                    (_, Ok(x), Ok(y), _) if !x.whole() || !y.whole() || y.value == 0 => (
+                        "INCOMPLETE",
+                        "a reading was multiplexed or zero: no ratio".into(),
+                    ),
+                    (_, Ok(x), Ok(y), Ok((us, ss))) => {
+                        let r = x.value as f64 / y.value as f64;
+                        let sys = ss / (us + ss).max(1e-9);
+                        let reading = if sys < 0.2 {
+                            "too little kernel time to say anything of the user-only flag"
+                        } else if r > 0.9 {
+                            "consistent with this kernel's task clock not excluding kernel time"
+                        } else {
+                            "consistent with the user-only task clock excluding kernel time"
+                        };
+                        (
+                            "OBSERVED",
+                            format!("the user-only task clock read {r:.3} of the both-mode one, over work {:.0}% in system time: {reading}", 100.0 * sys),
+                        )
                     }
-                    out(case(
-                        "task-clock-modes",
-                        "UNAVAILABLE",
-                        "a task clock could not be opened in both modes",
-                        "",
-                    ));
-                }
+                };
+                out(st, case("task-clock-modes", st, &d, &fields));
             }
         }
 
-        // inheritance
-        for (name, hw) in [("inheritance", false), ("inheritance-hardware", true)] {
-            // (a thread started before the counters open, spinning across the region: as
-            // the sampler is, it must not be counted)
+        // region-task-clock: the task clock (software) counts 80 ms in a thread started in
+        // the region and 20 ms in the opener, none of 120 ms outside the region, none of a
+        // thread started before the counters open. The task clock only: the hardware
+        // counters' region coverage is not validated here
+        {
             let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-            let (go_tx, go_rx) = std::sync::mpsc::channel::<()>();
+            let (go, wait) = std::sync::mpsc::channel::<()>();
             let s2 = stop.clone();
-            let before = std::thread::spawn(move || {
-                if go_rx.recv().is_err() {
-                    return;
+            let early = std::thread::spawn(move || -> Result<(), String> {
+                if wait.recv().is_err() {
+                    return Ok(());
                 }
                 while !s2.load(std::sync::atomic::Ordering::Relaxed) {
-                    spin(5);
+                    spin(5)?;
                 }
+                Ok(())
             });
-            let p = if hw {
-                Perf::open()
-            } else {
-                Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW)
-            };
+            let p = Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW);
             if let Err(e) = &p.cycles {
-                out(case(name, "UNAVAILABLE", e, ""));
+                let e = e.clone();
+                drop(go);
+                let _ = early.join();
                 drop(p.finish());
-                drop(go_tx);
-                before.join().unwrap();
-                continue;
+                out(
+                    "UNAVAILABLE",
+                    case("region-task-clock", "UNAVAILABLE", &e, ""),
+                );
+            } else {
+                let mut s = spin(60);
+                p.enable();
+                let _ = go.send(());
+                let inner = std::thread::spawn(|| spin(80)).join();
+                let own = spin(20);
+                p.disable();
+                stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                let bg = early.join();
+                let after = spin(60);
+                for r in [
+                    inner.unwrap_or_else(|_| Err("panicked".into())),
+                    own,
+                    bg.unwrap_or_else(|_| Err("panicked".into())),
+                    after,
+                ] {
+                    if s.is_ok() {
+                        s = r;
+                    }
+                }
+                let (rs, f) = p.collect();
+                let tc = rs[3].1.clone();
+                let (st, d) = match (&s, &tc) {
+                    (Err(e), _) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e)) => ("INCOMPLETE", e.clone()),
+                    (_, Ok(x)) if !x.whole() => ("INCOMPLETE", "multiplexed".into()),
+                    (_, Ok(x)) => {
+                        let v = x.value as f64 * 1e-9;
+                        let st = if (0.090..0.130).contains(&v) {
+                            "PASS"
+                        } else {
+                            "FAIL"
+                        };
+                        (st, format!("the task clock read {v:.4} s: 0.100 expected (80 ms in a thread started in the region, 20 ms in the opener), none of the 120 ms outside it, none of the thread started before. The task clock only: the hardware counters' region coverage is not validated here"))
+                    }
+                };
+                out(st, case("region-task-clock", st, &d, &f));
             }
-            spin(60);
-            p.enable();
-            let _ = go_tx.send(());
-            std::thread::spawn(move || spin(80)).join().unwrap();
-            spin(20);
-            p.disable();
-            stop.store(true, std::sync::atomic::Ordering::Relaxed);
-            before.join().unwrap();
-            spin(60);
-            let f = p.finish();
-            let tc = num(&f, "task_clock_s").unwrap_or(f64::NAN);
-            let ok = (0.090..0.130).contains(&tc);
-            out(case(
-                name,
-                if ok { "PASS" } else { "FAIL" },
-                &format!("the task clock read {tc:.4} s: 0.100 expected (80 ms in a thread started in the region, 20 ms in the opener), none of the 120 ms outside it, none of the thread started before"),
-                &f,
-            ));
         }
-        i32::from(fails > 0)
+
+        // inheritance, each counter on its own: software events, then the real counters
+        for (mode, hw) in [("software", false), ("hardware", true)] {
+            let open = move || {
+                if hw {
+                    Perf::open()
+                } else {
+                    Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW)
+                }
+            };
+            let (inside, before) = (inherit_region(&open, false), inherit_region(&open, true));
+            match (inside, before) {
+                (Err(e), _) | (_, Err(e)) => {
+                    out(
+                        "INCOMPLETE",
+                        case(&format!("inheritance-{mode}"), "INCOMPLETE", &e, ""),
+                    );
+                }
+                (Ok(a), Ok(b)) => {
+                    for ((name, ra), (_, rb)) in a.iter().zip(b.iter()) {
+                        let (st, d) = inherit_status(ra, rb);
+                        let what = if hw {
+                            (*name).to_string()
+                        } else {
+                            format!("{name} (a software stand-in)")
+                        };
+                        out(
+                            st,
+                            case(
+                                &format!("inheritance-{mode}-{name}"),
+                                st,
+                                &format!("{what}: {d}"),
+                                &format!(
+                                    "{},{}",
+                                    reading_json("inside", ra),
+                                    reading_json("before", rb)
+                                ),
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+        exit_code(&statuses)
     }
 
     #[cfg(test)]
@@ -3243,7 +3469,39 @@ mod machine {
         /// the events it needs is UNAVAILABLE)
         #[test]
         fn the_recorder_check_passes_where_it_can() {
-            assert_eq!(check(), 0);
+            // (no case FAILs; on a loaded runner a case may be INCOMPLETE, exit 3)
+            assert_ne!(check(), 1);
+        }
+
+        #[test]
+        fn exit_codes_keep_fail_and_incomplete_apart() {
+            assert_eq!(exit_code(&["PASS", "UNAVAILABLE", "OBSERVED"]), 0);
+            assert_eq!(exit_code(&["PASS", "INCOMPLETE"]), 3);
+            assert_eq!(exit_code(&["INCOMPLETE", "FAIL"]), 1);
+        }
+
+        /// The inheritance witness fails when a counter's inheritance is removed (the inside
+        /// region counts only the idle opener), and never passes on a null, a failed control
+        /// or a multiplexed reading
+        #[test]
+        fn inheritance_witness_negative_controls() {
+            let r = |value, running| -> Result<Reading, String> {
+                Ok(Reading {
+                    value,
+                    enabled: 100,
+                    running,
+                })
+            };
+            assert_eq!(inherit_status(&r(80_000, 100), &r(500, 100)).0, "PASS");
+            // inheritance removed: inside is the opener's idle count, as before
+            assert_eq!(inherit_status(&r(500, 100), &r(480, 100)).0, "FAIL");
+            assert_eq!(inherit_status(&r(0, 100), &r(0, 100)).0, "FAIL");
+            // a null, a failed control, a multiplexed reading: never PASS
+            let null: Result<Reading, String> = Err("no such event here".into());
+            let ctl: Result<Reading, String> = Err("its enable failed (errno 25)".into());
+            assert_eq!(inherit_status(&null, &r(1, 100)).0, "UNAVAILABLE");
+            assert_eq!(inherit_status(&r(80_000, 100), &ctl).0, "INCOMPLETE");
+            assert_eq!(inherit_status(&r(80_000, 50), &r(1, 100)).0, "INCOMPLETE");
         }
 
         #[test]

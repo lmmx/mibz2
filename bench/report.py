@@ -41,8 +41,9 @@ the toolchain) and its Markdown:
   `ab env`): the runner's cores, CPU quota, throttling and the run-queue counter.
 - **The machine's state, recorded and never judged** (`machine_state`, bench 3.3.0), where
   `ab run --machine-state` recorded it: per arm and thread count, beside the median wall,
-  the measured cycles a byte (perf, over exactly the region the wall is) and the effective
-  clock (cycles over the counted threads' task clock), and the clock and package
+  the measured cycles a byte (perf, enabled one counter after another just before the wall's
+  clock starts and disabled likewise just after it stops) and cycles over the counted
+  threads' task clock, and the clock and package
   temperature before and after the runs. Nothing reads it but its table: no verdict
   changes. `machine` prints it run by run for any recipe's runs file.
 
@@ -546,9 +547,12 @@ def machine_state_lines(ms: dict) -> list[str]:
         "",
         "### Machine state (recorded, never judged)",
         "",
-        "`ab run --machine-state`: each run's cycles, counted by perf over exactly the region its wall is, "
-        "and cycles over the counted threads' task clock (GHz: descriptive, never a normalisation, and null "
-        "where the counters' scopes don't match or a counter was multiplexed); `scaling_cur_freq` "
+        "`ab run --machine-state`: each run's cycles, counted by perf with the counters enabled one after "
+        "another just before the wall's clock starts and disabled likewise just after it stops (`perf_skew_ns` "
+        "bounds the difference), and cycles over the counted threads' task clock (GHz: descriptive, never a "
+        "normalisation, and null in user-only scope or where cycles or the task clock was multiplexed; a raw "
+        "count of a multiplexed counter is partial, so check `perf_times_ns` before any CPI or frequency); "
+        "`scaling_cur_freq` "
         "(the mean over the run's allowed CPUs, read once before and once after each run, outside it: a "
         "policy's requested or reported frequency at those moments, not the clock during the run) and the "
         "package temperature at the same moments. Diagnostic: nothing here feeds the assessment, and a "
