@@ -880,7 +880,18 @@ The CI reporter's 24 tests still pass.
    yet"), a CORPUS without DRY, a dirty checkout, and, through a throwaway local commit
    naming `f6708567` as frozen, "HEAD's measured inputs differ from the frozen commit".
 
-**The suites:**
+5. **VALID (DRY) again after merging master** (`e16caf3b`, `dry-run/valid-dry-merged/`):
+   both captures admitted, neither perturbing. The merge (`91eeb657`) brings master's
+   `#278` (`src/read.rs`: a reader whose source panics cancels the decode), `#279` and the
+   run's result journals. Every arm decodes through that reader, the incumbent included,
+   so the frozen run's reference is master's code, as §6 says.
+
+**The suites at `e16caf3b`:**
+- `cargo test`: the library 90 passed, 2 ignored; every integration and doc suite passed,
+  `reader_panic` included;
+- the run-fed CI steps: `run_team` 29 with the census ignored, `run_fed_leader` 10,
+  `mtf_kernels` 4, `ab` 4;
+- `test_run_fed_leader.py` and `test_run_fed_leader_ws.py`: OK;
 - native: `run_team` with both workers' unwind tests, 37 passed;
 - clippy (default, all features, and `occupancy` with `trace` alone) and fmt: clean;
 - ruff check and format on the new scripts: clean.

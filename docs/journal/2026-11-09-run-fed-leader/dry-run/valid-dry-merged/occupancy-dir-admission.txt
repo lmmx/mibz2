@@ -1,0 +1,1 @@
+VALID (dir capture, DRY): no perturbation shown
