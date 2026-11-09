@@ -7,17 +7,26 @@ refuses. A freeze needs the Researcher's assessment and the Coordinator's regist
 6741390621) resolved D067's technical objections at 6642faf4 and said to draft this; timing,
 queueing and production admission stay gated by it.
 
+**Revision (the Researcher's REVISE, REVIEW 6742157313 on #145; report and probes at
+`state/reports/service-guarded-registration-6741912733/` on b365250e):** the judge now admits
+an attempt's directory, not a bare runs file, and binds its workload, identity and preflight
+(R1, R2); the row schema is strict (R2); the report keeps the earlier qualifications (R3); the
+base, grid, RSS, N1 and replacement answers below follow the review's six answers; the recipe
+is exercised end to end past its refusals (answer 6); and the preflight-only entry
+(`2026-11-09-svc-target-registration.md`, answer 5) comes first.
+
 **What this does not presume.** D067 §5's adoption question is open and Louis's: the change
 makes svc2 an automatic default on a class of machines CI can't exercise, and how CI's
 unchanged acceptance rule applies to that is not settled. This registration measures the
 candidate on the one machine it can; it decides nothing about adoption, and no outcome below
 is a merge or release rule.
 
-It follows the switched-default precedent (`2026-11-07-pipelined-default-registration.md`:
-the exact switched default against the exact current default through the same public entry
-point, two builds, identity checks at neighbouring budgets) and the service-core
-registrations (`2026-11-08-service-2x3-registration.md`: the paired estimand, the outcome map,
-co-primary speed and CPU, the twin noise control N1), unchanged where they apply.
+It follows the switched-default precedent (`2026-11-07-pipelined-default-registration.md`: the
+exact switched default against the exact current default through the same public entry point,
+two builds) and the service-core registrations (the service-2x3 registration,
+`docs/journal/2026-11-08-service-2x3-registration.md` at **3e201246cf1266d4b2a984cb19eb9fdba5b9835d**,
+not on this branch: the paired estimand, the outcome map and its readings, co-primary speed
+and CPU, the noise control N1, its report's evidence boundary), unchanged where they apply.
 
 ## The candidate and the base
 
@@ -25,66 +34,63 @@ co-primary speed and CPU, the twin noise control N1), unchanged where they apply
   and so `BzReader::parallel`, `parallel_with` and `decode_parallel`, builds svc2 (two teams
   of three that only build and walk, two service workers; lookahead 2; window scaled to two
   teams, 8 blocks at `ab`'s 40) when, and only when, no plan is forced and
-  `parallel::service_target` holds: exactly 10 threads, AVX2 and CLMUL kernels, x86-64 Linux,
-  a coherent topology snapshot of 20 allowed online CPUs on 10 cores, all `GenuineIntel`
-  family 6 model 165 with a 20 MiB L3, and an established CPU quota of none or at least 10
-  (`docs/journal/2026-11-09-service-guarded-scope.md` §2). Everything else is master's
-  dispatch, unchanged.
-- **The base:** the current default: master at the commit the candidate's branch was last
-  merged from, named by SHA in the frozen file, an ancestor of the candidate (the recipe
-  checks both). There the default at 10 threads on the i9 is three pipelined teams of three
-  with park and small (`PIPELINED_PLAN`, `PIPELINED_LEVERS`), window 12.
-- **The runtime is not #258's.** The measured 3e201246 is a different runtime (the guard, the
-  terminal state, the completion witness, discovery and dispatch are new). #258's P1, 1.045
-  [1.017, 1.073], and #271's reported D-a2w8 are history: neither transfers to this candidate,
-  and this run does not pool with them.
+  `parallel::service_target` holds (`2026-11-09-service-guarded-scope.md` §2). Everything else
+  is master's dispatch, unchanged.
+- **The base: current master at the freeze, by its immutable SHA, merged into the candidate
+  before the freeze** (answer 1). This asks whether the proposed default improves the default
+  that would otherwise ship; a release comparison would answer a different, user-upgrade
+  question and include unrelated changes. The freeze procedure: fetch master, merge it into
+  `perf/service-guarded` (never a rebase), name that master commit as `base` and the merged
+  candidate as `candidate`. The recipe checks the base is an ancestor of the candidate; that
+  the base is *current* master at the freeze is the freeze's own check, recorded in the
+  freezing commit's message. The bundle records both commits (`commits.txt`), both
+  executables' digests and the toolchain (`inputs.txt`).
+- **The runtime is not #258's.** #258's P1, 1.045 [1.017, 1.073], and #271's reported D-a2w8 are
+  history on a different runtime: neither transfers, and this run does not pool with them.
 
 ## The run
 
-`just submit bench-service-guarded` on the i9, at the frozen commit (CLAUDE.md's workstation
-recipe shape: one new directory an attempt, its console log in it, one tarball whatever the
-outcome).
+`just submit bench-service-guarded` on the i9, at the frozen commit, in CLAUDE.md's
+workstation-recipe shape (one new directory an attempt, its console log in it, one tarball
+whatever the outcome). The recipe is `.just/service-guarded.just`.
 
-- **Refusals before anything runs**, as the precedent's: the frozen file unset; the base not
-  an ancestor of the candidate; uncommitted changes, or untracked files among the measured
-  inputs; HEAD's measured inputs differing from the candidate's (`src`, Cargo's files and
-  configuration, `examples` (the harness and the preflight), `tests/common` (the harness's
-  `#[path]` module), `bench/service_guarded.py`, the corpus's builder and manifest, the
-  bundler, the recipe and this file); a `CARGO_*`/`RUST*`/`AB_CENSUS_MS`/`AB_SAMPLE_MS`
-  override; differing toolchains; a Cargo configuration only the base build would read; the
-  base worktree not clean at the base; a CORPUS without DRY.
+- **Refusals before anything runs:** the frozen file unset; the base not an ancestor of the
+  candidate; uncommitted changes, or untracked files among the measured inputs; HEAD's
+  measured inputs differing from the candidate's (`src`, Cargo's files and configuration,
+  `examples` (the harness and the preflight), `tests/common`, the judge and the preflight's
+  checker, the corpus's builder and manifest, the bundler, the Justfile, the recipe and this
+  file; `NOT-FROZEN.txt` then marks the attempt); a `CARGO_*`/`RUST*`/`AB_CENSUS_MS`/
+  `AB_SAMPLE_MS` override; differing toolchains; a Cargo configuration only the base build would
+  read; the base worktree not clean at the base; a CORPUS without DRY.
 - **The builds:** each in its own checkout, Cargo's messages naming each executable, copied
-  into `bin/`: `ab-base` (the base's harness), `ab-base-twin` (a byte-identical copy, checked
-  by SHA-256), `ab-head`, `windows` (the corpus builder) and `svc_target` (the preflight),
-  with their digests and the toolchain in `inputs.txt`.
-- **The preflight (actual target), before any measurement:** `bin/svc_target`
-  (`examples/svc_target.rs`) prints `Machine::here()` as read on the i9 then (the plan
-  policy's facts, the predicate's topology snapshot and quota), the kernels, the predicate
-  and `Plan::for_threads` at 9, 10 and 11, and what `BzReader::parallel(.., t)` builds at each
-  by its own dispatch (`observe_builds`), after a small decode checked byte for byte and a
-  join. It exits 0 only if the predicate holds at 10 and not at 9 or 11, the snapshot is read
-  and the quota established, svc2 is built at 10 (8 decoding threads, window 8, every hub
-  thread ended) and not at 9 or 11. **Otherwise the attempt is REFUSED, before any timed
-  run**, its `preflight.json` archived in the bundle. These observations are consistent at
-  one moment, not an atomic snapshot: affinity, quota or hotplug changing during the run is
-  outside them (the runs' own thread census below is the per-run check).
-- **The arms:** `mibz2` (the head's `BzReader::parallel`), `mibz2@bin/ab-base` (the base's,
-  the same entry point) and `mibz2@bin/ab-base-twin` (N1). Unpinned, as a caller gets them.
-  Each run is its own child process (`ab child`), so its wall, CPU (`RUSAGE_SELF`: every thread
-  of that process: the scanner, the feeders, the caller's reader and the pool helpers
-  included) and **peak RSS (its own `ru_maxrss`, which never resets, so one process per run is
-  what makes it the run's)** are recorded for every run, beside each other.
+  into `bin/`: `ab-base`, `ab-base-twin` (a byte-identical copy, checked by SHA-256), `ab-head`,
+  `windows` (the corpus builder) and `svc_target` (the preflight).
+- **The preflight, before any measurement:** `bin/svc_target`'s record (schema
+  `mibz2.svc_target/1`) and exit status, checked whole by `bench/svc_target_check.py` (the
+  predicate recomputed from the record's own facts; the dispatch at 9, 10 and 11 against it).
+  **Anything but TARGET refuses the attempt** (REFUSED, exit 4), its record and check archived.
+  The preflight-only entry (`just bench-svc-target`) runs first, separately; it does not
+  replace this one.
+- **The workload manifest:** `corpus.sha256` (the corpus's digest), `arms.txt` (the exact
+  three arm strings run), `inputs.txt` (every executable's and the corpus's digest, the
+  toolchain, the Cargo configuration read).
+- **The arms:** `mibz2` (the head's `BzReader::parallel`), `mibz2@<attempt>/bin/ab-base` (the
+  base's, the same entry point) and `mibz2@<attempt>/bin/ab-base-twin` (N1). Unpinned. Each run
+  is its own child process (`ab child`), so its wall, its CPU (`RUSAGE_SELF`: every thread of
+  that process, the scanner, the feeders, the caller and the pool helpers included) and its
+  **peak RSS (its own `ru_maxrss`, which never resets: one process per run is what makes it
+  the run's)** are recorded for every run.
 - **The grid:** 9, 10 and 11 threads; 20 rounds, paired by round, arms' order rotated as `ab`
-  does; the bench's Wikidata sample. 3 arms × 3 budgets × 20 = 180 runs.
-- **No PMU telemetry:** `--machine-state` is not passed. The workstation runs
-  `perf_event_paranoid=4`, so the #298 counters are all UNAVAILABLE there
-  (`telemetry-check/20261109T125938Z`); nothing here depends on them. `ab env`, `lscpu` and
-  `ab sample --count 5` before and after the run are recorded under `diagnostics/`, as
-  diagnostics only, never judged and never used to select or drop runs (D064).
-- **The plans each build must run**, read from every run's threads twice (`thread_cpu`, the
-  child's busy threads; `observed_threads`, every thread the parent saw), as
-  (leaders `mibz2-N`, plain helpers `mibz2-coop-N`, pipelined helpers `mibz2-coop-pN`, service
-  workers `mibz2-svc-N`; the hub's feeder `mibz2-svc-feed` not counted):
+  does; the bench's Wikidata sample. 3 arms × 3 budgets × 20 = 180 runs. **Louis's authority
+  for this grid is pending** (RULES C6 reserves the thread grid; the Researcher has asked
+  him). Neither precedent is this design: service-2x3 was one budget with six arms, the
+  pipelined default seven budgets with two. The freeze waits for his decision.
+- **No PMU telemetry:** `--machine-state` is not passed (`perf_event_paranoid=4` on the
+  workstation; `telemetry-check/20261109T125938Z` found the #298 counters UNAVAILABLE).
+  `ab env`, `lscpu` and `ab sample` before and after the run go to `diagnostics/`, never judged
+  and never used to select runs (D064).
+- **The plans each build must run**, from every run's two thread records, as (leaders,
+  plain helpers, pipelined helpers, service workers; the hub's feeder not counted):
 
   | threads | base and twin | head |
   |---|---|---|
@@ -92,101 +98,113 @@ outcome).
   | 10 | 3 × 3 pipelined | 2 × 3 plain + 2 service (svc2) |
   | 11 | 3 × 3 pipelined | 3 × 3 pipelined |
 
-  The windows follow from the plans (`window`, unchanged at both commits): 16 at 9 (4 × 2),
-  12 for 3 × 3, 8 for svc2.
+  These are the sampled thread counts. That the windows are 16, 12 and 8 follows only from the
+  pinned dispatch and `window` code at both commits, not from the names. **Equal plans at 9 and
+  11 are a fallback check, not fallback equivalence:** they don't show the binaries equal there
+  (the candidate's discovery and layout differ), nor that the candidate doesn't regress there.
 
 ## The rule (`bench/service_guarded.py`, fixed with the freeze)
 
-Speed is the base's wall over the head's, CPU the base's CPU over the head's (above 1: the
-head is faster, or spends less); each is the geometric mean of the 20 rounds' paired ratios,
-with its two-sided 95% t-interval (19 degrees of freedom). Unchanged from the service-core
-registrations.
+**Admission** (the earlier service-2x3 report's evidence boundary restored; each failure says
+its kind, and none is a reason to retry):
+- **identity:** `commits.txt`'s candidate and base are the frozen file's; no `DRY-RUN.txt`;
+  `arms.txt` is exactly the three registered arms; `inputs.txt` gives both base paths' digests,
+  equal;
+- **workload:** `corpus.sha256` is the registered corpus's (`bench/wikidata.json`,
+  82f65ace…); every run's corpus `wikidata`, its output exactly the registered 209,700,196
+  bytes, its digest hex, one digest across every run;
+- **preflight:** the record and its exit status checked whole: TARGET (a record of only
+  `{"ok": true}`, or `ok` beside an unknown quota, an absent snapshot or missing observations,
+  is refused);
+- **structural:** every row's arm one of `arms.txt`'s; `threads` and `round` integers, never
+  booleans; `err` present and empty (ab's failed child prints its error there; a child that
+  printed nothing is marked `broken`, refused); no `exit`/`status` other than 0 where a row
+  carries one (ab's rows carry none: the parent records no child exit status, so these two are
+  the producer's own failure encodings); finite positive wall, CPU and RSS; 20 rounds a cell,
+  each once; every run's plan as in the table;
+- **N1:** the twin against the base at 10 threads, both bounds of its 95% interval within
+  [0.97, 1.03] (the service-core control's method, unchanged; RULES C6 reserves it to Louis).
+  **What changed in its implementation:** service-2x3's twin was the same decoder under two
+  arm names in one build; here it is the base executable copied byte for byte to a second
+  path. Both are A/A controls of run-to-run noise under the interleaving; neither certifies
+  differential overhead between the two builds or between-build layout effects. The twins at
+  9 and 11 are reported, not judged (answer 4: extending validity to them would change the
+  selection policy, not only the reporting).
 
-- **Validity:**
-  - the preflight passed (`preflight.json`'s `ok`);
-  - only the registered rows: the Wikidata sample, 9/10/11 threads, the head's `mibz2` and one
-    base and one twin binary; every run with a hash, a positive length, finite positive wall,
-    CPU and RSS; no failed run; 20 rounds a cell, each once;
-  - one output hash and length across every run;
-  - every run's plan as in the table, in both thread records;
-  - **N1:** the twin against the base at 10 threads, both bounds of its 95% interval within
-    [0.97, 1.03]: the service-core registrations' control and method, unchanged (RULES C6
-    reserves them to Louis).
-- **P1 (judged, 10 threads):** speed and CPU, co-primary, each by the outcome map:
+**P1 (judged, 10 threads):** speed (base wall over head wall) and CPU (base CPU over head CPU),
+each the geometric mean of the 20 rounds' paired ratios with its two-sided 95% t-interval,
+co-primary, each by the outcome map: GAIN lo > 1.02 (CPU SAVING); SMALL GAIN 1 < lo ≤ 1.02;
+NULL lo ≥ 0.97, hi ≤ 1.03, 1 inside; REGRESSION hi < 1 (CPU COST); INCONCLUSIVE otherwise.
+**Readings:** THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT (a speed GAIN or SMALL GAIN, CPU
+not a CPU COST); A TRADE (a speed gain with a CPU COST); NOT REPLICATED (NULL or REGRESSION);
+INCONCLUSIVE otherwise. The head runs fewer decoding threads than the base at 10 (8 against
+9): no extra-thread label applies.
 
-  | outcome | on the 95% interval [lo, hi] | CPU's wording |
-  |---|---|---|
-  | GAIN | lo > 1.02 | CPU SAVING |
-  | SMALL GAIN | 1 < lo ≤ 1.02 | SMALL CPU SAVING |
-  | NULL | lo ≥ 0.97, hi ≤ 1.03, 1 inside | NULL |
-  | REGRESSION | hi < 1 | CPU COST |
-  | INCONCLUSIVE | anything else | INCONCLUSIVE |
+**The qualifications the report states with them** (the earlier reports', restored):
+- CPU INCONCLUSIVE means no CPU cost was detected, not that none exists; a speed gain with
+  CPU INCONCLUSIVE keeps its reading but does not meet a demonstrated CPU non-inferiority
+  condition (none is registered);
+- NULL is bounded uncertainty within ±3%: a small effect is not excluded, and no effect is not
+  shown;
+- the two co-primary labels each have their own 95% interval: together they are not a
+  simultaneous 95% statement; both intervals are reported;
+- a product gain does not identify service-thread causality: svc2 against the current default
+  changes plan, teams, window and thread count together.
 
-  **Readings:** THE SERVICE DEFAULT BEATS THE CURRENT DEFAULT (a speed GAIN or SMALL GAIN, CPU
-  not a CPU COST); A TRADE (a speed gain with a CPU COST); NOT REPLICATED (NULL or
-  REGRESSION); INCONCLUSIVE otherwise. The head runs fewer decoding threads than the base at
-  10 (8 against 9), so no extra-thread label applies.
-- **Identity checks (9 and 11, reported, not judged):** both builds run the same plan; their
-  speed is reported with the ±2% flag (an interval wholly beyond ±2%). Their plans count
-  toward validity: they are the fallback's boundary, svc2 not built at 9 or 11.
-- **Peak RSS and the medians (reported, not judged):** at every cell, the head's peak RSS over
-  the base's, as a paired geometric mean with its interval, and every arm's median wall, CPU
-  and RSS.
-- **Attempts:** one slot. At most one replacement, only of an attempt that is not valid
-  (`valid` false) or was refused by the preflight or a refusal check; a valid run is never
-  replaced. Every attempt is kept and reported. No pooling across attempts or with #258/#271.
+**Reported, not judged:** the identity checks at 9 and 11 (speed with the ±2% flag), the
+twins at 9 and 11, every cell's CPU, and **peak RSS**: the head's over the base's as a paired
+geometric mean with its interval, and every arm's medians (answer 3). **No memory condition
+is registered, and no result of this run can be advertised as passing one.** The old
+64/74 MB corpus medians are not a resource bound.
+
+**Attempts:** **one attempt; no replacement is registered** (answer 4: neither precedent
+authorises one here). Every attempt is kept and reported with its kind of outcome: VALID;
+INVALID (identity, workload, structural or N1, said which); REFUSED by the preflight (before
+any measurement); REFUSED otherwise (nothing ran); INCOMPLETE. What follows any attempt that is
+not VALID is decided then, through the Coordinator and, for a rerun, Louis: never a retry until
+a pass.
+
+## Before readiness: the recipe exercised (answer 6)
+
+`bench/test_service_guarded_recipe.py` (CI) runs the whole recipe in a scratch repository
+with a test-fixture freeze, stand-ins for Cargo, the harness, the preflight, the corpus builder,
+`lscpu` and `gh`: both builds (the base's in its worktree), the copied and hashed binaries and
+the twin, the preflight and its check, the corpus manifest, the run, the report and the bundle,
+on every exit path (VALID; INVALID (n1); REFUSED by the preflight with no `runs.jsonl`; a DRY
+check, refused by the judge as DRY; INCOMPLETE by a crashing harness; REFUSED unfrozen, dirty
+and changed-after-freeze) and through `just submit`. `bench/test_service_guarded.py` (CI) holds
+the judge to the Researcher's witnesses and the rest of its admission. **A DRY run still reads
+clocks (one round of `ab run`); its numbers are excluded from evidence and the judge refuses
+it.** The real builds' path is to be exercised once more before readiness, on a throwaway
+clone with a pointer-only freeze, untimed, without editing the eventual frozen inputs.
 
 ## The model (before any run; not a prediction to be judged)
 
 From #258's runtime on this sample (history, not transfer): svc2@10 against the default at 10,
 P1 1.045 [1.017, 1.073], CPU 1.146 [1.123, 1.170], peak RSS about 64 MB against 74 MB. The
 guarded runtime adds per-block `Cell` stores and `failed` checks inside existing critical
-sections and one lock acquisition per hub-thread exit; the model expects no measurable change
-from them, and that expectation is exactly what is not known. At 9 and 11 both builds run the
-same plan, so the identity checks should be about 1.00.
+sections and one lock acquisition per hub-thread exit. At 9 and 11 both builds run the same
+plan, so the identity checks should be about 1.00.
 
 **Size:** #258's paired sd of the log-ratio at 10 threads, 0.046 (speed) and 0.038 (CPU), gives
 intervals of about ±2.2% and ±1.8% at 20 rounds; N1's 0.032, about ±1.5%. **Run time:** about
-2.2 s a run, so 180 runs in about 6.6 minutes, plus builds (two release builds, the base's in
-its own worktree) and the corpus: about 10 minutes from built, 15 from cold.
+2.2 s a run, so 180 runs in about 6.6 minutes, plus two release builds and the corpus: about 10
+minutes from built, 15 from cold.
 
 ## Scope: what a result would and would not show
 
 - **One i9 result does not qualify the class.** The predicate admits the 10-core Comet Lake-S
-  class (family 6 model 165 with these counts: by published specifications several i9 and
-  Xeon W parts); only the one i9-10900K is measured. Its other members are unmeasured, and
-  stay so after this run.
-- **CI's off-path bench does not qualify svc2's gain.** CI's runners fail the predicate, so
-  its paired bench prices only the candidate's construction and discovery cost, on the
-  existing plans. A null there is not a gain here, and a gain here is not a CI result.
-- **Unmeasured:** every other budget (svc2 is not built there, by the predicate), custom
-  windows (8 is measured; others scale by `window`), other workloads and levels (covered for
+  class (family 6 model 165 with these counts); only the one i9-10900K is measured.
+- **CI's off-path bench does not qualify svc2's gain.** CI's runners fail the predicate, so its
+  paired bench prices only the candidate's construction and discovery cost on the existing
+  plans. A null there is not a gain here, and a gain here is not a CI result.
+- **Unmeasured:** every other budget, custom windows, other workloads and levels (covered for
   correctness, not speed), a busy machine, a quota or affinity change during a run.
-- **Not the cause:** svc2 against the current default changes plan, teams, window and thread
-  count together; this run measures the product comparison, not which part carries it
-  (#258's C1 asked that of the old runtime).
+- **Not the cause:** the run measures the product comparison, not which part carries it.
 
-## Open questions for the Researcher's review
+## Still open before a freeze
 
-1. **The base.** Master's commit at freeze (an ancestor of the candidate), or a release tag's
-   commit by SHA, as the precedent used v0.2.5's? Master's is the exact current default; a
-   release is what users have.
-2. **The grid.** 9/10/11 with identity checks at 9 and 11, or the precedent's 8–20 grid with a
-   no-harm rule at 11+? Above 10 neither build changes plan, so a no-harm rule would test only
-   drift; 9 and 11 are the predicate's boundary.
-3. **RSS.** Reported, not judged, as in the service-core registrations. Should P1 carry a
-   memory condition (for example, the RSS ratio's upper bound below a registered ceiling), as
-   the Optimiser's "within its CPU/memory conditions" suggests? If so it must be registered
-   here, before the freeze.
-4. **N1 at 10 only.** The twin runs at every budget (it costs 60 runs, about 2.2 minutes); only
-   10's is a validity condition. Is that the right placement, or should N1 hold at 9 and 11
-   too?
-5. **The preflight's strictness.** It refuses on `Unknown` quota. If the workstation's cgroup
-   layout turns out to be unreadable or namespaced, the run cannot happen at all without a
-   change to discovery, which is a source change and a new freeze. Should a preflight-only dry
-   run (`svc_target` alone, untimed, reported) be asked of Louis first?
-6. **The recipe's dry run.** Its refusal path is checked (the draft refuses at the frozen
-   file). A DRY run past the freeze check, on a frozen commit, has not been run: the
-   precedent's found a recipe bug that way. It should precede the ready tag.
-7. **Adoption.** Not this registration's to answer (D067 §5); listed so the freeze does not
-   imply one.
+1. **The grid's authority** (Louis, RULES C6): pending; the freeze waits for it.
+2. **The base's merge and SHA:** at the freeze (above).
+3. **The real-build exercise** (above), then the Researcher's re-review of this revision.
+4. **Adoption** (D067 §5): not this registration's to answer.

@@ -78,6 +78,10 @@ jobs:
         run: python3 bench/test_svc_target_check.py
       - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_svc_target.py
+      - name: The guarded service A/B's judge and admission (its witnesses)
+        run: python3 bench/test_service_guarded.py
+      - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_guarded_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest

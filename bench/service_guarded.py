@@ -1,36 +1,56 @@
 """The guarded service default's workstation A/B (docs/journal/2026-11-09-service-guarded-registration.md,
 DRAFT, not frozen): the candidate build's default decoder (`BzReader::parallel`, which runs the
 service core, svc2, at exactly 10 threads on its target) against the current default's build
-(the base: master's default, the pipelined three teams of three there), through the same
-public entry point (`ab`'s `mibz2` arm), on the bench's Wikidata sample, paired by round.
+(the base), through the same public entry point (`ab`'s `mibz2` arm), on the bench's
+Wikidata sample, paired by round. It judges an attempt's directory, as the recipe leaves it
+(`just bench-service-guarded`), not a bare runs file:
 
-The rule, fixed with the registration before any run (as the service-core registrations':
-docs/journal/2026-11-08-service-2x3-registration.md, unchanged where it applies):
+    python3 bench/service_guarded.py report ATTEMPT_DIR --out ATTEMPT_DIR/service-guarded
 
-- **Validity**, every cell: 20 rounds, each once, no failed run; one output hash and one
-  length across every run; every run's plan the one expected (`EXPECT`), read both from the
-  threads that ran (`thread_cpu`) and from every thread the parent `ab` saw (`observed_threads`);
-  the noise control **N1** (the base binary against a byte-identical copy of itself under
-  another path, at 10 threads) with both bounds of its 95% interval within [0.97, 1.03]; the
-  preflight passed (`--preflight`, its JSON's `ok`).
-- **Identity checks**, 9 and 11 threads, where both builds run the same plan (four plain teams
-  of two; three pipelined teams of three): reported with the ±2% flag, not judged.
-- **P1, judged, at 10 threads:** speed (base wall over head wall) and CPU (base CPU over head
-  CPU), each the geometric mean of the 20 rounds' paired ratios with its two-sided 95%
-  t-interval, co-primary, each mapped by the service-core registrations' outcome map.
-- **Peak RSS** (each run's own process: `ab` runs every run as a child process of its own, so
-  `ru_maxrss` is that run's): the paired geometric-mean ratio of head over base with its
-  interval, and the medians, at every cell, **reported, not judged**.
+**What it admits, and how** (the earlier service-2x3 report's evidence boundary, at
+3e201246's bench/service_2x3.py, restored; the Researcher's REVIEW 6742157313):
+- **identity:** `commits.txt`'s candidate and base are `bench/service-guarded.frozen`'s, and
+  the base is an ancestor of the candidate; no `DRY-RUN.txt`; `arms.txt` names exactly the
+  three arms the recipe ran (`mibz2`, `mibz2@<attempt>/bin/ab-base`, `mibz2@<attempt>/bin/ab-base-twin`)
+  and `inputs.txt` gives a SHA-256 for both base paths, the same digest;
+- **workload:** `corpus.sha256` is the registered corpus's (`bench/wikidata.json`); every run
+  is the registered corpus (`wikidata`), its output exactly the registered decoded bytes
+  (209700196), its digest a hex string, one digest across every run;
+- **rows:** every row a JSON object with the arm one of `arms.txt`'s; `threads` and `round`
+  integers (never booleans); `err` present and empty; no `broken` (ab's mark for a child that
+  printed no record: a crash), and no `exit`/`status` other than 0 where a row carries one;
+  finite positive wall, CPU and peak RSS; both thread records;
+- **the preflight:** `preflight.json` and its exit status (`preflight.exit`) checked whole by
+  bench/svc_target_check.py: TARGET, not merely `ok`;
+- **the plans:** every run's plan as expected, from both thread records.
 
-    python3 bench/service_guarded.py report RUNS.jsonl --preflight PREFLIGHT.json --out DIR/service-guarded
+These are checks of the archived records. They do not prove what the binaries were built from
+(the recipe's refusals do that), that the window or kernels are as the plan implies (that
+follows only from the pinned dispatch code), or that equal plans at 9 and 11 mean equal
+binaries or no regression there.
+
+**The rule** (the service-core registrations', unchanged where it applies): P1 at 10 threads,
+speed (base wall over head wall) and CPU (base CPU over head CPU), each the geometric mean of
+the 20 rounds' paired ratios with its two-sided 95% t-interval, co-primary, each by the
+outcome map. N1 (the base against its byte-identical twin at 10) both bounds within
+[0.97, 1.03], a validity condition; the twins at 9 and 11 reported. 9 and 11 are identity
+checks, reported with the ±2% flag. Peak RSS (each run its own process) reported, not judged.
+
+A failed attempt says which kind of failure it is (`failure`): `identity`, `workload`,
+`preflight`, `structural` (rows, rounds, plans) or `n1`. None is a reason to retry.
 """
 
 import argparse
 import json
 import math
+import os
 import re
 import statistics
 import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import svc_target_check  # noqa: E402
 
 ROUNDS = 20
 # Student's t at 19 degrees of freedom: the two-sided 95% quantile (scipy.stats.t.ppf(0.975, 19))
@@ -50,8 +70,32 @@ EXPECT = {
 CONTROL_BAND = (0.98, 1.02)
 N1_BAND = (0.97, 1.03)
 CORPUS = "wikidata"
-# the recipe's names for the two base binaries (the same bytes, two paths)
+HASH = re.compile(r"[0-9a-f]{16,}")
 BASE_SUFFIX, TWIN_SUFFIX = "/bin/ab-base", "/bin/ab-base-twin"
+
+
+def registered(root=None):
+    """The registered workload (bench/wikidata.json) and the frozen commits
+    (bench/service-guarded.frozen), from the checkout the judge runs in"""
+    root = root or os.path.dirname(HERE)
+    with open(os.path.join(root, "bench", "wikidata.json")) as f:
+        w = json.load(f)
+    with open(os.path.join(root, "bench", "service-guarded.frozen")) as f:
+        lines = f.read().splitlines()
+    frozen = {}
+    for line in lines:
+        f = line.split()
+        if len(f) == 2 and f[0] in ("candidate", "base") and re.fullmatch(r"[0-9a-f]{40}", f[1]):
+            frozen[f[0]] = f[1]
+    return {"corpus_sha256": w["corpus_sha256"], "decoded_bytes": w["decoded_bytes"], "frozen": frozen}
+
+
+def is_int(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def positive(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
 
 
 def plan_of(threads):
@@ -68,19 +112,6 @@ def plan_of(threads):
     )
 
 
-def build_of(arm):
-    """ "head" for the candidate's own `mibz2`, "base" and "twin" for the two base binaries"""
-    if not isinstance(arm, str):
-        return None
-    if arm == "mibz2":
-        return "head"
-    if arm.startswith("mibz2@") and arm.endswith(TWIN_SUFFIX):
-        return "twin"
-    if arm.startswith("mibz2@") and arm.endswith(BASE_SUFFIX):
-        return "base"
-    return None
-
-
 def label(plans):
     out = []
     for leaders, plain, piped, svc in plans:
@@ -94,10 +125,6 @@ def label(plans):
         else:
             out.append(f"{leaders} leaders, {plain} plain, {piped} pipelined, {svc} service")
     return " / ".join(out) or "nothing"
-
-
-def positive(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
 
 
 def paired(ref, arm, key):
@@ -133,68 +160,128 @@ def reading(speed, cpu):
     return "INCONCLUSIVE"
 
 
-def row_problems(rows):
-    problems = []
-    if not all(isinstance(r, dict) for r in rows):
-        return [f"{sum(not isinstance(r, dict) for r in rows)} row(s) not a JSON object"]
-    failed = [r for r in rows if r.get("err")]
-    if failed:
-        problems.append(f"{len(failed)} failed run(s)")
-    for b in ("base", "twin"):
-        arms = sorted({r.get("arm") for r in rows if build_of(r.get("arm")) == b})
-        if len(arms) != 1:
-            problems.append(f"{len(arms)} {b} binaries ({', '.join(map(str, arms)) or 'none'})")
-    stray = sorted({str(r.get("arm")) for r in rows if build_of(r.get("arm")) is None})
-    if stray:
-        problems.append(f"rows from undeclared arms ({', '.join(stray)})")
-    if any(r.get("threads") not in THREADS for r in rows):
-        problems.append("rows at unregistered thread counts")
-    corpora = sorted({str(r.get("corpus")) for r in rows} - {CORPUS})
-    if corpora:
-        problems.append(f"rows from other corpora ({', '.join(corpora)})")
-    bad = [
-        r
-        for r in rows
-        if not r.get("err")
-        and not (
-            isinstance(r.get("hash"), str)
-            and r["hash"]
-            and isinstance(r.get("out"), int)
-            and not isinstance(r.get("out"), bool)
-            and r["out"] > 0
-            and all(positive(r.get(k)) for k in ("wall", "cpu", "rss_kb"))
-            and isinstance(r.get("round"), int)
-            and isinstance(r.get("thread_cpu"), str)
-            and isinstance(r.get("observed_threads"), str)
-        )
-    ]
-    if bad:
-        problems.append(f"{len(bad)} malformed row(s)")
-    return problems
+# the qualifications each label carries in the report (the earlier service-core reports')
+QUALIFY = {
+    "INCONCLUSIVE": "the interval spans gain and harm or is too wide: nothing detected either way",
+    "NULL": "within ±3% with 1 inside: a small effect is not excluded, and no effect is not shown",
+    "CPU INCONCLUSIVE": "no CPU cost detected, not shown to cost nothing",
+    "CPU NULL": "within ±3%: a small CPU difference is not excluded",
+}
 
 
-def judge(rows, preflight, unreadable=()):
-    problems = [f"line {n} of the runs file is not JSON" for n in unreadable][:5]
-    if not (isinstance(preflight, dict) and preflight.get("ok") is True):
-        why = preflight.get("why") if isinstance(preflight, dict) else None
-        problems.append(f"the preflight did not pass ({why or 'no preflight record'})")
-    if not unreadable:
-        problems += row_problems(rows)
-    empty = {
-        "valid": False,
-        "problems": problems,
-        "cells": {},
-        "n1": None,
-        "p1": None,
-    }
-    if problems:
-        return empty
+def bundle_problems(files, reg):
+    """(kind, problem) for the attempt's identity and workload files"""
+    p = []
+    if "DRY-RUN.txt" in files:
+        p.append(("identity", "a DRY run: never evidence"))
+    commits = dict(l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2)
+    for k in ("candidate", "base"):
+        if not reg["frozen"].get(k):
+            p.append(("identity", f"bench/service-guarded.frozen names no {k}"))
+        elif commits.get(k) != reg["frozen"][k]:
+            p.append(("identity", f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}"))
+    arms = [a for a in files.get("arms.txt", "").splitlines() if a.strip()]
+    if not (
+        len(arms) == 3
+        and arms[0] == "mibz2"
+        and arms[1].startswith("mibz2@/")
+        and arms[1].endswith(BASE_SUFFIX)
+        and arms[2] == arms[1] + "-twin"
+    ):
+        p.append(("identity", f"arms.txt is not the registered three arms: {arms}"))
+        arms = []
+    digests = {}
+    for l in files.get("inputs.txt", "").splitlines():
+        f = l.split(None, 1)
+        if len(f) == 2 and re.fullmatch(r"[0-9a-f]{64}", f[0]):
+            digests[f[1].strip()] = f[0]
+    if arms:
+        base, twin = arms[1][len("mibz2@"):], arms[2][len("mibz2@"):]
+        if base not in digests or twin not in digests:
+            p.append(("identity", "inputs.txt gives no digest for the base and twin executables run"))
+        elif digests[base] != digests[twin]:
+            p.append(("identity", "the twin is not the base's bytes"))
+    seen = files.get("corpus.sha256", "").split()
+    if not seen or seen[0] != reg["corpus_sha256"]:
+        p.append(("workload", f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's"))
+    return p, arms
+
+
+def row_problems(rows, arms, reg):
+    p = []
+    for i, r in enumerate(rows):
+        if not isinstance(r, dict):
+            p.append(f"row {i}: not a JSON object")
+            continue
+        q = []
+        if r.get("arm") not in arms:
+            q.append(f"arm {r.get('arm')!r} not one of arms.txt's")
+        if not (is_int(r.get("threads")) and r["threads"] in THREADS):
+            q.append(f"threads {r.get('threads')!r}")
+        if not (is_int(r.get("round")) and 0 <= r["round"] < ROUNDS):
+            q.append(f"round {r.get('round')!r} not an integer in 0..{ROUNDS - 1}")
+        if r.get("err") != "":
+            q.append(f"err {r.get('err')!r}: a failed run (or no err field)")
+        if "broken" in r:
+            q.append("broken: the child printed no record")
+        for k in ("exit", "status"):
+            if k in r and r[k] != 0:
+                q.append(f"{k} {r[k]!r}")
+        for k in ("wall", "cpu", "rss_kb"):
+            if not positive(r.get(k)):
+                q.append(f"{k} {r.get(k)!r} not finite and positive")
+        if not (isinstance(r.get("hash"), str) and HASH.fullmatch(r["hash"])):
+            q.append(f"hash {r.get('hash')!r} not a hex digest")
+        if not (is_int(r.get("out")) and r["out"] == reg["decoded_bytes"]):
+            q.append(f"out {r.get('out')!r} not the registered {reg['decoded_bytes']} bytes")
+        if r.get("corpus") != CORPUS:
+            q.append(f"corpus {r.get('corpus')!r}")
+        if not (isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)):
+            q.append("a thread record missing")
+        if q:
+            p.append(f"row {i}: " + ", ".join(q))
+    return p
+
+
+def judge(files, rows, unreadable=(), reg=None):
+    """The attempt's verdict. `files`: the attempt's small files by name (commits.txt,
+    arms.txt, inputs.txt, corpus.sha256, preflight.json, preflight.exit, DRY-RUN.txt if
+    present); `rows`: runs.jsonl's parsed lines; `unreadable`: its lines that weren't JSON"""
+    reg = reg or registered()
+    v = {"valid": False, "failure": None, "problems": [], "cells": {}, "n1": None, "p1": None,
+         "preflight": None}
+
+    def fail(kind, problems):
+        v["failure"] = v["failure"] or kind
+        v["problems"] += problems
+
+    bp, arms = bundle_problems(files, reg)
+    for kind in ("identity", "workload"):
+        if any(k == kind for k, _ in bp):
+            fail(kind, [m for k, m in bp if k == kind])
+    try:
+        record = json.loads(files.get("preflight.json", ""))
+    except json.JSONDecodeError:
+        record = None
+    try:
+        status = int(files.get("preflight.exit", "").strip())
+    except ValueError:
+        status = None
+    verdict, why = svc_target_check.check(record, status)
+    v["preflight"] = {"verdict": verdict, "problems": why}
+    if verdict != "TARGET":
+        fail("preflight", [f"the preflight is {verdict}" + (f": {'; '.join(why)}" if why else "")])
+    rp = [f"line {n} of runs.jsonl is not JSON" for n in unreadable] + row_problems(rows, arms, reg)
+    if rp:
+        fail("structural", rp[:8] + ([f"... and {len(rp) - 8} more"] if len(rp) > 8 else []))
+    if v["failure"]:
+        return v
+    build = {arms[0]: "head", arms[1]: "base", arms[2]: "twin"}
     by = {}
     for r in rows:
-        by.setdefault((build_of(r["arm"]), r["threads"]), []).append(r)
-    if len({(r["hash"], r["out"]) for r in rows}) != 1:
-        problems.append("more than one distinct output")
-    cells = {}
+        by.setdefault((build[r["arm"]], r["threads"]), []).append(r)
+    if len({r["hash"] for r in rows}) != 1:
+        fail("structural", ["more than one output digest"])
     for t in THREADS:
         runs = {b: by.get((b, t), []) for b in ("base", "head", "twin")}
         complete = all(sorted(r["round"] for r in runs[b]) == list(range(ROUNDS)) for b in runs)
@@ -205,13 +292,13 @@ def judge(rows, preflight, unreadable=()):
         plans_ok = all(seen[b] == [EXPECT[t][b]] for b in runs)
         c = {"threads": t, "complete": complete, "plans": plans_ok, "seen": seen}
         if not complete:
-            problems.append(f"{t} threads: rounds incomplete or repeated")
+            fail("structural", [f"{t} threads: rounds incomplete or repeated"])
         if not plans_ok:
-            problems.append(
+            fail("structural", [
                 f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}, "
                 f"twin {label(seen['twin'])}; expected base {label([EXPECT[t]['base']])}, "
                 f"head {label([EXPECT[t]['head']])}"
-            )
+            ])
         if complete:
             base = {r["round"]: r for r in runs["base"]}
             head = {r["round"]: r for r in runs["head"]}
@@ -225,23 +312,22 @@ def judge(rows, preflight, unreadable=()):
                 b: {k: statistics.median(r[k] for r in runs[b]) for k in ("wall", "cpu", "rss_kb")}
                 for b in runs
             }
-        cells[t] = c
-    n1 = cells[PRIMARY].get("twin_speed")
-    n1_ok = n1 is not None and N1_BAND[0] <= n1["lo"] and n1["hi"] <= N1_BAND[1]
-    if n1 is not None and not n1_ok:
-        problems.append(
-            f"N1 at 10 threads: {n1['ratio']:.3f} [{n1['lo']:.3f}, {n1['hi']:.3f}] not within [0.97, 1.03]"
-        )
+        v["cells"][t] = c
     for t in CONTROLS:
-        s = cells[t].get("speed")
-        cells[t]["flag"] = s is not None and (s["lo"] > CONTROL_BAND[1] or s["hi"] < CONTROL_BAND[0])
-    valid = not problems
-    p1 = None
-    if valid:
-        c = cells[PRIMARY]
-        so, co = outcome(c["speed"]), outcome(c["cpu"], cpu=True)
-        p1 = {"speed": so, "cpu": co, "reading": reading(so, co)}
-    return {"valid": valid, "problems": problems, "cells": cells, "n1": n1, "p1": p1}
+        s = v["cells"][t].get("speed")
+        v["cells"][t]["flag"] = s is not None and (s["lo"] > CONTROL_BAND[1] or s["hi"] < CONTROL_BAND[0])
+    if v["failure"]:
+        return v
+    n1 = v["cells"][PRIMARY]["twin_speed"]
+    v["n1"] = n1
+    if not (N1_BAND[0] <= n1["lo"] and n1["hi"] <= N1_BAND[1]):
+        fail("n1", [f"N1 at 10 threads: {n1['ratio']:.3f} [{n1['lo']:.3f}, {n1['hi']:.3f}] not within [0.97, 1.03]"])
+        return v
+    c = v["cells"][PRIMARY]
+    so, co = outcome(c["speed"]), outcome(c["cpu"], cpu=True)
+    v["p1"] = {"speed": so, "cpu": co, "reading": reading(so, co)}
+    v["valid"] = True
+    return v
 
 
 def fmt(r):
@@ -253,15 +339,15 @@ def markdown(v):
         "# The guarded service default against the current default",
         "",
         "Speed and CPU are the base's over the head's (above 1: the head is faster, or spends "
-        "less); RSS is the head's over the base's (above 1: more memory). Paired geometric "
-        "means over 20 rounds, 95% t-intervals.",
+        "less); peak RSS is the head's over the base's (above 1: more memory), each run its own "
+        "process. Paired geometric means over 20 rounds, 95% t-intervals.",
         "",
-        "| threads | role | plans, base → head | speed | CPU | peak RSS | twin (N1 at 10) |",
+        "| threads | role | plans, base → head | speed | CPU | peak RSS (reported) | twin over base |",
         "|--:|---|---|--:|--:|--:|--:|",
     ]
     for t in THREADS:
         c = v["cells"].get(t, {})
-        role = "P1 (judged)" if t == PRIMARY else "identity (reported)"
+        role = "P1 (judged); N1 (validity)" if t == PRIMARY else "identity (reported)"
         seen = c.get("seen", {})
         plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
         flag = " ±2% FLAG" if c.get("flag") else ""
@@ -269,39 +355,70 @@ def markdown(v):
             f"| {t} | {role} | {plans} | {fmt(c.get('speed'))}{flag} | {fmt(c.get('cpu'))} "
             f"| {fmt(c.get('rss'))} | {fmt(c.get('twin_speed'))} |"
         )
-    out += ["", f"**Valid:** {'yes' if v['valid'] else 'no'}"]
+    pf = v.get("preflight") or {}
+    out += ["", f"**The preflight:** {pf.get('verdict', '–')}."]
+    out += ["", f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}"]
     out += [f"- {p}" for p in v["problems"]]
     if v["p1"]:
+        s, c = v["p1"]["speed"], v["p1"]["cpu"]
+        c10 = v["cells"][PRIMARY]
         out += [
             "",
-            f"**P1:** speed {v['p1']['speed']}, CPU {v['p1']['cpu']}: **{v['p1']['reading']}**.",
-            "",
-            "Peak RSS is reported, not judged. One i9 result does not qualify the predicate's "
-            "class, nor does CI's off-path bench qualify the service default's gain.",
+            f"**P1:** speed {s} {fmt(c10['speed'])}; CPU {c} {fmt(c10['cpu'])}: **{v['p1']['reading']}**.",
+        ]
+        if s in QUALIFY:
+            out.append(f"- Speed {s}: {QUALIFY[s]}.")
+        if f"CPU {c}" in QUALIFY:
+            out.append(f"- CPU {c}: {QUALIFY['CPU ' + c]}.")
+        out += [
+            "- Speed and CPU are co-primary, each with its own 95% interval: together they are not "
+            "a simultaneous 95% statement.",
+            "- A product gain does not identify the service threads as its cause: svc2 against the "
+            "current default changes the plan, the teams, the window and the decoding threads together.",
+            "- The plans are the sampled thread counts, not a proof of the window or the kernels; "
+            "equal plans at 9 and 11 are a fallback check, not binary identity or no-regression evidence.",
+            "- Peak RSS is reported, not judged: no memory condition was registered, and none is met here.",
+            "- One i9 result does not qualify the predicate's class, and CI's off-path bench does not "
+            "qualify the service default's gain.",
         ]
     return "\n".join(out) + "\n"
+
+
+FILES = ("commits.txt", "arms.txt", "inputs.txt", "corpus.sha256", "preflight.json", "preflight.exit", "DRY-RUN.txt")
+
+
+def load(attempt):
+    files = {}
+    for n in FILES:
+        try:
+            with open(os.path.join(attempt, n), errors="replace") as f:
+                files[n] = f.read()
+        except OSError:
+            pass
+    rows, unreadable = [], []
+    try:
+        with open(os.path.join(attempt, "runs.jsonl"), errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines, unreadable = [], [0]
+    for n, line in enumerate(lines, 1):
+        if line.strip():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                unreadable.append(n)
+    return files, rows, unreadable
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("report")
-    r.add_argument("runs")
-    r.add_argument("--preflight", required=True)
+    r.add_argument("attempt")
     r.add_argument("--out", required=True)
     a = p.parse_args(argv)
-    rows, unreadable = [], []
-    for n, line in enumerate(open(a.runs, errors="replace"), 1):
-        if line.strip():
-            try:
-                rows.append(json.loads(line))
-            except json.JSONDecodeError:
-                unreadable.append(n)
-    try:
-        preflight = json.load(open(a.preflight))
-    except (OSError, json.JSONDecodeError):
-        preflight = None
-    v = judge(rows, preflight, unreadable)
+    files, rows, unreadable = load(a.attempt)
+    v = judge(files, rows, unreadable)
     with open(a.out + ".json", "w") as f:
         json.dump(v, f, indent=1, sort_keys=True)
     md = markdown(v)
