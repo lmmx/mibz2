@@ -1,0 +1,26 @@
+mutant C29a-checkpoint-before-part (7325d1e6 + mutants/C29a-checkpoint-before-part.patch); 2026-11-09T03:35:59Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- register_checkpoints --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 3.58s
+running 3 tests
+test parallel::run_team::tests::miri_register_checkpoints ... FAILED
+test parallel::run_team::tests::register_checkpoints_are_checkpoints ... FAILED
+test parallel::run_team::tests::register_checkpoints_reach_every_class ... FAILED
+failures:
+---- parallel::run_team::tests::miri_register_checkpoints stdout ----
+thread 'parallel::run_team::tests::miri_register_checkpoints' (22300) panicked at src/parallel/run_team.rs:3087:17:
+assertion failed: p == p2
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+---- parallel::run_team::tests::register_checkpoints_are_checkpoints stdout ----
+thread 'parallel::run_team::tests::register_checkpoints_are_checkpoints' (22301) panicked at src/parallel/run_team.rs:2555:21:
+assertion failed: ll == ll2 && c == c2 && p == p2
+---- parallel::run_team::tests::register_checkpoints_reach_every_class stdout ----
+thread 'parallel::run_team::tests::register_checkpoints_reach_every_class' (22302) panicked at src/parallel/run_team.rs:2931:17:
+16 symbols, max_len 16484, Kernels { avx2: true, clmul: true }: the checkpoints
+failures:
+    parallel::run_team::tests::miri_register_checkpoints
+    parallel::run_team::tests::register_checkpoints_are_checkpoints
+    parallel::run_team::tests::register_checkpoints_reach_every_class
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.22s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 341 MB (6 GB address-space cap)
+rc=101

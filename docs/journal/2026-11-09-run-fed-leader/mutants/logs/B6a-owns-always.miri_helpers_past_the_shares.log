@@ -1,0 +1,16 @@
+mutant B6a-owns-always (7325d1e6 + mutants/B6a-owns-always.patch); 2026-11-09T03:29:12Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- --exact parallel::run_team::tests::miri_helpers_past_the_shares --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.62s
+running 1 test
+test parallel::run_team::tests::miri_helpers_past_the_shares ... FAILED
+failures:
+---- parallel::run_team::tests::miri_helpers_past_the_shares stdout ----
+thread 'parallel::run_team::tests::miri_helpers_past_the_shares' (7574) panicked at src/parallel/run_team.rs:679:18:
+index out of bounds: the len is 24 but the index is 24
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+failures:
+    parallel::run_team::tests::miri_helpers_past_the_shares
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 225 MB (6 GB address-space cap)
+rc=101

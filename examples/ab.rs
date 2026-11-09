@@ -604,6 +604,49 @@ fn decode(
                 last,
             )
         }
+        // the shipped default at three teams of three, through its own entry point
+        // (`BzReader::parallel`, the default constructor with `PIPELINED_PLAN` forced, on any
+        // machine): the run-fed leader's incumbent (docs/journal/2026-11-09-run-fed-leader.md)
+        "mibz2-default33" => {
+            let f = open()?;
+            let r = mibz2::parallel::with_plan(mibz2::parallel::PIPELINED_PLAN, || {
+                mibz2::BzReader::parallel(f, threads)
+            });
+            drain(r, h, last)
+        }
+        // the run-fed leader (research, the `run-fed` feature,
+        // `StreamDecoder::pipelined_run_fed`): a pipeK-both arm's plan and window, its
+        // sub-arm the last part: ctl (no records, the shipped kernel), reg (no records, the
+        // register-list kernel: C29), ls (the sort on the leader), hs (on the helpers: C30),
+        // dir (no F-order array: C31)
+        #[cfg(feature = "run-fed")]
+        a if a.starts_with("mibz2-pipe") && a.contains("-runfed-") => {
+            use mibz2::parallel::RunFedSort;
+            let (base, sub) = a.rsplit_once("-runfed-").expect("mibz2-pipeK-runfed-SUB");
+            let k = (base.as_bytes()[base.len() - 1] - b'0') as usize;
+            let sort = match sub {
+                "ctl" => RunFedSort::Control,
+                "reg" => RunFedSort::RegControl,
+                "ls" => RunFedSort::Leader,
+                "hs" => RunFedSort::Helpers,
+                "dir" => RunFedSort::Direct,
+                _ => return Err(format!("unknown run-fed sub-arm {sub}")),
+            };
+            let teams = (threads / k).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            drain(
+                mibz2::BzReader::parallel_pipelined_run_fed(
+                    open()?,
+                    teams,
+                    k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                    sort,
+                ),
+                h,
+                last,
+            )
+        }
         "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h, last),
         "pbz2" => drain(
             pbz2::ParallelDecoder::with_threads(open()?, threads),
@@ -710,6 +753,13 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
 fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
+    // (the decoders' own record of the threads they ran, each under its own name: the plan
+    // as run, which the census's polling can miss, src/threads.rs; turned on before the
+    // decode spawns any thread, and read once the decode has read its whole output, which
+    // every contributing thread recorded before, by the order of completion, not by a join;
+    // it holds worker starts and helper task attempts, so it may hold non-contributors too;
+    // the decoder's threads may still be ending when it is read; empty for a program's arm)
+    mibz2::threads::record(true);
     let is_program = external.is_some();
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
         Some((cmd, ready)) => piped(cmd, ready, &mut h),
@@ -732,14 +782,38 @@ fn child(arm: &str, threads: usize, path: &str) {
             (res, wall, w.finish(true), 0.0)
         }
     };
+    mibz2::threads::record(false);
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
+    // (the record read, sorted and joined after the CPU and RSS readings as well as the
+    // wall, so neither counts it; its pushes during the decode are inside all three, as
+    // src/threads.rs says. The CPU and RSS are snapshots at that moment, cumulative CPU and
+    // peak-so-far RSS: teardown already done by then (the decoder's threads' ends, its join)
+    // can be in them, and only work and new peaks after the snapshot, a detached feeder's
+    // last reference to the decoder among them, are left out. Every arm's child runs this
+    // same code; that doesn't make what is left out equal across arms)
+    let mut ran = mibz2::threads::take();
+    ran.sort_unstable();
+    let ran = ran.join(" ").replace('"', "'");
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
     // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
+    // (the run-fed arms' phases, `name=value` space-separated, where this build has them)
+    #[cfg(feature = "run-fed")]
+    let phases = if arm.contains("-runfed-") {
+        let p: Vec<String> = mibz2::parallel::run_fed_phases()
+            .into_iter()
+            .map(|(n, _, v)| format!("{n}={v}"))
+            .collect();
+        format!(",\"phases\":\"{}\"", p.join(" "))
+    } else {
+        String::new()
+    };
+    #[cfg(not(feature = "run-fed"))]
+    let phases = String::new();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"ran_threads\":\"{ran}\",\"err\":\"{err}\"{phases}}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
@@ -1127,6 +1201,8 @@ fn run(args: &[String]) {
                         .unwrap();
                     let census = Census::watch(child.id());
                     let o = child.wait_with_output().unwrap();
+                    // (the child's exit: 0, or its code, or -1 for a signal)
+                    let exit = o.status.code().unwrap_or(-1);
                     let observed = census.finish();
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
@@ -1144,7 +1220,7 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",\"exit\":{exit},{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),

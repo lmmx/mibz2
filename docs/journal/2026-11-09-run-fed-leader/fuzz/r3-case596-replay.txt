@@ -1,0 +1,18 @@
+head f67085670ee696340337aa37377afab886dded3a; rustc 1.97.0 (2d8144b78 2026-07-07); 2026-11-09T04:23:49Z
+cmd: MIBZ2_FUZZ_CASE=596 MIBZ2_FUZZ_REPEAT=20 cap.py target/fuzz/examples/fuzz 30 1 - run-fed
+596 cases in 30 s (seed 1, mode run-fed), 0 failures
+pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
+       20  mibz2 run-fed Leader 1x3 s4 w100003 r65536 detected: 20 of 20 reached, 20 with an overlapped error, 20 overlapped jobs
+run-fed reach: candidate, then its cases' blocks staged that the records' rule takes, the team's blocks by records and by the column, the small blocks by records and by the column, the cases with a team block by records, and the blocks rebuilt after a refused check (a bug: 0)
+        0  mibz2 run-fed Control 1x3 s4 w100003 r65536 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+       20  mibz2 run-fed Leader 1x3 s4 w100003 r65536 detected: rule 20, team records 20 column 0, small records 0 column 0, cases with team records 20, rebuilt 0
+        0  mibz2 run-fed Helpers 1x3 s4 w100003 r65536 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Direct 1x3 s4 w100003 r65536 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Helpers 2x3 s6 w997 r509 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Direct 2x3 s6 w997 r509 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Leader 3x3 s12 w1048576 r4093 detected: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Helpers 1x2 s1 w100003 r65536 scalar: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed Direct 1x4 s4 w100003 r65536 scalar: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+        0  mibz2 run-fed RegControl 1x3 s4 w100003 r65536 scalar: rule 0, team records 0 column 0, small records 0 column 0, cases with team records 0, rebuilt 0
+[cap.py] rc=0 peak RSS 50 MB (6 GB address-space cap)

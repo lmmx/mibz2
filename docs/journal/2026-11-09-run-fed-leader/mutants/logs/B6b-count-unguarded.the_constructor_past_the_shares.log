@@ -1,0 +1,20 @@
+mutant B6b-count-unguarded (7325d1e6 + mutants/B6b-count-unguarded.patch); 2026-11-09T03:29:26Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- --exact parallel::run_team::unwind_tests::the_constructor_past_the_shares --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.49s
+running 1 test
+test parallel::run_team::unwind_tests::the_constructor_past_the_shares ... FAILED
+failures:
+---- parallel::run_team::unwind_tests::the_constructor_past_the_shares stdout ----
+thread 'mibz2-coop-p65' (15886) panicked at src/parallel/run_team.rs:1170:9:
+assertion failed: self.owns(j)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread 'parallel::run_team::unwind_tests::the_constructor_past_the_shares' (13923) panicked at src/parallel/run_team/unwind_tests.rs:634:39:
+k 66, Helpers, Kernels { avx2: false, clmul: false }: Error { kind: Internal("assertion failed: self.owns(j)"), block: Some(0), bit: Some(32) }
+thread 'mibz2-coop-p65' (15886) panicked at src/parallel/run_team.rs:1170:9:
+assertion failed: self.owns(j)
+failures:
+    parallel::run_team::unwind_tests::the_constructor_past_the_shares
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.82s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 226 MB (6 GB address-space cap)
+rc=101

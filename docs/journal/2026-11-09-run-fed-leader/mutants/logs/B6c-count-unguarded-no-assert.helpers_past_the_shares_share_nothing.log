@@ -1,0 +1,16 @@
+mutant B6c-count-unguarded-no-assert (7325d1e6 + mutants/B6c-count-unguarded-no-assert.patch); 2026-11-09T03:29:27Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- --exact parallel::run_team::tests::helpers_past_the_shares_share_nothing --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.77s
+running 1 test
+test parallel::run_team::tests::helpers_past_the_shares_share_nothing ... FAILED
+failures:
+---- parallel::run_team::tests::helpers_past_the_shares_share_nothing stdout ----
+thread 'parallel::run_team::tests::helpers_past_the_shares_share_nothing' (17980) panicked at src/parallel/run_team.rs:502:18:
+range end index 2936 out of range for slice of length 1469
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+failures:
+    parallel::run_team::tests::helpers_past_the_shares_share_nothing
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 375 MB (6 GB address-space cap)
+rc=101

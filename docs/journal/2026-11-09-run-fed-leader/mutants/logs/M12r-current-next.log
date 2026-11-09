@@ -1,0 +1,68 @@
+mutant M12r-current-next (5a350c84 + mutants/M12r-current-next.patch); 2026-11-09T03:49:50Z
+cmd: RUST_BACKTRACE=0 cap.py cargo test -j2 --lib -- run_team::unwind_tests --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 8.47s
+running 8 tests
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks has been running for over 60 seconds
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_next_blocks has been running for over 60 seconds
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_next_blocks ... FAILED
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks ... FAILED
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_block has been running for over 60 seconds
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current has been running for over 60 seconds
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current ... FAILED
+test parallel::run_team::unwind_tests::a_run_panic_retires_the_current_block ... FAILED
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior has been running for over 60 seconds
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior ... FAILED
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next has been running for over 60 seconds
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next ... FAILED
+test parallel::run_team::unwind_tests::the_constructor_past_the_shares ... ok
+test parallel::run_team::unwind_tests::the_run_fed_decoder_recovers_from_a_run_panic has been running for over 60 seconds
+test parallel::run_team::unwind_tests::the_run_fed_decoder_recovers_from_a_run_panic ... FAILED
+failures:
+---- parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_next_blocks stdout ----
+thread 'mibz2-0' (14596) panicked at src/parallel.rs:818:9:
+injected at block 1, LeadEnd
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+thread 'parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_next_blocks' (14554) panicked at src/parallel/run_team/unwind_tests.rs:198:13:
+Control, current + next, k 2: watchdog: the reader is stuck at place 1, with places [3] ready
+---- parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks stdout ----
+thread 'mibz2-0' (14613) panicked at src/parallel.rs:818:9:
+injected at block 2, LeadStart
+thread 'parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks' (14553) panicked at src/parallel/run_team/unwind_tests.rs:215:13:
+Control, current + held prior, k 2: watchdog: 3 of 4 blocks published, places [0, 1, 3]
+---- parallel::run_team::unwind_tests::miri_run_fed_panic_current stdout ----
+thread 'mibz2-0' (31892) panicked at src/parallel.rs:818:9:
+injected at block 3, LeadEnd
+thread 'parallel::run_team::unwind_tests::miri_run_fed_panic_current' (31891) panicked at src/parallel/run_team/unwind_tests.rs:198:13:
+tiny, Control, current: watchdog: the reader is stuck at place 3, with places [] ready
+---- parallel::run_team::unwind_tests::a_run_panic_retires_the_current_block stdout ----
+thread 'mibz2-0' (31925) panicked at src/parallel.rs:818:9:
+injected at block 3, LeadEnd
+thread 'parallel::run_team::unwind_tests::a_run_panic_retires_the_current_block' (31879) panicked at src/parallel/run_team/unwind_tests.rs:198:13:
+Control, current, k 2: watchdog: the reader is stuck at place 3, with places [] ready
+---- parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior stdout ----
+thread 'mibz2-0' (15873) panicked at src/parallel.rs:818:9:
+injected at block 2, LeadStart
+thread 'parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior' (15872) panicked at src/parallel/run_team/unwind_tests.rs:215:13:
+tiny, Control, current + held prior: watchdog: 3 of 4 blocks published, places [0, 1, 3]
+---- parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next stdout ----
+thread 'mibz2-0' (15893) panicked at src/parallel.rs:818:9:
+injected at block 1, LeadEnd
+thread 'parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next' (15892) panicked at src/parallel/run_team/unwind_tests.rs:198:13:
+tiny, Control, current + next: watchdog: the reader is stuck at place 1, with places [3] ready
+---- parallel::run_team::unwind_tests::the_run_fed_decoder_recovers_from_a_run_panic stdout ----
+thread 'mibz2-2' (378) panicked at src/parallel.rs:818:9:
+injected at block 2, LeadStart
+thread 'parallel::run_team::unwind_tests::the_run_fed_decoder_recovers_from_a_run_panic' (32092) panicked at src/parallel/run_team/unwind_tests.rs:198:13:
+Control 3x3, (2, LeadStart): watchdog: the reader is stuck at place 2, with places [3, 4, 5] ready
+failures:
+    parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks
+    parallel::run_team::unwind_tests::a_run_panic_retires_the_current_and_next_blocks
+    parallel::run_team::unwind_tests::a_run_panic_retires_the_current_block
+    parallel::run_team::unwind_tests::miri_run_fed_panic_current
+    parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior
+    parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next
+    parallel::run_team::unwind_tests::the_run_fed_decoder_recovers_from_a_run_panic
+test result: FAILED. 1 passed; 7 failed; 0 ignored; 0 measured; 83 filtered out; finished in 240.69s
+error: test failed, to rerun pass `--lib`
+[cap.py] rc=101 peak RSS 348 MB (6 GB address-space cap)
+rc=101

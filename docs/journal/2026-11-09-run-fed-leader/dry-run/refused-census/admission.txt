@@ -1,0 +1,8 @@
+INVALID
+  line 5 (mibz2-pipe3-runfed-ls t10 r0): ran (4, 0, 5) (leaders, plain, pipelined helpers), not (3, 0, 6)
+  line 5 (mibz2-pipe3-runfed-ls t10 r0): no team block by records
+  line 6 (mibz2-pipe3-runfed-hs t10 r0): no team block by records
+  line 7 (mibz2-pipe3-runfed-dir t10 r0): no team block by records
+  line 11 (mibz2-pipe3-runfed-ls t10 r1): no team block by records
+  line 12 (mibz2-pipe3-runfed-hs t10 r1): no team block by records
+  line 13 (mibz2-pipe3-runfed-dir t10 r1): no team block by records

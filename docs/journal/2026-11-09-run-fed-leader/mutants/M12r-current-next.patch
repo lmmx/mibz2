@@ -1,0 +1,13 @@
+diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
+index 2785f58c..84af55cf 100644
+--- a/src/parallel/run_team.rs
++++ b/src/parallel/run_team.rs
+@@ -1741,7 +1741,7 @@ fn worker<const MODE: u8>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kerne
+                 // fails at its own place and bit, and the team is reset
+                 let msg = panic_message(p);
+                 let held = [Some(s), l.next.take()];
+-                for b in held.into_iter().flatten() {
++                for b in held.into_iter().flatten().take(0) {
+                     let kind = ErrorKind::Internal(msg.clone());
+                     publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                 }

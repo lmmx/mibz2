@@ -1,0 +1,22 @@
+diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
+index 6a3572f1..8feb7422 100644
+--- a/src/parallel/run_team.rs
++++ b/src/parallel/run_team.rs
+@@ -1167,7 +1167,6 @@ impl<'a> RunFill<'a> {
+ 
+     /// Share j's records: C35's row cuts for C31, else equal records (j a share: `owns`)
+     fn records_of(&self, j: usize) -> (usize, usize) {
+-        debug_assert!(self.owns(j));
+         if self.direct {
+             (self.cuts[j], self.cuts[j + 1])
+         } else {
+@@ -1218,9 +1217,6 @@ impl<'a> RunFill<'a> {
+ 
+     /// Share j's count (the helpers' sort); nothing for a helper past the shares
+     fn count(&self, j: usize) {
+-        if !self.owns(j) {
+-            return;
+-        }
+         self.injected(INJECT_COUNT, j);
+         let (lo, hi) = self.records_of(j);
+         // SAFETY: j < shares (`owns`, above), so entry j is one of the `shares` allocated by

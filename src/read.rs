@@ -143,6 +143,24 @@ impl<R: Read + Send + 'static> BzReader<R> {
         )
     }
 
+    /// Research, opt-in (`run-fed`): `teams` run-fed pipelined teams of `k`
+    /// (`StreamDecoder::pipelined_run_fed`)
+    #[cfg(any(test, feature = "run-fed"))]
+    #[doc(hidden)]
+    pub fn parallel_pipelined_run_fed(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        sort: crate::parallel::RunFedSort,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::pipelined_run_fed(teams, k, slots, kernels, sort),
+        )
+    }
+
     fn on(mut r: R, dec: StreamDecoder) -> Self {
         let dec = Arc::new(dec);
         let read_error = Arc::new(Mutex::new(None));

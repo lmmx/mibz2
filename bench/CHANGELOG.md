@@ -35,6 +35,48 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.3.0] - 2026-11-09
+
+### Added
+
+- **Each run's threads as the decoders ran them** (`examples/ab.rs`, `ran_threads`, from
+  `mibz2::threads`): every worker, as it starts, and every team helper, at its first task,
+  records itself by its own name; the child reads the record after its timing. The census
+  (`observed_threads`, polled from outside every 5 ms) is kept as it was. It can catch a
+  helper only in the instant after its birth, under its leader's inherited name, and miss
+  it after: the Guardian's D059 reproduced a false (4, 0, 5) plan on a 20 ms decode. The
+  record is complete for a fresh child that turns it on before the decode spawns any thread
+  and reads it once the decode's whole output is read: every worker that published a block,
+  and every helper of every team run that built one, recorded before that output, by the
+  order of completion, not by a join (the decoder's threads may still be ending). It includes
+  every contributor, but need not contain only contributors; it records a worker's start and a
+  helper's first task attempt (a caught panic included), not simultaneous occupancy or
+  successful work. A new figure beside the others: every existing figure keeps its meaning.
+  Its cost: off, one relaxed load a thread; on, in ab's children, each thread allocates its
+  name and pushes it under one process-wide lock that threads starting together can
+  contend for, once. The pushes are inside each run's wall and CPU: a worker's before its
+  first job, a helper's before it publishes its first task's completion, so a contended
+  push can extend a run. Equal counts across arms do not make that cost equal: the
+  instrumentation can be differential, and its cost is not measured. The record's read,
+  sort and join come after the wall, CPU and RSS readings, in every arm alike. The run-fed leader's workstation
+  admission (`bench/run_fed_leader_ws.py`) reads the plan from it; the CI reporter is
+  unchanged.
+
+## [3.2.4] - 2026-11-09
+
+### Added
+
+- **Each run's child's exit status** (`examples/ab.rs`, `exit`: its code, or -1 for a
+  signal), so a validity check can refuse a run whose child failed. Before, a child that
+  died after printing its line, or printed none, was recorded alike. And, for the run-fed
+  leader's research only (docs/journal/2026-11-09-run-fed-leader.md), the arms
+  `mibz2-default33` (the default constructor with the three-teams-of-three plan forced,
+  the shipped decoder through its own entry point, on any machine) and, in a build with the
+  `run-fed` feature, `mibz2-pipeK-runfed-{ctl,reg,ls,hs,dir}`, whose lines carry their
+  `phases` (the leader's and the build's moments all from the run's start, and the record
+  fills' census by share). This is a change to what is stored. Every figure keeps its
+  meaning: no arm the bench runs changed.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added

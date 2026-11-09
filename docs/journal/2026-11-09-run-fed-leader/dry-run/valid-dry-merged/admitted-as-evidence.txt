@@ -1,0 +1,18 @@
+INVALID
+  the identity's dry True: a DRY run is not evidence
+  the frozen commit None is not a full 40-character commit
+  the head's measured inputs do not match the frozen commit's
+  source recipe (.just/bench.just): '05d33d980dc8d806160e97cf559dbc12c7b4e92277d1b58a6f5613db8755dd35' at the head, None at the frozen commit
+  source admission (bench/run_fed_leader_ws.py): '837e3077d4592783f6dfe2c92aac50080fa03914928ab46803e894b920200870' at the head, None at the frozen commit
+  source reporter (bench/run_fed_leader.py): '573633850e1d849decf1b8026973677a2f5578c4992662b34d00e4fbf8a12b8f' at the head, None at the frozen commit
+  source registration (docs/journal/2026-11-09-run-fed-leader.md): '28cedbf80b839ca0cd78e4777daa79a2934384da75eb0f1e10fb56d9f87b9bfb' at the head, None at the frozen commit
+  the corpus's SHA-256 1bd6c1a4fd3300b0f7eb080311a27e43cd8a35845e22f79d2b495671c3d76166, not the registered 82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915
+  the identity's rounds 2, not 20
+  mibz2-default33: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-both: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-ctl: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-reg: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-ls: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-hs: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  mibz2-pipe3-runfed-dir: rounds missing [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  14 timed records admitted, not 140

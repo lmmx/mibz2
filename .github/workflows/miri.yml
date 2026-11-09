@@ -4,27 +4,43 @@ name: Miri
 # (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
-# detector. And the pipelined worker's recovery from a run that panics outside its stages
-# (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
-# blocks' retirement, the team's reset and the reader, on tiny blocks. Only on changes to
-# the walks, the pool, the parallel decoder or its reader.
+# detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
+# included, with its unchecked states refused (run_stage::tests::miri_*); and the run-fed
+# leader's share kernels (its sort, its fills, the AVX2 ones included) and a whole run's
+# hand-offs between helpers and leader, its helpers past the shares, its tampered tilings
+# and C29's AVX2 stores (parallel::run_team::tests::miri_*). And the pipelined worker's
+# recovery from a run that panics outside its stages (parallel::unwind_tests::miri_*,
+# Guardian D047), and the run-fed worker's twin (parallel::run_team::unwind_tests::miri_*,
+# D049): the unwind through the pool, the held blocks' retirement, the team's reset and
+# the reader, on tiny blocks. Only on changes to the walks, the pool, the MTF kernels, the
+# parallel decoder or its reader, or that research.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/run_stage.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
+      - "src/parallel/run_team.rs"
+      - "src/parallel/run_team/**"
+      - "src/mtf.rs"
       - "src/read.rs"
+      - "src/threads.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/run_stage.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
+      - "src/parallel/run_team.rs"
+      - "src/parallel/run_team/**"
+      - "src/mtf.rs"
       - "src/read.rs"
+      - "src/threads.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -43,12 +59,45 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Miri setup
         run: cargo miri setup
-      # (`--lib -- miri_` reaches only the library's unit tests named miri_: the worker's
-      # recovery tests are among them, which this step checks, so that a rename can't drop
-      # them silently; tests/pipelined.rs's integration tests stay native)
-      - name: The worker recovery tests are selected
+      # what ran, for the log's reader: the checkout (a pull request's merge commit, and its
+      # parents), its tree's cleanliness, and the toolchain
+      - name: Identity
+        run: |
+          echo "checkout $(git rev-parse HEAD), parents $(git log -1 --format=%P), tree $(git rev-parse 'HEAD^{tree}')"
+          git status --porcelain --untracked-files=no | tee miri-dirty.txt
+          [ ! -s miri-dirty.txt ]
+          rustc -vV
+          cargo miri --version
+      # (`--lib -- miri_` reaches only the library's unit tests named miri_. This step lists
+      # them and fails unless the ones the run-fed leader's freeze relies on are among them,
+      # so that a rename can't drop one silently: the thread record's (its panic and reuse
+      # case included), the generic pool's lifetime, panic and wake-up tests, and both
+      # workers' recovery families. tests/pipelined.rs's integration tests stay native)
+      - name: The Miri selection
         run: |
           cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
-          grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+          for t in threads::tests::miri_helpers_record_their_own_names_once_they_ran \
+            coop::tests::miri_pool_runs_every_index_once coop::tests::miri_pool_writes_visible_after_run \
+            coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable \
+            coop::tests::miri_pool_caller_panic_waits_for_the_helpers coop::tests::miri_pool_caller_panic_wins \
+            coop::tests::miri_pool_dropped_while_parked; do
+            grep -qx "$t: test" miri-list.txt || { echo "not selected: $t"; exit 1; }
+          done
+          for f in parallel::unwind_tests::miri_run_panic parallel::run_team::unwind_tests::miri_run_fed_panic; do
+            [ "$(grep -c "^$f" miri-list.txt)" = 3 ] || { echo "not all three of $f*"; exit 1; }
+          done
       - name: Miri
         run: cargo miri test --lib -- miri_
+      # the run-fed research's AVX2 fill under Miri: the build with AVX2 enabled, so
+      # detection reports it, and the tests assert they reached it (MIBZ2_EXPECT_AVX2)
+      - name: Miri, the run-fed AVX2 fill
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: |
+          echo "RUSTFLAGS=$RUSTFLAGS MIBZ2_EXPECT_AVX2=$MIBZ2_EXPECT_AVX2 MIRIFLAGS=$MIRIFLAGS"
+          cargo miri test --lib -- run_stage::tests::miri_ run_team::tests::miri_ --list 2>/dev/null | tee miri-avx2-list.txt
+          grep -q '^parallel::run_team::tests::miri_register_checkpoints: test' miri-avx2-list.txt
+          grep -q '^parallel::run_team::tests::miri_share_kernels: test' miri-avx2-list.txt
+          cargo miri test --lib -- run_stage::tests::miri_ run_team::tests::miri_

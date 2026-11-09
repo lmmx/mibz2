@@ -1,0 +1,16 @@
+VALID (DRY (not evidence)): 2 rounds at 10 threads, 14 timed records, against mibz2-default33 (fixed)
+  mibz2-pipe3-both                     wall 0.9938 [0.6643, 1.4866]  CPU 1.0466 [0.4170, 2.6269]
+  mibz2-pipe3-runfed-ctl               wall 1.0092 [0.6375, 1.5977]  CPU 1.0763 [0.2590, 4.4723]
+  mibz2-pipe3-runfed-reg               wall 0.9457 [0.1188, 7.5301]  CPU 0.9692 [0.5439, 1.7272]
+  mibz2-pipe3-runfed-ls (secondary)    wall 1.0245 [0.2818, 3.7242]  CPU 1.0463 [0.3020, 3.6251]
+  mibz2-pipe3-runfed-hs (secondary)    wall 0.9347 [0.1362, 6.4135]  CPU 1.0183 [0.1746, 5.9398]
+  mibz2-pipe3-runfed-dir (PRIMARY)     wall 0.8379 [0.2546, 2.7573]  CPU 0.9256 [0.4757, 1.8010]
+Control contrasts (reported, never judged):
+  mibz2-pipe3-runfed-ls/mibz2-pipe3-runfed-ctl wall 1.0151 [0.4421, 2.3310]  CPU 0.9722 [0.8106, 1.1661]
+  mibz2-pipe3-runfed-hs/mibz2-pipe3-runfed-ctl wall 0.9261 [0.2136, 4.0143]  CPU 0.9462 [0.6741, 1.3281]
+  mibz2-pipe3-runfed-dir/mibz2-pipe3-runfed-ctl wall 0.8302 [0.1594, 4.3250]  CPU 0.8600 [0.1064, 6.9535]
+  mibz2-pipe3-runfed-reg/mibz2-pipe3-runfed-ctl wall 0.9370 [0.1863, 4.7132]  CPU 0.9005 [0.3862, 2.0999]
+  mibz2-pipe3-runfed-ctl/mibz2-pipe3-both      wall 1.0156 [0.9597, 1.0747]  CPU 1.0283 [0.6211, 1.7025]
+Primary (mibz2-pipe3-runfed-dir / mibz2-default33, DRY (not evidence)): INCONCLUSIVE; control fidelity FAILED: ctl/mibz2-default33 wall 1.0092 [0.6375, 1.5977]
+  secondary (mibz2-pipe3-runfed-hs, never judged): INCONCLUSIVE
+  secondary (mibz2-pipe3-runfed-ls, never judged): INCONCLUSIVE

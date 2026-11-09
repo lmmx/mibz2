@@ -1,0 +1,27 @@
+{
+ "sub": "ctl",
+ "dry": true,
+ "invalid": [],
+ "perturbation": {
+  "timeline": {
+   "throughput_ratio": {
+    "ratio": 1.102021,
+    "lo": 1.009716,
+    "hi": 1.202765
+   },
+   "verdict": "perturbs: its trace is not interpreted at this thread count"
+  },
+  "full": {
+   "throughput_ratio": {
+    "ratio": 1.017981,
+    "lo": 0.881694,
+    "hi": 1.175334
+   },
+   "verdict": "no perturbation shown (interval includes no change)"
+  }
+ },
+ "perturbing_modes": [
+  "timeline"
+ ],
+ "interpretable": false
+}

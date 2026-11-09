@@ -1,0 +1,628 @@
+{
+ "label": "DRY (not evidence)",
+ "threads": 10,
+ "rounds": 2,
+ "identity": {
+  "schema": "run_fed_leader/workstation-identity/1",
+  "dry": true,
+  "head": "e16caf3bc6bfc35894dac0da587087c5b27f305c",
+  "frozen": null,
+  "inputs_match_frozen": false,
+  "tree_clean": true,
+  "sources": {
+   "recipe": {
+    "path": ".just/bench.just",
+    "sha256": "05d33d980dc8d806160e97cf559dbc12c7b4e92277d1b58a6f5613db8755dd35",
+    "at_frozen": null
+   },
+   "admission": {
+    "path": "bench/run_fed_leader_ws.py",
+    "sha256": "837e3077d4592783f6dfe2c92aac50080fa03914928ab46803e894b920200870",
+    "at_frozen": null
+   },
+   "reporter": {
+    "path": "bench/run_fed_leader.py",
+    "sha256": "573633850e1d849decf1b8026973677a2f5578c4992662b34d00e4fbf8a12b8f",
+    "at_frozen": null
+   },
+   "registration": {
+    "path": "docs/journal/2026-11-09-run-fed-leader.md",
+    "sha256": "28cedbf80b839ca0cd78e4777daa79a2934384da75eb0f1e10fb56d9f87b9bfb",
+    "at_frozen": null
+   }
+  },
+  "features": [
+   "run-fed"
+  ],
+  "occupancy_features": [
+   "trace",
+   "run-fed"
+  ],
+  "profile": "release",
+  "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "ab_sha256_before": "dfb634358d822ca91ee2067d1ce5d79801fad7ed8bd9a53807ba2c2403c4e5b0",
+  "ab_sha256_after": "dfb634358d822ca91ee2067d1ce5d79801fad7ed8bd9a53807ba2c2403c4e5b0",
+  "occupancy_sha256_before": "6d29d5002e590e83879af59b4f4560d42a337c28efbd7f564df2f926863f50ea",
+  "occupancy_sha256_after": "6d29d5002e590e83879af59b4f4560d42a337c28efbd7f564df2f926863f50ea",
+  "corpus_sha256_before": "1bd6c1a4fd3300b0f7eb080311a27e43cd8a35845e22f79d2b495671c3d76166",
+  "corpus_sha256_after": "1bd6c1a4fd3300b0f7eb080311a27e43cd8a35845e22f79d2b495671c3d76166",
+  "arms": [
+   "mibz2-default33",
+   "mibz2-pipe3-both",
+   "mibz2-pipe3-runfed-ctl",
+   "mibz2-pipe3-runfed-reg",
+   "mibz2-pipe3-runfed-ls",
+   "mibz2-pipe3-runfed-hs",
+   "mibz2-pipe3-runfed-dir"
+  ],
+  "threads": [
+   10
+  ],
+  "rounds": 2,
+  "ab_exit": 0
+ },
+ "invalid": [],
+ "records": 14,
+ "raw": [
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-default33",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 9.142,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0187,
+   "cpu": 0.0567,
+   "rss_kb": 37264,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0193,
+   "sampler_s": 0.0005,
+   "sampler_cpus": "pinned",
+   "err": ""
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-both",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.37,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 10.019,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 mibz2-scan sampler",
+   "exit": 0,
+   "wall": 0.0205,
+   "cpu": 0.0582,
+   "rss_kb": 37512,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0248,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": ""
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-ctl",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.54,
+   "pre_busy": 0.05,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.574,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0185,
+   "cpu": 0.0556,
+   "rss_kb": 38284,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0224,
+   "sampler_s": 0.0006,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=0 team_column=7 small_records=0 small_column=0 fallbacks=0 lead_ns=6945035 lead_front_ns=4068302 lead_sort_ns=0 lead_rle_ns=2866283 lead_small_ns=0 join_wait_ns=11535558 lead_start_ns=691654 lead_end_ns=7637899 build_end_ns=16302436 run_ns=41751216 leader_late=1 helper_sort_ns=0 helper_fill_ns=0 helper_fused_ns=9430982 drained_front_ns=1624084 records=0 rows=0 stores=0 lookups=0 cells=0 shares=0 share_records_max=0 share_rows_max=0 share_cells_max=0 share_stores_max=0 ready_last_ns=0 ready_skew_ns=0 rule_blocks=4 rule_front_ns=4068302 rule_sort_ns=0"
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-reg",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.943,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0168,
+   "cpu": 0.0532,
+   "rss_kb": 38396,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0278,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=0 team_column=7 small_records=0 small_column=0 fallbacks=0 lead_ns=9838391 lead_front_ns=7094407 lead_sort_ns=0 lead_rle_ns=2731522 lead_small_ns=0 join_wait_ns=12221680 lead_start_ns=689676 lead_end_ns=10529483 build_end_ns=18196124 run_ns=40634713 leader_late=2 helper_sort_ns=0 helper_fill_ns=0 helper_fused_ns=12952830 drained_front_ns=1995321 records=0 rows=0 stores=0 lookups=0 cells=0 shares=0 share_records_max=0 share_rows_max=0 share_cells_max=0 share_stores_max=0 ready_last_ns=0 ready_skew_ns=0 rule_blocks=4 rule_front_ns=7094407 rule_sort_ns=0"
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-ls",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.62,
+   "pre_busy": 0.15,
+   "steal_pct": 8.3,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 6.372,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.015,
+   "cpu": 0.0437,
+   "rss_kb": 32636,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0239,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=1730483 lead_front_ns=312071 lead_sort_ns=148995 lead_rle_ns=1261071 lead_small_ns=0 join_wait_ns=14162728 lead_start_ns=92242 lead_end_ns=1823455 build_end_ns=11258795 run_ns=31218437 leader_late=1 helper_sort_ns=0 helper_fill_ns=7383495 helper_fused_ns=0 drained_front_ns=870477 records=81946 rows=6000057 stores=6770964 lookups=0 cells=150923 shares=14 share_records_max=40975 share_rows_max=3000032 share_cells_max=103065 share_stores_max=3529892 ready_last_ns=7534593 ready_skew_ns=3391244 rule_blocks=2 rule_front_ns=312071 rule_sort_ns=148995"
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-hs",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.2,
+   "pre_busy": 0.05,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.587,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.018,
+   "cpu": 0.0545,
+   "rss_kb": 32592,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0206,
+   "sampler_s": 0.0006,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=2451830 lead_front_ns=1500022 lead_sort_ns=0 lead_rle_ns=938587 lead_small_ns=0 join_wait_ns=17518144 lead_start_ns=186624 lead_end_ns=2639345 build_end_ns=15019631 run_ns=42532396 leader_late=0 helper_sort_ns=8170195 helper_fill_ns=7418530 helper_fused_ns=0 drained_front_ns=690432 records=81946 rows=6000057 stores=6770964 lookups=0 cells=150923 shares=14 share_records_max=40975 share_rows_max=3000032 share_cells_max=103065 share_stores_max=3529892 ready_last_ns=10831612 ready_skew_ns=1473562 rule_blocks=3 rule_front_ns=1500022 rule_sort_ns=0"
+  },
+  {
+   "round": 0,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-dir",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 5.923,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0159,
+   "cpu": 0.051,
+   "rss_kb": 30980,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0158,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=1588105 lead_front_ns=427126 lead_sort_ns=0 lead_rle_ns=1151042 lead_small_ns=0 join_wait_ns=10486664 lead_start_ns=1130659 lead_end_ns=2719674 build_end_ns=11970228 run_ns=35315723 leader_late=3 helper_sort_ns=3347859 helper_fill_ns=7798325 helper_fused_ns=0 drained_front_ns=602098 records=81946 rows=6000057 stores=6769852 lookups=182 cells=150916 shares=14 share_records_max=73188 share_rows_max=3123113 share_cells_max=134094 share_stores_max=3565584 ready_last_ns=7966916 ready_skew_ns=2718854 rule_blocks=3 rule_front_ns=427126 rule_sort_ns=0"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-both",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.54,
+   "others_busy": 0.69,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.437,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0178,
+   "cpu": 0.0512,
+   "rss_kb": 35660,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0214,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": ""
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-ctl",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.06,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 8.225,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0172,
+   "cpu": 0.0483,
+   "rss_kb": 38344,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0239,
+   "sampler_s": 0.0005,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=0 team_column=7 small_records=0 small_column=0 fallbacks=0 lead_ns=6842591 lead_front_ns=4302097 lead_sort_ns=0 lead_rle_ns=2526915 lead_small_ns=0 join_wait_ns=12410464 lead_start_ns=160478 lead_end_ns=7004378 build_end_ns=15658046 run_ns=40533895 leader_late=2 helper_sort_ns=0 helper_fill_ns=0 helper_fused_ns=15824101 drained_front_ns=1744429 records=0 rows=0 stores=0 lookups=0 cells=0 shares=0 share_records_max=0 share_rows_max=0 share_cells_max=0 share_stores_max=0 ready_last_ns=0 ready_skew_ns=0 rule_blocks=4 rule_front_ns=4302097 rule_sort_ns=0"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-reg",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.81,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 6.906,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.018,
+   "cpu": 0.0486,
+   "rss_kb": 38280,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0213,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=0 team_column=7 small_records=0 small_column=0 fallbacks=0 lead_ns=6973640 lead_front_ns=4464590 lead_sort_ns=0 lead_rle_ns=2495468 lead_small_ns=0 join_wait_ns=10998488 lead_start_ns=1708560 lead_end_ns=8683042 build_end_ns=14785834 run_ns=37953724 leader_late=2 helper_sort_ns=0 helper_fill_ns=0 helper_fused_ns=13775151 drained_front_ns=1567798 records=0 rows=0 stores=0 lookups=0 cells=0 shares=0 share_records_max=0 share_rows_max=0 share_cells_max=0 share_stores_max=0 ready_last_ns=0 ready_skew_ns=0 rule_blocks=4 rule_front_ns=4464590 rule_sort_ns=0"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-ls",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.03,
+   "pre_busy": 0.15,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.856,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0157,
+   "cpu": 0.0491,
+   "rss_kb": 32324,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.029,
+   "sampler_s": 0.0004,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=1025581 lead_front_ns=544822 lead_sort_ns=134924 lead_rle_ns=335415 lead_small_ns=0 join_wait_ns=14287408 lead_start_ns=128756 lead_end_ns=1155425 build_end_ns=10750209 run_ns=33537871 leader_late=0 helper_sort_ns=0 helper_fill_ns=6889969 helper_fused_ns=0 drained_front_ns=1128388 records=81946 rows=6000057 stores=6770964 lookups=0 cells=150923 shares=14 share_records_max=40975 share_rows_max=3000032 share_cells_max=103065 share_stores_max=3529892 ready_last_ns=6705144 ready_skew_ns=2842110 rule_blocks=2 rule_front_ns=544822 rule_sort_ns=134924"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-hs",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 7.297,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0165,
+   "cpu": 0.0536,
+   "rss_kb": 33024,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0232,
+   "sampler_s": 0.0005,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=2247766 lead_front_ns=528810 lead_sort_ns=0 lead_rle_ns=1707739 lead_small_ns=0 join_wait_ns=18274575 lead_start_ns=127554 lead_end_ns=2376443 build_end_ns=16803996 run_ns=39944289 leader_late=1 helper_sort_ns=4418264 helper_fill_ns=7700747 helper_fused_ns=0 drained_front_ns=493111 records=81946 rows=6000057 stores=6770964 lookups=0 cells=150923 shares=14 share_records_max=40975 share_rows_max=3000032 share_cells_max=103065 share_stores_max=3529892 ready_last_ns=11248585 ready_skew_ns=1085522 rule_blocks=4 rule_front_ns=528810 rule_sort_ns=0"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-pipe3-runfed-dir",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 9.632,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0202,
+   "cpu": 0.0614,
+   "rss_kb": 31964,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.02,
+   "sampler_s": 0.0005,
+   "sampler_cpus": "pinned",
+   "err": "",
+   "phases": "runs=7 team_records=7 team_column=0 small_records=0 small_column=0 fallbacks=0 lead_ns=1088998 lead_front_ns=345021 lead_sort_ns=0 lead_rle_ns=731794 lead_small_ns=0 join_wait_ns=16296586 lead_start_ns=1911462 lead_end_ns=3001731 build_end_ns=12982461 run_ns=42768155 leader_late=2 helper_sort_ns=1575946 helper_fill_ns=8465927 helper_fused_ns=0 drained_front_ns=988791 records=81946 rows=6000057 stores=6769852 lookups=182 cells=150916 shares=14 share_records_max=73188 share_rows_max=3123113 share_cells_max=134094 share_stores_max=3565584 ready_last_ns=6813982 ready_skew_ns=1435288 rule_blocks=2 rule_front_ns=345021 rule_sort_ns=0"
+  },
+  {
+   "round": 1,
+   "corpus": "wikidata",
+   "threads": 10,
+   "arm": "mibz2-default33",
+   "parallel": true,
+   "cpus": "all",
+   "load1": 1.73,
+   "others_busy": 0.0,
+   "pre_busy": 0.0,
+   "steal_pct": 0.0,
+   "throttled_n": 0.0,
+   "throttled_ms": 0.0,
+   "psi_cpu_ms": 9.729,
+   "waited_s": 0,
+   "observed_threads": "ab mibz2-0 mibz2-1 mibz2-2 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p1 mibz2-coop-p2 mibz2-coop-p2 mibz2-coop-p2 sampler",
+   "exit": 0,
+   "wall": 0.0201,
+   "cpu": 0.0647,
+   "rss_kb": 37712,
+   "out": 6000057,
+   "hash": "845267b21a9bc81c",
+   "threads_busy": 0,
+   "thread_cpu": "",
+   "runq_s": 0.0193,
+   "sampler_s": 0.0005,
+   "sampler_cpus": "pinned",
+   "err": ""
+  }
+ ],
+ "cells": {
+  "mibz2-pipe3-both/mibz2-default33": {
+   "wall": [
+    0.9852991308791987,
+    0.2539330731486372,
+    3.823111205144388
+   ],
+   "cpu": [
+    0.9012656166835799,
+    0.17263443258785297,
+    4.705201040369903
+   ]
+  },
+  "mibz2-pipe3-runfed-ctl/mibz2-default33": {
+   "wall": [
+    0.9200920022337767,
+    0.3661058443924217,
+    2.312362136637019
+   ],
+   "cpu": [
+    0.855593135216029,
+    0.1512730419408457,
+    4.839194106475713
+   ]
+  },
+  "mibz2-pipe3-runfed-reg/mibz2-default33": {
+   "wall": [
+    0.8969579044308685,
+    0.8788881179112329,
+    0.9153992026118988
+   ],
+   "cpu": [
+    0.8395185195501628,
+    0.20433943005488234,
+    3.4491206346146766
+   ]
+  },
+  "mibz2-pipe3-runfed-ls/mibz2-default33": {
+   "wall": [
+    0.7915468478387173,
+    0.6685355716092651,
+    0.9371923334090041
+   ],
+   "cpu": [
+    0.7647822412256599,
+    0.6931675496593219,
+    0.8437958135541777
+   ]
+  },
+  "mibz2-pipe3-runfed-hs/mibz2-default33": {
+   "wall": [
+    0.8889132764189396,
+    0.32329116696723476,
+    2.4441336285378217
+   ],
+   "cpu": [
+    0.8923535921021974,
+    0.3470820742308825,
+    2.2942554296480075
+   ]
+  },
+  "mibz2-pipe3-runfed-dir/mibz2-default33": {
+   "wall": [
+    0.9243903751379593,
+    0.3196163017995218,
+    2.6735105838990587
+   ],
+   "cpu": [
+    0.923901354552835,
+    0.6572748166132504,
+    1.2986861680520303
+   ]
+  }
+ },
+ "contrasts": {
+  "mibz2-pipe3-runfed-ls/mibz2-pipe3-runfed-ctl": {
+   "wall": [
+    0.8602909773338094,
+    0.40529652278946604,
+    1.8260718364623403
+   ],
+   "cpu": [
+    0.8938620586671255,
+    0.17436701132220078,
+    4.582227875938266
+   ]
+  },
+  "mibz2-pipe3-runfed-hs/mibz2-pipe3-runfed-ctl": {
+   "wall": [
+    0.9661134693713865,
+    0.8830538269711569,
+    1.05698566405885
+   ],
+   "cpu": [
+    1.0429648805876486,
+    0.47409865757975683,
+    2.294407977639576
+   ]
+  },
+  "mibz2-pipe3-runfed-dir/mibz2-pipe3-runfed-ctl": {
+   "wall": [
+    1.004671677281997,
+    0.13822069507865034,
+    7.302561881621794
+   ],
+   "cpu": [
+    1.079837269053776,
+    0.1358231974480416,
+    8.58504695476325
+   ]
+  },
+  "mibz2-pipe3-runfed-reg/mibz2-pipe3-runfed-ctl": {
+   "wall": [
+    0.9748567559040358,
+    0.3958719043649486,
+    2.4006394089933463
+   ],
+   "cpu": [
+    0.9812123134183313,
+    0.7127469075892476,
+    1.3507987109480344
+   ]
+  },
+  "mibz2-pipe3-runfed-ctl/mibz2-pipe3-both": {
+   "wall": [
+    0.9338199673562723,
+    0.6048377911491297,
+    1.441741478779825
+   ],
+   "cpu": [
+    0.9493240609404211,
+    0.8762622825192382,
+    1.0284776495108656
+   ]
+  }
+ },
+ "reading": "INCONCLUSIVE",
+ "attribution": "control fidelity FAILED: ctl/mibz2-default33 wall 0.9201 [0.3661, 2.3124]",
+ "fidelity": false,
+ "secondary_readings": {
+  "mibz2-pipe3-runfed-hs": "INCONCLUSIVE",
+  "mibz2-pipe3-runfed-ls": "LEAD"
+ },
+ "df": 1
+}

@@ -1,0 +1,18 @@
+5a350c8469b9d19c96b4e8e4facbcbfc6274b7ad; rustc 1.101.0-nightly (16d1ffac1 2026-10-26); miri 0.1.0 (16d1ffac17 2026-10-26); MIRIFLAGS unset; 2026-11-09T04:01:36Z
+cmd: cap.py cargo +nightly miri test -j2 --lib -- unwind_tests::miri_ --test-threads=2
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current ... ok
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior ... ok
+test parallel::unwind_tests::miri_run_panic_current ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... ok
+test parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ... ok
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 75 filtered out; finished in 273.24s
+[cap.py] rc=0 peak RSS 600 MB (6 GB address-space cap)
+wall 178 s
+cmd: cargo +nightly miri test --lib -- miri_ --list (CI's selection check)
+parallel::run_team::unwind_tests::miri_run_fed_panic_current: test
+parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_held_prior: test
+parallel::run_team::unwind_tests::miri_run_fed_panic_current_and_next: test
+parallel::unwind_tests::miri_run_panic_current: test
+parallel::unwind_tests::miri_run_panic_current_and_held_prior: test
+parallel::unwind_tests::miri_run_panic_current_and_next: test

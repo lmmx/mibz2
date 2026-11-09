@@ -841,3 +841,183 @@ bench-pipelined-default DRY="" CORPUS="":
     else
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
+
+# The run-fed leader's workstation run (docs/journal/2026-11-09-run-fed-leader.md §8, §R4):
+# the seven arms of CI's attributed LEAD (the incumbent mibz2-default33, the shipped
+# pipelined worker, the instrumented control, the register-list control C29, and the
+# records' sorts: ls and hs secondary, dir the primary), 20 paired rounds at a requested 10
+# threads (140 timed records, every run three teams of three), judged by its own fail-closed
+# admission, bench/run_fed_leader_ws.py; then one occupancy capture each of ctl and dir,
+# admitted apart from the timing. NOT FROZEN until bench/run-fed-leader.frozen names its
+# commit. About 15 minutes; it ends with one .tar.gz, kept whatever the outcome.
+#   just submit bench-run-fed-leader
+# A DRY value is the untimed check of the recipe itself (two rounds, the captures at three,
+# no settling), with optionally a CORPUS, a .bz2 to use instead of building the bench's
+# sample, both positional:
+#   just bench-run-fed-leader 1 [CORPUS]
+# never evidence: its admission is DRY, never JUDGED.
+
+# The run-fed leader against the shipped default, 20 rounds at 10 threads, and its captures
+bench-run-fed-leader DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/run-fed-leader
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-run-fed-leader: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends,
+    # its partial records and failing evidence included
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-run-fed-leader: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        "VALID "*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-run-fed-leader: $*"; exit 1; }
+    rounds=20; occ_rounds=6; busy=(--settle 0.25); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryarg=()
+    if [ -n "$dry" ]; then
+      rounds=2; occ_rounds=3; busy=(--max-busy 64 --settle 0.2); dryarg=(--dry)
+      echo "bench-run-fed-leader: DRY RUN: two rounds, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    elif [ -n "$corpus" ]; then
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
+    fi
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/run-fed-leader.frozen)
+    if ! [[ $frozen =~ ^[0-9a-f]{40}$ ]]; then
+      [ -n "$dry" ] || fail "bench/run-fed-leader.frozen names no frozen commit yet; nothing to run"
+      echo "bench-run-fed-leader: NOT FROZEN (a DRY run only)"
+      frozen=""
+    fi
+    # what the build, the workload and the judgement are made from: the sources, Cargo's files
+    # and configuration, the harness, the corpus's builder and manifest, the admission and the
+    # reporter it uses, the bundler, this recipe and the registration (a path that doesn't
+    # exist counts too: one appearing, such as a build.rs or a toolchain file, is a change)
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/run_fed_leader.py bench/run_fed_leader_ws.py bench/team_size.py bench/wikidata.json
+      bench/wikidata.py bench/bundle.sh .just/bench.just docs/journal/2026-11-09-run-fed-leader.md)
+    # no environment that changes how Cargo, rustc or rustup build, or how ab observes
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so the build and every arm run the same, registered way: $(echo $overrides)"
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the build and workload inputs"
+    match=false
+    if [ -n "$frozen" ]; then
+      git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+      git diff --quiet "$frozen" HEAD -- "${measured[@]}" || fail "HEAD's measured inputs differ from the frozen commit $frozen"
+      match=true
+    fi
+    head=$(git rev-parse HEAD)
+    printf 'head %s\nfrozen %s\n' "$head" "${frozen:-none}" | tee "$W/commits.txt"
+    # (each executable as Cargo reports building it, then copied into this attempt's
+    # directory: the copies are what run and what the digests describe)
+    built() {  # built FEATURES EXAMPLE...: print each example's executable, in order
+      local feat=$1; shift
+      local args=(); for e in "$@"; do args+=(--example "$e"); done
+      cargo build -q --release --features "$feat" --message-format=json-render-diagnostics "${args[@]}" \
+        | python3 -c 'import json,sys
+    want=sys.argv[1:]; got={}
+    for line in sys.stdin:
+        m=json.loads(line)
+        if m.get("reason")=="compiler-artifact" and m.get("executable") and m["target"]["name"] in want and "example" in m["target"]["kind"]:
+            got[m["target"]["name"]]=m["executable"]
+    missing=[w for w in want if w not in got]
+    if missing: sys.exit("no executable reported for: "+" ".join(missing))
+    print("\n".join(got[w] for w in want))' "$@"
+    }
+    mkdir "$W/bin"
+    ab_built=$(built run-fed ab windows) || fail "the build failed"
+    cp "$(printf '%s\n' "$ab_built" | sed -n 1p)" "$W/bin/ab"
+    cp "$(printf '%s\n' "$ab_built" | sed -n 2p)" "$W/bin/windows"
+    occ_built=$(built trace,run-fed occupancy) || fail "the occupancy build failed"
+    cp "$occ_built" "$W/bin/occupancy"
+    AB=$W/bin/ab; OCC=$W/bin/occupancy
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/bin/windows" "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+      want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+      [ "$(sha256sum "$corpus" | cut -d' ' -f1)" = "$want" ] || fail "the corpus built is not bench/wikidata.json's $want"
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha() { sha256sum "$1" | cut -d' ' -f1; }
+    ab0=$(sha "$AB"); occ0=$(sha "$OCC"); cor0=$(sha "$W/wikidata.bz2")
+    tool="$(rustc -V)"
+    { sha256sum "$AB" "$OCC" "$W/bin/windows" "$(realpath "$corpus")"; rustc -vV; cargo -V; } > "$W/inputs.txt"
+    cat "$W/inputs.txt"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt" || true
+    arms=mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir
+    # the timing first, alone; then the captures, which never enter its judgement
+    set +e
+    "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10 --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    ab_rc=$?
+    for sub in ctl dir; do
+      "$OCC" "$W/wikidata.bz2" --threads 10 --pipe 3 --run-fed "$sub" --rounds "$occ_rounds" \
+        --out "$W/occupancy-$sub.json" --meta "commit=$head" --meta "corpus_sha256=$cor0" --meta "rustc=$tool" \
+        > "$W/occupancy-$sub.txt" 2>&1
+      echo "occupancy $sub: exit $?"
+    done
+    set -e
+    # the identity, the sources' digests at the head and at the frozen commit
+    at_frozen() { [ -n "$frozen" ] && git show "$frozen:$1" | sha256sum | cut -d' ' -f1 || true; }
+    python3 - "$W/identity.json" <<PY
+    import json, sys
+    src = {}
+    for k, p, f in [("recipe", ".just/bench.just", "$(at_frozen .just/bench.just)"),
+                    ("admission", "bench/run_fed_leader_ws.py", "$(at_frozen bench/run_fed_leader_ws.py)"),
+                    ("reporter", "bench/run_fed_leader.py", "$(at_frozen bench/run_fed_leader.py)"),
+                    ("registration", "docs/journal/2026-11-09-run-fed-leader.md", "$(at_frozen docs/journal/2026-11-09-run-fed-leader.md)")]:
+        import hashlib
+        src[k] = {"path": p, "sha256": hashlib.sha256(open(p, "rb").read()).hexdigest(), "at_frozen": f or None}
+    json.dump({
+        "schema": "run_fed_leader/workstation-identity/1",
+        "dry": bool("$dry"),
+        "head": "$head",
+        "frozen": "$frozen" or None,
+        "inputs_match_frozen": "$match" == "true",
+        "tree_clean": True,
+        "sources": src,
+        "features": ["run-fed"],
+        "occupancy_features": ["trace", "run-fed"],
+        "profile": "release",
+        "rustc": "$tool",
+        "ab_sha256_before": "$ab0", "ab_sha256_after": "$(sha "$AB")",
+        "occupancy_sha256_before": "$occ0", "occupancy_sha256_after": "$(sha "$OCC")",
+        "corpus_sha256_before": "$cor0", "corpus_sha256_after": "$(sha "$W/wikidata.bz2")",
+        "arms": "$arms".split(","),
+        "threads": [10],
+        "rounds": $rounds,
+        "ab_exit": $ab_rc,
+    }, open(sys.argv[1], "w"), indent=1)
+    PY
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout changed during the run"
+    # the verdicts: the timing's, then each capture's, apart
+    set +e
+    python3 bench/run_fed_leader_ws.py admit "$W" "${dryarg[@]}" --out "$W/admission" > "$W/admission.txt"
+    rc=$?
+    cat "$W/admission.txt"
+    occ=""
+    for sub in ctl dir; do
+      python3 bench/run_fed_leader_ws.py admit-occupancy "$W" "$sub" "${dryarg[@]}" --out "$W/occupancy-$sub-admission" > "$W/occupancy-$sub-admission.txt"
+      cat "$W/occupancy-$sub-admission.txt"
+      occ="$occ; $sub capture: $(head -1 "$W/occupancy-$sub-admission.txt")"
+    done
+    set -e
+    if [ "$rc" -le 2 ] && [ -s "$W/admission.json" ]; then
+      outcome="$(head -1 "$W/admission.txt")$occ"
+    else
+      outcome="REPORT ERROR: run_fed_leader_ws.py exited $rc without writing its admission$occ"
+    fi

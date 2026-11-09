@@ -1,0 +1,15 @@
+diff --git a/src/mtf.rs b/src/mtf.rs
+index af61a6eb..e7e7c5f6 100644
+--- a/src/mtf.rs
++++ b/src/mtf.rs
+@@ -815,9 +815,9 @@ unsafe fn mtf_checkpoints_reg_avx2(
+             let mut left = run as usize;
+             while n + left >= next {
+                 let part = next - n;
++                checkpoints.push(*counts);
+                 run_store!(part);
+                 left -= part;
+-                checkpoints.push(*counts);
+                 next += CHECKPOINT;
+             }
+             run_store!(left);

@@ -277,7 +277,12 @@ impl StreamDecoder {
             handles.push(
                 std::thread::Builder::new()
                     .name(format!("mibz2-{i}"))
-                    .spawn(move || work(&shared, &job_rx))
+                    .spawn(move || {
+                        // (before the worker's first job, inside the timing when recording:
+                        // crate::threads)
+                        super::threads::ran();
+                        work(&shared, &job_rx)
+                    })
                     .expect("spawn a bz2 worker"),
             );
         }
@@ -588,6 +593,14 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
         .or_else(|| p.downcast_ref::<String>().cloned())
         .unwrap_or_else(|| "a panic".into())
 }
+
+// The pipelined team with a run-fed leader (research, opt-in: the `run-fed` feature,
+// `StreamDecoder::pipelined_run_fed`; docs/journal/2026-11-09-run-fed-leader.md)
+#[cfg(any(test, feature = "run-fed"))]
+mod run_team;
+#[cfg(any(test, feature = "run-fed"))]
+#[doc(hidden)]
+pub use run_team::{run_fed_phases, RunFedSort};
 
 // ---- The pipelined team (research, opt-in: `StreamDecoder::pipelined`) ----
 //

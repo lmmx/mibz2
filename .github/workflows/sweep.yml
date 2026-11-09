@@ -6,7 +6,15 @@
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
 # decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
-# stages alone and with every CPU busy, as a multi-threaded decode runs them.
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: run_fed_stage`, the run-fed stage's diagnostic (examples/run_fed_stage.rs, the
+# `run-fed` feature; docs/journal/2026-11-09-run-fed-stage.md) runs the same way, ROUNDS its
+# rounds. With `tool: run_fed_leader`, the run-fed leader's whole-decode A/B instead
+# (docs/journal/2026-11-09-run-fed-leader.md, DRAFT, NOT FROZEN): `ab run` of the shipped
+# default at three teams of three (`mibz2-default33`, its own entry point) against the
+# run-fed teams' sub-arms, interleaved by round, ROUNDS rounds at 9 threads and at 3, on the
+# runner's every CPU, unpinned; then bench/run_fed_leader.py's validity and reading, and the
+# raw runs archived.
 name: Walk sweep
 
 on:
@@ -17,9 +25,13 @@ on:
         required: false
         default: "5"
       tool:
-        description: "sweep (the factorial) or phases (the stages)"
+        description: "sweep (the factorial), phases (the stages), run_fed_stage (the run-fed stage) or run_fed_leader (its pipelined A/B)"
         required: false
         default: "sweep"
+      registered_head:
+        description: "run_fed_stage and run_fed_leader: the frozen registration's full 40-character head, for the judged reading (empty: UNJUDGED)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -44,7 +56,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release --example sweep --example phases --example windows
+        run: |
+          cargo build --release --example sweep --example phases --example windows
+          cargo build --release --features run-fed --example run_fed_stage --example ab
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -73,26 +87,94 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           TOOL: ${{ inputs.tool || 'sweep' }}
+          REGISTERED: ${{ inputs.registered_head }}
         run: |
+          set -o pipefail
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          case "$TOOL" in sweep|phases) ;; *) echo "tool: sweep or phases"; exit 1 ;; esac
+          case "$TOOL" in sweep|phases|run_fed_stage|run_fed_leader) ;; *) echo "tool: sweep, phases, run_fed_stage or run_fed_leader"; exit 1 ;; esac
+          if [ "$TOOL" = run_fed_leader ]; then
+            # whole decodes, one process a run (ab's), every arm's output hashed and paired
+            # by round; the 9-thread cells judged (the plan's own threads), the 3-thread
+            # ones (one team) reported
+            ab=target/release/examples/ab
+            arms=mibz2-default33,mibz2-pipe3-both,mibz2-pipe3-runfed-ctl,mibz2-pipe3-runfed-reg,mibz2-pipe3-runfed-ls,mibz2-pipe3-runfed-hs,mibz2-pipe3-runfed-dir
+            # the run's identity, for the reporter to check against the registration: the
+            # head, a clean tree, the build, and the binary's and corpus's digests before
+            # and after the run (one build, one corpus throughout)
+            # (the sources the build and the reporter read: the corpora and outputs aren't)
+            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench Cargo.toml Cargo.lock)" ] && echo true || echo false)
+            bin0=$(sha256sum "$ab" | cut -d' ' -f1); cor0=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            $ab env > rfl-env.json
+            $ab run rfl-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> rfl-progress.txt
+            bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            python3 - "$arms" > rfl-identity.json <<EOF
+          import json, subprocess, sys
+          print(json.dumps({
+              "schema": "run_fed_leader/identity/1",
+              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "tree_clean": json.loads("$tree_clean"),
+              "features": ["run-fed"],
+              "profile": "release",
+              "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "binary_sha256_before": "$bin0",
+              "binary_sha256_after": "$bin1",
+              "corpus_sha256_before": "$cor0",
+              "corpus_sha256_after": "$cor1",
+              "arms": sys.argv[1].split(","),
+              "threads": [9, 3],
+              "rounds": int("$ROUNDS"),
+          }, indent=1))
+          EOF
+            # judged only at the registered head; any other run UNJUDGED. No re-run on an
+            # INVALID: a failed admission is kept and investigated
+            if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
+            status=0
+            python3 bench/run_fed_leader.py report rfl-runs.jsonl "${judge[@]}" --identity rfl-identity.json --out rfl-9 > rfl-report.txt || status=$?
+            {
+              echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse HEAD); run_fed_leader, rounds $ROUNDS"
+              echo "corpus sha256 $(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)"
+              cat rfl-report.txt
+              echo
+              echo "(ab summary against mibz2-pipe3-both, at both thread counts: at 3 threads only that arm is a fair incumbent, one team like the run-fed arms; reported, never judged)"
+              $ab summary rfl-runs.jsonl --ref mibz2-pipe3-both || true
+            } > sweep-1.txt
+            cat sweep-1.txt
+            {
+              echo "## Run-fed leader A/B (DRAFT, NOT FROZEN): $model, $(nproc) CPUs"
+              echo
+              echo '```'
+              cat sweep-1.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit $status
+          fi
           bin=target/release/examples/$TOOL
+          head=$(git rev-parse HEAD)
+          if [ "$TOOL" = run_fed_stage ]; then
+            # its synthetic text corpus is read from these: they must be the head's
+            if [ -n "$(git status --porcelain -- src tests examples README.md)" ]; then
+              echo "the checkout's sources differ from the head"; git status --porcelain; exit 1
+            fi
+            export RUN_FED_HEAD=$head
+          fi
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures
-          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
+          hdr="runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $head; $TOOL, rounds $ROUNDS"
+          { echo "$hdr"; RUN_FED_RECORD=run-fed-1.json taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
           alone=$((SECONDS - start)); start=$SECONDS
           cpus=$(nproc)
-          for c in $(seq 0 $((cpus - 1))); do
-            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS; this copy on CPU $c"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
-          done
-          wait
+          # each copy's exit status collected: a failed copy marks the contended run INCOMPLETE
+          contended=complete
+          RUN_FED_RECORD_PREFIX=run-fed-$cpus bash bench/copies.sh "sweep-$cpus" "$hdr" -- \
+            bash -c 'RUN_FED_RECORD=$RUN_FED_RECORD_PREFIX-cpu$COPY_CPU.json exec "$@"' _ \
+            $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz" || contended=INCOMPLETE
           together=$((SECONDS - start))
           {
             echo "## Walk sweep ($TOOL): $model, $cpus cores, at its reported clock (${ghz} GHz)"
             echo
-            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
+            echo "Head \`$head\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
             echo
             echo "### One copy, pinned to one CPU (${alone} s)"
             echo
@@ -100,17 +182,36 @@ jobs:
             cat sweep-1.txt
             echo '```'
             echo
-            echo "### $cpus copies at once, one a CPU (${together} s): the copy on CPU 0 (the others are in the artifact)"
+            echo "### $cpus copies at once, one a CPU (${together} s, $contended): the copy on CPU 0 (the others are in the artifact)"
             echo
+            [ "$contended" = complete ] || { cat "sweep-$cpus-INCOMPLETE.txt"; echo; }
             echo '```'
             cat "sweep-$cpus-cpu0.txt"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          [ "$contended" = complete ]
+
+      # run_fed_stage's admission: its record judged on its own, from the raw times
+      - name: Verify (run_fed_stage)
+        if: "!cancelled() && inputs.tool == 'run_fed_stage'"
+        env:
+          REGISTERED: ${{ inputs.registered_head }}
+        run: |
+          if [ -n "$REGISTERED" ]; then args=(--head "$REGISTERED"); else args=(--head "$(git rev-parse HEAD)" --unjudged); fi
+          sha256sum corpora/wikidata.bz2
+          status=0
+          python3 bench/run_fed_stage.py verify run-fed-1.json --wikidata corpora/wikidata.bz2 "${args[@]}" > verify.txt || status=$?
+          cat verify.txt
+          { echo "### Admission (bench/run_fed_stage.py verify)"; echo; echo '```'; cat verify.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
 
       - name: Results
         if: "!cancelled()"
         uses: actions/upload-artifact@v4
         with:
           name: sweep-${{ github.sha }}
-          path: sweep-*.txt
+          path: |
+            sweep-*.txt
+            run-fed-*.json
+            rfl-*
           if-no-files-found: ignore

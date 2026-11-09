@@ -1,0 +1,15 @@
+diff --git a/src/parallel/run_team.rs b/src/parallel/run_team.rs
+index 6a3572f1..37584892 100644
+--- a/src/parallel/run_team.rs
++++ b/src/parallel/run_team.rs
+@@ -1161,8 +1161,8 @@ impl<'a> RunFill<'a> {
+     /// `FusedBuild::share` returns for `j >= shares`; a surplus helper still passes every
+     /// gate (`Relay::build_share` calls the phases and the gates for every helper), so the
+     /// gates' counts, of all the helpers, stay whole (Guardian D049, B6).
+-    fn owns(&self, j: usize) -> bool {
+-        j < self.shares
++    fn owns(&self, _j: usize) -> bool {
++        true
+     }
+ 
+     /// Share j's records: C35's row cuts for C31, else equal records (j a share: `owns`)
