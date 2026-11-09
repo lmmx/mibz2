@@ -35,6 +35,81 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.4.0] - 2026-11-09
+
+### Fixed
+
+- **The machine-state recorder's validity gaps** (the Researcher's REVIEW 6738754551, on
+  #290's `examples/ab.rs` at 637ad34b). Opt-in (`ab run --machine-state`), recorded and never
+  judged, as before. Nothing changes without the flag, and no measured figure changes meaning.
+  - **A failed enable or disable was ignored** (`Perf::each` dropped the ioctls' return
+    values). Each failure is now recorded (`perf_ctl_errors`: counter, request, errno). That
+    counter's value is null, with the failure as its reason.
+  - **`eff_ghz`'s multiplexing check is stated exactly.** It is null where cycles or the
+    task clock was multiplexed, the two counters it divides. 3.3.0's description ("null where
+    a counter was multiplexed") claimed more than its code checked. Instructions' and reference
+    cycles' validity is their own: `perf_multiplexed` lists every counter that counted less
+    than its enabled time. Any use of instructions with cycles (CPI) needs both.
+  - **Each counter's raw time enabled and running** (`perf_times_ns`, ns, never scaled). 3.3.0
+    kept only the least running share, rounded to 3 places (`perf_running`, kept, now to 6).
+  - **The boundary skew:** the counters are enabled, and disabled, one after another.
+    `perf_skew_ns` gives each sequence's duration and the order, so their intervals are
+    known to differ by up to that much.
+  - **The user-only fallback** (`perf_event_paranoid` 2 or more): `eff_ghz` is null there. The
+    task clock's exclusion of kernel time isn't established: on the dev VM's kernel, a
+    user-only task clock read 1.000 of a both-mode one over kernel-heavy work
+    (`ab telemetry-check`'s `task-clock-modes`).
+  - **Cycles over `eff_ghz` is the task clock again.** It is no independent frequency
+    correction, and is never presented as one.
+
+### Added
+
+- **Each machine-state observation says when, over what and in which units** (Guardian D064's
+  measurement limits).
+  - **Beside each sysfs reading,** before and after a run:
+    - its time (`t_unix_ns`, the reading's start, CLOCK_REALTIME) and duration (`read_s`);
+    - each CPU's own `scaling_cur_freq` in kHz by CPU id (`cpu_khz`, with `cpu_khz_why` for any
+      CPU that can't be read);
+    - each cpufreq policy's id, CPUs, driver, governor and EPP (`policies`), raw;
+    - the ACPI platform profile;
+    - the run's own `t_spawn_unix_ns` and `t_exit_unix_ns`, so each reading's distance from the
+      run is explicit.
+    - The 3.3.0 mean (`freq_mhz`) is kept. It is a mean over the allowed CPUs at one moment, a
+      policy's requested or reported frequency there, not the clock during the run.
+  - **In the child, with the counters:**
+    - reference cycles (`ref_cycles`), raw. A constant-rate count grows with elapsed on-CPU
+      time; it does not remove a slowdown;
+    - the counters' coverage (`perf_coverage`);
+    - the CPUs the child may run on (`cpus_allowed`, from `/proc/self/status`);
+    - the process's voluntary and involuntary context switches across the timed region
+      (`ctxsw_voluntary`, `ctxsw_involuntary`, the sampler's own included);
+    - the CPUs the sampler saw the run's threads on (`cpus_seen`: each thread's last CPU at
+      each 10 ms sample, a sample and not an account).
+  - **`ab sample [--count N] [--interval S]`:** untimed and read-only. Exactly N readings
+    (default 10) S seconds apart (default 1), one JSON line each. Unlike `ab settle` it
+    judges nothing: it never stops early, waits for no condition, and never fails, so its
+    length is fixed before it starts.
+  - **`ab telemetry-check`:** untimed. It exercises the recorder's failure paths and its
+    coverage, one JSON line a case, and exits 1 if any case FAILs. The cases:
+    - a failed enable and disable;
+    - a counter that can't be opened;
+    - the multiplexing predicate, and live multiplexing under 24 extra cycle counters;
+    - the user-only fallback, forced;
+    - the task clock's user-only semantics on this kernel;
+    - inheritance: a thread started before the counters open is not counted, one started in
+      the region is, and nothing outside it is.
+
+    A case without the events it needs is UNAVAILABLE, never PASS. `just
+    bench-telemetry-check` runs it on a workstation, untimed, as one bundle.
+  - **`report.py machine`** shows the reference cycles, the counters' least share running,
+    the allowed and seen CPUs, and each run's counter faults. Its labels say what each column
+    is ("cycles/task-clock GHz", "scaling_cur_freq mean"), not "the effective clock".
+- **Overhead, with the flag only:** a fourth counter (reference cycles), cloned for each
+  thread as the other three are; two `getrusage` calls and one `/proc/self/status` read in
+  the child, outside the wall's region; and, in the sampler, one more field parsed from the
+  `stat` it already reads. Inside the timed region the counters' context-switch cost grows
+  with the counter count. That cost is untested on real hardware: the dev VM has no PMU.
+
 ## [3.3.0] - 2026-11-09
 
 ### Added

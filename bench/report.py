@@ -69,7 +69,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.3.0"
+BENCH = "3.4.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
@@ -547,11 +547,14 @@ def machine_state_lines(ms: dict) -> list[str]:
         "### Machine state (recorded, never judged)",
         "",
         "`ab run --machine-state`: each run's cycles, counted by perf over exactly the region its wall is, "
-        "and the effective clock (cycles over the counted threads' task clock); the clock "
-        "(`scaling_cur_freq`, the run's CPUs' mean) and the package temperature read before and after each "
-        "run. Nothing here feeds the assessment.",
+        "and cycles over the counted threads' task clock (GHz: descriptive, never a normalisation, and null "
+        "where the counters' scopes don't match or a counter was multiplexed); `scaling_cur_freq` "
+        "(the mean over the run's allowed CPUs, read once before and once after each run, outside it: a "
+        "policy's requested or reported frequency at those moments, not the clock during the run) and the "
+        "package temperature at the same moments. Diagnostic: nothing here feeds the assessment, and a "
+        "missing reading is shown as missing, never filled in.",
         "",
-        "| corpus | arm | threads | runs | wall (s) | cycles/B | eff. clock GHz (min–max) | clock MHz pre → post | pkg °C pre → post |",
+        "| corpus | arm | threads | runs | wall (s) | cycles/B | cycles/task-clock GHz (min–max) | scaling_cur_freq mean MHz pre → post | pkg °C pre → post |",
         "|---|---|--:|--:|--:|--:|--:|--:|--:|",
     ]
     for corpus, arms in ms.items():
@@ -593,24 +596,41 @@ def machine_state_lines(ms: dict) -> list[str]:
     return out
 
 
+def faults(r: dict) -> str:
+    """A run's counter faults (bench 3.4.0): each failed enable or disable, and each
+    multiplexed counter; "none" where the counters recorded neither, "–" where none ran."""
+    if "perf_ctl_errors" not in r and "perf_multiplexed" not in r:
+        return "–"
+    f = [f"{e.get('counter')} {e.get('op')} errno {e.get('errno')}" for e in r.get("perf_ctl_errors") or []]
+    f += [f"{c} multiplexed" for c in r.get("perf_multiplexed") or []]
+    return "; ".join(f) or "none"
+
+
 def run_lines(runs: list[dict]) -> list[str]:
-    """`report.py machine`: every run's wall and CPU beside its cycles, effective clock,
-    clock and package temperature, one row a run, for any recipe's runs file. A run
-    recorded without `--machine-state` shows its wall and CPU only."""
+    """`report.py machine`: every run's wall and CPU beside its cycles, cycles over the task
+    clock, `scaling_cur_freq`'s mean and the package temperature, one row a run, for any
+    recipe's runs file; since bench 3.4.0 also its reference cycles, the counters' least
+    share running, its allowed CPUs and the CPUs its threads were seen on. A run recorded
+    without `--machine-state` shows its wall and CPU only. Diagnostic: a missing reading is
+    "–", never a value."""
     num = lambda v, f="{:.2f}": "–" if v is None else f.format(v)
     out = [
-        "| round | corpus | arm | threads | wall (s) | CPU (s) | cycles (G) | eff. clock GHz | clock MHz pre → post | pkg °C pre → post | governor |",
-        "|--:|---|---|--:|--:|--:|--:|--:|--:|--:|---|",
+        "| round | corpus | arm | threads | wall (s) | CPU (s) | cycles (G) | ref cycles (G) | perf running | cycles/task-clock GHz | scaling_cur_freq mean MHz pre → post | pkg °C pre → post | governor | CPUs allowed / seen | counter faults |",
+        "|--:|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|---|---|",
     ]
     for r in runs:
         cyc = r.get("cycles")
+        ref = r.get("ref_cycles")
         out.append(
             f"| {r.get('round')} | `{r.get('corpus')}` | {r.get('arm')} | {r.get('threads')} | "
             f"{num(r.get('wall'), '{:.3f}')} | {num(r.get('cpu'), '{:.3f}')} | "
-            f"{num(cyc / 1e9 if cyc is not None else None, '{:.3f}')} | {num(r.get('eff_ghz'))} | "
+            f"{num(cyc / 1e9 if cyc is not None else None, '{:.3f}')} | "
+            f"{num(ref / 1e9 if ref is not None else None, '{:.3f}')} | "
+            f"{num(r.get('perf_running'), '{:.3f}')} | {num(r.get('eff_ghz'))} | "
             f"{num(machine_of(r, 'freq_mhz'), '{:.0f}')} → {num(machine_of(r, 'freq_mhz', 'post'), '{:.0f}')} | "
             f"{num(machine_of(r, 'pkg_temp_c'), '{:.0f}')} → {num(machine_of(r, 'pkg_temp_c', 'post'), '{:.0f}')} | "
-            f"{machine_of(r, 'governor') or '–'} |"
+            f"{machine_of(r, 'governor') or '–'} | "
+            f"{r.get('cpus_allowed') or '–'} / {r.get('cpus_seen') or '–'} | {faults(r)} |"
         )
     return out
 
