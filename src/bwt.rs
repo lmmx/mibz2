@@ -302,7 +302,7 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
     let t = tt.as_mut_ptr();
     // the one-row step: row i's link at its byte's next slot, inside the bucket
     let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
-        let c = ll[i] as usize;
+        let c = row_byte(ll, i);
         let s = ftab[c];
         if s >= lim[c] {
             return false;
@@ -319,14 +319,15 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
     // to end before 16. A window of one run is that run of 16. Row by row, each row of a
     // run would reload the cursor its predecessor has just stored: a store-forward chain
     // as long as the run. A window of more than RUNS runs is mostly unequal neighbours and
-    // takes the one-row steps, which then have no such chain.
+    // takes the one-row steps, which then have no such chain: a window of 16 runs (most of
+    // a high-entropy block's) is sent there by one compare, before the count of its runs.
     let mut i = 0;
     while i + 16 <= n {
-        // bit j set: row i + j starts a run (j = 0, or its byte differs from row i + j - 1's)
-        let mut heads = run_heads(&ll[i..i + 16]);
-        if heads == 1 {
+        // bit j set: row i + j continues a run (j > 0, and its byte is row i + j - 1's)
+        let joins = run_joins(&ll[i..i + 16]);
+        if joins == ALL_JOINED {
             // one run of 16, most of Wikidata's windows
-            let c = ll[i] as usize;
+            let c = row_byte(ll, i);
             let s = ftab[c] as usize;
             if s + 16 > lim[c] as usize {
                 return false;
@@ -335,12 +336,14 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
             // tt's reserved capacity
             unsafe { run16(ll.as_ptr().add(s), (i as u32) << 8, t.add(s)) };
             ftab[c] = (s + 16) as u32;
-        } else if heads.count_ones() as usize <= RUNS {
+        } else if joins != 0 && few_runs(joins) {
+            // bit j set: row i + j starts a run
+            let mut heads = joins ^ 0xffff;
             while heads != 0 {
                 let j = heads.trailing_zeros() as usize;
                 heads &= heads - 1;
                 let len = (heads | 1 << 16).trailing_zeros() as usize - j;
-                let c = ll[i + j] as usize;
+                let c = row_byte(ll, i + j);
                 let s = ftab[c] as usize;
                 if s + 16 <= lim[c] as usize {
                     // SAFETY: s..s + 16 is below its bucket's end, at most n: inside ll
@@ -390,28 +393,64 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
 /// one-row steps
 const RUNS: usize = 6;
 
-/// The rows of a 16-byte window that start a run: bit j is set when j = 0 or `w[j]` differs
-/// from `w[j - 1]`
+/// Row i's byte, `ll[i]`, read from memory (a volatile read, bounds checked as `ll[i]`).
+/// Its window's 16 bytes are already in a vector (`run_joins`), and with a plain read the
+/// compiler took them from there: it stored the vector to the stack and copied out each
+/// byte, about 30 instructions on every window of more than one run, high-entropy
+/// blocks' above all. Read from `ll`, each is one load, as on master
 #[inline(always)]
-fn run_heads(w: &[u8]) -> u32 {
+fn row_byte(ll: &[u8], i: usize) -> usize {
+    // SAFETY: a reference to the byte, so valid and aligned for the read
+    unsafe { core::ptr::read_volatile(&ll[i]) as usize }
+}
+
+/// `run_joins` of a window of one run
+const ALL_JOINED: u32 = 0xfffe;
+
+/// Whether a window with these `run_joins` has at most RUNS runs: its heads (`joins ^
+/// 0xffff`) number at most RUNS, so its joins at least 16 - RUNS. Counted without POPCNT,
+/// which baseline x86-64 lacks (#310's software popcount was about a dozen instructions on
+/// every window of more than one run), from the counts of the two bytes: two loads from a
+/// 256-byte table. `build_one_pass` asks only for windows of more than one run and fewer
+/// than 16. Tested against `count_ones` on all 32,768 masks `run_joins` can return
+#[inline(always)]
+fn few_runs(joins: u32) -> bool {
+    POP8[joins as u8 as usize] + POP8[(joins >> 8) as u8 as usize] >= (16 - RUNS) as u8
+}
+
+/// The number of bits set in each byte
+static POP8: [u8; 256] = {
+    let mut t = [0u8; 256];
+    let mut i = 0;
+    while i < 256 {
+        t[i] = (i as u32).count_ones() as u8;
+        i += 1;
+    }
+    t
+};
+
+/// The rows of a 16-byte window that continue a run: bit j is set when j > 0 and `w[j]`
+/// equals `w[j - 1]`. A window of one run has all 15 (`ALL_JOINED`), one of 16 runs none:
+/// each one compare, with no count of its runs
+#[inline(always)]
+fn run_joins(w: &[u8]) -> u32 {
     let w: &[u8; 16] = w.try_into().unwrap();
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE2 is in x86_64's baseline; w is 16 readable bytes
     unsafe {
         use core::arch::x86_64::*;
         let v = _mm_loadu_si128(w.as_ptr().cast());
-        // byte j of `prev` is w[j - 1] (byte 0 is 0, and bit 0 is set below whatever)
+        // byte j of `prev` is w[j - 1] (byte 0 is 0, and bit 0 is cleared below whatever)
         let prev = _mm_slli_si128::<1>(v);
-        let same = _mm_movemask_epi8(_mm_cmpeq_epi8(v, prev)) as u32;
-        (!same & 0xffff) | 1
+        _mm_movemask_epi8(_mm_cmpeq_epi8(v, prev)) as u32 & ALL_JOINED
     }
     #[cfg(not(target_arch = "x86_64"))]
     {
-        let mut heads = 1;
+        let mut joins = 0;
         for j in 1..16 {
-            heads |= ((w[j] != w[j - 1]) as u32) << j;
+            joins |= ((w[j] == w[j - 1]) as u32) << j;
         }
-        heads
+        joins
     }
 }
 
@@ -1647,6 +1686,60 @@ pub(crate) mod tests {
         for ll in build_inputs(10, 3000).iter().filter(|ll| !ll.is_empty()) {
             wrong_counts_fall_back(ll);
         }
+    }
+
+    /// `few_runs` is #310's `heads.count_ones() <= RUNS` on every mask `run_joins` can
+    /// return (bit 0 clear, any of bits 1 to 15, none above), with heads `joins ^ 0xffff`;
+    /// and the build's classifier as a whole (`ALL_JOINED`, then 0, then `few_runs`) sends
+    /// each window where #310's did: one run, at most RUNS runs, or one row at a time
+    #[test]
+    fn few_runs_counts_the_runs() {
+        for high in 0..1u32 << 15 {
+            let joins = high << 1;
+            let heads = joins ^ 0xffff;
+            assert_eq!(heads & 1, 1);
+            assert_eq!(
+                few_runs(joins),
+                heads.count_ones() as usize <= RUNS,
+                "joins {joins:#06x}"
+            );
+            let new = if joins == ALL_JOINED {
+                0
+            } else if joins != 0 && few_runs(joins) {
+                1
+            } else {
+                2
+            };
+            let old = if heads == 1 {
+                0
+            } else if heads.count_ones() as usize <= RUNS {
+                1
+            } else {
+                2
+            };
+            assert_eq!(new, old, "joins {joins:#06x}");
+        }
+    }
+
+    /// Miri's columns reach each of the build's window paths: one run, at most RUNS runs,
+    /// more than RUNS runs but fewer than 16 (the run count's table) and 16 runs (the
+    /// first compare)
+    #[test]
+    fn miri_inputs_reach_every_window_path() {
+        let mut seen = [false; 4];
+        for ll in build_inputs(3, 80).iter().filter(|ll| ll.len() <= 80) {
+            for w in ll.chunks_exact(16) {
+                let runs = 16 - run_joins(w).count_ones() as usize;
+                assert_eq!(runs, 1 + (1..16).filter(|&j| w[j] != w[j - 1]).count());
+                seen[match runs {
+                    1 => 0,
+                    r if r <= RUNS => 1,
+                    16 => 3,
+                    _ => 2,
+                }] = true;
+            }
+        }
+        assert_eq!(seen, [true; 4], "one run, few runs, many runs, 16 runs");
     }
 
     /// The one-pass build's unchecked writes and its `set_len` under Miri, on small columns:
