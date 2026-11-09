@@ -14,7 +14,8 @@
 //!
 //! It exits 0 only if: the predicate holds at 10 and not at 9 or 11; the snapshot is read
 //! (not None) and the quota established (not `Unknown`); at 10 the reader built the service
-//! core at `SERVICE_PLAN` (8 decoding threads, a window of 8) and every hub thread ended; at 9
+//! core at `SERVICE_PLAN` (8 decoding threads, a window of 8), every hub thread ended and as
+//! many blocks finished as prepared (at least one); at 9
 //! and 11 it built something else; and every decode gave back the input. Anything else exits
 //! 3, with `"ok": false` and the reasons. These are a consistent set of observations at one
 //! moment, not an atomic kernel snapshot: affinity, quota and hotplug can change after it.
@@ -85,7 +86,9 @@ fn main() {
                     if b.service
                         && b.threads == SERVICE_PLAN.threads()
                         && b.window == 8
-                        && b.counts.is_some_and(|c| c.ended) => {}
+                        && b.counts.is_some_and(|c| {
+                            c.ended && c.finished == c.prepared && c.prepared > 0
+                        }) => {}
                 _ => why.push(format!(
                     "10 threads: not svc2 at 8 threads, window 8: {b:?}"
                 )),

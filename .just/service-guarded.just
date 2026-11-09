@@ -116,7 +116,7 @@ bench-service-guarded DRY="" CORPUS="":
     # the actual-target preflight, before anything is measured, checked whole: a refusal
     # unless TARGET (except in a DRY check), archived either way
     pf=0
-    timeout 120 "$W/bin/svc_target" > "$W/preflight.json" || pf=$?
+    timeout --kill-after=10 120 "$W/bin/svc_target" > "$W/preflight.json" || pf=$?
     echo "$pf" > "$W/preflight.exit"
     cat "$W/preflight.json"
     set +e

@@ -17,10 +17,13 @@ Verdicts:
   8, every hub thread ended, as many blocks finished as prepared, at least one); not the
   service core at 9 or 11; every decode gave back the input; the exit status 0.
 - NOT TARGET: the facts are not the target's (an unknown quota or an unread snapshot among
-  them: fail-closed), the record says not ok, with reasons, and is otherwise consistent: the
-  predicate false at every budget and the service core built nowhere; the exit status 3.
-- FAILED: the facts are the target's but a dispatch or decode check failed (the record says
-  not ok); the exit status 3.
+  them: fail-closed), the record says not ok, with reasons, and is otherwise consistent and
+  clean: the predicate false at every budget, the service core built nowhere, one decoder
+  built at each budget and every decode correct; the exit status 3.
+- FAILED: a dispatch or decode check failed (the record says not ok; the exit status 3):
+  on the target's facts, svc2 not as expected at 10; anywhere, a budget with other than one
+  decoder built, or a decode that did not give back its input. This takes precedence over
+  NOT TARGET: a failed fallback decode off the target is FAILED, never hidden under it.
 - INVALID RECORD: anything else: a malformed record, a missing fact, an exit status that
   disagrees, an `ok` that disagrees with the recomputation (ok=true beside an unknown quota or
   an absent snapshot), a predicate answer that disagrees with the facts, the service core
@@ -31,6 +34,7 @@ Verdicts:
 
 import argparse
 import json
+import math
 import sys
 
 SCHEMA = "mibz2.svc_target/1"
@@ -48,8 +52,55 @@ def is_bool(x):
     return isinstance(x, bool)
 
 
+def pos_int(x):
+    return is_int(x) and x > 0
+
+
+def nonneg_int(x):
+    return is_int(x) and x >= 0
+
+
+def finite_pos(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
+
+
+def plan_ok(plan):
+    """A complete, typed `Plan`: {"kind": "workers", "workers": n} or {"kind": "teams",
+    "teams": n, "k": k}, each a positive integer, nothing else"""
+    if not isinstance(plan, dict):
+        return False
+    if plan.get("kind") == "workers":
+        return set(plan) == {"kind", "workers"} and pos_int(plan["workers"])
+    if plan.get("kind") == "teams":
+        return set(plan) == {"kind", "teams", "k"} and pos_int(plan["teams"]) and pos_int(plan["k"])
+    return False
+
+
+def built_ok(b):
+    """A decoder built (`parallel::Built`): typed, positive threads and window, its counts (if
+    any) nonnegative integers with `ended` a boolean"""
+    if not (
+        isinstance(b, dict)
+        and set(b) == {"service", "pipelined", "threads", "window", "counts"}
+        and is_bool(b["service"])
+        and is_bool(b["pipelined"])
+        and pos_int(b["threads"])
+        and pos_int(b["window"])
+    ):
+        return False
+    c = b["counts"]
+    return c is None or (
+        isinstance(c, dict)
+        and set(c) == {"prepared", "pooled", "finished", "ended"}
+        and all(nonneg_int(c[f]) for f in ("prepared", "pooled", "finished"))
+        and is_bool(c["ended"])
+    )
+
+
 def shape_problems(r):
-    """What is malformed or missing in the record (empty: well formed)"""
+    """What is malformed or missing in the record (empty: well formed). Strict: every field
+    present and of its type, integers never floats or booleans, booleans never numbers,
+    numbers finite, sizes positive, counts nonnegative"""
     p = []
     if not isinstance(r, dict):
         return ["not a JSON object"]
@@ -60,13 +111,13 @@ def shape_problems(r):
     if not (isinstance(r.get("why"), list) and all(isinstance(w, str) for w in r["why"])):
         p.append("why not a list of strings")
     k = r.get("kernels")
-    if not (isinstance(k, dict) and is_bool(k.get("avx2")) and is_bool(k.get("clmul"))):
+    if not (isinstance(k, dict) and set(k) == {"avx2", "clmul"} and is_bool(k["avx2"]) and is_bool(k["clmul"])):
         p.append("kernels missing or malformed")
     m = r.get("machine")
     if not isinstance(m, dict):
         return p + ["machine missing"]
     for f in ("phys", "l3"):
-        if f not in m or not (m[f] is None or is_int(m[f])):
+        if f not in m or not (m[f] is None or pos_int(m[f])):
             p.append(f"machine.{f} missing or malformed")
     t = m.get("target", "missing")
     if t == "missing":
@@ -75,55 +126,46 @@ def shape_problems(r):
         cpu = t.get("cpu") if isinstance(t, dict) else None
         if not (
             isinstance(t, dict)
-            and all(is_int(t.get(f)) for f in ("phys", "logical", "l3"))
+            and set(t) == {"phys", "logical", "l3", "cpu"}
+            and all(pos_int(t[f]) for f in ("phys", "logical", "l3"))
             and isinstance(cpu, dict)
-            and isinstance(cpu.get("vendor"), str)
-            and is_int(cpu.get("family"))
-            and is_int(cpu.get("model"))
+            and set(cpu) == {"vendor", "family", "model"}
+            and isinstance(cpu["vendor"], str)
+            and nonneg_int(cpu["family"])
+            and nonneg_int(cpu["model"])
         ):
             p.append("machine.target malformed")
     q = m.get("quota")
     if not (isinstance(q, dict) and q.get("kind") in ("unlimited", "cpus", "unknown")):
         p.append("machine.quota missing or malformed")
-    elif q["kind"] == "cpus" and not (
-        isinstance(q.get("cpus"), (int, float)) and not is_bool(q.get("cpus")) and q["cpus"] > 0
-    ):
-        p.append("machine.quota.cpus malformed")
-    if r.get("service_plan") != SVC2:
-        p.append(f"service_plan {r.get('service_plan')!r}, not svc2's")
-    if not (is_int(r.get("input_bytes")) and r["input_bytes"] > 0):
+    elif q["kind"] == "cpus":
+        if not (set(q) == {"kind", "cpus"} and finite_pos(q["cpus"])):
+            p.append("machine.quota.cpus not a finite positive number")
+    elif set(q) != {"kind"}:
+        p.append("machine.quota has fields its kind doesn't")
+    sp = r.get("service_plan")
+    if not (isinstance(sp, dict) and set(sp) == set(SVC2) and all(is_int(sp[f]) and sp[f] == v for f, v in SVC2.items())):
+        p.append(f"service_plan {sp!r}, not svc2's integers")
+    if not pos_int(r.get("input_bytes")):
         p.append("input_bytes missing or malformed")
     at = r.get("at")
-    if not (isinstance(at, list) and [a.get("threads") if isinstance(a, dict) else None for a in at] == list(BUDGETS)):
-        return p + ["at: not the budgets 9, 10, 11 in order"]
+    if not (
+        isinstance(at, list)
+        and len(at) == len(BUDGETS)
+        and all(isinstance(a, dict) and is_int(a.get("threads")) and a["threads"] == t for a, t in zip(at, BUDGETS))
+    ):
+        return p + ["at: not the integer budgets 9, 10, 11 in order"]
     for a in at:
         t_ = a["threads"]
-        if not (is_bool(a.get("predicate")) and is_bool(a.get("decoded")) and is_int(a.get("builds"))):
+        if set(a) != {"threads", "predicate", "plan", "builds", "built", "decoded"}:
+            p.append(f"at {t_}: fields {sorted(a)}")
+            continue
+        if not (is_bool(a["predicate"]) and is_bool(a["decoded"]) and nonneg_int(a["builds"])):
             p.append(f"at {t_}: predicate, decoded or builds malformed")
-        plan = a.get("plan")
-        if not (isinstance(plan, dict) and plan.get("kind") in ("workers", "teams")):
-            p.append(f"at {t_}: plan malformed")
-        b = a.get("built", "missing")
-        if b == "missing":
-            p.append(f"at {t_}: built missing")
-        elif b is not None:
-            c = b.get("counts", "missing") if isinstance(b, dict) else "missing"
-            if not (
-                isinstance(b, dict)
-                and is_bool(b.get("service"))
-                and is_bool(b.get("pipelined"))
-                and is_int(b.get("threads"))
-                and is_int(b.get("window"))
-                and (
-                    c is None
-                    or (
-                        isinstance(c, dict)
-                        and all(is_int(c.get(f)) for f in ("prepared", "pooled", "finished"))
-                        and is_bool(c.get("ended"))
-                    )
-                )
-            ):
-                p.append(f"at {t_}: built malformed")
+        if not plan_ok(a["plan"]):
+            p.append(f"at {t_}: plan incomplete or malformed")
+        if a["built"] is not None and not built_ok(a["built"]):
+            p.append(f"at {t_}: built malformed")
     return p
 
 
@@ -184,15 +226,19 @@ def check(r, exit_status):
         dispatch.append("at 10: not svc2 at 8 threads, window 8, completed")
     if p:
         return "INVALID RECORD", p
-    if target and not dispatch:
+    # (precedence, explicit: a dispatch or decode failure anywhere, at the fallback budgets
+    # or off the target too, is FAILED, never hidden under NOT TARGET)
+    if dispatch:
+        if r["ok"]:
+            return "INVALID RECORD", ["ok, but " + "; ".join(dispatch)]
+        return "FAILED", dispatch
+    if target:
         if not r["ok"]:
             return "INVALID RECORD", ["the facts and dispatch are the target's, but not ok"]
         return "TARGET", []
     if r["ok"]:
-        return "INVALID RECORD", ["ok, but " + ("; ".join(dispatch) if target else "the facts are not the target's")]
-    if target:
-        return "FAILED", dispatch
-    return "NOT TARGET", dispatch
+        return "INVALID RECORD", ["ok, but the facts are not the target's"]
+    return "NOT TARGET", []
 
 
 def main(argv=None):

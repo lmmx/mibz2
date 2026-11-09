@@ -47,6 +47,14 @@ print(json.dumps({"reason": "build-finished", "success": True}))
 """
 
 FAKE_RUSTC = "#!/bin/sh\necho 'rustc 0.0.0 (stand-in)'\n"
+
+# timeout's stand-in: records its arguments, then either runs the real timeout or, with
+# FAKE_TIMEOUT_EXIT set, exits as timeout does when it TERMs (124) or KILLs (137)
+FAKE_TIMEOUT = r"""#!/bin/sh
+echo "$@" > "$FAKE_TIMEOUT_ARGS"
+if [ -n "$FAKE_TIMEOUT_EXIT" ]; then exit "$FAKE_TIMEOUT_EXIT"; fi
+exec "$REAL_TIMEOUT" "$@"
+"""
 FAKE_LSCPU = "#!/bin/sh\necho 'CPU(s): 4'\n"
 
 FAKE_GH = r"""#!/usr/bin/env python3
@@ -123,12 +131,13 @@ class EndToEnd(unittest.TestCase):
         elsewhere.mkdir(parents=True)
         for name, body, where in (("svc_target", FAKE_PREFLIGHT, elsewhere), ("cargo", FAKE_CARGO, bin_),
                                   ("rustc", FAKE_RUSTC, bin_), ("lscpu", FAKE_LSCPU, bin_),
-                                  ("gh", FAKE_GH, bin_)):
+                                  ("gh", FAKE_GH, bin_), ("timeout", FAKE_TIMEOUT, bin_)):
             p = where / name
             p.write_text(body)
             p.chmod(0o755)
         self.exe = elsewhere / "svc_target"
         self.env = {**os.environ, "PATH": f"{bin_}:{os.environ['PATH']}", "FAKE_EXE": str(self.exe),
+                    "REAL_TIMEOUT": shutil.which("timeout"), "FAKE_TIMEOUT_ARGS": str(self.tmp / "timeout-args"),
                     "FAKE_COMMENTS": str(self.tmp / "comments.json"), "GH": str(bin_ / "gh")}
 
     def tearDown(self):
@@ -150,7 +159,8 @@ class EndToEnd(unittest.TestCase):
             return {
                 n: t.extractfile(f"{stamp}/{n}").read().decode()
                 for n in ("outcome.txt", "inputs.txt", "build.txt", "commit.txt", "frozen.txt",
-                          "preflight.json", "preflight-check.json", "raw/_proc_self_cgroup")
+                          "preflight.json", "preflight.exit", "preflight-check.json", "raw/reads.txt",
+                          "stages.txt")
                 if f"{stamp}/{n}" in names
             }
 
@@ -174,7 +184,16 @@ class EndToEnd(unittest.TestCase):
                 self.assertEqual(got["inputs.txt"].split()[0], digest)
                 self.assertEqual(got["commit.txt"].strip(), git(self.work, "rev-parse", "HEAD"))
                 self.assertIn("frozen", got["frozen.txt"])
-                self.assertIn("raw/_proc_self_cgroup", got)
+                reads = got["raw/reads.txt"]
+                self.assertIn("== /proc/self/cgroup", reads)
+                self.assertTrue("cpu.max" in reads or "NOT RESOLVED" in reads, reads[-500:])
+                self.assertIn("topology/core_id", reads)
+                # every stage reached but the record's check, where the preflight crashed
+                stages = got["stages.txt"].splitlines()
+                self.assertEqual(len(stages), 5)
+                want = 3 if mode == "crash" else 5
+                self.assertEqual(sum(l.startswith("reached:") for l in stages), want, stages)
+                self.assertIn("--kill-after=10 120", Path(self.env["FAKE_TIMEOUT_ARGS"]).read_text())
                 if rec is not None:
                     self.assertEqual(json.loads(got["preflight.json"]), rec)
                     self.assertEqual(json.loads(got["preflight-check.json"])["verdict"], word)
@@ -184,7 +203,23 @@ class EndToEnd(unittest.TestCase):
         p.write_text(p.read_text() + "\n# edit\n")
         r = self.direct(self.mode_env("target"))
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
-        self.assertIn("REFUSED", self.contents(self.bundles()[-1])["outcome.txt"])
+        got = self.contents(self.bundles()[-1])
+        self.assertIn("REFUSED", got["outcome.txt"])
+        # an early refusal reaches no stage, and its bundle has no later stage's files
+        self.assertTrue(all(l.startswith("not reached:") for l in got["stages.txt"].splitlines()))
+        for n in ("frozen.txt", "build.txt", "inputs.txt", "preflight.json", "preflight-check.json"):
+            self.assertNotIn(n, got)
+
+    def test_the_timeouts_are_incomplete_and_bundled(self):
+        for code, words in ((124, "ended on TERM"), (137, "killed at 130 s")):
+            with self.subTest(code=code):
+                env = {**self.mode_env("target"), "FAKE_TIMEOUT_EXIT": str(code)}
+                r = self.direct(env)
+                self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+                got = self.contents(self.bundles()[-1])
+                self.assertIn(words, got["outcome.txt"])
+                self.assertEqual(got["preflight.exit"].strip(), str(code))
+                self.assertIn("not reached: preflight run", got["stages.txt"])
 
     def test_unfrozen_refuses_nonzero(self):
         (self.work / "bench" / "svc-target.frozen").write_text("# not frozen\n")

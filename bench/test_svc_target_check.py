@@ -6,6 +6,7 @@ observations).
     python3 bench/test_svc_target_check.py
 """
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -84,6 +85,48 @@ class Check(unittest.TestCase):
         for what, (bad, ex) in cases.items():
             with self.subTest(what):
                 self.assertEqual(check(bad, ex)[0], "INVALID RECORD")
+
+    def test_the_researchers_strictness_witnesses(self):
+        # REVIEW 6743780326 (probe.py at 05979b91): each returned TARGET at 7f691929
+        r, x = record(True)
+        inf = edit(r, lambda r: r["machine"].update(quota={"kind": "cpus", "cpus": float("inf")}))
+        cases = {
+            "an infinite quota": inf,
+            "the same through 1e309": json.loads(json.dumps(inf).replace("Infinity", "1e309")),
+            "an incomplete plan": edit(r, lambda r: r["at"][0].update(plan={"kind": "teams"})),
+            "a float budget": edit(r, lambda r: r["at"][0].update(threads=9.0)),
+            "a float service-plan teams": edit(r, lambda r: r["service_plan"].update(teams=2.0)),
+            "a negative pooled count": edit(r, lambda r: r["at"][1]["built"]["counts"].update(pooled=-1)),
+            "a NaN quota": edit(r, lambda r: r["machine"].update(quota={"kind": "cpus", "cpus": float("nan")})),
+            "a float window": edit(r, lambda r: r["at"][1]["built"].update(window=8.0)),
+            "a zero thread count": edit(r, lambda r: r["at"][0]["built"].update(threads=0)),
+            "a workers plan with no count": edit(r, lambda r: r["at"][0].update(plan={"kind": "workers"})),
+            "a plan of another kind": edit(r, lambda r: r["at"][0].update(plan={"kind": "service", "teams": 2, "k": 3})),
+            "a plan with an extra field": edit(r, lambda r: r["at"][0]["plan"].update(extra=1)),
+            "a float k": edit(r, lambda r: r["at"][0]["plan"].update(k=2.0)),
+            "an unknown quota with a count": edit(r, lambda r: r["machine"].update(quota={"kind": "unknown", "cpus": 20})),
+            "a bool builds": edit(r, lambda r: r["at"][0].update(builds=True)),
+        }
+        for what, bad in cases.items():
+            with self.subTest(what):
+                self.assertEqual(check(bad, x)[0], "INVALID RECORD")
+        # the retained controls
+        self.assertEqual(check(r, x), ("TARGET", []))
+        self.assertEqual(check(edit(r, lambda r: r["at"][0].pop("plan")), x)[0], "INVALID RECORD")
+        self.assertEqual(check(edit(r, lambda r: r["machine"].update(quota={"kind": "unknown"})), x)[0], "INVALID RECORD")
+        n, nx = record(False)
+        self.assertEqual(check(n, nx)[0], "NOT TARGET")
+
+    def test_a_failed_fallback_decode_is_never_not_target(self):
+        # REVIEW 6743780326: off the target, a decode failure is FAILED (its own outcome), not
+        # NOT TARGET with the defect in its problems
+        n, nx = record(False)
+        bad = edit(n, lambda r: (r["at"][0].update(decoded=False), r["why"].append("decode mismatch")))
+        verdict, problems = check(bad, nx)
+        self.assertEqual(verdict, "FAILED")
+        self.assertTrue(any("did not give back" in p for p in problems))
+        two = edit(n, lambda r: r["at"][2].update(builds=2))
+        self.assertEqual(check(two, nx)[0], "FAILED")
 
     def test_failed_dispatch_on_the_target(self):
         r, _ = record(True)

@@ -927,166 +927,16 @@ bench-pipelined-default DRY="" CORPUS="":
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
 
-# The guarded service default's workstation A/B (docs/journal/2026-11-09-service-guarded-registration.md:
-# a DRAFT, not frozen, not queued; bench/service-guarded.frozen names no commits yet, so the
-# recipe refuses). The candidate build's default decoder (svc2 at exactly 10 threads on its
-# target) against the current default's build, both through `BzReader::parallel` (ab's
-# `mibz2`), at 9, 10 and 11 threads, 20 paired rounds on the bench's Wikidata sample, with the
-# base binary's byte-identical twin as the noise control, judged by bench/service_guarded.py.
-# An actual-target preflight (examples/svc_target.rs) reads the predicate's facts back first
-# and refuses before anything is measured if the predicate is false or a fact is unknown; the
-# refusal is archived in the bundle. No PMU telemetry (--machine-state is not passed); sysfs
-# snapshots (ab env, ab sample) are recorded as diagnostics, never judged (D064).
-#   just submit bench-service-guarded
-# A DRY value is the untimed check of the recipe itself (one round, no settling, a failed
-# preflight recorded and not refused), with optionally a CORPUS, both positional:
-#   just bench-service-guarded 1 [CORPUS]
-# never evidence, and the report never calls it VALID.
-
-# The service default (svc2 at 10 threads) against the current default, 9 to 11 threads
-bench-service-guarded DRY="" CORPUS="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    B=$PWD/target/service-guarded
-    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
-    mkdir -p "$B"
-    mkdir "$W" || { echo "bench-service-guarded: $W already exists; not reusing an attempt's directory"; exit 1; }
-    exec > >(tee -a "$W/console.log") 2>&1
-    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
-    finish() {
-      status=$?
-      echo "$outcome" > "$W/outcome.txt"
-      echo "bench-service-guarded: OUTCOME: $outcome"
-      bash bench/bundle.sh "$W"
-      case "$outcome" in
-        "VALID: "*) exit 0 ;;
-        INVALID*) exit 1 ;;
-        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
-      esac
-    }
-    trap finish EXIT
-    fail() { outcome="REFUSED: $*"; echo "bench-service-guarded: $*"; exit 1; }
-    rounds=20; busy=(); dry="{{DRY}}"; corpus="{{CORPUS}}"
-    if [ -n "$dry" ]; then
-      rounds=1; busy=(--max-busy 64 --settle 0.2)
-      echo "bench-service-guarded: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
-    elif [ -n "$corpus" ]; then
-      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
-    fi
-    # the commits a freeze would name (bench/service-guarded.frozen): the candidate, whose build
-    # and workload inputs HEAD must match, and the base (the current default), an ancestor of it
-    frozen=bench/service-guarded.frozen
-    cand=$(awk '$1 == "candidate" {print $2}' "$frozen")
-    base=$(awk '$1 == "base" {print $2}' "$frozen")
-    [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base (the registration is a DRAFT); nothing to run"
-    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples tests/common bench/service_guarded.py bench/wikidata.json bench/wikidata.py bench/bundle.sh .just/bench.just
-      docs/journal/2026-11-09-service-guarded-registration.md)
-    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
-    [ -z "$overrides" ] || fail "unset these, so both builds and every arm run the same, registered way: $(echo $overrides)"
-    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
-    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the build and workload inputs"
-    git cat-file -e "$cand^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch: the frozen commits are missing"
-    git merge-base --is-ancestor "$base" "$cand" || fail "the base $base is not an ancestor of the candidate $cand"
-    git diff --quiet "$cand" HEAD -- "${measured[@]}" || fail "HEAD's build or workload inputs differ from the frozen candidate $cand"
-    head=$(git rev-parse HEAD)
-    printf 'head %s\ncandidate %s\nbase %s\n' "$head" "$cand" "$base" | tee "$W/commits.txt"
-    [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
-    [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
-    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
-    built() {  # built DIR EXAMPLE...: build in DIR, print each example's executable, in order
-      local dir=$1; shift
-      local args=(); for e in "$@"; do args+=(--example "$e"); done
-      (cd "$dir" && cargo build -q --release --message-format=json-render-diagnostics "${args[@]}") \
-        | python3 -c 'import json,sys
-    want=sys.argv[1:]; got={}
-    for line in sys.stdin:
-        m=json.loads(line)
-        if m.get("reason")=="compiler-artifact" and m.get("executable") and m["target"]["name"] in want and "example" in m["target"]["kind"]:
-            got[m["target"]["name"]]=m["executable"]
-    missing=[w for w in want if w not in got]
-    if missing: sys.exit("no executable reported for: "+" ".join(missing))
-    print("\n".join(got[w] for w in want))' "$@"
-    }
-    configs() { local d=$1 stop=$2; while :; do for f in "$d/.cargo/config" "$d/.cargo/config.toml"; do [ -f "$f" ] && echo "$f"; done; [ "$d" = "$stop" ] && break; d=$(dirname "$d"); done; return 0; }
-    only_base=$(configs "$(dirname "$B/build-$base")" "$PWD")
-    [ -z "$only_base" ] || fail "Cargo configuration only the base build would read: $(echo $only_base)"
-    tool() { (cd "$1" && rustc -vV && cargo -V); }
-    [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
-    mkdir "$W/bin"
-    base_built=$(built "$B/build-$base" ab) || fail "the base build failed"
-    cp "$base_built" "$W/bin/ab-base"
-    # (the noise control's twin: the base's executable, byte for byte, under another path)
-    cp "$W/bin/ab-base" "$W/bin/ab-base-twin"
-    sha256sum "$W/bin/ab-base" "$W/bin/ab-base-twin" > "$W/bin/ab-base.sha256"
-    [ "$(awk '{print $1}' "$W/bin/ab-base.sha256" | sort -u | wc -l)" = 1 ] || fail "the twin is not the base's bytes"
-    head_built=$(built "$PWD" ab windows svc_target) || fail "the head build failed"
-    [ "$(printf '%s\n' "$head_built" | wc -l)" = 3 ] || fail "Cargo reported no executables for the head build"
-    cp "$(printf '%s\n' "$head_built" | sed -n 1p)" "$W/bin/ab-head"
-    cp "$(printf '%s\n' "$head_built" | sed -n 2p)" "$W/bin/windows"
-    cp "$(printf '%s\n' "$head_built" | sed -n 3p)" "$W/bin/svc_target"
-    sha256sum -c --quiet "$W/bin/ab-base.sha256" || fail "the base executable changed after it was copied"
-    AB=$W/bin/ab-head; BASEAB=$W/bin/ab-base; TWINAB=$W/bin/ab-base-twin; WINDOWS=$W/bin/windows
-    # diagnostics only, never judged (D064): the machine as ab sees it, and sysfs readings
-    mkdir "$W/diagnostics"
-    "$AB" env > "$W/diagnostics/env.json"
-    lscpu > "$W/diagnostics/lscpu.txt"
-    "$AB" sample --count 5 > "$W/diagnostics/sample-before.jsonl"
-    # the actual-target preflight, before anything is measured: the predicate's facts read
-    # back on this machine, and the default's dispatch at 9, 10 and 11 threads. A failure
-    # refuses the attempt (archived: preflight.json is in the bundle), except in a DRY check
-    set +e
-    "$W/bin/svc_target" > "$W/preflight.json"
-    pf=$?
-    set -e
-    cat "$W/preflight.json"
-    if [ "$pf" -ne 0 ]; then
-      if [ -n "$dry" ]; then
-        echo "bench-service-guarded: DRY RUN: the preflight failed (exit $pf), recorded; continuing untimed"
-      else
-        fail "the preflight failed (exit $pf): the predicate is false here, or a fact is unknown (preflight.json)"
-      fi
-    fi
-    if [ -z "$corpus" ]; then
-      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
-      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
-        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
-          && git archive origin/bench-data "$dir" | tar -x || true
-      fi
-      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$WINDOWS" "$B/wikidata.bz2"
-      corpus=$B/wikidata.bz2
-    fi
-    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
-    {
-      sha256sum "$AB" "$BASEAB" "$TWINAB" "$WINDOWS" "$W/bin/svc_target" "$(realpath "$corpus")"
-      tool "$PWD"
-      { printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; configs "$(dirname "$PWD")" /; } \
-        | while IFS= read -r f; do if [ -f "$f" ]; then sha256sum "$f"; fi; done
-      echo "census every 5 ms (AB_CENSUS_MS unset); no --machine-state (no PMU telemetry)"
-    } > "$W/inputs.txt"
-    cat "$W/inputs.txt"
-    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB,mibz2@$TWINAB" \
-      --threads "9,10,11" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
-    "$AB" sample --count 5 > "$W/diagnostics/sample-after.jsonl"
-    set +e
-    python3 bench/service_guarded.py report "$W/runs.jsonl" --preflight "$W/preflight.json" --out "$W/service-guarded"
-    rc=$?
-    set -e
-    if [ "$rc" -le 1 ] && [ -s "$W/service-guarded.json" ] && [ -s "$W/service-guarded.md" ]; then
-      outcome=$(python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print("VALID: P1 " + v["p1"]["reading"] + " (speed " + v["p1"]["speed"] + ", CPU " + v["p1"]["cpu"] + ")" if v["valid"] else "INVALID: " + "; ".join(v["problems"]))' "$W/service-guarded.json")
-    else
-      outcome="REPORT ERROR: service_guarded.py exited $rc without writing its report"
-    fi
-
 # The service core's target preflight, alone (docs/journal/2026-11-09-svc-target-registration.md;
 # frozen by bench/svc-target.frozen, which names no commit until the Coordinator freezes it):
 # examples/svc_target.rs built as Cargo reports it, run once, its record checked whole by
 # bench/svc_target_check.py. It times no decoder (no ab grid) and is no performance evidence.
-# Read-only. Run once; no retry. The bundle keeps the identity (commit, executable digest,
-# toolchain) and the full facts (the record and the raw files it reads) whatever the outcome.
-# Its exit: 0 TARGET, 4 NOT TARGET, 5 FAILED (the target's facts, a dispatch or decode check
-# failed), 1 REFUSED or INVALID RECORD, 3 INCOMPLETE; kept through the bundle and `just submit`.
-# About a minute once built.
+# Read-only. Run once; no retry. Whatever the outcome, the bundle keeps what was reached, and
+# `stages.txt` says which stages were reached and which not (an early refusal has no build or
+# record, and none is made up). The preflight is sent TERM at 120 s and KILL 10 s later.
+# Its exit: 0 TARGET, 4 NOT TARGET, 5 FAILED (a dispatch or decode check failed), 1 REFUSED or
+# INVALID RECORD, 3 INCOMPLETE; kept through the bundle and `just submit`. About a minute once
+# built.
 #   just submit bench-svc-target
 
 # The service core's target predicate and dispatch, read back on this machine, once
@@ -1099,8 +949,17 @@ bench-svc-target:
     mkdir "$W" || { echo "bench-svc-target: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
     outcome="INCOMPLETE: stopped before the preflight finished (see console.log)"
+    # the stages, in order, each marked as it completes; stages.txt lists every one, reached
+    # or not, with the files that stage leaves
+    all_stages=("checks: frozen and clean (frozen.txt)" "build (build.txt, inputs.txt)"
+      "raw reads (raw/)" "preflight run (preflight.json, preflight.exit)" "record check (preflight-check.json)")
+    reached=0
+    mark() { reached=$((reached + 1)); }
     finish() {
       echo "$outcome" > "$W/outcome.txt"
+      for i in "${!all_stages[@]}"; do
+        if [ "$i" -lt "$reached" ]; then echo "reached: ${all_stages[$i]}"; else echo "not reached: ${all_stages[$i]}"; fi
+      done > "$W/stages.txt"
       echo "bench-svc-target: OUTCOME: $outcome"
       bash bench/bundle.sh "$W" || { echo "bench-svc-target: bundling failed"; exit 2; }
       case "$outcome" in
@@ -1128,39 +987,77 @@ bench-svc-target:
       fail "HEAD's measured inputs differ from the frozen $frozen"
     fi
     echo "frozen $frozen" > "$W/frozen.txt"
-    # the executable Cargo reports building, wherever its target directory is
+    mark
+    # the executable Cargo reports building, wherever its target directory is; the build's
+    # platform is rustc's host (build.txt), the one the predicate's compile-time x86-64 Linux
+    # condition is decided for
     EXE=$(cargo build -q --release --example svc_target --message-format=json-render-diagnostics \
       | python3 -c 'import json, sys
     got = [m["executable"] for m in map(json.loads, sys.stdin) if m.get("reason") == "compiler-artifact" and m.get("executable") and m["target"]["name"] == "svc_target" and "example" in m["target"]["kind"]]
     sys.exit("cargo reported no svc_target executable") if len(got) != 1 else print(got[0])') \
       || fail "the build reported no svc_target executable"
     [ -x "$EXE" ] || fail "cargo's reported $EXE is not an executable"
-    { echo "executable $EXE"; rustc -vV; cargo -V; } > "$W/build.txt"
+    { echo "executable $EXE"; rustc -vV; cargo -V; uname -srm; } > "$W/build.txt"
     sha256sum "$EXE" | sed "s|$EXE|svc_target|" > "$W/inputs.txt"
-    # the raw files the record's facts come from, as this shell reads them (diagnostics:
-    # the record is what is checked)
+    mark
+    # the files discovery reads, read again by this shell just before the preflight (the
+    # same paths, not the same reads: a diagnostic beside the record, which is what is
+    # checked), each value or its read error: the process's status, cgroup membership and
+    # mounts, cpuinfo, sysfs's online and present lists, every CPU's core, package and L3
+    # files, and every cgroup v2 level's cpu.max and cgroup.type from the process's cgroup up
+    # to the mount point
     mkdir "$W/raw"
-    for f in /proc/self/status /proc/self/cgroup /proc/self/mountinfo /proc/cpuinfo \
-             /sys/devices/system/cpu/online /sys/devices/system/cpu/present; do
-      cat "$f" > "$W/raw/$(echo "$f" | tr / _)" 2>"$W/raw/$(echo "$f" | tr / _).err" || true
-    done
     lscpu > "$W/raw/lscpu.txt" 2>&1 || true
-    # once, bounded
+    python3 - "$W/raw/reads.txt" <<'PY' || echo "the raw reads' script failed" >> "$W/raw/reads.txt"
+    import glob, os, sys
+    out = open(sys.argv[1], "w")
+    def read(p):
+        try:
+            v = open(p).read()
+            out.write(f"== {p}\n{v}" + ("" if v.endswith("\n") else "\n"))
+        except OSError as e:
+            out.write(f"== {p}\nREAD ERROR: {e.__class__.__name__}: {e}\n")
+    for p in ("/proc/self/status", "/proc/self/cgroup", "/proc/self/mountinfo", "/proc/cpuinfo",
+              "/sys/devices/system/cpu/online", "/sys/devices/system/cpu/present"):
+        read(p)
+    for d in sorted(glob.glob("/sys/devices/system/cpu/cpu[0-9]*"), key=lambda d: int(d.rsplit("cpu", 1)[1])):
+        for f in ("topology/core_id", "topology/physical_package_id", "cache/index3/level", "cache/index3/size"):
+            read(f"{d}/{f}")
+    try:
+        path = next(l[3:].strip() for l in open("/proc/self/cgroup") if l.startswith("0::"))
+        mount = next(l.split(" - ")[0].split()[4] for l in open("/proc/self/mountinfo")
+                     if " - " in l and l.split(" - ")[1].split()[0] == "cgroup2")
+    except (OSError, StopIteration) as e:
+        out.write(f"== the cgroup v2 levels\nNOT RESOLVED: {e.__class__.__name__}: {e}\n")
+    else:
+        d = os.path.normpath(mount + path)
+        while True:
+            for f in ("cpu.max", "cgroup.type"):
+                read(f"{d}/{f}")
+            if d == os.path.normpath(mount) or d == "/":
+                break
+            d = os.path.dirname(d)
+    PY
+    mark
+    # once, bounded: TERM at 120 s, KILL 10 s after (so at most 130 s)
     status=0
-    timeout 120 "$EXE" > "$W/preflight.json" || status=$?
+    timeout --kill-after=10 120 "$EXE" > "$W/preflight.json" || status=$?
+    echo "$status" > "$W/preflight.exit"
     [ "$(sha256sum "$EXE" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$W/inputs.txt")" ] \
       || { outcome="INCOMPLETE: the executable changed while it ran"; exit 3; }
     cat "$W/preflight.json"
     case "$status" in
       0|3) ;;
-      124) outcome="INCOMPLETE: the preflight passed its 120 s bound"; exit 3 ;;
+      124) outcome="INCOMPLETE: the preflight passed its 120 s bound and ended on TERM"; exit 3 ;;
+      137) outcome="INCOMPLETE: the preflight ignored TERM at 120 s and was killed at 130 s"; exit 3 ;;
       *) outcome="INCOMPLETE: the preflight exited $status (see console.log)"; exit 3 ;;
     esac
+    mark
     set +e
     python3 bench/svc_target_check.py "$W/preflight.json" --exit "$status" --out "$W/preflight-check.json"
     set -e
     verdict=$(python3 -c 'import json, sys; v = json.load(open(sys.argv[1])); print(v["verdict"] + ("" if not v["problems"] else ": " + "; ".join(v["problems"])))' "$W/preflight-check.json" 2>/dev/null || echo "")
     case "$verdict" in
       "") outcome="INCOMPLETE: the record's check wrote nothing" ;;
-      *) outcome="$verdict (see preflight.json)" ;;
+      *) mark; outcome="$verdict (see preflight.json)" ;;
     esac
