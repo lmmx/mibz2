@@ -1334,14 +1334,18 @@
     },
     {
       "trigger_comment_id": 6747581238,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commits": [
         "d136df7e31903bb7c18c3f90d7fa499985adb544",
         "2fab12cacca8c5235d30ca832ce0df2d53b8ceaf"
-      ]
+      ],
+      "report_path": "state/reports/integration-freeze-6747581238/report.md",
+      "report_commit": "5e6ec96399b32bf61c818997bdf0477759bd2e9c",
+      "review_comment_pr": 145,
+      "disposition": "PROCEED on exact integration heads: version reconciliation and master merge verified, no executable changes beyond BENCH labels. CI 25/24 success with three skips each, identical tested trees. Authenticated repin and final freeze provenance remain prerequisites."
     }
   ],
   "active_delegations": [],
