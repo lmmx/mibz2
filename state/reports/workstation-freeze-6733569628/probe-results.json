@@ -1,0 +1,120 @@
+[
+  {
+    "case": "baseline",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {
+        "timeline": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      },
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  },
+  {
+    "case": "missing perturbation",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {},
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  },
+  {
+    "case": "unknown perturbation verdict",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {
+        "timeline": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "verdict": "unknown: not measured"
+        }
+      },
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  },
+  {
+    "case": "native too few rounds verdict",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {
+        "timeline": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "verdict": "too few rounds",
+          "throughput_ratio": {
+            "ratio": null,
+            "lo": null,
+            "hi": null
+          }
+        }
+      },
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  },
+  {
+    "case": "duplicate only one round and mode",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {
+        "timeline": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      },
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  },
+  {
+    "case": "all capture wall clocks NaN",
+    "exit": 0,
+    "stdout": "VALID (dir capture): no perturbation shown\n",
+    "admission": {
+      "sub": "dir",
+      "dry": false,
+      "invalid": [],
+      "perturbation": {
+        "timeline": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      },
+      "perturbing_modes": [],
+      "interpretable": true
+    }
+  }
+]
