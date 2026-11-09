@@ -105,9 +105,10 @@
     6732447649,
     6732660399,
     6732776600,
-    6732895653
+    6732895653,
+    6733003420
   ],
-  "last_processed_comment_id": 6732895653,
+  "last_processed_comment_id": 6733003420,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -950,11 +951,15 @@
     },
     {
       "trigger_comment_id": 6733003420,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3"
+      "source_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
+      "report_commit": "d4065142340a0e005b428310df6e65e4a918e6df",
+      "report_path": "state/reports/packet-census-6733003420/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Pause measured self-repeat packet arm; C31/C29 retain priority. Raw digests and tables reproduced, 314 saved pair starts confirmed. Correct high-precision rates and Precopy/tandem ceiling claims. Derive/check nonadjacent forward affine reuse; no native timing or implementation."
     }
   ],
   "active_delegations": [],
