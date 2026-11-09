@@ -1142,12 +1142,15 @@
     },
     {
       "trigger_comment_id": 6739466190,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "source_commit": "e63f33cbe93ba8d55adcbfc17d784c1b39470e3c",
-      "report_path": "state/reports/service-diag-6739466190/report.md"
+      "report_path": "state/reports/service-diag-6739466190/report.md",
+      "report_commit": "36159d2894f90b4af245513306c970ea51973960",
+      "review_comment_pr": 145,
+      "disposition": "REVISE #293 before C5: sequence/timestamp overcount, released-credit misclassification and finish-priority causal overclaim reproduced. Port corrected diagnostic to guarded integration; no old-runtime trace recommended for adoption."
     }
   ],
   "active_delegations": [],
