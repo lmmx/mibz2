@@ -1,6 +1,8 @@
 //! The service core's actual-target preflight (docs/journal/2026-11-09-service-guarded-registration.md,
 //! DRAFT): untimed and read-only, run by `just bench-service-guarded` before anything is
-//! measured. It prints one JSON object:
+//! measured, and alone by `just bench-svc-target` (the preflight-only entry,
+//! docs/journal/2026-11-09-svc-target-registration.md). It prints one JSON object, schema
+//! `mibz2.svc_target/1` (checked by bench/svc_target_check.py):
 //! - the machine's facts as `parallel::Machine::here` reads them on this machine, now: the
 //!   plan policy's (physical cores, L3) and the predicate's (the topology snapshot, the cgroup
 //!   quota), and the kernels `Kernels::detect` finds;
@@ -96,10 +98,30 @@ fn main() {
                 why.push(format!("{t} threads: the service core was built"));
             }
         }
+        let plan_json = match plan {
+            Plan::Workers(n) => format!("{{\"kind\":\"workers\",\"workers\":{n}}}"),
+            Plan::Teams { teams, k } => {
+                format!("{{\"kind\":\"teams\",\"teams\":{teams},\"k\":{k}}}")
+            }
+        };
+        let built_json = match b {
+            None => "null".to_string(),
+            Some(b) => format!(
+                "{{\"service\":{},\"pipelined\":{},\"threads\":{},\"window\":{},\"counts\":{}}}",
+                b.service,
+                b.pipelined,
+                b.threads,
+                b.window,
+                b.counts.map_or("null".to_string(), |c| format!(
+                    "{{\"prepared\":{},\"pooled\":{},\"finished\":{},\"ended\":{}}}",
+                    c.prepared, c.pooled, c.finished, c.ended
+                ))
+            ),
+        };
         at.push(format!(
-            "{{\"threads\":{t},\"predicate\":{pred},\"plan\":{},\"built\":{}}}",
-            js(&format!("{plan:?}")),
-            js(&format!("{b:?}"))
+            "{{\"threads\":{t},\"predicate\":{pred},\"plan\":{plan_json},\"builds\":{},\"built\":{built_json},\"decoded\":{}}}",
+            built.len(),
+            bytes == data && err.is_none()
         ));
     }
     if m.target.is_none() {
@@ -109,14 +131,34 @@ fn main() {
         why.push("the CPU quota could not be established (Unknown)".into());
     }
     let ok = why.is_empty();
+    let opt = |v: Option<String>| v.unwrap_or_else(|| "null".into());
+    let target = opt(m.target.as_ref().map(|t| {
+        format!(
+            "{{\"phys\":{},\"logical\":{},\"l3\":{},\"cpu\":{{\"vendor\":{},\"family\":{},\"model\":{}}}}}",
+            t.phys,
+            t.logical,
+            t.l3,
+            js(&t.cpu.0),
+            t.cpu.1,
+            t.cpu.2
+        )
+    }));
+    let quota = match m.quota {
+        Quota::Unlimited => "{\"kind\":\"unlimited\"}".to_string(),
+        Quota::Cpus(c) => format!("{{\"kind\":\"cpus\",\"cpus\":{c}}}"),
+        Quota::Unknown => "{\"kind\":\"unknown\"}".to_string(),
+    };
     println!(
-        "{{\"ok\":{ok},\"why\":[{}],\"machine\":{{\"phys\":{},\"l3\":{},\"target\":{},\"quota\":{}}},\"kernels\":{},\"at\":[{}]}}",
+        "{{\"schema\":\"mibz2.svc_target/1\",\"ok\":{ok},\"why\":[{}],\"kernels\":{{\"avx2\":{},\"clmul\":{}}},\"machine\":{{\"phys\":{},\"l3\":{},\"target\":{target},\"quota\":{quota}}},\"service_plan\":{{\"teams\":{},\"k\":{},\"services\":{}}},\"input_bytes\":{},\"at\":[{}]}}",
         why.iter().map(|w| js(w)).collect::<Vec<_>>().join(","),
-        js(&format!("{:?}", m.phys)),
-        js(&format!("{:?}", m.l3)),
-        js(&format!("{:?}", m.target)),
-        js(&format!("{:?}", m.quota)),
-        js(&format!("{k:?}")),
+        k.avx2,
+        k.clmul,
+        opt(m.phys.map(|v| v.to_string())),
+        opt(m.l3.map(|v| v.to_string())),
+        SERVICE_PLAN.teams,
+        SERVICE_PLAN.k,
+        SERVICE_PLAN.services,
+        data.len(),
         at.join(",")
     );
     std::process::exit(if ok { 0 } else { 3 });

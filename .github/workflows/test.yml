@@ -74,6 +74,10 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      - name: The service core's target preflight record checker (its witnesses)
+        run: python3 bench/test_svc_target_check.py
+      - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
+        run: python3 bench/test_svc_target.py
 
   get-python-versions:
     runs-on: ubuntu-latest
