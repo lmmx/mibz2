@@ -1,0 +1,84 @@
+test_a_missing_record_is_invalid (__main__.Admission.test_a_missing_record_is_invalid) ... ok
+test_a_missing_round (__main__.Admission.test_a_missing_round) ... ok
+test_a_missing_synthetic_corpus (__main__.Admission.test_a_missing_synthetic_corpus) ... ok
+test_a_negative_time (__main__.Admission.test_a_negative_time) ... ok
+test_a_nonfinite_time_does_not_load (__main__.Admission.test_a_nonfinite_time_does_not_load) ... ok
+test_a_renamed_corpus (__main__.Admission.test_a_renamed_corpus) ... ok
+test_a_short_head (__main__.Admission.test_a_short_head) ... ok
+test_a_short_registered_head (__main__.Admission.test_a_short_registered_head) ... ok
+test_a_sort_time_for_d (__main__.Admission.test_a_sort_time_for_d) ... ok
+test_a_synthetic_digest_missing (__main__.Admission.test_a_synthetic_digest_missing) ... ok
+test_a_time_for_an_absent_path (__main__.Admission.test_a_time_for_an_absent_path) ... ok
+test_a_zero_total (__main__.Admission.test_a_zero_total) ... ok
+test_an_absent_interval (__main__.Admission.test_an_absent_interval) ... ok
+test_an_unpinned_primary (__main__.Admission.test_an_unpinned_primary) ... ok
+test_another_head (__main__.Admission.test_another_head) ... ok
+test_another_wikidata_file (__main__.Admission.test_another_wikidata_file) ... ok
+test_blocks_that_dont_add_up (__main__.Admission.test_blocks_that_dont_add_up) ... ok
+test_correctness_not_passed (__main__.Admission.test_correctness_not_passed) ... ok
+test_every_synthetic_corpus_absent (__main__.Admission.test_every_synthetic_corpus_absent) ... ok
+test_missing_phase_times (__main__.Admission.test_missing_phase_times) ... ok
+test_missing_placement_times (__main__.Admission.test_missing_placement_times) ... ok
+test_no_avx2 (__main__.Admission.test_no_avx2) ... ok
+test_no_corpus_evidence (__main__.Admission.test_no_corpus_evidence) ... ok
+test_no_head (__main__.Admission.test_no_head) ... ok
+test_no_host (__main__.Admission.test_no_host) ... ok
+test_no_output_size (__main__.Admission.test_no_output_size) ... ok
+test_rounds_as_a_bool (__main__.Admission.test_rounds_as_a_bool) ... ok
+test_the_arms_order_not_rotated (__main__.Admission.test_the_arms_order_not_rotated) ... ok
+test_the_counterexamples (__main__.Admission.test_the_counterexamples) ... ok
+test_the_counterexamples_print_no_reading (__main__.Admission.test_the_counterexamples_print_no_reading) ... ok
+test_the_fixture_is_valid (__main__.Admission.test_the_fixture_is_valid) ... ok
+test_the_old_arms (__main__.Admission.test_the_old_arms) ... ok
+test_the_old_schema (__main__.Admission.test_the_old_schema) ... ok
+test_the_wikidata_files_blocks (__main__.Admission.test_the_wikidata_files_blocks) ... ok
+test_the_wikidata_files_own_digest (__main__.Admission.test_the_wikidata_files_own_digest) ... ok
+test_the_wrong_rounds (__main__.Admission.test_the_wrong_rounds) ... ok
+test_a_bare_wait_would_have_masked_it (__main__.Copies.test_a_bare_wait_would_have_masked_it) ... ok
+test_all_copies_succeed (__main__.Copies.test_all_copies_succeed) ... ok
+test_one_failed_copy_fails_the_run (__main__.Copies.test_one_failed_copy_fails_the_run) ... ok
+test_a_costly_fallback_fails_its_screen (__main__.Readings.test_a_costly_fallback_fails_its_screen) ... ok
+test_a_small_saving_reads_inconclusive (__main__.Readings.test_a_small_saving_reads_inconclusive) ... ok
+test_a_wide_interval_passes_the_screen_as_a_screen_only (__main__.Readings.test_a_wide_interval_passes_the_screen_as_a_screen_only) ... ok
+test_no_saving_reads_stop (__main__.Readings.test_no_saving_reads_stop) ... ok
+test_q1_reads_d_not_b (__main__.Readings.test_q1_reads_d_not_b) ... ok
+test_the_budget_terms (__main__.Readings.test_the_budget_terms) ... ok
+test_the_cli (__main__.Readings.test_the_cli) ... ok
+test_the_fallback_screen_reads_r_fb_not_r_stage (__main__.Readings.test_the_fallback_screen_reads_r_fb_not_r_stage) ... ok
+test_the_fixture_reads_feasible (__main__.Readings.test_the_fixture_reads_feasible) ... ok
+test_the_gate_is_0_95 (__main__.Readings.test_the_gate_is_0_95) ... ok
+test_the_regeneration_matches (__main__.Readings.test_the_regeneration_matches) ... ok
+
+----------------------------------------------------------------------
+Ran 50 tests in 8.830s
+
+OK
+INVALID: the record does not load: [Errno 2] No such file or directory: '/nonexistent/record.json'
+INVALID: the record does not load: not a finite number: NaN
+INVALID (3 problems):
+  - file 1 ('synthetic text'): sha256 'e9a9ff6f51a236719aafd843998a92bc22eb751aed11e09fc77461fa05a9b4bf', not the evidence's 'b4c2767e731f9be033d841e2f23d3bcbb7ba11335a60404a4a3af51c458916a5'
+  - file 1 ('synthetic text'): bytes 601160, not the evidence's 611579
+  - file 1 ('synthetic text'): output 3297858, not the evidence's 3324678
+VALID; readings UNJUDGED
+  corpora/wikidata.bz2: R_direct 0.9000 (0.8959, 0.9041), R_stage 1.1067 (1.1005, 1.1129), R_DB 0.8133 (0.8087, 0.8178), R_acc_D 0.8500 (0.8461, 0.8539), R_fb_D 1.0000 (0.9954, 1.0046)
+  synthetic text: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D 1.0000 (0.9954, 1.0046), R_fb_D n/a
+  synthetic random: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D n/a, R_fb_D 1.0000 (0.9954, 1.0046)
+  synthetic one byte: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D 1.0000 (0.9954, 1.0046), R_fb_D n/a
+  synthetic pattern: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D 1.0000 (0.9954, 1.0046), R_fb_D n/a
+  synthetic runs: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D 1.0000 (0.9954, 1.0046), R_fb_D n/a
+  synthetic records: R_direct 1.0000 (0.9954, 1.0046), R_stage 1.0000 (0.9944, 1.0056), R_DB 1.0000 (0.9944, 1.0056), R_acc_D n/a, R_fb_D 1.0000 (0.9954, 1.0046)
+  R_phases_D 0.8400 (0.8362, 0.8439)
+  R_place 0.7200 (0.7167, 0.7233)
+  R_pf 0.9000 (0.8950, 0.9051)
+  R_psf 0.7200 (0.7160, 0.7241)
+  D's stores a row: 0.1318 store instructions, 1.0517 slots written (B's fill 1.0758); 78.1 write streams a block
+  budget (exploratory, nominal c/B, medians of each round's own terms): delta_direct -0.286, e +0.021, f +0.027 (measured controls); 0.218 + delta_i - e_i - f_i -0.116, against D - A's phase sum -1.569 (the identity's largest residual a round 1.11e-15); this run's own K -1.405
+  screen, synthetic whole stage: {'worst': 'synthetic text', 'geomean': 1.0, 'pass': True}
+  screen, fallback (entry point, selector charged): {'worst': 'corpora/wikidata.bz2', 'geomean': 1.0, 'pass': True}
+  Q1 (UNJUDGED): FEASIBLE
+  D against B (exploratory): D CHEAPER THAN B
+  note: Q1's screens are point-estimate screens, not a noninferiority claim: a passing screen does not show that no corpus or fallback regresses by more than 2%.
+  note: STOP and INCONCLUSIVE are operational pauses for this implementation on this runner, not proof of no effect; a STOP on this arm does not close the run-fed line (PROTOCOL 11).
+  note: R_DB, the phase ratios and the budget are exploratory. The budget is a sensitivity on the phase sweep (nominal c/B of output: wall time x the sampled clock), not a reconstructed paired verdict: the phase sum is not the entry point's cost.
+INVALID (1 problems):
+  - the record's head 0123456789abcdef0123456789abcdef01234567 is not the registered eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee

@@ -1,0 +1,208 @@
+{
+  "source_commit": "7f88388b938528f22088df79387f309eb112fe1c",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "trigger_comment_id": 6732258318,
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06"
+  },
+  "migration_verified": true,
+  "changed_files": [
+    {
+      "path": "bench/fixtures/run_fed_stage.json",
+      "status": "modified"
+    },
+    {
+      "path": "bench/fixtures/run_fed_stage_counterexamples.json",
+      "status": "added"
+    },
+    {
+      "path": "bench/run_fed_stage.py",
+      "status": "modified"
+    },
+    {
+      "path": "bench/test_run_fed_stage.py",
+      "status": "modified"
+    },
+    {
+      "path": "docs/journal/2026-11-09-pair-from-runs-result.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/journal/2026-11-09-run-fed-direct.md",
+      "status": "modified"
+    },
+    {
+      "path": "examples/run_fed_stage.rs",
+      "status": "modified"
+    }
+  ],
+  "source_blobs": [
+    {
+      "path": "README.md",
+      "sha": "089ae1ba9a4832c2ce3e942bded55d1d527703ed"
+    },
+    {
+      "path": "bench/fixtures/run_fed_stage.json",
+      "sha": "d71b0500d18b76a45c1c9bd318f851c249846e19"
+    },
+    {
+      "path": "bench/fixtures/run_fed_stage_counterexamples.json",
+      "sha": "2aa7dca2bd7ceae85111e006387365515fa99360"
+    },
+    {
+      "path": "bench/run_fed_stage.py",
+      "sha": "24708846efdc210ffb54a20d05e382ee9cc4f54a"
+    },
+    {
+      "path": "bench/test_run_fed_stage.py",
+      "sha": "d74d42cc4d3fee3a2b6c91e4577d6970b3eb4c0e"
+    },
+    {
+      "path": "bench/wikidata.json",
+      "sha": "8360bb5a60cb1b18da5c42b6c06822dd766c8b97"
+    },
+    {
+      "path": "docs/journal/2026-11-09-run-fed-direct.md",
+      "sha": "5bd6f84b5f850ad26d37836abe3984c64aeae830"
+    },
+    {
+      "path": "examples/ab.rs",
+      "sha": "4592e3aa4bec6933754128d7402807dbc2f63dc3"
+    },
+    {
+      "path": "examples/bzcat.rs",
+      "sha": "fb28fc43a08872ccc6cbbc465c20a8aef1f1da19"
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "sha": "c0074f18ce0993a7ed1e0561f4dde38f7ad60e6b"
+    },
+    {
+      "path": "examples/mtf_two_level.rs",
+      "sha": "12cc473b146b58249e254e209b375925c33a867f"
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "sha": "14412a2f04662929cb60593f842688a25de94626"
+    },
+    {
+      "path": "examples/phases.rs",
+      "sha": "403cfbbdd160559826793d173b673dad5bcac682"
+    },
+    {
+      "path": "examples/run_fed_stage.rs",
+      "sha": "45ba152b64763425214e7d355eee4ea791e2f7f2"
+    },
+    {
+      "path": "examples/stress.rs",
+      "sha": "8555f0fd1438b276370a8dcccac98ffd5202035f"
+    },
+    {
+      "path": "examples/sweep.rs",
+      "sha": "677f80349888fb86a749b11426be93ba30aaf710"
+    },
+    {
+      "path": "examples/windows.rs",
+      "sha": "c87a2485586e77498233cc3034f7946794f8a3a9"
+    },
+    {
+      "path": "src/bits.rs",
+      "sha": "3c91b12adba91ba801d1b48c5f59d5a3289beb6b"
+    },
+    {
+      "path": "src/block.rs",
+      "sha": "7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748"
+    },
+    {
+      "path": "src/bwt.rs",
+      "sha": "cb971c9f054492a5092264421166f4e6707fb5a8"
+    },
+    {
+      "path": "src/coop.rs",
+      "sha": "563ad21329c24bddaf90ffbfa30a582d43210e1a"
+    },
+    {
+      "path": "src/crc.rs",
+      "sha": "40038b941362702d540ceeca39354ebbf03d6c40"
+    },
+    {
+      "path": "src/lib.rs",
+      "sha": "45011100d8e0c5a0828692201f34bf4751ee0264"
+    },
+    {
+      "path": "src/mtf.rs",
+      "sha": "2610fa7ed1a7ee2c7653db47402bb7b7e9e3bb73"
+    },
+    {
+      "path": "src/parallel.rs",
+      "sha": "a425a3cd3939f74d9091fca7906122766097e84a"
+    },
+    {
+      "path": "src/python.rs",
+      "sha": "0731984c0fe00ae8c9c76714f0adda32eb2e0c76"
+    },
+    {
+      "path": "src/read.rs",
+      "sha": "50c3cb3db31ce800de219acb1ecd532a423f3bcd"
+    },
+    {
+      "path": "src/rle.rs",
+      "sha": "5f3bc36af1cc2f514d293f5c3b38be12413e78cb"
+    },
+    {
+      "path": "src/run_fed.rs",
+      "sha": "129cddc36fc7fe329374d61bec3b492c52fedf01"
+    },
+    {
+      "path": "src/run_stage.rs",
+      "sha": "fee6d7a97b47259baa63466603a4e13604f57bc4"
+    },
+    {
+      "path": "src/stream.rs",
+      "sha": "e9868f0f4d77bb07e05a0219c33281a8416d597f"
+    },
+    {
+      "path": "src/trace.rs",
+      "sha": "b094a440a36aca3e3fdeaaa3f9ad029b1a5c66a0"
+    },
+    {
+      "path": "tests/cooperative.rs",
+      "sha": "ae6c12dea33ff67509725f9f601dfe676be51378"
+    },
+    {
+      "path": "tests/corpus.rs",
+      "sha": "40ad4ae1aa6b8d3a987980927c4c4da0f83e0f88"
+    },
+    {
+      "path": "tests/decode.rs",
+      "sha": "029980107c0ed1f5772645cc51081f9a70eda929"
+    },
+    {
+      "path": "tests/in_place.rs",
+      "sha": "237a730c1e094b0b2d6d073c0e42a4f88a291e8e"
+    },
+    {
+      "path": "tests/mtf_checkpoints.rs",
+      "sha": "4034c8ac9c8ed9738feeadefca4faa3afeb39d4a"
+    },
+    {
+      "path": "tests/mtf_kernels.rs",
+      "sha": "d35c8b1e17233472c5076470db27b950625c4efe"
+    },
+    {
+      "path": "tests/pipelined.rs",
+      "sha": "74f0c85cb2affad20d209d9e9b7dea49c1cd7059"
+    }
+  ],
+  "tests": {
+    "python_tests": 50,
+    "python_pass": true,
+    "census_columns": 10840,
+    "native_timing": false,
+    "native_safety_review": false
+  }
+}
