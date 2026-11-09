@@ -1223,7 +1223,7 @@
     },
     {
       "trigger_comment_id": 6742323424,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1231,7 +1231,10 @@
       "report_commit": "05979b91d541fbe0d9da8deb3218874b61a0abd2",
       "report_path": "state/reports/svc-target-preflight-6742323424/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE strict record admission: nonfinite quota, incomplete plan, float integer fields and negative counts accepted. Seven checker tests pass; exact CI has two cancellations. Preflight-only design supported, timed/adoption boundaries unchanged."
+      "disposition": "REVISE strict record admission: nonfinite quota, incomplete plan, float integer fields and negative counts accepted. Seven checker tests pass; exact CI has two cancellations. Preflight-only design supported, timed/adoption boundaries unchanged.",
+      "review_comment_id": 6743780326,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
