@@ -914,6 +914,23 @@
       "receipt_commit": "0db38a83a7b35820d80481fc125dc0c01c097f9d",
       "disposition": "non-trace gate equivalence accepted; no extra mutation gate; normal CI/Miri pending; census repair recommended before freeze, no new B5 hold for false invalid",
       "comment": 6733239555
+    },
+    {
+      "id": "D060",
+      "pr": 281,
+      "incoming_pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6733269661,
+      "sha": "08db6405a419c6ac594c99c762e819fa47eab699",
+      "evidence_digest": "git-blob:95ee0e1dc5d512e6e740a5c1e5da38c6a6843335;journal:6a56f69d1047d8ea88d6fd0c8e4c0d6205b468bd;miri-job:129002477622",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "status": "complete",
+      "commit": "471aabefdf20848d93d8baeff778ed1b9f67fb07",
+      "receipt_commit": "7b03a71dc3c556772f6cd4a4bd36c767b9d45ec3",
+      "disposition": "B5 sufficient for frozen bounded CI diagnostic; default-on qualification held pending switched-unwind and changed-default production evidence"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1089,7 +1106,9 @@
     "dbcda95697fb3fd303929dbb91dbe14dc3431f2b",
     "0db38a83a7b35820d80481fc125dc0c01c097f9d",
     "57ea33e36fb05f78887f7f9a61939c5e8858689b",
-    "fa766ecca2c535ca3efad8c34f6ba30028621e6b"
+    "fa766ecca2c535ca3efad8c34f6ba30028621e6b",
+    "7b03a71dc3c556772f6cd4a4bd36c767b9d45ec3",
+    "471aabefdf20848d93d8baeff778ed1b9f67fb07"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1149,7 +1168,8 @@
     6732477634,
     6732560627,
     6732894651,
-    6733174182
+    6733174182,
+    6733269661
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1229,8 +1249,9 @@
   },
   "current_execution": {
     "active_comment": 6733269661,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D060",
+    "work_commit": "471aabefdf20848d93d8baeff778ed1b9f67fb07",
     "queue_snapshot": [
       6733269661
     ]
@@ -2048,8 +2069,10 @@
     {
       "comment_id": 6733269661,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D060"
+      "status": "complete",
+      "decision": "D060",
+      "receipt_commit": "7b03a71dc3c556772f6cd4a4bd36c767b9d45ec3",
+      "work_commit": "471aabefdf20848d93d8baeff778ed1b9f67fb07"
     }
   ],
   "migrated_from": {
