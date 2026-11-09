@@ -125,9 +125,10 @@
     6741912733,
     6742323424,
     6744588901,
-    6745615244
+    6745615244,
+    6745811380
   ],
-  "last_processed_comment_id": 6742323424,
+  "last_processed_comment_id": 6745811380,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1270,7 +1271,7 @@
     },
     {
       "trigger_comment_id": 6745811380,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1278,7 +1279,10 @@
       "report_commit": "ceb53e4f1f0d410f652f0d548cdbaa3f8423825d",
       "report_path": "state/reports/service-guarded-rereview-6745811380/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: retain actual child termination and port passive bounded diagnostics. 13 judge tests pass; stdout-before-exit17/signal witnesses accepted without status. svc_target hierarchy/unknown handling closes the separate ab-env concern; design supported scientifically, authority unchanged."
+      "disposition": "REVISE before freeze: retain actual child termination and port passive bounded diagnostics. 13 judge tests pass; stdout-before-exit17/signal witnesses accepted without status. svc_target hierarchy/unknown handling closes the separate ab-env concern; design supported scientifically, authority unchanged.",
+      "review_comment_id": 6746023579,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1298,10 +1302,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6745615244
+      6745811380
     ],
     "handled": [
-      6745615244
+      6745811380
     ],
     "skipped": [],
     "automation_modified": false
