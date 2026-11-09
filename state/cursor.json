@@ -91,9 +91,10 @@
     6729699102,
     6729877063,
     6729957944,
-    6730270019
+    6730270019,
+    6730378782
   ],
-  "last_processed_comment_id": 6730270019,
+  "last_processed_comment_id": 6730378782,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -722,7 +723,7 @@
     {
       "trigger_comment_id": 6730378782,
       "related_queued_comment_id": 6730279906,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -730,7 +731,10 @@
       "report_commit": "99689cecb7a149865750e5f2bdbe20b9c38f694a",
       "report_path": "state/reports/service-lookahead-6730378782/report.md",
       "review_comment_pr": 145,
-      "disposition": "HOLD admission independently of D045: prepared-count invariants unchecked, occupancy child status lost, cross-arm trace association; direct threshold contrast and freeze accepted, eight-minute warm estimate reasonable. 42 repository fixtures pass; false-VALID witnesses and front-pool bound recorded; no timing."
+      "disposition": "HOLD admission independently of D045: prepared-count invariants unchecked, occupancy child status lost, cross-arm trace association; direct threshold contrast and freeze accepted, eight-minute warm estimate reasonable. 42 repository fixtures pass; false-VALID witnesses and front-pool bound recorded; no timing.",
+      "review_comment_id": 6730484783,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and independent role-aware check passed. Pinned coord.py verify rejects FROM researcher due to hard-coded Coordinator predicate; recorded."
     }
   ],
   "active_delegations": [],
@@ -750,10 +754,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6730270019
+      6730378782
     ],
     "handled": [
-      6730270019
+      6730378782
     ],
     "skipped": [],
     "automation_modified": false

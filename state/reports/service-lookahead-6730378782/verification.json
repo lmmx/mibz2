@@ -1,0 +1,12 @@
+{
+  "pinned_helper": {
+    "comment": 6730484783,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "independent_role_aware_check": true,
+  "exact_body_readback": true
+}
