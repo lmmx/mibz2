@@ -41,13 +41,15 @@ merge only when all of these hold:
   beyond noise, meaning its 95% interval excludes zero in the beneficial direction;
 - no other figure regresses unacceptably.
 
-**Target-gated changes** (D071; effective from the commit that merges this paragraph, for
-registrations frozen after it, never for data collected before it). A change to measured code
-whose new behaviour is selected only by a *target predicate*, a pure function of discovered
-machine facts and the requested thread count, may merge by this route instead of the
-beneficial CI interval above. This route is not evidence-equivalent to a CI gain: it accepts
-a bounded slowdown off target (at most 2%) in exchange for a gain measured on target. Every
-condition must be met; missing or invalid evidence fails.
+**Target-gated changes** (D071, D072). This route applies only to registrations frozen after
+the authorised effective commit that merges this paragraph, citing it, and before any of their
+qualification observations. Old data may inform their design but never qualifies. A change to
+measured code whose new behaviour is selected only by a *target predicate*, a pure function of
+discovered machine facts and the requested thread count, may merge by this route instead of
+the beneficial CI interval above. This route is not evidence-equivalent to a CI gain: it
+accepts an off-target noninferiority margin of 2%, assessed by the confidence bounds below, in
+exchange for on-target superiority under this route. Every condition must be met; missing or
+invalid evidence fails.
 
 1. **The predicate is frozen before data,** with its hardware rationale: which discovered facts
    it reads, why each is needed, and how an unknown or unreadable fact is handled (it must
@@ -55,35 +57,60 @@ condition must be met; missing or invalid evidence fails.
    and asserts that the public dispatch there builds master's plan. Equal plans establish
    fallback selection only, not zero discovery, layout or shared-code cost; that cost is what
    condition 2 bounds.
-2. **Off-target non-inferiority, on CI.** On the CI paired A/B bench, at every cell of the
-   end-to-end table the registration names (each corpus × thread count × the metrics wall
-   and CPU), the one-sided 95% upper bound of head over base is at most 1.02. Every cell must
-   pass: an intersection-union test at level 5% for the claim "no named cell is worse by more
-   than 2%". It is not simultaneous interval coverage, and it does not protect against
-   retries; there are none (condition 6).
+2. **Off-target noninferiority, on CI.** On the CI paired A/B bench, at every cell of the
+   standing CI end-to-end bench at the pinned bench revision (runner configuration × corpus ×
+   thread count × wall and CPU time), enumerated completely in the registration, the one-sided
+   95% upper bound of head over base is at most 1.02. Every cell must pass: an
+   intersection-union test at level 5% for the claim "no cell is worse by more than the
+   margin". It is not simultaneous interval coverage, and it does not protect against
+   retries; there are none (condition 6). Any omission or change to that standing grid is a
+   separate prospective bench-policy decision, not an exclusion available within this route.
+   Ratios are head/base times under the registered paired geometric-mean estimator. Passing
+   supplies a confidence-based noninferiority conclusion on these cells, not a deterministic
+   bound on every machine or run.
 3. **On-target superiority, registered before data.** A frozen workstation A/B (RULES C5) on
    a machine where the predicate is true measures the exact candidate against master through
-   the public entry point. At every registered budget where the predicate is true, wall speed
-   (base over head) has a two-sided 95% interval whose lower bound exceeds 1.02, and CPU's
-   one-sided 95% upper bound of head over base is at most 1.02. A Bonferroni correction
-   applies when there is more than one such budget: the family and its level are stated in
-   the registration.
+   the public entry point. Every cell in the complete registered on-target machine × workload
+   × enabled-budget matrix must pass both tests: wall speed (base/head) lower bound >1.02 and
+   CPU time (head/base) upper bound ≤1.02. Let N be the number of required cells and K=2N the
+   number of intervals. Use a two-sided wall interval of confidence 1−0.05/K and a one-sided
+   CPU upper bound of confidence 1−0.05/K for each cell. These K intervals form one Bonferroni
+   family with coverage at least 95%, assuming each constituent interval has its stated
+   coverage. Missing, invalid or nonpassing cells fail qualification; no cell may be selected
+   or removed after its results.
 4. **On-target no harm at the fallback budgets.** In the same run, at every registered
-   neighbouring budget where the predicate is false, wall head over base has a one-sided upper
-   bound at most 1.02, Bonferroni over the registered family of those budgets at a family
-   level of 5%. Every one must be shown. NOT SHOWN fails qualification; it is not
-   demonstrated harm.
-5. **Coverage.** The adoption's reach is no wider than its evidence. Either the predicate is
-   narrowed to the facts every qualifying machine shares, or the registration names the
-   machines required (at least two distinct models) and the extrapolation to the rest of the
-   class is argued in it and reviewed. Release notes state the scope but never substitute for
-   this condition.
+   fallback budget where the predicate is false, wall head over base has a one-sided upper
+   bound at most 1.02, Bonferroni over all required fallback machine × workload × budget
+   wall-time contrasts: with M such contrasts, each one-sided upper bound has confidence
+   1−0.05/M. The registration fixes a nonempty set covering the relevant predicate transitions
+   and gives the rationale for any untested fallback budgets. Every one must be shown. NOT
+   SHOWN fails qualification; it is not demonstrated harm.
+5. **Coverage and adoption reach.** Before qualification data, the registration defines the
+   deployment class, the complete required machine × workload × enabled-budget matrix, and the
+   measured facts on which its selection depends. Every required cell must qualify. For every
+   unmeasured part of that deployment class, it states the mechanism-based grounds for
+   extrapolation, the material differences not covered and the residual risk accepted by the
+   authorised adoption decision. The coverage requirement and extrapolation are reviewed
+   before the qualification run. A narrowed predicate qualifies only to the extent its
+   resulting class is covered by this argument; shared facts alone do not establish coverage.
+   Where the multi-model route is used, at least two distinct models are required, but model
+   count alone is insufficient. If coverage cannot be justified, narrow deployment or obtain
+   the missing evidence. Release notes disclose measured scope and extrapolation separately.
 6. **The protocol is fixed in the registration:** rounds, the stopping rule (one attempt per
    registration), what makes a run invalid, and what follows an invalid run. No retry to
    pass. A later registration for the same change discloses every earlier attempt and its
-   outcome and justifies its information value; all outcomes are retained.
+   outcome and justifies its information value; all outcomes are retained. Freeze the
+   candidate and master baseline commits, public entry point, toolchain and measured inputs,
+   pair construction and geometric-mean estimand, interval calculation, complete matrices,
+   sample size and stopping rule, exclusions, and invalid-run disposition before any
+   qualifying observations, including CI. A changed measured candidate or baseline requires
+   fresh evidence under a prospectively justified registration. An invalid attempt is
+   retained and never an implicit licence to retry. Later registrations cannot reset the
+   no-retry-to-pass rule.
 7. **Tests, parity and green CI** hold on the head that merges, and the remaining conditions
-   above (no other figure regressing unacceptably) apply as for any measured change.
+   above (no other figure regressing unacceptably) apply as for any measured change. Their
+   unacceptable-regression criteria, including the reporting and disposition of CPU and peak
+   RSS, are fixed before qualification data, not chosen afterwards.
 
 **Before opening a PR that changes the default decoding kernel,** account for the whole decoder,
 not only the part being optimised (RULES.md C4, S2).
@@ -93,7 +120,9 @@ not only the part being optimised (RULES.md C4, S2).
 - **An excess over master's count needs a stated mechanism,** written down first: what it
   buys (overlap, locality, less contention), its predicted effect at each thread count CI
   measures, and what falsifies it. Falsified, the PR is closed and written up.
-- **CI's end-to-end bench decides the merge,** not the count alone.
+- **End-to-end evidence under the applicable acceptance route above decides the merge,** not
+  the instruction count alone. The target-gated route requires both its CI and workstation
+  conditions.
 - **Timing on the shared development machine** is never the evidence. A workstation run is
   evidence only under RULES.md C5.
 
@@ -165,9 +194,9 @@ metadata.
 
 These decisions still need the maintainer:
 - relaxing a gate or an acceptance minimum;
-- the bench's workload, statistical estimand, repeat policy and merge acceptance rule. Harness
-  mechanics and diagnostic instrumentation that leave these unchanged are the steward's
-  (RULES.md C6);
+- bench design, standing acceptance and adoption policy follow RULES C6 and its review,
+  recording and prospective-application safeguards. Relaxing an already registered rule
+  remains governed by RULES C2 and D;
 - a run on the i9 or another workstation. The maintainer authorises it by running a recipe
   frozen before the run, and that authorises that run only (RULES.md C5);
 - new infrastructure, credentials or spending;
