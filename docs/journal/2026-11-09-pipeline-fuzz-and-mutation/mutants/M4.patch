@@ -1,0 +1,13 @@
+diff --git a/src/coop.rs b/src/coop.rs
+index 563ad213..511fc268 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -933,7 +933,7 @@ impl Relay<'_> {
+             std::hint::spin_loop();
+         }
+         lock(&self.sleepers).push(thread::current());
+-        while !ready() {
++        if !ready() {
+             thread::park();
+         }
+     }

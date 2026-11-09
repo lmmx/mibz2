@@ -255,6 +255,26 @@ class Verify(unittest.TestCase):
                        state=st)
         self.assertFalse(r["ok"])
 
+    def test_a_resume_request_for_the_item_in_flight_passes(self):
+        st = {"incomplete": [6_999_999_999, 7_000_000_000], "unreviewed": [6_999_999_999],
+              "queued": []}
+        r = self.check(160, msg(FROM="coordinator", TO="optimizer",
+                                RE="resume 6999999999", TYPE="CHECKPOINT"), state=st)
+        self.assertTrue(r["ok"], r)
+
+    def test_a_resume_request_for_another_item_fails(self):
+        st = {"incomplete": [6_999_999_998, 7_000_000_000], "unreviewed": [], "queued": []}
+        r = self.check(160, msg(FROM="coordinator", TO="optimizer",
+                                RE="resume 6999999999", TYPE="CHECKPOINT"), state=st)
+        self.assertFalse(r["ok"])
+
+    def test_a_resume_request_does_not_cover_two_items(self):
+        st = {"incomplete": [6_999_999_998, 6_999_999_999, 7_000_000_000],
+              "unreviewed": [], "queued": []}
+        r = self.check(160, msg(FROM="coordinator", TO="optimizer",
+                                RE="resume 6999999999", TYPE="CHECKPOINT"), state=st)
+        self.assertFalse(r["ok"])
+
     def test_queued_must_be_on_the_channel(self):
         ok = self.check(145, msg(FROM="coordinator", TO="optimizer", TYPE="QUEUED"),
                         kind="QUEUED")

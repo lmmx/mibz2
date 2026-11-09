@@ -40,8 +40,9 @@ and reads MODE.md first on every run.
   its cursor marks that comment complete.
 - **Recovering the queue:** a QUEUED comment has been dispatched exactly when an inbox comment
   cites it.
-- **A silent run:** a run that has ended without finishing gets one resume request, naming the
-  comment.
+- **A silent run:** a run that has ended without finishing gets one resume request naming
+  the comment, as `RE: resume <id>`. `coord.py verify` passes it while that is the role's
+  only item in flight.
 - **A HOLD or STOP** takes effect through the Coordinator's own authority, without an inbox.
 - **Before posting:** `coord.py route` gives the destination. **After posting:** `coord.py
   verify` must pass. **On every wake:** `coord.py audit`.
@@ -216,6 +217,9 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - It skips an entry that isn't ready, is on HOLD, or already ran on that machine at that commit.
   - `--no-suspend` keeps the machine on.
   - `--hours N` waits up to N hours for entries not yet ready.
+  - `--wait H` keeps the queue open: once nothing is left to run, it checks origin every 5
+    minutes and runs whatever becomes ready, until H hours pass with nothing new. It can be
+    started on an empty queue, before an entry is admitted.
   - A single entry can still be run on its own with `just submit-when-ready <recipe> <branch>`.
 - **Adding work while the queue runs.** After each pass, the runner reads the queue and the tags
   from origin again. It runs every entry whose `ready` tag points at a commit not yet run on that
@@ -241,6 +245,28 @@ A red CI check on a PR is handled by `docs/team/CI-INCIDENTS.md`:
 - keep all other work moving.
 
 The Coordinator owns this for every PR the team drives.
+
+## 11. A negative result on a line Louis is pursuing
+
+Louis, 9 November 2026: "in the past we have had negative results and sought to sharpen them
+through the Optimiser and then they started showing benefit… and/or we could send the ideas
+themselves to the Researcher to find new angles on or adjacent ideas and then make
+breakthroughs there. i dont wanna wake up to find that you agents just gave up".
+
+A STOP on one arm closes that arm, not the line. When an arm of a line Louis is pursuing reads
+STOP, NO GAIN or INCONCLUSIVE, the Coordinator, in the same wake:
+1. **Sends it to the Optimiser to sharpen:** the measured costs by phase, and the question
+   "which construction removes the cost that bound this arm?" The answer is ranked
+   constructions, each with a CI falsifier.
+2. **Sends the idea to the Researcher for new angles:** adjacent results, other formulations
+   and primary sources, each with a falsifiable prediction.
+3. **Builds the best-ranked construction** as the next registered arm, once a review allows.
+
+The line stays open until Louis closes it, or until both roles report no remaining
+construction worth a falsifier. Then the Coordinator states that on #145 and asks Louis.
+
+**Lines this applies to now:** run-fed construction of the navigation table from compressed
+runs (the posts of 8 November, #266, #269, the run-fed leader).
 
 ## History
 

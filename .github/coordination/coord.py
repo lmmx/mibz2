@@ -237,6 +237,12 @@ def route(role, kind):
             "why": f"{role} is free: its inbox #{ROLES[role]['inbox']}"}
 
 
+def resumes(re_line):
+    """The inbox item a resume request names (`RE: resume 123`), or None."""
+    m = re.match(r"^\s*resume(?:\s+request\s+for)?\s+(\d+)\s*$", re_line or "", re.I)
+    return int(m[1]) if m else None
+
+
 def verify(comment_id, role, kind):
     c = get(f"{API}/issues/comments/{comment_id}")
     issue = int(c["issue_url"].rsplit("/", 1)[1])
@@ -262,6 +268,11 @@ def verify(comment_id, role, kind):
                 s = state(role)
                 others = sorted({i for i in s["incomplete"] + s["unreviewed"]
                                  if i != comment_id})
+                # A resume request (PROTOCOL.md §2) re-wakes the one item in flight: it
+                # names that item and adds no second assignment.
+                resumed = resumes(h.get("RE", ""))
+                if resumed is not None and others == [resumed]:
+                    others = []
                 if others:
                     problems.append(f"{role} already had {others} in flight: one at a time")
     return {"comment": comment_id, "issue": issue, "ok": not problems, "problems": problems}

@@ -1,0 +1,13 @@
+diff --git a/src/coop.rs b/src/coop.rs
+index 563ad213..5f07b42a 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -1150,7 +1150,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
+         } else {
+             Vec::new()
+         }),
+-        walkers: AtomicUsize::new(helpers),
++        walkers: AtomicUsize::new(helpers - 1),
+         failed: AtomicBool::new(false),
+         panic: Mutex::new(None),
+         place,

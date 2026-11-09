@@ -1,0 +1,22 @@
+diff --git a/src/coop.rs b/src/coop.rs
+index 563ad213..cd116d82 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -922,7 +922,7 @@ impl Relay<'_> {
+     /// flag and it never parks. A spurious wake-up, or a token left from an earlier
+     /// unpark, only makes it check the flag again.
+     fn wait_walk_ready<const PARK: bool, const SPIN: u32>(&self) {
+-        let ready = || self.walk_ready.load(Ordering::Acquire);
++        let ready = || self.walk_ready.load(Ordering::Relaxed);
+         if !PARK {
+             return wait_until::<SPIN>(ready);
+         }
+@@ -941,7 +941,7 @@ impl Relay<'_> {
+     /// The build's end published to the walk's threads (`wait_walk_ready`): with `PARK`,
+     /// every thread listed as waiting is unparked
+     fn set_walk_ready<const PARK: bool>(&self) {
+-        self.walk_ready.store(true, Ordering::Release);
++        self.walk_ready.store(true, Ordering::Relaxed);
+         if PARK {
+             for t in lock(&self.sleepers).drain(..) {
+                 t.unpark();

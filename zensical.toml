@@ -55,10 +55,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Reading the BWT's runs off the MTF codes" = "blog/2026-11-08-bwt-runs-from-mtf-codes.md" },
     { "Inverse-BWT navigation: the mathematics" = [
       { "One shift per run" = "blog/2026-11-08-inverse-bwt-navigation.md" },
       { "Technical appendix" = "blog/2026-11-08-inverse-bwt-navigation-notes.md" },
-      { "The runs, from the MTF codes" = "blog/2026-11-08-bwt-runs-from-mtf-codes.md" },
     ] },
     { "Pipelined teams in mibz2 0.2.6" = "blog/2026-11-07-pipelined-teams.md" },
     { "Why mibz2 stops scaling at eight threads" = "blog/2026-11-07-why-mibz2-stops-scaling.md" },

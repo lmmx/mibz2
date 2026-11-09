@@ -1,0 +1,24 @@
+diff --git a/src/coop.rs b/src/coop.rs
+index 563ad213..0619c7f5 100644
+--- a/src/coop.rs
++++ b/src/coop.rs
+@@ -941,11 +941,15 @@ impl Relay<'_> {
+     /// The build's end published to the walk's threads (`wait_walk_ready`): with `PARK`,
+     /// every thread listed as waiting is unparked
+     fn set_walk_ready<const PARK: bool>(&self) {
++        let ts: Vec<Thread> = if PARK {
++            lock(&self.sleepers).drain(..).collect()
++        } else {
++            Vec::new()
++        };
++        std::thread::yield_now();
+         self.walk_ready.store(true, Ordering::Release);
+-        if PARK {
+-            for t in lock(&self.sleepers).drain(..) {
+-                t.unpark();
+-            }
++        for t in ts {
++            t.unpark();
+         }
+     }
+ 
