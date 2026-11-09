@@ -989,7 +989,7 @@
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
+    "active_comment_status": "in_progress",
     "queue_snapshot": [
       6681847165,
       6682032075,
@@ -1012,10 +1012,11 @@
       6729878093,
       6730002640,
       6730271091,
-      6730370805
+      6730370805,
+      6730455683
     ],
-    "active_incoming_comment": 6730370805,
-    "status": "finished"
+    "active_incoming_comment": 6730455683,
+    "status": "in_progress"
   },
   "duplicate_events": [
     {
@@ -1609,6 +1610,12 @@
       "work_commit": "bab6f81695fe3b3c1e3ea738af66c8cfb1e3282b",
       "review_comment_id": 6730448704,
       "complete_cursor_commit": "35ccf0fbd04aa6a2149d0d4b7c9e4100cf7caa31"
+    },
+    {
+      "comment_id": 6730455683,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D048"
     }
   ],
   "migrated_from": {
