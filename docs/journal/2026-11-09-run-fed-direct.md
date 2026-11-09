@@ -97,7 +97,7 @@ row.
 | `sort`'s first pass over the records, counting runs a byte | gone |
 | `sort`'s scatter into an F-order array, `[a, p]` a run: 8 bytes a run written, about 0.50 B a row at Wikidata's r/n of 0.062 | gone: no F-order array, and no `Scratch` |
 | the fill's F iterator: two loads of the F order a cell | gone: the run's own p and its bucket's `a[c]` |
-| one sequential sweep of the rows | up to 256 interleaved write streams, one a nonempty bucket, in L order (as `build_one_pass` scatters); the record counts the streams D uses |
+| one sequential sweep of the rows | up to 256 interleaved destinations, one a nonempty bucket, in L order (as `build_one_pass` scatters); the record counts the nonempty buckets, not measured hardware write streams |
 
 **What D keeps, as the handoff specifies:** the checked counts, the prefixes, the resumed
 cursors, the F/L intersections (the cells: the same cuts as B's, so the same cells, at most
@@ -111,12 +111,18 @@ ending at b:
 - `v = min(⌈ℓ/8⌉, ⌊(b − q)/8⌋)` vector stores;
 - `max(0, ℓ − 8v)` one-slot stores, at most 7 rows a bucket.
 
-So D may write fewer slots than B while issuing more store instructions, and a narrow
-bucket can be all one-slot stores. `Tally.slots` stays B's fill's count. The record now
-holds D's own census too (`direct_census`, independent of `place`, the same rule): its
-vector stores, its one-slot stores and its write streams (the nonempty buckets), summed
-over the records' blocks. The binary and the verifier report D's store instructions a
-row, its slots written a row against B's, and its streams a block.
+So D may write fewer slots than B while issuing more table stores, and a narrow bucket can
+be all one-slot stores. `Tally.slots` stays B's fill's count. The record now holds D's own
+census too (`direct_census`, independent of `place`, the same rule), summed over the
+records' blocks:
+- its **predicted table stores**, vector and one-slot: the source's store loops counted,
+  not machine code. Until a disassembly, they are not all of D's machine stores: spills,
+  scratch state and the compiler's lowering are not counted;
+- its **nonempty destination buckets**: where its stores go, not a measurement of
+  concurrently active hardware write streams or of write-buffer pressure.
+
+The binary and the verifier report D's predicted table stores a row, its slots written a
+row against B's, and its nonempty buckets a block.
 
 **What D adds:**
 - per-run bucket state, `a[c]`, `end[c]` and `cur[c]`: loads and stores that chain through
@@ -220,7 +226,7 @@ D replaces B's sort and fill with its placement. So, on the phase sweep's scale:
   lose with the sort removed for free and the fill unchanged.
 - **δ_direct** is D's placement less B's sorted fill (1.332), on the same blocks. It carries
   everything the sort did that D still does: the prefixes and checks, now inline; the
-  cursors and their seeds; the 256 destination streams; and the ownership tails. Its sign
+  cursors and their seeds; up to 256 destination buckets; and the ownership tails. Its sign
   is open: negative if the removed F order and its iterator cost more than what D adds.
 - **e** is the emitter's recovery, B's front less D's.
 - **f** is the fallback's recovery, B's fallback less D's.
@@ -275,7 +281,7 @@ need not sum to the median of the total, and a gap between them is no missing ph
 | `place` and `build_direct` on every stream of `tests/mtf_kernels.rs`: the table on success; on a corrupt stream, `build_direct`'s error kind is `mtf::mtf`'s; its path is `takes_runs`'s | `cargo test --features run-fed --test mtf_kernels` (4 tests) | pass |
 | all 431 blocks of the bench corpus (`wikidata.bz2`, SHA-256 `82f65ace…`) and the six synthetic corpora: D's table by `place` and through `build_direct`, path, length, the CRC after the room walk; D's census cells equal to B's, its stores between its rows and B's slots, its one-slot stores at most 7 a stream; the Wikidata file's output = `decode`'s; then, over 2 timed rounds, B's and D's path on every timed block and each round's budget identity | the diagnostic's validation pass, run twice here (§7) | pass |
 | the record writer against the verifier's fixture, byte for byte (rewritten for schema 2, with real corpus identities since §9); D's census on two hand-counted cases (`direct_census_counts_the_tails`) | `cargo test --features run-fed --example run_fed_stage` (5 tests) | pass |
-| the verifier: the fixture VALID against its evidence; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; since §9, the 25 counterexamples of `bench/fixtures/run_fed_stage_counterexamples.json` (the Researcher's six among them) each INVALID, and the first six by the CLI with no reading printed; the Wikidata file's own digest and blocks against the spec; no corpus evidence; the regenerated synthetic corpora equal to the pinned five; the CLI VALID only once the text corpus is this checkout's; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms | `python3 bench/test_run_fed_stage.py` (50 tests) | pass |
+| the verifier: the fixture VALID against its evidence; each defect INVALID, now including D's placement untimed, a sort time for D, the old schema, the old arms and no output size; since §9 and §9.1, the 31 counterexamples of `bench/fixtures/run_fed_stage_counterexamples.json` (the Researcher's six and the closure review's four among them) each INVALID, and the first six by the CLI with no reading printed; the Wikidata file's own digest and blocks against the spec; no corpus evidence; the regenerated synthetic corpora equal to the pinned five; the CLI VALID only once the text corpus is this checkout's; the readings: Q1 follows D and not B, the 0.95 gate, INCONCLUSIVE on a wide 4% saving, the budget's terms | `python3 bench/test_run_fed_stage.py` (50 tests) | pass |
 | the real record of the local validation run, against the verifier's own evidence (the Wikidata file, the synthetic corpora regenerated from this checkout) and every count relation | `bench/run_fed_stage.py verify` | INVALID only for its 2 rounds and its 4-CPU affinity, as expected |
 | the existing run-fed tests, unchanged: `sort`, `fill`, the shares, the refusals | `cargo test --features run-fed --lib run_stage` (6 tests, 2 of them new) | pass |
 | clippy (`--all-targets --features run-fed`, `-D warnings`), rustfmt, ruff | locally | clean |
@@ -315,9 +321,10 @@ need not sum to the median of the total, and a gap between them is no missing ph
   `registered_head` input.
 - **The synthetic input is the frozen head's.** The text corpus is made from the head's
   `src/`, `tests/`, `examples/` and `README.md` (tests/common's `corpora(1)`), so any change
-  to those changes it. At this revision's sources it is 3,324,678 bytes, compressed at
-  level 9 to 611,579 bytes, SHA-256
-  `b4c2767e731f9be033d841e2f23d3bcbb7ba11335a60404a4a3af51c458916a5`, 4 blocks. The other
+  to those changes it. At this revision's sources (§9.1) it is 3,326,302 bytes, compressed
+  at level 9 to 612,142 bytes, SHA-256
+  `5996a32dcec1cb7899cd2dd2e2cb122a3de7eeead4c2096729575e3aec79e6ff`, 4 blocks. (At §9's
+  sources, `7f88388b`, it was 3,324,678 bytes, `b4c2767e…`.) The other
   five don't depend on the head (§4's pinned values). A docs-only commit changes none of
   them. The workflow refuses to run if the checkout's sources differ from the head, and the
   verifier regenerates every synthetic corpus from that checkout, so the judged record
@@ -346,13 +353,14 @@ schema 2:
   - each synthetic corpus's SHA-256, size, decoded size and blocks equal to its
     regeneration from the checkout (`--sources`; tests/common's `corpora(1)` ported to
     Python, compressed at level 9 with libbzip2, as `common::compress` does);
-- **the count relations (since §9),** each a sum of per-block bounds the representation
-  fixes (`count_relations`): 1 to 900,000 rows a block; on the records' blocks, records
-  from their blocks to their rows, cells from r to 2r − blocks (at most 2r − 1 a block),
-  B's slots a multiple of 8 from its rows to its rows + 7 a cell, D's written slots from
-  its rows to B's slots, D's one-slot stores at most 7 a stream, 1 to 256 streams a
-  block; the fallback's rows at least its blocks; RLE1's 4–259 bytes for 5 rows, with
-  each block's last 4 rows unpaired at most;
+- **the count relations (since §9 and §9.1),** each a sum of per-block bounds the
+  representation fixes (`count_relations`): 1 to 900,000 rows a block, on each path; on
+  the records' blocks, records from their blocks to their rows; cells from r to 2r −
+  blocks (at most 2r − 1 a block); B's slots a multiple of 8, from its rows to its rows + 7
+  a cell, and at least 8 a cell; D's written slots from its rows to B's slots, with at
+  least one predicted table store a cell and at most 7 one-slot rows a bucket; 1 to 256
+  nonempty buckets a block, and no more than its runs; RLE1's 4–259 bytes for 5 rows,
+  with each block's last 4 rows unpaired at most;
 - D's census (`d_vector`, `d_scalar`, `d_streams`) recorded;
 - otherwise #269's: the record exists; the full head, equal to the registered one; 15
   rounds; AVX2; correctness passed; the host; one CPU; the seven corpora by name and
@@ -402,8 +410,8 @@ registration (C6).
 - **The budget's terms** (§3), each round's own and their medians: δ, e and f (e and f
   measured controls), the identity's largest residual, D − A's phase sum beside the median
   of .218 + δ_i − e_i − f_i, and this run's own K beside #269's .218.
-- **D's store census** (§1.2): store instructions a row, slots written a row against B's,
-  and write streams a block.
+- **D's store census** (§1.2): predicted table stores a row, slots written a row against
+  B's, and nonempty destination buckets a block.
 - `R_place`, `R_pf`, `R_psf`, `R_phases_D`, `R_front` and `R_stage` on this run.
 
 **Voids and failures** are #269's:
@@ -442,15 +450,18 @@ natural) is not measured.
   F-order loads. The fill already beat production's build.
 - **Against:**
   - The budget needs D's placement 16% below B's sequential fill only to break even, and
-    30% below it for the gate. Most of B's fill cost is its cells and stores, which D keeps:
-    the same cells and the same 8-lane stores.
-  - D gives up the fill's one sequential write stream for 256 interleaved ones. Wikidata's
+    30% below it for the gate. Most of B's fill cost is its cells and stores. D keeps the
+    same cells and the same 8-lane store kernel, but not the same stores: near each bucket's
+    end it trades overstores for one-slot stores (§1.2).
+  - D gives up the fill's one sequential write order for up to 256 interleaved destination
+    buckets. Wikidata's
     runs average about 16 rows (r/n 0.062), so a run is about one 64-byte line: roughly
     `build_one_pass`'s own 16-row scatter, which costs 1.432.
   - D adds per-run state chained through memory (`a[c]`, `cur[c]`), and its cursor reads
     the records at 256 positions instead of one.
-  - The emitter's loss (+0.218 against plain MTF) and the fallback's (+0.100) are untouched
-    by D, by construction.
+  - D runs the emitter and fallback code whose losses #269 measured (+0.218 against plain
+    MTF; +0.100), unchanged. Their times in this run are measured controls (e and f, §3),
+    not assumed equal to B's.
 - **Rough odds, a judgement and not a model:** STOP (lo > 0.95) about 85%; INCONCLUSIVE
   about 10%; FEASIBLE about 5%. R_DB below 1 is more likely than not, about 60%. D is
   likelier to beat B than A, because it removes the sort's 0.317 outright and has to give
@@ -474,6 +485,10 @@ natural) is not measured.
   fallback; the six synthetic corpora's SHA-256s, each equal to the verifier's
   regeneration), its record checked by the verifier for problems only (its 2 rounds and 4
   CPUs, nothing else), then deleted. No timing figure was read.
+- **A third and a fourth, for §9.1's validity only,** the same way, before and after its
+  wording change to `examples/run_fed_stage.rs`: each record checked by the verifier, with
+  its own evidence and the four new bounds, for problems only (its 2 rounds and 4 CPUs,
+  nothing else), then deleted. No timing figure was read.
 
 ## 8. Not done, and why
 
@@ -485,7 +500,8 @@ natural) is not measured.
 - **A pipelined or helper-side D** (#270's question, held under D049): not built, not
   measured.
 - **The emitter and the fallback,** the Optimiser's items 2 and 3, are unchanged here by
-  design. D isolates the sort's removal.
+  design. That does not make D an isolated test of the sort's removal: D/B compares D's
+  whole placement with B's sort and fill (§2).
 
 ## 9. Revision, 2026-11-09: the Researcher's REVISE (#162 comment 6732062626)
 
@@ -512,6 +528,23 @@ revision.
 
 **Still open:** the B5 review of `place` (the Guardian's, queued), and fuzzing (§4, Not
 covered).
+
+### 9.1 The closure review's narrow REVISE (#162 comment 6732362367)
+
+The review of head `7f88388b938528f22088df79387f309eb112fe1c` (report:
+`state/reports/direct-f-closure-6732258318/report.md` at `409907ca`). It kept §9's closures.
+Four necessary count bounds were missing, and the unmutated text fixture was itself
+infeasible.
+
+| # | finding | fix | test |
+|---|---|---|---|
+| 1 | four necessary bounds missing: `blocks_fallback ≤ rows − rows_runs ≤ 900,000 · blocks_fallback`, `d_streams ≤ records`, `8 · cells ≤ slots`, `cells ≤ d_vector + d_scalar` | all four added to `count_relations`, checked before any reading (§5) | counterexamples 26–29, the review's four witnesses (zero fallback blocks but a fallback row; 42.4 M fallback rows in 47 blocks; one run, 256 nonempty buckets; too few B slots and D stores for the cells), and 30–31, each bound alone: each INVALID |
+| 2 | the passing fixture's text corpus declared 1.5 M cells with 5 M B slots and 562 k D stores (it needs at least 12 M and 1.5 M); the runs corpus likewise needed 192 k slots against 160 k | the record writer's fixture table and the JSON fixture fixed together: text 12.8 M slots, 1,502,000 D stores; runs 200 k slots, 24,500 D stores. Every corpus of the fixture keeps every bound, so one feasible record still passes | `test_the_fixture_is_valid`; `the_verifiers_fixture`, byte for byte |
+| 2b | the real binary's record against the new bounds | two more 2-round local validity runs, before and after the wording change: the verifier, with its own evidence, finds only the 2 rounds and the 4 CPUs (§7). No timing read | — |
+| 3 | the census called machine stores and hardware streams; §6 and §8 contradicted §§1–3 | the census is D's predicted table stores (the source's store loops, until disassembly) and its nonempty destination buckets, not measured hardware streams (§1.2, the binary's and the verifier's labels); §6 and §8 corrected | — |
+
+The wording changed `examples/run_fed_stage.rs`, so the synthetic text corpus changed with
+it; §5 names the new one.
 
 ## Provenance and reproduction
 

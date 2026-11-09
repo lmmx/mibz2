@@ -203,8 +203,10 @@ def count_relations(f):
     a block's sum): a block has 1 to MAX_ROWS rows; a block by records has 1 to its rows'
     runs (records), its cells are at least its runs and at most 2r - 1, B's fill stores 8
     for each started 8 of a cell's rows (so a multiple of 8, from its rows to its rows plus
-    7 a cell); D's stores write its rows exactly or more, no more than B's fill, with at
-    most 7 one-slot rows a write stream, and 1 to 256 streams a block; RLE1 turns 5 rows
+    7 a cell, and one 8-slot store at least a cell); D's stores write its rows exactly or
+    more, no more than B's fill, with one store at least a cell and at most 7 one-slot rows
+    a destination bucket, and 1 to 256 nonempty buckets a block, no more than its runs;
+    the fallback's blocks hold 1 to MAX_ROWS rows each; RLE1 turns 5 rows
     into 4 to 259 bytes, and each block's last 4 rows at most may be unpaired. Returns the
     problems"""
     p = []
@@ -215,13 +217,19 @@ def count_relations(f):
         ("blocks_runs + blocks_fallback = blocks", br + bf == b),
         ("blocks <= rows <= 900,000 a block", b <= rows <= MAX_ROWS * b),
         ("blocks_runs <= rows_runs <= 900,000 a block by records", br <= rr <= MAX_ROWS * br),
-        ("the fallback's rows at least its blocks", rows - rr >= bf),
+        (
+            "the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+            bf <= rows - rr <= MAX_ROWS * bf,
+        ),
         ("blocks_runs <= records <= rows_runs", br <= r <= rr),
         ("records <= cells <= 2 records - blocks_runs", r <= c <= 2 * r - br),
         ("rows_runs <= slots <= rows_runs + 7 cells", rr <= sl <= rr + 7 * c),
+        ("8 cells <= slots (B stores 8 slots at least a cell)", 8 * c <= sl),
         ("slots a multiple of 8", sl % 8 == 0),
         ("blocks_runs <= d_streams <= 256 blocks_runs", br <= dst <= 256 * br),
+        ("d_streams <= records (a nonempty bucket holds a run at least)", dst <= r),
         ("rows_runs <= 8 d_vector + d_scalar <= slots", rr <= 8 * dv + ds <= sl),
+        ("cells <= d_vector + d_scalar (D stores once at least a cell)", c <= dv + ds),
         ("d_scalar <= 7 d_streams", ds <= 7 * dst),
         ("RLE1: 5 output >= 4 (rows - 4 blocks)", 5 * f["output"] >= 4 * (rows - 4 * b)),
         ("RLE1: 5 output <= 259 rows", 5 * f["output"] <= 259 * rows),
@@ -388,7 +396,7 @@ def readings(rec):
             row["D_minus_A"] = _median(da_i)
             row["B_minus_A_less_sort"] = _median(k_i)
             row["budget"] = _median([BUDGET_269 + d - e - fb for d, e, fb in zip(d_i, e_i, f_i)])
-            # D's stores, from the record's census (reported, exploratory)
+            # D's predicted table stores, from the record's census (reported, exploratory)
             rr = f["rows_runs"]
             row["d_stores_per_row"] = (f["d_vector"] + f["d_scalar"]) / rr
             row["d_slots_per_row"] = (8 * f["d_vector"] + f["d_scalar"]) / rr
@@ -611,9 +619,10 @@ def main(argv=None):
         print(f"  {key} {fmt(w.get(key))}")
     if "d_stores_per_row" in w:
         print(
-            f"  D's stores a row: {w['d_stores_per_row']:.4f} store instructions, "
-            f"{w['d_slots_per_row']:.4f} slots written (B's fill {w['b_slots_per_row']:.4f}); "
-            f"{w['d_streams_per_block']:.1f} write streams a block"
+            f"  D's predicted table stores a row (its source's store loops, not machine "
+            f"code): {w['d_stores_per_row']:.4f}, {w['d_slots_per_row']:.4f} slots written "
+            f"(B's fill {w['b_slots_per_row']:.4f}); {w['d_streams_per_block']:.1f} nonempty "
+            f"destination buckets a block (not measured hardware streams)"
         )
     if "budget" in w:
         print(

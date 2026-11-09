@@ -229,19 +229,21 @@ struct Tally {
     cells: usize,
     /// the u32 slots B's AVX2 fill stores on the records' blocks, overstores included
     slots: usize,
-    /// D's AVX2 placement on the records' blocks (`direct_census`): its 8-slot vector
-    /// stores, its one-slot stores (the ownership tails), and its write streams, the
-    /// nonempty buckets, summed over the blocks
+    /// D's AVX2 placement on the records' blocks (`direct_census`), predicted from its
+    /// source's store rule, not counted in machine code: its 8-slot vector table stores,
+    /// its one-slot table stores (the ownership tails), and its nonempty destination
+    /// buckets (not measured concurrent hardware write streams), summed over the blocks
     d_vector: usize,
     d_scalar: usize,
     d_streams: usize,
 }
 
-/// D's AVX2 stores on a checked block, counted independently of `run_stage::place` (safe
-/// code, the same rule): its cells (each run's F interval cut where an L run ends), and
+/// D's predicted table stores on a checked block (the source's store loops, not machine
+/// code: no spills or other stores counted), computed independently of
+/// `run_stage::place` (safe code, the same rule): its cells (each run's F interval cut where an L run ends), and
 /// for a cell of ℓ rows from q in a bucket ending at b, `v = min(⌈ℓ/8⌉, ⌊(b − q)/8⌋)`
-/// vector stores and `ℓ − 8v` one-slot ones where positive; and the buckets with rows,
-/// its write streams. Returns (cells, vector, scalar, streams)
+/// vector stores and `ℓ − 8v` one-slot ones where positive; and the buckets with rows.
+/// Returns (cells, vector, scalar, nonempty buckets)
 fn direct_census(recs: &[u32], counts: &[u32; 256]) -> (usize, usize, usize, usize) {
     let (mut next, mut end) = ([0u32; 256], [0u32; 256]);
     let mut rows = 0u32;
@@ -699,9 +701,10 @@ fn main() {
         );
         let rr = tally.rows_runs.max(1) as f64;
         println!(
-            "  D's stores on the records' blocks: {} vector (8 slots) and {} one-slot, {:.4} \
-             store instructions a row, {:.4} slots written a row (B's fill: {:.4}); {} write \
-             streams (nonempty buckets), {:.1} a block",
+            "  D's predicted table stores on the records' blocks (its source's store loops, \
+             not machine code): {} vector (8 slots) and {} one-slot, {:.4} table stores a \
+             row, {:.4} slots written a row (B's fill: {:.4}); {} nonempty destination \
+             buckets (not measured hardware streams), {:.1} a block",
             tally.d_vector,
             tally.d_scalar,
             (tally.d_vector + tally.d_scalar) as f64 / rr,
@@ -1056,15 +1059,16 @@ mod tests {
                 // the corpora's identities and sizes are real: Wikidata's from its spec
                 // (bench/wikidata.json), the synthetic ones as `bench/run_fed_stage.py`
                 // regenerates them (the text's at the head that drafted C31); the path
-                // counts are made up, but keep `count_relations`
+                // counts are made up, but feasible: they keep every bound of
+                // `count_relations`, so one passing record is still tested
                 #[rustfmt::skip]
                 let (blocks_runs, blocks_fallback, rows, rows_runs, records, cells, slots,
                      d_vector, d_scalar, d_streams, bytes, output, sha) = [
                     (384, 47, 205_000_000, 163_600_000, 10_150_000, 15_200_000, 176_000_000,
                      21_500_000, 60_000, 30_000, 11_854_933, 209_700_196,
                      "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"),
-                    (4, 0, 3_300_000, 3_300_000, 900_000, 1_500_000, 5_000_000, 560_000, 2_000,
-                     400, 601_160, 3_297_858,
+                    (4, 0, 3_300_000, 3_300_000, 900_000, 1_500_000, 12_800_000, 1_500_000,
+                     2_000, 400, 601_160, 3_297_858,
                      "e9a9ff6f51a236719aafd843998a92bc22eb751aed11e09fc77461fa05a9b4bf"),
                     (0, 3, 2_000_000, 0, 0, 0, 0, 0, 0, 0, 1_774_781, 2_000_000,
                      "69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198"),
@@ -1073,7 +1077,7 @@ mod tests {
                     (6, 0, 4_900_000, 4_900_000, 60, 100, 4_900_400, 612_520, 200, 42, 314,
                      4_900_000,
                      "bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3"),
-                    (1, 0, 90_000, 90_000, 16_000, 24_000, 160_000, 12_000, 500, 200, 9_955,
+                    (1, 0, 90_000, 90_000, 16_000, 24_000, 200_000, 24_000, 500, 200, 9_955,
                      2_500_444,
                      "24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec"),
                     (0, 3, 2_400_000, 0, 0, 0, 0, 0, 0, 0, 2_397_517, 2_400_000,

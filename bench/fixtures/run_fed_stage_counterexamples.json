@@ -1,5 +1,5 @@
 {
-  "about": "Mutations of bench/fixtures/run_fed_stage.json that must read INVALID, with no reading printed: the Researcher's six (#162, the review of #277 at 70532329, state/reports/direct-f-registration-6731990737) and the further breaks of each count relation and each corpus's evidence. Each sets (or, with null and \"delete\": true, removes) one or more fields, by path from the record's root, and names a substring of the problem it must raise. bench/test_run_fed_stage.py applies them.",
+  "about": "Mutations of bench/fixtures/run_fed_stage.json that must read INVALID, with no reading printed: the Researcher's six (#162, the review of #277 at 70532329, state/reports/direct-f-registration-6731990737) and four from the closure review (at 7f88388b, state/reports/direct-f-closure-6732258318) and the further breaks of each count relation and each corpus's evidence. Each sets (or, with null and \"delete\": true, removes) one or more fields, by path from the record's root, and names a substring of the problem it must raise. bench/test_run_fed_stage.py applies them.",
   "cases": [
     {"name": "ghz negative (Researcher 1)", "set": [[["ghz"], -1]], "expect": "ghz -1"},
     {"name": "ghz zero (Researcher 2)", "set": [[["ghz"], 0]], "expect": "ghz 0"},
@@ -25,6 +25,12 @@
     {"name": "D's census missing", "delete": [["files", 0, "d_streams"]], "expect": "path counts missing"},
     {"name": "counts for a path with no blocks", "set": [[["files", 2, "records"], 5]], "expect": "records <= rows_runs"},
     {"name": "RLE1: too little output for the rows", "set": [[["files", 0, "rows"], 387000000]], "expect": "RLE1"},
-    {"name": "a fallback block with no rows", "set": [[["files", 0, "rows"], 163600000]], "expect": "the fallback's rows"}
+    {"name": "a fallback block with no rows", "set": [[["files", 0, "rows"], 163600000]], "expect": "the fallback's rows"},
+    {"name": "zero fallback blocks but one fallback row (closure review 1)", "set": [[["files", 3, "rows"], 96531]], "expect": "the fallback's rows"},
+    {"name": "42.4 M fallback rows in 47 blocks (closure review 2)", "set": [[["files", 0, "rows"], 206000000]], "expect": "the fallback's rows"},
+    {"name": "one run but 256 nonempty buckets (closure review 3)", "set": [[["files", 3, "d_streams"], 256]], "expect": "d_streams <= records"},
+    {"name": "too few B slots and D stores for the cells (closure review 4)", "set": [[["files", 0, "cells"], 20000000], [["files", 0, "slots"], 159999992], [["files", 0, "d_vector"], 19000000], [["files", 0, "d_scalar"], 0], [["files", 0, "rows_runs"], 150000000]], "expect": "8 cells <= slots"},
+    {"name": "too few D stores for the cells alone", "set": [[["files", 0, "d_vector"], 15100000], [["files", 0, "d_scalar"], 0], [["files", 0, "cells"], 15200000]], "expect": "cells <= d_vector + d_scalar"},
+    {"name": "too few B slots for the cells alone", "set": [[["files", 4, "slots"], 4900000], [["files", 4, "cells"], 612600], [["files", 4, "records"], 400000], [["files", 4, "d_vector"], 612520], [["files", 4, "d_scalar"], 200]], "expect": "8 cells <= slots"}
   ]
 }
