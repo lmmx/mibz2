@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index fcdd7cca..2b6e953d 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -873,7 +873,7 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) ->
+         Ok(Ok(n)) if n >= super::bwt::MIN_COOP => Staging::Team(s),
+         Ok(Ok(_)) => Staging::Small(s),
+         Ok(Err(kind)) => {
+-            publish(shared, place, bit, Err(kind), s.symbols.syms);
++            publish(shared, place + 1, bit, Err(kind), s.symbols.syms);
+             Staging::Failed
+         }
+         Err(p) => {

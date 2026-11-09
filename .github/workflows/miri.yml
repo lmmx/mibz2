@@ -4,15 +4,21 @@ name: Miri
 # (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
-# detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
-# included, with its unchecked states refused (run_stage::tests::miri_*). Only on changes to the
-# walks, the pool or that research.
+# detector. And the pipelined worker's recovery from a run that panics outside its stages
+# (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
+# blocks' retirement, the team's reset and the reader, on tiny blocks. And the run-fed
+# research's sort, store reference and fill, the AVX2 fill included, with its unchecked
+# states refused (run_stage::tests::miri_*). Only on changes to the walks, the pool, the
+# parallel decoder or its reader, or that research.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/parallel.rs"
+      - "src/parallel/**"
+      - "src/read.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -20,6 +26,9 @@ on:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/parallel.rs"
+      - "src/parallel/**"
+      - "src/read.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -38,6 +47,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Miri setup
         run: cargo miri setup
+      # (`--lib -- miri_` reaches only the library's unit tests named miri_: the worker's
+      # recovery tests are among them, which this step checks, so that a rename can't drop
+      # them silently; tests/pipelined.rs's integration tests stay native)
+      - name: The worker recovery tests are selected
+        run: |
+          cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
+          grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
       # the run-fed research's AVX2 fill under Miri: the build with AVX2 enabled, so

@@ -63,6 +63,18 @@ pub fn parallel(
     k: Kernels,
 ) -> Result<Vec<u8>, Error> {
     let dec = mibz2::StreamDecoder::new(threads, slots, k);
+    let (out, res) = drive(&dec, data, chunk, read);
+    res.map(|()| out)
+}
+
+/// A push decoder fed `chunk` bytes at a time from another thread and read `read` bytes
+/// at a time: its output up to its end or its first error, and that result
+pub fn drive(
+    dec: &mibz2::StreamDecoder,
+    data: &[u8],
+    chunk: usize,
+    read: usize,
+) -> (Vec<u8>, Result<(), Error>) {
     let mut out = Vec::new();
     let res = std::thread::scope(|s| {
         s.spawn(|| {
@@ -85,7 +97,15 @@ pub fn parallel(
             }
         }
     });
-    res.map(|()| out)
+    (out, res)
+}
+
+/// The plain parallel decoder (production's workers, two of them in four slots: the
+/// reference tests/pipelined.rs holds the pipelined teams to): its output up to its end or
+/// its first error, and that result
+pub fn plain_parallel(data: &[u8]) -> (Vec<u8>, Result<(), Error>) {
+    let dec = mibz2::StreamDecoder::with_inverse::<mibz2::bwt::Segmented>(2, 4, Kernels::detect());
+    drive(&dec, data, 1 << 20, 1 << 16)
 }
 
 pub struct Rng(pub u64);
@@ -468,13 +488,7 @@ impl Candidate for Mibz2 {
                 self.kernels,
             )
         };
-        r.map_err(|e| {
-            format!("{:?}", e.kind)
-                .split([' ', '{', '('])
-                .next()
-                .unwrap_or("")
-                .to_string()
-        })
+        r.map_err(|e| kind_name(&e))
     }
 }
 
@@ -495,6 +509,241 @@ pub fn candidates() -> Vec<Box<dyn Candidate>> {
             threads: 3,
         }),
     ]
+}
+
+/// How a pipelined candidate (`Pipelined`) is built and driven. Every shape but `Levers`
+/// is the shipped default's own constructor (`StreamDecoder::new`, `BzReader::parallel`,
+/// `decode_parallel`) with its plan forced to `PIPELINED_PLAN` (`parallel::with_plan`),
+/// since no 4-core machine selects it: three pipelined teams of three, park and small
+#[derive(Clone, Copy, Debug)]
+pub enum PipeShape {
+    /// `StreamDecoder::new(4, 16, ..)` at the plan, fed `chunk` bytes at a time from
+    /// another thread, read `read` bytes at a time
+    Push { chunk: usize, read: usize },
+    /// `BzReader::parallel(.., 10)` at the plan, read `read` bytes at a time
+    Reader { read: usize },
+    /// `decode_parallel(.., 10)` at the plan
+    Whole,
+    /// `StreamDecoder::pipelined_levers` with the default's levers (`PIPELINED_LEVERS`) at
+    /// `teams` teams of `k`, in `slots`: one team overlaps on nearly every block
+    Levers {
+        teams: usize,
+        k: usize,
+        slots: usize,
+        chunk: usize,
+        read: usize,
+    },
+}
+
+/// A pipelined decoder under test (`PipeShape`)
+pub struct Pipelined {
+    pub shape: PipeShape,
+}
+
+/// A pipelined candidate's run: its output up to its end or first error, that result, and
+/// its pipeline counts (`StreamDecoder::pipeline_counts`: jobs a leader took while its
+/// helpers inverted another block, and those of them that failed) where the shape's
+/// decoder is in reach (`Push`, `Levers`), else None
+pub struct PipeRun {
+    pub out: Vec<u8>,
+    pub res: Result<(), Error>,
+    pub counts: Option<(u64, u64)>,
+}
+
+impl Pipelined {
+    pub fn name(&self) -> String {
+        match self.shape {
+            PipeShape::Push { chunk, read } => {
+                format!("mibz2 default 3x3 StreamDecoder::new w{chunk} r{read}")
+            }
+            PipeShape::Reader { read } => format!("mibz2 default 3x3 BzReader::parallel r{read}"),
+            PipeShape::Whole => "mibz2 default 3x3 decode_parallel".into(),
+            PipeShape::Levers {
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+            } => format!("mibz2 pipelined {teams}x{k} park+small s{slots} w{chunk} r{read}"),
+        }
+    }
+
+    /// The candidate's decode of a whole .bz2. Panics if the decoder built is not
+    /// pipelined: the candidate would not be testing the pipeline.
+    pub fn run(&self, data: &[u8]) -> PipeRun {
+        use mibz2::parallel::{with_plan, PIPELINED_LEVERS, PIPELINED_PLAN};
+        use std::io::Read;
+        let pushed = |dec: mibz2::StreamDecoder, chunk, read| {
+            assert!(dec.is_pipelined(), "{}: not pipelined", self.name());
+            let (out, res) = drive(&dec, data, chunk, read);
+            let counts = Some(dec.pipeline_counts());
+            PipeRun { out, res, counts }
+        };
+        match self.shape {
+            PipeShape::Push { chunk, read } => {
+                let dec = with_plan(PIPELINED_PLAN, || {
+                    mibz2::StreamDecoder::new(4, 16, Kernels::detect())
+                });
+                assert_eq!(dec.threads(), 9);
+                pushed(dec, chunk, read)
+            }
+            PipeShape::Levers {
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+            } => {
+                let dec = mibz2::StreamDecoder::pipelined_levers(
+                    teams,
+                    k,
+                    slots,
+                    Kernels::detect(),
+                    PIPELINED_LEVERS,
+                );
+                pushed(dec, chunk, read)
+            }
+            PipeShape::Reader { read } => {
+                let mut r = with_plan(PIPELINED_PLAN, || {
+                    mibz2::BzReader::parallel(std::io::Cursor::new(data.to_vec()), 10)
+                });
+                let mut out = Vec::new();
+                let mut buf = vec![0u8; read.max(1)];
+                let res = loop {
+                    match r.read(&mut buf) {
+                        Ok(0) => break Ok(()),
+                        Ok(n) => out.extend_from_slice(&buf[..n]),
+                        Err(e) => {
+                            break Err(e
+                                .get_ref()
+                                .and_then(|x| x.downcast_ref::<Error>())
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    Error::new(mibz2::ErrorKind::Io(e.kind(), e.to_string()))
+                                }))
+                        }
+                    }
+                };
+                PipeRun {
+                    out,
+                    res,
+                    counts: None,
+                }
+            }
+            PipeShape::Whole => {
+                match with_plan(PIPELINED_PLAN, || mibz2::decode_parallel(data, 10)) {
+                    Ok(out) => PipeRun {
+                        out,
+                        res: Ok(()),
+                        counts: None,
+                    },
+                    Err(e) => PipeRun {
+                        out: Vec::new(),
+                        res: Err(e),
+                        counts: None,
+                    },
+                }
+            }
+        }
+    }
+
+    /// Whether a run gives the bytes before its error (all but `Whole`)
+    pub fn partial(&self) -> bool {
+        !matches!(self.shape, PipeShape::Whole)
+    }
+}
+
+impl Candidate for Pipelined {
+    fn name(&self) -> String {
+        Pipelined::name(self)
+    }
+    fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
+        let r = self.run(data);
+        r.res.map(|()| r.out).map_err(|e| kind_name(&e))
+    }
+}
+
+/// An error's kind's name (`BlockCrc`, `Truncated`, ..)
+pub fn kind_name(e: &Error) -> String {
+    format!("{:?}", e.kind)
+        .split([' ', '{', '('])
+        .next()
+        .unwrap_or("")
+        .to_string()
+}
+
+/// The pipelined candidates the fuzz loop checks (examples/fuzz.rs): the shipped default
+/// (three pipelined teams of three, park and small) through each default entry point, at
+/// large and small write and read sizes, and one team of three with the same levers
+pub fn pipeline_candidates() -> Vec<Pipelined> {
+    let shapes = [
+        PipeShape::Push {
+            chunk: 1 << 20,
+            read: 1 << 16,
+        },
+        PipeShape::Push {
+            chunk: 997,
+            read: 509,
+        },
+        PipeShape::Reader { read: 4093 },
+        PipeShape::Whole,
+        PipeShape::Levers {
+            teams: 1,
+            k: 3,
+            slots: 4,
+            chunk: 100_003,
+            read: 1 << 16,
+        },
+    ];
+    shapes
+        .into_iter()
+        .map(|shape| Pipelined { shape })
+        .collect()
+}
+
+/// Multi-block inputs for the pipeline (a team engages only on a block of `MIN_COOP` rows
+/// or more, and overlaps only with another block queued): full blocks at levels 3 to 9,
+/// small blocks (levels 1 and 2) among full ones, several streams, an empty stream among
+/// them, and crafted streams alternating full and small blocks. Each with its blocks'
+/// start bits (`block_starts`), where the fuzz loop aims some of its edits.
+pub fn pipeline_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
+    let corp = corpora(1);
+    let text = &corp[0].1;
+    let mut v: Vec<(String, Vec<u8>)> = vec![
+        ("text level 9".into(), compress(&text[..2_700_000], 9)),
+        ("text level 5".into(), compress(&text[..1_600_000], 5)),
+        ("random level 3".into(), compress(&rng.bytes(1_300_000), 3)),
+        (
+            "records level 4".into(),
+            compress(&corp[5].1[..1_700_000], 4),
+        ),
+        ("runs level 9".into(), compress(&corp[4].1[..2_500_000], 9)),
+        ("abab level 6".into(), compress(&b"ab".repeat(900_000), 6)),
+        ("text level 1".into(), compress(&text[..600_000], 1)),
+    ];
+    let mut multi = Vec::new();
+    for (i, level) in [9, 1, 9, 2, 1, 9].into_iter().enumerate() {
+        let part = &text[i * 300_001..i * 300_001 + 250_000 + i * 97_003];
+        multi.extend(compress(part, level));
+    }
+    multi.extend(compress(b"", 9));
+    multi.extend(compress(&rng.bytes(400_000), 3));
+    v.push(("streams of levels 9, 1, 2, empty, 3".into(), multi));
+    let col = |n: usize, seed: u64| -> Vec<u8> {
+        let mut r = Rng(seed);
+        (0..n).map(|_| b"abcdefgh"[r.below(8) as usize]).collect()
+    };
+    let mut specs = Vec::new();
+    for i in 0..3u64 {
+        specs.push(Spec::of(col(300_000, 40 + i), 1_234));
+        specs.push(Spec::of(col(2_000, 50 + i), 99));
+    }
+    specs.push(Spec::of(col(300_000, 60), 1_234));
+    v.push((
+        "crafted full and small alternating".into(),
+        craft(9, &specs, None),
+    ));
+    v
 }
 
 /// A candidate's decode, a panic caught and reported as one

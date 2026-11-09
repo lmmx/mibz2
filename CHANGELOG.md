@@ -70,7 +70,8 @@ and `pipelined-default/20261107T105448Z`.
   - small is 4.3% faster: 1.043 [1.020, 1.066];
   - both: 1.038 [1.021, 1.055] faster, 1.032 [1.018, 1.046] less CPU.
 - **The pipeline alone (`team-pipeline/20261107T042622Z`):** 1.042 [1.016, 1.068] faster
-  than the plain teams at 3 × 3, for 0.918 [0.895, 0.942] of their CPU.
+  than the plain teams at 3 × 3, at a CPU ratio of 0.918 [0.895, 0.942]. That ratio is the
+  plain teams' CPU over the pipeline's, so the pipeline spends about 8.9% more CPU (6.2–11.7%).
   - The levers' run reproduced it at 1.033 [1.017, 1.049].
 
 **On CI:** CI's 4-CPU runners have 2 physical cores, so neither build takes the 3 × 3 plan
@@ -89,7 +90,9 @@ there. CI's paired bench is therefore only the no-regression check of every othe
 **Known issue, measured after release (8 November 2026, `plan-levels/20261108T094232Z`):** on
 the ten-core topology, at 10 and 20 threads, 0.2.6's default is slower than 0.2.4's on files
 compressed at bzip2 levels 1 and 2:
-- 0.763 (0.752–0.775) at level 1, and 0.776 (0.759–0.794) at level 2, both at 10 threads;
+- 0.763 (0.752–0.775) at level 1, and 0.776 (0.759–0.794) at level 2, both at 10 threads.
+  These are speed ratios (0.2.4's wall over 0.2.6's): about 23% lower throughput, so such a
+  file takes about 31% (level 1) and 29% (level 2) longer to decode;
 - forced to 4 × 2, 0.2.6 matches 0.2.4 (1.007–1.009), so all of the loss is the plan;
 - at level 3, the default is 1.047 (1.015–1.081) against 0.2.4.
 

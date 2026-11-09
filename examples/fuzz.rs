@@ -7,7 +7,16 @@
 //! (a randomised block, an oversubscribed code past its alphabet), the case is counted by
 //! its error.
 //!
-//! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure]
+//! The pipeline cases (tests/common's `pipeline_candidates`: the shipped default, three
+//! pipelined teams of three with park and small, forced through each default entry point,
+//! and one such team): multi-block inputs (`pipeline_corpus`), some edits aimed at a later
+//! block's header and tables or the stream's end, and some left valid. Each is held to the
+//! plain parallel decoder exactly (the bytes before any error, and the error's kind, block
+//! and bit) as well as to libbzip2, and counted as reaching the pipeline when a leader took
+//! a job while its helpers inverted another block (`pipeline_counts`).
+//!
+//! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
+//! MODE: mixed (the default: every 8th case a pipeline case), classic, or pipeline
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -20,7 +29,14 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let secs: u64 = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(60);
     let seed: u64 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
-    let out_dir = args.get(3).cloned();
+    let out_dir = args.get(3).cloned().filter(|d| d != "-");
+    let mode = args.get(4).map_or("mixed", |s| s.as_str());
+    let every = match mode {
+        "mixed" => 8,
+        "classic" => 0,
+        "pipeline" => 1,
+        m => panic!("MODE is mixed, classic or pipeline, not {m}"),
+    };
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 
     let mut corpus: Vec<Vec<u8>> = Vec::new();
@@ -47,15 +63,44 @@ fn main() {
         }
     }
     let cands = candidates();
+    let pipes = pipeline_candidates();
+    let pipe_corpus: Vec<(Vec<u8>, Vec<u64>)> = if every == 0 {
+        Vec::new()
+    } else {
+        pipeline_corpus(&mut rng)
+            .into_iter()
+            .map(|(_, z)| {
+                let starts = block_starts(&z);
+                (z, starts)
+            })
+            .collect()
+    };
+    let mut pipe_stats = vec![PipeStats::default(); pipes.len()];
     let deadline = Instant::now() + Duration::from_secs(secs);
     let (mut cases, mut bad) = (0u64, 0u64);
     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
     while Instant::now() < deadline {
+        if every != 0 && (cases + 1) % every == 0 {
+            cases += 1;
+            let i = (cases / every) as usize % pipes.len();
+            let outcome = pipeline_case(
+                &pipes[i],
+                &mut pipe_stats[i],
+                &pipe_corpus,
+                &corpus,
+                &mut rng,
+                &out_dir,
+                cases,
+                &mut bad,
+            );
+            *outcomes.entry(format!("pipeline: {outcome}")).or_default() += 1;
+            continue;
+        }
         let base = &corpus[rng.below(corpus.len() as u64) as usize];
         let mut t = base.clone();
         let edits = 1 + rng.below(4);
         for _ in 0..edits {
-            mutate(&mut t, &corpus, &mut rng);
+            mutate(&mut t, &corpus, &mut rng, &near_start);
         }
         cases += 1;
         let want = oracle(&t);
@@ -101,26 +146,159 @@ fn main() {
         };
         *outcomes.entry(outcome).or_default() += 1;
     }
-    println!("{cases} cases in {secs} s (seed {seed}), {bad} failures");
+    println!("{cases} cases in {secs} s (seed {seed}, mode {mode}), {bad} failures");
     for (o, n) in &outcomes {
         println!("{n:>9}  {o}");
+    }
+    if every != 0 {
+        println!(
+            "pipeline cases: candidate, cases, cases reaching the pipeline (a job taken \
+             overlapped) of those countable, cases with an overlapped job's error, \
+             overlapped jobs in all"
+        );
+        for (p, st) in pipes.iter().zip(&pipe_stats) {
+            let reach = if st.countable == 0 {
+                "not countable (the decoder is not in reach; the constructor is the counted one's)"
+                    .to_string()
+            } else {
+                format!(
+                    "{} of {} reached, {} with an overlapped error, {} overlapped jobs",
+                    st.reached, st.countable, st.overlap_error_cases, st.overlapped_jobs
+                )
+            };
+            println!("{:>9}  {}: {reach}", st.cases, p.name());
+        }
     }
     std::process::exit(if bad == 0 { 0 } else { 1 });
 }
 
-fn mutate(t: &mut Vec<u8>, corpus: &[Vec<u8>], rng: &mut Rng) {
+/// A pipelined candidate's counts over the run
+#[derive(Clone, Default)]
+struct PipeStats {
+    cases: u64,
+    countable: u64,
+    reached: u64,
+    overlap_error_cases: u64,
+    overlapped_jobs: u64,
+}
+
+/// One pipeline case: a multi-block input, edited (or not), decoded by `p`, by the plain
+/// parallel decoder and by libbzip2; the outcome's class
+#[allow(clippy::too_many_arguments)]
+fn pipeline_case(
+    p: &Pipelined,
+    st: &mut PipeStats,
+    pipe_corpus: &[(Vec<u8>, Vec<u64>)],
+    corpus: &[Vec<u8>],
+    rng: &mut Rng,
+    out_dir: &Option<String>,
+    case: u64,
+    bad: &mut u64,
+) -> String {
+    let (base, starts) = &pipe_corpus[rng.below(pipe_corpus.len() as u64) as usize];
+    let mut t = base.clone();
+    // (one case in eight valid; else one or two edits, aimed at a block's start (its
+    // header, tables and first symbols: a block after the first where there is one, so
+    // that the blocks before it are in flight), at the stream's end, or anywhere)
+    let later = if starts.len() > 1 {
+        &starts[1..]
+    } else {
+        &starts[..]
+    };
+    let edits = if rng.below(8) == 0 {
+        0
+    } else {
+        1 + rng.below(2)
+    };
+    let pick = |rng: &mut Rng, n: usize| match rng.below(3) {
+        0 if !later.is_empty() => {
+            let s = later[rng.below(later.len() as u64) as usize] / 8;
+            (s as usize + rng.below(120) as usize).min(n - 1)
+        }
+        1 => n - 1 - (rng.below(16) as usize).min(n - 1),
+        _ => rng.below(n as u64) as usize,
+    };
+    for _ in 0..edits {
+        mutate(&mut t, corpus, rng, &pick);
+    }
+    st.cases += 1;
+    let want = oracle(&t);
+    let (plain_out, plain_res) = plain_parallel(&t);
+    let got = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| p.run(&t))) {
+        Ok(r) => r,
+        Err(_) => {
+            *bad += 1;
+            report(out_dir, &t, case, &format!("{}: panic", p.name()));
+            return "PANIC".into();
+        }
+    };
+    if let Some((jobs, errs)) = got.counts {
+        st.countable += 1;
+        st.reached += (jobs > 0) as u64;
+        st.overlap_error_cases += (errs > 0) as u64;
+        st.overlapped_jobs += jobs;
+    }
+    let same_as_plain =
+        got.res == plain_res && (got.out == plain_out || (!p.partial() && got.res.is_err()));
+    if !same_as_plain {
+        *bad += 1;
+        report(
+            out_dir,
+            &t,
+            case,
+            &format!(
+                "{}: not the plain decoder's: {:?} after {} bytes, the plain {:?} after {}",
+                p.name(),
+                got.res,
+                got.out.len(),
+                plain_res,
+                plain_out.len()
+            ),
+        );
+        return "NOT THE PLAIN DECODER'S BYTES OR ERROR".into();
+    }
+    match (&want, &got.res) {
+        (Ok(a), Ok(())) if *a == got.out => "both decode, same bytes".into(),
+        (Ok(_), Ok(())) => {
+            *bad += 1;
+            report(out_dir, &t, case, &format!("{}: different bytes", p.name()));
+            "DIFFERENT BYTES".into()
+        }
+        (Err(_), Ok(())) => {
+            *bad += 1;
+            let why = format!("{}: libbzip2 fails, this decodes", p.name());
+            report(out_dir, &t, case, &why);
+            "LIBBZIP2 FAILS, THIS DECODES".into()
+        }
+        (Err(_), Err(e)) => format!("both fail ({}), as the plain decoder", kind_name(e)),
+        (Ok(_), Err(e)) => format!(
+            "libbzip2 decodes, this refuses ({}), as the plain decoder",
+            kind_name(e)
+        ),
+    }
+}
+
+/// An edit's position in n bytes: mostly near the start (the headers and tables, where the
+/// checks are)
+fn near_start(rng: &mut Rng, n: usize) -> usize {
+    if rng.below(2) == 0 {
+        rng.below(n.min(400) as u64) as usize
+    } else {
+        rng.below(n as u64) as usize
+    }
+}
+
+/// One edit of `t`, at positions `pos` picks (of `t.len()`, at least 1)
+fn mutate(
+    t: &mut Vec<u8>,
+    corpus: &[Vec<u8>],
+    rng: &mut Rng,
+    pos: &dyn Fn(&mut Rng, usize) -> usize,
+) {
     if t.is_empty() {
         t.push(rng.next() as u8);
         return;
     }
-    // (mostly near the start: the headers and tables, where the checks are)
-    let pos = |rng: &mut Rng, n: usize| {
-        if rng.below(2) == 0 {
-            rng.below(n.min(400) as u64) as usize
-        } else {
-            rng.below(n as u64) as usize
-        }
-    };
     match rng.below(8) {
         0..=2 => {
             let i = pos(rng, t.len());

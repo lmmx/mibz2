@@ -1,0 +1,104 @@
+M12.patch applied unchanged with git apply: 1130:                for b in held.into_iter().flatten().take(0) {
+base: 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba + the working tree's src/ change
+src/parallel.rs sha256 0ff4914e59050036, unwind_tests.rs sha256 bb74157037d816bf
+date: 2026-11-09T02:39:05Z
+cmd: RUST_BACKTRACE=0 cargo test -j2 --lib unwind_tests
+
+   Compiling mibz2 v0.2.6 (<scratch>/wt-m12)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.45s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 8 tests
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks has been running for over 60 seconds
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks has been running for over 60 seconds
+test parallel::unwind_tests::a_run_panic_retires_the_current_block has been running for over 60 seconds
+test parallel::unwind_tests::miri_run_panic_current has been running for over 60 seconds
+test parallel::unwind_tests::miri_run_panic_current ... FAILED
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks ... FAILED
+test parallel::unwind_tests::a_run_panic_retires_the_current_block ... FAILED
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks ... FAILED
+test parallel::unwind_tests::the_tiny_blocks ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior has been running for over 60 seconds
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... FAILED
+test parallel::unwind_tests::miri_run_panic_current_and_next has been running for over 60 seconds
+test parallel::unwind_tests::miri_run_panic_current_and_next ... FAILED
+test parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic has been running for over 60 seconds
+test parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic ... FAILED
+
+failures:
+
+---- parallel::unwind_tests::miri_run_panic_current stdout ----
+
+thread 'mibz2-0' (10489) panicked at src/parallel.rs:810:9:
+injected at block 3, LeadEnd
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'parallel::unwind_tests::miri_run_panic_current' (10488) panicked at src/parallel/unwind_tests.rs:206:13:
+tiny, current: watchdog: the reader is stuck at place 3, with places [] ready
+
+---- parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks stdout ----
+
+thread 'mibz2-0' (10493) panicked at src/parallel.rs:810:9:
+injected at block 2, LeadStart
+
+thread 'parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks' (10485) panicked at src/parallel/unwind_tests.rs:221:13:
+current + held prior, k 2: watchdog: 3 of 4 blocks published, places [0, 1, 3]
+
+---- parallel::unwind_tests::a_run_panic_retires_the_current_block stdout ----
+
+thread 'mibz2-0' (10497) panicked at src/parallel.rs:810:9:
+injected at block 3, LeadEnd
+
+thread 'parallel::unwind_tests::a_run_panic_retires_the_current_block' (10487) panicked at src/parallel/unwind_tests.rs:206:13:
+current, k 2: watchdog: the reader is stuck at place 3, with places [] ready
+
+---- parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks stdout ----
+
+thread 'mibz2-0' (10499) panicked at src/parallel.rs:810:9:
+injected at block 1, LeadEnd
+
+thread 'parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks' (10486) panicked at src/parallel/unwind_tests.rs:206:13:
+current + next, k 2: watchdog: the reader is stuck at place 1, with places [3] ready
+
+---- parallel::unwind_tests::miri_run_panic_current_and_held_prior stdout ----
+
+thread 'mibz2-0' (16342) panicked at src/parallel.rs:810:9:
+injected at block 2, LeadStart
+
+thread 'parallel::unwind_tests::miri_run_panic_current_and_held_prior' (16341) panicked at src/parallel/unwind_tests.rs:221:13:
+tiny, current + held prior: watchdog: 3 of 4 blocks published, places [0, 1, 3]
+
+---- parallel::unwind_tests::miri_run_panic_current_and_next stdout ----
+
+thread 'mibz2-0' (16347) panicked at src/parallel.rs:810:9:
+injected at block 1, LeadEnd
+
+thread 'parallel::unwind_tests::miri_run_panic_current_and_next' (16346) panicked at src/parallel/unwind_tests.rs:206:13:
+tiny, current + next: watchdog: the reader is stuck at place 1, with places [3] ready
+
+---- parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic stdout ----
+
+thread 'mibz2-2' (16355) panicked at src/parallel.rs:810:9:
+injected at block 2, LeadStart
+
+thread 'parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic' (16351) panicked at src/parallel/unwind_tests.rs:206:13:
+default 3x3, (2, LeadStart): watchdog: the reader is stuck at place 2, with places [3, 4, 5] ready
+
+
+failures:
+    parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks
+    parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks
+    parallel::unwind_tests::a_run_panic_retires_the_current_block
+    parallel::unwind_tests::miri_run_panic_current
+    parallel::unwind_tests::miri_run_panic_current_and_held_prior
+    parallel::unwind_tests::miri_run_panic_current_and_next
+    parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic
+
+test result: FAILED. 1 passed; 7 failed; 0 ignored; 0 measured; 50 filtered out; finished in 120.23s
+
+error: test failed, to rerun pass `--lib`
+
+real	2m6.708s
+user	0m12.640s
+sys	0m1.413s
+rc=101

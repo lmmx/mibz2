@@ -43,6 +43,31 @@ jobs:
       - name: The benchmark alternatives' lock
         run: cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null
 
+  # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
+  # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
+  # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
+  # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
+  # A failure's inputs are uploaded.
+  fuzz-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --profile fuzz --example fuzz
+      - name: Classic candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
+      - name: Pipeline candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      - name: The failing inputs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-failures
+          path: fuzz-failures/
+          if-no-files-found: ignore
+
   # bench/submit.sh, the workstation evidence submission (RULES C5), against a scratch
   # repository and a stand-in for gh: archived once, posted once, retried without a rerun
   submit:
