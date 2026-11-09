@@ -3207,3 +3207,90 @@ I inspected the amended C6 at **cc84bd5a7a2b9ccf7a77c453f64b7af72b036baf**. It d
 Expected: a general route for real target gains that CI cannot exercise. Found: that route is coherent, but the draft leaves measurable tolerances, claim family, class extrapolation and fresh-evidence scope underspecified. Next useful work is the exact policy/registration contract, not a repeat of #302 to manufacture PASS. Existing technical closures remain closed.
 
 Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **5afaeab9bb66d1cb8706eff4a0214942c1d0286b**. Pinned coord.py blob 5b2c37db1f1e3c75886c3e0ef6be3cee588dda2d matched locally; audit found five resolved historical findings, zero unresolved; REVIEW routes to #145. No timing or raw-bundle replay performed; this is a policy review. Persistent task unchanged.
+
+
+## D072 — #309 target-gated policy text: REVISE with bounded, exact repairs
+
+**REVISE**, at **c40c8b46b99b8216ed102ff2ed3c4658e4d7edf0**, docs/STEWARDSHIP.md blob **220f2360c6e554cae531a0f1087fb8a82901e82c**. Advisory substantive ruling under SPEC.GUARDIAN; the existing adoption restriction remains. No policy enactment, G3 relaxation of a registered result, production qualification or line STOP.
+
+Request [6750546526](https://github.com/lmmx/mibz2/pull/161#issuecomment-6750546526), observed **2026-11-09T20:25:59Z**. PR #309 is a one-file, 44-line docs insertion on **97eb8edf51c558a7f74da595c152ab75288f531e**. Authority remains **a4f97714cc14366984015869d9d094d89488ac57**. [Evidence](records/d072/evidence.json).
+
+The draft closes real D071 objections: predicate and rationale frozen; unknown facts fall back; equal plans no longer imply zero cost; CI wall/CPU directions explicit; GAIN now lower >1.02; NOT SHOWN does not pass; old data excluded; attempts retained. Those points stand. Remaining repairs follow; they are corrections to the proposed policy, not retrospective gates on #302.
+
+### 1. Coverage: replace condition 5
+
+The first disjunct is insufficient. If the measured machine has facts F, restricting the predicate to F still selects every unmeasured machine sharing F. With one qualifying machine, “facts every qualifying machine shares” is nearly vacuous. Two model names are a sample-size floor, not a proof of class coverage. Neither branch currently requires the same extrapolation argument.
+
+**Replace condition 5 with:**
+
+> **Coverage and adoption reach.** Before qualification data, the registration defines the deployment class, the complete required machine × workload × enabled-budget matrix, and the measured facts on which its selection depends. Every required cell must qualify. For every unmeasured part of that deployment class, it states the mechanism-based grounds for extrapolation, the material differences not covered and the residual risk accepted by the authorised adoption decision. The coverage requirement and extrapolation are reviewed before the qualification run. A narrowed predicate qualifies only to the extent its resulting class is covered by this argument; shared facts alone do not establish coverage. Where the multi-model route is used, at least two distinct models are required, but model count alone is insufficient. If coverage cannot be justified, narrow deployment or obtain the missing evidence. Release notes disclose measured scope and extrapolation separately.
+
+This retains the proposed multi-model floor without treating it as scientific sufficiency, and permits justified narrow deployment without demanding every physical machine be tested. Candidate-specific coverage cannot be decided by release notes after a favourable result.
+
+### 2. Target inference: replace condition 3's interval sentences
+
+“Two-sided 95%,” “one-sided 95%,” and then unspecified Bonferroni are not an executable rule. Is the family wall only, CPU only, both, multiple corpora or machines? One budget still has two metrics. Freeze that definition now; do not leave the confidence level selectable by a later registration.
+
+**After condition 3's first two sentences, use:**
+
+> Every cell in the complete registered on-target machine × workload × enabled-budget matrix must pass both tests: wall speed (base/head) lower bound >1.02 and CPU time (head/base) upper bound ≤1.02. Let N be the number of required cells and K=2N the number of intervals. Use a two-sided wall interval of confidence 1−0.05/K and a one-sided CPU upper bound of confidence 1−0.05/K for each cell. These K intervals form one Bonferroni family with coverage at least 95%, assuming each constituent interval has its stated coverage. Missing, invalid or nonpassing cells fail qualification; no cell may be selected or removed after its results.
+
+This is a concrete conservative implementation of the draft's Bonferroni choice, not the only valid method. If a different method is wanted, specify it as an explicit prospective alternative. No Bonferroni is needed merely for an all-pass acceptance test; the draft chose the stronger simultaneous-interval promise. Do not claim independent metric families jointly have 95% coverage unless their error budget actually supports that claim. Conditions 2/3/4 may retain their separate stated inferential claims; they must not be advertised as one simultaneous 95% interval family across the whole policy.
+
+### 3. CI cells, fallback family and estimator: targeted replacements
+
+Condition 2's “table the registration names” can omit a losing CI cell. The quantifier must cover the standing grid, not an arbitrary named subset.
+
+**Replace that phrase and its parenthesis with:**
+
+> every cell of the standing CI end-to-end bench at the pinned bench revision (runner configuration × corpus × thread count × wall and CPU time), enumerated completely in the registration
+
+**Append to condition 2:**
+
+> Any omission or change to that standing grid is a separate prospective bench-policy decision, not an exclusion available within this route. Ratios are head/base times under the registered paired geometric-mean estimator. Passing supplies a confidence-based noninferiority conclusion on these cells, not a deterministic bound on every machine or run.
+
+The intersection-union statement remains correct for valid fixed-cell tests: when any required cell is truly outside the margin, passing all entails a false pass on that cell. No additional CI Bonferroni requirement is imposed.
+
+**Replace condition 4's Bonferroni phrase with:**
+
+> Bonferroni over all required fallback machine × workload × budget wall-time contrasts: with M such contrasts, each one-sided upper bound has confidence 1−0.05/M. The registration fixes a nonempty set covering the relevant predicate transitions and gives the rationale for any untested fallback budgets.
+
+This makes the existing wall-only fallback family explicit; it does not silently impose a new CPU margin there. Condition 7's protection for other figures still applies. Its unacceptable-regression criteria, including relevant CPU/RSS reporting and disposition, must be fixed before qualification data rather than chosen afterwards.
+
+**Add to condition 6:**
+
+> Freeze the candidate and master baseline commits, public entry point, toolchain and measured inputs, pair construction and geometric-mean estimand, interval calculation, complete matrices, sample size and stopping rule, exclusions, and invalid-run disposition before any qualifying observations, including CI. A changed measured candidate or baseline requires fresh evidence under a prospectively justified registration. An invalid attempt is retained and never an implicit licence to retry. Later registrations cannot reset the no-retry-to-pass rule.
+
+“One attempt” alone does not specify how many pairs are collected or how a confidence interval is calculated. Registration can contain those details; the policy must require them.
+
+### 4. Name the tolerance without promising certainty; record its rationale
+
+**Replace the opening “it accepts a bounded slowdown off target (at most 2%)” with:**
+
+> it accepts an off-target noninferiority margin of 2%, assessed by the confidence bounds below, in exchange for on-target superiority under this route
+
+The present sentence overclaims certainty and reach. A passing bound remains statistical evidence limited to its registered estimand and cells. It is not a guarantee that every run or untested machine slows by at most 2%.
+
+D071 also requested a reason for 2%, not merely its repetition. **Add to the enactment decision record:**
+
+> The authorised decision states why the 2% tolerance is acceptable for the defined deployment scope and how accumulated regressions against successive master baselines will be assessed. A 2% margin against each immediate parent is not a lifetime 2% bound.
+
+For example, ten genuine 1% slowdowns compound to 1.01^10 ≈1.1046. That arithmetic does not mandate a particular rolling-anchor rule or new numerical budget; it demonstrates the tradeoff the policy owner must explicitly address. Do not invent a fleet gain by subtracting target benefit from unweighted off-target cost.
+
+### 5. Scope and authority: preserve prospectivity, reconcile the document
+
+The forward-only scope is substantively correct. Tighten it to “registrations frozen after the authorised effective commit, citing it, and before any of their qualification observations.” Old data may inform design but cannot qualify. #302's existing result and 12/16 NOT SHOWN verdicts stay unchanged; no new run is authorised here.
+
+The PR still contains “CI's end-to-end bench decides the merge” and a maintainer-reserved design/acceptance bullet. The former needs this exact clarification:
+
+> End-to-end evidence under the applicable acceptance route above decides the merge, not the instruction count alone. The target-gated route requires both its CI and workstation conditions.
+
+When the amended C6 authority is authenticated, replace the stale reserved-bench bullet with:
+
+> Bench design, standing acceptance and adoption policy follow RULES C6 and its review, recording and prospective-application safeguards. Relaxing an already registered rule remains governed by RULES C2 and D.
+
+Do not enact that replacement under my current old pin. I can review its substance now, as D071 established. A re-pin alone does not approve this text, supply the tolerance rationale or resolve these remaining defects; the final reviewed decision record and channel log are still required under the amended C6 evidence inspected at cc84bd5a7a2b9ccf7a77c453f64b7af72b036baf.
+
+Expected: executable prospective acceptance text. Found: substantial correction, with a coverage loophole and underspecified inference/selection contract still material. Next action: the bounded textual replacements above and the explicit tolerance rationale. No reopening of D069's technical closures; no request for timing to settle a wording problem.
+
+Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **366b2164dad996ecd2cd4c107656019142a65fca**. Pinned coordination audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No build, timing, bundle replay, merge or task reconfiguration.
