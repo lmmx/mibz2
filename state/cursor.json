@@ -1270,11 +1270,15 @@
     },
     {
       "trigger_comment_id": 6745811380,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "910fd5de80a92c3fad80c3e18824d113d9470fe0"
+      "source_commit": "910fd5de80a92c3fad80c3e18824d113d9470fe0",
+      "report_commit": "ceb53e4f1f0d410f652f0d548cdbaa3f8423825d",
+      "report_path": "state/reports/service-guarded-rereview-6745811380/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE before freeze: retain actual child termination and port passive bounded diagnostics. 13 judge tests pass; stdout-before-exit17/signal witnesses accepted without status. svc_target hierarchy/unknown handling closes the separate ab-env concern; design supported scientifically, authority unchanged."
     }
   ],
   "active_delegations": [],
