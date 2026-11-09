@@ -1,0 +1,28 @@
+{
+  "inbox_comment_id": 6729486092,
+  "queued_comment_id": 6729427506,
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source_pin": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
+  "master_source_snapshot": "31e6a0c5e1e68db64555ee9c630dc679c3ca8d18",
+  "libsais_source_pin": "c284ba843dd16c159acb976f17bc19382793ea75",
+  "optimizer_report_commit": "e071cb7c981589c02f305f1de5c28ebfe2c7d6fc",
+  "prior_receipt_commit": "cf3a9541c7e8a7d7c63d21fae10d016f029a9f23",
+  "progress_commit": "be2513fed6e86a27fe7631a29c28b6c5e5a10e2e",
+  "migration_manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+  "previous_branch_head_checked": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+  "validation": "Finite mathematical identities only; no decoder implementation, timing, CI dispatch or native/safety qualification.",
+  "source_limitations": [
+    "Full Intel rev050 PDF retrieval failed; indexed primary excerpt used.",
+    "Prior timing and corpus counts read from pinned journals, not replayed.",
+    "No applicable parallel span theorem established from reviewed move-structure papers."
+  ],
+  "probe_stat_definition": {
+    "palette_exception_rows": "Rows whose high group differs from the directory-block leading high group; not whole flagged-block execution count."
+  },
+  "file_sha256": {
+    "report.md": "4bfc820d8ec45617db70d94e68de6e763c6b0c3ed798942e849d3b6030c791e5",
+    "probes.py": "ceb92e2514fafc1c0d5233c2689d1d3094274065e4c3f52a8b01ce3d2253c825",
+    "probes.json": "90185c018ea85cb8f859f17a5027b25b94c8e8f027576f8539dbcb1468bcb010",
+    "audit.json": "551d95ea48134e8c765962d8f361b5393201c2fc6dd7bee1d407e6890d9ea8f1"
+  }
+}

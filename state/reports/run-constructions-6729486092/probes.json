@@ -1,0 +1,15 @@
+{
+  "columns": 3359,
+  "rows": 108244,
+  "affine_pair_cells": 105161,
+  "palette_rows": 108244,
+  "palette_exception_rows": 53976,
+  "failures": 0,
+  "whole_exception_block_row_bound": 7936,
+  "post_boundary_only_row_bound": 7905,
+  "max_n_pointer_bits": 20,
+  "directory_bytes_at_900k": 3516,
+  "whole_block_exception_fraction_bound_at_900k": 0.008817777777777779,
+  "packed24_navigation_bytes_at_900k": 2704540,
+  "notes": "Formula checks only. No marker/scheduler, concurrency, unsafe-code, corpus or machine-code validation."
+}
