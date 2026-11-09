@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6732679972:** Guardian D057 lifted the scoped D045/D053 service-core safety HOLD after corrected trace attribution and completed pinned Miri. #271's independent admission HOLD remains; guarded integration does not inherit #258's unguarded performance result.
+
 - **2026-11-09, channel through 6732659255:** #270's class-A empty-block fuzz defect was repaired and D056 cleared the revised pin; its valid registered CI sweep produced the run-fed line's first attributed LEAD. Separated C29-only gain from direct-fill increment and unjudged leader-sort secondary; no workstation or production qualification. #278 feeder panic guard merged without clearing D053's service evidence hold. #277 remains Researcher REVISE and Guardian D055-held.
 
 - **2026-11-09, channel through 6732362367:** corrected #272's residual and comparator story without changing its Q1/Q2 verdicts; removed walk-only and no-builder-can-carry claims. D053 narrowed but retained the service safety hold for cross-case trace attribution and completed Miri. D054 lifted #270's scoped B5 hold, while exact-head CI fuzz-smoke failed and dispatch was withheld. #277 direct one-hop construction was built but Researcher REVISE remains on count evidence before freeze; B5/fuzz separate.
