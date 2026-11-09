@@ -184,17 +184,18 @@ mean of the 20 rounds' ratios, and its 95% interval is the uncertainty of that e
 one run. It is not the range of the individual rounds.
 
 With one service thread beside three teams of three, at a setting of ten, the decoder was much
-slower than the default. The trace showed why. The service thread was marked busy 96% of the time,
+slower than the default, on ten decoding threads to its nine. The trace showed why. The service thread was marked busy 96% of the time,
 finished blocks backed up behind it, and the teams waited for it. Moving the one-thread work onto
 one thread had made that thread the bottleneck. The model had put the work at 0.8 of a core, but
 in practice one thread couldn't keep up.
 
-The run's judged comparisons with the default:
+The run's judged comparisons with the default, each arm written as teams × team size + service
+threads:
 
-| arm (decoding threads, against 9) | setting | speed (95%) | CPU (95%) |
-| --- | ---: | ---: | ---: |
-| one service thread, 3 × 3 + 1 (10) | 10 | 0.799 (0.786–0.812) | 1.099 (1.079–1.118) |
-| two service threads, 3 × 3 + 2 (11) | 12 | 1.058 (1.035–1.081) | 0.901 (0.888–0.914) |
+| arm, at its setting | speed (95%) | CPU (95%) |
+| --- | ---: | ---: |
+| 3 × 3 + 1, at ten | 0.799 (0.786–0.812) | 1.099 (1.079–1.118) |
+| 3 × 3 + 2, at twelve | 1.058 (1.035–1.081) | 0.901 (0.888–0.914) |
 
 The second row is two service threads beside three teams of three, at a setting of twelve. It was
 5.8% faster than the default, but spent 11% more processor time and 8 MB more peak memory, on
