@@ -2,8 +2,9 @@
 
 **Status: CI's run VALID (JUDGED), an attributed LEAD** (`03e52206`, run 42564217298,
 `2026-11-09-run-fed-leader-result.md`). **The workstation run (§8) is NOT FROZEN.**
-Revised four times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
-CI's fuzz-smoke; §R4, the workstation run made freeze-ready.
+Revised five times: §R1, the reviews of `f94551ab`; §R2, D049; §R3, an empty block, from
+CI's fuzz-smoke; §R4, the workstation run made freeze-ready; §R5, the plan read from the
+decoders' own record (D059).
 The coordinator froze it at `ff6c2f74` (6730600503). That freeze supersedes the draft
 headings below, which are kept as history. The Guardian's D049 then held the timing
 dispatch at that head (a B6 boundary defect, B5's reached fuzz evidence, and the copied
@@ -474,7 +475,9 @@ an error of the admission itself is INVALID):
   - a hash and positive output, each equal to the incumbent's in its round, and the
     incumbent's one value throughout;
   - finite positive wall and CPU, and the corpus `wikidata`;
-  - the plan (3, 0, 6);
+  - the plan (3, 0, 6), read from the decoders' own record of the threads they ran
+    (`ran_threads`, §R5), not from the census's polling, which is kept, required present,
+    and reported, never judged;
   - for the run-fed arms, every registered phase once, as non-negative integers, with
     consistent counts, no fallback, and the controls with no records;
   - then threads 10 only, rounds 0–19, each arm once a round, in ab's rotation, and
@@ -865,7 +868,8 @@ The CI reporter's 24 tests still pass.
 2. **INVALID, rightly, on a corpus of mixed text** (`dry-run/refused-census/`):
    - no team block by records: the corpus's blocks fail the records' rule;
    - one record's thread census caught a pool helper before it named itself. ab saw
-     `mibz2-1` twice and one `mibz2-coop-p2` fewer, so the plan read (4, 0, 5). A thread
+     `mibz2-1` twice and one `mibz2-coop-p2` fewer, so the plan read (4, 0, 5) (§R5 repairs
+     this: the plan is now read from the decoders' own record). A thread
      carries its parent's name until it names itself. On a 20 ms decode the census can land
      in that window. On the registered corpus's multi-second decodes it is far less likely,
      and CI's 210 records never showed it. But if the workstation run shows it, the run is
@@ -903,6 +907,100 @@ The CI reporter's 24 tests still pass.
 2. Review, and then the queue entry.
 
 Not done here: no queue entry, no tag, no dispatch.
+
+## R5. Revision, 2026-11-09: the plan read from the decoders' own record (the Guardian's D059)
+
+D059 (6733239555; `state/decisions.md` at `57ea33e3`) accepts §R4's source changes (the
+`arrive`/`wait` split, `invert`'s place) with no new B5 HOLD. CI's reached fuzz at
+`e1765d09` (job 129000380243) gave 724 cases, 0 failures and 0 rebuilds. D059 reproduced
+§R4's census counterexample and recommended repairing it before the freeze. A false
+INVALID would cost Louis's one C5 run.
+
+**The defect.** ab's census polls `/proc/<pid>/task/*/comm` from outside every 5 ms, and
+the latest name wins. A Linux thread starts with its spawner's `comm` and names itself
+only once it runs. So a pool helper polled only in that instant reads under its leader's
+name. A pool that lives and dies between two polls is not seen at all.
+
+**Why neither suggested repair would be complete by construction:**
+- *Naming at spawn:* the only way to give a thread its name at birth is for the spawner,
+  the leader, to rename itself around the clone. That moves the race onto the leader.
+- *A readiness barrier:* a barrier holding the spawner until each helper has named itself
+  doesn't stop a poll from landing in the birth window, with the helper gone before the
+  next poll.
+
+No unprivileged external observer sees a thread's birth.
+
+**The repair: the decoders record themselves** (`src/threads.rs`, `mibz2::threads`):
+- each worker, as it starts, and each team helper, when it first runs a task, records its
+  own name (`std::thread::Builder`'s, never the inherited one);
+- a helper that exits before any task, or never exists, is not recorded, so it is truly
+  absent;
+- recording is off unless a harness turns it on. Off, it costs each decoder thread one
+  relaxed load, once. On, it costs one lock and push a thread, once: at a worker's start,
+  and at the end of a helper's first task;
+- ab's child turns it on before its decode, and reads it after its timing, as
+  `ran_threads` (bench 3.3.0, minor: a new field beside the census's `observed_threads`,
+  which is unchanged);
+- the workstation admission requires the plan (3, 0, 6) from `ran_threads`. The census
+  stays required present and its misreads are reported, never judged. Nothing is inferred
+  or waived: a plan the decoders didn't run still reads INVALID. The CI reporter is
+  unchanged.
+
+**What changed in `src/`, for the Guardian:**
+- `src/threads.rs` (new): the record, `record(on)`, `take()` and the crate-private `ran()`;
+- `src/lib.rs`: `pub mod threads`, doc-hidden;
+- `src/coop.rs`:
+  - `helper` (the pool's thread loop, the shipped teams' and the run-fed teams'): a local
+    `ran` flag, and `crate::threads::ran()` once, after its first task, before its `done`
+    count;
+  - `Pool::named` made `pub(crate)`, for the record's test;
+- `src/parallel.rs` (`launch`): each worker calls `threads::ran()` once before `work`.
+
+These touch the timed paths of every arm alike: the incumbent's, the shipped worker's and
+the run-fed teams'. Off, the cost is one relaxed load a thread, once. In ab's children,
+where recording is on, it is one uncontended lock and push a thread per decode: 3 workers
+and 6 helpers. That is nothing a decode's milliseconds can see, but it is a change to code
+the arms run, so it is stated here.
+
+**The fixtures** (`bench/test_run_fed_leader_ws.py`, now 16, all pass):
+- a census misread (D059's (4, 0, 5), three records) with the record (3, 0, 6) is VALID,
+  the misreads reported;
+- a delayed or inherited name in the record (a helper under `mibz2-1`), read (4, 0, 5):
+  INVALID;
+- an early exit, a team's helpers gone before their first task, read (3, 0, 4): INVALID;
+- an absent helper, read (3, 0, 5): INVALID;
+- no `ran_threads` (an older harness): INVALID, never taken from the census;
+- the census itself absent: INVALID;
+- the earlier plan fixture, a record of one team (1, 0, 2): INVALID.
+
+The Rust test `threads::tests::helpers_record_their_own_names_once_they_ran`: nothing is
+recorded while off; a pool dropped before any task records none of its helpers; a pool
+that ran twice records each helper once, under its own name.
+
+**The repeat run** (`census/`; the 20 ms corpus of §R4's census counterexample,
+regenerated by the same seeded generator, SHA-256 `05079dc8…`): `ab run` of the seven arms
+at 10 threads, 50 rounds, 350 records, wall median 24.7 ms. Results:
+- the census read (3, 0, 6) 343 times, (3, 0, 4) 6 times (a pool's helpers never polled at
+  all) and (5, 0, 4) once;
+- the decoders' record read (3, 0, 6) in **all 350**;
+- every exit 0 and every error empty.
+
+The old race no longer gives a false plan.
+
+**The checks at `a5a9f048`:**
+- `cargo test`: the library 91 passed, 2 ignored, every integration and doc suite passed;
+- the run-fed CI steps: `run_team` 29 with the census ignored, `run_fed_leader` 10, `ab` 4;
+- `run_team`, `parallel::unwind_tests`, `coop` and `threads`: 58 passed;
+- both Python suites (16 and 24): OK;
+- clippy (default and all features) and fmt: clean.
+
+**A DRY bundle** (`census/dry/`): VALID (DRY), both captures admitted, each record's
+`ran_threads` (3, 0, 6). It started at a load of 3.2, above this machine's limit of 3 for
+heavy steps; it was untimed, so its figures mean nothing either way.
+
+**The pin.** `bench/run-fed-leader.frozen` stays `frozen none`. The frozen head is this
+PR's head carrying this section, once the coordinator names it. Since `src/` changed, the
+Guardian's PROCEED for `a08be2e9` does not cover it.
 
 ## Provenance and reproduction
 

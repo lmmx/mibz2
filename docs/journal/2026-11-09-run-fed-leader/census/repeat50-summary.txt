@@ -1,0 +1,5 @@
+350 records (50 rounds x 7 arms) at 10 threads; wall median 24.7 ms (min 18.3, max 39.3)
+census plans (observed_threads): {(3, 0, 6): 343, (3, 0, 4): 6, (5, 0, 4): 1}
+decoders' record (ran_threads): {(3, 0, 6): 350}
+census misreads: [('mibz2-pipe3-runfed-ctl', 1, (3, 0, 4)), ('mibz2-default33', 6, (3, 0, 4)), ('mibz2-pipe3-runfed-ls', 24, (3, 0, 4)), ('mibz2-pipe3-runfed-reg', 24, (3, 0, 4)), ('mibz2-pipe3-runfed-hs', 41, (5, 0, 4)), ('mibz2-pipe3-runfed-dir', 41, (3, 0, 4)), ('mibz2-pipe3-both', 45, (3, 0, 4))]
+exits: Counter({0: 350}) errors: Counter({'': 350})
