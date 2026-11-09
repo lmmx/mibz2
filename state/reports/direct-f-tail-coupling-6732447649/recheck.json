@@ -1,0 +1,250 @@
+{
+  "source": "370a868f46e4a7326557859043e5e44960e7b592",
+  "fixture_problems": [],
+  "fixture_violations": [
+    {
+      "name": "corpora/wikidata.bz2",
+      "B_slots": 176000000,
+      "D_vector": 21500000,
+      "D_scalar": 60000,
+      "implied_tail_cells": 500000,
+      "permitted": [
+        8572,
+        60000
+      ]
+    },
+    {
+      "name": "synthetic text",
+      "B_slots": 12800000,
+      "D_vector": 1500000,
+      "D_scalar": 2000,
+      "implied_tail_cells": 100000,
+      "permitted": [
+        286,
+        2000
+      ]
+    },
+    {
+      "name": "synthetic runs",
+      "B_slots": 200000,
+      "D_vector": 24000,
+      "D_scalar": 500,
+      "implied_tail_cells": 1000,
+      "permitted": [
+        72,
+        500
+      ]
+    }
+  ],
+  "counterexamples": [
+    {
+      "case": "ghz negative (Researcher 1)",
+      "problems": [
+        "ghz -1: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "ghz zero (Researcher 2)",
+      "problems": [
+        "ghz 0: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "ghz a boolean (Researcher 3)",
+      "problems": [
+        "ghz True: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "ghz missing (Researcher 4)",
+      "problems": [
+        "ghz None: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "Wikidata's output 1 (Researcher 5)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): output 1, not the evidence's 209700196",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output >= 4 (rows - 4 blocks)"
+      ]
+    },
+    {
+      "case": "rows_runs 1 with 999,999,999 records and cells (Researcher 6)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= rows_runs <= 900,000 a block by records",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)"
+      ]
+    },
+    {
+      "case": "ghz past the plausible clock",
+      "problems": [
+        "ghz 2800: the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "ghz a string",
+      "problems": [
+        "ghz '2.8': the sampled clock must be a finite number in [0.1, 10.0] GHz"
+      ]
+    },
+    {
+      "case": "Wikidata's rows 1",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks <= rows <= 900,000 a block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output <= 259 rows"
+      ]
+    },
+    {
+      "case": "Wikidata's input size",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): bytes 11854934, not the evidence's 11854933"
+      ]
+    },
+    {
+      "case": "Wikidata's blocks, both paths moved together",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): blocks 432, not the evidence's 431"
+      ]
+    },
+    {
+      "case": "a synthetic output",
+      "problems": [
+        "file 3 ('synthetic one byte'): output 4999999, not the evidence's 5000000"
+      ]
+    },
+    {
+      "case": "a synthetic digest",
+      "problems": [
+        "file 5 ('synthetic runs'): sha256 '0000000000000000000000000000000000000000000000000000000000000000', not the evidence's '24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec'"
+      ]
+    },
+    {
+      "case": "records past rows_runs",
+      "problems": [
+        "file 4 ('synthetic pattern'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 4 ('synthetic pattern'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": "cells at 2r",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": "cells below r",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": "slots not a multiple of 8",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: slots a multiple of 8"
+      ]
+    },
+    {
+      "case": "slots below rows_runs",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= slots <= rows_runs + 7 cells",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots"
+      ]
+    },
+    {
+      "case": "D's stores short of its rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)"
+      ]
+    },
+    {
+      "case": "D's one-slot stores past 7 a stream",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: d_scalar <= 7 d_streams"
+      ]
+    },
+    {
+      "case": "D's streams past 256 a block",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: blocks_runs <= d_streams <= 256 blocks_runs"
+      ]
+    },
+    {
+      "case": "D's census missing",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): path counts missing or not whole: [11854933, 209700196, 431, 205000000, 384, 163600000, 10150000, 47, 15200000, 176000000, 21500000, 60000, None]"
+      ]
+    },
+    {
+      "case": "counts for a path with no blocks",
+      "problems": [
+        "file 2 ('synthetic random'): the counts break: blocks_runs <= records <= rows_runs",
+        "file 2 ('synthetic random'): the counts break: records <= cells <= 2 records - blocks_runs"
+      ]
+    },
+    {
+      "case": "RLE1: too little output for the rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: RLE1: 5 output >= 4 (rows - 4 blocks)"
+      ]
+    },
+    {
+      "case": "a fallback block with no rows",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": "zero fallback blocks but one fallback row (closure review 1)",
+      "problems": [
+        "file 3 ('synthetic one byte'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": "42.4 M fallback rows in 47 blocks (closure review 2)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block"
+      ]
+    },
+    {
+      "case": "one run but 256 nonempty buckets (closure review 3)",
+      "problems": [
+        "file 3 ('synthetic one byte'): the counts break: d_streams <= records (a nonempty bucket holds a run at least)"
+      ]
+    },
+    {
+      "case": "too few B slots and D stores for the cells (closure review 4)",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: the fallback's rows: blocks_fallback <= rows - rows_runs <= 900,000 a fallback block",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)"
+      ]
+    },
+    {
+      "case": "too few D stores for the cells alone",
+      "problems": [
+        "file 0 ('corpora/wikidata.bz2'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots",
+        "file 0 ('corpora/wikidata.bz2'): the counts break: cells <= d_vector + d_scalar (D stores once at least a cell)"
+      ]
+    },
+    {
+      "case": "too few B slots for the cells alone",
+      "problems": [
+        "file 4 ('synthetic pattern'): the counts break: 8 cells <= slots (B stores 8 slots at least a cell)",
+        "file 4 ('synthetic pattern'): the counts break: rows_runs <= 8 d_vector + d_scalar <= slots"
+      ]
+    }
+  ],
+  "synthetic_text": {
+    "name": "synthetic text",
+    "output": 3326302,
+    "sha256": "5996a32dcec1cb7899cd2dd2e2cb122a3de7eeead4c2096729575e3aec79e6ff",
+    "bytes": 612142,
+    "blocks": 4
+  }
+}

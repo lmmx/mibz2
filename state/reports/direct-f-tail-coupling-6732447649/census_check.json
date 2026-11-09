@@ -1,0 +1,7 @@
+{
+  "cases": 10840,
+  "exhaustive_ternary": 9840,
+  "longer_run_columns": 1000,
+  "result": "PASS",
+  "scope": "mathematical census model, not compiled instruction counts or native safety"
+}
