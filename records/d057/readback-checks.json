@@ -1,0 +1,20 @@
+{
+  "pinned_verify": {
+    "comment": 6732679972,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "guardian_readback": {
+    "sender": true,
+    "recipient": true,
+    "type": true,
+    "destination": true,
+    "incoming_id": true,
+    "work_commit": true,
+    "routing": true
+  },
+  "limitation": "Pinned verify hardcodes FROM coordinator; original failure retained, no impersonation or checker modification."
+}

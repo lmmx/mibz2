@@ -878,8 +878,9 @@
       "sha": "fc0139272607314895201e075b9b8145834ce350",
       "evidence_digest": "git-blob:62a737e2d48b4da2a8b1fcce284f739c080f9184;fuzz:e74174d558c1b88a1249c4e2f403f8714e5124c1;miri-job:128982297974",
       "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
-      "status": "complete; awaiting REVIEW",
-      "disposition": "D045/D053 HOLD lifted for reviewed service-core/admission snapshots; exact build/walk intersection not established; ordinary registration, timing and integration gates remain"
+      "status": "published; scoped D045/D053 HOLD lifted",
+      "disposition": "D045/D053 HOLD lifted for reviewed service-core/admission snapshots; exact build/walk intersection not established; ordinary registration, timing and integration gates remain",
+      "comment": 6732679972
     }
   ],
   "own_outgoing_comment_ids": [
@@ -934,7 +935,8 @@
     6731964304,
     6732094558,
     6732441720,
-    6732545801
+    6732545801,
+    6732679972
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1045,7 +1047,8 @@
     "82aadf1b98cf63971b8e41c3c48f55100976c638",
     "41af868c294772b8ddebfa351b6a8172cac9a55f",
     "61d3b9d2de69680d6fd1f7016edd9dc7e140fd77",
-    "aa0538a305b51368e8274c1bb508d8316c30bd95"
+    "aa0538a305b51368e8274c1bb508d8316c30bd95",
+    "d51723b1b4921bbd5cf6e05c9970542aace04f24"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1102,7 +1105,8 @@
     6731861816,
     6731982223,
     6732361106,
-    6732477634
+    6732477634,
+    6732560627
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1181,13 +1185,17 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6732560627,
+    "active_comment": null,
+    "last_finished_comment": 6732560627,
     "decision": "D057",
-    "status": "complete",
+    "status": "finished",
     "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
+    "review_comment_id": 6732679972,
     "queue_snapshot": [
       6732560627
-    ]
+    ],
+    "remaining_in_snapshot": [],
+    "automation": "unchanged; persistent task remains enabled"
   },
   "duplicate_events": [
     {
@@ -1634,7 +1642,7 @@
       "evidence_digest": "git-blob:62a737e2d48b4da2a8b1fcce284f739c080f9184;fuzz:e74174d558c1b88a1249c4e2f403f8714e5124c1;miri-job:128982297974",
       "decision": "D057",
       "commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
-      "comment": null
+      "comment": 6732679972
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1955,10 +1963,12 @@
     {
       "comment_id": 6732560627,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D057",
       "receipt_commit": "61d3b9d2de69680d6fd1f7016edd9dc7e140fd77",
-      "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95"
+      "work_commit": "aa0538a305b51368e8274c1bb508d8316c30bd95",
+      "complete_cursor_commit": "d51723b1b4921bbd5cf6e05c9970542aace04f24",
+      "review_comment_id": 6732679972
     }
   ],
   "migrated_from": {
