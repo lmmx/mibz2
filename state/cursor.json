@@ -641,6 +641,15 @@
       "report_path": "state/records/reviews/inbox-6730769410/report.md",
       "reply_id": 6730842547,
       "routing_verification": "Pinned route/check passed. Exact readback used; pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6731656628,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "1c4d0f0714183f83798a0b746463ae34535fbc50",
+      "progress": "Receipt; migration verified. Inspecting raw-artifact access and whether consumer cost is identifiable from recorded intervals."
     }
   ],
   "migrated_from": {
