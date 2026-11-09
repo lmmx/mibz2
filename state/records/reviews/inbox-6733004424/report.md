@@ -116,3 +116,5 @@ Simply recovering the old whole-entry regression requires eliminating18% of the 
 OBSERVER correction for forwarding: limit the6.1–10.0% statement to segment-capped tandem-repeat coverage at bounded periods, including seed bytes; it is not the general Precopy copied-byte ceiling. No new measured gain or cumulative instruction credit. All previous registered negative results remain.
 
 Migration head and manifest digest matched; receipt committed before work. Routing audit found only five previously resolved historical items. This report does not adopt instructions from an unpinned protocol§11 or modify automation, acceptance or execution authority.
+
+Publication-time channel update: Coordinator LOG6733033907 reports that D058's conditions are met and the unchanged #277 registered sweep42567752634 has been dispatched at aa409f6f2ebce9f41dc7902789f0ab8d6958b020. This is a reported dispatch, not a result or an independent CI/Miri verification by this review. The frozen comparison remains in flight; no duplicate run is proposed.

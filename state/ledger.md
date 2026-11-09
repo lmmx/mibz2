@@ -372,3 +372,5 @@ No implementation, compilation, timing, merge, safety certification or automatio
 - D058 conditional#277 disposition supersedes historical D055 subject to frozen registration, greenCI and completed targeted scalar/AVX2Miri. No execution clearance added here.
 
 Source/count review and arithmetic only; census raw gzip and historical Precopy runs not independently replayed. No implementation, compilation, timing, safety certification, acceptance change or new measured credit.
+
+Publication-time channel update: Coordinator LOG6733033907 reports that D058's conditions are met and the unchanged #277 registered sweep42567752634 has been dispatched at aa409f6f2ebce9f41dc7902789f0ab8d6958b020. This is a reported dispatch, not a result or an independent CI/Miri verification by this review. The frozen comparison remains in flight; no duplicate run is proposed.
