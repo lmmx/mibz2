@@ -316,3 +316,16 @@ No implementation, timing, tests, dispatch or measured speed credit. Prior regis
 Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-decoder further charges MTF, admission, synchronization and critical-worker effects. No new measured c/B or cumulative credit. C29/C31 remain preferable overall bets; D045 now holds service timing/admission pending targetedB5, separate from D042/D044. Prior registered results unchanged.
 
 **Publication update:** Guardian D046 / REVIEW6730359769 stops #272's exposed pair path and its proposed CI timing at this exact pin. Safe-entry/fallback/prepared-state repairs and targetedB5 evidence are required. C37–C40 remain research proposals; timing suggestions are conditional on closure. No independent reproduction of its witnesses in this report.
+
+
+## Measured run-fed losses: inbox6730769410
+
+[Source audit and ranked constructions](records/reviews/inbox-6730769410/report.md). Stage fd60fffada25d475bbcc2b54165b96cf5fd7a92f; result66edecbe2b1924594e485e1f956dbee8ed9beda2; helperff6c2f74677af80ea9813bd081d34a68d07e6f1b.
+
+- Registered Q1 STOP retained: journal R_stage1.1592 [1.1387,1.1801]; no raw artifact replay here.
+- C31 first construction, not a promised win: ideal sort deletion leaves+.218 nominal phase-sum c/B; also deleting fallback gap leaves+.118. Sorted fill1.332 is not direct-fill timing. Separate medians/denominators prevent paired counterfactual claims.
+- Corpus C35 lookup census163/block over186 team blocks, not one per record; actual one-worker384-block cost unmeasured. Charge resumed cursor work and256 write streams.
+- Fallback correction: selector lies outside the phase bracket; A/B fallback bodies match. No wasted emitter on ordinary rejected paths. Buffer history/native layout need isolation before assigning+.100 to selector/dispatch.
+- Emitter:4r≈.248n stored bytes on accepted rows, not4n. Keep cheap u32 indexable records pending instruction/spill evidence; literal-stream/extension hybrid must pay reconstruction. Three bytes cannot hold20-bit start+8-bit byte.
+- C41 admission: actual n/literals/run extensions/length bins, acquired in existing symbol production if economical. Current syms/max_len predicate is notr/n. Freeze model prospectively; no threshold fitting passed off as qualification.
+- #270 helper critical max differs from serial stage sum. D049 timing HOLD remains. R_floor/R_warm do not uniquely identify the binding resource. No implementation, timing, safety certification or measured speed credit.
