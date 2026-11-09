@@ -1,0 +1,25 @@
+{
+  "candidate": "4c70dfc42536c32e9b55c6f2e95da5b1d8538b39",
+  "inbox": 6731077460,
+  "queued": 6731019236,
+  "spec": "a4f97714cc14366984015869d9d094d89488ac57",
+  "files": {
+    "bench/pair_runs_validity.py": "cb12adb6659d91d9baaff9db82768b30a935106521ee6610831d84d0b6f5bba6",
+    "bench/test_pair_runs_validity.py": "9e9ec093f25c2bc5168a46eabd4ac52d80c708eb7df4c42610989105432ebf6c",
+    "probes.py": "4fe120051543ea4dabc67d3bccb05446782ac8c0838084bc6a077494f38c5c24",
+    "probe-results.json": "b39de2c8b49fb39aa382d37aea6459f8e40e7a73425f0b135980d8f9e42367aa",
+    "tests.txt": "f727c562b056439da1f6e52ed246201ad02a43b6ee8fd68d22a7bf293bf327ac",
+    "audit.json": "a84502f89ceeb4e979f9ffcf454063da03a2cf675ef5b34b4b9b4495651e75f6",
+    "report.md": "60d2537288ff991aa5de835e640025d9af02318395dac797a940d86c379104a0"
+  },
+  "source_files": [
+    "bench/pair_runs_validity.py",
+    "bench/test_pair_runs_validity.py",
+    "examples/pair_runs.rs",
+    "src/pair_runs.rs",
+    "src/pair_runs/tests.rs",
+    ".github/workflows/sweep.yml",
+    "docs/journal/2026-11-09-pair-from-runs.md"
+  ],
+  "tests": "28 candidate tests passed; four count mutations still VALID; no native execution or timing"
+}
