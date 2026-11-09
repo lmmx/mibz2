@@ -359,3 +359,14 @@ impl ReadExact for StreamDecoder {
         }
     }
 }
+
+/// The run-fed fuzz loop's seed 1, case 596 (CI's fuzz-smoke at `a08be2e9`): a full block
+/// of runs, then an empty block (its symbols the end-of-block alone, which the records'
+/// rule takes: n = 0, its tiling `[0]`), then a broken one. The leader's sort refused the
+/// empty tiling, which `run_stage::sort` takes, and counted a rebuild; every sort must
+/// take it, and fail the block `BadOrigPtr` as the default decoder does, with no fallback
+#[test]
+fn an_empty_block_by_records() {
+    let z = include_bytes!("regressions/run-fed-seed1-case596.bz2");
+    same_as_default(z, "fuzz seed 1 case 596");
+}

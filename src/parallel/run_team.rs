@@ -419,14 +419,17 @@ fn count_share(recs: &[u32], lo: usize, hi: usize, hist: &mut [[u32; 256]; 3]) -
 /// entry made [its first slot, its slots' end, its first F row] a byte, and `run_stage::
 /// sort`'s other checks: the first run starts at 0, the closing record is n, each byte's
 /// runs' rows sum to its count, the counts to n, and the slots to r. The slots' ranges, a
-/// byte and a share, are disjoint and tile [0, r) by construction.
+/// byte and a share, are disjoint and tile [0, r) by construction. The empty block's
+/// tiling, its closing record alone (`[0]`, n = 0, every count 0), is one, as
+/// `run_stage::sort` takes it: refusing it was the leader's sort's false refusal of an
+/// empty block (D049 §R3, the fuzz loop's seed 1 case 596).
 fn merge_shares(
     recs: &[u32],
     counts: &[u32; 256],
     n: usize,
     hists: &mut [[[u32; 256]; 3]],
 ) -> bool {
-    if recs.len() < 2 || n >= 1 << 24 {
+    if recs.is_empty() || n >= 1 << 24 {
         return false;
     }
     let r = recs.len() - 1;
@@ -713,7 +716,8 @@ fn count_rows(recs: &[u32], lo: usize, hi: usize, hist: &mut [[u32; 256]; 3]) ->
 /// j are the F rows [C(c) + the rows of c in the shares before j, + its own): disjoint, a
 /// byte and a share, and tiling [0, n) once the rows sum to the counts and they to n.
 fn merge_rows(recs: &[u32], counts: &[u32; 256], n: usize, hists: &mut [[[u32; 256]; 3]]) -> bool {
-    if recs.len() < 2 || n >= 1 << 24 {
+    // (the empty block's tiling, `[0]`, taken as `merge_shares` takes it)
+    if recs.is_empty() || n >= 1 << 24 {
         return false;
     }
     let r = recs.len() - 1;
@@ -2467,13 +2471,71 @@ mod tests {
         }
     }
 
+    /// The empty block (D049 §R3: the fuzz loop's seed 1 case 596): its symbols the
+    /// end-of-block alone, which the records' rule takes, its tiling the closing record
+    /// alone. Every sort takes it as `run_stage::sort` does, and fills its empty table; a
+    /// count or an end off refuses it; and the front stage of every mode fails it
+    /// `BadOrigPtr` with no rebuild (the leader's sort's path still `Sorted`)
+    #[test]
+    fn the_empty_block_tiles() {
+        let (recs, counts) = (vec![0u32], [0u32; 256]);
+        let mut s = crate::run_stage::Scratch::default();
+        let oracle = api::sorted_fo(&recs, &counts, 0, &mut s).expect("run_stage::sort");
+        let (mut hist, mut fo) = (Vec::new(), Vec::new());
+        assert!(sort_one_share(&recs, &counts, 0, &mut hist, &mut fo));
+        assert!(fo == oracle);
+        let mut tt = TVector::new();
+        assert!(fill_whole(&recs, &fo, 0, &mut tt, Kernels::detect()) && tt.0.is_empty());
+        for h in 1..=5 {
+            assert!(sort_by_shares(&recs, &counts, 0, h) == Some(oracle.clone()));
+            for k in kernels() {
+                assert_eq!(direct_by_shares(&recs, &counts, 0, h, k), Some(Vec::new()));
+            }
+            let mut c = counts;
+            c[7] = 1;
+            assert!(sort_by_shares(&recs, &c, 0, h).is_none(), "a count off");
+            assert!(direct_by_shares(&recs, &c, 0, h, Kernels::scalar()).is_none());
+            assert!(
+                sort_by_shares(&[256], &counts, 0, h).is_none(),
+                "an end off"
+            );
+        }
+        assert!(tiled(&recs, &counts, 0) == Some(Vec::new()));
+        let b = Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq: std::array::from_fn(|i| i as u8),
+            syms: vec![257],
+            eob: 257,
+            max_len: 600_000,
+        };
+        assert!(api::takes_runs(&b));
+        let k = Kernels::detect();
+        let mut f = Front::default();
+        let r = front_stage::<LS>(&b, &mut f, k, &mut 0, &mut 0, &mut false);
+        assert_eq!(r, Err(ErrorKind::BadOrigPtr));
+        assert_eq!(f.path, Path::Sorted, "the leader's sort took it");
+        for r in [
+            front_stage::<HS>(&b, &mut Front::default(), k, &mut 0, &mut 0, &mut false),
+            front_stage::<DIR>(&b, &mut Front::default(), k, &mut 0, &mut 0, &mut false),
+            front_stage::<CTL>(&b, &mut Front::default(), k, &mut 0, &mut 0, &mut false),
+            front_stage::<CTLR>(&b, &mut Front::default(), k, &mut 0, &mut 0, &mut false),
+        ] {
+            assert_eq!(r, Err(ErrorKind::BadOrigPtr));
+        }
+    }
+
     // ---- Malformed record tilings (D049 §4: unreachable from valid emission) ----
 
     /// The column a tiling describes, if it is one: `run_stage::sort`'s contract, by an
     /// independent model (the first run at 0, starts strictly rising, the closing record
     /// at n, below 2^24, and the counts the column's), else None
     fn tiled(recs: &[u32], counts: &[u32; 256], n: usize) -> Option<Vec<u8>> {
-        if n == 0 || n >= 1 << 24 || recs.len() < 2 {
+        if n == 0 {
+            // the empty block: its closing record alone, and no counts
+            return (recs == [0] && counts.iter().all(|&c| c == 0)).then_some(Vec::new());
+        }
+        if n >= 1 << 24 || recs.len() < 2 {
             return None;
         }
         let r = recs.len() - 1;

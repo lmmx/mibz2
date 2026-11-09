@@ -24,6 +24,8 @@
 //! check, a bug: any is a failure).
 //!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
+//! A case's input is its seed's and its index's alone: `MIBZ2_FUZZ_CASE=N` replays only
+//! pipeline case N (in a pipeline or run-fed mode), `MIBZ2_FUZZ_REPEAT=R` times.
 //! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline or run-fed
 
 #[path = "../tests/common/mod.rs"]
@@ -101,40 +103,65 @@ fn main() {
     let deadline = Instant::now() + Duration::from_secs(secs);
     let (mut cases, mut bad) = (0u64, 0u64);
     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
-    while Instant::now() < deadline {
+    // MIBZ2_FUZZ_CASE=N: only pipeline case N decoded (every case before it made, not
+    // decoded), MIBZ2_FUZZ_REPEAT times (default 1), whatever SECONDS: a failure's replay
+    let only: Option<u64> = std::env::var("MIBZ2_FUZZ_CASE")
+        .ok()
+        .map(|v| v.parse().unwrap());
+    let repeat: u64 = std::env::var("MIBZ2_FUZZ_REPEAT").map_or(1, |v| v.parse().unwrap());
+    let mut input = Vec::new();
+    while only.is_some_and(|n| cases < n) || (only.is_none() && Instant::now() < deadline) {
         if every != 0 && (cases + 1) % every == 0 {
             cases += 1;
             let i = (cases / every) as usize % pipes.len();
-            let before = phases_now();
-            let outcome = pipeline_case(
-                &pipes[i],
-                &mut pipe_stats[i],
-                &pipe_corpus,
-                &corpus,
-                &mut rng,
-                &out_dir,
-                cases,
-                &mut bad,
-            );
-            if run_fed {
-                let d: Vec<u64> = phases_now()
-                    .iter()
-                    .zip(&before)
-                    .map(|(a, b)| a - b)
-                    .collect();
-                reach[i].add(&d);
-                if d[REBUILT] > 0 {
-                    bad += 1;
-                    let why = format!(
-                        "{}: {} blocks rebuilt after a refused check",
-                        pipes[i].name(),
-                        d[REBUILT]
-                    );
-                    // (the case is the seed's: rerun at it to get its input)
-                    eprintln!("case {cases}: {why}");
+            let decode = !only.is_some_and(|n| n != cases);
+            // (each repeat on the same input: the rng as it was at the case's start)
+            let (start, mut end) = (rng.0, rng.0);
+            for _ in 0..if decode { repeat } else { 1 } {
+                let mut r = Rng(start);
+                let before = phases_now();
+                let outcome = pipeline_case(
+                    &pipes[i],
+                    &mut pipe_stats[i],
+                    &pipe_corpus,
+                    &corpus,
+                    &mut r,
+                    &out_dir,
+                    cases,
+                    &mut bad,
+                    decode,
+                    &mut input,
+                );
+                end = r.0;
+                if !decode {
+                    continue;
                 }
+                if run_fed {
+                    let d: Vec<u64> = phases_now()
+                        .iter()
+                        .zip(&before)
+                        .map(|(a, b)| a - b)
+                        .collect();
+                    reach[i].add(&d);
+                    if d[REBUILT] > 0 {
+                        bad += 1;
+                        let why = format!(
+                            "{}: {} blocks rebuilt after a refused check",
+                            pipes[i].name(),
+                            d[REBUILT]
+                        );
+                        // (its input saved, as every failure's)
+                        report(&out_dir, &input, cases, &why);
+                    }
+                }
+                *outcomes.entry(format!("pipeline: {outcome}")).or_default() += 1;
             }
-            *outcomes.entry(format!("pipeline: {outcome}")).or_default() += 1;
+            rng = Rng(end);
+            continue;
+        }
+        if only.is_some() {
+            // (a replay makes and decodes pipeline cases only)
+            cases += 1;
             continue;
         }
         let base = &corpus[rng.below(corpus.len() as u64) as usize];
@@ -319,6 +346,8 @@ fn pipeline_case(
     out_dir: &Option<String>,
     case: u64,
     bad: &mut u64,
+    decode: bool,
+    input: &mut Vec<u8>,
 ) -> String {
     let (base, starts) = &pipe_corpus[rng.below(pipe_corpus.len() as u64) as usize];
     let mut t = base.clone();
@@ -345,6 +374,12 @@ fn pipeline_case(
     };
     for _ in 0..edits {
         mutate(&mut t, corpus, rng, &pick);
+    }
+    // (the input is the seed's and the case's alone: the rng is drawn only above, so a
+    // case not decoded (`MIBZ2_FUZZ_CASE`) leaves the next one's input as it would be)
+    input.clone_from(&t);
+    if !decode {
+        return "skipped".into();
     }
     st.cases += 1;
     let want = oracle(&t);
