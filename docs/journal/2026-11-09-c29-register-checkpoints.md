@@ -1,6 +1,7 @@
 # 2026-11-09: C29, the register-list checkpoint kernel in the shipped pipelined front, opt-in
 
-**Status: DRAFT registration, NOT FROZEN, NOT RUN** (RULES C1). Nothing here changes the
+**Status: FROZEN registration, NOT RUN** (RULES C1). The frozen commit is the one carrying this
+line (§R4); the dispatch names it as `registered_head`. Nothing here changes the
 default decoder: the switch is off in `PIPELINED_LEVERS`, and the default's entry points can't
 set it. The diagnostic has not been run. The PR's own bench.yml run (42569223731) showed a 1-thread
 Wikidata cell 1.1% slower, on a path C29 never executes; §R1 investigates it without timing (the
@@ -133,7 +134,7 @@ seed 1 beside the classic and pipeline modes.
 outcomes reached include BlockTooLong 106 and RunTooLong 6 at seed 2: the MTF stage's own errors,
 through the switched kernel.)
 
-## 3. The registration (RULES C1). DRAFT, NOT FROZEN
+## 3. The registration (RULES C1). FROZEN (§R4)
 
 **The question.** In the shipped pipelined teams (the default's worker, levers and window), does
 the register-list checkpoint kernel in the leader's front stage make the whole decode faster than
@@ -449,7 +450,7 @@ now records the status, writes both, and exits with it); and the identity had no
 `nproc`, environment or CPU model. Any source or feature change after the freeze needs a new named
 registration, not reuse of this evidence.
 
-**The registration remains a DRAFT, NOT FROZEN.**
+**Superseded by §R4: the registration is frozen.**
 
 ## R3. Revision, 2026-11-09: an unknown quota is not unlimited; a failed `ab run` is not judged
 
@@ -472,7 +473,7 @@ was read, and the promise is kept, not narrowed.
   the workflow's inline identity script moved to this file, so the reporter's tests build their
   identities with the workflow's own mapping (`build`). Its `cpu_quota` is `{"state":
   "unlimited"}`, `{"state": "finite", "cpus": Q}`, or `{"state": "unknown"}`: unknown unless `ab
-  env`'s line says unlimited with a null quota, or finite with a number. A missing key, a null with
+  env`'s line says unlimited with a null quota, or finite with a number. A missing state (no `cpu_quota_state`), a null with
   no state, a state at odds with its number, or an absent or broken `ab env` line are all unknown.
 - **Refused** (`bench/c29_checkpoints.py`): only unlimited, or finite at least 4, is shown; an
   unknown, absent, null, bare-number or malformed quota is UNJUDGED (FALLBACK), exit 3.
@@ -502,8 +503,27 @@ was read, and the promise is kept, not narrowed.
   features (pbz2 enables `simd`).
 - **The run IDs** are in R2's figures above.
 
-**The registration remains a DRAFT, NOT FROZEN.**
+**Superseded by §R4: the registration is frozen.**
 
+
+## R4. The freeze
+
+The Researcher's REVIEW
+[6734936140](https://github.com/lmmx/mibz2/issues/145#issuecomment-6734936140) gives PROCEED toward
+freeze. It closes the quota-observability objection of 6734701311, with 59 independent cases: 54
+UNJUDGED, one INVALID and four admitted controls.
+- **The wording correction it asks for:** in R3, "a missing key" means a missing *state*
+  (`cpu_quota_state`), not every missing key. An explicit `cpu_quota_state = unlimited` without the
+  legacy numeric key is accepted, and that explicit detection is enough. The frozen producer emits
+  both keys anyway. No further gate is added for redundant evidence.
+- **Frozen:** this commit, journal and wording only on top of `28af8f7c`, whose exact-head CI was 26
+  success and 3 skipped. No source, harness, reporter, identity builder, workflow or Cargo file
+  differs from `28af8f7c`.
+- **What it holds is R2.1's list,** with `bench/c29_identity.py`.
+- **The dispatch:** `sweep.yml`, `tool: c29`, `rounds: 20`, `registered_head` this commit, once its
+  own CI is green.
+- **Unchanged:** the thresholds, the single 9-thread primary (3 threads secondary), no retry to pass,
+  UNJUDGED (FALLBACK) as a terminal reading, and D060's default-on obligations.
 
 ## Provenance and reproduction
 
