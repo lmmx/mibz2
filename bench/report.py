@@ -6,6 +6,7 @@ model, the pull request comment, and the record kept for a master commit.
                       [--kernels KERNELS.jsonl]
                       --out RESULT.json --md OUT.md
     report.py record STORE RESULT.json RUNS.jsonl
+    report.py machine RUNS.jsonl [--md OUT.md]
 
 `summary` reads the runs, the corpora's files (their sizes and SHA-256) and
 bench/wikidata.json, and writes the result (every figure below, with the machine and
@@ -38,6 +39,12 @@ the toolchain) and its Markdown:
   beyond noise among four pre-declared comparisons, whether the measurement could
   answer, and when a change needs a machine with more cores. The conditions (`--env`,
   `ab env`): the runner's cores, CPU quota, throttling and the run-queue counter.
+- **The machine's state, recorded and never judged** (`machine_state`, bench 3.3.0), where
+  `ab run --machine-state` recorded it: per arm and thread count, beside the median wall,
+  the measured cycles a byte (perf, over exactly the region the wall is) and the effective
+  clock (cycles over the counted threads' task clock), and the clock and package
+  temperature before and after the runs. Nothing reads it but its table: no verdict
+  changes. `machine` prints it run by run for any recipe's runs file.
 
 `record` adds a master commit's result to the results store (the `bench-results`
 branch): runs/<commit>.json, raw/<commit>.jsonl and a line of records.jsonl.
@@ -62,7 +69,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.2.3"
+BENCH = "3.3.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
@@ -480,6 +487,131 @@ def resources(runs: list[dict], pr: bool) -> dict:
             walls = {t: statistics.median([r["wall"] for r in rs.values()]) for t, rs in ts.items()}
             best = min(walls, key=walls.get)
             out.setdefault(corpus, {})[arm] = {"fewest": fewest, "best": best, "threads": per}
+    return out
+
+
+def machine_of(run: dict, key: str, when: str = "pre"):
+    """A run's machine-state reading (`ab run --machine-state`): `machine_pre` or
+    `machine_post`'s `key`, or None where it wasn't recorded or couldn't be read."""
+    return (run.get(f"machine_{when}") or {}).get(key)
+
+
+def machine_state(runs: list[dict], pr: bool) -> dict | None:
+    """Per corpus, arm (as shown) and thread count, the runs' machine state where `ab run
+    --machine-state` recorded it (bench 3.3.0): beside the median wall, the median measured
+    cycles a byte and effective clock (cycles over the task clock, GHz), and the clock and
+    package temperature before and after each run. Recorded, never judged: nothing here
+    feeds the assessment or any verdict. None where no run recorded it."""
+    rec = [r for r in runs if not r.get("err") and ("cycles" in r or "machine_pre" in r)]
+    if not rec:
+        return None
+    by = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for r in rec:
+        by[r["corpus"]][label(r["arm"], pr)][r["threads"]].append(r)
+    med = lambda v: round(statistics.median(v), 3) if v else None
+    span = lambda v: [round(min(v), 3), round(max(v), 3)] if v else None
+    out = {}
+    for corpus, arms in sorted(by.items()):
+        for arm, ts in sorted(arms.items()):
+            for t, rs in sorted(ts.items()):
+                cyc = [r for r in rs if r.get("cycles") is not None and r.get("out")]
+                eff = [r["eff_ghz"] for r in rs if r.get("eff_ghz") is not None]
+                pre = [x for r in rs if (x := machine_of(r, "freq_mhz")) is not None]
+                post = [x for r in rs if (x := machine_of(r, "freq_mhz", "post")) is not None]
+                tpre = [x for r in rs if (x := machine_of(r, "pkg_temp_c")) is not None]
+                tpost = [x for r in rs if (x := machine_of(r, "pkg_temp_c", "post")) is not None]
+                why = next((r.get("cycles_why") for r in rs if r.get("cycles_why")), None)
+                out.setdefault(corpus, {}).setdefault(arm, {})[str(t)] = {
+                    "n": len(rs),
+                    "counted": len(cyc),
+                    "wall": med([r["wall"] for r in rs]),
+                    "cycles_per_byte": med([r["cycles"] / r["out"] for r in cyc]),
+                    "eff_ghz": med(eff),
+                    "eff_ghz_range": span(eff),
+                    "scope": next((r["perf_scope"] for r in cyc if r.get("perf_scope")), None),
+                    "cycles_why": None if cyc else why,
+                    "freq_mhz_pre": med(pre),
+                    "freq_mhz_post": med(post),
+                    "pkg_temp_c_pre": med(tpre),
+                    "pkg_temp_c_post": med(tpost),
+                    "governor": next((g for r in rs if (g := machine_of(r, "governor"))), None),
+                }
+    return out
+
+
+def machine_state_lines(ms: dict) -> list[str]:
+    """The machine-state table, beside the figures: recorded, never judged."""
+    num = lambda v, f="{:.2f}": "–" if v is None else f.format(v)
+    out = [
+        "",
+        "### Machine state (recorded, never judged)",
+        "",
+        "`ab run --machine-state`: each run's cycles, counted by perf over exactly the region its wall is, "
+        "and the effective clock (cycles over the counted threads' task clock); the clock "
+        "(`scaling_cur_freq`, the run's CPUs' mean) and the package temperature read before and after each "
+        "run. Nothing here feeds the assessment.",
+        "",
+        "| corpus | arm | threads | runs | wall (s) | cycles/B | eff. clock GHz (min–max) | clock MHz pre → post | pkg °C pre → post |",
+        "|---|---|--:|--:|--:|--:|--:|--:|--:|",
+    ]
+    for corpus, arms in ms.items():
+        for arm, ts in arms.items():
+            for t, c in ts.items():
+                eff = (
+                    f"{c['eff_ghz']:.2f} ({c['eff_ghz_range'][0]:.2f}–{c['eff_ghz_range'][1]:.2f})"
+                    if c.get("eff_ghz") is not None
+                    else "–"
+                )
+                out.append(
+                    f"| `{corpus}` | {arm} | {t} | {c['n']} | {num(c['wall'], '{:.3f}')} | "
+                    f"{num(c['cycles_per_byte'])} | {eff} | "
+                    f"{num(c['freq_mhz_pre'], '{:.0f}')} → {num(c['freq_mhz_post'], '{:.0f}')} | "
+                    f"{num(c['pkg_temp_c_pre'], '{:.0f}')} → {num(c['pkg_temp_c_post'], '{:.0f}')} |"
+                )
+    whys = sorted(
+        {
+            c["cycles_why"]
+            for a in ms.values()
+            for ts in a.values()
+            for c in ts.values()
+            if c.get("cycles_why")
+        }
+    )
+    scopes = sorted(
+        {
+            c["scope"]
+            for a in ms.values()
+            for ts in a.values()
+            for c in ts.values()
+            if c.get("scope")
+        }
+    )
+    if scopes:
+        out += ["", f"Cycles counted in {' and '.join(scopes)} mode."]
+    if whys:
+        out += ["", "Cycles not counted: " + "; ".join(whys) + "."]
+    return out
+
+
+def run_lines(runs: list[dict]) -> list[str]:
+    """`report.py machine`: every run's wall and CPU beside its cycles, effective clock,
+    clock and package temperature, one row a run, for any recipe's runs file. A run
+    recorded without `--machine-state` shows its wall and CPU only."""
+    num = lambda v, f="{:.2f}": "–" if v is None else f.format(v)
+    out = [
+        "| round | corpus | arm | threads | wall (s) | CPU (s) | cycles (G) | eff. clock GHz | clock MHz pre → post | pkg °C pre → post | governor |",
+        "|--:|---|---|--:|--:|--:|--:|--:|--:|--:|---|",
+    ]
+    for r in runs:
+        cyc = r.get("cycles")
+        out.append(
+            f"| {r.get('round')} | `{r.get('corpus')}` | {r.get('arm')} | {r.get('threads')} | "
+            f"{num(r.get('wall'), '{:.3f}')} | {num(r.get('cpu'), '{:.3f}')} | "
+            f"{num(cyc / 1e9 if cyc is not None else None, '{:.3f}')} | {num(r.get('eff_ghz'))} | "
+            f"{num(machine_of(r, 'freq_mhz'), '{:.0f}')} → {num(machine_of(r, 'freq_mhz', 'post'), '{:.0f}')} | "
+            f"{num(machine_of(r, 'pkg_temp_c'), '{:.0f}')} → {num(machine_of(r, 'pkg_temp_c', 'post'), '{:.0f}')} | "
+            f"{machine_of(r, 'governor') or '–'} |"
+        )
     return out
 
 
@@ -1410,6 +1542,8 @@ def markdown(res: dict) -> str:
         lines += kernel_lines(res["kernels"])
     if res.get("models"):
         lines += model_lines(res["models"], n, pr)
+    if res.get("machine_state"):
+        lines += machine_state_lines(res["machine_state"])
     lines += [
         "",
         "<details><summary>The corpora, the machine and the toolchain</summary>",
@@ -1478,6 +1612,9 @@ def summary(a: argparse.Namespace) -> None:
     }
     res["accounting"] = accounting(runs)
     res["resources"] = resources(runs, a.mode == "pr")
+    # (recorded beside the figures, never judged: nothing reads it but the table)
+    if (ms := machine_state(runs, a.mode == "pr")) is not None:
+        res["machine_state"] = ms
     if a.env and Path(a.env).exists() and Path(a.env).read_text().strip():
         res["env"] = json.loads(Path(a.env).read_text())
     if a.mode == "pr":
@@ -1556,7 +1693,19 @@ def main() -> None:
     r.add_argument("store")
     r.add_argument("result")
     r.add_argument("runs")
+    m = sub.add_parser(
+        "machine", help="every run's wall and CPU beside its cycles, clock and temperature"
+    )
+    m.add_argument("runs")
+    m.add_argument("--md", help="write the table here too")
     a = ap.parse_args()
+    if a.cmd == "machine":
+        runs = [json.loads(l) for l in Path(a.runs).read_text().splitlines() if l.strip()]
+        text = "\n".join(run_lines(runs)) + "\n"
+        print(text, end="")
+        if a.md:
+            Path(a.md).write_text(text)
+        return
     summary(a) if a.cmd == "summary" else record(a)
 
 
