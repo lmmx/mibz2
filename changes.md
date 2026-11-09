@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-09, channel through 6730114756:** #258's valid registered ten-thread service-core gain replaces the pending-review account; corrected CPU saving to 12.7% and kept production use distinct. Recorded D042 pipeline, D044 run-fed CI and D045 service-core holds separately. #269 froze after Researcher PROCEED but awaits B5; #270's helper design remains REVISE. Narrowed the earlier low-level slowdown attribution, updated queue behavior and role pin, and retained Louis's run-fed line rule without claiming any timing gain.
+
 - **2026-11-09, channel through 6729116055:** reconciled the Researcher's corrected knee analysis; valid pipeline and lever results, passing default confirmation and 0.2.6 release; release scaling; three valid general-plan diagnostics and a measured low-level slowdown; service-core trade and #258's pending review; run-fed bounded diagnostic beginning. Replaced obsolete H1/release waits, recorded the repaired queue interruption and the withdrawal of the stand-in #258 request.
 
 - **2026-11-07, channel through 6699486962:** downstream 0.2.5 update merged on a one-off maintainer decision; release-scaling results and release notes completed. Scaling research resumed, with reported overlap prototype and adversarial review before freeze. Replaced the old dispatch pause; distinguished measurements from causal attributions, predictions and unconfirmed implementation completion.
