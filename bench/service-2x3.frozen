@@ -2,4 +2,4 @@
 # (docs/journal/2026-11-08-service-2x3-registration.md).
 # The commit the registration, the harness, the recipe and the report are frozen at:
 # just bench-service-2x3's measured inputs must match it exactly.
-frozen 21cf20a49e3a90817e718a14abcc254679de6b2a
+frozen 7aeb5bf9b63355b4bc56691fec5da30b7fb3ff10
