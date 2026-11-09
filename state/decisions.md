@@ -2193,3 +2193,44 @@ The four original safe-boundary objections are resolved; do not redo their desig
 This records substantive repair acceptance while retaining D046's unclosed completed-evidence obligation. Registration remains draft at this head; the Researcher's freeze and ordinary CI requirements remain separate. No timing dispatch, merge, implementation, credentials, spending or other branch change.
 
 Specs/MODE/RULES/PROTOCOL: **a4f97714cc14366984015869d9d094d89488ac57**. Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **a363e93a6b389e59c9513bdc17411b1bb7d2f4c6**. Observed 2026-11-09. Routing audit found only five already-resolved historical misroutes; route selects #145. The pinned verify command assumes FROM coordinator, so the Guardian publication is verified using its underlying routing predicate and exact Guardian header/destination/inbox/head read-back. History preserved; no persistent-task or subscription changes.
+
+## D052 — #272 D051 evidence closure; timing HOLD lifted
+
+Incoming [6731180299](https://github.com/lmmx/mibz2/pull/161#issuecomment-6731180299). Reviewed **80637086691f707a86adce94d1a0430c4c0b009a**, PR #272, against D051 at **4c70dfc42536c32e9b55c6f2e95da5b1d8538b39**.
+
+**G1: concur that D051's remaining evidence obligations are met. G2: lift the D046/D051 safety-evidence HOLD on the reviewed serial pair path's CI timing diagnostic. RULES B6 resumption recorded.** The four original safe-boundary causes were already accepted as fixed in D051; the completed Miri and nightly boundary-test evidence now closes the remaining B5/B7 objection. The corrected fuzz label closes the coverage-reporting objection. This is a scoped resumption, not production qualification, a registration freeze, a merge decision or a timing dispatch.
+
+### Completed evidence, directly retrieved
+
+[Run 42552694267, job 128951552061](https://github.com/lmmx/mibz2/actions/runs/42552694267/job/128951552061) is **completed / success**, including all four relevant steps. I retrieved its completed output rather than inferring success from the checkpoint or D051's pending snapshot.
+
+| step | observed output |
+|---|---|
+| Default Miri | `cargo miri test --lib -- miri_`; 18 passed, 0 failed/ignored, 46 filtered, including each of the six pair-module tests |
+| AVX2 Miri | `cargo miri test --lib -- pair_runs::tests::miri_`; 6 passed, 0 failed/ignored, 58 filtered |
+| Reachability negative control | Default build with AVX2 expected failed as intended; workflow verified the “AVX2 fill expected” reason and succeeded |
+| Nightly pair doc tests | `cargo test --features pair-runs --doc pair_runs`; 8 passed, 0 failed/ignored, 1 filtered: six compile-fail cases and two valid examples |
+
+The six pair tests are miri_fill_reached, miri_pair_runs, miri_rows_refused, miri_witness_default_table_and_bad_row, miri_witness_stale_state, and miri_witness_wrong_histogram_and_no_fallback. They pass in both fill configurations. The default step forwards `MIBZ2_EXPECT_SSE2=1` through `MIRIFLAGS=-Zmiri-env-forward=MIBZ2_EXPECT_SSE2`. AVX2 uses `RUSTFLAGS=-C target-feature=+avx2,+bmi1`, `MIBZ2_EXPECT_AVX2=1` and its corresponding env-forward flag. The negative control has that AVX2 expectation without AVX2 target flags. No disabling of Miri's checks is shown in these flags.
+
+CI installed **rustc 1.102.0-nightly (5b7b37aef 2026-11-08)** with Miri. This is distinct from the journal's earlier local nightly 2026-10-26; do not relabel one as the other. The log's compile-fail results bind to the unchanged pair source's E0451/E0308/E0499/E0616 cases. The negative-control wrapper retains the expected-failure summary, not the redirected control.log's complete error trace; its command checks both failure and the expected message. That suffices for this reachability control.
+
+### Tested code and the new head
+
+The checkout in the completed log is **98f0ca9ce1d166197699b5b6feab7a981f05b519**, the merge test commit combining 4c70dfc42536c32e9b55c6f2e95da5b1d8538b39 with 66edecbe2b1924594e485e1f956dbee8ed9beda2. I compared its Git blobs to the new head: **src/pair_runs.rs, src/bwt.rs, miri.yml, Cargo.toml and Cargo.lock all match**. In particular, pair source remains **f2a842552b3125d8226fe66ac7782f558b63ee86**.
+
+The complete old-head-to-new-head comparison changes only:
+- `src/pair_runs/tests.rs`: the local variable/counter `in_place` becomes `presized`, with explanatory comments. The test bodies are identical after removing comments/whitespace and undoing this identifier rename. No guard, reference result, input-generation branch, Miri test or actual overwrite test is weakened.
+- The journal: the 875,508 count is explicitly relabelled as output-buffer copies, and a separate D051 correction records the previous mislabelling and completed CI result.
+
+Old test blob **f74f17e8ab9b8931bb282f652d9621d141e1cadb**; new **5ab1bc04eb3a85ec4c3f6c56e5908919b11e507d**. The check is a source comparison, not a new compiler run. No new test execution is needed to transfer this completed safety evidence across that naming/documentation-only revision. The original 583,803-case fuzz and 14 mutation results remain at their recorded source/seed/commands; no claim of a new campaign or 875,508 actual input-buffer overwrites is made. Actual in-place coverage remains the direct setup/read-&io then walk/write-io case in miri_pair_runs and the Pairs::invert_in_place calls in fuzz_pairs; the former does not itself go through Pairs.
+
+### Scope and remaining conditions
+
+D046/D051's serial fill, checked Built/Prepared boundary and final-code proof remain the scope. The non-x86 portable fill remains an unexercised configuration. D051's independent source review and finite permutation model remain supplementary evidence; this review independently checks the completed CI record and revision, without implementation involvement or local Rust/Miri execution.
+
+The Coordinator may proceed under the existing diagnostic registration process **once the Researcher's freeze and normal CI requirements are satisfied**. This decision does not claim they already are. No further Guardian safety approval is required for the unchanged reviewed implementation/evidence. Any new substantive implementation or safety premise needs its own applicable evidence. No parallel spill-sharing, production adoption, criterion relaxation or workstation authorization follows. D049/#270 and D050 limits are unchanged.
+
+[Evidence index](records/d052/evidence.json), [completed log excerpts](records/d052/miri-excerpts.txt), [exact revision patch](records/d052/revision.json).
+
+Specs/MODE/RULES/PROTOCOL **a4f97714cc14366984015869d9d094d89488ac57**. Observed 2026-11-09. Migration passed before receipt: source f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt **f2e3d4a858adf54388f71b04c25cc1b4cf84d66a**. Routing audit: five resolved historical entries, zero unresolved; route #145. Pinned verify assumes FROM coordinator, so use its routing predicate plus exact Guardian header/destination/ID/head read-back. Only own state and one REVIEW are published; no workflow dispatch, merge, automation change or polling.

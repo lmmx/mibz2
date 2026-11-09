@@ -925,7 +925,8 @@
     "86d79f3c9df864f32cee381ab2ee82baebc5603c",
     "a363e93a6b389e59c9513bdc17411b1bb7d2f4c6",
     "a0005fd5d340ab7d02b3c445112ddfc55a7ca5dc",
-    "47d67ebcc5204a7a5d7a9cd6d7cdfccfe9338447"
+    "47d67ebcc5204a7a5d7a9cd6d7cdfccfe9338447",
+    "f2e3d4a858adf54388f71b04c25cc1b4cf84d66a"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1779,7 +1780,8 @@
       "comment_id": 6731180299,
       "pr": 161,
       "status": "in_progress",
-      "decision": "D052"
+      "decision": "D052",
+      "receipt_commit": "f2e3d4a858adf54388f71b04c25cc1b4cf84d66a"
     }
   ],
   "migrated_from": {

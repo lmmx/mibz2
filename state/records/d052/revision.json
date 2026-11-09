@@ -1,0 +1,26 @@
+[
+  {
+    "sha": "713420100a6a950632d8470fec8ac00dd89a4247",
+    "filename": "docs/journal/2026-11-09-pair-from-runs.md",
+    "status": "modified",
+    "additions": 12,
+    "deletions": 1,
+    "changes": 13,
+    "blob_url": "https://github.com/lmmx/mibz2/blob/80637086691f707a86adce94d1a0430c4c0b009a/docs%2Fjournal%2F2026-11-09-pair-from-runs.md",
+    "raw_url": "https://github.com/lmmx/mibz2/raw/80637086691f707a86adce94d1a0430c4c0b009a/docs%2Fjournal%2F2026-11-09-pair-from-runs.md",
+    "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/docs%2Fjournal%2F2026-11-09-pair-from-runs.md?ref=80637086691f707a86adce94d1a0430c4c0b009a",
+    "patch": "@@ -447,7 +447,7 @@ dense and a sparse segmented block (admission declined and taken) and a short on\n | cases | 583,803 (each kind 52,744-53,488), 914.9 M rows |\n | builds | 3,502,818 (the run builder's 1,751,409 all on the AVX2 fill: this machine has it) |\n | cells / vector cells / spills / scalar tails | 1,272,969,639 / 1,265,356,020 / 1,255,874,934 / 7,613,619 |\n-| walks (in place) | 1,751,409 (875,508) |\n+| walks (into a pre-filled output buffer, a copy of the column; not the same buffer, see D051) | 1,751,409 (875,508) |\n | segment ends at a start / at an LF row; buffer grows | 140,992,903 / 76,066,193; 317 |\n | more segments than rows | 342,388 |\n | refused invalid inputs | 2,335,212 |\n@@ -508,3 +508,14 @@ pair_runs::tests::NAME --exact` with `MIBZ2_EXPECT_SSE2=1`; doc is the nightly d\n The fixture tests run in `test.yml` (`python3 bench/test_pair_runs_validity.py`): 28 tests, all\n passing locally.\n \n+\n+## D051 corrections (9 November 2026)\n+\n+- **The fuzz's \"in place\" counter was mislabelled.** In `fuzz_case`, the branch cloned `ll` into\n+  `io` while `setup` read `&ll` and the walk wrote `io`, so it tested a pre-filled output buffer,\n+  not an overwrite of the walk's own input. It is renamed `presized`, and the 875,508 is\n+  relabelled. True in-place coverage is `miri_pair_runs` and `fuzz_pairs`, through\n+  `Pairs::invert_in_place`. No larger direct-fuzz in-place coverage is claimed.\n+- **Completed CI Miri on the reviewed head** `4c70dfc4` (job 128951552061): Miri, the pair builder's\n+  AVX2 fill, the reachability assertion's negative control, and the nightly compile_fail doc\n+  tests all succeeded."
+  },
+  {
+    "sha": "5ab1bc04eb3a85ec4c3f6c56e5908919b11e507d",
+    "filename": "src/pair_runs/tests.rs",
+    "status": "modified",
+    "additions": 8,
+    "deletions": 6,
+    "changes": 14,
+    "blob_url": "https://github.com/lmmx/mibz2/blob/80637086691f707a86adce94d1a0430c4c0b009a/src%2Fpair_runs%2Ftests.rs",
+    "raw_url": "https://github.com/lmmx/mibz2/raw/80637086691f707a86adce94d1a0430c4c0b009a/src%2Fpair_runs%2Ftests.rs",
+    "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/src%2Fpair_runs%2Ftests.rs?ref=80637086691f707a86adce94d1a0430c4c0b009a",
+    "patch": "@@ -631,7 +631,7 @@ struct Reach {\n     spills: usize,\n     scalar_cells: usize,\n     walks: usize,\n-    in_place: usize,\n+    presized: usize,\n     start_ends: usize,\n     lf_ends: usize,\n     grows: usize,\n@@ -724,7 +724,7 @@ fn length(rnd: &mut impl FnMut() -> u64, max: usize) -> usize {\n \n /// One fuzz case: both builders (the run one on a poisoned, reused table) against the\n /// oracle's words, LF rows, first rows and cells; refused wrong counts and rows; the walk\n-/// on both builders, out of place and in place, at several lane and segment counts\n+/// on both builders, into an empty or a pre-filled output buffer (never the column's own buffer: setup reads `ll` while the walk writes `io`), at several lane and segment counts\n fn fuzz_case(\n     rnd: &mut impl FnMut() -> u64,\n     max: usize,\n@@ -812,8 +812,10 @@ fn fuzz_case(\n             _ => 1 + (rnd() % 512) as usize,\n         };\n         reach.more_segments_than_rows += (segments > n) as usize;\n-        let in_place = rnd() % 2 == 0;\n-        let mut io = if in_place {\n+        // a pre-filled output buffer (a copy of the column), not the same buffer: true\n+        // in-place coverage is in miri_pair_runs and fuzz_pairs (`invert_in_place`)\n+        let presized = rnd() % 2 == 0;\n+        let mut io = if presized {\n             ll.clone()\n         } else {\n             vec![0x5a; rnd() as usize % 64]\n@@ -829,7 +831,7 @@ fn fuzz_case(\n             \"walk {build:?}, kind {kind}, n {n}, orig {orig}, {segments} segments\"\n         );\n         reach.walks += 1;\n-        reach.in_place += in_place as usize;\n+        reach.presized += presized as usize;\n         reach.start_ends += w.start_ends;\n         reach.lf_ends += w.lf_ends;\n         reach.grows += w.grows;\n@@ -873,7 +875,7 @@ fn assert_reached(r: &Reach) {\n         \"spills and tails: {r:?}\"\n     );\n     assert!(\n-        r.start_ends > 0 && r.lf_ends > 0 && r.grows > 0 && r.in_place > 0,\n+        r.start_ends > 0 && r.lf_ends > 0 && r.grows > 0 && r.presized > 0,\n         \"the walk's flags and growth: {r:?}\"\n     );\n     assert!(r.more_segments_than_rows > 0 && r.refused > 0, \"{r:?}\");"
+  }
+]

@@ -1,0 +1,153 @@
+{
+  "decision": "D052",
+  "incoming": 6731180299,
+  "pr": 272,
+  "head": "80637086691f707a86adce94d1a0430c4c0b009a",
+  "previous_head": "4c70dfc42536c32e9b55c6f2e95da5b1d8538b39",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "miri_job": {
+    "id": 128951552061,
+    "name": "miri",
+    "status": "completed",
+    "conclusion": "success",
+    "run_id": 42552694267,
+    "logs_url": null,
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@nightly",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Miri setup",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "Miri",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "Miri, the pair builder's AVX2 fill",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Miri, the reachability assertion's negative control",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "The pair module's doc tests (compile_fail error codes, on nightly)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      },
+      {
+        "name": "Post Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 17
+      },
+      {
+        "name": "Post Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 18
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 19
+      }
+    ]
+  },
+  "tested_checkout": "98f0ca9ce1d166197699b5b6feab7a981f05b519",
+  "toolchain": "rustc 1.102.0-nightly (5b7b37aef 2026-11-08)",
+  "default_miri": {
+    "passed": 18,
+    "failed": 0,
+    "ignored": 0,
+    "pair_passed": 6
+  },
+  "avx2_miri": {
+    "passed": 6,
+    "failed": 0,
+    "ignored": 0
+  },
+  "negative_control": "expected failure checked by wrapper; success",
+  "nightly_doc_tests": {
+    "passed": 8,
+    "compile_fail": 6,
+    "valid": 2
+  },
+  "blob_comparison": [
+    {
+      "path": "src/pair_runs.rs",
+      "candidate": "f2a842552b3125d8226fe66ac7782f558b63ee86",
+      "tested": "f2a842552b3125d8226fe66ac7782f558b63ee86"
+    },
+    {
+      "path": "src/bwt.rs",
+      "candidate": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+      "tested": "ed3c6e1a5bc068c587bdd2697446485f62d6b590"
+    },
+    {
+      "path": ".github/workflows/miri.yml",
+      "candidate": "5b92703384e3ae05da5509e3fa1f1567489f7087",
+      "tested": "5b92703384e3ae05da5509e3fa1f1567489f7087"
+    },
+    {
+      "path": "Cargo.toml",
+      "candidate": "cf32c6527bf46a460de3b5a435984fe4b2d6faab",
+      "tested": "cf32c6527bf46a460de3b5a435984fe4b2d6faab"
+    },
+    {
+      "path": "Cargo.lock",
+      "candidate": "451a9272c82d0565d63075e6d6498c5c6c16613e",
+      "tested": "451a9272c82d0565d63075e6d6498c5c6c16613e"
+    }
+  ],
+  "test_rename_only": true,
+  "old_test_blob": "f74f17e8ab9b8931bb282f652d9621d141e1cadb",
+  "new_test_blob": "5ab1bc04eb3a85ec4c3f6c56e5908919b11e507d",
+  "migration": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  },
+  "receipt": "f2e3d4a858adf54388f71b04c25cc1b4cf84d66a",
+  "audit": {
+    "resolved": 5,
+    "unresolved": 0,
+    "route": 145
+  },
+  "disposition": "Lift D046/D051 pair-path timing safety-evidence HOLD; B6 resumption recorded; freeze and normal CI separate."
+}

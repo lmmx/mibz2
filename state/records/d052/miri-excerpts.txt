@@ -1,0 +1,53 @@
+2026-11-09T02:45:50.0053189Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +98f0ca9ce1d166197699b5b6feab7a981f05b519:refs/remotes/pull/272/merge
+2026-11-09T02:45:51.1316158Z  * [new ref]         98f0ca9ce1d166197699b5b6feab7a981f05b519 -> pull/272/merge
+2026-11-09T02:45:51.2251585Z HEAD is now at 98f0ca9 Merge 4c70dfc42536c32e9b55c6f2e95da5b1d8538b39 into 66edecbe2b1924594e485e1f956dbee8ed9beda2
+2026-11-09T02:45:51.2308582Z 98f0ca9ce1d166197699b5b6feab7a981f05b519
+2026-11-09T02:45:59.4603478Z   nightly-x86_64-unknown-linux-gnu installed - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T02:45:59.5073484Z   nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T02:45:59.5693737Z [36;1m  if rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-11-09T02:45:59.5695038Z [36;1m  elif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-11-09T02:45:59.5999520Z [36;1mif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-11-09T02:45:59.6391432Z rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T02:46:01.4091646Z ##[group]Run cargo miri setup
+2026-11-09T02:46:01.4091901Z [36;1mcargo miri setup[0m
+2026-11-09T02:46:19.3691862Z ##[group]Run cargo miri test --lib -- miri_
+2026-11-09T02:46:19.3692558Z [36;1mcargo miri test --lib -- miri_[0m
+2026-11-09T02:46:19.3737208Z   MIBZ2_EXPECT_SSE2: 1
+2026-11-09T02:46:19.3737441Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_SSE2
+2026-11-09T02:49:53.6868409Z test pair_runs::tests::miri_fill_reached ... ok
+2026-11-09T02:51:06.2457528Z test pair_runs::tests::miri_pair_runs ... ok
+2026-11-09T02:51:06.5314348Z test pair_runs::tests::miri_rows_refused ... ok
+2026-11-09T02:51:13.1527204Z test pair_runs::tests::miri_witness_default_table_and_bad_row ... ok
+2026-11-09T02:51:59.3110012Z test pair_runs::tests::miri_witness_stale_state ... ok
+2026-11-09T02:52:15.4085259Z test pair_runs::tests::miri_witness_wrong_histogram_and_no_fallback ... ok
+2026-11-09T02:52:15.4550682Z test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 46 filtered out; finished in 674.07s
+2026-11-09T02:52:15.5152992Z ##[group]Run cargo miri test --lib -- pair_runs::tests::miri_
+2026-11-09T02:52:15.5153389Z [36;1mcargo miri test --lib -- pair_runs::tests::miri_[0m
+2026-11-09T02:52:15.5198060Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1
+2026-11-09T02:52:15.5198302Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T02:52:15.5198520Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T02:52:23.9064036Z test pair_runs::tests::miri_fill_reached ... ok
+2026-11-09T02:53:32.6687966Z test pair_runs::tests::miri_pair_runs ... ok
+2026-11-09T02:53:32.9405111Z test pair_runs::tests::miri_rows_refused ... ok
+2026-11-09T02:53:39.4068774Z test pair_runs::tests::miri_witness_default_table_and_bad_row ... ok
+2026-11-09T02:54:24.0285734Z test pair_runs::tests::miri_witness_stale_state ... ok
+2026-11-09T02:54:39.8130771Z test pair_runs::tests::miri_witness_wrong_histogram_and_no_fallback ... ok
+2026-11-09T02:54:39.9026639Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 314.38s
+2026-11-09T02:54:39.9533926Z ##[group]Run if cargo miri test --lib -- pair_runs::tests::miri_fill_reached > control.log 2>&1; then
+2026-11-09T02:54:39.9534478Z [36;1mif cargo miri test --lib -- pair_runs::tests::miri_fill_reached > control.log 2>&1; then[0m
+2026-11-09T02:54:39.9535562Z [36;1mgrep -q "AVX2 fill expected" control.log || { cat control.log; echo "failed for another reason"; exit 1; }[0m
+2026-11-09T02:54:39.9536071Z [36;1mecho "negative control: failed as it must (AVX2 fill expected, and the SSE2 one ran)"[0m
+2026-11-09T02:54:39.9581118Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T02:54:39.9581325Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T02:54:42.9176234Z negative control: failed as it must (AVX2 fill expected, and the SSE2 one ran)
+2026-11-09T02:54:42.9205263Z ##[group]Run cargo test --features pair-runs --doc pair_runs
+2026-11-09T02:54:42.9205674Z [36;1mcargo test --features pair-runs --doc pair_runs[0m
+2026-11-09T02:54:54.9453561Z test src/pair_runs.rs - pair_runs::Built (line 217) - compile fail ... ok
+2026-11-09T02:54:54.9473042Z test src/pair_runs.rs - pair_runs::Built (line 207) - compile fail ... ok
+2026-11-09T02:54:54.9553625Z test src/pair_runs.rs - pair_runs::Built (line 212) - compile fail ... ok
+2026-11-09T02:54:54.9713354Z test src/pair_runs.rs - pair_runs::Prepared (line 910) - compile fail ... ok
+2026-11-09T02:54:54.9733198Z test src/pair_runs.rs - pair_runs::Prepared (line 923) - compile fail ... ok
+2026-11-09T02:54:54.9747225Z test src/pair_runs.rs - pair_runs::Prepared (line 918) - compile fail ... ok
+2026-11-09T02:54:55.0088235Z test src/pair_runs.rs - pair_runs::Built (line 227) ... ok
+2026-11-09T02:54:55.0562737Z test src/pair_runs.rs - pair_runs::Prepared (line 933) ... ok
+2026-11-09T02:54:55.0563462Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.14s
