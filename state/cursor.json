@@ -315,7 +315,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING_FOR_INBOX",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "9101edf77c28fc6d52af0951abbf76e4ec9df490",
   "incoming_experiment_comment_ids": [
     {
@@ -493,6 +493,23 @@
       "evidence_commit": "544462881497fc957fe17c35ae7508ca1bac23d5",
       "report_commit": "9101edf77c28fc6d52af0951abbf76e4ec9df490",
       "reply_id": 6693638662
+    },
+    {
+      "comment_id": 6715370785,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "progress": "Receipt: migration verified; reviewing pipeline critical path against current state."
+    },
+    {
+      "comment_id": 6729116363,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "progress": "Receipt: migration verified; reviewing pipeline critical path against current state.",
+      "resumes_comment_id": 6715370785
     }
   ],
   "migrated_from": {
