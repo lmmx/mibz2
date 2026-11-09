@@ -161,6 +161,10 @@ impl<R: Read + Send + 'static> BzReader<R> {
         let feeder = std::thread::Builder::new()
             .name("mibz2-read".into())
             .spawn(move || {
+                // (a panic in `r`'s read unwinds this thread: the guard then records it as
+                // the read's error and cancels the decode, so the reader is not left
+                // waiting for input that will never come)
+                let _unwind = CancelOnUnwind(&d, &e);
                 loop {
                     let mut buf = vec![0u8; CHUNK];
                     let n = match read_full(&mut r, &mut buf) {
@@ -188,6 +192,21 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 feeder: Some(feeder),
                 read_error,
             }),
+        }
+    }
+}
+
+/// A parallel reader's feeder's guard: if the feeder unwinds (its source's `read`
+/// panicked), the decode is cancelled and the reader's next read fails with an
+/// `io::Error` saying so, instead of waiting for input that will never come
+struct CancelOnUnwind<'a>(&'a StreamDecoder, &'a Mutex<Option<io::Error>>);
+
+impl Drop for CancelOnUnwind<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            *self.1.lock().unwrap_or_else(|p| p.into_inner()) =
+                Some(io::Error::other("the input's reader panicked"));
+            self.0.cancel();
         }
     }
 }

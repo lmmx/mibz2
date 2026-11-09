@@ -497,6 +497,229 @@ pub fn candidates() -> Vec<Box<dyn Candidate>> {
     ]
 }
 
+/// A push decoder fed `chunk` bytes at a time from another thread and read `read` bytes
+/// at a time: its output up to its end or its first error, and that result. With
+/// `cancel_after`, the reader cancels the decode once it has that many bytes (or more),
+/// and reads once more (the cancellation's error, unless the decode had ended).
+pub fn drive(
+    dec: &mibz2::StreamDecoder,
+    data: &[u8],
+    chunk: usize,
+    read: usize,
+    cancel_after: Option<usize>,
+) -> (Vec<u8>, Result<(), Error>) {
+    let mut out = Vec::new();
+    let res = std::thread::scope(|s| {
+        s.spawn(|| {
+            for c in data.chunks(chunk.max(1)) {
+                if dec.write(c.to_vec()).is_err() {
+                    return;
+                }
+            }
+            dec.close();
+        });
+        let mut buf = vec![0u8; read.max(1)];
+        let mut cancelled = false;
+        loop {
+            if !cancelled && cancel_after.is_some_and(|n| out.len() >= n) {
+                dec.cancel();
+                cancelled = true;
+            }
+            match dec.read(&mut buf) {
+                Ok(0) => break Ok(()),
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => {
+                    dec.cancel();
+                    break Err(e);
+                }
+            }
+        }
+    });
+    (out, res)
+}
+
+/// The plain parallel decoder (production's workers, two of them in four slots: the
+/// reference the service core is held to, as tests/service.rs holds it): its output up to
+/// its end or its first error, and that result
+pub fn plain_parallel(data: &[u8]) -> (Vec<u8>, Result<(), Error>) {
+    let dec = mibz2::StreamDecoder::with_inverse::<mibz2::bwt::Segmented>(2, 4, Kernels::detect());
+    drive(&dec, data, 1 << 20, 1 << 16, None)
+}
+
+/// An error's kind's name (`BlockCrc`, `Truncated`, ..)
+pub fn kind_name(e: &Error) -> String {
+    format!("{:?}", e.kind)
+        .split([' ', '{', '('])
+        .next()
+        .unwrap_or("")
+        .to_string()
+}
+
+/// A service-core decoder under test (`StreamDecoder::service`, research): `teams` teams
+/// of `k`, `services` service workers, `slots` blocks in flight, on `kernels`; driven as a
+/// push decoder, or (`reader`) through `BzReader::parallel_service`, its feeder thread
+/// reading the input
+#[derive(Clone, Copy, Debug)]
+pub struct Serviced {
+    pub teams: usize,
+    pub k: usize,
+    pub services: usize,
+    pub slots: usize,
+    pub kernels: Kernels,
+    pub reader: bool,
+}
+
+/// How a service case drives its decoder: write and read sizes, and where (if anywhere)
+/// the reader cancels
+#[derive(Clone, Copy, Debug)]
+pub struct Drive {
+    pub chunk: usize,
+    pub read: usize,
+    pub cancel_after: Option<usize>,
+}
+
+impl Serviced {
+    pub fn name(&self) -> String {
+        let k = if self.kernels == Kernels::scalar() {
+            "scalar"
+        } else {
+            "simd"
+        };
+        let how = if self.reader {
+            "BzReader::parallel_service"
+        } else {
+            "push"
+        };
+        format!(
+            "mibz2 service {}x{} + {} in {} {k} {how}",
+            self.teams, self.k, self.services, self.slots
+        )
+    }
+
+    /// Its decode of a whole .bz2 driven as `how` says (a reader form ignores `chunk` and
+    /// cancels by dropping the reader): its output up to its end or first error, and that
+    /// result. Panics if the decoder built is not the service core's (its threads).
+    pub fn run(&self, data: &[u8], how: Drive) -> (Vec<u8>, Result<(), Error>) {
+        if !self.reader {
+            let dec = mibz2::StreamDecoder::service(
+                self.teams,
+                self.k,
+                self.services,
+                self.slots,
+                self.kernels,
+            );
+            assert_eq!(dec.threads(), self.teams * self.k + self.services);
+            return drive(&dec, data, how.chunk, how.read, how.cancel_after);
+        }
+        use std::io::Read;
+        let mut r = mibz2::BzReader::parallel_service(
+            std::io::Cursor::new(data.to_vec()),
+            self.teams,
+            self.k,
+            self.services,
+            self.slots,
+            self.kernels,
+        );
+        let mut out = Vec::new();
+        let mut buf = vec![0u8; how.read.max(1)];
+        let res = loop {
+            if how.cancel_after.is_some_and(|n| out.len() >= n) {
+                // (dropped mid-stream: what it delivered so far stands, as a cancel)
+                drop(r);
+                break Err(Error::new(mibz2::ErrorKind::Cancelled));
+            }
+            match r.read(&mut buf) {
+                Ok(0) => break Ok(()),
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => {
+                    break Err(e
+                        .get_ref()
+                        .and_then(|x| x.downcast_ref::<Error>())
+                        .cloned()
+                        .unwrap_or_else(|| {
+                            Error::new(mibz2::ErrorKind::Io(e.kind(), e.to_string()))
+                        }))
+                }
+            }
+        };
+        (out, res)
+    }
+}
+
+/// The service-core candidates the fuzz loop checks (examples/fuzz.rs, MODE service or
+/// mixed): svc2's plan at 10 threads (`ab`'s `mibz2-svc2`: two teams of three, two service
+/// workers, 8 slots, the plan FOR SVC2@10 was measured at), and other shapes: one service
+/// worker and a window of one block (tight), three teams of three in 12 (wide), a team of
+/// four with two service workers, two teams of two on the scalar kernels, one team of two
+/// on the scalar kernels in one slot, and svc2's plan through `BzReader::parallel_service`
+pub fn service_candidates() -> Vec<Serviced> {
+    let (simd, scalar) = (Kernels::detect(), Kernels::scalar());
+    let s = |teams, k, services, slots, kernels, reader| Serviced {
+        teams,
+        k,
+        services,
+        slots,
+        kernels,
+        reader,
+    };
+    vec![
+        s(2, 3, 2, 8, simd, false),
+        s(1, 3, 1, 1, simd, false),
+        s(3, 3, 1, 12, simd, false),
+        s(1, 4, 2, 2, simd, false),
+        s(2, 2, 1, 3, scalar, false),
+        s(1, 2, 1, 1, scalar, false),
+        s(2, 3, 2, 8, simd, true),
+    ]
+}
+
+/// Multi-block inputs for the service core (a team's pool engages only on a block of
+/// `MIN_COOP` rows or more, and blocks overlap only with several queued): full blocks at
+/// levels 3 to 9, small blocks (levels 1 and 2) among full ones, several streams, an empty
+/// stream among them, and crafted streams alternating full and small blocks (after the
+/// pipeline fuzz's corpus, safety/pipeline-fuzz)
+pub fn multi_block_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
+    let corp = corpora(1);
+    let text = &corp[0].1;
+    let mut v: Vec<(String, Vec<u8>)> = vec![
+        ("text level 9".into(), compress(&text[..2_700_000], 9)),
+        ("text level 5".into(), compress(&text[..1_600_000], 5)),
+        // (ten blocks of 300 kB, more than any candidate's back and front sets)
+        ("text level 3".into(), compress(&text[..3_000_000], 3)),
+        ("random level 3".into(), compress(&rng.bytes(1_300_000), 3)),
+        (
+            "records level 4".into(),
+            compress(&corp[5].1[..1_700_000], 4),
+        ),
+        ("runs level 9".into(), compress(&corp[4].1[..2_500_000], 9)),
+        ("abab level 6".into(), compress(&b"ab".repeat(900_000), 6)),
+        ("text level 1".into(), compress(&text[..600_000], 1)),
+    ];
+    let mut multi = Vec::new();
+    for (i, level) in [9, 1, 9, 2, 1, 9].into_iter().enumerate() {
+        let part = &text[i * 300_001..i * 300_001 + 250_000 + i * 97_003];
+        multi.extend(compress(part, level));
+    }
+    multi.extend(compress(b"", 9));
+    multi.extend(compress(&rng.bytes(400_000), 3));
+    v.push(("streams of levels 9, 1, 2, empty, 3".into(), multi));
+    let col = |n: usize, seed: u64| -> Vec<u8> {
+        let mut r = Rng(seed);
+        (0..n).map(|_| b"abcdefgh"[r.below(8) as usize]).collect()
+    };
+    let mut specs = Vec::new();
+    for i in 0..3u64 {
+        specs.push(Spec::of(col(300_000, 40 + i), 1_234));
+        specs.push(Spec::of(col(2_000, 50 + i), 99));
+    }
+    specs.push(Spec::of(col(300_000, 60), 1_234));
+    v.push((
+        "crafted full and small alternating".into(),
+        craft(9, &specs, None),
+    ));
+    v
+}
+
 /// A candidate's decode, a panic caught and reported as one
 pub fn try_decode(c: &dyn Candidate, data: &[u8]) -> Result<Result<Vec<u8>, String>, String> {
     catch_unwind(AssertUnwindSafe(|| c.decode(data))).map_err(|_| "PANIC".to_string())

@@ -1170,6 +1170,13 @@ struct HubState {
     backs: Vec<Back>,
     /// blocks taken from `jobs`, not yet published or dropped
     live: usize,
+    /// (tests only: the waits a service worker and a team's first thread have entered,
+    /// each counted under this lock just before its `Condvar::wait`, so a test holding the
+    /// lock and seeing the count knows that thread is parked, not merely slow)
+    #[cfg(test)]
+    svc_waits: usize,
+    #[cfg(test)]
+    team_waits: usize,
 }
 
 impl HubState {
@@ -1266,6 +1273,10 @@ impl StreamDecoder {
                     .collect(),
                 backs: (0..2 * teams).map(|_| Back::default()).collect(),
                 live: 0,
+                #[cfg(test)]
+                svc_waits: 0,
+                #[cfg(test)]
+                team_waits: 0,
             }),
             cv: Condvar::new(),
             lookahead,
@@ -1363,6 +1374,10 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
                 if !idle {
                     idle = true;
                     mark!(SvcIdleStart);
+                }
+                #[cfg(test)]
+                {
+                    st.svc_waits += 1;
                 }
                 st = hub.wait(st);
             };
@@ -1495,6 +1510,10 @@ fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
                 u8::from(!st.prepared.is_empty()),
                 0
             );
+        }
+        #[cfg(test)]
+        {
+            st.team_waits += 1;
         }
         st = hub.wait(st);
     };
@@ -1831,6 +1850,11 @@ mod service_tests {
     /// A hub as `service_with_fault` makes it, with no threads: `lookahead` blocks of
     /// lookahead and `fronts` front sets
     fn hub(lookahead: usize, fronts: usize) -> Hub {
+        hub_with(lookahead, fronts, 1, None)
+    }
+
+    /// `hub`, with `backs` back sets and the fault hook given
+    fn hub_with(lookahead: usize, fronts: usize, backs: usize, fault: Option<ServiceFault>) -> Hub {
         Hub {
             st: Mutex::new(HubState {
                 jobs: Default::default(),
@@ -1838,12 +1862,261 @@ mod service_tests {
                 prepared: Default::default(),
                 walked: Vec::new(),
                 fronts: (0..fronts).map(|_| Front::default()).collect(),
-                backs: vec![Back::default()],
+                backs: (0..backs).map(|_| Back::default()).collect(),
                 live: 0,
+                svc_waits: 0,
+                team_waits: 0,
             }),
             cv: Condvar::new(),
             lookahead,
-            fault: None,
+            fault,
+        }
+    }
+
+    /// A decoder's shared state, as `service_with_fault` makes it (cancelled or not)
+    fn shared(cancelled: bool) -> Shared {
+        Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+            }),
+            cv: Condvar::new(),
+            slots: 4,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+        }
+    }
+
+    /// Wait (yielding, at most `secs`) until `ok` holds of the hub's state, checked under
+    /// its lock; whether it did
+    fn until(h: &Hub, secs: u64, ok: impl Fn(&HubState) -> bool) -> bool {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(secs);
+        loop {
+            if ok(&h.lock()) {
+                return true;
+            }
+            if std::time::Instant::now() > deadline {
+                return false;
+            }
+            std::thread::yield_now();
+        }
+    }
+
+    /// The wake-up of rule 3 under a controlled schedule (D045's handshake): the service
+    /// worker is shown to be parked in its `Condvar::wait` before the pop it must wake on,
+    /// not merely given time. Each waiter counts its wait under the hub's lock just before
+    /// it waits, and `Condvar::wait` releases that lock only once the thread is waiting, so
+    /// a test that then holds the lock and sees the count knows the thread is parked (or,
+    /// after a spurious wake-up, blocked on the lock to recheck: the only schedule in which
+    /// a missing wake-up could go unseen here). A team's first thread is parked before it
+    /// too (waiting for a back set), so the one wake-up a `notify_one` would send can go to
+    /// the team, which can't use it, rather than to the service worker.
+    ///
+    /// Then a team takes the prepared block (`take_prepared`, the rule-3 wake-up) with the
+    /// lock never released between that pop and the handshake but by the pop itself, and
+    /// nothing else happens until the service worker has taken its job or 10 s (Miri: 120)
+    /// have passed: no job fed, no front set returned, no block walked.
+    #[test]
+    fn miri_a_parked_service_worker_wakes_on_the_pop() {
+        let shared = shared(false);
+        // lookahead 1, two front sets (one holding block 0), no back set yet
+        let h = hub_with(1, 2, 0, None);
+        {
+            let mut st = h.lock();
+            st.live = 1;
+            let front = st.fronts.pop().unwrap();
+            st.prepared.push_back(Prepared {
+                place: 0,
+                bit: 0,
+                symbols: job(0).2,
+                front,
+                rows: 0,
+            });
+            st.jobs.push_back(job(1));
+        }
+        let secs = if cfg!(miri) { 120 } else { 10 };
+        std::thread::scope(|s| {
+            // a team's first thread, parked: a prepared block, but no back set to walk into
+            let team = s.spawn(|| take_prepared(&h));
+            assert!(
+                until(&h, secs, |st| st.team_waits == 1),
+                "the team never parked"
+            );
+            // the service worker, parked: the prepared queue at its lookahead
+            let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
+            assert!(
+                until(&h, secs, |st| st.svc_waits == 1),
+                "the service never parked"
+            );
+            let (p, back) = {
+                let mut st = h.lock();
+                // both parked, and nothing done: the handshake
+                assert_eq!((st.team_waits, st.svc_waits), (1, 1));
+                assert_eq!((st.jobs.len(), st.prepared.len()), (1, 1));
+                // a back set for this thread's pop, given without a wake-up (the team
+                // parked above is not told of it)
+                st.backs.push(Back::default());
+                drop(st);
+                take_prepared(&h).expect("block 0")
+            };
+            assert_eq!(p.place, 0);
+            let woke = until(&h, secs, |st| st.jobs.is_empty());
+            // (end it either way: block 1's empty symbols fail their move-to-front, so it
+            // retires; block 0 retires here, then the hub is closed: the close's own
+            // wake-up ends both threads even where the pop's was missing)
+            h.retire(Some(p.front), Some(back));
+            h.lock().closed = true;
+            h.cv.notify_all();
+            svc.join().unwrap();
+            assert!(team.join().unwrap().is_none());
+            assert!(
+                woke,
+                "the parked service worker never woke on the team's pop"
+            );
+        });
+        let st = h.lock();
+        assert!(st.done() && st.prepared.is_empty());
+        assert_eq!((st.fronts.len(), st.backs.len()), (2, 1));
+        assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
+    }
+
+    /// Every route by which a block leaves the decode returns the buffers it held (or new
+    /// ones, after a panic) and retires it once: preparing (its error, its panic, a
+    /// cancelled decode), a team's run (its panic, a cancelled decode) and finishing (a CRC
+    /// error, its panic, success, a cancelled decode). Each route is driven alone on a hub
+    /// holding exactly one live block, and the hub then checked: `live` back to zero, and
+    /// every front and back set home, so no route can shrink a buffer bound into a deadlock
+    /// or leave the end waiting (D045: retirement and buffer return).
+    #[test]
+    fn miri_every_retirement_returns_its_buffers() {
+        const FRONTS: usize = 3;
+        const BACKS: usize = 2;
+        let k = Kernels::scalar();
+        let home = |h: &Hub, what: &str| {
+            let st = h.lock();
+            assert_eq!(st.live, 0, "{what}: retired");
+            assert_eq!(st.fronts.len(), FRONTS, "{what}: the front sets");
+            assert_eq!(st.backs.len(), BACKS, "{what}: the back sets");
+            assert!(st.prepared.is_empty() && st.walked.is_empty(), "{what}");
+        };
+        let published = |sh: &Shared, place: u64| sh.lock().ready.get(&place).cloned();
+        // preparing: a move-to-front error, a panic, a cancelled decode
+        for (what, fault, cancelled) in [
+            ("preparing's error", None, false),
+            (
+                "preparing's panic",
+                Some(ServiceFault::Prepare { place: 3 }),
+                false,
+            ),
+            ("preparing cancelled", None, true),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            let task = {
+                let mut st = h.lock();
+                st.jobs.push_back(job(3));
+                take_job(&mut st)
+            };
+            let SvcTask::Prepare(j, front) = task else {
+                unreachable!()
+            };
+            prepare(&sh, &h, j, front, k);
+            home(&h, what);
+            let r = published(&sh, 3);
+            if cancelled {
+                assert!(r.is_none(), "{what}");
+            } else {
+                let e = r.expect(what).unwrap_err();
+                assert_eq!((e.block, e.bit), (Some(3), Some(0)), "{what}");
+                assert_eq!(fault.is_some(), matches!(e.kind, ErrorKind::Internal(_)));
+            }
+        }
+        // a team's run: a panic (on the one-core path, as a block below MIN_COOP), and a
+        // cancelled decode; the team ends once the hub is done
+        for (what, fault, cancelled) in [
+            (
+                "a team's panic",
+                Some(ServiceFault::Team {
+                    place: 4,
+                    thread: 0,
+                }),
+                false,
+            ),
+            ("a team cancelled", None, true),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            {
+                let mut st = h.lock();
+                let front = st.fronts.pop().unwrap();
+                st.prepared.push_back(Prepared {
+                    place: 4,
+                    bit: 32,
+                    symbols: job(4).2,
+                    front,
+                    rows: 0,
+                });
+                st.live = 1;
+                st.closed = true;
+            }
+            team_worker(&sh, &h, 2);
+            home(&h, what);
+            let r = published(&sh, 4);
+            if cancelled {
+                assert!(r.is_none(), "{what}");
+            } else {
+                let e = r.expect(what).unwrap_err();
+                assert!(matches!(e.kind, ErrorKind::Internal(_)), "{what}: {e}");
+                assert_eq!((e.block, e.bit), (Some(4), Some(32)), "{what}");
+            }
+        }
+        // finishing: a CRC error, a panic, success, a cancelled decode (a block too short
+        // to segment, its bytes walked straight into `direct`)
+        let crc_x = super::super::crc::crc32(b"x", k);
+        for (what, fault, cancelled, crc, want) in [
+            ("finishing's CRC error", None, false, crc_x ^ 1, None),
+            (
+                "finishing's panic",
+                Some(ServiceFault::Finish { place: 5 }),
+                false,
+                crc_x,
+                None,
+            ),
+            ("finishing", None, false, crc_x, Some(b"x".to_vec())),
+            ("finishing cancelled", None, true, crc_x, None),
+        ] {
+            let (sh, h) = (shared(cancelled), hub_with(1, FRONTS, BACKS, fault));
+            let back = {
+                let mut st = h.lock();
+                st.live = 1;
+                st.backs.pop().unwrap()
+            };
+            let mut symbols = job(5).2;
+            symbols.crc = crc;
+            let w = Walked {
+                place: 5,
+                bit: 40,
+                symbols,
+                back: Back {
+                    direct: b"x".to_vec(),
+                    ..back
+                },
+            };
+            finish(&sh, &h, w, &mut Vec::new(), k);
+            home(&h, what);
+            let r = published(&sh, 5);
+            match (cancelled, want) {
+                (true, _) => assert!(r.is_none(), "{what}"),
+                (false, Some(bytes)) => assert_eq!(r, Some(Ok(bytes)), "{what}"),
+                (false, None) => {
+                    let e = r.expect(what).unwrap_err();
+                    assert_eq!((e.block, e.bit), (Some(5), Some(40)), "{what}");
+                    assert_eq!(fault.is_some(), matches!(e.kind, ErrorKind::Internal(_)));
+                }
+            }
         }
     }
 

@@ -421,3 +421,58 @@ fn dropped_and_cancelled() {
         drop(dec);
     });
 }
+
+/// A source whose `read` panics: at once, or after `ok` bytes
+struct Panicky {
+    data: Vec<u8>,
+    at: usize,
+    ok: usize,
+}
+
+impl Read for Panicky {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.at >= self.ok {
+            panic!("a source's read panicking at byte {}", self.at);
+        }
+        let n = buf
+            .len()
+            .min(self.ok - self.at)
+            .min(self.data.len() - self.at);
+        buf[..n].copy_from_slice(&self.data[self.at..self.at + n]);
+        self.at += n;
+        Ok(n)
+    }
+}
+
+/// The input's own `Read` panicking (D045's panic scope): the parallel reader's feeder
+/// unwinds, and its guard cancels the decode, so the reader's read fails (an `io::Error`
+/// saying the input's reader panicked) instead of waiting for input that will never come,
+/// whether the panic comes before any input or mid-stream, on the service core and the
+/// default parallel reader, all under the watchdog
+#[test]
+fn a_panicking_source() {
+    let corp = corpora(1);
+    let z = compress(&corp[0].1, 9);
+    // (more than the feeder's 4 MiB chunk, so a panic at 5 MB comes after its first write,
+    // with blocks in flight)
+    let big = compress(&corp[1].1.repeat(3), 1);
+    assert!(big.len() > 5_000_000);
+    let cases = [(&z, 0), (&z, 10), (&z, z.len() / 2), (&big, 5_000_000)];
+    for (z, ok) in cases {
+        for service in [true, false] {
+            let z = z.clone();
+            watchdog(&format!("panic at {ok}, service {service}"), move || {
+                let src = Panicky { data: z, at: 0, ok };
+                let mut r = if service {
+                    mibz2::BzReader::parallel_service(src, 2, 3, 2, 8, Kernels::detect())
+                } else {
+                    mibz2::BzReader::parallel(src, 3)
+                };
+                let mut out = Vec::new();
+                let e = r.read_to_end(&mut out).unwrap_err();
+                assert!(e.to_string().contains("panicked"), "{e}");
+                drop(r);
+            });
+        }
+    }
+}
