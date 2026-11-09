@@ -1207,7 +1207,7 @@
     },
     {
       "trigger_comment_id": 6741912733,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1215,7 +1215,10 @@
       "report_commit": "b365250e5230f64e35b918b8f8e847de1755735a",
       "report_path": "state/reports/service-guarded-registration-6741912733/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: restore workload/identity and structured preflight admission; pin current-master base; establish grid/replacement authority; preflight-only target entry and end-to-end recipe check. Eight tests pass; malformed-evidence witnesses still VALID. Adoption boundary unchanged."
+      "disposition": "REVISE before freeze: restore workload/identity and structured preflight admission; pin current-master base; establish grid/replacement authority; preflight-only target entry and end-to-end recipe check. Eight tests pass; malformed-evidence witnesses still VALID. Adoption boundary unchanged.",
+      "review_comment_id": 6742157313,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
