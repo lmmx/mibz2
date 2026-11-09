@@ -977,6 +977,20 @@
       "receipt_commit": "5006d9cc68a42f2f743c1f88160d6333120be8dc",
       "disposition": "D062 completion-order objection discharged; PROCEED toward freeze under existing CI and registration gates",
       "comment": 6734295081
+    },
+    {
+      "id": "D064",
+      "pr": 270,
+      "incoming_pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6735319842,
+      "sha": "378f0637e75378e36d9dff85b22a0bf4cd3086ab",
+      "evidence_digest": "git-blob:2c49daab30d13c539c8236956ec32bf124e90344",
+      "decision": "G1",
+      "status": "complete",
+      "commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2",
+      "receipt_commit": "781e9059c93891e14783833db83c43cd52845322",
+      "disposition": "All-observation diagnostic logging admissible; selective deletion not delegated; whole-attempt narrowing distinguished; C5/C6 reserved"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1168,7 +1182,9 @@
     "ea09a7084da0a1de032c553b8749ef20951c479d",
     "5006d9cc68a42f2f743c1f88160d6333120be8dc",
     "d3fa5845ff995ab6c798f7611ff001d1a1ffd790",
-    "85bff2185c3ef9d35181f8c5617cad207e2a16ee"
+    "85bff2185c3ef9d35181f8c5617cad207e2a16ee",
+    "781e9059c93891e14783833db83c43cd52845322",
+    "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1232,7 +1248,8 @@
     6733269661,
     6733568497,
     6733879388,
-    6734225080
+    6734225080,
+    6735319842
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1312,8 +1329,9 @@
   },
   "current_execution": {
     "active_comment": 6735319842,
-    "status": "in progress",
-    "decision": "D064"
+    "status": "complete",
+    "decision": "D064",
+    "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
   },
   "duplicate_events": [
     {
@@ -2204,8 +2222,10 @@
     {
       "comment_id": 6735319842,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D064"
+      "status": "complete",
+      "decision": "D064",
+      "receipt_commit": "781e9059c93891e14783833db83c43cd52845322",
+      "work_commit": "04c1e91248449b0c06ce9a1da9e7eb34d9b6e1c2"
     }
   ],
   "migrated_from": {
