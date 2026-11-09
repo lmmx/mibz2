@@ -5,14 +5,18 @@ name: Miri
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
-# included, with its unchecked states refused (run_stage::tests::miri_*). Only on changes to the
-# walks, the pool or that research.
+# included, with its unchecked states refused (run_stage::tests::miri_*). And that research's
+# emitter, mtf::mtf_runs, scalar and AVX2: its record stores on every exit, through sort, fill
+# and build's fallback (tests/run_fed_b5.rs's miri_*; Guardian D044). Only on changes to the
+# walks, the pool, the MTF kernels or that research.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/mtf.rs"
+      - "tests/run_fed_b5.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -20,6 +24,8 @@ on:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/run_stage.rs"
+      - "src/mtf.rs"
+      - "tests/run_fed_b5.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -48,3 +54,17 @@ jobs:
           MIBZ2_EXPECT_AVX2: "1"
           MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
         run: cargo miri test --lib -- run_stage::tests::miri_
+      # the run-fed emitter's record stores (mtf::mtf_runs) on every exit, scalar then AVX2,
+      # each case through sort, both fills and build's fallback against mtf then bwt::build
+      - name: Miri, the run-fed emitter (scalar)
+        run: cargo miri test --features run-fed --test run_fed_b5 -- miri_
+      - name: Miri, the run-fed emitter (AVX2)
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: cargo miri test --features run-fed --test run_fed_b5 -- miri_
+      # the compile_fail doc tests' error codes (E0451, E0616, E0502, E0499): rustdoc checks
+      # them on nightly only, and test.yml runs the doc tests on stable
+      - name: The run-fed doc tests' error codes (nightly)
+        run: cargo test --features run-fed --doc run_stage
