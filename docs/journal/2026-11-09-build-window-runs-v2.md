@@ -232,3 +232,94 @@ The rule is #310's, with its inherited no-harm policy written out in full.
 - **No retries to pass, no fallback:** if the rule fails, the PR is closed and this entry
   records the negative result. #310's head is not a fallback (D075).
 - **Not changed after the data:** the corpora, thread counts, rounds, `RUNS` = 6, this rule.
+
+## Result: the registered rule passes, with three wall rows unresolved
+
+Recorded after the runs. The rule above is unchanged. Three runs on the benched head
+**c40a1dc272c4fe83ae038ad165eb787543a0bd41** against b681712: run 42714182022, attempts 1, 2
+and 3, bench 3.4.0, 10 paired rounds each. The bench jobs were 129491282563, 129497083192 and
+129502398144. Run 1 was on an AMD EPYC 7763; runs 2 and 3 were on an Intel Xeon Platinum
+8573C. The tables are preserved on #312: run 1 in comment 6753648090, run 2 in 6753848898,
+and run 3 in the bench comment 6753433826 as it stands after attempt 3.
+
+Run 3 was made under the repeat policy, only to settle the two rows that run 2 flagged slower
+and run 1 had not. Every run gave the same bytes on every corpus. CI was green on the head:
+24 checks passed, 3 were skipped, and Miri passed.
+
+**The whole grid, wall change (CPU change), head over base, 95% intervals:**
+
+| corpus | threads | run 1 | run 2 | run 3 |
+|---|--:|--:|--:|--:|
+| `wikidata` | 1 | **−8.1% (−9.1, −7.1)** (**−8.1%**) | **−1.4% (−2.1, −0.7)** (**−1.4%**) | +0.3% (−2.3, +3.0) (+0.3%) |
+| `wikidata` | 2 | **−5.7% (−7.3, −4.0)** (**−5.7%**) | **−1.7% (−2.5, −0.8)** (**−1.4%**) | **−1.3% (−2.4, −0.3)** (**−1.4%**) |
+| `wikidata` | 4 | −2.2% (−4.5, +0.2) (**−3.0% (−5.0, −1.1)**) | −0.3% (−1.5, +0.9) (**−1.6% (−3.0, −0.0)**) | −2.6% (−5.7, +0.7) (**−3.1% (−5.5, −0.7)**) |
+| `onebyte` | 1 | −1.6% (−3.7, +0.5) | −3.7% (−10.6, +3.8) | +0.6% (−1.2, +2.5) |
+| `onebyte` | 2 | −1.1% (−4.6, +2.6) | −0.1% (−1.8, +1.6) | −1.3% (−3.0, +0.5) |
+| `onebyte` | 4 | −0.6% (−3.5, +2.4) | −0.0% (−1.5, +1.5) | +1.2% (−0.8, +3.2) |
+| `pattern` | 1 | **−2.3% (−4.4, −0.1) faster** | **+0.9% (+0.1, +1.7) slower** | +0.4% (−1.4, +2.2) |
+| `pattern` | 2 | **+7.7% (+0.1, +15.9) slower** | −4.3% (−12.4, +4.4) | −0.9% (−11.3, +10.7) |
+| `pattern` | 4 | +0.3% (−5.0, +5.8) | +1.1% (−4.0, +6.4) | +3.2% (−2.6, +9.4) |
+| `random` | 1 | −0.7% (−2.1, +0.7) | −0.8% (−1.7, +0.1) | −1.1% (−3.2, +1.1) |
+| `random` | 2 | +0.6% (−3.3, +4.6) | −1.9% (−4.7, +1.1) | +1.5% (−1.5, +4.7) |
+| `random` | 4 | **−3.2% (−5.6, −0.6) faster** | +1.8% (−2.2, +6.1) (CPU **+1.7% (+0.0, +3.5) slower**) | +1.2% (−2.4, +4.9) |
+| `records` | 1 | +0.4% (−1.1, +1.9) | −0.0% (−6.0, +6.3) | −0.1% (−5.7, +5.8) |
+| `records` | 2 | +1.4% (−2.1, +5.1) | **+2.3% (+0.8, +3.9) slower** | −1.3% (−5.8, +3.3) |
+| `records` | 4 | +0.1% (−3.5, +3.8) (CPU +1.3%) | −0.8% (−5.8, +4.6) (CPU +1.6%) | +2.3% (−0.7, +5.3) (CPU +3.1% (−0.1, +6.4)) |
+| `runs` | 1 | −0.0% (−1.6, +1.6) | −0.1% (−1.5, +1.4) | −1.1% (−4.2, +2.1) |
+| `runs` | 2 | −1.8% (−4.8, +1.2) | −0.1% (−1.6, +1.3) | −0.8% (−2.3, +0.7) |
+| `runs` | 4 | −1.3% (−3.3, +0.7) | −0.8% (−1.9, +0.4) | +0.3% (−1.3, +1.9) |
+| `text` | 1 | **−6.0% (−8.6, −3.3) faster** | **−1.7% (−2.2, −1.1) faster** | **−1.8% (−2.4, −1.2) faster** |
+| `text` | 2 | **−4.5% (−8.6, −0.2) faster** | −1.2% (−4.4, +2.2) (CPU **−1.4%**) | −2.7% (−8.5, +3.4) |
+| `text` | 4 | **−1.8% (−3.5, −0.2) faster** | −0.5% (−6.0, +5.4) | −0.2% (−2.4, +2.0) |
+
+**Peak RSS** moved by at most ±4% in every row, and none was flagged except `pattern` at 4
+threads in run 1 (+3.7%).
+
+**Resources (`wikidata`):**
+- run 1: "a trade-off: better CPU cost; worse contention sensitivity", with amplification at
+  4 threads +5.5% (+3.4, +7.5);
+- run 2: "better (CPU cost), and no measure worse";
+- run 3: "better (CPU cost, contention sensitivity), and no measure worse", with amplification
+  at 4 threads −3.5% (−6.6, −0.2).
+
+**Stages (`phases`, Wikidata, 1 thread), the T-vector build:**
+- run 1: **−28.4%** (−29.1, −27.8);
+- run 2: **−8.7%** (−8.9, −8.5);
+- run 3: **−9.2%** (−12.0, −6.2).
+
+The MTF + RLE2 stage, whose code is unchanged, read +4.8% and +1.2% slower in runs 1 and 2,
+and +1.1% (not flagged) in run 3. The walk didn't move.
+
+### Against the rule
+- **Correctness:** met.
+- **Benefit:** met. `wikidata` CPU at 4 threads is faster beyond noise in all three runs
+  (−3.0%, −1.6%, −3.1%). `wikidata` wall at 1 thread is faster beyond noise in runs 1 and 2,
+  but its point estimate in run 3 is +0.3%. So under the "every other run" clause that figure
+  alone would not qualify, and the benefit rests on the 4-thread CPU figure.
+- **No harm:** no harm confirmed. Each flagged wall row was settled by the next run on the
+  same head, and none was flagged again:
+  - `pattern` at 2 threads: flagged in run 1, not in run 2. **Unresolved.**
+  - `pattern` at 1 thread: flagged in run 2, not in run 3. **Unresolved.**
+  - `records` at 2 threads: flagged in run 2, not in run 3. **Unresolved.**
+
+  All three rows are reported with every run above. The rule allowed no fourth run.
+- **Verdict:** the registered rule **passes**. The merge decision is the coordinator's.
+
+### Against the predictions
+- **The build stage:** predicted −12% to −28%; it measured −28.4%, −8.7% and −9.2%. The
+  falsifier (a point estimate at or above −4%) did not fire. Runs 2 and 3, on the Xeon, fell
+  short of the predicted range: the build's gain there is a third of run 1's on the EPYC.
+- **`wikidata` wall at 1 thread:** predicted −1.5% to −5%; it measured −8.1%, −1.4% and
+  +0.3%. The prediction failed in run 3, where the interval was ±2.7%.
+- **`records` and `random` at 1 thread:** no wall flag in any run, and the point estimates
+  were −1.1% to +0.4%, within the predicted −1.0% to +0.5% except `random` in run 3 (−1.1%).
+  **The correction's falsifier did not fire.** The 1-thread slowdowns that failed #310 (+1.9%
+  twice, +2.6%) don't recur.
+- **The simulated back-edge mispredictions:** no `records` or `random` 1-thread slowdown
+  appeared, so I read them as a simulator artefact. That remains unverified on hardware.
+- **Uncertainties:**
+  - `records` at 2 threads (+2.3% in run 2) and its 4-thread CPU (+1.3%, +1.6%, +3.1%, none
+    beyond noise) lean slower. A harm smaller than these rows' half-widths (±3–6%) can't be
+    excluded.
+  - The MTF stage's flags in unchanged code suggest a layout effect of a size similar to the
+    small rows above.
