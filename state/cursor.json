@@ -1361,7 +1361,9 @@
       "comment_id": 6715368365,
       "pr": 161,
       "status": "in_progress",
-      "decision": "D042"
+      "decision": "D042",
+      "receipt_commit": "533aa057ff156f3aea766de87c24e1b563346d87",
+      "progress": "Source review completed: gate scoped to Plan::Teams{3,3}; static relay/parking/panic audit; tests inspected; built-in fuzz candidates omit pipeline. Checking B5 evidence and documenting bounded verdict."
     }
   ],
   "migrated_from": {

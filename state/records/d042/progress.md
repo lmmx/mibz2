@@ -1,0 +1,3 @@
+# D042 progress
+
+Inbox 6715368365, resumed by 6729117187. Reviewed source at a4f97714cc14366984015869d9d094d89488ac57; parallel.rs, coop.rs and tests/pipelined.rs are unchanged from release squash 0015de8c96127c6ea080097a6822c2a2ae5b09df. Gate and relay ordering examined. No concrete undefined behaviour found in this static read. Built-in examples/fuzz.rs candidates are sequential scalar, sequential detected, and parallel with three threads: none forces or directly instantiates the pipelined path. B5 pipeline-specific fuzz/mutation evidence remains to establish. PRs report coop Miri success; this executor has no cargo/rustc, so no Rust execution is claimed. README and CHANGELOG now disclose a later low-level regression; this does not rewrite the earlier confirmation.
