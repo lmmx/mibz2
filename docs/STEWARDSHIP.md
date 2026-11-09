@@ -193,14 +193,15 @@ metadata.
 ## What stays with the maintainer
 
 These decisions still need the maintainer:
-- relaxing a gate or an acceptance minimum;
-- bench design, standing acceptance and adoption policy follow RULES C6 and its review,
-  recording and prospective-application safeguards. Relaxing an already registered rule
-  remains governed by RULES C2 and D;
+- relaxing an already registered rule, gate or acceptance minimum (RULES C2 and D);
 - a run on the i9 or another workstation. The maintainer authorises it by running a recipe
   frozen before the run, and that authorises that run only (RULES.md C5);
 - new infrastructure, credentials or spending;
 - widening the scope beyond mibz2 and its downstream pin bump.
+
+Bench design, standing acceptance and adoption policy are not reserved: they follow RULES C6
+and its review, recording and prospective-application safeguards. Relaxing an already
+registered rule remains governed by RULES C2 and D.
 
 A campaign's rules can reserve more for the maintainer. They cannot give the steward more than
 this document and `docs/team/RULES.md` do without the maintainer's own words.
