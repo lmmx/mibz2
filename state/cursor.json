@@ -894,10 +894,11 @@
         "G1",
         "G2"
       ],
-      "status": "complete",
+      "status": "finished",
       "disposition": "D055 evidence objections resolved; timing HOLD lifts once Researcher freeze and green CI including completed empty-composition Miri are satisfied; not ready at observed red/incomplete snapshot",
       "commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
-      "receipt_commit": "20619365c570c41d42b089cf23fa9bb3c0c2a795"
+      "receipt_commit": "20619365c570c41d42b089cf23fa9bb3c0c2a795",
+      "comment": 6732989448
     }
   ],
   "own_outgoing_comment_ids": [
@@ -953,7 +954,8 @@
     6732094558,
     6732441720,
     6732545801,
-    6732679972
+    6732679972,
+    6732989448
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1067,7 +1069,8 @@
     "aa0538a305b51368e8274c1bb508d8316c30bd95",
     "d51723b1b4921bbd5cf6e05c9970542aace04f24",
     "20619365c570c41d42b089cf23fa9bb3c0c2a795",
-    "fa85f6b20d349c4b68dbb7384b7c592120652341"
+    "fa85f6b20d349c4b68dbb7384b7c592120652341",
+    "dbcda95697fb3fd303929dbb91dbe14dc3431f2b"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1125,7 +1128,8 @@
     6731982223,
     6732361106,
     6732477634,
-    6732560627
+    6732560627,
+    6732894651
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1204,15 +1208,17 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6732894651,
+    "active_comment": null,
+    "last_finished_comment": 6732894651,
     "decision": "D058",
-    "status": "complete",
+    "status": "finished",
+    "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
+    "review_comment_id": 6732989448,
     "queue_snapshot": [
       6732894651
     ],
     "remaining_in_snapshot": [],
-    "automation": "unchanged; persistent task remains enabled",
-    "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
+    "automation": "unchanged; persistent task remains enabled"
   },
   "duplicate_events": [
     {
@@ -1666,7 +1672,8 @@
       "sha": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
       "evidence_digest": "git-blob:cb09d7da817fa467cbdc4664ddf2289e68157d1f;journal:5eed3ea4b1505f0a82fd50eece86eb80414025b4;fuzz-job:128994104250",
       "decision": "D058",
-      "commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
+      "commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
+      "comment": 6732989448
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1997,11 +2004,13 @@
     {
       "comment_id": 6732894651,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D058",
-      "progress": "D058 work committed; REVIEW pending.",
+      "progress": "Published and read back exact REVIEW; pinned verifier has sole coordinator-header mismatch; independent Guardian checks pass.",
       "receipt_commit": "20619365c570c41d42b089cf23fa9bb3c0c2a795",
-      "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341"
+      "work_commit": "fa85f6b20d349c4b68dbb7384b7c592120652341",
+      "review_comment_id": 6732989448,
+      "complete_cursor_commit": "dbcda95697fb3fd303929dbb91dbe14dc3431f2b"
     }
   ],
   "migrated_from": {

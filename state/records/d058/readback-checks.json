@@ -1,0 +1,20 @@
+{
+  "pinned_coord_verify": {
+    "comment": 6732989448,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "limitation": "Pinned verifier hardcodes FROM coordinator; sole expected role mismatch. No script change or impersonation. Exact independent Guardian checks below all pass.",
+  "guardian_checks": {
+    "exact_body": true,
+    "id": true,
+    "destination": true,
+    "header": true,
+    "incoming_id": true,
+    "immutable_work": true,
+    "routing": true
+  }
+}
