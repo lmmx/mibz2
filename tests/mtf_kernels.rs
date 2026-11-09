@@ -129,8 +129,8 @@ fn runs_agree(
             // the records' path, whatever `takes_runs` would choose
             let (mut got, mut s, mut ll) =
                 (TVector::new(), run_stage::Scratch::default(), Vec::new());
-            assert!(run_stage::sort(&recs, &c, wl.len(), &mut s), "{what}: sort");
-            run_stage::fill(&recs, &s, wl.len(), &mut got, k);
+            let t = run_stage::sort(&recs, &c, wl.len(), &mut s).expect("sort");
+            run_stage::fill(&t, &mut got, k);
             assert!(
                 got.as_slice() == tt.as_slice(),
                 "{what}, max {}, {k:?}: the records' table",

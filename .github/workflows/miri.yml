@@ -4,7 +4,8 @@ name: Miri
 # (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
-# detector. And the run-fed research's sort (run_stage::tests::miri_*). Only on changes to the
+# detector. And the run-fed research's sort, store reference and fill, the AVX2 fill
+# included, with its unchecked states refused (run_stage::tests::miri_*). Only on changes to the
 # walks, the pool or that research.
 on:
   pull_request:
@@ -39,3 +40,11 @@ jobs:
         run: cargo miri setup
       - name: Miri
         run: cargo miri test --lib -- miri_
+      # the run-fed research's AVX2 fill under Miri: the build with AVX2 enabled, so
+      # detection reports it, and the tests assert they reached it (MIBZ2_EXPECT_AVX2)
+      - name: Miri, the run-fed AVX2 fill
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: cargo miri test --lib -- run_stage::tests::miri_

@@ -29,23 +29,114 @@ pub fn takes_runs(b: &Symbols) -> bool {
     b.max_len < 1 << 24 && 8 * b.syms.len() <= b.max_len
 }
 
-/// The F-order records, kept from block to block: `[a, p]` a run, then `[n, 0]`
+/// The F-order records, kept from block to block: `[a, p]` a run, then `[n, 0]`. Private:
+/// only `sort` writes them, and only a `Sorted` it returns reads them
 #[derive(Default)]
 pub struct Scratch {
-    pub fo: Vec<[u32; 2]>,
+    fo: Vec<[u32; 2]>,
+}
+
+/// A block's records that `sort` has checked: the L-order records, the F-order ones it
+/// made from them in its scratch, and the block's n rows, both orders tiling `[0, n)`.
+///
+/// Only `sort` makes one (its fields are private), and it holds the records and the
+/// scratch borrowed immutably for its life, so neither can change, nor the scratch be
+/// sorted again, while it lives. `fill` and `fill_rows` take one, so the premise of their
+/// reads, the tilings, is a fact of the type and not the caller's promise.
+///
+/// None can be made by hand:
+/// ```compile_fail,E0451
+/// let t = mibz2::run_stage::Sorted { recs: &[], fo: &[], n: 1 };
+/// ```
+/// nor the scratch forged:
+/// ```compile_fail,E0616
+/// let mut s = mibz2::run_stage::Scratch::default();
+/// s.fo.push([0, 0]);
+/// ```
+/// nor the records changed under one:
+/// ```compile_fail,E0502
+/// use mibz2::run_stage::{sort, Scratch};
+/// let (mut recs, mut s) = (vec![0u32 << 8 | 7, 1 << 8], Scratch::default());
+/// let mut counts = [0u32; 256];
+/// counts[7] = 1;
+/// let t = sort(&recs, &counts, 1, &mut s).unwrap();
+/// recs[1] = 9 << 8;
+/// let _ = t.n();
+/// ```
+/// nor the scratch sorted again under one (the wrong scratch for its records):
+/// ```compile_fail,E0499
+/// use mibz2::run_stage::{sort, Scratch};
+/// let (a, b, mut s) = (vec![7u32, 1 << 8], vec![8u32, 1 << 8], Scratch::default());
+/// let (mut ca, mut cb) = ([0u32; 256], [0u32; 256]);
+/// (ca[7], cb[8]) = (1, 1);
+/// let t = sort(&a, &ca, 1, &mut s).unwrap();
+/// let u = sort(&b, &cb, 1, &mut s).unwrap();
+/// let _ = (t.n(), u.n());
+/// ```
+/// while a checked one fills:
+/// ```
+/// use mibz2::{bwt::TVector, run_stage::{fill, sort, Scratch}, Kernels};
+/// let (recs, mut s, mut tt) = (vec![7u32, 1 << 8], Scratch::default(), TVector::new());
+/// let mut counts = [0u32; 256];
+/// counts[7] = 1;
+/// let t = sort(&recs, &counts, 1, &mut s).unwrap();
+/// fill(&t, &mut tt, Kernels::detect());
+/// assert_eq!(tt.as_slice(), [7]);
+/// ```
+#[derive(Clone, Copy)]
+pub struct Sorted<'a> {
+    recs: &'a [u32],
+    fo: &'a [[u32; 2]],
+    n: u32,
+}
+
+impl<'a> Sorted<'a> {
+    /// The block's rows
+    pub fn n(&self) -> usize {
+        self.n as usize
+    }
+    /// The L-order records, the closing one included
+    pub fn recs(&self) -> &'a [u32] {
+        self.recs
+    }
+    /// The F-order records, `[a, p]` a run, the closing `[n, 0]` included
+    pub fn fo(&self) -> &'a [[u32; 2]] {
+        self.fo
+    }
 }
 
 /// The records' stable counting sort by byte (`recs` as `mtf::mtf_runs` leaves them, for
-/// a block of `n` rows whose bytes `counts` counts) into `fo`. Each run's first F row is
-/// `a = C(c) + k`, where k sums the lengths of its byte's runs before it. Returns false,
-/// leaving `fo` unspecified, unless both orders tile `[0, n)`: the L runs (their starts
-/// rise strictly from 0, and the closing record is n), and the F intervals (each byte's
-/// runs' lengths sum to its count, and the counts to n). `fill` relies on exactly that.
-pub fn sort(recs: &[u32], counts: &[u32; 256], n: usize, s: &mut Scratch) -> bool {
-    s.fo.clear();
+/// a block of `n` rows whose bytes `counts` counts) into `s`. Each run's first F row is
+/// `a = C(c) + k`, where k sums the lengths of its byte's runs before it. Returns `None`
+/// unless both orders tile `[0, n)`: the L runs (their starts rise strictly from 0, and
+/// the closing record is n), and the F intervals (each byte's runs' lengths sum to its
+/// count, and the counts to n). The `Sorted` it returns holds exactly that.
+pub fn sort<'a>(
+    recs: &'a [u32],
+    counts: &[u32; 256],
+    n: usize,
+    s: &'a mut Scratch,
+) -> Option<Sorted<'a>> {
+    if checked_sort(recs, counts, n, &mut s.fo) {
+        Some(Sorted {
+            recs,
+            fo: &s.fo,
+            n: n as u32,
+        })
+    } else {
+        // nothing a later reader could mistake for a sorted block's
+        s.fo.clear();
+        None
+    }
+}
+
+/// `sort`'s work: true, `fo` the F order, only if both orders tile `[0, n)` (with
+/// `n < 2^24`, `recs.len() == fo.len()`, and `fo`'s starts rising strictly from 0)
+fn checked_sort(recs: &[u32], counts: &[u32; 256], n: usize, fo_v: &mut Vec<[u32; 2]>) -> bool {
+    fo_v.clear();
     if n == 0 {
         // the empty block: its closing record alone, and no counts
-        s.fo.push([0, 0]);
+        fo_v.push([0, 0]);
         return recs == [0] && counts.iter().all(|&c| c == 0);
     }
     if n >= 1 << 24 || recs.len() < 2 || recs[0] >> 8 != 0 || recs[recs.len() - 1] >> 8 != n as u32
@@ -70,8 +161,8 @@ pub fn sort(recs: &[u32], counts: &[u32; 256], n: usize, s: &mut Scratch) -> boo
     if rows != n as u64 {
         return false;
     }
-    s.fo.reserve(r + 1);
-    let fo = s.fo.as_mut_ptr();
+    fo_v.reserve(r + 1);
+    let fo = fo_v.as_mut_ptr();
     for w in recs.windows(2) {
         let (x, next) = (w[0], w[1] >> 8);
         let (c, p) = ((x & 0xff) as usize, x >> 8);
@@ -91,33 +182,36 @@ pub fn sort(recs: &[u32], counts: &[u32; 256], n: usize, s: &mut Scratch) -> boo
     // SAFETY: the slots [0, r) were each written once (above), and r + 1 were reserved
     unsafe {
         *fo.add(r) = [n as u32, 0];
-        s.fo.set_len(r + 1);
+        fo_v.set_len(r + 1);
     }
     true
 }
 
-/// The table from the L-order records and `sort`'s F-order ones (it must have returned
-/// true for them, `n` rows): one sweep, a cell at a time
-pub fn fill(recs: &[u32], s: &Scratch, n: usize, tt: &mut TVector, k: Kernels) {
+/// The table of a checked block (`sort`'s `Sorted`): one sweep, a cell at a time
+pub fn fill(t: &Sorted<'_>, tt: &mut TVector, k: Kernels) {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
-            // SAFETY: `k.avx2` is set only when AVX2 was detected
-            return unsafe { fill_avx2(recs, &s.fo, n, &mut tt.0) };
+            // SAFETY: `k.avx2` is set only when AVX2 was detected (`Kernels`' contract, as
+            // `mtf::mtf`'s), and `t` is `sort`'s, as `fill_avx2` requires
+            return unsafe { fill_avx2(t, &mut tt.0) };
         }
     }
     let _ = k;
     tt.0.clear();
-    fill_rows(recs, &s.fo, 0, n as u32, &mut tt.0);
+    fill_rows(t, 0, t.n, &mut tt.0);
 }
 
-/// The sweep over rows `q0..q1`, appended to `out`: each iterator found by binary search
-/// (the F order's over `a`, the L order's over p), so a share of the rows needs no count
-/// checkpoints. The scalar fill, and the shares' (the tests split a table into shares)
-pub fn fill_rows(recs: &[u32], fo: &[[u32; 2]], q0: u32, q1: u32, out: &mut Vec<u32>) {
+/// The sweep over rows `q0..q1` of a checked block, appended to `out`: each iterator
+/// found by binary search (the F order's over `a`, the L order's over p), so a share of
+/// the rows needs no count checkpoints. The scalar fill, and the shares' (the tests split
+/// a table into shares). Safe code throughout; panics unless `q1 <= t.n()`
+pub fn fill_rows(t: &Sorted<'_>, q0: u32, q1: u32, out: &mut Vec<u32>) {
+    assert!(q1 <= t.n, "rows {q0}..{q1} of a block of {}", t.n);
     if q0 >= q1 {
         return;
     }
+    let (recs, fo) = (t.recs, t.fo);
     let mut f = fo.partition_point(|e| e[0] <= q0) - 1;
     let mut l = recs.partition_point(|&x| x >> 8 <= q0) - 1;
     let mut q = q0;
@@ -140,22 +234,28 @@ pub fn fill_rows(recs: &[u32], fo: &[[u32; 2]], q0: u32, q1: u32, out: &mut Vec<
 /// 2048. The last store of a cell runs past its end into the next cell's rows, which that
 /// cell writes again (it starts there and stores at least 8); past n, into 8 slots of
 /// slack, cut off by the length.
+///
+/// # Safety
+///
+/// AVX2 must be available. `t` is a `Sorted`, so `sort` checked its tilings: that is the
+/// premise of every raw read below, and no caller can supply a `t` without it. The one
+/// caller is `fill`, under `Kernels`' detection.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn fill_avx2(recs: &[u32], fo: &[[u32; 2]], n: usize, tt: &mut Vec<u32>) {
+unsafe fn fill_avx2(t: &Sorted<'_>, tt: &mut Vec<u32>) {
     use std::arch::x86_64::*;
+    let n = t.n;
     tt.clear();
-    tt.reserve(n + 8);
-    let t = tt.as_mut_ptr();
+    tt.reserve(n as usize + 8);
+    let out = tt.as_mut_ptr();
     let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
     let step = _mm256_set1_epi32(2048);
-    let (fo, recs) = (fo.as_ptr(), recs.as_ptr());
-    let n = n as u32;
+    let (fo, recs) = (t.fo.as_ptr(), t.recs.as_ptr());
     let (mut f, mut l, mut q) = (0usize, 0usize, 0u32);
     while q < n {
-        // SAFETY (the loads): `sort` returned true, so both orders tile [0, n): while
-        // q < n, run f's F interval [af, fe) and run l's L run [p, le) both hold q, and f
-        // and l are below r, so f + 1 and l + 1 index the closing records at most
+        // SAFETY (the loads): `t` is `sort`'s, so both orders tile [0, n): while q < n,
+        // run f's F interval [af, fe) and run l's L run [p, le) both hold q, and f and l
+        // are below r, so f + 1 and l + 1 index the closing records at most
         let [af, pf] = *fo.add(f);
         let fe = (*fo.add(f + 1))[0];
         let (x, le) = (*recs.add(l), *recs.add(l + 1) >> 8);
@@ -165,7 +265,7 @@ unsafe fn fill_avx2(recs: &[u32], fo: &[[u32; 2]], n: usize, tt: &mut Vec<u32>) 
         let mut w = q;
         loop {
             // SAFETY: w < end <= n, so w + 8 <= n + 7, within the n + 8 reserved
-            _mm256_storeu_si256(t.add(w as usize) as *mut __m256i, v);
+            _mm256_storeu_si256(out.add(w as usize) as *mut __m256i, v);
             w += 8;
             if w >= end {
                 break;
@@ -181,10 +281,14 @@ unsafe fn fill_avx2(recs: &[u32], fo: &[[u32; 2]], n: usize, tt: &mut Vec<u32>) 
     tt.set_len(n as usize);
 }
 
-/// The table's write alone, for the diagnostic's floor: n entries stored in order, 8 at a
-/// time, into `tt`'s buffer (as `fill` stores them, without its cells), then the length
-/// left 0, since they are no table. What a build of n entries can't go below, for its
-/// stores; a build straight after finds the buffer's lines resident
+/// The table's write alone, the diagnostic's store-only reference: n entries stored in
+/// order, 8 at a time, into `tt`'s buffer (as `fill` stores them, without its cells), then
+/// the length left 0, since they are no table. A reference for the stores, not a floor
+/// every build obeys: `fill` overstores at its cells' ends (up to `8·Σ⌈lᵢ/8⌉` slots for
+/// cells of lengths lᵢ, against these n), and a build overlaps its stores with other work.
+/// The buffer's address is passed through `black_box` after the stores, so the compiler
+/// must keep them (an optimiser that saw no reader could drop them; no assembly has been
+/// inspected to show it doesn't). A build straight after finds the buffer's lines resident
 pub fn floor(n: usize, tt: &mut TVector, k: Kernels) {
     tt.0.clear();
     tt.0.reserve(n);
@@ -193,13 +297,16 @@ pub fn floor(n: usize, tt: &mut TVector, k: Kernels) {
     {
         if k.avx2 {
             // SAFETY: `k.avx2` is set only when AVX2 was detected
-            return unsafe { floor_avx2(spare) };
+            unsafe { floor_avx2(spare) };
+            std::hint::black_box(spare.as_ptr());
+            return;
         }
     }
     let _ = k;
     for (i, e) in spare.iter_mut().enumerate() {
         e.write(i as u32);
     }
+    std::hint::black_box(spare.as_ptr());
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -225,8 +332,8 @@ pub fn build(
 ) -> Result<(usize, bool), ErrorKind> {
     if takes_runs(b) {
         let n = mtf::mtf_runs(b, recs, counts, k)?;
-        if sort(recs, counts, n, s) {
-            fill(recs, s, n, tt, k);
+        if let Some(t) = sort(recs, counts, n, s) {
+            fill(&t, tt, k);
             return Ok((n, true));
         }
         // a broken tiling is a bug in `mtf_runs` (a debug build stops here): the column's
@@ -269,36 +376,111 @@ mod tests {
         let recs = recs_of(ll);
         let n = ll.len();
         let mut s = Scratch::default();
-        assert!(sort(&recs, &counts, n, &mut s), "n {n}: sort");
+        let t = sort(&recs, &counts, n, &mut s).expect("sort");
+        assert_eq!(
+            (t.n(), t.recs().len(), t.fo().len()),
+            (n, recs.len(), recs.len())
+        );
         let mut tt = TVector(vec![9; 3]);
         for k in kernels() {
-            fill(&recs, &s, n, &mut tt, k);
+            fill(&t, &mut tt, k);
             assert!(tt.0 == want, "n {n}, {k:?}: the table");
         }
         for shares in 1..=5u32 {
             let mut out = Vec::new();
             for j in 0..shares {
                 let (q0, q1) = (n as u32 * j / shares, n as u32 * (j + 1) / shares);
-                fill_rows(&recs, &s.fo, q0, q1, &mut out);
+                fill_rows(&t, q0, q1, &mut out);
             }
             assert!(out == want, "n {n}, {shares} shares");
         }
-        // a count off by one, a run's start moved, the closing record moved: refused
+        // a count off by one, a run's start moved, the closing record moved, the wrong n
+        // either way: refused, and the scratch left holding nothing
         if n > 0 {
             let mut c = counts;
             let b = ll[0] as usize;
             c[b] -= 1;
             c[(b + 1) % 256] += 1;
-            assert!(!sort(&recs, &c, n, &mut s), "n {n}: a wrong count");
+            refused(&recs, &c, n, &mut s, "a wrong count");
             let mut r = recs.clone();
             *r.last_mut().unwrap() += 256;
-            assert!(!sort(&r, &counts, n, &mut s), "n {n}: a wrong end");
+            refused(&r, &counts, n, &mut s, "a wrong end");
             if recs.len() > 2 {
                 let mut r = recs.clone();
                 r[1] += 256;
-                assert!(!sort(&r, &counts, n, &mut s), "n {n}: a run moved");
+                refused(&r, &counts, n, &mut s, "a run moved");
             }
         }
+        refused(&recs, &counts, n + 1, &mut s, "n one more");
+        if n > 0 {
+            refused(&recs, &counts, n - 1, &mut s, "n one less");
+        }
+    }
+
+    /// With `MIBZ2_EXPECT_AVX2` set (`miri.yml`'s AVX2 step), the AVX2 fill must be among
+    /// the kernels tested, so a pass there means its reads and stores were checked
+    fn expect_avx2() {
+        if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
+            assert!(Kernels::detect().avx2, "AVX2 expected, and not detected");
+        }
+    }
+
+    /// `sort` refuses the records, and leaves its scratch empty
+    fn refused(recs: &[u32], counts: &[u32; 256], n: usize, s: &mut Scratch, what: &str) {
+        assert!(sort(recs, counts, n, s).is_none(), "n {n}: {what}");
+        assert!(s.fo.is_empty(), "n {n}: {what}: the scratch");
+    }
+
+    /// The states `fill` must never read unchecked, each refused by `sort`, so no
+    /// `Sorted` exists for them (the doc tests show none can be made by hand): no records
+    /// at all, for an empty block and a one-row one (the fill that read empty F-order
+    /// storage); the records of one block with another's n; records out of order; records
+    /// that start past row 0; a scratch sorted for one block, then refused another
+    /// (nothing of the first left to read). And `fill_rows` past the block's rows panics
+    #[test]
+    fn miri_unchecked_states_refused() {
+        expect_avx2();
+        let zero = [0u32; 256];
+        let mut s = Scratch::default();
+        refused(&[], &zero, 0, &mut s, "no records, the empty block");
+        refused(&[], &zero, 1, &mut s, "no records, one row");
+        let mut one = zero;
+        one[7] = 1;
+        refused(&[], &one, 1, &mut s, "no records, one row counted");
+        refused(&[1 << 8], &one, 1, &mut s, "only the closing record");
+        refused(&[0], &zero, 1, &mut s, "the empty block's records, one row");
+        // the empty block itself is a block: no rows, no table
+        let t = sort(&[0], &zero, 0, &mut s).expect("the empty block");
+        let mut tt = TVector(vec![1; 4]);
+        for k in kernels() {
+            fill(&t, &mut tt, k);
+            assert!(tt.0.is_empty(), "{k:?}: the empty table");
+        }
+        // abba: runs a@0, b@1, a@3, closed by 4
+        let ll = b"abba";
+        let (counts, recs) = (run_fed::counts_of(ll), recs_of(ll));
+        assert!(sort(&recs, &counts, 4, &mut s).is_some());
+        for n in [0, 1, 3, 5, 1 << 24] {
+            refused(&recs, &counts, n, &mut s, "another block's n");
+        }
+        let mut swapped = recs.clone();
+        swapped.swap(1, 2);
+        refused(&swapped, &counts, 4, &mut s, "records out of order");
+        let mut late = recs.clone();
+        late[0] += 1 << 8;
+        refused(&late, &counts, 4, &mut s, "the first run past row 0");
+        let mut dup = recs.clone();
+        dup[1] = dup[0];
+        refused(&dup, &counts, 4, &mut s, "two runs at one row");
+        let mut byte = recs.clone();
+        byte[1] = byte[1] & !0xff | b'c' as u32;
+        refused(&byte, &counts, 4, &mut s, "a run's byte not counted");
+        // a scratch sorted for one block: refused for the next, it holds nothing of either
+        assert!(sort(&recs, &counts, 4, &mut s).is_some());
+        refused(&recs, &one, 4, &mut s, "the next block's counts");
+        let t = sort(&recs, &counts, 4, &mut s).unwrap();
+        let past = std::panic::catch_unwind(|| fill_rows(&t, 2, 5, &mut Vec::new()));
+        assert!(past.is_err(), "fill_rows past the block's rows");
     }
 
     /// Every ternary column of 1 to `max` rows (and the empty one)
@@ -326,11 +508,13 @@ mod tests {
         ternary(8);
     }
 
-    /// `sort`'s and `floor`'s unsafe writes under Miri (the scalar fill is safe code; the
-    /// AVX2 fill and emitter are checked by the differential tests only), on columns small
+    /// `sort`'s and `floor`'s unsafe writes under Miri, and the AVX2 fill's reads and
+    /// stores where Miri runs with AVX2 (`miri.yml`'s second step; the scalar fill is safe
+    /// code; the AVX2 emitter is checked by the differential tests only), on columns small
     /// enough to interpret, runs of 16 and more included
     #[test]
     fn miri_sort_and_floor() {
+        expect_avx2();
         ternary(4);
         for ll in [
             vec![1u8; 20],
