@@ -1318,11 +1318,15 @@
     },
     {
       "trigger_comment_id": 6747050053,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "14f5924e4af3c66f98254ba73bcedeac3a905eb3"
+      "source_commit": "14f5924e4af3c66f98254ba73bcedeac3a905eb3",
+      "report_path": "state/reports/run-fed-r12-6747050053/report.md",
+      "report_commit": "384723c59078a261c6d4bd473d3ccf60b707890b",
+      "review_comment_pr": 145,
+      "disposition": "Technical PROCEED toward freeze: required collector completion objection closed. 34 local admission tests, 24 replay cases and 11 CI recipe tests on identical tree pass; CI 24 success/3 skipped. Authority repin and version reconciliation remain separate prerequisites."
     }
   ],
   "active_delegations": [],
