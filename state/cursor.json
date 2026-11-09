@@ -550,7 +550,8 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
-      "progress": "Source audit recorded: kernel confound, vector overstores, Q2 scope; derived sort-free direct F-placement proposal. Completing prices and falsifiers."
+      "progress": "Completed source audit, C29-C34 ranking, direct F-placement derivation and critical-path prices; publishing final report/ledger before completion receipt.",
+      "report_path": "state/records/reviews/inbox-6729426658/report.md"
     }
   ],
   "migrated_from": {

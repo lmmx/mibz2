@@ -1,0 +1,23 @@
+{
+  "spec": "a4f97714cc14366984015869d9d094d89488ac57",
+  "source": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
+  "assignment": 6729426658,
+  "source_blobs": {
+    "src/run_stage.rs": "bd09faed8f26fac5085205739a324f29ec79f573",
+    "src/mtf.rs": "2610fa7ed1a7ee2c7653db47402bb7b7e9e3bb73",
+    "examples/run_fed_stage.rs": "9116d1d34d4e9f3dde8c447ad00fb1c8d36b63d2",
+    "src/parallel.rs": "fcdd7cca5bda6706bf1869c5ebfc4a246740939d",
+    "src/coop.rs": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "docs/journal/2026-11-08-run-fed-tvector-and-psi2-census.md": "5a3b9d2c2523f82112c6dbd501a21e4901cddcad",
+    "docs/journal/2026-11-09-run-fed-stage.md": "cebb471ea8df5e7a9b947067097ebe4c41d5697e"
+  },
+  "checks": {
+    "source_only": true,
+    "implementation": false,
+    "compilation": false,
+    "timing": false,
+    "tests_executed": false,
+    "migration_verified": true,
+    "routing_audit": "five resolved historical incidents; no new misroute"
+  }
+}

@@ -260,3 +260,24 @@ Source/spec **a4f97714cc14366984015869d9d094d89488ac57**; relevant production bl
 | Run-fed T-vector / Ψ² | #266 verdict retained; separate Coordinator diagnostic acknowledged | No duplicate implementation. Model-only outcomes stay model-only; whole MTF+sort+build and SIMD-comparable emitter required |
 
 Replayed 240 archived release rows: at10 threads 0.2.6/0.2.5 speed1.03730 [0.98401,1.09349], CPU multiplier1.09415. Separate release evidence does not rewrite the levers' registered verdict. Binary service/levers bundles were not replayed; text-reader limitation recorded in report. No new timing, implementation, safety certification, admission or cumulative speed credit. Historical C17 and all previous registered outcomes retained.
+
+
+## Run-fed critical-path constructions: inbox 6729426658
+
+[Full source audit and ranked proposals](records/reviews/inbox-6729426658/report.md).
+Source **187c0ba517c3324aa28c5e7ccd2667f6c0572145** (#269); specs **a4f97714cc14366984015869d9d094d89488ac57**.
+
+| Rank | Proposal | Net-work account and falsifier |
+|---|---|---|
+| 1 / C29 | Matched modern-list checkpointed MTF control | Emitter/checkpoint comparison also changes list kernel. Isolate before crediting checkpoint removal; source/listing counts then registered matched phase comparison |
+| 2 / C30 | Helper parallel sort and exact bounded row fill | Leader release M-E-A; charge two histograms (record count AND row length), prefix, scatter, barriers, fill and changed walk joining. Row-balanced fill; no cross-share overstores |
+| 3 / C31 | Direct F-interval placement, no sorted records | Length prefixes alone give each run's a; intersect its F interval with original L runs for the low byte. Removes 8(r+1)-byte F array; adds r predecessor searches, bucket streams and ownership costs. Count these before implementation |
+| 4 / C32 | Bounded tiled/multi-cell fill | Current wide stores write W=sum 8ceil(ell/8), n<=W<=n+7m. Logical 4n is not actual store count. Exact W census before mask/tile work |
+| 5 / C33 | Streaming full-line stores / field tiling | Charge immediate walk cache misses, publication fence and tails. Global two-pass table costs about12n logical read/write bytes, not4n. ArmD is a probe, not universal lower bound |
+| 6 / C34 | Lazy/hybrid interiors | Need touched-line census and dependent lookup/marker budget; smaller footprint cannot inherit a speed verdict from failed move walks |
+
+Model T=U+max(L,P(L))+D: helper completion depends on leader arrival. Local E=.75M gives only a hypothetical .25M gross leader release; no25% wall claim. C31 replaces F sorting with stable per-helper byte-length prefixes; it preserves T[q]=L[q]|Psi(q)<<8 and the existing walk. Derivation only, no new constructor.
+
+**Scope correction:** #269 Q1 tests one worker; Q2 includes leader-side sort. Their negative results cannot close new helper-side formulations. Preserve all actual registered outcomes. Current floor needs compiled-store/observability inspection; nominal-GHz elapsed cycles are not PMU cycles.
+
+**Whole-decoder priority:** #258 is now explicitly HELD for admission (Researcher6729358962, Coordinator6729367020); resolve that evidence issue before a run. C25 remains a cheaper narrow alternative. D042's separate B5 HOLD is untouched. Zero new timing, implementation, safety certification, speed credit or automation changes.
