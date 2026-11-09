@@ -1,0 +1,16 @@
+{
+  "comment_id": 6729784385,
+  "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6729784385",
+  "exact_body_readback": true,
+  "pinned_helper_verify": {
+    "comment": 6729784385,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "independent_role_aware_check": true,
+  "body_sha256": "b08c99e1645e23a503b2107b8b132a55f61f40b2ffe2c696367a91a143831fcf",
+  "note": "Pinned helper hard-codes FROM coordinator; actual Researcher identity preserved and helper failure recorded."
+}
