@@ -2558,6 +2558,266 @@ mod tests {
         }
     }
 
+    // ---- Malformed record tilings (D049 §4: unreachable from valid emission) ----
+
+    /// The column a tiling describes, if it is one: `run_stage::sort`'s contract, by an
+    /// independent model (the first run at 0, starts strictly rising, the closing record
+    /// at n, below 2^24, and the counts the column's), else None
+    fn tiled(recs: &[u32], counts: &[u32; 256], n: usize) -> Option<Vec<u8>> {
+        if n == 0 || n >= 1 << 24 || recs.len() < 2 {
+            return None;
+        }
+        let r = recs.len() - 1;
+        if recs[0] >> 8 != 0 || recs[r] >> 8 != n as u32 {
+            return None;
+        }
+        let mut ll = Vec::with_capacity(n);
+        for w in recs.windows(2) {
+            let (p, next) = (w[0] >> 8, w[1] >> 8);
+            if next <= p {
+                return None;
+            }
+            ll.extend(std::iter::repeat((w[0] & 0xff) as u8).take((next - p) as usize));
+        }
+        (run_fed::counts_of(&ll) == *counts).then_some(ll)
+    }
+
+    /// The tilings' mutations, by name: each changes the records or the counts after the
+    /// emitter. The last two leave a valid tiling (another column; the same column), to be
+    /// taken; the others leave one that isn't, to be refused (or, now and then, by chance,
+    /// one that is: the model decides)
+    const TAMPERS: [&str; 10] = [
+        "a start moved",
+        "a byte changed",
+        "two neighbours' bytes swapped",
+        "a record dropped",
+        "a record doubled",
+        "the closing record moved",
+        "the first start moved",
+        "a count moved",
+        "two equal runs' bytes swapped (another column)",
+        "a run split in two (the same column)",
+    ];
+
+    fn tamper(
+        recs: &mut Vec<u32>,
+        counts: &mut [u32; 256],
+        kind: usize,
+        r: &mut impl FnMut() -> u64,
+    ) {
+        let rr = recs.len() - 1;
+        let pick = |r: &mut dyn FnMut() -> u64, lo: usize, hi: usize| {
+            lo + (r() % (hi - lo).max(1) as u64) as usize
+        };
+        match kind {
+            0 if rr > 1 => {
+                let i = pick(r, 1, rr);
+                let d = [-3i64, -2, -1, 1, 2, 3][(r() % 6) as usize];
+                let p = ((recs[i] >> 8) as i64 + d).max(0) as u32;
+                recs[i] = p << 8 | (recs[i] & 0xff);
+            }
+            1 => {
+                let i = pick(r, 0, rr);
+                recs[i] = (recs[i] & !0xff) | (r() % 256) as u32;
+            }
+            2 if rr > 1 => {
+                let i = pick(r, 0, rr - 1);
+                let (a, b) = (recs[i] & 0xff, recs[i + 1] & 0xff);
+                recs[i] = (recs[i] & !0xff) | b;
+                recs[i + 1] = (recs[i + 1] & !0xff) | a;
+            }
+            3 if rr > 1 => {
+                recs.remove(pick(r, 1, rr));
+            }
+            4 => {
+                let i = pick(r, 0, rr);
+                recs.insert(i, recs[i]);
+            }
+            5 => {
+                let d = [-1i64, 1, 256, -((r() % 9 + 2) as i64)][(r() % 4) as usize];
+                recs[rr] = (((recs[rr] >> 8) as i64 + d).max(0) as u32) << 8;
+            }
+            6 => recs[0] += (1 + r() % 3) as u32 * 256,
+            7 => {
+                let a = (recs[pick(r, 0, rr)] & 0xff) as usize;
+                if counts[a] > 0 {
+                    counts[a] -= 1;
+                    counts[(a + 1 + (r() % 255) as usize) % 256] += 1;
+                }
+            }
+            8 => {
+                // two runs of one length and different bytes, their bytes swapped
+                let len = |i: usize, recs: &[u32]| (recs[i + 1] >> 8) - (recs[i] >> 8);
+                let i = pick(r, 0, rr);
+                if let Some(j) = (0..rr).find(|&j| {
+                    j != i && len(j, recs) == len(i, recs) && (recs[j] ^ recs[i]) & 0xff != 0
+                }) {
+                    let (a, b) = (recs[i] & 0xff, recs[j] & 0xff);
+                    recs[i] = (recs[i] & !0xff) | b;
+                    recs[j] = (recs[j] & !0xff) | a;
+                }
+            }
+            _ => {
+                // a run of 2 or more split: a record at its middle, its byte
+                if let Some(i) = (0..rr).find(|&i| (recs[i + 1] >> 8) - (recs[i] >> 8) >= 2) {
+                    let mid = (recs[i] >> 8) + ((recs[i + 1] >> 8) - (recs[i] >> 8)) / 2;
+                    recs.insert(i + 1, mid << 8 | (recs[i] & 0xff));
+                }
+            }
+        }
+    }
+
+    /// One tampered tiling through every check: the leader's sort, `run_stage::sort`
+    /// (independent of this module), the helpers' sort and the direct fill in 1, 2, 3 and
+    /// 5 shares, each kernel: each takes it iff the model says it tiles, and then makes
+    /// exactly the column's table; and, with `pool`, whole runs (the helpers' sort and the
+    /// direct fill on the pool, from the front stage of the untampered block): the walk of
+    /// that table if taken, else the untampered block's, rebuilt from its symbols. Returns
+    /// whether it was taken.
+    fn check_tiling(
+        ll: &[u8],
+        recs: &[u32],
+        counts: &[u32; 256],
+        pool: Option<&Pool>,
+        what: &str,
+    ) -> bool {
+        let n = ll.len();
+        let model = tiled(recs, counts, n);
+        let taken = model.is_some();
+        let mut s = crate::run_stage::Scratch::default();
+        let oracle = api::sorted_fo(recs, counts, n, &mut s);
+        assert_eq!(oracle.is_some(), taken, "{what}: run_stage::sort");
+        let (mut hist, mut one) = (Vec::new(), Vec::new());
+        assert_eq!(
+            sort_one_share(recs, counts, n, &mut hist, &mut one),
+            taken,
+            "{what}: the leader's sort"
+        );
+        let want = model.as_ref().map(|m| run_fed::production(m, counts));
+        if taken {
+            assert!(
+                Some(&one) == oracle.as_ref(),
+                "{what}: the leader's F order"
+            );
+        }
+        for h in [1, 2, 3, 5] {
+            let fo = sort_by_shares(recs, counts, n, h);
+            assert_eq!(fo.is_some(), taken, "{what}, {h} shares: the helpers' sort");
+            for k in kernels() {
+                if let Some(fo) = &fo {
+                    assert!(Some(fo) == oracle.as_ref(), "{what}, {h}: the F order");
+                    let mut tt: Vec<u32> = Vec::with_capacity(n);
+                    let mut tally = Tally::default();
+                    for j in 0..h {
+                        let (q0, q1) = share(n, h, j);
+                        let out = &mut tt.spare_capacity_mut()[q0..q1];
+                        assert!(fill_share(
+                            recs, fo, q0 as u32, q1 as u32, out, k, &mut tally
+                        ));
+                    }
+                    // SAFETY: the shares tile [0, n), each filled whole (asserted)
+                    unsafe { tt.set_len(n) };
+                    assert!(Some(&tt) == want.as_ref(), "{what}, {h}, {k:?}: the table");
+                }
+                let d = direct_by_shares(recs, counts, n, h, k);
+                assert_eq!(d.is_some(), taken, "{what}, {h}, {k:?}: the direct fill");
+                assert!(d == want, "{what}, {h}, {k:?}: the direct table");
+            }
+        }
+        if let Some(pool) = pool {
+            let b = symbols_of(ll, 1);
+            let expect = match &want {
+                Some(tt) => {
+                    let mut out = Vec::new();
+                    bwt::walk(&TVector(tt.clone()), 1, &mut out);
+                    (out, tt.clone())
+                }
+                None => self::want(ll, 1),
+            };
+            for direct in [false, true] {
+                let mut f = Front::default();
+                let mode = |f: &mut Front| {
+                    if direct {
+                        front_stage::<DIR>(&b, f, Kernels::detect(), &mut 0, &mut 0, &mut false)
+                    } else {
+                        front_stage::<HS>(&b, f, Kernels::detect(), &mut 0, &mut 0, &mut false)
+                    }
+                };
+                mode(&mut f).unwrap();
+                assert_eq!(f.path, Path::Records);
+                f.recs = recs.to_vec();
+                f.counts = *counts;
+                let (mut tt, mut seg, mut out) =
+                    (TVector::new(), SegScratch::default(), Vec::new());
+                let k = Kernels::detect();
+                invert(
+                    pool,
+                    &mut f,
+                    &b,
+                    k,
+                    &mut tt,
+                    &mut seg,
+                    &mut out,
+                    &|| {},
+                    direct,
+                    0,
+                )
+                .unwrap();
+                assert!((out, tt.0) == expect, "{what}, direct {direct}: the run");
+            }
+        }
+        taken
+    }
+
+    /// Tilings tampered after the emitter, each check against the model, seeded and
+    /// bounded (`cases` cases of columns of `lens` rows, every `whole`th also as whole runs
+    /// on a pool of 3): each tamper reached, the refusals and the valid ones taken
+    fn tilings(seed: u64, cases: usize, lens: &[usize], whole: usize) {
+        let pool = Pool::new(3).unwrap();
+        let mut r = xorshift(seed);
+        let mut seen = [[0u64; 2]; TAMPERS.len()];
+        for c in 0..cases {
+            let len = lens[c % lens.len()];
+            let sigma = [2u64, 3, 5, 9][c % 4];
+            let ll = runs_column(len, sigma, &[1, 2, 3, 4, 8], r());
+            let (mut recs, mut counts) = (recs_of(&ll), run_fed::counts_of(&ll));
+            let kind = c % TAMPERS.len();
+            tamper(&mut recs, &mut counts, kind, &mut r);
+            let what = format!("case {c} (seed {seed}): {}", TAMPERS[kind]);
+            let taken = check_tiling(
+                &ll,
+                &recs,
+                &counts,
+                (c % whole == 0).then_some(&pool),
+                &what,
+            );
+            seen[kind][taken as usize] += 1;
+        }
+        eprintln!("tilings (seed {seed}, {cases} cases): tamper, refused, taken");
+        for (t, [no, yes]) in TAMPERS.iter().zip(seen) {
+            eprintln!("{no:>7} {yes:>7}  {t}");
+        }
+        for (i, [no, yes]) in seen.iter().enumerate() {
+            if i < 8 {
+                assert!(*no > 0, "never refused: {}", TAMPERS[i]);
+            } else {
+                assert!(*yes > 0, "never taken: {}", TAMPERS[i]);
+            }
+        }
+    }
+
+    #[test]
+    fn tampered_tilings_are_refused_or_tile() {
+        tilings(0xd049, 6_000, &[40, 301, 4_099, 20_011], 6);
+    }
+
+    /// The same under Miri: the helpers' sort's scatter and the fills' writes on tilings
+    /// that are not, and the runs' refusals and rebuilds on the pool
+    #[test]
+    fn miri_tampered_tilings() {
+        tilings(0x5afe, 20, &[24, 37], 4);
+    }
+
     // ---- C29's control against `mtf_checkpoints`: its checkpoints and raw stores (D049 §4) ----
 
     /// The input classes a symbol stream reaches in `mtf`'s semantics (`classify`), each
@@ -2784,17 +3044,28 @@ mod tests {
         }
     }
 
-    /// The same under Miri (the AVX2 kernel with `-C target-feature=+avx2`): each class
-    /// about one checkpoint, on short streams
+    /// The same under Miri, for its AVX2 kernel's raw stores (CI's AVX2 step, `-C
+    /// target-feature=+avx2`; without AVX2, `mtf_checkpoints_reg` is `mtf_checkpoints`'
+    /// scalar twin itself, so there is nothing to check and the test returns): one stream
+    /// a class, on the detected kernels only
     #[test]
     fn miri_register_checkpoints() {
         if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
             assert!(Kernels::detect().avx2, "AVX2 not detected");
         }
-        let mut cases: Vec<Symbols> = Vec::new();
-        for ll in checkpoint_columns() {
-            at_bounds(&ll, &[-1, 0, 1, 64], &mut cases);
+        if cfg!(miri) && !Kernels::detect().avx2 {
+            return;
         }
+        let cp = mtf::CHECKPOINT;
+        let mut cases: Vec<Symbols> = Vec::new();
+        // a run to a checkpoint, ending the block there; a run across one; a block's last
+        // byte at one, its bound just below (BlockTooLong at the byte); a run of 64 at the
+        // bound (the byte store) and past it (BlockTooLong in the run)
+        at_bounds(&vec![7u8; cp], &[0], &mut cases);
+        at_bounds(&vec![7u8; cp + 100], &[0], &mut cases);
+        at_bounds(&[vec![7u8; cp], vec![8u8]].concat(), &[-1, 0], &mut cases);
+        let tail = [vec![4u8; cp - 30], vec![5u8], vec![6u8; 64]].concat();
+        at_bounds(&tail, &[-1, 0], &mut cases);
         let mut long = symbols_of(&[1, 2], 0);
         long.syms = [vec![0u16; 22], vec![257]].concat();
         cases.push(long);
@@ -2803,7 +3074,18 @@ mod tests {
         cases.push(short);
         let mut reach = Reach::default();
         for b in &cases {
-            same_checkpoints(b, &mut reach);
+            classify(b, &mut reach);
+            let k = Kernels::detect();
+            let (mut ll, mut c, mut p) = (Vec::new(), [0; 256], Vec::new());
+            let want = mtf::mtf_checkpoints(b, &mut ll, &mut c, &mut p, k);
+            // (a fresh column: its capacity exactly the bound, where Miri sees a store past it)
+            let (mut ll2, mut c2, mut p2) = (Vec::new(), [9; 256], vec![[3; 256]]);
+            let got = mtf::mtf_checkpoints_reg(b, &mut ll2, &mut c2, &mut p2, k);
+            assert_eq!(got, want);
+            assert!(ll == ll2 && c == c2);
+            if want.is_ok() {
+                assert!(p == p2);
+            }
         }
         for (what, n) in reach.each() {
             assert!(n > 0, "class not reached: {what}");
