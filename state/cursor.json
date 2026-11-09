@@ -199,6 +199,13 @@
       "type": "REVIEW",
       "sha": "92ccf8c9804c50da1458cefc62c1ab9b2ac374a3",
       "checkpoint_comment_id": 6732659575
+    },
+    {
+      "pr": 145,
+      "id": 6733103415,
+      "type": "REVIEW",
+      "sha": "fd245921a0936a74b641e181932d441d0fc2aff1",
+      "checkpoint_comment_id": 6733004424
     }
   ],
   "reviews": [
@@ -688,11 +695,11 @@
     {
       "comment_id": 6733004424,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
-      "progress": "Report, arithmetic and ledger complete. Awaiting deduplicated REVIEW publication and exact readback.",
+      "progress": "Source/count audit, economic report, arithmetic and ledger committed; REVIEW published and exact author/body/destination verified.",
       "report_commit": "fd245921a0936a74b641e181932d441d0fc2aff1",
       "report_path": "state/records/reviews/inbox-6733004424/report.md",
       "audit_scope": {
@@ -702,7 +709,9 @@
         "new_timing": false,
         "raw_census_replay": false,
         "safety_certification": false
-      }
+      },
+      "reply_id": 6733103415,
+      "routing_verification": "Pinned route/check passed; exact author/body/destination readback verified. Pinned verify hardcodes FROM coordinator; optimizer verify-pass not claimed."
     }
   ],
   "migrated_from": {
