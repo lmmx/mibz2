@@ -708,6 +708,52 @@ mod tests {
         }
     }
 
+    /// The composition, through `build_direct` (Guardian D055): an empty block whose
+    /// symbols are its end alone, which `takes_runs` sends to the records, gives (0, true)
+    /// and an empty table, so D was reached and no fallback hid a refusal: on fresh buffers
+    /// and on buffers left dirty by a block before, by both kernels
+    #[test]
+    fn miri_direct_empty_block_by_records() {
+        expect_avx2();
+        let mut seq_to_unseq = [0u8; 256];
+        seq_to_unseq[0] = b'q';
+        let b = Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq,
+            syms: vec![2],
+            eob: 2,
+            max_len: 100_000,
+        };
+        assert!(takes_runs(&b), "the records' rule takes it");
+        let mut abba = seq_to_unseq;
+        (abba[0], abba[1]) = (b'a', b'b');
+        let before = Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq: abba,
+            // a, b, b, a: a literal b, a run of one more b, a literal a
+            syms: vec![0, 2, 0, 2, 3],
+            eob: 3,
+            max_len: 100_000,
+        };
+        for k in kernels() {
+            for dirty in [false, true] {
+                let (mut recs, mut ll, mut counts, mut tt) =
+                    (Vec::new(), Vec::new(), [0u32; 256], TVector::new());
+                if dirty {
+                    let (n, by) =
+                        build_direct(&before, &mut recs, &mut ll, &mut counts, &mut tt, k).unwrap();
+                    assert!(n > 0 && by && !tt.0.is_empty(), "{k:?}: the block before");
+                }
+                let got = build_direct(&b, &mut recs, &mut ll, &mut counts, &mut tt, k);
+                assert_eq!(got, Ok((0, true)), "{k:?}, dirty {dirty}: by records");
+                assert!(tt.0.is_empty(), "{k:?}, dirty {dirty}: the empty table");
+                assert_eq!(recs, [0], "{k:?}, dirty {dirty}: the empty tiling");
+            }
+        }
+    }
+
     /// The direct placement's states it must never accept, each refused with no table,
     /// natively and under Miri (scalar and AVX2): no records, for n 0 and 1; the closing
     /// record alone; the empty block's records for one row; another block's n; records out

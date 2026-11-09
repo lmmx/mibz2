@@ -46,7 +46,7 @@ jobs:
   # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
   # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
-  # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
+  # and C31's direct placement (MODE run-fed-direct), 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
   fuzz-smoke:
     runs-on: ubuntu-latest
@@ -60,6 +60,13 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      # C31's direct placement (research, the `run-fed` feature): `build_direct` and
+      # `place` against production and a tiling oracle, its reach printed
+      # (docs/journal/2026-11-09-run-fed-direct.md §10)
+      - name: Build, run-fed
+        run: cargo build --profile fuzz --features run-fed --example fuzz
+      - name: Run-fed direct placement
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/run-fed-direct run-fed-direct
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7

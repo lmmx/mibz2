@@ -206,7 +206,10 @@ def count_relations(f):
     7 a cell, and one 8-slot store at least a cell); D's stores write its rows exactly or
     more, no more than B's fill, with one store at least a cell and at most 7 one-slot rows
     a destination bucket, and 1 to 256 nonempty buckets a block, no more than its runs;
-    the fallback's blocks hold 1 to MAX_ROWS rows each; RLE1 turns 5 rows
+    the fallback's blocks hold 1 to MAX_ROWS rows each. And the tails couple B's and D's
+    counts: a cell with no tail has D's vector stores equal to B's, ceil(l/8); a cell with
+    one has one fewer and 1 to 7 one-slot rows (b - q >= l bounds its last store), so
+    t = slots/8 - d_vector counts the cells with a tail; RLE1 turns 5 rows
     into 4 to 259 bytes, and each block's last 4 rows at most may be unpaired. Returns the
     problems"""
     p = []
@@ -230,6 +233,11 @@ def count_relations(f):
         ("d_streams <= records (a nonempty bucket holds a run at least)", dst <= r),
         ("rows_runs <= 8 d_vector + d_scalar <= slots", rr <= 8 * dv + ds <= sl),
         ("cells <= d_vector + d_scalar (D stores once at least a cell)", c <= dv + ds),
+        (
+            "the tails: t = slots/8 - d_vector cells have a one-slot tail, each of 1 to 7 "
+            "rows, so ceil(d_scalar/7) <= t <= min(d_scalar, cells)",
+            sl % 8 == 0 and -(-ds // 7) <= sl // 8 - dv <= min(ds, c),
+        ),
         ("d_scalar <= 7 d_streams", ds <= 7 * dst),
         ("RLE1: 5 output >= 4 (rows - 4 blocks)", 5 * f["output"] >= 4 * (rows - 4 * b)),
         ("RLE1: 5 output <= 259 rows", 5 * f["output"] <= 259 * rows),

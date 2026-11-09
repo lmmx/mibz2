@@ -456,3 +456,46 @@ fn real_blocks() {
     }
     assert!(blocks > 10);
 }
+
+/// #270's saved stream, fuzz seed 1 case 596 (copied from `research/run-fed-leader` at
+/// 03e52206, SHA-256 3c69e8a3…789f8632): a full block of runs, an empty block (its symbols
+/// the end-of-block alone, which the records' rule takes), then a broken one. Through
+/// `build_direct` (Guardian D055) each scanned block is production's, by both kernels and
+/// on buffers kept dirty from block to block, its path `takes_runs`'s, so no fallback hides
+/// a refusal; the empty block gives (0, true) and an empty table. What the decoder does
+/// with an empty block afterwards (`BadOrigPtr`) is a separate contract, not tested here
+#[cfg(feature = "run-fed")]
+#[test]
+fn the_empty_block_by_records_through_build_direct() {
+    use mibz2::bwt::{build, TVector};
+    use mibz2::run_stage;
+    let z = include_bytes!("regressions/run-fed-seed1-case596.bz2");
+    let mut blocks = Vec::new();
+    let mut sc = Scanner::new(SliceSource(z));
+    while let Ok(Event::Block { symbols, .. }) = sc.next(Vec::new()) {
+        blocks.push(symbols);
+    }
+    assert_eq!(blocks.len(), 2, "two blocks before the broken one");
+    for k in kernels() {
+        let (mut recs, mut ll, mut c, mut tt) =
+            (Vec::new(), Vec::new(), [0u32; 256], TVector::new());
+        for (i, b) in blocks.iter().enumerate() {
+            let (wl, wc) = reference(b).unwrap();
+            let mut want = TVector::new();
+            build(&wl, &wc, &mut want);
+            let got = run_stage::build_direct(b, &mut recs, &mut ll, &mut c, &mut tt, k).unwrap();
+            assert_eq!(
+                got,
+                (wl.len(), run_stage::takes_runs(b)),
+                "{k:?}, block {i}"
+            );
+            assert!(got.1, "{k:?}, block {i}: by records");
+            assert!(
+                tt.as_slice() == want.as_slice(),
+                "{k:?}, block {i}: the table"
+            );
+        }
+        assert!(blocks[1].syms == [blocks[1].eob], "block 1 is empty");
+        assert!(tt.as_slice().is_empty(), "{k:?}: the empty block's table");
+    }
+}

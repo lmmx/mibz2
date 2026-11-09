@@ -1056,31 +1056,34 @@ mod tests {
                     (0, 2) => 0.85,
                     _ => 1.0,
                 };
-                // the corpora's identities and sizes are real: Wikidata's from its spec
-                // (bench/wikidata.json), the synthetic ones as `bench/run_fed_stage.py`
-                // regenerates them (the text's at the head that drafted C31); the path
-                // counts are made up, but feasible: they keep every bound of
-                // `count_relations`, so one passing record is still tested
+                // the corpora's identities, sizes and counts are a real run's: the
+                // count-only census of a local validity run (docs/journal/2026-11-09-
+                // run-fed-direct/census.json; bench/test_run_fed_stage.py holds them
+                // equal), the text's at the sources that census ran on. Only the times
+                // are made up
                 #[rustfmt::skip]
                 let (blocks_runs, blocks_fallback, rows, rows_runs, records, cells, slots,
                      d_vector, d_scalar, d_streams, bytes, output, sha) = [
-                    (384, 47, 205_000_000, 163_600_000, 10_150_000, 15_200_000, 176_000_000,
-                     21_500_000, 60_000, 30_000, 11_854_933, 209_700_196,
+                    (384, 47, 209_706_557, 167_407_936, 10_389_028, 12_676_540, 247_388_152,
+                     30_877_916, 84_059, 19_388, 11_854_933, 209_700_196,
                      "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"),
-                    (4, 0, 3_300_000, 3_300_000, 900_000, 1_500_000, 12_800_000, 1_500_000,
-                     2_000, 400, 601_160, 3_297_858,
-                     "e9a9ff6f51a236719aafd843998a92bc22eb751aed11e09fc77461fa05a9b4bf"),
-                    (0, 3, 2_000_000, 0, 0, 0, 0, 0, 0, 0, 1_774_781, 2_000_000,
+                    (0, 4, 2_999_282, 0, 0, 0, 0,
+                     0, 0, 0, 617_305, 3_345_018,
+                     "7dd597e411c37d34c9edde3e73ea6064762e3ea4720111273e29db7efd737183"),
+                    (0, 3, 2_000_001, 0, 0, 0, 0,
+                     0, 0, 0, 1_774_781, 2_000_000,
                      "69a37c69ea1a77c38127de16424fd6e779b42e264dd964a011141d1505695198"),
-                    (1, 0, 96_530, 96_530, 1, 1, 96_536, 12_066, 2, 1, 49, 5_000_000,
+                    (1, 0, 98_040, 98_040, 3, 5, 98_056,
+                     12_255, 8, 3, 49, 5_000_000,
                      "fe83f12dd7b68f263d44f27080c7c21168eaca3ef9c5f54a73a061b262068bb8"),
-                    (6, 0, 4_900_000, 4_900_000, 60, 100, 4_900_400, 612_520, 200, 42, 314,
-                     4_900_000,
+                    (6, 0, 4_900_000, 4_900_000, 48, 54, 4_900_216,
+                     612_499, 50, 42, 314, 4_900_000,
                      "bc2b45e48ffe998c4bd21a1a1aa653e27a96f7db55fafe26a8296d14da4acfd3"),
-                    (1, 0, 90_000, 90_000, 16_000, 24_000, 200_000, 24_000, 500, 200, 9_955,
-                     2_500_444,
+                    (1, 0, 63_372, 63_372, 11_430, 19_796, 192_024,
+                     22_249, 1_761, 252, 9_955, 2_500_444,
                      "24141e111ba46d81122e4186124595690944c27ee40f31cc7c4aca52efd451ec"),
-                    (0, 3, 2_400_000, 0, 0, 0, 0, 0, 0, 0, 2_397_517, 2_400_000,
+                    (0, 3, 2_400_002, 0, 0, 0, 0,
+                     0, 0, 0, 2_397_517, 2_400_000,
                      "616e54bd727b056d7ff6fedb2a13c9eb411f2c512cca52ac4a419c131b135c2b"),
                 ][i];
                 let jitter =

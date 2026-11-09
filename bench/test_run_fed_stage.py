@@ -23,6 +23,7 @@ import run_fed_stage as v  # noqa: E402
 
 FIXTURE = HERE / "fixtures" / "run_fed_stage.json"
 COUNTEREXAMPLES = HERE / "fixtures" / "run_fed_stage_counterexamples.json"
+CENSUS = HERE.parent / "docs" / "journal" / "2026-11-09-run-fed-direct" / "census.json"
 HEAD = "0123456789abcdef0123456789abcdef01234567"
 # the five synthetic corpora whose inputs don't depend on the head, as the verifier
 # regenerates them (and as the binary's own record names them): SHA-256, compressed size,
@@ -134,7 +135,7 @@ class Admission(unittest.TestCase):
     def test_an_absent_interval(self):
         # a corpus's whole-stage times all 0: no interval, never worst = 0
         r = base()
-        for row in r["files"][1]["entry"]:
+        for row in r["files"][3]["entry"]:  # synthetic one byte, all by records
             row[1][0] = 0.0
         self.assertInvalid(r, "no time for a path with blocks")
 
@@ -150,7 +151,7 @@ class Admission(unittest.TestCase):
 
     def test_a_time_for_an_absent_path(self):
         r = base()
-        r["files"][1]["entry"][0][0][1] = 0.01  # synthetic text has no fallback blocks
+        r["files"][3]["entry"][0][0][1] = 0.01  # synthetic one byte has no fallback blocks
         self.assertInvalid(r, "a time for a path with no blocks")
 
     def test_a_nonfinite_time_does_not_load(self):
@@ -257,7 +258,7 @@ class Admission(unittest.TestCase):
     def test_the_counterexamples(self):
         # each mutation INVALID, by check() and by the CLI, which prints no reading
         cases = json.loads(COUNTEREXAMPLES.read_text())["cases"]
-        self.assertGreaterEqual(len(cases), 6)
+        self.assertGreaterEqual(len(cases), 36)
         for case in cases:
             with self.subTest(case["name"]):
                 self.assertInvalid(apply(base(), case), case["expect"])
@@ -354,10 +355,21 @@ class Readings(unittest.TestCase):
         # rises on a synthetic corpus with both paths, yet R_fb is 1: the fallback screen
         # passes and the synthetic whole-stage screen is what fails
         rec = base()
-        f = rec["files"][1]
-        # one of its blocks by records made a fallback block, its rows with it
-        f["blocks_runs"], f["blocks_fallback"] = f["blocks_runs"] - 1, 1
-        f["rows_runs"] -= 900_000
+        f = rec["files"][4]
+        # synthetic pattern (6 blocks by records in the census) with one of them made a
+        # fallback block: its rows, records, cells and stores taken from the records' path
+        # (made-up counts that keep every bound)
+        f.update(
+            blocks_runs=5,
+            blocks_fallback=1,
+            rows_runs=4_083_334,
+            records=40,
+            cells=45,
+            slots=4_083_520,
+            d_vector=510_420,
+            d_scalar=40,
+            d_streams=35,
+        )
         for row in f["entry"]:
             for a in range(3):
                 row[a][1] = 0.5
@@ -367,9 +379,9 @@ class Readings(unittest.TestCase):
                 row[a][3] = 0.25
         self.assertEqual(problems(rec), [])
         r = v.readings(rec)
-        text = next(x for x in r["files"] if x["name"] == "synthetic text")
-        self.assertAlmostEqual(text["R_fb_D"][0], 1.0, places=6)
-        self.assertGreater(text["R_direct"][0], 1.02)
+        pat = next(x for x in r["files"] if x["name"] == "synthetic pattern")
+        self.assertAlmostEqual(pat["R_fb_D"][0], 1.0, places=6)
+        self.assertGreater(pat["R_direct"][0], 1.02)
         self.assertFalse(r["screen_synthetic"]["pass"])
         self.assertTrue(r["screen_fallback"]["pass"])
         self.assertEqual(r["Q1"], "STOP: a screen failed")
@@ -424,17 +436,18 @@ class Readings(unittest.TestCase):
 
     def test_the_cli(self):
         # the verifier's own evidence: the text corpus regenerated from this checkout. The
-        # fixture's text is another head's, so it is INVALID as it stands, and VALID once
-        # its text entry is this checkout's
+        # fixture's text is the census's sources' (any later source edit changes it), so
+        # the fixture is VALID by the CLI only if those are this checkout's; with its text
+        # entry made this checkout's, it is (the census's text is all by the fallback)
         ev = synthetic()
-        self.assertEqual(v.main(["verify", str(FIXTURE), "--head", HEAD, "--unjudged"]), 1)
-        rec = base()
         text = next(x for x in ev if x["name"] == "synthetic text")
+        same = all(base()["files"][1][k] == text[k] for k in ("sha256", "bytes", "output"))
+        code = v.main(["verify", str(FIXTURE), "--head", HEAD, "--unjudged"])
+        self.assertEqual(code, 0 if same else 1)
+        rec = base()
         for k in ("sha256", "bytes", "output", "blocks"):
             rec["files"][1][k] = text[k]
-        rec["files"][1]["rows"] = rec["files"][1]["rows_runs"] = text["output"]
-        rec["files"][1]["blocks_runs"] = text["blocks"]
-        rec["files"][1]["blocks_fallback"] = 0
+        rec["files"][1]["blocks_fallback"] = text["blocks"]
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
             json.dump(rec, f)
         try:
@@ -442,6 +455,16 @@ class Readings(unittest.TestCase):
             self.assertEqual(v.main(["verify", f.name, "--head", "e" * 40]), 1)
         finally:
             os.unlink(f.name)
+
+    def test_the_fixture_counts_are_the_census(self):
+        # the passing fixture's counts and identities are the committed count-only census
+        census = json.loads(CENSUS.read_text())
+        keys = [k for k in census["files"][0] if k != "name"]
+        for f, c in zip(base()["files"], census["files"]):
+            self.assertEqual({k: f[k] for k in keys}, {k: c[k] for k in keys}, f["name"])
+        self.assertEqual(len(census["files"]), 7)
+        self.assertNotIn("entry", census["files"][0])
+        self.assertNotIn("phases", census["files"][0])
 
     def test_the_regeneration_matches(self):
         # the port of tests/common's corpora(1) and its compression: the five head-free
