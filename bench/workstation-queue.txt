@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-service-2x3            research/service-core-2x3 the service core at two teams: svc2@10 vs plain/pipelined 2x3 and the 0.2.6 default (#258)
