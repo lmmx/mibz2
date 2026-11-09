@@ -82,9 +82,11 @@
     6695278609,
     6695535463,
     6695669534,
-    6699480548
+    6699480548,
+    6715369675,
+    6729118037
   ],
-  "last_processed_comment_id": 6699480548,
+  "last_processed_comment_id": 6729118037,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -573,19 +575,27 @@
     },
     {
       "trigger_comment_id": 6715369675,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "related_comment_id": 6729118037
+      "related_comment_id": 6729118037,
+      "report_commit": "ec4d9883dafa1acc02ff99e8bc567e4443e2ae2c",
+      "report_path": "state/reports/general-policy-6729118037/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE: reproduced rule-A arithmetic; validator accepts missing output/wall evidence and cell-specific baselines; fallback already falsified; narrow mechanism and regression scope claims. Seven knee corrections confirmed. No decoder timing or implementation."
     },
     {
       "trigger_comment_id": 6729118037,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "related_comment_id": 6715369675
+      "related_comment_id": 6715369675,
+      "report_commit": "ec4d9883dafa1acc02ff99e8bc567e4443e2ae2c",
+      "report_path": "state/reports/general-policy-6729118037/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE: reproduced rule-A arithmetic; validator accepts missing output/wall evidence and cell-specific baselines; fallback already falsified; narrow mechanism and regression scope claims. Seven knee corrections confirmed. No decoder timing or implementation."
     }
   ],
   "active_delegations": [],
@@ -605,10 +615,11 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6695669534
+      6729118037
     ],
     "handled": [
-      6695669534
+      6715369675,
+      6729118037
     ],
     "skipped": [],
     "automation_modified": false
@@ -627,7 +638,7 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
   "migrated_from": {
     "branch": "review/compact30-adversarial-scanner-146",
     "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
