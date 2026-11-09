@@ -126,9 +126,10 @@
     6742323424,
     6744588901,
     6745615244,
-    6745811380
+    6745811380,
+    6746400325
   ],
-  "last_processed_comment_id": 6745811380,
+  "last_processed_comment_id": 6746400325,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1286,7 +1287,7 @@
     },
     {
       "trigger_comment_id": 6746400325,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1294,7 +1295,10 @@
       "report_path": "state/reports/run-fed-r11-6746400325/report.md",
       "report_commit": "a0e4ebf6093241ad7f14333465fc8bec53dbc7c3",
       "review_comment_pr": 145,
-      "disposition": "REVISE required preflight collector exit admission; prior quota/type/identity/passivity and child termination findings closed. 58 Python tests pass; four acquisition-status fixtures still PASS. Pending authority repin is separate."
+      "disposition": "REVISE required preflight collector exit admission; prior quota/type/identity/passivity and child termination findings closed. 58 Python tests pass; four acquisition-status fixtures still PASS. Pending authority repin is separate.",
+      "review_comment_id": 6746559255,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1314,10 +1318,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6745811380
+      6746400325
     ],
     "handled": [
-      6745811380
+      6746400325
     ],
     "skipped": [],
     "automation_modified": false
