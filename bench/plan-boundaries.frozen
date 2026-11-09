@@ -1,0 +1,4 @@
+# The general plan policy's registration (docs/journal/2026-11-07-plan-boundaries-registration.md), diagnostic.
+# The commit the registration, the recipe and the report are frozen at:
+# just bench-plan-boundaries's measured inputs must match it exactly.
+frozen 9f13b4e8bc7fc41e7a105d8ec25ec79c48cb653b

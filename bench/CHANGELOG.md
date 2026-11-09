@@ -35,6 +35,22 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.4] - 2026-11-07
+
+### Added
+
+- **Each run's CPUs and frequency, and each CPU's maximum frequency** (`examples/ab.rs`).
+  `ab run` records the CPUs it may use (`allowed`: a mask set on it with taskset, which every
+  unpinned run inherits) and the run's CPU frequency (`freq_mhz`: the median of the mean
+  `scaling_cur_freq` of those CPUs, sampled every 100 ms by the parent, outside the child).
+  `ab env` records each allowed CPU's `cpuinfo_max_freq` (`max_freq_khz`). For the general
+  plan policy's diagnostic registrations (their masked cells and turbo), and the topology
+  reader's open question on the i9's favoured cores. This is a change to what is stored.
+  Every figure keeps its meaning.
+- **Forced-plan arms and a recompression command,** run by no workflow: `mibz2-plan-TxK` and
+  `mibz2-plan-TxKp`, a plan forced plain or pipelined in the default's window for it, and
+  `ab recompress`, a file's content compressed again at a level by libbzip2 1.0.8.
+
 ## [3.2.3] - 2026-11-06
 
 ### Added

@@ -29,7 +29,11 @@
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
-//!                                    quota, and whether the run-queue counter counts
+//!                                    quota, whether the run-queue counter counts, and each
+//!                                    allowed CPU's `cpuinfo_max_freq` (kHz, null unread)
+//! ab recompress IN.bz2 LEVEL OUT.bz2 IN decoded and compressed again as one stream at
+//!                                    LEVEL by libbzip2 1.0.8 (the bzip2 crate's bundled
+//!                                    source): the same bytes on any machine
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -44,6 +48,16 @@
 //!   window, `parallel::SLOTS_PER_THREAD` blocks a team) and
 //!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
 //!   workers below 6 physical cores, else teams of 2 capped by the L3);
+//! - `mibz2-general` (research, opt-in: the general plan policy's plan and mode for THREADS
+//!   on this machine, `parallel::general::plan_general`: rule A outside its evidence
+//!   envelope, docs/journal/2026-11-07-general-plan-policy.md), in the default's window,
+//!   `parallel::SLOTS_PER_THREAD` blocks a team or worker, so it differs from `mibz2` in its
+//!   plan and mode alone;
+//! - `mibz2-plan-TxK` and `mibz2-plan-TxKp` (research: the plan T teams of K forced, plain,
+//!   or pipelined with park and small, `parallel::PIPELINED_LEVERS`, whatever THREADS is), in
+//!   the default's window for that plan (`parallel::SLOTS_PER_THREAD` blocks a team), so a
+//!   forced plan runs as the default would run it (docs/journal/2026-11-07-general-plan-policy.md's
+//!   diagnostic registrations);
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -81,7 +95,10 @@
 //! /proc's schedstat); and around it, the CPUs the run was given, the 1-minute load, the
 //! cores the other processes kept busy during the run (the machine's busy time less the
 //! run's own CPU), the steal, and the cgroup's CPU throttling and the CPU pressure stall
-//! time (PSI) over the run, where the kernel has them (null where not).
+//! time (PSI) over the run, where the kernel has them (null where not); the CPUs `ab run`
+//! itself may use (`allowed`: a mask set on it with taskset, which every unpinned run
+//! inherits) and the CPU frequency during the run (`freq_mhz`: the median, over samples every
+//! 100 ms by the parent, of the mean `scaling_cur_freq` of those CPUs; null unread).
 //!
 //! **Each thread's CPU is sampled from /proc every 10 ms** (and once more after the last
 //! byte is read, before an in-process decoder is dropped), so a thread that ends between
@@ -400,11 +417,12 @@ mod census_tests {
 /// whichever build the child is. Only names: a thread's CPU is the child's own report
 struct Census {
     stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    handle: std::thread::JoinHandle<BTreeMap<u64, String>>,
+    handle: std::thread::JoinHandle<(BTreeMap<u64, String>, Vec<f64>)>,
 }
 
 impl Census {
-    fn watch(pid: u32) -> Census {
+    /// (and, every 100 ms, the mean current frequency of `cpus`)
+    fn watch(pid: u32, cpus: Vec<usize>) -> Census {
         let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let s = stop.clone();
         let every: u64 = std::env::var("AB_CENSUS_MS")
@@ -416,8 +434,14 @@ impl Census {
             .name("census".into())
             .spawn(move || {
                 let mut seen = BTreeMap::new();
+                let mut freqs = Vec::new();
+                let mut next_freq = Instant::now();
                 let dir = format!("/proc/{pid}/task");
                 while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    if Instant::now() >= next_freq {
+                        freqs.extend(mean_freq_mhz(&cpus));
+                        next_freq += Duration::from_millis(100);
+                    }
                     let Ok(tasks) = std::fs::read_dir(&dir) else {
                         break;
                     };
@@ -431,19 +455,21 @@ impl Census {
                     }
                     std::thread::sleep(Duration::from_millis(every));
                 }
-                seen
+                (seen, freqs)
             })
             .unwrap();
         Census { stop, handle }
     }
 
-    /// Every thread seen, by name, sorted (one entry a thread)
-    fn finish(self) -> String {
+    /// Every thread seen, by name, sorted (one entry a thread), and the median of the
+    /// frequency samples (None without any)
+    fn finish(self) -> (String, Option<f64>) {
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
-        let seen: BTreeMap<u64, String> = self.handle.join().unwrap_or_default();
+        let (seen, mut freqs) = self.handle.join().unwrap_or_default();
         let mut names: Vec<String> = seen.into_values().map(|n| n.replace('"', "'")).collect();
         names.sort_unstable();
-        names.join(" ")
+        let freq = (!freqs.is_empty()).then(|| median(&mut freqs));
+        (names.join(" "), freq)
     }
 }
 
@@ -503,6 +529,43 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
     }
 }
 
+/// `mibz2-plan-TxK` or `mibz2-plan-TxKp`: (T, K, pipelined), T at least 1 and K 2 to 4
+/// (a pipelined team at least 2 wide)
+fn forced_plan(arm: &str) -> Option<(usize, usize, bool)> {
+    let s = arm.strip_prefix("mibz2-plan-")?;
+    let (s, piped) = match s.strip_suffix('p') {
+        Some(s) => (s, true),
+        None => (s, false),
+    };
+    let (t, k) = s.split_once('x')?;
+    let (t, k): (usize, usize) = (t.parse().ok()?, k.parse().ok()?);
+    (t >= 1 && (2..=4).contains(&k)).then_some((t, k, piped))
+}
+
+/// This process's CPUs (`Cpus_allowed_list`), as the kernel writes it
+fn allowed_list() -> Option<String> {
+    let s = std::fs::read_to_string("/proc/self/status").ok()?;
+    Some(
+        s.lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?
+            .trim()
+            .to_string(),
+    )
+}
+
+/// The mean current frequency (MHz) of `cpus`, from cpufreq's `scaling_cur_freq`; None if
+/// none can be read
+fn mean_freq_mhz(cpus: &[usize]) -> Option<f64> {
+    let f: Vec<f64> = cpus
+        .iter()
+        .filter_map(|c| {
+            let p = format!("/sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq");
+            std::fs::read_to_string(p).ok()?.trim().parse::<f64>().ok()
+        })
+        .collect();
+    (!f.is_empty()).then(|| f.iter().sum::<f64>() / f.len() as f64 / 1000.0)
+}
+
 /// An in-process arm's decode of the file at `path`, every byte through `h`, `last` run
 /// after its last byte (`drain`)
 fn decode(
@@ -556,6 +619,63 @@ fn decode(
                 h,
                 last,
             )
+        }
+        // the general plan policy (research, opt-in: `parallel::general`): rule A's plan and
+        // mode for THREADS on this machine, in the default's window (`StreamDecoder::new`'s
+        // for SLOTS_PER_THREAD a thread: SLOTS_PER_THREAD a team or worker)
+        "mibz2-general" => {
+            use mibz2::parallel::general::{plan_general, Mode, Topology};
+            use mibz2::parallel::Plan;
+            let (plan, mode) = plan_general(&Topology::detect(), threads);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * plan.workers();
+            let k = mibz2::Kernels::detect();
+            match (plan, mode) {
+                (Plan::Teams { teams, k: team_k }, Mode::Pipelined(levers)) => drain(
+                    mibz2::BzReader::parallel_pipelined_levers(
+                        open()?,
+                        teams,
+                        team_k,
+                        slots,
+                        k,
+                        levers,
+                    ),
+                    h,
+                    last,
+                ),
+                _ => drain(
+                    mibz2::BzReader::parallel_planned(open()?, plan, slots, k),
+                    h,
+                    last,
+                ),
+            }
+        }
+        // a forced plan (research): `mibz2-plan-TxK`, plain, or `mibz2-plan-TxKp`, pipelined
+        // with the default's levers, in the default's window for that plan
+        _ if arm.starts_with("mibz2-plan-") => {
+            let (teams, k, piped) = forced_plan(arm).ok_or_else(|| format!("unknown arm {arm}"))?;
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let kern = mibz2::Kernels::detect();
+            if piped {
+                drain(
+                    mibz2::BzReader::parallel_pipelined_levers(
+                        open()?,
+                        teams,
+                        k,
+                        slots,
+                        kern,
+                        mibz2::parallel::PIPELINED_LEVERS,
+                    ),
+                    h,
+                    last,
+                )
+            } else {
+                let plan = mibz2::parallel::Plan::Teams { teams, k };
+                drain(
+                    mibz2::BzReader::parallel_planned(open()?, plan, slots, kern),
+                    h,
+                    last,
+                )
+            }
         }
         // the pipelined team (research, `StreamDecoder::pipelined`): THREADS cores as
         // THREADS / K teams of K, as the teamK arms, and their window (SLOTS_PER_THREAD a
@@ -945,6 +1065,21 @@ fn env() {
                 .ok()?;
             Some(if q < 0.0 { None } else { Some(q / p) })
         });
+    // each allowed CPU's highest frequency, kHz (cpufreq's `cpuinfo_max_freq`): whether the
+    // cores differ in kind or in turbo (docs/journal/2026-11-07-general-plan-policy.md)
+    let max_freqs: Vec<(usize, Option<u64>)> = cores
+        .iter()
+        .flatten()
+        .map(|&c| {
+            let p = format!("/sys/devices/system/cpu/cpu{c}/cpufreq/cpuinfo_max_freq");
+            (
+                c,
+                std::fs::read_to_string(p)
+                    .ok()
+                    .and_then(|s| s.trim().parse().ok()),
+            )
+        })
+        .collect();
     let spin = 2 * ncpu.max(1);
     let t0 = Instant::now();
     let hs: Vec<_> = (0..spin)
@@ -984,7 +1119,7 @@ fn env() {
             .join(",")
     };
     println!(
-        "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}},\"max_freq_khz\":{{{}}}}}",
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
         match quota {
@@ -993,6 +1128,11 @@ fn env() {
         },
         throttled().is_some(),
         psi_cpu().is_some(),
+        max_freqs
+            .iter()
+            .map(|(c, f)| format!("\"{c}\":{}", f.map_or("null".into(), |f| f.to_string())))
+            .collect::<Vec<_>>()
+            .join(","),
     );
 }
 
@@ -1104,6 +1244,10 @@ fn run(args: &[String]) {
                     } else {
                         spread_cpus(t)
                     };
+                    // (the CPUs the run may use: its pin, or else this process's own, a mask
+                    // taskset set on `ab run` included)
+                    let allowed = allowed_list().unwrap_or_default();
+                    let run_cpus = cpu_list(cpus.as_deref().unwrap_or(&allowed));
                     let mut cmd = match &cpus {
                         Some(list) => {
                             let mut c = Command::new("taskset");
@@ -1125,9 +1269,9 @@ fn run(args: &[String]) {
                         .stderr(std::process::Stdio::inherit())
                         .spawn()
                         .unwrap();
-                    let census = Census::watch(child.id());
+                    let census = Census::watch(child.id(), run_cpus.clone());
                     let o = child.wait_with_output().unwrap();
-                    let observed = census.finish();
+                    let (observed, freq) = census.finish();
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
@@ -1144,13 +1288,14 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",\"allowed\":\"{allowed}\",\"freq_mhz\":{},{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
                         opt(throttle.map(|x| x.1 as f64 / 1000.0)),
                         opt(psi_ms),
                         waited.elapsed().as_secs_f64() - settle,
+                        opt(freq),
                         line.strip_prefix('{').unwrap_or("\"broken\":1}")
                     );
                     eprintln!(
@@ -1332,6 +1477,18 @@ fn gen(args: &[String]) {
     }
 }
 
+/// `ab recompress IN LEVEL OUT`: IN decoded whole (every stream) and compressed again as one
+/// stream at LEVEL by libbzip2 1.0.8 (the bzip2 crate's bundled source), written to OUT new
+fn recompress(args: &[String]) {
+    let (input, level, out) = (&args[0], args[1].parse::<u32>().unwrap(), &args[2]);
+    assert!((1..=9).contains(&level), "LEVEL is 1 to 9");
+    let data = mibz2::decode(&std::fs::read(input).unwrap()).unwrap();
+    let z = common::compress(&data, level);
+    let _ = std::fs::remove_file(out);
+    std::fs::write(out, &z).unwrap();
+    eprintln!("{out}: level {level}, {} -> {} bytes", data.len(), z.len());
+}
+
 fn main() {
     let args: Vec<String> = std::env::args()
         .skip(1)
@@ -1343,7 +1500,8 @@ fn main() {
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
         Some("env") => env(),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env"),
+        Some("recompress") => recompress(&args[1..]),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab recompress IN LEVEL OUT"),
     }
 }
 
@@ -1372,6 +1530,22 @@ mod tests {
         // two arms: head (0) and base (1) alternate first, in a balanced pattern
         let first: Vec<usize> = (0..4).map(|r| arm_order(r, 2)[0]).collect();
         assert_eq!(first, vec![0, 1, 1, 0]);
+    }
+
+    #[test]
+    fn forced_plans() {
+        assert_eq!(forced_plan("mibz2-plan-4x2"), Some((4, 2, false)));
+        assert_eq!(forced_plan("mibz2-plan-3x3p"), Some((3, 3, true)));
+        assert_eq!(forced_plan("mibz2-plan-2x4p"), Some((2, 4, true)));
+        for bad in [
+            "mibz2-plan-0x2",
+            "mibz2-plan-3x5",
+            "mibz2-plan-3x1",
+            "mibz2-plan-x2",
+            "mibz2-plan-3x3q",
+        ] {
+            assert_eq!(forced_plan(bad), None, "{bad}");
+        }
     }
 
     #[test]
