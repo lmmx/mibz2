@@ -137,3 +137,63 @@ B/A 0.976270, and #269's B/A 1.159179. Three statements above are corrected:
   - **Its budget:** the histogram, check, scatter and record gathers must fit in **0.319 c per
     output byte** (6.439 c per run) to beat B's sort+fill at 1.329.
   - **No guarantees:** neither free locality nor an instruction saving.
+
+## The Researcher's review (6733290162)
+
+**The Researcher concurs with the Q1 STOP.**
+- **The replay:** the artifact SHA-256 matches. An independent raw-time calculation reproduces
+  D/A 1.052451 [1.050598, 1.054308], B/A 0.976270 and D/B 1.078033.
+- **The loss is measured, but its hardware cause is not isolated.** place/(sort+fill) is
+  1.204515 [1.202353, 1.206682]. That covers every check, seed, dependency, read, tail and
+  compiled loop. D writes 0.1135% fewer slots, but issues 38,456 more predicted table stores
+  (+0.1244%).
+
+**The strongest control is already in this run: the all-fallback corpora.** No sort or placement
+runs on them:
+
+| corpus (every block by fallback) | B/A | D/A |
+|---|---:|---:|
+| text | 1.063689 | 1.001729 |
+| random | 1.284228 | 1.006082 |
+| records | 1.374928 | 0.997353 |
+
+- **B and D make the same selector and fallback source calls,** but with distinct wrappers and
+  buffers. B is 6–37% slower than A even where it does no record work.
+- **So B's cost here is partly its harness context.** That means its code layout, inlining or
+  register pressure, and its buffer and cache history, not its construction.
+- **What it implies:** this must be explained before any B/A figure, on either host, is charged
+  to the records, the selector or the CPU.
+
+**"The baseline changed" needs precision.**
+- **What is identical:** fd60fffa and aa409f6f have identical `src/mtf.rs`, `src/bwt.rs` and
+  `Cargo.lock`, and the only `Cargo.toml` difference is a comment.
+- **What differs:** the benchmark (four arms down to three, rotation and buffer context, and
+  checks).
+- **What it shows:** run-context dependence, not an identified CPU-family effect. Identical
+  source doesn't prove identical generated code.
+
+**An adjacent construction: compact F-order run indices.**
+- **The idea:** each byte's L-run stream is already ordered, and F order is their byte-ordered
+  concatenation, so no heap merge is needed. Replace B's 8-byte `[a, p]` descriptors with 4-byte
+  original indices.
+  - Recover p and the length from original records j and j+1.
+  - Rebuild a cumulatively within each bucket.
+  - One global L cursor supplies the labels.
+- **The check:** it gives the same table with at most 2r−1 cells, checked on 29,524 ternary
+  columns and 250,959 rows.
+- **The trade:** metadata falls from about 12r to 8r, including the L records. That saves
+  0.24823 B per accepted row per metadata pass, against more dependent record reads.
+- **A trap:** don't infer lengths from adjacent F-sorted starts; L = [b, a, b] refutes that.
+- **This and the Optimiser's C43** are the same family; build one of them, not both.
+- **Software write-combining** (arXiv 1008.2849) supports buffering as an option, but not as a
+  speed claim.
+
+**The order of work:**
+1. **Static discrimination of the fallback code generation:** listings, inlining, code layout and
+   buffers, comparing A's and B's fallback paths.
+2. **A bounded, shared-fallback control diagnostic,** before any compact-index timing.
+3. **C29 keeps priority.**
+4. **If host interaction stays material:** freeze identical sources, toolchain, corpus and arm set
+   across recorded actual hosts. The comparison crosses *harness snapshot × host*.
+
+No existing verdict reopens.
