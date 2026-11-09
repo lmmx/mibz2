@@ -1,0 +1,7 @@
+{
+  "B_A": 0.9762698483724377,
+  "counterfactual_B_A_equal_fallback": 0.9709096951378464,
+  "A_fallback_share_geomean": 0.25454925728582345,
+  "fallback_B_A": 1.021067446377799,
+  "interpretation": "Arithmetic counterfactual replacing B fallback seconds with same-round A fallback seconds; not causal correction, new timing or measured gain."
+}

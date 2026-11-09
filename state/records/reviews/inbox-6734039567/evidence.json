@@ -1,0 +1,26 @@
+{
+  "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+  "brief": 6734039567,
+  "journal_commit": "adb16fb75cb7e25eb734aeebf4cc9e7bf28ff8c5",
+  "journal_blob": "16548a78cc313b2d6800da8fe06b2db0d42fc376",
+  "archive_sha256": "00b0e008bdd8a90108ccaa87e21467dd35d70df35e1b71b86e687078a64a3e94",
+  "prior_evidence_commit": "ec8217f3d6a84205c0a9a1b7f9e49a6fda7ad939",
+  "scope": {
+    "new_timing": false,
+    "implementation": false,
+    "compilation": false,
+    "raw_rounds": 15,
+    "local_probe_rerun": false
+  },
+  "primary_sources": [
+    "https://www.agner.org/optimize/microarchitecture.pdf#page=251",
+    "https://www.numberworld.org/blogs/2024_8_7_zen5_avx512_teardown/57647_zen4_sog.pdf"
+  ],
+  "migration": {
+    "branch": "review/compact30-instruction-ledger",
+    "sha": "e6eea5889432aef28f4d9e450cee87dd5bf7bacf",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "86d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde",
+    "date": "2026-11-06"
+  }
+}
