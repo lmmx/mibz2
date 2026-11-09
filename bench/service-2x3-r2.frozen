@@ -1,0 +1,7 @@
+# The service core at two teams on the workstation, revision 2
+# (docs/journal/2026-11-09-service-2x3-r2-registration.md).
+# The commit the registration, the harness, the recipe and the report are frozen at:
+# just bench-service-2x3-r2's measured inputs must match it exactly.
+# DRAFT: this freeze is the draft's, for its untimed dry run. The Coordinator freezes the
+# reviewed commit (after #298 and the Researcher's review) before any ready tag.
+frozen d95e062678e70f8a7983acaa018fa9a83f32ca04
