@@ -55,6 +55,12 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   signal), as #270's research harness records it, so a reporter can refuse a run whose child
   failed. This is a change to what is stored.
 
+- **Each run's executed environment** (`examples/ab.rs`, read by the child after its wall and
+  CPU, so untimed): `avx2`, as `Kernels::detect` reports it (what the move-to-front kernels
+  dispatch on), `cpus_allowed`, the affinity mask's CPUs, and `available_parallelism`. `ab env`
+  prints the same three. C29's reporter refuses a judged reading without them, or with other
+  than the registered AVX2 and 4 CPUs. This is a change to what is stored.
+
 Every existing figure is as it was: the new arms, the field and the diagnostic sit beside them.
 
 ## [3.2.3] - 2026-11-06

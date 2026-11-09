@@ -1,5 +1,6 @@
 """bench/c29_checkpoints.py on synthetic runs: a clean run is VALID with the reading its
-ratios give, and each defect the admission guards against makes it INVALID.
+ratios give, each defect the admission guards against makes it INVALID, and a run whose
+registered environment (AVX2, the CPU allocation) is absent or other is never JUDGED.
 
     python3 bench/test_c29_checkpoints.py
 """
@@ -16,6 +17,15 @@ sys.path.insert(0, str(HERE))
 import c29_checkpoints as c  # noqa: E402
 
 HEAD = "a" * 40
+# the registered environment's facts, as ab's child and the workflow record them
+RECORD_FACTS = {"avx2": True, "cpus_allowed": 4, "available_parallelism": 4, "cpus": "all"}
+IDENTITY_FACTS = {
+    "avx2": True,
+    "nproc": 4,
+    "cpus_allowed": 4,
+    "available_parallelism": 4,
+    "cpu_quota": None,
+}
 
 
 def names(t):
@@ -25,7 +35,7 @@ def names(t):
     )
 
 
-def runs(ratio=0.97, cpu=1.0, rounds=c.ROUNDS, noise=0.004):
+def runs(ratio=0.97, cpu=1.0, rounds=c.ROUNDS, noise=0.004, facts=None):
     """ab's records for both arms at both thread counts, in ab's rotation"""
     out = []
     for t in (c.THREADS, c.REPORTED_THREADS):
@@ -47,6 +57,7 @@ def runs(ratio=0.97, cpu=1.0, rounds=c.ROUNDS, noise=0.004):
                         "out": 123,
                         "wall": w,
                         "cpu": 6.0 * (cpu if arm == c.C29 else 1.0),
+                        **(RECORD_FACTS if facts is None else facts),
                     }
                 )
     return out
@@ -67,6 +78,7 @@ def identity(**kw):
         "arms": c.REGISTERED_ARMS,
         "threads": [c.THREADS, c.REPORTED_THREADS],
         "rounds": c.ROUNDS,
+        **IDENTITY_FACTS,
     }
     d.update(kw)
     return d
@@ -132,6 +144,86 @@ class Reporter(unittest.TestCase):
         self.assertIn("not one build", self.invalid(runs(), identity(binary_sha256_after="d" * 64)))
         self.assertIn("corpus's SHA-256", self.invalid(runs(), identity(corpus_sha256_after="e")))
         self.assertIn("rounds missing", self.invalid(runs(rounds=5), identity(rounds=5)))
+
+
+class Environment(unittest.TestCase):
+    """The judged reading bound to the executed kernel and the runner's capacity"""
+
+    def not_judged(self, recs, ident):
+        code, out = report(recs, ident)
+        self.assertEqual(code, 3, out)
+        self.assertTrue(out.startswith("NOT JUDGED"), out)
+        self.assertNotIn("VALID (JUDGED)", out)
+        self.assertNotIn("(judged)", out)
+        self.assertIn("VALID (UNJUDGED (FALLBACK))", out)
+        self.assertIn("Reading (UNJUDGED (FALLBACK), 9 threads)", out)
+        return out
+
+    def test_researchers_counterexample(self):
+        # the Researcher's probe (REVIEW 6734359855): a ratio-one run with neither fact,
+        # identity schema 1's fields only: was VALID (JUDGED) STOP at 1.0000 [0.9986, 1.0014]
+        ident = {k: v for k, v in identity().items() if k not in IDENTITY_FACTS}
+        out = self.not_judged(runs(ratio=1.0, facts={}), ident)
+        self.assertIn("identity: avx2 None", out)
+        self.assertIn("identity: nproc None", out)
+        self.assertIn("avx2 None, not True", out)
+        self.assertIn("cpus_allowed None", out)
+        # and its illustrative fields, now schema keys: still not judged
+        ident.update(avx2=False, cpu_count=2)
+        self.not_judged(runs(ratio=1.0, facts={}), ident)
+
+    def test_false_avx2(self):
+        out = self.not_judged(runs(ratio=1.0), identity(avx2=False))
+        self.assertIn("identity: avx2 False", out)
+        # the records' own detection, the identity's true: still not judged
+        out = self.not_judged(runs(ratio=1.0, facts={**RECORD_FACTS, "avx2": False}), identity())
+        self.assertIn("avx2 False, not True", out)
+        # one record alone
+        r = runs(ratio=1.0)
+        r[7]["avx2"] = False
+        self.assertIn("line 8", self.not_judged(r, identity()))
+        # a truthy non-bool is not a detection
+        self.not_judged(runs(ratio=1.0), identity(avx2=1))
+
+    def test_two_cpus(self):
+        two = {"nproc": 2, "cpus_allowed": 2, "available_parallelism": 2}
+        rec2 = {**RECORD_FACTS, "cpus_allowed": 2, "available_parallelism": 2}
+        out = self.not_judged(runs(ratio=0.97, facts=rec2), identity(**two))
+        self.assertIn("nproc 2, not 4", out)
+        # each fact alone refuses it
+        for k in two:
+            self.not_judged(runs(ratio=0.97), identity(**{k: 2}))
+        self.not_judged(
+            runs(ratio=0.97, facts={**RECORD_FACTS, "available_parallelism": 2}), identity()
+        )
+        # a cgroup quota of 2 CPUs, the mask's 4: not the registered capacity
+        self.assertIn("cpu_quota 2.0", self.not_judged(runs(), identity(cpu_quota=2.0)))
+        # a pinned run is not the registered, unpinned setting
+        self.not_judged(runs(facts={**RECORD_FACTS, "cpus": "0,1"}), identity())
+
+    def test_correct_positive(self):
+        code, out = report(runs(ratio=1.0), identity())
+        self.assertEqual(code, 0, out)
+        self.assertTrue(out.startswith("VALID (JUDGED)"), out)
+        self.assertIn("1.0000 [0.9986, 1.0014]", out)
+        self.assertIn("Reading (JUDGED, 9 threads): STOP", out)
+        code, out = report(runs(ratio=0.97), identity(cpu_quota=4.0))
+        self.assertEqual(code, 0, out)
+        self.assertIn("Reading (JUDGED, 9 threads): LEAD", out)
+
+    def test_invalid_comes_first(self):
+        # an INVALID run is INVALID whatever its environment
+        r = runs(facts={})
+        r[2]["exit"] = 1
+        code, out = report(r, identity(avx2=False))
+        self.assertEqual(code, 2, out)
+        self.assertTrue(out.startswith("INVALID"), out)
+
+    def test_unjudged_notes_the_environment(self):
+        code, out = report(runs(facts={}), judged=False)
+        self.assertEqual(code, 0, out)
+        self.assertIn("VALID (UNJUDGED)", out)
+        self.assertIn("not the registered one", out)
 
 
 if __name__ == "__main__":

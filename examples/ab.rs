@@ -29,7 +29,9 @@
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
-//!                                    quota, and whether the run-queue counter counts
+//!                                    quota, whether the run-queue counter counts, and
+//!                                    each run's facts (AVX2 as detected, the affinity
+//!                                    mask's CPUs, `available_parallelism`)
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -766,12 +768,39 @@ fn child(arm: &str, threads: usize, path: &str) {
     // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
+    // (read after the decode's wall and CPU: untimed)
+    let facts = run_facts();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",{facts},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
     );
+}
+
+/// The facts a run's kernels and CPU allocation are bound by, as JSON fields: `avx2`, as
+/// `Kernels::detect` reports it (the detection every in-process arm hands its decoder, and
+/// the bool `mtf_checkpoints_reg` and `mtf_checkpoints` dispatch on: false, both are the
+/// scalar kernel); `cpus_allowed`, the CPUs in this process's affinity mask (its
+/// `Cpus_allowed_list`, what `sched_getaffinity` returns); and `available_parallelism`, the
+/// standard library's count (the mask, less any cgroup CPU quota). Absent: null. A child
+/// reads them after its wall and CPU are taken, so they are untimed
+fn run_facts() -> String {
+    let avx2 = mibz2::Kernels::detect().avx2;
+    let allowed = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+                .map(|l| cpu_list(l).len())
+        });
+    let par = std::thread::available_parallelism().ok().map(|n| n.get());
+    let n = |x: Option<usize>| x.map_or("null".into(), |x| x.to_string());
+    format!(
+        "\"avx2\":{avx2},\"cpus_allowed\":{},\"available_parallelism\":{}",
+        n(allowed),
+        n(par)
+    )
 }
 
 /// (busy, steal, total) jiffies over all CPUs
@@ -1012,7 +1041,8 @@ fn env() {
             .join(",")
     };
     println!(
-        "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        run_facts(),
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
         match quota {
@@ -1380,6 +1410,22 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn run_facts_are_the_kernels_detection_and_the_allocation() {
+        let line = format!("{{{}}}", run_facts());
+        assert_eq!(
+            json_str(&line, "avx2").as_deref(),
+            Some(if mibz2::Kernels::detect().avx2 {
+                "true"
+            } else {
+                "false"
+            })
+        );
+        let par = std::thread::available_parallelism().unwrap().get();
+        assert_eq!(json_f(&line, "available_parallelism"), par as f64);
+        assert!(json_f(&line, "cpus_allowed") >= 1.0, "{line}");
+    }
 
     #[test]
     fn every_arm_runs_in_every_position_equally() {

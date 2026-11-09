@@ -22,8 +22,15 @@ harness (no features). ID.json is the run's identity, written by the sweep workf
                            the leader's front stage by `mtf_checkpoints_reg` (C29)
 
 VALID only if every predicate holds; any failure prints INVALID with its reasons, exits 2,
-and no reading is given. Every measurement is checked for presence and type before any
-arithmetic, so an absent or malformed one is a reason, never a crash. See `admit`.
+and no reading is given. A judged reading further needs the registered environment shown,
+untimed, in the identity and in every record (`environment_problems`): AVX2 detected (as
+`Kernels::detect` reports it, the bool C29's and the control's kernels dispatch on: without
+it both are the same scalar kernel) and the registered CPU allocation (REGISTERED_CPUS, by
+`nproc`, the affinity mask and `available_parallelism`, no lower cgroup quota, unpinned).
+A fact absent or other than registered refuses the judged reading: the run is kept as
+UNJUDGED (FALLBACK), its ratios printed under that label, exit 3, never re-run to pass.
+Every measurement is checked for presence and type before any arithmetic, so an absent or
+malformed one is a reason, never a crash. See `admit`.
 
 The reading is C29 over the control at 9 threads (three teams of three, the shipped
 pipelined plan): LEAD, STOP or INCONCLUSIVE by the thresholds below. The 3-thread cell
@@ -52,7 +59,7 @@ THREADS = 9  # judged: three teams of three
 REPORTED_THREADS = 3  # one team of three: the same rule's reading, secondary, never judged
 CORPUS = "wikidata"
 CORPUS_SHA256 = "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
-IDENTITY_SCHEMA = "c29_checkpoints/identity/1"
+IDENTITY_SCHEMA = "c29_checkpoints/identity/2"
 FEATURES = []
 PROFILE = "release"
 # (leaders, plain helpers, pipelined helpers) each run must be seen running
@@ -60,6 +67,11 @@ PLANS = {THREADS: (3, 0, 6), REPORTED_THREADS: (1, 0, 2)}
 POSITIVE_WALL = 0.98  # LEAD: the geometric mean at most this, its interval's high end below 1
 CPU_CAP = 1.02  # and the CPU ratio's high end at most this
 NEGATIVE_WALL = 0.99  # STOP: the wall ratio's low end above this (no 1% cut)
+# The registered environment: the intended (AVX2) kernels, and CI's 4 vCPUs, which 9 threads
+# oversubscribe (the registration's justification). Not timed: read around the run
+REGISTERED_AVX2 = True
+REGISTERED_CPUS = 4
+ENV_SHOWN = 16  # the environment's reasons printed (all of them in --out's JSON)
 HEX40 = re.compile(r"[0-9a-f]{40}")
 HEX64 = re.compile(r"[0-9a-f]{64}")
 
@@ -193,6 +205,39 @@ def identity_problems(ident, head, judged, rounds):
     return bad
 
 
+def environment_problems(ident, recs):
+    """The registered environment's facts, absent or not as registered: a reason each. Any
+    reason refuses a judged reading (UNJUDGED (FALLBACK)), never an INVALID's"""
+    bad = []
+    if not isinstance(ident, dict):
+        ident = {}
+    if ident.get("avx2") is not REGISTERED_AVX2:
+        bad.append(f"identity: avx2 {ident.get('avx2')!r}, not {REGISTERED_AVX2}")
+    for k in ("nproc", "cpus_allowed", "available_parallelism"):
+        v = ident.get(k)
+        if not (is_int(v) and v == REGISTERED_CPUS):
+            bad.append(f"identity: {k} {v!r}, not {REGISTERED_CPUS}")
+    if "cpu_quota" not in ident:
+        bad.append("identity: cpu_quota not recorded")
+    else:
+        q = ident["cpu_quota"]
+        if not (q is None or (positive(q) and q >= REGISTERED_CPUS)):
+            bad.append(f"identity: cpu_quota {q!r}, below {REGISTERED_CPUS} CPUs")
+    for rec in recs:
+        where = (
+            f"line {rec.get('_line')} ({rec.get('arm')} t{rec.get('threads')} r{rec.get('round')})"
+        )
+        if rec.get("avx2") is not REGISTERED_AVX2:
+            bad.append(f"{where}: avx2 {rec.get('avx2')!r}, not {REGISTERED_AVX2}")
+        for k in ("cpus_allowed", "available_parallelism"):
+            v = rec.get(k)
+            if not (is_int(v) and v == REGISTERED_CPUS):
+                bad.append(f"{where}: {k} {v!r}, not {REGISTERED_CPUS}")
+        if rec.get("cpus") != "all":
+            bad.append(f"{where}: cpus {rec.get('cpus')!r}, not 'all' (unpinned)")
+    return bad
+
+
 def admit(recs, rounds):
     """The records' problems (none: admitted), and the runs by (threads, arm, round)"""
     bad = []
@@ -287,7 +332,9 @@ def report(args):
     if rounds:
         b, runs = admit(recs, rounds)
         bad += b
-    label = "JUDGED" if judged else "UNJUDGED"
+    env = environment_problems(ident, recs)
+    fallback = judged and bool(env)
+    label = "JUDGED" if judged and not env else "UNJUDGED (FALLBACK)" if fallback else "UNJUDGED"
     raw = [{k: v for k, v in r.items() if k != "_line"} for r in recs]
     out = {
         "label": label,
@@ -296,6 +343,7 @@ def report(args):
         "threads": THREADS,
         "rounds": rounds,
         "invalid": bad,
+        "environment": env,  # the registered environment's facts absent or not as registered
         "raw": raw,  # every record, in file order (the arms' actual order)
     }
     cells = {}
@@ -316,13 +364,28 @@ def report(args):
                 json.dump(out, f, indent=1)
         return 2
 
+    if env:
+        if fallback:
+            print("NOT JUDGED: the registered environment is not shown (no judged reading; kept")
+            print("  as UNJUDGED (FALLBACK), never re-run to pass)")
+        else:
+            print("(environment, not the registered one; this run is unjudged anyway)")
+        # (the identity's reasons and the first records'; every one is in --out's JSON)
+        for b in env[:ENV_SHOWN]:
+            print(f"  {b}")
+        if len(env) > ENV_SHOWN:
+            print(f"  ... and {len(env) - ENV_SHOWN} more")
     print(f"VALID ({label}): {rounds} rounds, {C29} against {CTL}, paired by round")
     print(f"{'threads':<12} {'wall ratio [95%]':<26} {'CPU ratio [95%]':<26} reading")
     readings = {}
     for t in (THREADS, REPORTED_THREADS):
         x = cells[t]
         readings[t] = reading_of(x["wall"], x["cpu"])
-        tag = "judged" if t == THREADS else "secondary, never judged"
+        tag = (
+            ("judged" if label == "JUDGED" else "primary, unjudged")
+            if t == THREADS
+            else "secondary, never judged"
+        )
         print(f"{t:<12} {fmt(x['wall']):<26} {fmt(x['cpu']):<26} {readings[t]} ({tag})")
     print(
         f"\nReading ({label}, {THREADS} threads): {readings[THREADS]}. LEAD: wall <= "
@@ -337,7 +400,7 @@ def report(args):
     if args.out:
         with open(args.out + ".json", "w") as f:
             json.dump(out, f, indent=1)
-    return 0
+    return 3 if fallback else 0
 
 
 def main():

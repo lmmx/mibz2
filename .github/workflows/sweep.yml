@@ -55,7 +55,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release --example sweep --example phases --example windows --example ab
+        # (--locked: the committed Cargo.lock, as the registration freezes it; no features)
+        run: cargo build --locked --release --example sweep --example phases --example windows --example ab
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -98,21 +99,37 @@ jobs:
             arms=mibz2-pipe3-both,mibz2-pipe3-both-c29
             # the run's identity, for the reporter to check against the registration: the
             # head, a clean tree (the sources the build and the reporter read), the build,
-            # and the binary's and corpus's digests before and after the run
-            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench Cargo.toml Cargo.lock)" ] && echo true || echo false)
+            # the binary's and corpus's digests before and after the run, and the executed
+            # environment (untimed): AVX2 as the harness's own detection reports it (ab env,
+            # `Kernels::detect`, what the kernels dispatch on) and the CPU allocation (nproc,
+            # the affinity mask, available_parallelism, the cgroup quota). Each record
+            # carries its child's own AVX2 and allocation too
+            tree_clean=$([ -z "$(git status --porcelain -- src tests examples benches bench .cargo Cargo.toml Cargo.lock)" ] && echo true || echo false)
             bin0=$(sha256sum "$ab" | cut -d' ' -f1); cor0=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+            nproc > c29-nproc.txt
             $ab env > c29-env.json
-            $ab run c29-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> c29-progress.txt
+            # (a failed run is kept, its records so far and its progress archived, the identity
+            # still written: its status is the step's)
+            run_status=0
+            $ab run c29-runs.jsonl --arms "$arms" --threads 9,3 --rounds "$ROUNDS" --settle 0.25 corpora/wikidata.bz2 2> c29-progress.txt || run_status=$?
             bin1=$(sha256sum "$ab" | cut -d' ' -f1); cor1=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
             python3 - "$arms" > c29-identity.json <<EOF
-          import json, subprocess, sys
+          import json, os, subprocess, sys
+          try:
+              env = json.load(open("c29-env.json"))
+          except (OSError, ValueError):
+              env = {}  # (the reporter then refuses a judged reading: no facts)
+          out = lambda *a: subprocess.check_output(a, text=True).strip()
           print(json.dumps({
-              "schema": "c29_checkpoints/identity/1",
-              "head": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "schema": "c29_checkpoints/identity/2",
+              "head": out("git", "rev-parse", "HEAD"),
               "tree_clean": json.loads("$tree_clean"),
               "features": [],
               "profile": "release",
-              "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "rustc": out("rustc", "--version"),
+              "toolchain": {"rustc_vV": out("rustc", "-vV"), "cargo": out("cargo", "--version"),
+                            "rustflags": os.environ.get("RUSTFLAGS"),
+                            "cargo_encoded_rustflags": os.environ.get("CARGO_ENCODED_RUSTFLAGS")},
               "binary_sha256_before": "$bin0",
               "binary_sha256_after": "$bin1",
               "corpus_sha256_before": "$cor0",
@@ -120,10 +137,20 @@ jobs:
               "arms": sys.argv[1].split(","),
               "threads": [9, 3],
               "rounds": int("$ROUNDS"),
+              "avx2": env.get("avx2"),
+              "nproc": int(open("c29-nproc.txt").read()),
+              "cpus_allowed": env.get("cpus_allowed"),
+              "available_parallelism": env.get("available_parallelism"),
+              "cpu_quota": env.get("cpu_quota"),
+              "cpu_model": "$model",
+              "ab_run_status": $run_status,
+              "env": env,
           }, indent=1))
           EOF
-            # judged only at the registered head; any other run UNJUDGED. No re-run on an
-            # INVALID: a failed admission is kept and investigated
+            # judged only at the registered head and environment; any other run UNJUDGED.
+            # The reporter exits 2 on an INVALID, 3 on a run whose AVX2 or CPU allocation is
+            # absent or not as registered (UNJUDGED (FALLBACK)). No re-run on either: the
+            # attempt is the registered one, kept and investigated, never retried to pass
             if [ -n "$REGISTERED" ]; then judge=(--head "$REGISTERED"); else judge=(--unjudged --rounds "$ROUNDS"); fi
             status=0
             python3 bench/c29_checkpoints.py report c29-runs.jsonl "${judge[@]}" --identity c29-identity.json --out c29-report > c29-report.txt || status=$?
@@ -143,6 +170,7 @@ jobs:
               cat sweep-1.txt
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
+            [ "$status" = 0 ] && status=$run_status
             exit $status
           fi
           bin=target/release/examples/$TOOL

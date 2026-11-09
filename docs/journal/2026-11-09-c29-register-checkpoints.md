@@ -5,8 +5,10 @@ default decoder: the switch is off in `PIPELINED_LEVERS`, and the default's entr
 set it. The diagnostic has not been run. The PR's own bench.yml run (42569223731) showed a 1-thread
 Wikidata cell 1.1% slower, on a path C29 never executes; §R1 investigates it without timing (the
 hot code is instruction-identical to base, Ir is identical, and every hot function sits 16 bytes
-later mod 64) and revises the reach counter per the Guardian's D060. Nothing here runs on the
-workstation, and no recipe is in the Justfile or the workstation queue.
+later mod 64) and revises the reach counter per the Guardian's D060. §R2 binds the judged reading
+to the executed kernel (AVX2 detected) and the runner's capacity (4 CPUs), per the Researcher's
+REVIEW 6734359855, and states the freeze's contents. Nothing here runs on the workstation, and no
+recipe is in the Justfile or the workstation queue.
 
 **The input.** #270's registered run (`docs/journal/2026-11-09-run-fed-leader-result.md`) put
 `mtf_checkpoints` on `mtf_avx2`'s register-list kernel (the arm `runfed-reg`, the matched control
@@ -152,7 +154,8 @@ in the treatment that the control lacks. The binary is one build, so code layout
 arms (§R1 is about layout between builds).
 
 **The setting.** `sweep.yml`, `tool: c29`, `rounds: 20`, `registered_head` the frozen head; one
-GitHub-hosted runner (4 vCPUs), every CPU, unpinned; `ab run --threads 9,3 --rounds 20 --settle
+GitHub-hosted runner with **AVX2 detected and 4 CPUs allocated** (§R2: both recorded and required
+for a judged reading), every CPU, unpinned; `ab run --threads 9,3 --rounds 20 --settle
 0.25` on the Wikidata corpus (bench/wikidata.json's windows, SHA-256 `82f65ace…c29915`, the same
 corpus as #270). 9 threads is three teams of three, the shipped pipelined plan (judged); 3 threads
 is one team of three (secondary, never judged). 20 rounds (df = 19) rather than #270's 15: the run
@@ -167,7 +170,7 @@ outputs equal. Its ratios mean nothing and are not reported.
 **VALID** (`bench/c29_checkpoints.py report`, shaped on #270's `bench/run_fed_leader.py`; its
 admission is checked on synthetic runs by `bench/test_c29_checkpoints.py`, in CI's test workflow).
 Every predicate must hold, else INVALID with its reasons, exit 2, and no reading:
-- the identity (written by the workflow around the run, schema `c29_checkpoints/identity/1`): the
+- the identity (written by the workflow around the run, schema `c29_checkpoints/identity/2`): the
   run's head the registered head (a full 40-character commit), a clean tree over the sources the
   build and the reporter read, no features, release, rustc recorded, the harness binary's SHA-256
   the same before and after, the corpus's the registered digest before and after, the registered
@@ -178,6 +181,16 @@ Every predicate must hold, else INVALID with its reasons, exit 2, and no reading
 - every (arm, threads) has rounds 0..19 exactly once, each round's arms in ab's rotation;
 - one output: the control's hash and length the same in every round at both thread counts, and
   C29's the control's in its round.
+
+**JUDGED, beyond VALID: the registered environment shown** (§R2). A VALID run is read as JUDGED only
+if the identity and every one of the 80 records show it, untimed: AVX2 detected (`avx2` true, as
+`Kernels::detect` reports it: the bool `mtf_checkpoints_reg` and `mtf_checkpoints` dispatch on,
+without which both are the same scalar kernel); the identity's `nproc`, `cpus_allowed` (the affinity
+mask) and `available_parallelism` each 4, and its cgroup `cpu_quota` none or at least 4; each
+record's `cpus_allowed` and `available_parallelism` 4 and its `cpus` `all` (unpinned). A fact absent
+or other than registered refuses the judged reading: the run is **UNJUDGED (FALLBACK)**, its ratios
+printed under that label, exit 3. It is kept as the attempt's evidence, a fallback or other-setting
+diagnostic, and never re-run to pass. An INVALID run is INVALID whatever its environment.
 
 **The reading** (judged at 9 threads; the same rule's reading at 3 reported as secondary). The
 ratio is C29 over the control, wall and CPU, each the geometric mean of the 20 paired per-round
@@ -334,6 +347,102 @@ of the decoder's code can produce it (a reason to look at aligning the hot loops
 it doesn't, the cell is unexplained and C29 must not be merged on "unchanged off-path" until it is.
 It is pushed only, with no PR and no run: opening it would start the bench, which is the
 coordinator's call.
+
+
+## R2. Revision, 2026-11-09: the judged reading bound to the executed kernel and the runner's capacity
+
+**The finding** (the Researcher's REVIEW 6734359855: REVISE narrowly; its report and probes at
+`state/reports/c29-registration-6733827974/` on commit `57b3ecf2`). `mtf_checkpoints_reg` returns
+`mtf_checkpoints_scalar` when `k.avx2` is false, and so does the control's `mtf_checkpoints`: without
+AVX2 the two arms run the same scalar kernel, and the intended treatment (the AVX2 register list and
+short-run stores) is absent. The registration's justification also depends on 9 threads
+oversubscribing 4 vCPUs. Yet neither the identity nor the reporter required AVX2 or the 4-CPU
+allocation: the reporter's ratio-one fixture, with neither fact, was **VALID (JUDGED) STOP at
+1.0000 [0.9986, 1.0014]**, and explicit `avx2: false` and two-CPU fields were ignored. A precise
+ratio of one there would be a fallback result, not a test rejecting the treatment. (This shows
+absent validation, not that any CI runner lacked AVX2; no C29 timing has been run or judged.)
+
+**The change** (no new timed work, no reach counter, no bench.yml change):
+- **Recorded, untimed** (`examples/ab.rs`, `run_facts`): each child's record now carries `avx2`
+  (`Kernels::detect().avx2`, the detection every in-process arm hands its decoder),
+  `cpus_allowed` (its affinity mask's CPUs, `Cpus_allowed_list`, what `sched_getaffinity`
+  returns) and `available_parallelism` (the mask less any cgroup quota), read after its wall and
+  CPU are taken. `ab env` prints the same three.
+- **Bound to the identity** (`sweep.yml`, schema `c29_checkpoints/identity/2`): `avx2`,
+  `cpus_allowed` and `available_parallelism` from `ab env` (the same binary's detection), `nproc`,
+  the cgroup `cpu_quota`, the CPU model, the whole `ab env` line, and the toolchain (`rustc -vV`,
+  `cargo --version`, `RUSTFLAGS` and `CARGO_ENCODED_RUSTFLAGS` as set).
+- **Refused, not retried** (`bench/c29_checkpoints.py`, `environment_problems`): the judged
+  reading needs AVX2 true and 4 CPUs in the identity and in every record (§3, "JUDGED, beyond
+  VALID"); otherwise UNJUDGED (FALLBACK), exit 3. The workflow says no re-run on an exit of 2 or 3:
+  the dispatch is the registered attempt, kept and investigated.
+- **Fixtures** (`bench/test_c29_checkpoints.py`, `Environment`): the Researcher's counterexample
+  (both facts absent, identity schema 1's fields only) is no longer JUDGED, nor with its
+  illustrative `avx2: false` and `cpu_count: 2`; `avx2` false in the identity, in every record or
+  in one record, or a truthy non-bool, is not JUDGED; two CPUs by `nproc`, the mask or
+  `available_parallelism`, a 2-CPU quota or a pinned run is not JUDGED; the correct environment is
+  JUDGED, STOP at 1.0000 [0.9986, 1.0014] and LEAD at 0.97; an INVALID run stays INVALID whatever
+  its environment; an unjudged run notes the environment and stays UNJUDGED.
+
+**Unchanged:** the thresholds, the matched control (one build, `mibz2-pipe3-both` against
+`mibz2-pipe3-both-c29`), the single judged primary (9 threads), 20 rounds, the corpus.
+
+**Disclosed, as the review asks:**
+- **The sampled-name plan predicate keeps D059's false-INVALID risk.** `observed_threads` is
+  sampled from `/proc`: an inherited name or a short-lived helper can be missed, and a correct run
+  read as the wrong plan. The corpus's length mitigates it; it does not make the census complete.
+  An INVALID from it is the attempt's outcome: the plans are never waived and rounds are never
+  discarded after seeing it. (#270's timed recorder is not imported.)
+- **The off-path 1-thread cell (§R1) is an adoption question, not a blocker here.** The newer
+  +0.2% [−0.8%, +1.1%] on an EPYC 7763 does not reproduce R1's +1.1% on the EPYC 9V74, but its
+  interval includes +1.1%: non-reproduction is not equivalence, nor proof of no regression.
+  Identical Ir does not fix alignment or timing. The placebo's +0.3% suggests layout sensitivity,
+  not attribution of the whole earlier effect. It stays open for any adoption decision.
+- **What a LEAD means.** Wall ≤ 0.98 with its upper end < 1 is evidence of some wall improvement
+  with a 2% point-estimate hurdle, **not** 95% confidence of a 2% gain (wall 0.98 [0.975, 0.985]
+  with CPU 1.00 [0.995, 1.005] is a LEAD).
+- **3 threads stays secondary**: its estimate and interval are reported whatever they say, and it
+  is never promoted to rescue a 9-thread STOP or INCONCLUSIVE.
+- **Default-on stays unqualified under D060** (§5): a LEAD permits a proposal only, which still
+  needs the switched panic, retirement and reuse coverage, the default constructors' exact reach,
+  separately registered production evidence and the standing CI adoption gate.
+
+### R2.1 The freeze's contents
+
+**The frozen commit** (one full 40-character head, `registered_head`, which the dispatched ref must
+resolve to: the reporter checks the identity's `git rev-parse HEAD` against it) holds:
+- this journal, final;
+- the source and the arms: `src/mtf.rs` (both kernels), `src/parallel.rs` (the switch and its
+  dispatch), `src/lib.rs` (`Kernels::detect`), `examples/ab.rs` (the arms, the record, `run_facts`);
+- the Cargo and build configuration: `Cargo.toml` (no default features, the release profile),
+  `Cargo.lock` (built `--locked`), `.cargo/`;
+- the sweep workflow, `.github/workflows/sweep.yml` (`tool: c29`);
+- the reporter `bench/c29_checkpoints.py` and its t-table dependency `bench/team_size.py`
+  (`T975`), and its tests;
+- the corpus recipe and digest: `bench/wikidata.json`, `bench/wikidata.py` and
+  `examples/windows.rs`, and the registered SHA-256 `82f65ace…c29915` in the reporter.
+
+**The dispatch retains** (the `sweep-<sha>` artifact, uploaded unless the run is cancelled, a
+failed run included):
+- the featureless release build and the toolchain: the build step's `cargo build --locked
+  --release` with no `--features` (the identity's `features: []`, `profile: release`), and
+  `rustc -vV`, `cargo --version` and the RUSTFLAGS as set (`c29-identity.json`). The toolchain is
+  `dtolnay/rust-toolchain@stable`'s on the day: recorded, not pinned;
+- the binary's SHA-256 and the corpus's, before and after the run (`c29-identity.json`);
+- the environment: `ab env` (`c29-env.json`), `nproc` (`c29-nproc.txt`), the CPU model, and each
+  record's own AVX2 and allocation;
+- all 80 records (`c29-runs.jsonl`: 20 rounds × 2 arms × 2 thread counts), the progress log
+  (`c29-progress.txt`), `ab run`'s exit status (`ab_run_status`), and the reporter's admission,
+  failures and reading (`c29-report.txt`, `c29-report.json`, which keeps every record and every
+  INVALID and environment reason), with `sweep-1.txt` and the step summary.
+
+The workflow was checked against this list and fixed where it fell short: the build was not
+`--locked`; a failing `ab run` ended the step before the identity and the report were written (it
+now records the status, writes both, and exits with it); and the identity had no toolchain detail,
+`nproc`, environment or CPU model. Any source or feature change after the freeze needs a new named
+registration, not reuse of this evidence.
+
+**The registration remains a DRAFT, NOT FROZEN.**
 
 
 ## Provenance and reproduction
