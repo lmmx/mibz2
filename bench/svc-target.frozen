@@ -2,3 +2,4 @@
 # The commit the registration, the preflight and the recipe are frozen at: just
 # bench-svc-target's measured inputs must match it exactly. Set by the Coordinator at the
 # freeze, in its own commit, as `frozen <40-hex>`; until then the recipe refuses.
+frozen 278f09ce38609a1d0e702bd88cac69d27a6c73cc
