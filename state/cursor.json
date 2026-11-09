@@ -191,6 +191,13 @@
       "type": "REVIEW",
       "sha": "8382072cecf5d2932e3bb4c5548b05a9512d1162",
       "checkpoint_comment_id": 6731656628
+    },
+    {
+      "pr": 145,
+      "id": 6732797905,
+      "type": "REVIEW",
+      "sha": "92ccf8c9804c50da1458cefc62c1ab9b2ac374a3",
+      "checkpoint_comment_id": 6732659575
     }
   ],
   "reviews": [
@@ -667,13 +674,15 @@
     {
       "comment_id": 6732659575,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "03e52206ac248737bc856f064928adf238265917",
-      "progress": "Complete report, raw artifact replay, arithmetic and ledger committed; exact report readback verified. REVIEW publication pending.",
+      "progress": "Artifact digest and raw replay verified; report and ledger committed; REVIEW exact author/body/destination verified.",
       "report_commit": "92ccf8c9804c50da1458cefc62c1ab9b2ac374a3",
-      "report_path": "state/records/reviews/inbox-6732659575/report.md"
+      "report_path": "state/records/reviews/inbox-6732659575/report.md",
+      "reply_id": 6732797905,
+      "routing_verification": "Pinned route/check passed; exact author/body/destination readback verified. Pinned verify hardcodes FROM coordinator; optimizer verify-pass not claimed."
     }
   ],
   "migrated_from": {
