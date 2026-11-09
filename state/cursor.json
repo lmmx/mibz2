@@ -43,7 +43,7 @@
     "6731658540": 6731700703,
     "6732355617": 6732393942
   },
-  "last_rebuilt_from": 6732659255,
+  "last_rebuilt_from": 6732679972,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -174,9 +174,9 @@
     "6732661221": {
       "comment_id": 6732661221,
       "status": "complete",
-      "progress": "Record committed through channel 6732659255; REVIEW pending.",
-      "work_commit": "1caeede0dacc0ad0665e6051278eca69b98671ff"
+      "progress": "Record committed through channel 6732679972; REVIEW pending.",
+      "work_commit": "9c403a0309aca38265f9c04129e9a55e29553205"
     }
   },
-  "last_record_commit": "1caeede0dacc0ad0665e6051278eca69b98671ff"
+  "last_record_commit": "9c403a0309aca38265f9c04129e9a55e29553205"
 }
