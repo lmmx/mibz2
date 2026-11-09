@@ -1361,7 +1361,7 @@ checks that the reading is identical with the snapshots removed or made to contr
 timing.
 
 **2. A frozen telemetry schema, recorded only.**
-- **Per run:** ab's new `--sysfs-state` (bench 3.5.0) records each run's `machine_pre` and
+- **Per run:** ab's new `--sysfs-state` (bench 3.6.0 since R12's reconciliation; 3.5.0 when written) records each run's `machine_pre` and
   `machine_post`, with `t_spawn_unix_ns` and `t_exit_unix_ns`. These are 3.3.0's
   `--machine-state` parent readings, unchanged: each CPU's `scaling_cur_freq` (kHz) and their
   mean, each policy's id, CPUs, driver, governor and EPP, the turbo state and its source, the

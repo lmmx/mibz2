@@ -31,7 +31,7 @@
 //!                      EPP, turbo and package temperature read from sysfs before each run
 //!                      is spawned and after it exits, with their timestamps. The child is
 //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
-//!                      cleared (bench 3.5.0; recorded and never judged)
+//!                      cleared (bench 3.6.0; recorded and never judged)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)

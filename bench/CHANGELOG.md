@@ -35,28 +35,16 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
-## [3.5.0] - 2026-11-09
+## [3.6.0] - 2026-11-09
 
 ### Added
 
-Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0. The last two
-entries below were numbered 3.2.4 and 3.3.0 on that branch while master made its own 3.3.0
-and 3.4.0; merged after them, they are this version. Each entry is opt-in or a new field
-beside the others: no measured figure changes meaning.
+Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0, and after
+#302's 3.5.0 (`ab env --facts` and `termination`, the same `examples/ab.rs` change, listed
+there). The entries below were numbered 3.2.4 and 3.3.0 on that branch, then 3.5.0, while
+master and #302 made their own versions; merged after them, they are this version. Each
+entry is opt-in or a new field beside the others: no measured figure changes meaning.
 
-- **`ab env --facts`** (`examples/ab.rs`, §R11 of docs/journal/2026-11-09-run-fed-leader.md):
-  the machine's facts read passively, from procfs, sysfs, cgroupfs and `sched_getaffinity`
-  alone. No thread is started, nothing spins and no perf counter is opened; plain `ab env`
-  is unchanged. The CPUs allowed are the affinity mask and `Cpus_allowed_list`, which must
-  agree. The CPU quota is that of the process's effective cgroup hierarchy (v2, or the v1
-  hierarchy holding the `cpu` controller), every level read up to the hierarchy's true
-  root: `unlimited`, `limited` or `unknown` with why, in the representation of
-  `parallel::cpu_quota` on #302. The run-fed leader's workstation preflight reads it.
-- **Each run's child termination** (`examples/ab.rs`, `termination`): `"success"`,
-  `"exit N"`, `"signal N"` or `"unknown"`, as the parent reaped the child, beside its
-  `exit`. Output written before a nonzero exit or a signal is no longer indistinguishable
-  from a successful run. The run-fed leader's checks (`bench/run_fed_leader.py`) require
-  `"success"`, and a record without it is refused.
 - **`ab run --sysfs-state`** (`examples/ab.rs`): the parent's half of `--machine-state`
   alone. The clock (each CPU's `scaling_cur_freq`, and their mean), the governor, EPP and
   turbo of the policies holding the run's CPUs, and the package temperature, read from sysfs
@@ -101,6 +89,27 @@ beside the others: no measured figure changes meaning.
   `phases` (the leader's and the build's moments all from the run's start, and the record
   fills' census by share). This is a change to what is stored. Every figure keeps its
   meaning: no arm the bench runs changed.
+
+## [3.5.0] - 2026-11-09
+
+### Added
+
+Both are opt-in or a new field beside the others: no measured figure changes meaning. The
+same `examples/ab.rs` change is on #302 (`a15e84f9`, cherry-picked from `cb2c233e` here).
+
+- **`ab env --facts`** (`examples/ab.rs`, §R11 of docs/journal/2026-11-09-run-fed-leader.md):
+  the machine's facts read passively, from procfs, sysfs, cgroupfs and `sched_getaffinity`
+  alone. No thread is started, nothing spins and no perf counter is opened; plain `ab env`
+  is unchanged. The CPUs allowed are the affinity mask and `Cpus_allowed_list`, which must
+  agree. The CPU quota is that of the process's effective cgroup hierarchy (v2, or the v1
+  hierarchy holding the `cpu` controller), every level read up to the hierarchy's true
+  root: `unlimited`, `limited` or `unknown` with why, in the representation of
+  `parallel::cpu_quota` on #302. The run-fed leader's workstation preflight reads it.
+- **Each run's child termination** (`examples/ab.rs`, `termination`): `"success"`,
+  `"exit N"`, `"signal N"` or `"unknown"`, as the parent reaped the child, beside its
+  `exit`. Output written before a nonzero exit or a signal is no longer indistinguishable
+  from a successful run. The run-fed leader's checks (`bench/run_fed_leader.py`) require
+  `"success"`, and a record without it is refused.
 
 ## [3.4.0] - 2026-11-09
 
