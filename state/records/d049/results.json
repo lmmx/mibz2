@@ -1,0 +1,18 @@
+{
+  "model_cases": 52896,
+  "columns": 3306,
+  "failures": 0,
+  "end_plus_8_mutant": "('unowned', 1, 1, 0, 1, [(0, 1), (1, 1), (1, 1)])",
+  "share_index_witness": {
+    "k": 66,
+    "helpers": 65,
+    "allocated_hist_entries": 64,
+    "helper_j": 64,
+    "hist_entry_bytes": 3072,
+    "byte_offset": 196608,
+    "initialized_hist_bytes": 196608,
+    "finding": "one-past initialized histogram; raw mutable reference formed before safe slicing"
+  },
+  "outer_publication_model": "baseline supplies place 5; missing held 5,6 stalls",
+  "scope": "finite Python semantic/source model only, not Rust/Miri/concurrency execution"
+}

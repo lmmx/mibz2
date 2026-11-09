@@ -1,0 +1,88 @@
+{
+  "decision": "D049",
+  "incoming": 6730599475,
+  "pr": 270,
+  "head": "ff6c2f74677af80ea9813bd081d34a68d07e6f1b",
+  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "receipt": "800d3e756ea0149c337395670e44de2a3d98b7fc",
+  "source_blobs": {
+    "src/parallel/run_team.rs": "49e87705474b8c4a6d13d994bfd68f31002c5dbe",
+    "src/coop.rs": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "src/parallel.rs": "d0cc72077057faa4253214a2446d12c7898154fd",
+    "src/mtf.rs": "af61a6eb4b1dfc14bc8811732d4566920dea7f4f",
+    "tests/run_fed_leader.rs": "a063e2f5d056fb680aaafd44dd67c6ddb2451d39",
+    "docs/journal/2026-11-09-run-fed-leader.md": "1a985544cd442b52cb673955e42f0c5353ac8bdc"
+  },
+  "test_checkout": "62e00523b9ff30bb8e26fdcc3850872f0c7fba85",
+  "test_tree": "156de48135a511d2e695c97c2ca42f96bb5333c1",
+  "merge_differences": [
+    ".github/coordination/coord.py",
+    ".github/coordination/test_coord.py",
+    ".github/workflows/test.yml",
+    "CHANGELOG.md",
+    "README.md",
+    "bench/run-queue.sh",
+    "docs/site/blog/2026-11-08-bwt-runs-from-mtf-codes.md",
+    "docs/team/PROTOCOL.md",
+    "examples/fuzz.rs",
+    "tests/common/mod.rs",
+    "zensical.toml",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/fuzz/mixed-21.txt",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/fuzz/pipe-11.txt",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/fuzz/pipe-12.txt",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/fuzz/pipe-13.txt",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/fuzz/pipe-14.txt",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M1.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M10.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M11.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M12.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M2.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M3.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M4.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M5.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M6.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M7.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M8.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/M9.patch",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/baseline-M0.json",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/mutants.py",
+    "docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/results.json",
+    "docs/journal/2026-11-09-service-2x3-result.md"
+  ],
+  "ci_jobs": [
+    128937689594,
+    128937689672,
+    128937689656
+  ],
+  "source_attribution": "source snapshots fetched via authorized GitHub connector; .rs files in this record are selected source excerpts, not compilable source.",
+  "supporting_comments": [
+    6730592712,
+    6730600503,
+    6730547798
+  ],
+  "model": {
+    "model_cases": 52896,
+    "columns": 3306,
+    "failures": 0,
+    "end_plus_8_mutant": "('unowned', 1, 1, 0, 1, [(0, 1), (1, 1), (1, 1)])",
+    "share_index_witness": {
+      "k": 66,
+      "helpers": 65,
+      "allocated_hist_entries": 64,
+      "helper_j": 64,
+      "hist_entry_bytes": 3072,
+      "byte_offset": 196608,
+      "initialized_hist_bytes": 196608,
+      "finding": "one-past initialized histogram; raw mutable reference formed before safe slicing"
+    },
+    "outer_publication_model": "baseline supplies place 5; missing held 5,6 stalls",
+    "scope": "finite Python semantic/source model only, not Rust/Miri/concurrency execution"
+  },
+  "scope": "source audit plus Python finite semantic/source model; retrieved CI logs. No fresh Rust/Miri/mutant/SIMD execution.",
+  "findings": [
+    "B6: j=64 helper with k=66 exceeds initialized RunFill histogram (64); no guard before raw reference.",
+    "B5: new constructor/control reached fuzz evidence not established by unchanged emitter or ordinary pipeline fuzz.",
+    "D047/M12 outer worker publication obligation persists in copied worker; pool-only injection does not reach worker Err."
+  ]
+}

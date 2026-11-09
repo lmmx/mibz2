@@ -1,0 +1,92 @@
+# 49mirilog
+2026-11-09T01:56:50.8391973Z HEAD is now at 62e0052 Merge ff6c2f74677af80ea9813bd081d34a68d07e6f1b into 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba
+2026-11-09T01:56:58.9636269Z   nightly-x86_64-unknown-linux-gnu installed - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T01:56:59.0039933Z   nightly-x86_64-unknown-linux-gnu unchanged - rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T01:56:59.1527508Z rustc 1.102.0-nightly (5b7b37aef 2026-11-08)
+2026-11-09T02:00:03.7898814Z test parallel::run_team::tests::miri_parallel_footprint ... ok
+2026-11-09T02:00:54.8086482Z test parallel::run_team::tests::miri_runs_are_walk ... ok
+2026-11-09T02:01:00.3811363Z test parallel::run_team::tests::miri_share_kernels ... ok
+2026-11-09T02:01:12.1671810Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T02:01:12.3575632Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T02:01:12.3974886Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 548.86s
+2026-11-09T02:01:12.4620753Z ##[group]Run cargo miri test --lib -- run_stage::tests::miri_ run_team::tests::miri_
+2026-11-09T02:01:12.4621094Z [36;1mcargo miri test --lib -- run_stage::tests::miri_ run_team::tests::miri_[0m
+2026-11-09T02:01:12.4662836Z   RUSTFLAGS: -C target-feature=+avx2,+bmi1
+2026-11-09T02:01:12.4662998Z   MIBZ2_EXPECT_AVX2: 1
+2026-11-09T02:01:12.4663151Z   MIRIFLAGS: -Zmiri-env-forward=MIBZ2_EXPECT_AVX2
+2026-11-09T02:01:31.6473864Z test parallel::run_team::tests::miri_parallel_footprint ... ok
+2026-11-09T02:02:24.6087696Z test parallel::run_team::tests::miri_runs_are_walk ... ok
+2026-11-09T02:02:33.6447356Z test parallel::run_team::tests::miri_share_kernels ... ok
+2026-11-09T02:02:45.9743025Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T02:02:46.1824503Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T02:02:46.2242390Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 211.61s
+
+# 49log128937689672
+2026-11-09T01:56:51.1702287Z HEAD is now at 62e0052 Merge ff6c2f74677af80ea9813bd081d34a68d07e6f1b into 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba
+2026-11-09T01:56:51.6894211Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:56:51.7316001Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:56:51.9430113Z rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:57:29.2634542Z test parallel::run_team::tests::a_refused_tiling_rebuilds_from_the_column ... ok
+2026-11-09T01:57:29.2636226Z test parallel::run_team::tests::census ... ignored, a corpus's census: MIBZ2_RUN_FED_CENSUS=FILE.bz2
+2026-11-09T01:57:29.5411187Z test parallel::run_team::tests::fills_write_their_own_rows_only ... ok
+2026-11-09T01:57:29.5430650Z test parallel::run_team::tests::leader_late_from_one_origin ... ok
+2026-11-09T01:57:29.5566794Z test parallel::run_team::tests::a_late_started_leader_is_late ... ok
+2026-11-09T01:57:29.5664341Z test parallel::run_team::tests::miri_runs_are_walk ... ok
+2026-11-09T01:57:29.5686366Z test parallel::run_team::tests::miri_share_kernels ... ok
+2026-11-09T01:57:29.5955042Z test parallel::run_team::tests::panics_in_each_phase ... ok
+2026-11-09T01:57:29.5980583Z test parallel::run_team::tests::phases_are_the_reporters ... ok
+2026-11-09T01:57:29.6234757Z test parallel::run_team::tests::register_checkpoints_are_checkpoints ... ok
+2026-11-09T01:57:29.6243700Z test parallel::run_team::tests::row_cuts_partition_by_rows ... ok
+2026-11-09T01:57:29.7511013Z test parallel::run_team::tests::miri_parallel_footprint ... ok
+2026-11-09T01:57:29.8960308Z test parallel::run_team::tests::share_kernels ... ok
+2026-11-09T01:57:31.1169098Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T01:57:31.1170256Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T01:57:31.6070132Z test parallel::run_team::tests::runs_are_walk ... ok
+2026-11-09T01:59:49.6794799Z test result: ok. 66 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 143.12s
+2026-11-09T02:00:01.6441241Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.96s
+2026-11-09T02:00:08.5441553Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.89s
+2026-11-09T02:00:25.6717018Z test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.12s
+2026-11-09T02:00:28.7429225Z test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.05s
+2026-11-09T02:00:31.7863582Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.04s
+2026-11-09T02:00:36.6397712Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.85s
+2026-11-09T02:00:51.5040673Z test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.86s
+2026-11-09T02:00:51.7291277Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+2026-11-09T02:00:51.7429340Z [36;1mcargo test --features run-fed --lib run_team[0m
+2026-11-09T02:00:51.7430072Z [36;1mcargo test --features run-fed --test run_fed_leader[0m
+2026-11-09T02:01:06.0692757Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.47s
+2026-11-09T02:01:14.3761467Z test run_stage::tests::miri_unchecked_states_refused ... ok
+2026-11-09T02:01:14.3762611Z test run_stage::tests::miri_sort_and_floor ... ok
+2026-11-09T02:01:14.4116334Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 0.04s
+2026-11-09T02:01:14.6796410Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.15s
+2026-11-09T02:01:15.4745194Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+2026-11-09T02:01:15.5045478Z test parallel::run_team::tests::census ... ignored, a corpus's census: MIBZ2_RUN_FED_CENSUS=FILE.bz2
+2026-11-09T02:01:15.5058245Z test parallel::run_team::tests::leader_late_from_one_origin ... ok
+2026-11-09T02:01:15.5100476Z test parallel::run_team::tests::a_refused_tiling_rebuilds_from_the_column ... ok
+2026-11-09T02:01:15.5135990Z test parallel::run_team::tests::miri_runs_are_walk ... ok
+2026-11-09T02:01:15.5147719Z test parallel::run_team::tests::miri_share_kernels ... ok
+2026-11-09T02:01:15.5419797Z test parallel::run_team::tests::panics_in_each_phase ... ok
+2026-11-09T02:01:15.5421585Z test parallel::run_team::tests::phases_are_the_reporters ... ok
+2026-11-09T02:01:15.5664237Z test parallel::run_team::tests::register_checkpoints_are_checkpoints ... ok
+2026-11-09T02:01:15.5674048Z test parallel::run_team::tests::row_cuts_partition_by_rows ... ok
+2026-11-09T02:01:15.6660968Z test parallel::run_team::tests::miri_parallel_footprint ... ok
+2026-11-09T02:01:15.7617380Z test parallel::run_team::tests::share_kernels ... ok
+2026-11-09T02:01:15.7758020Z test parallel::run_team::tests::fills_write_their_own_rows_only ... ok
+2026-11-09T02:01:15.9066253Z test parallel::run_team::tests::a_late_started_leader_is_late ... ok
+2026-11-09T02:01:17.3981249Z test parallel::run_team::tests::runs_are_walk ... ok
+2026-11-09T02:01:17.3982436Z test result: ok. 13 passed; 0 failed; 1 ignored; 0 measured; 54 filtered out; finished in 1.90s
+2026-11-09T02:01:19.3243909Z [1m[92m     Running[0m tests/run_fed_leader.rs (target/debug/deps/run_fed_leader-de951b4c80868bf4)
+2026-11-09T02:01:25.1130156Z test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.79s
+2026-11-09T02:01:30.1460165Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# 49log128937689656
+2026-11-09T01:56:56.7140632Z HEAD is now at 62e0052 Merge ff6c2f74677af80ea9813bd081d34a68d07e6f1b into 44b0b1a30e0117176a0e4e6acae76e2a8fd323ba
+2026-11-09T01:56:57.1090014Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:56:57.1391660Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:56:57.2838419Z rustc 1.99.1 (58cf8f9c3 2026-10-13)
+2026-11-09T01:56:58.6769987Z ##[group]Run cargo build --profile fuzz --example fuzz
+2026-11-09T01:56:58.6770432Z [36;1mcargo build --profile fuzz --example fuzz[0m
+2026-11-09T01:57:12.2516499Z ##[group]Run target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
+2026-11-09T01:57:12.2517352Z [36;1mtarget/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic[0m
+2026-11-09T01:57:42.4799986Z ##[group]Run target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+2026-11-09T01:57:42.4800515Z [36;1mtarget/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline[0m
+2026-11-09T01:58:13.7011379Z pipeline cases: candidate, cases, cases reaching the pipeline (a job taken overlapped) of those countable, cases with an overlapped job's error, overlapped jobs in all
