@@ -1,0 +1,23 @@
+test_unreadable_membership_is_archived (__main__.Discovery.test_unreadable_membership_is_archived) ... ok
+test_v1_cpu_and_a_path_outside_the_mount (__main__.Discovery.test_v1_cpu_and_a_path_outside_the_mount) ... ok
+test_v2_every_level_with_absence_and_errors (__main__.Discovery.test_v2_every_level_with_absence_and_errors) ... ok
+test_clean_attempt_reads_as_registered (__main__.Judge.test_clean_attempt_reads_as_registered) ... ok
+test_every_row_must_terminate_successfully (__main__.Judge.test_every_row_must_terminate_successfully) ... ok
+test_identity (__main__.Judge.test_identity) ... ok
+test_n1_is_its_own_failure (__main__.Judge.test_n1_is_its_own_failure) ... ok
+test_no_harm_is_judged_beside_p1 (__main__.Judge.test_no_harm_is_judged_beside_p1) ... ok
+test_outcome_map_boundaries (__main__.Judge.test_outcome_map_boundaries) ... ok
+test_plan_names (__main__.Judge.test_plan_names) ... ok
+test_preflight (__main__.Judge.test_preflight) ... ok
+test_readings_and_their_qualifications (__main__.Judge.test_readings_and_their_qualifications) ... ok
+test_registered_values_are_the_manifests (__main__.Judge.test_registered_values_are_the_manifests) ... ok
+test_structural (__main__.Judge.test_structural) ... ok
+test_the_producers_failed_child (__main__.Judge.test_the_producers_failed_child) ... ok
+test_the_researchers_witnesses (__main__.Judge.test_the_researchers_witnesses) ... ok
+test_workload (__main__.Judge.test_workload) ... ok
+test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success (__main__.Producer.test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success) ... skipped 'no ab executable: build it with `cargo build --example ab`, or set SG_AB'
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.439s
+
+OK (skipped=1)

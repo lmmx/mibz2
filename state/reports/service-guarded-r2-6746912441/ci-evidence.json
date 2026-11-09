@@ -1,0 +1,180 @@
+{
+  "rust": [
+    "2026-11-09T17:25:48.3678357Z \u001b[36;1mSG_AB=target/debug/examples/ab SG_REQUIRE_AB=1 python3 bench/test_service_guarded.py\u001b[0m",
+    "2026-11-09T17:25:59.5509159Z test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success (__main__.Producer.test_the_producer_records_each_ending_and_the_judge_refuses_all_but_success) ... ok",
+    "2026-11-09T17:25:59.5512002Z Ran 18 tests in 1.338s",
+    "2026-11-09T17:25:59.5512460Z OK"
+  ],
+  "recipe": [
+    "2026-11-09T17:21:03.1204528Z OK",
+    "2026-11-09T17:21:04.7506708Z test_dirty_inputs_refuse_nonzero (__main__.EndToEnd.test_dirty_inputs_refuse_nonzero) ... ok",
+    "2026-11-09T17:21:10.0651166Z test_exit_follows_the_check_through_the_bundle (__main__.EndToEnd.test_exit_follows_the_check_through_the_bundle) ... ok",
+    "2026-11-09T17:21:14.6704754Z test_submit_keeps_a_failure_nonzero_and_submits_it (__main__.EndToEnd.test_submit_keeps_a_failure_nonzero_and_submits_it) ... ok",
+    "2026-11-09T17:21:14.6707525Z OK",
+    "2026-11-09T17:21:14.7526253Z OK",
+    "2026-11-09T17:21:16.0164267Z test_changed_measured_inputs_refuse_nonzero (__main__.EndToEnd.test_changed_measured_inputs_refuse_nonzero) ... ok",
+    "2026-11-09T17:21:17.1936761Z test_dirty_inputs_refuse_nonzero (__main__.EndToEnd.test_dirty_inputs_refuse_nonzero) ... ok",
+    "2026-11-09T17:21:23.7744198Z test_every_outcome_is_bundled_with_its_identity_and_exit (__main__.EndToEnd.test_every_outcome_is_bundled_with_its_identity_and_exit) ... ok",
+    "2026-11-09T17:21:28.3853906Z test_submit_keeps_each_exit_and_submits_it (__main__.EndToEnd.test_submit_keeps_each_exit_and_submits_it) ... ok",
+    "2026-11-09T17:21:30.8925712Z test_the_timeouts_are_incomplete_and_bundled (__main__.EndToEnd.test_the_timeouts_are_incomplete_and_bundled) ... ok",
+    "2026-11-09T17:21:32.0759134Z test_unfrozen_refuses_nonzero (__main__.EndToEnd.test_unfrozen_refuses_nonzero) ... ok",
+    "2026-11-09T17:21:32.0761227Z OK",
+    "2026-11-09T17:21:32.6482075Z ##[group]Run python3 bench/test_service_guarded_recipe.py",
+    "2026-11-09T17:21:32.6482821Z \u001b[36;1mpython3 bench/test_service_guarded_recipe.py\u001b[0m",
+    "2026-11-09T17:21:34.5133772Z test_a_child_that_did_not_succeed_is_invalid (__main__.EndToEnd.test_a_child_that_did_not_succeed_is_invalid) ... ok",
+    "2026-11-09T17:21:39.0862060Z test_a_complete_target_record_then_a_nonzero_exit_refuses (__main__.EndToEnd.test_a_complete_target_record_then_a_nonzero_exit_refuses) ... ok",
+    "2026-11-09T17:21:40.7720993Z test_a_crashing_harness_is_incomplete (__main__.EndToEnd.test_a_crashing_harness_is_incomplete) ... ok",
+    "2026-11-09T17:21:42.5129267Z test_a_dry_check_runs_through_and_is_never_valid (__main__.EndToEnd.test_a_dry_check_runs_through_and_is_never_valid) ... ok",
+    "2026-11-09T17:21:44.3334307Z test_a_failing_diagnostic_is_archived_and_changes_nothing_timed (__main__.EndToEnd.test_a_failing_diagnostic_is_archived_and_changes_nothing_timed) ... ok",
+    "2026-11-09T17:21:44.3798643Z test_every_diagnostic_is_passive_and_bounded (__main__.EndToEnd.test_every_diagnostic_is_passive_and_bounded) ... ok",
+    "2026-11-09T17:21:46.1974873Z test_n1_is_invalid_with_its_kind (__main__.EndToEnd.test_n1_is_invalid_with_its_kind) ... ok",
+    "2026-11-09T17:21:50.8557441Z test_refusals (__main__.EndToEnd.test_refusals) ... ok",
+    "2026-11-09T17:21:54.5658852Z test_submit_keeps_each_exit (__main__.EndToEnd.test_submit_keeps_each_exit) ... ok",
+    "2026-11-09T17:21:56.1261569Z test_the_preflight_refuses_before_any_measurement (__main__.EndToEnd.test_the_preflight_refuses_before_any_measurement) ... ok",
+    "2026-11-09T17:21:57.9578820Z test_valid (__main__.EndToEnd.test_valid) ... ok",
+    "2026-11-09T17:21:57.9580093Z Ran 11 tests in 25.242s",
+    "2026-11-09T17:21:57.9580475Z OK"
+  ],
+  "checks": [
+    {
+      "name": "Release",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129327572104"
+    },
+    {
+      "name": "deploy-branch",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644409/job/129322300107"
+    },
+    {
+      "name": "preview",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644409/job/129322297255"
+    },
+    {
+      "name": "look",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644409/job/129322296575"
+    },
+    {
+      "name": "python (3.10)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658595"
+    },
+    {
+      "name": "python (3.11)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658583"
+    },
+    {
+      "name": "python (3.12)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658511"
+    },
+    {
+      "name": "python (3.13)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658443"
+    },
+    {
+      "name": "python (3.15)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658277"
+    },
+    {
+      "name": "python (3.14)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321658266"
+    },
+    {
+      "name": "bench",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644613/job/129321587831"
+    },
+    {
+      "name": "pages",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644409/job/129321585318"
+    },
+    {
+      "name": "miri",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644506/job/129321584768"
+    },
+    {
+      "name": "build",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644409/job/129321584761"
+    },
+    {
+      "name": "submit",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321580919"
+    },
+    {
+      "name": "fuzz-smoke",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321580769"
+    },
+    {
+      "name": "get-python-versions",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321580538"
+    },
+    {
+      "name": "typing",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321580497"
+    },
+    {
+      "name": "rust",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644396/job/129321580196"
+    },
+    {
+      "name": "Publish crate",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321480277"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321478225"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321478098"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321478047"
+    },
+    {
+      "name": "sdist",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321478018"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321477949"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321477909"
+    },
+    {
+      "name": "check-commit",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644492/job/129321432979"
+    },
+    {
+      "name": "occupancy",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663644403/job/129321431333"
+    }
+  ]
+}

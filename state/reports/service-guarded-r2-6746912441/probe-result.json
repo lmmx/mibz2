@@ -1,0 +1,90 @@
+[
+  {
+    "kind": "preflight",
+    "value": "'0\\n'",
+    "valid": true,
+    "failure": null
+  },
+  {
+    "kind": "preflight",
+    "value": "'17\\n'",
+    "valid": false,
+    "failure": "preflight"
+  },
+  {
+    "kind": "preflight",
+    "value": "'124\\n'",
+    "valid": false,
+    "failure": "preflight"
+  },
+  {
+    "kind": "preflight",
+    "value": "'137\\n'",
+    "valid": false,
+    "failure": "preflight"
+  },
+  {
+    "kind": "preflight",
+    "value": "''",
+    "valid": false,
+    "failure": "preflight"
+  },
+  {
+    "kind": "preflight",
+    "value": "'zero\\n'",
+    "valid": false,
+    "failure": "preflight"
+  },
+  {
+    "kind": "termination",
+    "value": "success",
+    "valid": true,
+    "failure": null
+  },
+  {
+    "kind": "termination",
+    "value": "exit 0",
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": "exit 17",
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": "signal 9",
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": "signal 15",
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": "unknown",
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": null,
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "termination",
+    "value": true,
+    "valid": false,
+    "failure": "structural"
+  },
+  {
+    "kind": "optional diagnostic failures",
+    "valid": true
+  }
+]
