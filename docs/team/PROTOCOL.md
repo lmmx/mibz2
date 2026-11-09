@@ -217,6 +217,9 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - It skips an entry that isn't ready, is on HOLD, or already ran on that machine at that commit.
   - `--no-suspend` keeps the machine on.
   - `--hours N` waits up to N hours for entries not yet ready.
+  - `--wait H` keeps the queue open: once nothing is left to run, it checks origin every 5
+    minutes and runs whatever becomes ready, until H hours pass with nothing new. It can be
+    started on an empty queue, before an entry is admitted.
   - A single entry can still be run on its own with `just submit-when-ready <recipe> <branch>`.
 - **Adding work while the queue runs.** After each pass, the runner reads the queue and the tags
   from origin again. It runs every entry whose `ready` tag points at a commit not yet run on that
