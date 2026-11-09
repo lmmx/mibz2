@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "PROCEED on exact integration heads: version reconciliation and master merge verified, no executable changes beyond BENCH labels. CI 25/24 success with three skips each, identical tested trees. Authenticated repin and final freeze provenance remain prerequisites.",
+  "state": "Close sequence as two separately reported inconclusive attempts with failed fidelity; bimodality/load do not prove harness incapacity or load causality. Future quiet eligibility needs prospective justification; no third attempt or reanalysis.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -130,9 +130,10 @@
     6746400325,
     6746912441,
     6747050053,
-    6747581238
+    6747581238,
+    6750333637
   ],
-  "last_processed_comment_id": 6747581238,
+  "last_processed_comment_id": 6750333637,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1353,7 +1354,7 @@
     },
     {
       "trigger_comment_id": 6750333637,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1361,7 +1362,10 @@
       "report_path": "state/reports/bimodality-advice-6750333637/report.md",
       "report_commit": "e4ce5f46df95567260916db3d904f70d1403f04a",
       "review_comment_pr": 145,
-      "disposition": "Close sequence as two separately reported inconclusive attempts with failed fidelity; bimodality/load do not prove harness incapacity or load causality. Future quiet eligibility needs prospective justification; no third attempt or reanalysis."
+      "disposition": "Close sequence as two separately reported inconclusive attempts with failed fidelity; bimodality/load do not prove harness incapacity or load causality. Future quiet eligibility needs prospective justification; no third attempt or reanalysis.",
+      "review_comment_id": 6750405677,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1381,10 +1385,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6747581238
+      6750333637
     ],
     "handled": [
-      6747581238
+      6750333637
     ],
     "skipped": [],
     "automation_modified": false
