@@ -1,0 +1,181 @@
+{
+  "columns": 9840,
+  "source_rows_checked": 73812,
+  "composed_packet_checks": 295248,
+  "formula_reused_steps_sum": 144414,
+  "pair_cell_bound": "at most 3r-2 after refining by L boundaries",
+  "witnesses": [
+    {
+      "text": "ababab",
+      "L": "bbbaaa",
+      "psi": [
+        3,
+        4,
+        5,
+        0,
+        1,
+        2
+      ],
+      "cells": [
+        {
+          "interval": [
+            0,
+            3
+          ],
+          "delta": 0,
+          "pair": "ba",
+          "batch_at_start": 6
+        },
+        {
+          "interval": [
+            3,
+            6
+          ],
+          "delta": 0,
+          "pair": "ab",
+          "batch_at_start": 6
+        }
+      ]
+    },
+    {
+      "text": "abcabcabc",
+      "L": "cccaaabbb",
+      "psi": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        0,
+        1,
+        2
+      ],
+      "cells": [
+        {
+          "interval": [
+            0,
+            3
+          ],
+          "delta": 6,
+          "pair": "ca",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            3,
+            6
+          ],
+          "delta": -3,
+          "pair": "ab",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            6,
+            9
+          ],
+          "delta": -3,
+          "pair": "bc",
+          "batch_at_start": 1
+        }
+      ]
+    },
+    {
+      "text": "aaaaaaaa",
+      "L": "aaaaaaaa",
+      "psi": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "cells": [
+        {
+          "interval": [
+            0,
+            8
+          ],
+          "delta": 0,
+          "pair": "aa",
+          "batch_at_start": 8
+        }
+      ]
+    },
+    {
+      "text": "aabca",
+      "L": "caaab",
+      "psi": [
+        1,
+        2,
+        3,
+        4,
+        0
+      ],
+      "cells": [
+        {
+          "interval": [
+            0,
+            1
+          ],
+          "delta": 2,
+          "pair": "ca",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            1,
+            2
+          ],
+          "delta": 2,
+          "pair": "aa",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            2,
+            3
+          ],
+          "delta": 2,
+          "pair": "aa",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            3,
+            4
+          ],
+          "delta": -3,
+          "pair": "ab",
+          "batch_at_start": 1
+        },
+        {
+          "interval": [
+            4,
+            5
+          ],
+          "delta": -3,
+          "pair": "bc",
+          "batch_at_start": 1
+        }
+      ]
+    }
+  ],
+  "arithmetic_only": {
+    "paired_rows_per_output_byte": 0.9999879160818714,
+    "run_build_per_output_byte": 5.667931508352048,
+    "R_residual": 6.037068491647952,
+    "O_residual": 6.181099643988887,
+    "P_residual": 3.9710267417108187,
+    "free_build_R_over_P": 0.9762400536300052,
+    "five_percent_target": 5.8748,
+    "residual_budget_current_builder": 0.20686849164795174,
+    "builder_budget_if_consumer_equals_P_residual": 1.9037732582891809,
+    "consumer_budget_if_builder_equals_onehop": 3.661826741710818,
+    "onebyte_residual": 0.122470304
+  }
+}

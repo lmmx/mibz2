@@ -1,0 +1,26 @@
+{
+  "run": 42556998342,
+  "job": 128964860657,
+  "head": "1c4d0f0714183f83798a0b746463ae34535fbc50",
+  "job_log_sha256_local_utf8": "d859d60e509d84a295a6bb6c6bde219adf53f76af87a6d47ab601c25b4ad5f9d",
+  "artifact_id": 13647977266,
+  "artifact_digest": "sha256:d5ae792b4cc8e5637d923e63202c8687d83037071dfac7261d69a80843c496a7",
+  "raw_csv_replayed": false,
+  "scope": "API identity and full job log inspected; archived raw ZIP not downloaded or validator independently replayed",
+  "log_excerpts": [
+    "2026-11-09T03:33:51.4339804Z corpora/wikidata.bz2: 11854933 bytes, SHA-256 checked",
+    "2026-11-09T03:34:00.6359793Z corpora/wikidata.bz2: 431 blocks, 209.7 MB of output, 209706557 rows; paired 233 blocks (209697662 rows): r/n 0.0722, cells/n 0.0881, cells/r 1.220 (all < 2r)",
+    "2026-11-09T03:34:48.7531624Z   (a) build, c/B of the paired blocks' rows, median: row 8.246, run 5.668, one 2.213",
+    "2026-11-09T03:34:48.7532750Z   (b) whole entry point, c/B of output, median: P 6.184, R 11.705, O 14.427; R took 231 blocks a round by the pair walk, declined 2 (admission)",
+    "2026-11-09T03:34:54.5492595Z VALID (this process's part): every interval and difference present and finite, totals finite and positive, GHZ, head and corpus identity checked",
+    "2026-11-09T03:34:54.5494077Z   Q1 R_build 0.6865 (0.6845, 0.6886); positive: <= 0.50 and hi < 0.60; stop: lo > 0.80",
+    "2026-11-09T03:34:54.5495316Z   M1 run \u2212 one-hop 3.457 nominal c/B (3.452, 3.463): NOT MET",
+    "2026-11-09T03:34:54.5495875Z   Q2 R_whole 1.8950 (1.8850, 1.9050); positive: <= 0.95, hi < 1, worst synthetic point estimate <= 1.05; stop: lo > 1",
+    "2026-11-09T03:34:54.5496440Z   Q2 worst synthetic R_whole 1.6484 (synthetic one byte)",
+    "2026-11-09T03:36:39.2359432Z plan: head 1c4d0f0714183f83798a0b746463ae34535fbc50, frozen 1c4d0f0714183f83798a0b746463ae34535fbc50, copies ['1', '4-cpu0', '4-cpu1', '4-cpu2', '4-cpu3'], GHZ 3.3091",
+    "2026-11-09T03:36:39.2360353Z VALID",
+    "2026-11-09T03:36:39.2361194Z   Q1 R_build 0.6865 (0.6845, 0.6886): INCONCLUSIVE",
+    "2026-11-09T03:36:39.2362187Z   M1 run - one-hop 3.46 nominal c/B at 3.3091 GHz (3.45, 3.46): NOT MET (exploratory; clock-scaled wall time, not cycles)",
+    "2026-11-09T03:36:39.2363659Z   Q2 R_whole 1.895 (1.885, 1.905); worst synthetic 1.648 (synthetic one byte): NEGATIVE STOP (pauses this candidate)"
+  ]
+}
