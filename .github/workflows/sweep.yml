@@ -6,7 +6,10 @@
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
 # decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
-# stages alone and with every CPU busy, as a multi-threaded decode runs them.
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: run_fed_stage`, the run-fed stage's diagnostic (examples/run_fed_stage.rs, the
+# `run-fed` feature; docs/journal/2026-11-09-run-fed-stage.md) runs the same way, ROUNDS its
+# rounds.
 name: Walk sweep
 
 on:
@@ -17,7 +20,7 @@ on:
         required: false
         default: "5"
       tool:
-        description: "sweep (the factorial) or phases (the stages)"
+        description: "sweep (the factorial), phases (the stages) or run_fed_stage (the run-fed stage)"
         required: false
         default: "sweep"
 
@@ -44,7 +47,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release --example sweep --example phases --example windows
+        run: |
+          cargo build --release --example sweep --example phases --example windows
+          cargo build --release --features run-fed --example run_fed_stage
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -77,7 +82,7 @@ jobs:
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          case "$TOOL" in sweep|phases) ;; *) echo "tool: sweep or phases"; exit 1 ;; esac
+          case "$TOOL" in sweep|phases|run_fed_stage) ;; *) echo "tool: sweep, phases or run_fed_stage"; exit 1 ;; esac
           bin=target/release/examples/$TOOL
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures

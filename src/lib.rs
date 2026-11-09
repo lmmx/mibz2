@@ -90,6 +90,8 @@ pub mod rle;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;
+#[cfg(any(test, feature = "run-fed"))]
+pub mod run_stage;
 pub mod stream;
 // (the `trace` feature's; compiled for the tests too, which check its footprint ledger)
 #[cfg(any(test, feature = "trace"))]

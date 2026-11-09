@@ -82,8 +82,83 @@ fn agree(b: &Symbols, what: &str) -> bool {
             }
             Err(e) => assert_eq!(r, Err(e.clone()), "{what}, max {}, {k:?}", b.max_len),
         }
+        #[cfg(feature = "run-fed")]
+        runs_agree(b, &want, k, what);
     }
     want.is_ok()
+}
+
+/// `mtf::mtf_runs` (research, the `run-fed` feature) on `b` against the reference: the
+/// same result, error kind included; on success the same counts, and the records the
+/// column's maximal runs, closed by its length; and `run_stage::build`'s table
+/// `bwt::build`'s word for word, by whichever path it takes
+#[cfg(feature = "run-fed")]
+fn runs_agree(
+    b: &Symbols,
+    want: &Result<(Vec<u8>, [u32; 256]), ErrorKind>,
+    k: Kernels,
+    what: &str,
+) {
+    use mibz2::bwt::{build, TVector};
+    use mibz2::run_stage;
+    let (mut recs, mut c) = (vec![7u32; 100], [3u32; 256]);
+    let r = mtf::mtf_runs(b, &mut recs, &mut c, k);
+    match want {
+        Ok((wl, wc)) => {
+            assert_eq!(
+                r,
+                Ok(wl.len()),
+                "{what}, max {}, {k:?}: runs' result",
+                b.max_len
+            );
+            assert!(c == *wc, "{what}, max {}, {k:?}: runs' counts", b.max_len);
+            let mut runs = Vec::new();
+            for (i, &x) in wl.iter().enumerate() {
+                if i == 0 || x != wl[i - 1] {
+                    runs.push((i as u32) << 8 | x as u32);
+                }
+            }
+            runs.push((wl.len() as u32) << 8);
+            assert!(
+                recs == runs,
+                "{what}, max {}, {k:?}: the records",
+                b.max_len
+            );
+            let mut tt = TVector::new();
+            build(wl, wc, &mut tt);
+            // the records' path, whatever `takes_runs` would choose
+            let (mut got, mut s, mut ll) =
+                (TVector::new(), run_stage::Scratch::default(), Vec::new());
+            assert!(run_stage::sort(&recs, &c, wl.len(), &mut s), "{what}: sort");
+            run_stage::fill(&recs, &s, wl.len(), &mut got, k);
+            assert!(
+                got.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the records' table",
+                b.max_len
+            );
+            // the stage, by the path it takes
+            let (n, _) =
+                run_stage::build(b, &mut recs, &mut s, &mut ll, &mut c, &mut got, k).unwrap();
+            assert_eq!(n, wl.len());
+            assert!(
+                got.as_slice() == tt.as_slice(),
+                "{what}, max {}, {k:?}: the run-fed table",
+                b.max_len
+            );
+        }
+        Err(e) => {
+            assert_eq!(r, Err(e.clone()), "{what}, max {}, {k:?}: runs", b.max_len);
+            let (mut got, mut s, mut ll) =
+                (TVector::new(), run_stage::Scratch::default(), Vec::new());
+            let r = run_stage::build(b, &mut recs, &mut s, &mut ll, &mut c, &mut got, k);
+            assert_eq!(
+                r.map(|x| x.0),
+                Err(e.clone()),
+                "{what}, max {}, {k:?}: the stage",
+                b.max_len
+            );
+        }
+    }
 }
 
 /// A block of `syms` over `n_in_use` bytes (a random ascending choice, as the stream's

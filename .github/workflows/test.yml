@@ -25,6 +25,12 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the run-fed research (the `run-fed` feature: mtf::mtf_runs, src/run_stage.rs): its
+      # emitter against the reference on every MTF test stream, and its table's own tests
+      - name: Run-fed research tests
+        run: |
+          cargo test --features run-fed --test mtf_kernels
+          cargo test --features run-fed --lib run_stage
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
