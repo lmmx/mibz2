@@ -109,9 +109,10 @@
     6733003420,
     6733159315,
     6733569628,
-    6733827974
+    6733827974,
+    6734368711
   ],
-  "last_processed_comment_id": 6733827974,
+  "last_processed_comment_id": 6734368711,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1014,7 +1015,7 @@
     },
     {
       "trigger_comment_id": 6734368711,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1022,7 +1023,10 @@
       "report_path": "state/reports/occupancy-closure-6734368711/report.md",
       "report_commit": "9ff654ab3e53e6469e12fd8b3a7c8684b8560edd",
       "disposition": "PROCEED toward pointer-only freeze; occupancy REVISE closed. 43 tests, original counterexamples refused, positive/perturbing controls retained, 100 independent interval vectors agree. Exact-source CI/Miri remain separate.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6734515138,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing pass. Pinned verify's only error is its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
