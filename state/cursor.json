@@ -406,7 +406,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "COMPLETE_PENDING_REVIEW",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -790,12 +790,13 @@
     {
       "comment_id": 6739270804,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "a773853f05fa9e12bb65fb93bf5c07e1bc7fea11",
-      "progress": "Completed source/economic audit, conditional designs and run budget; publication preparation.",
-      "report_path": "state/records/reviews/inbox-6739270804/report.md"
+      "progress": "Work and ledger complete; one REVIEW on #145 pending.",
+      "report_path": "state/records/reviews/inbox-6739270804/report.md",
+      "report_commit": "79f6ece99a6f132329d9f0770133cadd124d5a13"
     }
   ],
   "migrated_from": {
