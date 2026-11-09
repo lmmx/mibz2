@@ -190,11 +190,11 @@ comparisons, each against an arm chosen to answer one question:
 The run passed every validity check, including its noise check at 0.997 (0.971–1.023). The judged
 comparisons:
 
-| comparison | decoding threads | speed (95%) | CPU (95%) |
-| --- | ---: | ---: | ---: |
-| service layout against the default | 8 against 9 | **1.045 (1.017–1.073)** | 1.146 (1.123–1.170) |
-| service layout against plain two teams | 8 against 6 | 1.402 (1.368–1.437) | 0.941 (0.924–0.959) |
-| two pipelined teams against the default | 6 against 9 | 0.866 (0.851–0.881) | 1.214 (1.196–1.233) |
+| comparison (decoding threads) | speed (95%) | CPU (95%) |
+| --- | ---: | ---: |
+| service vs default (8 vs 9) | **1.045 (1.017–1.073)** | 1.146 (1.123–1.170) |
+| service vs plain two teams (8 vs 6) | 1.402 (1.368–1.437) | 0.941 (0.924–0.959) |
+| two pipelined teams vs default (6 vs 9) | 0.866 (0.851–0.881) | 1.214 (1.196–1.233) |
 
 The service layout beat the default, by the margin the first run had reported. The figure
 near the top of the post shows all three runs. Its CPU ratio of
@@ -214,13 +214,13 @@ separately.
 
 The run's medians, over 20 rounds each, give the costs side by side:
 
-| arm | threads (leaders + helpers + service) | elapsed (s) | CPU (s) | peak memory (MB) |
-| --- | --- | ---: | ---: | ---: |
-| 0.2.6 default, three pipelined teams | 3 + 6 + 0 | 0.144 | 1.026 | 74 |
-| service layout | 2 + 4 + 2 | 0.137 | 0.895 | 64 |
-| two pipelined teams | 2 + 4 + 0 | 0.166 | 0.850 | 57 |
-| plain two teams | 2 + 4 + 0 | 0.193 | 0.847 | 52 |
-| plain three teams, 0.2.5's layout | 3 + 6 + 0 | 0.153 | 0.985 | 67 |
+| arm (leaders + helpers + service) | elapsed (s) | CPU (s) | peak (MB) |
+| --- | ---: | ---: | ---: |
+| 0.2.6 default (3 + 6 + 0) | 0.144 | 1.026 | 74 |
+| service layout (2 + 4 + 2) | 0.137 | 0.895 | 64 |
+| two pipelined teams (2 + 4 + 0) | 0.166 | 0.850 | 57 |
+| plain two teams (2 + 4 + 0) | 0.193 | 0.847 | 52 |
+| plain three teams, 0.2.5 (3 + 6 + 0) | 0.153 | 0.985 | 67 |
 
 The medians agree with the paired figures, but they aren't a substitute for them: the speed and
 CPU ratios above are computed round by round.
@@ -263,12 +263,12 @@ while the first is still at it, but the point stands: the teams could run dry wh
 thread sat idle.
 
 So the third run raised the threshold from two to three, and to four, with everything else as in
-the registered run. Neither was faster, and neither was shown to be slower:
+the registered run. Neither was shown to be faster or slower:
 
-| threshold, against two | speed (95%) | CPU (95%) | reading |
-| --- | ---: | ---: | --- |
-| three | 0.992 (0.968–1.016) | 1.006 (0.987–1.025) | inconclusive |
-| four | 0.979 (0.951–1.008) | 0.983 (0.958–1.009) | inconclusive |
+| threshold (vs two) | speed (95%) | CPU (95%) |
+| --- | ---: | ---: |
+| three | 0.992 (0.968–1.016) | 1.006 (0.987–1.025) |
+| four | 0.979 (0.951–1.008) | 0.983 (0.958–1.009) |
 
 Both intervals include gains and losses of a few per cent, so neither change is shown to help or
 to hurt. The point estimate for four leans slower, and a loss of up to about 5% isn't excluded.
@@ -303,7 +303,7 @@ the processor time of all threads added up, and peak memory.
 <figure class="bf-fig">
 <p class="bf-title">Time, processor time and memory, ten threads</p>
 <svg viewBox="0 0 720 712" role="img" aria-label="Medians from the registered run. Elapsed: default 0.144 s, service layout 0.137, two pipelined teams 0.166, plain two teams 0.193. Processor time: 1.026, 0.895, 0.850, 0.847 s. Peak memory: 74, 64, 57, 52 MB."><text x="0" y="26" class="bf-ts" style="font-size: 24px">Elapsed, s (lower is faster)</text><text x="0" y="69" class="bf-t" style="font-size: 22px">0.2.6 default</text><rect x="240" y="48" width="266.4" height="30" rx="3" class="bf-steel"/><text x="516.4" y="71" class="bf-t-strong" style="font-size: 22px">0.144</text><text x="0" y="111" class="bf-t" style="font-size: 22px">Service layout</text><rect x="240" y="90" width="253.5" height="30" rx="3" class="bf-green"/><text x="503.5" y="113" class="bf-t-strong" style="font-size: 22px">0.137</text><text x="0" y="153" class="bf-t" style="font-size: 22px">Two pipelined teams</text><rect x="240" y="132" width="307.1" height="30" rx="3" class="bf-slot"/><text x="557.1" y="155" class="bf-t-strong" style="font-size: 22px">0.166</text><text x="0" y="195" class="bf-t" style="font-size: 22px">Plain two teams</text><rect x="240" y="174" width="357.1" height="30" rx="3" class="bf-slot"/><text x="607.1" y="197" class="bf-t-strong" style="font-size: 22px">0.193</text><text x="0" y="256" class="bf-ts" style="font-size: 24px">Processor time, s</text><text x="0" y="299" class="bf-t" style="font-size: 22px">0.2.6 default</text><rect x="240" y="278" width="345.1" height="30" rx="3" class="bf-steel"/><text x="595.1" y="301" class="bf-t-strong" style="font-size: 22px">1.026</text><text x="0" y="341" class="bf-t" style="font-size: 22px">Service layout</text><rect x="240" y="320" width="301.0" height="30" rx="3" class="bf-green"/><text x="551.0" y="343" class="bf-t-strong" style="font-size: 22px">0.895</text><text x="0" y="383" class="bf-t" style="font-size: 22px">Two pipelined teams</text><rect x="240" y="362" width="285.9" height="30" rx="3" class="bf-slot"/><text x="535.9" y="385" class="bf-t-strong" style="font-size: 22px">0.850</text><text x="0" y="425" class="bf-t" style="font-size: 22px">Plain two teams</text><rect x="240" y="404" width="284.9" height="30" rx="3" class="bf-slot"/><text x="534.9" y="427" class="bf-t-strong" style="font-size: 22px">0.847</text><text x="0" y="486" class="bf-ts" style="font-size: 24px">Peak memory, MB</text><text x="0" y="529" class="bf-t" style="font-size: 22px">0.2.6 default</text><rect x="240" y="508" width="342.2" height="30" rx="3" class="bf-steel"/><text x="592.2" y="531" class="bf-t-strong" style="font-size: 22px">74</text><text x="0" y="571" class="bf-t" style="font-size: 22px">Service layout</text><rect x="240" y="550" width="296.0" height="30" rx="3" class="bf-green"/><text x="546.0" y="573" class="bf-t-strong" style="font-size: 22px">64</text><text x="0" y="613" class="bf-t" style="font-size: 22px">Two pipelined teams</text><rect x="240" y="592" width="263.6" height="30" rx="3" class="bf-slot"/><text x="513.6" y="615" class="bf-t-strong" style="font-size: 22px">57</text><text x="0" y="655" class="bf-t" style="font-size: 22px">Plain two teams</text><rect x="240" y="634" width="240.5" height="30" rx="3" class="bf-slot"/><text x="490.5" y="657" class="bf-t-strong" style="font-size: 22px">52</text><text x="0" y="702" class="bf-tm" style="font-size: 21px">Bars start at zero.</text></svg>
-<figcaption>Measured, the test machine, medians of 20 rounds of the registered run (pull request 258). The service layout (green) is the only arm both faster and cheaper than the default (dark); the two-team arms without service threads (light) are cheaper but slower.</figcaption>
+<figcaption>Measured, the test machine, medians of 20 rounds of the registered run (pull request 258). The service layout (green) is the only arm both faster and cheaper than the default (blue); the two two-team arms without service threads are cheaper but slower.</figcaption>
 </figure>
 
 **Processor time and memory.** The service layout finishes sooner and does less work in total
