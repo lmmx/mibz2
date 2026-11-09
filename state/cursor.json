@@ -90,9 +90,10 @@
     6729486092,
     6729699102,
     6729877063,
-    6729957944
+    6729957944,
+    6730270019
   ],
-  "last_processed_comment_id": 6729957944,
+  "last_processed_comment_id": 6730270019,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -705,7 +706,7 @@
     },
     {
       "trigger_comment_id": 6730270019,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -713,7 +714,10 @@
       "report_commit": "ec2e19c632b7a62097ac50b11dd728693d6d02bb",
       "report_path": "state/reports/pair-from-runs-6730270019/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: missing M1 interval/clock validation and incomplete child/raw artifact checks; accept L[q] formula and admission with post-pilot disclosure, retain numerical thresholds, correct IPC necessity and line-wide STOP claims. 17520 independent formula cases; no native timing or implementation."
+      "disposition": "REVISE before freeze: missing M1 interval/clock validation and incomplete child/raw artifact checks; accept L[q] formula and admission with post-pilot disclosure, retain numerical thresholds, correct IPC necessity and line-wide STOP claims. 17520 independent formula cases; no native timing or implementation.",
+      "review_comment_id": 6730363373,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and independent role-aware routing check passed. Pinned coord.py verify fails solely on hard-coded FROM coordinator; recorded in verification.json."
     }
   ],
   "active_delegations": [],
@@ -733,10 +737,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6729957944
+      6730270019
     ],
     "handled": [
-      6729957944
+      6730270019
     ],
     "skipped": [],
     "automation_modified": false
