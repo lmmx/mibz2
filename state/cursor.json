@@ -38,7 +38,8 @@
     6730271993,
     6730769410,
     6731656628,
-    6732659575
+    6732659575,
+    6733004424
   ],
   "outgoing_comment_ids": [
     {
@@ -683,6 +684,15 @@
       "report_path": "state/records/reviews/inbox-6732659575/report.md",
       "reply_id": 6732797905,
       "routing_verification": "Pinned route/check passed; exact author/body/destination readback verified. Pinned verify hardcodes FROM coordinator; optimizer verify-pass not claimed."
+    },
+    {
+      "comment_id": 6733004424,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
+      "progress": "Migration verified. Auditing packet ceiling, per-step budgets and historical Precopy evidence."
     }
   ],
   "migrated_from": {
