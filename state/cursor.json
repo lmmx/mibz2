@@ -1119,6 +1119,19 @@
       "status": "finished",
       "disposition": "D072 scientific policy-text objections closed; REVISE new rationale and drift record plus reserved-list placement",
       "comment": 6750771906
+    },
+    {
+      "pr": 309,
+      "sha": "552d1d3c4f61aec835ce140be3b96a61a9c11315",
+      "evidence_digest": "stewardship:9a295edc2c239461ce4a69cfc135cce22caf1c6f;record:15dfd31352e0468080dddfb5a36917e34782787a",
+      "decision": "D074",
+      "commit": "a9d7d5f3752c8e11827919159b5bc7578b623e2d",
+      "id": "D074",
+      "incoming_pr": 161,
+      "incoming_comment": 6750788493,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "ADMISSIBLE AS TEXT; all D072/D073 text objections closed; pending authenticated authority and enactment"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1351,7 +1364,9 @@
     "608a427a07d128eb5608524deffcabbfea0fd537",
     "47245622b6b899dcb64f9448b112550832ecddf5",
     "43ad015374da8d553df7fdb2dde3e1697b8935cc",
-    "fb74ae7dc6e12f5d5fa4b469c32f2259518e58ee"
+    "fb74ae7dc6e12f5d5fa4b469c32f2259518e58ee",
+    "a4d7c9c0455bb17f4098b85d0a96a829db8e43c3",
+    "a9d7d5f3752c8e11827919159b5bc7578b623e2d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1425,7 +1440,8 @@
     6750287351,
     6750412724,
     6750546526,
-    6750670706
+    6750670706,
+    6750788493
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1505,8 +1521,9 @@
   },
   "current_execution": {
     "active_comment": 6750788493,
-    "status": "in progress",
-    "decision": "D074"
+    "status": "complete",
+    "decision": "D074",
+    "work_commit": "a9d7d5f3752c8e11827919159b5bc7578b623e2d"
   },
   "duplicate_events": [
     {
@@ -2082,6 +2099,13 @@
       "decision": "D073",
       "commit": "43ad015374da8d553df7fdb2dde3e1697b8935cc",
       "comment": 6750771906
+    },
+    {
+      "pr": 309,
+      "sha": "552d1d3c4f61aec835ce140be3b96a61a9c11315",
+      "evidence_digest": "stewardship:9a295edc2c239461ce4a69cfc135cce22caf1c6f;record:15dfd31352e0468080dddfb5a36917e34782787a",
+      "decision": "D074",
+      "commit": "a9d7d5f3752c8e11827919159b5bc7578b623e2d"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2586,8 +2610,10 @@
     {
       "comment_id": 6750788493,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D074"
+      "status": "complete",
+      "decision": "D074",
+      "receipt_commit": "a4d7c9c0455bb17f4098b85d0a96a829db8e43c3",
+      "work_commit": "a9d7d5f3752c8e11827919159b5bc7578b623e2d"
     }
   ],
   "migrated_from": {
