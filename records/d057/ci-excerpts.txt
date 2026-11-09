@@ -1,0 +1,26 @@
+2026-11-09T04:35:38.6192619Z HEAD is now at 01ed7f4 Merge fc0139272607314895201e075b9b8145834ce350 into 3e201246cf1266d4b2a984cb19eb9fdba5b9835d
+2026-11-09T04:36:06.5234745Z ##[group]Run cargo miri test --lib -- miri_
+2026-11-09T04:36:06.5235050Z [36;1mcargo miri test --lib -- miri_[0m
+2026-11-09T04:36:15.6511757Z test bwt::tests::miri_build_one_pass ... ok
+2026-11-09T04:36:51.4839886Z test bwt::tests::miri_room_walk_handoffs ... ok
+2026-11-09T04:37:19.7618595Z test coop::tests::miri_build_fused ... ok
+2026-11-09T04:37:20.1793479Z test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+2026-11-09T04:37:20.3704939Z test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+2026-11-09T04:37:20.5444121Z test coop::tests::miri_pool_caller_panic_wins ... ok
+2026-11-09T04:37:20.7558947Z test coop::tests::miri_pool_dropped_while_parked ... ok
+2026-11-09T04:37:20.9841937Z test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+2026-11-09T04:37:21.3505549Z test coop::tests::miri_pool_runs_every_index_once ... ok
+2026-11-09T04:37:21.6421075Z test coop::tests::miri_pool_writes_visible_after_run ... ok
+2026-11-09T04:39:20.7957852Z test coop::tests::miri_split_build_and_walk ... ok
+2026-11-09T04:41:18.0545361Z test coop::tests::miri_team_run_and_its_panic ... ok
+2026-11-09T04:41:39.1241457Z test coop::tests::miri_walk_room_handoffs ... ok
+2026-11-09T04:41:39.3121430Z test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+2026-11-09T04:41:39.4640696Z test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+2026-11-09T04:41:39.8311775Z test parallel::service_tests::miri_every_retirement_returns_its_buffers ... ok
+2026-11-09T04:42:02.9502015Z test parallel::service_tests::miri_service_core_hub ... ok
+2026-11-09T04:42:02.9976345Z test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 581.94s
+
+Guard native:
+2026-11-09T04:28:32.7443369Z HEAD is now at 4630922 Merge 40eff5543665b38aef848f098cf3d140a1632930 into 6b36fd8c43c1b834e69ee62cd6b5054dc99c571c
+2026-11-09T04:32:42.1658088Z [1m[92m     Running[0m tests/reader_panic.rs (target/debug/deps/reader_panic-f58bec17062a9d31)
+2026-11-09T04:32:42.9792586Z test a_panicking_source ... ok

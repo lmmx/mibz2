@@ -2445,3 +2445,56 @@ The prior unsupported-CPU Kernels limitation, finite Miri/fuzz coverage and unte
 [Evidence](records/d056/evidence.json), [reproducible probes](records/d056/probes.py), [results](records/d056/results.json), [routing audit](records/d056/routing.json).
 
 Migration passed before receipt: previous branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **3f6594235eb041f97e695fd5072e64216fe043e4**. Audit: five resolved historical misroutes, zero unresolved; REVIEW routes to #145. Pinned verify hardcodes FROM coordinator; its sole sender mismatch is retained alongside exact Guardian read-back checks. Task/subscriptions unchanged.
+
+## D057 — D045/D053 evidence repaired; scoped service-core resumption
+
+Incoming [6732560627](https://github.com/lmmx/mibz2/pull/161#issuecomment-6732560627), dispatching QUEUED 6732441209. Reviewed #276 at **fc0139272607314895201e075b9b8145834ce350**, evidence note blob **62a737e2d48b4da2a8b1fcce284f739c080f9184**. Operating SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL: **a4f97714cc14366984015869d9d094d89488ac57**.
+
+**G1 concur with the repaired, scoped B5 evidence; G2 lift D045's service-core timing/production-admission HOLD as narrowed by D053.** The resolved objection covers #258's measured runtime snapshot **3e201246cf1266d4b2a984cb19eb9fdba5b9835d** and #271's admission runtime **e64469f614f5d635a38de042741bdd344e61ae5c / 8a0fc8e099f932c14cd746c4c5d81aaef8dcc75d**, under the input/kernel/pool-use premises and external-source exclusions already stated in D045/D053. Record the resumption explicitly: the missing reached-path and completed-Miri evidence is supplied. No new G3 constraint or G8 line stop.
+
+This removes this material safety-evidence objection. It does not itself qualify a production candidate, approve a merge, authorize workstation timing, transfer a measured verdict to changed runtime code, or change a frozen registration. Registration, exact candidate identity, Louis's workstation authorization and the Coordinator's CI/integration gates still apply. Distinct holds, including D055 on #277, are unaffected.
+
+### Trace collection: accept the repair for this harness
+
+At this head, `service_case` waits before resetting the trace and again after `Serviced::run`, before disabling/taking it. A nonzero census waits up to 60 seconds; expiry fails the case. The census includes the reader feeder, scanner, service feeder/workers, teams and cooperative helpers by their `mibz2` prefix. TLS `Buf::drop` publishes to DONE before thread exit. The two collection boundaries therefore address precisely the D053 interleaving in which a named old producer publishes after the next reset.
+
+The source argument is specific to serial fuzz cases, finite in-memory sources and functioning Linux procfs. Push decoders join directly. In the reader path the active feeder retaining the decoder is itself named; final decoder destruction joins its handles. Dynamically created helpers remain owned by their named team, whose Pool destructor joins them. Thus helper creation is not an independent detached producer that can survive its owning team's exit. This is evidence instrumentation, not a new promise that arbitrary user-source threads, arbitrary trace producers or every platform have joined. The census ignores individual directory/comm read errors; do not generalize the successful-run argument to unreadable live tasks.
+
+The committed negative control creates a named late producer, marks before returning, and delays exit across the unfenced reset. Its reported unfenced outcome is own=false/next=true, fenced own=true/next=false. The real-reader control distinguishes the first 1/40 large-input observation from the recorded 0/40; neither is represented as a frequency estimate or proof that reader drop joins.
+
+Independent [publication-order model](records/d057/probes.py): five legal event orders, three incomplete/misattributed without completion, zero among the two allowed by a true completion fence. This checks bookkeeping, not the procfs premise. A separate [C pthread/TLS probe](records/d057/fence_probe.c) compiled, but could not exercise the census here: `opendir /proc/self/task: No such file or directory`, exit 77. It is **unavailable, not PASS**. No Rust toolchain is installed here; I did not independently execute the submitted Rust control or fuzz runs. Acceptance rests on independent source review, the pinned reported bounded control/reruns, checked arithmetic, and retrieved CI evidence, with those provenance distinctions intact.
+
+### Reached paths and exact pins
+
+Pass A at **13d4e51d** to reviewed fc013927 changes only the evidence note and admission overlay; executable files are unchanged. Pass B's e64469f6 to 8a0fc8e0 changes six recipe/registration/occupancy files, no `src/`. The committed overlay **2f437f928f06ed200890b7bc6207c805902127b4** applies cleanly to the reviewed fuzz/common files in an independent patch dry-run. It adjusts both admission entry points and the front-set denominator.
+
+Recomputed every table column:
+
+| pass | cases | build marginal | walk marginal | finish | assembly | back reuse | front reuse |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A | 7,010 | 4,909 | 4,909 | 5,973 | 5,687 | 2,606 | 1,694 |
+| B | 3,694 | 2,603 | 2,603 | 3,148 | 2,984 | 1,257 | 502 |
+
+The pinned report gives zero failures, seeds A 101/102/103 for 120 seconds each and B 201/202 for 90 seconds each, with fence waits in 15 and 8 cases respectively. These are reported executions, not new runs here. Old 10,870/5,340 claims remain beside them explicitly uncertified, satisfying B4 rather than silently replacing history.
+
+**Correct the shorthand “reached pooled build/walk”:** `reached` still increments build and walk independently. Equal totals do not establish an exact intersection. The reported marginals alone guarantee at least **2,808 A cases** and **1,512 B cases** in both sets by inclusion–exclusion; exact joint counts need a joint counter/per-case record. This is not a remaining B5 blocker: the required phases and reuse paths are demonstrably reached, and no exact joint-count threshold was registered. “Cancelled” remains configured cancellation, not necessarily the terminal outcome.
+
+For K=2 the reported prepared-queue maxima remain 3/4/5 at L=2/3/4, consistent with **P <= L+K-1**, not a hard cap L. The source proof, not sampled maxima alone, supplies that bound. The corrected denominator includes teams+L+services.
+
+### Completed Miri and the separated guard
+
+Retrieved final-head Miri run **42562673439**, job **128982297974**: completed success, **17 passed, zero failed**, including all four `parallel::service_tests::miri_*` fixtures. Checkout **01ed7f4273fe05e3e5ecc83f77831d68b8a72637** and fc013927 have the identical tree **234cd4c028fa0b2472b7e59a77246edcd55757e1**. This closes D053's unavailable/in-progress log gap. The earlier source arguments, native fixtures, targeted mutation records and H3/O3 survivor reasoning accepted there continue to apply. These are finite scoped Miri tests, not AVX2/full-size or all-interleaving proof. API read-back also shows #276's 23 successful checks and three skipped checks.
+
+Independent comparison after removing comments/blank lines confirms #276's `src/read.rs` runtime code equals 3e201246's; its new paragraph states the source-panic exclusion. The recovery test was removed from this unguarded branch. P1 remains historical evidence from the earlier guarded pin, not a mutation of today's unguarded source.
+
+#278 is separately merged: head **40eff5543665b38aef848f098cf3d140a1632930**, squash **edacd0ab0eaf9af84b7ae8ccd8a2f1582034369f**. Its two-file diff is the guard/documentation and reader-panic regression. The guard stores the I/O error before cancel wakes readers, and recovers a poisoned error mutex. Retrieved native job **128980302012** records `a_panicking_source ... ok`, 1/1; its fixture covers workers, planned teams and pipelined readers at four panic positions, including after a 4 MiB write. The guard-deletion watchdog kill is author-reported, not rerun here. I checked the successful bench status, not a new performance qualification.
+
+No objection to the separation. Keep “next read fails” scoped to an unfinished decode observing cancellation; no retroactive failure of an already-completed read, no abort recovery or interruption of a forever-blocked source. The old measured snapshot still excludes source panic. A future guarded service integration is a changed runtime and must not inherit the old performance claim merely because the guard is small.
+
+### Record and consequence
+
+Expected: the repaired collector distinguishes real service reach from late TLS publication, and completed Miri resolves the pending coverage evidence. Observed: both repairs are pinned; source/runtime separation is preserved; the remaining count wording overstates intersection but not path presence. The evidence gap closes. The next useful move is the already-registered service/admission evaluation through its ordinary gates, not another safety approval ceremony or an unregistered timing run.
+
+Independent work: source/diff review, overlay application check, table arithmetic, finite publication-order model and archived CI inspection. No implementation, Rust rerun, timing, merge or infrastructure change. [Evidence index](records/d057/evidence.json), [results](records/d057/results.json), [CI excerpts](records/d057/ci-excerpts.txt), [routing audit](records/d057/routing.json).
+
+Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **61d3b9d2de69680d6fd1f7016edd9dc7e140fd77**. Five resolved historical routing findings, zero unresolved; REVIEW routes to #145. Observed 2026-11-09. Only this inbox item remained unfinished in the queue snapshot. Persistent task/subscriptions unchanged.
