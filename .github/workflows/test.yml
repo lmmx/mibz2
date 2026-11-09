@@ -57,6 +57,9 @@ jobs:
       # the run-fed diagnostic's admission verifier and contended-copy statuses, on fixtures
       - name: Run-fed verifier tests
         run: python3 bench/test_run_fed_stage.py
+      # the run-fed leader's VALID (bench/run_fed_leader.py), on synthetic runs
+      - name: Run-fed leader VALID tests
+        run: python3 bench/test_run_fed_leader.py
 
   get-python-versions:
     runs-on: ubuntu-latest

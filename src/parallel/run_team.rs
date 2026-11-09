@@ -1830,6 +1830,10 @@ mod tests {
     /// `-C target-feature=+avx2`), on small columns
     #[test]
     fn miri_share_kernels() {
+        // (CI's AVX2 step asks for the AVX2 kernels to be reached, as run_stage's does)
+        if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
+            assert!(Kernels::detect().avx2, "AVX2 not detected");
+        }
         for ll in [
             runs_column(300, 3, &[1, 2, 9, 17], 5),
             (0..64u8).map(|i| i % 3).collect(),

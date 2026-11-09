@@ -88,6 +88,16 @@ opening the file to the last byte read, one process a run.
   call `run_stage::sort`: since #269's fix its checked `Sorted` borrows the scratch, and a
   leader's sort must outlive its stage, into the next run. The one-core path for small
   blocks does use `run_stage::sort` and `fill`, on a `Sorted`, through `api`.)
+- **No `Sorted` is made outside `run_stage`.** #269's fix makes a checked `Sorted` the only
+  way into `run_stage::fill` and `fill_rows`. The team's share fills never call them, and
+  never make one: they are this module's own (`fill_share`, `fill_direct`), reading an F
+  order that this module's checked path made (`sort_one_share`, or the helpers' prefix and
+  scatter), and only once its flag says every check passed (the prefix's, then every
+  scatter's exact fill). That flag is set nowhere else. So the share sort is a second
+  checked constructor of a checked F order, kept beside its fills, not a `Sorted` forged
+  from outside. Folding it into `run_stage` as a checked parallel constructor of `Sorted`
+  is the natural step if this line goes further. It isn't taken here, as this PR leaves
+  `run_stage.rs` to #269.
 - **`Helpers`' synchronisation.** Two gates among the helpers (counted, then scattered),
   each a one-shot barrier whose last arrival runs the step (the prefix; the scatter's
   check) and then opens it, the others spinning `BARRIER_SPINS` and then parking. This is
@@ -142,9 +152,10 @@ run-fed arm (`phases`):
 | C29's control: `mtf_checkpoints_reg` = `mtf_checkpoints` (result, column, counts, checkpoints, `RunTooLong`, `BlockTooLong` at bounds around each length), each kernel | `register_checkpoints_are_checkpoints` | pass |
 | every sub-arm through `StreamDecoder::pipelined_run_fed` at 1×2, 1×3, 2×3, 3×3, 1×4: byte for byte the default decoder's output and error (kind, block, bit) on the corpora, run-heavy full blocks (records taken: counted), small blocks among large across levels and streams, one block and none, a block CRC, a bad primary index, truncations, `RunTooLong` on the prefetched block and after a small one, `BlockTooLong`; no fallback | `tests/run_fed_leader.rs` | pass |
 | a reader dropped mid-stream, and the push form cancelled while writing, every sub-arm and plan: no hang (a one-minute watchdog) | `dropped_and_cancelled_mid_stream` | pass |
-| the share kernels' unsafe writes, scalar and AVX2, and a whole run's hand-offs between helpers and leader (the race detector) | `cargo miri test --features run-fed --lib -- run_team::tests::miri_`, with and without `-C target-feature=+avx2,+bmi1` | see the PR |
+| the share kernels' unsafe writes, scalar and AVX2, and a whole run's hand-offs between helpers and leader (the race detector) | `cargo +nightly miri test --lib -- run_team::tests::miri_`, with and without `-C target-feature=+avx2,+bmi1` | pass, both (2 tests each, about 140 s); CI's AVX2 step also asserts AVX2 was detected (`MIBZ2_EXPECT_AVX2`) |
 | the default suites, unchanged code paths: `cargo test` (default features), and with `run-fed` | `cargo test` | pass |
 | clippy (`--all-targets`, all features and default), fmt | | clean |
+| VALID refuses a missing round, a failed child (exit, error, broken line), a different output, a fallback, a control with records, absent phases, a zero wall (a non-finite interval) | `bench/test_run_fed_leader.py` (CI's submit job) | pass |
 
 A mutation check: the vector store's ownership bound moved 8 rows past its end
 (`w + 8 <= end + 8`) corrupts the heap at once in the parallel tests (`malloc(): invalid
