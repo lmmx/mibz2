@@ -6,3 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-service-lookahead      research/service-lookahead the prepared-queue admission threshold at svc2 (#271)
+bench-run-fed-leader         research/run-fed-leader   the run-fed leader against default33, with the self-recorded thread census (#270)
