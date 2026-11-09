@@ -602,6 +602,15 @@
       "review_comment_id": 6729233463,
       "publication_verified": true,
       "verification_note": "Exact body and #145 destination read back; role-aware routing check passed. Pinned coord.py verify rejects FROM researcher due to hard-coded coordinator predicate; result retained."
+    },
+    {
+      "trigger_comment_id": 6729243943,
+      "related_queued_comment_id": 6729027210,
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "status": "in_progress",
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "source_commit": "3e4477d035e96310eb4ac3d4014e01e13ffaa33c"
     }
   ],
   "active_delegations": [],
