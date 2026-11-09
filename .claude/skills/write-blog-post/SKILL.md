@@ -158,6 +158,12 @@ style, not a description of the method.
   teams") but the news ("mibz2 gets a pit crew").
 - **The dek delivers the news in one polished sentence** (the band below), with the finding
   and its best figures, and the same light touch.
+- **A metaphor, once introduced, is extended** (Louis, 9 November 2026). Carry it through every
+  part of the post that has leeway for joyful edits: figures above all (a flow diagram becomes
+  the metaphor's scene), section openings and captions. "mibz2 gets a pit crew" makes the
+  block's-path figure a race circuit: the teams on the track, the service threads in the pit
+  lane, the reader at the finish line. The plain technical label stays on every element. The
+  metaphor dresses the content and never replaces it, and it stops short of flippancy.
 - **Truth still binds.** The joy is in the telling, never in the claim. Each figure in the dek
   is a registered result, and the body carries the scope.
 
