@@ -1,7 +1,9 @@
 # 2026-11-09: The pair table built from run intersections (opt-in), and a diagnostic registered (DRAFT, NOT FROZEN)
 
 **Status: a draft registration, NOT FROZEN, NOT RUN on CI.** The coordinator freezes it, revises
-it or drops it. Nothing here changes the decoder, with or without the new feature.
+it or drops it. Nothing here changes the decoder, with or without the new feature. **Revised
+2026-11-09 (§10)** for Guardian D046 (the safe boundary and B5's evidence) and the Researcher's
+REVISE (6730270019): the registration's text, VALID, fairness and wording.
 
 **The input.** The Researcher's REVIEW, #145 comment 6729693845 (report
 `state/reports/run-constructions-6729486092/report.md` at `1db0acdb`, §2), under Louis's
@@ -15,8 +17,9 @@ then against production's one-hop path.
   per-row builder `build_pairs`, `pair_start` and its flagged 32-lane walk, in
   `src/pair_runs.rs` behind the non-default `pair-runs` feature.
 - **The run-intersection builder, `build_pairs_runs`, gives #34's words exactly:** checked
-  exhaustively on small columns, on random ones and on all 431 bench-corpus blocks. Its unsafe
-  code is under Miri.
+  exhaustively on small columns, on random ones, by a differential fuzz against a stable-sort ψ²
+  oracle, and on all 431 bench-corpus blocks. Its unsafe code is under Miri, behind checked safe
+  entries (§10).
 - **It removes the per-row bigram histogram and scatter.** It reads the column and writes the
   table in order; its random accesses are one gather a run into r-entry arrays. By
   instruction count (callgrind, counts, not timing) it is **12.4 instructions a row**, against
@@ -25,12 +28,14 @@ then against production's one-hop path.
   lookup's 28,125 bytes, and 0.34% of Wikidata's rows flagged, statically and dynamically.
   But the old lookup's correction loop runs only **0.002 times a step**, so the old path is
   already one load and one compare. Its prize is small.
-- **Registered (draft):** Q1, the build cost ratio run / row; Q2, the whole entry point
-  against production's in-place one-hop path. Each has positive and negative stops, run once
-  through `sweep.yml` (`tool: pair_runs`).
-- **What #34 implies:** a cheaper builder cannot make up for the consumer. #34's walk cost
-  about twice a one-hop step for each pair step, and production's walk has since become the
-  faster room walk. **The drafter's prior is Q1 INCONCLUSIVE and Q2 NEGATIVE STOP.**
+- **Registered (draft):** Q1, the build cost ratio run / row; Q2, the inverse-BWT entry point
+  (not the whole decoder) against production's in-place one-hop path, the R candidate with its
+  admission rule. Each has positive and negative stops, run once through `sweep.yml`
+  (`tool: pair_runs`).
+- **What #34 suggests:** the consumer, more than the builder, is the likely cost. #34's walk
+  cost about twice a one-hop step for each pair step, and production's walk has since become
+  the faster room walk. Counts alone do not decide it (§4). **The drafter's prior is Q1
+  INCONCLUSIVE and Q2 NEGATIVE STOP.**
 
 Labels, as in #266 and #269:
 - **proved**, a short argument given here;
@@ -106,22 +111,31 @@ one-hop table's links, moved by LF, with the column's bytes.
 **Safety (proved; Miri):**
 - **The record writes in step 1:** at most n, since the starts rise strictly below n.
 - **`set_len(n)`:** the I_i tile [0, n), given two checks: the runs' lengths per byte equal
-  `counts`, and the counts sum to n. Otherwise the function returns None and the caller uses
-  `build_pairs`. Each interval's cells cover it in rising q, so every slot is written. A store
-  past a cell only goes upward, into later cells' rows.
+  `counts`, and the counts sum to n (in u64). Otherwise the function returns an error, and
+  nothing falls back to `build_pairs` (§10). Each interval's cells cover it in rising q, so
+  every slot is written. A store past a cell only goes upward, into later cells' rows.
+- **Serial only:** a store past a cell writes words a later cell writes again. Adjacent cells
+  filled in parallel would race on them, which no later store repairs, so the fill must never
+  be parallelised across cells as it stands (D046; `fill`'s contract).
 - **The fill's raw reads and writes** are each behind a check that q + len + 8 ≤ n, computed
   without overflow. Its interval index is asserted below r, so a wrong input panics or writes
   wrong words in bounds.
 - **The AVX2 fill** is an `unsafe fn` reached only through `is_x86_feature_detected!`.
 
-**The admission (fixed before CI; see §6):** `Pairs` on the run builder samples the column's
-run density, the run starts in one 8-byte word of every 16. A block above `ADMIT_DENSITY` =
-0.15 runs a row goes to production's `Segmented`.
+**The admission (part of the R candidate; see §6 and §8):** `Pairs` on the run builder samples
+the column's run density, the run starts in one 8-byte word of every 16 (the comparisons at
+offsets 1-8 of every 128 bytes). A block above `ADMIT_DENSITY` = 0.15 runs a row (strictly
+above) goes to production's `Segmented`. The need for it followed the local pilot's losses on
+records and random, and 0.15 was picked from the corpora's observed run densities (§8). **The
+sampler is a heuristic, not a density bound:** the Researcher's witness, a 16,384-byte column
+that samples to 0 at a true density of 0.9375, is admitted (kept as the test
+`admission_heuristic_aliases`). It is frozen literally for the registration.
 
 ## 3. Correctness (checked)
 
 - **`pair_runs::tests::exhaustive_small`:** every column over 3 bytes of lengths 1–8 and over
-  2 bytes of lengths 9–12, 17,511 columns. At every primary index, it checks the same words,
+  2 bytes of lengths 9–12, 17,520 columns (the earlier 17,511 was an arithmetic slip; the test
+  asserts the count). At every primary index, it checks the same words,
   the same LF rows (every row), the same first row as `pair_start`, and the words against ψ²
   by definition (from `bwt::build`). The cells are below 2r.
 - **`random_columns`:** uniform, full-alphabet, periodic, constant and run-structured columns,
@@ -170,9 +184,10 @@ Wikidata's cells/n matches #266's line-A figure, 0.0881.
 So the run builder does 17% fewer instructions than #34's, with no per-row random RMW (#34's
 scatter writes `p[x]` and `b2[w]` at random). It does twice production's one-hop build. The
 archive's reopening bound for ψ² was "a build at no more than today's one-pass build plus
-1 c/B" (`2026-11-07-left-field-archive-check.md`). On counts that would need the extra 6.2
-instructions a row to retire in 1 cycle. **Model: not met** unless its IPC is above 6. M1
-times it.
+1 c/B" (`2026-11-07-left-field-archive-check.md`). **Counts alone do not decide it.** The cycle
+difference is I_run / IPC_run − I_one / IPC_one, not the instruction difference at one IPC:
+12.4 / 4 − 6.2 / 2 = 0 cycles with both IPCs below 6 (the Researcher's counterexample). M1
+estimates it, in nominal clock-scaled units (§6).
 
 **The spare-bit census (the REVIEW's second idea, not built).** The directory is one byte per
 256 F rows; a block is flagged where its first and last rows' bytes differ in their high five
@@ -209,7 +224,8 @@ Each block's last column is made once by `mtf::mtf`, untimed. Every arm runs ove
 in decode order, on one thread. The arms' order rotates by round, and each ratio is paired by
 round: the geometric mean and its 95% t-interval.
 
-- **(a), the build alone,** on the segmented blocks, each arm in its own buffers:
+- **(a), the build alone,** on the segmented blocks, each arm in its own buffers (its own
+  table and its own LF rows; until §10 the row and run arms shared the LF rows' vector):
   - `row`: `build_pairs` + `pair_start`;
   - `run`: `build_pairs_runs`, giving the same table, LF rows and first row;
   - `one`: production's `bwt::build`, a reference only.
@@ -218,58 +234,96 @@ round: the geometric mean and its 95% t-interval.
   - `P`: production's `Segmented` (`build_one_pass`, then the 32-lane room walk), the real
     in-place path;
   - `R`: the run-built pair table and #34's consumer, with the admission;
-  - `O`: #34 as it was (row builder, same consumer), a reference.
+  - `O`: #34 as it was (row builder, same consumer, no admission), a reference.
+
+  (b) is the inverse-BWT entry point, not the whole decoder: MTF, Huffman, scheduling,
+  concurrency and the later stages are outside it. The four-copy run is a contention
+  diagnostic, not a multithreaded decode.
 
 The files: Wikidata (the corpus `bench.yml` uses), then the test corpora's synthetic inputs at
 level 9.
 
-**On CI.** Dispatch `sweep.yml` with `tool: pair_runs` and `rounds: 15`, at the frozen head,
-once.
+**On CI.** Dispatch `sweep.yml` with `tool: pair_runs`, `rounds: 15` and `frozen` the frozen
+head, at that head, once.
+- **Before any copy starts,** the workflow writes `plan.json`: the rounds, the clock read, the
+  CPUs and the copies they imply (`1`, then `N-cpuC` for each), the head, the frozen head, and
+  the corpus's path, spec and SHA-256.
 - It runs one copy pinned to CPU 1, then one copy per CPU at once.
-- Each copy's exit status goes in `status-*.txt`; its raw paired timings in `raw-*.csv`.
-- **The `Validity` step writes `validity.txt`.** It fails the job unless all of these hold:
-  - the corpus's SHA-256 is `bench/wikidata.json`'s;
-  - every copy exited 0;
-  - every copy printed its VALID line;
-  - every copy left non-empty raw timings.
+- Each copy's exit status goes in `status-*.txt`, captured by `if` so no errexit skips it; its
+  raw paired timings in `raw-*.csv` (file, round, arm, seconds, and the file's paired blocks,
+  paired rows and output bytes).
+- **The `Validity` step, `bench/pair_runs_validity.py`, writes `validity.txt`.** It fails the
+  job unless all of these hold (each has a fixture test in `bench/test_pair_runs_validity.py`):
+  - the plan: rounds 2–31, a finite positive clock, the copy set the CPUs imply, the head the
+    frozen head, the corpus's SHA-256 the spec's and the plan's;
+  - the inventory: every planned copy's three files, and no unplanned copy's (a wholly
+    missing child is found from the plan); every status 0; every VALID line;
+  - every raw CSV: its header and the exact corpus × round × six-arm matrix, nothing missing,
+    duplicated or extra; every total finite and positive (a build arm's exactly 0 only on a
+    file with no paired block); each file's counts the same throughout; Wikidata paired;
+  - from the single copy's raw timings: every registered interval and M1's difference
+    present, with finite, ordered endpoints.
+
+  Only then does it print the readings, recomputed from the raw timings. A run that is not
+  VALID prints its problems and no reading.
 - **A copy's VALID line needs:**
-  - every registered interval present and finite;
+  - a finite, positive GHZ;
+  - every registered interval and M1's difference (nominal c/B and ns a row) present, with
+    finite endpoints;
   - every arm's every round total finite and positive;
   - the head, 40 hex digits;
   - the corpus's size and decoded size.
 
-  A copy that is not VALID exits 3.
+  Its readings are printed only after it; a copy that is not VALID prints none and exits 3.
 
 ## 6. The registration (DRAFT, NOT FROZEN)
 
 Judged on the **pinned single copy, on Wikidata**. The four-copy copies are exploratory. The
 readings are printed mechanically, labelled UNJUDGED until the coordinator names the
-registered run.
+registered run, and only once the run is VALID.
+
+**The candidate, and what was seen before.** The Q1/Q2 thresholds below are those written
+into the harness before its first timed run, kept as they were. The local pilot rounds (§8)
+are development data: excluded from every registered interval and verdict. The candidate was
+revised after profiling (§8), and the admission rule was added after the pilot's losses; the
+registered run tests the final, fixed candidate on its registered runner, not a pristine
+discovery. **The R candidate is the deployable hybrid:** the run builder, #34's consumer, and
+the admission (sampler, constant, strict `>`, fallback to `Segmented`, and its per-corpus
+taken/declined counts), all charged inside the timed entry point.
 
 **Q1: does building from run intersections remove the old build's cost?**
-R_build = run / row, from (a).
+R_build = run / row, from (a): the two builders alone, over every segmented block, with no
+admission. It is the only isolated builder comparison; R / O, below, includes the admission
+and so is a policy contrast.
 - **POSITIVE** if the geometric mean is ≤ 0.50 and its upper bound < 0.60. Most of #34's
   build penalty is removed.
-- **NEGATIVE STOP** if its lower bound > 0.80. The construction saves under 20%, and the
-  run-built pair table is closed.
+- **NEGATIVE STOP** if its lower bound > 0.80. The construction saves under 20%: this
+  registered candidate and configuration is closed. (Not every run-built pair table: a
+  materially cheaper builder is a new registration under C3.)
 - **INCONCLUSIVE** otherwise. No re-run without a new registration.
 
 **Q2: does the run-built pair path beat production?**
-R_whole = R / P, from (b).
+R_whole = R / P, from (b): the inverse-BWT entry point, admitted R against production's P.
 - **POSITIVE** if all three hold:
   - the geometric mean is ≤ 0.95;
   - its upper bound is < 1.0;
-  - the worst synthetic corpus's geometric mean is ≤ 1.05.
+  - the worst synthetic corpus's geometric mean is ≤ 1.05 (a point-estimate screen, not an
+    upper confidence bound on regression).
 
   A production prototype may then be registered, for `bench.yml`'s paired A/B to decide.
 - **NEGATIVE STOP** if the lower bound is > 1.0. The run-built pair with #34's consumer is
-  slower than production. The line reopens only with a different consumer (for instance the
-  spare-bit one), registered on its own.
-- **STOP (synthetic)** if Wikidata passes but a synthetic corpus regresses by more than 5%.
+  slower than production, and this candidate pauses. Reopening does not need a different
+  consumer: a materially cheaper builder, a changed admission, a different target or another
+  justified mechanism can warrant a new registration (PROTOCOL §11, C3).
+- **STOP (synthetic)** if Wikidata passes but a synthetic corpus's point estimate is above
+  1.05 (the screen above).
 - **INCONCLUSIVE** otherwise. No re-run without a new registration.
 
 **M1 (exploratory): the archive's reopening bound, timed.** The run build less the one-hop
-build, in c/B of the segmented rows, as a paired mean and 95% interval.
+build, in **nominal c/B** of the segmented rows (wall seconds × the GHZ read once from
+`/proc/cpuinfo`: clock-scaled wall time, not measured cycles; frequency changes and
+descheduling are not integrated), as a paired mean and 95% interval; the raw nanoseconds a row
+are printed beside it. Its difference is required for VALID.
 - **MET** if the upper bound is ≤ 1 c/B.
 - **NOT MET** if the lower bound is > 1 c/B.
 
@@ -282,13 +336,13 @@ O/P and R/O are printed as references and are not gates.
   thread on Wikidata, and the build accounted for about 5 c/B of it.
 - **What this line can fix:** the run-intersection build removes the bigram histogram and the
   per-row scatter (Q1 measures what that saves).
-- **What it cannot fix:** the consumer. Since #34, production's walk has become the room walk.
+- **What it does not change:** the consumer. Since #34, production's walk has become the room walk.
   It is the flagged walk in passes with a shared offset (#37: Wikidata −10.3% at one thread on
   CI, walk stage 4.37 → 3.81 c/B on the Xeon runner), then #157 and #171. #34's pair walk is
   the flagged walk #34 was built on, two bytes a step, plus the first-byte lookup.
-- **So even a free build** leaves R/P near #34's walk against today's room walk. The binding
-  census (`2026-11-05-binding-census/nogo.md`) found #34's port at least 10% slower at four
-  threads, with about 5 c/B of build.
+- **So the expectation is that even a free build** leaves R/P near #34's walk against today's
+  room walk. The binding census (`2026-11-05-binding-census/nogo.md`) found #34's port at least
+  10% slower at four threads, with about 5 c/B of build. This is a prior, not a necessity.
 - **Expectation, plainly:**
   - **Q1: INCONCLUSIVE, perhaps POSITIVE on very repetitive data,** but not at 0.50 on
     Wikidata. The run builder's instructions are 0.83 of #34's. Its cycles should fall
@@ -296,8 +350,9 @@ O/P and R/O are printed as references and are not gates.
   - **Q2: NEGATIVE STOP.** The pair consumer, not the build, is the larger cost, and nothing
     here changes it.
 
-  A Q2 POSITIVE would contradict #34's walk measurements and the binding census, and would
-  need a mechanism found before any adoption.
+  A Q2 POSITIVE would challenge a prediction transferred from #34 (the builder, baseline,
+  hardware, allocation and admission all differ), not #34's own measurements, which stand; a
+  mechanism would be found before any adoption.
 
 ## 8. Disclosures
 
@@ -311,12 +366,15 @@ O/P and R/O are printed as references and are not gates.
 - **What was fixed when:**
   - The Q1/Q2 thresholds were written into the harness before its first timed run.
   - **The admission (`ADMIT_DENSITY` = 0.15) was added after that local reading** on
-    records and random. Without it, Q2's synthetic condition could not pass on any CI
-    result.
-- **The coordinator should decide at freeze** whether the admission belongs in the
-  registered candidate. It is the shape any production use would need, as #269's fallback
-  is. The constant was chosen from the census (Wikidata 0.07, text 0.25, records and random
-  about 1), not from a timing of it.
+    records and random: the need for it followed those losses, a serious observed problem
+    on the pilot (not a proof about any CI result).
+  - **0.15 was picked from the corpora's observed run densities** (Wikidata 0.07, text 0.25,
+    records and random about 1) to separate those families, before the registered run, but
+    not from a timing sweep of thresholds. That is corpus-informed selection.
+- **The admission is in the registered R candidate** (Researcher, 6730270019), frozen
+  literally with the sampler; it is the shape any production use would need, as #269's
+  fallback is. It is not tuned after the registered result.
+- **The pilot samples are excluded** from every registered interval and verdict.
 - **The builder was revised after local profiling** (x-order fill → q-order fill; SWAR run
   scan; AVX2 fill). Each version passed the same word-identity checks. Its revision is part
   of building a fair candidate, not a fitted threshold.

@@ -41,6 +41,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench/pair_runs_validity.py, sweep.yml's pair_runs validity, on fixture runs
+      - name: The pair-runs validity's tests
+        run: python3 bench/test_pair_runs_validity.py
 
   get-python-versions:
     runs-on: ubuntu-latest

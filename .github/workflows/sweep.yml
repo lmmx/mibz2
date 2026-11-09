@@ -9,8 +9,10 @@
 # stages alone and with every CPU busy, as a multi-threaded decode runs them. With
 # `tool: pair_runs`, the run-built pair table's diagnostic (examples/pair_runs.rs, the
 # `pair-runs` feature; docs/journal/2026-11-09-pair-from-runs.md) runs the same way, ROUNDS
-# its rounds, and the run is judged VALID or not: the corpus's SHA-256, every copy's exit
-# status and its own validity line, with the raw paired timings archived.
+# its rounds, and the run is judged VALID or not by bench/pair_runs_validity.py against the
+# plan written before any copy starts (the planned copies' exact files and exit statuses, the
+# raw corpus x round x arm matrix, the frozen head and the corpus's SHA-256), which then
+# recomputes the registered readings from the raw paired timings, all archived.
 name: Walk sweep
 
 on:
@@ -24,6 +26,10 @@ on:
         description: "sweep (the factorial), phases (the stages) or pair_runs (the run-built pair table)"
         required: false
         default: "sweep"
+      frozen:
+        description: "pair_runs: the frozen head the registered run names (40 hex digits); VALID only at it"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -79,6 +85,7 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           TOOL: ${{ inputs.tool || 'sweep' }}
+          FROZEN: ${{ inputs.frozen }}
         run: |
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
@@ -87,19 +94,36 @@ jobs:
           bin=target/release/examples/$TOOL
           # (pair_runs's: the head it reports and the corpus spec it checks)
           export PAIR_RUNS_HEAD=$(git rev-parse HEAD) PAIR_RUNS_SPEC=bench/wikidata.json
+          cpus=$(nproc)
+          # pair_runs's plan, before any copy starts: the copies expected (a missing one is
+          # found from it, not from what survives), the clock, the heads and the corpus
+          if [ "$TOOL" = pair_runs ]; then
+            python3 - "$ROUNDS" "$ghz" "$cpus" "$(git rev-parse HEAD)" "$FROZEN" "$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)" <<'EOF'
+          import json, sys
+          rounds, ghz, cpus, head, frozen, sha = sys.argv[1:]
+          plan = {"tool": "pair_runs", "rounds": int(rounds), "ghz": float(ghz), "nproc": int(cpus),
+                  "copies": ["1"] + [f"{cpus}-cpu{c}" for c in range(int(cpus))],
+                  "head": head, "frozen": frozen, "corpus": "corpora/wikidata.bz2",
+                  "spec": "bench/wikidata.json", "corpus_sha256": sha}
+          json.dump(plan, open("plan.json", "w"), indent=1)
+          EOF
+          fi
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures;
-          # each copy's exit status goes in status-*.txt
-          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"; PAIR_RUNS_RAW=raw-1.csv taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
-          echo "${PIPESTATUS[0]}" > status-1.txt
+          # each copy's exit status goes in status-*.txt, written whatever the copy did (the
+          # status captured by `if`, so no errexit skips the write)
+          {
+            echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"
+            if PAIR_RUNS_RAW=raw-1.csv taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; then st=0; else st=$?; fi
+            echo "$st" > status-1.txt
+          } 2>&1 | tee sweep-1.txt
           alone=$((SECONDS - start)); start=$SECONDS
-          cpus=$(nproc)
           for c in $(seq 0 $((cpus - 1))); do
             {
               echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS; this copy on CPU $c"
               if PAIR_RUNS_RAW="raw-$cpus-cpu$c.csv" taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; then st=0; else st=$?; fi
               echo "$st" > "status-$cpus-cpu$c.txt"
-            } > "sweep-$cpus-cpu$c.txt" &
+            } > "sweep-$cpus-cpu$c.txt" 2>&1 &
           done
           wait
           together=$((SECONDS - start))
@@ -120,26 +144,20 @@ jobs:
             cat "sweep-$cpus-cpu0.txt"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          # (a failed copy fails the step, after its files and the summary are written)
+          for f in status-*.txt; do [ "$(cat "$f")" = 0 ] || { echo "$f: exit $(cat "$f")"; exit 1; }; done
 
-      # pair_runs's validity: the corpus's SHA-256, every copy's exit status (0) and its own
-      # VALID line; NOT VALID fails the job, with the figures still archived
+      # pair_runs's validity (bench/pair_runs_validity.py): against the plan, the planned
+      # copies' exact files, statuses and VALID lines, the raw matrix, the frozen head and the
+      # corpus's SHA-256; then the readings, recomputed from the raw timings, and only then.
+      # NOT VALID fails the job, with the figures still archived
       - name: Validity
         if: "!cancelled() && inputs.tool == 'pair_runs'"
         run: |
-          problems=""
-          want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
-          got=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
-          [ "$got" = "$want" ] || problems="$problems corpus SHA-256 $got, not $want;"
-          for f in sweep-*.txt; do
-            st=$(cat "status-${f#sweep-}" 2>/dev/null || echo missing)
-            [ "$st" = 0 ] || problems="$problems $f exit status $st;"
-            grep -q '^VALID (this process' "$f" || problems="$problems $f has no VALID line;"
-          done
-          for f in raw-*.csv; do [ -s "$f" ] || problems="$problems $f empty;"; done
-          [ "$(ls raw-*.csv 2>/dev/null | wc -l)" = "$(ls sweep-*.txt | wc -l)" ] || problems="$problems a copy's raw timings are missing;"
-          { echo "head $(git rev-parse HEAD); corpus SHA-256 $got"; for f in status-*.txt; do echo "$f: exit $(cat "$f")"; done; if [ -z "$problems" ]; then echo VALID; else echo "NOT VALID:$problems"; fi; } | tee validity.txt
+          if python3 bench/pair_runs_validity.py . > validity.txt; then ok=1; else ok=0; fi
+          cat validity.txt
           { echo; echo "### Validity"; echo; echo '```'; cat validity.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          [ -z "$problems" ]
+          [ "$ok" = 1 ]
 
       - name: Results
         if: "!cancelled()"
@@ -150,5 +168,6 @@ jobs:
             sweep-*.txt
             raw-*.csv
             status-*.txt
+            plan.json
             validity.txt
           if-no-files-found: ignore

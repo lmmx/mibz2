@@ -5,13 +5,18 @@ name: Miri
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. And the run-built pair table's research module (pair_runs::tests::miri_*): both
-# pair builders and #34's pair walk. Only on changes to the walks, the pool or that module.
+# pair builders, #34's pair walk and the states D046 named refused, once with the SSE2 fill
+# and once with the AVX2 one, each asserted reached (MIBZ2_EXPECT_SSE2, MIBZ2_EXPECT_AVX2),
+# with a negative control (AVX2 expected of a build without it must fail), and its doc tests
+# on nightly, where the compile_fail tests' error codes are checked. Only on changes to the
+# walks, the pool or that module.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/pair_runs.rs"
+      - "src/pair_runs/**"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -19,6 +24,7 @@ on:
       - "src/bwt.rs"
       - "src/coop.rs"
       - "src/pair_runs.rs"
+      - "src/pair_runs/**"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 
@@ -38,4 +44,29 @@ jobs:
       - name: Miri setup
         run: cargo miri setup
       - name: Miri
+        env:
+          MIBZ2_EXPECT_SSE2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_SSE2"
         run: cargo miri test --lib -- miri_
+      # the pair builder's AVX2 fill under Miri: the build with AVX2 enabled, so detection
+      # reports it, and the tests assert they reached it
+      - name: Miri, the pair builder's AVX2 fill
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: cargo miri test --lib -- pair_runs::tests::miri_
+      # the negative control: AVX2 expected of the default build (no AVX2 under Miri) must
+      # fail, and for that reason, so the assertion above is not vacuous
+      - name: Miri, the reachability assertion's negative control
+        env:
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: |
+          if cargo miri test --lib -- pair_runs::tests::miri_fill_reached > control.log 2>&1; then
+            cat control.log; echo "the AVX2 assertion passed without AVX2"; exit 1
+          fi
+          grep -q "AVX2 fill expected" control.log || { cat control.log; echo "failed for another reason"; exit 1; }
+          echo "negative control: failed as it must (AVX2 fill expected, and the SSE2 one ran)"
+      - name: The pair module's doc tests (compile_fail error codes, on nightly)
+        run: cargo test --features pair-runs --doc pair_runs

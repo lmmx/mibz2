@@ -24,22 +24,33 @@
 //!   - `P`: production's `Segmented` (`build_one_pass`, then the 32-lane room walk);
 //!   - `R`: `pair_runs::Pairs` with the run-built table and #34's consumer, on the blocks
 //!     whose sampled run density is at most `pair_runs::ADMIT_DENSITY` (0.15); any other
-//!     block goes to production's `Segmented` (the admission, fixed before timing);
-//!   - `O`: the same with #34's own builder (the #34 kernel, a reference).
+//!     block goes to production's `Segmented`. The admission (sampler, constant, strict `>`
+//!     and fallback) is part of the R candidate, frozen with it; it was added after the
+//!     local pilot's losses on records and random, its constant picked from the corpora's
+//!     observed run densities (journal §8);
+//!   - `O`: the same with #34's own builder and no admission (the #34 kernel, a
+//!     reference). R / O is a contrast of two policies, not the builder alone: Q1 is that.
 //!
-//!   After each, untimed: RLE1 and the block's CRC, checked.
+//!   After each, untimed: RLE1 and the block's CRC, checked. (b) is the inverse-BWT entry
+//!   point, not the whole decoder: MTF, Huffman, scheduling and the later stages are out.
 //!
 //! The arms' order rotates by round. Each ratio is paired by round: the geometric mean over
-//! rounds and its 95% t-interval; below 1 the first is cheaper.
+//! rounds and its 95% t-interval; below 1 the first is cheaper. M1's c/B are nominal
+//! clock-scaled wall time (seconds × the GHZ given), not measured cycles; its nanoseconds a
+//! row are printed too.
 //!
 //! **Validity**, checked on every block before any timing, a failure a panic: the two
 //! builders' words, LF rows (of 512 rows) and first row are identical, and the words are
 //! ψ² by definition (from `bwt::build`'s table); the cells are fewer than 2r; the three
 //! entry points' outputs are identical and give the block's CRC; the first file's whole
 //! output is `mibz2::decode`'s. Then every timed pass checks every block's CRC. The run's
-//! own validity (VALID) further needs every interval present, every total finite and
-//! positive, the head, and the corpus identity; the workflow adds the corpus's SHA-256 and
-//! each child's exit status. This process exits 3 when its part is not VALID.
+//! own validity (VALID) further needs a finite positive GHZ, every registered interval and
+//! difference present with finite endpoints, every total finite and positive (a build
+//! arm's zero only on a file with no paired block), the head, and the corpus identity. The
+//! readings are printed only once this process's part is VALID; it exits 3 when it is not.
+//! The workflow's validity (bench/pair_runs_validity.py) then checks the planned copies'
+//! exact files and statuses, the raw matrix, the frozen source and the corpus, and
+//! recomputes the registered readings from the raw timings.
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -50,8 +61,8 @@ use std::time::Instant;
 use mibz2::block::Symbols;
 use mibz2::bwt::{build, InverseBwt, Segmented, TVector, MIN_SEGMENTED};
 use mibz2::pair_runs::{
-    build_pairs, build_pairs_runs, is_psi2, pair_start, setup, spare_bits, walk, Build,
-    PairScratch, PairTable, Pairs, RunScratch, SpareBits,
+    build_pairs, build_pairs_runs, is_psi2, setup, spare_bits, walk, Build, PairScratch, PairTable,
+    Pairs, RunScratch, SpareBits,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{crc, mtf, rle, Kernels};
@@ -98,12 +109,13 @@ fn rows_for(n: usize) -> Vec<u32> {
 /// The arms' buffers, kept from block to block as a worker keeps them
 #[derive(Default)]
 struct Bufs {
-    /// each builder its own table, as a worker keeps one (a shared one would be grown by
-    /// one arm and reallocated by the other)
+    /// each builder its own table and LF rows, as a worker keeps them (a shared one would
+    /// be grown by one arm and reallocated by the other)
     t: PairTable,
     t_runs: PairTable,
     rs: RunScratch,
-    lf: Vec<u32>,
+    lf_row: Vec<u32>,
+    lf_run: Vec<u32>,
     tt: TVector,
     io: Vec<u8>,
     out: Vec<u8>,
@@ -125,20 +137,20 @@ impl Bufs {
 /// (a)'s arm `arm` on block `b`
 fn build_arm(arm: usize, b: &Block, rows: &[u32], x: &mut Bufs) -> u32 {
     match arm {
-        0 => {
-            build_pairs(&b.ll, &b.counts, &mut x.t, rows, &mut x.lf);
-            pair_start(&b.ll, &x.t, b.orig_ptr)
-        }
+        0 => build_pairs(&b.ll, &b.counts, b.orig_ptr, rows, &mut x.t, &mut x.lf_row)
+            .expect("the counts are the column's own")
+            .r0(),
         1 => build_pairs_runs(
             &b.ll,
             &b.counts,
+            b.orig_ptr,
+            rows,
             &mut x.t_runs,
             &mut x.rs,
-            rows,
-            &mut x.lf,
-            b.orig_ptr,
+            &mut x.lf_run,
         )
-        .expect("the counts are the column's own"),
+        .expect("the counts are the column's own")
+        .r0(),
         _ => {
             build(&b.ll, &b.counts, &mut x.tt);
             x.tt.len() as u32
@@ -188,22 +200,28 @@ fn validate(blocks: &[Block], k: Kernels, tally: &mut Tally) -> Vec<u8> {
         tally.rows += n;
         if n >= MIN_SEGMENTED {
             let rows = rows_for(n);
-            build_pairs(&b.ll, &b.counts, &mut a, &rows, &mut lfa);
-            let r0a = pair_start(&b.ll, &a, b.orig_ptr);
-            let r0b = build_arm(1, b, &rows, &mut x);
-            assert!(a.words() == x.t_runs.words(), "block {i}: the words");
-            assert_eq!(lfa, x.lf, "block {i}: the LF rows");
-            assert_eq!(r0a, r0b, "block {i}: the first row");
-            assert!(x.rs.cells < 2 * x.rs.runs, "block {i}: cells");
-            assert!(
-                is_psi2(&x.t_runs, &b.ll, &b.counts),
-                "block {i}: the words are ψ²"
-            );
+            let ba = build_pairs(&b.ll, &b.counts, b.orig_ptr, &rows, &mut a, &mut lfa)
+                .expect("the counts are the column's own");
+            let bb = build_pairs_runs(
+                &b.ll,
+                &b.counts,
+                b.orig_ptr,
+                &rows,
+                &mut x.t_runs,
+                &mut x.rs,
+                &mut x.lf_run,
+            )
+            .expect("the counts are the column's own");
+            assert!(ba.words() == bb.words(), "block {i}: the words");
+            assert_eq!(lfa, x.lf_run, "block {i}: the LF rows");
+            assert_eq!(ba.r0(), bb.r0(), "block {i}: the first row");
+            assert!(x.rs.fill.cells < 2 * x.rs.runs, "block {i}: cells");
+            assert!(is_psi2(&bb), "block {i}: the words are ψ²");
+            let c = spare_bits(&bb);
             tally.paired += 1;
             tally.paired_rows += n;
             tally.runs += x.rs.runs;
-            tally.cells += x.rs.cells;
-            let c = spare_bits(&x.t_runs, r0b);
+            tally.cells += x.rs.fill.cells;
             let s = &mut tally.spare;
             s.n += c.n;
             s.dir_bytes += c.dir_bytes;
@@ -227,15 +245,16 @@ fn validate(blocks: &[Block], k: Kernels, tally: &mut Tally) -> Vec<u8> {
         // and the run-built pair walk on every block it can segment, admitted or not
         if n >= MIN_SEGMENTED {
             let mut w = Vec::new();
-            let r0 = setup(
+            let p = setup(
                 Build::Runs,
                 &mut walk_x,
                 &b.ll,
                 &b.counts,
                 b.orig_ptr,
                 FLAGGED,
-            );
-            walk::<32, true>(&mut walk_x, r0, &mut w);
+            )
+            .expect("the counts are the column's own");
+            walk::<32, true>(p, &mut w);
             assert!(
                 outs[0] == w,
                 "block {i}: the run-built pair walk's output is P's"
@@ -268,7 +287,8 @@ fn diff(rounds: &[Round], a: usize, b: usize, cb: &dyn Fn(f64) -> f64) -> Option
     let m = d.iter().sum::<f64>() / d.len() as f64;
     let var = d.iter().map(|x| (x - m).powi(2)).sum::<f64>() / (d.len() - 1) as f64;
     let h = T95[d.len() - 2] * (var / d.len() as f64).sqrt();
-    Some((m, m - h, m + h))
+    let iv = (m, m - h, m + h);
+    (iv.0.is_finite() && iv.1.is_finite() && iv.2.is_finite() && iv.1 <= iv.2).then_some(iv)
 }
 
 /// A number from a flat JSON object's top level (bench/wikidata.json), by key
@@ -306,8 +326,12 @@ fn main() {
     let spec = std::env::var("PAIR_RUNS_SPEC")
         .ok()
         .map(|p| std::fs::read_to_string(p).unwrap());
-    let mut raw = String::from("file,round,arm,seconds\n");
+    let mut raw = String::from("file,round,arm,seconds,paired_blocks,paired_rows,out_bytes\n");
     let mut problems: Vec<String> = Vec::new();
+    // M1's conversion: a nominal clock, finite and positive, or no M1 (and not VALID)
+    if !(ghz.is_finite() && ghz > 0.0) {
+        problems.push(format!("GHZ {ghz} is not finite and positive"));
+    }
 
     let head_ok = head.len() == 40 && head.bytes().all(|b| b.is_ascii_hexdigit());
     if !head_ok {
@@ -322,7 +346,7 @@ fn main() {
          ratios are arm over arm, paired by round, geometric mean (95% interval); below 1 \
          the first is cheaper"
     );
-    // [file] = (name, Q1, M1 ratio, M1 c/B difference, Q2, O/P, R/O)
+    // [file] = (name, Q1, M1 nominal c/B difference, Q2)
     let mut readings = Vec::new();
     for (fi, (name, data)) in files.iter().enumerate() {
         let mut blocks = Vec::new();
@@ -429,11 +453,16 @@ fn main() {
                 }
             }
             for (a, an) in BUILD_ARMS.iter().chain(&WHOLE_ARMS).enumerate() {
-                let _ = writeln!(raw, "{name},{r},{an},{:.9}", round[a]);
+                let _ = writeln!(
+                    raw,
+                    "{name},{r},{an},{:.9},{},{},{n}",
+                    round[a], tally.paired, tally.paired_rows
+                );
             }
         }
         let cb = |s: f64| s * ghz * 1e9 / n as f64;
         let cb_paired = |s: f64| s * ghz * 1e9 / tally.paired_rows.max(1) as f64;
+        let ns_paired = |s: f64| s * 1e9 / tally.paired_rows.max(1) as f64;
         let median = |a: usize| {
             let mut v: Vec<f64> = times.iter().map(|r| r[a]).collect();
             v.sort_by(f64::total_cmp);
@@ -466,28 +495,47 @@ fn main() {
         );
         let q1 = ratio(&times, 1, 0);
         let m1 = ratio(&times, 1, 2);
-        let m1d = if tally.paired > 0 {
-            diff(&times, 1, 2, &cb_paired)
+        let (m1d, m1ns) = if tally.paired > 0 {
+            (
+                diff(&times, 1, 2, &cb_paired),
+                diff(&times, 1, 2, &ns_paired),
+            )
         } else {
-            None
+            (None, None)
         };
         let q2 = ratio(&times, 4, 3);
         let op = ratio(&times, 5, 3);
         let ro = ratio(&times, 4, 5);
+        println!("  intervals (arithmetic only: no reading before VALID)");
         println!("  Q1 R_build  run / row build              {}", fmt(q1));
         println!("  M1          run / one-hop build          {}", fmt(m1));
-        match m1d {
-            Some((m, lo, hi)) => {
-                println!("  M1          run − one-hop build, c/B     {m:.3} ({lo:.3}, {hi:.3})")
-            }
-            None => println!("  M1          run − one-hop build, c/B     n/a (no paired blocks)"),
-        }
+        let show = |iv: Option<Interval>, digits: usize| match iv {
+            Some((m, lo, hi)) => format!("{m:.digits$} ({lo:.digits$}, {hi:.digits$})"),
+            None if tally.paired == 0 => "n/a (no paired blocks)".into(),
+            None => "MISSING".into(),
+        };
+        println!(
+            "  M1          run − one-hop build, ns a row {}",
+            show(m1ns, 4)
+        );
+        println!(
+            "  M1          run − one-hop build, nominal c/B (x {ghz} GHz) {}",
+            show(m1d, 3)
+        );
         println!("  Q2 R_whole  R / P (run pair vs production) {}", fmt(q2));
         println!("  ref         O / P (#34 vs production)    {}", fmt(op));
         println!("  ref         R / O (run vs row, whole)    {}", fmt(ro));
         let paired_file = tally.paired > 0;
-        for (label, r) in [("Q1", q1), ("M1", m1), ("Q2", q2), ("O/P", op), ("R/O", ro)] {
-            let need = paired_file || matches!(label, "Q2");
+        for (label, r) in [
+            ("Q1", q1),
+            ("M1 ratio", m1),
+            ("M1 difference", m1d),
+            ("M1 ns difference", m1ns),
+            ("Q2", q2),
+            ("O/P", op),
+            ("R/O", ro),
+        ] {
+            let need = paired_file || matches!(label, "Q2" | "O/P" | "R/O");
             if need && r.is_none() {
                 problems.push(format!("{name}: interval {label} missing"));
             }
@@ -509,16 +557,31 @@ fn main() {
         return;
     }
 
+    println!();
+    if !problems.is_empty() {
+        println!("NOT VALID (no readings):");
+        for p in &problems {
+            println!("  - {p}");
+        }
+        std::process::exit(3);
+    }
+    println!(
+        "VALID (this process's part): every interval and difference present and finite, \
+         totals finite and positive, GHZ, head and corpus identity checked"
+    );
+
     // The registration's readings (docs/journal/2026-11-09-pair-from-runs.md), computed
     // mechanically; UNJUDGED unless this is the registered run
     println!();
-    println!("readings (UNJUDGED unless this is the registered run):");
+    println!(
+        "readings (UNJUDGED unless this is the registered run and the workflow's validity passes):"
+    );
     let (_, q1, m1d, q2) = &readings[0];
     if let Some((g, lo, hi)) = *q1 {
         let r = if g <= 0.50 && hi < 0.60 {
             "POSITIVE: the run intersections remove most of the old build's cost"
         } else if lo > 0.80 {
-            "NEGATIVE STOP: the run-built pair table saves under 20% of the old build"
+            "NEGATIVE STOP: under 20% of the old build saved; closes this registered candidate"
         } else {
             "INCONCLUSIVE (no re-run without a new registration)"
         };
@@ -527,13 +590,13 @@ fn main() {
     }
     if let Some((m, lo, hi)) = *m1d {
         let r = if hi <= 1.0 {
-            "MET: within one-pass + 1 c/B (the archive's reopening bound, here timed)"
+            "MET: within one-pass + 1 nominal c/B (clock-scaled wall time, not cycles)"
         } else if lo > 1.0 {
             "NOT MET"
         } else {
             "UNRESOLVED"
         };
-        println!("  M1 run − one-hop {m:.3} c/B ({lo:.3}, {hi:.3}): {r}");
+        println!("  M1 run − one-hop {m:.3} nominal c/B ({lo:.3}, {hi:.3}): {r}");
     }
     let worst = readings[1..]
         .iter()
@@ -543,24 +606,14 @@ fn main() {
         let r = if g <= 0.95 && hi < 1.0 && worst.1 <= 1.05 {
             "POSITIVE: a production prototype may be registered (bench.yml's A/B decides)"
         } else if lo > 1.0 {
-            "NEGATIVE STOP: the run-built pair with #34's consumer is slower than production"
+            "NEGATIVE STOP: slower than production; pauses this candidate (PROTOCOL §11)"
         } else if g <= 0.95 && hi < 1.0 {
-            "STOP: a synthetic corpus regresses by more than 5%"
+            "STOP: a synthetic corpus's point estimate is above 1.05 (a screen, not a bound)"
         } else {
             "INCONCLUSIVE (no re-run without a new registration)"
         };
-        println!("  Q2 R_whole {g:.4} ({lo:.4}, {hi:.4}); positive: <= 0.95, hi < 1, worst synthetic <= 1.05; stop: lo > 1");
+        println!("  Q2 R_whole {g:.4} ({lo:.4}, {hi:.4}); positive: <= 0.95, hi < 1, worst synthetic point estimate <= 1.05; stop: lo > 1");
         println!("  Q2 worst synthetic R_whole {:.4} ({})", worst.1, worst.0);
         println!("  Q2 reading: {r}");
-    }
-    println!();
-    if problems.is_empty() {
-        println!("VALID (this process's part): every interval present, totals finite and positive, head and corpus identity checked");
-    } else {
-        println!("NOT VALID:");
-        for p in &problems {
-            println!("  - {p}");
-        }
-        std::process::exit(3);
     }
 }
