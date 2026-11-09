@@ -40,8 +40,9 @@ and reads MODE.md first on every run.
   its cursor marks that comment complete.
 - **Recovering the queue:** a QUEUED comment has been dispatched exactly when an inbox comment
   cites it.
-- **A silent run:** a run that has ended without finishing gets one resume request, naming the
-  comment.
+- **A silent run:** a run that has ended without finishing gets one resume request naming
+  the comment, as `RE: resume <id>`. `coord.py verify` passes it while that is the role's
+  only item in flight.
 - **A HOLD or STOP** takes effect through the Coordinator's own authority, without an inbox.
 - **Before posting:** `coord.py route` gives the destination. **After posting:** `coord.py
   verify` must pass. **On every wake:** `coord.py audit`.
