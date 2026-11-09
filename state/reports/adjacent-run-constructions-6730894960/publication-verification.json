@@ -1,0 +1,12 @@
+{
+  "pinned_verify": {
+    "comment": 6731060416,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "role_aware_verify": true,
+  "body_and_destination_readback": true
+}

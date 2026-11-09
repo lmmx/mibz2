@@ -773,7 +773,7 @@
     {
       "trigger_comment_id": 6730894960,
       "related_queued_comment_id": 6730770330,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -781,7 +781,10 @@
       "report_commit": "40f58759e4554fa0e8e08122f4bab993f73076b0",
       "report_path": "state/reports/adjacent-run-constructions-6730894960/report.md",
       "review_comment_pr": 145,
-      "disposition": "Research complete; retain #269 STOP and D049 timing HOLD. Ranked direct-F resumed cursors, LF orientation, geometry-aware admission, hybrids and compressed walkers. 9840 untimed table/text cases; no performance claim."
+      "disposition": "Research complete; retain #269 STOP and D049 timing HOLD. Ranked direct-F resumed cursors, LF orientation, geometry-aware admission, hybrids and compressed walkers. 9840 untimed table/text cases; no performance claim.",
+      "review_comment_id": 6731060416,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
