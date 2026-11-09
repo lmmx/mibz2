@@ -1,0 +1,2798 @@
+{
+ "bench": "3.3.0",
+ "mode": "pr",
+ "head": "d2f5460a587b108c1a9899c709c887f095a5ecaa",
+ "base": "c0a3b0d34210873b6389f8991dea2a4e94e99389",
+ "date": "2026-11-09T09:14:14Z",
+ "run": "https://github.com/lmmx/mibz2/actions/runs/42591844428",
+ "rounds": 10,
+ "threads": [
+  1,
+  2,
+  4
+ ],
+ "machine": {
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cores": 4,
+  "mhz": 3695.8,
+  "flags": [
+   "avx2",
+   "avx512f",
+   "bmi1",
+   "bmi2",
+   "pclmulqdq",
+   "sse4_1",
+   "ssse3"
+  ],
+  "kernel": "7.0.0-1019-azure",
+  "image": "ubuntu26 20261101.186.1"
+ },
+ "toolchain": {
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "pbz2": "0.2.0",
+  "lbzip2": "lbzip2 version 2.5",
+  "libbzip2 (the corpora's encoder)": "1.0.8 (the bzip2 crate's bundled source)"
+ },
+ "arms": [
+  "mibz2",
+  "mibz2@base/ab"
+ ],
+ "parallel": {
+  "head": true,
+  "base": true
+ },
+ "reference": "mibz2@base/ab",
+ "corpora": {
+  "onebyte": {
+   "file": "onebyte.bz2",
+   "bytes": 51,
+   "out": 20000000,
+   "sha256": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "pattern": {
+   "file": "pattern.bz2",
+   "bytes": 1116,
+   "out": 19600000,
+   "sha256": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "random": {
+   "file": "random.bz2",
+   "bytes": 7097921,
+   "out": 8000000,
+   "sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "records": {
+   "file": "records.bz2",
+   "bytes": 9587840,
+   "out": 9600000,
+   "sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "runs": {
+   "file": "runs.bz2",
+   "bytes": 37995,
+   "out": 10000235,
+   "sha256": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "text": {
+   "file": "text.bz2",
+   "bytes": 2189059,
+   "out": 12250340,
+   "sha256": "cc0185b2dce29802846b642668a50add81a70187929cafc8da63e2e7b2919862",
+   "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+  },
+  "wikidata": {
+   "file": "wikidata.bz2",
+   "bytes": 11854933,
+   "out": 209700196,
+   "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+   "source": "wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json)"
+  }
+ },
+ "dump": {
+  "dump": "wikidata-20261019-all.json.bz2",
+  "dump_bytes": 103488697311,
+  "sample_ratio": 17.689,
+  "sample_ratio_rel_ci": 0.1401,
+  "dump_out_bytes_modelled": 1830596605641,
+  "windows": 12,
+  "blocks": 431
+ },
+ "parity": true,
+ "figures": {
+  "onebyte": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0184,
+      "wall_best": 0.0178,
+      "cpu": 0.0202,
+      "rss_mb": 33.2,
+      "out": 20000000,
+      "mb_s": 1087.0,
+      "cycles_per_byte": 3.74,
+      "errors": [],
+      "wall_ratio": [
+       0.9795,
+       0.9144,
+       1.0492
+      ],
+      "cpu_ratio": [
+       0.9786,
+       0.9135,
+       1.0483
+      ],
+      "rss_ratio": [
+       1.0,
+       0.9983,
+       1.0018
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0185,
+      "wall_best": 0.017,
+      "cpu": 0.0203,
+      "rss_mb": 33.2,
+      "out": 20000000,
+      "mb_s": 1078.2,
+      "cycles_per_byte": 3.75,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0191,
+      "wall_best": 0.018,
+      "cpu": 0.0211,
+      "rss_mb": 32.5,
+      "out": 20000000,
+      "mb_s": 1049.9,
+      "cycles_per_byte": 3.91,
+      "errors": [],
+      "wall_ratio": [
+       1.0157,
+       0.9892,
+       1.043
+      ],
+      "cpu_ratio": [
+       1.0171,
+       0.9927,
+       1.042
+      ],
+      "rss_ratio": [
+       1.0014,
+       0.9987,
+       1.0041
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0188,
+      "wall_best": 0.0178,
+      "cpu": 0.0209,
+      "rss_mb": 32.4,
+      "out": 20000000,
+      "mb_s": 1061.0,
+      "cycles_per_byte": 3.85,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0188,
+      "wall_best": 0.018,
+      "cpu": 0.0203,
+      "rss_mb": 32.5,
+      "out": 20000000,
+      "mb_s": 1066.7,
+      "cycles_per_byte": 3.75,
+      "errors": [],
+      "wall_ratio": [
+       0.9834,
+       0.9627,
+       1.0046
+      ],
+      "cpu_ratio": [
+       0.9842,
+       0.9658,
+       1.0029
+      ],
+      "rss_ratio": [
+       1.0025,
+       1.0005,
+       1.0045
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0188,
+      "wall_best": 0.0182,
+      "cpu": 0.0204,
+      "rss_mb": 32.4,
+      "out": 20000000,
+      "mb_s": 1063.8,
+      "cycles_per_byte": 3.77,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "pattern": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0289,
+      "wall_best": 0.0284,
+      "cpu": 0.0306,
+      "rss_mb": 16.0,
+      "out": 19600000,
+      "mb_s": 678.2,
+      "cycles_per_byte": 5.77,
+      "errors": [],
+      "wall_ratio": [
+       0.9986,
+       0.9898,
+       1.0075
+      ],
+      "cpu_ratio": [
+       0.9984,
+       0.9897,
+       1.0072
+      ],
+      "rss_ratio": [
+       1.0033,
+       1.0,
+       1.0065
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0289,
+      "wall_best": 0.0286,
+      "cpu": 0.0307,
+      "rss_mb": 15.9,
+      "out": 19600000,
+      "mb_s": 679.4,
+      "cycles_per_byte": 5.78,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0208,
+      "wall_best": 0.0181,
+      "cpu": 0.0371,
+      "rss_mb": 22.0,
+      "out": 19600000,
+      "mb_s": 944.6,
+      "cycles_per_byte": 7.0,
+      "errors": [],
+      "wall_ratio": [
+       1.1021,
+       0.9962,
+       1.2193
+      ],
+      "cpu_ratio": [
+       1.0363,
+       0.9375,
+       1.1455
+      ],
+      "rss_ratio": [
+       0.9988,
+       0.9732,
+       1.0251
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0187,
+      "wall_best": 0.0181,
+      "cpu": 0.0372,
+      "rss_mb": 21.9,
+      "out": 19600000,
+      "mb_s": 1048.1,
+      "cycles_per_byte": 7.01,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0216,
+      "wall_best": 0.0211,
+      "cpu": 0.0729,
+      "rss_mb": 39.4,
+      "out": 19600000,
+      "mb_s": 905.3,
+      "cycles_per_byte": 13.75,
+      "errors": [],
+      "wall_ratio": [
+       0.9874,
+       0.9562,
+       1.0197
+      ],
+      "cpu_ratio": [
+       0.9873,
+       0.9552,
+       1.0204
+      ],
+      "rss_ratio": [
+       0.9945,
+       0.9488,
+       1.0424
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0222,
+      "wall_best": 0.0209,
+      "cpu": 0.0752,
+      "rss_mb": 39.0,
+      "out": 19600000,
+      "mb_s": 884.9,
+      "cycles_per_byte": 14.19,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "random": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.1094,
+      "wall_best": 0.1081,
+      "cpu": 0.1111,
+      "rss_mb": 22.6,
+      "out": 8000000,
+      "mb_s": 73.2,
+      "cycles_per_byte": 51.33,
+      "errors": [],
+      "wall_ratio": [
+       0.9925,
+       0.9862,
+       0.9989
+      ],
+      "cpu_ratio": [
+       0.9923,
+       0.986,
+       0.9987
+      ],
+      "rss_ratio": [
+       1.0013,
+       0.9999,
+       1.0027
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.1103,
+      "wall_best": 0.1094,
+      "cpu": 0.1121,
+      "rss_mb": 22.6,
+      "out": 8000000,
+      "mb_s": 72.5,
+      "cycles_per_byte": 51.79,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0671,
+      "wall_best": 0.064,
+      "cpu": 0.1249,
+      "rss_mb": 38.1,
+      "out": 8000000,
+      "mb_s": 119.2,
+      "cycles_per_byte": 57.72,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.06,
+       "other": 0.0,
+       "unattributed": 0.045
+      },
+      "wall_ratio": [
+       0.9987,
+       0.9806,
+       1.0171
+      ],
+      "cpu_ratio": [
+       0.9899,
+       0.9775,
+       1.0025
+      ],
+      "rss_ratio": [
+       0.9909,
+       0.9474,
+       1.0363
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0673,
+      "wall_best": 0.066,
+      "cpu": 0.1264,
+      "rss_mb": 38.1,
+      "out": 8000000,
+      "mb_s": 118.9,
+      "cycles_per_byte": 58.39,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.06,
+       "other": 0.0,
+       "unattributed": 0.048
+      }
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0551,
+      "wall_best": 0.0537,
+      "cpu": 0.1675,
+      "rss_mb": 50.0,
+      "out": 8000000,
+      "mb_s": 145.3,
+      "cycles_per_byte": 77.38,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.065,
+       "other": 0.0,
+       "unattributed": 0.081
+      },
+      "wall_ratio": [
+       0.9653,
+       0.9011,
+       1.034
+      ],
+      "cpu_ratio": [
+       0.9746,
+       0.9153,
+       1.0377
+      ],
+      "rss_ratio": [
+       1.0067,
+       0.9825,
+       1.0315
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0558,
+      "wall_best": 0.0534,
+      "cpu": 0.1671,
+      "rss_mb": 49.8,
+      "out": 8000000,
+      "mb_s": 143.4,
+      "cycles_per_byte": 77.2,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.07,
+       "other": 0.0,
+       "unattributed": 0.077
+      }
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "records": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.1181,
+      "wall_best": 0.117,
+      "cpu": 0.1198,
+      "rss_mb": 22.9,
+      "out": 9600000,
+      "mb_s": 81.3,
+      "cycles_per_byte": 46.14,
+      "errors": [],
+      "wall_ratio": [
+       0.9958,
+       0.9909,
+       1.0006
+      ],
+      "cpu_ratio": [
+       0.9957,
+       0.9908,
+       1.0006
+      ],
+      "rss_ratio": [
+       1.0023,
+       0.9994,
+       1.0053
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.1189,
+      "wall_best": 0.1179,
+      "cpu": 0.1206,
+      "rss_mb": 22.8,
+      "out": 9600000,
+      "mb_s": 80.8,
+      "cycles_per_byte": 46.43,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0746,
+      "wall_best": 0.0706,
+      "cpu": 0.1375,
+      "rss_mb": 39.6,
+      "out": 9600000,
+      "mb_s": 128.7,
+      "cycles_per_byte": 52.93,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.06,
+       "other": 0.0,
+       "unattributed": 0.052
+      },
+      "wall_ratio": [
+       0.997,
+       0.9692,
+       1.0255
+      ],
+      "cpu_ratio": [
+       0.9948,
+       0.9771,
+       1.0127
+      ],
+      "rss_ratio": [
+       0.9621,
+       0.9084,
+       1.0189
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0745,
+      "wall_best": 0.0703,
+      "cpu": 0.1382,
+      "rss_mb": 41.6,
+      "out": 9600000,
+      "mb_s": 128.9,
+      "cycles_per_byte": 53.22,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.02,
+       "workers": 0.065,
+       "other": 0.0,
+       "unattributed": 0.051
+      }
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0631,
+      "wall_best": 0.0609,
+      "cpu": 0.1894,
+      "rss_mb": 53.0,
+      "out": 9600000,
+      "mb_s": 152.0,
+      "cycles_per_byte": 72.92,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.035,
+       "workers": 0.08,
+       "other": 0.0,
+       "unattributed": 0.078
+      },
+      "wall_ratio": [
+       1.0021,
+       0.9763,
+       1.0287
+      ],
+      "cpu_ratio": [
+       0.9861,
+       0.9601,
+       1.0128
+      ],
+      "rss_ratio": [
+       0.9937,
+       0.9739,
+       1.0138
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0633,
+      "wall_best": 0.0615,
+      "cpu": 0.1936,
+      "rss_mb": 52.8,
+      "out": 9600000,
+      "mb_s": 151.8,
+      "cycles_per_byte": 74.55,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.03,
+       "workers": 0.08,
+       "other": 0.0,
+       "unattributed": 0.083
+      }
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "runs": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0122,
+      "wall_best": 0.0119,
+      "cpu": 0.0138,
+      "rss_mb": 22.8,
+      "out": 10000235,
+      "mb_s": 823.1,
+      "cycles_per_byte": 5.12,
+      "errors": [],
+      "wall_ratio": [
+       1.0058,
+       0.9943,
+       1.0174
+      ],
+      "cpu_ratio": [
+       1.0065,
+       0.9937,
+       1.0195
+      ],
+      "rss_ratio": [
+       1.0028,
+       0.9998,
+       1.0058
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0121,
+      "wall_best": 0.0119,
+      "cpu": 0.0138,
+      "rss_mb": 22.7,
+      "out": 10000235,
+      "mb_s": 826.5,
+      "cycles_per_byte": 5.1,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0129,
+      "wall_best": 0.0123,
+      "cpu": 0.0149,
+      "rss_mb": 23.0,
+      "out": 10000235,
+      "mb_s": 775.2,
+      "cycles_per_byte": 5.51,
+      "errors": [],
+      "wall_ratio": [
+       1.0132,
+       0.9933,
+       1.0336
+      ],
+      "cpu_ratio": [
+       1.0141,
+       0.9985,
+       1.03
+      ],
+      "rss_ratio": [
+       1.0066,
+       1.0022,
+       1.0111
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0126,
+      "wall_best": 0.0124,
+      "cpu": 0.0147,
+      "rss_mb": 22.9,
+      "out": 10000235,
+      "mb_s": 790.5,
+      "cycles_per_byte": 5.45,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0127,
+      "wall_best": 0.0124,
+      "cpu": 0.0143,
+      "rss_mb": 22.9,
+      "out": 10000235,
+      "mb_s": 787.4,
+      "cycles_per_byte": 5.28,
+      "errors": [],
+      "wall_ratio": [
+       0.9878,
+       0.9577,
+       1.0189
+      ],
+      "cpu_ratio": [
+       0.9912,
+       0.9632,
+       1.0201
+      ],
+      "rss_ratio": [
+       1.0034,
+       1.0013,
+       1.0055
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0128,
+      "wall_best": 0.0124,
+      "cpu": 0.0143,
+      "rss_mb": 22.8,
+      "out": 10000235,
+      "mb_s": 784.3,
+      "cycles_per_byte": 5.28,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "text": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0719,
+      "wall_best": 0.0713,
+      "cpu": 0.0737,
+      "rss_mb": 18.2,
+      "out": 12250340,
+      "mb_s": 170.4,
+      "cycles_per_byte": 22.23,
+      "errors": [],
+      "wall_ratio": [
+       1.0062,
+       0.9842,
+       1.0287
+      ],
+      "cpu_ratio": [
+       1.0058,
+       0.9842,
+       1.0279
+      ],
+      "rss_ratio": [
+       1.0029,
+       1.0001,
+       1.0057
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0725,
+      "wall_best": 0.0717,
+      "cpu": 0.0742,
+      "rss_mb": 18.2,
+      "out": 12250340,
+      "mb_s": 169.0,
+      "cycles_per_byte": 22.39,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0455,
+      "wall_best": 0.0435,
+      "cpu": 0.0864,
+      "rss_mb": 32.9,
+      "out": 12250340,
+      "mb_s": 269.5,
+      "cycles_per_byte": 26.07,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.01,
+       "workers": 0.04,
+       "other": 0.0,
+       "unattributed": 0.038
+      },
+      "wall_ratio": [
+       1.0271,
+       0.9796,
+       1.0768
+      ],
+      "cpu_ratio": [
+       1.027,
+       0.9701,
+       1.0873
+      ],
+      "rss_ratio": [
+       0.9915,
+       0.9415,
+       1.0441
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.045,
+      "wall_best": 0.044,
+      "cpu": 0.0861,
+      "rss_mb": 32.9,
+      "out": 12250340,
+      "mb_s": 271.9,
+      "cycles_per_byte": 25.98,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.01,
+       "workers": 0.04,
+       "other": 0.0,
+       "unattributed": 0.037
+      }
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.037,
+      "wall_best": 0.0363,
+      "cpu": 0.1237,
+      "rss_mb": 52.3,
+      "out": 12250340,
+      "mb_s": 330.6,
+      "cycles_per_byte": 37.33,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.01,
+       "workers": 0.05,
+       "other": 0.0,
+       "unattributed": 0.066
+      },
+      "wall_ratio": [
+       1.0117,
+       0.9692,
+       1.056
+      ],
+      "cpu_ratio": [
+       0.9988,
+       0.9719,
+       1.0265
+      ],
+      "rss_ratio": [
+       1.0141,
+       0.9791,
+       1.0503
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.0369,
+      "wall_best": 0.0363,
+      "cpu": 0.125,
+      "rss_mb": 52.2,
+      "out": 12250340,
+      "mb_s": 331.5,
+      "cycles_per_byte": 37.73,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.01,
+       "workers": 0.04,
+       "other": 0.0,
+       "unattributed": 0.077
+      }
+     }
+    },
+    "same_bytes": true
+   }
+  },
+  "wikidata": {
+   "1": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.5335,
+      "wall_best": 0.5286,
+      "cpu": 0.5353,
+      "rss_mb": 25.6,
+      "out": 209700196,
+      "mb_s": 393.0,
+      "cycles_per_byte": 9.43,
+      "errors": [],
+      "wall_ratio": [
+       0.9913,
+       0.9779,
+       1.0048
+      ],
+      "cpu_ratio": [
+       0.9912,
+       0.9778,
+       1.0048
+      ],
+      "rss_ratio": [
+       1.0025,
+       1.0009,
+       1.0041
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 1,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.5342,
+      "wall_best": 0.5315,
+      "cpu": 0.5359,
+      "rss_mb": 25.5,
+      "out": 209700196,
+      "mb_s": 392.5,
+      "cycles_per_byte": 9.44,
+      "errors": []
+     }
+    },
+    "same_bytes": true
+   },
+   "2": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.2945,
+      "wall_best": 0.2869,
+      "cpu": 0.581,
+      "rss_mb": 48.9,
+      "out": 209700196,
+      "mb_s": 712.1,
+      "cycles_per_byte": 10.24,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.06,
+       "workers": 0.46,
+       "other": 0.01,
+       "unattributed": 0.05
+      },
+      "wall_ratio": [
+       1.0043,
+       0.9714,
+       1.0383
+      ],
+      "cpu_ratio": [
+       1.004,
+       0.9718,
+       1.0372
+      ],
+      "rss_ratio": [
+       0.9999,
+       0.9739,
+       1.0265
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 2,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.2951,
+      "wall_best": 0.2898,
+      "cpu": 0.585,
+      "rss_mb": 49.1,
+      "out": 209700196,
+      "mb_s": 710.6,
+      "cycles_per_byte": 10.31,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.06,
+       "workers": 0.465,
+       "other": 0.01,
+       "unattributed": 0.057
+      }
+     }
+    },
+    "same_bytes": true
+   },
+   "4": {
+    "arms": {
+     "head": {
+      "arm": "mibz2",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.2569,
+      "wall_best": 0.2484,
+      "cpu": 0.9718,
+      "rss_mb": 77.4,
+      "out": 209700196,
+      "mb_s": 816.3,
+      "cycles_per_byte": 17.13,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.085,
+       "workers": 0.78,
+       "other": 0.02,
+       "unattributed": 0.089
+      },
+      "wall_ratio": [
+       1.0053,
+       0.9832,
+       1.0279
+      ],
+      "cpu_ratio": [
+       0.9988,
+       0.9754,
+       1.0228
+      ],
+      "rss_ratio": [
+       1.0017,
+       0.991,
+       1.0125
+      ]
+     },
+     "base": {
+      "arm": "mibz2@base/ab",
+      "parallel": true,
+      "threads_run": 4,
+      "same_bytes": true,
+      "n": 10,
+      "wall": 0.2556,
+      "wall_best": 0.2464,
+      "cpu": 0.9667,
+      "rss_mb": 77.4,
+      "out": 209700196,
+      "mb_s": 820.3,
+      "cycles_per_byte": 17.04,
+      "errors": [],
+      "cpu_split": {
+       "scan": 0.08,
+       "workers": 0.775,
+       "other": 0.02,
+       "unattributed": 0.093
+      }
+     }
+    },
+    "same_bytes": true
+   }
+  }
+ },
+ "models": {
+  "base": {
+   "rounds": 10,
+   "threads": 4,
+   "scan_ns_per_bz2_byte": [
+    6.917,
+    0.254
+   ],
+   "workers_ns_per_out_byte": [
+    3.734,
+    0.109
+   ],
+   "rest_1t_ns_per_out_byte": [
+    2.179,
+    0.046
+   ],
+   "overlap": [
+    1.312,
+    0.01
+   ],
+   "scan_s": [
+    715.826,
+    26.328
+   ],
+   "workers_s": [
+    1708.817,
+    244.574
+   ],
+   "wall_n": [
+    2241.497,
+    318.692
+   ],
+   "wall_n_fixed": [
+    1708.878,
+    244.582
+   ],
+   "wall_1": [
+    4705.161,
+    563.976
+   ],
+   "scanner_binds_from": [
+    9.574,
+    1.423
+   ],
+   "bound": "workers",
+   "paired": {
+    "wall_1": [
+     4662.473692074438,
+     4670.330322523544,
+     4642.395636482282,
+     4657.235938441701,
+     4782.069066688592,
+     4698.265008564806,
+     4980.230745793797,
+     4654.617061625333,
+     4664.219609952017,
+     4639.776759665912
+    ],
+    "wall_n": [
+     2347.386586404824,
+     2201.6024436269863,
+     2257.471815709511,
+     2290.6442553835104,
+     2370.08351881335,
+     2150.9708251771985,
+     2170.175921830566,
+     2232.1560064846167,
+     2231.2830475458277,
+     2163.1922503202504
+    ]
+   }
+  },
+  "head": {
+   "rounds": 10,
+   "threads": 4,
+   "scan_ns_per_bz2_byte": [
+    7.17,
+    0.318
+   ],
+   "workers_ns_per_out_byte": [
+    3.724,
+    0.096
+   ],
+   "rest_1t_ns_per_out_byte": [
+    2.142,
+    0.03
+   ],
+   "overlap": [
+    1.322,
+    0.018
+   ],
+   "scan_s": [
+    742.015,
+    32.911
+   ],
+   "workers_s": [
+    1704.452,
+    242.796
+   ],
+   "wall_n": [
+    2253.02,
+    318.718
+   ],
+   "wall_n_fixed": [
+    1704.515,
+    242.804
+   ],
+   "wall_1": [
+    4663.259,
+    550.424
+   ],
+   "scanner_binds_from": [
+    9.229,
+    1.411
+   ],
+   "bound": "workers",
+   "paired": {
+    "wall_1": [
+     4627.555334522861,
+     4665.965527829596,
+     4651.998184808965,
+     4706.9945979527,
+     4760.245093218857,
+     4621.444621951335,
+     4698.265008564806,
+     4663.346651013228,
+     4614.460950441018,
+     4622.317580890123
+    ],
+    "wall_n": [
+     2258.3447746483007,
+     2179.77847015725,
+     2275.8039534240893,
+     2225.1723349743015,
+     2370.956477752139,
+     2168.4300039529876,
+     2329.0544486902454,
+     2237.3937601173534,
+     2239.1396779949328,
+     2246.123349505248
+    ]
+   }
+  }
+ },
+ "accounting": [],
+ "resources": {
+  "onebyte": {
+   "head": {
+    "fewest": 1,
+    "best": 1,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 1087.0,
+      "cpu_ns_per_byte": 1.012,
+      "cpu_s_per_gib": 1.087,
+      "runq_threads": 0.0,
+      "unattributed": 0.012,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 1049.9,
+      "cpu_ns_per_byte": 1.058,
+      "cpu_s_per_gib": 1.135,
+      "runq_threads": 0.005,
+      "throttled_runs": 0,
+      "amplification": [
+       1.0447,
+       1.015,
+       1.0752
+      ],
+      "speedup": [
+       0.9703,
+       0.9389,
+       1.0027
+      ],
+      "efficiency": [
+       0.4852,
+       0.4694,
+       0.5013
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 1066.7,
+      "cpu_ns_per_byte": 1.015,
+      "cpu_s_per_gib": 1.09,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       0.9997,
+       0.9788,
+       1.0211
+      ],
+      "speedup": [
+       0.9911,
+       0.9678,
+       1.0149
+      ],
+      "efficiency": [
+       0.2478,
+       0.2419,
+       0.2537
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 1,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 1078.2,
+      "cpu_ns_per_byte": 1.015,
+      "cpu_s_per_gib": 1.09,
+      "runq_threads": 0.0,
+      "unattributed": 0.007,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 1061.0,
+      "cpu_ns_per_byte": 1.042,
+      "cpu_s_per_gib": 1.119,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       1.0052,
+       0.9304,
+       1.086
+      ],
+      "speedup": [
+       1.0062,
+       0.933,
+       1.0852
+      ],
+      "efficiency": [
+       0.5031,
+       0.4665,
+       0.5426
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 1063.8,
+      "cpu_ns_per_byte": 1.02,
+      "cpu_s_per_gib": 1.095,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       0.9941,
+       0.9198,
+       1.0743
+      ],
+      "speedup": [
+       0.9951,
+       0.9225,
+       1.0735
+      ],
+      "efficiency": [
+       0.2488,
+       0.2306,
+       0.2684
+      ]
+     }
+    }
+   }
+  },
+  "pattern": {
+   "head": {
+    "fewest": 1,
+    "best": 2,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 678.2,
+      "cpu_ns_per_byte": 1.561,
+      "cpu_s_per_gib": 1.676,
+      "runq_threads": 0.0,
+      "unattributed": 0.02,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 944.6,
+      "cpu_ns_per_byte": 1.893,
+      "cpu_s_per_gib": 2.032,
+      "runq_threads": 0.474,
+      "throttled_runs": 0,
+      "amplification": [
+       1.2674,
+       1.1519,
+       1.3945
+      ],
+      "speedup": [
+       1.3845,
+       1.2634,
+       1.5172
+      ],
+      "efficiency": [
+       0.6923,
+       0.6317,
+       0.7586
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 905.3,
+      "cpu_ns_per_byte": 3.719,
+      "cpu_s_per_gib": 3.994,
+      "runq_threads": 0.513,
+      "throttled_runs": 0,
+      "amplification": [
+       2.4158,
+       2.3736,
+       2.4588
+      ],
+      "speedup": [
+       1.329,
+       1.3061,
+       1.3523
+      ],
+      "efficiency": [
+       0.3322,
+       0.3265,
+       0.3381
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 2,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 679.4,
+      "cpu_ns_per_byte": 1.564,
+      "cpu_s_per_gib": 1.679,
+      "runq_threads": 0.0,
+      "unattributed": 0.021,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 1048.1,
+      "cpu_ns_per_byte": 1.895,
+      "cpu_s_per_gib": 2.035,
+      "runq_threads": 0.359,
+      "throttled_runs": 0,
+      "amplification": [
+       1.2211,
+       1.198,
+       1.2446
+      ],
+      "speedup": [
+       1.528,
+       1.4846,
+       1.5727
+      ],
+      "efficiency": [
+       0.764,
+       0.7423,
+       0.7863
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 884.9,
+      "cpu_ns_per_byte": 3.839,
+      "cpu_s_per_gib": 4.122,
+      "runq_threads": 0.324,
+      "throttled_runs": 0,
+      "amplification": [
+       2.4431,
+       2.3782,
+       2.5096
+      ],
+      "speedup": [
+       1.3141,
+       1.2848,
+       1.3441
+      ],
+      "efficiency": [
+       0.3285,
+       0.3212,
+       0.336
+      ]
+     }
+    }
+   }
+  },
+  "random": {
+   "head": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 73.2,
+      "cpu_ns_per_byte": 13.887,
+      "cpu_s_per_gib": 14.912,
+      "runq_threads": 0.0,
+      "unattributed": 0.01,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 119.2,
+      "cpu_ns_per_byte": 15.619,
+      "cpu_s_per_gib": 16.771,
+      "runq_threads": 0.586,
+      "unattributed": 0.362,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1241,
+       1.1127,
+       1.1356
+      ],
+      "speedup": [
+       1.6196,
+       1.5838,
+       1.6562
+      ],
+      "efficiency": [
+       0.8098,
+       0.7919,
+       0.8281
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 145.3,
+      "cpu_ns_per_byte": 20.938,
+      "cpu_s_per_gib": 22.481,
+      "runq_threads": 0.432,
+      "unattributed": 0.489,
+      "throttled_runs": 0,
+      "amplification": [
+       1.5045,
+       1.4902,
+       1.519
+      ],
+      "speedup": [
+       1.9787,
+       1.9359,
+       2.0224
+      ],
+      "efficiency": [
+       0.4947,
+       0.484,
+       0.5056
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 72.5,
+      "cpu_ns_per_byte": 14.012,
+      "cpu_s_per_gib": 15.046,
+      "runq_threads": 0.0,
+      "unattributed": 0.019,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 118.9,
+      "cpu_ns_per_byte": 15.8,
+      "cpu_s_per_gib": 16.965,
+      "runq_threads": 0.618,
+      "unattributed": 0.374,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1268,
+       1.1175,
+       1.1362
+      ],
+      "speedup": [
+       1.6296,
+       1.6015,
+       1.6582
+      ],
+      "efficiency": [
+       0.8148,
+       0.8007,
+       0.8291
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 143.4,
+      "cpu_ns_per_byte": 20.887,
+      "cpu_s_per_gib": 22.428,
+      "runq_threads": 0.426,
+      "unattributed": 0.454,
+      "throttled_runs": 0,
+      "amplification": [
+       1.5319,
+       1.4356,
+       1.6346
+      ],
+      "speedup": [
+       1.9243,
+       1.8158,
+       2.0392
+      ],
+      "efficiency": [
+       0.4811,
+       0.454,
+       0.5098
+      ]
+     }
+    }
+   }
+  },
+  "records": {
+   "head": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 81.3,
+      "cpu_ns_per_byte": 12.484,
+      "cpu_s_per_gib": 13.405,
+      "runq_threads": 0.0,
+      "unattributed": -0.001,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 128.7,
+      "cpu_ns_per_byte": 14.323,
+      "cpu_s_per_gib": 15.379,
+      "runq_threads": 0.691,
+      "unattributed": 0.381,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1459,
+       1.1351,
+       1.1567
+      ],
+      "speedup": [
+       1.6041,
+       1.5743,
+       1.6344
+      ],
+      "efficiency": [
+       0.8021,
+       0.7872,
+       0.8172
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 152.0,
+      "cpu_ns_per_byte": 19.729,
+      "cpu_s_per_gib": 21.184,
+      "runq_threads": 0.392,
+      "unattributed": 0.4,
+      "throttled_runs": 0,
+      "amplification": [
+       1.5912,
+       1.5555,
+       1.6277
+      ],
+      "speedup": [
+       1.868,
+       1.8226,
+       1.9145
+      ],
+      "efficiency": [
+       0.467,
+       0.4556,
+       0.4786
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 80.8,
+      "cpu_ns_per_byte": 12.562,
+      "cpu_s_per_gib": 13.489,
+      "runq_threads": 0.0,
+      "unattributed": 0.005,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 128.9,
+      "cpu_ns_per_byte": 14.401,
+      "cpu_s_per_gib": 15.463,
+      "runq_threads": 0.642,
+      "unattributed": 0.361,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1469,
+       1.1304,
+       1.1637
+      ],
+      "speedup": [
+       1.606,
+       1.5633,
+       1.6498
+      ],
+      "efficiency": [
+       0.803,
+       0.7816,
+       0.8249
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 151.8,
+      "cpu_ns_per_byte": 20.172,
+      "cpu_s_per_gib": 21.659,
+      "runq_threads": 0.423,
+      "unattributed": 0.43,
+      "throttled_runs": 0,
+      "amplification": [
+       1.6066,
+       1.5837,
+       1.6299
+      ],
+      "speedup": [
+       1.8799,
+       1.8557,
+       1.9044
+      ],
+      "efficiency": [
+       0.47,
+       0.4639,
+       0.4761
+      ]
+     }
+    }
+   }
+  },
+  "runs": {
+   "head": {
+    "fewest": 1,
+    "best": 1,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 823.1,
+      "cpu_ns_per_byte": 1.385,
+      "cpu_s_per_gib": 1.487,
+      "runq_threads": 0.0,
+      "unattributed": 0.278,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 775.2,
+      "cpu_ns_per_byte": 1.49,
+      "cpu_s_per_gib": 1.6,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       1.0784,
+       1.0607,
+       1.0964
+      ],
+      "speedup": [
+       0.9427,
+       0.9228,
+       0.9631
+      ],
+      "efficiency": [
+       0.4713,
+       0.4614,
+       0.4815
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 787.4,
+      "cpu_ns_per_byte": 1.43,
+      "cpu_s_per_gib": 1.535,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       1.033,
+       1.0168,
+       1.0495
+      ],
+      "speedup": [
+       0.953,
+       0.9359,
+       0.9704
+      ],
+      "efficiency": [
+       0.2382,
+       0.234,
+       0.2426
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 1,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 826.5,
+      "cpu_ns_per_byte": 1.38,
+      "cpu_s_per_gib": 1.482,
+      "runq_threads": 0.0,
+      "unattributed": 0.275,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 790.5,
+      "cpu_ns_per_byte": 1.475,
+      "cpu_s_per_gib": 1.584,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       1.0703,
+       1.0539,
+       1.0869
+      ],
+      "speedup": [
+       0.9497,
+       0.9352,
+       0.9646
+      ],
+      "efficiency": [
+       0.4748,
+       0.4676,
+       0.4823
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 784.3,
+      "cpu_ns_per_byte": 1.43,
+      "cpu_s_per_gib": 1.535,
+      "runq_threads": 0.0,
+      "throttled_runs": 0,
+      "amplification": [
+       1.049,
+       1.0263,
+       1.0722
+      ],
+      "speedup": [
+       0.936,
+       0.9143,
+       0.9582
+      ],
+      "efficiency": [
+       0.234,
+       0.2286,
+       0.2396
+      ]
+     }
+    }
+   }
+  },
+  "text": {
+   "head": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 170.4,
+      "cpu_ns_per_byte": 6.016,
+      "cpu_s_per_gib": 6.46,
+      "runq_threads": 0.0,
+      "unattributed": 0.046,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 269.5,
+      "cpu_ns_per_byte": 7.053,
+      "cpu_s_per_gib": 7.573,
+      "runq_threads": 0.528,
+      "unattributed": 0.437,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1872,
+       1.1383,
+       1.2381
+      ],
+      "speedup": [
+       1.572,
+       1.5107,
+       1.6357
+      ],
+      "efficiency": [
+       0.786,
+       0.7553,
+       0.8178
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 330.6,
+      "cpu_ns_per_byte": 10.102,
+      "cpu_s_per_gib": 10.847,
+      "runq_threads": 0.549,
+      "unattributed": 0.559,
+      "throttled_runs": 0,
+      "amplification": [
+       1.6687,
+       1.6271,
+       1.7113
+      ],
+      "speedup": [
+       1.9208,
+       1.8369,
+       2.0085
+      ],
+      "efficiency": [
+       0.4802,
+       0.4592,
+       0.5021
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 169.0,
+      "cpu_ns_per_byte": 6.057,
+      "cpu_s_per_gib": 6.504,
+      "runq_threads": 0.0,
+      "unattributed": 0.057,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 271.9,
+      "cpu_ns_per_byte": 7.028,
+      "cpu_s_per_gib": 7.547,
+      "runq_threads": 0.567,
+      "unattributed": 0.425,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1627,
+       1.1475,
+       1.1781
+      ],
+      "speedup": [
+       1.6045,
+       1.578,
+       1.6315
+      ],
+      "efficiency": [
+       0.8023,
+       0.789,
+       0.8157
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 331.5,
+      "cpu_ns_per_byte": 10.208,
+      "cpu_s_per_gib": 10.961,
+      "runq_threads": 0.595,
+      "unattributed": 0.607,
+      "throttled_runs": 0,
+      "amplification": [
+       1.6804,
+       1.651,
+       1.7104
+      ],
+      "speedup": [
+       1.9311,
+       1.8823,
+       1.9812
+      ],
+      "efficiency": [
+       0.4828,
+       0.4706,
+       0.4953
+      ]
+     }
+    }
+   }
+  },
+  "wikidata": {
+   "head": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 393.0,
+      "cpu_ns_per_byte": 2.553,
+      "cpu_s_per_gib": 2.741,
+      "runq_threads": 0.0,
+      "unattributed": 0.001,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 712.1,
+      "cpu_ns_per_byte": 2.771,
+      "cpu_s_per_gib": 2.975,
+      "runq_threads": 0.721,
+      "unattributed": 0.085,
+      "throttled_runs": 0,
+      "amplification": [
+       1.1027,
+       1.0706,
+       1.1357
+      ],
+      "speedup": [
+       1.7859,
+       1.7339,
+       1.8396
+      ],
+      "efficiency": [
+       0.893,
+       0.8669,
+       0.9198
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 816.3,
+      "cpu_ns_per_byte": 4.634,
+      "cpu_s_per_gib": 4.976,
+      "runq_threads": 1.054,
+      "unattributed": 0.092,
+      "throttled_runs": 0,
+      "amplification": [
+       1.8163,
+       1.7865,
+       1.8466
+      ],
+      "speedup": [
+       2.0704,
+       2.0379,
+       2.1034
+      ],
+      "efficiency": [
+       0.5176,
+       0.5095,
+       0.5259
+      ]
+     }
+    }
+   },
+   "base": {
+    "fewest": 1,
+    "best": 4,
+    "threads": {
+     "1": {
+      "n": 10,
+      "cpus": "1",
+      "mb_s": 392.5,
+      "cpu_ns_per_byte": 2.556,
+      "cpu_s_per_gib": 2.744,
+      "runq_threads": 0.0,
+      "unattributed": 0.005,
+      "throttled_runs": 0
+     },
+     "2": {
+      "n": 10,
+      "cpus": "0,2",
+      "mb_s": 710.6,
+      "cpu_ns_per_byte": 2.79,
+      "cpu_s_per_gib": 2.995,
+      "runq_threads": 0.703,
+      "unattributed": 0.097,
+      "throttled_runs": 0,
+      "amplification": [
+       1.0886,
+       1.0798,
+       1.0975
+      ],
+      "speedup": [
+       1.8094,
+       1.7903,
+       1.8287
+      ],
+      "efficiency": [
+       0.9047,
+       0.8952,
+       0.9143
+      ]
+     },
+     "4": {
+      "n": 10,
+      "cpus": "all",
+      "mb_s": 820.3,
+      "cpu_ns_per_byte": 4.61,
+      "cpu_s_per_gib": 4.95,
+      "runq_threads": 1.04,
+      "unattributed": 0.096,
+      "throttled_runs": 0,
+      "amplification": [
+       1.8024,
+       1.7515,
+       1.8549
+      ],
+      "speedup": [
+       2.0997,
+       2.0369,
+       2.1645
+      ],
+      "efficiency": [
+       0.5249,
+       0.5092,
+       0.5411
+      ]
+     }
+    }
+   }
+  }
+ },
+ "env": {
+  "cpus": 4,
+  "cores": 2,
+  "core_cpus": [
+   "0,1",
+   "2,3"
+  ],
+  "cpu_quota": null,
+  "throttling": true,
+  "psi_cpu": true,
+  "runq": {
+   "counts": true,
+   "spin_threads": 8,
+   "off_cpu_s": 1.199,
+   "wait_s": 1.206
+  },
+  "machine": {
+   "cpufreq_driver": null,
+   "cpufreq_driver_why": "no cpufreq policy's scaling_driver",
+   "governor": null,
+   "governor_why": "no cpufreq policies (sys/devices/system/cpu/cpufreq/policy*)",
+   "epp": null,
+   "epp_why": "no cpufreq policies (sys/devices/system/cpu/cpufreq/policy*)",
+   "turbo": null,
+   "turbo_why": "neither intel_pstate/no_turbo nor cpufreq/boost",
+   "perf_event_paranoid": 4,
+   "perf": {
+    "cycles": false,
+    "why": "perf_event_open not permitted (perf_event_paranoid=4)"
+   }
+  }
+ },
+ "paired_resources": {
+  "onebyte": {
+   "amplification_change": {
+    "2": [
+     1.0393,
+     0.9587,
+     1.1266
+    ],
+    "4": [
+     1.0057,
+     0.9261,
+     1.0922
+    ]
+   },
+   "best": {
+    "head": 1,
+    "base": 1
+   },
+   "best_wall_ratio": [
+    0.9795,
+    0.9144,
+    1.0492
+   ]
+  },
+  "pattern": {
+   "amplification_change": {
+    "2": [
+     1.038,
+     0.9393,
+     1.147
+    ],
+    "4": [
+     0.9889,
+     0.9578,
+     1.021
+    ]
+   },
+   "best": {
+    "head": 2,
+    "base": 2
+   },
+   "best_wall_ratio": [
+    1.1021,
+    0.9962,
+    1.2193
+   ]
+  },
+  "random": {
+   "amplification_change": {
+    "2": [
+     0.9976,
+     0.9863,
+     1.009
+    ],
+    "4": [
+     0.9821,
+     0.9223,
+     1.0458
+    ]
+   },
+   "best": {
+    "head": 4,
+    "base": 4
+   },
+   "best_wall_ratio": [
+    0.9653,
+    0.9011,
+    1.034
+   ]
+  },
+  "records": {
+   "amplification_change": {
+    "2": [
+     0.9991,
+     0.9837,
+     1.0147
+    ],
+    "4": [
+     0.9904,
+     0.9619,
+     1.0198
+    ]
+   },
+   "best": {
+    "head": 4,
+    "base": 4
+   },
+   "best_wall_ratio": [
+    1.0021,
+    0.9763,
+    1.0287
+   ]
+  },
+  "runs": {
+   "amplification_change": {
+    "2": [
+     1.0076,
+     0.9872,
+     1.0283
+    ],
+    "4": [
+     0.9848,
+     0.9541,
+     1.0165
+    ]
+   },
+   "best": {
+    "head": 1,
+    "base": 1
+   },
+   "best_wall_ratio": [
+    1.0058,
+    0.9943,
+    1.0174
+   ]
+  },
+  "text": {
+   "amplification_change": {
+    "2": [
+     1.0211,
+     0.9819,
+     1.0617
+    ],
+    "4": [
+     0.993,
+     0.9596,
+     1.0276
+    ]
+   },
+   "best": {
+    "head": 4,
+    "base": 4
+   },
+   "best_wall_ratio": [
+    1.0117,
+    0.9692,
+    1.056
+   ]
+  },
+  "wikidata": {
+   "amplification_change": {
+    "2": [
+     1.0129,
+     0.9819,
+     1.0449
+    ],
+    "4": [
+     1.0077,
+     0.9734,
+     1.0432
+    ]
+   },
+   "best": {
+    "head": 4,
+    "base": 4
+   },
+   "best_wall_ratio": [
+    1.0053,
+    0.9832,
+    1.0279
+   ]
+  }
+ },
+ "assessment": {
+  "corpus": "wikidata",
+  "signs": {
+   "speed": 0,
+   "CPU cost": 0,
+   "contention sensitivity": 0,
+   "memory": 0
+  },
+  "better": [],
+  "worse": [],
+  "inconclusive": [],
+  "broader_hardware": [],
+  "verdict": "No change detected on the four measures at this run's precision (every interval holds no change; not a proof that nothing changed)."
+ },
+ "stages": {
+  "corpus": "wikidata",
+  "tool": "examples/phases.rs (bench/stages.py)",
+  "threads": 1,
+  "repeats": 2,
+  "rounds": 5,
+  "runs": 10,
+  "seconds": 110.4,
+  "mhz": 3695.8,
+  "arms": {
+   "base": {
+    "n": 5,
+    "errors": [],
+    "stages": {
+     "scan": {
+      "ns_per_byte": 0.3011,
+      "cycles_per_byte": 1.113
+     },
+     "mtf": {
+      "ns_per_byte": 0.4284,
+      "cycles_per_byte": 1.583
+     },
+     "build": {
+      "ns_per_byte": 0.4812,
+      "cycles_per_byte": 1.778
+     },
+     "walk": {
+      "ns_per_byte": 1.1601,
+      "cycles_per_byte": 4.287
+     },
+     "assemble": {
+      "ns_per_byte": 0.0454,
+      "cycles_per_byte": 0.168
+     },
+     "rle": {
+      "ns_per_byte": 0.055,
+      "cycles_per_byte": 0.203
+     },
+     "crc": {
+      "ns_per_byte": 0.0697,
+      "cycles_per_byte": 0.258
+     },
+     "total": {
+      "ns_per_byte": 2.4994,
+      "cycles_per_byte": 9.237
+     }
+    },
+    "rounds_ns_per_byte": {
+     "scan": [
+      0.29952,
+      0.30113999999999996,
+      0.30321,
+      0.30195,
+      0.30001
+     ],
+     "mtf": [
+      0.42677,
+      0.42835,
+      0.43001,
+      0.42925,
+      0.42687
+     ],
+     "build": [
+      0.48116000000000003,
+      0.48511000000000004,
+      0.48031999999999997,
+      0.48763999999999996,
+      0.47945
+     ],
+     "walk": [
+      1.1142,
+      1.16007,
+      1.1624700000000001,
+      1.2079900000000001,
+      1.1326500000000002
+     ],
+     "assemble": [
+      0.04001,
+      0.054090000000000006,
+      0.04542,
+      0.053439999999999994,
+      0.044770000000000004
+     ],
+     "rle": [
+      0.05459000000000001,
+      0.054979999999999994,
+      0.055060000000000005,
+      0.05554,
+      0.05479
+     ],
+     "crc": [
+      0.06913,
+      0.06974,
+      0.06969,
+      0.07009,
+      0.06916
+     ],
+     "total": [
+      2.44537,
+      2.49939,
+      2.50076,
+      2.55246,
+      2.4629299999999996
+     ]
+    },
+    "walk": "walk, room (used)"
+   },
+   "head": {
+    "n": 5,
+    "errors": [],
+    "stages": {
+     "scan": {
+      "ns_per_byte": 0.3012,
+      "cycles_per_byte": 1.113
+     },
+     "mtf": {
+      "ns_per_byte": 0.4288,
+      "cycles_per_byte": 1.585
+     },
+     "build": {
+      "ns_per_byte": 0.4817,
+      "cycles_per_byte": 1.78
+     },
+     "walk": {
+      "ns_per_byte": 1.1454,
+      "cycles_per_byte": 4.233
+     },
+     "assemble": {
+      "ns_per_byte": 0.046,
+      "cycles_per_byte": 0.17
+     },
+     "rle": {
+      "ns_per_byte": 0.0548,
+      "cycles_per_byte": 0.202
+     },
+     "crc": {
+      "ns_per_byte": 0.0694,
+      "cycles_per_byte": 0.257
+     },
+     "total": {
+      "ns_per_byte": 2.4905,
+      "cycles_per_byte": 9.204
+     }
+    },
+    "rounds_ns_per_byte": {
+     "scan": [
+      0.30627,
+      0.30075,
+      0.30143000000000003,
+      0.30001,
+      0.30116000000000004
+     ],
+     "mtf": [
+      0.43910000000000005,
+      0.42798,
+      0.42875,
+      0.43687,
+      0.42844
+     ],
+     "build": [
+      0.48169999999999996,
+      0.47917000000000004,
+      0.48384,
+      0.48382,
+      0.47845
+     ],
+     "walk": [
+      1.15205,
+      1.11557,
+      1.1616199999999999,
+      1.1454000000000002,
+      1.14278
+     ],
+     "assemble": [
+      0.04596,
+      0.04192,
+      0.05117,
+      0.048670000000000005,
+      0.04139
+     ],
+     "rle": [
+      0.05633,
+      0.05453,
+      0.054810000000000005,
+      0.054729999999999994,
+      0.054770000000000006
+     ],
+     "crc": [
+      0.07016,
+      0.06944,
+      0.06919,
+      0.06965,
+      0.06912
+     ],
+     "total": [
+      2.50562,
+      2.44744,
+      2.4996199999999997,
+      2.4904699999999997,
+      2.4747199999999996
+     ]
+    },
+    "walk": "walk, room (used)"
+   }
+  },
+  "change": {
+   "scan": [
+    1.0025,
+    0.9879,
+    1.0173
+   ],
+   "mtf": [
+    1.0092,
+    0.9925,
+    1.0262
+   ],
+   "build": [
+    0.9972,
+    0.9878,
+    1.0068
+   ],
+   "walk": [
+    0.9899,
+    0.9472,
+    1.0345
+   ],
+   "assemble": [
+    0.9668,
+    0.7887,
+    1.1851
+   ],
+   "rle": [
+    1.0007,
+    0.9787,
+    1.0232
+   ],
+   "crc": [
+    0.9993,
+    0.9881,
+    1.0106
+   ],
+   "total": [
+    0.9966,
+    0.9722,
+    1.0217
+   ]
+  }
+ }
+}
