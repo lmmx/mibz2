@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Lookahead #271 re-review finished; HOLD narrowed to raw-evidence validation.",
+  "state": "Pair-from-runs #272 re-review complete; awaiting REVIEW publication.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -95,9 +95,10 @@
     6730378782,
     6730501978,
     6730656466,
-    6730894960
+    6730894960,
+    6731077460
   ],
-  "last_processed_comment_id": 6730894960,
+  "last_processed_comment_id": 6731077460,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -789,11 +790,15 @@
     {
       "trigger_comment_id": 6731077460,
       "related_queued_comment_id": 6731019236,
-      "status": "in_progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "source_commit": "4c70dfc42536c32e9b55c6f2e95da5b1d8538b39",
-      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57"
+      "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+      "report_commit": "3b063b1eec880f6b39cc6fe01e4c9068f721f60b",
+      "report_path": "state/reports/pair-from-runs-rereview-6731077460/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE narrowed to count reconciliation before freeze: prior interval/inventory/framing repairs accepted; 28 tests pass, four inconsistent count fixtures remain VALID and single-copy denominator changes reverse M1. Separate D046/B5 unchanged; no native timing or implementation."
     }
   ],
   "active_delegations": [],
@@ -813,10 +818,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6730894960
+      6731077460
     ],
     "handled": [
-      6730894960
+      6731077460
     ],
     "skipped": [],
     "automation_modified": false
