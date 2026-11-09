@@ -101,9 +101,10 @@
     6731333886,
     6731657578,
     6731990737,
-    6732258318
+    6732258318,
+    6732447649
   ],
-  "last_processed_comment_id": 6732258318,
+  "last_processed_comment_id": 6732447649,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -885,11 +886,15 @@
     },
     {
       "trigger_comment_id": 6732447649,
-      "status": "in progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "370a868f46e4a7326557859043e5e44960e7b592"
+      "source_commit": "370a868f46e4a7326557859043e5e44960e7b592",
+      "report_commit": "72c50c2ce4229a28c0a9a1621c6cea7a761802fe",
+      "report_path": "state/reports/direct-f-tail-coupling-6732447649/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE coupled store-count admission and positive fixture only; four prior guards closed, 50 tests and 10840 census cases pass. Three fixture tuples violate exact B/D scalar-tail relation. No timing or implementation."
     }
   ],
   "active_delegations": [],
@@ -909,10 +914,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6732258318
+      6732447649
     ],
     "handled": [
-      6732258318
+      6732447649
     ],
     "skipped": [],
     "automation_modified": false
