@@ -1,0 +1,46 @@
+{
+  "formula_columns": 17520,
+  "admission_alias": {
+    "length": 16384,
+    "sample_density": 0.0,
+    "actual_density": 0.9375
+  },
+  "workflow_predicate": {
+    "complete": {
+      "problems": "",
+      "artifact_predicate_accepts": true
+    },
+    "missing_all_multicopy": {
+      "problems": "",
+      "artifact_predicate_accepts": true
+    },
+    "header_only_raw": {
+      "problems": "",
+      "artifact_predicate_accepts": true
+    }
+  },
+  "m1_missing": {
+    "ghz": "NaN",
+    "m1d": null,
+    "required_interval_labels": [
+      "Q1",
+      "M1 ratio",
+      "Q2",
+      "O/P",
+      "R/O"
+    ],
+    "difference_checked_by_validity": false
+  },
+  "zero_ghz_m1": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "ipc_counterexample": {
+    "one_I": 6.2,
+    "one_IPC": 2,
+    "run_I": 12.4,
+    "run_IPC": 4,
+    "cycle_difference": 0.0
+  }
+}

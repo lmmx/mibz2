@@ -1,0 +1,154 @@
+# The walk's mechanisms taken apart on the Wikidata blocks, on one runner
+# (examples/sweep.rs): the lane count (the interleaved chains), the prefetch (none, L1, L2,
+# non-temporal) and the scheduling (the room walk against the flagged walk), each against the
+# settings Segmented uses, paired by round; alone on one CPU, then with a copy on every CPU;
+# with hardware counters where the runner exposes them. A diagnostic for choosing settings to try, from the Actions tab only: its
+# figures are the run's summary and artifact, never recorded, and a setting it favours is
+# decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
+# stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: pair_runs`, the run-built pair table's diagnostic (examples/pair_runs.rs, the
+# `pair-runs` feature; docs/journal/2026-11-09-pair-from-runs.md) runs the same way, ROUNDS
+# its rounds, and the run is judged VALID or not: the corpus's SHA-256, every copy's exit
+# status and its own validity line, with the raw paired timings archived.
+name: Walk sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Rounds (each walks every block at every setting); for phases, its passes"
+        required: false
+        default: "5"
+      tool:
+        description: "sweep (the factorial), phases (the stages) or pair_runs (the run-built pair table)"
+        required: false
+        default: "sweep"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # lbzip2: examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: |
+          cargo build --release --example sweep --example phases --example windows
+          cargo build --release --features pair-runs --example pair_runs
+
+      # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          mkdir -p corpora
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+
+      # Counters where the runner exposes a PMU: let this process count its own events
+      - name: Counters
+        run: sudo sysctl -w kernel.perf_event_paranoid=1 || true
+
+      # One copy pinned to one CPU, then a copy on each CPU at once: a setting that wins
+      # alone can lose when four walks share the caches and the memory system
+      - name: Sweep
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          TOOL: ${{ inputs.tool || 'sweep' }}
+        run: |
+          mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
+          model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
+          ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          case "$TOOL" in sweep|phases|pair_runs) ;; *) echo "tool: sweep, phases or pair_runs"; exit 1 ;; esac
+          bin=target/release/examples/$TOOL
+          # (pair_runs's: the head it reports and the corpus spec it checks)
+          export PAIR_RUNS_HEAD=$(git rev-parse HEAD) PAIR_RUNS_SPEC=bench/wikidata.json
+          start=$SECONDS
+          # each file names its runner: runners differ in CPU model, and so in the figures;
+          # each copy's exit status goes in status-*.txt
+          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"; PAIR_RUNS_RAW=raw-1.csv taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
+          echo "${PIPESTATUS[0]}" > status-1.txt
+          alone=$((SECONDS - start)); start=$SECONDS
+          cpus=$(nproc)
+          for c in $(seq 0 $((cpus - 1))); do
+            {
+              echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS; this copy on CPU $c"
+              if PAIR_RUNS_RAW="raw-$cpus-cpu$c.csv" taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; then st=0; else st=$?; fi
+              echo "$st" > "status-$cpus-cpu$c.txt"
+            } > "sweep-$cpus-cpu$c.txt" &
+          done
+          wait
+          together=$((SECONDS - start))
+          {
+            echo "## Walk sweep ($TOOL): $model, $cpus cores, at its reported clock (${ghz} GHz)"
+            echo
+            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
+            echo
+            echo "### One copy, pinned to one CPU (${alone} s)"
+            echo
+            echo '```'
+            cat sweep-1.txt
+            echo '```'
+            echo
+            echo "### $cpus copies at once, one a CPU (${together} s): the copy on CPU 0 (the others are in the artifact)"
+            echo
+            echo '```'
+            cat "sweep-$cpus-cpu0.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # pair_runs's validity: the corpus's SHA-256, every copy's exit status (0) and its own
+      # VALID line; NOT VALID fails the job, with the figures still archived
+      - name: Validity
+        if: "!cancelled() && inputs.tool == 'pair_runs'"
+        run: |
+          problems=""
+          want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
+          got=$(sha256sum corpora/wikidata.bz2 | cut -d' ' -f1)
+          [ "$got" = "$want" ] || problems="$problems corpus SHA-256 $got, not $want;"
+          for f in sweep-*.txt; do
+            st=$(cat "status-${f#sweep-}" 2>/dev/null || echo missing)
+            [ "$st" = 0 ] || problems="$problems $f exit status $st;"
+            grep -q '^VALID (this process' "$f" || problems="$problems $f has no VALID line;"
+          done
+          for f in raw-*.csv; do [ -s "$f" ] || problems="$problems $f empty;"; done
+          [ "$(ls raw-*.csv 2>/dev/null | wc -l)" = "$(ls sweep-*.txt | wc -l)" ] || problems="$problems a copy's raw timings are missing;"
+          { echo "head $(git rev-parse HEAD); corpus SHA-256 $got"; for f in status-*.txt; do echo "$f: exit $(cat "$f")"; done; if [ -z "$problems" ]; then echo VALID; else echo "NOT VALID:$problems"; fi; } | tee validity.txt
+          { echo; echo "### Validity"; echo; echo '```'; cat validity.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          [ -z "$problems" ]
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-${{ github.sha }}
+          path: |
+            sweep-*.txt
+            raw-*.csv
+            status-*.txt
+            validity.txt
+          if-no-files-found: ignore
