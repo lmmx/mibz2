@@ -29,8 +29,9 @@ above 1 the arm spends less.
 | C1 | svc2@10 | team2x3@10 (plain 2 × 3) | 8 / 6 | 1.402 [1.368, 1.437] | GAIN | 0.941 [0.924, 0.959] | CPU COST |
 | P2 | pipe2x3@10 | mibz2@10 | 6 / 9 | 0.866 [0.851, 0.881] | REGRESSION | 1.214 [1.196, 1.233] | CPU SAVING |
 
-- **P1's CPU:** 1.146 means svc2@10 spends 1/1.146 = 0.873 of the default's CPU, so 12.7%
-  less. Put the other way, the default spends 14.6% more.
+- **P1's CPU:** the ratio 1.146 [1.123, 1.170] is the default's CPU over svc2@10's. So
+  svc2@10 spends 1/1.146 = 0.873 of the default's CPU: 12.7% less, with an interval of about
+  11.0–14.5% less (1/1.123 and 1/1.170). Put the other way, the default spends 14.6% more.
 - **C1's extra-thread label:** BEYOND ITS THREADS (its lower bound 1.368 is above 8/6 = 1.333).
   As registered, this label is reported, not required. C1's extra threads are the service
   threads themselves.
@@ -111,7 +112,8 @@ better (0.866). Every prediction was in the right direction.
 - svc2@10 is faster than the 0.2.6 default at 10 threads: 1.045 [1.017, 1.073]. That
   replicates the service core's reported S4 (1.045 [1.023, 1.068]) in a run registered to
   judge it.
-- It does so on fewer decode threads (8 against 9), 12.7% less CPU, and 10 MB less peak RSS.
+- It does so on fewer decode threads (8 against 9), 12.7% less CPU (about 11.0–14.5% less),
+  and 10 MB less peak RSS.
 - Two teams without the service don't do it, whether plain (S2 0.745) or pipelined (P2 0.866).
 
 **Not established:**
