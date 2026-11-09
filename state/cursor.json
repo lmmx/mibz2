@@ -664,8 +664,9 @@
       "sha": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
       "evidence_digest": "git-blob:b7de7275d4cba9ee60e98102d236f20775de6c2f",
       "commit": "24bf0264417dff742fab1074bc64222aa233d431",
-      "status": "complete",
-      "disposition": "Checked-state repair concurred; B5 HOLD applies before CI timing; emitter Miri and reached-path fuzz absent."
+      "status": "finished",
+      "disposition": "Checked-state repair concurred; B5 HOLD applies before CI timing; emitter Miri and reached-path fuzz absent.",
+      "comment": 6729932417
     }
   ],
   "own_outgoing_comment_ids": [
@@ -707,7 +708,8 @@
     6695575803,
     6695663002,
     6695760685,
-    6729223027
+    6729223027,
+    6729932417
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -827,7 +829,8 @@
     6695594055,
     6695685974,
     6715368365,
-    6729117187
+    6729117187,
+    6729878093
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -909,9 +912,9 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6729117187,
+    "last_completed_incoming_comment": 6729878093,
     "last_decision": "D044",
-    "last_outgoing_comment": 6729223027,
+    "last_outgoing_comment": 6729932417,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
@@ -920,13 +923,13 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "24bf0264417dff742fab1074bc64222aa233d431",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D042 REVIEW 6729223027 on #145 cites both original and resume; reconciled without duplicate",
+    "source_app_reply": "D044 REVIEW on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
-    "queue_snapshot": "20 inbox comments listed; all eligible comments through 6729117187 finished",
+    "active_comment_status": "finished",
+    "queue_snapshot": "21 comments listed; all eligible inbox comments through 6729878093 finished",
     "active_incoming_comment": 6729878093
   },
   "duplicate_events": [
@@ -1269,7 +1272,8 @@
       "sha": "fd60fffada25d475bbcc2b54165b96cf5fd7a92f",
       "evidence_digest": "git-blob:b7de7275d4cba9ee60e98102d236f20775de6c2f",
       "decision": "D044",
-      "commit": "24bf0264417dff742fab1074bc64222aa233d431"
+      "commit": "24bf0264417dff742fab1074bc64222aa233d431",
+      "comment": 6729932417
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1460,10 +1464,12 @@
     {
       "comment_id": 6729878093,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D044",
       "receipt_commit": "c0e0ec78944dbd7cf6053e0a12b0384ab4ea46fc",
-      "work_commit": "24bf0264417dff742fab1074bc64222aa233d431"
+      "work_commit": "24bf0264417dff742fab1074bc64222aa233d431",
+      "review_comment_id": 6729932417,
+      "complete_cursor_commit": "d6a495510034462c08e4c61fb78ebef6bf4e5d28"
     }
   ],
   "migrated_from": {
