@@ -951,7 +951,7 @@
     },
     {
       "trigger_comment_id": 6733003420,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -959,7 +959,10 @@
       "report_commit": "d4065142340a0e005b428310df6e65e4a918e6df",
       "report_path": "state/reports/packet-census-6733003420/report.md",
       "review_comment_pr": 145,
-      "disposition": "Pause measured self-repeat packet arm; C31/C29 retain priority. Raw digests and tables reproduced, 314 saved pair starts confirmed. Correct high-precision rates and Precopy/tandem ceiling claims. Derive/check nonadjacent forward affine reuse; no native timing or implementation."
+      "disposition": "Pause measured self-repeat packet arm; C31/C29 retain priority. Raw digests and tables reproduced, 314 saved pair starts confirmed. Correct high-precision rates and Precopy/tandem ceiling claims. Derive/check nonadjacent forward affine reuse; no native timing or implementation.",
+      "review_comment_id": 6733146738,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify hard-codes Coordinator sender; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
