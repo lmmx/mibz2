@@ -1133,6 +1133,19 @@
       "status": "finished",
       "disposition": "ADMISSIBLE AS TEXT; all D072/D073 text objections closed; pending authenticated authority and enactment",
       "comment": 6750846374
+    },
+    {
+      "pr": 310,
+      "sha": "eacd58826cdef3c040fb268356d787ce442b0d53",
+      "evidence_digest": "registration:23828411eab9131e1a0f52be4fe84d283e9ee0d6;no-harm:74633a48edb752c42b9d79ec8ebb363e5763c3ac;run:42704879531/attempts/1,2;comments:6752208345,6752574723",
+      "decision": "D075",
+      "commit": "fbbf539ad45db2ed1099f28dc015d49c8afd6399",
+      "id": "D075",
+      "incoming_pr": 161,
+      "incoming_comment": 6752605812,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "G1 no-harm FAILED; G2 HOLD adoption of eacd5882; bounded classifier correction admissible, no automatic fallback; no G8 line STOP"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1369,7 +1382,9 @@
     "fb74ae7dc6e12f5d5fa4b469c32f2259518e58ee",
     "a4d7c9c0455bb17f4098b85d0a96a829db8e43c3",
     "a9d7d5f3752c8e11827919159b5bc7578b623e2d",
-    "46a0224e0d80b70793490b3a179ab94033da7e9b"
+    "46a0224e0d80b70793490b3a179ab94033da7e9b",
+    "678d92a953d358634a480728ce2ac4de38745f01",
+    "fbbf539ad45db2ed1099f28dc015d49c8afd6399"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1444,7 +1459,8 @@
     6750412724,
     6750546526,
     6750670706,
-    6750788493
+    6750788493,
+    6752605812
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1524,8 +1540,9 @@
   },
   "current_execution": {
     "active_comment": 6752605812,
-    "status": "in progress",
-    "decision": "D075"
+    "status": "complete",
+    "decision": "D075",
+    "work_commit": "fbbf539ad45db2ed1099f28dc015d49c8afd6399"
   },
   "duplicate_events": [
     {
@@ -2109,6 +2126,13 @@
       "decision": "D074",
       "commit": "a9d7d5f3752c8e11827919159b5bc7578b623e2d",
       "comment": 6750846374
+    },
+    {
+      "pr": 310,
+      "sha": "eacd58826cdef3c040fb268356d787ce442b0d53",
+      "evidence_digest": "registration:23828411eab9131e1a0f52be4fe84d283e9ee0d6;no-harm:74633a48edb752c42b9d79ec8ebb363e5763c3ac;run:42704879531/attempts/1,2;comments:6752208345,6752574723",
+      "decision": "D075",
+      "commit": "fbbf539ad45db2ed1099f28dc015d49c8afd6399"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2624,8 +2648,10 @@
     {
       "comment_id": 6752605812,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D075"
+      "status": "complete",
+      "decision": "D075",
+      "receipt_commit": "678d92a953d358634a480728ce2ac4de38745f01",
+      "work_commit": "fbbf539ad45db2ed1099f28dc015d49c8afd6399"
     }
   ],
   "migrated_from": {
