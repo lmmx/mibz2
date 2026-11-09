@@ -947,6 +947,20 @@
       "receipt_commit": "ceee81200a876e004710d021d449db0743568572",
       "disposition": "No new B5 hold; current CI/freeze pending; census scope and contention/CPU accounting qualified",
       "comment": 6733631922
+    },
+    {
+      "id": "D062",
+      "pr": 270,
+      "incoming_pr": 161,
+      "output_pr": 145,
+      "incoming_comment": 6733879388,
+      "sha": "14134d696ac4792e9e1980b83b782d514ec5c8bb",
+      "evidence_digest": "git-blob:ae399a7014ebdcf8f1a4b73446410975f242d490",
+      "decision": "G1",
+      "status": "complete",
+      "commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+      "receipt_commit": "b8bcbeef89b2f907e897d10bda806268eb481e00",
+      "disposition": "Cost/CPU-formatting corrections close; revise unsupported join-before-take claim; existing CI pending, no new B5 hold"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1130,7 +1144,9 @@
     "fea6a65033832bfce32279a332c0cc94871898ee",
     "ceee81200a876e004710d021d449db0743568572",
     "ffff8b8635127a61daad79056179c97ea696af37",
-    "71d2a1bc57f170eabec2bd1e57fd77d678a6d095"
+    "71d2a1bc57f170eabec2bd1e57fd77d678a6d095",
+    "b8bcbeef89b2f907e897d10bda806268eb481e00",
+    "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1192,7 +1208,8 @@
     6732894651,
     6733174182,
     6733269661,
-    6733568497
+    6733568497,
+    6733879388
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1272,8 +1289,9 @@
   },
   "current_execution": {
     "active_comment": 6733879388,
-    "status": "in progress",
-    "decision": "D062"
+    "status": "complete",
+    "decision": "D062",
+    "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47"
   },
   "duplicate_events": [
     {
@@ -2126,8 +2144,11 @@
     {
       "comment_id": 6733879388,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D062"
+      "status": "complete",
+      "decision": "D062",
+      "receipt_commit": "b8bcbeef89b2f907e897d10bda806268eb481e00",
+      "work_commit": "72a7dbc6aa0cc4ad50a9f25d9ddbfc1c5c883a47",
+      "progress": "D062 work committed; join-before-take claim disputed, other corrections close; REVIEW pending."
     }
   ],
   "migrated_from": {
