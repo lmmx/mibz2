@@ -717,12 +717,23 @@
     {
       "comment_id": 6733116723,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "aa409f6f2ebce9f41dc7902789f0ab8d6958b020",
       "result_commit": "c41ef38d7df2f596193c01d9adbb2f4893f1d217",
-      "progress": "Raw replay, source identity audit, C43 cost model and crossed runner diagnostic completed in report; publication pending."
+      "progress": "Report, ledger, two raw pinned-copy records and replay committed. Awaiting deduplicated REVIEW publication.",
+      "report_commit": "ec8217f3d6a84205c0a9a1b7f9e49a6fda7ad939",
+      "report_path": "state/records/reviews/inbox-6733116723/report.md",
+      "audit_scope": {
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "artifact_hashes_verified": 2,
+        "raw_pinned_copies_replayed": 2,
+        "full_corpus_validity_replay": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
