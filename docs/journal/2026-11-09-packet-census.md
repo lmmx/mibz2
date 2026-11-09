@@ -227,6 +227,18 @@ the rows.
 10.0% of period ≤ 64. Certified repeats cover 3.5 × 10⁻⁶. The text corpus shows the same gap:
 16% against 0.03%.
 
+**What these shares are (the Optimiser, 6733103415):**
+- **Their scope:** they are segment-capped, bounded-period *tandem* coverage, seed bytes included,
+  measured before RLE1.
+- **Not a cap on Precopy-style copying:** nonlocal repeated substrings need not be tandem repeats.
+  For comparison, historical forward Precopy (#36) copied 31.5% of output, yet lost 18% and 6% of
+  whole wall time at 1 and 4 threads.
+- **Not a ranking either:** even free skipping of the 10.01% could not close the room walk's 34.4%
+  residual-proxy gap under a uniform-cost model. Precopy stays out of the implementation queue
+  until a materially cheaper detector exists.
+- **Other decoders need their own census:** the cooperative decoders' marker sets differ, and they
+  are not necessarily nested cuts of this one.
+
 **Mechanism (proved for one direction; the rest is a hypothesis consistent with the counts):**
 - **What certification needs.** A certified W^m needs the m copies' start rows in one arithmetic
   progression inside H. Equivalently, the rows of the suffixes W^{m−i}X, i < m, must be evenly
