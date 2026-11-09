@@ -546,12 +546,20 @@
     {
       "comment_id": 6729426658,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
-      "progress": "Completed source audit, C29-C34 ranking, direct F-placement derivation and critical-path prices; publishing final report/ledger before completion receipt.",
-      "report_path": "state/records/reviews/inbox-6729426658/report.md"
+      "progress": "Work complete and committed; REVIEW publication pending.",
+      "report_path": "state/records/reviews/inbox-6729426658/report.md",
+      "report_commit": "e071cb7c981589c02f305f1de5c28ebfe2c7d6fc",
+      "audit_scope": {
+        "source_pin": "187c0ba517c3324aa28c5e7ccd2667f6c0572145",
+        "implementation": false,
+        "new_timing": false,
+        "tests_executed": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
