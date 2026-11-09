@@ -1,0 +1,534 @@
+{
+  "diffs": [
+    {
+      "base": "bb362fa3c5e0650d730614682faeab8a43b20d19",
+      "head": "d136df7e31903bb7c18c3f90d7fa499985adb544",
+      "files": [
+        {
+          "sha": "2ae852d7dc929f46f05e432c4566cef6f988168c",
+          "filename": "CHANGELOG.md",
+          "status": "modified",
+          "additions": 68,
+          "deletions": 0,
+          "changes": 68,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/CHANGELOG.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/CHANGELOG.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/CHANGELOG.md?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -9,6 +9,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0\n \n ## [0.2.7](https://github.com/lmmx/mibz2/compare/v0.2.6...v0.2.7) - 2026-11-09\n \n+A safety release. A parallel `BzReader` whose source panics now fails its next read, instead\n+of waiting for ever (#278). The decoder's plans, the output, the API and the supported\n+inputs are unchanged.\n+\n+- **The fix (#278).** A parallel reader reads its source on a thread of its own. If the\n+  source's `read` panicked, that thread used to unwind without cancelling the decode, and the\n+  reader's next read waited for input that would never come. Every parallel reader was\n+  affected: the workers, the teams and the pipelined teams. Now a guard on that thread\n+  cancels the decode as it unwinds, and the next read returns an `io::Error` saying the\n+  input's reader panicked. `BzReader`'s docs state the contract and what stays outside it:\n+  an abort (an out-of-memory one among them) still ends the process, and a `read` that\n+  blocks for ever is still never interrupted.\n+- **Tests only (#275, Guardian D047; and #273, D042).** A deterministic test unwinds a\n+  pipelined team's worker at three points and checks what the reader gets, with a mutant\n+  that the test kills, a Miri filter, and the provenance of the pipeline's fuzz entry. #273\n+  adds pipeline fuzz candidates and invariant-mutation evidence for 0.2.6's default. Both\n+  are `cfg(test)`: the shipped decoder is unchanged by them.\n+\n+### Measured\n+\n+One paired run of this release's source (master at `5c98d423`, whose library is 0.2.7's)\n+against `v0.2.6` (`a49038b0`), both builds on one 4-CPU CI runner (AMD EPYC 9V45, 2 physical\n+cores), 10 rounds, the builds' order alternating, the bench's Wikidata sample (12 slices of\n+the dump, 210 MB decoded) and the crate's corpora\n+([run 42643237164](https://github.com/lmmx/mibz2/actions/runs/42643237164), bench 3.4.0):\n+\n+| threads | wall, 0.2.6 → 0.2.7 (median) | wall change (95%) | CPU change (95%) | peak RSS |\n+|--:|--:|--:|--:|--:|\n+| 1 | 0.348 → 0.349 s | +0.6% (−0.7, +2.0) | +0.6% (−0.7, +2.0) | 26 → 26 MB (+0.6%) |\n+| 2 | 0.194 → 0.201 s | +1.6% (−1.0, +4.3) | +1.7% (−0.7, +4.2) | 49 → 49 MB (+0.2%) |\n+| 4 | 0.178 → 0.182 s | +2.9% (−0.2, +6.0) | +2.7% (−1.1, +6.6) | 78 → 78 MB (+0.2%) |\n+\n+- **Result:** no change detected on the four measures at this run's precision. Every\n+  interval holds no change, which is not a proof that nothing changed.\n+  - Best wall time against best: +2.9% (−0.2, +6.0), both at 4 threads.\n+  - CPU per byte at 4 threads: 3.10 → 3.19 ns/B. Amplification over one thread: +1.0%\n+    (−2.0, +4.2) at 2 threads and +2.1% (−1.6, +5.9) at 4, neither a change.\n+  - The output was the same bytes as the base's on every corpus.\n+- **The other corpora:** no change at 2 or 4 threads. One flag of 21 rows: `text` at one\n+  thread, +2.1% (+0.4, +3.8) slower, about what chance gives across that many intervals.\n+- **By stage,** at one thread: a total of 7.14 → 7.04 cycles a byte, −1.6% (−3.4, +0.4).\n+  The T-vector build reads −5.2% (−6.5, −3.8), though its code is the same in both builds:\n+  with seven intervals a run, one stage's flag alone can be chance or code layout. The\n+  scanner, MTF, the walk, RLE1 and CRC are each within ±1.2%, none a change.\n+\n+### The cost\n+\n+- **The guard:** one check, as the reader's thread ends, and nothing a chunk. The run above\n+  shows no wall or CPU cost at any thread count.\n+- **Memory:** peak RSS is 0.1–0.3 MB higher (+0.5% to +0.9%) at one thread on every\n+  corpus, and at every thread count on `onebyte` and `runs`, each flagged. On the Wikidata\n+  sample at 2 and 4 threads it isn't a change (+0.2%). Its cause isn't identified. Being\n+  about the same in megabytes on every corpus, it looks like a fixed cost of the process,\n+  not a cost a byte. One larger flag, `random` at 4 threads, +2.0 MB, +3.1% (+0.1, +6.3),\n+  sits beside `pattern`'s −2.3 MB at 4 threads (not a change): the multi-threaded rows'\n+  memory is noisier than this.\n+\n+### Caveats\n+\n+- **One run on one CPU model,** a 2-core runner. It is a no-regression check: it can't show\n+  the ten-core plans, which CI's runners never take.\n+- **The release-scaling figures follow.** `bench-release-scaling`, 0.2.7 against 0.2.6 on\n+  the i9-10900K, is queued on the workstation at `539523b1`. Its figures will be added\n+  here once they are in.\n+- **0.2.6's known issue stands.** On the ten-core topology, the default is slower than\n+  0.2.4's on files compressed at bzip2 levels 1 and 2 (see 0.2.6's notes). 0.2.7 doesn't\n+  change the plans; `Plan::Teams { teams: 4, k: 2 }` still avoids it.\n+\n ### <!-- 9 -->Other\n \n - Bench 3.4.0: the recorder check's failed reads and controls are INCOMPLETE (Guardian D066)"
+        },
+        {
+          "sha": "13289df39571b284f195dc6ef6316a360e4239e9",
+          "filename": "CLAUDE.md",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0,
+          "changes": 4,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/CLAUDE.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/CLAUDE.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/CLAUDE.md?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -90,6 +90,10 @@ the Guardian's ruling. Louis is asked only for what RULES D reserves to him, or\n he has (for example, the workstation's state). Otherwise the coordinator decides, records why,\n and carries on.\n \n+## Delegated as a class: design, acceptance, adoption\n+\n+Louis delegated, in the Coordinator's session on 2026-11-09, experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities), master's merge acceptance rule and adoption policy, as a class (RULES C6, amended). The team decides them under review: pre-registered and frozen before data, the Researcher's PROCEED, the Guardian on gate and safety questions, and C2 never relaxed after the data is seen. Don't send these back to Louis one by one. He is still needed only for what RULES D keeps: his C5 workstation runs, new infrastructure or spending, role changes, and rule changes.\n+\n ## The agent team\n \n The team's live machinery is `docs/team/`:"
+        },
+        {
+          "sha": "b8fc2a417a742af1609d89d5e4cc931062570f4d",
+          "filename": "bench/CHANGELOG.md",
+          "status": "modified",
+          "additions": 21,
+          "deletions": 0,
+          "changes": 21,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2FCHANGELOG.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2FCHANGELOG.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2FCHANGELOG.md?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -35,6 +35,27 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En\n to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their\n pull requests. Until then, these versions were kept by hand, with no check in CI.\n \n+## [3.5.0] - 2026-11-09\n+\n+### Added\n+\n+Both are opt-in or a new field beside the others: no measured figure changes meaning. The\n+same `examples/ab.rs` change is on #305 (`cb2c233e`), whose further additions take the next\n+version.\n+\n+- **`ab env --facts`** (`examples/ab.rs`): the machine's facts read passively, from procfs,\n+  sysfs, cgroupfs and `sched_getaffinity` alone. No thread is started, nothing spins and no\n+  perf counter is opened; plain `ab env` is unchanged. The CPUs allowed are the affinity mask\n+  and `Cpus_allowed_list`, which must agree. The CPU quota is that of the process's effective\n+  cgroup hierarchy (v2, or the v1 hierarchy holding the `cpu` controller), every level read\n+  up to the hierarchy's true root: `unlimited`, `limited` or `unknown` with why, in the\n+  representation of `parallel::cpu_quota`. The service-guarded recipe's diagnostics read it.\n+- **Each run's child termination** (`examples/ab.rs`, `termination`): `\"success\"`,\n+  `\"exit N\"`, `\"signal N\"` or `\"unknown\"`, as the parent reaped the child. Output written\n+  before a nonzero exit or a signal is no longer indistinguishable from a successful run. The\n+  service-guarded judge (`bench/service_guarded.py`) requires `\"success\"`, and a row without\n+  it is refused.\n+\n ## [3.4.0] - 2026-11-09\n \n ### Fixed"
+        },
+        {
+          "sha": "1b7a648ce6a7d51d1c200c952f7a95957df1e88d",
+          "filename": "bench/report.py",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2Freport.py",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2Freport.py",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2Freport.py?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -70,7 +70,7 @@\n from collections import defaultdict\n from pathlib import Path\n \n-BENCH = \"3.4.0\"\n+BENCH = \"3.5.0\"\n # Each family of figures, and the major versions that set or redefined its meaning\n # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus\n # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every"
+        },
+        {
+          "sha": "b3e68ec8ab226dcf64cf1ff56fa7c01aa0892a05",
+          "filename": "bench/workstation-queue.txt",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2Fworkstation-queue.txt",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/bench%2Fworkstation-queue.txt",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2Fworkstation-queue.txt?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -6,3 +6,4 @@\n # - an entry is removed once its bundle has been read.\n #\n # recipe                       branch                    what it measures\n+bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)"
+        },
+        {
+          "sha": "0b501d10e3b69f36a42dec46e7439864e71a9659",
+          "filename": "docs/team/RULES.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3,
+          "changes": 6,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/d136df7e31903bb7c18c3f90d7fa499985adb544/docs%2Fteam%2FRULES.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/d136df7e31903bb7c18c3f90d7fa499985adb544/docs%2Fteam%2FRULES.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/docs%2Fteam%2FRULES.md?ref=d136df7e31903bb7c18c3f90d7fa499985adb544",
+          "patch": "@@ -68,15 +68,15 @@ origin.\n | C3 | Continuing or stopping a line (§8.4) | Neither persistence nor abandonment by reflex | The general part isn't | **⚑ Retain and complete.**<ul><li>A failed gate is a verdict on its candidate, not on the whole line.</li><li>Continue while the line's marginal expected value, in performance *or* information, warrants the compute **against the alternatives**. Some chance of eventual success is not enough.</li><li>PAUSE, REDIRECT and STOP need no proof of impossibility.</li><li>Every significant report answers the four questions: what was expected and what happened; how much of the gap closed; what was learned about the mechanism; and the next experiment's value.</li><li>Progress in understanding is never confused with qualification for production (as GUARDIAN §4 says).</li><li>Research viability on the target machine is kept apart from adoption through CI. CI's grid of 1, 2 and nproc threads doesn't necessarily test the i9's question at 8–12 threads.</li><li>compact30's economic limits (CAMPAIGN.md) are retired.</li></ul> |\n | C4 | compact30's sequence machinery:<ul><li>three attempts per prototype (§3);</li><li>the instruction net-saving ledger as the gate (§5);</li><li>the §6.1–6.3 sequence, ending in a combined build;</li><li>V3's rules (§7)</li></ul> | compact30's constructor campaign | Yes | **Retire.** Kept: whole-cost accounting, with induced work, memory traffic, synchronisation and control all charged, and independent safety review. Instruction counts stay an important diagnostic, but they don't qualify a change for performance on their own, either way: more instructions can buy overlap, locality or less contention. STEWARDSHIP's count gate is reconciled in S2 |\n | C5 | No timing on the i9 or a workstation, nor local timing as evidence, without Louis (charter §2, §12.3; STEWARDSHIP) | In compact30, only CI measured | ⚑ No longer matches practice | **⚑ Adapt:**<ul><li>local timing is indicative only;</li><li>one exact recipe, registered and frozen before it ran, counts as evidence for its registration's question when Louis runs it himself and either hands its bundle to the Coordinator in his session, or runs it with the opt-in submission command (`just submit <recipe>`). Submission archives the complete bundle immutably, on the `evidence` branch with its SHA-256, and posts its identity and digest on #145. Louis's running the command is the authorisation (A4). The run's identity is read from the bundle, not stated by him. A comment or tarball that didn't come from his own run, by hand-over or by the submission command, is not evidence. It authorises no further runs, no changed method, and no timing by the agents;</li><li>what the run shows is limited to its hardware and workload;</li><li>adopting a change into master still needs CI's paired bench (see C3)</li></ul> |\n-| C6 | Changes to the bench's workload, statistical method or acceptance criteria need Louis; diagnostic instrumentation is delegated (charter §2, §12.3; STEWARDSHIP) | The measuring stick can't move | ⚑ Boundary undefined | **⚑ Adapt, with an explicit boundary.**<br>**Reserved to Louis:**<ul><li>the workload: corpora, scale, the thread grid;</li><li>the statistical estimand (the paired geometric-mean ratio);</li><li>the repeat and multiplicity policy;</li><li>the merge acceptance rule (an end-to-end figure whose 95% interval excludes zero).</li></ul>**Delegated:** harness mechanics, reporting and diagnostic instrumentation that leave all of those unchanged.<br>The bench's version numbers record a change of meaning. They don't authorise one |\n+| C6 | The bench's workload, statistical method and acceptance criteria are the team's, under review; none may move after a registration's data is seen (charter §2, §12.3; STEWARDSHIP; Louis, 2026-11-09) | The measuring stick can't move after the data is seen | ⚑ Amended 2026-11-09 | **Delegated as a class** (Louis, in the Coordinator's session, 2026-11-09: \"Design + acceptance + adoption\"):<ul><li><b>experiment and bench design:</b> the workload, corpora and scale, the thread grid, the statistical method of a registration, the repeat and multiplicity policy, evidence criteria and priorities;</li><li><b>the merge acceptance rule</b> for master;</li><li><b>adoption policy:</b> whether a change becomes a production default, and on which machines.</li></ul><b>The protections stay:</b><ul><li>every choice is pre-registered and frozen before its data, with the Researcher's PROCEED, and the Guardian's ruling on any gate, safety or admissibility question;</li><li>verdicts are honest and every attempt is retained, with no retry to pass;</li><li>C2 holds: a registered rule, gate or minimum is never relaxed after its data is seen;</li><li>a change to the standing master acceptance rule or to adoption policy is made by a decision-record entry the Guardian has reviewed, is logged on #145, and applies only forward.</li></ul>Diagnostic instrumentation stays delegated. The bench's version numbers record a change of meaning. They don't authorise one |\n \n ## D. What needs Louis\n \n Each of these counts only when Louis says so in the Coordinator's session:\n 1. approving or amending these rules, STEWARDSHIP.md or MODE.md;\n 2. widening the mandate or the team's authority (A1);\n 3. relaxing a registered rule, gate or minimum (C2);\n-4. the reserved part of the bench (C6);\n+4. ⚑ *Retired 2026-11-09:* the bench's design, acceptance and adoption are delegated (C6);\n 5. a workstation run, by running its frozen recipe himself, and handing it over or submitting it (C5);\n 6. new infrastructure, credentials or spending;\n 7. widening scope beyond mibz2 and its downstream pin bumps (STEWARDSHIP);\n@@ -110,7 +110,7 @@ the rows above (the edits are in this PR):\n | S1 | \"compact30 is the current campaign\"; the campaign table lists compact30 (current) | **Retire:** compact30 is recorded as ended on 2026-11-06 and archived. The team's standing work is under these rules, and further campaigns may still have entry documents |\n | S2 | Before a PR that changes the default decoding kernel: count `decode_block`'s instructions (build, walk, the rest); an integration PR needs the whole count at or below master's; a measurement PR states its mechanism first (PR #155's lesson) | **⚑ Adapt.** Keep the whole-decoder accounting, with matched counts archived and induced costs charged: #155's lesson stands. Retire \"at or below master's\" as a merge precondition (C4). Merging is decided by CI's end-to-end bench, and any excess in instructions must be explained by a stated mechanism. The measurement-PR route becomes the norm: mechanism, predicted effect, falsifier |\n | S3 | Reserved: timing or captures on the i9 or a workstation | **⚑ Adapt** to C5 |\n-| S4 | Reserved: changes to the bench's workload, statistical method or acceptance criteria | **⚑ Adapt** to C6's boundary |\n+| S4 | Reserved: changes to the bench's workload, statistical method or acceptance criteria | **⚑ Superseded 2026-11-09:** delegated under C6, with its protections |\n \n ## M. MODE.md (Louis's decisions, 2026-11-06)\n "
+        }
+      ]
+    },
+    {
+      "base": "14f5924e4af3c66f98254ba73bcedeac3a905eb3",
+      "head": "2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+      "files": [
+        {
+          "sha": "88bbf44f55cc33fa40faf00a23390650236ae016",
+          "filename": "bench/CHANGELOG.md",
+          "status": "modified",
+          "additions": 27,
+          "deletions": 18,
+          "changes": 45,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/bench%2FCHANGELOG.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/bench%2FCHANGELOG.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2FCHANGELOG.md?ref=2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+          "patch": "@@ -35,28 +35,16 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En\n to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their\n pull requests. Until then, these versions were kept by hand, with no check in CI.\n \n-## [3.5.0] - 2026-11-09\n+## [3.6.0] - 2026-11-09\n \n ### Added\n \n-Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0. The last two\n-entries below were numbered 3.2.4 and 3.3.0 on that branch while master made its own 3.3.0\n-and 3.4.0; merged after them, they are this version. Each entry is opt-in or a new field\n-beside the others: no measured figure changes meaning.\n+Merged from `research/run-fed-leader` (#270) after master's 3.3.0 and 3.4.0, and after\n+#302's 3.5.0 (`ab env --facts` and `termination`, the same `examples/ab.rs` change, listed\n+there). The entries below were numbered 3.2.4 and 3.3.0 on that branch, then 3.5.0, while\n+master and #302 made their own versions; merged after them, they are this version. Each\n+entry is opt-in or a new field beside the others: no measured figure changes meaning.\n \n-- **`ab env --facts`** (`examples/ab.rs`, §R11 of docs/journal/2026-11-09-run-fed-leader.md):\n-  the machine's facts read passively, from procfs, sysfs, cgroupfs and `sched_getaffinity`\n-  alone. No thread is started, nothing spins and no perf counter is opened; plain `ab env`\n-  is unchanged. The CPUs allowed are the affinity mask and `Cpus_allowed_list`, which must\n-  agree. The CPU quota is that of the process's effective cgroup hierarchy (v2, or the v1\n-  hierarchy holding the `cpu` controller), every level read up to the hierarchy's true\n-  root: `unlimited`, `limited` or `unknown` with why, in the representation of\n-  `parallel::cpu_quota` on #302. The run-fed leader's workstation preflight reads it.\n-- **Each run's child termination** (`examples/ab.rs`, `termination`): `\"success\"`,\n-  `\"exit N\"`, `\"signal N\"` or `\"unknown\"`, as the parent reaped the child, beside its\n-  `exit`. Output written before a nonzero exit or a signal is no longer indistinguishable\n-  from a successful run. The run-fed leader's checks (`bench/run_fed_leader.py`) require\n-  `\"success\"`, and a record without it is refused.\n - **`ab run --sysfs-state`** (`examples/ab.rs`): the parent's half of `--machine-state`\n   alone. The clock (each CPU's `scaling_cur_freq`, and their mean), the governor, EPP and\n   turbo of the policies holding the run's CPUs, and the package temperature, read from sysfs\n@@ -102,6 +90,27 @@ beside the others: no measured figure changes meaning.\n   fills' census by share). This is a change to what is stored. Every figure keeps its\n   meaning: no arm the bench runs changed.\n \n+## [3.5.0] - 2026-11-09\n+\n+### Added\n+\n+Both are opt-in or a new field beside the others: no measured figure changes meaning. The\n+same `examples/ab.rs` change is on #302 (`a15e84f9`, cherry-picked from `cb2c233e` here).\n+\n+- **`ab env --facts`** (`examples/ab.rs`, §R11 of docs/journal/2026-11-09-run-fed-leader.md):\n+  the machine's facts read passively, from procfs, sysfs, cgroupfs and `sched_getaffinity`\n+  alone. No thread is started, nothing spins and no perf counter is opened; plain `ab env`\n+  is unchanged. The CPUs allowed are the affinity mask and `Cpus_allowed_list`, which must\n+  agree. The CPU quota is that of the process's effective cgroup hierarchy (v2, or the v1\n+  hierarchy holding the `cpu` controller), every level read up to the hierarchy's true\n+  root: `unlimited`, `limited` or `unknown` with why, in the representation of\n+  `parallel::cpu_quota` on #302. The run-fed leader's workstation preflight reads it.\n+- **Each run's child termination** (`examples/ab.rs`, `termination`): `\"success\"`,\n+  `\"exit N\"`, `\"signal N\"` or `\"unknown\"`, as the parent reaped the child, beside its\n+  `exit`. Output written before a nonzero exit or a signal is no longer indistinguishable\n+  from a successful run. The run-fed leader's checks (`bench/run_fed_leader.py`) require\n+  `\"success\"`, and a record without it is refused.\n+\n ## [3.4.0] - 2026-11-09\n \n ### Fixed"
+        },
+        {
+          "sha": "04c411b51244bcc4827d590e8c9a8c88cec7e9bf",
+          "filename": "bench/report.py",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/bench%2Freport.py",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/bench%2Freport.py",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2Freport.py?ref=2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+          "patch": "@@ -70,7 +70,7 @@\n from collections import defaultdict\n from pathlib import Path\n \n-BENCH = \"3.5.0\"\n+BENCH = \"3.6.0\"\n # Each family of figures, and the major versions that set or redefined its meaning\n # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus\n # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every"
+        },
+        {
+          "sha": "85fe63f12617701d23d3f4844f751aaaa618c025",
+          "filename": "docs/journal/2026-11-09-run-fed-leader.md",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/docs%2Fjournal%2F2026-11-09-run-fed-leader.md",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/docs%2Fjournal%2F2026-11-09-run-fed-leader.md",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/docs%2Fjournal%2F2026-11-09-run-fed-leader.md?ref=2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+          "patch": "@@ -1361,7 +1361,7 @@ checks that the reading is identical with the snapshots removed or made to contr\n timing.\n \n **2. A frozen telemetry schema, recorded only.**\n-- **Per run:** ab's new `--sysfs-state` (bench 3.5.0) records each run's `machine_pre` and\n+- **Per run:** ab's new `--sysfs-state` (bench 3.6.0 since R12's reconciliation; 3.5.0 when written) records each run's `machine_pre` and\n   `machine_post`, with `t_spawn_unix_ns` and `t_exit_unix_ns`. These are 3.3.0's\n   `--machine-state` parent readings, unchanged: each CPU's `scaling_cur_freq` (kHz) and their\n   mean, each policy's id, CPUs, driver, governor and EPP, the turbo state and its source, the"
+        },
+        {
+          "sha": "eba06c9a0a14e5b52000e9ad6809d546a1f0ca49",
+          "filename": "examples/ab.rs",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1,
+          "changes": 2,
+          "blob_url": "https://github.com/lmmx/mibz2/blob/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/examples%2Fab.rs",
+          "raw_url": "https://github.com/lmmx/mibz2/raw/2fab12cacca8c5235d30ca832ce0df2d53b8ceaf/examples%2Fab.rs",
+          "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/examples%2Fab.rs?ref=2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+          "patch": "@@ -31,7 +31,7 @@\n //!                      EPP, turbo and package temperature read from sysfs before each run\n //!                      is spawned and after it exits, with their timestamps. The child is\n //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`\n-//!                      cleared (bench 3.5.0; recorded and never judged)\n+//!                      cleared (bench 3.6.0; recorded and never judged)\n //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired\n //!                                    ratios against ARM (geometric mean, 95% CI over rounds)\n //! ab child ARM THREADS FILE          one run (what `run` spawns)"
+        }
+      ]
+    }
+  ],
+  "ci": [
+    {
+      "head": "d136df7e31903bb7c18c3f90d7fa499985adb544",
+      "tree": "7e44336a5783506e54364e2f78b944c8df91408d",
+      "merge": {
+        "sha": "bb583f682140422ffcecad6d2fe8814a0654545c",
+        "tree": "7e44336a5783506e54364e2f78b944c8df91408d"
+      },
+      "checks": [
+        {
+          "name": "Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129334359674"
+        },
+        {
+          "name": "deploy-branch",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899837/job/129333708807"
+        },
+        {
+          "name": "preview",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899837/job/129333706864"
+        },
+        {
+          "name": "look",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899837/job/129333706428"
+        },
+        {
+          "name": "python (3.12)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332935392"
+        },
+        {
+          "name": "python (3.15)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332935162"
+        },
+        {
+          "name": "python (3.11)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332935058"
+        },
+        {
+          "name": "python (3.14)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332935053"
+        },
+        {
+          "name": "python (3.13)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332934957"
+        },
+        {
+          "name": "python (3.10)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332934797"
+        },
+        {
+          "name": "Publish crate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332919014"
+        },
+        {
+          "name": "sdist",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916922"
+        },
+        {
+          "name": "windows (windows-latest, x64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916775"
+        },
+        {
+          "name": "linux (ubuntu-22.04, x86_64, auto)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916725"
+        },
+        {
+          "name": "macos (macos-15, aarch64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916722"
+        },
+        {
+          "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916685"
+        },
+        {
+          "name": "macos (macos-15, x86_64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332916681"
+        },
+        {
+          "name": "check-commit",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899592/job/129332871488"
+        },
+        {
+          "name": "pages",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899837/job/129332869336"
+        },
+        {
+          "name": "build",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899837/job/129332868989"
+        },
+        {
+          "name": "submit",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332868795"
+        },
+        {
+          "name": "typing",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332868635"
+        },
+        {
+          "name": "fuzz-smoke",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332868622"
+        },
+        {
+          "name": "rust",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332868402"
+        },
+        {
+          "name": "get-python-versions",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899543/job/129332868287"
+        },
+        {
+          "name": "miri",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899564/job/129332867829"
+        },
+        {
+          "name": "occupancy",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899557/job/129332867790"
+        },
+        {
+          "name": "bench",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42666899408/job/129332867554"
+        }
+      ],
+      "log": [
+        "2026-11-09T17:40:28.2378658Z HEAD is now at bb583f6 Merge d136df7e31903bb7c18c3f90d7fa499985adb544 into a2da49638ac54d7763de1c167bd054f67ffdc763",
+        "2026-11-09T17:40:28.2828179Z ##[group]Run python3 bench/test_submit.py",
+        "2026-11-09T17:40:41.5195453Z Ran 5 tests in 13.155s",
+        "2026-11-09T17:40:41.5196289Z OK",
+        "2026-11-09T17:40:41.7912926Z ##[group]Run python3 bench/test_telemetry_check.py",
+        "2026-11-09T17:40:53.0140302Z Ran 3 tests in 11.160s",
+        "2026-11-09T17:40:53.0140785Z OK",
+        "2026-11-09T17:40:53.0269263Z ##[group]Run python3 bench/test_svc_target_check.py",
+        "2026-11-09T17:40:53.0930239Z Ran 9 tests in 0.004s",
+        "2026-11-09T17:40:53.0930623Z OK",
+        "2026-11-09T17:40:53.1039764Z ##[group]Run python3 bench/test_svc_target.py",
+        "2026-11-09T17:41:10.4280106Z Ran 6 tests in 17.261s",
+        "2026-11-09T17:41:10.4280437Z OK",
+        "2026-11-09T17:41:10.4434159Z ##[group]Run python3 bench/test_service_guarded.py",
+        "2026-11-09T17:41:11.0081173Z Ran 18 tests in 0.473s",
+        "2026-11-09T17:41:11.0081951Z OK (skipped=1)",
+        "2026-11-09T17:41:11.0221922Z ##[group]Run python3 bench/test_service_guarded_recipe.py",
+        "2026-11-09T17:41:36.3605580Z Ran 11 tests in 25.273s",
+        "2026-11-09T17:41:36.3606005Z OK"
+      ]
+    },
+    {
+      "head": "2fab12cacca8c5235d30ca832ce0df2d53b8ceaf",
+      "tree": "3d10162572670b2e69871c9e9868d4c15cd22526",
+      "merge": {
+        "sha": "7bf6d3df770590ba9b45db13f781cecc9020d45e",
+        "tree": "3d10162572670b2e69871c9e9868d4c15cd22526"
+      },
+      "checks": [
+        {
+          "name": "Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345815739"
+        },
+        {
+          "name": "check-commit",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345448576"
+        },
+        {
+          "name": "windows (windows-latest, x64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345440425"
+        },
+        {
+          "name": "linux (ubuntu-22.04, x86_64, auto)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345438349"
+        },
+        {
+          "name": "macos (macos-15, x86_64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345428673"
+        },
+        {
+          "name": "sdist",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345381526"
+        },
+        {
+          "name": "Publish crate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345378596"
+        },
+        {
+          "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345377789"
+        },
+        {
+          "name": "macos (macos-15, aarch64)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850714/job/129345376552"
+        },
+        {
+          "name": "deploy-branch",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850754/job/129337148805"
+        },
+        {
+          "name": "preview",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850754/job/129337146935"
+        },
+        {
+          "name": "look",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850754/job/129337146096"
+        },
+        {
+          "name": "python (3.14)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286883"
+        },
+        {
+          "name": "python (3.15)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286752"
+        },
+        {
+          "name": "python (3.13)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286552"
+        },
+        {
+          "name": "python (3.12)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286486"
+        },
+        {
+          "name": "python (3.11)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286449"
+        },
+        {
+          "name": "python (3.10)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336286397"
+        },
+        {
+          "name": "bench",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667851013/job/129336187259"
+        },
+        {
+          "name": "pages",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850754/job/129336186784"
+        },
+        {
+          "name": "build",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850754/job/129336186210"
+        },
+        {
+          "name": "rust",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336184115"
+        },
+        {
+          "name": "submit",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336184039"
+        },
+        {
+          "name": "fuzz-smoke",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336183986"
+        },
+        {
+          "name": "get-python-versions",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336183931"
+        },
+        {
+          "name": "typing",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850602/job/129336183702"
+        },
+        {
+          "name": "occupancy",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/lmmx/mibz2/actions/runs/42667850414/job/129336183059"
+        }
+      ],
+      "log": [
+        "2026-11-09T17:46:24.4442979Z HEAD is now at 7bf6d3d Merge 2fab12cacca8c5235d30ca832ce0df2d53b8ceaf into e788556872121d269c2b8f078ab1699f13289a99",
+        "2026-11-09T17:46:24.4919585Z ##[group]Run python3 bench/test_submit.py",
+        "2026-11-09T17:46:37.9613980Z Ran 5 tests in 13.349s",
+        "2026-11-09T17:46:37.9614847Z OK",
+        "2026-11-09T17:46:37.9773377Z ##[group]Run python3 bench/test_run_fed_stage.py",
+        "2026-11-09T17:46:38.1333284Z Ran 37 tests in 0.084s",
+        "2026-11-09T17:46:38.1333737Z OK",
+        "2026-11-09T17:46:38.1473834Z ##[group]Run python3 bench/test_run_fed_leader.py",
+        "2026-11-09T17:46:42.7302854Z Ran 25 tests in 4.474s",
+        "2026-11-09T17:46:42.7303224Z OK",
+        "2026-11-09T17:46:42.7450548Z ##[group]Run python3 bench/test_run_fed_leader_ws.py",
+        "2026-11-09T17:46:56.8778995Z Ran 34 tests in 14.040s",
+        "2026-11-09T17:46:56.8779526Z OK",
+        "2026-11-09T17:46:57.2011160Z ##[group]Run python3 bench/test_telemetry_check.py",
+        "2026-11-09T17:47:08.7199862Z Ran 3 tests in 11.454s",
+        "2026-11-09T17:47:08.7208008Z OK",
+        "2026-11-09T17:47:08.7342426Z ##[group]Run python3 bench/test_run_fed_leader_recipe.py",
+        "2026-11-09T17:47:41.9602259Z Ran 11 tests in 33.158s",
+        "2026-11-09T17:47:41.9602736Z OK"
+      ]
+    }
+  ],
+  "audit": {
+    "resolved": 5,
+    "unresolved": []
+  }
+}
