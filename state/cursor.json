@@ -37,7 +37,8 @@
     6729932062,
     6730271993,
     6730769410,
-    6731656628
+    6731656628,
+    6732659575
   ],
   "outgoing_comment_ids": [
     {
@@ -662,6 +663,15 @@
       "report_path": "state/records/reviews/inbox-6731656628/report.md",
       "reply_id": 6731728422,
       "routing_verification": "Pinned route/check passed; exact author/body/destination verified. Pinned verify hardcodes coordinator; optimizer verify-pass not claimed."
+    },
+    {
+      "comment_id": 6732659575,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+      "baseline_commit": "03e52206ac248737bc856f064928adf238265917",
+      "progress": "Receipt: migration exact head and manifest digest verified; replay and production-path source audit pending."
     }
   ],
   "migrated_from": {
