@@ -1,0 +1,49 @@
+restored tree 8ee51ac7d5c8d5a97a53236862940a3d2cb1c47c; 2026-11-09T06:03:34Z
+cmd: cargo test -j2 --lib mtf::tests -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.86s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 3 tests
+test mtf::tests::miri_register_checkpoints ... ok
+test mtf::tests::register_checkpoints_are_checkpoints ... ok
+test mtf::tests::register_checkpoints_reach_every_class ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 1.36s
+
+rc=0
+cmd: env RUSTFLAGS="-C target-feature=+avx2,+bmi1" MIBZ2_EXPECT_AVX2=1 MIRIFLAGS=-Zmiri-env-forward=MIBZ2_EXPECT_AVX2 cargo +nightly miri test -j2 --lib -- --exact mtf::tests::miri_register_checkpoints
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/6a9a3154ce598d72/out/mibz2-6a9a3154ce598d72)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 1 test
+test mtf::tests::miri_register_checkpoints ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 66.65s
+
+warning: 1 warning emitted
+
+rc=0
+cmd: cargo test -j2 --features c29-reach --test pipelined an_mtf_error_after_a_small_block -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.91s
+     Running tests/pipelined.rs (target/debug/deps/pipelined-356882816d8ddc5b)
+
+running 1 test
+test an_mtf_error_after_a_small_block ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.56s
+
+rc=0
+cmd: cargo test -j2 --lib parallel::c29_tests -- --test-threads=2
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 1 test
+test parallel::c29_tests::the_front_stage_runs_c29_exactly_when_selected ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 61 filtered out; finished in 0.01s
+
+rc=0

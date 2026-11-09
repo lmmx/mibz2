@@ -1,0 +1,75 @@
+mutant C29c-vector-store-bound on 8ee51ac7d5c8d5a97a53236862940a3d2cb1c47c + mutants/C29c-vector-store-bound.patch; 2026-11-09T06:02:35Z
+cmd: cargo test -j2 --lib mtf::tests -- --test-threads=2
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.39s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-45e4ffcd803e645f)
+
+running 3 tests
+double free or corruption (!prev)
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `<worktree>/target/debug/deps/mibz2-45e4ffcd803e645f 'mtf::tests' --test-threads=2` (signal: 6, SIGABRT: process abort signal)
+rc=101
+cmd: env RUSTFLAGS="-C target-feature=+avx2,+bmi1" MIBZ2_EXPECT_AVX2=1 MIRIFLAGS=-Zmiri-env-forward=MIBZ2_EXPECT_AVX2 cargo +nightly miri test -j2 --lib -- --exact mtf::tests::miri_register_checkpoints
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling syn v3.0.9
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling fearless_simd v1.2.0
+   Compiling bytemuck v1.25.2
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.6 (<worktree>)
+    Finished `test` profile [optimized + debuginfo] target(s) in 10.47s
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/6a9a3154ce598d72/out/mibz2-6a9a3154ce598d72)
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 1 test
+test mtf::tests::miri_register_checkpoints ... error: Undefined Behavior: memory access failed: attempting to access 32 bytes, but got alloc4445359+0x4004 which is only 31 bytes from the end of the allocation
+    --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/../../stdarch/crates/core_arch/src/x86/avx.rs:1743:5
+     |
+1743 |     mem_addr.write_unaligned(a);
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+     |
+     = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+     = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+help: alloc4445359 was allocated here:
+    --> src/mtf.rs:543:5
+     |
+ 543 |     ll.reserve(max);
+     |     ^^^^^^^^^^^^^^^
+     = note: this is on thread `mtf::tests::mir`
+     = note: stack backtrace:
+             0: std::arch::x86_64::_mm256_storeu_si256
+                 at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/../../stdarch/crates/core_arch/src/x86/avx.rs:1743:5: 1743:32
+             1: mtf::mtf_checkpoints_reg_avx2
+                 at src/mtf.rs:600:17: 600:72
+             2: mtf::mtf_checkpoints_reg
+                 at src/mtf.rs:516:29: 516:81
+             3: mtf::tests::miri_register_checkpoints
+                 at src/mtf/tests.rs:365:19: 365:72
+             4: mtf::tests::miri_register_checkpoints::{closure#0}
+                 at src/mtf/tests.rs:337:31: 337:31
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error; 1 warning emitted
+
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner <worktree>/target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/6a9a3154ce598d72/out/mibz2-6a9a3154ce598d72 --exact 'mtf::tests::miri_register_checkpoints'` (exit status: 1)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.
+rc=1

@@ -1,0 +1,14 @@
+diff --git a/src/mtf.rs b/src/mtf.rs
+index 95ee0e1d..e7be29fb 100644
+--- a/src/mtf.rs
++++ b/src/mtf.rs
+@@ -677,9 +677,6 @@ unsafe fn mtf_checkpoints_reg_avx2(
+         byte!(s);
+     }
+     // a block that ends on a checkpoint completes it
+-    if result.is_ok() && n == next {
+-        checkpoints.push(*counts);
+-    }
+     // SAFETY: the first n bytes were written above, n <= max <= capacity
+     ll.set_len(n);
+     result.map(|()| n)

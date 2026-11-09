@@ -1,0 +1,6 @@
+C29a-checkpoint-before-part: KILLED
+C29b-final-checkpoint: KILLED
+C29c-vector-store-bound: KILLED
+C29d-lever-dropped: KILLED
+C29e-front-stage-ignores-switch: KILLED
+restored: PASS

@@ -1,0 +1,13 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index 42ec77c6..a2699c24 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -214,7 +214,7 @@ impl StreamDecoder {
+     ) -> StreamDecoder {
+         use super::coop::{BARRIER_SPINS as LONG, SHORT_SPINS as SHORT};
+         let (teams, team_k) = (teams.max(1), k.max(2));
+-        let reg = levers.register_list;
++        let reg = false && levers.register_list;
+         macro_rules! launch {
+             ($park:literal, $small:literal, $spin:ident) => {
+                 Self::launch(teams, slots, move |shared, jobs| {

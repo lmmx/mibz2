@@ -29,7 +29,10 @@
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
-//!                                    quota, and whether the run-queue counter counts
+//!                                    quota (and `cpu_quota_state`: unlimited, finite or
+//!                                    unknown), whether the run-queue counter counts, and
+//!                                    each run's facts (AVX2 as detected, the affinity
+//!                                    mask's CPUs, `available_parallelism`)
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -53,6 +56,10 @@
 //!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
 //!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
 //!   `both`, park and small together), each its pipeK arm's plan and window;
+//! - `mibz2-pipe2-both-c29`, `-pipe3-both-c29`, `-pipe4-both-c29` (C29, opt-in: a
+//!   pipeK-both arm with `Levers::register_list` set, the leader's move-to-front by the
+//!   register-list checkpoint kernel; docs/journal/2026-11-09-c29-register-checkpoints.md),
+//!   so in one build it differs from its pipeK-both arm in that kernel alone;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -590,6 +597,30 @@ fn decode(
                 park: lever == "park" || lever == "both",
                 small: lever == "small" || lever == "both",
                 spin2k: lever == "spin2k",
+                register_list: false,
+            };
+            drain(
+                mibz2::BzReader::parallel_pipelined_levers(
+                    open()?,
+                    teams,
+                    k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                    levers,
+                ),
+                h,
+                last,
+            )
+        }
+        // C29 (opt-in, `Levers::register_list`): the pipeK-both arm, its plan, window and
+        // levers, with the register-list checkpoint kernel in the leader's front stage
+        "mibz2-pipe2-both-c29" | "mibz2-pipe3-both-c29" | "mibz2-pipe4-both-c29" => {
+            let k = (arm.as_bytes()["mibz2-pipe".len()] - b'0') as usize;
+            let teams = (threads / k).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let levers = mibz2::parallel::Levers {
+                register_list: true,
+                ..mibz2::parallel::PIPELINED_LEVERS
             };
             drain(
                 mibz2::BzReader::parallel_pipelined_levers(
@@ -738,12 +769,39 @@ fn child(arm: &str, threads: usize, path: &str) {
     // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
+    // (read after the decode's wall and CPU: untimed)
+    let facts = run_facts();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",{facts},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
     );
+}
+
+/// The facts a run's kernels and CPU allocation are bound by, as JSON fields: `avx2`, as
+/// `Kernels::detect` reports it (the detection every in-process arm hands its decoder, and
+/// the bool `mtf_checkpoints_reg` and `mtf_checkpoints` dispatch on: false, both are the
+/// scalar kernel); `cpus_allowed`, the CPUs in this process's affinity mask (its
+/// `Cpus_allowed_list`, what `sched_getaffinity` returns); and `available_parallelism`, the
+/// standard library's count (the mask, less any cgroup CPU quota). Absent: null. A child
+/// reads them after its wall and CPU are taken, so they are untimed
+fn run_facts() -> String {
+    let avx2 = mibz2::Kernels::detect().avx2;
+    let allowed = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+                .map(|l| cpu_list(l).len())
+        });
+    let par = std::thread::available_parallelism().ok().map(|n| n.get());
+    let n = |x: Option<usize>| x.map_or("null".into(), |x| x.to_string());
+    format!(
+        "\"avx2\":{avx2},\"cpus_allowed\":{},\"available_parallelism\":{}",
+        n(allowed),
+        n(par)
+    )
 }
 
 /// (busy, steal, total) jiffies over all CPUs
@@ -914,6 +972,17 @@ fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
 
+/// The cgroup CPU quota's state, which `cpu_quota`'s null alone can't tell apart: read and
+/// unlimited (`max`), read and a number of CPUs, or not read at all (neither cgroup file, or
+/// one that doesn't parse). C29's reporter judges only the first two (at least 4 CPUs)
+fn quota_state(quota: Option<Option<f64>>) -> &'static str {
+    match quota {
+        Some(None) => "unlimited",
+        Some(Some(_)) => "finite",
+        None => "unknown",
+    }
+}
+
 /// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
 /// checked, not assumed: twice as many threads as CPUs spin for 0.3 s, and it counts if
 /// their summed wait is at least a quarter of their summed time off a CPU (most of it
@@ -984,13 +1053,15 @@ fn env() {
             .join(",")
     };
     println!(
-        "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        "{{\"cpus\":{ncpu},{},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"cpu_quota_state\":\"{}\",\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        run_facts(),
         cores.len(),
         cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
         match quota {
             Some(Some(q)) => format!("{q:.2}"),
             _ => "null".into(),
         },
+        quota_state(quota),
         throttled().is_some(),
         psi_cpu().is_some(),
     );
@@ -1143,8 +1214,10 @@ fn run(args: &[String]) {
                         .unwrap()
                         .to_string_lossy()
                         .to_string();
+                    // (the child's exit: 0, or its code, or -1 for a signal)
+                    let exit = o.status.code().unwrap_or(-1);
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",\"exit\":{exit},{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
@@ -1350,6 +1423,29 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_unread_quota_is_unknown_not_unlimited() {
+        assert_eq!(quota_state(Some(None)), "unlimited");
+        assert_eq!(quota_state(Some(Some(2.0))), "finite");
+        assert_eq!(quota_state(None), "unknown");
+    }
+
+    #[test]
+    fn run_facts_are_the_kernels_detection_and_the_allocation() {
+        let line = format!("{{{}}}", run_facts());
+        assert_eq!(
+            json_str(&line, "avx2").as_deref(),
+            Some(if mibz2::Kernels::detect().avx2 {
+                "true"
+            } else {
+                "false"
+            })
+        );
+        let par = std::thread::available_parallelism().unwrap().get();
+        assert_eq!(json_f(&line, "available_parallelism"), par as f64);
+        assert!(json_f(&line, "cpus_allowed") >= 1.0, "{line}");
+    }
 
     #[test]
     fn every_arm_runs_in_every_position_equally() {

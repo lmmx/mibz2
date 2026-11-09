@@ -1,0 +1,16 @@
+running 12 tests
+test a_bad_orig_ptr ... ok
+test an_mtf_error_after_a_small_block ... ok
+test an_mtf_error_on_the_prefetched_block ... ok
+test dropped_mid_stream ... ok
+test a_block_crc_in_the_middle ... ok
+test one_block_and_none ... ok
+test other_plans_take_the_plain_path ... ok
+test small_blocks_among_large_and_streams ... ok
+test small_blocks_keep_the_pipeline_primed ... ok
+test every_level_and_shape ... ok
+test the_corpora ... ok
+test truncated ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.01s
+

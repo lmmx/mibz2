@@ -28,6 +28,10 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # C29's reach (the `c29-reach` feature's counter, off in every timed build): the
+      # pipelined tests' assertions that the switch reaches the stage exactly when selected
+      - name: C29's reach
+        run: cargo test --features c29-reach --test pipelined
       # bench/alternatives has its own lock, on this crate by path, and master's benchmark
       # builds it --locked: a version bump that leaves it behind fails here, not only there
       - name: The benchmark alternatives' lock
@@ -36,6 +40,7 @@ jobs:
   # examples/fuzz.rs, briefly: the classic candidates (sequential, parallel) and the
   # pipeline cases (the shipped default, 3 x 3 pipelined with park and small, forced
   # through each default entry point; docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md),
+  # and C29's (those teams with the register-list checkpoint kernel selected),
   # 30 s each at fixed seeds, on the fuzz profile (debug assertions and overflow checks on).
   # A failure's inputs are uploaded.
   fuzz-smoke:
@@ -45,11 +50,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Build
-        run: cargo build --profile fuzz --example fuzz
+        run: cargo build --profile fuzz --example fuzz --features c29-reach
       - name: Classic candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      # C29 (opt-in): the same pipeline cases on the default's teams with the register-list
+      # checkpoint kernel selected (docs/journal/2026-11-09-c29-register-checkpoints.md)
+      - name: C29 candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/c29 c29
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7
@@ -66,6 +75,15 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+
+  # bench/c29_checkpoints.py, C29's diagnostic's reporter, on synthetic runs: VALID with the
+  # reading its ratios give, INVALID on each defect its admission guards against
+  c29-reporter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Reporter tests
+        run: python3 bench/test_c29_checkpoints.py
 
   get-python-versions:
     runs-on: ubuntu-latest

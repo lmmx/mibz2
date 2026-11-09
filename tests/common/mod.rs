@@ -533,6 +533,16 @@ pub enum PipeShape {
         chunk: usize,
         read: usize,
     },
+    /// C29 (opt-in): `StreamDecoder::pipelined_levers` with the default's levers and
+    /// `register_list` (the register-list checkpoint kernel in the leader's front stage)
+    /// at `teams` teams of `k`, in `slots`
+    C29 {
+        teams: usize,
+        k: usize,
+        slots: usize,
+        chunk: usize,
+        read: usize,
+    },
 }
 
 /// A pipelined decoder under test (`PipeShape`)
@@ -548,6 +558,9 @@ pub struct PipeRun {
     pub out: Vec<u8>,
     pub res: Result<(), Error>,
     pub counts: Option<(u64, u64)>,
+    /// the stage attempts made with C29 selected (`StreamDecoder::c29_stages`), where the
+    /// shape's decoder is in reach and the `c29-reach` feature is on
+    pub c29_stages: Option<u64>,
 }
 
 impl Pipelined {
@@ -565,6 +578,13 @@ impl Pipelined {
                 chunk,
                 read,
             } => format!("mibz2 pipelined {teams}x{k} park+small s{slots} w{chunk} r{read}"),
+            PipeShape::C29 {
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+            } => format!("mibz2 pipelined {teams}x{k} park+small+c29 s{slots} w{chunk} r{read}"),
         }
     }
 
@@ -577,7 +597,16 @@ impl Pipelined {
             assert!(dec.is_pipelined(), "{}: not pipelined", self.name());
             let (out, res) = drive(&dec, data, chunk, read);
             let counts = Some(dec.pipeline_counts());
-            PipeRun { out, res, counts }
+            #[cfg(feature = "c29-reach")]
+            let c29_stages = Some(dec.c29_stages());
+            #[cfg(not(feature = "c29-reach"))]
+            let c29_stages = None;
+            PipeRun {
+                out,
+                res,
+                counts,
+                c29_stages,
+            }
         };
         match self.shape {
             PipeShape::Push { chunk, read } => {
@@ -601,6 +630,27 @@ impl Pipelined {
                     Kernels::detect(),
                     PIPELINED_LEVERS,
                 );
+                pushed(dec, chunk, read)
+            }
+            PipeShape::C29 {
+                teams,
+                k,
+                slots,
+                chunk,
+                read,
+            } => {
+                let levers = mibz2::parallel::Levers {
+                    register_list: true,
+                    ..PIPELINED_LEVERS
+                };
+                let dec = mibz2::StreamDecoder::pipelined_levers(
+                    teams,
+                    k,
+                    slots,
+                    Kernels::detect(),
+                    levers,
+                );
+                assert_eq!(dec.threads(), teams * k);
                 pushed(dec, chunk, read)
             }
             PipeShape::Reader { read } => {
@@ -628,6 +678,7 @@ impl Pipelined {
                     out,
                     res,
                     counts: None,
+                    c29_stages: None,
                 }
             }
             PipeShape::Whole => {
@@ -636,11 +687,13 @@ impl Pipelined {
                         out,
                         res: Ok(()),
                         counts: None,
+                        c29_stages: None,
                     },
                     Err(e) => PipeRun {
                         out: Vec::new(),
                         res: Err(e),
                         counts: None,
+                        c29_stages: None,
                     },
                 }
             }
@@ -699,6 +752,30 @@ pub fn pipeline_candidates() -> Vec<Pipelined> {
         .into_iter()
         .map(|shape| Pipelined { shape })
         .collect()
+}
+
+/// The C29 candidates the fuzz loop checks in its `c29` mode (examples/fuzz.rs;
+/// docs/journal/2026-11-09-c29-register-checkpoints.md): the default's own pipelined
+/// teams (three of three, park and small, the window the default gives them, 12 blocks)
+/// with `register_list` set, at large and small write and read sizes, and one such team.
+/// The default constructors can't select C29 (it is off by default), so each is
+/// `pipelined_levers`, the default's levers and C29.
+pub fn c29_candidates() -> Vec<Pipelined> {
+    let at = |teams, k, slots, chunk, read| Pipelined {
+        shape: PipeShape::C29 {
+            teams,
+            k,
+            slots,
+            chunk,
+            read,
+        },
+    };
+    vec![
+        at(3, 3, 12, 1 << 20, 1 << 16),
+        at(3, 3, 12, 997, 509),
+        at(3, 3, 12, 100_003, 4093),
+        at(1, 3, 4, 100_003, 1 << 16),
+    ]
 }
 
 /// Multi-block inputs for the pipeline (a team engages only on a block of `MIN_COOP` rows
