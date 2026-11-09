@@ -1286,11 +1286,15 @@
     },
     {
       "trigger_comment_id": 6746400325,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
-      "source_commit": "cb4bccf025a79b712e0d2316eea1338e6f8fc582"
+      "source_commit": "cb4bccf025a79b712e0d2316eea1338e6f8fc582",
+      "report_path": "state/reports/run-fed-r11-6746400325/report.md",
+      "report_commit": "a0e4ebf6093241ad7f14333465fc8bec53dbc7c3",
+      "review_comment_pr": 145,
+      "disposition": "REVISE required preflight collector exit admission; prior quota/type/identity/passivity and child termination findings closed. 58 Python tests pass; four acquisition-status fixtures still PASS. Pending authority repin is separate."
     }
   ],
   "active_delegations": [],
