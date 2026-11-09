@@ -1063,6 +1063,19 @@
       "status": "finished",
       "disposition": "D067 three technical repair objections resolved; draft registration PROCEED; timing and admission boundaries retained",
       "comment": 6741390621
+    },
+    {
+      "pr": 302,
+      "sha": "2bab9aa544372a2dab7880157d192a4c99fc0acd",
+      "evidence_digest": "registration:676f1b5cf7f6af59f7f8902612b82f1bc89f1493;result-comment:6750273151",
+      "decision": "D070",
+      "commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c",
+      "id": "D070",
+      "incoming_pr": 161,
+      "incoming_comment": 6750287351,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "Adoption not admissible as written; standing CI rule misstated; amended C6 absent from authenticated pin; reported arithmetic corrected"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1278,7 +1291,9 @@
     "178f75e96941826a0f10af0888324b27c1e32f7e",
     "837f7c9d7595855438e0a0f40121c400ec34d34c",
     "c5c7d84035b7cadf6cb5906698afc365577e7b16",
-    "648cd0babb6fe7de4b4ea3e26648b6f0f7f0d5c2"
+    "648cd0babb6fe7de4b4ea3e26648b6f0f7f0d5c2",
+    "f40546c17655ee0647fa9ab3ca8f982a040a479d",
+    "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1428,8 +1443,9 @@
   },
   "current_execution": {
     "active_comment": 6750287351,
-    "status": "in progress",
-    "decision": "D070"
+    "status": "complete",
+    "decision": "D070",
+    "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
   },
   "duplicate_events": [
     {
@@ -1973,6 +1989,13 @@
       "decision": "D069",
       "commit": "c5c7d84035b7cadf6cb5906698afc365577e7b16",
       "comment": 6741390621
+    },
+    {
+      "pr": 302,
+      "sha": "2bab9aa544372a2dab7880157d192a4c99fc0acd",
+      "evidence_digest": "registration:676f1b5cf7f6af59f7f8902612b82f1bc89f1493;result-comment:6750273151",
+      "decision": "D070",
+      "commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
     }
   ],
   "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -2433,8 +2456,10 @@
     {
       "comment_id": 6750287351,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D070"
+      "status": "complete",
+      "decision": "D070",
+      "receipt_commit": "f40546c17655ee0647fa9ab3ca8f982a040a479d",
+      "work_commit": "7a2949c6341a733d8e8b7ecd1f933a88766dee6c"
     }
   ],
   "migrated_from": {
