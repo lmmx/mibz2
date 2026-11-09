@@ -1,0 +1,146 @@
+[
+  {
+    "case": "all-zero",
+    "checker_exit": 0,
+    "verdict": "PASS",
+    "expected": "PASS"
+  },
+  {
+    "case": "reordered",
+    "checker_exit": 0,
+    "verdict": "PASS",
+    "expected": "PASS"
+  },
+  {
+    "case": "ab env --facts-exit-17",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab env --facts-exit-124",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab env --facts-exit-137",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab env --facts-missing",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab env --facts-duplicate",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab env --facts-failure-then-success",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-exit-17",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-exit-124",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-exit-137",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-missing",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-duplicate",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "lscpu-failure-then-success",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-exit-17",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-exit-124",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-exit-137",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-missing",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-duplicate",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "ab sample-failure-then-success",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "missing-file",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "empty-file",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "unknown",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  },
+  {
+    "case": "malformed",
+    "checker_exit": 1,
+    "verdict": "REFUSED",
+    "expected": "REFUSED"
+  }
+]

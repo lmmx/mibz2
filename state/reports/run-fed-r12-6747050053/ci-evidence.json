@@ -1,0 +1,188 @@
+{
+  "head": "14f5924e4af3c66f98254ba73bcedeac3a905eb3",
+  "head_tree": "ecf690d3f76222847a1f766390d89de54d3e7c9a",
+  "ci_merge": "e572cb1f691f4a733d5fc56549987b192aeb41ac",
+  "ci_tree": "ecf690d3f76222847a1f766390d89de54d3e7c9a",
+  "checks": [
+    {
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129332423410"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331854752"
+    },
+    {
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331838422"
+    },
+    {
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331836383"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331763344"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331763279"
+    },
+    {
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331763024"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331762202"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840283/job/129331760321"
+    },
+    {
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840277/job/129323155492"
+    },
+    {
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840277/job/129323153988"
+    },
+    {
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840277/job/129323152845"
+    },
+    {
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322313105"
+    },
+    {
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322312983"
+    },
+    {
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322312920"
+    },
+    {
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322312880"
+    },
+    {
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322312856"
+    },
+    {
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322312805"
+    },
+    {
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322117501"
+    },
+    {
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322117482"
+    },
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840277/job/129322117478"
+    },
+    {
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322117444"
+    },
+    {
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322117369"
+    },
+    {
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840246/job/129322117159"
+    },
+    {
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840266/job/129322117137"
+    },
+    {
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840277/job/129322117001"
+    },
+    {
+      "name": "occupancy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42663840273/job/129322116144"
+    }
+  ],
+  "submit_log_excerpt": [
+    "2026-11-09T17:21:44.7893765Z HEAD is now at e572cb1 Merge 14f5924e4af3c66f98254ba73bcedeac3a905eb3 into e788556872121d269c2b8f078ab1699f13289a99",
+    "2026-11-09T17:21:57.8561542Z OK",
+    "2026-11-09T17:21:57.9736618Z OK",
+    "2026-11-09T17:21:57.9885942Z ##[group]Run python3 bench/test_run_fed_leader.py",
+    "2026-11-09T17:21:57.9886199Z \u001b[36;1mpython3 bench/test_run_fed_leader.py\u001b[0m",
+    "2026-11-09T17:22:00.7974477Z OK",
+    "2026-11-09T17:22:00.8080196Z ##[group]Run python3 bench/test_run_fed_leader_ws.py",
+    "2026-11-09T17:22:00.8080435Z \u001b[36;1mpython3 bench/test_run_fed_leader_ws.py\u001b[0m",
+    "2026-11-09T17:22:09.6926471Z Ran 34 tests in 8.824s",
+    "2026-11-09T17:22:09.6926675Z OK",
+    "2026-11-09T17:22:20.7436259Z OK",
+    "2026-11-09T17:22:20.7551496Z ##[group]Run python3 bench/test_run_fed_leader_recipe.py",
+    "2026-11-09T17:22:20.7551748Z \u001b[36;1mpython3 bench/test_run_fed_leader_recipe.py\u001b[0m",
+    "2026-11-09T17:22:25.3471267Z test_a_collector_failing_after_a_complete_payload_is_refused_untimed (__main__.EndToEnd.test_a_collector_failing_after_a_complete_payload_is_refused_untimed) ... ok",
+    "2026-11-09T17:22:50.0149764Z Ran 11 tests in 29.213s",
+    "2026-11-09T17:22:50.0149960Z OK"
+  ]
+}
