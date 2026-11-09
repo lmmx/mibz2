@@ -14,11 +14,10 @@
     6698816282,
     6699490637,
     6699652203,
-    6729118948
-  ],
-  "in_progress": [
+    6729118948,
     6729178007
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -31,7 +30,8 @@
     "6698816282": 6698900123,
     "6699490637": 6699543678,
     "6699652203": 6729167954,
-    "6729118948": 6729167954
+    "6729118948": 6729167954,
+    "6729178007": 6729195690
   },
   "last_rebuilt_from": 6729116055,
   "migrated_from": {
@@ -128,9 +128,10 @@
     },
     "6729178007": {
       "comment_id": 6729178007,
-      "status": "complete",
+      "status": "finished",
       "work_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6",
-      "progress": "QUEUED 6706742839 checked against existing settled record; no rebuild needed; awaiting REVIEW."
+      "progress": "Existing account confirmed; REVIEW read back with Observer route/header and both citations verified.",
+      "review_id": 6729195690
     }
   },
   "last_record_commit": "87f06d880ac02e07bc1aead0068d336b1674d0f6"
