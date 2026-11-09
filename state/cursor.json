@@ -500,7 +500,8 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Source audit and release-scaling replay complete; ranking and exposure model in progress."
+      "progress": "Report, source audit, archived release replay and ranked proposals complete; awaiting publication checkpoint.",
+      "report_path": "state/records/reviews/inbox-6715370785/report.md"
     },
     {
       "comment_id": 6729116363,
@@ -508,8 +509,9 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Source audit and release-scaling replay complete; ranking and exposure model in progress.",
-      "resumes_comment_id": 6715370785
+      "progress": "Report, source audit, archived release replay and ranked proposals complete; awaiting publication checkpoint.",
+      "resumes_comment_id": 6715370785,
+      "report_path": "state/records/reviews/inbox-6715370785/report.md"
     }
   ],
   "migrated_from": {

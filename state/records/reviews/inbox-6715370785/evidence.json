@@ -1,0 +1,63 @@
+{
+  "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
+  "original_assignment_commit": "e01db6a2895711eb13897fdc378816075d927c1e",
+  "inbox_comment_ids": [
+    6715370785,
+    6729116363
+  ],
+  "source_blobs": {
+    "src/parallel.rs": "fcdd7cca5bda6706bf1869c5ebfc4a246740939d",
+    "src/coop.rs": "563ad21329c24bddaf90ffbfa30a582d43210e1a",
+    "src/mtf.rs": "27716447766a2514e9cd0da34fe617a7143f62a3",
+    "src/bwt.rs": "ed3c6e1a5bc068c587bdd2697446485f62d6b590",
+    "src/rle.rs": "5f3bc36af1cc2f514d293f5c3b38be12413e78cb",
+    "src/crc.rs": "40038b941362702d540ceeca39354ebbf03d6c40"
+  },
+  "evidence_blobs": {
+    "docs/journal/2026-11-07-pipeline-levers-result.md": "7d9cd98dd2ec3c24e835e7c501a3c892192e1704",
+    "docs/journal/2026-11-07-team-pipeline-result.md": "e6608256dad94e076088acf1ef08ff087a5911a4",
+    "docs/journal/2026-11-07-knee-mechanism.md": "b2c89f0ebb819eb35cebbdfdd854e96aff9e9ed9",
+    "docs/journal/2026-11-07-pipeline-levers-registration.md": "1e29bc8237ddd9a139b651ca3de99ba1d775ad24"
+  },
+  "run_fed_census_blob": "5a3b9d2c2523f82112c6dbd501a21e4901cddcad",
+  "service_result": {
+    "commit": "a97e5b2a4bdbc83245975a6ef50fb4a72b039fd7",
+    "blob": "a375fe794b14d99b69aa7fe26d9495e47536a46a"
+  },
+  "service_registration": {
+    "commit": "3e4477d035e96310eb4ac3d4014e01e13ffaa33c",
+    "blob": "f69aa3ab6c1d63c0c84dcff71d40fbceeda6446c"
+  },
+  "release": {
+    "path": "bench/release-scaling/2026-11-07-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.6",
+    "meta_blob": "c9f0e1e32f17909103bd824fd3e17a289f877127",
+    "runs_blob": "f3a9b17977cd71078a89cf64bea893dcc8d15c4d",
+    "raw_rows_replayed": 240
+  },
+  "lever_archive": {
+    "commit": "808dc913923525ae6f0bf7886639e2ab9049d7c1",
+    "path": "pipeline-levers/20261107T091926Z.tar.gz",
+    "mode": "100644",
+    "type": "blob",
+    "sha": "20a74d7c9ef680cb097d45c0fe9566b455190c75",
+    "size": 105856,
+    "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/20a74d7c9ef680cb097d45c0fe9566b455190c75",
+    "read": false,
+    "errors": [
+      "UnicodeDecodeError: 'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte",
+      "HTTPError: 400: GitHub Fetch only accepts UTF-8 text. (Response: None)"
+    ]
+  },
+  "migration": {
+    "branch": "review/compact30-instruction-ledger",
+    "sha": "e6eea5889432aef28f4d9e450cee87dd5bf7bacf",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "86d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde",
+    "date": "2026-11-06"
+  },
+  "routing": {
+    "script_blob": "5b2c37db1f1e3c75886c3e0ef6be3cee588dda2d",
+    "audit": "passed; five known resolved historical misroutes only",
+    "verify_limitation": "Pinned verify requires FROM coordinator; use check and exact read-back for optimizer REVIEW."
+  }
+}

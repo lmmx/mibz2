@@ -1,0 +1,77 @@
+{
+  "kind": "Static arithmetic and explicit sensitivity scenarios; no timing",
+  "baseline": "a4f97714cc14366984015869d9d094d89488ac57",
+  "n": 900000,
+  "strides": [
+    {
+      "stride": 16384,
+      "vectors": 55,
+      "bytes": 56320,
+      "midpoint": 442368,
+      "largest_share": 457632
+    },
+    {
+      "stride": 32768,
+      "vectors": 28,
+      "bytes": 28672,
+      "midpoint": 458752,
+      "largest_share": 458752
+    },
+    {
+      "stride": 65536,
+      "vectors": 14,
+      "bytes": 14336,
+      "midpoint": 458752,
+      "largest_share": 458752
+    }
+  ],
+  "used_checkpoints": {
+    "shares": 2,
+    "existing_vectors": 55,
+    "selected_checkpoint_vectors": 2,
+    "totals_vector": 1,
+    "removed_vectors": 53,
+    "removed_u32_entries": 13568,
+    "removed_three_pass_visits": 40704
+  },
+  "default_summary": {
+    "overlap": 229.5,
+    "join_delay_ms": 22.4,
+    "late_joins": 100.5,
+    "runs": 233,
+    "wall_ms": 142
+  },
+  "cap_scenarios": {
+    "balanced_team_delay_ms": 7.466666666666666,
+    "equal_rate_live_walk_only_ms": 2.488888888888889,
+    "equal_rate_fraction_of_142ms": 0.017527386541471048,
+    "all_delay_relocation_scale": 0.05258215962441314,
+    "notes": "Not measured savings or a universal bound. No future-job/overlap loss, equal walking rates, all delay during live walk, balanced teams assumed for /9."
+  },
+  "proxy_phase_ns_per_output_byte": {
+    "mtf": 0.41,
+    "assembly": 0.04,
+    "rle": 0.05,
+    "crc": 0.07,
+    "build": 0.48,
+    "walk": 1.09
+  },
+  "output_bytes": 209700196,
+  "post_cost_scales": {
+    "crc_cpu_ms": 14.67901372,
+    "crc_balanced_team_ms": 4.893004573333333,
+    "crc_fraction_of_142": 0.03445777868544601,
+    "assembly_cpu_ms": 8.38800784,
+    "assembly_balanced_ms": 2.7960026133333336
+  },
+  "notes": "Phase coefficients from a different CI one-thread harness. Transferring them to the i9 is an explicit unvalidated scenario, not a forecast; overlap exposure unknown. Do not add pools.",
+  "tiny_blocks": {
+    "reported_total_rows": 209706557,
+    "reported_large_rows": 209697662,
+    "rows": 8895,
+    "blocks": 198,
+    "mean_rows": 44.92424242424242,
+    "row_fraction": 0.00004241641333131992,
+    "upper_rle_output_bytes": 460761
+  }
+}

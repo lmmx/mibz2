@@ -242,3 +242,21 @@ T footprint≤4n, ll dead after build, rle untouched during cooperative traversa
 - **Correction:**25% footprint equality is sufficient to match aggregate footprints under stated model, not a necessary speed/fit threshold. Researcher6683945162 counterexample and Coordinator6683965024 retraction accepted; no fixed threshold retained.
 
 Only a design was published. The role cannot create the requested production PR under SPEC.OPTIMIZER. Existing evidence PR#220 is not a policy implementation link.
+
+
+## Pipeline critical-path ranking: inbox 6715370785, resumed by 6729116363
+
+[Source audit, arithmetic and ranked constructions](records/reviews/inbox-6715370785/report.md).
+Source/spec **a4f97714cc14366984015869d9d094d89488ac57**; relevant production blobs unchanged from original assignment e01db6a2895711eb13897fdc378816075d927c1e.
+
+| Item | Disposition | Critical-path price / next falsifier |
+|---|---|---|
+| Existing #258 service-2x3 | First existing priority; frozen comparison untouched | #251's exploratory svc2@10 speed 1.045, CPU reference/arm 1.138; not qualification. One service thread saturated; svc2@12 trade not selected. Complete Researcher review/registered comparison |
+| C25 selected-boundary validation | First new bounded diagnostic, zero measured credit | Two helper shares consume one interior checkpoint; pre-dispatch setup validates 55 vectors at n=900000. Distinct selected-boundary interface can remove 53 vectors' validation, retaining disjoint-write/end checks. Count reduction is not an instruction/time verdict |
+| C27 chunked RLE1+CRC | Second new construction, conditional | Preserve CLMUL folding and current assembled buffers; whole output reread is logical traffic, not DRAM. Transferred entire-CRC scale 3.45% wall is not removable cost or forecast. Fragmentation may regress |
+| C26 bounded leader admission | Census before cap | Default both-arm has 22.4 ms summed join delay, not small-only 26 ms. 198 small blocks carry only 8895 BWT rows by census reconciliation. Equal-rate/balanced toy live-walk opportunity 1.75% before lost priming; not measured bound |
+| C25b stride/emission | Follow C25 only if worthwhile | CHECKPOINT also defines MIN_COOP; freeze threshold to avoid policy confound. Actual n unknown until MTF ends; sparse emission cannot assume max_len=n |
+| C28 segment CRC/direct fusion | Held for boundary and ownership cost | CRC needs post-RLE bytes in output order. Direct segment fusion needs second scratch or lost overlap; last-walker assembly is not always leader work |
+| Run-fed T-vector / Ψ² | #266 verdict retained; separate Coordinator diagnostic acknowledged | No duplicate implementation. Model-only outcomes stay model-only; whole MTF+sort+build and SIMD-comparable emitter required |
+
+Replayed 240 archived release rows: at10 threads 0.2.6/0.2.5 speed1.03730 [0.98401,1.09349], CPU multiplier1.09415. Separate release evidence does not rewrite the levers' registered verdict. Binary service/levers bundles were not replayed; text-reader limitation recorded in report. No new timing, implementation, safety certification, admission or cumulative speed credit. Historical C17 and all previous registered outcomes retained.
