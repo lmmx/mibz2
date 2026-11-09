@@ -356,3 +356,19 @@ Whole-entry requires walk saving to exceed extra build/setup/assembly; whole-dec
 - Existing workstation transfer keeps DIR primary, LS secondary. No percentage extrapolation9-on-4 to i9; freeze10-thread admission and retain C5 authorization. C29 B5 covers checkpoint boundaries, raw short-run stores and shipped worker integration. D055 still holds#277; D056/D057 scoped dispositions recorded.
 
 No implementation, compilation, timing, merge, safety certification or automation change. Proposal thresholds are prospective diagnostics, not new production gates.
+
+
+## Packet census and pair-step budgets: inbox6733004424
+
+[Report and break-even model](records/reviews/inbox-6733004424/report.md), census **292d65b9128b8f8d3d941b755885ab2349ebf8a3**.
+
+- **Priority:** C29 production evidence first, existing matched LS/direct-F work next; C37 then conditional C38 are secondary prebuilt-consumer diagnostics.
+- Each stand-alone consumer must remove **4.17669 nominal residual-equivalent cycles/ordinary pair step** (2.08834/output byte;34.3923%) to match room. This is a cross-sweep planning proxy, not a consumer interval. Combined savings must be measured together; construction premium still unpaid.
+- C37 charges flush/128 only on full256-byte lane tiles, plus odd ends, occupancy, compaction and spills. C38 retains high-directory load and exact fallback; actual exceptional visits, not63 static blocks, price its benefit.
+- Certified k≤8 packets save314 loads/209697662 rows under the stated model; close that bounded Wikidata packet lead without asserting a universal consumer-cycle impossibility.
+- **Tandem correction:**6.1%/10.01% count union coverage including seed bytes, before RLE1. They do not bound general nonlocal Precopy; historical#36 copied31.5% and still lost18%/6% wall at1/4threads.
+- Ideal uniform-cost, zero-copy-cost detector allowances per all rows: room.2430/.3988; pair.3704/.6078 nominal c/row for periods≤8/≤64. Real cost must include source availability, resume certification, seeds, copies and metadata. Tandem-only copying cannot close34.4% under this model.
+- Precopy outside implementation queue. Reopen only with a materially cheaper detector/certifier and priced ready-source mechanism; no repeated all-step neighbour experiment.
+- D058 conditional#277 disposition supersedes historical D055 subject to frozen registration, greenCI and completed targeted scalar/AVX2Miri. No execution clearance added here.
+
+Source/count review and arithmetic only; census raw gzip and historical Precopy runs not independently replayed. No implementation, compilation, timing, safety certification, acceptance change or new measured credit.

@@ -692,7 +692,7 @@
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
       "baseline_commit": "292d65b9128b8f8d3d941b755885ab2349ebf8a3",
-      "progress": "Migration verified. Auditing packet ceiling, per-step budgets and historical Precopy evidence."
+      "progress": "Source/count audit and Precopy history complete; pair-step and detector budgets derived. Ranked report and ledger committed; publication pending."
     }
   ],
   "migrated_from": {

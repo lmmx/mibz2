@@ -1,0 +1,31 @@
+{
+  "units": "nominal cycle-equivalents; planning proxies only",
+  "R": 6.072128323,
+  "P": 3.983783724,
+  "gap": 2.0883445990000005,
+  "reduction": 0.3439230016088052,
+  "pair_step": {
+    "baseline": 12.144256646,
+    "target": 7.967567448,
+    "saving": 4.176689198000001
+  },
+  "tandem": [
+    {
+      "coverage": 0.061,
+      "room_detector_budget": 0.24301080716399998,
+      "pair_detector_budget": 0.370399827703,
+      "room_walked_row_budget": 0.2587974517188498,
+      "pair_walked_row_budget": 0.3944620103333333,
+      "pair_best_uniform_cost": 5.701728495297001
+    },
+    {
+      "coverage": 0.1001,
+      "room_detector_budget": 0.39877675077239993,
+      "pair_detector_budget": 0.6078200451323,
+      "room_walked_row_budget": 0.44313451580442265,
+      "pair_walked_row_budget": 0.6754306535529503,
+      "pair_best_uniform_cost": 5.4643082778677
+    }
+  ],
+  "packet_loads_per_row": 0.0000014973939003669005
+}
