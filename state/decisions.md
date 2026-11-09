@@ -3378,3 +3378,57 @@ No existing experiment is reclassified. #302's service-guarded result remains in
 Expected: the finite D073 repairs. Observed: all incorporated, with the accepted seven-condition contract preserved. The textual gap is closed. Next consequential action belongs to the existing authority/enactment process, not another benchmark, another tolerance change or another policy-edit loop.
 
 Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **a4d7c9c0455bb17f4098b85d0a96a829db8e43c3**. Pinned routing audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No build, timing, raw-bundle replay, merge, authority change or task reconfiguration.
+
+## D075 — #310 fails its registered no-harm rule; pursue the classifier fix, without fallback to the failed head
+
+**G1: benefit met, no-harm FAILED at eacd58826cdef3c040fb268356d787ce442b0d53. G2: HOLD adoption of that candidate. Choose (b)'s corrective experiment, with the acceptance and fallback corrections below.** No G3 tightening is needed to establish this failure. No G8 line STOP: a failed candidate is not an exhausted mechanism.
+
+Inbox [6752605812](https://github.com/lmmx/mibz2/pull/161#issuecomment-6752605812), observed 2026-11-09T22:04:21Z. Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a4f97714cc14366984015869d9d094d89488ac57**. Candidate base **b681712235a3576306cb46d4818b9608a0e0b13d**. [Frozen evidence](records/d075/evidence.json).
+
+### The registered gate already decides this head
+
+The request frames the decision as STEWARDSHIP's discretionary “unacceptable” tradeoff. But the candidate registered a narrower rule. Its journal, blob **23828411eab9131e1a0f52be4fe84d283e9ee0d6**, says:
+
+> **No harm (required):** as in `2026-11-05-deferred-flag-walk.md`. A wall row flagged slower is settled by one more run on the same head, with at most three runs.
+
+The incorporated file, blob **74633a48edb752c42b9d79ec8ebb363e5763c3ac**, is explicit:
+
+> a wall row (any corpus × thread count) flagged **slower** is a harm signal;
+> one more run on the same head settles it: flagged again, it is a harm, and the rule fails;
+
+The candidate is the direct child of the registered base; its commit precedes the first bench job. Both attempts of run **42704879531** checked out that exact head and base. Attempt 1's job is **129458941875**, attempt 2's **129462262591**. The repeated `records` 1-thread wall flag therefore **fails the original rule**, not a new Guardian margin.
+
+| Figure | Attempt 1 | Attempt 2 | Classification |
+|---|---|---|---|
+| Wikidata wall, 1 thread | −1.7% [−2.7, −0.7] | −4.0% [−4.8, −3.2] | Registered benefit met |
+| Records wall, 1 thread | +1.9% [+1.3, +2.5] | +1.9% [+0.1, +3.7] | Confirmed harm; required no-harm fails |
+| Records CPU, 4 threads | +2.2% [−0.8, +5.2] | +3.8% [+0.8, +6.8] | Additional cost; not the wall-rule trigger |
+| Random wall, 1 thread | No flag in rounded-log reconstruction | +2.6% [+1.9, +3.2] | Additional attempt-2 harm signal omitted from the checkpoint table |
+
+Report endpoints come from bench comment **6752208345** and the preserved attempt-1 table **6752574723**. I independently parsed ten paired observations per cell from both job logs and recomputed log-t intervals: records wall approximately **+1.947 [1.304, 2.594]%** and **+1.739 [0.041, 3.465]%**; Wikidata wall approximately **−1.670 [−2.693, −0.636]%** and **−3.967 [−4.765, −3.163]%**. Logs round seconds to milliseconds: this corroborates the direction but is **not** a reproduction of the unrounded confidence limits, particularly attempt 2's near-zero records endpoint. The reported repeated flags, same-head provenance and exact rule establish the classification; I do not claim raw-artifact replay.
+
+A third run is not needed to settle a flag that already reproduced. “At most three” is a ceiling, not permission to seek a favourable third result. The later random flag also cannot rescue the already failed records row. Report the whole grid, including random, CPU and RSS; the Wikidata-only resource assessment is not an all-corpus verdict.
+
+### Options (a), (b), (c)
+
+**(a) is not admissible under this registration.** A promised follow-up does not qualify the current head. Calling +1.9% acceptable after observing it would relax the required rule (C2/D), even though the general STEWARDSHIP sentence permits judgement where a tighter registration has not settled it. No workload weighting was registered that allows subtracting a Wikidata gain from an incompressible-input loss. This ruling does not invent a universal 1.9%, 2% or 4% intolerance threshold.
+
+**(b) is the worthwhile next experiment, not a retry merely because it follows a failure.** It changes the suspected mechanism of the loss: the classifier cost paid by windows that fall back to one-row writes. C1/C3 permit that bounded corrective work. Preserve the failed head, both runs and the failure beside its registration; identify the corrected implementation and prospective registration separately. A new SHA alone, a doc-only change, changing RUNS until a favourable run appears, or repeating the old code is not a new mechanism.
+
+The finite preparation is:
+- Fix the candidate, base, predicted gain, harm criteria, stopping and existing repeat policy before timing. Preserve the inherited any-corpus wall obligation and the ordinary beneficial-interval requirement; do not select only records and Wikidata. “Not slower beyond noise” means no detected slowdown, **not** equivalence or proven absence of harm.
+- State whether the proposed one fresh bench is the first assessment or the complete registered sequence. It cannot silently remove the inherited benefit check's “other run” requirement or the harm-confirmation policy. Results on the old implementation do not become the new head's second run. Do not change the reserved repeat/acceptance policy; resolve the registration consistently with it before observations.
+- Establish that the lookup classifier implements the same `popcount(heads) <= 6` predicate. Only 32,768 masks are reachable (`heads` has bit 0 set and no bits above 15), so exhaustive untimed comparison is cheap. Inspect the emitted baseline-x86 code and account for the two loads and table footprint. The proposed cost reduction is a hypothesis, not a consequence of replacing arithmetic with lookups.
+- Keep B5's safety obligations on the new head. I read the changed overwrite argument and source patch, but this gate review does not certify a complete independent adversarial/fuzz/mutation/Miri evidence package. Green check names alone are not that package.
+
+**Delete (b)'s automatic fallback to (a).** Reverting to `eacd5882` and benchmarking again does not clear its confirmed harm, and must not be presented as a fresh chance to pass. If the correction fails, record that result and choose another justified direction or stop, using C3's value against alternatives. A relaxation needs Louis under the pinned rules, not an exception inferred from this REVIEW.
+
+**(c)'s rejection of the current candidate is warranted by its rule; a permanent line STOP is not.** Keep the failed candidate out of production and record its negative verdict/closure. A bounded successor can retain the observed latency gain while testing a concrete removable cost. Merges remain the Coordinator's, on a qualifying exact head; no routine work waits for Guardian approval.
+
+### Mechanism, uncertainty, next value
+
+Expected: build −7..−20%, Wikidata wall at 1 thread −1..−3%, at 4 threads −1..−4%, other stages unchanged. Observed: build −11.7% and −22.5%; 1-thread wall gains in both, 4-thread wall not beyond noise; attempt 2's walk also flags −1.5% [−2.9, −0.2]. The build falsifier (point estimate at or above −4%) did not fire, but the measurements neither fit every predicted range nor isolate store forwarding as the sole cause: the SSE2 writer and classification changed together. The checkpoint's “old one-run path” is not byte-for-byte unchanged: it now uses the SSE2 `run16` writer.
+
+The mechanism remains promising; production qualification does not. The next useful question is whether the classification overhead can be removed without losing its build/end-to-end benefit or moving the harm elsewhere. Untimed predicate/assembly checks are cheap; the corrected candidate's registered CI evidence then answers the adoption question. Do not spend another run on the failed head to relabel it.
+
+Migration verified before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **678d92a953d358634a480728ce2ac4de38745f01**. Routing audit: five resolved historical findings, zero unresolved; publication routes to #145. No implementation, timing, merge, authority change or task reconfiguration.
