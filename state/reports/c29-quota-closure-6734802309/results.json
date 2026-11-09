@@ -1,0 +1,480 @@
+[
+  {
+    "case": "unlimited/None",
+    "exit": 0,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/False",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/0",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/2",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/8",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/nan",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unlimited/inf",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/None",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/False",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/0",
+    "exit": 3,
+    "quota": {
+      "state": "finite",
+      "cpus": 0
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'finite', 'cpus': 0}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/2",
+    "exit": 3,
+    "quota": {
+      "state": "finite",
+      "cpus": 2
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota 2 CPUs, below 4\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/4",
+    "exit": 0,
+    "quota": {
+      "state": "finite",
+      "cpus": 4
+    },
+    "output": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/8",
+    "exit": 0,
+    "quota": {
+      "state": "finite",
+      "cpus": 8
+    },
+    "output": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/nan",
+    "exit": 3,
+    "quota": {
+      "state": "finite",
+      "cpus": NaN
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'finite', 'cpus': nan}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "finite/inf",
+    "exit": 3,
+    "quota": {
+      "state": "finite",
+      "cpus": Infinity
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'finite', 'cpus': inf}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/None",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/False",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/0",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/2",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/8",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/nan",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "unknown/inf",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/None",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/False",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/0",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/2",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/8",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/nan",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "None/inf",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/None",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/False",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/0",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/2",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/8",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/nan",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "bad/inf",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "absent_cpu_quota_state",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "absent_both",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "status_101",
+    "exit": 3,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: ab_run_status 101, not 0\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "status_-1",
+    "exit": 3,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: ab_run_status -1, not 0\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "status_False",
+    "exit": 3,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: ab_run_status False, not 0\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "status_None",
+    "exit": 3,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: ab_run_status None, not 0\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "status_'0'",
+    "exit": 3,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: ab_run_status '0', not 0\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "broken_env_",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: avx2 None, not True\n  identity: cpus_allowed None, not 4\n  identity: available_parallelism None, not 4\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "broken_env_{",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: avx2 None, not True\n  identity: cpus_allowed None, not 4\n  identity: available_parallelism None, not 4\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "broken_env_null",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: avx2 None, not True\n  identity: cpus_allowed None, not 4\n  identity: available_parallelism None, not 4\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "broken_env_[]",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: avx2 None, not True\n  identity: cpus_allowed None, not 4\n  identity: available_parallelism None, not 4\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "broken_env_4",
+    "exit": 3,
+    "quota": {
+      "state": "unknown"
+    },
+    "output": "NOT JUDGED: the registered environment is not shown (no judged reading; kept\n  as UNJUDGED (FALLBACK), never re-run to pass)\n  identity: avx2 None, not True\n  identity: cpus_allowed None, not 4\n  identity: available_parallelism None, not 4\n  identity: cpu_quota {'state': 'unknown'}: not known unlimited or finite\nVALID (UNJUDGED (FALLBACK)): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (primary, unjudged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (UNJUDGED (FALLBACK), 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  },
+  {
+    "case": "invalid_precedence",
+    "exit": 2,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "INVALID\n  line 1 (mibz2-pipe3-both t9 r0): exit 1\n"
+  },
+  {
+    "case": "explicit_unlimited_missing_legacy_number",
+    "exit": 0,
+    "quota": {
+      "state": "unlimited"
+    },
+    "output": "VALID (JUDGED): 20 rounds, mibz2-pipe3-both-c29 against mibz2-pipe3-both, paired by round\nthreads      wall ratio [95%]           CPU ratio [95%]            reading\n9            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (judged)\n3            1.0000 [0.9986, 1.0014]    1.0000 [1.0000, 1.0000]    STOP (secondary, never judged)\n\nReading (JUDGED, 9 threads): STOP. LEAD: wall <= 0.98 with its upper end < 1 and CPU's upper end <= 1.02; STOP: wall's lower end > 0.99; else INCONCLUSIVE.\n  (environment-specific: a CI reading is this runner's; a diagnostic, not a production\n  gate: a LEAD supports a default-on proposal, which needs its own gate)\n"
+  }
+]
