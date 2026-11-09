@@ -500,7 +500,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Receipt: migration verified; reviewing pipeline critical path against current state."
+      "progress": "Source audit and release-scaling replay complete; ranking and exposure model in progress."
     },
     {
       "comment_id": 6729116363,
@@ -508,7 +508,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a4f97714cc14366984015869d9d094d89488ac57",
-      "progress": "Receipt: migration verified; reviewing pipeline critical path against current state.",
+      "progress": "Source audit and release-scaling replay complete; ranking and exposure model in progress.",
       "resumes_comment_id": 6715370785
     }
   ],
