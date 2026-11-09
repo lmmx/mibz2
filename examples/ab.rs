@@ -39,6 +39,17 @@
 //!                                    untimed: sample the clock and the package temperature
 //!                                    until they hold within a registered tolerance or N
 //!                                    seconds pass, one JSON line (`machine::settle`)
+//! ab sample [--count N] [--interval S]
+//!                                    untimed and read-only: exactly N readings of the
+//!                                    machine's state (default 10), S seconds apart (default
+//!                                    1), one JSON line each, whatever they read; it never
+//!                                    stops early, waits for nothing and never fails
+//!                                    (`machine::sample`)
+//! ab telemetry-check                 untimed: the machine-state recorder's failure paths
+//!                                    (a failed enable or disable, a missing counter,
+//!                                    multiplexing, the user-only fallback) and coverage
+//!                                    (inheritance, the region), one JSON line a case;
+//!                                    exits 1 if any case FAILs (`machine::check`)
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -92,8 +103,9 @@
 //! run's own CPU), the steal, and the cgroup's CPU throttling and the CPU pressure stall
 //! time (PSI) over the run, where the kernel has them (null where not).
 //! With `--machine-state` only (bench 3.3.0; the `machine` module): the run's cycles,
-//! instructions and task clock (perf, inherited by its threads, over exactly the region its
-//! wall is), the effective clock (cycles over task clock), and the clock, governor, EPP,
+//! instructions and task clock (perf, inherited by its threads, enabled one after another
+//! just before the wall's clock starts and disabled one after another just after it stops:
+//! `perf_skew_ns` bounds the difference), cycles over the task clock, and the clock, governor, EPP,
 //! turbo and package temperature before and after it; each null with a reason where it
 //! can't be read.
 //!
@@ -140,6 +152,16 @@ fn rusage(who: i32) -> (f64, i64) {
     unsafe { getrusage(who, &mut r) };
     let t = |tv: [i64; 2]| tv[0] as f64 + tv[1] as f64 * 1e-6;
     (t(r.utime) + t(r.stime), r.rest[0])
+}
+
+/// (voluntary, involuntary) context switches of this process (who 0), every thread's,
+/// live and exited, summed (`machine`'s per-run telemetry, bench 3.4.0)
+fn ctx_switches() -> (i64, i64) {
+    let mut r = Rusage::default();
+    // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
+    unsafe { getrusage(0, &mut r) };
+    // (ru_nvcsw and ru_nivcsw: the last two of the 14 longs after the two timevals)
+    (r.rest[12], r.rest[13])
 }
 
 /// A streaming 64-bit hash of the output (4 lanes of a multiply-rotate over 8-byte
@@ -253,6 +275,8 @@ struct Threads {
     /// could leave the run's pinned CPUs
     handle: Option<std::thread::JoinHandle<(f64, Option<String>)>>,
     pid: u32,
+    /// the CPUs seen (`--machine-state` only)
+    cpus: Option<SeenCpus>,
 }
 
 /// A schedstat file's run-queue wait (its second field, ns), 0 where it can't be read
@@ -263,7 +287,12 @@ fn run_delay(path: &std::path::Path) -> u64 {
         .unwrap_or(0)
 }
 
-fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>) {
+/// The CPUs the sampler saw a run's threads on (`--machine-state` only): each thread's last
+/// CPU (/proc stat's field 39) at each sample, the sampler's own left out. A sample, not an
+/// account: a thread can run on a CPU between two samples and never be seen there
+type SeenCpus = std::sync::Arc<std::sync::Mutex<std::collections::BTreeSet<u32>>>;
+
+fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>, cpus: Option<&SeenCpus>) {
     let Ok(dir) = std::fs::read_dir(format!("/proc/{pid}/task")) else {
         return;
     };
@@ -285,6 +314,13 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>) {
         let ticks = f.get(11).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0)
             + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
         let wait = run_delay(&e.path().join("schedstat"));
+        if let Some(c) = cpus {
+            if name != "sampler" {
+                if let Some(cpu) = f.get(36).and_then(|x| x.parse::<u32>().ok()) {
+                    c.lock().unwrap().insert(cpu);
+                }
+            }
+        }
         // (the latest name: a new thread has its parent's until it names itself)
         let v = m.entry(tid).or_insert_with(|| (String::new(), 0, 0));
         if !name.is_empty() {
@@ -298,10 +334,11 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>) {
 impl Threads {
     /// The sampler, every AB_SAMPLE_MS milliseconds (default 10; 0: no sampler at all, so
     /// its cost to the decode can itself be measured: no split, no run-queue wait)
-    fn watch(pid: u32) -> Threads {
+    fn watch(pid: u32, see_cpus: bool) -> Threads {
         let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let seen = std::sync::Arc::new(std::sync::Mutex::new(BTreeMap::new()));
-        let (s, m) = (stop.clone(), seen.clone());
+        let cpus: Option<SeenCpus> = see_cpus.then(Default::default);
+        let (s, m, c) = (stop.clone(), seen.clone(), cpus.clone());
         let every: u64 = std::env::var("AB_SAMPLE_MS")
             .ok()
             .and_then(|v| v.parse().ok())
@@ -316,7 +353,7 @@ impl Threads {
                     let away = off_the_pin();
                     let _ = moved.send(());
                     while !s.load(std::sync::atomic::Ordering::Relaxed) {
-                        sample_tasks(pid, &m);
+                        sample_tasks(pid, &m, c.as_ref());
                         std::thread::sleep(Duration::from_millis(every));
                     }
                     (rusage(1).0, away)
@@ -331,13 +368,19 @@ impl Threads {
             seen,
             handle,
             pid,
+            cpus,
         }
+    }
+    /// The set the sampler fills with the CPUs it sees (`--machine-state` only), read after
+    /// `finish`
+    fn cpu_set(&self) -> Option<SeenCpus> {
+        self.cpus.clone()
     }
     /// A sample now (an in-process decoder's, once its last byte is read and before it is
     /// dropped, while its threads are still there to read)
     fn sample(&self) {
         if self.handle.is_some() {
-            sample_tasks(self.pid, &self.seen);
+            sample_tasks(self.pid, &self.seen, self.cpus.as_ref());
         }
     }
     /// The threads that ran (more than 2% of the busiest's CPU), and each one's CPU
@@ -349,7 +392,7 @@ impl Threads {
             return (0, String::new(), 0.0, 0.0, "off".into());
         };
         if own {
-            sample_tasks(self.pid, &self.seen);
+            sample_tasks(self.pid, &self.seen, self.cpus.as_ref());
         }
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
         let (sampler, away) = handle.join().unwrap();
@@ -691,7 +734,7 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
             )
         }
     };
-    let w = Threads::watch(p.id());
+    let w = Threads::watch(p.id(), false);
     let mut out = p.stdout.take().unwrap();
     let mut startup = Ok(0.0);
     if ready {
@@ -729,6 +772,8 @@ fn child(arm: &str, threads: usize, path: &str) {
     // region, enabled and disabled at its edges; None leaves every path as it was)
     let counted = machine::requested();
     let mut perf = None;
+    // (with the counters: the region's affinity, context switches and the CPUs seen)
+    let mut region: Option<machine::Region> = None;
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
         Some((cmd, ready)) => {
             if counted {
@@ -742,6 +787,7 @@ fn child(arm: &str, threads: usize, path: &str) {
         None if threads == 1 => {
             perf = counted.then(machine::Perf::open);
             if let Some(p) = &perf {
+                region = Some(machine::Region::start(None));
                 p.enable();
             }
             let t0 = Instant::now();
@@ -750,15 +796,20 @@ fn child(arm: &str, threads: usize, path: &str) {
             if let Some(p) = &perf {
                 p.disable();
             }
+            if let Some(r) = &mut region {
+                r.stop();
+            }
             let wait = run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
             let main = format!("main={:.2}", rusage(1).0);
             (res, wall, (1, main, wait, 0.0, "none".into()), 0.0)
         }
         None => {
-            let w = Threads::watch(std::process::id());
+            let w = Threads::watch(std::process::id(), counted);
+            let seen_cpus = w.cpu_set();
             // (opened after the sampler starts, so it is never counted)
             perf = counted.then(machine::Perf::open);
             if let Some(p) = &perf {
+                region = Some(machine::Region::start(seen_cpus));
                 p.enable();
             }
             let t0 = Instant::now();
@@ -766,6 +817,9 @@ fn child(arm: &str, threads: usize, path: &str) {
             let wall = t0.elapsed().as_secs_f64();
             if let Some(p) = &perf {
                 p.disable();
+            }
+            if let Some(r) = &mut region {
+                r.stop();
             }
             (res, wall, w.finish(true), 0.0)
         }
@@ -776,7 +830,8 @@ fn child(arm: &str, threads: usize, path: &str) {
     // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
-    let perf = perf.map(machine::Perf::finish).unwrap_or_default();
+    let perf = perf.map(machine::Perf::finish).unwrap_or_default()
+        + &region.map(machine::Region::json).unwrap_or_default();
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
@@ -949,6 +1004,11 @@ fn psi_cpu() -> Option<u64> {
 }
 
 /// A JSON number, or null
+/// A timestamp or null
+fn opt_ns(v: &Result<u128, String>) -> String {
+    v.as_ref().map_or("null".into(), |x| x.to_string())
+}
+
 fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
@@ -1170,6 +1230,7 @@ fn run(args: &[String]) {
                         cmd.env_remove(machine::ENV);
                     }
                     let state_pre = sysfs.as_ref().map(|s| s.state(&mask).json());
+                    let t_spawn = machine::unix_ns();
                     let load = load1();
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
@@ -1186,11 +1247,14 @@ fn run(args: &[String]) {
                     let o = child.wait_with_output().unwrap();
                     let observed = census.finish();
                     let span = w0.elapsed().as_secs_f64();
+                    let t_exit = machine::unix_ns();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
                     let state = match (&sysfs, state_pre) {
                         (Some(s), Some(pre)) => format!(
-                            "\"machine_pre\":{pre},\"machine_post\":{},",
+                            "\"machine_pre\":{pre},\"t_spawn_unix_ns\":{},\"t_exit_unix_ns\":{},\"machine_post\":{},",
+                            opt_ns(&t_spawn),
+                            opt_ns(&t_exit),
                             s.state(&mask).json()
                         ),
                         _ => String::new(),
@@ -1411,7 +1475,12 @@ fn main() {
             let cpus: Vec<usize> = cores().into_iter().flatten().collect();
             machine::settle(&args[1..], &cpus)
         }
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S]"),
+        Some("sample") => {
+            let cpus: Vec<usize> = cores().into_iter().flatten().collect();
+            machine::sample(&args[1..], &cpus)
+        }
+        Some("telemetry-check") => std::process::exit(machine::check()),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
@@ -1436,6 +1505,31 @@ fn main() {
 ///   over the run's CPUs, each cpufreq policy's governor and energy-performance preference
 ///   (over the policies holding the run's CPUs), the turbo state, and the package
 ///   temperature.
+///
+/// Added in bench 3.4.0, so each observation says when, over what and in which units:
+/// - beside each sysfs reading, its time (`t_unix_ns`, CLOCK_REALTIME, at the reading's
+///   start, and `read_s`, how long it took), each CPU's own `scaling_cur_freq` in kHz by CPU
+///   id (`cpu_khz`, a policy's requested or reported frequency, which the kernel documents
+///   may not be the hardware's), each policy's id, CPUs, driver, governor and EPP
+///   (`policies`), and the ACPI platform profile; the run's `t_spawn_unix_ns` and
+///   `t_exit_unix_ns`, so each reading's distance from the run is explicit;
+/// - in the child: reference cycles (`ref_cycles`, a constant-rate count, so cycles over
+///   them is the counted threads' clock against that reference), each counter's raw time
+///   enabled and running (`perf_times_ns`, never scaled), its coverage (`perf_coverage`), the
+///   CPUs the child may run on (`cpus_allowed`), the context switches across the region
+///   (`ctxsw_voluntary`, `ctxsw_involuntary`: the whole process's, the sampler's included)
+///   and the CPUs the sampler saw its threads on (`cpus_seen`: a sample, not an account);
+/// - `eff_ghz` is null where cycles were counted in user mode only, since the task clock's
+///   scope then isn't shown to match; and null where cycles or the task clock was
+///   multiplexed. Only those two decide it: instructions' and reference cycles' validity is
+///   their own (`perf_multiplexed`). Cycles over `eff_ghz` gives back the task clock: it is
+///   no independent frequency correction;
+/// - every failed enable or disable is recorded (`perf_ctl_errors`, with its errno), and
+///   that counter's value is null with the failure as its reason;
+/// - the counters are enabled, and disabled, one after another (`perf_skew_ns`: how long each
+///   sequence took, and the order), so their boundaries differ by up to that much;
+/// - `ab sample`: a fixed number of readings at a fixed interval, judging nothing;
+/// - `ab telemetry-check`: the recorder's failure paths and coverage, untimed.
 ///
 /// Every field is null with a `_why` beside it where it can't be read: never a guess.
 mod machine {
@@ -1483,7 +1577,20 @@ mod machine {
 
     /// The machine's state at one moment, each reading or why there's none
     pub struct State {
-        /// the mean scaling_cur_freq (MHz) and how many of the CPUs it is over
+        /// when the reading began (ns since the Unix epoch, CLOCK_REALTIME), and how long
+        /// it took (s): a reading is of its moment, not of the run beside it
+        pub t_unix_ns: Result<u128, String>,
+        pub read_s: f64,
+        /// each CPU's own scaling_cur_freq (kHz, as sysfs gives it), by CPU id: the policy's
+        /// last requested or reported frequency, which the kernel documents may not be the
+        /// hardware's actual frequency
+        pub cpu_khz: Vec<(usize, Result<u64, String>)>,
+        /// each cpufreq policy holding any of the CPUs, by id, with its own settings
+        pub policies: Vec<Policy>,
+        /// the ACPI platform profile, where the firmware has one
+        pub platform_profile: Result<String, String>,
+        /// the mean scaling_cur_freq (MHz) and how many of the CPUs it is over (bench 3.3.0;
+        /// a mean over the allowed CPUs at one moment, not a workload's frequency)
         pub freq_mhz: Result<(f64, usize), String>,
         pub governor: Result<String, String>,
         pub epp: Result<String, String>,
@@ -1493,8 +1600,66 @@ mod machine {
         pub pkg_temp_c: Result<(f64, String), String>,
     }
 
+    /// One cpufreq policy's identity and settings, each read raw or why not
+    pub struct Policy {
+        /// its directory's name (`policy0`)
+        pub id: String,
+        /// affected_cpus (else related_cpus), as sysfs lists them
+        pub cpus: Result<String, String>,
+        pub driver: Result<String, String>,
+        pub governor: Result<String, String>,
+        pub epp: Result<String, String>,
+    }
+
+    impl Policy {
+        fn json(&self) -> String {
+            let f = [
+                format!("\"policy\":{}", js(&self.id)),
+                field("cpus", &self.cpus, |x| js(x)),
+                field("driver", &self.driver, |x| js(x)),
+                field("governor", &self.governor, |x| js(x)),
+                field("epp", &self.epp, |x| js(x)),
+            ];
+            format!("{{{}}}", f.join(","))
+        }
+    }
+
+    /// The time now, ns since the Unix epoch, or why not
+    pub fn unix_ns() -> Result<u128, String> {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .map_err(|e| format!("the clock reads before the epoch: {e}"))
+    }
+
     impl State {
         pub fn json(&self) -> String {
+            let khz: Vec<String> = self
+                .cpu_khz
+                .iter()
+                .map(|(c, v)| {
+                    format!(
+                        "\"{c}\":{}",
+                        v.as_ref().map_or("null".into(), |x| x.to_string())
+                    )
+                })
+                .collect();
+            let khz_why: Vec<String> = self
+                .cpu_khz
+                .iter()
+                .filter_map(|(c, v)| v.as_ref().err().map(|w| format!("\"{c}\":{}", js(w))))
+                .collect();
+            let policies: Vec<String> = self.policies.iter().map(Policy::json).collect();
+            let mut raw = vec![
+                field("t_unix_ns", &self.t_unix_ns, |x| x.to_string()),
+                format!("\"read_s\":{:.6}", self.read_s),
+                format!("\"cpu_khz\":{{{}}}", khz.join(",")),
+            ];
+            if !khz_why.is_empty() {
+                raw.push(format!("\"cpu_khz_why\":{{{}}}", khz_why.join(",")));
+            }
+            raw.push(format!("\"policies\":[{}]", policies.join(",")));
+            raw.push(field("platform_profile", &self.platform_profile, |x| js(x)));
             let mut f = vec![
                 field("freq_mhz", &self.freq_mhz, |x| format!("{:.1}", x.0)),
                 field("governor", &self.governor, |x| js(x)),
@@ -1511,6 +1676,7 @@ mod machine {
             if let Ok((_, src)) = &self.pkg_temp_c {
                 f.push(format!("\"temp_src\":{}", js(src)));
             }
+            f.extend(raw);
             format!("{{{}}}", f.join(","))
         }
     }
@@ -1679,9 +1845,57 @@ mod machine {
             })
         }
 
+        /// Each CPU's own scaling_cur_freq (kHz), or why not
+        pub fn cpu_khz(&self, cpus: &[usize]) -> Vec<(usize, Result<u64, String>)> {
+            cpus.iter()
+                .map(|&c| {
+                    let rel = format!("sys/devices/system/cpu/cpu{c}/cpufreq/scaling_cur_freq");
+                    let v = match self.read(&rel) {
+                        Some(x) => x.parse().map_err(|_| format!("{rel} reads {x:?}")),
+                        None => Err(format!("no {rel}")),
+                    };
+                    (c, v)
+                })
+                .collect()
+        }
+
+        /// Each policy holding any of `cpus`, its identity and settings read raw
+        pub fn policy_list(&self, cpus: &[usize]) -> Vec<Policy> {
+            let dir = "sys/devices/system/cpu/cpufreq";
+            let get = |p: &str, attr: &str| -> Result<String, String> {
+                self.read(&format!("{dir}/{p}/{attr}"))
+                    .ok_or_else(|| format!("no {dir}/{p}/{attr}"))
+            };
+            self.policies(Some(cpus))
+                .into_iter()
+                .map(|p| Policy {
+                    cpus: get(&p, "affected_cpus").or_else(|_| get(&p, "related_cpus")),
+                    driver: get(&p, "scaling_driver"),
+                    governor: get(&p, "scaling_governor"),
+                    epp: get(&p, "energy_performance_preference"),
+                    id: p,
+                })
+                .collect()
+        }
+
         /// The state over the run's CPUs
         pub fn state(&self, cpus: &[usize]) -> State {
+            let t0 = std::time::Instant::now();
+            let t_unix_ns = unix_ns();
+            let mut st = self.state_at(cpus, t_unix_ns);
+            st.read_s = t0.elapsed().as_secs_f64();
+            st
+        }
+
+        fn state_at(&self, cpus: &[usize], t_unix_ns: Result<u128, String>) -> State {
             State {
+                t_unix_ns,
+                read_s: 0.0,
+                cpu_khz: self.cpu_khz(cpus),
+                policies: self.policy_list(cpus),
+                platform_profile: self
+                    .read("sys/firmware/acpi/platform_profile")
+                    .ok_or_else(|| "no sys/firmware/acpi/platform_profile".to_string()),
                 freq_mhz: self.freq_mhz(cpus),
                 governor: self.policy_attr(Some(cpus), "scaling_governor"),
                 epp: self.policy_attr(Some(cpus), "energy_performance_preference"),
@@ -1823,6 +2037,100 @@ mod machine {
         );
     }
 
+    /// `ab sample [--count N] [--interval S]`: untimed and read-only. Exactly N readings of
+    /// the state over the allowed CPUs (default 10), S seconds apart (default 1), one JSON
+    /// line each, whatever they read. Unlike `settle` it judges nothing: it never stops
+    /// early, never waits for a condition, and never fails, so its length is fixed before
+    /// it starts (bench 3.4.0)
+    pub fn sample(args: &[String], cpus: &[usize]) {
+        let mut count: usize = 10;
+        let mut interval = 1.0;
+        let mut i = 0;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--count" => count = args[i + 1].parse().expect("--count N"),
+                "--interval" => interval = args[i + 1].parse().expect("--interval S"),
+                a => panic!("ab sample: unknown argument {a}"),
+            }
+            i += 2;
+        }
+        let s = Sysfs::live();
+        let list = cpus
+            .iter()
+            .map(usize::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
+        for k in 0..count {
+            if k > 0 {
+                std::thread::sleep(std::time::Duration::from_secs_f64(interval));
+            }
+            println!(
+                "{{\"sample\":{k},\"count\":{count},\"interval_s\":{interval},\"cpus\":\"{list}\",\"state\":{}}}",
+                s.state(cpus).json()
+            );
+        }
+    }
+
+    /// The child's timed region beside its counters (`--machine-state` only): the CPUs it
+    /// may run on, its context switches across the region, and the CPUs the sampler saw
+    /// its threads on (bench 3.4.0)
+    pub struct Region {
+        allowed: Result<String, String>,
+        ctx0: (i64, i64),
+        ctx: Option<(i64, i64)>,
+        cpus: Option<super::SeenCpus>,
+    }
+
+    impl Region {
+        /// Just before the counters are enabled
+        pub fn start(cpus: Option<super::SeenCpus>) -> Region {
+            let allowed = std::fs::read_to_string("/proc/self/status")
+                .map_err(|e| format!("/proc/self/status: {e}"))
+                .and_then(|s| {
+                    s.lines()
+                        .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+                        .map(|v| v.trim().to_string())
+                        .ok_or_else(|| "no Cpus_allowed_list in /proc/self/status".into())
+                });
+            Region {
+                allowed,
+                ctx0: super::ctx_switches(),
+                ctx: None,
+                cpus,
+            }
+        }
+        /// Just after they are disabled
+        pub fn stop(&mut self) {
+            let c = super::ctx_switches();
+            self.ctx = Some((c.0 - self.ctx0.0, c.1 - self.ctx0.1));
+        }
+        /// The record's fields: a leading comma, then the allowed CPUs, the context
+        /// switches (voluntary, involuntary) and the CPUs seen
+        pub fn json(self) -> String {
+            let ctx = self
+                .ctx
+                .ok_or_else(|| "the region was not stopped".to_string());
+            let seen = match &self.cpus {
+                Some(c) => {
+                    let c = c.lock().unwrap();
+                    if c.is_empty() {
+                        Err("the sampler saw no thread on any CPU".to_string())
+                    } else {
+                        Ok(c.iter().map(u32::to_string).collect::<Vec<_>>().join(","))
+                    }
+                }
+                None => Err("no sampler (a 1-thread run, pinned to its allowed CPU)".into()),
+            };
+            let f = [
+                field("cpus_allowed", &self.allowed, |x| js(x)),
+                field("ctxsw_voluntary", &ctx, |x| x.0.to_string()),
+                field("ctxsw_involuntary", &ctx, |x| x.1.to_string()),
+                field("cpus_seen", &seen, |x| js(x)),
+            ];
+            format!(",{}", f.join(","))
+        }
+    }
+
     // ---------------------------------------------------------------------------------
     // the child's counters
 
@@ -1846,6 +2154,7 @@ mod machine {
     const TYPE_SOFTWARE: u64 = 1;
     const HW_CPU_CYCLES: u64 = 0;
     const HW_INSTRUCTIONS: u64 = 1;
+    const HW_REF_CPU_CYCLES: u64 = 9;
     const SW_TASK_CLOCK: u64 = 1;
     const IOC_ENABLE: u64 = 0x2400;
     const IOC_DISABLE: u64 = 0x2401;
@@ -1866,9 +2175,98 @@ mod machine {
     pub struct Perf {
         cycles: Counter,
         instructions: Counter,
+        /// reference cycles: counted at a constant rate whatever the core's clock (bench
+        /// 3.4.0); cycles over them is the counted threads' clock over that reference
+        ref_cycles: Counter,
         task_clock: Counter,
         /// "user+kernel" or "user"
         scope: &'static str,
+        /// each failed enable or disable: (counter, request, errno), in order (bench 3.4.0;
+        /// a counter whose control failed is invalid, whatever it reads)
+        ctl: std::cell::RefCell<Vec<(&'static str, &'static str, i32)>>,
+        /// how long the enables, and the disables, took from the first counter's to the
+        /// last's (ns): the counters' boundaries are that far apart, at most
+        skew_ns: std::cell::Cell<(Option<u64>, Option<u64>)>,
+    }
+
+    /// The counters, in the order they are enabled and disabled
+    const ORDER: [&str; 4] = ["task_clock", "ref_cycles", "instructions", "cycles"];
+
+    /// One counter's reading: its raw value, time enabled and time running (ns)
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Reading {
+        pub value: u64,
+        pub enabled: u64,
+        pub running: u64,
+    }
+
+    /// Where a counter's reading failed (D066): it couldn't be opened here (UNAVAILABLE in
+    /// the check), or it was opened and then its enable, disable or read failed (INCOMPLETE)
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub enum Stage {
+        Open,
+        Control,
+        Read,
+    }
+
+    /// A failed reading: its stage and its reason
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Fault {
+        pub stage: Stage,
+        pub why: String,
+    }
+
+    /// A counter's reading, or where and why it failed
+    pub type Got = Result<Reading, Fault>;
+
+    fn fault(stage: Stage, why: impl Into<String>) -> Fault {
+        Fault {
+            stage,
+            why: why.into(),
+        }
+    }
+
+    impl Reading {
+        /// Whether it counted the whole of the time it was enabled (not multiplexed)
+        pub fn whole(&self) -> bool {
+            self.enabled > 0 && self.running == self.enabled
+        }
+    }
+
+    /// Cycles over the task clock (GHz), or why there's no matched ratio. Only the two
+    /// counters it divides decide it: instructions' validity is its own (`perf_multiplexed`,
+    /// `perf_ctl_errors`), and any use of them with cycles needs it separately. Note that
+    /// this ratio isn't an independent correction: cycles over it gives back the task clock
+    pub fn eff_ghz(
+        cy: &Result<Reading, String>,
+        tc: &Result<Reading, String>,
+        user_only: bool,
+    ) -> Result<f64, String> {
+        match (cy, tc) {
+            (Err(e), _) => Err(format!("no cycles: {e}")),
+            (_, Err(e)) => Err(format!("no task clock: {e}")),
+            // (the task clock's exclusion of kernel time isn't established, so a user-mode
+            // cycle count over it is no matched ratio)
+            _ if user_only => Err(
+                "cycles counted in user mode only, and the task clock is not shown to be: no matched ratio"
+                    .into(),
+            ),
+            (Ok(c), Ok(t)) if !c.whole() || !t.whole() => Err(format!(
+                "multiplexed: cycles counted {:.1}% and the task clock {:.1}% of their enabled time",
+                share(c),
+                share(t)
+            )),
+            (Ok(c), Ok(t)) if t.value > 0 => Ok(c.value as f64 / t.value as f64),
+            _ => Err("no task clock".into()),
+        }
+    }
+
+    fn share(r: &Reading) -> f64 {
+        if r.enabled == 0 {
+            0.0
+        } else {
+            100.0 * r.running as f64 / r.enabled as f64
+        }
     }
 
     /// What an errno from perf_event_open means here
@@ -1922,14 +2320,25 @@ mod machine {
             Perf::open_events(
                 (TYPE_HARDWARE, HW_CPU_CYCLES),
                 (TYPE_HARDWARE, HW_INSTRUCTIONS),
+                (TYPE_HARDWARE, HW_REF_CPU_CYCLES),
             )
         }
         /// `open` with the events counted as cycles and instructions given (a test counts
         /// software events in their place, where there's no hardware PMU)
-        fn open_events(cyc: (u64, u64), ins: (u64, u64)) -> Perf {
+        fn open_events(cyc: (u64, u64), ins: (u64, u64), refc: (u64, u64)) -> Perf {
+            Perf::open_mode(cyc, ins, refc, false)
+        }
+        /// `open_events`, in user mode only where `user_only` (the fallback, forced: `ab
+        /// telemetry-check` exercises it on a machine that would count both modes)
+        fn open_mode(cyc: (u64, u64), ins: (u64, u64), refc: (u64, u64), user_only: bool) -> Perf {
             let paranoid = std::fs::read_to_string("/proc/sys/kernel/perf_event_paranoid")
                 .map_or("unreadable".into(), |s| s.trim().to_string());
-            let (cycles, scope) = match open(cyc.0, cyc.1, false) {
+            let first = if user_only {
+                Err(13)
+            } else {
+                open(cyc.0, cyc.1, false)
+            };
+            let (cycles, scope) = match first {
                 Ok(fd) => (Ok(fd), "user+kernel"),
                 Err(1 | 13) => (
                     open(cyc.0, cyc.1, true).map_err(|e| why(e, &paranoid)),
@@ -1938,9 +2347,10 @@ mod machine {
                 Err(e) => (Err(why(e, &paranoid)), "user+kernel"),
             };
             let user = scope == "user";
-            let (instructions, task_clock) = if cycles.is_ok() {
+            let (instructions, ref_cycles, task_clock) = if cycles.is_ok() {
                 (
                     open(ins.0, ins.1, user).map_err(|e| why(e, &paranoid)),
+                    open(refc.0, refc.1, user).map_err(|e| why(e, &paranoid)),
                     open(TYPE_SOFTWARE, SW_TASK_CLOCK, user).map_err(|e| why(e, &paranoid)),
                 )
             } else {
@@ -1948,13 +2358,17 @@ mod machine {
                 (
                     Err(format!("not opened: cycles {no}")),
                     Err(format!("not opened: cycles {no}")),
+                    Err(format!("not opened: cycles {no}")),
                 )
             };
             Perf {
                 cycles,
                 instructions,
+                ref_cycles,
                 task_clock,
                 scope,
+                ctl: Default::default(),
+                skew_ns: Default::default(),
             }
         }
         /// A child that wasn't asked to count, or can't (a program's arm): every field null
@@ -1962,101 +2376,191 @@ mod machine {
             Perf {
                 cycles: Err(reason.into()),
                 instructions: Err(reason.into()),
+                ref_cycles: Err(reason.into()),
                 task_clock: Err(reason.into()),
                 scope: "user+kernel",
+                ctl: Default::default(),
+                skew_ns: Default::default(),
             }
         }
-        fn each(&self, req: u64) {
-            for fd in [&self.task_clock, &self.instructions, &self.cycles]
-                .into_iter()
-                .flatten()
-            {
-                // SAFETY: an open perf event descriptor; the request takes no argument
-                unsafe { ioctl(*fd, req as std::ffi::c_ulong, 0u64) };
+        fn counter(&self, name: &str) -> &Counter {
+            match name {
+                "task_clock" => &self.task_clock,
+                "ref_cycles" => &self.ref_cycles,
+                "instructions" => &self.instructions,
+                _ => &self.cycles,
             }
+        }
+        /// The request on every open counter, in ORDER; each failure kept, with its errno.
+        /// Returns how long it took from the first ioctl's start to the last's end
+        fn each(&self, req: u64) -> Option<u64> {
+            let op = if req == IOC_ENABLE {
+                "enable"
+            } else {
+                "disable"
+            };
+            let mut first = None;
+            for name in ORDER {
+                let Ok(fd) = self.counter(name) else { continue };
+                first.get_or_insert_with(std::time::Instant::now);
+                // SAFETY: an open perf event descriptor; the request takes no argument
+                let r = unsafe { ioctl(*fd, req as std::ffi::c_ulong, 0u64) };
+                if r != 0 {
+                    let errno = std::io::Error::last_os_error().raw_os_error().unwrap_or(0);
+                    self.ctl.borrow_mut().push((name, op, errno));
+                }
+            }
+            first.map(|t| t.elapsed().as_nanos() as u64)
         }
         /// Just before the timed region's clock starts
         #[inline]
         pub fn enable(&self) {
-            self.each(IOC_ENABLE);
+            let s = self.each(IOC_ENABLE);
+            self.skew_ns.set((s, self.skew_ns.get().1));
         }
         /// Just after it stops
         #[inline]
         pub fn disable(&self) {
-            self.each(IOC_DISABLE);
+            let s = self.each(IOC_DISABLE);
+            self.skew_ns.set((self.skew_ns.get().0, s));
         }
         /// The record's fields (after `disable`), the descriptors closed: a leading comma,
         /// then cycles, instructions, the task clock (s), the scope, the least share of
         /// the region a counter ran for, and the effective clock (GHz)
         pub fn finish(self) -> String {
-            let get = |c: &Counter| -> Result<(u64, f64), String> {
-                let fd = *c.as_ref().map_err(Clone::clone)?;
+            self.collect().1
+        }
+        /// `finish`, with each counter's reading beside the record's fields: cycles,
+        /// instructions, reference cycles and the task clock, in that order
+        #[allow(clippy::type_complexity)]
+        pub fn collect(self) -> (Vec<(&'static str, Got)>, String) {
+            let ctl = self.ctl.take();
+            let failed = |name: &str| -> Option<String> {
+                let v: Vec<String> = ctl
+                    .iter()
+                    .filter(|x| x.0 == name)
+                    .map(|x| format!("{} failed (errno {})", x.1, x.2))
+                    .collect();
+                (!v.is_empty()).then(|| v.join(", "))
+            };
+            let get = |name: &str| -> Got {
+                let fd = *self
+                    .counter(name)
+                    .as_ref()
+                    .map_err(|e| fault(Stage::Open, e.clone()))?;
                 // SAFETY: an open perf event descriptor this Perf owns, taken once: the File
                 // closes it when dropped
                 let mut file = unsafe { owned(fd) };
+                // (a counter whose enable or disable failed is invalid, whatever it reads)
+                if let Some(why) = failed(name) {
+                    return Err(fault(Stage::Control, format!("its {why}")));
+                }
                 // (the value, time enabled and time running: read_format 3)
                 let mut raw = [0u8; 24];
                 std::io::Read::read_exact(&mut file, &mut raw)
-                    .map_err(|e| format!("reading the counter: {e}"))?;
+                    .map_err(|e| fault(Stage::Read, format!("reading the counter: {e}")))?;
                 let w = |i: usize| u64::from_ne_bytes(raw[8 * i..8 * i + 8].try_into().unwrap());
-                let b = [w(0), w(1), w(2)];
-                Ok((
-                    b[0],
-                    if b[1] == 0 {
-                        0.0
-                    } else {
-                        b[2] as f64 / b[1] as f64
-                    },
-                ))
+                Ok(Reading {
+                    value: w(0),
+                    enabled: w(1),
+                    running: w(2),
+                })
             };
-            let (cy, ins, tc) = (
-                get(&self.cycles),
-                get(&self.instructions),
-                get(&self.task_clock),
+            let got = [
+                ("cycles", get("cycles")),
+                ("instructions", get("instructions")),
+                ("ref_cycles", get("ref_cycles")),
+                ("task_clock", get("task_clock")),
+            ];
+            let why = |g: &Got| g.clone().map_err(|f| f.why);
+            let (cy, ins, rc, tc) = (
+                why(&got[0].1),
+                why(&got[1].1),
+                why(&got[2].1),
+                why(&got[3].1),
             );
-            let running = [&cy, &ins, &tc]
+            let all = [
+                ("cycles", &cy),
+                ("instructions", &ins),
+                ("ref_cycles", &rc),
+                ("task_clock", &tc),
+            ];
+            let running = all
                 .iter()
-                .filter_map(|r| r.as_ref().ok().map(|x| x.1))
+                .filter_map(|r| r.1.as_ref().ok().map(|x| share(x) / 100.0))
                 .fold(None, |a: Option<f64>, x| Some(a.map_or(x, |a| a.min(x))));
-            let eff = match (&cy, &tc) {
-                (Ok(c), Ok(t)) if c.1 < 1.0 || t.1 < 1.0 => Err(format!(
-                    "multiplexed: counted {:.0}% of the region",
-                    100.0 * c.1.min(t.1)
-                )),
-                (Ok(c), Ok(t)) if t.0 > 0 => Ok(c.0 as f64 / t.0 as f64),
-                (Ok(_), Ok(_)) => Err("no task clock".into()),
-                (Err(e), _) => Err(format!("no cycles: {e}")),
-                (_, Err(e)) => Err(format!("no task clock: {e}")),
-            };
-            let measured = cy.is_ok();
+            let eff = eff_ghz(&cy, &tc, self.scope == "user");
+            let measured = self.cycles.is_ok();
             let mut f = vec![
-                field("cycles", &cy, |x| x.0.to_string()),
-                field("instructions", &ins, |x| x.0.to_string()),
-                field("task_clock_s", &tc, |x| format!("{:.4}", x.0 as f64 * 1e-9)),
+                field("cycles", &cy, |x| x.value.to_string()),
+                field("instructions", &ins, |x| x.value.to_string()),
+                field("ref_cycles", &rc, |x| x.value.to_string()),
+                field("task_clock_s", &tc, |x| {
+                    format!("{:.4}", x.value as f64 * 1e-9)
+                }),
             ];
             if measured {
                 f.push(format!("\"perf_scope\":\"{}\"", self.scope));
+                // (each counter's time enabled and time running, ns, raw: never scaled; a
+                // value is the raw count, never scaled up for multiplexing)
+                let t = |r: &Result<Reading, String>| {
+                    r.as_ref()
+                        .map_or("null".into(), |x| format!("[{},{}]", x.enabled, x.running))
+                };
+                f.push(format!(
+                    "\"perf_times_ns\":{{\"cycles\":{},\"instructions\":{},\"ref_cycles\":{},\"task_clock\":{}}}",
+                    t(&cy),
+                    t(&ins),
+                    t(&rc),
+                    t(&tc)
+                ));
+                let mux: Vec<String> = all
+                    .iter()
+                    .filter(|r| r.1.as_ref().is_ok_and(|x| !x.whole()))
+                    .map(|r| js(r.0))
+                    .collect();
+                f.push(format!("\"perf_multiplexed\":[{}]", mux.join(",")));
+                let errs: Vec<String> = ctl
+                    .iter()
+                    .map(|x| {
+                        format!(
+                            "{{\"counter\":\"{}\",\"op\":\"{}\",\"errno\":{}}}",
+                            x.0, x.1, x.2
+                        )
+                    })
+                    .collect();
+                f.push(format!("\"perf_ctl_errors\":[{}]", errs.join(",")));
+                let (se, sd) = self.skew_ns.get();
+                let ns = |v: Option<u64>| v.map_or("null".into(), |x| x.to_string());
+                f.push(format!(
+                    "\"perf_skew_ns\":{{\"enable\":{},\"disable\":{},\"order\":\"{}\"}}",
+                    ns(se),
+                    ns(sd),
+                    ORDER.join(",")
+                ));
+                f.push("\"perf_coverage\":\"the opening thread and every thread it starts after the counters open (inherited), each followed on any CPU; not threads started before (the sampler)\"".into());
             }
             f.push(format!(
                 "\"perf_running\":{}",
-                running.map_or("null".into(), |x| format!("{x:.3}"))
+                running.map_or("null".into(), |x| format!("{x:.6}"))
             ));
             f.push(field("eff_ghz", &eff, |x| format!("{x:.3}")));
-            format!(",{}", f.join(","))
+            (got.into_iter().collect(), format!(",{}", f.join(",")))
         }
         /// `ab env`'s `perf` field: what the counters would count here
         pub fn probe() -> String {
             let p = Perf::open();
             let r = match &p.cycles {
                 Ok(_) => format!(
-                    "\"perf\":{{\"cycles\":true,\"scope\":\"{}\",\"instructions\":{},\"task_clock\":{}}}",
+                    "\"perf\":{{\"cycles\":true,\"scope\":\"{}\",\"instructions\":{},\"ref_cycles\":{},\"task_clock\":{}}}",
                     p.scope,
                     p.instructions.is_ok(),
+                    p.ref_cycles.is_ok(),
                     p.task_clock.is_ok()
                 ),
                 Err(e) => format!("\"perf\":{{\"cycles\":false,\"why\":{}}}", js(e)),
             };
-            for fd in [&p.task_clock, &p.instructions, &p.cycles]
+            for fd in [&p.task_clock, &p.ref_cycles, &p.instructions, &p.cycles]
                 .into_iter()
                 .flatten()
             {
@@ -2065,6 +2569,661 @@ mod machine {
             }
             r
         }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // the recorder's own check (bench 3.4.0; its specification:
+    // docs/journal/2026-11-09-telemetry-check-registration.md)
+
+    /// This thread's own (user, system) CPU seconds, RUSAGE_THREAD, or why not: a failed
+    /// call is an error, never a zero
+    pub fn thread_times() -> Result<(f64, f64), String> {
+        let mut r = crate::Rusage::default();
+        // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
+        let rc = unsafe { crate::getrusage(1, &mut r) };
+        if rc != 0 {
+            return Err(format!(
+                "getrusage(RUSAGE_THREAD) failed (errno {})",
+                std::io::Error::last_os_error().raw_os_error().unwrap_or(0)
+            ));
+        }
+        let t = |tv: [i64; 2]| tv[0] as f64 + tv[1] as f64 * 1e-6;
+        Ok((t(r.utime), t(r.stime)))
+    }
+
+    /// The wall-time bound on each spin: whatever its CPU budget, a spin gives up after this
+    /// long, and its case is INCOMPLETE (a machine too busy to give it the CPU, or failed
+    /// accounting, never a pass)
+    pub const SPIN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
+
+    /// Spin for `ms` of this thread's own CPU time, checked, within SPIN_DEADLINE of wall
+    /// time
+    pub fn spin(ms: u64) -> Result<(), String> {
+        let deadline = std::time::Instant::now() + SPIN_DEADLINE;
+        let cpu = || thread_times().map(|t| t.0 + t.1);
+        let t0 = cpu()?;
+        let mut x = 0u64;
+        while cpu()? - t0 < ms as f64 * 1e-3 {
+            if std::time::Instant::now() > deadline {
+                return Err(format!(
+                    "{ms} ms of CPU not reached within {} s of wall time",
+                    SPIN_DEADLINE.as_secs()
+                ));
+            }
+            for _ in 0..10_000 {
+                x = std::hint::black_box(x.wrapping_add(1));
+            }
+        }
+        Ok(())
+    }
+
+    const SW_CPU_CLOCK: u64 = 0;
+    const SW: (u64, u64) = (TYPE_SOFTWARE, SW_TASK_CLOCK);
+
+    /// One case's line: its name, its status, what it saw, and its fields. The statuses:
+    /// PASS (the property checked holds), FAIL (it doesn't: the recorder is wrong here),
+    /// OBSERVED (a behaviour shown, with nothing it is checked against), UNAVAILABLE (the
+    /// events it needs can't be opened here, with why) and INCOMPLETE (it started but
+    /// couldn't finish validly: a failed control or read, multiplexing, a deadline)
+    fn case(name: &str, status: &str, detail: &str, fields: &str) -> String {
+        format!(
+            "{{\"case\":{},\"status\":\"{status}\",\"detail\":{},\"fields\":{{{}}}}}",
+            js(name),
+            js(detail),
+            fields.trim_start_matches(',')
+        )
+    }
+
+    /// A reading's JSON: raw value, enabled and running, or null with its reason
+    fn reading_json(name: &str, r: &Got) -> String {
+        match r {
+            Ok(x) => format!(
+                "\"{name}\":{{\"value\":{},\"enabled_ns\":{},\"running_ns\":{}}}",
+                x.value, x.enabled, x.running
+            ),
+            Err(e) => format!(
+                "\"{name}\":null,\"{name}_why\":{},\"{name}_stage\":\"{:?}\"",
+                js(&e.why),
+                e.stage
+            ),
+        }
+    }
+
+    /// The case statuses' exit code: 1 if any FAILs, else 3 if any is INCOMPLETE, else 0
+    pub fn exit_code(statuses: &[&str]) -> i32 {
+        if statuses.contains(&"FAIL") {
+            1
+        } else if statuses.contains(&"INCOMPLETE") {
+            3
+        } else {
+            0
+        }
+    }
+
+    /// The per-counter inheritance witness: counts with the work in a thread started inside
+    /// the region (`inside`) against the same work in a thread started before the counters
+    /// open (`before`), with the opener idle in both. A counter passes only if both readings
+    /// are valid and whole, and `inside` is at least ten times `before` (and nonzero):
+    /// removing that counter's inheritance makes `inside` the opener's idle count, and fails
+    pub fn inherit_status(inside: &Got, before: &Got) -> (&'static str, String) {
+        // (both regions' faults first: a control or read failure after a successful open is
+        // INCOMPLETE, whichever region it is in and whatever the other shows; only then an
+        // event that couldn't be opened is UNAVAILABLE)
+        let faults: Vec<(&str, &Fault)> = [("inside", inside), ("before", before)]
+            .into_iter()
+            .filter_map(|(k, r)| r.as_ref().err().map(|f| (k, f)))
+            .collect();
+        let say = |fs: &[(&str, &Fault)]| {
+            fs.iter()
+                .map(|(k, f)| format!("{k}: {:?}: {}", f.stage, f.why))
+                .collect::<Vec<_>>()
+                .join("; ")
+        };
+        if faults.iter().any(|(_, f)| f.stage != Stage::Open) {
+            return ("INCOMPLETE", say(&faults));
+        }
+        if !faults.is_empty() {
+            return ("UNAVAILABLE", say(&faults));
+        }
+        let (Ok(a), Ok(b)) = (inside, before) else {
+            unreachable!("no faults, so both readings are valid")
+        };
+        if !a.whole() || !b.whole() {
+            (
+                "INCOMPLETE",
+                "multiplexed: the counts don't cover their enabled time".into(),
+            )
+        } else if a.value > 0 && a.value >= 10 * b.value.max(1) {
+            (
+                "PASS",
+                format!(
+                    "{} counted with the work in a thread started in the region, {} with it in a thread started before",
+                    a.value, b.value
+                ),
+            )
+        } else {
+            (
+                "FAIL",
+                format!(
+                    "{} counted with the work in a thread started in the region, {} with it in a thread started before: no inheritance shown",
+                    a.value, b.value
+                ),
+            )
+        }
+    }
+
+    /// The live multiplexing case's status, from the record's readings and its fields
+    /// (D066): any control or read failure on an opened counter is INCOMPLETE, before
+    /// multiplexing is judged; a counter that couldn't be opened is left out. Then: no
+    /// multiplexed counter is OBSERVED ("not exercised"), never a pass; a multiplexed
+    /// counter is PASS only if the record lists it and eff_ghz follows its rule
+    pub fn multiplex_status(rs: &[(&'static str, Got)], f: &str) -> (&'static str, String) {
+        let broken: Vec<String> = rs
+            .iter()
+            .filter_map(|(n, r)| match r {
+                Err(x) if x.stage != Stage::Open => Some(format!("{n}: {:?}: {}", x.stage, x.why)),
+                _ => None,
+            })
+            .collect();
+        if !broken.is_empty() {
+            return (
+                "INCOMPLETE",
+                format!("a control or read failed: {}", broken.join("; ")),
+            );
+        }
+        let partial: Vec<&str> = rs
+            .iter()
+            .filter(|r| r.1.as_ref().is_ok_and(|x| !x.whole()))
+            .map(|r| r.0)
+            .collect();
+        if partial.is_empty() {
+            return (
+                "OBSERVED",
+                "multiplexing not exercised: every valid counter ran its whole enabled time".into(),
+            );
+        }
+        let mux = f
+            .split_once("\"perf_multiplexed\":[")
+            .and_then(|x| x.1.split_once(']'))
+            .map_or("", |x| x.0);
+        let listed = partial.iter().all(|n| mux.contains(&format!("\"{n}\"")));
+        let divides = partial.iter().any(|n| *n == "cycles" || *n == "task_clock");
+        if listed && (!divides || f.contains("\"eff_ghz\":null")) {
+            (
+                "PASS",
+                format!(
+                    "multiplexed: {}; the record lists them and eff_ghz follows",
+                    partial.join(", ")
+                ),
+            )
+        } else {
+            (
+                "FAIL",
+                format!(
+                    "multiplexed: {}; the record doesn't say so",
+                    partial.join(", ")
+                ),
+            )
+        }
+    }
+
+    /// One inheritance region: `before` true runs the work (80 ms of CPU) in a thread
+    /// started before the counters open, else in one started inside the region; the opener
+    /// only waits. The readings, or why the region couldn't be run
+    #[allow(clippy::type_complexity)]
+    fn inherit_region(
+        open: &dyn Fn() -> Perf,
+        before: bool,
+    ) -> Result<Vec<(&'static str, Got)>, String> {
+        let (go, wait) = std::sync::mpsc::channel::<()>();
+        let early = before.then(|| {
+            std::thread::spawn(move || {
+                wait.recv().map_err(|_| "never started".to_string())?;
+                spin(80)
+            })
+        });
+        let p = open();
+        if let Err(e) = p.cycles.clone() {
+            drop(go);
+            if let Some(h) = early {
+                let _ = h.join();
+            }
+            return Ok(p
+                .collect()
+                .0
+                .into_iter()
+                .map(|(n, _)| (n, Err(fault(Stage::Open, e.clone()))))
+                .collect());
+        }
+        p.enable();
+        let r = match early {
+            Some(h) => {
+                let _ = go.send(());
+                h.join()
+            }
+            None => std::thread::spawn(|| spin(80)).join(),
+        };
+        p.disable();
+        let readings = p.collect().0;
+        r.map_err(|_| "the worker panicked".to_string())??;
+        Ok(readings)
+    }
+
+    /// `ab telemetry-check`: one JSON line a case (statuses at `case`), then exit 1 if any
+    /// case FAILs, else 3 if any is INCOMPLETE, else 0. Every case is bounded: each spin by
+    /// SPIN_DEADLINE, the whole check by the recipe's outer timeout
+    pub fn check() -> i32 {
+        let mut statuses: Vec<&'static str> = Vec::new();
+        let mut out = |status: &'static str, line: String| {
+            statuses.push(status);
+            println!("{line}");
+        };
+
+        // control-failure: a descriptor that isn't a perf event's, so its enable and disable
+        // fail; that counter must be invalid, the rest valid
+        {
+            let mut p = Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW);
+            if let Err(e) = &p.cycles {
+                let e = e.clone();
+                drop(p.finish());
+                out(
+                    "UNAVAILABLE",
+                    case("control-failure", "UNAVAILABLE", &e, ""),
+                );
+            } else {
+                use std::os::fd::IntoRawFd;
+                if let Ok(fd) = &p.instructions {
+                    // SAFETY: an open descriptor this Perf owns, replaced below, closed once
+                    drop(unsafe { owned(*fd) });
+                }
+                p.instructions = std::fs::File::open("/dev/null")
+                    .map(|f| f.into_raw_fd())
+                    .map_err(|e| e.to_string());
+                p.enable();
+                let s = spin(5);
+                p.disable();
+                let f = p.finish();
+                let ok = f.contains(
+                    "\"instructions\":null,\"instructions_why\":\"its enable failed (errno",
+                ) && f.contains("disable failed (errno")
+                    && f.contains("{\"counter\":\"instructions\",\"op\":\"enable\"")
+                    && f.contains("{\"counter\":\"instructions\",\"op\":\"disable\"")
+                    && !f.contains("\"cycles\":null");
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", e),
+                    Ok(()) if ok => (
+                        "PASS",
+                        "a failed enable and disable are recorded, and only that counter is invalid"
+                            .into(),
+                    ),
+                    Ok(()) => (
+                        "FAIL",
+                        "a failed enable or disable was not recorded as such".into(),
+                    ),
+                };
+                out(st, case("control-failure", st, &d, &f));
+            }
+        }
+
+        // missing-counter
+        {
+            let p = Perf::open_events(
+                (TYPE_HARDWARE, 0xfff0),
+                (TYPE_HARDWARE, 0xfff1),
+                (TYPE_HARDWARE, 0xfff2),
+            );
+            p.enable();
+            p.disable();
+            let f = p.finish();
+            let ok = [
+                "cycles",
+                "instructions",
+                "ref_cycles",
+                "task_clock_s",
+                "eff_ghz",
+            ]
+            .iter()
+            .all(|k| f.contains(&format!("\"{k}\":null,\"{k}_why\":\"")))
+                && f.contains("\"perf_running\":null")
+                && !f.contains("perf_scope");
+            let st = if ok { "PASS" } else { "FAIL" };
+            out(
+                st,
+                case(
+                    "missing-counter",
+                    st,
+                    "an event that can't be opened: every field null with its reason, never zero",
+                    &f,
+                ),
+            );
+        }
+
+        // multiplex-predicate
+        {
+            let r = |value, running| Reading {
+                value,
+                enabled: 1_000,
+                running,
+            };
+            let a = eff_ghz(&Ok(r(2_000, 500)), &Ok(r(1_000, 1_000)), false);
+            let b = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 500)), false);
+            let c = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 1_000)), false);
+            let d = eff_ghz(&Ok(r(4_000, 1_000)), &Ok(r(1_000, 1_000)), true);
+            let ok = a.as_ref().is_err_and(|e| e.starts_with("multiplexed"))
+                && b.as_ref().is_err_and(|e| e.starts_with("multiplexed"))
+                && c == Ok(4.0)
+                && d.as_ref().is_err_and(|e| e.contains("user mode only"));
+            let st = if ok { "PASS" } else { "FAIL" };
+            let q = |x: &Result<f64, String>| js(&format!("{x:?}"));
+            out(
+                st,
+                case(
+                    "multiplex-predicate",
+                    st,
+                    "eff_ghz: null for multiplexed cycles or task clock, and in user mode only",
+                    &format!(
+                        "\"a\":{},\"b\":{},\"c\":{},\"d\":{}",
+                        q(&a),
+                        q(&b),
+                        q(&c),
+                        q(&d)
+                    ),
+                ),
+            );
+        }
+
+        // multiplex-live: 24 more cycle counters, each opened and enabled with its result
+        // checked; whether the record's counters were in fact multiplexed, and if so that
+        // the record says so
+        {
+            let p = Perf::open();
+            if let Err(e) = &p.cycles {
+                let e = format!("no hardware cycles: {e}");
+                drop(p.finish());
+                out("UNAVAILABLE", case("multiplex-live", "UNAVAILABLE", &e, ""));
+            } else {
+                let user = p.scope == "user";
+                let attempted = 24;
+                let opened: Vec<i32> = (0..attempted)
+                    .filter_map(|_| open(TYPE_HARDWARE, HW_CPU_CYCLES, user).ok())
+                    .collect();
+                let enabled = opened
+                    .iter()
+                    // SAFETY: an open perf event descriptor; the request takes no argument
+                    .filter(|fd| unsafe { ioctl(**fd, IOC_ENABLE as std::ffi::c_ulong, 0u64) } == 0)
+                    .count();
+                p.enable();
+                let s = spin(50);
+                p.disable();
+                for fd in &opened {
+                    // SAFETY: an open descriptor owned here, closed once
+                    drop(unsafe { owned(*fd) });
+                }
+                let (rs, f) = p.collect();
+                let counts = format!(
+                    "{attempted} extra cycle counters attempted, {} opened, {enabled} enabled",
+                    opened.len()
+                );
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", format!("{counts}; {e}")),
+                    Ok(()) => {
+                        let (st, d) = multiplex_status(&rs, &f);
+                        (st, format!("{counts}; {d}"))
+                    }
+                };
+                out(st, case("multiplex-live", st, &d, &f));
+            }
+        }
+
+        // user-only-fallback: the fallback forced; no matched ratio may be claimed
+        {
+            let p = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, true);
+            if let Err(e) = &p.cycles {
+                let e = e.clone();
+                drop(p.finish());
+                out(
+                    "UNAVAILABLE",
+                    case("user-only-fallback", "UNAVAILABLE", &e, ""),
+                );
+            } else {
+                p.enable();
+                let s = spin(5);
+                p.disable();
+                let f = p.finish();
+                let ok = f.contains("\"perf_scope\":\"user\"")
+                    && f.contains(
+                        "\"eff_ghz\":null,\"eff_ghz_why\":\"cycles counted in user mode only",
+                    );
+                let (st, d) = match s {
+                    Err(e) => ("INCOMPLETE", e),
+                    Ok(()) if ok => (
+                        "PASS",
+                        "the fallback forced: scope user, no matched ratio claimed".into(),
+                    ),
+                    Ok(()) => (
+                        "FAIL",
+                        "the forced fallback claimed a ratio or lost its scope".into(),
+                    ),
+                };
+                out(st, case("user-only-fallback", st, &d, &f));
+            }
+        }
+
+        // task-clock-modes: a task clock in user mode only beside one in both modes, over
+        // syscall-heavy work, every control and read checked, with this thread's own user
+        // and system time over the same work. A ratio only from two valid, whole readings
+        {
+            let pu = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, true);
+            let pa = Perf::open_mode(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW, false);
+            if pu.cycles.is_err() || pa.cycles.is_err() || pa.scope != "user+kernel" {
+                let why = match (&pu.cycles, &pa.cycles) {
+                    (Err(e), _) | (_, Err(e)) => e.clone(),
+                    _ => "a both-mode task clock is not permitted here".into(),
+                };
+                drop(pu.finish());
+                drop(pa.finish());
+                out(
+                    "UNAVAILABLE",
+                    case("task-clock-modes", "UNAVAILABLE", &why, ""),
+                );
+            } else {
+                let t0 = thread_times();
+                pu.enable();
+                pa.enable();
+                let deadline = std::time::Instant::now() + SPIN_DEADLINE;
+                let mut work: Result<(), String> = Ok(());
+                match std::fs::File::open("/dev/zero") {
+                    Err(e) => work = Err(format!("/dev/zero: {e}")),
+                    Ok(mut z) => {
+                        let mut b = [0u8; 64];
+                        loop {
+                            match (thread_times(), t0.clone()) {
+                                (Ok(t), Ok(s)) if (t.0 + t.1) - (s.0 + s.1) >= 0.05 => break,
+                                (Err(e), _) | (_, Err(e)) => {
+                                    work = Err(e.clone());
+                                    break;
+                                }
+                                _ => {}
+                            }
+                            if std::time::Instant::now() > deadline {
+                                work = Err("50 ms of CPU not reached within the deadline".into());
+                                break;
+                            }
+                            if let Err(e) = std::io::Read::read(&mut z, &mut b) {
+                                work = Err(format!("reading /dev/zero: {e}"));
+                                break;
+                            }
+                        }
+                    }
+                }
+                pa.disable();
+                pu.disable();
+                let t1 = thread_times();
+                let (ru, fu) = pu.collect();
+                let (ra, fa) = pa.collect();
+                let (u, a) = (ru[0].1.clone(), ra[0].1.clone());
+                let times = match (&t0, &t1) {
+                    (Ok(s), Ok(e)) => Ok((e.0 - s.0, e.1 - s.1)),
+                    (Err(x), _) | (_, Err(x)) => Err(x.clone()),
+                };
+                let fields = format!(
+                    "{},{},{},\"user_only_record\":{{{}}},\"both_record\":{{{}}}",
+                    reading_json("user_only", &u),
+                    reading_json("both", &a),
+                    match &times {
+                        Ok((us, ss)) =>
+                            format!("\"thread_user_s\":{us:.4},\"thread_system_s\":{ss:.4}"),
+                        Err(e) => format!("\"thread_user_s\":null,\"thread_times_why\":{}", js(e)),
+                    },
+                    fu.trim_start_matches(','),
+                    fa.trim_start_matches(',')
+                );
+                let (st, d) = match (&work, &u, &a, &times) {
+                    (Err(e), ..) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e), _, _) | (_, _, Err(e), _) => {
+                        ("INCOMPLETE", format!("{:?}: {}", e.stage, e.why))
+                    }
+                    (_, _, _, Err(e)) => ("INCOMPLETE", e.clone()),
+                    // (both nonzero, as registered: over 50 ms of this thread's CPU, a zero
+                    // either way is no reading of the flag)
+                    (_, Ok(x), Ok(y), _)
+                        if !x.whole() || !y.whole() || x.value == 0 || y.value == 0 =>
+                    {
+                        (
+                            "INCOMPLETE",
+                            "a reading was multiplexed or zero: no ratio".into(),
+                        )
+                    }
+                    (_, Ok(x), Ok(y), Ok((us, ss))) => {
+                        let r = x.value as f64 / y.value as f64;
+                        let sys = ss / (us + ss).max(1e-9);
+                        let reading = if sys < 0.2 {
+                            "too little kernel time to say anything of the user-only flag"
+                        } else if r > 0.9 {
+                            "consistent with this kernel's task clock not excluding kernel time"
+                        } else {
+                            "consistent with the user-only task clock excluding kernel time"
+                        };
+                        (
+                            "OBSERVED",
+                            format!("the user-only task clock read {r:.3} of the both-mode one, over work {:.0}% in system time: {reading}", 100.0 * sys),
+                        )
+                    }
+                };
+                out(st, case("task-clock-modes", st, &d, &fields));
+            }
+        }
+
+        // region-task-clock: the task clock (software) counts 80 ms in a thread started in
+        // the region and 20 ms in the opener, none of 120 ms outside the region, none of a
+        // thread started before the counters open. The task clock only: the hardware
+        // counters' region coverage is not validated here
+        {
+            let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let (go, wait) = std::sync::mpsc::channel::<()>();
+            let s2 = stop.clone();
+            let early = std::thread::spawn(move || -> Result<(), String> {
+                if wait.recv().is_err() {
+                    return Ok(());
+                }
+                while !s2.load(std::sync::atomic::Ordering::Relaxed) {
+                    spin(5)?;
+                }
+                Ok(())
+            });
+            let p = Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW);
+            if let Err(e) = &p.cycles {
+                let e = e.clone();
+                drop(go);
+                let _ = early.join();
+                drop(p.finish());
+                out(
+                    "UNAVAILABLE",
+                    case("region-task-clock", "UNAVAILABLE", &e, ""),
+                );
+            } else {
+                let mut s = spin(60);
+                p.enable();
+                let _ = go.send(());
+                let inner = std::thread::spawn(|| spin(80)).join();
+                let own = spin(20);
+                p.disable();
+                stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                let bg = early.join();
+                let after = spin(60);
+                for r in [
+                    inner.unwrap_or_else(|_| Err("panicked".into())),
+                    own,
+                    bg.unwrap_or_else(|_| Err("panicked".into())),
+                    after,
+                ] {
+                    if s.is_ok() {
+                        s = r;
+                    }
+                }
+                let (rs, f) = p.collect();
+                let tc = rs[3].1.clone();
+                let (st, d) = match (&s, &tc) {
+                    (Err(e), _) => ("INCOMPLETE", e.clone()),
+                    (_, Err(e)) => ("INCOMPLETE", format!("{:?}: {}", e.stage, e.why)),
+                    (_, Ok(x)) if !x.whole() => ("INCOMPLETE", "multiplexed".into()),
+                    (_, Ok(x)) => {
+                        let v = x.value as f64 * 1e-9;
+                        let st = if (0.090..0.130).contains(&v) {
+                            "PASS"
+                        } else {
+                            "FAIL"
+                        };
+                        (st, format!("the task clock read {v:.4} s: 0.100 expected (80 ms in a thread started in the region, 20 ms in the opener), none of the 120 ms outside it, none of the thread started before. The task clock only: the hardware counters' region coverage is not validated here"))
+                    }
+                };
+                out(st, case("region-task-clock", st, &d, &f));
+            }
+        }
+
+        // inheritance, each counter on its own: software events, then the real counters
+        for (mode, hw) in [("software", false), ("hardware", true)] {
+            let open = move || {
+                if hw {
+                    Perf::open()
+                } else {
+                    Perf::open_events(SW, (TYPE_SOFTWARE, SW_CPU_CLOCK), SW)
+                }
+            };
+            let (inside, before) = (inherit_region(&open, false), inherit_region(&open, true));
+            match (inside, before) {
+                (Err(e), _) | (_, Err(e)) => {
+                    out(
+                        "INCOMPLETE",
+                        case(&format!("inheritance-{mode}"), "INCOMPLETE", &e, ""),
+                    );
+                }
+                (Ok(a), Ok(b)) => {
+                    for ((name, ra), (_, rb)) in a.iter().zip(b.iter()) {
+                        let (st, d) = inherit_status(ra, rb);
+                        let what = if hw {
+                            (*name).to_string()
+                        } else {
+                            format!("{name} (a software stand-in)")
+                        };
+                        out(
+                            st,
+                            case(
+                                &format!("inheritance-{mode}-{name}"),
+                                st,
+                                &format!("{what}: {d}"),
+                                &format!(
+                                    "{},{}",
+                                    reading_json("inside", ra),
+                                    reading_json("before", rb)
+                                ),
+                            ),
+                        );
+                    }
+                }
+            }
+        }
+        exit_code(&statuses)
     }
 
     #[cfg(test)]
@@ -2117,7 +3276,8 @@ mod machine {
                 .put("sys/class/thermal/thermal_zone0/temp", "99000")
                 .put("sys/class/thermal/thermal_zone1/type", "x86_pkg_temp")
                 .put("sys/class/thermal/thermal_zone1/temp", "71000")
-                .put("proc/sys/kernel/perf_event_paranoid", "2");
+                .put("proc/sys/kernel/perf_event_paranoid", "2")
+                .put("sys/firmware/acpi/platform_profile", "balanced");
         }
 
         #[test]
@@ -2154,6 +3314,24 @@ mod machine {
                 "{j}"
             );
             assert!(!j.contains("_why"), "{j}");
+            // the raw readings beside the mean: each CPU's own, each policy's own
+            assert!(
+                j.contains("\"cpu_khz\":{\"0\":4000000,\"1\":4100000,\"2\":4200000,\"3\":4300000}"),
+                "{j}"
+            );
+            assert!(
+                j.contains("{\"policy\":\"policy3\",\"cpus\":\"3\",\"driver\":\"intel_pstate\",\"governor\":\"performance\",\"epp\":\"balance_performance\"}"),
+                "{j}"
+            );
+            assert!(j.contains("\"platform_profile\":\"balanced\""), "{j}");
+            assert!(
+                j.contains("\"t_unix_ns\":1") && j.contains("\"read_s\":"),
+                "{j}"
+            );
+            // only the policies holding the CPUs asked for
+            let j1 = s.state(&[1]).json();
+            assert!(j1.contains("\"policies\":[{\"policy\":\"policy1\""), "{j1}");
+            assert!(!j1.contains("policy2"), "{j1}");
             let e = s.env_json("\"perf\":{}");
             assert!(e.contains("\"cpufreq_driver\":\"intel_pstate\""), "{e}");
             assert!(e.contains("\"perf_event_paranoid\":2"), "{e}");
@@ -2193,12 +3371,23 @@ mod machine {
             let t = Tree::new("empty");
             let s = Sysfs::at(&t.0);
             let j = s.state(&[0, 1]).json();
-            for k in ["freq_mhz", "governor", "epp", "turbo", "pkg_temp_c"] {
+            for k in [
+                "freq_mhz",
+                "governor",
+                "epp",
+                "turbo",
+                "pkg_temp_c",
+                "platform_profile",
+            ] {
                 assert!(
                     j.contains(&format!("\"{k}\":null,\"{k}_why\":\"")),
                     "{k}: {j}"
                 );
             }
+            // each CPU absent by its id, with its reason; never a zero
+            assert!(j.contains("\"cpu_khz\":{\"0\":null,\"1\":null}"), "{j}");
+            assert!(j.contains("\"cpu_khz_why\":{\"0\":\"no sys/"), "{j}");
+            assert!(j.contains("\"policies\":[]"), "{j}");
             assert!(!j.contains("freq_cpus") && !j.contains("temp_src"), "{j}");
             // a driver with no EPP (acpi-cpufreq): the governor read, the EPP null
             t.put(
@@ -2230,7 +3419,13 @@ mod machine {
             let f = Perf::skipped("not measured for a program's arm").finish();
             assert!(f.starts_with(','));
             let rec: String = format!("{{\"wall\":1.0{f}}}");
-            for k in ["cycles", "instructions", "task_clock_s", "eff_ghz"] {
+            for k in [
+                "cycles",
+                "instructions",
+                "ref_cycles",
+                "task_clock_s",
+                "eff_ghz",
+            ] {
                 assert!(
                     rec.contains(&format!("\"{k}\":null,\"{k}_why\":\"")),
                     "{k}: {rec}"
@@ -2238,6 +3433,7 @@ mod machine {
             }
             assert!(rec.contains("\"perf_running\":null"), "{rec}");
             assert!(!rec.contains("perf_scope"), "{rec}");
+            assert!(!rec.contains("perf_times_ns"), "{rec}");
             // whatever this machine allows, opening and reading gives the same fields: each
             // a value or null with its reason
             let p = Perf::open();
@@ -2245,7 +3441,13 @@ mod machine {
             std::hint::black_box((0..100_000u64).sum::<u64>());
             p.disable();
             let f = p.finish();
-            for k in ["cycles", "instructions", "task_clock_s", "eff_ghz"] {
+            for k in [
+                "cycles",
+                "instructions",
+                "ref_cycles",
+                "task_clock_s",
+                "eff_ghz",
+            ] {
                 let present =
                     f.contains(&format!("\"{k}\":")) && !f.contains(&format!("\"{k}\":null"));
                 let why = f.contains(&format!("\"{k}\":null,\"{k}_why\":\""));
@@ -2270,7 +3472,11 @@ mod machine {
                     }
                 }
             };
-            let p = Perf::open_events((TYPE_SOFTWARE, SW_TASK_CLOCK), (TYPE_SOFTWARE, 0));
+            let p = Perf::open_events(
+                (TYPE_SOFTWARE, SW_TASK_CLOCK),
+                (TYPE_SOFTWARE, 0),
+                (TYPE_SOFTWARE, 0),
+            );
             if p.cycles.is_err() {
                 eprintln!("no software events here: {:?}", p.cycles);
                 return;
@@ -2292,8 +3498,21 @@ mod machine {
             assert!((95e6..115e6).contains(&ns), "{ns} ns: {f}");
             assert!((0.095..0.115).contains(&num("task_clock_s")), "{f}");
             assert_eq!(num("perf_running"), 1.0, "{f}");
-            // task clock over task clock: 1 cycle a ns
-            assert!((num("eff_ghz") - 1.0).abs() < 0.01, "{f}");
+            // task clock over task clock: 1 cycle a ns, where the scopes match; in user
+            // mode only, no matched ratio is claimed
+            if f.contains("\"perf_scope\":\"user\"") {
+                assert!(
+                    f.contains(
+                        "\"eff_ghz\":null,\"eff_ghz_why\":\"cycles counted in user mode only"
+                    ),
+                    "{f}"
+                );
+            } else {
+                assert!((num("eff_ghz") - 1.0).abs() < 0.01, "{f}");
+            }
+            // the raw times enabled and running, for every counter
+            assert!(f.contains("\"perf_times_ns\":{\"cycles\":["), "{f}");
+            assert!(f.contains("\"perf_coverage\":"), "{f}");
         }
 
         #[test]
@@ -2336,6 +3555,136 @@ mod machine {
             let mut gap = f(&[4000.0; 5]);
             gap[3] = None;
             assert_eq!(settled(&gap, &none), Some(false));
+        }
+
+        /// `ab telemetry-check` on whatever this machine has: no case FAILs (a case without
+        /// the events it needs is UNAVAILABLE)
+        #[test]
+        fn the_recorder_check_passes_where_it_can() {
+            // (no case FAILs; on a loaded runner a case may be INCOMPLETE, exit 3)
+            assert_ne!(check(), 1);
+        }
+
+        #[test]
+        fn exit_codes_keep_fail_and_incomplete_apart() {
+            assert_eq!(exit_code(&["PASS", "UNAVAILABLE", "OBSERVED"]), 0);
+            assert_eq!(exit_code(&["PASS", "INCOMPLETE"]), 3);
+            assert_eq!(exit_code(&["INCOMPLETE", "FAIL"]), 1);
+        }
+
+        /// The inheritance witness fails when a counter's inheritance is removed (the inside
+        /// region counts only the idle opener), and never passes on a null, a failed control
+        /// or a multiplexed reading
+        #[test]
+        fn inheritance_witness_negative_controls() {
+            let r = |value, running| -> Got {
+                Ok(Reading {
+                    value,
+                    enabled: 100,
+                    running,
+                })
+            };
+            let f = |stage, why: &str| -> Got { Err(fault(stage, why)) };
+            assert_eq!(inherit_status(&r(80_000, 100), &r(500, 100)).0, "PASS");
+            // inheritance removed: inside is the opener's idle count, as before
+            assert_eq!(inherit_status(&r(500, 100), &r(480, 100)).0, "FAIL");
+            assert_eq!(inherit_status(&r(0, 100), &r(0, 100)).0, "FAIL");
+            // never a pass on a missing, failed or multiplexed reading
+            let unopened = f(Stage::Open, "no such event here");
+            assert_eq!(inherit_status(&unopened, &r(1, 100)).0, "UNAVAILABLE");
+            let ctl = f(Stage::Control, "its enable failed (errno 25)");
+            assert_eq!(inherit_status(&r(80_000, 100), &ctl).0, "INCOMPLETE");
+            assert_eq!(inherit_status(&r(80_000, 50), &r(1, 100)).0, "INCOMPLETE");
+            // D066's witnesses: a failed read is INCOMPLETE, not UNAVAILABLE; and an
+            // unavailable first reading can't hide a control failure in the second
+            let eio = f(
+                Stage::Read,
+                "reading the counter: Input/output error (os error 5)",
+            );
+            assert_eq!(inherit_status(&eio, &r(1, 100)).0, "INCOMPLETE");
+            assert_eq!(inherit_status(&r(80_000, 100), &eio).0, "INCOMPLETE");
+            let (st, why) = inherit_status(&unopened, &ctl);
+            assert_eq!(st, "INCOMPLETE");
+            assert!(
+                why.contains("inside: Open") && why.contains("before: Control"),
+                "{why}"
+            );
+            // with no independent FAIL, those make the check's exit 3
+            let statuses = [
+                "PASS",
+                "UNAVAILABLE",
+                inherit_status(&eio, &r(1, 100)).0,
+                inherit_status(&unopened, &ctl).0,
+            ];
+            assert_eq!(exit_code(&statuses), 3);
+        }
+
+        /// D066's multiplexing witnesses: failed controls or reads on opened counters are
+        /// INCOMPLETE before multiplexing is judged; only valid, exercised multiplexing
+        /// listed in the record passes; none exercised is OBSERVED
+        #[test]
+        fn multiplex_status_negative_controls() {
+            let whole = |v| -> Got {
+                Ok(Reading {
+                    value: v,
+                    enabled: 100,
+                    running: 100,
+                })
+            };
+            let half = |v| -> Got {
+                Ok(Reading {
+                    value: v,
+                    enabled: 100,
+                    running: 50,
+                })
+            };
+            let f = |stage, why: &str| -> Got { Err(fault(stage, why)) };
+            let names = ["cycles", "instructions", "ref_cycles", "task_clock"];
+            let rec =
+                |v: [Got; 4]| -> Vec<(&'static str, Got)> { names.into_iter().zip(v).collect() };
+            // every opened counter's control failed: INCOMPLETE, never "whole enabled time"
+            let all_failed = rec([
+                f(Stage::Control, "its enable failed (errno 9)"),
+                f(Stage::Control, "its enable failed (errno 9)"),
+                f(Stage::Read, "reading the counter: os error 5"),
+                f(Stage::Control, "its enable failed (errno 9)"),
+            ]);
+            let none = "\"perf_multiplexed\":[],\"eff_ghz\":null";
+            assert_eq!(multiplex_status(&all_failed, none).0, "INCOMPLETE");
+            // cycles' control failed while instructions multiplexed: INCOMPLETE, not PASS
+            let mixed = rec([
+                f(Stage::Control, "its disable failed (errno 9)"),
+                half(50),
+                whole(10),
+                whole(10),
+            ]);
+            let listed = "\"perf_multiplexed\":[\"instructions\"],\"eff_ghz\":null";
+            assert_eq!(multiplex_status(&mixed, listed).0, "INCOMPLETE");
+            // a counter that couldn't be opened is left out
+            let unopened = rec([
+                whole(10),
+                half(50),
+                f(Stage::Open, "no such event here"),
+                whole(10),
+            ]);
+            assert_eq!(multiplex_status(&unopened, listed).0, "PASS");
+            // nothing multiplexed: OBSERVED, not exercised
+            let clean = rec([whole(1), whole(1), whole(1), whole(1)]);
+            let (st, d) = multiplex_status(&clean, none);
+            assert_eq!(st, "OBSERVED");
+            assert!(d.contains("not exercised"), "{d}");
+            // multiplexed but not listed, or cycles multiplexed with eff_ghz standing: FAIL
+            assert_eq!(multiplex_status(&unopened, none).0, "FAIL");
+            let cyc = rec([half(5), whole(1), whole(1), whole(1)]);
+            let standing = "\"perf_multiplexed\":[\"cycles\"],\"eff_ghz\":1.000";
+            assert_eq!(multiplex_status(&cyc, standing).0, "FAIL");
+            // with no independent FAIL, the two D066 witnesses make the exit 3
+            let statuses = [
+                "PASS",
+                multiplex_status(&all_failed, none).0,
+                multiplex_status(&mixed, listed).0,
+            ];
+            assert_eq!(exit_code(&statuses), 3);
         }
 
         #[test]
