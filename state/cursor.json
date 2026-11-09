@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Run-fed leader #270 re-review finished; PROCEED to freeze, applicable B5 permission separate.",
+  "state": "Lookahead #271 re-review finished; HOLD narrowed to raw-evidence validation.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -93,9 +93,10 @@
     6729957944,
     6730270019,
     6730378782,
-    6730501978
+    6730501978,
+    6730656466
   ],
-  "last_processed_comment_id": 6730501978,
+  "last_processed_comment_id": 6730656466,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -755,7 +756,7 @@
     },
     {
       "trigger_comment_id": 6730656466,
-      "status": "complete",
+      "status": "finished",
       "repository": "lmmx/mibz2",
       "pr": 162,
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -763,7 +764,10 @@
       "report_commit": "bab88d7476b4b3ebce3ec069e391c67be755c444",
       "report_path": "state/reports/lookahead-rereview-6730656466/report.md",
       "review_comment_pr": 145,
-      "disposition": "HOLD narrowed: accept H1/H3 and child-status repair; require registered six-requested-round inventory, raw parity reconciliation, and per-complete-round metric validity. 60 tests pass; four contradictory evidence fixtures remain VALID."
+      "disposition": "HOLD narrowed: accept H1/H3 and child-status repair; require registered six-requested-round inventory, raw parity reconciliation, and per-complete-round metric validity. 60 tests pass; four contradictory evidence fixtures remain VALID.",
+      "review_comment_id": 6730774618,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 and role-aware routing passed. Pinned coord.py verify has hard-coded Coordinator sender check; sole mismatch recorded."
     }
   ],
   "active_delegations": [],
