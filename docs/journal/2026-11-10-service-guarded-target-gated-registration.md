@@ -12,7 +12,9 @@
 - under the Guardian's D085 (#145 6759863881): §2.10 added, the conditional estimand, DRAFT, a
   proposal for review and a decision record; §2.9's calibration carried unchanged;
 - under the Researcher's REVIEW 6760366316: §2.10 marked refuted, kept for the record; §2.11
-  added, replicated independent dispatches (DRAFT).
+  added, replicated independent dispatches (DRAFT);
+- under the Researcher's REVIEW 6763089509 §2: §2.11 final, 12 dispatches × R240, implemented;
+  §§6, 9 and 10 aligned; the Pathfinder's k 11 checked and not adopted.
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -1113,132 +1115,159 @@ its own mean first, and no mean, ratio or bound is computed. The construction:
   pilot-like heteroskedasticity and tails) is accepted. The claim lost: generalisation beyond
   each window. Adopted before qualification data; no threshold changed."
 
-### 2.11 Replicated independent dispatches (DRAFT: the Coordinator's redirection, for review)
+### 2.11 Replicated independent dispatches: the programme (final design, for review before freeze)
 
 **Why.** §2.9 found that no pilot-consistent within-window model keeps a single dispatch's
-size defensible. §2.10's conditional repair was refuted (6760366316). This design stops
-modelling the inside of a window. The inference unit becomes the dispatch: D085's option of
-independent dispatches.
+size defensible. §2.10's conditional repair was refuted (6760366316). The unit of inference
+is therefore the dispatch: D085's option of independent dispatches.
+- **The programme:** 12 dispatches × R240, no separate A/A calibration. This is the
+  Researcher's minimum programme (REVIEW 6763089509 §2, report
+  `integration-priorities-6762860125/02-replication.md` at 07b453d1), adopted with no further
+  statistical redesign.
+- **It is a fixed planning choice,** not a theorem that twelve dispatches suffice for every
+  runner mixture. Nothing in it grows after qualification data are seen.
 
-**The design (candidate values; frozen only after review):**
+**The design, implemented** (`bench/service_tg.py` `ni_judge`, `replicated`, `dispatch_stats`;
+`bench/tg_ni_gate.py` labels `qualification` and `replicated`; the workflow):
 
 | item | value |
 |---|---|
-| unit | one **dispatch** of `target-gated-ni.yml`: all nine shards, each one runner, one complete paired A/B per cell under the frozen schedule (§2.9: four-round cycles, the chronology admission) |
-| k | **12** dispatches (candidate; the table below gives 4, 6, 8, 12) |
-| R | **480** rounds a dispatch (120 whole cycles), down from 2880. Within-dispatch precision no longer binds: σ_D² = τ² + LRV/R, and τ dominates at R ≥ 480 for most cells |
-| shards | the same nine, every dispatch; nothing pooled across shards within a dispatch |
-| per-dispatch estimate | D_{c,j} = the mean of cell c's R paired log ratios in dispatch j: one number per cell per dispatch. No batches |
-| NI bound | U_c = exp(D̄_c + t(0.95, k − 1) · sd_j(D_{c,j}) / √k) ≤ 1.02, at all 42 cells (intersection-union, nominal 5%, conditional on the model below) |
-| admissions, per dispatch | the existing structural admission unchanged: history, digests, runner, read-back, corpus, timing, the chronology. A dispatch INVALID by it makes the qualification INVALID: no replacement, no retry, k fixed |
-| trend veto | **proposed retired for inference**: a within-dispatch trend no longer threatens validity, since it is part of D_j's spread across dispatches. Reported per dispatch, never judged |
-| order | each D_j averages whole cycles, so constant and linear order terms cancel within it; anything else is part of the estimand under this schedule (§2.9) |
-| ceilings | at R480, `records` is about 26.5 minutes of rounds plus 15 of setup; the shard ceilings (300 / 240) are kept as they are, pace margins at least 9.4× (`text`; `records` 10.8×) |
-| condition 7 | the slower flag on the dispatch-level two-sided 95% interval (above 1.00). Whether §2.6's extra confirmation dispatch is still needed, when the k dispatches already replicate, is open (the Guardian); unchanged here |
+| unit | one **dispatch** of `target-gated-ni.yml`, labelled `qualification`: all nine shards, each one runner, one complete paired A/B per cell under the frozen schedule (four-round cycles; the chronology admitted before grouping, §2.9) |
+| k | **12** distinct dispatches (`NI_DISPATCHES`) |
+| R | **240** rounds a cell a dispatch (`NI_ROUNDS`), 60 whole cycles. The plan job refuses a `qualification` dispatch at any other R |
+| cells | **all 42**; nothing pooled across cells, shards or dispatches within a cell's estimate |
+| per-dispatch estimate | D_{c,j}: the mean of cell c's 240 paired log ratios in dispatch j (`ni_judge`). A dispatch's own job writes it and its admission, and **is never a verdict**: its gate passes only an admitted dispatch and says so |
+| the bound | U_c = exp(D̄_c + t(0.95, 11) · sd_j(D_{c,j}) / √12) ≤ 1.02 at every cell (`replicated`), t(0.95, 11) = 1.7958848187. An intersection-union test at nominal 5% under the model below |
+| the programme's admission | exactly 12 dispatch verdicts, each admitted by the full structural admission (history, digests, runner, read-back, corpus, timing, chronology), all of the frozen head, R 240, **12 distinct run ids**, every cell's 12 estimates finite, the spacing below. Anything else: INVALID |
+| no replacement | a dispatch that is INVALID, cancelled, timed out after its measurement began, or missing makes the programme INVALID. **No dispatch is replaced, repeated or dropped,** and k never changes. The setup-only recovery of §2.5 applies within a dispatch, as before |
+| spacing | dispatch j + 1 starts at the later of: dispatch j's first job's start + **60 minutes**; dispatch j's last shard job's completion (`SPACING_MIN`; checked from the API's job times in each manifest) |
+| overrun | a dispatch that overruns its hour delays the next one, which then starts at its completion. Nothing is skipped or shortened, and an overrun never makes a dispatch INVALID by itself. A start earlier than the rule allows, or unknown times, makes the programme INVALID |
+| one verdict | `service_tg.py replicated --dispatch ROOT MANIFEST` ×12 re-judges every dispatch from its archived artifacts, then gives the programme's single verdict, gated with `tg_ni_gate.py --label replicated`. The gate recomputes the bound apart from the judge (12 distinct run ids, 42 × 12 finite estimates, U_c) and fails on any disagreement. No verdict is computed before all 12 dispatches are archived |
+| trend veto | **retired.** Within-dispatch structure enters only through D_{c,j}. The estimand is the mean under the frozen scheduling policy. Persistent cross-dispatch trends, carryover or arm-position bias are not made innocuous by this; they are inside the estimand, or violate the model below |
+| ceilings | unchanged: `records` 300 minutes, the rest 240. At R240 `records` is about 13.2 minutes of rounds plus 15 of setup: a pace margin of about 21.5× (`text` 18.8×) |
+| condition 7 | **the Guardian's to rule** under replication. Replication changes the unit, and a final additional confirmation dispatch may remain required until ruled otherwise; §2.6's rule is not silently replaced. `replicated` reports the slower flags on the dispatch-level two-sided 95% interval (above 1.00) and peak RSS (lower bound above 1.10, failing). `confirm` takes two programme verdicts with no run id shared |
 
-**The model, all that remains:** D_{c,1} … D_{c,k} are independent, identically distributed
-draws, approximately normal, for each cell.
-- **No within-window dependence model is needed.** Slow drift, common residuals, outcome-
-  dependent state and idle-gate selection inside a window all enter only through D_j's own
-  value. That is, through the between-dispatch spread the bound estimates.
-- **What it can't absorb:** dependence *between* dispatches, and non-normality of D_j at small k.
-  The runner-model mix is a discrete mixture, so D_j can be skewed or multimodal (below).
+**The model, explicitly conditional.** For each cell, the 12 dispatch contrasts D_{c,1} … D_{c,12}
+are independent, identically distributed and approximately normal. The t bound is
+mathematically sound under that model and only under it.
+- **What does not prove it:** fresh VMs, sequential launches and fixed spacing do not establish
+  independence or a stable fleet mix. They make it plausible, and nothing more.
+- **What a failure costs:**
+  - a non-normal or shifting runner-model mixture can push a cell's size above 5%;
+  - the intersection-union construction needs no 42-fold correction (under any global null at
+    least one cell's null is true), but it cannot repair that cell's size.
+- **The estimand:** the scheduled-period runner-draw mean under these assumptions. It is not a
+  guaranteed fleet-wide no-harm bound.
 
-**What "independent" requires, and what GitHub does and doesn't guarantee:**
-- **Guaranteed by the platform:** each job runs on a fresh GitHub-hosted VM from the image, torn
-  down afterwards (ephemeral). Nothing on disk survives between jobs.
-- **Guaranteed by the workflow:**
-  - no `actions/cache` and no other shared state: cold `--locked` builds, the corpus generated
-    or fetched fresh, the read-back per shard;
-  - each dispatch is a distinct run id; the judge requires that and reconciles each run's whole
-    history (§2.5).
-- **Not guaranteed by GitHub:**
+**What "independent" requires, and what GitHub does and doesn't guarantee** (unchanged from the
+draft):
+- **Guaranteed by the platform:** each job runs on a fresh, ephemeral GitHub-hosted VM.
+- **Guaranteed by the workflow:** no shared cache or state, cold `--locked` builds, and distinct
+  run ids enforced.
+- **Not guaranteed:**
   - distinct physical hosts;
   - a distinct or balanced CPU model;
-  - no co-tenancy or regional load correlated across time;
-  - any stable runner-model mix over time.
-- **Frozen to approximate independence (proposed):**
-  - the k dispatches run strictly sequentially, each dispatched after the previous one's
-    aggregate job completes;
-  - at a fixed, pre-registered spacing that is never conditioned on results (for example one
-    an hour);
-  - no verdict is computed until all k are archived.
+  - no load correlated over time;
+  - a stable mix.
 
-  Concurrent dispatches would share a time window and region load, and weaken independence.
-- **The time:** a dispatch's slowest shard at R480 is about 42 minutes. Twelve sequential
-  dispatches at hourly spacing take about 12 hours.
+**Planning (τ, neutral evidence only).** The strict 19 neutral links give τ with median 0.0026
+and largest 0.0118 (pattern/4/cpu). The 25-link set gives median 0.0034 and largest 0.0153.
+The table is in the draft history (§2.11 at 8fd2c557); the script and output are
+`docs/journal/2026-11-10-tg-ni-replicated/plan.py` and `plan.json`.
+- **τ is a planning scenario, not a proven conservative bound.** DerSimonian–Laird after
+  subtracting the iid SE can be inflated by omitted positive serial dependence. Estimation
+  noise, heterogeneity and negative covariance rule out any general guarantee.
+- **The bound uses the qualification's own across-dispatch SD.** No external τ enters it.
 
-**The planning value: the between-dispatch SD, from neutral evidence only.**
-- **Source:** `bench-results` `links.jsonl` at ebb793af. These are merged PRs' last paired CI
-  runs: bench 3.x (arm order fixed), balanced, `decoder: false`, 10 rounds, 4-CPU runners.
-- **Strict set:** also no change to `examples/ab.rs` across the merge, so both arms run
-  identical code and the true change is zero. That leaves 19 links: PRs 75, 80, 82, 87, 116,
-  175, 176, 217, 218, 242, 246, 255, 273, 280, 285, 286, 317, 319 and 330.
-- **The 25-link set** adds 69, 74, 219, 290, 298 and 326, which changed the harness.
-- No candidate's run is used.
-- **The method:** per cell, DerSimonian–Laird τ, the between-run SD beyond each run's iid
-  10-round SE. The iid SE understates within-run dependence, so τ absorbs it: conservative
-  for planning.
-- **The within part:** the pilot's largest LRV over its menu (§2.9), divided by R.
-- Script and output: `docs/journal/2026-11-10-tg-ni-replicated/plan.py`, `plan.json`.
+**Power at a true ratio of 1.005** (all-cell union-bound lower bound max(0, 1 − Σ misses);
+noncentral t on 11 df; runner-minutes 12 × (135 + 0.3344 × 240) = **2583**, at the pilot's pace,
+plan and aggregate jobs excluded):
 
-| τ (between-dispatch SD of a cell's log ratio) | strict, 19 links | all, 25 links |
-|---|--:|--:|
-| median over the 42 cells | 0.0026 | 0.0034 |
-| largest | 0.0118 (pattern/4/cpu) | 0.0153 (onebyte/1/cpu) |
-| cells above 0.01 | pattern/4 wall and CPU, random/2/wall, text/4/wall | onebyte/1 wall and CPU, pattern/4/wall |
-| cells at 0 | 16 | 10 |
-| wikidata 1 / 2 / 4, wall | 0.0047 / 0.0072 / 0 | — |
+| τ scenario | lower bound | product of the cells' powers | weakest cell |
+|---|--:|--:|---|
+| strict, 19 links | **0.934** | 0.936 | pattern/4/cpu |
+| 25 links | 0.884 | 0.887 | — |
+| every τ doubled | **0 (lower bound)** | 0.136 | pattern/4/cpu, 0.631 |
 
-Each τ comes from 19 or 25 runs of 10 rounds on mixed runner models (7763, 9V74, 9V45, Xeon):
-an imprecise estimate, and a scenario, not an envelope.
+- **The doubled-τ row is a zero lower bound, not zero power.** The union bound
+  1 − Σ misses falls below 0 there, and the true all-cell probability is not shown to be 0.
+  The product, which assumes independent cells and is not a bound, is 0.136; the weakest
+  single cell's power is 0.631.
+- R480 would give 0.969 for about 3546 runner-minutes. Not adopted: about 963 more minutes
+  for that scenario's 3.5 points.
 
-**Power at 1.005** (all-cell lower bound, max(0, 1 − Σ misses); noncentral t, k − 1 df; strict
-τ unless stated) **and the runner-minutes** (k × (135 setup + 0.3344 × R measurement), at the
-pilot's pace; plan and aggregate jobs excluded):
+**Validity exposure, separate from power.** Every one of the 9 × 12 = 108 shard jobs must
+measure validly, since none is replaced. With an unestimated per-job failure probability q,
+P(all valid) = (1 − q)^108: 0.81 at q = 0.2%, 0.34 at q = 1%. q is not estimated here. A
+failure is INVALID, not NOT SHOWN, and it fails the route under §2.5.
 
-| R \ k | 4 | 6 | 8 | 12 |
+**k = 11 considered, not adopted** (the Pathfinder's PROPOSAL 6763206590,
+`docs/journal/2026-11-10-gate-support.md` §1 at 9e16cf9f). Its arithmetic reproduces exactly:
+- k 11 × R240: 0.895 strict / 0.834 25-link, 2368 runner-minutes;
+- k 12 × R240: 0.934 / 0.884, 2583;
+- exposure 0.820 / 0.806 at q 0.2%.
+
+The "33%" saving is against k 12 × R480 (3546). Almost all of it is the R480 → R240 change
+already adopted. Against the adopted 12 × 240, k 11 saves 215 runner-minutes (8.3%) and one
+hour, and costs 3.9 / 5.0 points of planning power. The planning τ is noisy, and the bound is
+fragile to it. The Researcher reviewed 12 × 240, and the Coordinator fixed it as the programme;
+the margin is kept. One constant (`NI_DISPATCHES`) would change it, before freeze only.
+
+**Mixture sensitivity (reported, not claimed as coverage)**
+(`docs/journal/2026-11-10-tg-ni-replicated/mixture.py`, `mixture.json`).
+- **The data:** the strict 19 neutral links, tagged by runner model: AMD 7763 (8), AMD 9V74
+  (8), Intel (3).
+- **The method:** per cell, the mixture is moved to log 1.02 exactly (the null boundary). Model
+  strata and offsets are kept. 12 contrasts are drawn iid and the frozen bound applied, 40,000
+  draws a cell and scenario (binomial SE about 0.11 points at 5%). Each scenario is compared
+  with iid normal draws of the same variance.
+- **A stated limitation:** these are 10-round contrasts, noisier than an R240 dispatch's.
+
+| scenario (model weights) | median cell size | largest cell size | cells above 6% | iid normal, same variance: largest |
 |---|--:|--:|--:|--:|
-| 240 | 0.000 (861) | 0.000 (1292) | 0.581 (1722) | 0.934 (2583) |
-| **480** | 0.000 (1182) | 0.241 (1773) | 0.741 (2364) | **0.969 (3546)** |
-| 960 | 0.000 (1824) | 0.337 (2736) | 0.777 (3648) | 0.975 (5472) |
-| 2880 | 0.000 (4392) | 0.374 (6588) | 0.795 (8784) | 0.979 (13176) |
+| as observed | 5.87% | 36.07% (runs/4/wall) | 20 | 5.27% |
+| equal model weights | 6.21% | 29.01% (runs/4/wall) | 22 | 5.17% |
+| without 7763 | 5.64% | 32.10% (runs/4/wall) | 19 | 5.25% |
+| 7763 at 80% | 5.33% | 31.91% (runs/1/cpu) | 14 | 5.24% |
+| without 9V74 | 5.12% | 31.60% (runs/1/cpu) | 16 | 5.20% |
+| 9V74 at 80% | 5.56% | 28.07% (runs/4/wall) | 19 | 5.21% |
+| without Intel | 5.74% | 39.30% (runs/4/cpu) | 20 | 5.24% |
+| Intel at 80% | 5.91% | 18.57% (records/4/cpu) | 19 | 5.27% |
 
-- **The weakest single cell at R480** (pattern/4/cpu): 0.569, 0.800, 0.913 and 0.986 at k 4, 6,
-  8 and 12.
-- **The 25-link τ:** R480 gives 0.000, 0.000, 0.610 and 0.917.
-- **With every τ doubled** (a sensitivity): the all-cell lower bound is 0 at every k ≤ 12; the
-  weakest cell at R480 reaches 0.251, 0.369, 0.474 and 0.642.
-- **The binding term is τ:** more dispatches buy power, more rounds barely do.
-- **k = 12, R = 480** is the first design in the grid to reach the 0.80 target under the point τ,
-  at about 3546 runner-minutes, 3.2× §2.9's single dispatch.
-- It is not robust to τ twice the estimate. Whether to plan on k 16 or more, at about 4700
-  runner-minutes and up, is a cost decision (D078 §3: standard hosted compute only), open.
+- **What drives the large sizes:** single rare large neutral contrasts.
+  - #317's link is +11.5% on runs/4 wall, against −2.5% to +1.3% for the other 18 links.
+  - On runs/1 CPU, #319 and #286 are at +7.9% and +9.0%.
+  - A mixture with one such point in 19 draws twelve all-ordinary contrasts with probability
+    (18/19)^12 ≈ 0.52. The bulk, moved to the boundary, then sits below it with a small SD,
+    and the bound passes. This is the Researcher's rare-mixture counterexample, appearing in
+    the neutral data themselves.
+- **Under iid normal draws of the same variances the size is ≤ 5.27%.** The excess is the
+  non-normality, not the variance.
+- **These are sensitivity models,** not estimates of CI's distribution or of candidate effects.
+  A 10-round outlier may be a noisy run rather than a host property. No weight, critical value
+  or k is chosen from them.
+- **They show the normal-dispatch assumption is load-bearing:** for the cells whose neutral
+  history has rare large contrasts (runs, onebyte 2, wikidata 4, records 4), a nominal 5%
+  bound can be materially anticonservative. That is disclosed, not repaired.
+- **Any repair is a prospective decision for the Researcher and the Guardian,** not made here.
+  Options would be a robust or rank-based dispatch-level rule, or a larger k.
 
 **What it licenses, and what not:**
-- **Licensed:** per cell, a confidence-based noninferiority conclusion about the mean paired log
-  ratio over draws of a GitHub-hosted `ubuntu-latest` 4-CPU runner and its host state, under
-  this harness, during the dispatch period.
-  - It is a population claim, conditional on GitHub's runner mix and on the k draws being
-    independent and identically distributed.
-  - It is the claim §2.2 had disclaimed (a fleet mean); now the design can carry it.
-  - The CPU models drawn are recorded per dispatch.
+- **Licensed:** per cell, a confidence-based noninferiority conclusion about the
+  scheduled-period mean paired log ratio over draws of a GitHub-hosted `ubuntu-latest` 4-CPU
+  runner and its host state, under this harness. It is conditional on the iid, approximately
+  normal dispatch model, and it is not coverage beyond it. The CPU models drawn are recorded
+  per dispatch (`replicated`'s `models`).
 - **Not licensed:**
-  - any one runner, or any CPU model absent from the draws;
-  - another period whose runner mix differs;
-  - machines outside GitHub's hosted fleet;
-  - a deterministic bound on every run.
-  - The intersection-union test still does not repair a cell's size if the dispatch-level model
-    fails.
-- **Still open for review:**
-  - **The t bound's calibration at small k under a skewed runner-model mixture.** The 19 links
-    span 4 models: a mixture-based calibration from the links, neutral evidence only, is the
-    next check.
-  - The tooling delta. A multi-run judge: k manifests, distinct run ids, all k admitted,
-    dispatch-level estimates. The plan job's R guard at 480. It is not implemented; until it
-    is, #333 and this branch implement §2.9's single-dispatch design.
-  - Condition 7's confirmation under replication.
-  - The cost, and whether k should exceed 12.
+  - any one runner, or CPU models not drawn;
+  - another period's mix;
+  - machines outside GitHub's fleet;
+  - a deterministic bound;
+  - coverage under the mixtures above.
+
+**The order of what remains:** the Guardian's ruling on condition 7 under replication (and its
+adoption-policy question) comes before the qualification freeze. The on-target §§3–4 wait on
+#318's result and a frozen paired uncertainty plan; this programme does not settle them.
 
 ## 3. On-target superiority (condition 3)
 
@@ -1493,11 +1522,11 @@ measured.
 - **The estimand:** the geometric mean of the paired ratios.
 - **The intervals:**
   - **Workstation:** a t-interval on the logs, at the levels in §§3–4.
-  - **CI:** the batch-means bound of §2.3.
+  - **CI:** the dispatch-level bound of §2.11 over 12 dispatches.
 - **Sample size and stopping:**
   - workstation, 128 rounds, fixed;
-  - CI, R = 2880 rounds a cell in B = 24 batches of 120, fixed (§2.9);
-  - no interim look, no early stop, **one attempt**.
+  - CI, 12 dispatches of R = 240 rounds a cell, fixed (§2.11);
+  - no interim look, no early stop, no replaced dispatch, **one programme**.
 - **Exclusions:** none. Every row is required, and none is deleted, replaced or selected.
   Diagnostics never gate or select.
 - **What makes a run invalid, and what follows:**
@@ -1587,24 +1616,22 @@ measured.
   built or 10 from cold.
 - **In all, about 35–40 minutes on the i9,** within 45. The settle gate's waits, if the machine
   is busy, add 20 s each.
-- **CI (§2.9):** nine parallel hosted runners at R = 2880, the slowest shard (`records`) about
-  174 minutes at the pilot's pace, 238 at 1.4×, under its own 300-minute ceiling (1.793×
-  margin; the other shards 240). About **1098
-  runner-minutes** an attempt, setup included (1483 at 1.4× pace); a harm confirmation roughly
-  doubles it.
+- **CI (§2.11):** 12 sequential dispatches, each nine parallel hosted runners at R = 240. The
+  slowest shard (`records`) is about 28 minutes a dispatch, setup included. About **2583
+  runner-minutes** in all at the pilot's pace (setup 1620 of it). About 12 hours elapsed at the
+  60-minute spacing. A condition-7 confirmation, if the Guardian keeps one, adds its own.
 
 ## 10. Open before a freeze
 
-1. **The final design (§2.9):** from the pilot (run 42748681243), R2880/m120/B24, the schedule's
-   cycles and the full chronology enforced, the trend veto, all rows kept, the same nine shards,
-   ceilings of 300 minutes (`records`) and 240,
-   condition 7 retained. **It needs the Researcher's review,** above all of the residual
-   batch-memory assumption; qualification-freeze PROCEED is withheld until then.
-   - **§2.10, the conditional estimand:** refuted (6760366316), kept for the record.
-   - **§2.11, replicated dispatches (DRAFT):** needs review of k, R, the independence protocol,
-     the τ planning value, small-k calibration under the runner-model mix, cost, condition 7's
-     confirmation, and a multi-run judge before any freeze.
-   - **The tooling delta reaches master by the tooling-only PR #333,** as #319 did, its six files
+1. **The CI design is §2.11's programme:** 12 dispatches × R240, implemented (the dispatch
+   judge, `replicated`, the gate's two labels, the R guard at 240, the spacing check). §2.9's
+   single-dispatch R2880 design and §2.10's conditional estimand are superseded and kept for
+   the record (§2.10 refuted, 6760366316).
+   - **Before the qualification freeze:**
+     - the Researcher's review of the final registration and tooling;
+     - the Guardian's ruling on condition 7 under replication, and on the adoption-policy
+       question the mixture sensitivity raises.
+   - **The tooling reaches master by the tooling-only PR #333,** as #319 did, its tooling files
      byte-identical to this branch's. Until #333 merges, master's copies are #319's.
 2. **The Researcher's REVISE** (#145 6756808726). Addressed in this revision:
    - the admission bugs, in #319: history reconciled fail-closed, `confirm` bound to distinct
@@ -1622,4 +1649,4 @@ measured.
 5. **The i9's name, read back** before the freeze: `just bench-svc-target`, at a new freeze of
    its own.
 6. **The freeze's values:** `candidate`, `base`, `base_fetched`, `rustc`, `ni_rustc`,
-   `corpus_text`. R and B are no longer open: 2880 and 24, in the judge (§2.9).
+   `corpus_text`. k and R are no longer open: 12 and 240, in the judge (§2.11).

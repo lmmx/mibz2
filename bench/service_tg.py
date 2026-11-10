@@ -8,7 +8,8 @@ master (the Guardian's D078); the candidate's decoder is not. Its parts, fixed w
     python3 bench/service_tg.py report ATTEMPT_DIR --out ATTEMPT_DIR/service-tg
     python3 bench/service_tg.py manifest SHARDS_DIR [--artifacts A.jsonl --jobs J.jsonl --run ID --attempt N --label L]
     python3 bench/service_tg.py ni SHARDS_DIR --manifest MANIFEST.json --head SHA --out PREFIX
-    python3 bench/service_tg.py confirm ROOT MANIFEST --confirmation ROOT2 MANIFEST2 --head SHA --out PREFIX
+    python3 bench/service_tg.py replicated --dispatch ROOT1 MANIFEST1 ... --dispatch ROOT12 MANIFEST12 --head SHA --out PREFIX
+    python3 bench/service_tg.py confirm REGISTERED.json --confirmation CONFIRMATION.json --out PREFIX
 
 **`report`: the workstation A/B** (conditions 3, 4 and its share of 7), judged from the
 attempt's directory as `just bench-service-tg` leaves it: the candidate's default decoder
@@ -33,32 +34,35 @@ CPU and RSS, every round once per arm and budget, every run's plan as expected).
   cell, peak RSS head over base is a demonstrated regression if its two-sided 95% lower bound
   exceeds 1.10. Either fails. Everything else is reported.
 
-**`ni`: the CI off-target noninferiority** (condition 2, and condition 7's CI criteria), from
-the sharded workflow (.github/workflows/target-gated-ni.yml, the Guardian's D077), which
-replaces the draft's single pull-request Benchmark run. The standing grid's 42 cells (the 4-CPU,
-2-core runner × the seven corpora × 1, 2 and 4 threads × wall and CPU time) in nine fixed
+**`ni` and `replicated`: the CI off-target noninferiority** (condition 2, and condition 7's CI
+criteria; registration §2.11, the replicated programme), from the sharded workflow
+(.github/workflows/target-gated-ni.yml, the Guardian's D077). The standing grid's 42 cells (the
+4-CPU, 2-core runner × the seven corpora × 1, 2 and 4 threads × wall and CPU time) in nine fixed
 shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard one runner.
-Every cell is `NI_ROUNDS` (R = 2880) paired rounds on its own shard's runner, never pooled
-across runners; its estimate the geometric mean of the paired head-over-base ratios; its
-standard error from `NI_BATCHES` (B = 24) consecutive batch means of m = 120 rounds; its
-one-sided upper bound at nominal 95% (t at 0.95, B - 1 = 23 df) at most 1.02. All 42 must pass.
-The nominal level holds only under the stated batch model (approximately iid normal batch
-means); under residual cross-batch dependence the size can exceed it, and the
-intersection-union construction, which needs no independence across cells, does not repair a
-constituent test's size (registration §2.9).
-- **The schedule:** `ab`'s arm order with two arms is head-first, base-first, base-first,
-  head-first, repeated (`ORDER_CYCLE`, from round 0). A batch of m = 120 is 30 complete cycles,
-  starting on a cycle boundary, so a constant or linearly varying order coefficient cancels in
-  every batch mean. No order covariate: it would change no batch mean, and subtracting its
-  variance from the batch LRV would remove the same term twice. The judge refuses a row order
-  that is not this schedule, and a design whose batches are not whole cycles.
-- **The trend veto** (frozen numerically, the Researcher's REVIEW 6758898817 §4): per cell and
-  metric (the 42), the 24 batch means regressed on the batch index 0 … 23 with an intercept;
-  the slope's t on 22 df. Any |t| > `TREND_T_MAX` = t(1 − 0.01/84, 22) = 4.3806308666, or a
-  missing or non-finite t, makes condition 2 INVALID. A zero residual variance gives t = 0
-  for a zero slope, |t| = infinity otherwise. The rows and every cell's estimate are kept and
-  reported; nothing is detrended, removed, replaced or retried. It certifies no independence:
-  under constant-mean iid Gaussian batch means its family probability is at most 1%.
+- **The unit is a dispatch.** The programme is `NI_DISPATCHES` (k = 12) distinct, sequential
+  dispatches of the workflow, each `NI_ROUNDS` (R = 240) paired rounds a cell on its own shard's
+  runner. `ni` admits one dispatch and writes its dispatch-level estimates D_{c,j}: the mean of
+  cell c's R paired log ratios, head over base. Nothing in a dispatch is a verdict.
+- **`replicated`** takes all k dispatch verdicts and, per cell, the bound
+  U_c = exp(mean_j D_{c,j} + t(0.95, k − 1) · sd_j(D_{c,j}) / √k) ≤ 1.02 at all 42 cells (an
+  intersection-union test, nominal 5%). **The model, explicitly conditional:** the k dispatch
+  contrasts of a cell are independent, identically distributed and approximately normal. Fresh
+  VMs, sequential launches and fixed spacing do not prove that, nor a stable runner mix; under
+  a non-normal or shifting mixture the size can exceed 5%, and the intersection-union
+  construction does not repair a cell's size. The estimand is the scheduled-period runner-draw
+  mean under these assumptions, not a guaranteed fleet-wide bound. No within-dispatch
+  dependence model is used, and no trend veto: within-dispatch structure enters only through
+  each D_{c,j}.
+- **The programme's admission** (`replicated`): exactly k dispatch verdicts, each admitted, of
+  the same head, with k distinct run ids; every cell's k estimates present and finite; the
+  frozen spacing (`SPACING_MIN`): each dispatch's first job starts at least 60 minutes after
+  the previous one's first job and not before the previous one's last shard job has completed
+  (an overrun delays the next dispatch; it never skips or replaces one). Any dispatch INVALID,
+  missing, duplicated or out of spacing: the programme is INVALID. No replacement, no retry.
+- **The schedule within a dispatch:** `ab`'s arm order with two arms is head-first, base-first,
+  base-first, head-first, repeated (`ORDER_CYCLE`, from round 0); R = 240 is 60 whole cycles,
+  so a constant or linearly varying order coefficient cancels in each D_{c,j}. The judge
+  refuses a row order that is not the registered traversal (the chronology, before grouping).
 - **All rows are kept:** no trimming, no robust estimator. A row's `waited_s` is the settle
   wait plus the child's own execution, rounded to whole seconds (`ab`): it is never summed as
   pure waiting nor subtracted from wall.
@@ -80,14 +84,15 @@ constituent test's size (registration §2.9).
   - every run successful, placed as `--spread` places it, every round once per arm and
     thread, one output digest.
 - **Anything missing or failing:** INVALID, and the route fails (§2.5).
-- **Condition 7 on CI:** a wall cell flagged slower (its two-sided 95% batch-means interval
-  above 1) is a harm signal, for `confirm`. Peak RSS head over base whose two-sided 95% lower
-  bound exceeds 1.10 fails.
+- **Condition 7 on CI:** a wall cell flagged slower (its two-sided 95% dispatch-level interval
+  above 1) is a harm signal, for `confirm`. Peak RSS head over base whose two-sided 95%
+  dispatch-level lower bound exceeds 1.10 fails. Condition 7's confirmation under replication
+  is the Guardian's to rule; `confirm` is unchanged in kind.
 
 `manifest` writes the aggregate's manifest; the workflow's `aggregate` job runs it and `ni`.
 
-**`confirm`: the inherited harm-confirmation rule**, on the one confirmation dispatch allowed
-(§2.6), which must be a distinct dispatch (another run id) of the same head. A wall cell flagged slower in the registered run and flagged slower again in the
+**`confirm`: the inherited harm-confirmation rule**, on the one confirmation allowed (§2.6),
+which must be of distinct dispatches (no run id shared) of the same head. A wall cell flagged slower in the registered run and flagged slower again in the
 confirmation run on the same head is a confirmed harm, and fails condition 7. A cell not
 flagged again is unresolved, and reported. The confirmation run never enters condition 2: it
 cannot rescue a failed cell, replace the registered run, or be pooled with it.
@@ -182,18 +187,14 @@ CI_CPUS = 4
 CI_CORES = 2
 CI_ARMS = ("mibz2", "mibz2@base/ab")
 CI_METRICS = ("wall", "cpu")
-NI_ROUNDS = 2880  # R: every cell's paired rounds, fixed (registration §2.9)
-NI_BATCHES = 24  # B: consecutive batches of R / B = 120 rounds, the standard error's units (§2.9)
+NI_ROUNDS = 240  # R: every cell's paired rounds in one dispatch, fixed (registration §2.11)
+NI_DISPATCHES = 12  # k: the programme's distinct sequential dispatches (§2.11)
+SPACING_MIN = 60  # minutes, at least, from one dispatch's first job to the next's (§2.11)
 # `ab`'s arm order with two arms (examples/ab.rs `arm_order`): whether the head runs first in
 # round r is ORDER_CYCLE[r % 4]. Sum of signs 0 and sum of i * sign 0 over a cycle: a constant
 # or linear order coefficient cancels within each complete cycle
 ORDER_CYCLE = (True, False, False, True)
-NI_BATCH_LEN = NI_ROUNDS // NI_BATCHES
-NI_CYCLES_PER_BATCH = 30
-# the trend veto's cutoff, t(1 - 0.01 / (2 * 42), 22), frozen to ten decimals (§2.9)
-TREND_T_MAX = 4.3806308666
-assert NI_ROUNDS == NI_BATCHES * NI_BATCH_LEN, "R splits into B whole batches"
-assert NI_BATCH_LEN == NI_CYCLES_PER_BATCH * len(ORDER_CYCLE), "each batch is 30 complete order cycles"
+assert NI_ROUNDS % len(ORDER_CYCLE) == 0, "a dispatch is whole order cycles"
 SHARDS = {c: (c, (1, 2, 4)) for c in CI_CORPORA if c != "wikidata"}
 SHARDS.update({f"wikidata-{t}": ("wikidata", (t,)) for t in CI_THREADS})
 # the corpora's SHA-256 (ab gen at scale 4; bench/wikidata.json's): `text` is built from the
@@ -773,52 +774,13 @@ def sequence_problems(sid, rows, corpus, threads, rounds):
             f"first at row {first}: {seen}, expected {expected}"]
 
 
-def cycle_problems(rounds, batches):
-    """Why `rounds` in `batches` batches is not a design of whole order cycles (empty: it is):
-    every batch the same length, a multiple of the four-round cycle, so each starts on a cycle
-    boundary"""
-    if not (is_int(rounds) and is_int(batches) and batches > 1 and rounds > 0):
-        return [f"R {rounds!r} / B {batches!r}: not a design"]
-    if rounds % batches:
-        return [f"R {rounds} doesn't split into {batches} whole batches"]
-    if (rounds // batches) % len(ORDER_CYCLE):
-        return [f"batches of {rounds // batches} rounds are not whole {len(ORDER_CYCLE)}-round order cycles"]
+def rounds_problems(rounds):
+    """Why `rounds` is not a dispatch of whole four-round order cycles (empty: it is)"""
+    if not (is_int(rounds) and rounds > 0):
+        return [f"R {rounds!r}: not a number of rounds"]
+    if rounds % len(ORDER_CYCLE):
+        return [f"R {rounds} is not whole {len(ORDER_CYCLE)}-round order cycles"]
     return []
-
-
-def trend_t(means):
-    """The trend veto's statistic: the batch means regressed on their index 0 … B − 1 with an
-    intercept, the slope's t on B − 2 df. A zero residual variance gives 0 for a zero slope and
-    infinity otherwise; fewer than three means or a non-finite input give None (invalid)"""
-    k = len(means)
-    if k < 3 or not all(isinstance(y, (int, float)) and math.isfinite(y) for y in means):
-        return None
-    xm, ym = (k - 1) / 2, statistics.fmean(means)
-    sxx = sum((i - xm) ** 2 for i in range(k))
-    b = sum((i - xm) * (y - ym) for i, y in enumerate(means)) / sxx
-    ss = sum((y - ym - b * (i - xm)) ** 2 for i, y in enumerate(means))
-    if ss == 0:
-        return 0.0 if b == 0 else math.copysign(math.inf, b)
-    t = b / math.sqrt(ss / (k - 2) / sxx)
-    return t if math.isfinite(t) else None
-
-
-def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
-    """The registered estimator (§2.9): the mean of all the paired logs (equal to the mean of the
-    batch means), its standard error from the means of `batches` consecutive equal batches of
-    whole order cycles, t with batches - 1 df; and the trend veto's t over the batch means"""
-    n = len(logs)
-    q = cycle_problems(n, batches)
-    if q:
-        raise ValueError(q[0])
-    k = n // batches
-    means = [statistics.fmean(logs[i * k:(i + 1) * k]) for i in range(batches)]
-    m = statistics.fmean(logs)
-    se = statistics.stdev(means) / math.sqrt(batches)
-    df = batches - 1
-    tu, tt = t_ppf(conf_upper, df), t_ppf(1 - (1 - conf_two) / 2, df)
-    return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
-            "hi95": math.exp(m + tt * se), "se": se, "batch_means": means, "trend_t": trend_t(means)}
 
 
 def diagnostics(logs):
@@ -1073,39 +1035,123 @@ def structural(root, man, head, reg, rounds, label, check_git=True):
     return p, out
 
 
-def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batches=NI_BATCHES):
-    """Condition 2 from the sharded workflow's artifacts (registration §2): the structural
-    admission (`structural`, label qualification, the frozen values), then each cell estimated
-    from its own shard's runner alone by the batch-means bound, every one of the 42 at most 1.02"""
+def window(man):
+    """A dispatch's (first job start, last shard-job completion) as epoch seconds, from the
+    manifest's API record of the run's jobs (every attempt); None where unknown"""
+    jobs = man.get("jobs") or []
+    starts = [utc(j.get("started_at")) for j in jobs if j.get("started_at")]
+    ends = [utc(j.get("completed_at")) for j in jobs
+            if j.get("completed_at") and str(j.get("name", "")).startswith("shard (")]
+    starts, ends = [x for x in starts if x is not None], [x for x in ends if x is not None]
+    return (min(starts) if starts else None, max(ends) if ends else None)
+
+
+def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS):
+    """One dispatch of the replicated programme (registration §2.11): the structural admission
+    (`structural`, label qualification, the frozen values, the chronology), then each cell's
+    dispatch-level estimate D, the mean of its R paired log ratios on its own shard's runner.
+    Not a verdict: `replicated` judges condition 2 from all k dispatches"""
     reg = reg or registered()
     fz = reg["frozen"]
-    v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
-         "failing": [], "vetoed": [], "condition2": "INVALID", "trend_t_max": TREND_T_MAX, "batches": batches,
-         "shards": {}, "run": man.get("run"), "head": head, "label": man.get("label")}
+    start, end = window(man)
+    v = {"schema": "mibz2.tg_ni_dispatch/1", "valid": False, "problems": [], "cells": {}, "shards": {},
+         "run": man.get("run"), "head": head, "label": man.get("label"), "rounds": rounds,
+         "started": start, "completed": end}
     p = v["problems"]
-    p += cycle_problems(rounds, batches)
+    p += rounds_problems(rounds)
     for k in ("candidate", "base", "ni_rustc", "corpus_text"):
         if k not in fz:
             p.append(f"bench/{FROZEN} names no {k}")
     if man.get("label") != "qualification":
         p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
+    if not is_int(man.get("run")):
+        p.append(f"the manifest names no run id ({man.get('run')!r})")
     q, admitted = structural(root, man, head, reg, rounds, "qualification", check_git=check_git)
     p += [x for x in q if not x.startswith("the run is labelled")]
-    whole = not cycle_problems(rounds, batches)
     for sid, (a, by) in admitted.items():
-        v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
+        model = next((l.split(":", 1)[1].strip() for l in (read_text(os.path.join(root, a["name"], sid), "lscpu.txt") or "").splitlines()
+                      if l.startswith("Model name:")), None)
+        v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest"), "model": model}
         corpus, threads = SHARDS[sid]
-        if not whole:
+        if rounds_problems(rounds):
             continue
         for t in threads:
             h, b = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
             cell = {"shard": sid}
             for metric in CI_METRICS + ("rss_kb",):
                 logs = paired_logs(h, b, metric, range(rounds))
-                st = batch_stats(logs, batches)
-                st["diagnostics"] = diagnostics(logs)
-                cell[metric] = st
+                cell[metric] = {"d": statistics.fmean(logs), "diagnostics": diagnostics(logs)}
             v["cells"][f"{corpus}/{t}"] = cell
+    if p:
+        v["cells"] = {}
+        return v
+    v["valid"] = True
+    return v
+
+
+def dispatch_stats(ds, conf_upper=0.95, conf_two=0.95):
+    """The dispatch-level bound (§2.11): k estimates D_j of one cell and metric; the mean, its
+    standard error sd/sqrt(k), t with k - 1 df"""
+    k = len(ds)
+    m = statistics.fmean(ds)
+    se = statistics.stdev(ds) / math.sqrt(k)
+    tu, tt = t_ppf(conf_upper, k - 1), t_ppf(1 - (1 - conf_two) / 2, k - 1)
+    return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
+            "hi95": math.exp(m + tt * se), "se": se, "d": list(ds)}
+
+
+def replicated(dispatches, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, rounds=NI_ROUNDS):
+    """Condition 2 from the whole replicated programme (§2.11): `dispatches`, every dispatch's
+    `ni_judge` verdict, in dispatch order. Admitted only as all k, each valid, of `head`, with
+    distinct run ids, every cell's estimates finite, at the frozen spacing; then per cell and
+    metric U = exp(mean D + t(0.95, k - 1) sd(D)/sqrt(k)) <= 1.02 at all 42"""
+    runs = [d.get("run") if isinstance(d, dict) else None for d in dispatches]
+    v = {"schema": "mibz2.tg_ni_replicated/1", "valid": False, "problems": [], "cells": {}, "flags": [],
+         "rss_regression": [], "passes": False, "failing": [], "condition2": "INVALID", "k": k,
+         "runs": runs, "head": head, "models": {}}
+    p = v["problems"]
+    if len(dispatches) != k:
+        p.append(f"{len(dispatches)} dispatches, not the registered {k}")
+    for i, d in enumerate(dispatches):
+        if not isinstance(d, dict):
+            p.append(f"dispatch {i + 1}: no readable verdict")
+            continue
+        if not d.get("valid"):
+            p.append(f"dispatch {i + 1} (run {d.get('run')!r}) is INVALID: "
+                     + "; ".join(map(str, (d.get("problems") or ["not admitted"])[:3])))
+        if d.get("head") != head:
+            p.append(f"dispatch {i + 1} (run {d.get('run')!r}) is of head {d.get('head')!r}, not {head}")
+        if d.get("rounds") != rounds:
+            p.append(f"dispatch {i + 1} (run {d.get('run')!r}): R {d.get('rounds')!r}, not {rounds}")
+    if not all(is_int(r) for r in runs) or len(set(runs)) != len(runs):
+        p.append(f"the run ids are not {len(runs)} distinct dispatches: {runs}")
+    # (the frozen spacing: starts at least `spacing_min` apart, never before the previous
+    # dispatch's last shard job completed; an overrun delays, it never skips or replaces)
+    for i in range(1, len(dispatches)):
+        a, b = dispatches[i - 1], dispatches[i]
+        if not (isinstance(a, dict) and isinstance(b, dict)):
+            continue
+        s0, e0, s1 = a.get("started"), a.get("completed"), b.get("started")
+        if not all(isinstance(x, (int, float)) for x in (s0, e0, s1)):
+            p.append(f"dispatches {i} and {i + 1}: their times are unknown, so the spacing is unshown")
+            continue
+        if s1 < s0 + 60 * spacing_min:
+            p.append(f"dispatch {i + 1} started {(s1 - s0) / 60:.1f} minutes after dispatch {i}, not {spacing_min}")
+        if s1 < e0:
+            p.append(f"dispatch {i + 1} started before dispatch {i}'s shards completed")
+    if not p:
+        for key in (f"{c}/{t}" for c in CI_CORPORA for t in CI_THREADS):
+            cell = {}
+            for metric in CI_METRICS + ("rss_kb",):
+                ds = [((d["cells"].get(key) or {}).get(metric) or {}).get("d") for d in dispatches]
+                if not all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in ds):
+                    p.append(f"{key} {metric}: not {k} finite dispatch estimates")
+                    continue
+                cell[metric] = dispatch_stats(ds)
+            v["cells"][key] = cell
+        for i, d in enumerate(dispatches):
+            for sid, sh in (d.get("shards") or {}).items():
+                v["models"].setdefault(sid, []).append(sh.get("model"))
     if p:
         v["cells"] = {}
         return v
@@ -1115,18 +1161,12 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
             cell[metric]["pass"] = cell[metric]["upper"] <= MARGIN
             if not cell[metric]["pass"]:
                 v["failing"].append(f"{key} {metric} upper {cell[metric]['upper']:.4f}")
-            # (the trend veto, §2.9: it invalidates condition 2; the estimate stays, reported)
-            t = cell[metric]["trend_t"]
-            if t is None or abs(t) > TREND_T_MAX:
-                v["vetoed"].append(f"{key} {metric} trend t {'non-finite' if t is None else f'{t:+.4f}'}")
         if cell["wall"]["lo95"] > 1.0:
             v["flags"].append(key)
         if cell["rss_kb"]["lo95"] > RSS_MARGIN:
             v["rss_regression"].append(key)
-    # (`valid` is the admission; the veto voids condition 2 alone. Wall flags and the harm
-    # confirmation of §2.6, and peak RSS, stand as they are: condition 7 is unchanged)
-    v["passes"] = not v["failing"] and not v["rss_regression"] and not v["vetoed"]
-    v["condition2"] = "INVALID" if v["vetoed"] else "PASS" if not v["failing"] else "NOT SHOWN"
+    v["passes"] = not v["failing"] and not v["rss_regression"]
+    v["condition2"] = "PASS" if not v["failing"] else "NOT SHOWN"
     return v
 
 
@@ -1145,63 +1185,74 @@ def structure(root, man, head, base, rounds, label, toolchain, corpus_text=None,
             "unchecked": [] if corpus_text else ["the text corpus's digest (no corpus_text before the freeze)"]}
 
 
-def fmt_t(t):
-    return "–" if t is None else f"{t:+.2f}"
+def dispatch_markdown(v):
+    out = [f"# Target-gated NI: one dispatch of the replicated programme (run {v.get('run')}): not a verdict", ""]
+    if not v["valid"]:
+        out += ["**Not admitted** (INVALID: the programme fails; nothing is re-run or replaced):"]
+        out += [f"- {p}" for p in v["problems"]]
+        return "\n".join(out) + "\n"
+    out += [f"Admitted: all nine shards, R {v['rounds']}. Each cell's dispatch-level estimate D (the mean of its "
+            f"paired log ratios) is in the JSON. Condition 2 is judged only from all {NI_DISPATCHES} dispatches "
+            "(`service_tg.py replicated`).", "",
+            "| shard | runner model |", "|---|---|"]
+    out += [f"| {sid} | {sh.get('model')} |" for sid, sh in v["shards"].items()]
+    return "\n".join(out) + "\n"
 
 
 def ni_markdown(v):
-    out = ["# The guarded service default under the target-gated route: CI condition 2 (sharded)", ""]
+    out = ["# The guarded service default under the target-gated route: CI condition 2 (replicated)", ""]
     if not v["valid"]:
-        out += ["**Not admitted** (INVALID: the route fails; nothing is re-run):"]
+        out += ["**Not admitted** (INVALID: the route fails; nothing is re-run or replaced):"]
         out += [f"- {p}" for p in v["problems"]]
         return "\n".join(out) + "\n"
     out += [
-        f"Head over base, the geometric mean of {NI_ROUNDS} paired rounds on the cell's own runner; the one-sided "
-        f"95% upper bound from {NI_BATCHES} batch means of {NI_BATCH_LEN} rounds ({NI_CYCLES_PER_BATCH} complete "
-        f"order cycles; t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every one of the 42 cells (an "
-        "intersection-union test, nominal 5%, conditional on the stated batch model: approximately iid normal "
-        "batch means; coverage only approximate under the short-memory approximation. The intersection-union "
-        "construction needs no independence across cells, but it does not repair a constituent test's size, "
-        f"registration §2.9). The trend veto: any cell's batch-mean trend |t| > {TREND_T_MAX} "
-        "makes condition 2 INVALID, every estimate kept. Lag-1 autocorrelation is reported, not judged.",
+        f"Head over base, per cell: {v['k']} dispatch-level estimates, each the mean of {NI_ROUNDS} paired log ratios "
+        f"on that dispatch's runner; the one-sided 95% upper bound exp(mean + t(0.95, {v['k'] - 1}) sd/sqrt({v['k']})), "
+        f"at most {MARGIN} at every one of the 42 cells (an intersection-union test, nominal 5%, conditional on the "
+        "dispatch model: the k contrasts independent, identically distributed and approximately normal. The "
+        "intersection-union construction needs no independence across cells, but it does not repair a cell's "
+        "size; the estimand is the scheduled-period runner-draw mean under these assumptions; registration §2.11).",
+        f"Runs: {', '.join(map(str, v['runs']))}.",
         "",
-        "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall | trend t wall / CPU |",
-        "|---|---|--:|--:|--:|--:|--:|--:|--:|",
+        "| cell | wall | wall upper | CPU | CPU upper | peak RSS (95%) |",
+        "|---|--:|--:|--:|--:|--:|",
     ]
     for key, c in v["cells"].items():
         w, cp, r = c["wall"], c["cpu"], c["rss_kb"]
         mark = lambda x: "" if x["pass"] else " **FAIL**"  # noqa: E731
-        out.append(f"| {key} | {c['shard']} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
-                   f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] "
-                   f"| {w['diagnostics']['lag1']:+.2f} | {fmt_t(w['trend_t'])} / {fmt_t(cp['trend_t'])} |")
-    if v["vetoed"]:
-        c2 = "**INVALID** (the trend veto; rows and estimates kept, nothing re-run): " + "; ".join(v["vetoed"])
-    elif v["failing"]:
-        c2 = "**not met** (NOT SHOWN): " + "; ".join(v["failing"])
-    else:
-        c2 = "**met** at every cell"
+        out.append(f"| {key} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
+                   f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] |")
+    c2 = "**not met** (NOT SHOWN): " + "; ".join(v["failing"]) if v["failing"] else "**met** at every cell"
     out += ["", f"**Condition 2:** {c2}."]
-    out += [f"**Wall flags (harm signals, §2.6):** {', '.join(v['flags']) or 'none'}."]
+    out += [f"**Wall flags (harm signals, §2.6; condition 7 under replication is the Guardian's):** {', '.join(v['flags']) or 'none'}."]
     out += [f"**Peak RSS regression (condition 7):** {', '.join(v['rss_regression']) or 'none'}."]
+    out += ["", "| shard | runner models, dispatch order |", "|---|---|"]
+    out += [f"| {sid} | {', '.join(map(str, m))} |" for sid, m in v["models"].items()]
     return "\n".join(out) + "\n"
 
 
+def run_ids(v):
+    return v["runs"] if isinstance(v.get("runs"), list) else [v.get("run")]
+
+
 def confirm(registered_v, confirmation_v):
-    """The inherited harm-confirmation rule on the one confirmation dispatch (§2.6): each wall
-    flag of the registered run, flagged again (confirmed harm: fails condition 7) or not
-    (unresolved). The two must be distinct dispatches (distinct run ids) of the same head, both
-    valid; the same verdict twice is not a confirmation. It never enters condition 2"""
+    """The inherited harm-confirmation rule (§2.6): each wall flag of the registered verdict,
+    flagged again (confirmed harm: fails condition 7) or not (unresolved). The two must be of
+    distinct dispatches (no run id shared) of the same head, both valid; the same verdict twice
+    is not a confirmation. It never enters condition 2. Under replication its unit and need are
+    the Guardian's to rule (§2.11); this applies the rule as it stands"""
     no = {"valid": False, "confirmed": [], "unresolved": []}
     if not (registered_v.get("valid") and confirmation_v.get("valid")):
         return dict(no, problems=["a run is invalid"])
-    r1, r2 = registered_v.get("run"), confirmation_v.get("run")
-    if not (is_int(r1) and is_int(r2)) or r1 == r2:
-        return dict(no, problems=[f"not two distinct dispatches: runs {r1!r} and {r2!r}"])
+    r1, r2 = run_ids(registered_v), run_ids(confirmation_v)
+    if not all(is_int(r) for r in r1 + r2) or set(r1) & set(r2):
+        return dict(no, problems=[f"not distinct dispatches: runs {r1!r} and {r2!r}"])
     if registered_v.get("head") != confirmation_v.get("head"):
         return dict(no, problems=["the confirmation is of another head"])
     again = set(confirmation_v["flags"])
     flags = registered_v["flags"]
-    return {"valid": True, "registered_run": r1, "confirmation_run": r2,
+    one = lambda r: r[0] if len(r) == 1 else r  # noqa: E731
+    return {"valid": True, "registered_run": one(r1), "confirmation_run": one(r2),
             "confirmed": [f for f in flags if f in again], "unresolved": [f for f in flags if f not in again]}
 
 
@@ -1231,6 +1282,11 @@ def main(argv=None):
     n.add_argument("--manifest", required=True)
     n.add_argument("--head", required=True)
     n.add_argument("--out", required=True)
+    rp = sub.add_parser("replicated")
+    rp.add_argument("--dispatch", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
+                    help="each dispatch's artifacts and manifest, in dispatch order, all k")
+    rp.add_argument("--head", required=True)
+    rp.add_argument("--out", required=True)
     st = sub.add_parser("structure")
     st.add_argument("root")
     st.add_argument("--manifest", required=True)
@@ -1242,9 +1298,8 @@ def main(argv=None):
     st.add_argument("--corpus-text")
     st.add_argument("--out", required=True)
     f = sub.add_parser("confirm")
-    f.add_argument("registered", nargs=2, metavar=("ROOT", "MANIFEST"))
-    f.add_argument("--confirmation", nargs=2, metavar=("ROOT", "MANIFEST"), required=True)
-    f.add_argument("--head", required=True)
+    f.add_argument("registered", help="the registered verdict's JSON (`replicated`'s)")
+    f.add_argument("--confirmation", required=True, help="the confirmation verdict's JSON")
     f.add_argument("--out", required=True)
     a = p.parse_args(argv)
     if a.cmd == "report":
@@ -1272,12 +1327,20 @@ def main(argv=None):
         with open(a.manifest) as fh:
             man = json.load(fh)
         v = ni_judge(a.root, man, a.head)
+        write(a.out, v, dispatch_markdown(v))
+        return 0 if v["valid"] else 2
+    if a.cmd == "replicated":
+        ds = []
+        for root, mpath in a.dispatch:
+            with open(mpath) as fh:
+                ds.append(ni_judge(root, json.load(fh), a.head))
+        v = replicated(ds, a.head)
         write(a.out, v, ni_markdown(v))
-        return 0 if v["valid"] and v["passes"] else 1 if v["valid"] and not v["vetoed"] else 2
-    def one(root, mpath):
-        with open(mpath) as fh:
-            return ni_judge(root, json.load(fh), a.head)
-    v = confirm(one(*a.registered), one(*a.confirmation))
+        return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
+    def load_v(path):
+        with open(path) as fh:
+            return json.load(fh)
+    v = confirm(load_v(a.registered), load_v(a.confirmation))
     md = ("# Harm confirmation\n\n" + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. "
           f"Unresolved: {', '.join(v['unresolved']) or 'none'}.\n" if v["valid"] else "Not admitted: a run is invalid.\n"))
     write(a.out, v, md)
