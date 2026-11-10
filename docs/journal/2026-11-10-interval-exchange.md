@@ -94,10 +94,12 @@ data. They keep the row walk. The choice is by runs a row, known when the front 
    rigidity test, a return test, a split now and then. At 0.19 n steps it must cost under
    about 5 row-steps to win on instructions, less to win clearly. A kernel timed against the
    room walk on Wikidata blocks decides. This is the next thing built.
-2. **The copies.** 1.7–2.6 n bytes in words of 8 to a few hundred bytes. If the short words
-   dominate, copying is not cheap.
-3. **Branches.** A return about every 8 steps and a split about every 10 are data-dependent.
-   Their mispredictions are the event cost that sank the copy walk.
+2. **The copies.** 1.7–2.6 n bytes. On Wikidata's 8 × 3 tower a return word averages 11 bytes
+   at the first level, 118 at the second, 616 at the third. The first level's short words
+   are where copying is not cheap.
+3. **Branches.** On Wikidata a piece returns every 7 to 11 steps and splits every 6 to 10:
+   returns and splits together are about 0.045 n data-dependent events. Their
+   mispredictions are the event cost that sank the copy walk.
 4. **Prior art.** If this is a known inversion algorithm, the claim of novelty goes and the
    numbers stay.
 
