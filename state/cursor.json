@@ -1947,12 +1947,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D096",
-    "incoming_comment": 6764400880,
-    "review_comment_id": 6764503403,
-    "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
+    "active_comment": 6770180620,
+    "status": "in progress",
+    "decision": "D097"
   },
   "duplicate_events": [
     {
@@ -3449,6 +3446,13 @@
       "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235",
       "review_comment_id": 6764503403,
       "complete_cursor_commit": "b46e0b62bc656426c2785508b8824a4b5fb77339"
+    },
+    {
+      "comment_id": 6770180620,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D097",
+      "progress": "Receipt; pinned specs and migration verified. Reviewing MTF alignment and team-runs port."
     }
   ],
   "migrated_from": {
