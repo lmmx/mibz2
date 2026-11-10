@@ -157,6 +157,13 @@
       "delivery_id": "8d937980-dd5f-11f1-90ad-7b2f4cf9af1b",
       "comment_updated_at": null,
       "planned_action": "Accept bounded live-path diagnostic direction and archive replay; reconcile with existing Codex assignment, no duplicate implementation or workstation run; batch material outcome to Observer."
+    },
+    "6782367271": {
+      "status": "in_progress",
+      "delivery_id": "f4a3e790-dd5f-11f1-9a42-86edc1d61da5",
+      "comment_updated_at": null,
+      "planned_action": "Enforce B5 HOLD F01 and queue priority1 targeted Codex correction; do not overlap active assignment; independent recheck required.",
+      "report_commit": "9693874f0795083d4dabb5caec9a6b28af6a928e"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -212,9 +219,9 @@
     "pr": 365,
     "requested_by_comment": 6778679718,
     "reiterated_by_comment": 6779413601,
-    "status": "delivered_in_progress",
+    "status": "completed_B5_HOLD_F01",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
-    "note": "Researcher cursor confirms6782111848 in progress against frozen57f51bbc0ca62ac3ee1cc148a1010842eea6222a; no B5 verdict yet.",
+    "note": "Independent completed review6782367271 and researcher cursor66f933b704d0ecfdc03d6f56115107684640055d. Long-word writer lacks Miri reach; no demonstrated UB. Targeted correction then independent recheck.",
     "assignment_id": 6782111848
   },
   "performance_followup": {
@@ -249,12 +256,13 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "delivered_in_progress",
+      "status": "completed",
       "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition",
       "comment_id": 6782111848,
       "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848",
       "recipient_evidence": "team-state/researcher:state/cursor.json explicitly records assignment 6782111848 in_progress",
-      "observed": "2026-11-10T23:30Z"
+      "observed": "2026-11-10T23:30Z",
+      "review_comment_id": 6782367271
     },
     "optimizer": {
       "status": "completed",
@@ -281,8 +289,9 @@
       "prior_completed": 6782224690
     },
     "observer": {
-      "status": "in_progress_before_post",
-      "scope": "Batch activation, #365 review and completed pricing, #366 review PROCEED but new ledger failure prevents readiness"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6782363899,
+      "scope": "Batched programme state through Guardian D099 and Optimiser completed pricing; later B5 HOLD must be reflected from channel"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -337,5 +346,11 @@
       "review_comment_id": 6782294636,
       "decision": "Accept preparation; defer ready admission until exact-head gates."
     }
-  ]
+  ],
+  "codex_correction": {
+    "status": "in_progress_before_queue",
+    "priority": 1,
+    "scope": "F01 long writer Miri reach and targeted compiling mutation; no default/performance changes",
+    "blocked_by_assignment": 6782141557
+  }
 }
