@@ -1000,11 +1000,12 @@ impl Kernel {
             let (mut sa, mut sb) = (ft0 - SLOT, fb0 - SLOT);
             // the letter `FAR` slots on in an order, as memory has it now: its slot in
             // the other order is where its cells will be written, and its word is read then
+            // (what is read there may be a slot not yet written: the address is only hinted)
             macro_rules! ahead {
                 ($s:expr) => {{
                     let far = $s - FAR * SLOT;
-                    prefetch(base.add(rd32(base, far + 16) as usize));
-                    prefetch(base.add(rd32(base, far + 12) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + 16) as usize));
+                    prefetch(base.wrapping_add(rd32(base, far + 12) as usize));
                 }};
             }
             'fresh: loop {
