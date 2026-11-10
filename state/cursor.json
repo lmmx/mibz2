@@ -163,9 +163,10 @@
     6763960537,
     6767025138,
     6769305752,
-    6771319195
+    6771319195,
+    6782111848
   ],
-  "last_processed_comment_id": 6771319195,
+  "last_processed_comment_id": 6782111848,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1888,11 +1889,15 @@
     },
     {
       "trigger_comment_id": 6782111848,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
-      "report_path": "state/reports/cells-b5-6782111848/report.md"
+      "report_path": "state/reports/cells-b5-6782111848/report.md",
+      "repository": "lmmx/mibz2",
+      "report_commit": "9693874f0795083d4dabb5caec9a6b28af6a928e",
+      "disposition": "REVISE/B5 HOLD F01: Miri skips every long-rule writer path; checked model supplies ordinary-admission witness. No demonstrated UB. Editorial queue reconciled; macOS jobs cancelled.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
