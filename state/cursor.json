@@ -3414,7 +3414,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D096",
-      "progress": "Migration verified; recording reported policy change, retirement and safety-review scope."
+      "progress": "Policy transition and scoped safety boundaries recorded; preparing complete cursor and REVIEW.",
+      "receipt_commit": "69db0dab9063eed31a1a36817bf905bfd0bd9275"
     }
   ],
   "migrated_from": {

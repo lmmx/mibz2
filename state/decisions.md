@@ -4453,3 +4453,43 @@ Expected: a calibrated, affordable default-adoption rule. Found: exact calibrati
 Evidence under state/evidence/D095/: exact policy.py and results.json, incoming checkpoint snapshot and cited Researcher report. The script recomputes binomial tails and the constructed witnesses; no simulation or decoder timing, build, CI dispatch, merge, infrastructure or spending. It uses existing SciPy only for t quantiles.
 
 Migration verified before receipt: old branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 7be711cfc792143f8277717d837d18e97308190b. Pinned routing audit: five resolved historical findings and already-reported LOG 6757065549 on #162; no new routing finding. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.
+
+<a id="d096"></a>
+## D096 — Reported performance-policy transition; retired work and safety boundaries
+
+Incoming [6764400880](https://github.com/lmmx/mibz2/pull/161#issuecomment-6764400880), observed 2026-11-10; body SHA256 **45283a7cbd55632de6087849af353998414d2665fb8e971fa080af46858a23f0**. Operating SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL remain pinned to **a2da49638ac54d7763de1c167bd054f67ffdc763**. **G1:** record the reported transition and concur with preserving prior verdicts and withdrawing unused work. No new concrete memory-safety defect established in the limited source inspection below. No B5 discharge, merge/default approval, G3 amendment or G8 line STOP.
+
+### Verified state and authority scope
+
+GitHub reports **#343 merged**, head 571f7e10550653cdf662d06ad8d2b284c57238ef, merge **12f0e192c3d7f3768b3e21d1ca01fa8762b2f0b7**. Read its PERFORMANCE-POLICY.md (blob **8014b49128bffbe954d9e90389c4aa7b5113e9bd**), changed RULES.md (45886205cd6f2dac7a199fe1a331e38c8ce377ab), decisions.md (6daa59c3e668c698a3a35e030e03b97cb848fbb4), and LOG **6764355047**. They report Louis's in-session decision, including explicit acceptance of performance trade-offs and retention of correctness, B5, reproducibility and green-head CI.
+
+This task's explicit pin has not changed. Under pinned SPEC and RULES A1–A4/D, repository text, a shared login and a report of Louis's words are evidence, not a replacement instruction or authenticated widening. I do not dispute the reported conversation; I cannot silently apply a changed RULES clause or certify reserved retrospective permission from that report. Any change to this task's governing pin follows the existing re-pin path, not a new experiment-approval process. C6 already delegates prospective acceptance/adoption choices with its safeguards; it does not authorise rewriting earlier outcomes or bypassing an unresolved scoped HOLD.
+
+The fetched decisions.md at the policy merge contains no performance-policy decision entry. PERFORMANCE-POLICY.md and LOG carry the reported change, but are not that E2 record. Record the source, exact reserved decision/exception, affected rules, effective pin and retained earlier verdicts through the established decision-record procedure. This is a provenance gap, not a fabricated memory-safety objection. This REVIEW neither substitutes for Louis's reserved decision nor reverses it.
+
+### Disposition of the four items
+
+1. **#316:** record the Coordinator's withdrawal of the unused 12×R240 qualification and confirmation programmes. No requirement to execute a withdrawn experiment. D094's t12 coverage finding, D094-C7's scoped confirmation constraint and D095's sign-policy finding remain historical decisions on their respective designs, not PASS outcomes. They are not converted into requirements for every possible future policy. A claimed new adoption route is not certified by this administrative update. At this read **#316 was open**, exact head **cb073ea006db617965157071812fe9b1e551ceb2**; no merged-head result is asserted.
+2. **#324:** record reported adoption intent and preserve its original FAIL. The checkpoint itself says mutation testing and independent adversarial review are still underway. I do not request a duplicate Guardian review: another non-implementer may do B5. Completion and exact reviewed source scope must be recorded before treating B5 as met. This comment is not an adjudication of #324's new bench or safety delta.
+3. **STEPS:** honour the reported stop as a narrowing withdrawal of work. D090–D093 and their technical findings stay on record. No further implementation, freeze or run is requested by this review.
+4. **Ports:** record the reported queued wall-clock experiment only. I have not verified its queue, frozen recipe, submission, results or safety case in this checkpoint. Queue presence is not C5 authorisation for agents to run it. If ports 2/3 are kept, their separate B5 obligations remain.
+
+### Limited #316 source check; no implication of a completed adversarial review
+
+Inspected source at cb073ea006db617965157071812fe9b1e551ceb2:
+- src/parallel.rs blob **f042135de89a80bb1e4dced2cf01c02b41e318ab**;
+- PR file patch for tests/service_default.rs, including the_existing_plan_otherwise;
+- service scope note blob **f6492700e716caa43986025ba2492b9b6089c310**;
+- prior D045/D053 and D069's scoped closure.
+
+The actual predicate requires ten requested threads, AVX2/CLMUL, x86-64 Linux, the specified CPU tuple, **exact SERVICE_NAME** (`Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz`), 10 physical/20 logical CPUs, 20 MiB L3 and **Quota::Unlimited**. StreamDecoder::new respects a forced plan and otherwise calls the existing defaulted plan when the predicate is false. This is narrower than the older scope note's no-brand-name/quota-at-least-ten description; use the exact source for current reach.
+
+the_existing_plan_otherwise observes natural dispatch for several machine/budget cases and compares output. It supplies finite-case route evidence. Static predicate inspection supports the explicit exclusions; this review did not run Rust tests or generalise those cases into a universal hardware proof. Route inactivity does not establish zero discovery/layout/shared-code cost: the constructor can call Machine::here before falling back. A neutral paired bench is an empirical result, not an exact proof of mean noninferiority. These distinctions stay true under any policy, without requiring the retired t12 programme.
+
+No new unsafe access or invariant violation is demonstrated by this scoped check. Equally, it is **not** the independent review of the entire service delta. The checkpoint explicitly reports that review in progress. The required safety case must cover the changed runtime, unwind/retirement, completion fences, wrappers and public dispatch at the actual adopted source, with meaningful Miri/differential/fuzz/mutation evidence. D069's closed objections are not reopened; changes outside the earlier proof scope need their own evidence. Passing a fallback-selection test cannot substitute for reached service-path B5. Do not interpret absence of a new defect in this limited check as an approval or as completion of the review already assigned.
+
+### Evidence limits and state
+
+Archived policy, checkpoint/LOG, exact API identity read-back and source excerpts under state/evidence/D096/. No execution of Rust, Miri, fuzz or mutation tests; no fresh bench/archived i9 bundle adjudication; no assertion that CI is green at the eventual merge head. No source implementation, merge, dispatch, workstation run, infrastructure or spending.
+
+Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 69db0dab9063eed31a1a36817bf905bfd0bd9275. Pinned routing audit retains the five resolved historical findings and already-reported LOG 6757065549 on #162; no new routing finding. One REVIEW on #145; state only team-state/guardian. Persistent task unchanged.
