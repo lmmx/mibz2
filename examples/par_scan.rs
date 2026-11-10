@@ -5,6 +5,7 @@
 //!
 //! ```text
 //! par_scan FILE.bz2 [finder|check|adversarial|fuzz|time|shapes|all] [ROUNDS]
+//! par_scan FILE.bz2 knee ROUNDS WORKERS      (WORKERS: a list, as 1,2,4,6,8,10)
 //!   finder       the finder's rate on FILE (looped), its candidates against `mibz2::scan`
 //!   check        FILE decoded by the harness at 1-4 workers, against `mibz2::decode`
 //!   adversarial  magics inside valid blocks, a valid block spliced into a payload,
@@ -14,6 +15,10 @@
 //!   time         ROUNDS (default 7) rounds, arms alternating, at 1-4 threads: MB/s, CPU s
 //!   shapes       worst-case shapes at 4 workers: incompressible, tiny streams, one block,
 //!                false magics in every block
+//!   knee         the find and scan arms at each worker count, ROUNDS rounds, a fixed
+//!                schedule: every cell run once, no waiting for quiet and no retries. One
+//!                JSON line a cell on stdout and nothing else there (bench/par_scan_knee.py
+//!                reads them): {"round","arm","workers","wall_ns","cpu_ns","bytes"}
 //! ```
 //!
 //! It holds the input, the decoded output and one decode's output at once (about 0.8 GB
@@ -721,13 +726,18 @@ extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
 }
 
-/// This process's CPU seconds so far (user and system, every thread)
-fn cpu_seconds() -> f64 {
+/// This process's CPU time so far (user and system, every thread), in microseconds
+fn cpu_micros() -> u64 {
     let mut r = Rusage::default();
     // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
     unsafe { getrusage(0, &mut r) };
-    let t = |tv: [i64; 2]| tv[0] as f64 + tv[1] as f64 * 1e-6;
+    let t = |tv: [i64; 2]| tv[0] as u64 * 1_000_000 + tv[1] as u64;
     t(r.utime) + t(r.stime)
+}
+
+/// This process's CPU seconds so far
+fn cpu_seconds() -> f64 {
+    cpu_micros() as f64 * 1e-6
 }
 
 fn loadavg() -> String {
@@ -1477,6 +1487,42 @@ fn cmd_shapes(text: &[u8], rounds: usize) {
     }
 }
 
+// ---- knee: the two arms over a grid of worker counts, a JSON line a cell ----
+
+/// The find and scan arms at each of `workers`, `rounds` rounds: a fixed schedule, every
+/// cell once, which arm goes first alternating by round and by place in the grid. Each
+/// cell's output is checked against `want` (a difference is a panic), outside its timing.
+/// Stdout holds the cells' JSON lines and nothing else.
+fn cmd_knee(data: &[u8], want: &[u8], rounds: usize, workers: &[usize]) {
+    let (k, f) = (Kernels::detect(), Finder::detect());
+    for round in 0..rounds {
+        let before = loadavg();
+        for (place, &t) in workers.iter().enumerate() {
+            for i in 0..2 {
+                let find = (round + place + i) % 2 == 1;
+                let (c0, t0) = (cpu_micros(), Instant::now());
+                let run = if find {
+                    decode_find(data, t, 4 * t, k, &f)
+                } else {
+                    decode_scan(data, t, 4 * t, k)
+                };
+                let (wall_ns, cpu_ns) = (t0.elapsed().as_nanos(), (cpu_micros() - c0) * 1000);
+                let arm = if find { "find" } else { "scan" };
+                assert_eq!(run.res, Ok(()), "{arm}, {t} workers, round {round}");
+                assert!(
+                    run.out == want,
+                    "{arm}, {t} workers, round {round}: the output differs from decode's"
+                );
+                println!(
+                    "{{\"round\":{round},\"arm\":\"{arm}\",\"workers\":{t},\"wall_ns\":{wall_ns},\"cpu_ns\":{cpu_ns},\"bytes\":{}}}",
+                    run.out.len()
+                );
+            }
+        }
+        eprintln!("  round {round}: loadavg {before} -> {}", loadavg());
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let path = args.get(1).expect(
@@ -1486,6 +1532,24 @@ fn main() {
     let rounds: usize = args.get(3).map_or(7, |s| s.parse().unwrap());
     let data = std::fs::read(path).unwrap();
     let want = mibz2::decode(&data).unwrap();
+    if cmd == "knee" {
+        let workers: Vec<usize> = args
+            .get(4)
+            .expect("usage: par_scan FILE.bz2 knee ROUNDS WORKERS")
+            .split(',')
+            .map(|w| w.parse().expect("WORKERS: whole numbers, as 1,2,4"))
+            .collect();
+        assert!(
+            args.get(3).is_some() && rounds >= 1 && workers.iter().all(|&w| w >= 1),
+            "usage: par_scan FILE.bz2 knee ROUNDS WORKERS (each at least 1)"
+        );
+        eprintln!(
+            "{path}: {} bytes -> {} bytes; knee: {rounds} rounds, workers {workers:?}",
+            data.len(),
+            want.len()
+        );
+        return cmd_knee(&data, &want, rounds, &workers);
+    }
     println!(
         "{path}: {} bytes -> {} bytes ({:.2}x)",
         data.len(),
