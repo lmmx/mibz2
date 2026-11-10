@@ -300,16 +300,61 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
     }
     tt.reserve(n);
     let t = tt.as_mut_ptr();
+    // The one-row steps' entries are staged by destination: slot s's entry waits at
+    // stage[c][s & 15] until its 16-slot group of the table (s & !15 to s | 15) is done, then
+    // the group's staged part, from[c] to s, is copied out in one go. A bucket's writes then
+    // touch one 64-byte line of the stage instead of its own page of the table; the table
+    // receives whole groups. from[c] is the first staged slot of c's current group: the
+    // bucket's start, a slot after a flush, or a slot after a run (the 16-row path writes the
+    // table itself, so it flushes c's staged part first).
+    #[repr(align(64))]
+    struct Stage([[u32; 16]; 256]);
+    let mut stage = Stage([[0u32; 16]; 256]);
+    let mut from = ftab;
+    // copy c's staged slots from[c]..to (to - from[c] <= 16, all in one group) to the table
+    let flush = |stage: &Stage, from: &mut [u32; 256], c: usize, to: u32| {
+        let f = from[c];
+        debug_assert!(f <= to && to - f <= 16 && (to == f || f >> 4 == (to - 1) >> 4));
+        // SAFETY: f..to are slots of bucket c already assigned (below its cursor, so below
+        // its end, at most n), inside tt's reserved capacity; their entries are staged at
+        // stage[c][f & 15..]
+        unsafe {
+            std::ptr::copy_nonoverlapping(
+                stage.0[c].as_ptr().add((f & 15) as usize),
+                t.add(f as usize),
+                (to - f) as usize,
+            )
+        };
+        from[c] = to;
+    };
     // the one-row step: row i's link at its byte's next slot, inside the bucket
-    let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
+    let one = |i: usize, ftab: &mut [u32; 256], stage: &mut Stage, from: &mut [u32; 256]| -> bool {
         let c = ll[i] as usize;
         let s = ftab[c];
         if s >= lim[c] {
             return false;
         }
-        // SAFETY: s is below its bucket's end, at most n, within tt's reserved capacity
-        unsafe { *t.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
+        // the entry for slot s, staged at its place in its group
+        stage.0[c][(s & 15) as usize] = ll[s as usize] as u32 | (i as u32) << 8;
         ftab[c] = s + 1;
+        if s & 15 == 15 {
+            let f = from[c];
+            if f & 15 == 0 && s - f == 15 {
+                // a whole group: one 64-byte copy
+                // SAFETY: s - 15..=s are bucket c's assigned slots (above), inside tt's
+                // reserved capacity
+                unsafe {
+                    std::ptr::copy_nonoverlapping(
+                        stage.0[c].as_ptr(),
+                        t.add(f as usize),
+                        16,
+                    )
+                };
+                from[c] = s + 1;
+            } else {
+                flush(stage, from, c, s + 1);
+            }
+        }
         true
     };
     // 16 rows at a time, as `build_two_pass` (its comment)
@@ -322,13 +367,16 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
             if s + 16 > lim[c] as usize {
                 return false;
             }
+            // c's staged slots come first; the run's 16 then go straight to the table
+            flush(&stage, &mut from, c, s as u32);
             let base = (i as u32) << 8;
             // SAFETY: s..s + 16 is below its bucket's end, as above, and inside ll
             unsafe { run16(ll.as_ptr().add(s), base, t.add(s)) };
             ftab[c] += 16;
+            from[c] = ftab[c];
         } else {
             for i in i..i + 16 {
-                if !one(i, &mut ftab) {
+                if !one(i, &mut ftab, &mut stage, &mut from) {
                     return false;
                 }
             }
@@ -336,9 +384,14 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
         i += 16;
     }
     for i in i..n {
-        if !one(i, &mut ftab) {
+        if !one(i, &mut ftab, &mut stage, &mut from) {
             return false;
         }
+    }
+    // every bucket's last staged part
+    for c in 0..256 {
+        let to = ftab[c];
+        flush(&stage, &mut from, c, to);
     }
     if ftab != lim {
         return false;
