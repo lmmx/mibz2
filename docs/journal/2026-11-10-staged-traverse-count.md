@@ -442,3 +442,81 @@ Ir/B (#330 §6). Counted here, the staged team's whole process is 30.207, and it
 **What is left of the team's excess over one worker:**
 - **The excess:** 30.207 − #330's 25.792 = 4.42 Ir/B;
 - **The rest of it** is mostly the build (+3.94 in #330) and MTF (+0.60).
+
+---
+
+## Addendum: the Guardian's D084 (appended; nothing above is changed)
+
+D084 is #145 comment 6759487306; its record is `state/records/D084` at `f4012c4f`. It rules:
+- **FAIL-MEASUREMENT stands.** The helper-only fractions reproduce as 0.512254, **0.694987**
+  and 0.519890. 39,282,386 exceeds twice 17,240,070 by 4,802,246 bytes, and the leaders'
+  bytes are not in that denominator.
+- **What is held:** a replacement qualifying count, and the single-caller result standing
+  in for the team gate. The pass-earned forced-team CI registration is unearned.
+- **No line STOP.** The work continues with the D083 screen's design, independent B5
+  review, and at most one separately registered diagnostic.
+
+### A registered-binary deviation
+
+**The pins:**
+- §6 pins the binary to "this branch's head at the commit that adds this file":
+  **`6c3bc692b26a1dd506d41f477ed0d5c34f68c918`**.
+- Every count above was made with binaries built at
+  **`c78c18d3d6178caa5abae03f07288974ac995a01`**.
+
+**The difference** is the one source change between them (`git diff 6c3bc692 c78c18d3`:
+`src/coop.rs`, 3 lines added): `#[inline(never)]` and a comment on the unstaged
+`coop::traverse`.
+
+**Why it was made, as reported:**
+- At `6c3bc692`, LTO had inlined `traverse` into `RoomWalk::share`; `nm` showed no
+  `coop::traverse` symbol.
+- The binary was inspected and never profiled.
+- The commit order is consistent with this account. Nothing else verifies that no count
+  preceded the change.
+
+**This is a deviation from the frozen pin, not an annotation.**
+- The figures above hold for `c78c18d3`'s binaries only.
+- The old arm's 17.771 against #330's 17.712 is a diagnostic check, not proof of
+  machine-code identity with master or with `6c3bc692`.
+
+**The full build identities** (both pins: rustc 1.99.1 `58cf8f9c3` 2026-10-13, cargo 1.99.1
+`5f94df478`; release profile: fat LTO, one codegen unit, `debug = "line-tables-only"`;
+`cargo build --release --example ab --example walk_count`, on the shared x86_64 machine):
+
+| source | binary | SHA-256 | profiled |
+|---|---|---|---|
+| `6c3bc692` (the registration's pin) | `examples/ab` | `ba1d254da1056d16eb830c3e424ca1c6a0e9d0ff2a69d292bc823b4432adcb5e` | no |
+| `6c3bc692` | `examples/walk_count` | `5328bd67e3842306d32a22fb674b02af5dfb62926cd8181d715c04d08a588fd2` | no |
+| `c78c18d3` (counted) | `examples/ab` | `b49a914672963a904dbae3d03aefbc32d68d48a42426268915f61d1b0111c669` | every team arm |
+| `c78c18d3` (counted) | `examples/walk_count` | `44e79421c6a9fbd12fbf657fc92fdabc2a17f8e35b856ad4c99d296bfcca6380` | every control arm, and the extraction |
+
+**Any future measurement** is frozen only after the inlining and attribution arrangement is
+fixed, and at the exact commit that will be built.
+
+### Correction: a clock was read
+
+The status line says "no clock is read anywhere in this work". **That is false of the
+archive.**
+- **What the archive holds:** `out/*-old.json` and `out/*-staged.json` are the harness's
+  child records. They contain `wall`, `cpu`, `thread_cpu`, `runq_s` and `sampler_s`,
+  recorded under valgrind.
+- **The correction:** the inference here is from instruction counts only. Those timing
+  fields are incidental instrumented output, kept unaltered and **unused for any
+  performance inference**. They establish no native speedup.
+
+### Corrections of scope (D084's reproduced figures)
+
+**The one-caller saving** is (3,709,609,095 − 2,072,879,909) / 209,691,304 = **7.805422 Ir/D**.
+- **It supports:** a construction-dependent instruction saving in this binary, without
+  competing walkers.
+- **It does not show** that the team figure is unaffected by scheduling.
+
+**The team against the control** is **0.081459 Ir/M** on their common walked-byte
+denominator (M = 209,697,662).
+- **What it is:** a descriptive difference between two harnesses and paths.
+- **What it is not:** a bound on every team overhead, on scheduling effects or on native
+  time.
+- **Withdrawn:** the results' line "coordination, late leaders and the tail together cost
+  less than 0.1 Ir/D", and the report's "+0.08 for everything a team adds". Both are too
+  strong.
