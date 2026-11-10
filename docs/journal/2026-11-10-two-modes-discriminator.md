@@ -541,9 +541,30 @@ archived `ab`):
 - every run exited 0;
 - the judge's gap checks found no problems.
 
-**A full in-recipe DRY check with the gap block is still to come.** It waits for an idle window,
-which the shared machine did not have for an hour. Like any DRY check, it proves plumbing only,
-never discrimination on the target.
+**The complete revised in-recipe DRY check, at `e5885772`** (after the re-review). It ran in
+an idle window: no rustc, valgrind, miri or cargo running, and no process above 50% CPU.
+`just bench-two-modes 1` ran every stage inside the recipe:
+- **Inputs:** the archived bundle was read, extracted and checked by digest. The probe was
+  compiled and the corpus built, all under their deadlines.
+- **The preflight:** all five collectors exited 0. Its verdict was REFUSED, as it must be on a
+  4-CPU VM without SMT, and it was recorded.
+- **The gap block:** exit 0.
+  - The conditioning child, then six treatment runs in the registered slots G Z G Z Z Z.
+  - Every run had the registered output.
+  - The G gaps were 0.2502 and 0.2504 s; the Z gaps 0.0001 to 0.0002 s.
+- **The sustained block:** exit 0. The 3-copy input was the same by content before and after.
+- **The rest:** 1 s.
+- **Pass 1:** exit 0. Three runs in slots N, P, P, P-idle's coverage 0.999 overall and at least
+  0.994 in each third.
+- **Pass 2: not run.** This host has no SMT sibling, so pass 2's native plumbing is not shown
+  here; it is covered only by the synthetic tests.
+- **The judgement:** DRY, with an **empty problems list**. The identity holds every registered
+  field: the deadlines, the 1 s DRY rest, the gap block's order, seed, gap and count, and the
+  before and after digests.
+- **The bundle:** made, 33 files, SHA-256
+  `b01d8dbfd2129687336dca44c4d53f887c26604a09d259621aa58e9e222b3164`.
+
+Like any DRY check, it proves plumbing only, never discrimination on the target.
 
 ## Reproduce
 
