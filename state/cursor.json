@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6778995031,
+  "last_examined_comment_id": 6779208153,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -80,12 +80,15 @@
       "response_comments": 0
     },
     "6779208153": {
-      "status": "in_progress",
+      "status": "triaged_advisory",
       "delivery_id": "38dd4660-dd4a-11f1-9465-bc8209b29fa8",
       "comment_updated_at": null,
       "head_sha": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
       "planned_action": "Advisory checkpoint of isolated-harness primary loss and final follow-up head; no assignment",
-      "log_dedup_key": "isolated-followup-6779208153"
+      "log_dedup_key": "isolated-followup-6779208153",
+      "disposition": "Verified isolated-head benchmark text 1t +2.4% [0.2,4.6], parity yes; fixed gate not passed. Follow-up 57f51bbc0ca62ac3ee1cc148a1010842eea6222a changes cfg formatting/log visibility and archived evidence only. Five Actions running, CI queued; legacy pending. Prior Miri and docs cancelled, not passed. Retain final primary-loss follow-up commitment and independent B5; no dispatch while #364 unmerged.",
+      "dispatches": 0,
+      "log_publication": "pending"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -121,10 +124,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "d4886b50-dd48-11f1-91aa-15a7e87e2d64",
-    "comment_id": 6778995031,
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "delivery_id": "38dd4660-dd4a-11f1-9465-bc8209b29fa8",
+    "comment_id": 6779208153,
+    "disposition": "isolated_primary_loss_final_followup_pending"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -137,9 +139,18 @@
   "pending_independent_review": {
     "pr": 365,
     "requested_by_comment": 6778679718,
-    "reiterated_by_comment": 6778961765,
+    "reiterated_by_comment": 6779208153,
     "status": "pending_authorised_dispatch",
-    "head_at_request": "989f782719ec69420713f94ed0b79cc5bedc8709",
+    "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
+  },
+  "performance_followup": {
+    "pr": 365,
+    "first_head": "989f782719ec69420713f94ed0b79cc5bedc8709",
+    "followup_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+    "run": 42901406328,
+    "status": "pending",
+    "source_comment": 6779208153,
+    "commitment": "Author predeclared this required CI as the one primary-loss follow-up of unchanged decoder/harness; repeated text 1t loss stands; no additional rerun/layout perturbation. Original adverse evidence retained."
   }
 }
