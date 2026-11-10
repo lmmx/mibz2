@@ -1,0 +1,93 @@
+[
+  {
+    "file": "service_tg.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/service_tg.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "3b8e82c52fcce14250bb9b928d2c2053d956923b2e086b091ff9251dd36efd55"
+  },
+  {
+    "file": "service_tg_power.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/service_tg_power.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "8e350e9a414cd9f4939e408809bbe428be8db729b9f127cefbad99748670cd54"
+  },
+  {
+    "file": "svc_target_check.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/svc_target_check.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "955d5e92d2ad0a1dbf161a0f8b30f1e1f7460b3bdbb0bf3e2ef911e4c6b441a3"
+  },
+  {
+    "file": "svc_target_fixtures.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/svc_target_fixtures.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "a9a73a8ba6d1426e8e033278848ea70c932339ed0ef4804efc6fda6ae778e08a"
+  },
+  {
+    "file": "test_service_tg.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/test_service_tg.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "2746f31165edf576c4e926e7c37ae5dae2577cd8f985134a92a07ab5495fa081"
+  },
+  {
+    "file": "test_tg_ni_gate.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/test_tg_ni_gate.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "6ea0a9c0c44e4df3c707d2375955ba3f16c7d9c90e75e323ba25b3615c8efa22"
+  },
+  {
+    "file": "test_tg_ni_pilot.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/test_tg_ni_pilot.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "ee52d6a829fe7e989158491cf613ef7f717bffe02ac35edb94c2f92465bbdcbe"
+  },
+  {
+    "file": "tg_ni_gate.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/tg_ni_gate.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "8589932524c19b9f4149c83a08643f79b560ebf78e724b5201b378c4e0a5b803"
+  },
+  {
+    "file": "tg_ni_pilot.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/tg_ni_pilot.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "d38fb686b826a4e68599d434c2b66387cd6334ab79b9c8066d7b4a23248dea00"
+  },
+  {
+    "file": "tg_ni_stamp.py",
+    "repository": "lmmx/mibz2",
+    "source_path": "bench/tg_ni_stamp.py",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "a7956c3510d0d9d9eba2c3fdecb400044f2127324a7222c05dab397b57a0ed75"
+  },
+  {
+    "file": "target-gated-ni.yml",
+    "repository": "lmmx/mibz2",
+    "source_path": ".github/workflows/target-gated-ni.yml",
+    "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
+    "archived_sha256": "5b709ab3aa71eb87d800ff7d4bb52d6587750049212b6b84b21e739e8be0eac2"
+  },
+  {
+    "file": "registration.md",
+    "repository": "lmmx/mibz2",
+    "source_path": "docs/journal/2026-11-10-service-guarded-target-gated-registration.md",
+    "source_commit": "7c582152ca4b3f44674084b4e75362e930645f34",
+    "archived_sha256": "a8c3d56fa27db95e1e89944381bed35cf7015410b4d56e92a6f16c7c39e593e7"
+  },
+  {
+    "file": "links.jsonl",
+    "repository": "lmmx/mibz2",
+    "source_path": "links.jsonl",
+    "source_commit": "f99e2f358ba7d0885b8129e1dc7f60e59f30a39a",
+    "archived_sha256": "289681347ee25054e5137cf97112638a93e3dad896290f0564343ced09befb51"
+  }
+]

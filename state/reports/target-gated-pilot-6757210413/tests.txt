@@ -1,0 +1,35 @@
+test_a_null_run_passes_every_cell (test_service_tg.CI.test_a_null_run_passes_every_cell) ... ok
+test_a_setup_failure_before_measuring_may_precede_the_measured_attempt (test_service_tg.CI.test_a_setup_failure_before_measuring_may_precede_the_measured_attempt) ... ok
+test_admission (test_service_tg.CI.test_admission) ... ok
+test_flags_and_rss (test_service_tg.CI.test_flags_and_rss) ... ok
+test_harm_confirmation (test_service_tg.CI.test_harm_confirmation) ... ok
+test_one_cell_over_the_margin_fails_the_condition (test_service_tg.CI.test_one_cell_over_the_margin_fails_the_condition) ... ok
+test_the_bound_is_batch_means_one_sided_95 (test_service_tg.CI.test_the_bound_is_batch_means_one_sided_95) ... ok
+test_the_frozen_file_must_name_the_ci_fields (test_service_tg.CI.test_the_frozen_file_must_name_the_ci_fields) ... ok
+test_the_history_is_reconciled_fail_closed (test_service_tg.CI.test_the_history_is_reconciled_fail_closed) ... ok
+test_the_power_script (test_service_tg.CI.test_the_power_script) ... ok
+test_the_runner_and_its_read_back (test_service_tg.CI.test_the_runner_and_its_read_back) ... ok
+test_quantiles (test_service_tg.TStats.test_quantiles) ... ok
+test_a_clean_attempt_meets_the_workstation_conditions (test_service_tg.Workstation.test_a_clean_attempt_meets_the_workstation_conditions) ... ok
+test_admission (test_service_tg.Workstation.test_admission) ... ok
+test_each_condition_fails_on_its_own (test_service_tg.Workstation.test_each_condition_fails_on_its_own) ... ok
+test_structural (test_service_tg.Workstation.test_structural) ... ok
+test_the_bounds_are_the_registered_ones (test_service_tg.Workstation.test_the_bounds_are_the_registered_ones) ... ok
+test_qualification (test_tg_ni_gate.Gate.test_qualification) ... ok
+test_smoke (test_tg_ni_gate.Gate.test_smoke) ... ok
+test_the_command_line (test_tg_ni_gate.Gate.test_the_command_line) ... ok
+test_the_judges_refusal_is_what_the_gate_expects (test_tg_ni_gate.Gate.test_the_judges_refusal_is_what_the_gate_expects) ... ok
+test_unknown_label (test_tg_ni_gate.Gate.test_unknown_label) ... ok
+test_cargo_builds_are_locked (test_tg_ni_gate.Workflow.test_cargo_builds_are_locked) ... ok
+test_dispatch_only (test_tg_ni_gate.Workflow.test_dispatch_only) ... ok
+test_every_action_is_pinned_to_a_commit (test_tg_ni_gate.Workflow.test_every_action_is_pinned_to_a_commit) ... ok
+test_no_verdict_is_masked (test_tg_ni_gate.Workflow.test_no_verdict_is_masked) ... ok
+test_admission_is_the_judges_with_the_pilot_label (test_tg_ni_pilot.Pilot.test_admission_is_the_judges_with_the_pilot_label) ... ok
+test_it_sees_dependence_order_and_trend_and_shows_no_ratio (test_tg_ni_pilot.Pilot.test_it_sees_dependence_order_and_trend_and_shows_no_ratio) ... ok
+test_the_gate_takes_a_pilot_as_never_evidence (test_tg_ni_pilot.Pilot.test_the_gate_takes_a_pilot_as_never_evidence) ... ok
+test_each_row_is_timed_and_a_truncation_restarts (test_tg_ni_pilot.Stamp.test_each_row_is_timed_and_a_truncation_restarts) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 9.944s
+
+OK

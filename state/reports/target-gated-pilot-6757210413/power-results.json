@@ -1,0 +1,31 @@
+{
+  "historical_runs": 47,
+  "cells": 42,
+  "scenarios": [
+    {
+      "R": 600,
+      "B": 20,
+      "scenario": "p90",
+      "true_ratio": 1.0,
+      "all_cell_lower": 0.8069240469059137,
+      "independent_product": 0.8193341386929794
+    },
+    {
+      "R": 600,
+      "B": 20,
+      "scenario": "p90",
+      "true_ratio": 1.005,
+      "all_cell_lower": 0.0015265676491990066,
+      "independent_product": 0.33441743397304347
+    },
+    {
+      "R": 960,
+      "B": 20,
+      "scenario": "p90",
+      "true_ratio": 1.005,
+      "all_cell_lower": 0.7191904916428421,
+      "independent_product": 0.7465081831271283
+    }
+  ],
+  "odd_batches_rejected": true
+}

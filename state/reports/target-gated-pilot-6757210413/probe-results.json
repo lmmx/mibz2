@@ -1,0 +1,89 @@
+{
+  "missing_timestamps": {
+    "valid": true,
+    "problems": [],
+    "runs_shard": {
+      "model": "AMD EPYC 7763 64-Core Processor",
+      "setup_s": null,
+      "measurement_s": 1800.0,
+      "round_s": null,
+      "timestamps": 0
+    }
+  },
+  "batch_menu_at_600": [
+    10,
+    20,
+    30,
+    60
+  ],
+  "changed_rows_after_manifest": {
+    "digest_mismatch": true,
+    "valid": true,
+    "problems": []
+  },
+  "unlisted_artifact": {
+    "valid": true,
+    "problems": []
+  },
+  "partial_backwards_timestamps": {
+    "valid": true,
+    "shard": {
+      "model": "AMD EPYC 7763 64-Core Processor",
+      "setup_s": null,
+      "measurement_s": 1800.0,
+      "round_s": {
+        "median": -1.0,
+        "p95": -1.0,
+        "max": -1.0
+      },
+      "timestamps": 600
+    }
+  },
+  "empty_smoke_gate": {
+    "status": 0,
+    "summary": "smoke: not evidence (the judge refused it as a smoke run, as it must; plumbing OK)",
+    "problems": [
+      "bench/service-tg.frozen names no candidate",
+      "bench/service-tg.frozen names no base",
+      "bench/service-tg.frozen names no ni_rustc",
+      "bench/service-tg.frozen names no corpus_text",
+      "the run is labelled 'smoke': not qualification (a smoke check or the pilot is never evidence)",
+      "manifest schema None: not one that records the run's whole history",
+      "onebyte: no job in the run's history",
+      "pattern: no job in the run's history",
+      "random: no job in the run's history",
+      "records: no job in the run's history",
+      "runs: no job in the run's history",
+      "text: no job in the run's history",
+      "wikidata-1: no job in the run's history",
+      "wikidata-2: no job in the run's history",
+      "wikidata-4: no job in the run's history"
+    ]
+  },
+  "empty_pilot_gate": {
+    "status": 0,
+    "summary": "pilot: not evidence (the judge refused it as a pilot run, as it must; plumbing OK)",
+    "problems": [
+      "bench/service-tg.frozen names no candidate",
+      "bench/service-tg.frozen names no base",
+      "bench/service-tg.frozen names no ni_rustc",
+      "bench/service-tg.frozen names no corpus_text",
+      "the run is labelled 'pilot': not qualification (a smoke check or the pilot is never evidence)",
+      "manifest schema None: not one that records the run's whole history",
+      "onebyte: no job in the run's history",
+      "pattern: no job in the run's history",
+      "random: no job in the run's history",
+      "records: no job in the run's history",
+      "runs: no job in the run's history",
+      "text: no job in the run's history",
+      "wikidata-1: no job in the run's history",
+      "wikidata-2: no job in the run's history",
+      "wikidata-4: no job in the run's history"
+    ]
+  },
+  "duration_proxy_counterexample": {
+    "m": 30,
+    "reported_m_times_median_round": 30.0,
+    "actual_median_batch_sum": 129.0
+  }
+}

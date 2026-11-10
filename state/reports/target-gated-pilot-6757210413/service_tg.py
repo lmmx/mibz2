@@ -1,0 +1,1015 @@
+"""The guarded service default under the target-gated route (docs/STEWARDSHIP.md, "Target-gated
+changes", conditions 1-7, enacted at 3e1a7ec3): the judge of its registration,
+docs/journal/2026-11-10-service-guarded-target-gated-registration.md (DRAFT, not frozen; on
+#316, the candidate's branch, with the workstation recipe `.just/service-tg.just` and the
+preflight `examples/svc_target.rs`). This file and its CI workflow are measurement tooling on
+master (the Guardian's D078); the candidate's decoder is not. Its parts, fixed with the freeze:
+
+    python3 bench/service_tg.py report ATTEMPT_DIR --out ATTEMPT_DIR/service-tg
+    python3 bench/service_tg.py manifest SHARDS_DIR [--artifacts A.jsonl --jobs J.jsonl --run ID --attempt N --label L]
+    python3 bench/service_tg.py ni SHARDS_DIR --manifest MANIFEST.json --head SHA --out PREFIX
+    python3 bench/service_tg.py confirm ROOT MANIFEST --confirmation ROOT2 MANIFEST2 --head SHA --out PREFIX
+
+**`report`: the workstation A/B** (conditions 3, 4 and its share of 7), judged from the
+attempt's directory as `just bench-service-tg` leaves it: the candidate's default decoder
+(`BzReader::parallel`, ab's `mibz2` arm) against the base's (`mibz2@<attempt>/bin/ab-base`),
+two arms, no twin, at 9, 10 and 11 threads, `ROUNDS` paired rounds, on the bench's Wikidata
+sample. Admission is the earlier attempt's (bench/service_guarded.py, restored here for two
+arms): identity (the frozen candidate, base, base fetch time and toolchain), workload (the
+registered corpus and decoded bytes, one digest), the preflight (TARGET, checked whole by
+bench/svc_target_check.py with its exit status), and structure (every row's arm, integer
+threads and round, `termination` exactly "success", an empty `err`, finite positive wall,
+CPU and RSS, every round once per arm and budget, every run's plan as expected).
+
+- **Condition 3, on target** (N = 1 cell: the i9 × Wikidata × 10 threads; K = 2N = 2): wall
+  speed, base over head, its two-sided interval at confidence 1 - 0.05/K (t at 0.9875), lower
+  bound > 1.02; CPU time, head over base, its one-sided upper bound at confidence 1 - 0.05/K
+  (t at 0.975), at most 1.02. Both must pass.
+- **Condition 4, fallback no harm** (M = 2 contrasts: 9 and 11 threads, wall time): head over
+  base, one-sided upper bound at confidence 1 - 0.05/M (t at 0.975), at most 1.02 at each.
+  NOT SHOWN fails.
+- **Condition 7's workstation criteria** (fixed before data): at 9 and 11, CPU time head over
+  base is a demonstrated regression if its two-sided 95% lower bound exceeds 1.02; at every
+  cell, peak RSS head over base is a demonstrated regression if its two-sided 95% lower bound
+  exceeds 1.10. Either fails. Everything else is reported.
+
+**`ni`: the CI off-target noninferiority** (condition 2, and condition 7's CI criteria), from
+the sharded workflow (.github/workflows/target-gated-ni.yml, the Guardian's D077), which
+replaces the draft's single pull-request Benchmark run. The standing grid's 42 cells (the 4-CPU,
+2-core runner × the seven corpora × 1, 2 and 4 threads × wall and CPU time) in nine fixed
+shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard one runner.
+Every cell is `NI_ROUNDS` paired rounds on its own shard's runner, never pooled across
+runners; its estimate the geometric mean of the paired head-over-base ratios; its standard
+error from `NI_BATCHES` consecutive batch means (robust to dependence within a batch); its
+one-sided 95% upper bound (t at 0.95, `NI_BATCHES` - 1 df) at most 1.02. All 42 must pass.
+- **Admission, every shard:**
+  - the run's whole history reconciled, fail-closed (`history_problems`): every job of every
+    attempt (the API's, with its steps) and every artifact GitHub lists, downloaded or not. An
+    attempt counts as measured if its artifact holds rows or a start marker, or the API shows
+    its measurement step began. Exactly one attempt measured, the shard's last, its job and
+    step succeeded, its artifact listed and downloaded. An earlier attempt passes only as a
+    verified setup failure (job failed, measurement step skipped, no rows or marker).
+    Anything unknown refuses;
+  - every file matching the manifest's SHA-256;
+  - labelled `qualification` (a `smoke` run is never evidence);
+  - the registered head (the candidate plus the frozen file alone), base, run, rounds, corpus
+    and threads, and the frozen CI toolchain;
+  - a runner of 4 CPUs on 2 cores, two a core, whose lscpu model is not the target's;
+  - the predicate read back NOT TARGET on that runner (svc_target, checked whole);
+  - the registered corpus digest;
+  - every run successful, placed as `--spread` places it, every round once per arm and
+    thread, one output digest.
+- **Anything missing or failing:** INVALID, and the route fails (§2.5).
+- **Condition 7 on CI:** a wall cell flagged slower (its two-sided 95% batch-means interval
+  above 1) is a harm signal, for `confirm`. Peak RSS head over base whose two-sided 95% lower
+  bound exceeds 1.10 fails.
+
+`manifest` writes the aggregate's manifest; the workflow's `aggregate` job runs it and `ni`.
+
+**`confirm`: the inherited harm-confirmation rule**, on the one confirmation dispatch allowed
+(§2.6), which must be a distinct dispatch (another run id) of the same head. A wall cell flagged slower in the registered run and flagged slower again in the
+confirmation run on the same head is a confirmed harm, and fails condition 7. A cell not
+flagged again is unresolved, and reported. The confirmation run never enters condition 2: it
+cannot rescue a failed cell, replace the registered run, or be pooled with it.
+
+None of the outcomes is a reason to retry: one attempt (condition 6).
+"""
+
+import argparse
+import json
+import math
+import os
+import re
+import statistics
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import svc_target_check  # noqa: E402
+
+# (helpers shared with bench/service_guarded.py's admission, carried here so this judge stands
+# alone on master: the earlier attempt's judge is #302's, not this tooling's)
+HASH = re.compile(r"[0-9a-f]{16,}")
+# the time master was fetched at the freeze (UTC), beside the base it names
+FETCHED = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ")
+
+
+def is_int(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def positive(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
+
+
+def plan_of(threads):
+    """(leaders, plain helpers, pipelined helpers, service workers) from ab's `thread_cpu`
+    ("name=seconds ...") or `observed_threads` ("name ..."): leaders or workers `mibz2-N`, a
+    plain team's helpers `mibz2-coop-N`, a pipelined team's `mibz2-coop-pN`, service workers
+    `mibz2-svc-N` (the hub's feeder, `mibz2-svc-feed`, is not counted)"""
+    names = [p.partition("=")[0] for p in threads.split()]
+    return (
+        sum(1 for n in names if re.fullmatch(r"mibz2-\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-coop-\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-coop-p\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-svc-\d+", n)),
+    )
+
+
+def label(plans):
+    out = []
+    for leaders, plain, piped, svc in plans:
+        helpers = plain + piped
+        kind = "pipelined" if piped and not plain else "plain" if plain and not piped else "mixed"
+        s = f" + {svc} service" if svc else ""
+        if helpers == 0 and not svc:
+            out.append(f"{leaders} workers")
+        elif leaders and helpers % leaders == 0:
+            out.append(f"{leaders}×{1 + helpers // leaders} {kind}{s}")
+        else:
+            out.append(f"{leaders} leaders, {plain} plain, {piped} pipelined, {svc} service")
+    return " / ".join(out) or "nothing"
+
+
+FROZEN = "service-tg.frozen"
+MARGIN = 1.02
+RSS_MARGIN = 1.10
+# the workstation A/B
+ROUNDS = 128
+TARGET = 10
+FALLBACK = (9, 11)
+THREADS = (9, 10, 11)
+K = 2  # condition 3's intervals: N = 1 cell, two tests
+M = len(FALLBACK)  # condition 4's contrasts
+# plans as (leaders, plain helpers, pipelined helpers, service workers)
+FOUR_BY_TWO = (4, 4, 0, 0)
+PIPED_3X3 = (3, 0, 6, 0)
+SVC2 = (2, 4, 0, 2)
+EXPECT = {
+    9: {"base": FOUR_BY_TWO, "head": FOUR_BY_TWO},
+    10: {"base": PIPED_3X3, "head": SVC2},
+    11: {"base": PIPED_3X3, "head": PIPED_3X3},
+}
+CORPUS = "wikidata"
+BASE_SUFFIX = "/bin/ab-base"
+# the CI grid at the pinned bench revision (.github/workflows/bench.yml, examples/ab.rs `gen`),
+# measured by .github/workflows/target-gated-ni.yml in nine fixed shards (D077)
+CI_CORPORA = ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata")
+CI_THREADS = (1, 2, 4)
+CI_CPUS = 4
+CI_CORES = 2
+CI_ARMS = ("mibz2", "mibz2@base/ab")
+CI_METRICS = ("wall", "cpu")
+NI_ROUNDS = 600  # R: every cell's paired rounds, fixed (registration §2.4)
+NI_BATCHES = 20  # B: consecutive batches of R / B = 30 rounds, the standard error's units (§2.3)
+SHARDS = {c: (c, (1, 2, 4)) for c in CI_CORPORA if c != "wikidata"}
+SHARDS.update({f"wikidata-{t}": ("wikidata", (t,)) for t in CI_THREADS})
+# the corpora's SHA-256 (ab gen at scale 4; bench/wikidata.json's): `text` is built from the
+# candidate's own sources, so its digest is the freeze's (`corpus_text`)
+CORPUS_SHA256 = {
+    "onebyte": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e",
+    "pattern": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
+    "random": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+    "records": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+    "runs": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
+    "wikidata": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+}
+SHARD_FILES = ("shard.json", "rustc.txt", "binaries.sha256", "lscpu.txt", "env.json", "preflight.json",
+               "preflight.exit", "preflight-check.json", "corpus.sha256", "measurement-started.txt",
+               "measurement-ended.txt", "runs.jsonl")
+# the target's processor name (src/parallel.rs SERVICE_NAME): a runner reporting another is
+# off the target by that fact alone
+TARGET_NAME = svc_target_check.NAME
+
+
+# ---------------------------------------------------------------------------------------
+# Student's t, exactly enough: the regularized incomplete beta by its continued fraction
+# (Numerical Recipes' betacf), the quantile by bisection. Checked against scipy in the tests.
+
+
+def _betacf(a, b, x):
+    tiny, qab, qap, qam = 1e-300, a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, 400):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-15:
+            break
+    return h
+
+
+def _betai(a, b, x):
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    lb = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return math.exp(lb) * _betacf(a, b, x) / a
+    return 1.0 - math.exp(lb) * _betacf(b, a, 1.0 - x) / b
+
+
+def t_cdf(t, df):
+    p = 0.5 * _betai(df / 2.0, 0.5, df / (df + t * t))
+    return 1.0 - p if t > 0 else p
+
+
+def t_ppf(q, df):
+    """Student's t quantile, q in (0.5, 1)"""
+    lo, hi = 0.0, 1e3
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        if t_cdf(mid, df) < q:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def paired_logs(num, den, key, rounds):
+    """log(num[key] / den[key]) per round"""
+    return [math.log(num[i][key] / den[i][key]) for i in rounds]
+
+
+def summary(logs):
+    n = len(logs)
+    return statistics.fmean(logs), statistics.stdev(logs) / math.sqrt(n), n
+
+
+def two_sided(logs, conf):
+    m, se, n = summary(logs)
+    t = t_ppf(1 - (1 - conf) / 2, n - 1)
+    return {"ratio": math.exp(m), "lo": math.exp(m - t * se), "hi": math.exp(m + t * se), "conf": conf}
+
+
+def upper(logs, conf):
+    """The one-sided upper bound at confidence `conf` of the geometric mean"""
+    m, se, n = summary(logs)
+    return {"ratio": math.exp(m), "upper": math.exp(m + t_ppf(conf, n - 1) * se), "conf": conf}
+
+
+# ---------------------------------------------------------------------------------------
+# The frozen file
+
+
+def registered(root=None):
+    """The registered workload (bench/wikidata.json), the frozen commits, fetch time,
+    workstation and CI toolchains and the `text` corpus's digest (bench/service-tg.frozen) and
+    the pinned bench version (bench/report.py's BENCH), from the checkout the judge runs in"""
+    root = root or os.path.dirname(HERE)
+    with open(os.path.join(root, "bench", "wikidata.json")) as f:
+        w = json.load(f)
+    frozen = {}
+    try:
+        with open(os.path.join(root, "bench", FROZEN)) as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines = []
+    for line in lines:
+        if line.startswith("#"):
+            continue
+        key, _, value = line.partition(" ")
+        value = value.strip()
+        if key in ("candidate", "base") and re.fullmatch(r"[0-9a-f]{40}", value):
+            frozen[key] = value
+        elif key == "base_fetched" and FETCHED.fullmatch(value):
+            frozen[key] = value
+        elif key == "rustc" and value.startswith("rustc "):
+            frozen[key] = value
+        elif key == "ni_rustc" and value.startswith("rustc "):
+            frozen[key] = value
+        elif key == "corpus_text" and re.fullmatch(r"[0-9a-f]{64}", value):
+            frozen[key] = value
+    bench = None
+    try:
+        with open(os.path.join(root, "bench", "report.py")) as f:
+            m = re.search(r'^BENCH = "([^"]+)"', f.read(), re.M)
+            bench = m and m.group(1)
+    except OSError:
+        pass
+    return {"corpus_sha256": w["corpus_sha256"], "decoded_bytes": w["decoded_bytes"],
+            "frozen": frozen, "bench": bench}
+
+
+# ---------------------------------------------------------------------------------------
+# The workstation A/B
+
+
+def bundle_problems(files, reg):
+    """(kind, problem) for the attempt's identity and workload files"""
+    p = []
+    if "DRY-RUN.txt" in files:
+        p.append(("identity", "a DRY run: never evidence"))
+    commits = dict(l.split()[:2] for l in files.get("commits.txt", "").splitlines() if len(l.split()) >= 2)
+    for k in ("candidate", "base", "base_fetched"):
+        if not reg["frozen"].get(k):
+            p.append(("identity", f"bench/{FROZEN} names no {k}"))
+        elif commits.get(k) != reg["frozen"][k]:
+            p.append(("identity", f"commits.txt's {k} {commits.get(k)!r} is not the frozen {reg['frozen'][k]}"))
+    rustc = reg["frozen"].get("rustc")
+    if not rustc:
+        p.append(("identity", f"bench/{FROZEN} names no rustc"))
+    elif rustc not in [l.strip() for l in files.get("inputs.txt", "").splitlines()]:
+        p.append(("identity", f"inputs.txt's toolchain is not the frozen {rustc!r}"))
+    arms = [a for a in files.get("arms.txt", "").splitlines() if a.strip()]
+    if not (len(arms) == 2 and arms[0] == "mibz2" and arms[1].startswith("mibz2@/") and arms[1].endswith(BASE_SUFFIX)):
+        p.append(("identity", f"arms.txt is not the registered two arms: {arms}"))
+        arms = []
+    digests = {}
+    for l in files.get("inputs.txt", "").splitlines():
+        f = l.split(None, 1)
+        if len(f) == 2 and re.fullmatch(r"[0-9a-f]{64}", f[0]):
+            digests[f[1].strip()] = f[0]
+    if arms and arms[1][len("mibz2@"):] not in digests:
+        p.append(("identity", "inputs.txt gives no digest for the base executable run"))
+    seen = files.get("corpus.sha256", "").split()
+    if not seen or seen[0] != reg["corpus_sha256"]:
+        p.append(("workload", f"corpus.sha256 {seen[0] if seen else 'missing'} is not the registered corpus's"))
+    return p, arms
+
+
+def row_problems(rows, arms, reg):
+    p = []
+    for i, r in enumerate(rows):
+        if not isinstance(r, dict):
+            p.append(f"row {i}: not a JSON object")
+            continue
+        q = []
+        if r.get("arm") not in arms:
+            q.append(f"arm {r.get('arm')!r} not one of arms.txt's")
+        if not (is_int(r.get("threads")) and r["threads"] in THREADS):
+            q.append(f"threads {r.get('threads')!r}")
+        if not (is_int(r.get("round")) and 0 <= r["round"] < ROUNDS):
+            q.append(f"round {r.get('round')!r} not an integer in 0..{ROUNDS - 1}")
+        if r.get("termination") != "success":
+            q.append(f"termination {r.get('termination')!r}, not 'success'")
+        if r.get("err") != "":
+            q.append(f"err {r.get('err')!r}: a failed run (or no err field)")
+        if "broken" in r:
+            q.append("broken: the child printed no record")
+        for k in ("exit", "status"):
+            if k in r and r[k] != 0:
+                q.append(f"{k} {r[k]!r}")
+        for k in ("wall", "cpu", "rss_kb"):
+            if not positive(r.get(k)):
+                q.append(f"{k} {r.get(k)!r} not finite and positive")
+        if not (isinstance(r.get("hash"), str) and HASH.fullmatch(r["hash"])):
+            q.append(f"hash {r.get('hash')!r} not a hex digest")
+        if not (is_int(r.get("out")) and r["out"] == reg["decoded_bytes"]):
+            q.append(f"out {r.get('out')!r} not the registered {reg['decoded_bytes']} bytes")
+        if r.get("corpus") != CORPUS:
+            q.append(f"corpus {r.get('corpus')!r}")
+        if not (isinstance(r.get("thread_cpu"), str) and isinstance(r.get("observed_threads"), str)):
+            q.append("a thread record missing")
+        if q:
+            p.append(f"row {i}: " + ", ".join(q))
+    return p
+
+
+def judge(files, rows, unreadable=(), reg=None):
+    """The workstation attempt's verdict (see the module's doc)"""
+    reg = reg or registered()
+    v = {"valid": False, "failure": None, "problems": [], "cells": {}, "preflight": None,
+         "target": None, "fallback": None, "other": None, "qualifies": False, "reasons": []}
+
+    def fail(kind, problems):
+        v["failure"] = v["failure"] or kind
+        v["problems"] += problems
+
+    bp, arms = bundle_problems(files, reg)
+    for kind in ("identity", "workload"):
+        if any(k == kind for k, _ in bp):
+            fail(kind, [m for k, m in bp if k == kind])
+    try:
+        record = json.loads(files.get("preflight.json", ""))
+    except json.JSONDecodeError:
+        record = None
+    try:
+        status = int(files.get("preflight.exit", "").strip())
+    except ValueError:
+        status = None
+    verdict, why = svc_target_check.check(record, status)
+    v["preflight"] = {"verdict": verdict, "problems": why}
+    if verdict != "TARGET":
+        fail("preflight", [f"the preflight is {verdict}" + (f": {'; '.join(why)}" if why else "")])
+    rp = [f"line {n} of runs.jsonl is not JSON" for n in unreadable] + row_problems(rows, arms, reg)
+    if rp:
+        fail("structural", rp[:8] + ([f"... and {len(rp) - 8} more"] if len(rp) > 8 else []))
+    if v["failure"]:
+        return v
+    build = {arms[0]: "head", arms[1]: "base"}
+    by = {}
+    for r in rows:
+        by.setdefault((build[r["arm"]], r["threads"]), []).append(r)
+    if len({r["hash"] for r in rows}) != 1:
+        fail("structural", ["more than one output digest"])
+    rounds = range(ROUNDS)
+    for t in THREADS:
+        runs = {b: by.get((b, t), []) for b in ("base", "head")}
+        complete = all(sorted(r["round"] for r in runs[b]) == list(rounds) for b in runs)
+        seen = {
+            b: sorted({plan_of(r[k]) for r in runs[b] for k in ("thread_cpu", "observed_threads")})
+            for b in runs
+        }
+        plans_ok = all(seen[b] == [EXPECT[t][b]] for b in runs)
+        c = {"threads": t, "complete": complete, "plans": plans_ok, "seen": seen}
+        if not complete:
+            fail("structural", [f"{t} threads: rounds incomplete or repeated"])
+        if not plans_ok:
+            fail("structural", [
+                f"{t} threads: ran base {label(seen['base'])}, head {label(seen['head'])}; "
+                f"expected base {label([EXPECT[t]['base']])}, head {label([EXPECT[t]['head']])}"
+            ])
+        if complete:
+            base = {r["round"]: r for r in runs["base"]}
+            head = {r["round"]: r for r in runs["head"]}
+            wall_hb = paired_logs(head, base, "wall", rounds)
+            cpu_hb = paired_logs(head, base, "cpu", rounds)
+            c["speed95"] = two_sided([-x for x in wall_hb], 0.95)
+            c["cpu95"] = two_sided(cpu_hb, 0.95)
+            c["rss95"] = two_sided(paired_logs(head, base, "rss_kb", rounds), 0.95)
+            if t == TARGET:
+                c["speed_k"] = two_sided([-x for x in wall_hb], 1 - 0.05 / K)
+                c["cpu_upper_k"] = upper(cpu_hb, 1 - 0.05 / K)
+            else:
+                c["wall_upper_m"] = upper(wall_hb, 1 - 0.05 / M)
+            c["median"] = {
+                b: {k: statistics.median(r[k] for r in runs[b]) for k in ("wall", "cpu", "rss_kb")}
+                for b in runs
+            }
+        v["cells"][t] = c
+    if v["failure"]:
+        return v
+    v["valid"] = True
+    c = v["cells"][TARGET]
+    v["target"] = {
+        "wall": c["speed_k"]["lo"] > MARGIN,
+        "cpu": c["cpu_upper_k"]["upper"] <= MARGIN,
+    }
+    v["fallback"] = {t: v["cells"][t]["wall_upper_m"]["upper"] <= MARGIN for t in FALLBACK}
+    cpu_harm = [t for t in FALLBACK if v["cells"][t]["cpu95"]["lo"] > MARGIN]
+    rss_harm = [t for t in THREADS if v["cells"][t]["rss95"]["lo"] > RSS_MARGIN]
+    v["other"] = {"cpu_regression": cpu_harm, "rss_regression": rss_harm}
+    if not v["target"]["wall"]:
+        v["reasons"].append(f"condition 3: wall speed at 10 threads, lower bound {c['speed_k']['lo']:.4f}, not above {MARGIN}")
+    if not v["target"]["cpu"]:
+        v["reasons"].append(f"condition 3: CPU at 10 threads, upper bound {c['cpu_upper_k']['upper']:.4f}, above {MARGIN}")
+    for t in FALLBACK:
+        if not v["fallback"][t]:
+            v["reasons"].append(
+                f"condition 4: NOT SHOWN at {t} threads, wall upper bound {v['cells'][t]['wall_upper_m']['upper']:.4f} above {MARGIN}")
+    for t in cpu_harm:
+        v["reasons"].append(f"condition 7: CPU regression demonstrated at {t} threads (lower bound above {MARGIN})")
+    for t in rss_harm:
+        v["reasons"].append(f"condition 7: peak RSS regression demonstrated at {t} threads (lower bound above {RSS_MARGIN})")
+    v["qualifies"] = not v["reasons"]
+    return v
+
+
+def fmt(r):
+    return f"{r['ratio']:.4f} [{r['lo']:.4f}, {r['hi']:.4f}]" if r else "–"
+
+
+def markdown(v):
+    out = [
+        "# The guarded service default under the target-gated route: the workstation A/B",
+        "",
+        f"Paired geometric means over {ROUNDS} rounds. Speed is base wall over head wall (above 1: the head "
+        "is faster); CPU and peak RSS are head over base (above 1: the head spends more). Condition 3 at 10 "
+        f"threads: speed's two-sided {100 * (1 - 0.05 / K):.1f}% interval, lower bound above {MARGIN}; CPU's "
+        f"one-sided {100 * (1 - 0.05 / K):.1f}% upper bound at most {MARGIN}. Condition 4 at 9 and 11: wall "
+        f"head over base, one-sided {100 * (1 - 0.05 / M):.1f}% upper bound at most {MARGIN}.",
+        "",
+        "| threads | role | plans, base → head | speed (95%) | judged bound | CPU (95%) | peak RSS (95%) |",
+        "|--:|---|---|--:|--:|--:|--:|",
+    ]
+    for t in THREADS:
+        c = v["cells"].get(t, {})
+        seen = c.get("seen", {})
+        plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
+        if t == TARGET:
+            role = "on target (condition 3)"
+            judged = (f"speed lo {c['speed_k']['lo']:.4f}; CPU up {c['cpu_upper_k']['upper']:.4f}"
+                      if "speed_k" in c else "–")
+        else:
+            role = "fallback (condition 4)"
+            judged = f"wall up {c['wall_upper_m']['upper']:.4f}" if "wall_upper_m" in c else "–"
+        out.append(f"| {t} | {role} | {plans} | {fmt(c.get('speed95'))} | {judged} | {fmt(c.get('cpu95'))} "
+                   f"| {fmt(c.get('rss95'))} |")
+    pf = v.get("preflight") or {}
+    out += ["", f"**The preflight:** {pf.get('verdict', '–')}."]
+    out += ["", f"**Valid:** {'yes' if v['valid'] else 'no' + (' (' + v['failure'] + ')' if v['failure'] else '')}"]
+    out += [f"- {p}" for p in v["problems"]]
+    if v["valid"]:
+        out += ["", "**The workstation conditions (3, 4 and 7's workstation criteria):** "
+                + ("**met**." if v["qualifies"] else "**not met**:")]
+        out += [f"- {r}" for r in v["reasons"]]
+        out += [
+            "",
+            "- This is the workstation half only: qualification also needs condition 2 on CI "
+            "(`service_tg.py ci`), conditions 1, 5 and 6 as registered, and condition 7's tests, parity and green CI.",
+            "- NOT SHOWN at a fallback budget is not demonstrated harm; it fails qualification all the same.",
+            "- The intervals are a Bonferroni family within each condition (K = 2, M = 2), not one simultaneous "
+            "statement across conditions.",
+            "- One i9-10900K, the bench's Wikidata sample: the coverage argument for the rest of the deployment "
+            "class is the registration's, not this run's.",
+        ]
+    return "\n".join(out) + "\n"
+
+
+FILES = ("commits.txt", "arms.txt", "inputs.txt", "corpus.sha256", "preflight.json", "preflight.exit", "DRY-RUN.txt")
+
+
+def read_jsonl(path):
+    rows, unreadable = [], []
+    try:
+        with open(path, errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return [], [0]
+    for n, line in enumerate(lines, 1):
+        if line.strip():
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                unreadable.append(n)
+    return rows, unreadable
+
+
+def load(attempt):
+    files = {}
+    for n in FILES:
+        try:
+            with open(os.path.join(attempt, n), errors="replace") as f:
+                files[n] = f.read()
+        except OSError:
+            pass
+    rows, unreadable = read_jsonl(os.path.join(attempt, "runs.jsonl"))
+    return files, rows, unreadable
+
+
+# ---------------------------------------------------------------------------------------
+# CI: condition 2, by the sharded workflow (.github/workflows/target-gated-ni.yml)
+
+
+def head_problems(head, cand, root=None):
+    """The registered CI head must be the frozen candidate plus the frozen file and nothing
+    else: the candidate an ancestor of it, and the only path that differs bench/service-tg.frozen"""
+    root = root or os.path.dirname(HERE)
+    try:
+        subprocess.run(["git", "merge-base", "--is-ancestor", cand, head], cwd=root, check=True,
+                       capture_output=True)
+        diff = subprocess.run(["git", "diff", "--name-only", cand, head], cwd=root, check=True,
+                              capture_output=True, text=True).stdout.split()
+    except (OSError, subprocess.CalledProcessError) as e:
+        return [f"git could not relate the head {head} to the candidate {cand}: {e}"]
+    other = [d for d in diff if d != f"bench/{FROZEN}"]
+    return [f"the head differs from the candidate beyond the frozen file: {other}"] if other else []
+
+
+def sha256_file(path):
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+MEASURE_STEP = "Run (the measurement)"
+ARTIFACT = re.compile(r"tg-ni-(.+)-a([0-9]+)")
+
+
+def manifest(root, artifacts=(), jobs=(), run=None, attempt=None, label=None):
+    """The run's whole history, for the judge: every shard artifact GitHub lists (`artifacts`,
+    the API's records, all attempts), each with the files downloaded under `root` (as
+    `gh run download` leaves them: `tg-ni-<shard>-a<attempt>/<shard>/...`) and each file's
+    SHA-256, or `files: null` where the listed artifact was not downloaded; any downloaded
+    directory the API did not list (`unlisted`); and every job of every attempt with its steps
+    (`jobs`, the API's `filter=all`)"""
+    listed = {a.get("name"): a for a in artifacts if ARTIFACT.fullmatch(str(a.get("name", "")))}
+    on_disk = sorted(os.listdir(root)) if os.path.isdir(root) else []
+    out = {"schema": "mibz2.tg_ni_manifest/2", "run": run, "attempt": attempt, "label": label,
+           "artifacts": [], "unlisted": [], "jobs": list(jobs)}
+    for name in sorted(set(listed) | {n for n in on_disk if ARTIFACT.fullmatch(n)}):
+        m = ARTIFACT.fullmatch(name)
+        if m.group(1) == "aggregate":
+            continue
+        d = os.path.join(root, name, m.group(1))
+        files = None
+        if name in on_disk and os.path.isdir(d):
+            files = {f: sha256_file(os.path.join(d, f)) for f in sorted(os.listdir(d))
+                     if os.path.isfile(os.path.join(d, f))}
+        if name not in listed:
+            out["unlisted"].append(name)
+        a = listed.get(name, {})
+        out["artifacts"].append({"name": name, "shard": m.group(1), "attempt": int(m.group(2)),
+                                 "id": a.get("id"), "digest": a.get("digest"),
+                                 "expired": a.get("expired"), "files": files})
+    return out
+
+
+def shard_jobs(jobs, sid):
+    """The API's jobs of one shard, every attempt: the matrix job is named `shard (<id>, ...)`"""
+    return [j for j in jobs if str(j.get("name", "")).startswith(f"shard ({sid},")]
+
+
+def measure_step(job):
+    """The job's measurement step as the API records it, or None if its steps are unknown"""
+    steps = job.get("steps")
+    if not isinstance(steps, list) or not steps:
+        return None
+    hit = [s for s in steps if s.get("name") == MEASURE_STEP]
+    return hit[0] if len(hit) == 1 else {"name": MEASURE_STEP, "conclusion": "absent"}
+
+
+def history_problems(sid, jobs, arts, head=None, run=None):
+    """§2.5's attempt rule, fail-closed, from the authoritative history: (problems, the measured
+    attempt's artifact record). An attempt counts as measured if its artifact holds rows or a
+    start marker, OR the API shows its measurement step began; exactly one attempt may have
+    measured, it must be the shard's last, its job and step must have succeeded, and its
+    artifact must be listed and downloaded. An earlier attempt is a recoverable setup failure
+    only on positive evidence: its job failed and its measurement step was skipped, and its
+    artifact (if any) holds no rows or marker. Anything unknown refuses"""
+    p = []
+    js = shard_jobs(jobs, sid)
+    by_attempt = {}
+    for j in js:
+        k = j.get("run_attempt")
+        if not is_int(k) or k in by_attempt:
+            p.append(f"{sid}: job attempts unknown or repeated ({k!r})")
+            continue
+        if head is not None and j.get("head_sha") != head:
+            p.append(f"{sid}: attempt {k}'s job ran at {j.get('head_sha')!r}, not the head")
+        if run is not None and j.get("run_id") != run:
+            p.append(f"{sid}: attempt {k}'s job belongs to run {j.get('run_id')!r}, not {run}")
+        by_attempt[k] = j
+    for a in arts:
+        if a["attempt"] not in by_attempt:
+            p.append(f"{sid}: an artifact of attempt {a['attempt']} with no job of that attempt")
+    if not by_attempt:
+        return p + [f"{sid}: no job in the run's history"], None
+    attempts = sorted(by_attempt)
+    art = {a["attempt"]: a for a in arts}
+    measured = []
+    for k in attempts:
+        j, a = by_attempt[k], art.get(k)
+        step = measure_step(j)
+        files = (a or {}).get("files")
+        has_data = bool(files) and ("runs.jsonl" in files or "measurement-started.txt" in files)
+        if step is None:
+            p.append(f"{sid}: attempt {k}: the job's steps are unknown")
+            continue
+        began = step.get("conclusion") not in ("skipped", "absent") or bool(step.get("started_at"))
+        if has_data or began:
+            measured.append(k)
+            continue
+        # (a setup failure: positive evidence it never measured)
+        if not (j.get("status") == "completed" and j.get("conclusion") == "failure"
+                and step.get("conclusion") == "skipped"):
+            p.append(f"{sid}: attempt {k} neither measured nor a verified setup failure "
+                     f"(job {j.get('status')}/{j.get('conclusion')}, step {step.get('conclusion')})")
+        if a is not None and files is None:
+            p.append(f"{sid}: attempt {k}'s listed artifact was not downloaded: its contents are unknown")
+    if p:
+        return p, None
+    if len(measured) != 1:
+        return [f"{sid}: {len(measured)} attempts that started measuring, not one"], None
+    k = measured[0]
+    if k != attempts[-1]:
+        return [f"{sid}: an attempt after the measured one ({attempts})"], None
+    j, a, step = by_attempt[k], art.get(k), measure_step(by_attempt[k])
+    if not (j.get("status") == "completed" and j.get("conclusion") == "success"):
+        p.append(f"{sid}: the measured attempt's job ended {j.get('status')}/{j.get('conclusion')}, not success")
+    if step.get("conclusion") != "success":
+        p.append(f"{sid}: the measurement step ended {step.get('conclusion')!r}, not success")
+    if a is None or a.get("id") is None:
+        p.append(f"{sid}: the measured attempt's artifact is not listed by GitHub")
+    elif not a.get("files"):
+        p.append(f"{sid}: the measured attempt's artifact was not downloaded")
+    elif a.get("expired"):
+        p.append(f"{sid}: the measured attempt's artifact expired")
+    return p, (None if p else a)
+
+
+def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
+    """The registered estimator (§2.3): the mean of all the paired logs, its standard error from
+    the means of `batches` consecutive equal batches, t with batches - 1 df"""
+    n = len(logs)
+    k = n // batches
+    means = [statistics.fmean(logs[i * k:(i + 1) * k]) for i in range(batches)]
+    m = statistics.fmean(logs)
+    se = statistics.stdev(means) / math.sqrt(batches)
+    df = batches - 1
+    tu, tt = t_ppf(conf_upper, df), t_ppf(1 - (1 - conf_two) / 2, df)
+    return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
+            "hi95": math.exp(m + tt * se), "se": se}
+
+
+def diagnostics(logs):
+    """Reported, never judged: lag-1 autocorrelation of the paired logs in round order, and the
+    two halves' geometric means"""
+    n = len(logs)
+    m = statistics.fmean(logs)
+    var = sum((x - m) ** 2 for x in logs)
+    r1 = sum((logs[i] - m) * (logs[i + 1] - m) for i in range(n - 1)) / var if var else 0.0
+    h = n // 2
+    return {"lag1": r1, "first_half": math.exp(statistics.fmean(logs[:h])),
+            "second_half": math.exp(statistics.fmean(logs[h:]))}
+
+
+def read_text(d, name):
+    try:
+        with open(os.path.join(d, name), errors="replace") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2",
+                   label="qualification"):
+    """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
+    rows by (corpus, threads, arm) and round"""
+    p = []
+    fz = reg["frozen"]
+    corpus, threads = SHARDS[sid]
+    missing = [f for f in SHARD_FILES if read_text(d, f) is None]
+    if missing:
+        return [f"{sid}: missing {missing}"], {}
+    try:
+        info = json.loads(read_text(d, "shard.json"))
+    except json.JSONDecodeError:
+        return [f"{sid}: shard.json unreadable"], {}
+    want = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
+            "threads": list(threads), "rounds": expect_rounds, "head": head, "base": fz.get("base"),
+            "github_sha": head, "workflow_sha": head, "run_id": run_id, "run_attempt": attempt,
+            "repository": repository}
+    for k, v in want.items():
+        if info.get(k) != v:
+            p.append(f"{sid}: shard.json {k} {info.get(k)!r}, not {v!r}")
+    if not str(info.get("workflow_ref", "")).startswith(f"{repository}/.github/workflows/target-gated-ni.yml@"):
+        p.append(f"{sid}: not run by target-gated-ni.yml ({info.get('workflow_ref')!r})")
+    rustc = read_text(d, "rustc.txt").strip()
+    if not fz.get("ni_rustc") or rustc != fz["ni_rustc"]:
+        p.append(f"{sid}: toolchain {rustc!r}, not the frozen {fz.get('ni_rustc')!r}")
+    try:
+        env = json.loads(read_text(d, "env.json"))
+    except json.JSONDecodeError:
+        env = {}
+    core_cpus = env.get("core_cpus") or []
+    if not (env.get("cpus") == CI_CPUS and env.get("cores") == CI_CORES and len(core_cpus) == CI_CORES
+            and all(len(str(c).split(",")) == 2 for c in core_cpus)):
+        p.append(f"{sid}: the runner is not 4 CPUs on 2 cores, two a core: {env.get('cpus')!r} CPUs, "
+                 f"{env.get('cores')!r} cores, {core_cpus!r}")
+    model = next((l.split(":", 1)[1].strip() for l in read_text(d, "lscpu.txt").splitlines()
+                  if l.startswith("Model name:")), None)
+    if not model or model == TARGET_NAME:
+        p.append(f"{sid}: lscpu's model {model!r} is not shown off the target")
+    try:
+        record = json.loads(read_text(d, "preflight.json"))
+        status = int(read_text(d, "preflight.exit").strip())
+    except (json.JSONDecodeError, ValueError):
+        record, status = None, None
+    verdict, why = svc_target_check.check(record, status)
+    if verdict != "NOT TARGET":
+        p.append(f"{sid}: the predicate's read-back is {verdict}, not NOT TARGET: {why}")
+    digest = read_text(d, "corpus.sha256").split()
+    want_digest = fz.get("corpus_text") if corpus == "text" else CORPUS_SHA256[corpus]
+    if not digest or not want_digest or digest[0] != want_digest:
+        p.append(f"{sid}: corpus digest {digest[:1]}, not the registered {want_digest!r}")
+    rows, unreadable = read_jsonl(os.path.join(d, "runs.jsonl"))
+    if unreadable:
+        p.append(f"{sid}: runs.jsonl lines not JSON: {unreadable[:5]}")
+    by = {}
+    cores = [set(str(c).split(",")) for c in core_cpus]
+    for i, r in enumerate(rows):
+        key = (r.get("corpus"), r.get("threads"), r.get("arm"))
+        q = []
+        if key[0] != corpus or not is_int(key[1]) or key[1] not in threads or key[2] not in CI_ARMS:
+            q.append(f"a cell outside the shard {key}")
+        if r.get("termination") != "success":
+            q.append(f"termination {r.get('termination')!r}")
+        if r.get("err") != "":
+            q.append(f"err {r.get('err')!r}")
+        for k in ("wall", "cpu", "rss_kb"):
+            if not positive(r.get(k)):
+                q.append(f"{k} {r.get(k)!r}")
+        if not (is_int(r.get("round")) and 0 <= r["round"] < expect_rounds):
+            q.append(f"round {r.get('round')!r}")
+        if not (isinstance(r.get("hash"), str) and HASH.fullmatch(r["hash"])):
+            q.append(f"hash {r.get('hash')!r}")
+        placed = str(r.get("cpus", ""))
+        t = key[1]
+        if t == 1 and not re.fullmatch(r"[0-9]+", placed):
+            q.append(f"1 thread placed on {placed!r}")
+        if t == 2 and not (len(placed.split(",")) == 2
+                           and all(sum(c in core for c in placed.split(",")) == 1 for core in cores)):
+            q.append(f"2 threads placed on {placed!r}, not one CPU a core")
+        if t == 4 and placed != "all":
+            q.append(f"4 threads placed on {placed!r}")
+        if q:
+            p.append(f"{sid} row {i}: " + ", ".join(q))
+            continue
+        cell = by.setdefault(key, {})
+        if r["round"] in cell:
+            p.append(f"{sid} row {i}: round {r['round']} repeated")
+        cell[r["round"]] = r
+    if len({r.get("hash") for r in rows}) != 1:
+        p.append(f"{sid}: {len({r.get('hash') for r in rows})} output digests, not one")
+    for t in threads:
+        for arm in CI_ARMS:
+            if sorted(by.get((corpus, t, arm), {})) != list(range(expect_rounds)):
+                p.append(f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
+                         f"not 0..{expect_rounds - 1} once each")
+    return p[:20], by
+
+
+def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batches=NI_BATCHES):
+    """Condition 2 from the sharded workflow's artifacts (registration §2): every registered
+    shard's one measured attempt admitted, each cell estimated from its own shard's runner
+    alone by the batch-means bound, every one of the 42 at most 1.02"""
+    reg = reg or registered()
+    fz = reg["frozen"]
+    v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
+         "failing": [], "shards": {}, "run": man.get("run"), "head": head, "label": man.get("label")}
+    p = v["problems"]
+    for k in ("candidate", "base", "ni_rustc", "corpus_text"):
+        if k not in fz:
+            p.append(f"bench/{FROZEN} names no {k}")
+    if man.get("label") != "qualification":
+        p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
+    if check_git and "candidate" in fz:
+        p += head_problems(head, fz["candidate"])
+    run_id = man.get("run")
+    arts = man.get("artifacts", [])
+    jobs = man.get("jobs") or []
+    if man.get("schema") != "mibz2.tg_ni_manifest/2":
+        p.append(f"manifest schema {man.get('schema')!r}: not one that records the run's whole history")
+    for name in man.get("unlisted") or []:
+        p.append(f"{name}: downloaded but not listed by GitHub")
+    for sid in SHARDS:
+        mine = [a for a in arts if a["shard"] == sid]
+        q, a = history_problems(sid, jobs, mine, head=head, run=run_id)
+        if q:
+            p += q
+            continue
+        d = os.path.join(root, a["name"], sid)
+        for f, h in a["files"].items():
+            path = os.path.join(d, f)
+            if not os.path.isfile(path) or sha256_file(path) != h:
+                p.append(f"{sid}: {f} does not match the manifest's digest")
+        q, by = shard_problems(sid, d, reg, head, run_id, rounds, attempt=a["attempt"])
+        p += q
+        v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
+        if q:
+            continue
+        corpus, threads = SHARDS[sid]
+        for t in threads:
+            h, b = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
+            cell = {"shard": sid}
+            for metric in CI_METRICS + ("rss_kb",):
+                logs = paired_logs(h, b, metric, range(rounds))
+                st = batch_stats(logs, batches)
+                st["diagnostics"] = diagnostics(logs)
+                cell[metric] = st
+            v["cells"][f"{corpus}/{t}"] = cell
+    if p:
+        v["cells"] = {}
+        return v
+    v["valid"] = True
+    for key, cell in v["cells"].items():
+        for metric in CI_METRICS:
+            cell[metric]["pass"] = cell[metric]["upper"] <= MARGIN
+            if not cell[metric]["pass"]:
+                v["failing"].append(f"{key} {metric} upper {cell[metric]['upper']:.4f}")
+        if cell["wall"]["lo95"] > 1.0:
+            v["flags"].append(key)
+        if cell["rss_kb"]["lo95"] > RSS_MARGIN:
+            v["rss_regression"].append(key)
+    v["passes"] = not v["failing"] and not v["rss_regression"]
+    return v
+
+
+def ni_markdown(v):
+    out = ["# The guarded service default under the target-gated route: CI condition 2 (sharded)", ""]
+    if not v["valid"]:
+        out += ["**Not admitted** (INVALID: the route fails; nothing is re-run):"]
+        out += [f"- {p}" for p in v["problems"]]
+        return "\n".join(out) + "\n"
+    out += [
+        f"Head over base, the geometric mean of {NI_ROUNDS} paired rounds on the cell's own runner; the one-sided "
+        f"95% upper bound from {NI_BATCHES} batch means (t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every "
+        "one of the 42 cells (an intersection-union test at level 5%). Lag-1 autocorrelation is reported, not judged.",
+        "",
+        "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall |",
+        "|---|---|--:|--:|--:|--:|--:|--:|",
+    ]
+    for key, c in v["cells"].items():
+        w, cp, r = c["wall"], c["cpu"], c["rss_kb"]
+        mark = lambda x: "" if x["pass"] else " **FAIL**"  # noqa: E731
+        out.append(f"| {key} | {c['shard']} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
+                   f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] "
+                   f"| {w['diagnostics']['lag1']:+.2f} |")
+    out += ["", f"**Condition 2:** {'**met** at every cell' if not v['failing'] else '**not met** (NOT SHOWN): ' + '; '.join(v['failing'])}."]
+    out += [f"**Wall flags (harm signals, §2.6):** {', '.join(v['flags']) or 'none'}."]
+    out += [f"**Peak RSS regression (condition 7):** {', '.join(v['rss_regression']) or 'none'}."]
+    return "\n".join(out) + "\n"
+
+
+def confirm(registered_v, confirmation_v):
+    """The inherited harm-confirmation rule on the one confirmation dispatch (§2.6): each wall
+    flag of the registered run, flagged again (confirmed harm: fails condition 7) or not
+    (unresolved). The two must be distinct dispatches (distinct run ids) of the same head, both
+    valid; the same verdict twice is not a confirmation. It never enters condition 2"""
+    no = {"valid": False, "confirmed": [], "unresolved": []}
+    if not (registered_v.get("valid") and confirmation_v.get("valid")):
+        return dict(no, problems=["a run is invalid"])
+    r1, r2 = registered_v.get("run"), confirmation_v.get("run")
+    if not (is_int(r1) and is_int(r2)) or r1 == r2:
+        return dict(no, problems=[f"not two distinct dispatches: runs {r1!r} and {r2!r}"])
+    if registered_v.get("head") != confirmation_v.get("head"):
+        return dict(no, problems=["the confirmation is of another head"])
+    again = set(confirmation_v["flags"])
+    flags = registered_v["flags"]
+    return {"valid": True, "registered_run": r1, "confirmation_run": r2,
+            "confirmed": [f for f in flags if f in again], "unresolved": [f for f in flags if f not in again]}
+
+
+def write(prefix, v, md):
+    with open(prefix + ".json", "w") as f:
+        json.dump(v, f, indent=1, sort_keys=True)
+    with open(prefix + ".md", "w") as f:
+        f.write(md)
+    print(md)
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    r = sub.add_parser("report")
+    r.add_argument("attempt")
+    r.add_argument("--out", required=True)
+    m = sub.add_parser("manifest")
+    m.add_argument("root")
+    m.add_argument("--artifacts")
+    m.add_argument("--jobs")
+    m.add_argument("--run", type=int)
+    m.add_argument("--attempt", type=int)
+    m.add_argument("--label")
+    n = sub.add_parser("ni")
+    n.add_argument("root")
+    n.add_argument("--manifest", required=True)
+    n.add_argument("--head", required=True)
+    n.add_argument("--out", required=True)
+    f = sub.add_parser("confirm")
+    f.add_argument("registered", nargs=2, metavar=("ROOT", "MANIFEST"))
+    f.add_argument("--confirmation", nargs=2, metavar=("ROOT", "MANIFEST"), required=True)
+    f.add_argument("--head", required=True)
+    f.add_argument("--out", required=True)
+    a = p.parse_args(argv)
+    if a.cmd == "report":
+        files, rows, unreadable = load(a.attempt)
+        v = judge(files, rows, unreadable)
+        write(a.out, v, markdown(v))
+        return 0 if v["valid"] else 1
+    if a.cmd == "manifest":
+        arts = read_jsonl(a.artifacts)[0] if a.artifacts else []
+        jobs = read_jsonl(a.jobs)[0] if a.jobs else []
+        json.dump(manifest(a.root, arts, jobs, a.run, a.attempt, a.label), sys.stdout, indent=1, sort_keys=True)
+        print()
+        return 0
+    if a.cmd == "ni":
+        with open(a.manifest) as fh:
+            man = json.load(fh)
+        v = ni_judge(a.root, man, a.head)
+        write(a.out, v, ni_markdown(v))
+        return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
+    def one(root, mpath):
+        with open(mpath) as fh:
+            return ni_judge(root, json.load(fh), a.head)
+    v = confirm(one(*a.registered), one(*a.confirmation))
+    md = ("# Harm confirmation\n\n" + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. "
+          f"Unresolved: {', '.join(v['unresolved']) or 'none'}.\n" if v["valid"] else "Not admitted: a run is invalid.\n"))
+    write(a.out, v, md)
+    return 0 if v["valid"] and not v["confirmed"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
