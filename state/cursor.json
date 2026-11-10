@@ -1675,11 +1675,15 @@
     },
     {
       "trigger_comment_id": 6760095177,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf"
+      "source_commit": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
+      "report_commit": "ddd3479c789e5dee2da951eff8346a5fb25298a0",
+      "report_path": "state/reports/team-designs-recheck-6760095177/report.md",
+      "disposition": "REVISE both before freeze: four screen admission counterexamples; zero-work walker record completeness; precise prefix and two-tier recommendations.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
