@@ -86,6 +86,7 @@ pub mod crc;
 pub mod mtf;
 pub mod parallel;
 mod read;
+pub mod regseg;
 pub mod rle;
 pub mod stream;
 // (the `trace` feature's; compiled for the tests too, which check its footprint ledger)
