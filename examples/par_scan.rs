@@ -879,15 +879,47 @@ extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
 }
 
+/// A `getrusage`: libc's, or a stand-in that fails, to test the checked path
+type GetRusage = unsafe extern "C" fn(i32, *mut Rusage) -> i32;
+
+/// The stand-in for an injected failure: it writes nothing and returns -1, as a failed call
+/// does (the buffer stays as the caller zeroed it)
+extern "C" fn getrusage_fails(_who: i32, _usage: *mut Rusage) -> i32 {
+    -1
+}
+
+/// The `getrusage` to call: libc's, unless `inject` is `getrusage-fails` (the dry run's
+/// fault injection, from PAR_SCAN_INJECT; the recipe refuses a measured run with it set).
+/// Any other value is refused.
+fn getrusage_for(inject: Option<&str>) -> GetRusage {
+    match inject {
+        None => getrusage,
+        Some("getrusage-fails") => getrusage_fails,
+        Some(other) => panic!("par_scan: PAR_SCAN_INJECT={other:?} is not a known fault"),
+    }
+}
+
 /// This process's CPU time so far (user and system, every thread), in microseconds. A
 /// failed `getrusage` is a panic, never a figure: a cell without its CPU time is no cell.
 fn cpu_micros() -> u64 {
+    static CALL: std::sync::OnceLock<GetRusage> = std::sync::OnceLock::new();
+    let call = *CALL.get_or_init(|| {
+        let inject = std::env::var("PAR_SCAN_INJECT").ok();
+        getrusage_for(inject.as_deref())
+    });
+    cpu_micros_by(call)
+}
+
+/// `cpu_micros` with the given `getrusage`: the checked path itself, which the tests drive
+/// with stand-ins (a failed call, malformed times, known times)
+fn cpu_micros_by(call: GetRusage) -> u64 {
     let mut r = Rusage::default();
-    // SAFETY: RUSAGE_SELF (0) and a valid, exclusive pointer to a zeroed `Rusage`, which
-    // has struct rusage's size and layout on x86_64 and aarch64 Linux (LP64: two
-    // timevals of two i64 each, then 14 longs, 144 bytes; checked below at compile time).
-    // The kernel writes only within it; nothing is retained after the call.
-    let rc = unsafe { getrusage(0, &mut r) };
+    // SAFETY: `call` is libc's getrusage or one of this file's stand-ins, which write within
+    // the buffer or not at all. RUSAGE_SELF (0) and a valid, exclusive pointer to a zeroed
+    // `Rusage`, which has struct rusage's size and layout on x86_64 and aarch64 Linux (LP64:
+    // two timevals of two i64 each, then 14 longs, 144 bytes; checked below at compile
+    // time). The kernel writes only within it; nothing is retained after the call.
+    let rc = unsafe { call(0, &mut r) };
     if rc != 0 {
         panic!(
             "par_scan: getrusage failed ({}): no CPU time to record",
@@ -1963,6 +1995,9 @@ fn main() {
         // (each cell: t workers, a finder or scanner thread and this thread, the joiner,
         // none pinned)
         eprintln!("knee: placement: {}", placement());
+        if let Ok(f) = std::env::var("PAR_SCAN_INJECT") {
+            eprintln!("knee: INJECTED FAULT {f:?}: not a measurement");
+        }
         return cmd_knee(&data, &want, rounds, &workers);
     }
     println!(
@@ -2479,6 +2514,70 @@ mod tests {
             grew >= burnt,
             "the process's CPU grew {grew} us; the thread burnt {burnt} us"
         );
+    }
+
+    /// A stand-in that writes known, well-formed times and succeeds
+    extern "C" fn getrusage_known(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: `usage` is `cpu_micros_by`'s live, exclusive buffer
+        let r = unsafe { &mut *usage };
+        r.utime = [1, 500];
+        r.stime = [2, 250];
+        0
+    }
+
+    /// Stand-ins that succeed but write malformed times: microseconds out of range, and
+    /// negative seconds
+    extern "C" fn getrusage_bad_micros(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: as above
+        unsafe { (*usage).utime = [0, 2_000_000] };
+        0
+    }
+    extern "C" fn getrusage_bad_secs(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: as above
+        unsafe { (*usage).stime = [-1, 0] };
+        0
+    }
+
+    /// M28 (the B5 review): a failed getrusage must be a panic, never a CPU figure. Without
+    /// the return code's check, the zeroed buffer reads as 0 µs and this test fails. Runs
+    /// under Miri too (no foreign call: the stand-in is Rust).
+    #[test]
+    #[should_panic(expected = "getrusage failed")]
+    fn miri_getrusage_failure_is_a_panic() {
+        let got = cpu_micros_by(getrusage_fails);
+        // (reached only if the failure went unnoticed)
+        eprintln!("a failed getrusage gave {got} us");
+    }
+
+    /// The injection the recipe's dry run uses selects the same failing call
+    #[test]
+    #[should_panic(expected = "getrusage failed")]
+    fn miri_getrusage_injected_failure_is_a_panic() {
+        cpu_micros_by(getrusage_for(Some("getrusage-fails")));
+    }
+
+    #[test]
+    #[should_panic(expected = "not a known fault")]
+    fn miri_getrusage_unknown_injection_refused() {
+        getrusage_for(Some("something-else"));
+    }
+
+    #[test]
+    #[should_panic(expected = "getrusage gave")]
+    fn miri_getrusage_bad_micros_is_a_panic() {
+        cpu_micros_by(getrusage_bad_micros);
+    }
+
+    #[test]
+    #[should_panic(expected = "getrusage gave")]
+    fn miri_getrusage_bad_secs_is_a_panic() {
+        cpu_micros_by(getrusage_bad_secs);
+    }
+
+    /// The success path: user and system time summed, in microseconds
+    #[test]
+    fn miri_getrusage_known_times() {
+        assert_eq!(cpu_micros_by(getrusage_known), 3_000_750);
     }
 
     /// The FFI boundary: getrusage writes a whole `Rusage` and the times only grow.

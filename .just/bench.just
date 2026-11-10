@@ -937,8 +937,12 @@ bench-pipelined-default DRY="" CORPUS="":
 # anchoring, the checks, the cells, the reports and the bundle each run under a deadline in a
 # process group of their own (bench/bounded.py): past it, the whole group gets TERM, then KILL
 # 30 s later whatever its leader's state, and the group must be empty before the recipe goes
-# on. A step past its deadline makes the run INVALID; what it wrote is bundled. The small
-# queries (git, lscpu, taskset, reading /proc) are not bounded.
+# on. A step past its deadline, or whose group can't be stopped, makes the run INVALID; what it
+# wrote is bundled. The small queries (git, lscpu, taskset, reading /proc) are not bounded.
+# The steps' deadlines sum to 18,600 s (5 h 10 min) before the graces, cleanup and the small
+# queries: a ceiling, not an expected duration, and not a bound on the whole run. A bundle
+# that fails or passes its deadline leaves the outcome INVALID and no .tar.gz to submit
+# (bench/par_scan_finish.sh; exit 2).
 #   just submit bench-par-scan
 # A DRY value is the untimed check of the recipe itself: one round, and a check that the
 # deadline stops a stalled child's group, a grandchild that ignores TERM under a parent that
@@ -962,11 +966,16 @@ bench-par-scan DRY="":
     deadline() { [ "$1" -eq 124 ] || [ "$1" -eq 125 ]; }
     # the outcome decides the exit, whatever the last command's status
     outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    # finalisation (bench/par_scan_finish.sh): the outcome written, then the bundle under its
+    # deadline. If the bundle fails or is late, the outcome is rewritten INVALID, no .tar.gz is
+    # left for `just submit`, and the directory is kept: exit 2
     finish() {
-      echo "$outcome" > "$W/outcome.txt"
       echo "bench-par-scan: OUTCOME: $outcome"
       rm -rf "$W/inputs"
-      bounded 600 bash bench/bundle.sh "$W" || { echo "bench-par-scan: bundling failed"; exit 2; }
+      local fst=0
+      bash bench/par_scan_finish.sh "$W" "$outcome" 600 bash bench/bundle.sh "$W" || fst=$?
+      outcome=$(cat "$W/outcome.txt")
+      [ "$fst" -eq 0 ] || { echo "bench-par-scan: OUTCOME: $outcome"; exit 2; }
       case "$outcome" in
         VALID*|DRY*) exit 0 ;;
         INVALID*|REFUSED*) exit 1 ;;
@@ -976,7 +985,8 @@ bench-par-scan DRY="":
     trap finish EXIT
     fail() { outcome="REFUSED: $*"; echo "bench-par-scan: $*"; exit 1; }
     # a step that passed its deadline: the registered INVALID, whatever step it was
-    late() { outcome="INVALID: $1 passed its deadline ($2)"; echo "bench-par-scan: $1 passed its deadline"; exit 1; }
+    # (124: past its deadline; 125: its process group could not be stopped and reaped)
+    late() { outcome="INVALID: $1 passed its deadline or could not be stopped (exit $st; $2)"; echo "bench-par-scan: $outcome"; exit 1; }
     ROUNDS=5
     WORKERS=1,2,4,6,8,10
     dry="{{DRY}}"
@@ -984,6 +994,16 @@ bench-par-scan DRY="":
       ROUNDS=1
       echo "bench-par-scan: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
     fi
+    # (the harness's fault injection is the dry run's alone, and only where it sets it below)
+    [ -z "${PAR_SCAN_INJECT:-}" ] || fail "PAR_SCAN_INJECT is set ($PAR_SCAN_INJECT): a measured run takes no injected fault"
+    unset PAR_SCAN_INJECT
+    # a cell run's failure, classified: nothing if it succeeded, else the registered INVALID
+    knee_outcome() {
+      local st=$1 name=$2 log=$3
+      [ "$st" -eq 0 ] && return 0
+      if deadline "$st"; then echo "INVALID: the harness on $name passed its deadline or could not be stopped (exit $st; $log)"
+      else echo "INVALID: the harness failed on $name ($log)"; fi
+    }
     for tool in python3 git cargo; do
       command -v "$tool" > /dev/null || fail "needs $tool on PATH"
     done
@@ -997,7 +1017,8 @@ bench-par-scan DRY="":
     measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml
       examples/par_scan.rs examples/ab.rs tests/common bench/bundle.sh bench/corpus.sh
       bench/wikidata.json bench/wikidata.py bench/par_scan_knee.py bench/par_scan_inputs.py
-      bench/bounded.py .just/bench.just docs/journal/2026-11-10-parallel-scan.md)
+      bench/bounded.py bench/par_scan_finish.sh .just/bench.just
+      docs/journal/2026-11-10-parallel-scan.md)
     [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
     [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
     git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
@@ -1064,6 +1085,19 @@ bench-par-scan DRY="":
     deadline "$st" && late "the inputs' anchoring" "console.log"
     [ "$st" -eq 0 ] || fail "the inputs are not as recorded (console.log)"
     cat "$W/inputs.json"
+    if [ -n "$dry" ]; then
+      # a failed getrusage in a cell (injected: the harness's stand-in that returns -1 and
+      # writes nothing): the cell panics, no row is written, and the cells' classification
+      # below makes it INVALID; its log is kept in the attempt
+      st=0
+      PAR_SCAN_INJECT=getrusage-fails bounded 300 "$P" "$I/records.bz2" knee 1 1 \
+        > "$W/injected-getrusage.jsonl" 2> "$W/injected-getrusage.log" || st=$?
+      o=$(knee_outcome "$st" "records, with an injected getrusage failure" injected-getrusage.log)
+      case "$o" in INVALID*) ;; *) fail "DRY: an injected getrusage failure was not INVALID (exit $st)" ;; esac
+      grep -q 'getrusage failed' "$W/injected-getrusage.log" || fail "DRY: the injected failure's panic is not in its log"
+      [ ! -s "$W/injected-getrusage.jsonl" ] || fail "DRY: a cell was recorded despite a failed getrusage"
+      echo "DRY: an injected getrusage failure: exit $st, no cell recorded, classified: $o" | tee "$W/injected-getrusage.txt"
+    fi
     expected() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["inputs"][sys.argv[2]]["expected_bytes"])' "$W/inputs.json" "$1"; }
     readings=""
     for name in wikidata wikidata-l1 records; do
@@ -1079,8 +1113,8 @@ bench-par-scan DRY="":
       st=0; bounded 1800 "$P" "$I/$name.bz2" knee "$ROUNDS" "$WORKERS" > "$W/runs-$name.jsonl" 2> "$W/harness-$name.log" || st=$?
       if [ "$st" -ne 0 ]; then
         tail -5 "$W/harness-$name.log"
-        deadline "$st" && late "the harness on $name" "harness-$name.log"
-        outcome="INVALID: the harness failed on $name (harness-$name.log)"
+        outcome=$(knee_outcome "$st" "$name" "harness-$name.log")
+        echo "bench-par-scan: $outcome"
         exit 1
       fi
       st=0

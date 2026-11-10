@@ -1,8 +1,9 @@
 # 2026-11-10: The scan without the scanner: found by magic, accepted by chain (#10 reopened)
 
 **Status: an exact prototype, a bound, and a registered diagnostic, revised after the
-Researcher's REVISE (#145 comment 6755860961; §8) and its re-review (#145 comment 6756608043;
-§9), and re-frozen. No workstation data yet.**
+Researcher's REVISE (#145 comment 6755860961; §8), its re-review (#145 comment 6756608043; §9)
+and the Guardian's D079 with the Researcher's final review (§10), and re-frozen. No
+workstation data yet.**
 - **The design.** One thread finds every bit where a block or end-of-stream magic occurs. Each
   worker reads and decodes the block at a candidate itself, Huffman included. The caller's thread
   walks the chain exactly as `stream::Scanner` does, and uses a worker's result only for the
@@ -192,6 +193,14 @@ in memory.
   under a deadline in a process group of its own (`bench/bounded.py`). Past it the group is
   stopped and must be empty, and the run is INVALID. The small queries (git, lscpu, taskset,
   reading /proc) are not bounded.
+- **Runtime and memory, scoped.** The steps' deadlines (§9.3) sum to 18,600 s (5 h 10 min)
+  before the graces, cleanup and the small queries: 3,600 each for the corpus's preparation and
+  the build, 300 for the fault tests, 600 for the inputs' generation, 900 for their anchoring,
+  3 × 900 for the checks, 3 × 1,800 for the cells, 3 × 300 for the reports and 600 for the
+  bundle. That is a ceiling, not an expected duration, and not a bound on the whole run. The
+  dry runs' peak resident memory (about 0.6, 0.5 and 0.2 GB for the three inputs' cells) is an
+  observation on the shared VM, not a cap; no memory threshold is set. The inputs and the grid
+  are fixed, and nothing here extends to other files.
 - **Before the cells,** `par_scan FILE check` on each input: `mibz2::decode`'s bytes equal to
   libbzip2's, and every arm's bytes equal to `mibz2::decode`'s, or the run is INVALID. It also
   serves as the warm-up.
@@ -421,12 +430,13 @@ before #320, "new" with it:
 | M24, M25 | `getrusage` `who` = THREAD, CHILDREN | **pass** | killed |
 | M26 | `Rusage` 8 bytes short | fails to build (the compile-time assert) | fails to build |
 | M27 | timeval seconds misread (× 1e3) | **pass** | killed (the test now burns past 1 s) |
-| M28 | `getrusage`'s return unchecked | pass | **survivor** |
+| M28 | `getrusage`'s return unchecked | pass | survivor in #320; **killed** since §10 (an injected failure) |
 | M29 | both load bounds loosened (the last load 1 byte past, output unchanged) | **pass**, Miri too | killed: SIGSEGV at the guard page; and by Miri on the new length subset |
 
-- **M28, a documented survivor:** a valid `getrusage` call never fails, so its check can't be
-  exercised without fault injection. The defensive check is kept: a failure panics, and the
-  run is INVALID.
+- **M28:** a survivor in #320, since a valid `getrusage` call never fails. The Guardian's D079
+  held that it was not equivalent to the promised failure handling (without the check a failed
+  call reads as 0 µs), and it is now killed by an injected failure through the checked path
+  itself (§10.1).
 - **Two gaps in this entry's own tests, found by it:**
   - M29: the old Miri length subset (0, 5–7, 39–41, 45, 70, 96) never reached the lengths
     where a loosened bound reads past the end, so a 1-byte overread passed under Miri.
@@ -520,3 +530,89 @@ residual liveness holes
 - The memory knee at level 9 is stated as a prediction (§4).
 - **Placement:** `cpu.max` is the file at the mounted path, not necessarily the effective
   quota of a nested cgroup. The recipe now records `/proc/self/cgroup` beside it.
+
+## 10. Revised after D079 and the Researcher's final review
+
+The Guardian's D079 (#145 comment 6757058587;
+[decisions, d079](https://github.com/lmmx/mibz2/blob/c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed/state/decisions.md))
+accepted the B5 methods and held unattended queueing on three gaps. The Researcher's final
+review (#145 comment 6757069602) made the supervisor's repair precise.
+
+### 10.1 M28 killed (checked)
+
+- **The seam:** `cpu_micros` now calls `cpu_micros_by(call)`, which holds the whole checked
+  path: the zeroed buffer, the call, the return code's check and the timevals' checks. The
+  measured binary passes libc's `getrusage`. The stand-in `getrusage_fails` returns −1 and
+  writes nothing, as a failed call does.
+- **The tests** drive the checked path itself, never a copy of it:
+  - `miri_getrusage_failure_is_a_panic`: the stand-in must make it panic;
+  - `miri_getrusage_injected_failure_is_a_panic`: the same, through the dry run's injection;
+  - `miri_getrusage_unknown_injection_refused`;
+  - `miri_getrusage_bad_micros_is_a_panic` and `miri_getrusage_bad_secs_is_a_panic`: malformed
+    times;
+  - `miri_getrusage_known_times`: the success path, 3,000,750 µs from known times.
+
+  They pass natively and under Miri, where the stand-ins are Rust and no foreign call is made.
+- **M28 applied** (the check removed): both failure tests fail, natively and under Miri ("test
+  did not panic as expected"): killed. The known-times test also kills M27 directly.
+- **The recipe:** the dry run runs a cell with `PAR_SCAN_INJECT=getrusage-fails` (the harness's
+  only fault injection, read once; any other value is refused). It requires:
+  - the harness's exit is nonzero;
+  - no cell row is written;
+  - the panic is in the log;
+  - the cells' own classification, `knee_outcome`, which the measured loop also uses, makes it
+    INVALID.
+
+  The failed attempt's log is kept in the bundle. A measured run is REFUSED if
+  `PAR_SCAN_INJECT` is set, and the variable is unset for every other step.
+- **B6:** its missed-target obligation remains as written.
+
+### 10.2 The supervisor's failure paths (checked)
+
+- **The defect (D079, reproduced here):** after a failed `stop_group`, `bench/bounded.py`
+  called an unbounded `child.wait()` before it could return 125. The signal path discarded the
+  cleanup's result and returned 143.
+- **The repair:** the cleanup's result is checked before any wait on the command. A failed
+  cleanup names the survivors and returns 125 at once. The command's reaping is bounded (REAP,
+  10 s) and returns 125 if it times out. Both apply on the deadline path, after a normal exit,
+  and after a signal.
+- **The promise is narrower:** a bounded attempt at cleanup and a bounded refusal. A process
+  blocked in the kernel may outlive any user-space supervisor, and the caller must not carry on
+  after 125.
+- **The tests** (`bench/test_bounded.py`, 10 in all, mocking `stop_group` and the child's wait
+  as the Researcher's probe did):
+
+  | test | the old supervisor | now |
+  |---|---|---|
+  | failed cleanup, direct child unreaped, at the deadline | **hangs** (killed at 30 s) | 125 within 10 s |
+  | the command can't be reaped (a bounded wait times out) | **an unbounded wait** (the mock refuses it) | 125 |
+  | failed cleanup, direct child unreaped, after a signal | **hangs** (killed at 30 s) | 125 within 10 s |
+  | the direct child exited, descendants survive, at the deadline | 125 | 125 |
+  | the direct child exited, descendants survive, after a signal | **143** | 125 |
+  | a signal with a clean stop (a TERM-ignoring grandchild) | 143 | 143, the group gone |
+
+  The four tests of §9.2 still pass.
+
+### 10.3 A consistent outcome when finalisation fails (checked)
+
+- **The defect (D079):** `finish` wrote `outcome.txt` before bundling, so a bundle that timed
+  out exited 2 but left VALID or DRY in it.
+- **The repair:** `bench/par_scan_finish.sh` writes the outcome, then runs the bundle under
+  `bounded.py`. If the bundle fails or is late:
+  - `outcome.txt` is rewritten `INVALID: finalisation failed: …`, naming the outcome it
+    replaces;
+  - `FINALISATION-FAILED.txt` records the same;
+  - any `DIR.tar.gz`, or its `.tmp`, is renamed `DIR.tar.gz.failed`;
+  - the directory is kept as the failure's record, and the recipe exits 2.
+- **Submission refuses it:** `just submit` takes the one new `target/*/*.tar.gz` and refuses
+  when there are none; `bench/submit.sh` refuses a file that isn't a `.tar.gz`.
+- **The tests** (`bench/test_par_scan_finish.py`):
+  - success keeps the outcome and makes the bundle;
+  - a bundle timeout, after a VALID and after a DRY outcome, leaves INVALID and no `.tar.gz`;
+  - a tarball written before a late failure is set aside, and `submit.sh` refuses it;
+  - a failing bundler leaves INVALID.
+- **Shared files:** `submit.just` and `bench/submit.sh` are not changed.
+
+### 10.4 Runtime and memory
+
+The ceiling sum and the scope of the memory figures are stated in §5.

@@ -1,5 +1,6 @@
-"""Run a command under a deadline, in a process group of its own, and leave nothing of that group
-running when it returns (bench-par-scan; docs/journal/2026-11-10-parallel-scan.md, section 8.1).
+"""Run a command under a deadline, in a process group of its own; then make a bounded attempt to
+stop whatever of that group is left, and refuse, within a bounded time, if it cannot
+(bench-par-scan; docs/journal/2026-11-10-parallel-scan.md, sections 9 and 10).
 
     python3 bench/bounded.py SECS GRACE COMMAND [ARG...]
 
@@ -10,12 +11,19 @@ running when it returns (bench-par-scan; docs/journal/2026-11-10-parallel-scan.m
   exits on it, is still killed.
 - Whenever the command exits, before the deadline or after, any of its group still running is
   stopped the same way (TERM, GRACE, KILL).
-- Before returning, it waits until no live process is left in the group (a killed process not
-  yet reaped counts as gone) and fails loudly if one is.
+- After the KILL it waits, for at most REAP seconds, for no live process to be left in the
+  group (a killed process not yet reaped counts as gone).
 - A TERM, INT or HUP sent to this supervisor stops the group the same way, then exits 143.
+- The cleanup's result is checked before any wait on the command, and every wait is bounded.
+  If the group is not empty, or the command cannot be reaped, within REAP seconds of the KILL,
+  it names the survivors and returns 125, on every path: the deadline, a normal exit, a signal
+  (a failed cleanup is never reported as 124 or 143). It does not promise that every process
+  disappears: a process blocked in the kernel may outlive any user-space supervisor. It
+  promises a bounded attempt and a bounded refusal, and the caller must not carry on after 125.
 
 Exit: the command's own status if it finished before the deadline (128 + N for a signal N);
-124 if the deadline passed; 125 if the group could not be emptied.
+124 if the deadline passed; 143 if this supervisor was signalled; 125 if the group could not
+be emptied or the command not reaped (whatever else happened).
 
 Out of scope: a descendant that starts a session of its own leaves the group, and with it this
 supervision. The diagnostic's children do not do that.
@@ -28,6 +36,8 @@ import sys
 import time
 
 TIMED_OUT, NOT_EMPTIED, SIGNALLED = 124, 125, 143
+# seconds to wait for the group to empty, and for the command to be reaped, after the KILL
+REAP = 10.0
 
 
 def say(msg: str) -> None:
@@ -71,7 +81,7 @@ def stop_group(child: subprocess.Popen, pgid: int, grace: float) -> bool:
             break
         time.sleep(0.05)
     signal_group(pgid, signal.SIGKILL)
-    end = time.monotonic() + 10
+    end = time.monotonic() + REAP
     while time.monotonic() < end:
         child.poll()
         if not members(pgid):
@@ -99,21 +109,31 @@ def run(secs: float, grace: float, argv: list[str]) -> int:
         time.sleep(0.05)
     if stopping["signal"] is not None:
         say(f"stopped by signal {stopping['signal']}: stopping the group")
-        stop_group(child, pgid, grace)
-        child.wait()
-        return SIGNALLED
+        emptied = stop_group(child, pgid, grace)
+        return finish(child, pgid, emptied, SIGNALLED)
     timed_out = status is None
     if timed_out:
         say(f"{argv[0]} passed its deadline of {secs:g} s: stopping its process group")
     elif members(pgid):
         say(f"{argv[0]} exited and left processes in its group: stopping them")
     emptied = stop_group(child, pgid, grace) if timed_out or members(pgid) else True
-    rc = child.wait()
+    return finish(child, pgid, emptied, TIMED_OUT if timed_out else None)
+
+
+def finish(child: subprocess.Popen, pgid: int, emptied: bool, code: int | None) -> int:
+    """The exit, after the group was stopped (or needed no stopping): 125 if it isn't empty or
+    the command can't be reaped within REAP seconds, never a wait without end; else `code`,
+    or the command's own status where `code` is None."""
     if not emptied:
         say(f"process group {pgid} still has live members {members(pgid)} after KILL")
         return NOT_EMPTIED
-    if timed_out:
-        return TIMED_OUT
+    try:
+        rc = child.wait(timeout=REAP)
+    except subprocess.TimeoutExpired:
+        say(f"the command (pid {child.pid}) could not be reaped within {REAP:g} s of KILL")
+        return NOT_EMPTIED
+    if code is not None:
+        return code
     return rc if rc >= 0 else 128 - rc
 
 
