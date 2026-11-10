@@ -1,0 +1,170 @@
+{
+ "onebyte/1/wall": {
+  "size": 0.0536,
+  "block_var_max_over_min": 11.462488949378354
+ },
+ "onebyte/1/cpu": {
+  "size": 0.05165,
+  "block_var_max_over_min": 11.449182379009692
+ },
+ "onebyte/2/wall": {
+  "size": 0.0503,
+  "block_var_max_over_min": 5.30493466945077
+ },
+ "onebyte/2/cpu": {
+  "size": 0.0501,
+  "block_var_max_over_min": 5.608385921056383
+ },
+ "onebyte/4/wall": {
+  "size": 0.0487,
+  "block_var_max_over_min": 9.397226239358575
+ },
+ "onebyte/4/cpu": {
+  "size": 0.04925,
+  "block_var_max_over_min": 11.89878411983379
+ },
+ "pattern/1/wall": {
+  "size": 0.0455,
+  "block_var_max_over_min": 11.841925644400586
+ },
+ "pattern/1/cpu": {
+  "size": 0.0479,
+  "block_var_max_over_min": 14.340069088208102
+ },
+ "pattern/2/wall": {
+  "size": 0.0506,
+  "block_var_max_over_min": 3.4260927215379646
+ },
+ "pattern/2/cpu": {
+  "size": 0.04835,
+  "block_var_max_over_min": 5.506725296845579
+ },
+ "pattern/4/wall": {
+  "size": 0.04915,
+  "block_var_max_over_min": 3.477516505422652
+ },
+ "pattern/4/cpu": {
+  "size": 0.0522,
+  "block_var_max_over_min": 4.137218671427688
+ },
+ "random/1/wall": {
+  "size": 0.049,
+  "block_var_max_over_min": 38.37634161121923
+ },
+ "random/1/cpu": {
+  "size": 0.0494,
+  "block_var_max_over_min": 42.92032113223422
+ },
+ "random/2/wall": {
+  "size": 0.0471,
+  "block_var_max_over_min": 4.947391076232051
+ },
+ "random/2/cpu": {
+  "size": 0.04715,
+  "block_var_max_over_min": 14.297882722020336
+ },
+ "random/4/wall": {
+  "size": 0.05265,
+  "block_var_max_over_min": 2.330916805312711
+ },
+ "random/4/cpu": {
+  "size": 0.0446,
+  "block_var_max_over_min": 6.6576024870295685
+ },
+ "records/1/wall": {
+  "size": 0.0518,
+  "block_var_max_over_min": 13.743720731351026
+ },
+ "records/1/cpu": {
+  "size": 0.04985,
+  "block_var_max_over_min": 14.156087021618907
+ },
+ "records/2/wall": {
+  "size": 0.0525,
+  "block_var_max_over_min": 9.134571591951437
+ },
+ "records/2/cpu": {
+  "size": 0.05215,
+  "block_var_max_over_min": 14.867841604354417
+ },
+ "records/4/wall": {
+  "size": 0.0473,
+  "block_var_max_over_min": 5.136918885198883
+ },
+ "records/4/cpu": {
+  "size": 0.05155,
+  "block_var_max_over_min": 7.471019634177023
+ },
+ "runs/1/wall": {
+  "size": 0.0535,
+  "block_var_max_over_min": 16.84257292926352
+ },
+ "runs/1/cpu": {
+  "size": 0.05575,
+  "block_var_max_over_min": 18.746595369031365
+ },
+ "runs/2/wall": {
+  "size": 0.05295,
+  "block_var_max_over_min": 7.344307966496226
+ },
+ "runs/2/cpu": {
+  "size": 0.05075,
+  "block_var_max_over_min": 4.264520862773771
+ },
+ "runs/4/wall": {
+  "size": 0.0506,
+  "block_var_max_over_min": 2.4546051461192193
+ },
+ "runs/4/cpu": {
+  "size": 0.05015,
+  "block_var_max_over_min": 2.562064236761969
+ },
+ "text/1/wall": {
+  "size": 0.051,
+  "block_var_max_over_min": 7.670312395255183
+ },
+ "text/1/cpu": {
+  "size": 0.0491,
+  "block_var_max_over_min": 7.379171797143216
+ },
+ "text/2/wall": {
+  "size": 0.04775,
+  "block_var_max_over_min": 6.569923570176458
+ },
+ "text/2/cpu": {
+  "size": 0.0498,
+  "block_var_max_over_min": 6.230080906194453
+ },
+ "text/4/wall": {
+  "size": 0.0533,
+  "block_var_max_over_min": 2.74561759713304
+ },
+ "text/4/cpu": {
+  "size": 0.0462,
+  "block_var_max_over_min": 3.0314709024670363
+ },
+ "wikidata/1/wall": {
+  "size": 0.05185,
+  "block_var_max_over_min": 6.955098278324655
+ },
+ "wikidata/1/cpu": {
+  "size": 0.04885,
+  "block_var_max_over_min": 6.968550781503885
+ },
+ "wikidata/2/wall": {
+  "size": 0.04725,
+  "block_var_max_over_min": 10.036109509663179
+ },
+ "wikidata/2/cpu": {
+  "size": 0.0457,
+  "block_var_max_over_min": 13.437396138991396
+ },
+ "wikidata/4/wall": {
+  "size": 0.0488,
+  "block_var_max_over_min": 10.970035790831519
+ },
+ "wikidata/4/cpu": {
+  "size": 0.0515,
+  "block_var_max_over_min": 5.720982156725108
+ }
+}

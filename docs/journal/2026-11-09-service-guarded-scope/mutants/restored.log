@@ -1,0 +1,18 @@
+# cargo test --lib -- service_unwind_tests
+# src/parallel.rs sha256 50f322da3395ba0ebe21e363e6b9e1ba4562781adb438c54c0ac246de7270333
+# exit 0
+
+running 7 tests
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... ok
+test parallel::service_unwind_tests::miri_outer_after_job ... ok
+test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+test parallel::service_unwind_tests::miri_outer_parked ... ok
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... ok
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... ok
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.25s
+
+   Compiling mibz2 v0.2.6 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-svc-guarded)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.09s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-ef0dd7d62c41c063)

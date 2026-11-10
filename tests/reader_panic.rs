@@ -2,11 +2,13 @@
 //! and its guard cancels the decode, so the reader's read fails (an `io::Error` saying the
 //! input's reader panicked) instead of waiting for ever for input that will never come.
 //! At once, after a few bytes, half way and with blocks in flight, on each parallel reader
-//! (production's workers, the plain teams, a pipelined team), all under a watchdog.
+//! (production's workers, the plain teams, a pipelined team, the service core: explicitly,
+//! and as `BzReader::parallel`'s default at 10 threads on its target, by its own dispatch),
+//! all under a watchdog.
 
 mod common;
 use common::*;
-use mibz2::parallel::{Plan, PIPELINED_LEVERS};
+use mibz2::parallel::{with_machine, Machine, Plan, PIPELINED_LEVERS};
 use mibz2::{BzReader, Kernels};
 use std::io::Read;
 use std::time::Duration;
@@ -53,7 +55,13 @@ fn a_panicking_source() {
     assert!(big.len() > 5_000_000);
     let cases = [(&z, 0), (&z, 10), (&z, z.len() / 2), (&big, 5_000_000)];
     for (z, ok) in cases {
-        for reader in ["workers", "teams", "pipelined"] {
+        for reader in [
+            "workers",
+            "teams",
+            "pipelined",
+            "service",
+            "service default",
+        ] {
             let z = z.clone();
             watchdog(&format!("panic at {ok}, {reader}"), move || {
                 let src = Panicky { data: z, at: 0, ok };
@@ -63,7 +71,20 @@ fn a_panicking_source() {
                     "teams" => {
                         BzReader::parallel_planned(src, Plan::Teams { teams: 2, k: 2 }, 8, k)
                     }
-                    _ => BzReader::parallel_pipelined_levers(src, 1, 3, 4, k, PIPELINED_LEVERS),
+                    "pipelined" => {
+                        BzReader::parallel_pipelined_levers(src, 1, 3, 4, k, PIPELINED_LEVERS)
+                    }
+                    "service" => BzReader::parallel_service(src, 2, 3, 2, 8, k),
+                    _ => {
+                        let r =
+                            with_machine(Machine::service_target(), || BzReader::parallel(src, 10));
+                        let dec = r.parallel_decoder().unwrap();
+                        let on_target = cfg!(all(target_os = "linux", target_arch = "x86_64"))
+                            && k.avx2
+                            && k.clmul;
+                        assert_eq!(dec.is_service(), on_target, "{reader}");
+                        r
+                    }
                 };
                 let mut out = Vec::new();
                 let e = r.read_to_end(&mut out).unwrap_err();

@@ -87,6 +87,19 @@ impl<R: Read> BzReader<R> {
     }
 }
 
+impl<R> BzReader<R> {
+    /// Testing: the parallel decoder this reader runs (None for a sequential reader), so a
+    /// test can see which decoder `parallel`/`parallel_with` built (`is_service`,
+    /// `is_pipelined`, `threads`, `window`)
+    #[doc(hidden)]
+    pub fn parallel_decoder(&self) -> Option<&StreamDecoder> {
+        match &self.inner {
+            Inner::Par(p) => Some(&p.dec),
+            Inner::Seq(_) => None,
+        }
+    }
+}
+
 impl<R: Read + Send + 'static> BzReader<R> {
     /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
     /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams
@@ -140,6 +153,24 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(
             r,
             StreamDecoder::pipelined_levers(teams, k, slots, kernels, levers),
+        )
+    }
+
+    /// Research, opt-in: the service core (`StreamDecoder::service`): `teams` teams of `k`
+    /// that only build and walk, and `services` service workers doing every block's serial
+    /// stages, with `slots` blocks in flight and the kernels given
+    #[doc(hidden)]
+    pub fn parallel_service(
+        r: R,
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::service(teams, k, services, slots, kernels),
         )
     }
 

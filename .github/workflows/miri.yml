@@ -6,7 +6,10 @@ name: Miri
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. And the pipelined worker's recovery from a run that panics outside its stages
 # (parallel::unwind_tests::miri_*, Guardian D047): the unwind through the pool, the held
-# blocks' retirement, the team's reset and the reader, on tiny blocks. Only on changes to
+# blocks' retirement, the team's reset and the reader, on tiny blocks. And the service
+# core's hub (parallel::service_tests::miri_*, D045/D053/D057's fixtures) and its team run
+# (coop::tests::miri_team_run_and_its_panic), and its outer unwind's guard-and-fail
+# (parallel::service_unwind_tests::miri_outer_*, Guardian D067). Only on changes to
 # the walks, the pool, the parallel decoder or its reader.
 on:
   pull_request:
@@ -54,5 +57,9 @@ jobs:
         run: |
           cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+          grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt
+          grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt
+          grep -q '^coop::tests::miri_team_run_and_its_panic' miri-list.txt
+          grep -q '^parallel::service_unwind_tests::miri_outer_parked' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_

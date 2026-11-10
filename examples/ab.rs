@@ -32,14 +32,48 @@
 //!                      is spawned and after it exits, with their timestamps. The child is
 //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
 //!                      cleared (bench 3.5.0; recorded and never judged)
+//!     --hold-cpu N|auto
+//!                      hold one CPU busy around each run (bench 3.8.0; off by default, and
+//!                      for workstation runs: an idle machine starts a decode in a slow mode,
+//!                      cold-start/20261110T102700Z): a spinner, a thread of this process
+//!                      pinned to CPU N, started and seen running there before the settle
+//!                      gate, held through the decode until the child is reaped, then stopped
+//!                      and joined (on an error or a panic too; as a thread it dies with this
+//!                      process). `auto` takes the last CPU of the last core the run's CPUs
+//!                      leave free, else a CPU the run doesn't use (an SMT sibling), else
+//!                      the last CPU (`pick_hold`); `overlap` records whether its core shares
+//!                      a CPU with the run's (always so for an unpinned run). The gate and
+//!                      `others_busy` take the spinner's own CPU off (its raw readings kept),
+//!                      and its CPU is never the decoder's. Never passed to the child, so an
+//!                      ARM@EXE build without the option runs as before. Recorded as
+//!                      `held_spinner`: {cpu, auto, overlap, decoder_cpus, owner, cpu_s,
+//!                      pre_busy_raw, pre_one_raw, others_busy_raw}
+//!     --hold-max-threads T
+//!                      hold only around runs of at most T threads (default: every run)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
-//! ab child ARM THREADS FILE          one run (what `run` spawns)
+//! ab child ARM THREADS FILE [--hold-cpu N|auto]
+//!                                    one run (what `run` spawns, never with the option).
+//!                                    `--hold-cpu`, for a driver spawning the child itself:
+//!                                    the child holds its own spinner thread, started before
+//!                                    the sampler and the counters and stopped before its CPU
+//!                                    is read, that CPU taken off the decode's and left out
+//!                                    of the per-thread split; `auto` picks against the CPUs
+//!                                    the child may run on (`held_spinner`, owner `child`)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
 //!                                    quota, and whether the run-queue counter counts
 //!                                    (and `machine`: the cpufreq driver, governor, EPP,
-//!                                    turbo, and what perf can count)
+//!                                    turbo, and what perf can count). Active: it spins
+//!                                    2 x CPUs threads for 0.3 s and opens perf counters
+//! ab env --facts                     passive: the same machine facts read from procfs,
+//!                                    sysfs and sched_getaffinity alone, no spin thread and
+//!                                    no perf counter opened; the CPUs allowed (the
+//!                                    affinity and Cpus_allowed_list, which must agree), the
+//!                                    cores, and the CPU quota of the process's effective
+//!                                    cgroup hierarchy, every ancestor read (v1 or v2):
+//!                                    established unlimited, a limit, or unknown with why
+//!                                    (`facts`; bench 3.5.0)
 //! ab settle [--seconds N] [--interval S]
 //!                                    untimed: sample the clock and the package temperature
 //!                                    until they hold within a registered tolerance or N
@@ -155,6 +189,8 @@ struct Rusage {
 extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
     fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+    fn sched_getaffinity(pid: i32, size: usize, mask: *mut u64) -> i32;
+    fn sched_getcpu() -> i32;
 }
 
 /// (CPU seconds, peak RSS in KiB) of this process (who 0), its waited-for children (-1)
@@ -449,7 +485,7 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>, cpus: Option<&SeenCpus>
             + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
         let wait = run_delay(&e.path().join("schedstat"));
         if let Some(c) = cpus {
-            if name != "sampler" {
+            if name != "sampler" && name != "held-spinner" {
                 if let Some(cpu) = f.get(36).and_then(|x| x.parse::<u32>().ok()) {
                     c.lock().unwrap().insert(cpu);
                 }
@@ -533,13 +569,13 @@ impl Threads {
         let m = self.seen.lock().unwrap();
         let runq = m
             .values()
-            .filter(|x| x.0 != "sampler")
+            .filter(|x| x.0 != "sampler" && x.0 != "held-spinner")
             .map(|x| x.2 as f64 * 1e-9)
             .sum();
         // (in this process, the thread whose id is the process's is the reading thread)
         let mut v: Vec<(u64, String)> = m
             .iter()
-            .filter(|(_, x)| x.0 != "sampler")
+            .filter(|(_, x)| x.0 != "sampler" && x.0 != "held-spinner")
             .map(|(&tid, x)| {
                 let main = own && tid == self.pid;
                 (
@@ -561,6 +597,224 @@ impl Threads {
             .collect();
         let away = away.unwrap_or_else(|| "pinned".into());
         (busy.len(), busy.join(" "), runq, sampler, away)
+    }
+}
+
+/// `--hold-cpu`'s choice: a CPU number, or `auto` (`pick_hold`)
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Hold {
+    Cpu(usize),
+    Auto,
+}
+
+impl Hold {
+    fn parse(v: &str) -> Hold {
+        match v {
+            "auto" => Hold::Auto,
+            n => Hold::Cpu(n.parse().unwrap_or_else(|_| {
+                eprintln!("ab: --hold-cpu takes a CPU number or `auto`, not {n:?}");
+                std::process::exit(2)
+            })),
+        }
+    }
+}
+
+/// `--hold-cpu auto`'s CPU, given the allowed CPUs grouped by core (`cores`) and the CPUs
+/// the decoder may run on: the last CPU of the last core the decoder can't use at all; else
+/// the last CPU the decoder can't use (an SMT sibling of one of its CPUs); else the last of
+/// the decoder's own. With whether the held CPU's core shares a CPU with the decoder's
+fn pick_hold(cores: &[Vec<usize>], decoder: &[usize]) -> Option<(usize, bool)> {
+    let free_core = cores
+        .iter()
+        .rev()
+        .find(|c| !c.iter().any(|x| decoder.contains(x)));
+    if let Some(&cpu) = free_core.and_then(|c| c.last()) {
+        return Some((cpu, false));
+    }
+    let all: Vec<usize> = cores.iter().flatten().copied().collect();
+    if let Some(&cpu) = all.iter().rev().find(|x| !decoder.contains(x)) {
+        return Some((cpu, true));
+    }
+    all.last().map(|&cpu| (cpu, true))
+}
+
+/// Whether CPU `cpu`'s core (`siblings`: its thread_siblings_list, itself where unread)
+/// shares a CPU with the decoder's
+fn hold_overlaps(cpu: usize, siblings: &[usize], decoder: &[usize]) -> bool {
+    decoder.contains(&cpu) || siblings.iter().any(|x| decoder.contains(x))
+}
+
+/// The held spinner (bench 3.8.0, W1 of docs/journal/2026-11-10-next-experiments.md): one
+/// thread of the process that holds it, pinned to one CPU and spinning there, so the machine
+/// never goes wholly idle around a decode (cold-start/20261110T102700Z: a decode started
+/// after the machine went idle ran at about 2.1× the wall; one spinner held throughout kept
+/// 30 of 30 runs fast). A thread, never a process: it can't outlive its owner. It is started,
+/// and its affinity and CPU confirmed, before the settle gate; stopped and joined after the
+/// child is reaped, or on drop (an error, a panic). Its CPU is its own (`cpu_s`), never the
+/// decoder's.
+struct Held {
+    cpu: usize,
+    auto: bool,
+    overlap: bool,
+    /// the CPUs the decoder may run on, as the choice saw them
+    decoder: String,
+    tid: u32,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    handle: Option<std::thread::JoinHandle<f64>>,
+}
+
+impl Held {
+    /// The spinner on `cpu`, once it runs there (Err: the kernel refused the CPU, or the
+    /// thread wasn't seen on it within a second)
+    fn start(cpu: usize, auto: bool, overlap: bool) -> Result<Held, String> {
+        if cpu >= 1024 {
+            return Err(format!("CPU {cpu} is beyond a 1024-bit CPU set"));
+        }
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s = stop.clone();
+        let (tx, rx) = std::sync::mpsc::sync_channel::<Result<u32, String>>(1);
+        let handle = std::thread::Builder::new()
+            .name("held-spinner".into())
+            .spawn(move || {
+                let ready = (|| {
+                    let mut mask = [0u64; 16];
+                    mask[cpu / 64] |= 1 << (cpu % 64);
+                    // SAFETY: a cpu_set_t of 1024 bits, read or written by the kernel; pid 0
+                    // is the calling thread
+                    if unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) }
+                        != 0
+                    {
+                        return Err(format!(
+                            "sched_setaffinity to CPU {cpu}: {}",
+                            std::io::Error::last_os_error()
+                        ));
+                    }
+                    let mut got = [0u64; 16];
+                    // SAFETY: as above
+                    if unsafe {
+                        sched_getaffinity(0, std::mem::size_of_val(&got), got.as_mut_ptr())
+                    } < 0
+                    {
+                        return Err(format!(
+                            "sched_getaffinity: {}",
+                            std::io::Error::last_os_error()
+                        ));
+                    }
+                    if got != mask {
+                        return Err(format!("the affinity read back is not CPU {cpu} alone"));
+                    }
+                    let t = Instant::now();
+                    // SAFETY: no arguments; the CPU the calling thread runs on
+                    while unsafe { sched_getcpu() } != cpu as i32 {
+                        if t.elapsed() > Duration::from_secs(1) {
+                            return Err(format!("not seen running on CPU {cpu} within 1 s"));
+                        }
+                        std::thread::yield_now();
+                    }
+                    // (/proc/thread-self is "PID/task/TID")
+                    std::fs::read_link("/proc/thread-self")
+                        .ok()
+                        .and_then(|p| p.file_name()?.to_str()?.parse().ok())
+                        .ok_or_else(|| "no thread id from /proc/thread-self".to_string())
+                })();
+                let ok = ready.is_ok();
+                let _ = tx.send(ready);
+                // (a plain increment, as bench/cold_start_spin.c's `hold`, the stop flag read
+                // every 4,096 of them)
+                let mut x = 0u64;
+                while ok && !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    for _ in 0..4096 {
+                        x = std::hint::black_box(x.wrapping_add(1));
+                    }
+                }
+                rusage(1).0
+            })
+            .map_err(|e| format!("spawning the spinner: {e}"))?;
+        let mut held = Held {
+            cpu,
+            auto,
+            overlap,
+            decoder: String::new(),
+            tid: 0,
+            stop,
+            handle: Some(handle),
+        };
+        match rx.recv() {
+            Ok(Ok(tid)) => {
+                held.tid = tid;
+                Ok(held)
+            }
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err("the spinner ended before it was ready".into()),
+        }
+    }
+
+    /// `hold` for a decoder on the CPUs `decoder`, among `cores` (`online_cores`)
+    fn for_decoder(hold: Hold, cores: &[Vec<usize>], decoder: &[usize]) -> Result<Held, String> {
+        let (cpu, auto, overlap) = match hold {
+            Hold::Cpu(cpu) => {
+                let sib = std::fs::read_to_string(format!(
+                    "/sys/devices/system/cpu/cpu{cpu}/topology/thread_siblings_list"
+                ))
+                .map(|s| cpu_list(&s))
+                .unwrap_or_default();
+                (cpu, false, hold_overlaps(cpu, &sib, decoder))
+            }
+            Hold::Auto => {
+                let (cpu, overlap) =
+                    pick_hold(cores, decoder).ok_or("no CPU to hold: none allowed")?;
+                (cpu, true, overlap)
+            }
+        };
+        let mut held = Held::start(cpu, auto, overlap)?;
+        held.decoder = decoder
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        Ok(held)
+    }
+
+    /// Its CPU so far, in ticks (/proc's utime + stime)
+    fn ticks(&self) -> u64 {
+        std::fs::read_to_string(format!("/proc/self/task/{}/stat", self.tid))
+            .ok()
+            .and_then(|st| {
+                let f: Vec<u64> = st
+                    .rsplit_once(')')?
+                    .1
+                    .split_whitespace()
+                    .skip(11)
+                    .take(2)
+                    .filter_map(|x| x.parse().ok())
+                    .collect();
+                (f.len() == 2).then(|| f[0] + f[1])
+            })
+            .unwrap_or(0)
+    }
+
+    /// Stop it and wait for it: its own CPU seconds (RUSAGE_THREAD, exact)
+    fn stop(mut self) -> f64 {
+        self.halt()
+    }
+
+    fn halt(&mut self) -> f64 {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        self.handle.take().map_or(0.0, |h| h.join().unwrap_or(0.0))
+    }
+
+    /// The record's `held_spinner` fields before its CPU is known
+    fn facts(&self) -> String {
+        format!(
+            "\"cpu\":{},\"auto\":{},\"overlap\":{},\"decoder_cpus\":\"{}\"",
+            self.cpu, self.auto, self.overlap, self.decoder
+        )
+    }
+}
+
+impl Drop for Held {
+    fn drop(&mut self) {
+        self.halt();
     }
 }
 
@@ -1023,7 +1277,17 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
     (r, wall, threads, startup.unwrap_or(0.0))
 }
 
-fn child(arm: &str, threads: usize, path: &str) {
+fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
+    // (`ab child ... --hold-cpu`, for a driver that spawns the child itself: the spinner is
+    // this process's thread, started first, before the sampler and the counters, and its CPU
+    // taken off the decode's. `ab run --hold-cpu` holds its own and never passes the option)
+    let held = hold.map(|h| {
+        let decoder: Vec<usize> = cores().into_iter().flatten().collect();
+        Held::for_decoder(h, &online_cores(), &decoder).unwrap_or_else(|e| {
+            eprintln!("ab child: --hold-cpu: {e}");
+            std::process::exit(2)
+        })
+    });
     // (the `walk-stats` feature only: `AB_WALK_STATS=FILE` writes the walks' records there
     // once the child is done, never during the decode)
     #[cfg(feature = "walk-stats")]
@@ -1098,6 +1362,8 @@ fn child(arm: &str, threads: usize, path: &str) {
             (res, wall, w.finish(true), 0.0)
         }
     };
+    // (stopped, and its CPU known, before the process's CPU is read)
+    let held = held.map(|h| (h.facts(), h.stop()));
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
@@ -1106,9 +1372,15 @@ fn child(arm: &str, threads: usize, path: &str) {
     let err = res.err().unwrap_or_default().replace('"', "'");
     let perf = perf.map(machine::Perf::finish).unwrap_or_default()
         + &region.map(machine::Region::json).unwrap_or_default();
+    let (held, held_s) = held.map_or((String::new(), 0.0), |(facts, s)| {
+        (
+            format!(",\"held_spinner\":{{{facts},\"owner\":\"child\",\"cpu_s\":{s:.4}}}"),
+            s,
+        )
+    });
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{},\"err\":\"{err}\"}}",
-        cpu_self + cpu_kids - startup - sampler,
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{held}{},\"err\":\"{err}\"}}",
+        cpu_self + cpu_kids - startup - sampler - held_s,
         h.n,
         h.finish(),
         err_id_json()
@@ -1146,32 +1418,53 @@ fn load1() -> f64 {
 
 const HZ: f64 = 100.0;
 
-/// Busy jiffies of each CPU
-fn per_cpu() -> Vec<u64> {
+/// Busy jiffies of each CPU, by its number
+fn per_cpu() -> Vec<(usize, u64)> {
     let s = std::fs::read_to_string("/proc/stat").unwrap();
     s.lines()
         .filter(|l| l.starts_with("cpu") && l.as_bytes().get(3).is_some_and(u8::is_ascii_digit))
         .map(|l| {
-            let f: Vec<u64> = l
-                .split_whitespace()
-                .skip(1)
-                .map(|x| x.parse().unwrap())
-                .collect();
-            f[0] + f[1] + f[2] + f[5] + f[6] + f[7]
+            let mut it = l.split_whitespace();
+            let cpu = it.next().unwrap()[3..].parse().unwrap();
+            let f: Vec<u64> = it.map(|x| x.parse().unwrap()).collect();
+            (cpu, f[0] + f[1] + f[2] + f[5] + f[6] + f[7])
         })
         .collect()
 }
 
 /// Cores the other processes keep busy, over `secs` while nothing of ours runs: in all,
-/// and the busiest single CPU's share
-fn others_busy(secs: f64) -> (f64, f64) {
+/// and the busiest single CPU's share. With a held spinner (`--hold-cpu`), its own CPU over
+/// the same window is taken off its CPU's share, so the known helper doesn't hold the gate
+/// shut; then also the raw readings, the spinner's CPU left in
+fn others_busy(secs: f64, held: Option<&Held>) -> (f64, f64, Option<(f64, f64)>) {
     let a = per_cpu();
+    let h0 = held.map(Held::ticks);
     let t = Instant::now();
     std::thread::sleep(Duration::from_secs_f64(secs));
     let b = per_cpu();
+    let h1 = held.map(Held::ticks);
     let dt = t.elapsed().as_secs_f64() * HZ;
-    let each: Vec<f64> = a.iter().zip(&b).map(|(x, y)| (y - x) as f64 / dt).collect();
-    (each.iter().sum(), each.iter().cloned().fold(0.0, f64::max))
+    let mut each: Vec<(usize, f64)> = a
+        .iter()
+        .zip(&b)
+        .map(|((c, x), (_, y))| (*c, y.saturating_sub(*x) as f64 / dt))
+        .collect();
+    let sum_max = |e: &[(usize, f64)]| {
+        (
+            e.iter().map(|x| x.1).sum::<f64>(),
+            e.iter().map(|x| x.1).fold(0.0, f64::max),
+        )
+    };
+    let raw = sum_max(&each);
+    let Some(((h, x), y)) = held.zip(h0).zip(h1) else {
+        return (raw.0, raw.1, None);
+    };
+    let spun = y.saturating_sub(x) as f64 / dt;
+    for e in each.iter_mut().filter(|e| e.0 == h.cpu) {
+        e.1 = (e.1 - spun).max(0.0);
+    }
+    let (busy, one) = sum_max(&each);
+    (busy, one, Some(raw))
 }
 
 /// A CPU list ("0-3,6"), as sysfs and /proc write them
@@ -1203,6 +1496,24 @@ fn cores() -> Vec<Vec<usize>> {
             (0..std::thread::available_parallelism().map_or(1, |n| n.get())).collect()
         });
     group(&allowed, |c| {
+        std::fs::read_to_string(format!(
+            "/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"
+        ))
+        .ok()
+        .map(|s| cpu_list(&s))
+    })
+}
+
+/// The online CPUs grouped by physical core, as `cores` groups the allowed ones: where
+/// `--hold-cpu auto` looks, since the spinner may run beyond the CPUs a decoder is pinned to
+fn online_cores() -> Vec<Vec<usize>> {
+    let online = std::fs::read_to_string("/sys/devices/system/cpu/online")
+        .map(|s| cpu_list(&s))
+        .unwrap_or_default();
+    if online.is_empty() {
+        return cores();
+    }
+    group(&online, |c| {
         std::fs::read_to_string(format!(
             "/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"
         ))
@@ -1291,11 +1602,19 @@ fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
 
+thread_local! {
+    /// The spin threads `env_line` has started on this thread (`facts`'s test reads it: the
+    /// passive path must start none, the active one does)
+    static SPIN_SPAWNS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 /// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
 /// checked, not assumed: twice as many threads as CPUs spin for 0.3 s, and it counts if
 /// their summed wait is at least a quarter of their summed time off a CPU (most of it
-/// should be wait); a counter that reads zero there is never read as no wait
-fn env() {
+/// should be wait); a counter that reads zero there is never read as no wait. Active: the
+/// spin loads every CPU, and `machine`'s `perf` field opens (and closes) perf counters.
+/// `ab env --facts` (`facts`) is the passive reading
+fn env_line() -> String {
     let cores = cores();
     let ncpu: usize = cores.iter().map(Vec::len).sum();
     let quota = std::fs::read_to_string("/sys/fs/cgroup/cpu.max")
@@ -1326,6 +1645,7 @@ fn env() {
     let t0 = Instant::now();
     let hs: Vec<_> = (0..spin)
         .map(|_| {
+            SPIN_SPAWNS.with(|n| n.set(n.get() + 1));
             std::thread::spawn(move || {
                 let t = Instant::now();
                 let mut x = 0u64;
@@ -1371,7 +1691,461 @@ fn env() {
         throttled().is_some(),
         psi_cpu().is_some(),
     );
-    println!("{}", machine::extend_env(&line));
+    machine::extend_env(&line)
+}
+
+/// `ab env --facts` (bench 3.5.0; docs/journal/2026-11-09-run-fed-leader.md §R11): the
+/// machine facts a preflight needs, read passively. Procfs, sysfs, cgroupfs and
+/// `sched_getaffinity` only: no thread is started, nothing spins, and no perf counter is
+/// opened (`machine`'s `perf` field is null, "not probed"). Every fact is established or
+/// null with why; nothing is defaulted.
+///
+/// - **The CPUs allowed** (`cpus_allowed`): `sched_getaffinity` and `/proc/self/status`'s
+///   `Cpus_allowed_list`, each read strictly, and they must agree; `cpus` is their count.
+/// - **The cores** (`cores`, `core_cpus`): the allowed CPUs grouped by
+///   `thread_siblings_list`, every one of them read (a CPU whose siblings can't be read is
+///   no core of its own here: the count is null).
+/// - **The CPU quota** (`cpu_quota`): of this process's effective cgroup hierarchy, as
+///   `mibz2::parallel::cpu_quota` establishes it on `perf/service-guarded` (#302: Unlimited,
+///   Cpus or Unknown, fail closed), ported here with cgroup v1 covered too: the hierarchy
+///   that holds the `cpu` controller (a v1 one, where any v1 hierarchy names it, else the
+///   unified v2 one), the process's cgroup in it, then every directory up to the mount
+///   point, each level's limit parsed strictly and the tightest kept; the mount point must
+///   be the hierarchy's true root (v2: no `cgroup.type`; v1: its `release_agent`, which only
+///   a hierarchy's root has). Anything not so established is `unknown`, with why.
+mod facts {
+    use std::path::{Path, PathBuf};
+
+    use super::machine::js;
+
+    extern "C" {
+        fn sched_getaffinity(pid: i32, size: usize, mask: *mut u64) -> i32;
+    }
+
+    /// A cgroup's CPU quota, as `cpu_quota` establishes it
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Quota {
+        /// established: no limit on this process's cgroup or any ancestor, up to and
+        /// including the hierarchy's true root
+        Unlimited,
+        /// established: the tightest limit on the way up is this many CPUs' time
+        Cpus(f64),
+        /// not established: the preflight refuses
+        Unknown,
+    }
+
+    /// The quota with what established it: the hierarchy, every level read, or why not
+    pub struct QuotaFacts {
+        pub quota: Quota,
+        pub hierarchy: Option<&'static str>,
+        pub levels: Vec<String>,
+        pub why: Option<String>,
+    }
+
+    impl QuotaFacts {
+        pub fn json(&self) -> String {
+            let (state, cpus) = match self.quota {
+                Quota::Unlimited => ("unlimited", "null".to_string()),
+                Quota::Cpus(c) => ("limited", format!("{c}")),
+                Quota::Unknown => ("unknown", "null".to_string()),
+            };
+            format!(
+                "{{\"state\":\"{state}\",\"cpus\":{cpus},\"hierarchy\":{},\"levels\":[{}],\"why\":{}}}",
+                self.hierarchy.map_or("null".into(), js),
+                self.levels.iter().map(|l| js(l)).collect::<Vec<_>>().join(","),
+                self.why.as_deref().map_or("null".into(), js),
+            )
+        }
+    }
+
+    fn unknown(hierarchy: Option<&'static str>, why: impl Into<String>) -> QuotaFacts {
+        QuotaFacts {
+            quota: Quota::Unknown,
+            hierarchy,
+            levels: Vec::new(),
+            why: Some(why.into()),
+        }
+    }
+
+    /// The tree read from: `/` live, a fake tree in tests. Paths are absolute, as procfs
+    /// and the mount table write them
+    pub struct Root(PathBuf);
+
+    impl Root {
+        pub fn at(p: impl AsRef<Path>) -> Root {
+            Root(p.as_ref().to_path_buf())
+        }
+        fn path(&self, abs: &str) -> PathBuf {
+            self.0.join(abs.trim_start_matches('/'))
+        }
+        fn read(&self, abs: &str) -> std::io::Result<String> {
+            std::fs::read_to_string(self.path(abs))
+        }
+        fn is_dir(&self, abs: &str) -> bool {
+            self.path(abs).is_dir()
+        }
+        fn is_file(&self, abs: &str) -> bool {
+            self.path(abs).is_file()
+        }
+    }
+
+    /// A cgroup path from /proc/self/cgroup, accepted only plain and absolute
+    fn plain(path: &str) -> bool {
+        path.starts_with('/') && !path.contains("..") && !path.contains(' ') && !path.contains('\\')
+    }
+
+    /// This process's CPU quota, established or `Unknown` with why (Linux only)
+    pub fn cpu_quota(r: &Root) -> QuotaFacts {
+        if !cfg!(target_os = "linux") {
+            return unknown(None, "not Linux");
+        }
+        let cg = match r.read("/proc/self/cgroup") {
+            Ok(s) => s,
+            Err(e) => return unknown(None, format!("/proc/self/cgroup: {e}")),
+        };
+        let mut v1 = Vec::new();
+        for l in cg.lines().filter(|l| !l.is_empty()) {
+            let mut f = l.splitn(3, ':');
+            let (Some(_), Some(ctl), Some(path)) = (f.next(), f.next(), f.next()) else {
+                return unknown(None, format!("/proc/self/cgroup: an unparsable line {l:?}"));
+            };
+            if ctl.split(',').any(|c| c == "cpu") {
+                v1.push(path.to_string());
+            }
+        }
+        let (hier, got) = match v1.as_slice() {
+            [] => ("v2", v2(r, &cg)),
+            [path] => ("v1", self::v1(r, path)),
+            _ => {
+                return unknown(
+                    Some("v1"),
+                    "several cgroup v1 entries name the cpu controller",
+                )
+            }
+        };
+        match got {
+            Ok((quota, levels)) => QuotaFacts {
+                quota,
+                hierarchy: Some(hier),
+                levels,
+                why: None,
+            },
+            Err(why) => unknown(Some(hier), why),
+        }
+    }
+
+    /// The directories from the mount point down to the process's cgroup
+    fn levels(root: &str, point: &str, path: &str) -> Result<Vec<String>, String> {
+        if root.contains('\\') || point.contains('\\') || !point.starts_with('/') {
+            return Err(format!(
+                "an escaped or relative mount ({root:?} at {point:?})"
+            ));
+        }
+        let rel = if root == "/" {
+            path
+        } else {
+            let r = path.strip_prefix(root).ok_or_else(|| {
+                format!("the cgroup {path:?} is not under the mount's root {root:?}")
+            })?;
+            if !(r.is_empty() || r.starts_with('/')) {
+                return Err(format!(
+                    "the cgroup {path:?} is not under the mount's root {root:?}"
+                ));
+            }
+            r
+        };
+        let point = point.trim_end_matches('/');
+        let point = if point.is_empty() { "/" } else { point };
+        let mut out = vec![point.to_string()];
+        let mut at = point.trim_end_matches('/').to_string();
+        for part in rel.split('/').filter(|p| !p.is_empty()) {
+            at = format!("{at}/{part}");
+            out.push(at.clone());
+        }
+        Ok(out)
+    }
+
+    /// The one mount of `fstype` whose super options satisfy `want`: (root, mount point)
+    fn one_mount(
+        r: &Root,
+        fstype: &str,
+        want: impl Fn(&str) -> bool,
+    ) -> Result<(String, String), String> {
+        let info = r
+            .read("/proc/self/mountinfo")
+            .map_err(|e| format!("/proc/self/mountinfo: {e}"))?;
+        let mut found = info.lines().filter_map(|l| {
+            let (pre, post) = l.split_once(" - ")?;
+            let mut p = post.split_whitespace();
+            let (t, _src, opts) = (p.next()?, p.next()?, p.next().unwrap_or(""));
+            (t == fstype && want(opts)).then_some(pre)
+        });
+        let pre = found.next().ok_or_else(|| format!("no {fstype} mount"))?;
+        if found.next().is_some() {
+            return Err(format!("several {fstype} mounts"));
+        }
+        let f: Vec<&str> = pre.split_whitespace().collect();
+        match (f.get(3), f.get(4)) {
+            (Some(root), Some(point)) => Ok((root.to_string(), point.to_string())),
+            _ => Err(format!("an unparsable {fstype} mount")),
+        }
+    }
+
+    /// Positive decimal, strictly (no sign, no space)
+    fn pos(t: &str) -> Option<u64> {
+        (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| t.parse::<u64>().ok())
+            .flatten()
+            .filter(|&n| n > 0)
+    }
+
+    /// The tighter of two established quotas
+    fn tighter(a: Quota, b: Quota) -> Quota {
+        match (a, b) {
+            (Quota::Cpus(x), Quota::Cpus(y)) => Quota::Cpus(x.min(y)),
+            (Quota::Unlimited, b) => b,
+            (a, _) => a,
+        }
+    }
+
+    /// A v2 `cpu.max`, strictly: one line, `max PERIOD` or `QUOTA PERIOD`
+    pub fn parse_cpu_max(s: &str) -> Quota {
+        let line = s.strip_suffix('\n').unwrap_or(s);
+        match line.split(' ').collect::<Vec<_>>().as_slice() {
+            [q, p] => match (pos(p), *q) {
+                (Some(_), "max") => Quota::Unlimited,
+                (Some(p), q) => pos(q).map_or(Quota::Unknown, |q| Quota::Cpus(q as f64 / p as f64)),
+                (None, _) => Quota::Unknown,
+            },
+            _ => Quota::Unknown,
+        }
+    }
+
+    /// cgroup v2, as #302's `cpu_quota_of`: the one `0::` entry and the one `cgroup2` mount
+    fn v2(r: &Root, cg: &str) -> Result<(Quota, Vec<String>), String> {
+        use std::io::ErrorKind::NotFound;
+        let mut entries = cg.lines().filter_map(|l| l.strip_prefix("0::"));
+        let path = entries
+            .next()
+            .ok_or("no cgroup v2 entry and no v1 cpu controller")?
+            .trim()
+            .to_string();
+        if entries.next().is_some() || !plain(&path) {
+            return Err(format!("an ambiguous or escaped cgroup v2 entry {path:?}"));
+        }
+        let (root, point) = one_mount(r, "cgroup2", |_| true)?;
+        let levels = levels(&root, &point, &path)?;
+        let mut q = Quota::Unlimited;
+        for dir in &levels {
+            if !r.is_dir(dir) {
+                return Err(format!("{dir}: not a directory"));
+            }
+            let f = format!("{}/cpu.max", dir.trim_end_matches('/'));
+            match r.read(&f) {
+                Ok(text) => match parse_cpu_max(&text) {
+                    Quota::Unknown => return Err(format!("{f} reads {text:?}")),
+                    b => q = tighter(q, b),
+                },
+                // (the cpu controller not enabled at that level: no limit there)
+                Err(e) if e.kind() == NotFound => {}
+                Err(e) => return Err(format!("{f}: {e}")),
+            }
+        }
+        let top = format!("{}/cgroup.type", levels[0].trim_end_matches('/'));
+        match r.read(&top) {
+            Err(e) if e.kind() == NotFound => Ok((q, levels)),
+            Ok(_) => Err(format!(
+                "{top} exists: the mount is a cgroup below the hierarchy's root, whose ancestors can't be read"
+            )),
+            Err(e) => Err(format!("{top}: {e}")),
+        }
+    }
+
+    /// cgroup v1: the hierarchy holding the cpu controller, its bandwidth files at every
+    /// level (`cpu.cfs_quota_us`, -1 for none, and `cpu.cfs_period_us`), each required
+    fn v1(r: &Root, path: &str) -> Result<(Quota, Vec<String>), String> {
+        let path = path.trim();
+        if !plain(path) {
+            return Err(format!("an escaped cgroup v1 entry {path:?}"));
+        }
+        let (root, point) = one_mount(r, "cgroup", |o| o.split(',').any(|x| x == "cpu"))?;
+        let levels = levels(&root, &point, path)?;
+        let mut q = Quota::Unlimited;
+        for dir in &levels {
+            if !r.is_dir(dir) {
+                return Err(format!("{dir}: not a directory"));
+            }
+            let d = dir.trim_end_matches('/');
+            let read = |name: &str| -> Result<String, String> {
+                let f = format!("{d}/{name}");
+                let s = r.read(&f).map_err(|e| format!("{f}: {e}"))?;
+                Ok(s.strip_suffix('\n').unwrap_or(&s).to_string())
+            };
+            let (quota, period) = (read("cpu.cfs_quota_us")?, read("cpu.cfs_period_us")?);
+            let p =
+                pos(&period).ok_or_else(|| format!("{d}/cpu.cfs_period_us reads {period:?}"))?;
+            let here = if quota == "-1" {
+                Quota::Unlimited
+            } else {
+                Quota::Cpus(
+                    pos(&quota).ok_or_else(|| format!("{d}/cpu.cfs_quota_us reads {quota:?}"))?
+                        as f64
+                        / p as f64,
+                )
+            };
+            q = tighter(q, here);
+        }
+        let top = format!("{}/release_agent", levels[0].trim_end_matches('/'));
+        if r.is_file(&top) {
+            Ok((q, levels))
+        } else {
+            Err(format!(
+                "no {top}: the mount is not the hierarchy's root, whose ancestors can't be read"
+            ))
+        }
+    }
+
+    /// A CPU list ("0-3,6"), strictly: every part a CPU or an ascending range, at least one
+    pub fn cpu_list(s: &str) -> Option<Vec<usize>> {
+        let n = |t: &str| {
+            (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+                .then(|| t.parse::<usize>().ok())
+                .flatten()
+        };
+        let mut out = Vec::new();
+        for part in s.trim().split(',') {
+            match part.split_once('-') {
+                Some((a, b)) => {
+                    let (a, b) = (n(a)?, n(b)?);
+                    if a > b {
+                        return None;
+                    }
+                    out.extend(a..=b);
+                }
+                None => out.push(n(part)?),
+            }
+        }
+        out.sort_unstable();
+        let len = out.len();
+        out.dedup();
+        (len == out.len() && !out.is_empty()).then_some(out)
+    }
+
+    /// This process's CPU affinity mask (`sched_getaffinity`), as CPU ids
+    pub fn affinity() -> Result<Vec<usize>, String> {
+        let mut mask = [0u64; 64];
+        // SAFETY: an out-parameter of the size given (4096 CPUs' bits)
+        let rc = unsafe { sched_getaffinity(0, std::mem::size_of_val(&mask), mask.as_mut_ptr()) };
+        if rc < 0 {
+            return Err(format!(
+                "sched_getaffinity failed: {}",
+                std::io::Error::last_os_error()
+            ));
+        }
+        let cpus: Vec<usize> = (0..mask.len() * 64)
+            .filter(|&c| mask[c / 64] >> (c % 64) & 1 == 1)
+            .collect();
+        if cpus.is_empty() {
+            return Err("sched_getaffinity: an empty mask".into());
+        }
+        Ok(cpus)
+    }
+
+    /// The CPUs allowed: the affinity mask and Cpus_allowed_list, which must agree
+    pub fn allowed(r: &Root, mask: Result<Vec<usize>, String>) -> Result<Vec<usize>, String> {
+        let mask = mask?;
+        let status = r
+            .read("/proc/self/status")
+            .map_err(|e| format!("/proc/self/status: {e}"))?;
+        let line = status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+            .ok_or("no Cpus_allowed_list in /proc/self/status")?;
+        let listed =
+            cpu_list(line).ok_or_else(|| format!("Cpus_allowed_list reads {:?}", line.trim()))?;
+        if listed != mask {
+            return Err(format!(
+                "Cpus_allowed_list ({} CPUs) and sched_getaffinity ({} CPUs) disagree",
+                listed.len(),
+                mask.len()
+            ));
+        }
+        Ok(listed)
+    }
+
+    /// The allowed CPUs grouped by core, every CPU's siblings read
+    pub fn cores(r: &Root, allowed: &[usize]) -> Result<Vec<Vec<usize>>, String> {
+        let mut sib = std::collections::BTreeMap::new();
+        for &c in allowed {
+            let f = format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list");
+            let s = r.read(&f).map_err(|e| format!("{f}: {e}"))?;
+            let v = cpu_list(&s).ok_or_else(|| format!("{f} reads {:?}", s.trim()))?;
+            if !v.contains(&c) {
+                return Err(format!("{f} does not list cpu{c} itself"));
+            }
+            sib.insert(c, v);
+        }
+        Ok(super::group(allowed, |c| sib.get(&c).cloned()))
+    }
+
+    /// The facts line, from the tree `r` and the affinity mask given
+    pub fn line(
+        r: &Root,
+        mask: Result<Vec<usize>, String>,
+        throttling: bool,
+        psi: bool,
+        machine: &str,
+    ) -> String {
+        let ids = |v: &[usize]| v.iter().map(usize::to_string).collect::<Vec<_>>().join(",");
+        let allowed = allowed(r, mask);
+        let cores = allowed
+            .as_ref()
+            .map_err(Clone::clone)
+            .and_then(|a| cores(r, a));
+        let mut f = vec!["\"facts\":\"ab env --facts/1\"".to_string()];
+        match &allowed {
+            Ok(a) => {
+                f.push(format!("\"cpus\":{}", a.len()));
+                f.push(format!("\"cpus_allowed\":[{}]", ids(a)));
+            }
+            Err(why) => {
+                f.push(format!(
+                    "\"cpus\":null,\"cpus_allowed\":null,\"cpus_allowed_why\":{}",
+                    js(why)
+                ));
+            }
+        }
+        match &cores {
+            Ok(c) => {
+                f.push(format!("\"cores\":{}", c.len()));
+                let cc: Vec<String> = c.iter().map(|x| js(&ids(x))).collect();
+                f.push(format!("\"core_cpus\":[{}]", cc.join(",")));
+            }
+            Err(why) => f.push(format!(
+                "\"cores\":null,\"core_cpus\":null,\"cores_why\":{}",
+                js(why)
+            )),
+        }
+        f.push(format!("\"cpu_quota\":{}", cpu_quota(r).json()));
+        f.push(format!("\"throttling\":{throttling},\"psi_cpu\":{psi}"));
+        f.push("\"spin_threads\":0,\"perf_probed\":false".into());
+        f.push(format!("\"machine\":{machine}"));
+        format!("{{{}}}", f.join(","))
+    }
+
+    /// `ab env --facts`, live
+    pub fn live() -> String {
+        let machine = super::machine::Sysfs::live()
+            .env_json("\"perf\":null,\"perf_why\":\"not probed: ab env --facts opens no counter\"");
+        line(
+            &Root::at("/"),
+            affinity(),
+            super::throttled().is_some(),
+            super::psi_cpu().is_some(),
+            &machine,
+        )
+    }
+    // (the end of mod facts: its test reads the text above for what it must not call)
 }
 
 fn json_str(line: &str, key: &str) -> Option<String> {
@@ -1403,6 +2177,8 @@ fn run(args: &[String]) {
     let mut spread = false;
     let mut machine_state = false;
     let mut sysfs_state = false;
+    let mut hold: Option<Hold> = None;
+    let mut hold_max = usize::MAX;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -1427,6 +2203,14 @@ fn run(args: &[String]) {
             "--spread" => spread = true,
             "--machine-state" => machine_state = true,
             "--sysfs-state" => sysfs_state = true,
+            "--hold-cpu" => {
+                hold = Some(Hold::parse(&args[i + 1]));
+                i += 1;
+            }
+            "--hold-max-threads" => {
+                hold_max = args[i + 1].parse().unwrap();
+                i += 1;
+            }
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -1455,6 +2239,7 @@ fn run(args: &[String]) {
     let fewest = threads.iter().copied().min().unwrap_or(1);
     // (--spread: a run of t threads, where there are t cores, on each core's first CPU)
     let cores = cores();
+    let online = hold.map(|_| online_cores()).unwrap_or_default();
     let spread_cpus = |t: usize| spread.then(|| spread_list(&cores, t)).flatten();
     for round in 0..rounds {
         for file in &files {
@@ -1469,22 +2254,40 @@ fn run(args: &[String]) {
                         continue;
                     }
                     let waited = Instant::now();
-                    // (and no CPU more than half busy: a 1-thread run is pinned to one, and
-                    // a pinned job of someone else's would share it)
-                    let (mut busy, mut one) = others_busy(settle);
-                    while busy > max_busy || one > 0.5 {
-                        eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
-                        std::thread::sleep(Duration::from_secs(20));
-                        (busy, one) = others_busy(settle);
-                    }
-                    let (name, exe) = match arm.split_once('@') {
-                        Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
-                        None => (arm.clone(), me.clone()),
-                    };
                     let cpus = if t == 1 {
                         Some(pin.clone())
                     } else {
                         spread_cpus(t)
+                    };
+                    let mask: Vec<usize> = match &cpus {
+                        Some(list) => cpu_list(list),
+                        None => cores.iter().flatten().copied().collect(),
+                    };
+                    // (--hold-cpu: the spinner, this process's own thread, held from before
+                    // the gate until the child is reaped; never passed to the child, so an
+                    // ARM@EXE build without the option runs as before)
+                    let held = match hold.filter(|_| t <= hold_max) {
+                        Some(h) => match Held::for_decoder(h, &online, &mask) {
+                            Ok(x) => Some(x),
+                            Err(e) => {
+                                eprintln!("ab run: --hold-cpu: {e}");
+                                std::process::exit(2);
+                            }
+                        },
+                        None => None,
+                    };
+                    // (and no CPU more than half busy: a 1-thread run is pinned to one, and
+                    // a pinned job of someone else's would share it. The held spinner's own
+                    // CPU is taken off, its raw readings kept)
+                    let (mut busy, mut one, mut raw) = others_busy(settle, held.as_ref());
+                    while busy > max_busy || one > 0.5 {
+                        eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
+                        std::thread::sleep(Duration::from_secs(20));
+                        (busy, one, raw) = others_busy(settle, held.as_ref());
+                    }
+                    let (name, exe) = match arm.split_once('@') {
+                        Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
+                        None => (arm.clone(), me.clone()),
                     };
                     let mut cmd = match &cpus {
                         Some(list) => {
@@ -1501,10 +2304,6 @@ fn run(args: &[String]) {
                     // one never turns the counters on. --sysfs-state: the parent's readings
                     // alone, the child exactly as without either flag)
                     let sysfs = (machine_state || sysfs_state).then(machine::Sysfs::live);
-                    let mask: Vec<usize> = match &cpus {
-                        Some(list) => cpu_list(list),
-                        None => cores.iter().flatten().copied().collect(),
-                    };
                     if machine_state {
                         cmd.env(machine::ENV, "1");
                     } else {
@@ -1513,6 +2312,7 @@ fn run(args: &[String]) {
                     let state_pre = sysfs.as_ref().map(|s| s.state(&mask).json());
                     let t_spawn = machine::unix_ns();
                     let load = load1();
+                    let spun0 = held.as_ref().map(Held::ticks);
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
                     let w0 = Instant::now();
@@ -1527,10 +2327,16 @@ fn run(args: &[String]) {
                     let census = Census::watch(child.id());
                     let o = child.wait_with_output().unwrap();
                     let observed = census.finish();
+                    // (how it ended, the signal's number included: `termination`, bench 3.5.0)
+                    let term = Term::of(o.status);
                     let span = w0.elapsed().as_secs_f64();
                     let t_exit = machine::unix_ns();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
+                    // (the spinner's CPU over the run, taken off the others' busy cores)
+                    let spun = spun0
+                        .zip(held.as_ref().map(Held::ticks))
+                        .map_or(0.0, |(a, b)| b.saturating_sub(a) as f64 / HZ);
                     let state = match (&sysfs, state_pre) {
                         (Some(s), Some(pre)) => format!(
                             "\"machine_pre\":{pre},\"t_spawn_unix_ns\":{},\"t_exit_unix_ns\":{},\"machine_post\":{},",
@@ -1544,8 +2350,23 @@ fn run(args: &[String]) {
                     let psi_ms = psi0.zip(psi1).map(|(a, b)| (b - a) as f64 / 1000.0);
                     let line = String::from_utf8_lossy(&o.stdout);
                     let line = line.trim();
+                    // (the record's tail: the termination, then the child's own fields)
+                    let fields = format!(
+                        "{},{}",
+                        term.json(),
+                        line.strip_prefix('{').unwrap_or("\"broken\":1}")
+                    );
                     let cpu = json_f(line, "cpu");
-                    let others = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
+                    let others_raw = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
+                    let others = ((b1 - b0) as f64 / HZ - cpu - spun).max(0.0) / span;
+                    let held_json = held.map_or(String::new(), |h| {
+                        let facts = h.facts();
+                        let (raw_busy, raw_one) = raw.unwrap_or((busy, one));
+                        format!(
+                            "\"held_spinner\":{{{facts},\"owner\":\"run\",\"cpu_s\":{:.4},\"pre_busy_raw\":{raw_busy:.2},\"pre_one_raw\":{raw_one:.2},\"others_busy_raw\":{others_raw:.2}}},",
+                            h.stop()
+                        )
+                    });
                     let steal = 100.0 * (s1 - s0) as f64 / (tot1 - tot0).max(1) as f64;
                     let base = std::path::Path::new(file)
                         .file_stem()
@@ -1553,14 +2374,14 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{state}{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{held_json}{state}{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
                         opt(throttle.map(|x| x.1 as f64 / 1000.0)),
                         opt(psi_ms),
                         waited.elapsed().as_secs_f64() - settle,
-                        line.strip_prefix('{').unwrap_or("\"broken\":1}")
+                        fields
                     );
                     eprintln!(
                         "r{round} {base:<12} t={t} {arm:<16} wall {:>7.3} cpu {:>7.3} rss {:>5.0}MB others {others:.2} steal {steal:.1}% {}",
@@ -1574,6 +2395,40 @@ fn run(args: &[String]) {
                 }
             }
         }
+    }
+}
+
+/// How a run's child ended (bench 3.5.0): success, a nonzero exit code, or the signal that
+/// killed it. Recorded in every run's record (`termination`), so output written before a
+/// failure is never taken for a run that succeeded
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Term {
+    Success,
+    Code(i32),
+    Signal(i32),
+    /// neither a code nor a signal (not on Unix): never success
+    Unknown,
+}
+
+impl Term {
+    fn of(status: std::process::ExitStatus) -> Term {
+        use std::os::unix::process::ExitStatusExt;
+        match (status.code(), status.signal()) {
+            (Some(0), _) => Term::Success,
+            (Some(c), _) => Term::Code(c),
+            (None, Some(s)) => Term::Signal(s),
+            (None, None) => Term::Unknown,
+        }
+    }
+    /// The record's field: `"termination":"success"`, `"exit N"`, `"signal N"` or `"unknown"`
+    fn json(self) -> String {
+        let t = match self {
+            Term::Success => "success".to_string(),
+            Term::Code(c) => format!("exit {c}"),
+            Term::Signal(s) => format!("signal {s}"),
+            Term::Unknown => "unknown".to_string(),
+        };
+        format!("\"termination\":\"{t}\"")
     }
 }
 
@@ -1747,11 +2602,22 @@ fn main() {
         .filter(|a| a != "--bench")
         .collect();
     match args.first().map(String::as_str) {
-        Some("child") => child(&args[1], args[2].parse().unwrap(), &args[3]),
+        Some("child") => {
+            let hold = match args.get(4).map(String::as_str) {
+                Some("--hold-cpu") => Some(Hold::parse(args.get(5).map_or("", String::as_str))),
+                Some(a) => panic!("ab child: unknown argument {a}"),
+                None => None,
+            };
+            child(&args[1], args[2].parse().unwrap(), &args[3], hold)
+        }
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
-        Some("env") => env(),
+        Some("env") => match args.get(1).map(String::as_str) {
+            None => println!("{}", env_line()),
+            Some("--facts") if args.len() == 2 => println!("{}", facts::live()),
+            Some(a) => panic!("ab env: unknown argument {a} (ab env [--facts])"),
+        },
         Some("settle") => {
             let cpus: Vec<usize> = cores().into_iter().flatten().collect();
             machine::settle(&args[1..], &cpus)
@@ -1761,7 +2627,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
@@ -2563,7 +3429,14 @@ mod machine {
         }
     }
 
+    thread_local! {
+        /// Every `perf_event_open` this thread has attempted through `open` (`facts`'s test
+        /// reads it: the passive path must attempt none, the active one does)
+        pub static PERF_OPENS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
     fn open(kind: u64, config: u64, user_only: bool) -> Result<i32, i32> {
+        PERF_OPENS.with(|n| n.set(n.get() + 1));
         let Some(nr) = SYS_PERF_EVENT_OPEN else {
             return Err(38);
         };
@@ -4002,6 +4875,441 @@ mod tests {
         assert_eq!(first, vec![0, 1, 1, 0]);
     }
 
+    /// A fake procfs, sysfs and cgroupfs under the test's own directory, removed when dropped
+    struct Fake(std::path::PathBuf);
+    impl Fake {
+        fn new(name: &str) -> Fake {
+            let p = std::env::temp_dir().join(format!("ab-facts-{}-{name}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&p);
+            std::fs::create_dir_all(&p).unwrap();
+            Fake(p)
+        }
+        fn put(&self, rel: &str, v: &str) -> &Self {
+            let p = self.0.join(rel.trim_start_matches('/'));
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, v).unwrap();
+            self
+        }
+        fn dir(&self, rel: &str) -> &Self {
+            std::fs::create_dir_all(self.0.join(rel.trim_start_matches('/'))).unwrap();
+            self
+        }
+        fn root(&self) -> facts::Root {
+            facts::Root::at(&self.0)
+        }
+    }
+    impl Drop for Fake {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    const MOUNT_V2: &str = "30 23 0:26 / /sys/fs/cgroup rw,nosuid - cgroup2 cgroup2 rw\n";
+
+    /// cgroup v2, the process in /user.slice/run.scope, its root unlimited
+    fn v2(name: &str) -> Fake {
+        let t = Fake::new(name);
+        t.put("/proc/self/cgroup", "0::/user.slice/run.scope\n")
+            .put("/proc/self/mountinfo", MOUNT_V2)
+            .dir("/sys/fs/cgroup/user.slice/run.scope")
+            .put("/sys/fs/cgroup/user.slice/cpu.max", "max 100000\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+                "max 100000\n",
+            )
+            .put("/sys/fs/cgroup/user.slice/cgroup.type", "domain\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cgroup.type",
+                "domain\n",
+            );
+        t
+    }
+
+    const MOUNT_V1: &str = "36 23 0:28 / /sys/fs/cgroup rw - tmpfs tmpfs rw,mode=755\n\
+        37 36 0:29 / /sys/fs/cgroup/cpu,cpuacct rw - cgroup cgroup rw,cpu,cpuacct\n\
+        40 36 0:32 / /sys/fs/cgroup/memory rw - cgroup cgroup rw,memory\n\
+        46 36 0:38 / /sys/fs/cgroup/unified rw - cgroup2 cgroup2 rw\n";
+
+    /// cgroup v1 (hybrid), the process in /job, every level unlimited
+    fn v1(name: &str) -> Fake {
+        let t = Fake::new(name);
+        let h = "/sys/fs/cgroup/cpu,cpuacct";
+        t.put(
+            "/proc/self/cgroup",
+            "4:memory:/\n3:cpu,cpuacct:/job\n0::/\n",
+        )
+        .put("/proc/self/mountinfo", MOUNT_V1)
+        .put(&format!("{h}/release_agent"), "")
+        .put(&format!("{h}/cpu.cfs_quota_us"), "-1\n")
+        .put(&format!("{h}/cpu.cfs_period_us"), "100000\n")
+        .put(&format!("{h}/job/cpu.cfs_quota_us"), "-1\n")
+        .put(&format!("{h}/job/cpu.cfs_period_us"), "100000\n");
+        t
+    }
+
+    #[test]
+    fn the_quota_is_established_unlimited_only_through_every_level() {
+        use facts::Quota::*;
+        let q = |t: &Fake| facts::cpu_quota(&t.root());
+        // positive controls: v2 and v1, every level read and none limited
+        let t = v2("v2-ok");
+        let got = q(&t);
+        assert_eq!(got.quota, Unlimited, "{:?}", got.why);
+        assert_eq!(got.hierarchy, Some("v2"));
+        assert_eq!(
+            got.levels,
+            [
+                "/sys/fs/cgroup",
+                "/sys/fs/cgroup/user.slice",
+                "/sys/fs/cgroup/user.slice/run.scope"
+            ]
+        );
+        assert!(got
+            .json()
+            .starts_with("{\"state\":\"unlimited\",\"cpus\":null,\"hierarchy\":\"v2\""));
+        let t = v1("v1-ok");
+        let got = q(&t);
+        assert_eq!(got.quota, Unlimited, "{:?}", got.why);
+        assert_eq!(got.hierarchy, Some("v1"));
+        assert_eq!(got.levels.len(), 2);
+        // (the Researcher's case: a limited child under an unlimited root, which a fixed
+        // read of /sys/fs/cgroup/cpu.max calls unlimited) negative controls: limited
+        let t = v2("v2-child-limited");
+        t.put(
+            "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+            "400000 100000\n",
+        );
+        assert_eq!(q(&t).quota, Cpus(4.0));
+        assert!(q(&t)
+            .json()
+            .starts_with("{\"state\":\"limited\",\"cpus\":4,"));
+        let t = v2("v2-tightest");
+        t.put("/sys/fs/cgroup/user.slice/cpu.max", "200000 100000\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+                "800000 100000\n",
+            );
+        assert_eq!(q(&t).quota, Cpus(2.0));
+        let t = v1("v1-child-limited");
+        t.put("/sys/fs/cgroup/cpu,cpuacct/job/cpu.cfs_quota_us", "50000\n");
+        assert_eq!(q(&t).quota, Cpus(0.5));
+        // (v2: a level without cpu.max has the controller off there, no limit)
+        let t = v2("v2-no-controller");
+        std::fs::remove_file(t.0.join("sys/fs/cgroup/user.slice/cpu.max")).unwrap();
+        assert_eq!(q(&t).quota, Unlimited);
+        // unknown controls: each refuses to establish anything
+        let unknown: Vec<(&str, Box<dyn Fn(&Fake)>)> = vec![
+            (
+                "no /proc/self/cgroup",
+                Box::new(|t| {
+                    std::fs::remove_file(t.0.join("proc/self/cgroup")).unwrap();
+                }),
+            ),
+            (
+                "no mountinfo",
+                Box::new(|t| {
+                    std::fs::remove_file(t.0.join("proc/self/mountinfo")).unwrap();
+                }),
+            ),
+            (
+                "an unparsable cpu.max",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/user.slice/cpu.max", "max\n");
+                }),
+            ),
+            (
+                "a fractional cpu.max",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/user.slice/cpu.max", "1.5 100000\n");
+                }),
+            ),
+            (
+                "an unreadable cpu.max",
+                Box::new(|t| {
+                    let p = t.0.join("sys/fs/cgroup/user.slice/run.scope/cpu.max");
+                    std::fs::remove_file(&p).unwrap();
+                    std::fs::create_dir(&p).unwrap();
+                }),
+            ),
+            (
+                "a missing level",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "0::/user.slice/gone.scope\n");
+                }),
+            ),
+            (
+                "a namespaced mount (cgroup.type at the top)",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/cgroup.type", "domain\n");
+                }),
+            ),
+            (
+                "two cgroup2 mounts",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/mountinfo",
+                        &format!("{MOUNT_V2}{}", MOUNT_V2.replace("30 23", "31 23")),
+                    );
+                }),
+            ),
+            (
+                "two v2 entries",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/cgroup",
+                        "0::/user.slice\n0::/user.slice/run.scope\n",
+                    );
+                }),
+            ),
+            (
+                "an escaped path",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "0::/user.slice/../run.scope\n");
+                }),
+            ),
+            (
+                "no v2 entry, no v1 cpu",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "4:memory:/\n");
+                }),
+            ),
+        ];
+        for (what, mutate) in unknown {
+            let t = v2(&format!("v2-{}", what.len()));
+            mutate(&t);
+            let got = q(&t);
+            assert_eq!(got.quota, Unknown, "{what}: {:?}", got.levels);
+            assert!(got.why.is_some(), "{what}");
+            assert!(
+                got.json()
+                    .starts_with("{\"state\":\"unknown\",\"cpus\":null"),
+                "{what}"
+            );
+        }
+        let h = "sys/fs/cgroup/cpu,cpuacct";
+        let unknown_v1: Vec<(&str, Box<dyn Fn(&Fake)>)> = vec![
+            (
+                "no release_agent (not the hierarchy's root)",
+                Box::new(move |t| {
+                    std::fs::remove_file(t.0.join(format!("{h}/release_agent"))).unwrap();
+                }),
+            ),
+            (
+                "no cfs_quota_us at a level",
+                Box::new(move |t| {
+                    std::fs::remove_file(t.0.join(format!("{h}/job/cpu.cfs_quota_us"))).unwrap();
+                }),
+            ),
+            (
+                "a zero period",
+                Box::new(move |t| {
+                    t.put(&format!("/{h}/cpu.cfs_period_us"), "0\n");
+                }),
+            ),
+            (
+                "a quota of -2",
+                Box::new(move |t| {
+                    t.put(&format!("/{h}/job/cpu.cfs_quota_us"), "-2\n");
+                }),
+            ),
+            (
+                "two v1 cpu entries",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "3:cpu,cpuacct:/job\n2:cpu:/job\n");
+                }),
+            ),
+            (
+                "no v1 cpu mount",
+                Box::new(|t| {
+                    t.put("/proc/self/mountinfo", MOUNT_V2);
+                }),
+            ),
+            (
+                "a mount below the hierarchy's root",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/mountinfo",
+                        &MOUNT_V1.replace("0:29 / ", "0:29 /other "),
+                    );
+                }),
+            ),
+        ];
+        for (what, mutate) in unknown_v1 {
+            let t = v1(&format!("v1-{}", what.len()));
+            mutate(&t);
+            let got = q(&t);
+            assert_eq!(got.quota, Unknown, "{what}: {:?}", got.levels);
+            assert_eq!(got.hierarchy, Some("v1"), "{what}");
+        }
+    }
+
+    #[test]
+    fn the_allowed_cpus_are_the_affinity_and_the_status_agreeing() {
+        let t = Fake::new("allowed");
+        t.put("/proc/self/status", "Name:\tab\nCpus_allowed_list:\t0-3\n");
+        let r = t.root();
+        assert_eq!(
+            facts::allowed(&r, Ok(vec![0, 1, 2, 3])),
+            Ok(vec![0, 1, 2, 3])
+        );
+        assert!(facts::allowed(&r, Ok(vec![0, 1]))
+            .unwrap_err()
+            .contains("disagree"));
+        assert!(facts::allowed(&r, Err("no mask".into())).is_err());
+        t.put("/proc/self/status", "Cpus_allowed_list:\t0-3,x\n");
+        assert!(facts::allowed(&r, Ok(vec![0, 1, 2, 3])).is_err());
+        assert_eq!(facts::cpu_list("0-3,6\n"), Some(vec![0, 1, 2, 3, 6]));
+        for bad in ["", "3-1", "0,0", "a", "1-", " - "] {
+            assert_eq!(facts::cpu_list(bad), None, "{bad:?}");
+        }
+        // the live process: whatever this machine is, the two sources agree
+        let live = facts::allowed(&facts::Root::at("/"), facts::affinity());
+        assert!(live.as_ref().is_ok_and(|v| !v.is_empty()), "{live:?}");
+    }
+
+    #[test]
+    fn the_facts_line_is_null_with_why_where_a_fact_is_not_read() {
+        let t = v2("line");
+        t.put("/proc/self/status", "Cpus_allowed_list:\t0-3\n");
+        for c in 0..4 {
+            t.put(
+                &format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"),
+                if c % 2 == 0 { &"0,2"[..] } else { "1,3" },
+            );
+        }
+        let l = facts::line(&t.root(), Ok(vec![0, 1, 2, 3]), false, true, "{}");
+        assert!(l.starts_with("{\"facts\":\"ab env --facts/1\",\"cpus\":4,\"cpus_allowed\":[0,1,2,3],\"cores\":2,\"core_cpus\":[\"0,2\",\"1,3\"],\"cpu_quota\":{\"state\":\"unlimited\""), "{l}");
+        assert!(
+            l.ends_with("\"spin_threads\":0,\"perf_probed\":false,\"machine\":{}}"),
+            "{l}"
+        );
+        std::fs::remove_file(t.0.join("sys/devices/system/cpu/cpu3/topology/thread_siblings_list"))
+            .unwrap();
+        let l = facts::line(&t.root(), Ok(vec![0, 1, 2, 3]), false, true, "{}");
+        assert!(
+            l.contains("\"cores\":null,\"core_cpus\":null,\"cores_why\":"),
+            "{l}"
+        );
+        let l = facts::line(&t.root(), Ok(vec![0, 1]), false, true, "{}");
+        assert!(
+            l.contains("\"cpus\":null,\"cpus_allowed\":null,\"cpus_allowed_why\":"),
+            "{l}"
+        );
+    }
+
+    /// The passive path's witness, at run time and by its text. At run time: `facts::live`
+    /// on this thread attempts no `perf_event_open` through ab's one wrapper
+    /// (`machine::PERF_OPENS`) and starts no spin thread (`SPIN_SPAWNS`), while the active
+    /// `env_line`, through the same counters, does both (the positive control). By its text:
+    /// the module calls no counter, spawns no thread and spins nothing. Neither shows what a
+    /// library call might do underneath (sysfs reads, `sched_getaffinity`): only ab's own
+    /// counter and spin paths are witnessed
+    #[test]
+    fn the_facts_path_opens_no_counter_and_spawns_no_spin_thread() {
+        let opens = || machine::PERF_OPENS.with(std::cell::Cell::get);
+        let spins = || SPIN_SPAWNS.with(std::cell::Cell::get);
+        let (o0, s0) = (opens(), spins());
+        let l = facts::live();
+        assert_eq!(
+            (opens(), spins()),
+            (o0, s0),
+            "the passive path opened or spun: {l}"
+        );
+        assert!(l.contains("\"perf\":null,\"perf_why\":\"not probed"), "{l}");
+        let active = env_line();
+        assert!(
+            opens() > o0,
+            "the positive control opened nothing: {active}"
+        );
+        assert!(spins() > s0, "the positive control spun nothing: {active}");
+        let src = include_str!("ab.rs");
+        let start = src.find("\nmod facts {").expect("mod facts");
+        let end = src.find("// (the end of mod facts").expect("its end");
+        let body = &src[start..end];
+        for banned in [
+            "Perf::",
+            "Perf {",
+            "perf_event_open",
+            "probe()",
+            "fn open(",
+            "thread::spawn",
+            "spin(",
+            "extend_env",
+            "env_line",
+        ] {
+            assert!(!body.contains(banned), "mod facts names {banned}");
+        }
+    }
+
+    /// The producer keeps every child's termination: `ab run` itself, its children stand-in
+    /// scripts (ARM@EXE) that write a valid-looking record and then succeed, exit 17, or are
+    /// killed by a signal, and one that writes nothing (the controls). Output before a
+    /// failure is recorded with that failure, never as a success
+    #[test]
+    fn the_run_records_each_childs_termination() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("ab-term-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let rec = r#"echo '{"wall":0.5,"cpu":0.5,"rss_kb":1,"out":3,"hash":"0123456789abcdef"}'"#;
+        let mut arms = Vec::new();
+        for (name, tail) in [
+            ("ok", format!("{rec}\nexit 0")),
+            ("seventeen", format!("{rec}\nexit 17")),
+            ("killed", format!("{rec}\nkill -KILL $$")),
+            ("empty", "exit 0".to_string()),
+        ] {
+            let p = dir.join(name);
+            std::fs::write(&p, format!("#!/bin/sh\n{tail}\n")).unwrap();
+            std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o755)).unwrap();
+            arms.push(format!("{name}@{}", p.display()));
+        }
+        let corpus = dir.join("c.bz2");
+        std::fs::write(&corpus, b"BZh9").unwrap();
+        let out = dir.join("runs.jsonl");
+        let args: Vec<String> = [
+            out.to_str().unwrap(),
+            "--arms",
+            &arms.join(","),
+            "--threads",
+            "2",
+            "--rounds",
+            "1",
+            "--max-busy",
+            "64",
+            "--settle",
+            "0.2",
+            corpus.to_str().unwrap(),
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        run(&args);
+        let text = std::fs::read_to_string(&out).unwrap();
+        let by = |arm: &str| {
+            text.lines()
+                .find(|l| l.contains(&format!("\"arm\":\"{arm}@")))
+                .unwrap_or_else(|| panic!("no {arm} record in {text}"))
+                .to_string()
+        };
+        let ok = by("ok");
+        assert!(ok.contains("\"termination\":\"success\""), "{ok}");
+        assert!(ok.contains("\"hash\":\"0123456789abcdef\""), "{ok}");
+        let r = by("seventeen");
+        assert!(r.contains("\"termination\":\"exit 17\""), "{r}");
+        assert!(
+            r.contains("\"hash\":\"0123456789abcdef\""),
+            "its output kept beside: {r}"
+        );
+        let r = by("killed");
+        assert!(r.contains("\"termination\":\"signal 9\""), "{r}");
+        assert!(r.contains("\"hash\":\"0123456789abcdef\""), "{r}");
+        let r = by("empty");
+        assert!(r.contains("\"termination\":\"success\""), "{r}");
+        assert!(r.contains("\"broken\":1"), "{r}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     #[test]
     fn cpu_lists() {
         assert_eq!(cpu_list("0-3,6\n"), vec![0, 1, 2, 3, 6]);
@@ -4030,5 +5338,133 @@ mod tests {
         assert_eq!(cores, vec![vec![0], vec![2]]);
         // siblings unreadable: each CPU a core of its own
         assert_eq!(group(&[0, 1], |_| None), vec![vec![0], vec![1]]);
+    }
+
+    #[test]
+    fn hold_auto_avoids_the_decoders_cores() {
+        // the i9: 10 cores, siblings c and c + 10
+        let cores = group(&(0..20).collect::<Vec<_>>(), |c| {
+            Some(vec![c % 10, c % 10 + 10])
+        });
+        let spread = |t: usize| cpu_list(&spread_list(&cores, t).unwrap());
+        // 4 threads spread on cores 0-3: the last free core's last CPU
+        assert_eq!(pick_hold(&cores, &spread(4)), Some((19, false)));
+        // 10 threads on every core: no free core, so a sibling, the overlap reported
+        assert_eq!(pick_hold(&cores, &spread(10)), Some((19, true)));
+        // a 1-thread run pinned to CPU 1
+        assert_eq!(pick_hold(&cores, &[1]), Some((19, false)));
+        // a decoder on core 9's CPU 19 alone: its sibling 9 is on the same core
+        assert_eq!(pick_hold(&cores, &[19]), Some((18, false)));
+        // unpinned (every CPU): the last, overlapping
+        assert_eq!(
+            pick_hold(&cores, &(0..20).collect::<Vec<_>>()),
+            Some((19, true))
+        );
+        // CI's 4 CPUs on 2 cores, 2 threads spread on 0,2: no free core; 3, 2's sibling
+        let ci = group(&[0, 1, 2, 3], |c| {
+            Some(if c < 2 { vec![0, 1] } else { vec![2, 3] })
+        });
+        assert_eq!(pick_hold(&ci, &[0, 2]), Some((3, true)));
+        assert_eq!(pick_hold(&ci, &[1]), Some((3, false)));
+        assert_eq!(pick_hold(&[], &[]), None);
+        // an explicit CPU: its core against the decoder's CPUs
+        assert!(hold_overlaps(19, &[9, 19], &[9]));
+        assert!(hold_overlaps(3, &[], &[3]));
+        assert!(!hold_overlaps(19, &[9, 19], &[0, 1, 2]));
+    }
+
+    /// The held spinners among this process's threads now
+    fn spinners() -> usize {
+        std::fs::read_dir("/proc/self/task")
+            .unwrap()
+            .flatten()
+            .filter(|e| {
+                std::fs::read_to_string(e.path().join("comm"))
+                    .is_ok_and(|c| c.trim() == "held-spinner")
+            })
+            .count()
+    }
+
+    /// Whether thread `tid` of this process is still there
+    fn alive(tid: u32) -> bool {
+        std::path::Path::new(&format!("/proc/self/task/{tid}")).exists()
+    }
+
+    /// Whether `cond` holds within 2 s. A joined thread's /proc entry can outlast the join
+    /// briefly (the join returns when the kernel clears its tid, before its task is released)
+    fn soon(cond: impl Fn() -> bool) -> bool {
+        let t = std::time::Instant::now();
+        while t.elapsed() < std::time::Duration::from_secs(2) {
+            if cond() {
+                return true;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        cond()
+    }
+
+    #[test]
+    fn held_spinner_starts_holds_and_stops() {
+        // (one test, so the tests' own threads don't come and go between its readings)
+        let cores = cores();
+        let mine: Vec<usize> = cores.iter().flatten().copied().collect();
+        let (cpu, _) = pick_hold(&cores, &mine[..1]).unwrap();
+        assert_eq!(spinners(), 0);
+        let h = Held::start(cpu, true, false).expect("the spinner holds a CPU it may use");
+        let tid = h.tid;
+        assert!(alive(tid));
+        let comm = std::fs::read_to_string(format!("/proc/self/task/{tid}/comm")).unwrap();
+        assert_eq!(comm.trim(), "held-spinner");
+        let status = std::fs::read_to_string(format!("/proc/self/task/{tid}/status")).unwrap();
+        let allowed = status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+            .map(cpu_list)
+            .unwrap();
+        assert_eq!(allowed, vec![cpu]);
+        // it spins: its CPU grows while it is held, and the gate takes it off its CPU
+        let t0 = h.ticks();
+        let (busy, _, raw) = others_busy(0.3, Some(&h));
+        let (raw_busy, _) = raw.expect("the raw readings beside the accounted ones");
+        assert!(h.ticks() > t0, "the spinner ran");
+        assert!(busy <= raw_busy);
+        assert!(h.facts().contains(&format!("\"cpu\":{cpu},\"auto\":true")));
+        let spun = h.stop();
+        // (only that its CPU was read: how much it gets depends on the runner's load)
+        assert!(spun > 0.0, "its own CPU, {spun} s");
+        assert!(soon(|| !alive(tid)), "stopped and joined");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
+
+        // a failing child (it exits 1) under the spinner: stopped after the reap, as `run`
+        let h = Held::start(cpu, false, false).unwrap();
+        let tid = h.tid;
+        let st = std::process::Command::new("sh")
+            .args(["-c", "exit 1"])
+            .status()
+            .unwrap();
+        assert!(!st.success());
+        assert!(alive(tid), "held until the child is reaped");
+        h.stop();
+        assert!(soon(|| !alive(tid)));
+
+        // an error or a panic while it is held: dropped, so stopped and joined
+        let tid = std::panic::catch_unwind(|| {
+            let h = Held::start(cpu, false, false).unwrap();
+            let tid = h.tid;
+            assert!(alive(tid));
+            std::panic::panic_any(tid);
+        })
+        .unwrap_err()
+        .downcast::<u32>()
+        .map(|b| *b)
+        .unwrap();
+        assert!(soon(|| !alive(tid)), "the unwind stopped it");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
+
+        // a CPU it may not run on: refused, and nothing left running
+        assert!(Held::start(4096, false, false).is_err());
+        let not_allowed = (0..1024).find(|c| !mine.contains(c)).unwrap();
+        assert!(Held::start(not_allowed, false, false).is_err());
+        assert!(soon(|| spinners() == 0), "no thread left behind");
     }
 }

@@ -220,6 +220,12 @@ bench-pmu-probe *args:
 # before NEW. The release runbook (docs/RELEASING.md) runs it bare after every release.
 #   just bench-release-scaling
 #   just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" /path/to/big.bz2
+# The held spinner (bench 3.8.0, `ab run --hold-cpu auto --hold-max-threads 10`): around
+# every run of 10 threads or fewer, one CPU the run leaves free is held busy, so no decode
+# starts on an idle machine (cold-start/20261110T102700Z). The runs are NEW's harness, so it
+# is on only where NEW's `ab` has the option (a release or commit from bench 3.8.0 on), and
+# the console says which; both arms run under the same spinner, the pairing untouched. Each
+# held run's record carries `held_spinner`. HOLD_CPU=off turns it off; HOLD_CPU=N holds CPU N.
 
 # Two releases and lbzip2 on this machine, up to its full thread count
 bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
@@ -258,8 +264,18 @@ bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     "$NEWAB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
     rm -f "$W/runs.jsonl"
+    # (the held spinner where NEW's harness has it: runs of 10 threads or fewer)
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    if [ "$hold_cpu" = off ]; then
+      echo "bench-release-scaling: held spinner off (HOLD_CPU=off)"
+    elif grep -qa -- '--hold-max-threads' "$NEWAB"; then
+      hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+      echo "bench-release-scaling: held spinner on ($hold_cpu) around runs of 10 threads or fewer"
+    else
+      echo "bench-release-scaling: $NEW's ab has no --hold-cpu (before bench 3.8.0): no held spinner"
+    fi
     "$NEWAB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$OLDAB,lbzip2" \
-      --threads "$threads" --rounds {{ROUNDS}} --spread "$W/wikidata.bz2" {{FILES}}
+      --threads "$threads" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2" {{FILES}}
     "$NEWAB" summary "$W/runs.jsonl" --ref mibz2 | tee "$W/summary.txt"
     lb=$(lbzip2 --version 2>&1 | head -1 | grep -oE '[0-9]+(\.[0-9]+)+' || true)
     files=(--file "wikidata=$W/wikidata.bz2")
@@ -929,6 +945,141 @@ bench-pipelined-default DRY="" CORPUS="":
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
 
+# The service core's target preflight, alone (docs/journal/2026-11-09-svc-target-registration.md;
+# frozen by bench/svc-target.frozen, which names no commit until the Coordinator freezes it):
+# examples/svc_target.rs built as Cargo reports it, run once, its record checked whole by
+# bench/svc_target_check.py. It times no decoder (no ab grid) and is no performance evidence.
+# Read-only. Run once; no retry. Whatever the outcome, the bundle keeps what was reached, and
+# `stages.txt` says which stages were reached and which not (an early refusal has no build or
+# record, and none is made up). The preflight is sent TERM at 120 s and KILL 10 s later.
+# Its exit: 0 TARGET, 4 NOT TARGET, 5 FAILED (a dispatch or decode check failed), 1 REFUSED or
+# INVALID RECORD, 3 INCOMPLETE; kept through the bundle and `just submit`. About a minute once
+# built.
+#   just submit bench-svc-target
+
+# The service core's target predicate and dispatch, read back on this machine, once
+bench-svc-target:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/svc-target
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-svc-target: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    outcome="INCOMPLETE: stopped before the preflight finished (see console.log)"
+    # the stages, in order, each marked as it completes; stages.txt lists every one, reached
+    # or not, with the files that stage leaves
+    all_stages=("checks: frozen and clean (frozen.txt)" "build (build.txt, inputs.txt)"
+      "raw reads (raw/)" "preflight run (preflight.json, preflight.exit)" "record check (preflight-check.json)")
+    reached=0
+    mark() { reached=$((reached + 1)); }
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      for i in "${!all_stages[@]}"; do
+        if [ "$i" -lt "$reached" ]; then echo "reached: ${all_stages[$i]}"; else echo "not reached: ${all_stages[$i]}"; fi
+      done > "$W/stages.txt"
+      echo "bench-svc-target: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W" || { echo "bench-svc-target: bundling failed"; exit 2; }
+      case "$outcome" in
+        "TARGET"*) exit 0 ;;
+        "NOT TARGET"*) exit 4 ;;
+        "FAILED"*) exit 5 ;;
+        REFUSED*|"INVALID RECORD"*) exit 1 ;;
+        *) exit 3 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-svc-target: $*"; exit 1; }
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/svc-target.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/svc-target.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      tests/common bench/svc_target_check.py bench/bundle.sh .just/bench.just
+      docs/journal/2026-11-09-svc-target-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    mark
+    # the executable Cargo reports building, wherever its target directory is; the build's
+    # platform is rustc's host (build.txt), the one the predicate's compile-time x86-64 Linux
+    # condition is decided for
+    EXE=$(cargo build -q --release --example svc_target --message-format=json-render-diagnostics \
+      | python3 -c 'import json, sys
+    got = [m["executable"] for m in map(json.loads, sys.stdin) if m.get("reason") == "compiler-artifact" and m.get("executable") and m["target"]["name"] == "svc_target" and "example" in m["target"]["kind"]]
+    sys.exit("cargo reported no svc_target executable") if len(got) != 1 else print(got[0])') \
+      || fail "the build reported no svc_target executable"
+    [ -x "$EXE" ] || fail "cargo's reported $EXE is not an executable"
+    { echo "executable $EXE"; rustc -vV; cargo -V; uname -srm; } > "$W/build.txt"
+    sha256sum "$EXE" | sed "s|$EXE|svc_target|" > "$W/inputs.txt"
+    mark
+    # the files discovery reads, read again by this shell just before the preflight (the
+    # same paths, not the same reads: a diagnostic beside the record, which is what is
+    # checked), each value or its read error: the process's status, cgroup membership and
+    # mounts, cpuinfo, sysfs's online and present lists, every CPU's core, package and L3
+    # files, and every cgroup v2 level's cpu.max and cgroup.type from the process's cgroup up
+    # to the mount point
+    mkdir "$W/raw"
+    lscpu > "$W/raw/lscpu.txt" 2>&1 || true
+    python3 - "$W/raw/reads.txt" <<'PY' || echo "the raw reads' script failed" >> "$W/raw/reads.txt"
+    import glob, os, sys
+    out = open(sys.argv[1], "w")
+    def read(p):
+        try:
+            v = open(p).read()
+            out.write(f"== {p}\n{v}" + ("" if v.endswith("\n") else "\n"))
+        except OSError as e:
+            out.write(f"== {p}\nREAD ERROR: {e.__class__.__name__}: {e}\n")
+    for p in ("/proc/self/status", "/proc/self/cgroup", "/proc/self/mountinfo", "/proc/cpuinfo",
+              "/sys/devices/system/cpu/online", "/sys/devices/system/cpu/present"):
+        read(p)
+    for d in sorted(glob.glob("/sys/devices/system/cpu/cpu[0-9]*"), key=lambda d: int(d.rsplit("cpu", 1)[1])):
+        for f in ("topology/core_id", "topology/physical_package_id", "cache/index3/level", "cache/index3/size"):
+            read(f"{d}/{f}")
+    try:
+        path = next(l[3:].strip() for l in open("/proc/self/cgroup") if l.startswith("0::"))
+        mount = next(l.split(" - ")[0].split()[4] for l in open("/proc/self/mountinfo")
+                     if " - " in l and l.split(" - ")[1].split()[0] == "cgroup2")
+    except (OSError, StopIteration) as e:
+        out.write(f"== the cgroup v2 levels\nNOT RESOLVED: {e.__class__.__name__}: {e}\n")
+    else:
+        d = os.path.normpath(mount + path)
+        while True:
+            for f in ("cpu.max", "cgroup.type"):
+                read(f"{d}/{f}")
+            if d == os.path.normpath(mount) or d == "/":
+                break
+            d = os.path.dirname(d)
+    PY
+    mark
+    # once, bounded: TERM at 120 s, KILL 10 s after (so at most 130 s)
+    status=0
+    timeout --kill-after=10 120 "$EXE" > "$W/preflight.json" || status=$?
+    echo "$status" > "$W/preflight.exit"
+    [ "$(sha256sum "$EXE" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$W/inputs.txt")" ] \
+      || { outcome="INCOMPLETE: the executable changed while it ran"; exit 3; }
+    cat "$W/preflight.json"
+    case "$status" in
+      0|3) ;;
+      124) outcome="INCOMPLETE: the preflight passed its 120 s bound and ended on TERM"; exit 3 ;;
+      137) outcome="INCOMPLETE: the preflight ignored TERM at 120 s and was killed at 130 s"; exit 3 ;;
+      *) outcome="INCOMPLETE: the preflight exited $status (see console.log)"; exit 3 ;;
+    esac
+    mark
+    set +e
+    python3 bench/svc_target_check.py "$W/preflight.json" --exit "$status" --out "$W/preflight-check.json"
+    set -e
+    verdict=$(python3 -c 'import json, sys; v = json.load(open(sys.argv[1])); print(v["verdict"] + ("" if not v["problems"] else ": " + "; ".join(v["problems"])))' "$W/preflight-check.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      "") outcome="INCOMPLETE: the record's check wrote nothing" ;;
+      *) mark; outcome="$verdict (see preflight.json)" ;;
+    esac
+
 # The scan without the scanner, on the workstation (docs/journal/2026-11-10-parallel-scan.md,
 # section 5, registered and frozen before use): a research harness's two arms, one reading every
 # block's symbols on a scanner thread and one finding blocks by magic and reading them on the
@@ -1135,3 +1286,15 @@ bench-par-scan DRY="":
     else
       outcome="VALID:$readings"
     fi
+
+# The cooperative ports (#335, #337, #339 stacked) against their base, on the i9's team path:
+# wikidata wall at 8-20 threads. Decision rule set before the run: #145 LOG 6764355047.
+bench-team-ports:
+    git fetch -q origin research/team-mtf-port
+    just bench-release-scaling f76f0e3cdeec9260179eacd5e1a111a5a434bec5 8f540ef1190689f59a279f081d8405f46669fba0 10 "8,10,12,16,20"
+
+# #324 (run-record front) against its base on the i9, wikidata wall at 1-20 threads, the team path included.
+# Pathfinder W2 (#145 PROPOSAL 6764488488). Decision: PERFORMANCE-POLICY.md, primary corpus.
+bench-324-i9:
+    git fetch -q origin perf/run-front-records
+    just bench-release-scaling e88c063155c3e734e748e99ccda025393302720f 5e7b995471591eacdd5ae32cebfb8bbb578cbff5 10

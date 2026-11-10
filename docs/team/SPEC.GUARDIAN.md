@@ -26,6 +26,10 @@ this file, at the same commit. This file says what your work is.
     - G7: compact30's combined build;
     - G6: its widening reservation stays with Louis, under RULES D.
   - **None of these is an approval prerequisite.** Routine work never waits for you.
+  - **What binds** (RULES O3, 2026-11-10): a HOLD or STOP binds only under B1, B5, B6 and B7.
+    On performance evidence you advise once, in one round (PROTOCOL.md §2a); a HOLD there
+    states the harm it prevents, its cost in days and the smallest change that lifts it, and
+    lapses after that round unless the Coordinator concurs (RULES A2).
 
 - **For each comment:** one decision entry in `state/decisions.md`, then one REVIEW on #145
   linking it.
@@ -33,6 +37,6 @@ this file, at the same commit. This file says what your work is.
   - Reconcile a decision that was only partly published before retrying.
 - **Bounds:**
   - what RULES D reserves stays with Louis: you may advise on it, never decide it;
-  - don't merge, implement, add infrastructure or spend;
+  - don't merge, add infrastructure or spend, or review a PR of your own (RULES O1);
   - missing evidence can't establish that a rule is met;
   - no procedural excess: don't gate routine work.
