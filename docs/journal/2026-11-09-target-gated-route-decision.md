@@ -1,10 +1,14 @@
 # Decision record (DRAFT, not enacted): the target-gated acceptance route
 
-**Status:** draft, for review. Enacting it needs two things:
-- the role tasks' authenticated re-pin to a commit that holds the amended RULES C6 (request 6745788393);
-- the Guardian's review of this record and of `docs/STEWARDSHIP.md`'s "Target-gated changes" paragraph (D071, D072), followed by a LOG on #145.
-
-It applies forward only, from the commit that merges it.
+**Status: enacted 2026-11-10,** by the merge of #309, forward only from that merge commit.
+- **Authority:** RULES C6, as amended in #306 (Louis, in the Coordinator's session, 2026-11-09).
+  The role tasks are re-pinned to `a2da49638ac54d7763de1c167bd054f67ffdc763`, which carries the
+  amended C6. The read-back is verified character for character: request 6745788393, REVIEW
+  6755222109.
+- **Review:** the Guardian, D071 to D074. D074 ruled the final text, at `552d1d3c`, ADMISSIBLE
+  with no further edit. The enacting PR changes nothing in it but this status line and a merge
+  of master.
+- **Log:** on #145, the Coordinator's enactment LOG.
 
 **What it decides:** a second, prospective merge route for changes to measured code whose new behaviour only a target predicate selects, and which CI never satisfies. The route is defined in `docs/STEWARDSHIP.md`, conditions 1 to 7.
 
