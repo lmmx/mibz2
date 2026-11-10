@@ -1481,6 +1481,20 @@
       "status": "finished",
       "disposition": "PROCEED; D097-F1 lifted. Forced plain-team fuzz closes missing route; counters are eligibility classifications, not exact execution counts.",
       "comment": 6771767708
+    },
+    {
+      "id": "D099",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6782224690,
+      "pr": 161,
+      "sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "evidence_digest": "recipe:ae13742fe4c6e2726c178e2409a1d69ef8fca939;driver-sha256:6167171b7889706226340adc0beba89bfbf5e933af944d7f68e49d97bc7bfa07",
+      "commit": "0e03badbdaf9fd77d29302bab2a39779325cb723",
+      "status": "complete",
+      "disposition": "PROCEED bounded diagnostic; exact-head readiness and raw evidence validity remain.",
+      "comment": null
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1809,7 +1823,9 @@
     "766f5b01ce2b50f49b30d4dad8518ede332f4397",
     "b2b68314f41c32d629a36798ad24add98c6722af",
     "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
-    "6a0b23b203ff5023cc649de6fade27c8cb0e45e5"
+    "6a0b23b203ff5023cc649de6fade27c8cb0e45e5",
+    "cac330ad1e62abc09ec3befea2d33547fb30edf3",
+    "0e03badbdaf9fd77d29302bab2a39779325cb723"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1908,7 +1924,8 @@
     6764248398,
     6764400880,
     6770180620,
-    6771542584
+    6771542584,
+    6782224690
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1988,8 +2005,9 @@
   },
   "current_execution": {
     "active_comment": 6782224690,
-    "status": "in progress",
-    "decision": "D099"
+    "status": "complete",
+    "decision": "D099",
+    "work_commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
   },
   "duplicate_events": [
     {
@@ -2749,6 +2767,14 @@
       "incoming_comment": 6771542584,
       "decision": "D098",
       "commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
+    },
+    {
+      "pr": 161,
+      "sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "evidence_digest": "recipe:ae13742fe4c6e2726c178e2409a1d69ef8fca939;driver-sha256:6167171b7889706226340adc0beba89bfbf5e933af944d7f68e49d97bc7bfa07",
+      "incoming_comment": 6782224690,
+      "decision": "D099",
+      "commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3528,9 +3554,11 @@
     {
       "comment_id": 6782224690,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D099",
-      "progress": "Migration passed; receipt before bounded recipe review."
+      "progress": "Bounded recipe review PROCEED; awaiting publication.",
+      "receipt_commit": "cac330ad1e62abc09ec3befea2d33547fb30edf3",
+      "work_commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
     }
   ],
   "migrated_from": {
