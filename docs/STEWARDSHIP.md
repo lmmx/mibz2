@@ -34,95 +34,24 @@ The steward may open, review and merge pull requests into `master`, and may rele
 these gates.
 
 **Changes that touch measured code** (`src/**`, `Cargo.toml`, `Cargo.lock`, the bench's inputs)
-merge only when all of these hold:
-- the tests and parity checks pass;
-- CI is green on the head that will merge;
-- the CI paired A/B bench (`.github/workflows/bench.yml`) shows an end-to-end improvement
-  beyond noise, meaning its 95% interval excludes zero in the beneficial direction;
-- no other figure regresses unacceptably.
+merge under PERFORMANCE-POLICY.md (2026-11-10): the tests and parity checks pass, CI is green on
+the head that will merge, and the CI paired A/B bench (`.github/workflows/bench.yml`) is judged
+by that policy.
 
-**Target-gated changes** (D071, D072). This route applies only to registrations frozen after
-the authorised effective commit that merges this paragraph, citing it, and before any of their
-qualification observations. Old data may inform their design but never qualifies. A change to
-measured code whose new behaviour is selected only by a *target predicate*, a pure function of
-discovered machine facts and the requested thread count, may merge by this route instead of
-the beneficial CI interval above. This route is not evidence-equivalent to a CI gain: it
-accepts an off-target noninferiority margin of 2%, assessed by the confidence bounds below, in
-exchange for on-target superiority under this route. Every condition must be met; missing or
-invalid evidence fails.
+**Maintenance route** (2026-11-10). A change that is neutral on the bench and improves the code
+(simpler, safer, a better API) merges on green CI and one review.
 
-1. **The predicate is frozen before data,** with its hardware rationale: which discovered facts
-   it reads, why each is needed, and how an unknown or unreadable fact is handled (it must
-   select the existing plan). A CI test evaluates it on every CI runner and finds it false,
-   and asserts that the public dispatch there builds master's plan. Equal plans establish
-   fallback selection only, not zero discovery, layout or shared-code cost; that cost is what
-   condition 2 bounds.
-2. **Off-target noninferiority, on CI.** On the CI paired A/B bench, at every cell of the
-   standing CI end-to-end bench at the pinned bench revision (runner configuration × corpus ×
-   thread count × wall and CPU time), enumerated completely in the registration, the one-sided
-   95% upper bound of head over base is at most 1.02. Every cell must pass: an
-   intersection-union test at level 5% for the claim "no cell is worse by more than the
-   margin". It is not simultaneous interval coverage, and it does not protect against
-   retries; there are none (condition 6). Any omission or change to that standing grid is a
-   separate prospective bench-policy decision, not an exclusion available within this route.
-   Ratios are head/base times under the registered paired geometric-mean estimator. Passing
-   supplies a confidence-based noninferiority conclusion on these cells, not a deterministic
-   bound on every machine or run.
-3. **On-target superiority, registered before data.** A frozen workstation A/B (RULES C5) on
-   a machine where the predicate is true measures the exact candidate against master through
-   the public entry point. Every cell in the complete registered on-target machine × workload
-   × enabled-budget matrix must pass both tests: wall speed (base/head) lower bound >1.02 and
-   CPU time (head/base) upper bound ≤1.02. Let N be the number of required cells and K=2N the
-   number of intervals. Use a two-sided wall interval of confidence 1−0.05/K and a one-sided
-   CPU upper bound of confidence 1−0.05/K for each cell. These K intervals form one Bonferroni
-   family with coverage at least 95%, assuming each constituent interval has its stated
-   coverage. Missing, invalid or nonpassing cells fail qualification; no cell may be selected
-   or removed after its results.
-4. **On-target no harm at the fallback budgets.** In the same run, at every registered
-   fallback budget where the predicate is false, wall head over base has a one-sided upper
-   bound at most 1.02, Bonferroni over all required fallback machine × workload × budget
-   wall-time contrasts: with M such contrasts, each one-sided upper bound has confidence
-   1−0.05/M. The registration fixes a nonempty set covering the relevant predicate transitions
-   and gives the rationale for any untested fallback budgets. Every one must be shown. NOT
-   SHOWN fails qualification; it is not demonstrated harm.
-5. **Coverage and adoption reach.** Before qualification data, the registration defines the
-   deployment class, the complete required machine × workload × enabled-budget matrix, and the
-   measured facts on which its selection depends. Every required cell must qualify. For every
-   unmeasured part of that deployment class, it states the mechanism-based grounds for
-   extrapolation, the material differences not covered and the residual risk accepted by the
-   authorised adoption decision. The coverage requirement and extrapolation are reviewed
-   before the qualification run. A narrowed predicate qualifies only to the extent its
-   resulting class is covered by this argument; shared facts alone do not establish coverage.
-   Where the multi-model route is used, at least two distinct models are required, but model
-   count alone is insufficient. If coverage cannot be justified, narrow deployment or obtain
-   the missing evidence. Release notes disclose measured scope and extrapolation separately.
-6. **The protocol is fixed in the registration:** rounds, the stopping rule (one attempt per
-   registration), what makes a run invalid, and what follows an invalid run. No retry to
-   pass. A later registration for the same change discloses every earlier attempt and its
-   outcome and justifies its information value; all outcomes are retained. Freeze the
-   candidate and master baseline commits, public entry point, toolchain and measured inputs,
-   pair construction and geometric-mean estimand, interval calculation, complete matrices,
-   sample size and stopping rule, exclusions, and invalid-run disposition before any
-   qualifying observations, including CI. A changed measured candidate or baseline requires
-   fresh evidence under a prospectively justified registration. An invalid attempt is
-   retained and never an implicit licence to retry. Later registrations cannot reset the
-   no-retry-to-pass rule.
-7. **Tests, parity and green CI** hold on the head that merges, and the remaining conditions
-   above (no other figure regressing unacceptably) apply as for any measured change. Their
-   unacceptable-regression criteria, including the reporting and disposition of CPU and peak
-   RSS, are fixed before qualification data, not chosen afterwards.
+**Target-gated changes** follow PERFORMANCE-POLICY.md §2: the gain on the target machine (C5), a
+deterministic CI test that the predicate is false and master's plan is built, and a neutral CI
+bench. Registrations frozen under the earlier route (D071, D072) keep their registered verdicts
+(RULES B4, C2); a change is judged prospectively under this policy on a fresh CI bench, as #324
+was. **The earlier target-gated route (its conditions 1–7) is retired** and kept as history:
+its text is at `12f0e192c:docs/STEWARDSHIP.md`, and in the D071 and D072 registrations.
 
-**Before opening a PR that changes the default decoding kernel,** account for the whole decoder,
-not only the part being optimised (RULES.md C4, S2).
-- **Count the instructions** executed in `decode_block` on master and on the candidate, split
-  into build, walk and the rest. Use matched toolchain, flags and input, and archive the
-  profiles. Charge every induced cost: work, memory traffic, synchronisation and control.
-- **An excess over master's count needs a stated mechanism,** written down first: what it
-  buys (overlap, locality, less contention), its predicted effect at each thread count CI
-  measures, and what falsifies it. Falsified, the PR is closed and written up.
-- **End-to-end evidence under the applicable acceptance route above decides the merge,** not
-  the instruction count alone. The target-gated route requires both its CI and workstation
-  conditions.
+**A PR changing the default kernel** states its mechanism, its predicted end-to-end effect, and
+what falsifies it. CI's end-to-end bench decides. Instruction counts are optional diagnostics. An
+instruction-count result gets a wall-clock CI bench within one working cycle
+(PERFORMANCE-POLICY §4), or it is dropped.
 - **Timing on the shared development machine** is never the evidence. A workstation run is
   evidence only under RULES.md C5.
 

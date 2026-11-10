@@ -6,4 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)
+bench-cold-start             master                    W1 cold start: gap/no-gap/pinned/start-spin/held-spinner/x4 arms (rule: docs/journal/2026-11-10-cold-start.md)
