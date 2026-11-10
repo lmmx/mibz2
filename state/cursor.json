@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782560706,
+  "last_examined_comment_id": 6782600574,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -224,6 +224,18 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6782590919": {
+      "status": "in_progress",
+      "delivery_id": "bbe92120-dd61-11f1-917b-dc6327a2c61e",
+      "comment_updated_at": null,
+      "planned_action": "Assess narrowly scoped Run signal bridge; route one design-only authority/security review to free Guardian. No implementation or signal."
+    },
+    "6782600574": {
+      "status": "completed",
+      "delivery_id": "d07faaf0-dd61-11f1-99dc-6cea2516bce1",
+      "comment_updated_at": null,
+      "disposition": "Observer account8df9bca616474cb0f8e6aec63cf573d2e39d97b4 and finished cursor05ff83886a75c3fb3a2276e7c7b4672bcbd24368 verified; no correction."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -270,10 +282,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6782560706,
-    "delivery_id": "7adb61c0-dd61-11f1-900b-24fbcd5f709d",
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "comment_id": 6782600574,
+    "delivery_id": "d07faaf0-dd61-11f1-99dc-6cea2516bce1",
+    "disposition": "observer_completed_and_new_external_proposal_under_assessment"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -356,23 +367,15 @@
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694"
     },
     "guardian": {
-      "status": "completed",
-      "comment_id": 6782334222,
-      "scope": "New #366 occupancy invariant incident",
-      "prior_completed": 6782224690,
-      "recipient_receipt": {
-        "comment_id": 6782334222,
-        "pr": 161,
-        "status": "in progress",
-        "decision": "D100",
-        "progress": "Migration verified; investigating occupancy ledger assertion."
-      },
-      "review_comment_id": 6782473662
+      "status": "in_progress_before_post",
+      "scope": "Design-only Run signal bridge security/authority assessment",
+      "source_comment_id": 6782590919
     },
     "observer": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "comment_id": 6782551058,
-      "scope": "D100 accounting diagnosis and completed Codex census/F01 handoff"
+      "scope": "D100 accounting diagnosis and completed Codex census/F01 handoff",
+      "review_comment_id": 6782600574
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -448,6 +451,20 @@
       "comment_id": 6782363899,
       "scope": "Batched programme state through Guardian D099 and Optimiser completed pricing; later B5 HOLD must be reflected from channel",
       "review_comment_id": 6782452706
+    },
+    {
+      "status": "completed",
+      "comment_id": 6782334222,
+      "scope": "New #366 occupancy invariant incident",
+      "prior_completed": 6782224690,
+      "recipient_receipt": {
+        "comment_id": 6782334222,
+        "pr": 161,
+        "status": "in progress",
+        "decision": "D100",
+        "progress": "Migration verified; investigating occupancy ledger assertion."
+      },
+      "review_comment_id": 6782473662
     }
   ],
   "codex_correction": {
@@ -483,7 +500,7 @@
       "admitted": 196,
       "row_share_percent": 84.117
     },
-    "ci": "census and CI success; Test and Benchmark pending; legacy pre-commit failure",
+    "ci": "Census,CI,Test,Benchmark success; legacy pre-commit failure remains",
     "artifact_digest_claim": "08c80df363d8d5db6bdc1310a66a3fa886ca0b0c36262cf43b93edf63a7049aa upload reported; root download not verified"
   }
 }
