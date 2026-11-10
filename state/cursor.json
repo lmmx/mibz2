@@ -831,11 +831,11 @@
     {
       "comment_id": 6757179363,
       "pr": 160,
-      "status": "complete",
+      "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "02cc5f89988abb9ab436eae1af4b89576c19d590",
-      "progress": "Work committed; publication pending.",
+      "progress": "Incorporating D080 received before publication; adding actual-master code/layout control.",
       "report_path": "state/records/reviews/inbox-6757179363/report.md",
       "report_commit": "ce84c983e9fe252c66bc816e6b2194c79d8895f3",
       "audit_scope": {

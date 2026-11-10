@@ -27,7 +27,7 @@ instrumented count rows agree on bytes/hash. Output agreement is not independent
 Paired log-ratio arithmetic with t17 reproduces the screen figures. Across 56 arm/cell rows
 and 112 metric intervals, none is wholly above 1; both arms have beneficial intervals.
 Tests/Miri are reported and their source scope inspected, not rerun or certified here.
-The Guardian separately judges research merge and exact-head safety/CI.
+Guardian D080 (REVIEW6757246555, decision b4d7a4a755510af80d9c6a369a43d8b54364c3be) arrived before publication: HOLD the measurement-only merge classification. Shared's new budget field and production loads can change code/layout even at2000. Coordinator6757250382 accepted the HOLD and returned #321 to draft. Both screen passes survive; research continues, with no research-arm merge exception.
 
 | Archived Wikidata cell | pool0 wall / 2000 | pool0 CPU / 2000 | Interpretation |
 |---|---|---|---|
@@ -117,12 +117,11 @@ rounds before data. The 18-round CI variance is not an i9 sample-size justificat
 |---|---|---|
 | Forced 1×3, full target affinity | 2000 vs 0 | Is an exposed caller/helper wake penalty visible with spare cores? |
 | Forced 3×3, full target affinity | 2000 vs 0 | Does the actual pipelined population turn the CPU saving into wall benefit? |
-| Actual public default, requested 10 | baseline vs proposed guarded pool0 | Does public dispatch reach exactly the treatment intended for adoption? |
+| Actual public default, requested 10 | old/master2000, candidate2000, candidate0 | Does public dispatch reach the treatment, and what does the new field/code/layout cost before changing its value? |
 
-Use Wikidata and text in each context: **12R decodes** for two arms, three contexts,
-two corpora, R fixed paired rounds; setup/count/safety work is additional. If public default
+Use Wikidata and text in each context: **14R decodes** (two forced-plan contexts × two arms × two corpora, plus public10 × three arms × two corpora), R fixed balanced rounds; setup/count/safety work is additional. The old/master-to-candidate2000 contrast is a code/layout control, not assumed identity. Candidate0 must ultimately beat old/master directly. If public default
 and forced 3×3 are experimentally identical, prove that before freeze and remove the redundant
-diagnostic contrast then, not after seeing its data. Separate instrumented counts should match
+diagnostic contrast then, not after seeing its data. Do not remove the old/master code/layout control on the basis of equal2000 budgets. Separate instrumented counts should match
 each timed plan/affinity, record site counts and actual thread/plan identity, and not be pooled
 into timing.
 
