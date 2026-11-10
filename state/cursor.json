@@ -984,10 +984,10 @@
     {
       "comment_id": 6758723399,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Work complete: archived 420-row grid replayed with source median convention; full construction and storage charged; separate diagnostic priced; D4 filters and #195 restrictions retained. Preparing publication.",
+      "progress": "Completed report, evidence replay and ledger committed. Publication pending; no duplicate optimizer REVIEW found on #145.",
       "report_path": "state/records/reviews/inbox-6758723399/report.md",
       "audit_scope": {
         "implementation": false,
@@ -996,7 +996,8 @@
         "historical_grid_rows_replayed": 420,
         "model_predictions_only": true,
         "safety_certification": false
-      }
+      },
+      "report_commit": "9ff1d0e2e4d32921f2400376378fb9efec2f6436"
     }
   ],
   "migrated_from": {
