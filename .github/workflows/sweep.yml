@@ -8,17 +8,21 @@
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
 # stages alone and with every CPU busy, as a multi-threaded decode runs them. With
 # `tool: pair`, examples/pair.rs runs once, pinning its own threads (ROUNDS rounds, at
-# least 5): the walk, MTF and the build each measured on one CPU beside a chosen load
-# (another walk, a one-line chain, an ALU loop, MTF, the build, a streaming read) on its
-# SMT sibling and on the other core, and alone; its markdown is the summary, its JSON
-# (pair.json) in the artifact. Never part of bench.yml or a pull request's benchmark.
+# least 7; a reading uses 9): the walk, MTF and the build each measured on one CPU beside
+# a chosen load (another walk, a one-line chain, ALU loops, MTF, the build, streaming
+# reads, a whole decode, and for the walk a PAUSE spin, an L1 store stream, 32-lane
+# chases and the same block walked together) on its SMT sibling and on the other core,
+# with the other core idle or busy, and alone; plus fixed work for both siblings; its
+# markdown is the summary, its JSON (pair.json) and the runner's records
+# (pair-topology.txt) in the artifact. Registered in docs/journal/2026-11-05-pair-matrix.md.
+# Never part of bench.yml or a pull request's benchmark.
 name: Walk sweep
 
 on:
   workflow_dispatch:
     inputs:
       rounds:
-        description: "Rounds (each walks every block at every setting); for phases, its passes; for pair, at least 5"
+        description: "Rounds (each walks every block at every setting); for phases, its passes; for pair, at least 7 (9 for a reading)"
         required: false
         default: "5"
       tool:
@@ -40,6 +44,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      # The runner's CPU model first, seconds in, so a run on a model already covered can be
+      # cancelled before the build (also a notice on the run's page)
+      - name: Runner
+        run: |
+          model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
+          echo "runner: $model, $(nproc) CPUs"
+          echo "::notice title=runner::$model, $(nproc) CPUs"
 
       # lbzip2: examples/windows.rs's check of the Wikidata blocks
       - name: lbzip2
@@ -120,22 +132,43 @@ jobs:
 
       # The pair matrix: one process on the whole runner, its threads pinned by itself (the
       # measured stage on one CPU, its load on the SMT sibling or on the other core), so no
-      # taskset; it says so, and runs the cross-core conditions only, where there is no SMT
+      # taskset; it says so, and runs the cross-core conditions only, where there is no SMT.
+      # pair-topology.txt records the runner: its cores, each cache's sharing (whether the
+      # two cores share an L3), the guest's idle path, its boot line and hugepages; the
+      # binary reads the CPU model and GITHUB_RUN_ID into pair.json itself
       - name: Pair
         if: inputs.tool == 'pair'
         env:
           ROUNDS: ${{ inputs.rounds }}
         run: |
           case "$ROUNDS" in ''|*[!0-9]*) echo "::error::rounds: a number"; exit 1 ;; esac
-          [ "$ROUNDS" -ge 5 ] || { echo "::error::pair: at least 5 rounds"; exit 1; }
+          [ "$ROUNDS" -ge 7 ] || { echo "::error::pair: at least 7 rounds (9 for a reading)"; exit 1; }
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          head="runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); pair, rounds $ROUNDS"
+          head="runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); pair, rounds $ROUNDS; run $GITHUB_RUN_ID"
           echo "$head"
-          for c in /sys/devices/system/cpu/cpu[0-9]*; do
-            echo "$(basename "$c"): siblings $(cat "$c/topology/thread_siblings_list"), core_id $(cat "$c/topology/core_id")"
-          done | sort -V | tee pair-topology.txt
+          sys=/sys/devices/system/cpu
+          rd() { cat "$1" 2>/dev/null || echo unreadable; }
+          {
+            for c in $sys/cpu[0-9]*; do
+              echo "$(basename "$c"): siblings $(rd "$c/topology/thread_siblings_list"), core_id $(rd "$c/topology/core_id")"
+            done | sort -V
+            for c in $sys/cpu[0-9]*; do
+              for i in "$c"/cache/index*; do
+                echo "$(basename "$c") $(basename "$i"): L$(rd "$i/level") $(rd "$i/type") $(rd "$i/size"), shared_cpu_list $(rd "$i/shared_cpu_list")"
+              done
+            done | sort -V
+            echo "cpuidle current_driver: $(rd $sys/cpuidle/current_driver)"
+            echo "cpuidle current_governor: $(cat $sys/cpuidle/current_governor 2>/dev/null || rd $sys/cpuidle/current_governor_ro)"
+            echo "transparent_hugepage enabled: $(rd /sys/kernel/mm/transparent_hugepage/enabled)"
+            echo "transparent_hugepage defrag: $(rd /sys/kernel/mm/transparent_hugepage/defrag)"
+            echo "kernel: $(uname -r)"
+            echo "cmdline: $(rd /proc/cmdline)"
+            echo "lscpu -C:"
+            lscpu -C 2>&1 || true
+          } > pair-topology.txt
+          cat pair-topology.txt
           start=$SECONDS
           target/release/examples/pair corpora/wikidata.bz2 "$ROUNDS" "$ghz" --json pair.json > pair.md
           took=$((SECONDS - start))
