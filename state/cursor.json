@@ -1229,8 +1229,9 @@
       "pr": 317,
       "sha": "efc1bd88c73b07d917617eddfdf008dffc691e3d",
       "commit": "820e507106a064d9d6706b9a205fed368a5e209f",
-      "status": "complete",
-      "disposition": "D079 three scoped holds lifted; remaining readiness/admission conditions retained"
+      "status": "finished",
+      "disposition": "D079 three scoped holds lifted; remaining readiness/admission conditions retained",
+      "comment": 6757750433
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1309,7 +1310,8 @@
     6756184275,
     6756634391,
     6757058587,
-    6757246555
+    6757246555,
+    6757750433
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1571,7 +1573,8 @@
     6756084723,
     6756570238,
     6756994744,
-    6757176848
+    6757176848,
+    6757688316
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2859,11 +2862,13 @@
     {
       "comment_id": 6757688316,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D081",
-      "progress": "D079 scoped holds lifted; REVIEW pending.",
+      "progress": "Exact REVIEW readback verified; pinned verifier coordinator-only FROM limitation; independent Guardian checks pass.",
       "receipt_commit": "048698ebc9cd281489bd672cd450f1851290aa2f",
-      "work_commit": "820e507106a064d9d6706b9a205fed368a5e209f"
+      "work_commit": "820e507106a064d9d6706b9a205fed368a5e209f",
+      "review_comment_id": 6757750433,
+      "complete_cursor_commit": "eaaf79d9ee5f20386220e4921204d2b85b5b0c59"
     }
   ],
   "migrated_from": {
