@@ -309,3 +309,17 @@ And later in the same session:
   - ROLES.md is updated to match.
 - **Unchanged:** the Pathfinder's limits (no `src/`, no merge, release, workstation timing or
   self-certification) and PROTOCOL §11 for negative results on a line Louis is pursuing.
+
+## 2026-11-10: the Pathfinder's MODE stanza (by Louis)
+
+- **Source:** Louis, in the Coordinator's session: "we need a durable pathfinder MODE. please
+  provide". He supplied a stanza drafted with ChatGPT, written in MODE.RATIONALE.md's
+  differential recurrence ("Smaller table? Smaller live set. Smaller live set? Independent
+  workers."), to be placed after the Optimiser's stanza, with SPEC.PATHFINDER.md switched from
+  the Researcher stanza to its own.
+- **Decided (in force):**
+  - MODE.md gains the Pathfinder stanza verbatim, after the Optimiser's, and its history line
+    records the amendment.
+  - SPEC.PATHFINDER.md now says "Follow MODE.md's Pathfinder stanza".
+- **Unchanged:** the spec's operational rules (#327) and the register of the other stanzas.
+  MODE.md is changed only by Louis.
