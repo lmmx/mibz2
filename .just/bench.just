@@ -225,7 +225,9 @@ bench-pmu-probe *args:
 bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     #!/usr/bin/env bash
     set -euo pipefail
-    git fetch -q --tags origin
+    # Release tags only: a fetch of every tag fails ("would clobber existing tag") once a
+    # ready/<recipe> tag has moved on origin, as ready tags do (bench/workstation-queue.txt).
+    git fetch -q origin '+refs/tags/v*:refs/tags/v*'
     # (release tags only, newest first: vX.Y.Z, no pre-releases)
     releases=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV)
     NEW="{{NEW}}"; OLD="{{OLD}}"
