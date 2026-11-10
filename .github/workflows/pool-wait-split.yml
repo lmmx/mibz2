@@ -1,0 +1,210 @@
+# The pool-wait split's CI screen (docs/journal/2026-11-10-pool-wait-split.md, registered
+# before any of its data): arms both2000, both0 and helper0/join2000 (`mibz2-pool2000`,
+# `-pool0`, `-poolh0j2000`: the pipelined teams with park and small, their pools' two own
+# waits spinning up to 2,000 times at both, at neither, or only at the caller's join, before
+# they park) timed by examples/ab.rs on the standing bench's corpora, interleaved in one
+# process shape on one runner; then their waits counted, and their wake-to-work latencies
+# recorded, untimed, by examples/wait_audit.rs (feature `wait-stats`, a separate build: the
+# timed arms are built without it and read no clock at the pool's waits).
+#
+# One attempt a registration: it runs when a pull request is labelled
+# `bench:pool-wait-split` (never on a push, so a later docs commit can't re-run it), or from
+# the Actions tab. Its figures are the run's summary and artifact, never recorded.
+# (It replaces #321's pool-wait.yml on this branch: that screen's arm 64 is not offered here.)
+name: Pool-wait split
+
+on:
+  pull_request:
+    types: [labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ROUNDS: 18 # three full cycles of ab's arm-order rotation over three arms (2 x 3 rounds each)
+  SCALE: 4 # the standing bench's: ab gen's corpora of 8-20 MB of output each
+  SETTLE: 0.25
+  CARGO_TERM_COLOR: never
+
+jobs:
+  arms:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'bench:pool-wait-split'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Head
+        run: echo "HEAD_SHA=$(git rev-parse HEAD)" | tee -a "$GITHUB_ENV"
+
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && lbzip2 --version | head -1
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # The release profile, as the standing bench builds it; the counting build apart
+      - name: Build
+        run: |
+          cargo build --release --example ab --example windows
+          CARGO_TARGET_DIR=target/ws cargo build --release --features wait-stats --example wait_audit
+          mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/ws/release/examples/wait_audit bin/wait_audit
+
+      - name: Corpora
+        run: bin/ab gen corpora "$SCALE"
+
+      # The same Wikidata blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+          ls -l corpora
+
+      - name: Environment
+        run: bin/ab env | tee env.json
+
+      # The standing bench's thread grid (1, 2 and the runner's CPUs, --spread), and 9: the
+      # default's own three teams of three
+      - name: Run
+        run: |
+          threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc),9" || echo "1,$(nproc),9")
+          echo "threads $threads, rounds $ROUNDS"
+          start=$SECONDS
+          bin/ab run runs.jsonl --arms mibz2-pool2000,mibz2-pool0,mibz2-poolh0j2000 --threads "$threads" \
+            --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+          echo "run: $((SECONDS - start)) s"
+
+      # Unchanged output: every run of every arm decoded its corpus to the same bytes, without error
+      - name: Same bytes
+        run: |
+          python3 - runs.jsonl <<'EOF'
+          import json, sys
+          by = {}
+          bad = []
+          for line in open(sys.argv[1]):
+              if not line.strip():
+                  continue
+              r = json.loads(line)
+              if r.get("err"):
+                  bad.append(f"{r.get('arm')} {r.get('file')} {r.get('threads')}: {r['err']}")
+              key = r.get("file") or r.get("corpus")
+              by.setdefault(key, set()).add((r["out"], r["hash"]))
+          for k, v in sorted(by.items()):
+              print(f"{k}: {len(v)} distinct output(s)")
+              if len(v) != 1:
+                  bad.append(f"{k}: {sorted(v)}")
+          if bad:
+              print("\n".join(bad))
+              sys.exit(1)
+          EOF
+
+      # The registered screen (each arm over both2000), then the registered secondary
+      # contrast (each over both0: does helper0/join2000 recover both0's caller-wake penalty?)
+      - name: Figures
+        run: |
+          { echo "## Pool-wait split at $HEAD_SHA (reference: both2000, mibz2-pool2000)"; echo
+            bin/ab summary runs.jsonl --ref mibz2-pool2000
+            echo; echo "## The secondary contrast (reference: both0, mibz2-pool0)"; echo
+            bin/ab summary runs.jsonl --ref mibz2-pool0; } > summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat summary.md
+
+      # Untimed: each arm's waits counted (spins, parks, wakes; how each wait ended) and its
+      # pool waits' wake-to-work latencies recorded, on the Wikidata blocks, at one team of
+      # three and at three, after the timing
+      - name: Counts and latencies
+        run: |
+          for pool in 2000 0 h0j2000; do
+            for teams in 1 3; do
+              bin/wait_audit corpora/wikidata.bz2 --teams "$teams" --k 3 --levers both --pool "$pool" \
+                --rounds 3 --label "ci-${teams}x3" >> counts.jsonl
+            done
+          done
+          python3 - counts.jsonl <<'EOF' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, math, sys
+          from collections import defaultdict
+          acc = defaultdict(lambda: defaultdict(float))
+          lat = defaultdict(lambda: defaultdict(int))
+          lsum = defaultdict(float)
+          n = defaultdict(int)
+          hashes = set()
+          FIELDS = ("waits", "immediate", "ended_spinning", "parked", "spins", "spins_wasted", "parks", "wakes")
+          for line in open(sys.argv[1]):
+              r = json.loads(line)
+              key = (r["teams"], r["pool_wait"])
+              n[key] += 1
+              hashes.add((r["bytes"], r["hash"]))
+              for site, c in r["sites"].items():
+                  for f in FIELDS:
+                      acc[key, site][f] += c[f]
+                  for cls, l in c.get("latency", {}).items():
+                      lsum[key, site, cls] += l["mean_ns"] * l["count"]
+                      for lo, m in l["buckets"].items():
+                          lat[key, site, cls][float(lo)] += m
+
+          def upper(lo):
+              # (the bucket's upper bound: a quarter octave above its lower bound; [0, 1) first)
+              return 1.0 if lo < 1 else lo + 2 ** math.floor(math.log2(lo)) / 4
+
+          def q(b, p):
+              total = sum(b.values())
+              want = max(1, math.ceil(p * total))
+              seen = 0
+              for lo in sorted(b):
+                  seen += b[lo]
+                  if seen >= want:
+                      return upper(lo)
+              return float("nan")
+
+          def us(ns):
+              return f"{ns / 1000:,.1f}"
+
+          print("\n## Wait counts (untimed, mean of 3 rounds a line)\n")
+          print("| plan | arm | site | " + " | ".join(FIELDS) + " |")
+          print("|---|---|---|" + "--:|" * len(FIELDS))
+          for (key, site), c in sorted(acc.items()):
+              m = n[key]
+              print(f"| {key[0]}x3 | {key[1]} | {site} | " + " | ".join(f"{c[f] / m:,.0f}" for f in FIELDS) + " |")
+          print("\n## Wake-to-work latencies (untimed, counting build, 3 rounds pooled)\n")
+          print("pool_helper_idle: the run's publication to the helper's claim of its call; "
+                "pool_caller_join: the run's last helper's end to the caller's wait ending. "
+                "Quantiles are bucket upper bounds (a quarter octave), in microseconds.\n")
+          print("| plan | arm | site | ended | waits a round | mean µs | p50 µs | p90 µs | p99 µs | max µs |")
+          print("|---|---|---|---|--:|--:|--:|--:|--:|--:|")
+          for (key, site, cls), b in sorted(lat.items()):
+              total = sum(b.values())
+              if total == 0:
+                  continue
+              print(f"| {key[0]}x3 | {key[1]} | {site} | {cls} | {total / n[key]:,.0f} | "
+                    f"{us(lsum[key, site, cls] / total)} | {us(q(b, .5))} | {us(q(b, .9))} | "
+                    f"{us(q(b, .99))} | {us(q(b, 1.0))} |")
+          print(f"\ndistinct outputs across all arms and plans: {len(hashes)}")
+          if len(hashes) != 1:
+              sys.exit(1)
+          EOF
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: pool-wait-split-${{ env.HEAD_SHA }}
+          path: |
+            runs.jsonl
+            env.json
+            summary.md
+            counts.jsonl
+          if-no-files-found: ignore

@@ -25,6 +25,11 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the counting build's own tests (feature `wait-stats`: the pool's split budgets reach
+      # their own waits, and the wake-to-work latencies are recorded), alone, since its counts
+      # are the process's
+      - name: Counting-build tests
+        run: cargo test --features wait-stats --lib -- wait_stats latency_buckets --test-threads=1
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab

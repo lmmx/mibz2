@@ -6,8 +6,23 @@
 //!
 //! ```text
 //! cargo run --release --features wait-stats --example wait_audit -- FILE.bz2 \
-//!     [--teams 3] [--k 3] [--levers both|park|small|none] [--rounds 3] [--label TEXT]
+//!     [--teams 3] [--k 3] [--levers both|park|small|none] [--pool 2000|0|h0j2000]
+//!     [--rounds 3] [--label TEXT]
 //! ```
+//!
+//! `--pool` picks the pool-wait arm (`Levers::pool`, docs/journal/2026-11-10-pool-wait-split.md):
+//! the spin budgets of the pools' own two waits, 2,000 at both (the default's, both2000), 0
+//! at both (both0), or 0 at the helpers' idle wait and 2,000 at the caller's join
+//! (helper0/join2000). Each line names its arm (`pool_wait`, `idle_spins`, `join_spins`)
+//! and, per site, the unparks aimed at its waiters (`wakes`) beside the spins and parks.
+//!
+//! At the pool's two sites each line also carries the round's wake-to-work latencies
+//! (`latency`, `wait_stats::latency`), by how the wait ended (immediate, spun, parked):
+//! their count, mean and quantiles (each a bucket's upper bound, a quarter octave wide), and
+//! the nonzero buckets. At `pool_helper_idle`, from the run's publication to the helper's
+//! claim of its call (the launch latency a helper adds); at `pool_caller_join`, from the
+//! run's last helper's end to the caller's wait ending. Times, in the counting build only:
+//! the timed builds read no clock there.
 //!
 //! Each round is one decode of FILE by `BzReader::parallel_pipelined_levers(File, teams, k,
 //! SLOTS_PER_THREAD × teams, Kernels::detect(), levers)` (the default decoder's own
@@ -64,6 +79,43 @@ fn spin_cost_ns() -> f64 {
     best
 }
 
+/// A pool site's latencies this round, as `,"latency":{"parked":{"count":..,"mean_ns":..,
+/// "p50_ns":..,"p90_ns":..,"p99_ns":..,"max_ns":..,"buckets":{"LO":N,..}},..}` (each
+/// quantile a bucket's upper bound; a bucket keyed by its lower bound), or nothing at the
+/// walk's sites (no latency is kept there)
+fn latencies(site: wait_stats::Site) -> String {
+    use wait_stats::{bucket_bounds, latency, Site, ENDED};
+    if !matches!(site, Site::HelperIdle | Site::CallerJoin) {
+        return String::new();
+    }
+    let classes: Vec<String> = ENDED
+        .iter()
+        .map(|&e| {
+            let l = latency(site, e);
+            let buckets: Vec<String> = l
+                .buckets
+                .iter()
+                .enumerate()
+                .filter(|(_, &n)| n > 0)
+                .map(|(i, n)| format!("\"{}\":{n}", bucket_bounds(i).0))
+                .collect();
+            format!(
+                "\"{}\":{{\"count\":{},\"mean_ns\":{:.1},\"p50_ns\":{},\"p90_ns\":{},\
+                 \"p99_ns\":{},\"max_ns\":{},\"buckets\":{{{}}}}}",
+                e.name(),
+                l.count,
+                l.mean_ns(),
+                l.quantile_ns(0.5),
+                l.quantile_ns(0.9),
+                l.quantile_ns(0.99),
+                l.quantile_ns(1.0),
+                buckets.join(",")
+            )
+        })
+        .collect();
+    format!(",\"latency\":{{{}}}", classes.join(","))
+}
+
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let path = args.first().expect("FILE.bz2").clone();
@@ -73,10 +125,13 @@ fn main() -> std::io::Result<()> {
     let rounds: usize = arg(&args, "--rounds", 3);
     let levers_name: String = arg(&args, "--levers", "both".to_string());
     let label: String = arg(&args, "--label", String::new());
+    let pool_name: String = arg(&args, "--pool", "2000".to_string());
+    let pool = mibz2::parallel::PoolWait::parse(&pool_name).expect("--pool 2000, 0 or h0j2000");
     let levers = mibz2::parallel::Levers {
         park: levers_name == "park" || levers_name == "both",
         small: levers_name == "small" || levers_name == "both",
         spin2k: false,
+        pool,
     };
     let spin_ns = spin_cost_ns();
     let tick = 0.01; // (USER_HZ is 100 on Linux)
@@ -118,7 +173,8 @@ fn main() -> std::io::Result<()> {
             all_spins += c.spins;
             sites.push(format!(
                 "\"{}\":{{\"waits\":{},\"immediate\":{},\"ended_spinning\":{},\"parked\":{},\
-                 \"yielded\":{},\"spins\":{},\"spins_wasted\":{},\"parks\":{},\"yields\":{}}}",
+                 \"yielded\":{},\"spins\":{},\"spins_wasted\":{},\"parks\":{},\"yields\":{},\
+                 \"wakes\":{}{}}}",
                 s.name(),
                 c.waits,
                 c.immediate,
@@ -128,14 +184,20 @@ fn main() -> std::io::Result<()> {
                 c.spins,
                 c.spins_wasted,
                 c.parks,
-                c.yields
+                c.yields,
+                c.wakes,
+                latencies(s)
             ));
         }
         println!(
             "{{\"label\":\"{label}\",\"round\":{round},\"teams\":{teams},\"k\":{k},\
-             \"levers\":\"{levers_name}\",\"bytes\":{bytes},\"hash\":\"{hash:016x}\",\
+             \"levers\":\"{levers_name}\",\"pool_wait\":\"{}\",\"idle_spins\":{},\"join_spins\":{},\
+             \"bytes\":{bytes},\"hash\":\"{hash:016x}\",\
              \"sites\":{{{}}},\"spins_all\":{all_spins},\"spin_ns_estimate\":{spin_ns:.2},\
              \"spin_cpu_s_estimate\":{:.4},\"process_cpu_s_indicative\":{cpu_s:.2}}}",
+            pool.name(),
+            pool.spins().0,
+            pool.spins().1,
             sites.join(","),
             all_spins as f64 * spin_ns * 1e-9,
         );

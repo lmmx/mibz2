@@ -7,7 +7,11 @@
 //! leader prefetched while the one before was in flight); and a reader dropped mid-stream.
 //! Every test runs the registered prototype and each of its levers
 //! (`StreamDecoder::pipelined_levers`): park, the spin-budget control (spin2k), small, park
-//! and small together, and park after the short spin.
+//! and small together, and park after the short spin; and the default's levers (park and
+//! small) with each pool-wait arm that is not the default's (`Levers::pool`: the pool's own
+//! two waits parking at once, both0, or only the helpers' idle wait doing so,
+//! helper0/join2000; docs/journal/2026-11-10-pool-wait-split.md), so all three arms (the
+//! default's levers being both2000) are held to the same bytes, errors and cancellation.
 //!
 //! **The default at the measured plan:** `StreamDecoder::new` (so `BzReader::parallel` and
 //! `decode_parallel`) runs pipelined teams with park and small at three teams of three
@@ -18,7 +22,7 @@
 
 mod common;
 use common::*;
-use mibz2::parallel::{with_plan, Levers, Plan, PIPELINED_PLAN};
+use mibz2::parallel::{with_plan, Levers, Plan, PoolWait, PIPELINED_PLAN};
 use mibz2::{Error, ErrorKind, Kernels, StreamDecoder};
 use std::io::Read;
 
@@ -51,14 +55,18 @@ fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
 }
 
 /// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone,
-/// the spin-budget control, park and small together, and park at the short budget
-const LEVERS: [Levers; 6] = [
+/// the spin-budget control, park and small together, and park at the short budget; then
+/// park and small with the pool-wait arms both0 and helper0/join2000 (park and small
+/// alone being both2000)
+const LEVERS: [Levers; 8] = [
     lv(false, false, false),
     lv(true, false, false),
     lv(false, false, true),
     lv(false, true, false),
     lv(true, true, false),
     lv(true, false, true),
+    pool(PoolWait::Spin0),
+    pool(PoolWait::Helper0Join2000),
 ];
 
 const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {
@@ -66,6 +74,15 @@ const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {
         park,
         small,
         spin2k,
+        pool: PoolWait::Spin2000,
+    }
+}
+
+/// The default's levers (park and small) with the pool-wait arm `pool`
+const fn pool(pool: PoolWait) -> Levers {
+    Levers {
+        pool,
+        ..lv(true, true, false)
     }
 }
 

@@ -190,7 +190,11 @@ impl StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         let mut dec = Self::launch(teams, slots, move |shared, jobs| {
             pipelined_worker::<false, false, { super::coop::BARRIER_SPINS }>(
-                shared, jobs, kernels, team_k,
+                shared,
+                jobs,
+                kernels,
+                team_k,
+                super::coop::Budgets::DEFAULT,
             )
         });
         dec.threads = teams * team_k;
@@ -211,10 +215,19 @@ impl StreamDecoder {
     ) -> StreamDecoder {
         use super::coop::{BARRIER_SPINS as LONG, SHORT_SPINS as SHORT};
         let (teams, team_k) = (teams.max(1), k.max(2));
+        // (the pool's wait budgets are values fixed at the pool's making, not types: one
+        // worker's code serves every arm)
+        let pool_budgets = levers.pool.budgets();
         macro_rules! launch {
             ($park:literal, $small:literal, $spin:ident) => {
                 Self::launch(teams, slots, move |shared, jobs| {
-                    pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k)
+                    pipelined_worker::<$park, $small, $spin>(
+                        shared,
+                        jobs,
+                        kernels,
+                        team_k,
+                        pool_budgets,
+                    )
                 })
             };
         }
@@ -628,6 +641,77 @@ pub struct Levers {
     /// for the team or finds none queued, so a small block no longer leaves the next run
     /// with nothing staged (`pipelined_worker`'s `SMALL`)
     pub small: bool,
+    /// The pool-wait arms (docs/journal/2026-11-10-pool-wait-budgets.md,
+    /// docs/journal/2026-11-10-pool-wait-split.md): the spin budgets of the team's pool's own
+    /// two waits (a helper between runs, the leader waiting for its helpers to end a run),
+    /// `PoolWait::Spin2000` (the pool's `SPINS` at both, the default's) unless an arm is
+    /// chosen. The walk's waits (`park`, `spin2k`) are not affected.
+    pub pool: PoolWait,
+}
+
+/// The pool-wait arms (research, opt-in: `Levers::pool`): the spin budgets a pipelined
+/// team's pool's two waits spend before they park, each fixed when the pool is made. Each
+/// parks through the same protocol; a budget of 0 parks at its first unmet check. A budget
+/// is the pool's comparison as it is: a wait spins while its count of checks is below it, so
+/// 2,000 spins up to 1,999 times. Exactly three arms, the ones registered: no other budget
+/// is offered.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum PoolWait {
+    /// both2000: the pool's own budget, `coop::SPINS` (2,000), at both waits (the default's)
+    #[default]
+    Spin2000,
+    /// both0: no spin at either wait, park at once
+    Spin0,
+    /// helper0/join2000: the helpers park at once between runs; the caller's join still
+    /// spins up to `coop::SPINS`
+    Helper0Join2000,
+}
+
+impl PoolWait {
+    /// The registered arms, in their registered order (both2000, both0, helper0/join2000)
+    pub const ARMS: [PoolWait; 3] = [
+        PoolWait::Spin2000,
+        PoolWait::Spin0,
+        PoolWait::Helper0Join2000,
+    ];
+
+    /// The helpers' idle wait's budget and the caller's join's budget, in that order (under
+    /// Miri, 2,000 is the pool's Miri budget, 4, as `SPINS` is)
+    pub fn spins(self) -> (u32, u32) {
+        let b = self.budgets();
+        (b.idle, b.join)
+    }
+
+    pub(crate) fn budgets(self) -> super::coop::Budgets {
+        use super::coop::{Budgets, SPINS};
+        match self {
+            PoolWait::Spin2000 => Budgets::DEFAULT,
+            PoolWait::Spin0 => Budgets { idle: 0, join: 0 },
+            PoolWait::Helper0Join2000 => Budgets {
+                idle: 0,
+                join: SPINS,
+            },
+        }
+    }
+
+    /// The arm's name: `pool2000`, `pool0` or `poolh0j2000` (`ab`'s `mibz2-pool*` arms)
+    pub fn name(self) -> &'static str {
+        match self {
+            PoolWait::Spin2000 => "pool2000",
+            PoolWait::Spin0 => "pool0",
+            PoolWait::Helper0Join2000 => "poolh0j2000",
+        }
+    }
+
+    /// The arm named `name` (`name`'s inverse, with or without its `pool` prefix: `2000`,
+    /// `0`, `h0j2000`)
+    pub fn parse(name: &str) -> Option<PoolWait> {
+        let n = name.strip_prefix("pool").unwrap_or(name);
+        PoolWait::ARMS
+            .into_iter()
+            .find(|a| a.name().strip_prefix("pool") == Some(n))
+    }
 }
 
 /// A block's move-to-front stage's buffers (`Scratch`'s first three)
@@ -950,13 +1034,15 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
 }
 
 /// A pipelined team's worker: its leader's loop. `PARK` and `SMALL` are `Levers`' park and
-/// small, `SPIN` the waits' spin budget; both false at `coop::BARRIER_SPINS`, it is the
-/// registered prototype's
+/// small, `SPIN` the walk's waits' spin budget; both false at `coop::BARRIER_SPINS`, it is
+/// the registered prototype's. `pool_budgets` is its pool's own waits' budgets
+/// (`Levers::pool`): `coop::Budgets::DEFAULT` but in a pool-wait arm.
 fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
     shared: &Shared,
     jobs: &Mutex<Receiver<Job>>,
     k: Kernels,
     team_k: usize,
+    pool_budgets: super::coop::Budgets,
 ) {
     use super::bwt::FLAGGED_LANES;
     let mut t = Team::default();
@@ -998,7 +1084,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             continue;
         };
         if t.pool
-            .get_or_insert_with(|| super::coop::Pool::pipelined(team_k))
+            .get_or_insert_with(|| super::coop::Pool::pipelined_with(team_k, pool_budgets))
             .is_err()
         {
             // (no team: every block on this thread, as `bwt::Cooperative` falls back)
@@ -1182,6 +1268,7 @@ pub const PIPELINED_LEVERS: Levers = Levers {
     park: true,
     small: true,
     spin2k: false,
+    pool: PoolWait::Spin2000,
 };
 
 thread_local! {

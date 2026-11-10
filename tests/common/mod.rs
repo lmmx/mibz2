@@ -533,6 +533,14 @@ pub enum PipeShape {
         chunk: usize,
         read: usize,
     },
+    /// `StreamDecoder::pipelined_levers` at `PIPELINED_PLAN` (three teams of three, in 12
+    /// slots) with the default's levers and the pool-wait arm `pool` (`Levers::pool`,
+    /// docs/journal/2026-11-10-pool-wait-split.md), fed and read as `Push`
+    Pool {
+        pool: mibz2::parallel::PoolWait,
+        chunk: usize,
+        read: usize,
+    },
 }
 
 /// A pipelined decoder under test (`PipeShape`)
@@ -565,6 +573,12 @@ impl Pipelined {
                 chunk,
                 read,
             } => format!("mibz2 pipelined {teams}x{k} park+small s{slots} w{chunk} r{read}"),
+            PipeShape::Pool { pool, chunk, read } => {
+                format!(
+                    "mibz2 pipelined 3x3 park+small {} w{chunk} r{read}",
+                    pool.name()
+                )
+            }
         }
     }
 
@@ -600,6 +614,19 @@ impl Pipelined {
                     slots,
                     Kernels::detect(),
                     PIPELINED_LEVERS,
+                );
+                pushed(dec, chunk, read)
+            }
+            PipeShape::Pool { pool, chunk, read } => {
+                let dec = mibz2::StreamDecoder::pipelined_levers(
+                    3,
+                    3,
+                    12,
+                    Kernels::detect(),
+                    mibz2::parallel::Levers {
+                        pool,
+                        ..PIPELINED_LEVERS
+                    },
                 );
                 pushed(dec, chunk, read)
             }
@@ -674,7 +701,9 @@ pub fn kind_name(e: &Error) -> String {
 
 /// The pipelined candidates the fuzz loop checks (examples/fuzz.rs): the shipped default
 /// (three pipelined teams of three, park and small) through each default entry point, at
-/// large and small write and read sizes, and one team of three with the same levers
+/// large and small write and read sizes, one team of three with the same levers, and the
+/// default's three teams with each pool-wait arm that is not the default's (both0 and
+/// helper0/join2000)
 pub fn pipeline_candidates() -> Vec<Pipelined> {
     let shapes = [
         PipeShape::Push {
@@ -692,6 +721,16 @@ pub fn pipeline_candidates() -> Vec<Pipelined> {
             k: 3,
             slots: 4,
             chunk: 100_003,
+            read: 1 << 16,
+        },
+        PipeShape::Pool {
+            pool: mibz2::parallel::PoolWait::Spin0,
+            chunk: 1 << 20,
+            read: 4093,
+        },
+        PipeShape::Pool {
+            pool: mibz2::parallel::PoolWait::Helper0Join2000,
+            chunk: 997,
             read: 1 << 16,
         },
     ];
