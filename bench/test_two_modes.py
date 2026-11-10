@@ -727,6 +727,38 @@ class Recheck(unittest.TestCase):
         self.assertEqual(rc, 2)
         self.assertTrue(any("no conditioning child" in x for x in j["problems"]))
 
+    def test_a_treatment_relabelled_conditioning(self):
+        # (the freeze review's witness, 6761671844: VALID on 7af2b970 with G 29, Z 30)
+        rc, j = self.replay(lambda rows: rows[1].update(condition="C"))
+        self.assertEqual((rc, j["label"]), (2, "INVALID"))
+        self.assertTrue(any("not slot 0 of the registered order" in x for x in j["problems"]))
+        self.assertTrue(any("29 G and 30 Z treatment runs" in x for x in j["problems"]))
+
+    def test_every_treatment_relabelled_conditioning(self):
+        # (the freeze review's witness: VALID on 7af2b970 with G 0, Z 0)
+        def edit(rows):
+            for r in rows[1:]:
+                r["condition"] = "C"
+
+        rc, j = self.replay(edit)
+        self.assertEqual((rc, j["label"]), (2, "INVALID"))
+        self.assertTrue(any("0 G and 0 Z treatment runs" in x for x in j["problems"]))
+
+    def test_a_later_conditioning_row_is_invalid_even_if_it_succeeded(self):
+        def edit(rows):
+            rows[30]["condition"] = "C"
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+
+    def test_the_conditioning_row_must_be_a_first_run(self):
+        def edit(rows):
+            rows[0]["gap_s"] = 0.3
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("no conditioning child first" in x for x in j["problems"]))
+
     def test_zero_rest(self):
         rc, j = self.replay(ident_edit=lambda i: i["sustained"].update(rest_s=0))
         self.assertEqual(rc, 2)

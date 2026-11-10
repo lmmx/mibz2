@@ -120,8 +120,12 @@ Everything below is fixed before any data:
     `GZGZZZGZGZGGZZGZZGGZGZZGZZZZGZGZGGZZGZZZGGGGZZGGGGZZZGGGGGZG`, recorded in the identity.
   - **Its deadline:** 600 s, then KILL 10 s later. It is expected to take about 30 s.
   - **Its admission** is part of the contract (§3). These must all hold:
-    - the conditioning child first;
-    - 60 treatment runs in the registered order;
+    - the conditioning child at record zero, and only there: conditioning is a position, not a
+      label. Its condition is C, it has no index, no reap before it and no gap. A C anywhere
+      else is INVALID, whether or not its child succeeded;
+    - 60 treatment runs, each record after the first in its own registered slot (index, schema
+      and G or Z), and exactly 30 G and 30 Z (in a DRY check, the order's first six slots and
+      their counts);
     - every run succeeded with the registered output;
     - every run has a finite, strictly positive wall and span, and a finite, nonnegative CPU;
     - launches and reaps are ordered: each launch after the reap before it, each reap after its
@@ -195,10 +199,11 @@ Everything below is fixed before any data:
   - **A group that cannot be emptied (125)** stops the attempt there. `bench/bounded.py`
     promises a bounded attempt and a bounded refusal, not that every descendant disappears.
   - **Partial records are kept and bundled** whatever the outcome.
-  - **The operational ceiling** is `OPERATIONAL_CEILING_S`, **8460 s**, about 2 h 21 min.
+  - **The operational ceiling** is `OPERATIONAL_CEILING_S`, **8460 s**, about 2 h 21 min. It is
+    an operational ceiling, not a strict wall-time guarantee.
     - **What it sums:**
       - every supervised call at its deadline and grace, plus `bounded.py`'s two 10 s cleanup
-        phases (7,965 s);
+        phases (8,190 s);
       - the six bounded collectors at 35 s each (210 s);
       - the 60 s rest.
     - **What it leaves out:** a few seconds of unsupervised bookkeeping (`git status`, small
@@ -557,14 +562,42 @@ an idle window: no rustc, valgrind, miri or cargo running, and no process above 
 - **Pass 1:** exit 0. Three runs in slots N, P, P, P-idle's coverage 0.999 overall and at least
   0.994 in each third.
 - **Pass 2: not run.** This host has no SMT sibling, so pass 2's native plumbing is not shown
-  here; it is covered only by the synthetic tests.
+  here.
+  - **What the synthetic tests do and don't cover:** they establish how pass 2's records are
+    handled. They are **not native SMT validation**: they exercise no host scheduling, affinity
+    or concurrent-probe operation.
+  - **On the target:** the first pass 2 must pass the registered native placement, coverage,
+    containment, status and identity checks. A failure is kept as INVALID or REFUSED under the
+    frozen contract. It is never retried selectively, and pass 1 is never read as a completed
+    two-pass attempt.
 - **The judgement:** DRY, with an **empty problems list**. The identity holds every registered
   field: the deadlines, the 1 s DRY rest, the gap block's order, seed, gap and count, and the
   before and after digests.
 - **The bundle:** made, 33 files, SHA-256
   `b01d8dbfd2129687336dca44c4d53f887c26604a09d259621aa58e9e222b3164`.
+  - **Where it is kept:** committed unchanged, byte for byte, at
+    `2026-11-10-two-modes-discriminator/dry/20261110T054241Z.tar.gz` with its `.sha256`.
+  - **Its identity:** head `e5885772`. Its source digests are those of that head; for example,
+    `bench/two_modes.py` at `7dbcdfc2…`. The bundle is never rewritten to claim another head.
 
 Like any DRY check, it proves plumbing only, never discrimination on the target.
+
+**Carried forward, with explicit cross-version provenance.**
+- **What changed after the run** (the Researcher's ruling, #145 6761671844):
+  - **`e5885772...7af2b970`:** only this section changed, to record the DRY.
+  - **Then the freeze review's repair:** conditioning made a position, not a label. It is an
+    admission-only change to `gaps_problems` and `gaps_reading` in `bench/two_modes.py`. The
+    driver, the probe, the recipe and the identity plumbing are unchanged, so no new full DRY
+    is owed for it.
+- **The replay, with the repaired judge** (the head that carries this text):
+  - **The retained records, intact:** DRY, with an empty problems list, the same outcome as
+    the original judgement, and 2 G and 4 Z treatment runs.
+  - **The same records, mutated:**
+    - first treatment relabelled C: 2 problems ("1 G and 4 Z treatment runs, not the registered
+      2 and 4"; "run 0 not slot 0");
+    - every treatment relabelled C: 7 problems.
+  - **What this is:** checker regression evidence on retained native records, not a native run
+    of the repaired head.
 
 ## Reproduce
 

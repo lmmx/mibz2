@@ -1111,7 +1111,7 @@ def gaps_reading(recs):
     apart), the child's CPU per block (all, fast, slow), the parent-observed gaps; the Fisher
     test of slow against condition; the registered outcome. The p value assumes independent
     runs, which persistence breaks: it is reported as registered and read as descriptive"""
-    recs = [r for r in recs if r.get("condition") in ("G", "Z")]
+    recs = recs[1:] if recs and recs[0].get("condition") == "C" else recs
     out = {"conditions": {}}
 
     def cpb(rs):
@@ -1122,7 +1122,7 @@ def gaps_reading(recs):
         )
 
     for cond in ("G", "Z"):
-        g = [r for r in recs if r["condition"] == cond]
+        g = [r for r in recs if r.get("condition") == cond]
         timed = [r for r in g if gap_wall(r) is not None]
         fast = [r for r in timed if gap_wall(r) < THRESHOLD_S]
         slow = [r for r in timed if gap_wall(r) >= THRESHOLD_S]
@@ -1146,11 +1146,11 @@ def gaps_reading(recs):
     out["sequence"] = "".join(
         "?" if gap_wall(r) is None else ("s" if gap_wall(r) >= THRESHOLD_S else "F") for r in recs
     )
-    out["order"] = "".join(r["condition"] for r in recs)
+    out["order"] = "".join(str(r.get("condition")) for r in recs)
     after = {}  # (by the condition of the run before: a carryover check, descriptive)
     for a, b in zip(recs, recs[1:]):
         if gap_wall(b) is not None:
-            x = after.setdefault(f"{a['condition']}->{b['condition']}", [0, 0])
+            x = after.setdefault(f"{a.get('condition')}->{b.get('condition')}", [0, 0])
             x[0] += gap_wall(b) >= THRESHOLD_S
             x[1] += 1
     out["slow_by_transition"] = after
@@ -1182,22 +1182,37 @@ def gaps_problems(recs, n, dry):
     after its launch); each recorded gap equal to its retained endpoints' difference; G gaps at
     least GAP_S less 5 ms, Z gaps in [0, 0.05) s"""
     bad = []
-    if not recs or recs[0].get("condition") != "C" or recs[0].get("index") is not None:
+    # (conditioning is a position, not a label: record zero alone, and only record zero)
+    first = recs[0] if recs else {}
+    if not (
+        first.get("condition") == "C"
+        and first.get("schema") == GAPS_SCHEMA
+        and first.get("index") is None
+        and first.get("prev_reap_mono_ns") is None
+        and first.get("gap_s") is None
+    ):
         bad.append("the gap block: no conditioning child first")
-    treat = recs[1:] if recs and recs[0].get("condition") == "C" else recs
+    treat = recs[1:]
     if len(treat) != n:
         bad.append(f"the gap block: {len(treat)} treatment runs recorded, not {n}")
+    want = GAP_ORDER[:n]
+    got = "".join(str(r.get("condition")) for r in treat)
+    if (got.count("G"), got.count("Z")) != (want.count("G"), want.count("Z")):
+        bad.append(
+            f"the gap block: {got.count('G')} G and {got.count('Z')} Z treatment runs, not the "
+            f"registered {want.count('G')} and {want.count('Z')}"
+        )
     prev = None
     for k, r in enumerate(recs):
         i = r.get("index")
-        w = "the conditioning run" if r.get("condition") == "C" else f"gap block run {i}"
-        if r.get("condition") != "C" and (
+        w = "the conditioning run" if k == 0 else f"gap block run {k - 1}"
+        if k > 0 and (
             r.get("schema") != GAPS_SCHEMA
             or i != k - 1
             or i >= len(GAP_ORDER)
             or r.get("condition") != GAP_ORDER[i]
         ):
-            bad.append(f"{w}: not slot {k - 1} of the registered order")
+            bad.append(f"{w}: not slot {k - 1} of the registered order ({r.get('condition')!r})")
         c = r.get("child")
         if r.get("exit") != 0 or not isinstance(c, dict) or c.get("err"):
             bad.append(f"{w}: did not succeed (exit {r.get('exit')!r})")
@@ -1227,7 +1242,7 @@ def gaps_problems(recs, n, dry):
                 bad.append(f"{w}: a gap run whose gap was {g!r} s")
             elif r.get("condition") == "Z" and not 0 <= g < 0.05:
                 bad.append(f"{w}: a no-gap run whose gap was {g!r} s")
-        elif r.get("condition") != "C":
+        elif k > 0:
             bad.append(f"{w}: a treatment run with no reap before it")
         if positive(r.get("span_s")) and abs(r["span_s"] - (re_ - la) / 1e9) > 1e-6:
             bad.append(f"{w}: its span is not its endpoints' difference")
