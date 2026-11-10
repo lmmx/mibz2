@@ -190,6 +190,24 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6782452706": {
+      "status": "completed",
+      "delivery_id": "98ea8020-dd60-11f1-82f1-c08ab2fc2243",
+      "comment_updated_at": null,
+      "disposition": "Observer account and finished cursor verified; no discrepancy requiring correction."
+    },
+    "6782473662": {
+      "status": "in_progress",
+      "delivery_id": "c3657080-dd60-11f1-925f-f53fe34ed404",
+      "comment_updated_at": null,
+      "planned_action": "Concur with scoped D100 accounting HOLD; queue bounded source/test correction, no unchanged-code retry."
+    },
+    "6782495828": {
+      "status": "in_progress",
+      "delivery_id": "f2cb3a80-dd60-11f1-8910-c2e48d551967",
+      "comment_updated_at": null,
+      "planned_action": "Accept diagnostic delivery, preserve PR367 CI blockers, dispatch queued priority1 F01 to now-free Codex."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -311,15 +329,12 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_existing_session_observed",
-      "scope": "Existing direct-owner cells gap investigation; no new task/session",
-      "wake": "Actual Codex report 6782113588 confirms manual owner launch; no restart mechanism",
-      "comment_id": 6782141557,
-      "recipient_report": 6782113588,
-      "receipt_for_formal_assignment_pending": true
+      "status": "in_progress_before_post",
+      "scope": "Dispatch queued6782394725 B5 F01 correction after completed6782141557",
+      "queue_comment_id": 6782394725
     },
     "guardian": {
-      "status": "delivered_in_progress",
+      "status": "completed",
       "comment_id": 6782334222,
       "scope": "New #366 occupancy invariant incident",
       "prior_completed": 6782224690,
@@ -329,12 +344,14 @@
         "status": "in progress",
         "decision": "D100",
         "progress": "Migration verified; investigating occupancy ledger assertion."
-      }
+      },
+      "review_comment_id": 6782473662
     },
     "observer": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "comment_id": 6782363899,
-      "scope": "Batched programme state through Guardian D099 and Optimiser completed pricing; later B5 HOLD must be reflected from channel"
+      "scope": "Batched programme state through Guardian D099 and Optimiser completed pricing; later B5 HOLD must be reflected from channel",
+      "review_comment_id": 6782452706
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -360,9 +377,10 @@
     "ci_incident": {
       "run": 42923929886,
       "job": 130205457614,
-      "class": "A project assertion failed; causality not established",
+      "class": "A inherited accounting defect; scoped B6 HOLD",
       "failure": "teams ledger ll1799923 exceeds900000; rle38 below900000; assertion ledger check fails under teams",
-      "action": "no retry; Guardian bounded invariant classification"
+      "action": "no retry; Guardian bounded invariant classification",
+      "decision": "No ledger-validity claim or #366 ready admission until corrected source and native evidence. D1001bfe226e98e9589b60a626e30a67ea1b31bf8c38. No demonstrated storage breach; no blanket decoder stop."
     }
   },
   "ci_incident_365": {
@@ -391,6 +409,17 @@
       "recipient_evidence": "team-state/guardian cursor blob7c6462f7478ca48f4547e91ad2743818bec306ca records6782224690 in progress, decisionD099",
       "review_comment_id": 6782294636,
       "decision": "Accept preparation; defer ready admission until exact-head gates."
+    },
+    {
+      "status": "completed",
+      "scope": "Existing direct-owner cells gap investigation; no new task/session",
+      "wake": "Actual Codex report 6782113588 confirms manual owner launch; no restart mechanism",
+      "comment_id": 6782141557,
+      "recipient_report": 6782113588,
+      "receipt_for_formal_assignment_pending": true,
+      "review_comment_id": 6782495828,
+      "pr": 367,
+      "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84"
     }
   ],
   "codex_correction": {
@@ -407,5 +436,11 @@
     "Researcher independent targeted F01 recheck only after corrected exact-head evidence.",
     "Observer6782363899 updates programme; no duplicate assignment.",
     "No ready job queued; #366 CI failed and Run signal authenticated dispatch unavailable. No automatic merge or i9 execution."
-  ]
+  ],
+  "pending_ledger_repair": {
+    "status": "in_progress_before_queue",
+    "priority": 2,
+    "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions"
+  }
 }
