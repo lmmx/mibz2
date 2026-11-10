@@ -937,11 +937,19 @@
     {
       "comment_id": 6758227354,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: migration verified. Source and historical-count audit of staged cooperative traversal pending.",
-      "report_path": "state/records/reviews/inbox-6758227354/report.md"
+      "progress": "Complete staged-team price, transition obligations, matched-count falsifier, historical raw replay and ledger committed; REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6758227354/report.md",
+      "report_commit": "7d2c780472e60e67fd254392ddbdb65fa1fa9b92",
+      "audit_scope": {
+        "new_timing": false,
+        "implementation": false,
+        "compilation": false,
+        "historical_profiles_replayed": 2,
+        "bandwidth_Ir_raw_replay": false
+      }
     }
   ],
   "migrated_from": {
