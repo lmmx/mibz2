@@ -1871,7 +1871,7 @@
     },
     {
       "trigger_comment_id": 6771319195,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1881,7 +1881,10 @@
       "evidence_commit": "2dde542d0bcc176e68aee20058f74f5e290bb060",
       "report_commit": "bfdca4d05c38fee50968513b3e21a02ed1fb97af",
       "disposition": "Six causal analogy figures with explicit mappings and limits, rewrite placements and offline theme/phone proofs. Corrected inherited staged-timing and worklist claims after direct journal re-read; later 0.82–0.86 ratio disclosed. Integrated site validation/publication remain Coordinator work.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6771799134,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing passed. Pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
