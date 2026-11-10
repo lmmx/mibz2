@@ -1,0 +1,13 @@
+{
+  "source_commit": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
+  "files": {
+    "examples/ab.rs": "d2291c634bf435e47d339cdc6981dbb2b3136f04c97635fe7cfada09b62ec54a",
+    "bench/team_screen.py": "8b22cbcdf793b2612131de45b72db8319423ddc7305bdbaf614765a582b9b42f",
+    "bench/test_team_screen.py": "496c9f94da89d2fd170864de86db76f5a713f4251cdec8d139a6dfcf8efc8198",
+    "bench/team_gap_count.py": "eb7f78201f78662389d737f66a3adb7ed744495f9de4eae7554e344eab1a30c0",
+    "src/parallel.rs": "f3e7a4543202436d42db5ed762f6c82db97e58671524c16744813990a3a82c2b",
+    "src/coop.rs": "8b8a9e51a63c7949d16cd2b4054dceb0077e947edeba5555c4ce40a224fc1c28",
+    "bench/team-screen/manifest.json": "0311664980821237248124bdc59b5c2374e1eed3fa8e58f9eccf2735a6eaecb9",
+    "bench/team-screen/deltas/334.json": "462c504d069551d3d988b11ef7ad080aeb97b0ba8310c7f7e7c418dd0fda2f22"
+  }
+}
