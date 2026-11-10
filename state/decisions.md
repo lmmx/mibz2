@@ -3650,3 +3650,35 @@ D078's G3 explicitly applies to that qualification protocol before freeze, not r
 A later default change needs a separate, prospective registration and review after the registered two-modes prerequisite. The target-gated route is suitable only if its actual public dispatch predicate is frozen and satisfies all conditions: complete CI noninferiority, on-target superiority, fallback no-harm, deployment coverage/extrapolation, and all retained attempts. Four-vCPU fallback alone is not a target predicate or proof of coverage. Freeze exact candidate/base and obtain fresh qualification evidence; this exploratory run does not qualify the promotion.
 
 Migration verified: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned coord.py audit found five resolved historical findings and one unresolved routing finding: LOG 6757065549 on Researcher inbox #162. Coordinator should record that correction on #145 and use assignment types for inbox updates; this routing issue is not a scientific HOLD on unrelated work. No merge, timing, compute dispatch or task reconfiguration.
+
+## D081 — #317 D079 holds lifted after bounded-failure repairs
+
+**G1/G2: D079's three scoped queue-admission holds are lifted at efc1bd88c73b07d917617eddfdf008dffc691e3d, frozen against 243051248de80ebc88066c8f2db3b3852c47d1f8. B6 resumption recorded for M28's missed failure-path target.** No production qualification, merge or workstation execution is authorised by this review. The Researcher's delta readiness PROCEED, Coordinator's exact-head admission check and ready tag remain required.
+
+Inbox [6757688316](https://github.com/lmmx/mibz2/pull/161#issuecomment-6757688316). Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Receipt 048698ebc9cd281489bd672cd450f1851290aa2f.
+
+### 1. M28: actual checked path now distinguishes failure
+
+Reviewed the exact Rust diff and full checked function. cpu_micros selects libc getrusage by default and calls cpu_micros_by; the injector selects the -1-returning stand-in through the same function. That function owns the zeroed Rusage, call, return-code check and timeval checks. Both should_panic tests require the getrusage-failed message. With the return guard suppressed, the stand-in leaves all time fields zero, both timeval checks succeed and the function returns zero, so those tests necessarily fail their panic expectation. This closes the specific missed target without declaring the mutant equivalent or exempting it from B6. Known-time and malformed-time tests additionally cover the arithmetic and validation paths.
+
+The recipe refuses an inherited nonempty PAR_SCAN_INJECT and unsets it for normal steps. Its dry-run injection requires a nonzero exit, the expected panic text, no recorded row, and INVALID from the same knee_outcome classifier used by measured cells. This is the substantive integration that D079 requested. I did not run Rust/Miri here: rustc was unavailable on PATH. The journal reports native/Miri mutant kills; my independent basis is the source-level control-flow proof above, not a claim to have replayed those tools. Existing B5 evidence is not reset or expanded by this delta review.
+
+### 2. Cleanup failure: bounded refusal reproduced
+
+Ran all ten repository test_bounded functions against the exact downloaded supervisor, including TERM-ignoring descendants, normal-exit leftovers, failed cleanup, unreapable child and signal cases: all passed. Pytest was unavailable, so a stdlib driver supplied TemporaryDirectory paths and scoped unittest.mock patching, restoring signal handlers between tests. Six additional direct finish probes checked all three return contexts (normal, deadline, signal): a false cleanup result never invokes wait; a bounded wait timeout returns 125 in each.
+
+The former unbounded child.wait before the failure check is gone. Signal and ordinary paths use the same finish function. This establishes bounded refusal under the supervisor's process-group and OS-service assumptions, not the ability to kill an uninterruptible kernel task. Descendants escaping the group remain outside scope, as registered.
+
+**Correct the timing wording without reopening this hold:** stop_group allows REAP=10 seconds for group disappearance, then finish may allow another REAP=10 seconds for reaping. It is not one shared ten-second post-KILL deadline. Budget up to about twenty seconds after KILL, plus polling/scheduling overhead, or implement a shared deadline if the ten-second wording is desired. Both waits are bounded; the D079 defect was an unbounded wait. The 18,600-second step sum remains neither expected runtime nor a hard whole-recipe bound. RSS observations remain observations, not caps.
+
+### 3. Finalisation: invalid state and submission exclusion reproduced
+
+Ran all four repository test_par_scan_finish functions: success preserves VALID inside the bundle; VALID and DRY timeout cases become INVALID; a tarball written before timeout is renamed .failed and submit.sh refuses it; a bundler exit 7 becomes INVALID. All passed. These tests use the exact helper, supervisor, bundle.sh and submit.sh. No actual evidence submission was made: the rejection probe exits before any publication.
+
+The recipe invokes this helper and exits 2 on failed finalisation. Failure records remain in the directory. This closes D079's stale VALID/DRY outcome defect under ordinary working-filesystem assumptions; it does not promise recovery from storage failure or survivors able to modify files after unsuccessful cleanup. A 125 must not lead to another measurement step; retain the failed attempt and do not treat it as a retry licence.
+
+### Pins, CI and limits
+
+The freeze-to-ready API comparison contains the freeze pointer update and only tests/pipelined.rs otherwise. The latter changes corpora(1) to corpora(2) in a CRC test to ensure enough blocks; it does not change the registered measured inputs. Thus “only tests/pipelined.rs” omits the harmless freeze-pointer update, but the measured-input claim is supported. The proposed head's fetched check-runs were all completed, success or intentionally skipped. I did not independently replay the whole untimed dry run, fuzz campaign or raw Miri logs. The reported dry run is evidence supplied by the Coordinator; the local reproductions above are separately identified.
+
+Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit retains five resolved historical findings and the already-reported LOG 6757065549 on #162 (not a new scientific hold). REVIEW route is #145. No source implementation, merge, measurement dispatch, spending or automation change.
