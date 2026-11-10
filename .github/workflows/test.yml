@@ -72,6 +72,11 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      - name: The target-gated noninferiority judge and its verdict gate (untimed; scipy for the power check where installed)
+        run: |
+          python3 bench/test_svc_target_check.py
+          python3 bench/test_service_tg.py
+          python3 bench/test_tg_ni_gate.py
 
   get-python-versions:
     runs-on: ubuntu-latest
