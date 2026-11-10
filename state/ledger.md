@@ -532,3 +532,13 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Correct prior30Ir default: observed41.8/65.9 per piece, fixed work separate. Corpus densities and split counts matter; no global2.2 multiplier.
 - Table-only law gives2628–3578MB/s at7–10 under unmeasured equal-CPI proxy. Not forecast. Scratch up to4.40MB/worker, oversized blocks and late fallback omitted by simple model. Complete worker/decoder supply and output bound required.
 - Reported tests/counts source-audited, raw profiles not replayed. No implementation, timing, gate relaxation or production qualification. Team/service/emitter and geometry retain priority.
+
+
+## Three-table architecture price: inbox6759345168
+
+[Report](records/reviews/inbox-6759345168/report.md). Pin7bf5769be; correction96b7937 separately read. No12-cell timing recommendation now: chunked full fill/segmentation absent; D4F2 no-timing disposition stands; compact30 adapter deferred.
+- Chunked correction allocates16B directory entries but bytes() charges12. Extra~56.25KB/full block; proposed start bitmap~112.5KB. Corrected layout+bitmap≈1.31MB Wikidata,1.44MB text before slack, contradicting1.3MB universal admission. Oracle start traversal/conversion excluded from local timings.
+- g≤1.8 possible but unmeasured; fill+2Ir unsupported. Whole fill includes bucket-ordered record collection/packing, flags, rank, validation, allocation and assembly. Selector and late fallback charged.
+-12 cells×21 rounds252 vs105; with2sentinels294; two corpora504/588. No claimed power/target wall-time. Whole-decoder adaptive selector needs separate mixed-workload pair.
+- Tunnel1470–2200 reproduces optimaW5/W4, not10; X42MB unobserved. c=.611 k8 stored-exit differs from priced k1 learned-exit rider. Defer named build, not close family.
+- Team/service/emitter/geometry remain ahead. No new timing, implementation or raw local-profile replay.
