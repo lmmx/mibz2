@@ -234,16 +234,20 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_in_progress",
       "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition",
       "comment_id": 6782111848,
-      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848"
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848",
+      "recipient_evidence": "team-state/researcher:state/cursor.json explicitly records assignment 6782111848 in_progress",
+      "observed": "2026-11-10T23:30Z"
     },
     "optimizer": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_in_progress",
       "scope": "Bounded existing-evidence cells stage/end-to-end gap investigation",
       "comment_id": 6782112235,
-      "url": "https://github.com/lmmx/mibz2/pull/160#issuecomment-6782112235"
+      "url": "https://github.com/lmmx/mibz2/pull/160#issuecomment-6782112235",
+      "recipient_evidence": "team-state/optimizer:state/cursor.json explicitly records assignment 6782112235 in_progress",
+      "observed": "2026-11-10T23:30Z"
     },
     "codex": {
       "status": "posted_verified_existing_session_observed",
