@@ -1217,6 +1217,20 @@
       "status": "finished",
       "disposition": "HOLD measurement-only merge classification; research may continue",
       "comment": 6757246555
+    },
+    {
+      "id": "D081",
+      "decision": [
+        "G1",
+        "G2",
+        "B6 resumption"
+      ],
+      "incoming_comment": 6757688316,
+      "pr": 317,
+      "sha": "efc1bd88c73b07d917617eddfdf008dffc691e3d",
+      "commit": "820e507106a064d9d6706b9a205fed368a5e209f",
+      "status": "complete",
+      "disposition": "D079 three scoped holds lifted; remaining readiness/admission conditions retained"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1475,7 +1489,8 @@
     "795b4ae08d8f51a58286a1989aa93e5ee6004fd9",
     "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
     "8013d01ab7d1a7bdb50746c0b8db8cb3da0c4b31",
-    "b4d7a4a755510af80d9c6a369a43d8b54364c3be"
+    "b4d7a4a755510af80d9c6a369a43d8b54364c3be",
+    "820e507106a064d9d6706b9a205fed368a5e209f"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2844,9 +2859,11 @@
     {
       "comment_id": 6757688316,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D081",
-      "progress": "Receipt; reviewing D079 fixes."
+      "progress": "D079 scoped holds lifted; REVIEW pending.",
+      "receipt_commit": "048698ebc9cd281489bd672cd450f1851290aa2f",
+      "work_commit": "820e507106a064d9d6706b9a205fed368a5e209f"
     }
   ],
   "migrated_from": {
