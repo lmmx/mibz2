@@ -72,6 +72,13 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      # the two modes' discriminator (docs/journal/2026-11-10-two-modes-discriminator.md):
+      # its analysis on synthetic attempts, and its probe compiled and pinned (untimed)
+      - name: The two modes' discriminator (analysis tests, probe selftest)
+        run: |
+          python3 bench/test_two_modes.py
+          cc -O2 -Wall -Wextra -Werror -pthread -o "$RUNNER_TEMP/two_modes_probe" bench/two_modes_probe.c
+          "$RUNNER_TEMP/two_modes_probe" selftest 0 200
 
   get-python-versions:
     runs-on: ubuntu-latest
