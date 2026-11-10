@@ -37,4 +37,4 @@ Louis runs `just workstation-queue --wait 12`. Both tags above are set; bundles 
 
 ## Local work archived
 Every local branch with unpushed commits was pushed to `archive/coord-2026-11-10/<branch>`:
-mibz2 43, polars-genson 19, pq-glue 8 (mostly 2026-11-05 experiment arms already decided). Nothing else was local-only.
+mibz2 43, polars-genson 19, pq-glue 8 (mostly 2026-11-05 experiment arms already decided). Uncommitted edits in 13 worktrees were committed as WIP and pushed to `archive/coord-2026-11-10/wip/<worktree>`; the main checkout's stashes are under `archive/coord-2026-11-10/stash-N`. Nothing else was local-only.
