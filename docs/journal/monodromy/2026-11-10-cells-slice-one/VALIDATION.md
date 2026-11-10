@@ -38,7 +38,8 @@ module independently of this documentation commit.
   `tests::the_run_records_each_childs_termination` (the latter also passed separately
   with `--nocapture`, exit 0). No benchmark acceptance rule was changed.
 - `cargo clippy --lib --tests --example ab --example fuzz --all-features -- -D warnings`;
-  `cargo fmt --all --check`; `git diff --check`; `cargo test --doc` (one passed).
+  `cargo fmt --all --check`; source/documentation `git diff --check` (raw evidence
+  logs retain their original trailing whitespace); `cargo test --doc` (one passed).
 - `cargo check --lib --target aarch64-unknown-linux-gnu` and
   `cargo check --lib --target x86_64-pc-windows-gnu`. Compilation only, not execution
   on either platform. Aarch64 reports the existing unused run-front bitmap fields.
