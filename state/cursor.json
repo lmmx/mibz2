@@ -987,8 +987,16 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Checkpoint: g=1.18 is cross-host CI inference, not measured target build+walk; X includes build congestion. Separate diagnostic preferred; D4 filters preserved. Full report and archived-grid replay in progress.",
-      "report_path": "state/records/reviews/inbox-6758723399/report.md"
+      "progress": "Work complete: archived 420-row grid replayed with source median convention; full construction and storage charged; separate diagnostic priced; D4 filters and #195 restrictions retained. Preparing publication.",
+      "report_path": "state/records/reviews/inbox-6758723399/report.md",
+      "audit_scope": {
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "historical_grid_rows_replayed": 420,
+        "model_predictions_only": true,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {

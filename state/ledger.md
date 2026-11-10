@@ -510,3 +510,14 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 ## #324 rescue and tunnel lane: inbox 6758452562
 
 [Report](records/reviews/inbox-6758452562/report.md). Part A checkpoint: #324 remains FAIL; high-priority untimed rescue under D082. Four raw historical profiles reproduce +61/block, decomposed +6 caller, +7 memset, +48 newly outlined finish; MTF/room counts unchanged. Scratch construction and Huffman outside this profile. Rank actual data/caller geometry, then changed call/code placement; mod4KiB discriminator withdrawn by #277 §6. One boxed diagnostic conditional on actual production evidence; lazy per-worker sidecar offers stronger fallback allocation isolation, no geometry guarantee. No timing/implementation. Part B: certificate REVISE. Pinned census uses1+minK; valid aab BWT shows safe height=minK. Fixed-k quantum copy retains room, but .0736 lookup groups/row is conditional on unverified coverage. State/entry costs can consume the gain; .2B/row words alone exceed D4's ~.123B/row residual under1.2MB. First validate words/exits and record actual segmented copy quanta/entries/capacities. No hybrid build recommendation; D4 filters unchanged. CI and local-profile baselines explicitly separated.
+
+
+## Compact30 plain-worker price: inbox 6758723399
+
+[Report](records/reviews/inbox-6758723399/report.md), with archived-grid replay. Register3a63542b2; candidate ba94ff5c; #326 draft482df588. Proposals only.
+- 420 raw rows reproduce2350.48MB/s at7 only under g1.18,a1,s1.95MB. u24 ratio range .872–1.117; one-worker point calibrated. Neither error range nor separate team2430–2584 reference establishes a tie.
+- g1.18 is inferred from EPYC full-decoder losses assuming70% inversion, not measured i9 build+walk. Ctor2c includes canonicalisation; oldinvalidv2 and walk-only evidence cannot fill that cost.
+- X includes construction contention: production build inflation5.19 at8,7.54 at10. Walk-load fractions cannot discount that term without testing. Whole worker capacities and other decoder stages remain charged.
+- Separate diagnostic preferred. #326 adding five level9 cells costs305 slots(+41.7%), both levels610(+83.3%); still lacks1/7 anchors. Five-cell P1/C1/P7/C7/team9 pilot proposed, not frozen; full p-grid transfer test11 cells. Common harness adapter required, no new kernel by this role.
+- D4 walk15Ir/outputbyte, build7.35Ir/row,1.2MB filters unchanged. #195FAIL and production reopening restriction retained. Regime/default-team census and service/emitter/geometry work retain priority; compact30 small diagnostic is information, not adoption.
+- No implementation, compilation, new timing or safety certification. Zero new measured performance credit.
