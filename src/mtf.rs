@@ -336,6 +336,29 @@ pub fn mtf_checkpoints_scalar(
     r
 }
 
+/// `mtf_checkpoints_avx2`'s list and its slack, in the kernel's frame: aligned to 512 bytes,
+/// so that it lies in one page wherever the frame falls (its 320 bytes fill one 512-byte
+/// slot, and a page is a whole number of slots).
+///
+/// Aligned to 64 alone, the list straddled a page boundary at about one stack depth in 13.
+/// The kernel's shifts are unaligned loads and stores along the list (`ptr::copy`), and
+/// across a page boundary they cost up to twice the block's move-to-front on a block of a
+/// symbol a row (docs/journal/2026-11-10-team-runs-port.md, section 6). On a worker thread
+/// the depth is the build's, so a build either had the cost on every such block or never.
+#[cfg(target_arch = "x86_64")]
+#[repr(align(512))]
+struct PagedList([u8; 320]);
+
+#[cfg(target_arch = "x86_64")]
+const _: () = {
+    let (size, align) = (
+        std::mem::size_of::<PagedList>(),
+        std::mem::align_of::<PagedList>(),
+    );
+    // one aligned slot, and a 4 KiB page a whole number of them: no straddle
+    assert!(size == align && 4096 % align == 0);
+};
+
 /// `mtf_avx2`'s loop unchanged but for its limit, the nearer of the block's end and the
 /// next checkpoint, fixed for the loop as `max` is there. Where it stops at that limit,
 /// the outer loop, entered once every `CHECKPOINT` bytes, tells the block's end (`mtf`'s
@@ -363,9 +386,7 @@ unsafe fn mtf_checkpoints_avx2(
     *counts = [0; 256];
     checkpoints.clear();
     checkpoints.push([0; 256]);
-    #[repr(align(64))]
-    struct L([u8; 320]);
-    let mut store = L([0u8; 320]);
+    let mut store = PagedList([0u8; 320]);
     // the list at store[32..288], with slack before it for the shifted load
     for i in 0..256 {
         store.0[32 + i] = i as u8;
