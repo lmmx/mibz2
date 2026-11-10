@@ -1885,6 +1885,14 @@
       "review_comment_id": 6771799134,
       "publication_verified": true,
       "verification_note": "Exact body/author/#145 readback and role-aware routing passed. Pinned coord.verify reports only its hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6782111848,
+      "status": "in progress",
+      "pr": 162,
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+      "report_path": "state/reports/cells-b5-6782111848/report.md"
     }
   ],
   "active_delegations": [],
