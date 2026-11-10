@@ -461,3 +461,15 @@ No implementation, compilation, timing, safety certification, admission change o
 - No implementation, compilation, new timing, safety certification, acceptance change or measured target credit.
 
 D080 arrived before publication: HOLD measurement-only merge classification; production budget field/loads change code/layout even at2000. Coordinator6757250382 accepted. Research continues, no default-neutral merge exception. Added old/master2000 control to public10 diagnostic; candidate0 must beat actual master directly.
+
+
+## Small tables after E: inbox6757808815
+[Report](records/reviews/inbox-6757808815/report.md), [replay](records/reviews/inbox-6757808815/replay.json).
+Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verified; five head stage rows independently replayed. E FALSIFIED3.665[3.591,3.740] preserved.
+- Step22–26Ir plus≈22 bookkeeping; deleting bookkeeping alone still misses15Ir. Build time/Ir≈2.21× scatter; serial distinct-symbol chain plausible, not measured attribution.
+- E2.039B/row=1.835MB/full block before bitmap/scratch: misses1.2MB.
+- Rank D2 first:8-byte two-byte piece records plus explicit20B/64-row SoA directory≈.915MB at r2/n=.088; charge splits, tags, buffers and doubling peak. ≤30Ir/full pair only a target; count all emitted bytes/tails.
+- C second, low-build-cost control≈.801MB at r/n=.0722; per-byte dependent lookup remains. D4 padded records≈1.456MB; packed9-byte≈1.163MB before stop metadata/splits, no fit guaranteed.
+-1.44 historical CPU growth is not a derived allowable kernel slowdown.15Ir remains prospective reopen filter, not speed qualification.
+- Share-nothing survives E's failure as a hypothesis. -2/-9 sweep confounds footprint with block/scan/setup/work changes; require counts and within-level scaling. No extrapolated2.7–3.4GB/s result.
+- Service first adoption, emitter useful-work priority, D2 next compact-table construction. No implementation, compilation, new timing, safety certification or gate relaxation.
