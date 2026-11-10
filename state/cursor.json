@@ -942,7 +942,7 @@
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "progress": "Complete staged-team price, transition obligations, matched-count falsifier, historical raw replay and ledger committed; REVIEW pending.",
       "report_path": "state/records/reviews/inbox-6758227354/report.md",
-      "report_commit": "7d2c780472e60e67fd254392ddbdb65fa1fa9b92",
+      "report_commit": "e43daa0fad124c196a63bd8105017adf1d4875dd",
       "audit_scope": {
         "new_timing": false,
         "implementation": false,
