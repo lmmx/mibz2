@@ -263,6 +263,13 @@
       "type": "REVIEW",
       "sha": "d4c4b41c89db2561bd3b3470670894a4b6d2e318",
       "checkpoint_comment_id": 6757808815
+    },
+    {
+      "pr": 145,
+      "id": 6758172458,
+      "type": "REVIEW",
+      "sha": "f9e3826e0ef19c6efda88d260b562b2476b7f801",
+      "checkpoint_comment_id": 6757979390
     }
   ],
   "reviews": [
@@ -890,10 +897,10 @@
     {
       "comment_id": 6757979390,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Seven-item rescue pass plus BufRead/PGO/v3 pricing complete; report, arithmetic, evidence and ledger committed; REVIEW pending.",
+      "progress": "Rescue report, arithmetic, evidence and ledger committed; REVIEW delivered on #145 and exact author/body/destination verified.",
       "report_path": "state/records/reviews/inbox-6757979390/report.md",
       "report_commit": "f9e3826e0ef19c6efda88d260b562b2476b7f801",
       "audit_scope": {
@@ -902,7 +909,9 @@
         "compilation": false,
         "new_timing": false,
         "raw_profile_replay": false
-      }
+      },
+      "reply_id": 6758172458,
+      "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator; no optimizer verify-pass claimed."
     }
   ],
   "migrated_from": {
