@@ -124,6 +124,7 @@ def validate(lines, classes, helpers, walked=None):
     for r in by["share"]:
         shares[r["block"]].add(r["thread"])
     total = 0
+    expected = sum(1 << h for h in range(1, helpers + 1))
     for b, s in summary.items():
         cs = calls[b]
         seen = sum(1 << t for t in cs)
@@ -135,6 +136,18 @@ def validate(lines, classes, helpers, walked=None):
             bad.append(f"block {b}: the leader's call and its join bit disagree")
         if sum(1 << t for t in shares[b]) != s["built"]:
             bad.append(f"block {b}: share records are not the built set")
+        # the roster, per T block (the Researcher's counterexample, REVIEW 6763089509 item 3):
+        # every expected helper in the independently recorded built set AND in the share
+        # records. A team-wide roster alone admits a block that some or all helpers never
+        # built, and (a) then holds vacuously (no share, no call)
+        if s["built"] != expected:
+            bad.append(
+                f"block {b}: built set {s['built']:b}, expected helpers 1..{helpers} ({expected:b})"
+            )
+        if shares[b] != set(range(1, helpers + 1)):
+            bad.append(
+                f"block {b}: share records from {sorted(shares[b])}, expected helpers 1..{helpers}"
+            )
         if sum(c["takes"] for c in cs.values()) != s["starts"]:
             bad.append(f"block {b}: takes are not its starts")
         if sum(c["bytes"] for c in cs.values()) != s["seg_bytes"]:
@@ -172,11 +185,16 @@ def predicates(by, walker, helpers):
         for h in range(1, helpers + 1)
         if (h in calls[(t, b)]) != (h in shares[(t, b)])
     ]
+    # zero-work helper calls (present, found the queue exhausted at once): reported, not a fail
+    zero = sum(1 for r in by["call"] if r["thread"] != 0 and r["bytes"] == 0)
     out["a"] = (
         not a_fail,
-        f"{len(a_fail)} helper-blocks without a matching call"
-        if a_fail
-        else "every helper walked every block it built",
+        (
+            f"{len(a_fail)} helper-blocks without a matching call"
+            if a_fail
+            else "every helper walked every block it built"
+        )
+        + f"; {zero} zero-work helper calls",
     )
     # (b) helper-only, per team across its blocks: 3*max <= 2*sum, sum > 0
     b_detail, b_ok = [], True
