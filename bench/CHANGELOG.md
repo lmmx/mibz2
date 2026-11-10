@@ -35,6 +35,25 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.6.0] - 2026-11-10
+
+### Added
+
+- **The child's record, schema `ab-child/2`** (`examples/ab.rs`), for untimed exact-result and
+  exact-error checks (the team screen's draft, `docs/journal/2026-11-10-team-screen-design-draft.md`
+  on #334):
+  - **`schema`:** `"ab-child/2"`.
+  - **`err_kind`, `err_block`:** a decoder error's kind and block, from the reader's
+    `mibz2::Error`. Both are null on success, or where the error carries no block. Before this,
+    only the error's text (`err`) was recorded.
+  - **`sha256`:** with `AB_SHA256=1` only, a streaming SHA-256 of the output beside the 64-bit
+    hash; null without it.
+  - **`AB_READ_BUF=BYTES`:** the child's read buffer, 4 MiB without it, as always.
+- **Nothing measured changes.** `ab run` sets neither variable, so a timed child reads with the
+  same 4 MiB buffer and hashes as before. The two new fields are written once, after the
+  decode. A decoder error is still reported in the record, with a normal exit, as before. No
+  figure's meaning changes, so this is a minor version.
+
 ## [3.5.0] - 2026-11-10
 
 ### Added

@@ -127,6 +127,14 @@
 //! the run's CPU. `AB_SAMPLE_MS` sets its interval (0: none, to measure its cost). A
 //! 1-thread run of an in-process arm has no sampler: its split is its own thread's CPU
 //! (RUSAGE_THREAD), and anything else its process spent shows as unattributed.
+//!
+//! **The child's record is schema `ab-child/2`** (bench 3.6.0): beside its figures, `out`
+//! and `hash`, and `err` (the error's text, empty on success), it carries `schema`, and
+//! `err_kind` and `err_block` (a decoder error's kind and block, from the reader's
+//! `mibz2::Error`; both null on success, or where the error carries no block). A decoder
+//! error is reported in the record, and the child exits normally. For untimed checks only,
+//! never set by `ab run`: `AB_SHA256=1` adds `sha256`, a SHA-256 of the output (null
+//! without it), and `AB_READ_BUF=BYTES` sets the read buffer (4 MiB without it).
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -176,6 +184,9 @@ struct Hash {
     tail: [u8; 32],
     nt: usize,
     n: u64,
+    /// with `AB_SHA256=1` only (untimed checks): a SHA-256 of the same stream, beside the
+    /// 64-bit hash, for byte-exact identity
+    sha: Option<Sha256>,
 }
 
 impl Hash {
@@ -185,6 +196,9 @@ impl Hash {
             tail: [0; 32],
             nt: 0,
             n: 0,
+            sha: std::env::var("AB_SHA256")
+                .is_ok_and(|v| v == "1")
+                .then(Sha256::new),
         }
     }
     #[inline]
@@ -197,6 +211,9 @@ impl Hash {
         }
     }
     fn update(&mut self, mut b: &[u8]) {
+        if let Some(s) = &mut self.sha {
+            s.update(b);
+        }
         self.n += b.len() as u64;
         if self.nt > 0 {
             let k = (32 - self.nt).min(b.len());
@@ -227,6 +244,118 @@ impl Hash {
             x = (x ^ b as u64).wrapping_mul(0xc4ce_b9fe_1a85_ec53);
         }
         format!("{x:016x}")
+    }
+}
+
+/// SHA-256 (FIPS 180-4), streaming: a byte-exact output identity for untimed checks, only
+/// with `AB_SHA256=1` (never set by a timed run)
+struct Sha256 {
+    st: [u32; 8],
+    buf: [u8; 64],
+    nb: usize,
+    len: u64,
+}
+
+impl Sha256 {
+    const K: [u32; 64] = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+        0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+        0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+        0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+        0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+        0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+        0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+        0xc67178f2,
+    ];
+
+    fn new() -> Self {
+        Sha256 {
+            st: [
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+                0x5be0cd19,
+            ],
+            buf: [0; 64],
+            nb: 0,
+            len: 0,
+        }
+    }
+
+    fn compress(st: &mut [u32; 8], b: &[u8]) {
+        let mut w = [0u32; 64];
+        for i in 0..16 {
+            w[i] = u32::from_be_bytes(b[4 * i..4 * i + 4].try_into().unwrap());
+        }
+        for i in 16..64 {
+            let s0 = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
+            let s1 = w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
+            w[i] = w[i - 16]
+                .wrapping_add(s0)
+                .wrapping_add(w[i - 7])
+                .wrapping_add(s1);
+        }
+        let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h] = *st;
+        for (&k, &wi) in Self::K.iter().zip(w.iter()) {
+            let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+            let ch = (e & f) ^ (!e & g);
+            let t1 = h
+                .wrapping_add(s1)
+                .wrapping_add(ch)
+                .wrapping_add(k)
+                .wrapping_add(wi);
+            let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+            let maj = (a & b) ^ (a & c) ^ (b & c);
+            let t2 = s0.wrapping_add(maj);
+            h = g;
+            g = f;
+            f = e;
+            e = d.wrapping_add(t1);
+            d = c;
+            c = b;
+            b = a;
+            a = t1.wrapping_add(t2);
+        }
+        for (x, y) in st.iter_mut().zip([a, b, c, d, e, f, g, h]) {
+            *x = x.wrapping_add(y);
+        }
+    }
+
+    fn update(&mut self, mut b: &[u8]) {
+        self.len += b.len() as u64;
+        if self.nb > 0 {
+            let k = (64 - self.nb).min(b.len());
+            self.buf[self.nb..self.nb + k].copy_from_slice(&b[..k]);
+            self.nb += k;
+            b = &b[k..];
+            if self.nb < 64 {
+                return;
+            }
+            let t = self.buf;
+            Self::compress(&mut self.st, &t);
+            self.nb = 0;
+        }
+        let mut c = b.chunks_exact(64);
+        for x in &mut c {
+            Self::compress(&mut self.st, x);
+        }
+        let r = c.remainder();
+        self.buf[..r.len()].copy_from_slice(r);
+        self.nb = r.len();
+    }
+
+    fn hex(&self) -> String {
+        let mut st = self.st;
+        let mut tail = self.buf[..self.nb].to_vec();
+        tail.push(0x80);
+        while tail.len() % 64 != 56 {
+            tail.push(0);
+        }
+        tail.extend_from_slice(&(self.len * 8).to_be_bytes());
+        for blk in tail.chunks_exact(64) {
+            Self::compress(&mut st, blk);
+        }
+        st.iter().map(|x| format!("{x:08x}")).collect()
     }
 }
 
@@ -442,6 +571,89 @@ fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
 }
 
 #[cfg(test)]
+mod child_record_tests {
+    use super::*;
+
+    fn sha(chunks: &[&[u8]]) -> String {
+        let mut s = Sha256::new();
+        for c in chunks {
+            s.update(c);
+        }
+        s.hex()
+    }
+
+    /// FIPS 180-4's vectors, and the same bytes however they are cut into reads
+    #[test]
+    fn sha256_known_answers_and_any_cut() {
+        assert_eq!(
+            sha(&[b""]),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            sha(&[b"abc"]),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        let two = b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+        assert_eq!(
+            sha(&[two]),
+            "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+        );
+        let million = vec![b'a'; 1_000_000];
+        let want = "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0";
+        assert_eq!(sha(&[&million]), want);
+        let cuts: Vec<&[u8]> = million
+            .chunks(63)
+            .chain(std::iter::once(&b""[..]))
+            .collect();
+        assert_eq!(sha(&cuts), want);
+        let (a, b) = million.split_at(64);
+        let (b, c) = b.split_at(1);
+        assert_eq!(sha(&[a, b, c]), want);
+    }
+
+    /// A decoder error's kind and block, and nulls where there is none
+    #[test]
+    fn the_error_identity() {
+        *ERR_ID.lock().unwrap() = None;
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":null,\"err_block\":null"
+        );
+        let e = mibz2::Error {
+            kind: mibz2::ErrorKind::BlockCrc {
+                stored: 1,
+                computed: 2,
+            },
+            block: Some(41),
+            bit: Some(80),
+        };
+        record_err_id(&std::io::Error::from(e));
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":\"BlockCrc\",\"err_block\":41"
+        );
+        let e = mibz2::Error::new(mibz2::ErrorKind::Truncated);
+        record_err_id(&std::io::Error::from(e));
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":\"Truncated\",\"err_block\":null"
+        );
+        // an error that is not the decoder's leaves the identity as it was
+        record_err_id(&std::io::Error::other("a reader's own"));
+        assert!(err_id_json().contains("Truncated"));
+        *ERR_ID.lock().unwrap() = None;
+    }
+
+    #[test]
+    fn the_read_buffer() {
+        assert_eq!(read_buf(None), 4 << 20);
+        assert_eq!(read_buf(Some("4096")), 4096);
+        assert_eq!(read_buf(Some("0")), 4 << 20);
+        assert_eq!(read_buf(Some("x")), 4 << 20);
+    }
+}
+
+#[cfg(test)]
 mod census_tests {
     use super::*;
 
@@ -512,7 +724,9 @@ impl Census {
 /// Every byte of `r` through `h`; `last` runs after the last byte, while `r` (and a
 /// decoder's threads) still lives
 fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> {
-    let mut buf = vec![0u8; 4 << 20];
+    // (`AB_READ_BUF=BYTES`, untimed checks only: read-buffer variants of an exact-error
+    // check; unset, the 4 MiB every run has always read with)
+    let mut buf = vec![0u8; read_buf(std::env::var("AB_READ_BUF").ok().as_deref())];
     loop {
         match r.read(&mut buf) {
             Ok(0) => {
@@ -521,9 +735,49 @@ fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> 
             }
             Ok(n) => h.update(&buf[..n]),
             Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-            Err(e) => return Err(e.to_string()),
+            Err(e) => {
+                record_err_id(&e);
+                return Err(e.to_string());
+            }
         }
     }
+}
+
+/// The read buffer's size: `AB_READ_BUF`'s, where it is a positive number, else 4 MiB
+fn read_buf(v: Option<&str>) -> usize {
+    v.and_then(|v| v.parse().ok())
+        .filter(|&n: &usize| n > 0)
+        .unwrap_or(4 << 20)
+}
+
+/// The decoder's error, as the child's record reports it apart from its text: its kind's
+/// name and its block (`mibz2::Error`'s, where the reader's error carries one), so that an
+/// untimed check can compare an expected error exactly (record schema `ab-child/2`)
+static ERR_ID: std::sync::Mutex<Option<(String, Option<u64>)>> = std::sync::Mutex::new(None);
+
+fn record_err_id(e: &std::io::Error) {
+    if let Some(d) = e.get_ref().and_then(|x| x.downcast_ref::<mibz2::Error>()) {
+        let name = format!("{:?}", d.kind);
+        let name = name
+            .split(['(', ' ', '{'])
+            .next()
+            .unwrap_or_default()
+            .to_string();
+        *ERR_ID.lock().unwrap_or_else(|p| p.into_inner()) = Some((name, d.block));
+    }
+}
+
+/// `,"err_kind":…,"err_block":…` for the child's record (null where there is none)
+fn err_id_json() -> String {
+    let mut s = String::from(",\"schema\":\"ab-child/2\"");
+    s += &match ERR_ID.lock().unwrap_or_else(|p| p.into_inner()).clone() {
+        Some((k, b)) => format!(
+            ",\"err_kind\":\"{k}\",\"err_block\":{}",
+            b.map_or("null".into(), |b| b.to_string())
+        ),
+        None => ",\"err_kind\":null,\"err_block\":null".into(),
+    };
+    s
 }
 
 /// Whether an arm decodes a stream's blocks in parallel. A single-threaded arm (libbzip2
@@ -838,10 +1092,14 @@ fn child(arm: &str, threads: usize, path: &str) {
     let perf = perf.map(machine::Perf::finish).unwrap_or_default()
         + &region.map(machine::Region::json).unwrap_or_default();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf},\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
-        h.finish()
+        h.finish(),
+        err_id_json()
+            + &h.sha
+                .as_ref()
+                .map_or(",\"sha256\":null".into(), |s| format!(",\"sha256\":\"{}\"", s.hex()))
     );
 }
 
