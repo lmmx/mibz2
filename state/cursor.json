@@ -1259,6 +1259,19 @@
       "status": "finished",
       "disposition": "Forced-team screen admissible prospectively; exact dispatch and claim scopes corrected; tier readiness unestablished",
       "comment": 6758740649
+    },
+    {
+      "id": "D084",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6759394097,
+      "pr": 334,
+      "sha": "dd5d8bf76477499292bdd9bd6d2f2afcffcccd59",
+      "commit": "f4012c4f9c5294ed56086269a7148236c056ee57",
+      "status": "complete",
+      "disposition": "FAIL-MEASUREMENT preserved; replacement qualifying count held; one bounded method diagnostic and routine screen/B5 work admissible."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1527,7 +1540,9 @@
     "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f",
     "0689fbc7904b262d26961a9ea062b340a3fbd79f",
     "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
-    "3bc34325b08dd8532e6c90408da1b5c6a2c88781"
+    "3bc34325b08dd8532e6c90408da1b5c6a2c88781",
+    "4f161d2be9b96a4afa82043829846cc7818c694d",
+    "f4012c4f9c5294ed56086269a7148236c056ee57"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1611,7 +1626,8 @@
     6757176848,
     6757688316,
     6758376066,
-    6758683390
+    6758683390,
+    6759394097
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1691,8 +1707,9 @@
   },
   "current_execution": {
     "active_comment": 6759394097,
-    "status": "in progress",
-    "decision": "D084"
+    "status": "complete",
+    "decision": "D084",
+    "work_commit": "f4012c4f9c5294ed56086269a7148236c056ee57"
   },
   "duplicate_events": [
     {
@@ -2332,6 +2349,13 @@
       "decision": "D083",
       "commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
       "comment": 6758740649
+    },
+    {
+      "pr": 334,
+      "sha": "dd5d8bf76477499292bdd9bd6d2f2afcffcccd59",
+      "evidence_digest": "journal:46887c3866c276b5f7a5f7f584684f336370ac1d;report:514df78587cf057896de0d2e03d2f692defd2dac;inbox:6759394097",
+      "decision": "D084",
+      "commit": "f4012c4f9c5294ed56086269a7148236c056ee57"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2946,10 +2970,11 @@
     {
       "comment_id": 6759394097,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D084",
-      "progress": "Assessment complete; work committed before publication; original failure preserved, method diagnostic bounded.",
-      "receipt_commit": "4f161d2be9b96a4afa82043829846cc7818c694d"
+      "progress": "D084 complete; awaiting one REVIEW on #145.",
+      "receipt_commit": "4f161d2be9b96a4afa82043829846cc7818c694d",
+      "work_commit": "f4012c4f9c5294ed56086269a7148236c056ee57"
     }
   ],
   "migrated_from": {
