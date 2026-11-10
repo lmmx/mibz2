@@ -122,3 +122,52 @@ parity, and actual fuzz/Miri/mutation reach. The implementer cannot certify this
 The acting monitor reported reviewer routing inactive while #364 remains unmerged.
 An authorised Coordinator must arrange the independent review and decide the gate
 from the corrected head's evidence. No research or cooperative/team source was changed.
+
+## Isolated-harness CI result
+
+Head `989f782719ec69420713f94ed0b79cc5bedc8709`, [run 42899341988](https://github.com/lmmx/mibz2/actions/runs/42899341988),
+job **130120814367**, Intel Xeon Platinum 8370C (a different runner from the two
+original attempts), Rust 1.99.1. Every default output hash agrees. Wikidata is level
+at 1/2/4 threads; 4t is **+0.0% (−2.6%, +2.7%)**. Text 1t is flagged
+**+2.4% (+0.2%, +4.6%) slower**. Every other default wall row is level or faster.
+Random 2t CPU is +0.9% (+0.2%, +1.6%) slower; default RSS stays within +3.1%.
+Thus the slice-one performance gate is **still open**, not ACCEPT.
+
+Artifact **13801838309**, reported digest
+`2653899fef924a6618e3e1d5210624cf3aa305e76a6ca5b57c0979a844c793e2`.
+Its bytes remain unavailable locally; the report and complete job log are archived
+as `benchmark-isolated.*`. Test CI passes, including 27 ordinary harness tests and
+the enabled adapter test. CI cells fuzz: **27,701 cases**, **14,539 forced admissions**,
+**10,254 forced short cycles**, zero forced refusals (`fuzz-isolated.log`).
+
+CI's `.text` digests differ: base `ee20eb0052bfec3654dfe308e30e7562b769f9cde1f25a479a93b3d4ee38c6d4`,
+head `827a77a3d92101166cbab22f9f15c3c3a8b2a8136b6bc9bcc3e76fb349bdb551`.
+The local exact-equality experiment controlled the source path; CI builds base in
+`.base-src`. Rebuilding **unchanged master** locally in that extra subdirectory alone
+changes its `.text` digest from `bb5f540c…` to
+`72c68d1dcca0a0d1cb429023204e2c6690ebcf19748dc197314a7322ea3e701a`, while 252/252
+common functions remain normalized-identical. The harness embeds `CARGO_MANIFEST_DIR`
+for corpus generation. Thus whole-section equality across different paths is not
+expected; the local controlled comparison remains valid, but **CI byte identity is
+not claimed**. No benchmark-path/remapping change was made to seek a timing result.
+
+## Formatting and summary visibility follow-up
+
+The isolated-harness head is `989f782719ec69420713f94ed0b79cc5bedc8709`. Its legacy
+pre-commit status failed. The external log host is blocked here, so that remote
+failure's exact step is unverified (class D), not assumed to be infrastructure.
+Running the configured Taplo check locally reproduced a concrete formatting failure
+in the added `Cargo.toml` cfg array; the formatter's line wrapping fixes it. Parsed
+TOML before/after is equal. Taplo lint/check on the changed manifest and the configured
+whitespace check on the correction's files pass; logs are in `evidence/`.
+
+The follow-up also tees `cells-summary.md` to the job log as well as the Actions
+summary, making the reported experimental figures readable when artifact downloads
+are blocked. It changes no producer command, data, timing, statistic or gate. Decoder
+and harness source are byte-identical to `989f782`; the synthetic text corpus reads
+only src/tests/examples/README, so these formatting/logging changes do not alter it.
+The completed isolated-harness benchmark is retained above. The follow-up's required
+exact-head CI measurement will count as the **one permitted primary-loss follow-up**
+for this unchanged decoder/harness: if text 1t is slower again, that loss stands. There
+will be no additional rerun or code-layout perturbation to seek a passing outcome.
+Any secondary flag must likewise be retained under the original fixed slice-one gate.

@@ -252,7 +252,7 @@ jobs:
         run: |
           bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
           bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab > cells-summary.md
-          cat cells-summary.md >> "$GITHUB_STEP_SUMMARY"
+          tee -a "$GITHUB_STEP_SUMMARY" < cells-summary.md
 
       # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
       - name: Stages
