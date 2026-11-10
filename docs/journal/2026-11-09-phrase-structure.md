@@ -1,5 +1,13 @@
 # 2026-11-09: The inverse BWT as copies of decoded text: the phrase census, an exact copy walk, and what they bound (closed 2026-11-10)
 
+> **Correction (2026-11-10).** The first-split words of this entry were counted with a height
+> of 1 + min K. The safe height is min K (the Optimiser's witness, "aab"; #145, 6758640506). The
+> row "first-split words … 0.1436" in the table below and the figures drawn from it are one byte
+> a word too long. The corrected and now asserted counts are in `2026-11-10-tunnels.md` §0:
+> 0.132 steps a row at a cap of 64. The phrase histogram, the Ψ^s cell counts and the copy-walk
+> policies do not use that height.
+
+
 **Result: a structural finding, a correct new kernel, and no speed-up yet.**
 - **The finding (counted, all 233 full Wikidata blocks).** The walk lands on the start of one of
   Ψ's translation cells only 0.0722 times a row. Between two landings it runs parallel to the

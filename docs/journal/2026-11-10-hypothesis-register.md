@@ -41,10 +41,12 @@ bundle), **reader's** (a section reader's finding, not re-checked), **derived**,
 - **What bounds k is the words:** a table is r_k (k + c) bytes. Counted on Wikidata: r_k ÷ n is
   0.088, 0.109, 0.142, 0.196 at k = 2, 4, 8, 16. Under 1.5 MB a block that is k ≤ 8: at least
   one dependent load an eight bytes.
-- **And the tall tunnels lower that:** 48% of the bytes sit in blocks 33 rows high or more
-  (`2026-11-10-tunnels.md`), copied with no table access: about 0.074 loads a row at k = 8.
+- **The tall tunnels do not lower that** (corrected the same day, `2026-11-10-tunnels.md` §0):
+  copying them would cut the table steps to 0.057 a row at k = 8, but a tall cell is landed on
+  under once, so its word costs more to make than it delivers (1.24 to 1.73 bytes a byte).
+  Closed on that witness.
 - **So the chain a row is born of the T-vector.** What is left of it under a table of 1 to
-  1.5 MB is a twelfth to an eighth of a load a row.
+  1.5 MB is an eighth to a quarter of a load a row.
 
 ## 1. The law of the knee (fitted, then tested out of sample; verified)
 
@@ -211,7 +213,7 @@ Each is corrected in its entry or here.
 | 2 | the law on a built table | share-nothing at level 9 with no new kernel | compact30 with 6 to 10 plain workers in the grid harness: 2,350 MB/s at seven, ±13% | the Optimiser's price of the arm; then the queue |
 | 3 | N1 at k = 4 | 3.5 to 5.3 GB/s of inversion at ten workers (model) | the counting probe now running, read in loads a row as well as instructions | 3a |
 | 4 | the team path's ports | up to 15% at ten threads | a callgrind count of the default plan at this head | 3a, then the 9-thread sweep |
-| 5 | tall tunnels in a k-step lane | 0.125 to 0.074 loads a row at k = 8 | one counter in `phrase_census` | 3a |
+| 5 | ~~tall tunnels in a k-step lane~~ | closed: words stored ÷ bytes delivered is 1.24 to 1.73 | counted, `2026-11-10-tunnels.md` §0 | n.a. |
 | 6 | the reader's `BufRead` | the next serial stage past about 5 GB/s | none needed | the Coordinator's schedule |
 
 ## Reproduce
