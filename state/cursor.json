@@ -1463,8 +1463,9 @@
       "sha": "4ae63fd18819e293b53a04dc83fc9660b9bed7df",
       "evidence_digest": "mtf-sha256:789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e;team-runs-sha256:3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229;base:8ed2fbdf3e8c05cdbfa426676883c652054ef17d",
       "commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
-      "status": "complete",
-      "disposition": "#358 source/safety PROCEED; team-run B5 completion HOLD pending forced plain-team fuzz coverage; no new UB established."
+      "status": "finished",
+      "disposition": "#358 source/safety PROCEED; team-run B5 completion HOLD pending forced plain-team fuzz coverage; no new UB established.",
+      "comment": 6770483223
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1559,7 +1560,8 @@
     6763937701,
     6764159416,
     6764381812,
-    6764503403
+    6764503403,
+    6770483223
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1787,7 +1789,8 @@
     "1c87ddf96359885f027e010ec8f624e6864b2235",
     "b46e0b62bc656426c2785508b8824a4b5fb77339",
     "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff",
-    "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
+    "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
+    "766f5b01ce2b50f49b30d4dad8518ede332f4397"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1964,9 +1967,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6770180620,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D097",
+    "incoming_comment": 6770180620,
+    "review_comment_id": 6770483223,
     "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
   },
   "duplicate_events": [
@@ -3476,11 +3481,13 @@
     {
       "comment_id": 6770180620,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D097",
-      "progress": "D097 committed; awaiting deduplicated REVIEW on #145.",
+      "progress": "Exact REVIEW body and destination read back on #145. Pinned verifier fails only its hardcoded coordinator FROM check; independent Guardian header/routing checks pass.",
       "receipt_commit": "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff",
-      "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
+      "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
+      "review_comment_id": 6770483223,
+      "complete_cursor_commit": "766f5b01ce2b50f49b30d4dad8518ede332f4397"
     }
   ],
   "migrated_from": {
