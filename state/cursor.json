@@ -1161,6 +1161,19 @@
       "status": "finished",
       "disposition": "Statistical pass; HOLD cancelled docs-only head merge pending policy reconciliation; no fourth benchmark",
       "comment": 6754250293
+    },
+    {
+      "pr": 316,
+      "sha": "b63f6bee2e3ceb821198129d649bed2bd2fb349e",
+      "evidence_digest": "registration:6c84b47110b3ab6fd77100138501ab6335859acc;freeze:d5935377695733349ecf95417314a6f2b95de172;pilot:42732367790/1;proposal:6756084723",
+      "decision": "D077",
+      "commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+      "id": "D077",
+      "incoming_pr": 161,
+      "incoming_comment": 6756084723,
+      "output_pr": 145,
+      "status": "complete",
+      "disposition": "PROCEED prospective sharded design; qualification unready pending complete fixed protocol and review"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1405,7 +1418,9 @@
     "6435c2b84a9a0d13d5316e92396b33022c4b199f",
     "fd461f8ec917f43cba486c0f241974dcb9228a39",
     "ec9b13f026392484b3e61847cb25aa87337f0320",
-    "3e4e31f7a233cf1397c9be478154c15929d7b32a"
+    "3e4e31f7a233cf1397c9be478154c15929d7b32a",
+    "61eb76814102d61b399c45436c10835ffc4fbe0a",
+    "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1482,7 +1497,8 @@
     6750670706,
     6750788493,
     6752605812,
-    6754182845
+    6754182845,
+    6756084723
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1562,8 +1578,9 @@
   },
   "current_execution": {
     "active_comment": 6756084723,
-    "status": "in progress",
-    "decision": "D077"
+    "status": "complete",
+    "decision": "D077",
+    "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
   },
   "duplicate_events": [
     {
@@ -2163,6 +2180,13 @@
       "decision": "D076",
       "commit": "ec9b13f026392484b3e61847cb25aa87337f0320",
       "comment": 6754250293
+    },
+    {
+      "pr": 316,
+      "sha": "b63f6bee2e3ceb821198129d649bed2bd2fb349e",
+      "evidence_digest": "registration:6c84b47110b3ab6fd77100138501ab6335859acc;freeze:d5935377695733349ecf95417314a6f2b95de172;pilot:42732367790/1;proposal:6756084723",
+      "decision": "D077",
+      "commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2700,8 +2724,10 @@
     {
       "comment_id": 6756084723,
       "pr": 161,
-      "status": "in progress",
-      "decision": "D077"
+      "status": "complete",
+      "decision": "D077",
+      "receipt_commit": "61eb76814102d61b399c45436c10835ffc4fbe0a",
+      "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
     }
   ],
   "migrated_from": {
@@ -2712,8 +2738,8 @@
     "date": "2026-11-06"
   },
   "authority_transition": {
-    "previous_spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-    "active_spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+    "previous_spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+    "active_spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
     "source": "direct user instruction in this run",
     "historical_fields": "operating_pin, stage, activation and earlier assessments retain their compact30 provenance; current authority is docs/team/SPEC.GUARDIAN.md at active_spec_pin",
     "migration_checked": true,
