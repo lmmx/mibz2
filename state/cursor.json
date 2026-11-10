@@ -1755,11 +1755,15 @@
     },
     {
       "trigger_comment_id": 6763141779,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "41be4c2707768e89e4ca41d8ebe5ba8c930dff66"
+      "source_commit": "41be4c2707768e89e4ca41d8ebe5ba8c930dff66",
+      "report_commit": "e5409a3fffaefa5ff148a09a28ab32d9e1ce14f0",
+      "report_path": "state/reports/steps-placement-delta-6763141779/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE before freeze: additive design/exposure/precision accepted; operational sufficiency claim, t-model/drift language, ASLR and explicit count checks still require corrections. No new experiment."
     }
   ],
   "active_delegations": [],
