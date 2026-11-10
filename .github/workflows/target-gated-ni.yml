@@ -240,11 +240,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p shards
+          # (a download that fails leaves a listed artifact without files: the judge refuses it)
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir shards --pattern 'tg-ni-*' || true
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
-            --jq '.artifacts[] | {name, id, digest, size_in_bytes, workflow_run: .workflow_run.id}' > artifacts.jsonl
+            --jq '.artifacts[] | {name, id, digest, size_in_bytes, expired, created_at, workflow_run: .workflow_run.id}' > artifacts.jsonl
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=all" \
-            --jq '.jobs[] | {name, id, run_attempt, status, conclusion, started_at, completed_at}' > jobs.jsonl
+            --jq '.jobs[] | {name, id, run_id, run_attempt, workflow_name, head_sha, status, conclusion, started_at, completed_at, steps: [.steps[]? | {name, number, status, conclusion, started_at, completed_at}]}' > jobs.jsonl
           python3 bench/service_tg.py manifest shards --artifacts artifacts.jsonl --jobs jobs.jsonl \
             --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
           cat manifest.json

@@ -43,7 +43,13 @@ runners; its estimate the geometric mean of the paired head-over-base ratios; it
 error from `NI_BATCHES` consecutive batch means (robust to dependence within a batch); its
 one-sided 95% upper bound (t at 0.95, `NI_BATCHES` - 1 df) at most 1.02. All 42 must pass.
 - **Admission, every shard:**
-  - exactly one attempt that started measuring, none after it;
+  - the run's whole history reconciled, fail-closed (`history_problems`): every job of every
+    attempt (the API's, with its steps) and every artifact GitHub lists, downloaded or not. An
+    attempt counts as measured if its artifact holds rows or a start marker, or the API shows
+    its measurement step began. Exactly one attempt measured, the shard's last, its job and
+    step succeeded, its artifact listed and downloaded. An earlier attempt passes only as a
+    verified setup failure (job failed, measurement step skipped, no rows or marker).
+    Anything unknown refuses;
   - every file matching the manifest's SHA-256;
   - labelled `qualification` (a `smoke` run is never evidence);
   - the registered head (the candidate plus the frozen file alone), base, run, rounds, corpus
@@ -61,7 +67,7 @@ one-sided 95% upper bound (t at 0.95, `NI_BATCHES` - 1 df) at most 1.02. All 42 
 `manifest` writes the aggregate's manifest; the workflow's `aggregate` job runs it and `ni`.
 
 **`confirm`: the inherited harm-confirmation rule**, on the one confirmation dispatch allowed
-(§2.6). A wall cell flagged slower in the registered run and flagged slower again in the
+(§2.6), which must be a distinct dispatch (another run id) of the same head. A wall cell flagged slower in the registered run and flagged slower again in the
 confirmation run on the same head is a confirmed harm, and fails condition 7. A cell not
 flagged again is unresolved, and reported. The confirmation run never enters condition 2: it
 cannot rescue a failed cell, replace the registered run, or be pooled with it.
@@ -586,27 +592,120 @@ def sha256_file(path):
     return h.hexdigest()
 
 
+MEASURE_STEP = "Run (the measurement)"
+ARTIFACT = re.compile(r"tg-ni-(.+)-a([0-9]+)")
+
+
 def manifest(root, artifacts=(), jobs=(), run=None, attempt=None, label=None):
-    """Every shard artifact under `root` (as `gh run download` leaves them: one directory an
-    artifact, `tg-ni-<shard>-a<attempt>`, holding `<shard>/...`), each file with its SHA-256,
-    beside GitHub's own record of the artifacts (id, digest) and the jobs"""
-    meta = {a.get("name"): a for a in artifacts}
-    out = {"schema": "mibz2.tg_ni_manifest/1", "run": run, "attempt": attempt, "label": label,
-           "artifacts": [], "jobs": list(jobs)}
-    for name in sorted(os.listdir(root)) if os.path.isdir(root) else []:
-        m = re.fullmatch(r"tg-ni-(.+)-a([0-9]+)", name)
-        if not m or m.group(1) == "aggregate":
+    """The run's whole history, for the judge: every shard artifact GitHub lists (`artifacts`,
+    the API's records, all attempts), each with the files downloaded under `root` (as
+    `gh run download` leaves them: `tg-ni-<shard>-a<attempt>/<shard>/...`) and each file's
+    SHA-256, or `files: null` where the listed artifact was not downloaded; any downloaded
+    directory the API did not list (`unlisted`); and every job of every attempt with its steps
+    (`jobs`, the API's `filter=all`)"""
+    listed = {a.get("name"): a for a in artifacts if ARTIFACT.fullmatch(str(a.get("name", "")))}
+    on_disk = sorted(os.listdir(root)) if os.path.isdir(root) else []
+    out = {"schema": "mibz2.tg_ni_manifest/2", "run": run, "attempt": attempt, "label": label,
+           "artifacts": [], "unlisted": [], "jobs": list(jobs)}
+    for name in sorted(set(listed) | {n for n in on_disk if ARTIFACT.fullmatch(n)}):
+        m = ARTIFACT.fullmatch(name)
+        if m.group(1) == "aggregate":
             continue
         d = os.path.join(root, name, m.group(1))
-        files = {}
-        if os.path.isdir(d):
-            for f in sorted(os.listdir(d)):
-                if os.path.isfile(os.path.join(d, f)):
-                    files[f] = sha256_file(os.path.join(d, f))
-        a = meta.get(name, {})
+        files = None
+        if name in on_disk and os.path.isdir(d):
+            files = {f: sha256_file(os.path.join(d, f)) for f in sorted(os.listdir(d))
+                     if os.path.isfile(os.path.join(d, f))}
+        if name not in listed:
+            out["unlisted"].append(name)
+        a = listed.get(name, {})
         out["artifacts"].append({"name": name, "shard": m.group(1), "attempt": int(m.group(2)),
-                                 "id": a.get("id"), "digest": a.get("digest"), "files": files})
+                                 "id": a.get("id"), "digest": a.get("digest"),
+                                 "expired": a.get("expired"), "files": files})
     return out
+
+
+def shard_jobs(jobs, sid):
+    """The API's jobs of one shard, every attempt: the matrix job is named `shard (<id>, ...)`"""
+    return [j for j in jobs if str(j.get("name", "")).startswith(f"shard ({sid},")]
+
+
+def measure_step(job):
+    """The job's measurement step as the API records it, or None if its steps are unknown"""
+    steps = job.get("steps")
+    if not isinstance(steps, list) or not steps:
+        return None
+    hit = [s for s in steps if s.get("name") == MEASURE_STEP]
+    return hit[0] if len(hit) == 1 else {"name": MEASURE_STEP, "conclusion": "absent"}
+
+
+def history_problems(sid, jobs, arts, head=None, run=None):
+    """§2.5's attempt rule, fail-closed, from the authoritative history: (problems, the measured
+    attempt's artifact record). An attempt counts as measured if its artifact holds rows or a
+    start marker, OR the API shows its measurement step began; exactly one attempt may have
+    measured, it must be the shard's last, its job and step must have succeeded, and its
+    artifact must be listed and downloaded. An earlier attempt is a recoverable setup failure
+    only on positive evidence: its job failed and its measurement step was skipped, and its
+    artifact (if any) holds no rows or marker. Anything unknown refuses"""
+    p = []
+    js = shard_jobs(jobs, sid)
+    by_attempt = {}
+    for j in js:
+        k = j.get("run_attempt")
+        if not is_int(k) or k in by_attempt:
+            p.append(f"{sid}: job attempts unknown or repeated ({k!r})")
+            continue
+        if head is not None and j.get("head_sha") != head:
+            p.append(f"{sid}: attempt {k}'s job ran at {j.get('head_sha')!r}, not the head")
+        if run is not None and j.get("run_id") != run:
+            p.append(f"{sid}: attempt {k}'s job belongs to run {j.get('run_id')!r}, not {run}")
+        by_attempt[k] = j
+    for a in arts:
+        if a["attempt"] not in by_attempt:
+            p.append(f"{sid}: an artifact of attempt {a['attempt']} with no job of that attempt")
+    if not by_attempt:
+        return p + [f"{sid}: no job in the run's history"], None
+    attempts = sorted(by_attempt)
+    art = {a["attempt"]: a for a in arts}
+    measured = []
+    for k in attempts:
+        j, a = by_attempt[k], art.get(k)
+        step = measure_step(j)
+        files = (a or {}).get("files")
+        has_data = bool(files) and ("runs.jsonl" in files or "measurement-started.txt" in files)
+        if step is None:
+            p.append(f"{sid}: attempt {k}: the job's steps are unknown")
+            continue
+        began = step.get("conclusion") not in ("skipped", "absent") or bool(step.get("started_at"))
+        if has_data or began:
+            measured.append(k)
+            continue
+        # (a setup failure: positive evidence it never measured)
+        if not (j.get("status") == "completed" and j.get("conclusion") == "failure"
+                and step.get("conclusion") == "skipped"):
+            p.append(f"{sid}: attempt {k} neither measured nor a verified setup failure "
+                     f"(job {j.get('status')}/{j.get('conclusion')}, step {step.get('conclusion')})")
+        if a is not None and files is None:
+            p.append(f"{sid}: attempt {k}'s listed artifact was not downloaded: its contents are unknown")
+    if p:
+        return p, None
+    if len(measured) != 1:
+        return [f"{sid}: {len(measured)} attempts that started measuring, not one"], None
+    k = measured[0]
+    if k != attempts[-1]:
+        return [f"{sid}: an attempt after the measured one ({attempts})"], None
+    j, a, step = by_attempt[k], art.get(k), measure_step(by_attempt[k])
+    if not (j.get("status") == "completed" and j.get("conclusion") == "success"):
+        p.append(f"{sid}: the measured attempt's job ended {j.get('status')}/{j.get('conclusion')}, not success")
+    if step.get("conclusion") != "success":
+        p.append(f"{sid}: the measurement step ended {step.get('conclusion')!r}, not success")
+    if a is None or a.get("id") is None:
+        p.append(f"{sid}: the measured attempt's artifact is not listed by GitHub")
+    elif not a.get("files"):
+        p.append(f"{sid}: the measured attempt's artifact was not downloaded")
+    elif a.get("expired"):
+        p.append(f"{sid}: the measured attempt's artifact expired")
+    return p, (None if p else a)
 
 
 def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
@@ -643,7 +742,7 @@ def read_text(d, name):
         return None
 
 
-def shard_problems(sid, d, reg, head, run_id, expect_rounds):
+def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2"):
     """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
     rows by (corpus, threads, arm) and round"""
     p = []
@@ -658,11 +757,12 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds):
         return [f"{sid}: shard.json unreadable"], {}
     want = {"schema": "mibz2.tg_ni_shard/1", "label": "qualification", "shard": sid, "corpus": corpus,
             "threads": list(threads), "rounds": expect_rounds, "head": head, "base": fz.get("base"),
-            "github_sha": head, "run_id": run_id}
+            "github_sha": head, "workflow_sha": head, "run_id": run_id, "run_attempt": attempt,
+            "repository": repository}
     for k, v in want.items():
         if info.get(k) != v:
             p.append(f"{sid}: shard.json {k} {info.get(k)!r}, not {v!r}")
-    if "target-gated-ni.yml" not in str(info.get("workflow_ref")):
+    if not str(info.get("workflow_ref", "")).startswith(f"{repository}/.github/workflows/target-gated-ni.yml@"):
         p.append(f"{sid}: not run by target-gated-ni.yml ({info.get('workflow_ref')!r})")
     rustc = read_text(d, "rustc.txt").strip()
     if not fz.get("ni_rustc") or rustc != fz["ni_rustc"]:
@@ -746,7 +846,7 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
     reg = reg or registered()
     fz = reg["frozen"]
     v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
-         "failing": [], "shards": {}}
+         "failing": [], "shards": {}, "run": man.get("run"), "head": head, "label": man.get("label")}
     p = v["problems"]
     for k in ("candidate", "base", "ni_rustc", "corpus_text"):
         if k not in fz:
@@ -757,25 +857,23 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
         p += head_problems(head, fz["candidate"])
     run_id = man.get("run")
     arts = man.get("artifacts", [])
+    jobs = man.get("jobs") or []
+    if man.get("schema") != "mibz2.tg_ni_manifest/2":
+        p.append(f"manifest schema {man.get('schema')!r}: not one that records the run's whole history")
+    for name in man.get("unlisted") or []:
+        p.append(f"{name}: downloaded but not listed by GitHub")
     for sid in SHARDS:
-        mine = sorted((a for a in arts if a["shard"] == sid), key=lambda a: a["attempt"])
-        measured = [a for a in mine if "measurement-started.txt" in a["files"]]
-        if not mine:
-            p.append(f"{sid}: no artifact")
-            continue
-        if len(measured) != 1:
-            p.append(f"{sid}: {len(measured)} attempts that started measuring, not one")
-            continue
-        a = measured[0]
-        if any(b["attempt"] > a["attempt"] for b in mine):
-            p.append(f"{sid}: an attempt after the measured one")
+        mine = [a for a in arts if a["shard"] == sid]
+        q, a = history_problems(sid, jobs, mine, head=head, run=run_id)
+        if q:
+            p += q
             continue
         d = os.path.join(root, a["name"], sid)
         for f, h in a["files"].items():
             path = os.path.join(d, f)
             if not os.path.isfile(path) or sha256_file(path) != h:
                 p.append(f"{sid}: {f} does not match the manifest's digest")
-        q, by = shard_problems(sid, d, reg, head, run_id, rounds)
+        q, by = shard_problems(sid, d, reg, head, run_id, rounds, attempt=a["attempt"])
         p += q
         v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
         if q:
@@ -836,13 +934,20 @@ def ni_markdown(v):
 def confirm(registered_v, confirmation_v):
     """The inherited harm-confirmation rule on the one confirmation dispatch (§2.6): each wall
     flag of the registered run, flagged again (confirmed harm: fails condition 7) or not
-    (unresolved). It never enters condition 2"""
-    if not (registered_v["valid"] and confirmation_v["valid"]):
-        return {"valid": False, "confirmed": [], "unresolved": []}
+    (unresolved). The two must be distinct dispatches (distinct run ids) of the same head, both
+    valid; the same verdict twice is not a confirmation. It never enters condition 2"""
+    no = {"valid": False, "confirmed": [], "unresolved": []}
+    if not (registered_v.get("valid") and confirmation_v.get("valid")):
+        return dict(no, problems=["a run is invalid"])
+    r1, r2 = registered_v.get("run"), confirmation_v.get("run")
+    if not (is_int(r1) and is_int(r2)) or r1 == r2:
+        return dict(no, problems=[f"not two distinct dispatches: runs {r1!r} and {r2!r}"])
+    if registered_v.get("head") != confirmation_v.get("head"):
+        return dict(no, problems=["the confirmation is of another head"])
     again = set(confirmation_v["flags"])
     flags = registered_v["flags"]
-    return {"valid": True, "confirmed": [f for f in flags if f in again],
-            "unresolved": [f for f in flags if f not in again]}
+    return {"valid": True, "registered_run": r1, "confirmation_run": r2,
+            "confirmed": [f for f in flags if f in again], "unresolved": [f for f in flags if f not in again]}
 
 
 def write(prefix, v, md):

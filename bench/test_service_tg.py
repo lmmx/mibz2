@@ -256,14 +256,37 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
     return out
 
 
-def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=()):
+HISTORY = {"artifacts": [], "jobs": []}
+
+
+def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=(),
+                job=None, step=None, steps=True, listed=True, downloaded=True, artifact=True, run=RUN):
+    """One shard attempt: its artifact's files (unless `artifact` is False or it wasn't
+    `downloaded`), GitHub's record of the artifact (unless not `listed`) and of the job: its
+    conclusion `job` and its measurement step's `step` (success and success when `measured`,
+    failure and skipped otherwise), or no steps at all (`steps` False)"""
     corpus, threads = tg.SHARDS[sid]
-    d = Path(root) / f"tg-ni-{sid}-a{attempt}" / sid
+    name = f"tg-ni-{sid}-a{attempt}"
+    HISTORY["jobs"].append({
+        "name": f"shard ({sid}, {corpus}, {','.join(map(str, threads))})", "run_attempt": attempt,
+        "run_id": run, "head_sha": HEAD,
+        "status": "completed", "conclusion": job or ("success" if measured else "failure"),
+        **({"steps": [{"name": "Build the head and the base", "conclusion": "success"},
+                      {"name": tg.MEASURE_STEP, "conclusion": step or ("success" if measured else "skipped"),
+                       "started_at": "2026-11-10T00:00:00Z" if (step or measured) not in (False, "skipped") else None}]}
+           if steps else {})})
+    if artifact and listed:
+        HISTORY["artifacts"].append({"name": name, "id": len(HISTORY["artifacts"]) + 1,
+                                     "digest": f"sha256:{len(HISTORY['artifacts']):064x}"})
+    if not (artifact and downloaded):
+        return
+    d = Path(root) / name / sid
     d.mkdir(parents=True)
     info = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
             "threads": list(threads), "rounds": R, "head": HEAD, "base": BASESHA, "github_sha": HEAD,
+            "workflow_sha": HEAD, "repository": "lmmx/mibz2",
             "workflow_ref": "lmmx/mibz2/.github/workflows/target-gated-ni.yml@refs/heads/x",
-            "run_id": RUN, "run_attempt": attempt}
+            "run_id": run, "run_attempt": attempt}
     info.update(over or {})
     rec, ex = record(False)
     digest = REG["frozen"]["corpus_text"] if corpus == "text" else tg.CORPUS_SHA256[corpus]
@@ -289,12 +312,18 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
             (d / name).write_text(text)
 
 
-def build(root, label="qualification", **per):
-    """Every registered shard's artifact; `per[sid]` gives write_shard's arguments for one"""
+def build(root, label="qualification", run=RUN, **per):
+    """Every registered shard's attempts; `per[sid]` gives write_shard's arguments for each"""
+    HISTORY["artifacts"], HISTORY["jobs"] = [], []
     for sid in tg.SHARDS:
         for kw in per.get(sid, [{}]):
-            write_shard(root, sid, label=kw.pop("label", label), **kw)
-    return tg.manifest(root, run=RUN, attempt=1, label=label)
+            kw = dict(kw)
+            write_shard(root, sid, label=kw.pop("label", label), run=run, **kw)
+    return remanifest(root, label, run=run)
+
+
+def remanifest(root, label="qualification", run=RUN):
+    return tg.manifest(root, HISTORY["artifacts"], HISTORY["jobs"], run=run, attempt=1, label=label)
 
 
 class CI(unittest.TestCase):
@@ -382,10 +411,10 @@ class CI(unittest.TestCase):
         def mutate(name, f):
             shutil.rmtree(self.root)
             self.root = tempfile.mkdtemp()
-            man = build(self.root)
+            build(self.root)
             path = Path(self.root) / "tg-ni-random-a1" / "random" / name
             path.write_text(f(path.read_text()))
-            return tg.manifest(self.root, run=RUN, attempt=1, label="qualification")
+            return remanifest(self.root)
         rec, _ = record(True)
         cases = {
             "the target's lscpu model": ("lscpu.txt", lambda t: f"Model name: {tg.TARGET_NAME}\n"),
@@ -419,6 +448,74 @@ class CI(unittest.TestCase):
         v = self.ni(build(self.root, runs=[{"attempt": 1}, {"attempt": 2, "measured": False}]))
         self.assertFalse(v["valid"])
 
+    def fresh(self):
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+
+    def refused(self, why, **per):
+        self.fresh()
+        v = self.ni(build(self.root, **per))
+        self.assertFalse(v["valid"], why)
+        return v
+
+    def test_the_history_is_reconciled_fail_closed(self):
+        # (the Researcher's four probes, review of inbox 6756614616 §5, each accepted by the
+        # judge at eb46b5a8, and the other unknown histories, each refused)
+        good = {"attempt": 2}
+        cases = {
+            "a cancelled job with a complete-looking artifact": [{"job": "cancelled", "step": "cancelled"}],
+            "a cancelled job whose step says success": [{"job": "cancelled"}],
+            "attempt 1 with rows but no start marker, then attempt 2":
+                [{"attempt": 1, "drop": ("measurement-started.txt", "measurement-ended.txt")}, good],
+            "an earlier measurement cancelled, with no artifact, then a good attempt 2":
+                [{"attempt": 1, "job": "cancelled", "step": "cancelled", "artifact": False}, good],
+            "an earlier measurement started per the API, artifact clean, then attempt 2":
+                [{"attempt": 1, "measured": False, "step": "failure"}, good],
+            "a wrong workflow sha": [{"over": {"workflow_sha": "0" * 40}}],
+            "an inconsistent shard attempt": [{"over": {"run_attempt": 99}}],
+            "another repository": [{"over": {"repository": "fork/mibz2"}}],
+            "a workflow ref of another file": [{"over": {"workflow_ref": "lmmx/mibz2/.github/workflows/x/target-gated-ni.yml@r"}}],
+            "the measured artifact listed but not downloaded": [{"downloaded": False}],
+            "the measured artifact not listed by GitHub": [{"listed": False}],
+            "the job's steps unknown": [{"steps": False}],
+            "the measured job timed out": [{"job": "failure", "step": "cancelled"}],
+            "the measured step failed in a job marked success": [{"step": "failure"}],
+            "a setup failure whose step didn't record as skipped":
+                [{"attempt": 1, "measured": False, "job": "cancelled", "step": "skipped"}, good],
+            "a setup failure whose artifact wasn't downloaded":
+                [{"attempt": 1, "measured": False, "downloaded": False}, good],
+        }
+        for what, attempts in cases.items():
+            with self.subTest(what):
+                v = self.refused(what, runs=attempts)
+                self.assertTrue(any(x.startswith("runs") for x in v["problems"]), v["problems"])
+        # (no job at all for a shard: an artifact without history)
+        self.fresh()
+        man = build(self.root)
+        man["jobs"] = [j for j in man["jobs"] if not j["name"].startswith("shard (runs,")]
+        self.assertFalse(self.ni(man)["valid"])
+        # (a downloaded artifact GitHub didn't list)
+        self.fresh()
+        man = build(self.root)
+        man["artifacts"] = [a for a in man["artifacts"] if a["shard"] != "text"]
+        HISTORY["artifacts"] = [a for a in HISTORY["artifacts"] if not a["name"].startswith("tg-ni-text-")]
+        v = self.ni(remanifest(self.root))
+        self.assertFalse(v["valid"])
+        self.assertTrue(any("not listed by GitHub" in x for x in v["problems"]), v["problems"])
+        # (a job of another head, or another run, in the history)
+        for key, value in (("head_sha", "0" * 40), ("run_id", 1)):
+            self.fresh()
+            man = build(self.root)
+            for j in man["jobs"]:
+                if j["name"].startswith("shard (pattern,"):
+                    j[key] = value
+            self.assertFalse(self.ni(man)["valid"], key)
+        # (a manifest of the old schema, which kept no history)
+        self.fresh()
+        man = build(self.root)
+        man["schema"] = "mibz2.tg_ni_manifest/1"
+        self.assertFalse(self.ni(man)["valid"])
+
     def test_the_frozen_file_must_name_the_ci_fields(self):
         for k in ("ni_rustc", "corpus_text"):
             reg = copy.deepcopy(REG)
@@ -432,22 +529,44 @@ class CI(unittest.TestCase):
                                 text=[{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001)}]))
         other = tempfile.mkdtemp()
         try:
-            build(other, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=9)}])
-            again = tg.ni_judge(other, tg.manifest(other, run=RUN, attempt=1, label="qualification"), HEAD,
-                                reg=REG, check_git=False, rounds=R, batches=B)
+            man = build(other, run=RUN + 1,
+                        runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=9)}])
+            again = tg.ni_judge(other, man, HEAD, reg=REG, check_git=False, rounds=R, batches=B)
         finally:
             shutil.rmtree(other)
-        self.assertEqual(tg.confirm(flagged, again), {"valid": True, "confirmed": ["runs/2"], "unresolved": ["text/1"]})
+        self.assertTrue(again["valid"], again["problems"])
+        self.assertEqual(tg.confirm(flagged, again), {"valid": True, "registered_run": RUN, "confirmation_run": RUN + 1,
+                                                      "confirmed": ["runs/2"], "unresolved": ["text/1"]})
         self.assertFalse(tg.confirm(flagged, {"valid": False})["valid"])
+        # (the Researcher's finding: the same verdict twice is not a confirmation)
+        same = tg.confirm(flagged, flagged)
+        self.assertFalse(same["valid"])
+        self.assertIn("distinct", same["problems"][0])
+        # (nor a confirmation of another head)
+        self.assertFalse(tg.confirm(flagged, dict(again, head="0" * 40))["valid"])
 
-    def test_the_power_script_runs(self):
+    def test_the_power_script(self):
         try:
-            import scipy  # noqa: F401
+            from scipy import integrate
         except ImportError:
             self.skipTest("scipy is not installed")
         import service_tg_power as pw
-        self.assertAlmostEqual(pw.power(600, 20, 0.05, pw.DELTA), 0.05, places=6)
-        self.assertGreater(pw.power(600, 20, 0.05, 0.0), pw.power(600, 20, 0.05, 0.005))
+        # (size under the model at the boundary; power falls as the true ratio nears it)
+        self.assertAlmostEqual(pw.power(600, 20, 0.05, 1.02), 0.05, places=6)
+        self.assertGreater(pw.power(600, 20, 0.05, 1.0), pw.power(600, 20, 0.05, 1.005))
+        # (the Researcher's NaN, at R900 / median / null with the library's noncentral-t CDF:
+        # the integral is finite there, and a non-finite result is an error, never a printed 0)
+        self.assertTrue(math.isfinite(pw.power(960, 20, 0.0139, 1.0)))
+        real = integrate.quad
+        try:
+            integrate.quad = lambda *a, **k: (float("nan"), 0.0)
+            with self.assertRaises(ArithmeticError):
+                pw.power(600, 20, 0.05, 1.0)
+        finally:
+            integrate.quad = real
+        # (batches of an odd length break the arms' two-round order balance: refused)
+        with self.assertRaises(ValueError):
+            pw.power(900, 20, 0.05, 1.0)
 
 
 if __name__ == "__main__":
