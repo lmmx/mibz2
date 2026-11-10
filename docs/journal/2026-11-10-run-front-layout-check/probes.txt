@@ -1,0 +1,24 @@
+== sc-master (ASLR off)
+STACK hits=9 counts=0x5555556d7060 rsp=0x7fffffffac80 frame-counts%4K=0xc20 rows-counts%4K=0xc60 frame_bytes_in_counts_window=0
+counts=0x56352b132060 rsp=0x7ffcadbde800 frame-counts%4K=0x7a0 rows-counts%4K=0x7e0 frame_bytes_in_counts_window=0
+counts=0x55afa712c060 rsp=0x7fffba00d400 frame-counts%4K=0x3a0 rows-counts%4K=0x3e0 frame_bytes_in_counts_window=96
+counts=0x5616a6f85060 rsp=0x7ffc87736d80 frame-counts%4K=0xd20 rows-counts%4K=0xd60 frame_bytes_in_counts_window=0
+counts=0x55ee93df3060 rsp=0x7ffe258614c0 frame-counts%4K=0x460 rows-counts%4K=0x4a0 frame_bytes_in_counts_window=0
+counts=0x55b2a42ac060 rsp=0x7fff053962c0 frame-counts%4K=0x260 rows-counts%4K=0x2a0 frame_bytes_in_counts_window=416
+counts=0x556c1d40d060 rsp=0x7ffec7593800 frame-counts%4K=0x7a0 rows-counts%4K=0x7e0 frame_bytes_in_counts_window=0
+== sc-head (ASLR off)
+STACK hits=9 counts=0x5555556dc8a8 rsp=0x7fffffffac80 frame-counts%4K=0x3d8 rows-counts%4K=0x418 frame_bytes_in_counts_window=40
+counts=0x560c409af8a8 rsp=0x7ffe77568200 frame-counts%4K=0x958 rows-counts%4K=0x998 frame_bytes_in_counts_window=0
+counts=0x56116d0bd8a8 rsp=0x7ffdbd480440 frame-counts%4K=0xb98 rows-counts%4K=0xbd8 frame_bytes_in_counts_window=0
+counts=0x5607b0a9f8a8 rsp=0x7ffc8b06ad00 frame-counts%4K=0x458 rows-counts%4K=0x498 frame_bytes_in_counts_window=0
+counts=0x55ea00d008a8 rsp=0x7ffc4e650d00 frame-counts%4K=0x458 rows-counts%4K=0x498 frame_bytes_in_counts_window=0
+counts=0x559012d6b8a8 rsp=0x7fff82be4640 frame-counts%4K=0xd98 rows-counts%4K=0xdd8 frame_bytes_in_counts_window=0
+counts=0x55b164c398a8 rsp=0x7ffdfb93f700 frame-counts%4K=0xe58 rows-counts%4K=0xe98 frame_bytes_in_counts_window=24
+== sc-boxed (ASLR off)
+STACK hits=9 counts=0x5555556db8b8 rsp=0x7fffffffac80 frame-counts%4K=0x3c8 rows-counts%4K=0x408 frame_bytes_in_counts_window=56
+counts=0x5652af3258b8 rsp=0x7ffc1abd5b00 frame-counts%4K=0x248 rows-counts%4K=0x288 frame_bytes_in_counts_window=440
+counts=0x556ade45d8b8 rsp=0x7ffff9eb2280 frame-counts%4K=0x9c8 rows-counts%4K=0xa08 frame_bytes_in_counts_window=0
+counts=0x5588afe9c8b8 rsp=0x7ffd8073a800 frame-counts%4K=0xf48 rows-counts%4K=0xf88 frame_bytes_in_counts_window=264
+counts=0x563e4de4a8b8 rsp=0x7ffdd8df5ec0 frame-counts%4K=0x608 rows-counts%4K=0x648 frame_bytes_in_counts_window=0
+counts=0x559be39588b8 rsp=0x7fff7b74bd40 frame-counts%4K=0x488 rows-counts%4K=0x4c8 frame_bytes_in_counts_window=0
+counts=0x5610080908b8 rsp=0x7ffcb25ceec0 frame-counts%4K=0x608 rows-counts%4K=0x648 frame_bytes_in_counts_window=0

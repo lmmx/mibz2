@@ -281,9 +281,10 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// the inverse BWT's output, for a kernel that doesn't invert in place (never allocated
     /// otherwise)
     rle: Vec<u8>,
-    /// a block's run records and their F order, for a kernel that reads runs
-    /// (`InverseBwt::reads_runs`) on a block of few symbols (`runs::takes_runs`)
-    runs: runs::Runs,
+    /// a block's run records, for a kernel that reads runs (`InverseBwt::reads_runs`) on a
+    /// block of few symbols (`runs::takes_runs`). Boxed, so that `Scratch` grows by one
+    /// pointer and the column's path keeps its stack layout
+    runs: Box<runs::Runs>,
 }
 
 impl<I: bwt::InverseBwt> Scratch<I> {
@@ -317,7 +318,7 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             checkpoints: Vec::new(),
             inverse: I::default(),
             rle: Vec::new(),
-            runs: runs::Runs::default(),
+            runs: Box::default(),
         }
     }
 }
