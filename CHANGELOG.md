@@ -9,6 +9,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.8](https://github.com/lmmx/mibz2/compare/v0.2.7...v0.2.8) - 2026-11-10
 
+A speed release. On the Wikidata sample a decode is 12–19% faster on CI's runner, from a new
+path for blocks of few symbols (#324) and a faster table build (#312). On the i9-10900K at 10
+threads, a guarded service core becomes the default (#316). The output, the API and the
+supported inputs are unchanged.
+
+- **Blocks of few symbols (#324).** On a block with at most one symbol per two rows of its
+  bound, the default `Segmented` kernel, which decodes a block on one thread, no longer
+  writes the last column. It turns the
+  move-to-front symbols into run records, writes the backward (LF) table from them in arrival
+  order, with no sort and no scatter, and walks it backward with the room walk's own code.
+  That covers every Wikidata and `text` block; `records` and `random` keep the column. Every
+  other kernel (the cooperative teams, `Plain`, the pipelined teams) is unchanged. Louis
+  adopted it as the default although its registered no-harm rule failed on `random` and
+  `records` at one thread (see the cost and the caveats).
+- **The table build (#312).** The T-vector build cuts its 16-row windows into runs, with a
+  cheap classifier for high-entropy windows. It reaches the plain-worker path, which CI
+  measures, and a team's `solo` fallback; the shared-team path (`FusedBuild::share`) doesn't
+  carry it.
+- **The i9-10900K (#316).** At 10 threads on exactly that machine (its CPU model and
+  topology, AVX2 and CLMUL, Linux x86-64, an unlimited quota), the default is now the guarded
+  service core. Its qualification run on the i9 (`service-guarded/20261109T195345Z`, 420
+  runs, none in the slow mode) gave throughput +6.8% and CPU −14.7%. It is inactive on every
+  other machine, which keeps the plan it had, as tests check.
+- **Harness only (#350).** The bench harness can hold a spinner on a spare CPU for a
+  workstation run (`ab run --hold-cpu`, bench 3.8.0). It is off by default, and the library
+  is untouched by it. #311's wait counts are behind the `wait-stats` feature, off by default.
+
+### Measured
+
+One paired run of this release's source (master at `47149bff`, whose library is 0.2.8's)
+against `v0.2.7` (`539523b1`), both builds on one 4-CPU CI runner (AMD EPYC 9V74, 2 physical
+cores), 10 rounds, the builds' order alternating, the bench's Wikidata sample (12 slices of
+the dump, 210 MB decoded) and the crate's corpora
+([run 42811647197](https://github.com/lmmx/mibz2/actions/runs/42811647197), bench 3.8.0):
+
+| threads | wall, 0.2.7 → 0.2.8 (median) | wall change (95%) | CPU change (95%) | peak RSS |
+|--:|--:|--:|--:|--:|
+| 1 | 0.534 → 0.433 s | **−19.0% (−19.3, −18.6)** | **−18.9% (−19.2, −18.6)** | 26 → 26 MB (+1.9%) |
+| 2 | 0.290 → 0.242 s | **−16.6% (−17.6, −15.6)** | **−17.3% (−17.5, −17.2)** | 49 → 52 MB (+6.5%) |
+| 4 | 0.247 → 0.217 s | **−12.1% (−13.7, −10.5)** | **−14.1% (−15.1, −13.2)** | 77 → 81 MB (+4.5%) |
+
+- **Result:** faster in wall and CPU at every thread count, beyond noise.
+  - Best wall time against best: −12.1% (−13.7, −10.5), both at 4 threads (848 → 967
+    MB/s).
+  - CPU per byte at 4 threads: 4.45 → 3.81 ns/B. Amplification over one thread rose: +1.9%
+    (+1.4, +2.4) at 2 threads and +5.8% (+4.6, +7.1) at 4: the CPU at one thread fell
+    more (−18.9%) than at four (−14.1%).
+  - The output was the same bytes as the base's on every corpus.
+- **The other corpora:**
+  - `text` is faster at every thread count: −25.9% (−26.9, −24.8) at 1 thread, −17.4% at
+    2, −10.2% at 4.
+  - `pattern` is faster at every thread count: −8.6% at 1 thread, −11.9% at 2, −5.4% at 4.
+  - `runs` is −2.3% (−4.2, −0.3) at 2 threads, and unchanged at 1 and 4.
+  - `random` is +1.2% (+0.7, +1.7) slower at 1 thread (below), and unchanged at 2 and 4.
+  - `records` and `onebyte` are unchanged.
+- **By stage,** at one thread: a total of 9.21 → 8.94 cycles a byte, −3.0% (−3.3, −2.7).
+  The stage table times the library's `mtf`, `bwt::build` and forward walk directly, so it
+  can't see #324's path; its rows show #312.
+  - The T-vector build: −16.0% (−16.3, −15.8), #312's windows.
+  - RLE1: −5.7% (−6.4, −4.9).
+  - The walk −0.2% and CRC +0.0%, neither a change.
+  - The scanner +1.0% (+0.8, +1.1), MTF + RLE2 +1.7% (+1.0, +2.4) and the walk's segment
+    assembly +3.8% (+0.6, +7.1) are flagged slower. With seven intervals a run, a small flag
+    on one stage can be chance or code layout.
+
+### The cost
+
+- **`random` at one thread:** +1.2% (+0.7, +1.7) wall and CPU, beyond noise. Its blocks run
+  none of #324's new code. #324's registration measured +5.3% on `random` and +2.1% on
+  `records` at one thread; Louis accepted that trade-off for the gain on Wikidata and text.
+- **Memory:** peak RSS is higher on the corpora that take #324's path: `text` +5.0% to
+  +7.6% (35 → 38 MB at 2 threads), `wikidata` +1.9% to +6.5% (49 → 52 MB at 2 threads). The
+  other corpora move by at most +1.4% (`runs`); `random`, `pattern`, and `records` at 2 and
+  4 threads, not beyond noise.
+- **CPU amplification** at 4 threads rose by +5.8% (above). It is a 2-core runner's figure;
+  how it grows with more cores needs a larger machine.
+
+### Caveats
+
+- **Short high-entropy blocks.** On blocks of 200–440 kB that are mostly high-entropy, #324's
+  admission test takes the new path, and their decode costs about 10–11% more instructions. No
+  CI corpus holds such blocks, so the run above can't show it. 0.2.8 carries this cost. It
+  is fixed on master by #353 (admission by the bound and the share of run symbols, so such a
+  block keeps the column), which ships in the next release.
+- **One run on one CPU model,** a 2-core runner. It can't show the ten-core plans, which
+  CI's runners never take, nor #316's default, which is inactive there.
+- **The release-scaling figures follow.** 0.2.8 against 0.2.7 on the i9-10900K is pending.
+  Its figures will be added here once they are in.
+- **0.2.6's known issue isn't re-measured.** On the ten-core topology, 0.2.6's default was
+  slower than 0.2.4's on files compressed at bzip2 levels 1 and 2 (see 0.2.6's notes).
+  #316 changes the i9's default at 10 threads; whether those files still decode slower is
+  not yet measured.
+
 ### <!-- 3 -->Performance
 
 - run-record front and LF table on blocks of few symbols, walked backward ([#324](https://github.com/lmmx/mibz2/pull/324))
