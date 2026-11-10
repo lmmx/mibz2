@@ -280,7 +280,8 @@ from #324's emitter (PF:`by-data-class` §2).
   step costs the same in mispredictions. Not cache misses: 11 ns at r = 2·10⁴.
 - **The budget, in cycles a run** (2.1 GHz, r/n 0.0722): production's build + walk is 63 here
   (the record: 72 on its VM, 110 on the i9). The kernel is 81: order 15, induce 53 (1.81 steps
-  × 29), write 12. Halving production here needs ≤ 32 a run all told. At n/r = 13.9 the row
+  × 29), write 12. Parity alone needs induce ≤ 1.228 ns a row with order and write as they
+  are (it is 1.826). Halving production here needs ≤ 32 cycles a run all told. At n/r = 13.9 the row
   walk is already cheap *per run*; that, not the count, is what an r-proportional method
   fights on this corpus.
 - **Tried and closed as built (M): joining the (1, 1) chains before the induction**
