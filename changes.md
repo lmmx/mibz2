@@ -1,5 +1,9 @@
 # Changes since the last version
 
+- 2026-11-10, through [6763939540](https://github.com/lmmx/mibz2/pull/145#issuecomment-6763939540): STEPS diagnostic revision 4 won Researcher PROCEED and Guardian D093 after independent counter repairs; implementation review, freeze and run remain, with no causal or production claim.
+- 2026-11-10: the Coordinator checked the old guarded-service archive: 0/420 slow-mode runs and balanced arm positions. The #316 twelve-dispatch draft now has green CI but remains under review for neutral-tail false acceptance.
+- 2026-11-10: Louis submitted a replacement 0.2.7 release-scaling bundle without outcome.txt; no verdict was confirmed by the channel watermark.
+
 - 2026-11-10, through [6763522358](https://github.com/lmmx/mibz2/pull/145#issuecomment-6763522358): #318 ran VALID and identified a strong idle-gap trigger for i9 slow mode; secondary mechanism probes were inconclusive. Earlier #316 gap balance is being checked.
 - 2026-11-10: Louis prioritised #324 rescue and #316 qualification over new exploration. STEPS placement revision 3 is under review; #316's twelve-dispatch draft judge has a conflict and neutral-tail concern.
 - 2026-11-10: #341's team-roster checker and #342's release-tag fetch repair merged. #342 explains the missing 0.2.7 scaling bundle; the older queued recipe still needs a tag refresh.
