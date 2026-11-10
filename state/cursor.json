@@ -192,9 +192,10 @@
     "pr": 365,
     "requested_by_comment": 6778679718,
     "reiterated_by_comment": 6779413601,
-    "status": "pending_authorised_dispatch",
+    "status": "posted_verified_awaiting_actual_recipient_action",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
-    "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
+    "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer.",
+    "assignment_id": 6782111848
   },
   "performance_followup": {
     "pr": 365,
@@ -227,12 +228,16 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "in_progress",
-      "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition"
+      "status": "posted_verified_not_delivered",
+      "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition",
+      "comment_id": 6782111848,
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848"
     },
     "optimizer": {
-      "status": "in_progress",
-      "scope": "Bounded existing-evidence cells stage/end-to-end gap investigation"
+      "status": "posted_verified_not_delivered",
+      "scope": "Bounded existing-evidence cells stage/end-to-end gap investigation",
+      "comment_id": 6782112235,
+      "url": "https://github.com/lmmx/mibz2/pull/160#issuecomment-6782112235"
     }
   }
 }
