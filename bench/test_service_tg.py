@@ -958,24 +958,99 @@ class Replicated(unittest.TestCase):
         import tg_ni_gate as gate
         self.assertEqual(gate.gate("replicated", v, code)[0], 0)
 
+    def flagged_programme(self, base=0, first=0.0, extra=lambda j: {}):
+        """A programme whose runs/2 wall is 0.8% slower in every dispatch (flagged), dispatches
+        hourly from `first` seconds, run ids from RUN + base"""
+        return self.programme(per=lambda j: dict({
+            "run": RUN + base + j, "start": first + 3600.0 * j,
+            "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=base + j)}]}, **extra(j)))
+
     def test_harm_confirmation(self):
-        flagged = tg.replicated(self.programme(per=lambda j: {
-            "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=j)}],
-            "text": [{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001, seed=j)}]}), HEAD, rounds=R)
-        again = tg.replicated(self.programme(per=lambda j: {
-            "run": RUN + 100 + j, "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=50 + j)}]}),
-            HEAD, rounds=R)
-        self.assertTrue(again["valid"], again["problems"])
-        self.assertEqual(flagged["flags"], ["runs/2", "text/1"])
-        c = tg.confirm(flagged, again)
-        self.assertTrue(c["valid"], c)
+        primary = self.flagged_programme(extra=lambda j: {
+            "text": [{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001, seed=j)}]})
+        confirmation = self.flagged_programme(base=100, first=3600.0 * K)
+        c = tg.confirm(primary, confirmation, HEAD, rounds=R)
+        self.assertTrue(c["valid"], c["problems"])
+        self.assertEqual(c["primary_flags"], ["runs/2", "text/1"])
         self.assertEqual((c["confirmed"], c["unresolved"]), (["runs/2"], ["text/1"]))
-        self.assertFalse(tg.confirm(flagged, {"valid": False})["valid"])
-        # (the same programme twice, or one sharing a run, is not a confirmation)
-        self.assertFalse(tg.confirm(flagged, flagged)["valid"])
-        self.assertIn("distinct", tg.confirm(flagged, flagged)["problems"][0])
-        self.assertFalse(tg.confirm(flagged, dict(again, runs=again["runs"][:11] + [RUN]))["valid"])
-        self.assertFalse(tg.confirm(flagged, dict(again, head="0" * 40))["valid"])
+        self.assertFalse(c["d094_c7"]["met"])  # (a confirmed harm)
+        # (no flag confirmed: the valid confirmation adjudicates them, D094-C7 met)
+        quiet = self.programme(per=lambda j: {"run": RUN + 200 + j, "start": 3600.0 * (K + j)})
+        c = tg.confirm(primary, quiet, HEAD, rounds=R)
+        self.assertTrue(c["valid"], c["problems"])
+        self.assertEqual((c["confirmed"], c["unresolved"]), ([], ["runs/2", "text/1"]))
+        self.assertTrue(c["d094_c7"]["met"], c["d094_c7"])
+        self.assertIn("unresolved", " ".join(c))  # (the inherited classification kept beside it)
+
+    def test_confirm_fails_closed(self):
+        primary = self.flagged_programme()
+        confirmation = self.flagged_programme(base=100, first=3600.0 * K)
+        self.assertTrue(tg.confirm(primary, confirmation, HEAD, rounds=R)["valid"])
+        bad = {
+            # (the Guardian's D094 witnesses: empty lists, twelve copies of one run, single runs)
+            "empty programmes": ([], []),
+            "twelve copies of one run each": ([primary[0]] * K, [confirmation[0]] * K),
+            "single-run programmes": (primary[:1], confirmation[:1]),
+            # (and the rest)
+            "a run id shared between the programmes": (primary, confirmation[:11] + [dict(confirmation[11], run=primary[3]["run"])]),
+            "another base in one dispatch": (primary, confirmation[:11] + [dict(confirmation[11], settings=dict(
+                confirmation[11]["settings"], base="0" * 40))]),
+            "another toolchain in one dispatch": (primary[:11] + [dict(primary[11], settings=dict(
+                primary[11]["settings"], ni_rustc="rustc 0.0.0"))], confirmation),
+            "settings missing": (primary, confirmation[:11] + [{k: v for k, v in confirmation[11].items() if k != "settings"}]),
+            "another R": (primary, confirmation[:11] + [dict(confirmation[11], rounds=R + 4)]),
+            "another head": (primary, [dict(d, head="0" * 40) for d in confirmation]),
+            "spacing broken across the boundary": (primary, self.flagged_programme(base=300, first=3600.0 * (K - 1) + 1800)),
+            "started before the primary's last completed": (
+                primary[:11] + [dict(primary[11], completed=primary[11]["started"] + 7200)], confirmation),
+            "boundary times unknown": (primary, [dict(confirmation[0], started=None)] + confirmation[1:]),
+            "an INVALID confirmation dispatch": (primary, confirmation[:11] + [dict(confirmation[11], valid=False,
+                                                                                     problems=["x"])]),
+            "a missing confirmation": (primary, None),
+            "a malformed dispatch": (primary, confirmation[:11] + [None]),
+        }
+        for what, (a, b) in bad.items():
+            with self.subTest(what):
+                c = tg.confirm(a, b, HEAD, rounds=R)
+                self.assertFalse(c["valid"], what)
+                self.assertTrue(c["problems"])
+                self.assertEqual((c["confirmed"], c["unresolved"]), ([], []))
+                # (D094-C7: a flagged primary is never cleared by a missing, invalid or malformed confirmation)
+                self.assertFalse(c["d094_c7"]["met"], what)
+
+    def test_confirm_from_the_archives(self):
+        # (the command line re-judges every dispatch of both programmes from its artifacts;
+        # it reads no stored verdict)
+        def args(base, first, flag):
+            out = []
+            for j in range(K):
+                root, man = self.dispatch(j, run=RUN + base + j, start=first + 3600.0 * j,
+                                          runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008 if flag else 1.0},
+                                                                    sd=0.001, seed=base + j)}])
+                mpath = Path(root) / "manifest.json"
+                mpath.write_text(json.dumps(man))
+                out.append((root, str(mpath)))
+            return out
+        prim, conf = args(0, 0.0, True), args(100, 3600.0 * K, False)
+        out = Path(self.roots[0]) / "confirm"
+        real, real_rep = tg.ni_judge, tg.replicated
+        try:
+            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R)
+            tg.replicated = lambda ds, head, **kw: real_rep(ds, head, **dict(kw, rounds=R))
+            flat = lambda flag, pairs: [x for pr in pairs for x in (flag, *pr)]  # noqa: E731
+            code = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf), "--head", HEAD,
+                            "--out", str(out)])
+            v = json.loads(Path(str(out) + ".json").read_text())
+            code_short = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf[:1]), "--head",
+                                  HEAD, "--out", str(out) + "-short"])
+        finally:
+            tg.ni_judge, tg.replicated = real, real_rep
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(v["unresolved"], ["runs/2"])
+        self.assertTrue(v["d094_c7"]["met"])
+        self.assertEqual(code, 0)
+        self.assertEqual(code_short, 2)
+        self.assertFalse(json.loads(Path(str(out) + "-short.json").read_text())["d094_c7"]["met"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
