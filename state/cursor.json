@@ -1048,7 +1048,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Source/log audit checkpoint: warm head/base builds 27.08/25.14s verified; Valgrind/cold assumptions not observed. Reproduced A1 false pass for four empty JSON records. Native coverage economically preferred; full callgrind tier requires robust attribution and complete cost.",
+      "progress": "Completed source/log price, checker counterexample, tier ranking and prospective falsifier; report committed next, no decoder build or timing.",
       "report_path": "state/records/reviews/inbox-6759587407/report.md"
     }
   ],

@@ -1,0 +1,78 @@
+{
+  "brief": 6759587407,
+  "spec": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "reviewed_pin": "ffb568913ce9bd6eeb807082ac935570e36c3c8d",
+  "files": {
+    "docs/journal/2026-11-10-team-screen-design-draft.md": "4b6428d91830a38c2fc088c82e8ee512e9febcb7",
+    "bench/team_screen.py": "d84da2e16aa47dd3c897359e478613f83c85f35e",
+    "bench/team_gap_count.py": "08c63fbb76fc97f60349f7e24441f4ae2325ae58",
+    "examples/ab.rs": "a2a4182408c983a15d398b03776117725b9348fa",
+    ".github/workflows/bench.yml": "9faab8422efbaba9d528f9cd8e41ba13bc056f6e",
+    "CLAUDE.md": "13289df39571b284f195dc6ef6316a360e4239e9"
+  },
+  "historical_job": {
+    "run": 42758830562,
+    "job": 129639441404,
+    "head": "dd5d8bf76477499292bdd9bd6d2f2afcffcccd59",
+    "base": "c47fbe50cf99fbff930526356b9723bfc453ddb9",
+    "head_build_s": 27.08,
+    "base_build_s": 25.14,
+    "lbzip2_install_s_approx": 24.83,
+    "cpus": 4,
+    "cores": 2,
+    "perf_event_paranoid": 4,
+    "perf_cycles_allowed": false
+  },
+  "pricing": {
+    "status": "scenario, not new measurement",
+    "draft_warm_subtotal_s": [
+      220,
+      300
+    ],
+    "draft_cold_subtotal_s": [
+      465,
+      845
+    ],
+    "measurement_s": [
+      95,
+      175
+    ],
+    "omits": [
+      "seven native oracle decodes",
+      "Valgrind install delta",
+      "cache transfer/save",
+      "symbol/disassembly validation",
+      "queueing",
+      "reruns",
+      "artifact growth",
+      "timeouts"
+    ],
+    "throughput_sensitivity_GIr_s": [
+      0.267,
+      0.133,
+      0.067,
+      0.033
+    ],
+    "assumed_aggregate_GIr": 16
+  },
+  "checker_counterexample": {
+    "input": "four JSON objects {}",
+    "observed_stdout": "A1 ok",
+    "observed_exit": 0
+  },
+  "scope": {
+    "native_decoder_execution": false,
+    "compilation": false,
+    "new_timing": false,
+    "checker_only_execution": true,
+    "raw_callgrind_replay": false
+  },
+  "routing_audit": {
+    "existing_unresolved": {
+      "pr": 162,
+      "comment": 6757065549,
+      "reason": "LOG in role inbox"
+    },
+    "new_findings": 0
+  }
+}

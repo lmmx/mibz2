@@ -542,3 +542,13 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 -12 cells×21 rounds252 vs105; with2sentinels294; two corpora504/588. No claimed power/target wall-time. Whole-decoder adaptive selector needs separate mixed-workload pair.
 - Tunnel1470–2200 reproduces optimaW5/W4, not10; X42MB unobserved. c=.611 k8 stored-exit differs from priced k1 learned-exit rider. Defer named build, not close family.
 - Team/service/emitter/geometry remain ahead. No new timing, implementation or raw local-profile replay.
+
+
+## D083 screen economics: inbox6759587407
+
+[Report](records/reviews/inbox-6759587407/report.md), draft ffb568913ce9bd6eeb807082ac935570e36c3c8d. Bounded affected-PR coverage justified; full-Callgrind mandatory tier not ready.
+- Warm stated rows220–300s, cold465–845s before omitted oracle/cache/Valgrind setup costs. Seven oracle runs omitted from36 native decodes. @9 count+parse increment80–160s, not60–120. Values are models; historical warm head/base27.08/25.14s verified from job129639441404.
+- Parallel latency=max(0,queue+screen−existing required completion); no unconditional zero. Cold and queue tails matter, runner-minutes always added.
+- Reproduced four empty JSON records passing A1. Error block identity not emitted; per-arm source/asm and validated helper identities required. Merge-base standalone walker symbol not guaranteed under LTO; don't mutate base to manufacture attribution.
+- Rank native semantic execution/conservation probes with exact-result checks before full profiles per PR. Symbol presence/sampling cannot replace exact execution/absence assertions. Instrumented binary/probe builds charged; full matched counts remain separate diagnostic with Guardian's prospective disposition.
+- D084 FAIL-MEASUREMENT unchanged. No new decoder execution, compilation, timing or qualification; parser-only counterexample. Team/service/emitter remains ahead of speculative table work.
