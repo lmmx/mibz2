@@ -81,7 +81,7 @@
     "6756783263": 6756835071,
     "6758059674": 6758114156
   },
-  "last_rebuilt_from": 6758055231,
+  "last_rebuilt_from": 6759415547,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -344,9 +344,10 @@
     },
     "6759401806": {
       "comment_id": 6759401806,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling channel and record."
+      "status": "complete",
+      "progress": "Record rebuilt through channel 6759415547; REVIEW pending.",
+      "work_commit": "c2a4618bf74a56260a89b36c0a25bd19d414f4b9"
     }
   },
-  "last_record_commit": "a31393ba8bc8bca07631ad1def401b75fd7fa333"
+  "last_record_commit": "c2a4618bf74a56260a89b36c0a25bd19d414f4b9"
 }
