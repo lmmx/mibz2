@@ -136,9 +136,10 @@
     6755685313,
     6755779354,
     6756472047,
-    6756614616
+    6756614616,
+    6756992499
   ],
-  "last_processed_comment_id": 6756614616,
+  "last_processed_comment_id": 6756992499,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1450,7 +1451,7 @@
     },
     {
       "trigger_comment_id": 6756992499,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1458,7 +1459,10 @@
       "report_path": "state/reports/par-scan-final-6756992499/report.md",
       "report_commit": "8b4a0e8958474d74bce1303be133fc11581101ce",
       "disposition": "REVISE supervisor cleanup-failure paths before queue admission; accept sampler unwind and ordinary grandchild cleanup. Guardian B5/admissibility ruling remains separate.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6757069602,
+      "publication_verified": true,
+      "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction. D079 acknowledged at publication."
     }
   ],
   "active_delegations": [],
@@ -1478,10 +1482,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6756614616
+      6756992499
     ],
     "handled": [
-      6756614616
+      6756992499
     ],
     "skipped": [],
     "automation_modified": false
