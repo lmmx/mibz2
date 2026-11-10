@@ -1023,10 +1023,10 @@
     {
       "comment_id": 6759345168,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed source pricing, corrected footprint and tunnel arithmetic; publication pending.",
+      "progress": "Complete report published; exact REVIEW author, destination and body verified.",
       "report_path": "state/records/reviews/inbox-6759345168/report.md",
       "report_commit": "fcc45cdcfe9ec2270c118ebcdd884746f63d107d",
       "audit_scope": {
@@ -1038,7 +1038,9 @@
           "7bf5769be304d8908910de76a4fe5050ac8cf8c4",
           "96b7937be27ede9822dbcbd15e0ac712e5ddd41a"
         ]
-      }
+      },
+      "reply_id": 6759415547,
+      "routing_verification": "route/check passed. Exact readback verified. Pinned verify rejects FROM optimizer because it hardcodes coordinator; no verify-pass claimed."
     }
   ],
   "migrated_from": {
