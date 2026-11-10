@@ -1,0 +1,71 @@
+in both: 212; identical 166; different 46; only in base 24; only in head 40
+  DIFFERENT  1043 -> 1069  <<mibz2::parallel::StreamDecoder>::service_built::{closure#4} as core::ops::function::FnOnce<()>>::call_once::{shim:vtab
+  DIFFERENT   936 -> 987   <<mibz2::parallel::StreamDecoder>::service_built::{closure#5} as core::ops::function::FnOnce<()>>::call_once::{shim:vtab
+  DIFFERENT    46 -> 46    <alloc::collections::vec_deque::VecDeque<mibz2::parallel::Prepared>>::grow
+  DIFFERENT    27 -> 27    <alloc::raw_vec::RawVec<mibz2::parallel::Front>>::grow_one
+  DIFFERENT    27 -> 27    <alloc::raw_vec::RawVec<mibz2::parallel::Prepared>>::grow_one
+  DIFFERENT   333 -> 333   <mibz2::ErrorKind as core::fmt::Debug>::fmt
+  DIFFERENT   212 -> 212   <mibz2::ErrorKind as core::fmt::Display>::fmt
+  DIFFERENT   238 -> 257   <mibz2::coop::FusedBuild>::new
+  DIFFERENT   513 -> 513   <mibz2::coop::Pool>::named
+  DIFFERENT   118 -> 118   <mibz2::coop::Relay>::caught
+  DIFFERENT    77 -> 112   <mibz2::coop::Relay>::end_build
+  DIFFERENT   117 -> 115   <mibz2::coop::Relay>::set_walk_ready::<true>
+  DIFFERENT   121 -> 121   <mibz2::coop::Relay>::wait_walk_ready_tallied::<true, 2000>
+  DIFFERENT   117 -> 117   <mibz2::coop::Relay>::wait_walk_ready_tallied::<true, 4096>
+  DIFFERENT   100 -> 104   <mibz2::coop::Relay>::walk_and_leave::<32>
+  DIFFERENT   342 -> 334   <mibz2::parallel::Hub>::fail
+  DIFFERENT   159 -> 161   <mibz2::parallel::Hub>::retire_counted
+  DIFFERENT  3128 -> 3128  <mibz2::parallel::Machine>::here
+  DIFFERENT  1178 -> 1187  <mibz2::parallel::StreamDecoder>::new
+  DIFFERENT    99 -> 87    core::ptr::drop_glue::<alloc::collections::vec_deque::VecDeque<mibz2::parallel::Prepared>>
+  DIFFERENT    59 -> 74    core::ptr::drop_glue::<mibz2::Scratch<mibz2::bwt::Cooperative<2>>>
+  DIFFERENT    57 -> 57    core::ptr::drop_glue::<mibz2::coop::Relay>
+  DIFFERENT    13 -> 29    core::ptr::drop_glue::<mibz2::parallel::Front>
+  DIFFERENT    93 -> 84    core::ptr::drop_glue::<mibz2::parallel::Hub>
+  DIFFERENT    17 -> 11    core::ptr::drop_glue::<mibz2::parallel::Prepared>
+  DIFFERENT    59 -> 46    core::ptr::drop_glue::<mibz2::parallel::Team>
+  DIFFERENT    64 -> 73    mibz2::coop::walk_room::<32>
+  DIFFERENT  1282 -> 1544  mibz2::parallel::pipelined_worker::<false, false, 4096>
+  DIFFERENT   452 -> 458   mibz2::parallel::pipelined_worker::<false, false, 4096>::{closure#3}
+  DIFFERENT   463 -> 473   mibz2::parallel::pipelined_worker::<false, true, 4096>::{closure#3}
+  DIFFERENT   210 -> 166   mibz2::parallel::solo
+  DIFFERENT    83 -> 89    mibz2::parallel::solo_on
+  DIFFERENT   145 -> 135   mibz2::parallel::stage
+  DIFFERENT    88 -> 88    mibz2::parallel::take_job
+  DIFFERENT   177 -> 177   mibz2::runs::fill
+  DIFFERENT    95 -> 97    mibz2::runs::fill_avx2
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT  1265 -> 1846  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT   825 -> 1352  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT   825 -> 1352  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  DIFFERENT   825 -> 1352  std::sys::backtrace::__rust_begin_short_backtrace::<<mibz2::parallel::StreamDecoder>::launch<<mibz2::parallel::StreamDec
+  only in base: <mibz2::coop::RoomWalk>::new
+  only in base: <mibz2::coop::invert_pipelined_with<32, false, 2000>::{closure#1} as core::ops::function::FnOnce<(usize,)>>::call_once::
+  only in base: <mibz2::coop::invert_pipelined_with<32, false, 4096>::{closure#1} as core::ops::function::FnOnce<(usize,)>>::call_once::
+  only in base: <mibz2::coop::invert_pipelined_with<32, true, 2000>::{closure#1} as core::ops::function::FnOnce<(usize,)>>::call_once::{
+  only in base: <mibz2::coop::invert_pipelined_with<32, true, 4096>::{closure#1} as core::ops::function::FnOnce<(usize,)>>::call_once::{
+  only in base: <mibz2::coop::invert_team<32>::{closure#0} as core::ops::function::FnOnce<(usize,)>>::call_once::{shim:vtable#0}
+  only in base: <mibz2::coop::invert_team<32>::{closure#1} as core::ops::function::FnOnce<(usize,)>>::call_once::{shim:vtable#0}
+  only in base: <mibz2::coop::walk_room<32>::{closure#0} as core::ops::function::FnOnce<(usize,)>>::call_once::{shim:vtable#0}
+  only in base: core::ptr::drop_glue::<core::option::IntoIter<mibz2::parallel::Front>>
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 2000>
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 2000>::{closure#0}
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 2000>::{closure#1}
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 4096>
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 4096>::{closure#0}
+  only in base: mibz2::coop::invert_pipelined_with::<32, false, 4096>::{closure#1}
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 2000>
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 2000>::{closure#0}
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 2000>::{closure#1}
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 4096>
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 4096>::{closure#0}
+  only in base: mibz2::coop::invert_pipelined_with::<32, true, 4096>::{closure#1}
+  only in base: mibz2::coop::invert_team::<32>::{closure#0}
+  only in base: mibz2::coop::invert_team::<32>::{closure#1}
+  only in base: mibz2::coop::walk_room::<32>::{closure#0}

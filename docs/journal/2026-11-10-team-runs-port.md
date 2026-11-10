@@ -337,6 +337,22 @@ Whole suite in release and debug, the lint with the three features, and 30 s eac
 The Miri and long fuzz evidence of §8a is for the port before this adjustment, which
 changes two inlining attributes and adds a one-line wrapper, all in safe code.
 
+## 8c. Outcome, and the adjustment as its own change
+
+- **The workstation A/B ran** (`release-scaling/run-20261110T160612Z`): `wikidata` 12 to 14%
+  faster at 6 to 20 threads, `text` faster at 10, `records` and `random` level. §8's rule was
+  met and #359 merged, as `team-runs-2` (without §8b's 12 lines). It shipped in 0.2.9.
+- **0.2.9 against 0.2.8 on the i9:** `wikidata` 10 to 15% faster at 8 to 20 threads, and
+  0.9% slower at 1 thread (0.991, 0.983 to 0.998).
+- **§8b's adjustment is therefore a change to master now.** On master `6782c0fbf`,
+  `decode_block::<Segmented>` is the 574-instruction form and `walk_back_room` is inlined
+  away. With the 12 lines both are instruction for instruction what they were before the
+  port (`codegen/all-functions-master-6782c0f-patched.txt`). Lint and the whole suite, debug
+  and release, pass with it. A title and body for its PR:
+  [`inline-pr.md`](2026-11-10-team-runs-port/inline-pr.md).
+- **I have not opened that PR.** This session may push to its own branch alone; the patch
+  is a file for the Coordinator to open, as #358 and #359 were.
+
 ## 9. To apply
 
 **Current, against master `910472e8bcb75a09ec2c61db232c98182951ab2b`** (later master differs
