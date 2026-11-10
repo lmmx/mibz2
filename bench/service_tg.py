@@ -41,7 +41,11 @@ shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard o
 Every cell is `NI_ROUNDS` (R = 2880) paired rounds on its own shard's runner, never pooled
 across runners; its estimate the geometric mean of the paired head-over-base ratios; its
 standard error from `NI_BATCHES` (B = 24) consecutive batch means of m = 120 rounds; its
-one-sided 95% upper bound (t at 0.95, B - 1 = 23 df) at most 1.02. All 42 must pass.
+one-sided upper bound at nominal 95% (t at 0.95, B - 1 = 23 df) at most 1.02. All 42 must pass.
+The nominal level holds only under the stated batch model (approximately iid normal batch
+means); under residual cross-batch dependence the size can exceed it, and the
+intersection-union construction, which needs no independence across cells, does not repair a
+constituent test's size (registration §2.9).
 - **The schedule:** `ab`'s arm order with two arms is head-first, base-first, base-first,
   head-first, repeated (`ORDER_CYCLE`, from round 0). A batch of m = 120 is 30 complete cycles,
   starting on a cycle boundary, so a constant or linearly varying order coefficient cancels in
@@ -741,6 +745,34 @@ def history_problems(sid, jobs, arts, head=None, run=None):
     return p, (None if p else a)
 
 
+def traversal(corpus, threads, rounds):
+    """The registered file order of one shard's rows (§2.9): rounds 0 … R − 1; in each, the
+    shard's thread counts in their registered order; at each, the two arms in `ORDER_CYCLE`'s
+    order. Each item is (round, corpus, threads, arm)"""
+    for rnd in range(rounds):
+        arms = CI_ARMS if ORDER_CYCLE[rnd % len(ORDER_CYCLE)] else CI_ARMS[::-1]
+        for t in threads:
+            for arm in arms:
+                yield (rnd, corpus, t, arm)
+
+
+def sequence_problems(sid, rows, corpus, threads, rounds):
+    """Why the rows, in file order, are not the registered traversal (empty: they are). Checked
+    before any grouping by round, so that batches are consecutive in execution, not in labels:
+    a permuted, reversed or regrouped file is refused, never sorted back"""
+    want = list(traversal(corpus, tuple(threads), rounds))
+    got = [(r.get("round"), r.get("corpus"), r.get("threads"), r.get("arm")) for r in rows]
+    if got == want:
+        return []
+    bad = [i for i, (g, w) in enumerate(zip(got, want)) if g != w]
+    first = bad[0] if bad else min(len(got), len(want))
+    seen = got[first] if first < len(got) else "end of file"
+    expected = want[first] if first < len(want) else "end of file"
+    return [f"{sid}: rows not in the registered order (round, thread counts {list(threads)}, ab's arm cycle): "
+            f"{len(got)} rows for {len(want)}, {len(bad) + abs(len(got) - len(want))} out of place, "
+            f"first at row {first}: {seen}, expected {expected}"]
+
+
 def cycle_problems(rounds, batches):
     """Why `rounds` in `batches` batches is not a design of whole order cycles (empty: it is):
     every batch the same length, a multiple of the four-round cycle, so each starts on a cycle
@@ -941,6 +973,11 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     if unreadable:
         p.append(f"{sid}: runs.jsonl lines not JSON: {unreadable[:5]}")
     p += timing_problems(sid, d, len(rows))
+    # the chronology (§2.9), before anything is grouped: the file's rows, in file order, must be
+    # exactly the registered nested traversal. Refused, never sorted or repaired
+    q = sequence_problems(sid, rows, corpus, threads, expect_rounds)
+    if q:
+        return (p + q)[:20], {}
     by, at = {}, {}
     cores = [set(str(c).split(",")) for c in core_cpus]
     for i, r in enumerate(rows):
@@ -983,7 +1020,8 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
             if sorted(by.get((corpus, t, arm), {})) != list(range(expect_rounds)):
                 p.append(f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
                          f"not 0..{expect_rounds - 1} once each")
-    # the schedule (§2.9): in each round and thread count, the two arms back to back, the head
+    # (implied by the chronology above; kept as a second, local statement of it) the schedule
+    # (§2.9): in each round and thread count, the two arms back to back, the head
     # first exactly in the rounds ORDER_CYCLE names
     for t in threads:
         bad = []
@@ -1121,7 +1159,10 @@ def ni_markdown(v):
         f"Head over base, the geometric mean of {NI_ROUNDS} paired rounds on the cell's own runner; the one-sided "
         f"95% upper bound from {NI_BATCHES} batch means of {NI_BATCH_LEN} rounds ({NI_CYCLES_PER_BATCH} complete "
         f"order cycles; t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every one of the 42 cells (an "
-        f"intersection-union test at level 5%). The trend veto: any cell's batch-mean trend |t| > {TREND_T_MAX} "
+        "intersection-union test, nominal 5%, conditional on the stated batch model: approximately iid normal "
+        "batch means; coverage only approximate under the short-memory approximation. The intersection-union "
+        "construction needs no independence across cells, but it does not repair a constituent test's size, "
+        f"registration §2.9). The trend veto: any cell's batch-mean trend |t| > {TREND_T_MAX} "
         "makes condition 2 INVALID, every estimate kept. Lag-1 autocorrelation is reported, not judged.",
         "",
         "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall | trend t wall / CPU |",

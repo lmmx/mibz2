@@ -13,7 +13,8 @@ judge (docs/journal/2026-11-10-service-guarded-target-gated-registration.md).
   the all-pass rule, wall flags and the harm-confirmation rule, peak RSS.
 - Student's t quantiles against fixed values (and scipy's, where it is installed).
 - The final design (registration §2.9): R 2880 in B 24 batches of 120, each 30 complete
-  four-round order cycles, ab's own schedule; the schedule enforced on the rows; the trend
+  four-round order cycles, ab's own schedule; the full file-order chronology enforced before
+  grouping, with its negative controls and a default-size control; the trend
   veto's statistic, cutoff and effect (condition 2 INVALID, every estimate kept, condition 7's
   flags and confirmation unchanged); every row kept.
 
@@ -311,7 +312,8 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
         files["measurement-started.txt"] = "2026-11-10T00:00:00Z\n"
         files["measurement-ended.txt"] = "2026-11-10T00:30:00Z\n"
         n = files["runs.jsonl"].count("\n")
-        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i:.3f}\n" for i in range(n))
+        step = min(1.0, 1700.0 / max(n, 1))  # (inside the 30-minute markers at any R)
+        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * step:.3f}\n" for i in range(n))
         files["stamp.exit"] = "0\n"
     else:
         del files["runs.jsonl"]
@@ -709,6 +711,11 @@ class Veto(unittest.TestCase):
                 self.assertLessEqual(abs(cell[metric]["trend_t"]), tg.TREND_T_MAX)
         import tg_ni_gate as gate
         self.assertEqual(gate.veto(v), ([], []))
+        # (the level is nominal and conditional: the IUT doesn't repair a constituent's size)
+        md = tg.ni_markdown(v)
+        self.assertIn("nominal 5%, conditional on the stated batch model", md)
+        self.assertIn("does not repair a constituent test's size", md)
+        self.assertNotIn("at level 5%", md)
 
     def test_a_trend_invalidates_condition_2_and_keeps_every_estimate(self):
         for metric in tg.CI_METRICS:
@@ -766,28 +773,8 @@ class Veto(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn("INVALID (the trend veto", line)
 
-    def test_the_schedule_is_enforced(self):
-        # (head first in every round: not ab's four-round cycle)
-        rows = shard_rows("runs")
-        fixed = []
-        for i in range(0, len(rows), 2):
-            pair = sorted(rows[i:i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
-            fixed += pair
-        v = self.ni(build(self.root, runs=[{"rows": fixed}]))
-        self.assertFalse(v["valid"])
-        self.assertTrue(any("off ab's four-round schedule" in p and "head first" in p for p in v["problems"]),
-                        v["problems"])
-        # (the arms not back to back: a round's base run moved away from its head run)
-        shutil.rmtree(self.root)
-        self.root = tempfile.mkdtemp()
-        rows = shard_rows("runs")
-        rows.append(rows.pop(1))
-        v = self.ni(build(self.root, runs=[{"rows": rows}]))
-        self.assertFalse(v["valid"])
-        self.assertTrue(any("not back to back" in p for p in v["problems"]), v["problems"])
+    def test_a_partial_cycle_design_is_refused(self):
         # (a design of partial cycles is refused before anything is estimated)
-        shutil.rmtree(self.root)
-        self.root = tempfile.mkdtemp()
         v = tg.ni_judge(self.root, build(self.root), HEAD, reg=REG, check_git=False, rounds=R, batches=48)
         self.assertFalse(v["valid"])
         self.assertIn("not whole 4-round order cycles", "; ".join(v["problems"]))
@@ -808,6 +795,140 @@ class Veto(unittest.TestCase):
         w = v["cells"]["runs/4"]["wall"]
         self.assertAlmostEqual(math.log(w["ratio"]), sum(logs) / R, places=12)
         self.assertAlmostEqual(math.log(w["ratio"]), sum(w["batch_means"]) / B, places=12)
+
+
+def by_round(rows):
+    """The shard's rows as complete round groups, in file order"""
+    groups = {}
+    for r in rows:
+        groups.setdefault(r["round"], []).append(r)
+    return [groups[k] for k in sorted(groups)]
+
+
+def flat(groups):
+    return [r for g in groups for r in g]
+
+
+def shuffled_rounds(rows, seed=64):
+    g = by_round(rows)
+    random.Random(seed).shuffle(g)
+    return flat(g)
+
+
+def shuffled_cycles(rows, seed=64):
+    # (whole four-round cycles moved: every round keeps ab's arm order for its own label)
+    g = by_round(rows)
+    cycles = [g[i:i + 4] for i in range(0, len(g), 4)]
+    random.Random(seed).shuffle(cycles)
+    return flat(flat(cycles))
+
+
+def threads_421(rows):
+    out = []
+    for g in by_round(rows):
+        pairs = {}
+        for r in g:
+            pairs.setdefault(r["threads"], []).append(r)
+        out += [r for t in sorted(pairs, reverse=True) for r in pairs[t]]
+    return out
+
+
+def head_first_always(rows):
+    out = []
+    for i in range(0, len(rows), 2):
+        out += sorted(rows[i:i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
+    return out
+
+
+def base_moved(rows):
+    rows = list(rows)
+    rows.append(rows.pop(1))
+    return rows
+
+
+# (the Researcher's REVIEW 6759371719 §1: complete, internally consistent artifacts whose rows
+# ran in an order the registration doesn't name; each must be refused, never sorted back)
+CONTROLS = {
+    "whole-round permutation (seed 64)": shuffled_rounds,
+    "whole-cycle permutation (seed 64)": shuffled_cycles,
+    "reversed rounds": lambda rows: flat(by_round(rows)[::-1]),
+    "thread order 4, 2, 1 in every round": threads_421,
+    "head first in every round": head_first_always,
+    "a base run moved to the end": base_moved,
+}
+
+
+class Chronology(unittest.TestCase):
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def judged(self, rows=None, rounds=R, batches=B):
+        man = build(self.root, **({} if rows is None else {"runs": [{"rows": rows}]}))
+        v = tg.ni_judge(self.root, man, HEAD, reg=REG, check_git=False, rounds=rounds, batches=batches)
+        code = 0 if v["valid"] and v["passes"] else 1 if v["valid"] and not v["vetoed"] else 2
+        import tg_ni_gate as gate
+        return v, gate.gate("qualification", v, code)
+
+    def test_the_traversal(self):
+        want = list(tg.traversal("runs", (1, 2, 4), 4))
+        self.assertEqual(want[:6], [(0, "runs", 1, "mibz2"), (0, "runs", 1, "mibz2@base/ab"), (0, "runs", 2, "mibz2"),
+                                    (0, "runs", 2, "mibz2@base/ab"), (0, "runs", 4, "mibz2"),
+                                    (0, "runs", 4, "mibz2@base/ab")])
+        self.assertEqual([w[3] for w in want if w[2] == 1], ["mibz2", "mibz2@base/ab", "mibz2@base/ab", "mibz2",
+                                                              "mibz2@base/ab", "mibz2", "mibz2", "mibz2@base/ab"])
+        # (the fixtures emit it)
+        rows = shard_rows("runs")
+        self.assertEqual(tg.sequence_problems("runs", rows, "runs", (1, 2, 4), R), [])
+
+    def test_every_negative_control_is_refused(self):
+        clean, (status, line) = self.judged()
+        self.assertTrue(clean["valid"], clean["problems"])
+        self.assertEqual(status, 0, line)
+        for name, change in CONTROLS.items():
+            with self.subTest(name):
+                shutil.rmtree(self.root)
+                self.root = tempfile.mkdtemp()
+                rows = change(shard_rows("runs"))
+                self.assertEqual(len(rows), len(shard_rows("runs")))  # (complete: nothing missing)
+                self.assertNotEqual(rows, shard_rows("runs"))
+                v, (status, line) = self.judged(rows)
+                self.assertFalse(v["valid"], name)
+                self.assertTrue(any("not in the registered order" in p for p in v["problems"]), v["problems"])
+                self.assertEqual(v["cells"], {})
+                self.assertEqual(status, 1, line)
+                self.assertIn("INVALID", line)
+
+    def test_the_default_size(self):
+        # (R 2880 / B 24, the registered constants, as the judge is called: a clean artifact is
+        # admitted and passes; the Researcher's shuffled-round witness, with increasing
+        # observation times and a regenerated manifest, is INVALID)
+        global R
+        saved = R
+        try:
+            R = tg.NI_ROUNDS
+            man = build(self.root)
+            v = tg.ni_judge(self.root, man, HEAD, reg=REG, check_git=False)
+            self.assertTrue(v["valid"], v["problems"])
+            self.assertEqual(v["batches"], 24)
+            self.assertEqual(len(v["cells"]["runs/2"]["wall"]["batch_means"]), 24)
+            import tg_ni_gate as gate
+            self.assertEqual(gate.gate("qualification", v, 0 if v["passes"] else 1)[0], 0 if v["passes"] else 1)
+            self.assertTrue(v["passes"], v["failing"] + v["vetoed"])
+            shutil.rmtree(self.root)
+            self.root = tempfile.mkdtemp()
+            build(self.root, runs=[{"rows": shuffled_rounds(shard_rows("runs"))}])
+            for p in Path(self.root).glob("*/*/row-times.txt"):
+                n = len(p.read_text().splitlines()) - 1
+                p.write_text(f"# start {T0 + .5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * .01:.3f}\n" for i in range(n)))
+            v = tg.ni_judge(self.root, remanifest(self.root), HEAD, reg=REG, check_git=False)
+            self.assertFalse(v["valid"])
+            self.assertTrue(any("runs: rows not in the registered order" in p for p in v["problems"]), v["problems"])
+            self.assertEqual(gate.gate("qualification", v, 2)[0], 1)
+        finally:
+            R = saved
 
 
 if __name__ == "__main__":
