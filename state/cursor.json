@@ -137,9 +137,10 @@
     6755779354,
     6756472047,
     6756614616,
-    6756992499
+    6756992499,
+    6757065549
   ],
-  "last_processed_comment_id": 6756992499,
+  "last_processed_comment_id": 6757065549,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1466,7 +1467,7 @@
     },
     {
       "trigger_comment_id": 6757065549,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1474,7 +1475,10 @@
       "report_commit": "6d3feb49b1ac5401edd3ff7432bac3001ff0e0f4",
       "report_path": "state/reports/par-scan-notice-6757065549/report.md",
       "disposition": "Supplemental head-movement notice reconciled with completed REVIEW 6757069602; REVISE/D079 HOLD unchanged; await exact delta without repeating review.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6757143576,
+      "publication_verified": true,
+      "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
@@ -1494,10 +1498,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6756992499
+      6757065549
     ],
     "handled": [
-      6756992499
+      6757065549
     ],
     "skipped": [],
     "automation_modified": false
