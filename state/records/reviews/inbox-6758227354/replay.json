@@ -1,0 +1,143 @@
+{
+  "stage-base-b1.out": [
+    {
+      "name": "mibz2::bwt::room_segments::<32, 1>",
+      "self_ir": 9588849,
+      "inclusive_ir": 9859793,
+      "callees": [
+        {
+          "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+          "ir": 223308,
+          "calls": 594
+        },
+        {
+          "name": "__memset_avx2_unaligned_erms",
+          "ir": 4097,
+          "calls": 1
+        },
+        {
+          "name": "malloc",
+          "ir": 346,
+          "calls": 1
+        },
+        {
+          "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+          "ir": 213,
+          "calls": 1
+        },
+        {
+          "name": "free",
+          "ir": 85,
+          "calls": 1
+        },
+        {
+          "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+          "ir": 42895,
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "name": "c30cg::measured",
+      "self_ir": 16,
+      "inclusive_ir": 20184311,
+      "callees": [
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "ir": 20184295,
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "name": "__memcpy_avx_unaligned_erms",
+      "self_ir": 223168,
+      "inclusive_ir": 223168,
+      "callees": []
+    }
+  ],
+  "stage-branch-b1.out": [
+    {
+      "name": "c30cg::measured",
+      "self_ir": 16,
+      "inclusive_ir": 19051749,
+      "callees": [
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "ir": 19051733,
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "name": "mibz2::bwt::spec_offset::<32, 1, 0>",
+      "self_ir": 3052888,
+      "inclusive_ir": 3052888,
+      "callees": []
+    },
+    {
+      "name": "mibz2::bwt::room_segments::<32, 1>",
+      "self_ir": 2218141,
+      "inclusive_ir": 8727231,
+      "callees": [
+        {
+          "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+          "ir": 223308,
+          "calls": 594
+        },
+        {
+          "name": "__memset_avx2_unaligned_erms",
+          "ir": 12306,
+          "calls": 2
+        },
+        {
+          "name": "mibz2::bwt::spec_offset::<32, 1, 1>",
+          "ir": 3051728,
+          "calls": 13154
+        },
+        {
+          "name": "mibz2::bwt::spec_offset::<32, 1, 0>",
+          "ir": 3052888,
+          "calls": 13159
+        },
+        {
+          "name": "__memcpy_avx_unaligned_erms",
+          "ir": 125321,
+          "calls": 5055
+        },
+        {
+          "name": "malloc",
+          "ir": 346,
+          "calls": 1
+        },
+        {
+          "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+          "ir": 213,
+          "calls": 1
+        },
+        {
+          "name": "free",
+          "ir": 85,
+          "calls": 1
+        },
+        {
+          "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+          "ir": 42895,
+          "calls": 1
+        }
+      ]
+    },
+    {
+      "name": "mibz2::bwt::spec_offset::<32, 1, 1>",
+      "self_ir": 3051728,
+      "inclusive_ir": 3051728,
+      "callees": []
+    },
+    {
+      "name": "__memcpy_avx_unaligned_erms",
+      "self_ir": 348489,
+      "inclusive_ir": 348489,
+      "callees": []
+    }
+  ]
+}

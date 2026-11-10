@@ -1,0 +1,40 @@
+{
+  "inbox": 6758227354,
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "source_pin": "2c70fd13ebc8565cbf1eab82536d72cfb2c84cfe",
+  "master_checked": "ae44497e99765f3f1570c749ef5b381d7d8799a6",
+  "source_blobs": {
+    "src/coop.rs": "bc918b0aa87b25d9dc74858ee5beda3648a473e3",
+    "src/bwt.rs": "dce242e882f23369a53ea7e3e0a28ce8b9340ffe",
+    "src/parallel.rs": "a425a3cd3939f74d9091fca7906122766097e84a",
+    "docs/journal/2026-11-05-staged-walk.md": "8543d3904c4dd6e4b0144cb5cf311ea520ecef06",
+    "docs/journal/2026-11-05-walk-round.md": "907b7fe5de465b2a12b2ee3a3d4eca67dadd1a9b",
+    "docs/journal/2026-11-10-share-nothing.md": "59adea98dc03b7f82ae5bc2bab8795fcb98054eb",
+    "docs/journal/2026-11-10-bandwidth-titration/README.md": "d8648f6f7a59924cfa1e60bd481d0b43d0675d39",
+    "docs/journal/2026-11-10-bandwidth-titration/sim-one.txt": "a770bad768b66fe4dfedf7b4f4f14bc02b368c8a",
+    "docs/journal/2026-11-10-bandwidth-titration/sim-pipe3-20.txt": "3f6f67c4e3b03b56c27abb93b817e406b9c008c3",
+    "docs/journal/2026-11-05-staged-walk/cg/base-b1.out": "68b45382ecefef2e7e78aedf105c2ceca383a1ce",
+    "docs/journal/2026-11-05-staged-walk/cg/branch-b1.out": "e0951c981eac339833420c4836856fd9b356f19e",
+    "docs/journal/2026-11-05-staged-walk/spec_offset-P0.asm": "4e5421e1f9b5677a888f96b4a82347c4db1453b6"
+  },
+  "historical_pr171": {
+    "head": "23011895c32523c3967f5ba652d762e0aae91ff5",
+    "plan_blob": "f44c688ad1960e8ffb5be2de43e1d02a09d82913",
+    "ab_blob": "a3e78339e3c4b747cb63a74f8a4fef980b76947f"
+  },
+  "audit_scope": {
+    "new_timing": false,
+    "implementation": false,
+    "compilation": false,
+    "historical_profiles_replayed": 2,
+    "bandwidth_Ir_raw_replay": false
+  },
+  "migration": {
+    "branch": "review/compact30-instruction-ledger",
+    "sha": "e6eea5889432aef28f4d9e450cee87dd5bf7bacf",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "86d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde",
+    "date": "2026-11-06"
+  },
+  "routing_audit": "Only historical LOG6757065549 remains flagged by pinned coord.py; prior correction6757075751/6757250382 recorded. No new routing issue."
+}
