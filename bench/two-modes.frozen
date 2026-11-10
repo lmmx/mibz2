@@ -1,0 +1,6 @@
+# The two modes' discriminator (docs/journal/2026-11-10-two-modes-discriminator.md): diagnostic
+# only, no merge gate. The commit the registration, the probe, the analysis and the recipe are
+# frozen at: `just bench-two-modes`'s inputs must match it exactly. Frozen by the coordinator in
+# this commit of its own, after the Researcher's PROCEED (#145 comment 6763089509, item 4) at
+# exactly this head.
+frozen 339f745f85ea1174d9c59837f475e27d2881043f
