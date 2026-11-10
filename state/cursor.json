@@ -1561,11 +1561,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6754182845,
-    "status": "finished",
-    "decision": "D076",
-    "work_commit": "ec9b13f026392484b3e61847cb25aa87337f0320",
-    "review_comment_id": 6754250293
+    "active_comment": 6756084723,
+    "status": "in progress",
+    "decision": "D077"
   },
   "duplicate_events": [
     {
@@ -2167,7 +2165,7 @@
       "comment": 6754250293
     }
   ],
-  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
   "inbox_comments": [
     {
       "comment_id": 6681847165,
@@ -2698,6 +2696,12 @@
       "review_comment_id": 6754250293,
       "complete_cursor_commit": "3e4e31f7a233cf1397c9be478154c15929d7b32a",
       "progress": "Exact REVIEW readback verified; sole pinned verifier limitation is coordinator-only FROM check; independent Guardian checks pass."
+    },
+    {
+      "comment_id": 6756084723,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D077"
     }
   ],
   "migrated_from": {
