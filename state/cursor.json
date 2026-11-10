@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6778716882,
+  "last_examined_comment_id": 6778891459,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -44,6 +44,20 @@
       "coordination_writes": 0,
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6778891459": {
+      "status": "triaged_no_additional_coordination_action",
+      "delivery_id": "224977e0-dd48-11f1-92d9-a590cf0c1aa7",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6778891459",
+      "pr": 365,
+      "head_sha": "b24d9baa167e01d57961b82a9a3c6f4501849190",
+      "verified": "Exact PR head unchanged. Six head-associated Actions completed successfully and legacy pre-commit success. Sticky benchmark matches primary rerun intervals: Wikidata 4t -0.6% [-2.2,+1.0], text 2t -1.4% [-5.0,+2.3]; random 4t +2.3% [+0.7,+3.9], runs 4t +2.6% [+0.5,+4.6]; parity yes.",
+      "disposition": "Not performance-qualified; preserve first pattern result. One primary rerun consumed. Await substantive correction/evidence commit and fresh exact-head results. Existing independent B5 request retained, not assigned; #364 unmerged.",
+      "unverified": "Codegen equality, staged separate-executable correction and artifact digests are author-reported; staged correction is not yet this PR head. No artifact bytes downloaded or tests executed here.",
+      "dispatches": 0,
+      "response_comments": 0,
+      "existing_advisory_log": 6778716882
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -78,10 +92,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "f84114e0-dd46-11f1-80d1-c783b039e585",
-    "comment_id": 6778716882,
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "delivery_id": "224977e0-dd48-11f1-92d9-a590cf0c1aa7",
+    "comment_id": 6778891459,
+    "disposition": "rerun_verified_correction_pending"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -90,5 +103,13 @@
     "cursor_recorded": true,
     "no_coordination_action": true,
     "scope": "This observed test event only; no guarantee of future delivery."
+  },
+  "pending_independent_review": {
+    "pr": 365,
+    "requested_by_comment": 6778679718,
+    "reiterated_by_comment": 6778891459,
+    "status": "pending_authorised_dispatch",
+    "head_at_request": "b24d9baa167e01d57961b82a9a3c6f4501849190",
+    "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
   }
 }
