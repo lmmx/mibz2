@@ -16,8 +16,9 @@
 # file's SHA-256 and judges it with `bench/service_tg.py ni`.
 #
 # The dispatched ref is the frozen candidate's freeze commit (the head), not master: the shards
-# build its `ab` (bench 3.5.0's, with `env --facts` and each child's termination) and its
-# `examples/svc_target.rs`, which only the candidate carries. This file is on the default branch
+# build its `ab` (bench 3.7.0's, with `env --facts` and each child's termination; numbered 3.5.0
+# on the branch before master's 3.5.0 and 3.6.0 were merged) and its `examples/svc_target.rs`,
+# which only the candidate carries. This file is on the default branch
 # so that it can be dispatched (GitHub requires that); the run executes the head's own copy,
 # which must be identical (the plan job checks GITHUB_SHA is the head). Every external action is
 # pinned to a full commit SHA (the Guardian's D078); cargo builds are --locked.
@@ -161,8 +162,8 @@ jobs:
       - name: The head carries the tooling the shards run
         run: |
           test -f examples/svc_target.rs || { echo "::error::the head has no examples/svc_target.rs: dispatch the frozen candidate's ref"; exit 1; }
-          grep -q -- '--facts' examples/ab.rs || { echo "::error::the head's ab has no env --facts (bench 3.5.0)"; exit 1; }
-          grep -q '"termination"' examples/ab.rs || { echo "::error::the head's ab records no child termination (bench 3.5.0)"; exit 1; }
+          grep -q -- '--facts' examples/ab.rs || { echo "::error::the head's ab has no env --facts (bench 3.7.0)"; exit 1; }
+          grep -q '"termination"' examples/ab.rs || { echo "::error::the head's ab records no child termination (bench 3.7.0)"; exit 1; }
 
       - name: lbzip2 (examples/windows.rs's check of the Wikidata blocks)
         if: matrix.shard.corpus == 'wikidata'

@@ -35,7 +35,10 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
-## [3.5.0] - 2026-11-09
+## [3.7.0] - 2026-11-10
+
+Numbered 3.5.0 on #316's branch before master's 3.5.0 (`--sysfs-state`) and 3.6.0 (`ab-child/2`)
+were merged into it; renumbered at that merge, as #305's 3.6.0 was. Its content is unchanged.
 
 ### Added
 
@@ -55,6 +58,43 @@ version.
   before a nonzero exit or a signal is no longer indistinguishable from a successful run. The
   service-guarded judge (`bench/service_guarded.py`) requires `"success"`, and a row without
   it is refused.
+
+## [3.6.0] - 2026-11-10
+
+### Added
+
+- **The child's record, schema `ab-child/2`** (`examples/ab.rs`), for untimed exact-result and
+  exact-error checks (the team screen's draft, `docs/journal/2026-11-10-team-screen-design-draft.md`
+  on #334):
+  - **`schema`:** `"ab-child/2"`.
+  - **`err_kind`, `err_block`:** a decoder error's kind and block, from the reader's
+    `mibz2::Error`. Both are null on success, or where the error carries no block. Before this,
+    only the error's text (`err`) was recorded.
+  - **`sha256`:** with `AB_SHA256=1` only, a streaming SHA-256 of the output beside the 64-bit
+    hash; null without it.
+  - **`AB_READ_BUF=BYTES`:** the child's read buffer, 4 MiB without it, as always.
+- **Nothing measured changes.** `ab run` sets neither variable, so a timed child reads with the
+  same 4 MiB buffer and hashes as before. The two new fields are written once, after the
+  decode. A decoder error is still reported in the record, with a normal exit, as before. No
+  figure's meaning changes, so this is a minor version.
+
+## [3.5.0] - 2026-11-10
+
+### Added
+
+- **`ab run --sysfs-state`** (`examples/ab.rs`), ported unchanged from
+  `research/run-fed-leader-ws2` (eddfcca0, where it is part of that branch's own numbering) for
+  the share-nothing pricing diagnostic (`docs/journal/2026-11-10-share-nothing-pricing.md`): the
+  parent's half of `--machine-state` alone. The clock (each CPU's `scaling_cur_freq`, and their
+  mean), the governor, EPP and turbo of the policies holding the run's CPUs, and the package
+  temperature, read from sysfs in the parent before each run is spawned and after it exits
+  (`machine_pre`, `machine_post`, `t_spawn_unix_ns`, `t_exit_unix_ns`), exactly as 3.3.0's
+  `--machine-state` records them, each null with its reason where it can't be read. The child is
+  untouched: no counters are opened, its sampler records no CPU set, and `AB_MACHINE_STATE` is
+  cleared, as without either flag. The readings are endpoint snapshots outside the run's every
+  reading, not the clock during the decode. Opt-in, recorded and never judged: nothing changes
+  without the flag, and no measured figure changes meaning. A branch that carries its own
+  numbering of the same flag reconciles at merge, as #305's 3.6.0 did.
 
 ## [3.4.0] - 2026-11-09
 

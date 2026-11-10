@@ -14,7 +14,12 @@
 - under the Researcher's REVIEW 6760366316: §2.10 marked refuted, kept for the record; §2.11
   added, replicated independent dispatches (DRAFT);
 - under the Researcher's REVIEW 6763089509 §2: §2.11 final, 12 dispatches × R240, implemented;
-  §§6, 9 and 10 aligned; the Pathfinder's k 11 checked and not adopted.
+  §§6, 9 and 10 aligned; the Pathfinder's k 11 checked and not adopted;
+- master 829ff7d3 merged (a merge commit): the branch's harness version, numbered 3.5.0 here
+  before master's 3.5.0 (`--sysfs-state`) and 3.6.0 (`ab-child/2`) existed, is renumbered
+  **3.7.0** (bench/CHANGELOG.md), its content unchanged; every "bench 3.5.0" below now reads
+  3.7.0. The judge admits `ab-child/2` rows (a non-null `err_kind` or `err_block`, or another
+  child schema, refuses) and still admits older rows without the fields.
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -127,7 +132,7 @@ discovery, layout or shared-code cost; condition 2 bounds that.
 **Amended 10 November 2026, under the Guardian's D077** (#145 comment 6756184275;
 `state/decisions.md` at 6c63ce5e, D077). This section **replaces** the draft's admission path
 for condition 2. That path was the first completed pull-request Benchmark run on the freeze
-commit, mode `pr`, bench 3.5.0, a single artifact. In its place is a dispatch-only, sharded,
+commit, mode `pr`, bench 3.7.0, a single artifact. In its place is a dispatch-only, sharded,
 within-runner workflow, `.github/workflows/target-gated-ni.yml`, judged by
 `bench/service_tg.py ni`. Everything below is fixed before any qualification observation
 under the frozen registration.
@@ -138,7 +143,7 @@ under the frozen registration.
 
 ### 2.1 The grid and its pinned inputs
 
-The standing CI end-to-end grid at the pinned bench revision (bench 3.5.0 at the frozen
+The standing CI end-to-end grid at the pinned bench revision (bench 3.7.0 at the frozen
 candidate) is 7 corpora × 3 thread counts × 2 metrics = **42 cells**. Every one is required.
 
 | axis | the cells, pinned |
@@ -159,7 +164,7 @@ nothing the decoder builds from, and its branch is merged into this one, with th
 identical in both. The workflow is dispatched at this branch's freeze commit F, never at
 master. GitHub requires the file on the default branch to dispatch it, but the run executes
 F's copy, and the plan job requires `GITHUB_SHA` = F. F carries the candidate's
-`examples/svc_target.rs` and bench 3.5.0's `ab`, and a shard checks for both. The decoder code
+`examples/svc_target.rs` and bench 3.7.0's `ab`, and a shard checks for both. The decoder code
 itself never lands on master through #319.
 
 **What is not pinned, declared as an admitted environment assumption** (D078):

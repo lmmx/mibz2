@@ -951,6 +951,13 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
             q.append(f"termination {r.get('termination')!r}")
         if r.get("err") != "":
             q.append(f"err {r.get('err')!r}")
+        # (bench 3.6.0's child record, `ab-child/2`: a decoder error's kind and block, null on
+        # success. A row from an older child has neither field, and is judged as before)
+        for k in ("err_kind", "err_block"):
+            if r.get(k) is not None:
+                q.append(f"{k} {r.get(k)!r}")
+        if "schema" in r and r["schema"] != "ab-child/2":
+            q.append(f"child record schema {r['schema']!r}")
         for k in ("wall", "cpu", "rss_kb"):
             if not positive(r.get(k)):
                 q.append(f"{k} {r.get(k)!r}")

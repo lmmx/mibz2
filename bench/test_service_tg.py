@@ -258,7 +258,9 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
                     r *= effect.get((t, "rss"), 1.0)
                 out.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": c,
                             "rss_kb": r, "out": 1000, "hash": "0123456789abcdef", "termination": "success",
-                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t]})
+                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t],
+                            # (bench 3.6.0's child record, `ab-child/2`, as `ab run` writes it)
+                            "schema": "ab-child/2", "err_kind": None, "err_block": None, "sha256": None})
     return out
 
 
@@ -371,6 +373,18 @@ class CI(unittest.TestCase):
         self.assertEqual(v["shards"]["runs"]["model"], "AMD EPYC 7763 64-Core Processor")
         self.assertIn("not a verdict", tg.dispatch_markdown(v))
 
+    def test_child_records_old_and_new(self):
+        # (an `ab-child/2` row, as bench 3.6.0's `ab run` writes it, is admitted; so is an older
+        # child's row without the new fields, as the pilot's were)
+        rows = shard_rows("runs")
+        self.assertEqual(rows[0]["schema"], "ab-child/2")
+        self.assertTrue(self.ni(build(self.root, runs=[{"rows": rows}]))["valid"])
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+        old = [{k: v for k, v in r.items() if k not in ("schema", "err_kind", "err_block", "sha256")} for r in rows]
+        v = self.ni(build(self.root, runs=[{"rows": old}]))
+        self.assertTrue(v["valid"], v["problems"])
+
     def test_the_tails_are_kept(self):
         # (one round's long settle wait and slow child stay in: the dispatch's estimate is the
         # mean of all R paired logs)
@@ -411,6 +425,10 @@ class CI(unittest.TestCase):
             "another workflow": dict(text=[{"over": {"workflow_ref": "x/bench.yml@y"}}]),
             "a failed child": dict(records=[{"rows": [dict(r, termination="signal 9") if i == 3 else r
                                                       for i, r in enumerate(rows)]}]),
+            "a decoder error's kind (ab-child/2)": dict(records=[{"rows": [dict(r, err_kind="BlockCrc", err_block=41)
+                                                                            if i == 3 else r for i, r in enumerate(rows)]}]),
+            "another child schema": dict(records=[{"rows": [dict(r, schema="ab-child/3") if i == 3 else r
+                                                            for i, r in enumerate(rows)]}]),
             "a round missing": dict(records=[{"rows": rows[1:]}]),
             "two digests": dict(records=[{"rows": [dict(r, hash="fedcba9876543210") if i == 3 else r
                                                    for i, r in enumerate(rows)]}]),

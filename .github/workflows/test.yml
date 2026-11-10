@@ -81,6 +81,10 @@ jobs:
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py
+      # bench-share-nothing's judge, schedule, preflight and drive (it uses bench/bounded.py and
+      # bench/par_scan_finish.sh, tested above; docs/journal/2026-11-10-share-nothing-pricing.md)
+      - name: The share-nothing diagnostic's judge, schedule, preflight and drive
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && pipx run pytest -p no:cacheprovider bench/test_share_nothing.py
       - name: Install just
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:
