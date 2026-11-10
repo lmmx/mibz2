@@ -33,6 +33,9 @@ responsibilities, not by the model a role runs on.
 - It keeps an independent, whole-decoder search for the largest credible removable costs.
 - It keeps a ranked ledger of priced opportunities.
 - At each pivot, it first recovers the relevant prior candidates from the record.
+- It prices every Pathfinder design before it gets a build slot: the complete algorithm's
+  construction, traversal, metadata, branch behaviour, memory traffic and parallel
+  coordination, with alternative constructions and the cheapest falsifier.
 - **Does not** implement, time anything, merge, or certify its own proposals as reviewed.
 
 Changed from compact30: its job was "reduce dynamically executed instructions", with the
@@ -83,8 +86,15 @@ are one cost among several.
 - It runs in a Claude Code session of its own, separate from the Coordinator's. It is woken by
   its inbox, #314, and works by pull request.
 - It starts from the record: a closed lead is reopened only on a named gap in its evidence.
-- It goes from a proved claim to a census on real blocks, to a bound, to an exact prototype in
-  `examples/`, and only then to a registered timing.
+- It goes from a proved claim to a census on real blocks, to a bound, then **through the
+  Optimiser's independent pricing of the complete algorithm**, to an exact prototype in
+  `examples/`, and only then to a registered timing. Only designs that survive the price get a
+  build slot.
+- **It disproves the underlying advantage, not merely the first implementation:** a falsified
+  prototype closes that construction; the idea closes when its advantage is disproved.
+- It prefers many cheap falsifiers (counts, bounds, counting probes) to expensive prototypes.
+- Its architectural objective is **share-nothing:** remove costly cooperation by shrinking each
+  worker's memory footprint.
 - It ends every entry with the avenues the counts leave open, ranked, each with a ceiling and a
   falsifier.
 - **Does not** change `src/`, merge, release, time anything on the workstation, or certify its

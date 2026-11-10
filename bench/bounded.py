@@ -11,12 +11,14 @@ stop whatever of that group is left, and refuse, within a bounded time, if it ca
   exits on it, is still killed.
 - Whenever the command exits, before the deadline or after, any of its group still running is
   stopped the same way (TERM, GRACE, KILL).
-- After the KILL it waits, for at most REAP seconds, for no live process to be left in the
-  group (a killed process not yet reaped counts as gone).
+- After the KILL, cleanup is two phases of at most REAP seconds each, so about 2 × REAP (20 s)
+  in all: first a wait for no live process to be left in the group (a killed process not yet
+  reaped counts as gone), then, only if that succeeded, a wait to reap the command.
 - A TERM, INT or HUP sent to this supervisor stops the group the same way, then exits 143.
 - The cleanup's result is checked before any wait on the command, and every wait is bounded.
-  If the group is not empty, or the command cannot be reaped, within REAP seconds of the KILL,
-  it names the survivors and returns 125, on every path: the deadline, a normal exit, a signal
+  If the group is not empty within the first phase, it names the survivors and returns 125 at
+  once, without the second; if the command cannot be reaped within the second, it returns 125.
+  On every path: the deadline, a normal exit, a signal
   (a failed cleanup is never reported as 124 or 143). It does not promise that every process
   disappears: a process blocked in the kernel may outlive any user-space supervisor. It
   promises a bounded attempt and a bounded refusal, and the caller must not carry on after 125.
@@ -36,7 +38,8 @@ import sys
 import time
 
 TIMED_OUT, NOT_EMPTIED, SIGNALLED = 124, 125, 143
-# seconds to wait for the group to empty, and for the command to be reaped, after the KILL
+# each of cleanup's two phases after the KILL, in seconds: the group to empty, then the command
+# to be reaped (so about 2 × REAP in all)
 REAP = 10.0
 
 
@@ -130,7 +133,9 @@ def finish(child: subprocess.Popen, pgid: int, emptied: bool, code: int | None) 
     try:
         rc = child.wait(timeout=REAP)
     except subprocess.TimeoutExpired:
-        say(f"the command (pid {child.pid}) could not be reaped within {REAP:g} s of KILL")
+        say(
+            f"the command (pid {child.pid}) could not be reaped within {REAP:g} s (cleanup's second phase)"
+        )
         return NOT_EMPTIED
     if code is not None:
         return code
