@@ -67,6 +67,13 @@ if s.inverse.reads_runs() {
   1-thread hot path.
 - **The inputs:** one block each of CI's `random` and `records` (their first 890,000 bytes,
   `bzip2 -9`). Both take the column's path in every build.
+- **SUPERSEDED (D086, #145 6760052047): the touched-slot classes below were counted by
+  `agg.c`.** For each load it recorded only the class of the first matching store in ring
+  order, so stack placement could move a count between "hh" and "sh". `agg2.c` filters out
+  stack stores before matching, which is a different statistic (stack stores excluded), not
+  an alternative count of the same classes. Corrected counts follow in
+  [Corrected counts](#corrected-counts-d086-independent-classes). The original figures stay
+  as they were recorded.
 - **The touched-slot classes** are D082's method from `2026-11-10-run-front-layout-check.md`
   (on `research/run-front-boxed`):
   - lackey traces every data access;
@@ -121,6 +128,11 @@ longer meet.
   justification and evidence.
 
 ## The gate table
+
+> **The (c) rows below are SUPERSEDED (D086):** they come from `agg.c`'s first-match
+> classification. See [Corrected counts](#corrected-counts-d086-independent-classes). The
+> verdicts on (a), (b) and the benefit and fallback rows don't depend on that counter. This
+> screen stays FAILED (D086); nothing below reclassifies it.
 
 | gate | quantity | master 27ed84df | #324 head | candidate | verdict |
 |---|---|---|---|---|---|
@@ -178,3 +190,151 @@ registered or benched here.
 - Miri and the fuzz smoke were not rerun for this `lib.rs`. Before any registration they are
   needed again, with the B5 items D082 lists: mutation testing and an independent
   adversarial review.
+
+## Corrected counts (D086): independent classes
+
+**The defect.** `agg.c` checked each load against the last 48 stores and kept only the
+**first** match in ring order, recording that store's class alone. A stack store earlier in
+the ring could take a load that also matched a heap store. D086's witness:
+- a heap store at 0x3000 and a heap load at 0x4000, with a stack store at 0x1000002000 in the
+  ring: the load counted as stack–heap;
+- move the stack store to 0x1000002040: the same load counted as heap–heap.
+
+Its "fixed" classes were therefore not independent of stack placement.
+
+**The repair: `agg3.c`** (in `agg3/`, with the run scripts and the raw output).
+- **Every class is counted independently.** For each load by a hot function, and for each
+  modulus (4 KiB, 1 KiB) and each store region, it records whether any of the last 48 stores
+  of that region overlaps the load's bytes modulo the spacing at a different real address.
+  A load can count in several classes; none consumes another.
+- **Three regions:**
+  - **S,** the stack (at or above 0x1000000000);
+  - **D,** the binary's static image (0x100000–0x1000000, where valgrind maps the
+    executable: `.rodata` such as `mtf::STEPS`);
+  - **H,** everything else (heap and mmaps).
+
+  The old "hh" merged D and H.
+- **Pairs:** for each (function, load region, store region, modulus), the top (store PC,
+  load PC) pairs are kept, each counted once per load.
+- **The tests** (`agg3/test_agg3.sh`, all passing, output in `test_agg3.out`):
+  - D086's witness in both placements, and with the ring reordered: H←H = 1 every time;
+  - a static-image store;
+  - a 1 KiB-only match;
+  - ring wraparound (the 49th-oldest store is evicted; the 48th is kept);
+  - a true dependence and a partial real overlap (both excluded).
+- **These are trace candidates, not stall counts.** A store among the last 48 observed need
+  not be outstanding when a native load executes. And the stack's placement under valgrind
+  (two paddings here) is one environment's, where natively it is randomised per process.
+
+**Recomputed on the same inputs, with all four builds rebuilt as CI builds them:**
+- master 27ed84df;
+- #324's head e88c0631;
+- boxed f72b2a3c;
+- the candidate e8a417c6.
+
+Ratios are against master; "–" means no candidates in that class.
+
+**random, pad 0**
+
+| function | mod | load ← store | master 27ed84df | #324 head e88c0631 | boxed f72b2a3c | candidate e8a417c6 |
+|---|---|---|--:|--:|--:|--:|
+| `mtf_avx2` | 4K | D<-H | 13,829 | 56,154 (4.06×) | 56,188 (4.06×) | 14,071 (1.02×) |
+| `mtf_avx2` | 1K | D<-H | 341,247 | 339,795 (1.00×) | 340,067 (1.00×) | 341,414 (1.00×) |
+| `mtf_avx2` | 4K | H<-H | 13,352 | 13,486 (1.01×) | 13,375 (1.00×) | 13,352 (1.00×) |
+| `mtf_avx2` | 1K | H<-H | 53,025 | 53,149 (1.00×) | 53,361 (1.01×) | 53,025 (1.00×) |
+| `mtf_avx2` | 4K | S<-H | 46,146 | 787,938 (17.07×) | 842,759 (18.26×) | 46,146 (1.00×) |
+| `mtf_avx2` | 4K | H<-S | 48,608 | 193,967 (3.99×) | 207,880 (4.28×) | 48,608 (1.00×) |
+| `mtf_avx2` | 4K | D<-S | 75,530 | 75,125 (0.99×) | 75,125 (0.99×) | 75,125 (0.99×) |
+| `read_item` | 1K | S<-S | 17,836 | 95 (0.01×) | 40,972 (2.30×) | 75,067 (4.21×) |
+| `read_item` | 4K | S<-S | 19 | 13 (0.68×) | 13 (0.68×) | 19 (1.00×) |
+| `read_item` | 4K | H<-H | 14,007 | 14,096 (1.01×) | 14,175 (1.01×) | 14,007 (1.00×) |
+| `read_item` | 1K | H<-H | 56,104 | 56,120 (1.00×) | 56,117 (1.00×) | 56,104 (1.00×) |
+| `build` | 4K | H<-H | 44,461 | 44,459 (1.00×) | 44,458 (1.00×) | 44,461 (1.00×) |
+| `build` | 1K | S<-S | 171,307 | 171,307 (1.00×) | 171,307 (1.00×) | 171,307 (1.00×) |
+| `build` | 1K | H<-H | 169,514 | 169,514 (1.00×) | 169,513 (1.00×) | 169,514 (1.00×) |
+| `room_segments` | 4K | H<-H | 6,943 | 6,933 (1.00×) | 6,931 (1.00×) | 6,943 (1.00×) |
+| `room_segments` | 4K | S<-S | 16,711 | 16,711 (1.00×) | 16,711 (1.00×) | 16,711 (1.00×) |
+| `room_segments` | 1K | S<-S | 19,625 | 19,625 (1.00×) | 19,625 (1.00×) | 19,625 (1.00×) |
+
+**random, pad 336**
+
+| function | mod | load ← store | master 27ed84df | #324 head e88c0631 | boxed f72b2a3c | candidate e8a417c6 |
+|---|---|---|--:|--:|--:|--:|
+| `mtf_avx2` | 4K | D<-H | 13,829 | 56,154 (4.06×) | 56,188 (4.06×) | 14,071 (1.02×) |
+| `mtf_avx2` | 1K | D<-H | 341,247 | 339,795 (1.00×) | 340,067 (1.00×) | 341,414 (1.00×) |
+| `mtf_avx2` | 4K | H<-H | 13,352 | 13,486 (1.01×) | 13,375 (1.00×) | 13,352 (1.00×) |
+| `mtf_avx2` | 1K | H<-H | 53,025 | 53,149 (1.00×) | 53,361 (1.01×) | 53,025 (1.00×) |
+| `mtf_avx2` | 4K | S<-H | 46,384 | 977,683 (21.08×) | 976,000 (21.04×) | 46,384 (1.00×) |
+| `mtf_avx2` | 4K | H<-S | 48,608 | 243,197 (5.00×) | 242,988 (5.00×) | 48,608 (1.00×) |
+| `mtf_avx2` | 4K | D<-S | 75,105 | 75,856 (1.01×) | 76,096 (1.01×) | 76,096 (1.01×) |
+| `read_item` | 1K | S<-S | 17,836 | 95 (0.01×) | 40,972 (2.30×) | 75,067 (4.21×) |
+| `read_item` | 4K | S<-S | 13 | 19 (1.46×) | 19 (1.46×) | 13 (1.00×) |
+| `read_item` | 4K | H<-H | 14,007 | 14,096 (1.01×) | 14,175 (1.01×) | 14,007 (1.00×) |
+| `read_item` | 1K | H<-H | 56,103 | 56,120 (1.00×) | 56,117 (1.00×) | 56,103 (1.00×) |
+| `build` | 4K | H<-H | 44,461 | 44,459 (1.00×) | 44,458 (1.00×) | 44,461 (1.00×) |
+| `build` | 1K | S<-S | 171,307 | 171,307 (1.00×) | 171,307 (1.00×) | 171,307 (1.00×) |
+| `build` | 1K | H<-H | 169,514 | 169,514 (1.00×) | 169,513 (1.00×) | 169,514 (1.00×) |
+| `room_segments` | 4K | H<-H | 6,943 | 6,933 (1.00×) | 6,931 (1.00×) | 6,943 (1.00×) |
+| `room_segments` | 4K | S<-S | 16,711 | 16,711 (1.00×) | 16,711 (1.00×) | 16,711 (1.00×) |
+| `room_segments` | 1K | S<-S | 19,625 | 19,625 (1.00×) | 19,625 (1.00×) | 19,625 (1.00×) |
+
+**records, pad 0**
+
+| function | mod | load ← store | master 27ed84df | #324 head e88c0631 | boxed f72b2a3c | candidate e8a417c6 |
+|---|---|---|--:|--:|--:|--:|
+| `mtf_avx2` | 4K | D<-H | 14,255 | 26,933 (1.89×) | 26,933 (1.89×) | 14,082 (0.99×) |
+| `mtf_avx2` | 1K | D<-H | 334,676 | 332,311 (0.99×) | 332,465 (0.99×) | 335,075 (1.00×) |
+| `mtf_avx2` | 4K | H<-H | 9,929 | 10,042 (1.01×) | 10,044 (1.01×) | 9,929 (1.00×) |
+| `mtf_avx2` | 1K | H<-H | 40,010 | 39,847 (1.00×) | 39,924 (1.00×) | 40,010 (1.00×) |
+| `mtf_avx2` | 4K | S<-H | 54,358 | 868,196 (15.97×) | 934,724 (17.20×) | 54,358 (1.00×) |
+| `mtf_avx2` | 4K | H<-S | 48,608 | 194,399 (4.00×) | 208,291 (4.29×) | 48,608 (1.00×) |
+| `mtf_avx2` | 4K | D<-S | 30,408 | 29,323 (0.96×) | 29,323 (0.96×) | 29,323 (0.96×) |
+| `read_item` | 1K | S<-S | 17,835 | 74 (0.00×) | 62,863 (3.52×) | 96,372 (5.40×) |
+| `read_item` | 4K | S<-S | 19 | 13 (0.68×) | 13 (0.68×) | 19 (1.00×) |
+| `read_item` | 4K | H<-H | 14,118 | 14,256 (1.01×) | 14,284 (1.01×) | 14,118 (1.00×) |
+| `read_item` | 1K | H<-H | 56,502 | 56,520 (1.00×) | 56,422 (1.00×) | 56,502 (1.00×) |
+| `build` | 4K | H<-H | 43,799 | 43,798 (1.00×) | 43,797 (1.00×) | 43,799 (1.00×) |
+| `build` | 1K | S<-S | 83,857 | 83,857 (1.00×) | 83,857 (1.00×) | 83,857 (1.00×) |
+| `build` | 1K | H<-H | 170,232 | 170,232 (1.00×) | 170,231 (1.00×) | 170,232 (1.00×) |
+| `room_segments` | 4K | H<-H | 10,839 | 10,742 (0.99×) | 10,740 (0.99×) | 10,839 (1.00×) |
+| `room_segments` | 4K | S<-S | 16,204 | 16,204 (1.00×) | 16,204 (1.00×) | 16,204 (1.00×) |
+| `room_segments` | 1K | S<-S | 19,091 | 19,091 (1.00×) | 19,091 (1.00×) | 19,091 (1.00×) |
+
+**What the corrected counts show:**
+- **The named pair is `mtf_avx2`'s D←H at 4 KiB:** `STEPS` loads (D) after `counts`'
+  read-modify-write stores (H).
+  - **The counts:** master 13.8 k, head 56.2 k (4.06×), boxed 56.2 k (4.06×), candidate
+    14.1 k (1.02×) on random. On records: 14.3 k, 26.9 k (1.89×), 26.9 k, 14.1 k (0.99×).
+  - **The pairs** (store PC → load PC): in the head, `counts`' store (…950) against
+    `STEPS`' three row loads (…78c, …792, …798), about 15 k each. Master's and the
+    candidate's top pairs are the `ll` stream's store against two constant-pool loads.
+  - **At 1 KiB** the class is the same in every build (about 340 k), as D086 §3 predicts:
+    `counts` spans every residue modulo 1 KiB.
+- **New with the repair: `mtf_avx2`'s stack–heap classes.**
+  - **S←H at 4 KiB:** head 16–21× master's at both paddings and on both corpora (788 k–978 k
+    against 46 k), boxed the same.
+  - **H←S:** 4–5× master's.
+  - **The pairs:** the same `counts` read-modify-write against `mtf_avx2`'s frame (its loads
+    at …800–…81e, and its load half against frame stores).
+  - **The candidate equals master exactly** in these classes.
+  - **But the stack side of these classes is a placement,** valgrind's here and random
+    natively, so they are not build constants. The two paddings agree for these builds; that
+    doesn't make the classes fixed.
+- **`read_item`'s S←S at 1 KiB** stays as the original screen had it:
+  - master 17.8 k;
+  - head 0.1 k;
+  - boxed 41.0 k (random) and 62.9 k (records);
+  - candidate 75.1 k and 96.4 k (4.2× and 5.4×).
+
+  **The (c) failure stands.**
+- **`bwt::build`, `room_segments`, and `mtf_avx2`'s and `read_item`'s H←H:** within 1% in
+  every build. The candidate equals master to the instruction-level trace.
+- **Boxing restored nothing D082 asked for.** Its D←H equals the head's.
+
+**What changes against the original screen:**
+- (c)'s heap–heap row for `mtf_avx2` is replaced by D←H and H←H. The candidate is at master's
+  level on both, and the head is 4.1× and 1.9× master's on D←H.
+- `read_item` fails as before.
+- Nothing here reclassifies the screen, which stays FAILED (D086).
+- The pair's link to #324's elapsed-time harm is unproven: the counter rise is attributed,
+  the runtime loss is not.

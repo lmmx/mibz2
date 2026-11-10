@@ -1,0 +1,75 @@
+bwt.room_segments loads S=1035550 D=4996 H=1113072 | any4K=66252 any1K=184358
+  mod 4K (load<-store): S<-S=16711 S<-H=6022 D<-S=13 D<-H=882 H<-S=35739 H<-H=6943
+  mod 1K (load<-store): S<-S=19625 S<-H=32245 D<-S=495 D<-H=2605 H<-S=101822 H<-H=28684
+bwt.build loads S=1835637 D=12354 H=1836011 | any4K=131029 any1K=650606
+  mod 4K (load<-store): S<-H=41984 D<-S=1 D<-H=279 H<-S=45603 H<-H=44461
+  mod 1K (load<-store): S<-S=171307 S<-H=162389 D<-S=1040 D<-H=1072 H<-S=180194 H<-H=169514
+crc.clmul_update loads S=3 D=84 H=55634 | any4K=2390 any1K=6973
+  mod 4K (load<-store): D<-S=1 D<-H=2 H<-S=1519 H<-H=868
+  mod 1K (load<-store): S<-H=2 D<-S=6 D<-H=2 H<-S=6096 H<-H=3476
+mtf.mtf_avx2 loads S=5828326 D=1542976 H=1779893 | any4K=196769 any1K=2316830
+  mod 4K (load<-store): S<-H=46384 D<-S=75105 D<-H=13829 H<-S=48608 H<-H=13352
+  mod 1K (load<-store): S<-S=1 S<-H=1085796 D<-S=601611 D<-H=341247 H<-S=389183 H<-H=53025
+rle.unrle_avx2 loads S=9 D=0 H=222498 | any4K=16719 any1K=66936
+  mod 4K (load<-store): H<-H=16719
+  mod 1K (load<-store): S<-H=2 H<-S=11 H<-H=66923
+block.read_item loads S=1684629 D=13 H=1121935 | any4K=38324 any1K=169790
+  mod 4K (load<-store): S<-S=13 S<-H=19687 D<-S=1 H<-S=4667 H<-H=14007
+  mod 1K (load<-store): S<-S=17836 S<-H=78475 D<-S=9 H<-S=18435 H<-H=56103
+PAIRS bwt.room_segments mod4K S<-S: [store 1d2b23 load 1d2acf n=2487] [store 1d2b23 load 1d2af1 n=2459] [store 1d2b23 load 1d2b35 n=2369] [store 1d2b23 load 1d2b57 n=2367] [store 1d2b23 load 1d2b7f n=2352]
+PAIRS bwt.room_segments mod4K S<-H: [store 1d32af load 1d3288 n=1147] [store 1d32af load 1d325a n=256] [store 4aebe8f load 1d2a08 n=86] [store 4aebe8f load 1d29d4 n=81] [store 4aebe94 load 1d2a08 n=80]
+PAIRS bwt.room_segments mod4K D<-S: [store 1d2bba load 1d2d60 n=14] [store 1d2bba load 1d29ce n=4] [store 1d2bba load 1d2a02 n=3] [store 1d2f35 load 1d2ff0 n=1]
+PAIRS bwt.room_segments mod4K D<-H: [store 4aebea5 load 1d29ce n=82] [store 4aebeab load 1d29ce n=82] [store 4aebe99 load 1d2a02 n=81] [store 4aebea5 load 1d2a02 n=80] [store 4aebeab load 1d2a02 n=75]
+PAIRS bwt.room_segments mod4K H<-S: [store 1d2b23 load 1d2af5 n=365] [store 1d2b45 load 1d2b17 n=352] [store 1d2b45 load 1d2b86 n=349] [store 1d2adf load 1d2b5e n=346] [store 1d2bc3 load 1d2b5e n=342]
+PAIRS bwt.room_segments mod4K H<-H: [store 1d32af load 1d32bc n=1591] [store 1d32af load 1d32b1 n=1576] [store 1d32b8 load 1d3292 n=1571] [store 1d32af load 1d32ab n=1560] [store 1d32af load 1d3292 n=891]
+PAIRS bwt.room_segments mod1K S<-S: [store 1d2bba load 1d2acf n=4934] [store 1d2b23 load 1d2acf n=4926] [store 1d2bba load 1d2af1 n=4886] [store 1d2b23 load 1d2af1 n=4876] [store 1d2bba load 1d2b13 n=4818]
+PAIRS bwt.room_segments mod1K S<-H: [store 1d32a3 load 1d3288 n=12961] [store 1d32af load 1d3288 n=5755] [store 1d32af load 1d325a n=945] [store 4aebe94 load 1d29b0 n=302] [store 4aebe8f load 1d2a08 n=293]
+PAIRS bwt.room_segments mod1K D<-S: [store 1d2cfc load 1d2d60 n=481] [store 1d2bba load 1d2d60 n=20] [store 1d2b23 load 1d2d60 n=20] [store 1d2bba load 1d29ce n=6] [store 1d2cfc load 1d2f72 n=4]
+PAIRS bwt.room_segments mod1K D<-H: [store 4aebeab load 1d2a02 n=297] [store 4aebeab load 1d29ce n=293] [store 4aebe99 load 1d2a02 n=283] [store 4aebe99 load 1d29ce n=272] [store 4aebe9f load 1d2a02 n=262]
+PAIRS bwt.room_segments mod1K H<-S: [store 1d2bba load 1d2af5 n=1329] [store 1d2b23 load 1d2af5 n=1327] [store 1d2cb2 load 1d2b17 n=1308] [store 1d2b45 load 1d2b17 n=1308] [store 1d2b9b load 1d2bae n=1304]
+PAIRS bwt.room_segments mod1K H<-H: [store 1d32af load 1d32bc n=6633] [store 1d32af load 1d32b1 n=6625] [store 1d32af load 1d32ab n=6606] [store 1d32b8 load 1d3292 n=6295] [store 1d32af load 1d3292 n=3336]
+PAIRS bwt.build mod4K S<-H: [store 1d81d9 load 1d8393 n=238] [store 1d82f9 load 1d8393 n=236] [store 1d8221 load 1d8393 n=222] [store 1d8269 load 1d8393 n=218] [store 1d8385 load 1d8393 n=218]
+PAIRS bwt.build mod4K D<-S: [store 1ef098 load 1d7a75 n=2]
+PAIRS bwt.build mod4K D<-H: [store 1d82f9 load 1d7da6 n=18] [store 1d8221 load 1d7da6 n=14] [store 1d81d9 load 1d7da6 n=14] [store 1d8269 load 1d7da6 n=14] [store 1d8221 load 1d7da1 n=14]
+PAIRS bwt.build mod4K H<-S: [store 1d8227 load 1d7c9f n=473] [store 1d81df load 1d7c9f n=464] [store 1d82ff load 1d7c9f n=456] [store 1d82b7 load 1d7c9f n=454] [store 1d8347 load 1d7c9f n=446]
+PAIRS bwt.build mod4K H<-H: [store 1d82f9 load 1d7c9f n=468] [store 1d8385 load 1d7c9f n=457] [store 1d81d9 load 1d7c9f n=443] [store 1d8341 load 1d7c9f n=428] [store 1d8221 load 1d7c9f n=428]
+PAIRS bwt.build mod1K S<-S: [store 1d7cbc load 1d811d n=950] [store 1d7cbc load 1d8125 n=950] [store 1d8227 load 1d8393 n=936] [store 1d82ff load 1d7f31 n=931] [store 1d80bf load 1d80dd n=931]
+PAIRS bwt.build mod1K S<-H: [store 1d82f9 load 1d8393 n=936] [store 1d8269 load 1d8393 n=894] [store 1d81d9 load 1d8393 n=880] [store 1d82b1 load 1d8393 n=880] [store 1d8385 load 1d8393 n=862]
+PAIRS bwt.build mod1K D<-S: [store 1d82b7 load 1d7da6 n=60] [store 1d82ff load 1d7da1 n=55] [store 1d82ff load 1d7da6 n=53] [store 1d826f load 1d7da1 n=53] [store 1d838b load 1d7da6 n=52]
+PAIRS bwt.build mod1K D<-H: [store 1d82f9 load 1d7da6 n=59] [store 1d82b1 load 1d7da1 n=54] [store 1d8341 load 1d7da6 n=52] [store 1d8221 load 1d7da6 n=52] [store 1d8341 load 1d7da1 n=50]
+PAIRS bwt.build mod1K H<-S: [store 1d8227 load 1d7c9f n=1812] [store 1d82ff load 1d7c9f n=1773] [store 1d838b load 1d7c9f n=1743] [store 1d81df load 1d7c9f n=1741] [store 1d7cbc load 1d807f n=1740]
+PAIRS bwt.build mod1K H<-H: [store 1d8385 load 1d7c9f n=1825] [store 1d82f9 load 1d7c9f n=1809] [store 1d8269 load 1d7c9f n=1745] [store 1d8341 load 1d7c9f n=1720] [store 1d8221 load 1d7c9f n=1717]
+PAIRS crc.clmul_update mod4K D<-S: [store 1d9609 load 1dc630 n=1] [store 1dc2df load 1dc630 n=1]
+PAIRS crc.clmul_update mod4K D<-H: [store 1d975d load 1dc507 n=4] [store 1d975d load 1dc5f6 n=4]
+PAIRS crc.clmul_update mod4K H<-S: [store 1d964e load 1dc23e n=217] [store 1d9bf0 load 1dc23e n=217] [store 1d9605 load 1dc230 n=217] [store 1d9bfe load 1dc230 n=217] [store 1d9600 load 1dc23e n=217]
+PAIRS crc.clmul_update mod4K H<-H: [store 1d975d load 1dc230 n=3472] [store 1d9769 load 1dc245 n=3472] [store 1d9a93 load 1dc23e n=217] [store 1d9a9c load 1dc245 n=217] [store 1d9a93 load 1dc245 n=217]
+PAIRS crc.clmul_update mod1K S<-H: [store 1d975d load 1dc75f n=8] [store 1d975d load 1dc827 n=8]
+PAIRS crc.clmul_update mod1K D<-S: [store 1d9bfe load 1dc507 n=1] [store 1d9609 load 1dc630 n=1] [store 1d9bf2 load 1dc5a9 n=1] [store 1d9601 load 1dc4ff n=1] [store 1d9bf1 load 1dc4ff n=1]
+PAIRS crc.clmul_update mod1K D<-H: [store 1d975d load 1dc507 n=4] [store 1d975d load 1dc5f6 n=4]
+PAIRS crc.clmul_update mod1K H<-S: [store 1d964e load 1dc23e n=870] [store 1d9609 load 1dc245 n=870] [store 1d9633 load 1dc237 n=870] [store 1d9bfe load 1dc230 n=869] [store 1d9605 load 1dc230 n=869]
+PAIRS crc.clmul_update mod1K H<-H: [store 1d9769 load 1dc245 n=13904] [store 1d975d load 1dc230 n=13904] [store 1d9a93 load 1dc245 n=869] [store 1d9a9c load 1dc245 n=869] [store 1d9a93 load 1dc23e n=869]
+PAIRS mtf.mtf_avx2 mod4K S<-H: [store 1ef0d3 load 1ef05c n=31018] [store 1ef0d3 load 1eef95 n=30934] [store 1ef0d3 load 1eef8c n=30901] [store 1ef0d3 load 1ef02d n=30872] [store 1ef0d3 load 1eef80 n=30798]
+PAIRS mtf.mtf_avx2 mod4K D<-S: [store 1ef0b0 load 1eef18 n=43764] [store 1ef0b0 load 1eef0c n=43764] [store 1ef0a1 load 1eef0c n=29428] [store 1ef0a1 load 1eef18 n=29428] [store 1ef098 load 1eef12 n=27821]
+PAIRS mtf.mtf_avx2 mod4K D<-H: [store 1ef0d3 load 1eefc1 n=30633] [store 1ef0d3 load 1ef050 n=30468] [store 1ef0d3 load 1eef18 n=7518] [store 1ef0d3 load 1eef12 n=7358] [store 1ef0d3 load 1eef0c n=7185]
+PAIRS mtf.mtf_avx2 mod4K H<-S: [store 1ef0b0 load 1eede0 n=44675] [store 1ef0a1 load 1eede0 n=29187] [store 1ef098 load 1eede0 n=28464] [store 1ef08f load 1eede0 n=27961] [store 1ef086 load 1eede0 n=27253]
+PAIRS mtf.mtf_avx2 mod4K H<-H: [store 1ef0d0 load 1eede0 n=7341] [store 1ef0d3 load 1ef0d0 n=7163] [store 1ef0d3 load 1eede0 n=3898] [store 1eee4b load 1ef0d0 n=506] [store 1eee51 load 1ef0d0 n=494]
+PAIRS mtf.mtf_avx2 mod1K S<-S: [store 4a0f5b9 load 1eecf6 n=1]
+PAIRS mtf.mtf_avx2 mod1K S<-H: [store 1ef0d3 load 1eef95 n=124231] [store 1ef0d3 load 1eef8c n=124032] [store 1ef0d3 load 1ef02d n=124031] [store 1ef0d3 load 1eef9e n=123911] [store 1ef0d3 load 1ef05c n=123828]
+PAIRS mtf.mtf_avx2 mod1K D<-S: [store 1ef0b0 load 1ef050 n=2883727] [store 1ef0b0 load 1eef0c n=88080] [store 1ef0b0 load 1eef18 n=88080] [store 1ef0a1 load 1eef0c n=58187] [store 1ef0a1 load 1eef18 n=58187]
+PAIRS mtf.mtf_avx2 mod1K D<-H: [store 1ef0d3 load 1eefc1 n=123433] [store 1ef0d3 load 1ef050 n=123056] [store 1ef0d0 load 1eefc1 n=121131] [store 1ef0d0 load 1ef050 n=121089] [store 1ef0d3 load 1eef18 n=29741]
+PAIRS mtf.mtf_avx2 mod1K H<-S: [store 1ef0b0 load 1ef0d0 n=184327] [store 1ef0b0 load 1eede0 n=178085] [store 1ef0a1 load 1ef0d0 n=120685] [store 1ef098 load 1ef0d0 n=119162] [store 1ef0a1 load 1eede0 n=117190]
+PAIRS mtf.mtf_avx2 mod1K H<-H: [store 1ef0d0 load 1eede0 n=29656] [store 1ef0d3 load 1ef0d0 n=28175] [store 1ef0d3 load 1eede0 n=15336] [store 1eee51 load 1ef0d0 n=1950] [store 1eee4b load 1ef0d0 n=1900]
+PAIRS rle.unrle_avx2 mod4K H<-H: [store 1d9a9c load 1d9936 n=5208] [store 1d9a9c load 1d9944 n=5208] [store 1d9a93 load 1d9a8b n=5208] [store 1d9a9c load 1d993d n=5208] [store 1d9a93 load 1d9a77 n=5208]
+PAIRS rle.unrle_avx2 mod1K S<-H: [store 1d9a93 load 1d98c1 n=1] [store 1d9a93 load 1d98d6 n=1]
+PAIRS rle.unrle_avx2 mod1K H<-S: [store 1d47d6 load 1d9936 n=2] [store 1d47d6 load 1d993d n=2] [store 1d47d6 load 1d9944 n=2] [store 1d47b2 load 1d993d n=1] [store 1d47b2 load 1d9944 n=1]
+PAIRS rle.unrle_avx2 mod1K H<-H: [store 1d9a93 load 1d9a7a n=20856] [store 1d9a93 load 1d9a8b n=20856] [store 1d9a93 load 1d9a77 n=20856] [store 1d9a9c load 1d9930 n=20837] [store 1d9a9c load 1d9a8f n=20837]
+PAIRS block.read_item mod4K S<-S: [store 4aebf37 load 1e6d43 n=6] [store 4aebf3b load 1e6d71 n=6] [store 1e5cd1 load 1e5e8a n=1]
+PAIRS block.read_item mod4K S<-H: [store 1e7013 load 1e7036 n=2114] [store 1e6fef load 1e7036 n=2114] [store 1e7096 load 1e70b9 n=2113] [store 1e7072 load 1e70b9 n=2112] [store 1e70f5 load 1e713c n=2110]
+PAIRS block.read_item mod4K D<-S: [store 1e7912 load 1e792a n=1]
+PAIRS block.read_item mod4K H<-S: [store 1e6f9a load 1e71d8 n=336] [store 1e6fa2 load 1e71d8 n=326] [store 1e7512 load 1e71d8 n=250] [store 1e6f9a load 1e70be n=243] [store 1e6f9a load 1e703b n=239]
+PAIRS block.read_item mod4K H<-H: [store 1e7178 load 1e71d8 n=2144] [store 1e719c load 1e71d8 n=2130] [store 1e7072 load 1e71d8 n=1997] [store 1e7013 load 1e71d8 n=1993] [store 1e70f5 load 1e71d8 n=1985]
+PAIRS block.read_item mod1K S<-S: [store 1e6869 load 1e68b8 n=76987] [store 4aebf3b load 1e6d71 n=12] [store 4aebf37 load 1e6d43 n=12] [store 4aebf37 load 1e6d3e n=6] [store 4aebf37 load 1e6d39 n=6]
+PAIRS block.read_item mod1K S<-H: [store 1e7013 load 1e7036 n=8381] [store 1e6fef load 1e7036 n=8381] [store 1e7096 load 1e70b9 n=8375] [store 1e7119 load 1e713c n=8374] [store 1e70f5 load 1e713c n=8374]
+PAIRS block.read_item mod1K D<-S: [store 4aebf3b load 1e6d7e n=6] [store 1e7912 load 1e792a n=1] [store 4aebf58 load 1e7a11 n=1] [store 4aebf58 load 1e69b6 n=1]
+PAIRS block.read_item mod1K H<-S: [store 1e6f9a load 1e71d8 n=1292] [store 1e6fa2 load 1e71d8 n=1284] [store 1e7512 load 1e71d8 n=1018] [store 1e6f9a load 1e7141 n=889] [store 1e6f9a load 1e70be n=878]
+PAIRS block.read_item mod1K H<-H: [store 1e7178 load 1e71d8 n=8524] [store 1e719c load 1e71d8 n=8522] [store 1e70f5 load 1e71d8 n=7920] [store 1e7096 load 1e71d8 n=7912] [store 1e7072 load 1e71d8 n=7907]
