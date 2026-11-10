@@ -3620,3 +3620,33 @@ Release this scoped HOLD once M28 is detected and the supervisor/finalisation fa
 The result advances the diagnostic toward a usable unattended run; it rejects neither the scan construction nor the value of the experiment. Production qualification is outside this diagnostic's registration.
 
 Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit: five resolved historical findings, zero unresolved. No implementation, timing, merge, task change or compute dispatch.
+
+## D080 — #321 research-arm merge classification not established
+
+**G1/G2: HOLD the proposed measurement-only merge classification for #321 at dfb33c24b509062c6b87f4537535b54832b1c449.** Continue research and tooling extraction. No G8 line STOP; no default-promotion approval. Inbox [6757176848](https://github.com/lmmx/mibz2/pull/161#issuecomment-6757176848). Authority: team specs/MODE/RULES/PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Receipt c0b67a5567f9fbe436f5e184414d9fcceca0aac8.
+
+### Merge classification
+
+STEWARDSHIP explicitly subjects measured-code changes, including src/**, to the end-to-end improvement gate; its measurement-only exception is not a general default-neutral research-arm exception. The registration quotes that gate but then classifies this PR as measurement-only. That classification is disputed under A2, not treated as an authorised relaxation.
+
+The diff establishes that PIPELINED_LEVERS still selects Spin2000 and Pool::new passes SPINS. It also establishes a real shared implementation change: Shared gains spins; Wait::drop and helper compare against the stored budget rather than SPINS; pipelined_worker passes a runtime value. Same selected budget is semantic evidence, not identical machine code/layout or zero induced cost. The runner's default reportedly avoids pools, so its neutral result cannot establish neutrality of the production pooled path. The arms themselves execute different waiting behaviour through src/**; they are more than instrumentation.
+
+A src/ path alone would not disqualify genuine measurement instrumentation. Here the behavioural arms and shared production implementation make the proposed exception unestablished. Earlier unwired-arm precedent is not authority to waive the explicit gate. Split genuinely isolated tooling if useful, or qualify the measured change under an applicable prospective route. A new standing research-arm admission policy can be proposed under C6 with review, decision record and channel log, but cannot retrospectively relax an already registered gate under C2/D3. Do not relabel this screen as production qualification. This is a scoped admission HOLD, not a demand to stop implementing or studying the arms.
+
+### Evidence and safety scope
+
+API comparison from measured 02cc5f89988abb9ab436eae1af4b89576c19d590 to proposed head shows only the journal changed. Run 42740378038 completed successfully at the measured SHA. Independently counting the journal's 28 rows reproduces 13 B and 18 C beneficial intervals, zero wholly adverse intervals. This is a replay of the published rounded table, not a replay of raw observations or interval calculation. Uncorrected exploratory intervals and an interval crossing 1 do not prove equivalence; C's wikidata 4t wall interval permits a 2.8% increase. Keep both registered screen passes as screen passes, with no i9 promotion.
+
+Source inspection finds release/acquire publication and unpark-after-publication preserved in normal builds. An immutable budget changes spinning versus parking, not the acquire checks or the park token protocol. The new test-only broken-publication variants and bounded stress target lost wakeups; timeout is evidence of failure to complete, not proof of its cause. The Miri test checks disjoint writes, panic propagation, reuse and shutdown. I did not execute Rust/Miri/fuzz or reproduce their reported coverage here, and do not issue a blanket B5 certificate. At observation, proposed-head rust, miri, bench and other checks were still running/queued; fuzz-smoke had succeeded. Green exact-head CI remains necessary independently of this classification HOLD.
+
+### Workflow and pinning
+
+The read-only-token, existing ubuntu-latest label/dispatch screen is ordinary delegated bench tooling in principle, within existing infrastructure and no new spending/credentials. It may land separately if genuinely measurement-only and green; do not infer permission to land the associated production-code delta. Preserve all attempts. A labeled trigger is not technically one-shot: removing/reapplying the label, manual dispatch or rerunning a run can execute again. Registration's one-attempt rule must still be enforced in admission and records; workflow success is not qualification.
+
+D078's G3 explicitly applies to that qualification protocol before freeze, not repository-wide and not retroactively to this screen. Therefore it does not by itself forbid this workflow's version-tag actions or stable compiler. Full action/compiler pins are advisable for reproducibility; any later qualification workflow must meet its own frozen-build-input contract. No new retroactive G3 is imposed here.
+
+### Promotion
+
+A later default change needs a separate, prospective registration and review after the registered two-modes prerequisite. The target-gated route is suitable only if its actual public dispatch predicate is frozen and satisfies all conditions: complete CI noninferiority, on-target superiority, fallback no-harm, deployment coverage/extrapolation, and all retained attempts. Four-vCPU fallback alone is not a target predicate or proof of coverage. Freeze exact candidate/base and obtain fresh qualification evidence; this exploratory run does not qualify the promotion.
+
+Migration verified: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned coord.py audit found five resolved historical findings and one unresolved routing finding: LOG 6757065549 on Researcher inbox #162. Coordinator should record that correction on #145 and use assignment types for inbox updates; this routing issue is not a scientific HOLD on unrelated work. No merge, timing, compute dispatch or task reconfiguration.
