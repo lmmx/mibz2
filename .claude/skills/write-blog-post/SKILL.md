@@ -164,6 +164,16 @@ style, not a description of the method.
   block's-path figure a race circuit: the teams on the track, the service threads in the pit
   lane, the reader at the finish line. The plain technical label stays on every element. The
   metaphor dresses the content and never replaces it, and it stops short of flippancy.
+- **Figures explain causes, through an analogy where one fits** (Louis, 10 November 2026:
+  "rather thin on visual causal reasoning, and quite hard to access as a result … ideally
+  with some analogical visual metaphors rather than just visualised data structures and flow
+  charts"). Interval strips, bar charts and boxes-and-arrows show what the data is; the reader
+  also needs to see why one thing causes another (why the walk stalls, why one step covers
+  many rows, why a cheaper order costs more to find). For each causal step, choose an
+  analogy whose parts map onto the mechanism's actors (the race track's cars, pit lane and
+  finish line), state the mapping on the figure, and say in the caption where the analogy
+  stops holding. This is the one place a metaphor earns its keep: in a picture, beside the
+  plain labels. In prose, the mannered-prose rule still holds.
 - **Truth still binds.** The joy is in the telling, never in the claim. Each figure in the dek
   is a registered result, and the body carries the scope.
 
@@ -259,6 +269,22 @@ The evidence:
 - A follow-up post can open from where the last one left off, linking it, without
   re-introducing mibz2 [E: 920b77f1]. It still says what this post is about before it goes
   into detail.
+- **A follow-up post grounds the reader before it builds** (Louis, 10 November 2026, on
+  the Rauzy–Veech post: "the reader would be like 'wait wtf is MONODROMY?', and there is no
+  link back to prior posts"). Its first paragraph names the earlier post, links it, and says
+  in a sentence what that post established. Then it recaps, in a short paragraph each, every
+  idea from earlier posts the result depends on (for an inverse-BWT post: what the BWT is,
+  what the table and LF are, what a run is), linking the post that works each one through.
+  A reader arriving from a search must be able to follow the opening without opening a link.
+- **The key ideas' aha moments come in the opening; the middle deepens them** (Louis,
+  10 November 2026, citing the exegenius protocol). Before drafting, list the three to six
+  ideas a reader must grasp, in the order the argument needs them. The opening states each
+  simply, with its mechanism, before its numbers: a results-first opening that leaves the
+  reader to infer the mechanism is the withheld state this rule exists to prevent. Each
+  section then takes one idea deeper, with its worked example, its evidence and its limits.
+  A section that introduces a conclusion the opening didn't state is a finding: move the
+  conclusion up. And the opening is not a full summary that the sections repeat; it states
+  each idea once, and the sections add to it.
 
 ### Why the reader cares, then the answer, then the reader's next question
 
@@ -411,7 +437,17 @@ quoted verbatim:
 > The fix is to say what you mean. When a literal phrase is available, use it.
 
 In practice, read the draft for any phrase that is a figure of speech where a literal
-phrase exists, and replace it. Examples: "peels off the layers" becomes "undoes the
+phrase exists, and replace it. Then read it for the tics listed in
+[declauding](https://github.com/oaustegard/claude-skills/releases/tag/declauding-v0.13.0)
+(Louis, 10 November 2026: "'carrying' is blatantly Claude"). The ones our drafts have shown:
+"carry"/"carries" for "holds" or "has", "land(s)" for "arrives" or "appears", "surface",
+"load-bearing"; a question heading that teases instead of naming its topic ("Why does a
+Lyndon tree appear?" becomes "The Lyndon tree"); a negation-first reveal or "not the whole
+story" set-up; a colon reveal ("What is new is the route:"); an aphoristic closer ("A new
+representation was an opening, not an immediate win"); a bold staged lead-in ("**A
+correction came the same day.**"); a rhetorical question answered at once; and an abstract
+noun as the subject doing the work ("The cells representation applies that distinction").
+The fix for each is the same: a real subject, the plain claim, and stop. Examples: "peels off the layers" becomes "undoes the
 steps"; "the lever" becomes "the change"; "a hand-over sits on the chain" becomes "the
 next step waits for it". The same guide's companion rule
 ([Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices),
@@ -502,6 +538,15 @@ reason it arises.
   commit-pinned links to files that may change [E: 54220de4 "links at first mention",
   842c0223, 99e38b8c, 0be765db, 9942497d]. Credit the source of an idea or a presentation
   [E: db1b10c1, a7ce8ab0].
+- **No commit hashes in the text** (Louis, 10 November 2026: "don't include sha commit
+  hashes in the post, linking them is one thing but it's bizarre. Use PRs and aim for human
+  readability"). A pinned link keeps its hash in the link target; the words say what it is
+  ("the research journal", "the code", "#351"). Refer to work by its PR or release.
+- **Project names are defined or left out.** A release ("mibz2's 0.2.8 release"), a
+  benchmark file ("an 11.9 MB extract of a Wikidata dump that decompresses to 210 MB"), a
+  method's internal name ("run records": "a list of the block's runs") each get a clause at
+  first use, and one thing keeps one name throughout. An agent's name stays out of a
+  research post entirely (see "The agents' work is reported as the project's").
 - **Close the openings for misreading** [E: 27a6b3e1]. Before: "The transform turns them
   into nnbaaa and the number 3". After: "The transform doesn't shrink them: it reorders
   them into nnbaaa and records the number 3."
@@ -609,8 +654,11 @@ A post is wired in at five places [E: 7b8fc9d4, 35daf725, 08fb7ae1, 7125bccb]:
 1. a card at the top of `docs/site/blog/index.md`;
 2. a navigation entry under "Blog" in `zensical.toml`;
 3. its description in the `llmstxt` sections of `zensical.toml`;
-4. its social card, drawn by `python docs/scripts/social_cards.py` (it needs a Chromium
-   or headless shell);
+4. its social card, drawn by `python docs/scripts/social_cards.py --chrome
+   /opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell` (the headless
+   shell, not full Chromium, whose headless mode renders a shorter viewport and clips the
+   card's foot line [E: Louis, 10 November 2026, "Error in the image"]). Open the PNG and
+   look at it before committing, and revert any other card the script redrew;
 5. its entry in `cards.json`, which that script writes.
 
 **The label** in the meta line is the post's status: "Research result", "Research in
