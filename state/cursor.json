@@ -917,11 +917,12 @@
     {
       "comment_id": 6758176258,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: migration head and manifest digest verified. Acknowledge complete-algorithm pricing duty; next named share-nothing design remains a follow-on.",
-      "report_path": "state/records/reviews/inbox-6758176258/report.md"
+      "progress": "Acknowledgement and carried-forward priorities committed; short REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6758176258/report.md",
+      "report_commit": "4aee171c9f2c7934ab1319b0d6a7b1dc52131a88"
     }
   ],
   "migrated_from": {
