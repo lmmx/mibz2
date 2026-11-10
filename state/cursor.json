@@ -1466,11 +1466,15 @@
     },
     {
       "trigger_comment_id": 6757065549,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "c2f461491b97a563ca3f8669b5c3d7e14eeff07f"
+      "source_commit": "c2f461491b97a563ca3f8669b5c3d7e14eeff07f",
+      "report_commit": "6d3feb49b1ac5401edd3ff7432bac3001ff0e0f4",
+      "report_path": "state/reports/par-scan-notice-6757065549/report.md",
+      "disposition": "Supplemental head-movement notice reconciled with completed REVIEW 6757069602; REVISE/D079 HOLD unchanged; await exact delta without repeating review.",
+      "review_comment_pr": 145
     }
   ],
   "active_delegations": [],
