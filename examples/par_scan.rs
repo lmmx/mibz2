@@ -2063,6 +2063,398 @@ mod tests {
         }
     }
 
+    // ---- B5: fuzz and mutation tests aimed at the finder's `unsafe` (journal §8.4) ----
+
+    /// The finders to compare: the AVX2 filter wherever the CPU has it, and the scalar
+    fn finders() -> Vec<Finder> {
+        if Finder::detect().avx2 {
+            vec![Finder::new(true), Finder::new(false)]
+        } else {
+            vec![Finder::new(false)]
+        }
+    }
+
+    /// Writable pages between two inaccessible ones, so a read one byte before or past a
+    /// slice placed against either guard faults (SIGSEGV) natively, where an out-of-bounds
+    /// load would otherwise read whatever follows the allocation and go unseen
+    #[cfg(all(target_os = "linux", not(miri)))]
+    struct Guarded {
+        base: *mut u8,
+        page: usize,
+        pages: usize,
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    mod sys {
+        extern "C" {
+            pub fn mmap(
+                a: *mut u8,
+                len: usize,
+                prot: i32,
+                flags: i32,
+                fd: i32,
+                off: i64,
+            ) -> *mut u8;
+            pub fn mprotect(a: *mut u8, len: usize, prot: i32) -> i32;
+            pub fn munmap(a: *mut u8, len: usize) -> i32;
+        }
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    impl Guarded {
+        fn new(max_len: usize) -> Guarded {
+            let page = 4096;
+            let pages = max_len.div_ceil(page).max(1);
+            let total = (pages + 2) * page;
+            // SAFETY: an anonymous private mapping of `total` bytes (PROT_READ|PROT_WRITE,
+            // MAP_PRIVATE|MAP_ANONYMOUS); checked against MAP_FAILED; the first and last
+            // pages are then made inaccessible, and nothing else maps or frees them
+            unsafe {
+                let base = sys::mmap(std::ptr::null_mut(), total, 3, 0x02 | 0x20, -1, 0);
+                assert!(base as isize != -1, "mmap failed");
+                assert_eq!(sys::mprotect(base, page, 0), 0);
+                assert_eq!(sys::mprotect(base.add((pages + 1) * page), page, 0), 0);
+                Guarded { base, page, pages }
+            }
+        }
+
+        /// `d` copied against the trailing guard (`tail`) or the leading one
+        fn place(&mut self, d: &[u8], tail: bool) -> &[u8] {
+            assert!(d.len() <= self.pages * self.page);
+            let rw = self.pages * self.page;
+            let off = if tail { rw - d.len() } else { 0 };
+            // SAFETY: `off..off + d.len()` lies within the writable pages, which only this
+            // value refers to; the slice borrows `self`, so it ends before the next place
+            unsafe {
+                let p = self.base.add(self.page + off);
+                std::ptr::copy_nonoverlapping(d.as_ptr(), p, d.len());
+                std::slice::from_raw_parts(p, d.len())
+            }
+        }
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    impl Drop for Guarded {
+        fn drop(&mut self) {
+            // SAFETY: the mapping made in `new`, unmapped once
+            unsafe { sys::munmap(self.base, (self.pages + 2) * self.page) };
+        }
+    }
+
+    /// Elsewhere (and under Miri, which checks every load's bounds itself): a plain copy
+    #[cfg(not(all(target_os = "linux", not(miri))))]
+    struct Guarded(Vec<u8>);
+
+    #[cfg(not(all(target_os = "linux", not(miri))))]
+    impl Guarded {
+        fn new(_: usize) -> Guarded {
+            Guarded(Vec::new())
+        }
+        fn place(&mut self, d: &[u8], _: bool) -> &[u8] {
+            self.0 = d.to_vec();
+            &self.0
+        }
+    }
+
+    /// Counts of what a fuzz run compared
+    #[derive(Default, Debug)]
+    struct FuzzCounts {
+        inputs: u64,
+        bytes: u64,
+        find_calls: u64,
+        cands: u64,
+        planted: u64,
+        guarded: u64,
+    }
+
+    /// Every finder against the bit-by-bit reference on `d`: the whole input; a random
+    /// sub-range (only the magics starting in its bytes); a random partition into 1-8
+    /// ranges; and, natively, the whole input and the partition again with `d` placed
+    /// against each guard page
+    fn check_all(d: &[u8], fs: &[Finder], rng: &mut Rng, n: &mut FuzzCounts, g: &mut Guarded) {
+        let want = find_naive(d);
+        n.inputs += 1;
+        n.bytes += d.len() as u64;
+        n.cands += want.len() as u64;
+        let len = d.len();
+        let (a, b) = {
+            let x = rng.below(len as u64 + 1) as usize;
+            let y = rng.below(len as u64 + 1) as usize;
+            (x.min(y), x.max(y))
+        };
+        let sub: Vec<Cand> = want
+            .iter()
+            .copied()
+            .filter(|c| (a as u64 * 8..b as u64 * 8).contains(&c.bit))
+            .collect();
+        let mut cuts: Vec<usize> = (0..rng.below(8))
+            .map(|_| rng.below(len as u64 + 1) as usize)
+            .collect();
+        cuts.push(0);
+        cuts.push(len);
+        cuts.sort_unstable();
+        let run = |f: &Finder, d: &[u8], n: &mut FuzzCounts, what: &str| {
+            let mut v = Vec::new();
+            f.find(d, 0, len, &mut v);
+            assert_eq!(
+                v, want,
+                "{what}: len {len}, avx2 {}, input {d:02x?}",
+                f.avx2
+            );
+            let mut v = Vec::new();
+            for w in cuts.windows(2) {
+                f.find(d, w[0], w[1], &mut v);
+            }
+            assert_eq!(
+                v, want,
+                "{what}: cuts {cuts:?}, avx2 {}, input {d:02x?}",
+                f.avx2
+            );
+            n.find_calls += cuts.len() as u64;
+        };
+        for f in fs {
+            run(f, d, n, "plain");
+            let mut v = Vec::new();
+            f.find(d, a, b, &mut v);
+            assert_eq!(v, sub, "range {a}..{b}, avx2 {}, input {d:02x?}", f.avx2);
+            n.find_calls += 1;
+            for tail in [true, false] {
+                let gd = g.place(d, tail);
+                run(f, gd, n, if tail { "guarded tail" } else { "guarded head" });
+                n.guarded += 1;
+            }
+        }
+    }
+
+    /// One fuzz input: its length biased to the AVX2 loop's edges (the bound
+    /// `k + 32 <= to && k + 40 <= len` and the scalar tail), its bytes one of several
+    /// shapes, and magics (and near-misses) planted at random bits, at the tail, and across
+    /// 32-byte step edges
+    fn fuzz_input(rng: &mut Rng, n: &mut FuzzCounts) -> Vec<u8> {
+        let len = match rng.below(10) {
+            0..=5 => rng.below(140) as usize,
+            6 | 7 => 32 * rng.below(8) as usize + rng.below(16) as usize + 30,
+            8 => rng.below(1200) as usize,
+            _ => rng.below(5000) as usize,
+        };
+        let bits = len as u64 * 8;
+        let mut d: Vec<u8> = match rng.below(6) {
+            0 => vec![0; len],
+            1 => vec![0xff; len],
+            2 => {
+                // bytes of the magics, at random shifts: many filter hits
+                let m = [BLOCK_MAGIC, END_MAGIC][rng.below(2) as usize];
+                (0..len)
+                    .map(|_| (m << (16 - rng.below(8))).to_be_bytes()[1 + rng.below(5) as usize])
+                    .collect()
+            }
+            _ => (0..len).map(|_| rng.next() as u8).collect(),
+        };
+        let mut plant = |d: &mut Vec<u8>, bit: u64, m: u64, flip: Option<u64>| {
+            n.planted += 1;
+            for j in 0..48u64 {
+                let b = bit + j;
+                if b >= bits {
+                    break;
+                }
+                let mut v = (m >> (47 - j) & 1) as u8;
+                if flip == Some(j) {
+                    v ^= 1;
+                }
+                let (byte, sh) = ((b / 8) as usize, 7 - (b % 8) as u32);
+                d[byte] = d[byte] & !(1 << sh) | v << sh;
+            }
+        };
+        if bits == 0 {
+            return d;
+        }
+        for _ in 0..rng.below(6) {
+            let m = [BLOCK_MAGIC, END_MAGIC][rng.below(2) as usize];
+            let flip = (rng.below(4) == 0).then(|| rng.below(48));
+            let bit = match rng.below(5) {
+                // at or near the tail, including past where one fits
+                0 => bits.saturating_sub(40 + rng.below(16)),
+                // across a 32-byte step edge (window starts k..k+32 from 0)
+                1 => {
+                    (32 * rng.below(len as u64 / 32 + 1) + rng.below(3)).saturating_sub(1) * 8
+                        + rng.below(8)
+                }
+                // a chain of magics, back to back
+                2 => {
+                    let mut b = rng.below(bits);
+                    while b < bits {
+                        plant(&mut d, b, m, None);
+                        b += 48;
+                    }
+                    continue;
+                }
+                _ => rng.below(bits),
+            };
+            plant(&mut d, bit.min(bits - 1), m, flip);
+        }
+        d
+    }
+
+    /// The finder's randomised differential fuzz: the AVX2 filter and the scalar finder
+    /// against the bit-by-bit reference (`check_all`) on `fuzz_input`s. The budget is
+    /// PAR_SCAN_FUZZ_SECS seconds (the B5 run), else a fixed 3,000 inputs (CI); the seed
+    /// PAR_SCAN_FUZZ_SEED (printed, so a failure replays)
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn fuzz_finder_differential() {
+        let seed = std::env::var("PAR_SCAN_FUZZ_SEED")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0x5eed_f00d_u64);
+        let secs: Option<f64> = std::env::var("PAR_SCAN_FUZZ_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok());
+        let mut rng = Rng(seed | 1);
+        let fs = finders();
+        let mut n = FuzzCounts::default();
+        let mut g = Guarded::new(8192);
+        let t0 = Instant::now();
+        loop {
+            let d = fuzz_input(&mut rng, &mut n);
+            check_all(&d, &fs, &mut rng, &mut n, &mut g);
+            let more = match secs {
+                Some(s) => t0.elapsed().as_secs_f64() < s,
+                None => n.inputs < 3000,
+            };
+            if !more {
+                break;
+            }
+        }
+        eprintln!(
+            "fuzz_finder_differential: seed {seed:#x}, finders {} (avx2 {}): {n:?}",
+            fs.len(),
+            fs[0].avx2
+        );
+    }
+
+    /// Exhaustive: one magic of each kind at every bit of every length 40-104 (the AVX2
+    /// loop's first steps and its scalar tail), on a zero and a random background, each
+    /// input also cut at every byte from 2 before the magic's to 7 after, and guarded
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn finder_every_bit_offset() {
+        let fs = finders();
+        let mut rng = Rng(0xb17_0ff5e7);
+        let mut n = FuzzCounts::default();
+        let mut g = Guarded::new(4096);
+        for len in 40..=104usize {
+            let bits = len as u64 * 8;
+            for m in [BLOCK_MAGIC, END_MAGIC] {
+                for bit in 0..bits {
+                    for random in [false, true] {
+                        let mut d: Vec<u8> = if random {
+                            (0..len).map(|_| rng.next() as u8).collect()
+                        } else {
+                            vec![0; len]
+                        };
+                        for j in 0..48u64.min(bits - bit) {
+                            let b = bit + j;
+                            let (byte, sh) = ((b / 8) as usize, 7 - (b % 8) as u32);
+                            let v = (m >> (47 - j) & 1) as u8;
+                            d[byte] = d[byte] & !(1 << sh) | v << sh;
+                        }
+                        let want = find_naive(&d);
+                        assert_eq!(
+                            want.iter().any(|c| c.bit == bit),
+                            bit + 48 <= bits,
+                            "the reference itself"
+                        );
+                        n.inputs += 1;
+                        let k = (bit / 8) as usize;
+                        for f in &fs {
+                            let mut v = Vec::new();
+                            f.find(&d, 0, len, &mut v);
+                            assert_eq!(v, want, "len {len}, bit {bit}, avx2 {}", f.avx2);
+                            for cut in k.saturating_sub(2)..=(k + 7).min(len) {
+                                let mut v = Vec::new();
+                                f.find(&d, 0, cut, &mut v);
+                                f.find(&d, cut, len, &mut v);
+                                assert_eq!(v, want, "len {len}, bit {bit}, cut {cut}");
+                                n.find_calls += 2;
+                            }
+                            for tail in [true, false] {
+                                let gd = g.place(&d, tail);
+                                let mut v = Vec::new();
+                                f.find(gd, 0, len, &mut v);
+                                assert_eq!(v, want, "guarded, len {len}, bit {bit}");
+                                n.guarded += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        eprintln!("finder_every_bit_offset: {n:?}");
+    }
+
+    /// The harness's own chunking: a magic whose first bit is `r` bits before each
+    /// FIND_CHUNK edge, for every r in 0..=48 (straddling the edge, ending at it, starting
+    /// on it), found when the input is searched chunk by chunk as the finder thread does
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn finder_find_chunk_edges() {
+        let fs = finders();
+        let mut rng = Rng(0xc40e_d6e5);
+        let len = 3 * FIND_CHUNK + 77;
+        for r in 0..=48u64 {
+            let at: Vec<(u64, bool)> = [FIND_CHUNK, 2 * FIND_CHUNK, 3 * FIND_CHUNK]
+                .iter()
+                .map(|&e| (e as u64 * 8 - r, r % 2 == 1))
+                .collect();
+            let d = planted(len, &mut rng, &at);
+            let want = find_naive(&d);
+            for &(bit, _) in &at {
+                assert!(want.iter().any(|c| c.bit == bit), "planted at {bit}");
+            }
+            for f in &fs {
+                let (mut v, mut from) = (Vec::new(), 0);
+                while from < d.len() {
+                    let to = (from + FIND_CHUNK).min(d.len());
+                    f.find(&d, from, to, &mut v);
+                    from = to;
+                }
+                assert_eq!(v, want, "chunked, r {r}, avx2 {}", f.avx2);
+            }
+        }
+    }
+
+    /// RUSAGE_SELF counts every thread's CPU: a second thread burns at least 150 ms of its
+    /// own CPU (by RUSAGE_THREAD, 1) and the process's figure grows by at least that.
+    /// Catches the wrong `who` (RUSAGE_THREAD or RUSAGE_CHILDREN) and a misread timeval.
+    #[cfg(all(target_os = "linux", not(miri)))]
+    #[test]
+    fn getrusage_counts_every_thread() {
+        let thread_micros = || {
+            let mut r = Rusage::default();
+            // SAFETY: as in `cpu_micros`; RUSAGE_THREAD (1) is Linux's
+            assert_eq!(unsafe { getrusage(1, &mut r) }, 0);
+            (r.utime[0] * 1_000_000 + r.utime[1] + r.stime[0] * 1_000_000 + r.stime[1]) as u64
+        };
+        let a = cpu_micros();
+        let burnt = std::thread::spawn(move || {
+            let (t0, mut x) = (thread_micros(), 0u64);
+            while thread_micros() - t0 < 150_000 {
+                for i in 0..100_000u64 {
+                    x = x.wrapping_mul(31).wrapping_add(i);
+                }
+                std::hint::black_box(x);
+            }
+            thread_micros() - t0
+        })
+        .join()
+        .unwrap();
+        let grew = cpu_micros() - a;
+        assert!(
+            grew >= burnt,
+            "the process's CPU grew {grew} us; the thread burnt {burnt} us"
+        );
+    }
+
     /// The FFI boundary: getrusage writes a whole `Rusage` and the times only grow.
     /// Natively only: not run under Miri, which does not execute this foreign call; the
     /// stated bound argument covers it (docs/journal/2026-11-10-parallel-scan.md, B5).
