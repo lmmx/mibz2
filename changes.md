@@ -1,5 +1,9 @@
 # Changes since the last version
 
+- 2026-11-10, through [6770483223](https://github.com/lmmx/mibz2/pull/145#issuecomment-6770483223): #358 merged a neutral one-page MTF alignment fix; the team-runs port was sent back under D097-F1 for forced plain-team fuzz coverage before its i9 A/B.
+- 2026-11-10: MONODROMY found and repaired an unwritten-byte writer/check defect and overlapping copy in #351. Pre-fix sparse timings were withdrawn; latest PR reports a fresh indicative cells-kernel 0.818× the current records inversion on Wikidata, without production qualification.
+- 2026-11-10: the MONODROMY explanation was published after the correction; Pathfinder post-publication review was assigned. #353 admission maintenance merged; 0.2.8 i9 scaling bundle submitted without checked verdict.
+
 - 2026-11-10, through [6767075813](https://github.com/lmmx/mibz2/pull/145#issuecomment-6767075813): #324 and #316 merged under Louis's new performance policy and mibz2 0.2.8 released; the original #324 FAIL and #316 unsound inference findings remain on record.
 - 2026-11-10: 0.2.7/0.2.6 i9 scaling checked broadly neutral; a new 0.2.8 i9 run is next. W1 found the all-machine idle mode and #350 merged a bench-only held spinner.
 - 2026-11-10: the stacked cooperative ports were dropped under their fixed wall rule; #348 closed without primary gain, with #353 carrying an admission repair.
