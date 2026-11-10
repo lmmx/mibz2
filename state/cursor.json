@@ -1403,8 +1403,9 @@
       "sha": "b23897e89a292221836685eab0f1c8ce944802d2",
       "evidence_digest": "draft:ac1707e8aa76f5b77a5b6a3c6f945de23b764ea9;counter:1b7f3c00086b886ffb70eb48fb7063bf707a4877",
       "commit": "71661b1ab04fb408624ac793e29a4970b4485caa",
-      "status": "complete",
-      "disposition": "Concur with revision 4; D092 counter/execution HOLD lifted. Researcher PROCEED and registration/execution predicates remain. D082/D086 preserved."
+      "status": "finished",
+      "disposition": "Concur with revision 4; D092 counter/execution HOLD lifted. Researcher PROCEED and registration/execution predicates remain. D082/D086 preserved.",
+      "comment": 6763937701
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1495,7 +1496,8 @@
     6761524241,
     6763239132,
     6763469482,
-    6763626030
+    6763626030,
+    6763937701
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1711,7 +1713,8 @@
     "efa9878748e58df49446d9841ad36e095679a5f7",
     "7540760ff73bd1f505fa284a880c42da3526221d",
     "c84b4173d61ff7d61a061adf70571f50bde637ce",
-    "71661b1ab04fb408624ac793e29a4970b4485caa"
+    "71661b1ab04fb408624ac793e29a4970b4485caa",
+    "e773a92d02f2934fc56acd2f4669f47c230b3c40"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1885,9 +1888,10 @@
   },
   "current_execution": {
     "active_comment": 6763772014,
-    "status": "complete",
+    "status": "finished",
     "decision": "D093",
-    "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa"
+    "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa",
+    "review_comment_id": 6763937701
   },
   "duplicate_events": [
     {
@@ -3320,11 +3324,13 @@
     {
       "comment_id": 6763772014,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D093",
-      "progress": "D093 work committed: revision-4 repairs reproduced, D092 scoped HOLD lifted. REVIEW pending.",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier fails only coordinator-specific FROM requirement; independent Guardian header/routing checks pass.",
       "receipt_commit": "c84b4173d61ff7d61a061adf70571f50bde637ce",
-      "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa"
+      "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa",
+      "review_comment_id": 6763937701,
+      "complete_cursor_commit": "e773a92d02f2934fc56acd2f4669f47c230b3c40"
     }
   ],
   "migrated_from": {
