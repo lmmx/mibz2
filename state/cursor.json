@@ -1105,10 +1105,10 @@
     {
       "comment_id": 6760363087,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed report, ledger and archived variance replay committed; REVIEW publication pending.",
+      "progress": "Completed report, ledger and archived variance replay published; exact REVIEW body, author and #145 destination verified.",
       "report_path": "state/records/reviews/inbox-6760363087/report.md",
       "report_commit": "c12282e9b9623f9068889d01b93dc7af484c0839",
       "audit_scope": {
@@ -1118,7 +1118,9 @@
         "new_timing": false,
         "archived_rounds_replayed": 60,
         "raw_instruction_count": false
-      }
+      },
+      "reply_id": 6760521690,
+      "routing_verification": "route/check passed. Pinned verify rejects FROM optimizer because it hardcodes coordinator; exact GitHub readback verified, no verify-pass claimed."
     }
   ],
   "migrated_from": {
