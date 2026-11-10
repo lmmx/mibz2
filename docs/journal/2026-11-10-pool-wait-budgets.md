@@ -195,5 +195,105 @@ How it applies here, fixed before the data:
 
 ## Result
 
-Not yet run. The CI screen's figures, the counts and the verdict per arm, under the rule above,
-go here.
+**One attempt, valid:** the Pool-wait arms run
+[42740378038](https://github.com/lmmx/mibz2/actions/runs/42740378038), at `02cc5f89` (the
+registration's commit). The runner was an AMD EPYC 7763: 4 vCPUs on 2 cores, no CPU quota, no
+cpufreq policy visible, `perf_event_paranoid` 4. No setup failure and no re-run. Every run of
+every arm gave the same bytes on every corpus, without error, and the counts' outputs agreed
+across arms and plans.
+
+**Verdict under the registered rule: arms B (0) and C (64) both pass the screen.** Each has
+improvements beyond noise, no regression beyond noise in wall or CPU at any of the 28 cells,
+and no cell meets the rejection condition. Neither changes any default: a pass makes each a
+candidate only (see "The decision rule"). Per arm:
+- **B (0):** 13 of the 56 intervals are improvements, none are regressions, and none meet the
+  rejection condition.
+- **C (64):** 18 improvements, no regressions, no rejection.
+
+### The figures: arm / A, geometric mean of 18 paired rounds [95% t interval]
+
+Below 1 is better. Marked **bold** where the interval is wholly below 1.
+
+| corpus | threads | B wall | B CPU | C wall | C CPU |
+|---|--:|--:|--:|--:|--:|
+| wikidata | 1 | **0.925 [0.898, 0.953]** | **0.925 [0.899, 0.953]** | **0.955 [0.927, 0.983]** | **0.954 [0.927, 0.983]** |
+| wikidata | 2 | **0.966 [0.941, 0.992]** | **0.957 [0.940, 0.974]** | **0.961 [0.937, 0.985]** | **0.956 [0.935, 0.977]** |
+| wikidata | 4 | 1.001 [0.988, 1.015] | **0.962 [0.953, 0.972]** | 1.012 [0.996, 1.028] | **0.969 [0.955, 0.984]** |
+| wikidata | 9 | **0.956 [0.919, 0.995]** | **0.950 [0.911, 0.990]** | 0.974 [0.935, 1.014] | 0.965 [0.927, 1.005] |
+| text | 1 | 0.988 [0.968, 1.008] | 0.988 [0.969, 1.008] | **0.981 [0.965, 0.996]** | **0.981 [0.966, 0.996]** |
+| text | 2 | 0.973 [0.928, 1.020] | 1.005 [0.971, 1.040] | 0.985 [0.932, 1.041] | 1.006 [0.954, 1.060] |
+| text | 4 | 0.989 [0.968, 1.010] | **0.979 [0.960, 0.998]** | 0.988 [0.970, 1.007] | **0.969 [0.948, 0.990]** |
+| text | 9 | 0.999 [0.947, 1.053] | 0.986 [0.947, 1.026] | 0.996 [0.969, 1.023] | 0.986 [0.959, 1.014] |
+| random | 1 | **0.972 [0.950, 0.995]** | **0.973 [0.951, 0.996]** | **0.969 [0.948, 0.991]** | **0.970 [0.948, 0.991]** |
+| random | 2 | 1.002 [0.950, 1.057] | 0.999 [0.941, 1.061] | 0.976 [0.932, 1.022] | 0.970 [0.940, 1.001] |
+| random | 4 | 1.015 [0.982, 1.049] | 1.012 [0.973, 1.052] | 1.004 [0.989, 1.018] | 1.004 [0.979, 1.029] |
+| random | 9 | 1.002 [0.935, 1.074] | 1.006 [0.938, 1.081] | 0.977 [0.928, 1.028] | 0.974 [0.922, 1.029] |
+| records | 1 | 0.995 [0.975, 1.014] | 0.994 [0.975, 1.014] | 0.991 [0.968, 1.013] | 0.991 [0.969, 1.013] |
+| records | 2 | 0.974 [0.940, 1.010] | 0.988 [0.950, 1.028] | 1.002 [0.969, 1.036] | 0.988 [0.949, 1.028] |
+| records | 4 | 0.995 [0.978, 1.012] | 0.991 [0.968, 1.014] | 1.007 [0.973, 1.042] | 1.000 [0.968, 1.032] |
+| records | 9 | 0.992 [0.968, 1.016] | 0.990 [0.972, 1.008] | 0.991 [0.967, 1.017] | 0.992 [0.972, 1.011] |
+| pattern | 1 | **0.944 [0.919, 0.969]** | **0.946 [0.922, 0.970]** | **0.948 [0.929, 0.968]** | **0.952 [0.933, 0.971]** |
+| pattern | 2 | **0.924 [0.859, 0.993]** | 0.943 [0.887, 1.003] | **0.924 [0.863, 0.989]** | **0.936 [0.878, 0.999]** |
+| pattern | 4 | 1.028 [0.971, 1.088] | 0.973 [0.934, 1.013] | 1.013 [0.981, 1.045] | **0.964 [0.933, 0.996]** |
+| pattern | 9 | 0.991 [0.932, 1.054] | 1.001 [0.940, 1.066] | **0.965 [0.945, 0.985]** | **0.963 [0.947, 0.980]** |
+| onebyte | 1 | 0.974 [0.921, 1.030] | 0.973 [0.919, 1.029] | 0.992 [0.919, 1.071] | 0.991 [0.915, 1.074] |
+| onebyte | 2 | 0.986 [0.962, 1.011] | 0.982 [0.960, 1.006] | 0.987 [0.960, 1.014] | **0.975 [0.962, 0.988]** |
+| onebyte | 4 | 0.946 [0.840, 1.066] | 0.943 [0.838, 1.060] | 0.920 [0.827, 1.024] | 0.916 [0.824, 1.018] |
+| onebyte | 9 | 0.993 [0.970, 1.017] | 0.982 [0.960, 1.004] | 0.998 [0.982, 1.015] | 0.987 [0.972, 1.003] |
+| runs | 1 | 0.935 [0.833, 1.048] | 0.940 [0.841, 1.050] | 0.936 [0.831, 1.054] | 0.938 [0.837, 1.051] |
+| runs | 2 | 1.013 [0.972, 1.056] | 1.016 [0.968, 1.067] | 0.999 [0.975, 1.024] | 1.000 [0.979, 1.021] |
+| runs | 4 | 0.928 [0.838, 1.028] | 0.932 [0.848, 1.024] | 0.957 [0.846, 1.082] | 0.963 [0.855, 1.084] |
+| runs | 9 | 1.015 [0.942, 1.093] | 1.032 [0.954, 1.117] | 0.995 [0.969, 1.022] | 0.999 [0.975, 1.023] |
+
+Arm A's Wikidata medians: 0.270 s wall and 0.736 CPU-s at 4 threads; 0.305 s and 1.057 CPU-s at
+9. The artifact `pool-wait-02cc5f89…` holds `runs.jsonl`, `summary.md`, `counts.jsonl` and
+`env.json`.
+
+### The counts (untimed, the Wikidata blocks, mean of 3 rounds)
+
+| plan | arm | pool spins (helper idle + caller join) | caller-join parks | all spins |
+|---|---|--:|--:|--:|
+| 1×3 | A | 1.08 M | 254 | 2.28 M |
+| 1×3 | B | 0 | 341 | 1.11 M |
+| 1×3 | C | 40 k | 340 | 1.22 M |
+| 3×3 | A | 1.18 M | 290 | 2.83 M |
+| 3×3 | B | 0 | 254 | 1.63 M |
+| 3×3 | C | 38 k | 260 | 1.66 M |
+
+- **Wakes are the same in every arm:** 466 caller-join wakes, and 468–472 helper-idle wakes, a
+  decode. Wakes are unparks sent, so the protocol's traffic doesn't change; what changes is how
+  often a waiter is asleep to receive one.
+- **The runner's spin estimate:** `wait_audit`'s idle-thread figure was about 22.7 ns a spin.
+  It is an estimate on this runner, not a measured saving.
+
+### What it shows
+
+- **The one uncrowded cell agrees with the bound.** At 4 threads (one team of three, the
+  scanner and the reader on 4 vCPUs), Wikidata's CPU fell by 3.8% (B) and 3.1% (C), about
+  0.028 and 0.023 CPU-s.
+  - The bound priced before timing, on this runner's estimate, is 1.08 M removed spins × 22.7
+    ns ≈ 0.025 CPU-s. The saving is about the size the mechanism allows, and no more.
+  - Wall there did not move beyond noise: B 1.001 [0.988, 1.015], C 1.012 [0.996, 1.028].
+    C's central wall is up while its CPU is down, the rejection condition's direction, but
+    within noise. It is noted, not judged.
+- **The wall gains are in the oversubscribed cells,** where a spinning waiter takes a CPU from
+  a thread with work:
+  - 1 and 2 threads, where three decoding threads, the scanner and the reader share one or two
+    CPUs;
+  - 9 threads, where nine decoding threads share four CPUs.
+  
+  By the registration, a wall gain seen only there is CI-only and promotes nothing on the i9.
+- **The CPU gains reach the uncrowded cell, the wall gains don't.** At 4 threads CPU improves
+  beyond noise on Wikidata (B, C), text (B, C) and pattern (C). Wall improves at no 4-thread
+  cell. So the evidence of a non-oversubscribed benefit is a CPU saving at unchanged wall.
+- **The plain teams were not measured.** Every arm here is the pipelined plan; the plain teams'
+  pools keep `SPINS`.
+- **The default's bench** ([42740293712](https://github.com/lmmx/mibz2/actions/runs/42740293712),
+  head over base) detected no change on its four assessed measures, as expected: the runner's
+  default decoder has no pools. One of its 42 per-cell intervals, `records` wall at 4 threads
+  (−4.4%), excluded no change. The workers' code path is unchanged, so it is read as chance.
+
+**Not done, by the registration:** no i9 timing, until the two-modes diagnostic has reported and
+been reviewed. A default change would be a separate pull request: arm B or C as the pipelined
+teams' pool budget, under the standing route on `bench.yml`. Since the runner's default has no
+pools, it would need a target argument (the target-gated route) rather than this screen.
