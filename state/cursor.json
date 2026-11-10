@@ -1376,6 +1376,20 @@
       "status": "finished",
       "disposition": "Concur prospective descriptive helper balance; HOLD freeze until checker-exit contradiction resolved; prior verdicts unchanged.",
       "comment": 6763469482
+    },
+    {
+      "id": "D092",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6763511665,
+      "pr": 161,
+      "sha": "20cfd070010e44264d8482fb1d9ac5e6b366a8e6",
+      "evidence_digest": "draft:abe13445e605213993eba288ba085ef3fd2c578d;counter:fa50736678ce0f81f3f21a29201df48923ea48c4",
+      "commit": "efa9878748e58df49446d9841ad36e095679a5f7",
+      "status": "complete",
+      "disposition": "Allocation rule accepted; REVISE counter units/completeness and execution definitions before freeze. D082/D086 preserved."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1676,7 +1690,9 @@
     "877ad8b391244d5fdb2c0eb653a604d83d80e516",
     "14268343d174e54e8c5bb95020adb3c30deaa26d",
     "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
-    "a89216bd904a0c4fcfb290ddc580891c28aaa7b3"
+    "a89216bd904a0c4fcfb290ddc580891c28aaa7b3",
+    "6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2",
+    "efa9878748e58df49446d9841ad36e095679a5f7"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1768,7 +1784,8 @@
     6760691372,
     6761414959,
     6763143812,
-    6763334325
+    6763334325,
+    6763511665
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1848,8 +1865,9 @@
   },
   "current_execution": {
     "active_comment": 6763511665,
-    "status": "in progress",
-    "decision": "D092"
+    "status": "complete",
+    "decision": "D092",
+    "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7"
   },
   "duplicate_events": [
     {
@@ -2553,6 +2571,13 @@
       "decision": "D091",
       "commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
       "comment": 6763469482
+    },
+    {
+      "pr": 161,
+      "sha": "20cfd070010e44264d8482fb1d9ac5e6b366a8e6",
+      "evidence_digest": "draft:abe13445e605213993eba288ba085ef3fd2c578d;counter:fa50736678ce0f81f3f21a29201df48923ea48c4",
+      "decision": "D092",
+      "commit": "efa9878748e58df49446d9841ad36e095679a5f7"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3255,9 +3280,11 @@
     {
       "comment_id": 6763511665,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D092",
-      "progress": "Migration verified; reviewing STEPS revision 3 against D090."
+      "progress": "D092 committed: allocation concurred; counter and timeout defects reproduced; awaiting REVIEW.",
+      "receipt_commit": "6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2",
+      "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7"
     }
   ],
   "migrated_from": {
