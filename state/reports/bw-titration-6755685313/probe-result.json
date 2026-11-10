@@ -1,0 +1,27 @@
+{
+  "existing_tests": "3 passed",
+  "negative_zero_thread_bytes": {
+    "exit": 0,
+    "reading": "BOUND: at 10 threads the decoder kept 0.500 of its rate, at most 0.8"
+  },
+  "uniform_wrong_size": {
+    "exit": 0,
+    "reading": "BOUND: at 10 threads the decoder kept 0.500 of its rate, at most 0.8"
+  },
+  "aab_certificate": {
+    "old": 2,
+    "revised": 1,
+    "native_rust_executed": false
+  },
+  "fixed_capacity_saturated_model": {
+    "W_GBs": 28.5,
+    "H_GBs": 8,
+    "predicted_ratio": 0.7192982456140351
+  },
+  "baseline_bottleneck_shift": {
+    "original_GBs": 1.5,
+    "hog_spin_baseline_GBs": 1.0,
+    "hog_store_GBs": 1.0,
+    "ratio": 1.0
+  }
+}
