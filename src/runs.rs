@@ -32,15 +32,59 @@ const CAP: u32 = 127;
 /// A run's weight (N in libbzip2) refused at this, as `mtf::mtf` refuses it
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
-/// Whether the decoder takes the run records' path for `b` (else the column's): the block is
-/// below 2^24 rows, and its symbols number at most half its bound. The bound, not the
-/// length, as the length is known only after the front; for a full block they are about
-/// equal. The cut is set by instruction counts (docs/journal/2026-11-10-run-front-production.md
+/// Symbols in a window of the admission's sample, and the most windows it reads
+const WINDOW: usize = 64;
+const WINDOWS: usize = 64;
+
+/// Whether the decoder takes the run records' path for `b` (else the column's): the block's
+/// bound is below 2^24 rows, and its symbols number at most half its rows, as a sample of
+/// them estimates.
+///
+/// **The sample.** The rows are known only after the front, so they are estimated from the
+/// symbols: up to WINDOWS windows of WINDOW symbols, evenly spaced, each decoded for its row
+/// count alone (a literal is a row, a run its length). A block of at most WINDOW x WINDOWS
+/// symbols is counted whole. A window that opens inside a run's symbols undercounts that
+/// run, which leans the estimate toward the column: the safe side, since either path gives
+/// the block's bytes and only the cost differs.
+///
+/// **Why the rows and not the bound.** Against the bound, a short block of high entropy
+/// (a small incompressible file, a stream's last block) has few symbols and took the
+/// records' path, at 18-19% more instructions than the column's.
+///
+/// The cut is set by instruction counts (docs/journal/2026-11-10-run-front-production.md
 /// §4): Wikidata's blocks (0.05-0.22 symbols a row) and text's (0.47) decode in 10-16% fewer
 /// instructions by records; high-entropy blocks (a symbol a row: a record a row, each dearer
-/// to fill than the build's row) in 18-19% more, so they keep the column.
+/// to fill than the column's row) in more, so they keep the column.
 pub fn takes_runs(b: &Symbols) -> bool {
-    b.max_len < 1 << 24 && 2 * b.syms.len() <= b.max_len
+    if b.max_len >= 1 << 24 {
+        return false;
+    }
+    let syms = &b.syms;
+    let (mut rows, mut seen) = (0u64, 0u64);
+    let mut window = |w: &[u16]| {
+        let (mut run, mut weight) = (0u64, 1u64);
+        for &s in w {
+            if s <= 1 {
+                run += (s as u64 + 1) * weight;
+                // (a window holds at most WINDOW run symbols: capped, the sum can't wrap)
+                weight = (weight << 1).min(1 << 24);
+            } else {
+                rows += run + 1;
+                (run, weight) = (0, 1);
+            }
+        }
+        rows += run;
+        seen += w.len() as u64;
+    };
+    if syms.len() <= WINDOW * WINDOWS {
+        window(syms);
+    } else {
+        let step = syms.len() / WINDOWS;
+        for i in 0..WINDOWS {
+            window(&syms[i * step..i * step + WINDOW]);
+        }
+    }
+    2 * seen <= rows
 }
 
 /// A block's run records and the path's scratch, kept from block to block

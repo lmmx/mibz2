@@ -127,6 +127,9 @@ pub struct Segmented {
 
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        if build_back(ll, counts, &mut self.tt) {
+            return walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+        }
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
     }
@@ -138,6 +141,14 @@ impl InverseBwt for Segmented {
     // n = ll.len() fits the capacity `ll` already has. So the success contract holds, and
     // Segmented never falls back.
     fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        // the column's block walks backward too: its LF table is written in row order, with
+        // no scatter (`build_back`), and the backward walks clear their output and write
+        // exactly n rows, as the forward ones do. The forward build is kept for counts
+        // that are not `ll`'s own, which the decoder never passes
+        if build_back(ll, counts, &mut self.tt) {
+            walk_back_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+            return true;
+        }
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
         true
@@ -536,6 +547,104 @@ unsafe fn run16(src: *const u8, base: u32, dst: *mut u32) {
             *dst.add(j) = (*src.add(j) as u32).wrapping_add(base.wrapping_add((j as u32) << 8))
         };
     }
+}
+
+/// The LF table of the last column `ll`, whose bytes `counts` counts: `P[i] = ll[i] | LF(i)
+/// << 8`, with LF(i) = C(ll[i]) + the copies of ll[i] before row i. It is the table
+/// `runs::fill` writes from a block's run records, written here from its column, a row at a
+/// time: entry i goes to slot i, so the table is written in order, with one cursor a byte
+/// and no scatter. Walked backward from `orig_ptr` (`walk_back_room`), it gives the bytes
+/// `build`'s table gives walked forward.
+///
+/// Returns false, the table left empty, unless the counts are `ll`'s own (as the decoder's
+/// always are) and the block is below 2^24 rows.
+///
+/// **The check.** Each row's cursor must be below its bucket's end when the row takes it.
+/// The counts sum to n and there are n rows, so if no bucket is overrun each takes exactly
+/// its count: the links are then the slots [0, n), each once, and every one is below n, as
+/// the walks require. A failed check is only remembered (`ok`), and the table is cleared
+/// before it can be read.
+///
+/// **The windows** are `build_one_pass`'s: 16 rows of one byte are one cursor step and 16
+/// entries rising by 256; a window of a few runs takes each run so; a window of many runs
+/// (most of a high-entropy block's) takes its rows one at a time, which then reload no
+/// cursor their neighbour has just stored.
+pub fn build_back(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) -> bool {
+    let n = ll.len();
+    let t = &mut tt.0;
+    if n >= 1 << 24 || counts.iter().map(|&c| c as usize).sum::<usize>() != n {
+        t.clear();
+        return false;
+    }
+    let (mut next, mut lim) = ([0u32; 256], [0u32; 256]);
+    let mut cum = 0u32;
+    for b in 0..256 {
+        next[b] = cum;
+        cum += counts[b];
+        lim[b] = cum;
+    }
+    // every slot below n is written below, so the table's old entries need no clearing. A
+    // table too small is allocated zeroed (fresh pages, with no pass over them), growing as
+    // `Vec::reserve` grows (the footprint ledger's model of it, `trace::grown`); one with
+    // the room is extended, zeroing only what it adds
+    if t.capacity() < n {
+        *t = vec![0; n.max(2 * t.capacity())];
+        t.truncate(n);
+    } else if t.len() < n {
+        t.resize(n, 0);
+    } else {
+        t.truncate(n);
+    }
+    let mut ok = true;
+    // rows `len` of byte c from the cursor: their entries, and the cursor's one step
+    #[inline(always)]
+    fn run(e: &mut [u32], c: usize, next: &mut [u32; 256], lim: &[u32; 256], ok: &mut bool) {
+        let s = next[c];
+        let len = e.len() as u32;
+        *ok &= s <= lim[c] && lim[c] - s >= len;
+        let base = c as u32 | s << 8;
+        for (j, x) in e.iter_mut().enumerate() {
+            *x = base.wrapping_add((j as u32) << 8);
+        }
+        next[c] = s.wrapping_add(len);
+    }
+    let mut rows = t.chunks_exact_mut(16);
+    let mut cols = ll.chunks_exact(16);
+    for (e, w) in (&mut rows).zip(&mut cols) {
+        let joins = run_joins(w);
+        if joins == ALL_JOINED {
+            run(e, row_byte(w, 0), &mut next, &lim, &mut ok);
+        } else if joins != 0 && few_runs(joins) {
+            // bit j set: row j of the window starts a run
+            let mut heads = joins ^ 0xffff;
+            while heads != 0 {
+                let j = heads.trailing_zeros() as usize;
+                heads &= heads - 1;
+                let len = (heads | 1 << 16).trailing_zeros() as usize - j;
+                run(&mut e[j..j + len], row_byte(w, j), &mut next, &lim, &mut ok);
+            }
+        } else {
+            for (j, x) in e.iter_mut().enumerate() {
+                let c = row_byte(w, j);
+                let s = next[c];
+                ok &= s < lim[c];
+                *x = c as u32 | s << 8;
+                next[c] = s.wrapping_add(1);
+            }
+        }
+    }
+    for (x, &c) in rows.into_remainder().iter_mut().zip(cols.remainder()) {
+        let c = c as usize;
+        let s = next[c];
+        ok &= s < lim[c];
+        *x = c as u32 | s << 8;
+        next[c] = s.wrapping_add(1);
+    }
+    if !ok {
+        t.clear();
+        return false;
+    }
+    true
 }
 
 /// The two-pass build: the last column copied into the table, then each row's link added
