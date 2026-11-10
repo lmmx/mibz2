@@ -83,6 +83,10 @@ pub mod bwt;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
+// (research only, never used by the decoder: design E's line table, for examples/phases.rs's
+// research rows and examples/line_table.rs; docs/journal/2026-11-10-design-e-registration.md)
+#[doc(hidden)]
+pub mod line_table;
 pub mod mtf;
 pub mod parallel;
 mod read;

@@ -98,6 +98,61 @@ class StageSchemas(unittest.TestCase):
         self.assertEqual(share, f"{100 * 300 / 8950:.1f}%")
 
 
+class ResearchRows(unittest.TestCase):
+    """bench 3.5.0: phases' rows not in the total, kept by bench/stages.py and set beside
+    the stage they name (`against:`), paired by run."""
+
+    PHASES = (
+        "  T-vector build                 1.50 c/B   20.0%\n"
+        "  walk, room (used)              4.00 c/B   50.0%\n"
+        "  walk, plain                    9.00 c/B  (not in the total; against: walk)\n"
+        "  line table E: build            0.75 c/B  (not in the total; against: build)\n"
+        "  line table E: build + walk, 32 lanes   6.60 c/B  (not in the total; against: build+walk)\n"
+        "  walk, bitmap (before #4)       5.00 c/B  (not in the total)\n"
+    )
+
+    def test_stages_reads_them(self):
+        import stages
+
+        o = stages.others(self.PHASES)
+        self.assertEqual(o["walk, plain"], {"ps": 9.0, "against": "walk"})
+        self.assertEqual(o["line table E: build"]["against"], "build")
+        self.assertEqual(o["line table E: build + walk, 32 lanes"]["against"], "build+walk")
+        self.assertIsNone(o["walk, bitmap (before #4)"]["against"])
+        # never stages of the total
+        self.assertEqual(set(stages.parse(self.PHASES)), {"build", "walk"})
+
+    def test_paired_by_run_against_their_stage(self):
+        import stages
+
+        o = stages.others(self.PHASES)
+        lines = runs(WITH, WITH)
+        for i, r in enumerate(lines):
+            if r["arm"] == "head":
+                # the rows move with the run; their ratio to their stage does not
+                r["ps_per_byte"] = {k: v * (1 + i / 10) for k, v in WITH.items()}
+                r["others"] = {
+                    k: dict(v, ps=v["ps"] * 1000 * (1 + i / 10)) for k, v in o.items()
+                }
+        st = report.stage_figures(lines, MHZ, True)
+        res = st["arms"]["head"]["research"]
+        self.assertEqual(st["arms"]["base"]["research"], {})
+        self.assertAlmostEqual(res["line table E: build"]["ratio"][0], 0.5)
+        self.assertAlmostEqual(res["line table E: build + walk, 32 lanes"]["ratio"][0], 1.2)
+        self.assertAlmostEqual(res["walk, plain"]["ratio"][0], 2.25)
+        self.assertIsNone(res["walk, bitmap (before #4)"]["ratio"])
+        table = report.stage_lines(st, True)
+        cells = row(table, "line table E: build + walk, 32 lanes")
+        self.assertEqual(cells[2], "build + walk")
+        self.assertTrue(cells[3].startswith("+20.0%"), cells)
+        self.assertEqual(row(table, "walk, bitmap (before #4)")[3], "–")
+
+    def test_absent_before_3_5_0(self):
+        st = report.stage_figures(runs(WITH, WITH), MHZ, True)
+        table = report.stage_lines(st, True)
+        self.assertFalse(any("Rows not in the total" in l for l in table))
+
+
 class Version(unittest.TestCase):
     def test_bench_matches_the_changelog(self):
         # BENCH and bench/CHANGELOG.md's newest entry agree: a bump comes with its entry, an

@@ -35,6 +35,26 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.5.0] - 2026-11-10
+
+### Added
+
+- **The stage harness's rows not in the total, kept and shown** (design E's registration,
+  `docs/journal/2026-11-10-design-e-registration.md`). `bench/stages.py` records each row
+  `examples/phases.rs` prints outside its total (`others`: the walks it does not use, and
+  research rows), with the stage the row names on its line (`against: walk`,
+  `against: build+walk`). `bench/report.py` sets each beside that stage in a table under the
+  stage table: the row's median and its ratio to the stage in the same run, paired by run
+  (the geometric mean and its 95% interval). A new table beside the others: no existing
+  figure changes. The rows' labels gain `against:` in their parenthesis, which the stage
+  table never read.
+- **Design E's research rows in `examples/phases.rs`:** the line table's build, its walk in
+  the bitmap walk's shape and in the flagged walk's, and its build and walk together, each
+  against the stage it stands in for. They are passes of their own after the others, so the
+  stage table's figures and their passes are as before. Each phases run takes 2 × PASSES
+  more decodes of the file (4 at CI's `STAGE_REPEATS` of 2), on the head arm only, since a
+  base without them prints none.
+
 ## [3.4.0] - 2026-11-09
 
 ### Fixed

@@ -27,6 +27,14 @@
 //! assembly timed as one, the check that timing them apart changed neither, its passes
 //! interleaved with the split ones (which goes first alternating). The pass that `decode`
 //! runs is checked against `decode`'s output.
+//!
+//! Research rows (design E, the line table: src/line_table.rs, docs/journal/
+//! 2026-11-10-design-e-registration.md), never in the total: passes of their own in which
+//! E's table is built in the T-vector's place and walked backward in the walk's, segmented
+//! in the bitmap walk's shape (12 lanes, 256 segments) and in the flagged walk's (32 lanes,
+//! 512 segments, each lane's next line prefetched); RLE1 and the CRC check their output.
+//! Each row not in the total names the stage it stands against (`against:`), which
+//! bench/stages.py records and bench/report.py sets it beside, paired by run.
 
 use std::time::Instant;
 
@@ -34,6 +42,7 @@ use mibz2::bwt::{
     build, walk, walk_fast, walk_segments_flagged, walk_segments_room, walk_segments_room_parts,
     SegScratch, TVector,
 };
+use mibz2::line_table::{LineTable, Scratch, BITMAP_SHAPE, FLAGGED_SHAPE};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{crc, mtf, rle, Kernels};
 
@@ -116,6 +125,31 @@ fn pass(data: &[u8], k: Kernels, w: Option<Walk>, keep: bool) -> (Times, usize, 
     (tm, n, blocks, decoded)
 }
 
+/// One decode of the file in decode order with design E's line table in the T-vector's
+/// place and its segmented walk (`L` lanes, `segments` segments, `PF`: prefetch) in the
+/// walk's; returns E's build's and walk's times. RLE1 and the CRC check every block.
+fn pass_e<const L: usize, const PF: bool>(data: &[u8], k: Kernels, segments: usize) -> (f64, f64) {
+    let (mut build_s, mut walk_s) = (0.0, 0.0);
+    let mut sc = Scanner::new(SliceSource(data));
+    let (mut syms, mut ll, mut counts) = (Vec::new(), Vec::new(), [0u32; 256]);
+    let (mut e, mut s) = (LineTable::new(), Scratch::default());
+    let (mut walked, mut out) = (Vec::new(), Vec::new());
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let t = Instant::now();
+        assert!(e.build(&ll, &counts), "E's build refused a block's column");
+        build_s += t.elapsed().as_secs_f64();
+        let t = Instant::now();
+        e.walk_segments::<L, PF>(b.orig_ptr, &mut walked, &mut s, segments);
+        walk_s += t.elapsed().as_secs_f64();
+        out.clear();
+        rle::unrle(&walked, &mut out, k).unwrap();
+        assert_eq!(crc::crc32(&out, k), b.crc, "a block's CRC, from E's walk");
+        syms = b.syms;
+    }
+    (build_s, walk_s)
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let path = args.get(1).expect("usage: phases FILE.bz2 [PASSES] [GHZ]");
@@ -179,6 +213,15 @@ fn main() {
             .fold(f64::INFINITY, f64::min);
         (name, best)
     });
+    // Design E (research): each stage's fastest pass, as above, E's build from every pass
+    let (mut e_build, mut e_walk12, mut e_walk32) = (f64::INFINITY, f64::INFINITY, f64::INFINITY);
+    assert_eq!((BITMAP_SHAPE.0, FLAGGED_SHAPE.0), (12, 32));
+    for _ in 0..passes {
+        let (b, w) = pass_e::<12, false>(&data, k, BITMAP_SHAPE.1);
+        (e_build, e_walk12) = (e_build.min(b), e_walk12.min(w));
+        let (b, w) = pass_e::<32, true>(&data, k, FLAGGED_SHAPE.1);
+        (e_build, e_walk32) = (e_build.min(b), e_walk32.min(w));
+    }
 
     let n = n as f64;
     let cb = |s: f64| s * ghz * 1e9 / n;
@@ -208,12 +251,30 @@ fn main() {
         100.0 * tm.assemble / total
     );
     println!(
-        "  {:28} {:6.2} c/B  (not in the total: the walk's row, timed as one)",
+        "  {:28} {:6.2} c/B  (not in the total: the walk's row, timed as one; against: walk)",
         "walk, room + assembly as one",
         cb(as_one)
     );
     for (name, s) in others {
-        println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));
+        println!(
+            "  {name:28} {:6.2} c/B  (not in the total; against: walk)",
+            cb(s)
+        );
+    }
+    for (name, s, against) in [
+        ("line table E: build", e_build, "build"),
+        ("line table E: walk, 12 lanes", e_walk12, "walk"),
+        ("line table E: walk, 32 lanes, prefetch", e_walk32, "walk"),
+        (
+            "line table E: build + walk, 32 lanes",
+            e_build + e_walk32,
+            "build+walk",
+        ),
+    ] {
+        println!(
+            "  {name:28} {:6.2} c/B  (not in the total; against: {against})",
+            cb(s)
+        );
     }
     println!(
         "  {:28} {:6.2} c/B  = {:.0} MB/s on one thread",
