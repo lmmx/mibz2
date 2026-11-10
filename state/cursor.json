@@ -1627,11 +1627,14 @@
     },
     {
       "trigger_comment_id": 6759385543,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "482df588e2a97b99c6797c7bc2a24098015968dd"
+      "source_commit": "482df588e2a97b99c6797c7bc2a24098015968dd",
+      "report_path": "state/reports/share-nothing-delta-6759385543/report.md",
+      "report_commit": "f113a581f1cfe21d53fb17da53de8b942bf5d894",
+      "disposition": "PROCEED to freeze exact diagnostic: interpretation and fail-closed repairs accepted; gate stalls are bounded operational risk, quota limited to visible path."
     }
   ],
   "active_delegations": [],
