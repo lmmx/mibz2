@@ -16,6 +16,8 @@ measurably faster, correct production decoder, properly released. MODE.md says t
 | [CODEX-PILOT.md](CODEX-PILOT.md) / [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md) | Codex implementation mandate, routed issue inbox #363, manual wake and reporting |
 | [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md) / [WORK-ACTING-COORDINATOR.md](WORK-ACTING-COORDINATOR.md) | owner-activated coordination handoff between Claude and Work, with safety boundaries |
 
+**Optional event monitor:** [SPEC.COORDINATOR-ACTING-MONITOR.md](SPEC.COORDINATOR-ACTING-MONITOR.md), created only by Louis in Work using [WORK-TASKS.md](WORK-TASKS.md) after adoption. A checked-in spec is not an installed task.
+
 **Where the rest lives:**
 - **Each role's state:** `team-state/<role>`, a continuation of its old branch, holding its
   cursor and records. These branches have no PR, and the workflows' filters run no CI on them.
