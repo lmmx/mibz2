@@ -1,5 +1,0 @@
-# The bandwidth titration (docs/journal/2026-11-10-bandwidth-titration.md, section 4).
-# The commit the registration, the harness and the recipe are frozen at: just
-# bench-bw-titrate's measured inputs must match it exactly. Re-frozen if review changes them,
-# before any run.
-frozen eed6cc7705c329ed685c00411cf2330e11b95752

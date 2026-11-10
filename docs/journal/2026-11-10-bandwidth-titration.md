@@ -1,5 +1,12 @@
 # 2026-11-10: Is the i9's ceiling memory bandwidth? A simulated ledger, and a titration to test it
 
+> **Withdrawn, and its recipe removed (2026-11-10).** The Researcher's REVISE (6755766766)
+> stands and no run was made. When master's `bench-par-scan` (#317) was merged into this
+> branch, the `bench-bw-titrate` recipe and `bench/bw-titrate.frozen` were dropped rather than
+> carried: a withdrawn diagnostic should not be runnable. The harness
+> (`examples/bw_titrate.rs`) and reporter stay as a record; the recipe is at commit `2c70fd13e`.
+
+
 **Status: a hypothesis with a ledger, and a registered diagnostic. No workstation data yet.**
 - **The hypothesis.** At the plan the i9 ships (three pipelined teams of three), the decoder's
   throughput is set by memory bandwidth: T = W ÷ β, with W the bandwidth the machine can move

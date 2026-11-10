@@ -6,8 +6,14 @@
 //! ```text
 //! par_scan FILE.bz2 [finder|check|adversarial|fuzz|time|shapes|all] [ROUNDS]
 //! par_scan FILE.bz2 knee ROUNDS WORKERS      (WORKERS: a list, as 1,2,4,6,8,10)
+//! par_scan - faults
 //!   finder       the finder's rate on FILE (looped), its candidates against `mibz2::scan`
-//!   check        FILE decoded by the harness at 1-4 workers, against `mibz2::decode`
+//!   check        `mibz2::decode`'s bytes against libbzip2's; FILE decoded by the harness
+//!                at 1-4 and 10 workers, against `mibz2::decode`; the process's CPU mask
+//!                and its threads' (sampled), and its peak resident memory
+//!   faults       a panic injected at each role (a worker, the finder, the scanner, the
+//!                joiner) of each arm, on a small input made in memory: each decode must
+//!                end with an error or the joiner's panic, never Ok, never a hang (untimed)
 //!   adversarial  magics inside valid blocks, a valid block spliced into a payload,
 //!                a stream after trailing bytes: the harness against the sequential decoder
 //!   fuzz         ROUNDS (at least 1500) mutated small files: the bytes before an error and
@@ -91,6 +97,10 @@ impl Finder {
                 pair[idx >> 6] |= 1 << (idx & 63);
             }
         }
+        // (a safe constructor: AVX2 only where asked for and the CPU has it, so no caller can
+        // reach `find_avx2` on a CPU without it; R1 of the B5 review)
+        #[cfg(target_arch = "x86_64")]
+        let avx2 = avx2 && std::is_x86_feature_detected!("avx2");
         #[cfg(not(target_arch = "x86_64"))]
         let avx2 = {
             let _ = avx2;
@@ -113,10 +123,16 @@ impl Finder {
     fn find(&self, data: &[u8], from: usize, to: usize, v: &mut Vec<Cand>) {
         // (a magic needs 6 bytes from its first)
         let to = to.min(data.len().saturating_sub(5));
+        // (nothing to search: and `from` past the end must never reach the bounds below,
+        // where `k + 40` could wrap; R2 of the B5 review)
+        if from >= to {
+            return;
+        }
         let mut k = from;
         #[cfg(target_arch = "x86_64")]
         if self.avx2 {
-            // SAFETY: `avx2` is set only where the CPU has AVX2
+            // SAFETY: `avx2` is set only where the CPU has AVX2 (`Finder::new` checks it), and
+            // `from < to <= data.len() - 5` here, so `find_avx2`'s bounds cannot wrap
             k = unsafe { self.find_avx2(data, k, to, v) };
         }
         while k < to {
@@ -303,6 +319,8 @@ struct FindState {
     results: BTreeMap<usize, Outcome>,
     free: Vec<Vec<u8>>,
     stop: bool,
+    /// a helper thread (the finder or a worker) panicked: nothing it owed will come
+    failed: bool,
     stats: Stats,
 }
 
@@ -320,15 +338,92 @@ struct Run {
 /// The input the finder searches at a time
 const FIND_CHUNK: usize = 256 << 10;
 
+// ---- Liveness: every thread's failure reaches every waiter ----
+//
+// Each role that another waits on (the finder, the scanner, the workers) holds a guard
+// that, if the thread unwinds, marks the shared state failed and stopped and wakes every
+// waiter; each wait checks that mark. The joiner (the caller's thread) holds a guard that
+// stops the helpers and wakes them however it leaves, a panic included. Then the helpers'
+// handles are joined, and a helper that panicked makes the decode an error, even where the
+// chain had finished: a decode returns, or its panic propagates, and it never waits on a
+// thread that has gone.
+
+/// Runs its closure when dropped, on an ordinary exit and on unwinding alike
+struct OnDrop<F: FnMut()>(F);
+
+impl<F: FnMut()> Drop for OnDrop<F> {
+    fn drop(&mut self) {
+        (self.0)()
+    }
+}
+
+/// A panic injected at one role's boundary, for the fault tests (`faults`); `None` in
+/// every decode that is measured or checked
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Fault {
+    None,
+    /// a worker, after claiming its first job and before reporting it
+    Worker,
+    /// the finder, after searching its first chunk and before publishing it
+    Finder,
+    /// the scanner, after issuing its first block
+    Scanner,
+    /// the joiner, after accepting its first block
+    Joiner,
+}
+
+fn inject(fault: Fault, here: Fault) {
+    if fault == here && here != Fault::None {
+        panic!("par_scan: injected fault: {here:?}");
+    }
+}
+
+/// The error a decode returns when a helper thread panicked
+fn helper_failed(who: &str) -> Error {
+    Error {
+        kind: ErrorKind::Internal(format!("par_scan: {who} panicked")),
+        block: None,
+        bit: None,
+    }
+}
+
 /// `data` decoded by a finder thread and `threads` workers that each read and decode a
 /// block, at most `slots` candidates ahead of the chain
 fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder) -> Run {
+    decode_find_with(data, threads, slots, k, f, Fault::None)
+}
+
+fn decode_find_with(
+    data: &[u8],
+    threads: usize,
+    slots: usize,
+    k: Kernels,
+    f: &Finder,
+    fault: Fault,
+) -> Run {
     let shared = (Mutex::new(FindState::default()), Condvar::new());
     let (state, cv) = (&shared.0, &shared.1);
     let slots = slots.max(threads);
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
+    // a helper that unwinds: the state failed and stopped, every waiter woken
+    let on_panic = move || {
+        if std::thread::panicking() {
+            let mut st = lock(state);
+            st.failed = true;
+            st.stop = true;
+            drop(st);
+            cv.notify_all();
+        }
+    };
     let res = std::thread::scope(|s| {
-        s.spawn(move || {
+        // the joiner, however it leaves: the helpers stopped and woken
+        let stop_all = OnDrop(move || {
+            lock(state).stop = true;
+            cv.notify_all();
+        });
+        let mut helpers = Vec::with_capacity(threads + 1);
+        helpers.push(s.spawn(move || {
+            let _failed = OnDrop(on_panic);
             let t0 = Instant::now();
             let (mut v, mut from) = (Vec::new(), 0);
             let mut n = [0u64; 2];
@@ -336,6 +431,7 @@ fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder
                 let to = (from + FIND_CHUNK).min(data.len());
                 v.clear();
                 f.find(data, from, to, &mut v);
+                inject(fault, Fault::Finder);
                 let mut st = lock(state);
                 if st.stop {
                     return;
@@ -366,9 +462,10 @@ fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder
             st.stats.find_s = t0.elapsed().as_secs_f64();
             drop(st);
             cv.notify_all();
-        });
+        }));
         for _ in 0..threads {
-            s.spawn(move || {
+            helpers.push(s.spawn(move || {
+                let _failed = OnDrop(on_panic);
                 let mut sc: Scratch = Scratch::default();
                 let mut syms = Vec::new();
                 loop {
@@ -395,6 +492,7 @@ fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder
                             .unwrap_or(st.level);
                         (i, st.tasks[i].bit, level, st.free.pop().unwrap_or_default())
                     };
+                    inject(fault, Fault::Worker);
                     buf.clear();
                     let level = if level == 0 { 9 } else { level };
                     let res = match one_item(data, bit, level, k, &mut sc, &mut syms, &mut buf) {
@@ -412,12 +510,19 @@ fn decode_find(data: &[u8], threads: usize, slots: usize, k: Kernels, f: &Finder
                     drop(st);
                     cv.notify_all();
                 }
-            });
+            }));
         }
-        let res = chain(data, k, &mut out, state, cv);
-        lock(state).stop = true;
-        cv.notify_all();
-        res
+        let res = chain(data, k, &mut out, state, cv, fault);
+        drop(stop_all);
+        // (every helper joined here: one that panicked makes the decode an error)
+        let panicked = helpers
+            .into_iter()
+            .fold(false, |p, h| h.join().is_err() | p);
+        if panicked {
+            Err(helper_failed("the finder or a worker"))
+        } else {
+            res
+        }
     });
     // (results the chain never came to, where it stopped at an error)
     let mut st = lock(state);
@@ -440,9 +545,17 @@ fn drop_result(st: &mut FindState, o: Outcome) {
 
 /// The worker's result for the candidate at exactly `at`, decoded at `level`; None where
 /// there is none to use (the joiner then reads the item itself)
-fn take(state: &Mutex<FindState>, cv: &Condvar, at: u64, level: u32) -> Option<Outcome> {
+fn take(
+    state: &Mutex<FindState>,
+    cv: &Condvar,
+    at: u64,
+    level: u32,
+) -> Result<Option<Outcome>, Error> {
     let mut st = lock(state);
     loop {
+        if st.failed {
+            return Err(helper_failed("the finder or a worker"));
+        }
         // candidates before the chain's place: inside a block it accepted
         let before = st.base;
         while st.base < st.tasks.len() && st.tasks[st.base].bit < at {
@@ -459,7 +572,7 @@ fn take(state: &Mutex<FindState>, cv: &Condvar, at: u64, level: u32) -> Option<O
         let b = st.base;
         if b < st.tasks.len() {
             if st.tasks[b].bit != at {
-                return None; // (the finder missed a magic: it never does)
+                return Ok(None); // (the finder missed a magic: it never does)
             }
             if let Some(o) = st.results.remove(&b) {
                 st.base += 1;
@@ -469,13 +582,13 @@ fn take(state: &Mutex<FindState>, cv: &Condvar, at: u64, level: u32) -> Option<O
                     if let Ok((_, _, buf)) = o.res {
                         st.free.push(buf);
                     }
-                    return None;
+                    return Ok(None);
                 }
                 st.stats.accepted += 1;
-                return Some(o);
+                return Ok(Some(o));
             }
         } else if st.found_upto > at {
-            return None; // (as above)
+            return Ok(None); // (as above)
         }
         st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
     }
@@ -490,6 +603,7 @@ fn chain(
     out: &mut Vec<u8>,
     state: &Mutex<FindState>,
     cv: &Condvar,
+    fault: Fault,
 ) -> Result<(), Error> {
     let mut sc: Scratch = Scratch::default();
     let mut syms = Vec::new();
@@ -525,9 +639,11 @@ fn chain(
             };
             let mut br = Bits::at(data, at);
             let magic = (br.bits(24) as u64) << 24 | br.bits(24) as u64;
-            let got = (magic == BLOCK_MAGIC && !br.overran())
-                .then(|| take(state, cv, at, level))
-                .flatten();
+            let got = if magic == BLOCK_MAGIC && !br.overran() {
+                take(state, cv, at, level)?
+            } else {
+                None
+            };
             let item = match got {
                 Some(o) => {
                     let (end, crc, buf) = o.res.map_err(err)?;
@@ -547,6 +663,7 @@ fn chain(
                     combined = combined.rotate_left(1) ^ crc;
                     blocks += 1;
                     bit = end;
+                    inject(fault, Fault::Joiner);
                 }
                 One::End { end, stored } => {
                     if stored != combined {
@@ -574,6 +691,8 @@ struct ScanState {
     taken: u64,
     end: Option<u64>,
     stop: bool,
+    /// a helper thread (the scanner or a worker) panicked: nothing it owed will come
+    failed: bool,
     free_out: Vec<Vec<u8>>,
     free_syms: Vec<Vec<u16>>,
 }
@@ -581,15 +700,36 @@ struct ScanState {
 /// `data` decoded as the library's parallel decoder does it (one scanner thread reading
 /// every block's symbols in order, `threads` workers finishing a block each, at most
 /// `slots` blocks in flight), in this harness's shape: the input a slice, the output
-/// joined once. The control arm: it differs from `decode_find` only in who reads the
-/// symbols.
+/// joined once. The control arm. Besides who reads the symbols, it differs from
+/// `decode_find` in who owns the symbol buffers, in its locking and in having no candidates
+/// or speculative work.
 fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
+    decode_scan_with(data, threads, slots, k, Fault::None)
+}
+
+fn decode_scan_with(data: &[u8], threads: usize, slots: usize, k: Kernels, fault: Fault) -> Run {
     let shared = (Mutex::new(ScanState::default()), Condvar::new());
     let (state, cv) = (&shared.0, &shared.1);
     let slots = slots.max(threads) as u64;
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
+    // (as in decode_find_with)
+    let on_panic = move || {
+        if std::thread::panicking() {
+            let mut st = lock(state);
+            st.failed = true;
+            st.stop = true;
+            drop(st);
+            cv.notify_all();
+        }
+    };
     let res = std::thread::scope(|s| {
-        s.spawn(move || {
+        let stop_all = OnDrop(move || {
+            lock(state).stop = true;
+            cv.notify_all();
+        });
+        let mut helpers = Vec::with_capacity(threads + 1);
+        helpers.push(s.spawn(move || {
+            let _failed = OnDrop(on_panic);
             let mut sc = Scanner::new(SliceSource(data));
             loop {
                 let syms = {
@@ -615,6 +755,7 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                         st.issued += 1;
                         drop(st);
                         cv.notify_all();
+                        inject(fault, Fault::Scanner);
                     }
                     other => {
                         if let Err(e) = other {
@@ -629,9 +770,10 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                     }
                 }
             }
-        });
+        }));
         for _ in 0..threads {
-            s.spawn(move || {
+            helpers.push(s.spawn(move || {
+                let _failed = OnDrop(on_panic);
                 let mut sc: Scratch = Scratch::default();
                 loop {
                     let ((index, bit, symbols), mut buf) = {
@@ -646,6 +788,7 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                             st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
                         }
                     };
+                    inject(fault, Fault::Worker);
                     buf.clear();
                     let res = decode_block(&symbols, k, &mut sc, &mut buf)
                         .map(|_| buf)
@@ -660,11 +803,14 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                     drop(st);
                     cv.notify_all();
                 }
-            });
+            }));
         }
         let mut st = lock(state);
         let res = loop {
             let taken = st.taken;
+            if st.failed {
+                break Err(helper_failed("the scanner or a worker"));
+            }
             if let Some(r) = st.results.remove(&taken) {
                 st.taken += 1;
                 drop(st);
@@ -672,6 +818,7 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                 match r {
                     Ok(buf) => {
                         out.extend_from_slice(&buf);
+                        inject(fault, Fault::Joiner);
                         st = lock(state);
                         st.free_out.push(buf);
                     }
@@ -686,10 +833,16 @@ fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
                 st = cv.wait(st).unwrap_or_else(|e| e.into_inner());
             }
         };
-        st.stop = true;
         drop(st);
-        cv.notify_all();
-        res
+        drop(stop_all);
+        let panicked = helpers
+            .into_iter()
+            .fold(false, |p, h| h.join().is_err() | p);
+        if panicked {
+            Err(helper_failed("the scanner or a worker"))
+        } else {
+            res
+        }
     });
     Run {
         out,
@@ -726,14 +879,65 @@ extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
 }
 
-/// This process's CPU time so far (user and system, every thread), in microseconds
+/// A `getrusage`: libc's, or a stand-in that fails, to test the checked path
+type GetRusage = unsafe extern "C" fn(i32, *mut Rusage) -> i32;
+
+/// The stand-in for an injected failure: it writes nothing and returns -1, as a failed call
+/// does (the buffer stays as the caller zeroed it)
+extern "C" fn getrusage_fails(_who: i32, _usage: *mut Rusage) -> i32 {
+    -1
+}
+
+/// The `getrusage` to call: libc's, unless `inject` is `getrusage-fails` (the dry run's
+/// fault injection, from PAR_SCAN_INJECT; the recipe refuses a measured run with it set).
+/// Any other value is refused.
+fn getrusage_for(inject: Option<&str>) -> GetRusage {
+    match inject {
+        None => getrusage,
+        Some("getrusage-fails") => getrusage_fails,
+        Some(other) => panic!("par_scan: PAR_SCAN_INJECT={other:?} is not a known fault"),
+    }
+}
+
+/// This process's CPU time so far (user and system, every thread), in microseconds. A
+/// failed `getrusage` is a panic, never a figure: a cell without its CPU time is no cell.
 fn cpu_micros() -> u64 {
+    static CALL: std::sync::OnceLock<GetRusage> = std::sync::OnceLock::new();
+    let call = *CALL.get_or_init(|| {
+        let inject = std::env::var("PAR_SCAN_INJECT").ok();
+        getrusage_for(inject.as_deref())
+    });
+    cpu_micros_by(call)
+}
+
+/// `cpu_micros` with the given `getrusage`: the checked path itself, which the tests drive
+/// with stand-ins (a failed call, malformed times, known times)
+fn cpu_micros_by(call: GetRusage) -> u64 {
     let mut r = Rusage::default();
-    // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
-    unsafe { getrusage(0, &mut r) };
-    let t = |tv: [i64; 2]| tv[0] as u64 * 1_000_000 + tv[1] as u64;
+    // SAFETY: `call` is libc's getrusage or one of this file's stand-ins, which write within
+    // the buffer or not at all. RUSAGE_SELF (0) and a valid, exclusive pointer to a zeroed
+    // `Rusage`, which has struct rusage's size and layout on x86_64 and aarch64 Linux (LP64:
+    // two timevals of two i64 each, then 14 longs, 144 bytes; checked below at compile
+    // time). The kernel writes only within it; nothing is retained after the call.
+    let rc = unsafe { call(0, &mut r) };
+    if rc != 0 {
+        panic!(
+            "par_scan: getrusage failed ({}): no CPU time to record",
+            std::io::Error::last_os_error()
+        );
+    }
+    let t = |tv: [i64; 2]| {
+        assert!(
+            tv[0] >= 0 && (0..1_000_000).contains(&tv[1]),
+            "par_scan: getrusage gave {tv:?}"
+        );
+        tv[0] as u64 * 1_000_000 + tv[1] as u64
+    };
     t(r.utime) + t(r.stime)
 }
+
+#[cfg(all(target_os = "linux", target_pointer_width = "64"))]
+const _: () = assert!(std::mem::size_of::<Rusage>() == 144);
 
 /// This process's CPU seconds so far
 fn cpu_seconds() -> f64 {
@@ -910,8 +1114,99 @@ fn cmd_finder(data: &[u8], decoded: usize) {
 
 // ---- check: the harness against the decoders ----
 
+/// A field of /proc/self/status (or of a thread's), as written there
+fn status_field(path: &str, key: &str) -> String {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find_map(|l| l.strip_prefix(key).map(|v| v.trim().to_string()))
+        })
+        .unwrap_or_else(|| "?".into())
+}
+
+/// The CPUs each of this process's threads may run on (sched_getaffinity, as the kernel
+/// reports it in /proc/self/task/*/status), and how many threads have each set
+fn thread_masks() -> BTreeMap<String, usize> {
+    let mut m = BTreeMap::new();
+    if let Ok(dir) = std::fs::read_dir("/proc/self/task") {
+        for e in dir.flatten() {
+            let p = e.path().join("status");
+            *m.entry(status_field(&p.to_string_lossy(), "Cpus_allowed_list:"))
+                .or_insert(0) += 1;
+        }
+    }
+    m
+}
+
+/// Where the process may run: its CPU mask, the CPUs Rust sees, its cgroup's CPU quota.
+/// The harness never sets an affinity: every thread inherits this mask.
+fn placement() -> String {
+    format!(
+        "process Cpus_allowed_list {}; available_parallelism {}; cgroup cpu.max {}",
+        status_field("/proc/self/status", "Cpus_allowed_list:"),
+        std::thread::available_parallelism().map_or(0, |n| n.get()),
+        std::fs::read_to_string("/sys/fs/cgroup/cpu.max")
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|_| "?".into())
+    )
+}
+
+/// This process's peak resident memory so far (VmHWM)
+fn peak_rss() -> String {
+    status_field("/proc/self/status", "VmHWM:")
+}
+
+/// `run` with a thread beside it sampling every thread's CPU mask until it returns: the
+/// most threads seen at once, and each mask with the most threads seen holding it. The
+/// sampler stops however `run` ends: a panic in it propagates, and never leaves the scope
+/// waiting on the sampler.
+fn sampled<T: Send>(run: impl FnOnce() -> T + Send) -> (T, usize, BTreeMap<String, usize>) {
+    let done = std::sync::atomic::AtomicBool::new(false);
+    std::thread::scope(|s| {
+        // (set on every exit, an unwinding `run` included)
+        let _stop = OnDrop(|| done.store(true, std::sync::atomic::Ordering::Relaxed));
+        let sampler = s.spawn(|| {
+            let (mut most, mut masks) = (0, BTreeMap::new());
+            while !done.load(std::sync::atomic::Ordering::Relaxed) {
+                let m = thread_masks();
+                most = most.max(m.values().sum::<usize>());
+                for (k, n) in m {
+                    let e = masks.entry(k).or_insert(0);
+                    *e = n.max(*e);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(2));
+            }
+            (most, masks)
+        });
+        let v = run();
+        done.store(true, std::sync::atomic::Ordering::Relaxed);
+        let (most, masks) = sampler.join().unwrap();
+        (v, most, masks)
+    })
+}
+
+/// libbzip2's decode of `data` (every stream): a second decoder's bytes, by its own code
+fn libbzip2_decode(data: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    bzip2::read::MultiBzDecoder::new(data)
+        .read_to_end(&mut out)
+        .expect("libbzip2 decodes the input");
+    out
+}
+
 fn cmd_check(data: &[u8], want: &[u8]) {
     let (k, f) = (Kernels::detect(), Finder::detect());
+    // the reference itself against a second decoder: mibz2::decode's bytes are libbzip2's
+    assert!(
+        libbzip2_decode(data) == want,
+        "mibz2::decode's bytes differ from libbzip2's"
+    );
+    println!(
+        "check: mibz2::decode's bytes equal libbzip2's ({} bytes)",
+        want.len()
+    );
+    println!("check: placement: {}", placement());
     for threads in 1..=4 {
         let r = decode_find(data, threads, 4 * threads, k, &f);
         assert_eq!(r.res, Ok(()), "find, {threads} workers");
@@ -930,6 +1225,150 @@ fn cmd_check(data: &[u8], want: &[u8]) {
     let r = decode_find(data, 3, 1, Kernels::scalar(), &Finder::new(false));
     assert!(r.res == Ok(()) && r.out == want);
     println!("check: scalar finder, scalar kernels, 3 workers: equal");
+    // the grid's largest count: equal, and where its threads may run. Each arm's decode
+    // is t workers, one finder or scanner thread and the caller's thread (the joiner),
+    // so 10 workers are 12 threads of the arm, sharing the machine's CPUs with each
+    // other (and here with the sampler)
+    {
+        let t = 10;
+        let (r, most, masks) = sampled(|| decode_find(data, t, 4 * t, k, &f));
+        assert!(r.res == Ok(()) && r.out == want, "find, {t} workers");
+        println!(
+            "check: {t} workers: find equal; placement: at most {most} threads at once \
+             (the sampler's included); their CPU masks {masks:?}"
+        );
+        let (r, most, masks) = sampled(|| decode_scan(data, t, 4 * t, k));
+        assert!(r.res == Ok(()) && r.out == want, "scan, {t} workers");
+        println!(
+            "check: {t} workers: scan equal; placement: at most {most} threads at once \
+             (the sampler's included); their CPU masks {masks:?}"
+        );
+    }
+    println!("check: peak resident memory {}", peak_rss());
+}
+
+// ---- faults: a panic at each role's boundary ends the decode, never hangs it ----
+
+/// A small multi-stream input of many blocks, made here: 60 lines of text a stream, ten
+/// streams at level 1
+fn fault_input() -> Vec<u8> {
+    let mut rng = Rng(0x2468_ace0_1357_9bdf);
+    let words = [
+        "scan", "find", "block", "magic", "chain", "worker", "joiner", "bit",
+    ];
+    let mut data = Vec::new();
+    for _ in 0..10 {
+        let mut text = Vec::new();
+        while text.len() < 250_000 {
+            text.extend_from_slice(words[rng.below(8) as usize].as_bytes());
+            text.extend_from_slice(&rng.next().to_le_bytes()[..rng.below(4) as usize]);
+            text.push(b' ');
+        }
+        data.extend_from_slice(&compress(&text, 1));
+    }
+    data
+}
+
+/// How a faulted decode ended
+#[derive(Debug, PartialEq, Eq)]
+enum Ended {
+    /// it returned this error
+    Error(String),
+    /// its panic reached the caller
+    Panic(String),
+    /// it returned Ok: the fault went unnoticed
+    Ok,
+}
+
+/// Each arm with a panic injected at each of its roles, at 1 and 4 workers, and the
+/// joiner's panic again through `sampled` (the check's wrapper): each must end within
+/// `deadline` seconds, with an error (a helper's panic) or a panic (the joiner's), never
+/// Ok and never a hang. Untimed: the deadline only bounds the wait. Returns the lines it
+/// reports, or the first failure.
+fn run_faults(deadline: u64) -> Result<Vec<String>, String> {
+    let data = std::sync::Arc::new(fault_input());
+    let want = mibz2::decode(&data).unwrap();
+    let mut lines = vec![format!(
+        "faults: input {} bytes -> {} bytes, {} blocks",
+        data.len(),
+        want.len(),
+        mibz2::scan(&data).count()
+    )];
+    let cases = [
+        ("find", Fault::Worker),
+        ("find", Fault::Finder),
+        ("find", Fault::Joiner),
+        ("scan", Fault::Worker),
+        ("scan", Fault::Scanner),
+        ("scan", Fault::Joiner),
+        ("find, sampled", Fault::Joiner),
+        ("scan, sampled", Fault::Joiner),
+    ];
+    for t in [1, 4] {
+        for (arm, fault) in cases {
+            let (tx, rx) = std::sync::mpsc::channel();
+            let d = data.clone();
+            // (detached: a hang is reported, and the process then exits)
+            std::thread::spawn(move || {
+                let r = std::panic::catch_unwind(|| {
+                    let (k, f) = (Kernels::detect(), Finder::detect());
+                    match arm {
+                        "find" => decode_find_with(&d, t, 4 * t, k, &f, fault).res,
+                        "scan" => decode_scan_with(&d, t, 4 * t, k, fault).res,
+                        "find, sampled" => {
+                            sampled(|| decode_find_with(&d, t, 4 * t, k, &f, fault).res).0
+                        }
+                        _ => sampled(|| decode_scan_with(&d, t, 4 * t, k, fault).res).0,
+                    }
+                });
+                let ended = match r {
+                    Ok(Ok(())) => Ended::Ok,
+                    Ok(Err(e)) => Ended::Error(e.to_string()),
+                    Err(p) => Ended::Panic(
+                        p.downcast_ref::<String>()
+                            .cloned()
+                            .or_else(|| p.downcast_ref::<&str>().map(|s| s.to_string()))
+                            .unwrap_or_default(),
+                    ),
+                };
+                let _ = tx.send(ended);
+            });
+            let case = format!("{arm}, {t} workers, a panic in the {fault:?}");
+            match rx.recv_timeout(std::time::Duration::from_secs(deadline)) {
+                Err(_) => return Err(format!("faults: {case}: HANG (no end in {deadline} s)")),
+                Ok(Ended::Ok) => return Err(format!("faults: {case}: returned Ok")),
+                Ok(Ended::Error(e)) if fault != Fault::Joiner && e.contains("panicked") => {
+                    lines.push(format!("faults: {case}: ended with an error: {e}"))
+                }
+                Ok(Ended::Panic(m)) if fault == Fault::Joiner && m.contains("injected") => {
+                    lines.push(format!("faults: {case}: ended, its panic propagated: {m}"))
+                }
+                Ok(other) => return Err(format!("faults: {case}: ended unexpectedly: {other:?}")),
+            }
+        }
+    }
+    Ok(lines)
+}
+
+fn cmd_faults() {
+    // (the injected panics' own messages are expected: kept off stderr)
+    std::panic::set_hook(Box::new(|i| {
+        if !i.to_string().contains("injected fault") {
+            eprintln!("{i}");
+        }
+    }));
+    match run_faults(120) {
+        Ok(lines) => {
+            for l in lines {
+                println!("{l}");
+            }
+            println!("faults: every case ended, none hung");
+        }
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    }
 }
 
 // ---- adversarial inputs ----
@@ -1521,15 +1960,20 @@ fn cmd_knee(data: &[u8], want: &[u8], rounds: usize, workers: &[usize]) {
         }
         eprintln!("  round {round}: loadavg {before} -> {}", loadavg());
     }
+    eprintln!("knee: peak resident memory {}", peak_rss());
 }
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let path = args.get(1).expect(
-        "usage: par_scan FILE.bz2 [finder|check|adversarial|fuzz|time|shapes|all] [ROUNDS]",
+        "usage: par_scan FILE.bz2 [finder|check|faults|adversarial|fuzz|time|shapes|all] [ROUNDS]",
     );
     let cmd = args.get(2).map_or("all", |s| s.as_str());
     let rounds: usize = args.get(3).map_or(7, |s| s.parse().unwrap());
+    if cmd == "faults" {
+        // (its own input, made in memory: FILE is not read)
+        return cmd_faults();
+    }
     let data = std::fs::read(path).unwrap();
     let want = mibz2::decode(&data).unwrap();
     if cmd == "knee" {
@@ -1548,6 +1992,12 @@ fn main() {
             data.len(),
             want.len()
         );
+        // (each cell: t workers, a finder or scanner thread and this thread, the joiner,
+        // none pinned)
+        eprintln!("knee: placement: {}", placement());
+        if let Ok(f) = std::env::var("PAR_SCAN_INJECT") {
+            eprintln!("knee: INJECTED FAULT {f:?}: not a measurement");
+        }
         return cmd_knee(&data, &want, rounds, &workers);
     }
     println!(
@@ -1574,5 +2024,607 @@ fn main() {
     }
     if all || cmd == "shapes" {
         cmd_shapes(&want, rounds.min(5));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A panic at every role of both arms ends the decode (natively: threads and libbzip2)
+    #[cfg(not(miri))]
+    #[test]
+    fn faults_end_never_hang() {
+        let lines = run_faults(120).unwrap_or_else(|e| panic!("{e}"));
+        assert_eq!(lines.len(), 1 + 16, "{lines:#?}");
+    }
+
+    /// Bytes with both magics planted at chosen bits (any shift, near either end)
+    fn planted(len: usize, rng: &mut Rng, at: &[(u64, bool)]) -> Vec<u8> {
+        let mut d: Vec<u8> = (0..len).map(|_| rng.next() as u8).collect();
+        for &(bit, end) in at {
+            let m = if end { END_MAGIC } else { BLOCK_MAGIC };
+            for j in 0..48u64 {
+                let b = bit + j;
+                if b / 8 >= len as u64 {
+                    break;
+                }
+                let (byte, sh) = ((b / 8) as usize, 7 - (b % 8) as u32);
+                let v = (m >> (47 - j) & 1) as u8;
+                d[byte] = d[byte] & !(1 << sh) | v << sh;
+            }
+        }
+        d
+    }
+
+    /// The finder's every path, the AVX2 filter's included, against the bit-by-bit
+    /// reference, on every length up to 96 bytes and every cut of each into two ranges
+    /// (the same 6-byte overlap rule the harness relies on): Miri checks each of the
+    /// filter's unaligned 32-byte loads and its 8-byte verifications for bounds and
+    /// initialisation. Run under Miri with AVX2 enabled for the target (the test fails
+    /// rather than skip the filter where AVX2 was asked for and is absent).
+    #[test]
+    fn miri_finder_matches_naive() {
+        let mut rng = Rng(0x0dd_ba11_cafe_f00d);
+        let avx2 = Finder::detect().avx2;
+        if cfg!(all(target_arch = "x86_64", target_feature = "avx2")) {
+            assert!(
+                avx2,
+                "AVX2 is a target feature here, so the filter must be detected"
+            );
+        }
+        let finders: Vec<Finder> = if avx2 {
+            vec![Finder::new(true), Finder::new(false)]
+        } else {
+            vec![Finder::new(false)]
+        };
+        // (under Miri: the AVX2 loop's tightest lengths too, 32i + 34..=40, where its last
+        // load ends within a few bytes of the input's end, and a loosened bound reads past)
+        let lens: Vec<usize> = if cfg!(miri) {
+            vec![
+                0, 5, 6, 7, 34, 35, 36, 37, 38, 39, 40, 41, 45, 66, 69, 70, 72, 96,
+            ]
+        } else {
+            (0..=96).collect()
+        };
+        for len in lens {
+            let bits = len as u64 * 8;
+            let mut at = Vec::new();
+            for _ in 0..3 {
+                if bits >= 48 {
+                    at.push((rng.below(bits - 47), rng.below(2) == 1));
+                }
+            }
+            // and at the last bit a magic fits, and one past it (cut short)
+            if bits >= 48 {
+                at.push((bits - 48, false));
+            }
+            if bits >= 47 {
+                at.push((bits - 47, true));
+            }
+            let d = planted(len, &mut rng, &at);
+            let want = find_naive(&d);
+            for f in &finders {
+                let mut v = Vec::new();
+                f.find(&d, 0, len, &mut v);
+                assert_eq!(v, want, "len {len}, avx2 {}", f.avx2);
+                let cuts: Vec<usize> = if cfg!(miri) {
+                    vec![len / 3, len / 2]
+                } else {
+                    (0..=len).collect()
+                };
+                for cut in cuts {
+                    let mut v = Vec::new();
+                    f.find(&d, 0, cut, &mut v);
+                    f.find(&d, cut, len, &mut v);
+                    assert_eq!(v, want, "len {len}, cut {cut}, avx2 {}", f.avx2);
+                }
+            }
+        }
+    }
+
+    // ---- B5: fuzz and mutation tests aimed at the finder's `unsafe` (journal §8.4) ----
+
+    /// The finders to compare: the AVX2 filter wherever the CPU has it, and the scalar
+    fn finders() -> Vec<Finder> {
+        if Finder::detect().avx2 {
+            vec![Finder::new(true), Finder::new(false)]
+        } else {
+            vec![Finder::new(false)]
+        }
+    }
+
+    /// Writable pages between two inaccessible ones, so a read one byte before or past a
+    /// slice placed against either guard faults (SIGSEGV) natively, where an out-of-bounds
+    /// load would otherwise read whatever follows the allocation and go unseen
+    #[cfg(all(target_os = "linux", not(miri)))]
+    struct Guarded {
+        base: *mut u8,
+        page: usize,
+        pages: usize,
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    mod sys {
+        extern "C" {
+            pub fn mmap(
+                a: *mut u8,
+                len: usize,
+                prot: i32,
+                flags: i32,
+                fd: i32,
+                off: i64,
+            ) -> *mut u8;
+            pub fn mprotect(a: *mut u8, len: usize, prot: i32) -> i32;
+            pub fn munmap(a: *mut u8, len: usize) -> i32;
+        }
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    impl Guarded {
+        fn new(max_len: usize) -> Guarded {
+            let page = 4096;
+            let pages = max_len.div_ceil(page).max(1);
+            let total = (pages + 2) * page;
+            // SAFETY: an anonymous private mapping of `total` bytes (PROT_READ|PROT_WRITE,
+            // MAP_PRIVATE|MAP_ANONYMOUS); checked against MAP_FAILED; the first and last
+            // pages are then made inaccessible, and nothing else maps or frees them
+            unsafe {
+                let base = sys::mmap(std::ptr::null_mut(), total, 3, 0x02 | 0x20, -1, 0);
+                assert!(base as isize != -1, "mmap failed");
+                assert_eq!(sys::mprotect(base, page, 0), 0);
+                assert_eq!(sys::mprotect(base.add((pages + 1) * page), page, 0), 0);
+                Guarded { base, page, pages }
+            }
+        }
+
+        /// `d` copied against the trailing guard (`tail`) or the leading one
+        fn place(&mut self, d: &[u8], tail: bool) -> &[u8] {
+            assert!(d.len() <= self.pages * self.page);
+            let rw = self.pages * self.page;
+            let off = if tail { rw - d.len() } else { 0 };
+            // SAFETY: `off..off + d.len()` lies within the writable pages, which only this
+            // value refers to; the slice borrows `self`, so it ends before the next place
+            unsafe {
+                let p = self.base.add(self.page + off);
+                std::ptr::copy_nonoverlapping(d.as_ptr(), p, d.len());
+                std::slice::from_raw_parts(p, d.len())
+            }
+        }
+    }
+
+    #[cfg(all(target_os = "linux", not(miri)))]
+    impl Drop for Guarded {
+        fn drop(&mut self) {
+            // SAFETY: the mapping made in `new`, unmapped once
+            unsafe { sys::munmap(self.base, (self.pages + 2) * self.page) };
+        }
+    }
+
+    /// Elsewhere (and under Miri, which checks every load's bounds itself): a plain copy
+    #[cfg(not(all(target_os = "linux", not(miri))))]
+    struct Guarded(Vec<u8>);
+
+    #[cfg(not(all(target_os = "linux", not(miri))))]
+    impl Guarded {
+        fn new(_: usize) -> Guarded {
+            Guarded(Vec::new())
+        }
+        fn place(&mut self, d: &[u8], _: bool) -> &[u8] {
+            self.0 = d.to_vec();
+            &self.0
+        }
+    }
+
+    /// Counts of what a fuzz run compared
+    #[derive(Default, Debug)]
+    struct FuzzCounts {
+        inputs: u64,
+        bytes: u64,
+        find_calls: u64,
+        cands: u64,
+        planted: u64,
+        guarded: u64,
+    }
+
+    /// Every finder against the bit-by-bit reference on `d`: the whole input; a random
+    /// sub-range (only the magics starting in its bytes); a random partition into 1-8
+    /// ranges; and, natively, the whole input and the partition again with `d` placed
+    /// against each guard page
+    fn check_all(d: &[u8], fs: &[Finder], rng: &mut Rng, n: &mut FuzzCounts, g: &mut Guarded) {
+        let want = find_naive(d);
+        n.inputs += 1;
+        n.bytes += d.len() as u64;
+        n.cands += want.len() as u64;
+        let len = d.len();
+        let (a, b) = {
+            let x = rng.below(len as u64 + 1) as usize;
+            let y = rng.below(len as u64 + 1) as usize;
+            (x.min(y), x.max(y))
+        };
+        let sub: Vec<Cand> = want
+            .iter()
+            .copied()
+            .filter(|c| (a as u64 * 8..b as u64 * 8).contains(&c.bit))
+            .collect();
+        let mut cuts: Vec<usize> = (0..rng.below(8))
+            .map(|_| rng.below(len as u64 + 1) as usize)
+            .collect();
+        cuts.push(0);
+        cuts.push(len);
+        cuts.sort_unstable();
+        let run = |f: &Finder, d: &[u8], n: &mut FuzzCounts, what: &str| {
+            let mut v = Vec::new();
+            f.find(d, 0, len, &mut v);
+            assert_eq!(
+                v, want,
+                "{what}: len {len}, avx2 {}, input {d:02x?}",
+                f.avx2
+            );
+            let mut v = Vec::new();
+            for w in cuts.windows(2) {
+                f.find(d, w[0], w[1], &mut v);
+            }
+            assert_eq!(
+                v, want,
+                "{what}: cuts {cuts:?}, avx2 {}, input {d:02x?}",
+                f.avx2
+            );
+            n.find_calls += cuts.len() as u64;
+        };
+        for f in fs {
+            run(f, d, n, "plain");
+            let mut v = Vec::new();
+            f.find(d, a, b, &mut v);
+            assert_eq!(v, sub, "range {a}..{b}, avx2 {}, input {d:02x?}", f.avx2);
+            n.find_calls += 1;
+            for tail in [true, false] {
+                let gd = g.place(d, tail);
+                run(f, gd, n, if tail { "guarded tail" } else { "guarded head" });
+                n.guarded += 1;
+            }
+        }
+    }
+
+    /// One fuzz input: its length biased to the AVX2 loop's edges (the bound
+    /// `k + 32 <= to && k + 40 <= len` and the scalar tail), its bytes one of several
+    /// shapes, and magics (and near-misses) planted at random bits, at the tail, and across
+    /// 32-byte step edges
+    fn fuzz_input(rng: &mut Rng, n: &mut FuzzCounts) -> Vec<u8> {
+        let len = match rng.below(10) {
+            0..=5 => rng.below(140) as usize,
+            6 | 7 => 32 * rng.below(8) as usize + rng.below(16) as usize + 30,
+            8 => rng.below(1200) as usize,
+            _ => rng.below(5000) as usize,
+        };
+        let bits = len as u64 * 8;
+        let mut d: Vec<u8> = match rng.below(6) {
+            0 => vec![0; len],
+            1 => vec![0xff; len],
+            2 => {
+                // bytes of the magics, at random shifts: many filter hits
+                let m = [BLOCK_MAGIC, END_MAGIC][rng.below(2) as usize];
+                (0..len)
+                    .map(|_| (m << (16 - rng.below(8))).to_be_bytes()[1 + rng.below(5) as usize])
+                    .collect()
+            }
+            _ => (0..len).map(|_| rng.next() as u8).collect(),
+        };
+        let mut plant = |d: &mut Vec<u8>, bit: u64, m: u64, flip: Option<u64>| {
+            n.planted += 1;
+            for j in 0..48u64 {
+                let b = bit + j;
+                if b >= bits {
+                    break;
+                }
+                let mut v = (m >> (47 - j) & 1) as u8;
+                if flip == Some(j) {
+                    v ^= 1;
+                }
+                let (byte, sh) = ((b / 8) as usize, 7 - (b % 8) as u32);
+                d[byte] = d[byte] & !(1 << sh) | v << sh;
+            }
+        };
+        if bits == 0 {
+            return d;
+        }
+        for _ in 0..rng.below(6) {
+            let m = [BLOCK_MAGIC, END_MAGIC][rng.below(2) as usize];
+            let flip = (rng.below(4) == 0).then(|| rng.below(48));
+            let bit = match rng.below(5) {
+                // at or near the tail, including past where one fits
+                0 => bits.saturating_sub(40 + rng.below(16)),
+                // across a 32-byte step edge (window starts k..k+32 from 0)
+                1 => {
+                    (32 * rng.below(len as u64 / 32 + 1) + rng.below(3)).saturating_sub(1) * 8
+                        + rng.below(8)
+                }
+                // a chain of magics, back to back
+                2 => {
+                    let mut b = rng.below(bits);
+                    while b < bits {
+                        plant(&mut d, b, m, None);
+                        b += 48;
+                    }
+                    continue;
+                }
+                _ => rng.below(bits),
+            };
+            plant(&mut d, bit.min(bits - 1), m, flip);
+        }
+        d
+    }
+
+    /// The finder's randomised differential fuzz: the AVX2 filter and the scalar finder
+    /// against the bit-by-bit reference (`check_all`) on `fuzz_input`s. The budget is
+    /// PAR_SCAN_FUZZ_SECS seconds (the B5 run), else a fixed 3,000 inputs (CI); the seed
+    /// PAR_SCAN_FUZZ_SEED (printed, so a failure replays)
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn fuzz_finder_differential() {
+        let seed = std::env::var("PAR_SCAN_FUZZ_SEED")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0x5eed_f00d_u64);
+        let secs: Option<f64> = std::env::var("PAR_SCAN_FUZZ_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok());
+        let mut rng = Rng(seed | 1);
+        let fs = finders();
+        let mut n = FuzzCounts::default();
+        let mut g = Guarded::new(8192);
+        let t0 = Instant::now();
+        loop {
+            let d = fuzz_input(&mut rng, &mut n);
+            check_all(&d, &fs, &mut rng, &mut n, &mut g);
+            let more = match secs {
+                Some(s) => t0.elapsed().as_secs_f64() < s,
+                None => n.inputs < 3000,
+            };
+            if !more {
+                break;
+            }
+        }
+        eprintln!(
+            "fuzz_finder_differential: seed {seed:#x}, finders {} (avx2 {}): {n:?}",
+            fs.len(),
+            fs[0].avx2
+        );
+    }
+
+    /// Exhaustive: one magic of each kind at every bit of every length 40-104 (the AVX2
+    /// loop's first steps and its scalar tail), on a zero and a random background, each
+    /// input also cut at every byte from 2 before the magic's to 7 after, and guarded
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn finder_every_bit_offset() {
+        let fs = finders();
+        let mut rng = Rng(0xb17_0ff5e7);
+        let mut n = FuzzCounts::default();
+        let mut g = Guarded::new(4096);
+        for len in 40..=104usize {
+            let bits = len as u64 * 8;
+            for m in [BLOCK_MAGIC, END_MAGIC] {
+                for bit in 0..bits {
+                    for random in [false, true] {
+                        let mut d: Vec<u8> = if random {
+                            (0..len).map(|_| rng.next() as u8).collect()
+                        } else {
+                            vec![0; len]
+                        };
+                        for j in 0..48u64.min(bits - bit) {
+                            let b = bit + j;
+                            let (byte, sh) = ((b / 8) as usize, 7 - (b % 8) as u32);
+                            let v = (m >> (47 - j) & 1) as u8;
+                            d[byte] = d[byte] & !(1 << sh) | v << sh;
+                        }
+                        let want = find_naive(&d);
+                        assert_eq!(
+                            want.iter().any(|c| c.bit == bit),
+                            bit + 48 <= bits,
+                            "the reference itself"
+                        );
+                        n.inputs += 1;
+                        let k = (bit / 8) as usize;
+                        for f in &fs {
+                            let mut v = Vec::new();
+                            f.find(&d, 0, len, &mut v);
+                            assert_eq!(v, want, "len {len}, bit {bit}, avx2 {}", f.avx2);
+                            for cut in k.saturating_sub(2)..=(k + 7).min(len) {
+                                let mut v = Vec::new();
+                                f.find(&d, 0, cut, &mut v);
+                                f.find(&d, cut, len, &mut v);
+                                assert_eq!(v, want, "len {len}, bit {bit}, cut {cut}");
+                                n.find_calls += 2;
+                            }
+                            for tail in [true, false] {
+                                let gd = g.place(&d, tail);
+                                let mut v = Vec::new();
+                                f.find(gd, 0, len, &mut v);
+                                assert_eq!(v, want, "guarded, len {len}, bit {bit}");
+                                n.guarded += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        eprintln!("finder_every_bit_offset: {n:?}");
+    }
+
+    /// The harness's own chunking: a magic whose first bit is `r` bits before each
+    /// FIND_CHUNK edge, for every r in 0..=48 (straddling the edge, ending at it, starting
+    /// on it), found when the input is searched chunk by chunk as the finder thread does
+    #[cfg_attr(miri, ignore)]
+    #[test]
+    fn finder_find_chunk_edges() {
+        let fs = finders();
+        let mut rng = Rng(0xc40e_d6e5);
+        let len = 3 * FIND_CHUNK + 77;
+        for r in 0..=48u64 {
+            let at: Vec<(u64, bool)> = [FIND_CHUNK, 2 * FIND_CHUNK, 3 * FIND_CHUNK]
+                .iter()
+                .map(|&e| (e as u64 * 8 - r, r % 2 == 1))
+                .collect();
+            let d = planted(len, &mut rng, &at);
+            let want = find_naive(&d);
+            for &(bit, _) in &at {
+                assert!(want.iter().any(|c| c.bit == bit), "planted at {bit}");
+            }
+            for f in &fs {
+                let (mut v, mut from) = (Vec::new(), 0);
+                while from < d.len() {
+                    let to = (from + FIND_CHUNK).min(d.len());
+                    f.find(&d, from, to, &mut v);
+                    from = to;
+                }
+                assert_eq!(v, want, "chunked, r {r}, avx2 {}", f.avx2);
+            }
+        }
+    }
+
+    /// RUSAGE_SELF counts every thread's CPU: a second thread burns at least 1.1 s of its
+    /// own CPU (by RUSAGE_THREAD, 1) and the process's figure grows by at least that.
+    /// Catches the wrong `who` (RUSAGE_THREAD or RUSAGE_CHILDREN) and a misread timeval
+    /// (past a whole second, so the seconds field is read as well as the microseconds).
+    #[cfg(all(target_os = "linux", not(miri)))]
+    #[test]
+    fn getrusage_counts_every_thread() {
+        let thread_micros = || {
+            let mut r = Rusage::default();
+            // SAFETY: as in `cpu_micros`; RUSAGE_THREAD (1) is Linux's
+            assert_eq!(unsafe { getrusage(1, &mut r) }, 0);
+            (r.utime[0] * 1_000_000 + r.utime[1] + r.stime[0] * 1_000_000 + r.stime[1]) as u64
+        };
+        let a = cpu_micros();
+        let burnt = std::thread::spawn(move || {
+            let (t0, mut x) = (thread_micros(), 0u64);
+            while thread_micros() - t0 < 1_100_000 {
+                for i in 0..100_000u64 {
+                    x = x.wrapping_mul(31).wrapping_add(i);
+                }
+                std::hint::black_box(x);
+            }
+            thread_micros() - t0
+        })
+        .join()
+        .unwrap();
+        let grew = cpu_micros() - a;
+        assert!(
+            grew >= burnt,
+            "the process's CPU grew {grew} us; the thread burnt {burnt} us"
+        );
+    }
+
+    /// A stand-in that writes known, well-formed times and succeeds
+    extern "C" fn getrusage_known(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: `usage` is `cpu_micros_by`'s live, exclusive buffer
+        let r = unsafe { &mut *usage };
+        r.utime = [1, 500];
+        r.stime = [2, 250];
+        0
+    }
+
+    /// Stand-ins that succeed but write malformed times: microseconds out of range, and
+    /// negative seconds
+    extern "C" fn getrusage_bad_micros(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: as above
+        unsafe { (*usage).utime = [0, 2_000_000] };
+        0
+    }
+    extern "C" fn getrusage_bad_secs(_who: i32, usage: *mut Rusage) -> i32 {
+        // SAFETY: as above
+        unsafe { (*usage).stime = [-1, 0] };
+        0
+    }
+
+    /// M28 (the B5 review): a failed getrusage must be a panic, never a CPU figure. Without
+    /// the return code's check, the zeroed buffer reads as 0 µs and this test fails. Runs
+    /// under Miri too (no foreign call: the stand-in is Rust).
+    #[test]
+    #[should_panic(expected = "getrusage failed")]
+    fn miri_getrusage_failure_is_a_panic() {
+        let got = cpu_micros_by(getrusage_fails);
+        // (reached only if the failure went unnoticed)
+        eprintln!("a failed getrusage gave {got} us");
+    }
+
+    /// The injection the recipe's dry run uses selects the same failing call
+    #[test]
+    #[should_panic(expected = "getrusage failed")]
+    fn miri_getrusage_injected_failure_is_a_panic() {
+        cpu_micros_by(getrusage_for(Some("getrusage-fails")));
+    }
+
+    #[test]
+    #[should_panic(expected = "not a known fault")]
+    fn miri_getrusage_unknown_injection_refused() {
+        getrusage_for(Some("something-else"));
+    }
+
+    #[test]
+    #[should_panic(expected = "getrusage gave")]
+    fn miri_getrusage_bad_micros_is_a_panic() {
+        cpu_micros_by(getrusage_bad_micros);
+    }
+
+    #[test]
+    #[should_panic(expected = "getrusage gave")]
+    fn miri_getrusage_bad_secs_is_a_panic() {
+        cpu_micros_by(getrusage_bad_secs);
+    }
+
+    /// The success path: user and system time summed, in microseconds
+    #[test]
+    fn miri_getrusage_known_times() {
+        assert_eq!(cpu_micros_by(getrusage_known), 3_000_750);
+    }
+
+    /// The FFI boundary: getrusage writes a whole `Rusage` and the times only grow.
+    /// Natively only: not run under Miri, which does not execute this foreign call; the
+    /// stated bound argument covers it (docs/journal/2026-11-10-parallel-scan.md, B5).
+    #[cfg(not(miri))]
+    #[test]
+    fn getrusage_times_grow() {
+        let a = cpu_micros();
+        let mut x = 0u64;
+        for i in 0..20_000_000u64 {
+            x = x.wrapping_mul(31).wrapping_add(i);
+        }
+        std::hint::black_box(x);
+        assert!(cpu_micros() >= a);
+    }
+
+    /// R1 (the B5 review, #320): `Finder::new` is safe, so it must not let a caller reach
+    /// the AVX2 path on a CPU without AVX2. Under Miri without `+avx2` the request is
+    /// refused, not obeyed (before the fix: "calling a function that requires unavailable
+    /// target features: avx2").
+    #[test]
+    fn miri_r1_avx2_asked_for_without_avx2() {
+        let f = Finder::new(true);
+        let mut v = Vec::new();
+        f.find(&[0u8; 64], 0, 64, &mut v);
+        assert!(v.is_empty());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(f.avx2, std::is_x86_feature_detected!("avx2"));
+    }
+
+    /// R2 (the B5 review, #320): a `from` at or past the clamped end searches nothing, and
+    /// never wraps the bounds into out-of-range pointer arithmetic (before the fix, under Miri
+    /// with `+avx2` and overflow checks off: "overflowing pointer arithmetic"; with overflow
+    /// checks on, an overflow panic).
+    #[test]
+    fn miri_r2_from_past_the_end() {
+        let d = [0u8; 64];
+        for avx2 in [true, false] {
+            let f = Finder::new(avx2);
+            let mut v = Vec::new();
+            f.find(&d[1..], usize::MAX - 1, 63, &mut v);
+            f.find(&d[1..], usize::MAX, usize::MAX, &mut v);
+            f.find(&d, 64, 64, &mut v);
+            f.find(&d, 100, 200, &mut v);
+            f.find(&d, 30, 10, &mut v);
+            assert!(v.is_empty(), "avx2 {avx2}: {v:?}");
+        }
     }
 }

@@ -32,12 +32,16 @@ def grid(top=1.5, mutate=None):
     return "".join(json.dumps(r) + "\n" for r in rows)
 
 
-def run(tmp_path, text):
+def run(tmp_path, text, expected=SIZE):
     p = tmp_path / "runs.jsonl"
     p.write_text(text)
     out = tmp_path / "report.json"
+    out.unlink(missing_ok=True)
+    args = [str(p), str(ROUNDS), "1,4,10", str(out)]
+    if expected is not None:
+        args.append(str(expected))
     r = subprocess.run(
-        [sys.executable, str(HERE / "par_scan_knee.py"), str(p), str(ROUNDS), "1,4,10", str(out)],
+        [sys.executable, str(HERE / "par_scan_knee.py"), *args],
         capture_output=True,
         text=True,
     )
@@ -106,3 +110,24 @@ def test_admission(tmp_path):
     refused(tmp_path, lambda rows: rows[5].pop("workers"), "exactly the fields")
     r, _ = run(tmp_path, grid() + "not json\n")
     assert r.returncode == 1 and "not JSON" in r.stderr
+
+
+def test_expected_size(tmp_path):
+    # one size in every cell, but not the input's: uniformly wrong sizes are refused, a
+    # reading of FASTER included
+    for wrong in (1, SIZE - 1, SIZE + 1, 2 * SIZE):
+
+        def uniform(rows, wrong=wrong):
+            for r in rows:
+                r["bytes"] = wrong
+
+        r, v = run(tmp_path, grid(top=1.5, mutate=uniform))
+        assert r.returncode == 1 and "not the expected" in r.stderr, (wrong, r.stderr)
+        assert v is None and r.stdout == ""
+    # the right size is read, and the report records what it was checked against
+    r, v = run(tmp_path, grid(top=1.5))
+    assert r.returncode == 0 and v["expected_bytes"] == SIZE
+    # no expected size, or a nonsensical one: refused
+    for bad in (None, 0, -5):
+        r, v = run(tmp_path, grid(), expected=bad)
+        assert r.returncode == 1 and v is None, (bad, r.stderr)
