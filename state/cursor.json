@@ -1064,10 +1064,10 @@
     {
       "comment_id": 6759983287,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Archive replay and complete repricing report committed; awaiting REVIEW.",
+      "progress": "Report and cell replay published; exact author, body and #145 destination verified.",
       "report_path": "state/records/reviews/inbox-6759983287/report.md",
       "report_commit": "39c1cd79ffb1f14124aae0a0fb7df8d7c1bcfb21",
       "audit_scope": {
@@ -1078,7 +1078,9 @@
         "slot_rows": 732,
         "grid_rows_after_warmup": 600,
         "full_judge_replay": false
-      }
+      },
+      "reply_id": 6760081653,
+      "routing_verification": "route/check passed. Pinned verify rejects FROM optimizer because it hardcodes coordinator; exact GitHub readback verified, no verify-pass claimed."
     }
   ],
   "migrated_from": {
