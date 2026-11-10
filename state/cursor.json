@@ -2906,6 +2906,13 @@
       "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
       "review_comment_id": 6758456856,
       "complete_cursor_commit": "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f"
+    },
+    {
+      "comment_id": 6758683390,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D083",
+      "progress": "Receipt; assess forced-team coverage proposal."
     }
   ],
   "migrated_from": {
