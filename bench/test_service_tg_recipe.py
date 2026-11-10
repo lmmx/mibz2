@@ -185,7 +185,7 @@ class EndToEnd(unittest.TestCase):
         git(w, "commit", "-q", "-am", "candidate")
         self.cand = git(w, "rev-parse", "HEAD")
         self.freeze = (f"candidate {self.cand}\nbase {self.base}\nbase_fetched 2026-11-10T00:00:00Z\n"
-                       f"rustc {RUSTC}\nci_rounds 10\n")
+                       f"rustc {RUSTC}\nni_rustc rustc 1.99.1 (x)\ncorpus_text {'7' * 64}\n")
         (w / "bench" / "service-tg.frozen").write_text(self.freeze)
         git(w, "commit", "-q", "-am", "freeze (test fixture)")
         bin_ = self.tmp / "bin"

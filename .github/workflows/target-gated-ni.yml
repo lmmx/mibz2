@@ -1,0 +1,253 @@
+# The target-gated route's CI off-target noninferiority (docs/STEWARDSHIP.md condition 2), as
+# docs/journal/2026-11-10-service-guarded-target-gated-registration.md §2 registers it, under the
+# Guardian's D077: dispatch only, never on a push or a pull request.
+#
+# The standing grid's 42 cells (7 corpora x 1, 2, 4 threads x wall, CPU) in nine fixed shards,
+# each one runner: a corpus a shard, `wikidata` split by thread count. Each shard builds the head
+# and the base, reads its runner back (lscpu, `ab env --facts`, the service core's predicate and
+# dispatch through examples/svc_target.rs: it must be NOT TARGET), and runs its cells paired and
+# interleaved (`ab run`, the two arms alternating, --spread, settle 0.25 s) for ROUNDS rounds.
+# Every cell is estimated from its own shard's runner alone: nothing is pooled across runners.
+# `aggregate` gathers every shard's artifact, of every attempt, into one manifest with each
+# file's SHA-256 and judges it with `bench/service_tg.py ni`.
+#
+# `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze)
+# or `smoke` (a plumbing check, never evidence: the judge refuses it). Nothing here retries a
+# shard: a shard that fails, times out or is cancelled after its measurement started is part
+# of the attempt as it is (the registration's §2.5).
+name: Target-gated noninferiority
+
+on:
+  workflow_dispatch:
+    inputs:
+      head:
+        description: "The head commit (40 hex): the frozen candidate plus the frozen file; must be the dispatched ref's commit"
+        required: true
+      base:
+        description: "The base commit (40 hex): the frozen master"
+        required: true
+      rounds:
+        description: "Rounds a shard (the registration's R)"
+        required: true
+        default: "600"
+      toolchain:
+        description: "The Rust toolchain, exactly (the registration's, e.g. 1.99.1)"
+        required: true
+      shards:
+        description: "all, or a comma-separated list of shard ids (a smoke check only: the judge requires all nine)"
+        required: true
+        default: "all"
+      label:
+        description: "smoke (a plumbing check, never evidence) or qualification"
+        required: true
+        type: choice
+        options: [smoke, qualification]
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  SCALE: 4 # ab gen's, as the standing bench
+  SETTLE: 0.25 # as the standing bench
+  CARGO_TERM_COLOR: never
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - name: The shards, and the inputs checked
+        id: plan
+        env:
+          HEAD_SHA: ${{ inputs.head }}
+          BASE_SHA: ${{ inputs.base }}
+          ROUNDS: ${{ inputs.rounds }}
+          SHARDS: ${{ inputs.shards }}
+          LABEL: ${{ inputs.label }}
+        run: |
+          [[ $HEAD_SHA =~ ^[0-9a-f]{40}$ && $BASE_SHA =~ ^[0-9a-f]{40}$ ]] || { echo "::error::head and base must be 40-hex SHAs"; exit 1; }
+          [[ $ROUNDS =~ ^[1-9][0-9]*$ ]] || { echo "::error::rounds must be a positive integer"; exit 1; }
+          # (the workflow file run is the head's own: the dispatched ref must be the head)
+          [ "$GITHUB_SHA" = "$HEAD_SHA" ] || { echo "::error::dispatched at $GITHUB_SHA, not the head $HEAD_SHA"; exit 1; }
+          pick=$(python3 - <<'EOF'
+          import json, os, sys
+          ids = ["onebyte", "pattern", "random", "records", "runs", "text"]
+          all = [{"id": c, "corpus": c, "threads": "1,2,4"} for c in ids]
+          all += [{"id": f"wikidata-{t}", "corpus": "wikidata", "threads": t} for t in ("1", "2", "4")]
+          want = os.environ["SHARDS"]
+          if want == "all":
+              print(json.dumps(all))
+          else:
+              if os.environ["LABEL"] != "smoke":
+                  sys.exit("a subset of shards is for a smoke check only")
+              want = want.split(",")
+              bad = [w for w in want if w not in {s["id"] for s in all}]
+              if bad:
+                  sys.exit("unknown shards: " + ",".join(bad))
+              print(json.dumps([s for s in all if s["id"] in want]))
+          EOF
+          )
+          echo "shards=$pick" >> "$GITHUB_OUTPUT"
+          echo "label $LABEL, head $HEAD_SHA, base $BASE_SHA, rounds $ROUNDS, shards $pick"
+
+  shard:
+    needs: plan
+    runs-on: ubuntu-latest
+    # (the registration's §2.5: the slowest shard's measured rounds at 1.75x the fastest CI
+    # pace seen, plus setup, is about 47 minutes)
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.shards) }}
+    env:
+      SHARD: ${{ matrix.shard.id }}
+      CORPUS: ${{ matrix.shard.corpus }}
+      THREADS: ${{ matrix.shard.threads }}
+      ROUNDS: ${{ inputs.rounds }}
+      HEAD_SHA: ${{ inputs.head }}
+      BASE_SHA: ${{ inputs.base }}
+      LABEL: ${{ inputs.label }}
+      OUT: out/${{ matrix.shard.id }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.head }}
+          fetch-depth: 0
+
+      - name: Provenance
+        run: |
+          mkdir -p "$OUT"
+          python3 - <<'EOF'
+          import json, os
+          e = os.environ
+          json.dump({"schema": "mibz2.tg_ni_shard/1", "label": e["LABEL"], "shard": e["SHARD"], "corpus": e["CORPUS"],
+                     "threads": [int(t) for t in e["THREADS"].split(",")], "rounds": int(e["ROUNDS"]),
+                     "head": e["HEAD_SHA"], "base": e["BASE_SHA"], "github_sha": e["GITHUB_SHA"],
+                     "workflow_sha": e.get("GITHUB_WORKFLOW_SHA"), "workflow_ref": e.get("GITHUB_WORKFLOW_REF"),
+                     "run_id": int(e["GITHUB_RUN_ID"]), "run_attempt": int(e["GITHUB_RUN_ATTEMPT"]),
+                     "job": e["GITHUB_JOB"], "repository": e["GITHUB_REPOSITORY"],
+                     "runner_name": e.get("RUNNER_NAME"), "image": " ".join(filter(None, [e.get("ImageOS"), e.get("ImageVersion")]))},
+                    open(os.path.join(e["OUT"], "shard.json"), "w"), indent=1, sort_keys=True)
+          EOF
+          cat "$OUT/shard.json"
+
+      - name: lbzip2 (examples/windows.rs's check of the Wikidata blocks)
+        if: matrix.shard.corpus == 'wikidata'
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.toolchain }}
+
+      - name: Build the head and the base
+        run: |
+          rustc -V | tee "$OUT/rustc.txt"
+          cargo build --release --example ab --example windows --example svc_target
+          mkdir -p bin base
+          cp target/release/examples/ab bin/ab
+          cp target/release/examples/windows bin/windows
+          cp target/release/examples/svc_target bin/svc_target
+          git worktree add --detach .base-src "$BASE_SHA"
+          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab)
+          cp target/release/examples/ab base/ab
+          sha256sum bin/ab bin/windows bin/svc_target base/ab | tee "$OUT/binaries.sha256"
+
+      # The runner as it is: its CPU, topology and quota (passive), and the service core's
+      # predicate and public dispatch read back on it (must be NOT TARGET: the predicate false
+      # and master's decoder built at 9, 10 and 11, every decode correct)
+      - name: The runner, read back
+        run: |
+          lscpu > "$OUT/lscpu.txt" 2>&1 || true
+          bin/ab env --facts > "$OUT/env.json"
+          cat "$OUT/env.json"
+          pf=0
+          timeout --kill-after=10 120 bin/svc_target > "$OUT/preflight.json" 2> "$OUT/preflight.stderr" || pf=$?
+          echo "$pf" > "$OUT/preflight.exit"
+          pc=0
+          python3 bench/svc_target_check.py "$OUT/preflight.json" --exit "$pf" --out "$OUT/preflight-check.json" || pc=$?
+          verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$OUT/preflight-check.json")
+          echo "the predicate read back: $verdict (svc_target exit $pf, check exit $pc)"
+          [ "$verdict" = "NOT TARGET" ] || { echo "::error::the runner's read-back is $verdict, not NOT TARGET"; exit 1; }
+
+      - name: The corpus
+        run: |
+          mkdir -p corpora
+          if [ "$CORPUS" = wikidata ]; then
+            dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+            if git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+              git archive origin/bench-data "$dir" | tar -x || true
+            fi
+            python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+            python3 bench/wikidata.py build bench/wikidata.json "$dir" bin/windows corpora/wikidata.bz2
+          else
+            bin/ab gen gen-all "$SCALE"
+            cp "gen-all/$CORPUS.bz2" corpora/
+          fi
+          sha256sum "corpora/$CORPUS.bz2" | tee "$OUT/corpus.sha256"
+
+      - name: Run (the measurement)
+        run: |
+          date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/measurement-started.txt"
+          bin/ab run "$OUT/runs.jsonl" --arms "mibz2,mibz2@base/ab" --threads "$THREADS" --spread \
+            --rounds "$ROUNDS" --settle "$SETTLE" "corpora/$CORPUS.bz2"
+          date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/measurement-ended.txt"
+
+      - name: The shard's files
+        if: always()
+        run: |
+          mkdir -p "$OUT"
+          (cd "$OUT" && find . -type f ! -name files.sha256 -print0 | sort -z | xargs -0 sha256sum > files.sha256) || true
+          cat "$OUT/files.sha256" || true
+
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tg-ni-${{ matrix.shard.id }}-a${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: error
+
+  aggregate:
+    needs: [plan, shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.head }}
+          fetch-depth: 0
+
+      - name: Every shard's artifact, of every attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p shards
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir shards --pattern 'tg-ni-*' || true
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+            --jq '.artifacts[] | {name, id, digest, size_in_bytes, workflow_run: .workflow_run.id}' > artifacts.jsonl
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=all" \
+            --jq '.jobs[] | {name, id, run_attempt, status, conclusion, started_at, completed_at}' > jobs.jsonl
+          python3 bench/service_tg.py manifest shards --artifacts artifacts.jsonl --jobs jobs.jsonl \
+            --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
+          cat manifest.json
+
+      - name: The judge (bench/service_tg.py ni, at the head's own frozen file)
+        run: |
+          python3 bench/service_tg.py ni shards --manifest manifest.json --head "${{ inputs.head }}" --out ni || true
+          cat ni.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tg-ni-aggregate-a${{ github.run_attempt }}
+          path: |
+            manifest.json
+            artifacts.jsonl
+            jobs.jsonl
+            ni.json
+            ni.md
+          if-no-files-found: warn

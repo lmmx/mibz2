@@ -6,8 +6,10 @@ judge (docs/journal/2026-11-10-service-guarded-target-gated-registration.md).
   regression); each admission defect is refused with its kind (identity, the toolchain
   included; workload; preflight, a schema 1 record included; structural: termination, plans,
   rounds, a third arm).
-- CI's condition 2: the 42-cell grid admitted only as registered (head, base, bench, rounds,
-  threads, runner, corpora, completeness, termination, digests), each cell's one-sided bound,
+- CI's condition 2, from the sharded workflow's artifacts: the nine shards admitted only as
+  registered (one measured attempt each, the manifest's digests, label, head, base, run,
+  rounds, toolchain, runner topology and model, the predicate read back NOT TARGET, corpus
+  digests, completeness, termination, placement), each cell's batch-means one-sided bound,
   the all-pass rule, wall flags and the harm-confirmation rule, peak RSS.
 - Student's t quantiles against fixed values (and scipy's, where it is installed).
 
@@ -15,9 +17,12 @@ judge (docs/journal/2026-11-10-service-guarded-target-gated-registration.md).
 """
 
 import copy
+import json
 import math
 import random
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -32,7 +37,8 @@ CAND, BASESHA, HEAD = "c" * 40, "b" * 40, "f" * 40
 RUSTC = "rustc 1.98.0 (88d9e12ae 2026-08-18)"
 FETCHED = "2026-11-10T00:00:00Z"
 REG = {"corpus_sha256": "a" * 64, "decoded_bytes": 209700196, "bench": "3.5.0",
-       "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED, "rustc": RUSTC, "ci_rounds": 10}}
+       "frozen": {"candidate": CAND, "base": BASESHA, "base_fetched": FETCHED, "rustc": RUSTC,
+                  "ni_rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)", "corpus_text": "7" * 64}}
 HASH = "0123456789abcdef"
 
 
@@ -89,7 +95,7 @@ def files(**over):
         "arms.txt": f"mibz2\n{BASE}\n",
         "inputs.txt": f"{'d' * 64}  {W}/bin/ab-head\n{'e' * 64}  {W}/bin/ab-base\n{RUSTC}\nbinary: rustc\n",
         "corpus.sha256": "a" * 64 + "  /w/wikidata.bz2\n",
-        "preflight.json": __import__("json").dumps(rec),
+        "preflight.json": json.dumps(rec),
         "preflight.exit": f"{ex}\n",
     }
     f.update(over)
@@ -178,9 +184,9 @@ class Workstation(unittest.TestCase):
             "workload": [files(**{"corpus.sha256": "9" * 64})],
             "preflight": [
                 files(**{"preflight.exit": "17\n"}),
-                files(**{"preflight.json": __import__("json").dumps(edit(rec, lambda r: r.__setitem__(
+                files(**{"preflight.json": json.dumps(edit(rec, lambda r: r.__setitem__(
                     "schema", "mibz2.svc_target/1")))}),
-                files(**{"preflight.json": __import__("json").dumps(record(False)[0]), "preflight.exit": "3\n"}),
+                files(**{"preflight.json": json.dumps(record(False)[0]), "preflight.exit": "3\n"}),
             ],
         }
         for kind, fs in cases.items():
@@ -223,124 +229,225 @@ class Workstation(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------------------
-# CI
+# CI: the sharded workflow's artifacts
 
 
-def ci_rows(effect={}, sd=0.005, seed=5, rounds=10):
-    """A Benchmark run's records: the head's figure times `effect[(corpus, threads, metric)]`"""
-    rng = random.Random(seed)
+R, B = 40, 4  # (small, for speed: the judge takes them as parameters; the registered 600 and 20 are constants)
+RUN = 4242
+
+
+def shard_rows(sid, effect={}, sd=0.003, seed=5):
+    """One shard's records: the head's figure times `effect[(threads, metric)]`, placed as
+    --spread places them on a runner whose cores are CPUs 0,1 and 2,3"""
+    corpus, threads = tg.SHARDS[sid]
+    rng = random.Random(f"{seed}{sid}")
     out = []
-    for rnd in range(rounds):
-        for corpus in tg.CI_CORPORA:
-            for t in tg.CI_THREADS:
-                for arm in tg.CI_ARMS:
-                    w, c, r = 0.05 * rng.gauss(1, sd), 0.08 * rng.gauss(1, sd), 30000 * rng.gauss(1, 0.001)
-                    if arm == "mibz2":
-                        w *= effect.get((corpus, t, "wall"), 1.0)
-                        c *= effect.get((corpus, t, "cpu"), 1.0)
-                        r *= effect.get((corpus, t, "rss"), 1.0)
-                    out.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": c,
-                                "rss_kb": r, "out": 1000, "hash": f"{abs(hash(corpus)) % 10**16:016x}",
-                                "termination": "success", "err": ""})
+    for rnd in range(R):
+        for t in threads:
+            for arm in tg.CI_ARMS:
+                w, c, r = 0.05 * rng.gauss(1, sd), 0.08 * rng.gauss(1, sd), 30000 * rng.gauss(1, 0.001)
+                if arm == "mibz2":
+                    w *= effect.get((t, "wall"), 1.0)
+                    c *= effect.get((t, "cpu"), 1.0)
+                    r *= effect.get((t, "rss"), 1.0)
+                out.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": c,
+                            "rss_kb": r, "out": 1000, "hash": "0123456789abcdef", "termination": "success",
+                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t]})
     return out
 
 
-def result(**over):
-    r = {"mode": "pr", "head": HEAD, "base": BASESHA, "bench": "3.5.0", "rounds": 10, "threads": [1, 2, 4],
-         "machine": {"cpu": "AMD EPYC 7763 64-Core Processor", "cores": 4}}
-    r.update(over)
-    return r
+def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=()):
+    corpus, threads = tg.SHARDS[sid]
+    d = Path(root) / f"tg-ni-{sid}-a{attempt}" / sid
+    d.mkdir(parents=True)
+    info = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
+            "threads": list(threads), "rounds": R, "head": HEAD, "base": BASESHA, "github_sha": HEAD,
+            "workflow_ref": "lmmx/mibz2/.github/workflows/target-gated-ni.yml@refs/heads/x",
+            "run_id": RUN, "run_attempt": attempt}
+    info.update(over or {})
+    rec, ex = record(False)
+    digest = REG["frozen"]["corpus_text"] if corpus == "text" else tg.CORPUS_SHA256[corpus]
+    files = {
+        "shard.json": json.dumps(info),
+        "rustc.txt": REG["frozen"]["ni_rustc"] + "\n",
+        "binaries.sha256": "x\n",
+        "lscpu.txt": "Architecture: x86_64\nModel name:                           AMD EPYC 7763 64-Core Processor\n",
+        "env.json": json.dumps({"facts": "ab env --facts/1", "cpus": 4, "cores": 2, "core_cpus": ["0,1", "2,3"]}),
+        "preflight.json": json.dumps(rec),
+        "preflight.exit": f"{ex}\n",
+        "preflight-check.json": json.dumps({"verdict": "NOT TARGET"}),
+        "corpus.sha256": f"{digest}  corpora/{corpus}.bz2\n",
+        "runs.jsonl": "".join(json.dumps(r) + "\n" for r in (shard_rows(sid) if rows is None else rows)),
+    }
+    if measured:
+        files["measurement-started.txt"] = "2026-11-10T00:00:00Z\n"
+        files["measurement-ended.txt"] = "2026-11-10T00:30:00Z\n"
+    else:
+        del files["runs.jsonl"]
+    for name, text in files.items():
+        if name not in drop:
+            (d / name).write_text(text)
+
+
+def build(root, label="qualification", **per):
+    """Every registered shard's artifact; `per[sid]` gives write_shard's arguments for one"""
+    for sid in tg.SHARDS:
+        for kw in per.get(sid, [{}]):
+            write_shard(root, sid, label=kw.pop("label", label), **kw)
+    return tg.manifest(root, run=RUN, attempt=1, label=label)
 
 
 class CI(unittest.TestCase):
-    def ci(self, res=None, r=None, reg=REG):
-        return tg.ci_judge(result() if res is None else res, ci_rows() if r is None else r, head=HEAD, reg=reg,
-                           check_git=False)
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def ni(self, man, reg=REG):
+        return tg.ni_judge(self.root, man, HEAD, reg=reg, check_git=False, rounds=R, batches=B)
 
     def test_a_null_run_passes_every_cell(self):
-        v = self.ci()
+        v = self.ni(build(self.root))
         self.assertTrue(v["valid"], v["problems"])
         self.assertEqual(len(v["cells"]), 21)
-        self.assertEqual(sum(len(tg.CI_METRICS) for _ in v["cells"]), 42)
+        self.assertEqual(sorted(v["cells"]), sorted(f"{c}/{t}" for c in tg.CI_CORPORA for t in tg.CI_THREADS))
         self.assertTrue(v["passes"], v["failing"])
-        self.assertEqual(v["flags"], [])
-        self.assertIn("met** at every cell", tg.ci_markdown(v))
+        self.assertEqual(v["cells"]["wikidata/2"]["shard"], "wikidata-2")
+        self.assertIn("met** at every cell", tg.ni_markdown(v))
 
-    def test_the_bound_is_one_sided_95(self):
-        r = ci_rows()
-        v = self.ci(r=r)
-        by = {(x["corpus"], x["threads"], x["arm"], x["round"]): x for x in r}
-        logs = [math.log(by[("runs", 2, "mibz2", i)]["wall"] / by[("runs", 2, "mibz2@base/ab", i)]["wall"])
-                for i in range(10)]
-        m = sum(logs) / 10
-        sd = math.sqrt(sum((x - m) ** 2 for x in logs) / 9)
-        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["upper"], math.exp(m + 1.833113 * sd / math.sqrt(10)),
-                               places=6)
+    def test_the_bound_is_batch_means_one_sided_95(self):
+        rows = shard_rows("runs")
+        v = self.ni(build(self.root, runs=[{"rows": rows}]))
+        by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
+        logs = [math.log(by[(2, "mibz2", i)]["wall"] / by[(2, "mibz2@base/ab", i)]["wall"]) for i in range(R)]
+        k = R // B
+        means = [sum(logs[i * k:(i + 1) * k]) / k for i in range(B)]
+        m = sum(logs) / R
+        mm = sum(means) / B
+        se = math.sqrt(sum((x - mm) ** 2 for x in means) / (B - 1)) / math.sqrt(B)
+        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["upper"], math.exp(m + tg.t_ppf(0.95, B - 1) * se), places=9)
+        self.assertAlmostEqual(tg.t_ppf(0.95, 19), 1.729133, places=5)
 
     def test_one_cell_over_the_margin_fails_the_condition(self):
         for metric in ("wall", "cpu"):
             with self.subTest(metric):
-                v = self.ci(r=ci_rows(effect={("onebyte", 4, metric): 1.025}))
-                self.assertTrue(v["valid"])
+                shutil.rmtree(self.root)
+                self.root = tempfile.mkdtemp()
+                v = self.ni(build(self.root, onebyte=[{"rows": shard_rows("onebyte", {(4, metric): 1.025})}]))
+                self.assertTrue(v["valid"], v["problems"])
                 self.assertFalse(v["passes"])
                 self.assertEqual(len(v["failing"]), 1, v["failing"])
-                self.assertIn(f"onebyte 4t {metric}", v["failing"][0])
-        # (a wall slowdown inside the margin, shown: a flag, condition 2 still met)
-        v = self.ci(r=ci_rows(effect={("runs", 2, "wall"): 1.008}, sd=0.001))
-        self.assertTrue(v["passes"], v["failing"])
-        self.assertEqual(v["flags"], ["runs/2"])
-        # (noise too wide to show the bound: fails, not shown is not passed)
-        v = self.ci(r=ci_rows(sd=0.08))
-        self.assertFalse(v["passes"])
+                self.assertIn(f"onebyte/4 {metric}", v["failing"][0])
 
-    def test_peak_rss(self):
-        v = self.ci(r=ci_rows(effect={("text", 4, "rss"): 1.15}))
+    def test_flags_and_rss(self):
+        v = self.ni(build(self.root, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001)}],
+                          text=[{"rows": shard_rows("text", {(4, "rss"): 1.15})}]))
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(v["flags"], ["runs/2"])
         self.assertEqual(v["rss_regression"], ["text/4"])
         self.assertFalse(v["passes"])
-        v = self.ci(r=ci_rows(effect={("text", 4, "rss"): 1.05}))
-        self.assertTrue(v["passes"])
+        self.assertEqual(v["failing"], [])
 
     def test_admission(self):
-        def drop(f):
-            r = ci_rows()
-            f(r)
-            return r
-        noname = result()
-        noname["machine"] = {"cpu": tg.TARGET_NAME, "cores": 4}
+        rows = shard_rows("records")
         cases = {
-            "master mode": (result(mode="master"), None),
-            "another head": (result(head="0" * 40), None),
-            "another base": (result(base="0" * 40), None),
-            "another bench": (result(bench="3.4.0"), None),
-            "20 rounds": (result(rounds=20), None),
-            "a 2-CPU runner": (result(machine={"cpu": "x", "cores": 2}), None),
-            "the target's CPU": (noname, None),
-            "threads 1, 2": (result(threads=[1, 2]), None),
-            "a missing round": (None, drop(lambda r: r.pop(0))),
-            "a failed child": (None, drop(lambda r: r[3].__setitem__("termination", "signal 9"))),
-            "an error": (None, drop(lambda r: r[3].__setitem__("err", "x"))),
-            "two digests": (None, drop(lambda r: r[3].__setitem__("hash", "ffffffffffffffff"))),
-            "a corpus outside the grid": (None, drop(lambda r: r[3].__setitem__("corpus", "other"))),
-            "a missing corpus": (None, [x for x in ci_rows() if x["corpus"] != "pattern"]),
-            "a repeated round": (None, drop(lambda r: r.append(dict(r[0])))),
+            "a smoke run": dict(label="smoke"),
+            "a shard missing": dict(pattern=[]),
+            "two measured attempts": dict(runs=[{"attempt": 1}, {"attempt": 2}]),
+            "a measured attempt without its runs": dict(runs=[{"drop": ("runs.jsonl",)}]),
+            "another head": dict(text=[{"over": {"head": "0" * 40}}]),
+            "another base": dict(text=[{"over": {"base": "0" * 40}}]),
+            "another run": dict(text=[{"over": {"run_id": 1}}]),
+            "another rounds": dict(text=[{"over": {"rounds": R + 1}}]),
+            "another workflow": dict(text=[{"over": {"workflow_ref": "x/bench.yml@y"}}]),
+            "a failed child": dict(records=[{"rows": [dict(r, termination="signal 9") if i == 3 else r
+                                                      for i, r in enumerate(rows)]}]),
+            "a round missing": dict(records=[{"rows": rows[1:]}]),
+            "two digests": dict(records=[{"rows": [dict(r, hash="fedcba9876543210") if i == 3 else r
+                                                   for i, r in enumerate(rows)]}]),
+            "2 threads on one core": dict(records=[{"rows": [dict(r, cpus="0,1") if r["threads"] == 2 else r
+                                                             for r in rows]}]),
         }
-        for what, (res, r) in cases.items():
+        for what, per in cases.items():
             with self.subTest(what):
-                v = self.ci(res=res, r=r)
+                shutil.rmtree(self.root)
+                self.root = tempfile.mkdtemp()
+                label = per.pop("label", "qualification")
+                v = self.ni(build(self.root, label=label, **per))
                 self.assertFalse(v["valid"], what)
                 self.assertTrue(v["problems"])
-        reg = copy.deepcopy(REG)
-        del reg["frozen"]["ci_rounds"]
-        self.assertFalse(self.ci(reg=reg)["valid"])
+
+    def test_the_runner_and_its_read_back(self):
+        def mutate(name, f):
+            shutil.rmtree(self.root)
+            self.root = tempfile.mkdtemp()
+            man = build(self.root)
+            path = Path(self.root) / "tg-ni-random-a1" / "random" / name
+            path.write_text(f(path.read_text()))
+            return tg.manifest(self.root, run=RUN, attempt=1, label="qualification")
+        rec, _ = record(True)
+        cases = {
+            "the target's lscpu model": ("lscpu.txt", lambda t: f"Model name: {tg.TARGET_NAME}\n"),
+            "an 8-CPU runner": ("env.json", lambda t: json.dumps({"cpus": 8, "cores": 4, "core_cpus": ["0,1"] * 4})),
+            "the predicate TARGET": ("preflight.json", lambda t: json.dumps(rec)),
+            "another toolchain": ("rustc.txt", lambda t: "rustc 1.99.0 (x)\n"),
+            "another corpus": ("corpus.sha256", lambda t: "9" * 64 + "  x\n"),
+        }
+        for what, (name, f) in cases.items():
+            with self.subTest(what):
+                v = self.ni(mutate(name, f))
+                self.assertFalse(v["valid"], what)
+        # (a file changed after the manifest was written)
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+        man = build(self.root)
+        (Path(self.root) / "tg-ni-runs-a1" / "runs" / "runs.jsonl").write_text("")
+        v = self.ni(man)
+        self.assertFalse(v["valid"])
+        self.assertTrue(any("manifest's digest" in p for p in v["problems"]), v["problems"])
+
+    def test_a_setup_failure_before_measuring_may_precede_the_measured_attempt(self):
+        # (§2.5: an attempt that never started measuring holds no observations)
+        man = build(self.root, runs=[{"attempt": 1, "measured": False}, {"attempt": 2}])
+        v = self.ni(man)
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(v["shards"]["runs"]["attempt"], 2)
+        # (but never after it: a measured attempt is the attempt)
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+        v = self.ni(build(self.root, runs=[{"attempt": 1}, {"attempt": 2, "measured": False}]))
+        self.assertFalse(v["valid"])
+
+    def test_the_frozen_file_must_name_the_ci_fields(self):
+        for k in ("ni_rustc", "corpus_text"):
+            reg = copy.deepcopy(REG)
+            del reg["frozen"][k]
+            self.assertFalse(self.ni(build(self.root), reg=reg)["valid"])
+            shutil.rmtree(self.root)
+            self.root = tempfile.mkdtemp()
 
     def test_harm_confirmation(self):
-        flagged = self.ci(r=ci_rows(effect={("runs", 2, "wall"): 1.008, ("text", 1, "wall"): 1.008}, sd=0.001))
-        again = self.ci(r=ci_rows(effect={("runs", 2, "wall"): 1.008}, sd=0.001, seed=9))
-        v = tg.confirm(flagged, again)
-        self.assertEqual(v, {"valid": True, "confirmed": ["runs/2"], "unresolved": ["text/1"]})
-        # (an invalid confirmation run confirms nothing and settles nothing)
-        bad = self.ci(res=result(head="0" * 40))
-        self.assertFalse(tg.confirm(flagged, bad)["valid"])
+        flagged = self.ni(build(self.root, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001)}],
+                                text=[{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001)}]))
+        other = tempfile.mkdtemp()
+        try:
+            build(other, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=9)}])
+            again = tg.ni_judge(other, tg.manifest(other, run=RUN, attempt=1, label="qualification"), HEAD,
+                                reg=REG, check_git=False, rounds=R, batches=B)
+        finally:
+            shutil.rmtree(other)
+        self.assertEqual(tg.confirm(flagged, again), {"valid": True, "confirmed": ["runs/2"], "unresolved": ["text/1"]})
+        self.assertFalse(tg.confirm(flagged, {"valid": False})["valid"])
+
+    def test_the_power_script_runs(self):
+        try:
+            import scipy  # noqa: F401
+        except ImportError:
+            self.skipTest("scipy is not installed")
+        import service_tg_power as pw
+        self.assertAlmostEqual(pw.power(600, 20, 0.05, pw.DELTA), 0.05, places=6)
+        self.assertGreater(pw.power(600, 20, 0.05, 0.0), pw.power(600, 20, 0.05, 0.005))
 
 
 if __name__ == "__main__":

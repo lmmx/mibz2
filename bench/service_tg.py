@@ -4,8 +4,9 @@ docs/journal/2026-11-10-service-guarded-target-gated-registration.md (DRAFT, not
 Two parts, both fixed with the freeze:
 
     python3 bench/service_tg.py report ATTEMPT_DIR --out ATTEMPT_DIR/service-tg
-    python3 bench/service_tg.py ci ARTIFACT_DIR --head SHA --out PREFIX
-    python3 bench/service_tg.py confirm REGISTERED_DIR CONFIRMATION_DIR --head SHA --out PREFIX
+    python3 bench/service_tg.py manifest SHARDS_DIR [--artifacts A.jsonl --jobs J.jsonl --run ID --attempt N --label L]
+    python3 bench/service_tg.py ni SHARDS_DIR --manifest MANIFEST.json --head SHA --out PREFIX
+    python3 bench/service_tg.py confirm ROOT MANIFEST --confirmation ROOT2 MANIFEST2 --head SHA --out PREFIX
 
 **`report`: the workstation A/B** (conditions 3, 4 and its share of 7), judged from the
 attempt's directory as `just bench-service-tg` leaves it: the candidate's default decoder
@@ -30,24 +31,38 @@ CPU and RSS, every round once per arm and budget, every run's plan as expected).
   cell, peak RSS head over base is a demonstrated regression if its two-sided 95% lower bound
   exceeds 1.10. Either fails. Everything else is reported.
 
-**`ci`: the CI off-target noninferiority** (condition 2, and condition 7's CI criteria), judged
-from the registered Benchmark run's artifact (`runs.jsonl` and `result.json`): the standing
-end-to-end grid at the pinned bench revision (the 4-CPU runner × the seven corpora × 1, 2 and 4
-threads × wall and CPU time: 42 cells), every cell's head-over-base paired geometric mean and
-its one-sided 95% upper bound (t at 0.95, n - 1 degrees of freedom) at most 1.02; every cell
-must pass. The run is admitted only as registered: mode `pr`, its head the one given (whose
-only difference from the frozen candidate is the frozen file), its base the frozen base, the
-pinned bench version, `ci_rounds` rounds, the runner's 4 CPUs, a runner CPU that is not the
-target's (the predicate false there by its processor name alone), both arms complete, every
-run successful, one output digest a corpus. Condition 7: a wall cell flagged slower (its
-two-sided 95% interval above 1) is a harm signal, for `confirm`; peak RSS head over base with a
-two-sided 95% lower bound above 1.10 fails.
+**`ni`: the CI off-target noninferiority** (condition 2, and condition 7's CI criteria), from
+the sharded workflow (.github/workflows/target-gated-ni.yml, the Guardian's D077), which
+replaces the draft's single pull-request Benchmark run. The standing grid's 42 cells (the 4-CPU,
+2-core runner × the seven corpora × 1, 2 and 4 threads × wall and CPU time) in nine fixed
+shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard one runner.
+Every cell is `NI_ROUNDS` paired rounds on its own shard's runner, never pooled across
+runners; its estimate the geometric mean of the paired head-over-base ratios; its standard
+error from `NI_BATCHES` consecutive batch means (robust to dependence within a batch); its
+one-sided 95% upper bound (t at 0.95, `NI_BATCHES` - 1 df) at most 1.02. All 42 must pass.
+- **Admission, every shard:**
+  - exactly one attempt that started measuring, none after it;
+  - every file matching the manifest's SHA-256;
+  - labelled `qualification` (a `smoke` run is never evidence);
+  - the registered head (the candidate plus the frozen file alone), base, run, rounds, corpus
+    and threads, and the frozen CI toolchain;
+  - a runner of 4 CPUs on 2 cores, two a core, whose lscpu model is not the target's;
+  - the predicate read back NOT TARGET on that runner (svc_target, checked whole);
+  - the registered corpus digest;
+  - every run successful, placed as `--spread` places it, every round once per arm and
+    thread, one output digest.
+- **Anything missing or failing:** INVALID, and the route fails (§2.5).
+- **Condition 7 on CI:** a wall cell flagged slower (its two-sided 95% batch-means interval
+  above 1) is a harm signal, for `confirm`. Peak RSS head over base whose two-sided 95% lower
+  bound exceeds 1.10 fails.
 
-**`confirm`: the inherited harm-confirmation rule**, on the one confirmation run allowed: a
-wall cell flagged slower in the registered run and flagged slower again in the confirmation
-run on the same head is a confirmed harm, and fails condition 7. A cell not flagged again is
-unresolved, reported. The confirmation run never enters condition 2: it cannot rescue a
-failed cell or replace the registered run.
+`manifest` writes the aggregate's manifest; the workflow's `aggregate` job runs it and `ni`.
+
+**`confirm`: the inherited harm-confirmation rule**, on the one confirmation dispatch allowed
+(§2.6). A wall cell flagged slower in the registered run and flagged slower again in the
+confirmation run on the same head is a confirmed harm, and fails condition 7. A cell not
+flagged again is unresolved, and reported. The confirmation run never enters condition 2: it
+cannot rescue a failed cell, replace the registered run, or be pooled with it.
 
 None of the outcomes is a reason to retry: one attempt (condition 6).
 """
@@ -87,12 +102,31 @@ EXPECT = {
 }
 CORPUS = "wikidata"
 BASE_SUFFIX = "/bin/ab-base"
-# the CI grid at the pinned bench revision (.github/workflows/bench.yml, examples/ab.rs `gen`)
+# the CI grid at the pinned bench revision (.github/workflows/bench.yml, examples/ab.rs `gen`),
+# measured by .github/workflows/target-gated-ni.yml in nine fixed shards (D077)
 CI_CORPORA = ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata")
 CI_THREADS = (1, 2, 4)
 CI_CPUS = 4
+CI_CORES = 2
 CI_ARMS = ("mibz2", "mibz2@base/ab")
 CI_METRICS = ("wall", "cpu")
+NI_ROUNDS = 600  # R: every cell's paired rounds, fixed (registration §2.4)
+NI_BATCHES = 20  # B: consecutive batches of R / B = 30 rounds, the standard error's units (§2.3)
+SHARDS = {c: (c, (1, 2, 4)) for c in CI_CORPORA if c != "wikidata"}
+SHARDS.update({f"wikidata-{t}": ("wikidata", (t,)) for t in CI_THREADS})
+# the corpora's SHA-256 (ab gen at scale 4; bench/wikidata.json's): `text` is built from the
+# candidate's own sources, so its digest is the freeze's (`corpus_text`)
+CORPUS_SHA256 = {
+    "onebyte": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e",
+    "pattern": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
+    "random": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+    "records": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+    "runs": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
+    "wikidata": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+}
+SHARD_FILES = ("shard.json", "rustc.txt", "binaries.sha256", "lscpu.txt", "env.json", "preflight.json",
+               "preflight.exit", "preflight-check.json", "corpus.sha256", "measurement-started.txt",
+               "measurement-ended.txt", "runs.jsonl")
 # the target's processor name (src/parallel.rs SERVICE_NAME): a runner reporting another is
 # off the target by that fact alone
 TARGET_NAME = svc_target_check.NAME
@@ -184,8 +218,8 @@ def upper(logs, conf):
 
 def registered(root=None):
     """The registered workload (bench/wikidata.json), the frozen commits, fetch time,
-    toolchain and CI rounds (bench/service-tg.frozen) and the pinned bench version
-    (bench/report.py's BENCH), from the checkout the judge runs in"""
+    workstation and CI toolchains and the `text` corpus's digest (bench/service-tg.frozen) and
+    the pinned bench version (bench/report.py's BENCH), from the checkout the judge runs in"""
     root = root or os.path.dirname(HERE)
     with open(os.path.join(root, "bench", "wikidata.json")) as f:
         w = json.load(f)
@@ -206,8 +240,10 @@ def registered(root=None):
             frozen[key] = value
         elif key == "rustc" and value.startswith("rustc "):
             frozen[key] = value
-        elif key == "ci_rounds" and re.fullmatch(r"[1-9][0-9]*", value):
-            frozen[key] = int(value)
+        elif key == "ni_rustc" and value.startswith("rustc "):
+            frozen[key] = value
+        elif key == "corpus_text" and re.fullmatch(r"[0-9a-f]{64}", value):
+            frozen[key] = value
     bench = None
     try:
         with open(os.path.join(root, "bench", "report.py")) as f:
@@ -477,7 +513,7 @@ def load(attempt):
 
 
 # ---------------------------------------------------------------------------------------
-# CI: condition 2
+# CI: condition 2, by the sharded workflow (.github/workflows/target-gated-ni.yml)
 
 
 def head_problems(head, cand, root=None):
@@ -495,51 +531,132 @@ def head_problems(head, cand, root=None):
     return [f"the head differs from the candidate beyond the frozen file: {other}"] if other else []
 
 
-def ci_judge(result, rows, unreadable=(), head=None, reg=None, check_git=True):
-    """Condition 2 on the registered Benchmark run (see the module's doc)"""
-    reg = reg or registered()
+def sha256_file(path):
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def manifest(root, artifacts=(), jobs=(), run=None, attempt=None, label=None):
+    """Every shard artifact under `root` (as `gh run download` leaves them: one directory an
+    artifact, `tg-ni-<shard>-a<attempt>`, holding `<shard>/...`), each file with its SHA-256,
+    beside GitHub's own record of the artifacts (id, digest) and the jobs"""
+    meta = {a.get("name"): a for a in artifacts}
+    out = {"schema": "mibz2.tg_ni_manifest/1", "run": run, "attempt": attempt, "label": label,
+           "artifacts": [], "jobs": list(jobs)}
+    for name in sorted(os.listdir(root)) if os.path.isdir(root) else []:
+        m = re.fullmatch(r"tg-ni-(.+)-a([0-9]+)", name)
+        if not m or m.group(1) == "aggregate":
+            continue
+        d = os.path.join(root, name, m.group(1))
+        files = {}
+        if os.path.isdir(d):
+            for f in sorted(os.listdir(d)):
+                if os.path.isfile(os.path.join(d, f)):
+                    files[f] = sha256_file(os.path.join(d, f))
+        a = meta.get(name, {})
+        out["artifacts"].append({"name": name, "shard": m.group(1), "attempt": int(m.group(2)),
+                                 "id": a.get("id"), "digest": a.get("digest"), "files": files})
+    return out
+
+
+def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
+    """The registered estimator (§2.3): the mean of all the paired logs, its standard error from
+    the means of `batches` consecutive equal batches, t with batches - 1 df"""
+    n = len(logs)
+    k = n // batches
+    means = [statistics.fmean(logs[i * k:(i + 1) * k]) for i in range(batches)]
+    m = statistics.fmean(logs)
+    se = statistics.stdev(means) / math.sqrt(batches)
+    df = batches - 1
+    tu, tt = t_ppf(conf_upper, df), t_ppf(1 - (1 - conf_two) / 2, df)
+    return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
+            "hi95": math.exp(m + tt * se), "se": se}
+
+
+def diagnostics(logs):
+    """Reported, never judged: lag-1 autocorrelation of the paired logs in round order, and the
+    two halves' geometric means"""
+    n = len(logs)
+    m = statistics.fmean(logs)
+    var = sum((x - m) ** 2 for x in logs)
+    r1 = sum((logs[i] - m) * (logs[i + 1] - m) for i in range(n - 1)) / var if var else 0.0
+    h = n // 2
+    return {"lag1": r1, "first_half": math.exp(statistics.fmean(logs[:h])),
+            "second_half": math.exp(statistics.fmean(logs[h:]))}
+
+
+def read_text(d, name):
+    try:
+        with open(os.path.join(d, name), errors="replace") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def shard_problems(sid, d, reg, head, run_id, expect_rounds):
+    """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
+    rows by (corpus, threads, arm) and round"""
+    p = []
     fz = reg["frozen"]
-    v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
-         "failing": []}
-    p = v["problems"]
-    for k in ("candidate", "base", "ci_rounds"):
-        if k not in fz:
-            p.append(f"bench/{FROZEN} names no {k}")
-    if not isinstance(result, dict):
-        p.append("result.json unreadable")
-        return v
-    if result.get("mode") != "pr":
-        p.append(f"mode {result.get('mode')!r}, not a head-against-base run")
-    if not head or result.get("head") != head:
-        p.append(f"result.json's head {result.get('head')!r} is not the registered head {head!r}")
-    elif check_git and "candidate" in fz:
-        p += head_problems(head, fz["candidate"])
-    if "base" in fz and result.get("base") != fz["base"]:
-        p.append(f"result.json's base {result.get('base')!r} is not the frozen base {fz['base']}")
-    if result.get("bench") != reg["bench"]:
-        p.append(f"bench {result.get('bench')!r}, not the pinned {reg['bench']!r}")
-    if "ci_rounds" in fz and result.get("rounds") != fz["ci_rounds"]:
-        p.append(f"{result.get('rounds')!r} rounds, not the registered {fz['ci_rounds']}")
-    if result.get("threads") != list(CI_THREADS):
-        p.append(f"threads {result.get('threads')!r}, not {list(CI_THREADS)}")
-    machine = result.get("machine") or {}
-    if machine.get("cores") != CI_CPUS:
-        p.append(f"a runner of {machine.get('cores')!r} CPUs, not the standing {CI_CPUS}")
-    if not isinstance(machine.get("cpu"), str) or not machine["cpu"] or machine["cpu"].strip() == TARGET_NAME:
-        p.append(f"the runner's CPU {machine.get('cpu')!r} is not shown off the target")
+    corpus, threads = SHARDS[sid]
+    missing = [f for f in SHARD_FILES if read_text(d, f) is None]
+    if missing:
+        return [f"{sid}: missing {missing}"], {}
+    try:
+        info = json.loads(read_text(d, "shard.json"))
+    except json.JSONDecodeError:
+        return [f"{sid}: shard.json unreadable"], {}
+    want = {"schema": "mibz2.tg_ni_shard/1", "label": "qualification", "shard": sid, "corpus": corpus,
+            "threads": list(threads), "rounds": expect_rounds, "head": head, "base": fz.get("base"),
+            "github_sha": head, "run_id": run_id}
+    for k, v in want.items():
+        if info.get(k) != v:
+            p.append(f"{sid}: shard.json {k} {info.get(k)!r}, not {v!r}")
+    if "target-gated-ni.yml" not in str(info.get("workflow_ref")):
+        p.append(f"{sid}: not run by target-gated-ni.yml ({info.get('workflow_ref')!r})")
+    rustc = read_text(d, "rustc.txt").strip()
+    if not fz.get("ni_rustc") or rustc != fz["ni_rustc"]:
+        p.append(f"{sid}: toolchain {rustc!r}, not the frozen {fz.get('ni_rustc')!r}")
+    try:
+        env = json.loads(read_text(d, "env.json"))
+    except json.JSONDecodeError:
+        env = {}
+    core_cpus = env.get("core_cpus") or []
+    if not (env.get("cpus") == CI_CPUS and env.get("cores") == CI_CORES and len(core_cpus) == CI_CORES
+            and all(len(str(c).split(",")) == 2 for c in core_cpus)):
+        p.append(f"{sid}: the runner is not 4 CPUs on 2 cores, two a core: {env.get('cpus')!r} CPUs, "
+                 f"{env.get('cores')!r} cores, {core_cpus!r}")
+    model = next((l.split(":", 1)[1].strip() for l in read_text(d, "lscpu.txt").splitlines()
+                  if l.startswith("Model name:")), None)
+    if not model or model == TARGET_NAME:
+        p.append(f"{sid}: lscpu's model {model!r} is not shown off the target")
+    try:
+        record = json.loads(read_text(d, "preflight.json"))
+        status = int(read_text(d, "preflight.exit").strip())
+    except (json.JSONDecodeError, ValueError):
+        record, status = None, None
+    verdict, why = svc_target_check.check(record, status)
+    if verdict != "NOT TARGET":
+        p.append(f"{sid}: the predicate's read-back is {verdict}, not NOT TARGET: {why}")
+    digest = read_text(d, "corpus.sha256").split()
+    want_digest = fz.get("corpus_text") if corpus == "text" else CORPUS_SHA256[corpus]
+    if not digest or not want_digest or digest[0] != want_digest:
+        p.append(f"{sid}: corpus digest {digest[:1]}, not the registered {want_digest!r}")
+    rows, unreadable = read_jsonl(os.path.join(d, "runs.jsonl"))
     if unreadable:
-        p.append(f"runs.jsonl lines not JSON: {list(unreadable)[:5]}")
-    n = fz.get("ci_rounds")
+        p.append(f"{sid}: runs.jsonl lines not JSON: {unreadable[:5]}")
     by = {}
+    cores = [set(str(c).split(",")) for c in core_cpus]
     for i, r in enumerate(rows):
-        if not isinstance(r, dict):
-            p.append(f"row {i}: not a JSON object")
-            continue
         key = (r.get("corpus"), r.get("threads"), r.get("arm"))
-        if key[0] not in CI_CORPORA or key[1] not in CI_THREADS or key[2] not in CI_ARMS or not is_int(key[1]):
-            p.append(f"row {i}: a cell outside the registered grid {key}")
-            continue
         q = []
+        if key[0] != corpus or not is_int(key[1]) or key[1] not in threads or key[2] not in CI_ARMS:
+            q.append(f"a cell outside the shard {key}")
         if r.get("termination") != "success":
             q.append(f"termination {r.get('termination')!r}")
         if r.get("err") != "":
@@ -547,96 +664,140 @@ def ci_judge(result, rows, unreadable=(), head=None, reg=None, check_git=True):
         for k in ("wall", "cpu", "rss_kb"):
             if not positive(r.get(k)):
                 q.append(f"{k} {r.get(k)!r}")
-        if not is_int(r.get("round")):
+        if not (is_int(r.get("round")) and 0 <= r["round"] < expect_rounds):
             q.append(f"round {r.get('round')!r}")
+        if not (isinstance(r.get("hash"), str) and HASH.fullmatch(r["hash"])):
+            q.append(f"hash {r.get('hash')!r}")
+        placed = str(r.get("cpus", ""))
+        t = key[1]
+        if t == 1 and not re.fullmatch(r"[0-9]+", placed):
+            q.append(f"1 thread placed on {placed!r}")
+        if t == 2 and not (len(placed.split(",")) == 2
+                           and all(sum(c in core for c in placed.split(",")) == 1 for core in cores)):
+            q.append(f"2 threads placed on {placed!r}, not one CPU a core")
+        if t == 4 and placed != "all":
+            q.append(f"4 threads placed on {placed!r}")
         if q:
-            p.append(f"row {i} {key}: " + ", ".join(q))
+            p.append(f"{sid} row {i}: " + ", ".join(q))
             continue
-        by.setdefault(key, {})
-        if r["round"] in by[key]:
-            p.append(f"row {i} {key}: round {r['round']} repeated")
-        by[key][r["round"]] = r
-    for corpus in CI_CORPORA:
-        hashes = {r.get("hash") for (c, _, _), rs in by.items() if c == corpus for r in rs.values()}
-        if len(hashes) != 1:
-            p.append(f"{corpus}: {len(hashes)} output digests, not one")
-        for t in CI_THREADS:
-            for arm in CI_ARMS:
-                got = sorted(by.get((corpus, t, arm), {}))
-                if n is not None and got != list(range(n)):
-                    p.append(f"{corpus} at {t} threads, {arm}: rounds {len(got)}, not 0..{n - 1} once each")
+        cell = by.setdefault(key, {})
+        if r["round"] in cell:
+            p.append(f"{sid} row {i}: round {r['round']} repeated")
+        cell[r["round"]] = r
+    if len({r.get("hash") for r in rows}) != 1:
+        p.append(f"{sid}: {len({r.get('hash') for r in rows})} output digests, not one")
+    for t in threads:
+        for arm in CI_ARMS:
+            if sorted(by.get((corpus, t, arm), {})) != list(range(expect_rounds)):
+                p.append(f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
+                         f"not 0..{expect_rounds - 1} once each")
+    return p[:20], by
+
+
+def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batches=NI_BATCHES):
+    """Condition 2 from the sharded workflow's artifacts (registration §2): every registered
+    shard's one measured attempt admitted, each cell estimated from its own shard's runner
+    alone by the batch-means bound, every one of the 42 at most 1.02"""
+    reg = reg or registered()
+    fz = reg["frozen"]
+    v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
+         "failing": [], "shards": {}}
+    p = v["problems"]
+    for k in ("candidate", "base", "ni_rustc", "corpus_text"):
+        if k not in fz:
+            p.append(f"bench/{FROZEN} names no {k}")
+    if man.get("label") != "qualification":
+        p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check is never evidence)")
+    if check_git and "candidate" in fz:
+        p += head_problems(head, fz["candidate"])
+    run_id = man.get("run")
+    arts = man.get("artifacts", [])
+    for sid in SHARDS:
+        mine = sorted((a for a in arts if a["shard"] == sid), key=lambda a: a["attempt"])
+        measured = [a for a in mine if "measurement-started.txt" in a["files"]]
+        if not mine:
+            p.append(f"{sid}: no artifact")
+            continue
+        if len(measured) != 1:
+            p.append(f"{sid}: {len(measured)} attempts that started measuring, not one")
+            continue
+        a = measured[0]
+        if any(b["attempt"] > a["attempt"] for b in mine):
+            p.append(f"{sid}: an attempt after the measured one")
+            continue
+        d = os.path.join(root, a["name"], sid)
+        for f, h in a["files"].items():
+            path = os.path.join(d, f)
+            if not os.path.isfile(path) or sha256_file(path) != h:
+                p.append(f"{sid}: {f} does not match the manifest's digest")
+        q, by = shard_problems(sid, d, reg, head, run_id, rounds)
+        p += q
+        v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
+        if q:
+            continue
+        corpus, threads = SHARDS[sid]
+        for t in threads:
+            h, b = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
+            cell = {"shard": sid}
+            for metric in CI_METRICS + ("rss_kb",):
+                logs = paired_logs(h, b, metric, range(rounds))
+                st = batch_stats(logs, batches)
+                st["diagnostics"] = diagnostics(logs)
+                cell[metric] = st
+            v["cells"][f"{corpus}/{t}"] = cell
     if p:
+        v["cells"] = {}
         return v
     v["valid"] = True
-    for corpus in CI_CORPORA:
-        for t in CI_THREADS:
-            head_r, base_r = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
-            rounds = range(n)
-            cell = {}
-            for metric in CI_METRICS:
-                logs = paired_logs(head_r, base_r, metric, rounds)
-                u = upper(logs, 0.95)
-                two = two_sided(logs, 0.95)
-                cell[metric] = {"ratio": u["ratio"], "upper": u["upper"], "lo95": two["lo"], "hi95": two["hi"],
-                                "pass": u["upper"] <= MARGIN}
-                if not cell[metric]["pass"]:
-                    v["failing"].append(f"{corpus} {t}t {metric} upper {u['upper']:.4f}")
-                if metric == "wall" and two["lo"] > 1.0:
-                    v["flags"].append(f"{corpus}/{t}")
-            rss = two_sided(paired_logs(head_r, base_r, "rss_kb", rounds), 0.95)
-            cell["rss"] = rss
-            if rss["lo"] > RSS_MARGIN:
-                v["rss_regression"].append(f"{corpus}/{t}")
-            v["cells"][f"{corpus}/{t}"] = cell
+    for key, cell in v["cells"].items():
+        for metric in CI_METRICS:
+            cell[metric]["pass"] = cell[metric]["upper"] <= MARGIN
+            if not cell[metric]["pass"]:
+                v["failing"].append(f"{key} {metric} upper {cell[metric]['upper']:.4f}")
+        if cell["wall"]["lo95"] > 1.0:
+            v["flags"].append(key)
+        if cell["rss_kb"]["lo95"] > RSS_MARGIN:
+            v["rss_regression"].append(key)
     v["passes"] = not v["failing"] and not v["rss_regression"]
     return v
 
 
-def ci_markdown(v):
-    out = ["# The guarded service default under the target-gated route: CI condition 2", ""]
+def ni_markdown(v):
+    out = ["# The guarded service default under the target-gated route: CI condition 2 (sharded)", ""]
     if not v["valid"]:
-        out += ["**Not admitted** (the run is not the registered one, or incomplete):"]
+        out += ["**Not admitted** (INVALID: the route fails; nothing is re-run):"]
         out += [f"- {p}" for p in v["problems"]]
         return "\n".join(out) + "\n"
     out += [
-        "Head over base, paired geometric mean over the rounds; the one-sided 95% upper bound at most "
-        f"{MARGIN} at every one of the 42 cells (an intersection-union test at level 5%). Flags: a wall "
-        "cell whose two-sided 95% interval lies above 1 (a harm signal, settled by `confirm`).",
+        f"Head over base, the geometric mean of {NI_ROUNDS} paired rounds on the cell's own runner; the one-sided "
+        f"95% upper bound from {NI_BATCHES} batch means (t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every "
+        "one of the 42 cells (an intersection-union test at level 5%). Lag-1 autocorrelation is reported, not judged.",
         "",
-        "| corpus | threads | wall | wall upper | CPU | CPU upper | peak RSS (95%) |",
-        "|---|--:|--:|--:|--:|--:|--:|",
+        "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall |",
+        "|---|---|--:|--:|--:|--:|--:|--:|",
     ]
     for key, c in v["cells"].items():
-        corpus, t = key.split("/")
-        w, cp = c["wall"], c["cpu"]
+        w, cp, r = c["wall"], c["cpu"], c["rss_kb"]
         mark = lambda x: "" if x["pass"] else " **FAIL**"  # noqa: E731
-        out.append(f"| {corpus} | {t} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
-                   f"| {cp['upper']:.4f}{mark(cp)} | {fmt(c['rss'])} |")
-    out += ["", f"**Condition 2:** {'**met** at every cell' if not v['failing'] else '**not met**: ' + '; '.join(v['failing'])}."]
-    out += [f"**Wall flags (harm signals, one confirmation run):** {', '.join(v['flags']) or 'none'}."]
+        out.append(f"| {key} | {c['shard']} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
+                   f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] "
+                   f"| {w['diagnostics']['lag1']:+.2f} |")
+    out += ["", f"**Condition 2:** {'**met** at every cell' if not v['failing'] else '**not met** (NOT SHOWN): ' + '; '.join(v['failing'])}."]
+    out += [f"**Wall flags (harm signals, §2.6):** {', '.join(v['flags']) or 'none'}."]
     out += [f"**Peak RSS regression (condition 7):** {', '.join(v['rss_regression']) or 'none'}."]
     return "\n".join(out) + "\n"
 
 
 def confirm(registered_v, confirmation_v):
-    """The inherited harm-confirmation rule on the one confirmation run: each wall flag of the
-    registered run, flagged again (confirmed harm: fails condition 7) or not (unresolved)"""
+    """The inherited harm-confirmation rule on the one confirmation dispatch (§2.6): each wall
+    flag of the registered run, flagged again (confirmed harm: fails condition 7) or not
+    (unresolved). It never enters condition 2"""
     if not (registered_v["valid"] and confirmation_v["valid"]):
         return {"valid": False, "confirmed": [], "unresolved": []}
     again = set(confirmation_v["flags"])
     flags = registered_v["flags"]
     return {"valid": True, "confirmed": [f for f in flags if f in again],
             "unresolved": [f for f in flags if f not in again]}
-
-
-def load_artifact(d):
-    try:
-        with open(os.path.join(d, "result.json")) as f:
-            result = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        result = None
-    rows, unreadable = read_jsonl(os.path.join(d, "runs.jsonl"))
-    return result, rows, unreadable
 
 
 def write(prefix, v, md):
@@ -653,13 +814,21 @@ def main(argv=None):
     r = sub.add_parser("report")
     r.add_argument("attempt")
     r.add_argument("--out", required=True)
-    c = sub.add_parser("ci")
-    c.add_argument("artifact")
-    c.add_argument("--head", required=True)
-    c.add_argument("--out", required=True)
+    m = sub.add_parser("manifest")
+    m.add_argument("root")
+    m.add_argument("--artifacts")
+    m.add_argument("--jobs")
+    m.add_argument("--run", type=int)
+    m.add_argument("--attempt", type=int)
+    m.add_argument("--label")
+    n = sub.add_parser("ni")
+    n.add_argument("root")
+    n.add_argument("--manifest", required=True)
+    n.add_argument("--head", required=True)
+    n.add_argument("--out", required=True)
     f = sub.add_parser("confirm")
-    f.add_argument("registered")
-    f.add_argument("confirmation")
+    f.add_argument("registered", nargs=2, metavar=("ROOT", "MANIFEST"))
+    f.add_argument("--confirmation", nargs=2, metavar=("ROOT", "MANIFEST"), required=True)
     f.add_argument("--head", required=True)
     f.add_argument("--out", required=True)
     a = p.parse_args(argv)
@@ -668,13 +837,22 @@ def main(argv=None):
         v = judge(files, rows, unreadable)
         write(a.out, v, markdown(v))
         return 0 if v["valid"] else 1
-    if a.cmd == "ci":
-        v = ci_judge(*load_artifact(a.artifact), head=a.head)
-        write(a.out, v, ci_markdown(v))
+    if a.cmd == "manifest":
+        arts = read_jsonl(a.artifacts)[0] if a.artifacts else []
+        jobs = read_jsonl(a.jobs)[0] if a.jobs else []
+        json.dump(manifest(a.root, arts, jobs, a.run, a.attempt, a.label), sys.stdout, indent=1, sort_keys=True)
+        print()
+        return 0
+    if a.cmd == "ni":
+        with open(a.manifest) as fh:
+            man = json.load(fh)
+        v = ni_judge(a.root, man, a.head)
+        write(a.out, v, ni_markdown(v))
         return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
-    first = ci_judge(*load_artifact(a.registered), head=a.head)
-    second = ci_judge(*load_artifact(a.confirmation), head=a.head)
-    v = confirm(first, second)
+    def one(root, mpath):
+        with open(mpath) as fh:
+            return ni_judge(root, json.load(fh), a.head)
+    v = confirm(one(*a.registered), one(*a.confirmation))
     md = ("# Harm confirmation\n\n" + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. "
           f"Unresolved: {', '.join(v['unresolved']) or 'none'}.\n" if v["valid"] else "Not admitted: a run is invalid.\n"))
     write(a.out, v, md)

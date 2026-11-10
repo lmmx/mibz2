@@ -1,7 +1,8 @@
 # The guarded service default under the target-gated route: registration (DRAFT)
 
-10 November 2026. **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a
-measurement of this candidate. `bench/service-tg.frozen` names no commits, so
+10 November 2026; amended the same day under the Guardian's D077 (§2 replaced, §3.1 added).
+**DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
+candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
 Researcher's review (RULES C1) and the Coordinator's registration; the workstation run is
 Louis's, on the i9, after that (RULES C5).
@@ -38,7 +39,8 @@ condition below is required; missing or invalid evidence fails.
 - **How the old data is used, and only so:**
   - its paired variances size the workstation rounds (§4);
   - its CI result exposed an off-target discovery cost, removed in this candidate (§8);
-  - CI's history sizes condition 2 (§2).
+  - CI's history sizes condition 2 (§2.4);
+  - the pilot run 42732367790 on this PR, before any freeze, prices the shards (§2.7).
 
   None of it is pooled with, or substitutes for, this registration's observations.
 - **Information value (RULES C3).** A new sample is needed in any case: the route admits no
@@ -94,113 +96,274 @@ Unit tests cover:
 - every quota, any established limit included;
 - discovery's failures, a CPU of another name or with no name among them.
 
-**The bench runner:** the Benchmark job runs no `cargo test`. The CI judge
-(`service_tg.py ci`) therefore admits the registered run only if its recorded runner CPU
-(`result.json`, `machine.cpu`, read from that runner's `/proc/cpuinfo`) is not the target's
-name. The predicate is then false on that runner by that fact alone.
+**Every measurement runner:** the test above runs on the Test job's machine, which is not the
+machine that measures (D077). So every shard of condition 2's workflow reads the predicate
+back on its own runner, before measuring: `examples/svc_target.rs`, checked whole by
+`bench/svc_target_check.py`, must be NOT TARGET. That means the predicate false at 9, 10 and
+11, and the public dispatch building master's decoder at each, every decode correct. The shard
+also records the runner's lscpu model, which must not be the target's (§2.2).
 
 **What this establishes:** fallback selection only. Equal plans don't establish zero
 discovery, layout or shared-code cost; condition 2 bounds that.
 
 ## 2. CI off-target noninferiority (condition 2)
 
-**The standing grid at the pinned bench revision.** The pinned revision is bench **3.5.0**, at
-the frozen candidate: `.github/workflows/bench.yml` (pull-request mode), `examples/ab.rs`, and
-`bench/report.py`'s `BENCH`.
+**Amended 10 November 2026, under the Guardian's D077** (#145 comment 6756184275;
+`state/decisions.md` at 6c63ce5e, D077). This section **replaces** the draft's admission path
+for condition 2. That path was the first completed pull-request Benchmark run on the freeze
+commit, mode `pr`, bench 3.5.0, a single artifact. In its place is a dispatch-only, sharded,
+within-runner workflow, `.github/workflows/target-gated-ni.yml`, judged by
+`bench/service_tg.py ni`. Everything below is fixed before any qualification observation
+under the frozen registration.
+- **Authority:** amended RULES C6. D077 rules that no RULES amendment is needed and that this
+  replacement is a prospective bench-policy decision, recorded here and in its reviewed record.
+- **The standing PR bench is unchanged.** It keeps running on every push to this PR; those runs
+  are exploratory (§2.7).
 
-| axis | the cells |
+### 2.1 The grid and its pinned inputs
+
+The standing CI end-to-end grid at the pinned bench revision (bench 3.5.0 at the frozen
+candidate) is 7 corpora × 3 thread counts × 2 metrics = **42 cells**. Every one is required.
+
+| axis | the cells, pinned |
 |---|---|
-| runner configuration | `ubuntu-latest`, 4 CPUs on 2 physical cores (`nproc` = 4), whatever CPU model it gets; `--spread`, settle 0.25 s |
-| corpus | `onebyte`, `pattern`, `random`, `records`, `runs`, `text` (`ab gen corpora 4`), `wikidata` (bench/wikidata.json's 12 MB of blocks, SHA-256 82f65ace…) |
-| threads | 1 (pinned to CPU 1), 2 (CPUs 0 and 2), 4 |
-| metric | wall time, CPU time (the child's `RUSAGE_SELF`) |
+| runner | GitHub-hosted `ubuntu-latest`, admitted only if its observed topology is 4 logical CPUs on 2 physical cores, two a core (`ab env --facts`: `cpus` 4, `cores` 2, each `core_cpus` entry two CPUs), and its lscpu model is not the target's. The label `ubuntu-latest` and `nproc` alone prove nothing. The CPU model is recorded, not chosen. |
+| corpus | `onebyte` 22924f5b…4a9e, `pattern` 0f07e2a2…1407, `random` 10d444e6…3f18, `records` ff8b5f6e…1f8c, `runs` af3be4d1…2fb8 (`ab gen`, scale 4, libbzip2 -9), `wikidata` 82f65ace…9915 (bench/wikidata.json). Full digests are in `bench/service_tg.py` `CORPUS_SHA256`. `text` is built by `ab gen` from the candidate's own sources, so its digest is the freeze's `corpus_text`. |
+| threads and placement | 1 (pinned to one CPU), 2 (`--spread`: one CPU on each core), 4 (all); settle 0.25 s, as the standing bench |
+| metric | wall time; CPU time (the child's `RUSAGE_SELF`) |
+| arms | `mibz2` (the head's `ab`) and `mibz2@base/ab` (the base's own `ab`, built from the frozen base in a worktree) |
+| toolchain | the dispatch's `toolchain` input; the freeze's `ni_rustc` is its `rustc -V`, checked on every shard |
+| harness and estimator | `examples/ab.rs` and `bench/service_tg.py` at the frozen candidate; the workflow file at the dispatched head, which must be the head itself |
+| head and base | the freeze commit F (the candidate C plus the frozen file alone, checked with git) and the frozen base |
 
-7 corpora × 3 thread counts × 2 metrics = **42 cells**. Every one is required.
+### 2.2 The shards, and their budget
 
-- **Arms:** `mibz2` (the head's `ab`) and `mibz2@base/ab` (the base's own `ab`, built from
-  the merge base with master).
-- **Corpus validity:** the runs of each corpus give one output digest, with no error (parity).
+Nine shards, fixed now. Each is one runner and one job:
 
-**The estimator and the pass rule.** For each cell:
-- `R` = the n paired head-over-base ratios, paired by round;
-- the estimate is their geometric mean;
-- `U = exp(mean(log R) + t(0.95, n − 1) · sd(log R) / √n)`;
-- the cell passes if `U ≤ 1.02`.
+| shard | cells | measured s a round (pilot pace) | minutes at R = 600 | at the slowest pace seen (×1.75) |
+|---|---|--:|--:|--:|
+| `onebyte` | onebyte × 1, 2, 4 × wall, CPU | 1.70 | 17.0 | 29.8 |
+| `pattern` | pattern × 1, 2, 4 | 1.74 | 17.4 | 30.5 |
+| `random` | random × 1, 2, 4 | 2.17 | 21.7 | 38.0 |
+| `records` | records × 1, 2, 4 | 2.22 | 22.2 | **38.9** |
+| `runs` | runs × 1, 2, 4 | 1.66 | 16.6 | 29.1 |
+| `text` | text × 1, 2, 4 | 2.00 | 20.0 | 35.0 |
+| `wikidata-1` | wikidata × 1 | 1.87 | 18.7 | 32.7 |
+| `wikidata-2` | wikidata × 2 | 1.26 | 12.6 | 22.1 |
+| `wikidata-4` | wikidata × 4 | 1.17 | 11.7 | 20.5 |
+| all | 42 cells | 15.8 | 158 runner-minutes | 277 |
 
-Condition 2 passes only if all 42 cells pass: an intersection-union test at level 5%. It is
-not simultaneous coverage. `bench/service_tg.py ci` computes it from the run's artifact
-(`runs.jsonl`, `result.json`), with exact t quantiles. Those quantiles are checked against
-scipy in the tests.
+- **Where the costs come from:** the pilot's Run step (run 42732367790: 158 s, 10 rounds, 420
+  runs). Each run is its decode's wall time plus 0.261 s, which is the 0.25 s settle and the
+  child's start. The table is that, per shard.
+- **The slowest pace seen:** of the last 30 successful PR Benchmark runs, the same 420-run
+  shape took 135 to 277 s. 277/158 = 1.75.
+- **Why `wikidata` is split by thread count:** whole, it would cost 43 minutes at the pilot's
+  pace and 75 at the slowest. Every other corpus fits whole.
+- **Setup is budgeted at 15 minutes a shard** (cold release builds of the head and the base,
+  fat LTO, no cache; the corpus; the read-back).
+- **The timeout:** the slowest shard (`records`) is then about 54 minutes at the slowest pace
+  seen. The job timeout is fixed at **90 minutes**, a 36-minute margin.
+- **Cost against the alternatives (RULES C3):** about 160–280 runner-minutes of measurement and
+  about 2 hours of setup, on hosted runners at no charge. Repeating 10-round PR runs can't
+  answer condition 2 (§2.4), and a single 60-minute job can't hold 600 rounds.
+- **The partition is fixed now.** It can't be changed after a timeout, a wide interval or a
+  failing cell.
 
-**The registered CI run.** The run, and how it is admitted:
-- **The head:** the freeze commit F. It adds `bench/service-tg.frozen` to the candidate C and
-  changes nothing else. The judge checks with git that C is an ancestor of F and that the
-  frozen file is the only path between them.
-- **The run:** the Benchmark workflow's first completed (not cancelled) run on F, the pull
-  request's own run.
-- **The base:** the frozen base, which is the merge base the workflow computes. The base must
-  not move: master isn't merged again after the freeze, because merging it would change the
-  candidate and need a new registration.
-- **The run is admitted only as registered:**
-  - mode `pr`;
-  - its head F, its base the frozen base;
-  - bench 3.5.0;
-  - `ci_rounds` rounds, threads 1, 2, 4;
-  - a 4-CPU runner whose CPU is not the target's;
-  - every cell complete;
-  - every run's `termination` "success", with an empty `err`;
-  - one digest per corpus.
-- **Not admitted:** the run is invalid. The registration records it and ends there; there's no
-  re-run to pass.
-- **Earlier runs:** the bench runs on this pull request before F are exploratory. They are
-  disclosed and never qualify. The parameters above were fixed from CI's history (below)
-  before this candidate's first CI run completed.
+**Within a shard,** one `ab run` measures its cells for R rounds:
+- in each round, every thread count in order;
+- at each, the two arms back to back, their order rotated as `ab` does (balanced over each 2
+  rounds from an even round);
+- every run its own child process.
 
-**The repeat and confirmation policy, under the inherited harm-confirmation rule**
-(`2026-11-05-p87-production-validation.md`, `2026-11-09-build-window-runs-v2.md`):
-- **Condition 2 is decided by the registered run alone.**
-- **A slower flag:** a wall cell whose two-sided 95% interval lies above 1 in the registered
-  run is a harm signal. One confirmation run on the same head F (a re-run of the job) settles
-  every signal at once.
+A cell's pairs are (head, base) at one thread count in one round, on that shard's runner. **No
+cell mixes runners. Nothing is pooled across shards.** Each cell's interval comes from its own
+runner alone.
+
+**What sharding changes, and the resulting estimand:**
+- Each corpus's cells now run on their own runner, so they don't share the round with the other
+  corpora, as the standing bench's do. Their cache and thermal history is their own corpus's,
+  and the nine runners may be different CPU models.
+- **The estimand:** for each cell, the geometric-mean head/base time ratio on the one runner
+  that shard drew, under this harness.
+- **What it isn't:** a fleet average. Nor does a predicate-false read-back on nine runners show
+  coverage of every non-target CPU (D077).
+
+**Each shard records** (`shard.json` and beside it):
+- the run id, its attempt, the job, the head, base, workflow ref and SHA;
+- the runner's name and image;
+- `rustc -V`;
+- the binaries' digests;
+- lscpu;
+- `ab env --facts`;
+- the predicate's read-back on that runner: `svc_target`'s record and exit, and the checker's
+  verdict, which must be **NOT TARGET**, meaning the predicate false and master's decoder built
+  by the public dispatch at 9, 10 and 11, every decode correct. A CI test on another job's
+  machine is not enough (D077).
+- the corpus's digest;
+- when the measurement started and ended;
+- the runs;
+- every file's SHA-256.
+
+**The `aggregate` job** gathers every shard artifact of every attempt into a manifest:
+- each file's SHA-256;
+- GitHub's artifact id and digest;
+- the jobs' conclusions.
+
+It then runs the judge. Every attempted shard is archived, failures included.
+
+### 2.3 The sampling model, and the estimator
+
+- **For each cell:** X_i = log(head time_i / base time_i), i = 0 … R − 1, in round order.
+- **The estimate:** exp(mean X).
+- **Pairing removes common-mode noise. It doesn't make the X_i independent:** drift, thermal
+  evolution, a runner's noisy episode or order effects can correlate neighbouring rounds, and
+  then s/√R understates the standard error (D077).
+- **So the registered standard error is the batch-means one, chosen now and not after any
+  data.**
+  - The R = 600 rounds form B = **20** consecutive batches of 30 rounds.
+  - se = sd(batch means)/√B.
+  - The upper bound is U = exp(mean X + t(0.95, 19) · se), with t(0.95, 19) = 1.7291.
+  - The cell passes if U ≤ 1.02.
+  - The two-sided 95% interval for flags and RSS uses t(0.975, 19).
+- **What this assumes, stated:**
+  - **Within the run:** the cell's paired logs have a constant mean.
+  - **Dependence:** short-range only, decaying well within a 30-round batch (about 5 to 8
+    minutes of wall clock in a shard). The batch means are then approximately independent and,
+    at 30 rounds each, approximately normal.
+  - **What it tolerates:** autocorrelation within a batch, and heavy tails within a batch.
+  - **What it doesn't:** a trend across the whole run, or dependence lasting longer than a
+    batch. Under positive dependence of that kind the interval is too narrow.
+  - **Arm order:** balanced within every batch.
+- **What the interval is not:** a randomisation inference over runners. Its conclusion is about
+  the run on each shard's runner.
+- **Reported, never judged:**
+  - each cell's lag-1 autocorrelation of X in round order;
+  - its two halves' geometric means.
+
+  They are for the Researcher's assessment of the model. They don't select an estimator, and no
+  threshold on them changes a verdict.
+- **The Researcher's review of these assumptions comes before the freeze** (§10). If the review
+  finds the model inadequate, the design changes before any qualification data, never after.
+- **No validity check is applied to the qualification data beyond §2.5's admission.** Interval
+  width is not invalidity.
+
+### 2.4 Power, and size
+
+- **Size:** at a cell's null boundary (true ratio 1.02), the test passes that cell with
+  probability 0.05, whatever σ, R and B. That is its level.
+- **Power:** at a true ratio of 1.00, which is inside the alternative, not on its boundary. Low
+  power at R = 10 means the test is unlikely to show noninferiority there. It doesn't mean
+  success is impossible.
+- **The intersection-union test needs no independence across cells or shards.** If any cell is
+  truly at or beyond the margin, passing all 42 has probability at most 0.05.
+- **The all-pass power does depend on dependence across cells,** so two summaries are given:
+  - the dependence-free lower bound, max(0, 1 − Σ misses) (D077);
+  - the product, which assumes independent cells and is not a bound.
+
+**The inputs:**
+- **History:** the `bench-results` branch's `links.jsonl`, which keeps each merged PR's last
+  paired Benchmark run. Every run there at bench 3.x, 10 rounds and 4 CPUs is taken: 47 runs,
+  2026-10-28 to 2026-11-09, PRs 69 to 311.
+- **Per cell:** the within-run sd of the 10 paired logs on one runner, which is the noise one
+  shard sees. Its median and its 90th percentile over the 47 runs are the planning sds.
+  Examples:
+  - `pattern` 2t wall: median 0.104, p90 0.159;
+  - `wikidata` 1t wall: 0.014 and 0.030;
+  - the whole table is printed by the script.
+- **What these sds are not:** bounds. Each is a 9-df estimate, and the history's runs were real
+  changes, not nulls (their sds, not their means, are used).
+
+**The model:** the batch means are iid normal with sd σ/√(R/B), so a cell passes with
+probability P(T ≥ t(0.95, B − 1)), where T is noncentral t with B − 1 df and noncentrality
+(log 1.02 − μ)·√R/σ. It is computed by `python3 bench/service_tg_power.py links.jsonl`,
+published with this registration for the Researcher to reproduce.
+
+| R | B | planning sd, every cell | true ratio | weakest cell | Σ misses | all 42, lower bound | all 42, if independent |
+|--:|--:|---|--:|--:|--:|--:|--:|
+| 300 | 20 | median | 1.000 | 0.938 | 0.062 | 0.938 | 0.938 |
+| 480 | 20 | median | 1.000 | 0.991 | 0.009 | 0.991 | 0.991 |
+| **600** | **20** | **median** | **1.000** | **0.998** | **0.002** | **0.998** | **0.998** |
+| 600 | 20 | median | 1.005 | 0.958 | 0.042 | 0.958 | 0.958 |
+| 600 | 20 | median | 1.010 | 0.721 | 0.317 | 0.683 | 0.694 |
+| 600 | 20 | p90 | 1.000 | 0.902 | 0.193 | **0.807** | 0.819 |
+| 600 | 20 | p90 | 1.005 | 0.710 | 1.002 | 0.000 | 0.333 |
+| 900 | 20 | p90 | 1.000 | 0.975 | 0.035 | 0.965 | 0.965 |
+| 10 (standing) | – | – | 1.000 | – | – | ≈ 0 | ≈ 0 |
+
+- **R = 600 is a design candidate, not a guaranteed power.**
+  - At the median sds and no true effect, the all-cell lower bound is 0.998.
+  - With every cell at its 90th-percentile sd at once (pessimistic), it is 0.81.
+  - Power falls sharply as the true ratio nears 1.02: at a true +0.5% everywhere, it is between
+    0.96 and well below 0.5, depending on the sds.
+- **These numbers assume the model:** positive dependence within or across batches lowers them.
+- **The draft's earlier figure is superseded.** The draft's "0.85 at 600" came from a different
+  calculation: each historical run's own sds, an iid t interval, and the product across cells.
+- **The standing 10 rounds** give a conditionally low power, about 0 for the all-cell claim
+  under every history-based variance input. That is low power at R = 10, not a proof that
+  passing is impossible.
+
+### 2.5 Fixed R, timeouts and invalid runs
+
+- **R = 600 and B = 20 are fixed.** No interim look, no early stop, no extra rounds.
+  - If the realised variance runs high, the result is the registered bound: PASS, or NOT
+    SHOWN, which fails qualification.
+  - Never more rounds, a re-run, a new shard, another estimator or an easier threshold.
+- **One qualification dispatch**, labelled `qualification`, with `shards: all`, the frozen head
+  and base, `rounds: 600`, and the frozen toolchain.
+- **The only recovery allowed is strictly before measurement.**
+  - A shard job that failed before its measurement step began holds no observations: no
+    `measurement-started.txt` and no `runs.jsonl`. Such a job may be re-run, as the same run's
+    next attempt ("re-run failed jobs"). Its earlier attempt is archived.
+  - Once a shard's measurement has started, that attempt is the shard's attempt. A later
+    attempt of it makes the run INVALID.
+- **INVALID fails condition 2, and so the route.** Nothing is re-run to pass. Any of these makes
+  the run INVALID:
+  - a shard missing;
+  - a shard that timed out, was cancelled or failed after its measurement started;
+  - an artifact not matching the manifest;
+  - a wrong label, head, base, run, rounds, corpus, threads or toolchain;
+  - a runner of another topology or the target's model;
+  - a read-back that isn't NOT TARGET;
+  - a corpus digest that isn't the registered one;
+  - an incomplete or duplicated cell, a failed child, a misplaced run, or two output digests in
+    a shard.
+- **Every attempt is retained** with the manifest. A data-bearing failure is never called an
+  infrastructure retry (D077).
+
+### 2.6 The harm-confirmation rule, reconciled
+
+The inherited rule stays (D077 keeps it unless a separate forward-only decision changes it). It
+cannot touch condition 2:
+- **Condition 2 is decided by the one qualification dispatch alone.**
+- **A slower flag:** a wall cell whose two-sided 95% batch-means interval lies above 1 in that
+  dispatch is a harm signal.
+- **The confirmation dispatch:** one more full dispatch of the same workflow on the same head,
+  base and settings, labelled `qualification`, settles every signal at once. It is made only if
+  something is flagged.
   - A cell flagged slower again is a **confirmed harm**, and fails condition 7, even where its
-    U is at most 1.02. The route accepts an untested margin, not a replicated slowdown.
-  - A cell not flagged again is unresolved, and reported with both runs.
-- **No more runs:** at most one confirmation run, and none if nothing is flagged.
-- **The confirmation run can't rescue anything.** It never enters condition 2: it cannot
-  rescue a failed cell, replace the registered run, or be pooled with it.
-- `service_tg.py confirm` applies this rule.
+    U ≤ 1.02.
+  - A cell not flagged again is unresolved, reported with both dispatches.
+- **The confirmation dispatch never enters condition 2.** It can't rescue a failed cell,
+  replace or pool with the first dispatch, or change its verdict. If it is INVALID, the flags
+  stay unresolved, and condition 7 counts them as not confirmed.
+- `service_tg.py confirm` applies the rule.
 
-**BLOCKER: at the standing 10 rounds, condition 2 is not attainable, whatever the candidate
-does.** CI's history shows why. `bench-results` `links.jsonl` holds 47 paired PR runs from
-28 October to 9 November 2026: bench 3.x, 10 rounds, 4 CPUs, every runner model seen.
-- **Measured from that history:**
-  - Under this rule, **none of the 47** would have passed all 42 cells.
-  - They fail 9 to 26 cells each, median 15. The noisiest cells' within-run sd of the log ratio
-    is about 0.10 (`pattern` at 2 threads, wall, median over runs), against a margin of
-    log 1.02 = 0.0198.
-- **Modelled:** the probability that a candidate with no effect at all passes every cell.
-  This assumes each run's per-cell sds as its noise and normal paired logs, averaged over the
-  47 runs' noise:
+### 2.7 Data before the freeze, disclosed
 
-  | rounds | 10 | 50 | 100 | 160 | 250 | 400 | 600 |
-  |---|--:|--:|--:|--:|--:|--:|--:|
-  | P(all 42 pass \| null) | 0.000 | 0.03 | 0.17 | 0.34 | 0.53 | 0.72 | 0.85 |
-  | one runner's Run step, at 16–28 s a round | 3–5 min | 13–23 | 27–47 | 43–75 | 1.1–1.9 h | 1.8–3.1 h | 2.7–4.7 h |
+None of the following is qualification data, and none can be pooled with the fresh sample:
+- **Run 42732367790:** the standing PR Benchmark, attempt 1, on b63f6bee, 10 rounds.
+  - It completed successfully, before any freeze, with this registration then marking CI rounds
+    OPEN and excluding pre-freeze runs.
+  - It is an exploratory pilot. Read under the draft's rule, 18 of 42 cells were NOT SHOWN, on
+    width, and none was flagged slower.
+  - Its per-run cost is the §2.2 budget's input. Its outcome informed nothing else here.
+- **Every later standing Benchmark run on this PR before the freeze** is exploratory too.
+- **The smoke check of the new workflow** is labelled `smoke`, R = 2, a plumbing check. The
+  judge refuses `smoke` as evidence.
+- **#302's outcomes are preserved unchanged** (§0).
 
-So a qualification run at 10 rounds would very probably fail, and would spend this
-registration's one attempt on an uninformative result. Reaching about 80% power takes
-around 500 rounds, beyond one job's 60-minute limit.
-- **The rounds are not the grid,** and condition 6 makes them the registration's to fix.
-- **But the workflow has no way to run more,** and adding one, or sharding the run across
-  runners with a pooled estimator, is a change to the standing bench. The route makes any such
-  change "a separate prospective bench-policy decision".
-- **So this registration is not freezable** until that decision fixes:
-  - `ci_rounds`;
-  - the mechanism that runs them;
-  - if sharded, how the interval accounts for runners: per-shard means or pooled pairs.
-
-The judge already takes `ci_rounds` from the frozen file and checks the run against it. A
-sharded design would need the judge extended to several artifacts, under that decision.
+Only fresh observations from the qualification dispatch after the freeze count.
 
 ## 3. On-target superiority (condition 3)
 
@@ -223,6 +386,43 @@ sharded design would need the judge extended to several artifacts, under that de
   6.8% gain gives a lower bound near 1.057. The probability of passing is about 1.00 at a true
   1.068, 0.97 at 1.04, and 0.42 at 1.03. CPU passes with near certainty at the earlier
   attempt's 0.85.
+
+### 3.1 The i9's two modes: the on-target freeze waits
+
+The Pathfinder found that at 10 threads the i9 has two persistent modes
+(`docs/journal/2026-11-10-two-modes.md`, PR #313):
+- **The modes:** a decode takes about 0.15 s or about 0.30 s, nothing between, with every
+  thread's CPU time grown alike.
+- **Persistence:** a fast run follows a fast run 52% of the time, against 21% by chance.
+- **The mechanism is not yet named.** Its candidates are a core-clock mechanism (the governor's
+  ramp, stop-clock throttling, the package power limit), sibling packing, and huge pages.
+
+A separate diagnostic recipe to name it is being built. **The on-target half of this
+registration (§§3, 4 and the workstation's §7 criteria) is not frozen until that diagnostic's
+result is in and reviewed.** If it changes the design, the change is made before any
+workstation data.
+
+**How the paired, interleaved design behaves under the modes (model, not observed):**
+- **A mode shared within a pair** (both arms of a round in the same mode, as persistence over
+  runs suggests):
+  - It scales both times alike, and the paired log ratio cancels it.
+  - What it adds is the modes' interaction with the plan: if svc2 and the pipelined default
+    slow by different factors in the slow mode, the ratio itself is bimodal. The estimate is
+    then a mixture weighted by the run's mode frequencies, and its interval is wide.
+- **A switch within a pair** (one arm fast, the other slow):
+  - It adds about ±log 2 ≈ ±0.69 to that pair's log ratio, against a planning sd of 0.05.
+  - A few such pairs dominate the variance. If switches favour one arm's position or plan,
+    they also bias the mean.
+  - Arm-order rotation balances position, not plan: a mode that the plan itself provokes
+    (more threads, more siblings packed) is a real effect of the plan and belongs in the
+    estimate, while a mode from the machine's state at the moment does not.
+- **What the earlier attempts showed:** `service-guarded/20261109T195345Z`'s 60 runs at 10
+  threads were all fast (0.126–0.158 s), and `run-fed-leader/20261109T201013Z`'s, 17 minutes
+  later on the same machine, mostly slow. So the mode can change between attempts as well as
+  within one.
+- **What can't be decided until the mechanism is named:** whether a one-attempt design of 128
+  rounds can estimate the plan's effect without mode exclusion, or a mode covariate,
+  registered beforehand.
 
 ## 4. Fallback no harm (condition 4)
 
@@ -357,8 +557,9 @@ measured.
   - `candidate`: the branch's commit after master is merged at the freeze;
   - `base`: master as fetched;
   - `base_fetched`: the UTC fetch time;
-  - `rustc`: the toolchain;
-  - `ci_rounds`: the CI rounds.
+  - `rustc`: the workstation's toolchain;
+  - `ni_rustc`: the CI shards' toolchain (`rustc -V`);
+  - `corpus_text`: the `text` corpus's digest at the candidate (§2.1).
 
   The procedure:
   - fetch master and record its SHA and the time;
@@ -368,27 +569,32 @@ measured.
   The recipe refuses if HEAD's measured inputs differ from the candidate, or if the base isn't
   an ancestor of the candidate. A changed candidate or base needs a new registration.
 - **The public entry point:** `BzReader::parallel` (ab's `mibz2` arm, `ab child`), both builds.
-  On CI, the same through the standing bench's arms.
-- **The toolchain:** the workstation's `rustc -V`, frozen exactly. The recipe refuses another
-  before anything is built, and both checkouts must select the same one. CI uses the
-  workflow's own stable toolchain, as the standing bench does; it is recorded in `result.json`.
+  On CI, the same through `ab`'s two arms in each shard.
+- **The toolchain:** frozen exactly, `rustc -V`.
+  - **Workstation:** the recipe refuses another before anything is built, and both checkouts
+    must select the same one.
+  - **CI:** the dispatch's `toolchain` input selects it, and every shard's `rustc -V` must be
+    the frozen `ni_rustc`.
 - **The measured inputs:**
   - `src`, Cargo's files and configuration, `examples` (the harness and the preflight),
     `tests/common`;
   - the judge (`bench/service_tg.py`, with `bench/service_guarded.py` for its shared helpers),
     `bench/svc_target_check.py`, `bench/report.py`;
-  - the corpus's builder and manifest, the bundler, the Justfile, the recipe and this file.
+  - the corpus's builder and manifest, the bundler, the Justfile, the recipe and this file;
+  - for CI, `.github/workflows/target-gated-ni.yml` at the head.
 - **Pair construction:**
   - **Workstation:** one `ab run`, 2 arms, threads 9, 10, 11, 128 rounds, each run its own
     child process, unpinned. A pair is (head, base) at one budget in one round; within a round
     the budgets run in order and the two arms back to back, their order rotated as `ab` does.
     Settle as `ab`'s default: 2 s at most 1.5 busy cores before each run.
-  - **CI:** the standing bench's pairs, by round.
-- **The estimand:** the geometric mean of the paired ratios. The interval is a t-interval on the
-  logs, at the levels in §§2–4.
+  - **CI:** each shard's one `ab run`, by round, on its own runner (§2.2).
+- **The estimand:** the geometric mean of the paired ratios.
+- **The intervals:**
+  - **Workstation:** a t-interval on the logs, at the levels in §§3–4.
+  - **CI:** the batch-means bound of §2.3.
 - **Sample size and stopping:**
   - workstation, 128 rounds, fixed;
-  - CI, `ci_rounds` (§2, open), fixed;
+  - CI, 600 rounds a cell in batches of 30, fixed (§§2.4–2.5);
   - no interim look, no early stop, **one attempt**.
 - **Exclusions:** none. Every row is required, and none is deleted, replaced or selected.
   Diagnostics never gate or select.
@@ -402,12 +608,15 @@ measured.
     - **Timed rows exist:** INCOMPLETE (the harness stopped), INVALID or VALID. That is this
       registration's one attempt. It is retained as it is, and nothing is re-run under this
       registration.
-  - **CI:** the run is not admitted (§2). It is retained, and the registration ends there.
+  - **CI:** INVALID as §2.5 defines it. It is retained, condition 2 fails, and the route fails.
+    The one recovery is §2.5's, strictly before measurement.
   - **The rule for later registrations:** a later registration for this change discloses every
     attempt here and its outcome, and justifies its information value. It cannot reset the
     no-retry-to-pass rule.
-- **Order:** the workstation run and the registered CI run may happen in either order after the
-  freeze. Neither's result changes the other's rule.
+- **Order:** the workstation run and the CI qualification dispatch may happen in either order
+  after the freeze. Neither's result changes the other's rule. The on-target half's freeze
+  waits for the two-modes diagnostic (§3.1). It may be frozen separately, later, if the
+  diagnostic changes nothing in §§2 and 7's CI parts.
 
 ## 7. Other regressions (condition 7), fixed before data
 
@@ -430,7 +639,7 @@ measured.
     few MB on an ordinary 16 GB laptop. The earlier attempt measured svc2 at 0.863 of the
     base's peak at 10 threads.
   - No memory improvement is claimed.
-- **Wall:** CI's cells by condition 2 and the harm-confirmation rule (§2); the workstation's
+- **Wall:** CI's cells by condition 2 and the harm-confirmation rule (§2.6); the workstation's
   by conditions 3 and 4.
 - **Not judged:** CI's stage table and resources assessment (diagnostics), and the
   workstation's medians.
@@ -475,16 +684,22 @@ measured.
   built or 10 from cold.
 - **In all, about 35–40 minutes on the i9,** within 45. The settle gate's waits, if the machine
   is busy, add 20 s each.
+- **CI (§2.2):** nine parallel hosted runners, the slowest shard about 54 minutes at the
+  slowest pace seen. About 160–280 runner-minutes of measurement, plus setup.
 
 ## 10. Open before a freeze
 
-1. **Condition 2's sample size and mechanism (BLOCKER, §2):** a prospective bench-policy
-   decision on how the registered CI run gets enough rounds. This registration can't make it
-   within the route.
-2. **The Researcher's review** of this registration, and the Guardian on the coverage
-   argument and the CI decision (STEWARDSHIP condition 5: "reviewed before the qualification
-   run").
+1. **The Researcher's review** of the amended §2:
+   - the shard plan;
+   - the sampling model and batch-means estimator;
+   - the power calculation (reproduced from `bench/service_tg_power.py`);
+   - the timeout and invalid-run rules;
+   - the workflow, `.github/workflows/target-gated-ni.yml`.
+
+   Also the Guardian on the coverage argument (STEWARDSHIP condition 5: "reviewed before the
+   qualification run"), and the bench-policy record D077 asks for.
+2. **The two-modes diagnostic** (§3.1): its result, before the on-target half is frozen.
 3. **The i9's name, read back before the freeze:** `just bench-svc-target`, the untimed
-   preflight-only entry, at a new freeze of its own. It confirms that the narrowed predicate is
-   TARGET on the workstation as Louis runs it, before a timed slot is spent.
-4. **The freeze's values:** `candidate`, `base`, `base_fetched`, `rustc`, `ci_rounds`.
+   preflight-only entry, at a new freeze of its own.
+4. **The freeze's values:** `candidate`, `base`, `base_fetched`, `rustc`, `ni_rustc`,
+   `corpus_text`.

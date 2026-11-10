@@ -4,6 +4,9 @@
 #   candidate <40-hex>      the commit whose build and workload inputs HEAD must match
 #   base <40-hex>           master as fetched at the freeze, merged into the candidate
 #   base_fetched <UTC>      YYYY-MM-DDTHH:MM:SSZ, when that master was fetched
-#   rustc <rustc -V>        the toolchain, exactly as `rustc -V` prints it on the workstation
-#   ci_rounds <N>           the registered CI run's rounds (condition 2; see the registration)
+#   rustc <rustc -V>        the workstation's toolchain, exactly as `rustc -V` prints it there
+#   ni_rustc <rustc -V>     the CI shards' toolchain, as `rustc -V` prints it (the dispatch's
+#                           `toolchain` input selects it)
+#   corpus_text <sha256>    the `text` corpus's digest: ab gen builds it from the candidate's
+#                           own sources (the other six are bench/service_tg.py's CORPUS_SHA256)
 # Until then `just bench-service-tg` refuses, and bench/service_tg.py admits nothing.
