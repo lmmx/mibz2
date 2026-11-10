@@ -370,6 +370,8 @@ def test_judge_valid_and_its_figures(tmp_path):
     m = j["result"]["model_check"]
     assert m["l2_interval_vs_band"] == "within the band" and m["l2_point_in_band"]
     assert m["l9_interval_contains_s2"] and m["ratio_of_ratios_below_1"]
+    assert m["model_gb_s"]["point"] == pytest.approx(3.76 / 1.25)
+    assert m["model_gb_s"]["label"].startswith("MODEL")
     assert j["result"]["rounds"] == sn.ROUNDS
     assert j["result"]["modes"]["counts"]["fast"] == sn.ROUNDS
     # (the wall: here cpu / workers, so its growth is the CPU's x 4/10)

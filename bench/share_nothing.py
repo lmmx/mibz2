@@ -113,6 +113,10 @@ REGISTERED_BZ2 = {
 # plain workers, an earlier decoder
 BAND = (1.10, 1.44)  # -1 (0.4 MB a block) to -3 (1.2 MB a block)
 S2_L9 = 3.50
+# §3's model: ten workers at one thread's 400 MB/s at the all-core clock (0.94), divided by
+# the growth factor: 3.76 GB/s / G. MODEL ONLY: the judge restates it with the measured -2
+# growth and labels it so; nothing here observes it
+MODEL_GB_S_NUMERATOR = 10 * 0.400 * 0.94
 MODE_THRESHOLD_S = 0.21  # a sentinel's own wall below it: fast (two_modes.py's separator)
 MIN_CLASS = 5  # rounds a mode class needs before its figures are given an interval
 BOOT_RESAMPLES = 10000
@@ -859,6 +863,17 @@ def analyse(rows, dry):
                 "pre_freq_mhz_median": st.median(pre) if pre else None,
             }
     res["grid"] = grid
+    # the pre-run sysfs state against the declared settings: counted, never excluded
+    dev = {k: 0 for k in ("governor", "epp", "turbo")}
+    for r in measured:
+        for k in dev:
+            if r["pre"].get(k) != DECLARED[k]:
+                dev[k] += 1
+    res["pre_state"] = {
+        "runs": len(measured),
+        "not_as_declared": dev,
+        "label": "recorded, never an exclusion",
+    }
     g2, g9 = res["primary"]["cpu"]["growth"][PRIMARY], res["primary"]["cpu"]["growth"][COMPARATOR]
     rr = res["primary"]["cpu"]["ratio_of_ratios"]
     res["model_check"] = {
@@ -868,6 +883,12 @@ def analyse(rows, dry):
         "l9_s2": S2_L9,
         "l9_interval_contains_s2": g9.get("lo") is not None and g9["lo"] <= S2_L9 <= g9["hi"],
         "ratio_of_ratios_below_1": rr.get("hi") is not None and rr["hi"] < 1,
+        "model_gb_s": {
+            "label": "MODEL (§3 restated with the measured -2 growth), not observed",
+            "point": MODEL_GB_S_NUMERATOR / g2["ratio"] if g2["ratio"] else None,
+            "lo": MODEL_GB_S_NUMERATOR / g2["hi"] if g2.get("hi") else None,
+            "hi": MODEL_GB_S_NUMERATOR / g2["lo"] if g2.get("lo") else None,
+        },
     }
     # the descriptive mode split (registered; never an exclusion): a round is fast if both its
     # sentinels' walls are below the threshold, slow if both are at or above it, else mixed
@@ -904,6 +925,15 @@ def analyse(rows, dry):
     return res
 
 
+def _gb(x):
+    if x.get("point") is None:
+        return "n/a"
+    s = f"{x['point']:.2f} GB/s"
+    if x.get("lo") is not None:
+        s += f" [{x['lo']:.2f}-{x['hi']:.2f}]"
+    return s
+
+
 def render(outcome, res, bad):
     lines = [outcome, ""]
     if bad:
@@ -935,6 +965,7 @@ def render(outcome, res, bad):
         f"(point in band: {m['l2_point_in_band']})",
         f"- -9 growth against §2's x{S2_L9}: interval contains it: {m['l9_interval_contains_s2']}",
         f"- ratio of ratios below 1 (interval): {m['ratio_of_ratios_below_1']}",
+        f"- {m['model_gb_s']['label']}: {_gb(m['model_gb_s'])}",
         "",
     ]
     lines += ["## Sensitivity (block length)", ""]
@@ -958,6 +989,12 @@ def render(outcome, res, bad):
             lines.append(
                 f"| {c} | {w} | {x['cpu_median']:.3f} | {x['wall_median']:.3f} | {x['mb_s_median']:.0f} | {gr} | {fq} |"
             )
+    ps = res["pre_state"]
+    lines += [
+        "",
+        f"Pre-run sysfs state not as declared (of {ps['runs']} runs; {ps['label']}): "
+        f"{ps['not_as_declared']}",
+    ]
     md = res["modes"]
     lines += ["", "## Mode split", "", md["label"], "", f"Rounds: {md['counts']}", ""]
     for c, s in md["classes"].items():
