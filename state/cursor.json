@@ -142,9 +142,10 @@
     6757210413,
     6757368708,
     6757686244,
-    6757791774
+    6757791774,
+    6758126153
   ],
-  "last_processed_comment_id": 6757791774,
+  "last_processed_comment_id": 6758126153,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1548,13 +1549,17 @@
     },
     {
       "trigger_comment_id": 6758126153,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/small-tables-6758126153/report.md",
       "report_commit": "b88baf5bc0299ede48fcc22e4d921c1e2503be58",
-      "disposition": "Preserve current D4 filters; neither 1.44 nor 2.5 is a measured slowdown budget. Propose carried-interval move census; quantify space and mixed-step proof limits."
+      "disposition": "Preserve current D4 filters; neither 1.44 nor 2.5 is a measured slowdown budget. Propose carried-interval move census; quantify space and mixed-step proof limits.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6758204909,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/destination readback and role-aware routing pass; pinned verify flags only hardcoded coordinator FROM."
     }
   ],
   "active_delegations": [],
