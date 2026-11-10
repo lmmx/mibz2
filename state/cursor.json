@@ -2869,6 +2869,13 @@
       "work_commit": "820e507106a064d9d6706b9a205fed368a5e209f",
       "review_comment_id": 6757750433,
       "complete_cursor_commit": "eaaf79d9ee5f20386220e4921204d2b85b5b0c59"
+    },
+    {
+      "comment_id": 6758376066,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D082",
+      "progress": "Receipt; examining successor admissibility under C2."
     }
   ],
   "migrated_from": {
