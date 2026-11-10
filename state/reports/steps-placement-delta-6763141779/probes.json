@@ -1,0 +1,34 @@
+{
+  "source_sha256": "b9a3f97de656925e46b1034874aa9756fcb9b79c1b4d32253b888ebd3ac342d8",
+  "cancellation": {
+    "mean_net": 0.05,
+    "halfwidth": 0.004801726494508101,
+    "upper": 0.0548017264945081,
+    "required": 0.51,
+    "pair_component": 0.6,
+    "other_component": -0.55
+  },
+  "linear_drift": {
+    "equally_spaced_residual": 0,
+    "unequal_starts": [
+      0,
+      1,
+      3,
+      6
+    ],
+    "unit_slope_residual": 1.0
+  },
+  "iid_non_normal": {
+    "mixture": "0.99 Uniform[-.001,.001] + 0.01 point mass at 10",
+    "population_mean": 0.1,
+    "all_low_probability": 0.8179069375972308,
+    "upper_bound_if_all_low": 0.0014801726494508103
+  },
+  "aslr": {
+    "lo_offset": 0,
+    "hi_offset": 2048,
+    "absolute_cross_process_difference": 2099200
+  },
+  "precision_max_sample_sd": 0.2136686363245804,
+  "native_measurements": false
+}
