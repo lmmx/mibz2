@@ -1560,6 +1560,15 @@
       "review_comment_id": 6758204909,
       "publication_verified": true,
       "verification_note": "Exact body/author/destination readback and role-aware routing pass; pinned verify flags only hardcoded coordinator FROM."
+    },
+    {
+      "trigger_comment_id": 6758228391,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "aae6dc5ed4779c094f1af932a384204f1933a25b",
+      "report_path": "state/reports/share-nothing-pricing-6758228391/report.md"
     }
   ],
   "active_delegations": [],
