@@ -375,6 +375,18 @@ classified only by a rule whose error bound comes from the chunking.
 
   This run assumes neither.
 
+## Related evidence (context only, not diagnostic)
+
+**`par-scan/20261110T030608Z`** (on `evidence` at `727674e1`; summarised with the Pathfinder's
+addendum in LOG 6758018574 on #145). This workstation run ran 180
+cells in three long-lived processes, with plain workers at 1 to 10 threads, and no twofold mode
+appeared in it.
+- **How it bears on the five:** it fits the short-process mechanisms (H1, H2, H4).
+- **Why it is not evidence here:** its arm, its process shape and its plan all differ from the
+  runs that showed the modes.
+- **What it changes:** it is cited for context only. It changes none of the rules above, and
+  this run's outcome is judged without it.
+
 ## 5. The local checks (DRY, untimed, never evidence)
 
 ### Before the revision (head `3588d35d`)
