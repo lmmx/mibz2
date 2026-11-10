@@ -1,0 +1,202 @@
+{
+  "reviewed_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+  "master_post_commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "input_comment": 6782111848,
+  "archived_source_manifest": "c11be9107e462737ceab4a8ab4291a91ba0f2bd389010fa6295c3c545a9350be  src/cells.rs\n10e791a93a8800707b6d11ab299454ed1068f2517537cf4324671c7b00092607  src/bwt.rs\n12632248604a41aba157c16b11f0695ff68cc4c16689a4a85e6700e5d91fa68c  src/lib.rs\n6a257b8996026fae0ab49c9b26b20f417b7f270a7d9502dfc922645885d48cc9  src/runs.rs\nf4866cb4ce1177ec597deb208aef96b40412638785fe21cae9a29cc90801cade  tests/cells.rs\nf750d12fe1f27f71a299ee1bb29065697b4f3005071fa7a1cf00858b7756e4c8  tests/common/cells.rs\ne7190eb8b99df91e5b5213be7eae41c0a8f857417c99114efbaff7a33dbcbe97  examples/ab.rs\n30f7d4af0576e78fd6fc8a786b05ac4dbc902b2aff268c065b70ea97a4475330  examples/ab_cells/mod.rs\n3efac55c053d4cc6aa58e63ec8e6704bc239cda2f120642a6a4e4118345f2928  examples/fuzz.rs\n",
+  "checks": [
+    {
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130136803208"
+    },
+    {
+      "name": "deploy-branch",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404685/job/130129674318"
+    },
+    {
+      "name": "preview",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404685/job/130129673208"
+    },
+    {
+      "name": "look",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404685/job/130129672137"
+    },
+    {
+      "name": "miri",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404659/job/130128163701"
+    },
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404685/job/130128151843"
+    },
+    {
+      "name": "pages",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404685/job/130128151486"
+    },
+    {
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128137150"
+    },
+    {
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128136931"
+    },
+    {
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128136893"
+    },
+    {
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128136883"
+    },
+    {
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128136879"
+    },
+    {
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128136777"
+    },
+    {
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128072241"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069864"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069775"
+    },
+    {
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069718"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069688"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069626"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128069510"
+    },
+    {
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901406328/job/130128016844"
+    },
+    {
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404948/job/130128013143"
+    },
+    {
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128012742"
+    },
+    {
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128012563"
+    },
+    {
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128012426"
+    },
+    {
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128012162"
+    },
+    {
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404736/job/130128011766"
+    },
+    {
+      "name": "walk-stats",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42901404695/job/130128011609"
+    }
+  ],
+  "miri_log_excerpt": [
+    "2026-11-10T21:04:45.4272109Z HEAD is now at 37f6c05 Merge 57f51bbc0ca62ac3ee1cc148a1010842eea6222a into edaa984c4f57614f25bb897e808ab12c59c48d8f",
+    "2026-11-10T21:05:12.0507742Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_exact_fit_and_reuse' miri-list.txt\u001b[0m",
+    "2026-11-10T21:05:12.0508044Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_admission_and_invalid_records' miri-list.txt\u001b[0m",
+    "2026-11-10T21:05:12.0508345Z \u001b[36;1mgrep -q '^cells::tests::miri_cells_slots_mark_and_links' miri-list.txt\u001b[0m",
+    "2026-11-10T21:05:13.7040867Z cells::tests::miri_cells_admission_and_invalid_records: test",
+    "2026-11-10T21:05:13.7086681Z cells::tests::miri_cells_exact_fit_and_reuse: test",
+    "2026-11-10T21:05:13.7132219Z cells::tests::miri_cells_slots_mark_and_links: test",
+    "2026-11-10T21:05:47.0877152Z test cells::tests::miri_cells_admission_and_invalid_records ... ok",
+    "2026-11-10T21:05:49.9929397Z test cells::tests::miri_cells_exact_fit_and_reuse ... ok",
+    "2026-11-10T21:05:50.0914858Z test cells::tests::miri_cells_slots_mark_and_links ... ok",
+    "2026-11-10T21:13:33.8924463Z test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 1131.37s"
+  ],
+  "legacy": [
+    {
+      "context": "pre-commit.ci - pr",
+      "state": "success"
+    }
+  ],
+  "verified_sha256": {
+    "src/cells.rs": "c11be9107e462737ceab4a8ab4291a91ba0f2bd389010fa6295c3c545a9350be",
+    "miri-cells.log": "d58351e462905324d0091864f251e3c14c5de133704c49660a03b83b1ab261b6",
+    "unsafe-outcomes.json": "f8a162ce1c83e5a8760579431661becebc2aa339488cf1812259e526fa9b52ee",
+    "admission-outcomes.json": "3aae26eed5ca765cf506d5eeda13a54549535a9d5516558989de9a73ff511419"
+  }
+}

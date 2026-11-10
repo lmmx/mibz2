@@ -1,0 +1,207 @@
+{
+  "original_miri_writer_fixtures": [
+    {
+      "n": 2,
+      "primary": 0,
+      "cells": 1,
+      "period": 2,
+      "rules": 1,
+      "dropped": 0
+    },
+    {
+      "n": 2,
+      "primary": 1,
+      "cells": 1,
+      "period": 2,
+      "rules": 1,
+      "dropped": 0
+    },
+    {
+      "n": 2,
+      "primary": 1,
+      "cells": 1,
+      "period": 2,
+      "rules": 1,
+      "dropped": 0
+    },
+    {
+      "n": 5,
+      "primary": 0,
+      "cells": 4,
+      "period": 5,
+      "rules": 2,
+      "dropped": 0
+    },
+    {
+      "n": 5,
+      "primary": 2,
+      "cells": 3,
+      "period": 5,
+      "rules": 2,
+      "dropped": 0
+    },
+    {
+      "n": 5,
+      "primary": 4,
+      "cells": 4,
+      "period": 5,
+      "rules": 3,
+      "dropped": 0
+    },
+    {
+      "n": 7,
+      "primary": 0,
+      "cells": 4,
+      "period": 1,
+      "rules": 0,
+      "dropped": 2
+    },
+    {
+      "n": 7,
+      "primary": 3,
+      "cells": 3,
+      "period": 3,
+      "rules": 1,
+      "dropped": 0
+    },
+    {
+      "n": 7,
+      "primary": 6,
+      "cells": 3,
+      "period": 3,
+      "rules": 2,
+      "dropped": 0
+    },
+    {
+      "n": 17,
+      "primary": 0,
+      "cells": 0,
+      "period": 1,
+      "rules": 0,
+      "dropped": 1
+    },
+    {
+      "n": 17,
+      "primary": 8,
+      "cells": 0,
+      "period": 1,
+      "rules": 0,
+      "dropped": 1
+    },
+    {
+      "n": 17,
+      "primary": 16,
+      "cells": 0,
+      "period": 1,
+      "rules": 0,
+      "dropped": 0
+    },
+    {
+      "n": 65,
+      "primary": 0,
+      "cells": 55,
+      "period": 1,
+      "rules": 0,
+      "dropped": 9
+    },
+    {
+      "n": 65,
+      "primary": 32,
+      "cells": 55,
+      "period": 12,
+      "rules": 7,
+      "dropped": 7
+    },
+    {
+      "n": 65,
+      "primary": 64,
+      "cells": 54,
+      "period": 12,
+      "rules": 8,
+      "dropped": 6
+    }
+  ],
+  "checked_cases": 22172,
+  "writer_reach": {
+    "long_spine_seed": 553,
+    "position_propagation": 2863,
+    "unmarked_rule_expansion": 2863,
+    "long_factor_copy": 1,
+    "spine_recopy": 1,
+    "overlapping_long_copy": 0
+  },
+  "first_witnesses": {
+    "long_spine_seed": {
+      "column_hex": "01010101010101010101010101010101000000000000000000000000000000",
+      "primary": 16,
+      "cells": 17,
+      "period": 31,
+      "rules": 9,
+      "dropped": 0,
+      "long_spine_seed": 1,
+      "position_propagation": 7,
+      "unmarked_rule_expansion": 7
+    },
+    "position_propagation": {
+      "column_hex": "01010101010101010101010101010101000000000000000000000000000000",
+      "primary": 16,
+      "cells": 17,
+      "period": 31,
+      "rules": 9,
+      "dropped": 0,
+      "long_spine_seed": 1,
+      "position_propagation": 7,
+      "unmarked_rule_expansion": 7
+    },
+    "unmarked_rule_expansion": {
+      "column_hex": "01010101010101010101010101010101000000000000000000000000000000",
+      "primary": 16,
+      "cells": 17,
+      "period": 31,
+      "rules": 9,
+      "dropped": 0,
+      "long_spine_seed": 1,
+      "position_propagation": 7,
+      "unmarked_rule_expansion": 7
+    },
+    "spine_recopy": {
+      "column_hex": "63626261616161616161616161616161616161616161616161616162626262626262626262626262626262616161626262626262626262",
+      "primary": 0,
+      "cells": 37,
+      "period": 55,
+      "rules": 22,
+      "dropped": 0,
+      "long_spine_seed": 2,
+      "position_propagation": 2,
+      "unmarked_rule_expansion": 2,
+      "spine_recopy": 1
+    },
+    "long_factor_copy": {
+      "column_hex": "63626261616161616161616161616161616161616161616161616162626262626262626262626262626262616161626262626262626262",
+      "primary": 3,
+      "cells": 38,
+      "period": 55,
+      "rules": 8,
+      "dropped": 0,
+      "long_spine_seed": 2,
+      "position_propagation": 6,
+      "unmarked_rule_expansion": 6,
+      "long_factor_copy": 1,
+      "overlapping_long_copy": 0
+    }
+  },
+  "production_admission_witness": {
+    "cells": 57,
+    "period": 55,
+    "rules": 27,
+    "dropped": 1,
+    "long_spine_seed": 2,
+    "position_propagation": 2,
+    "unmarked_rule_expansion": 2,
+    "spine_recopy": 1,
+    "n": 550,
+    "records": 8,
+    "budget": 88
+  },
+  "model_omit_recopy_mutation": "unwritten output"
+}
