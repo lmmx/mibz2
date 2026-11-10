@@ -1,0 +1,94 @@
+
+## port1-team: 12 profiles, threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+| file | sha256 | thread | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|--:|--:|--:|--:|--:|
+| port1-team.30932-01.gz | 81ef7232b47660b12898c4446138fd199a98dbab486007dfe6ce80d61f55ceb3 | 1 | 308,899,771 | 0 | 0 | 0 | 0 |
+| port1-team.30932-02.gz | 99f51f64440af319310a06289c61898eef11e852b80ee25fbc6632c32760b32f | 2 | 36,978,340 | 0 | 0 | 0 | 0 |
+| port1-team.30932-03.gz | 009f459ddbfb89829e3f0d63f470b9564ab14d8deada50d12a981d018ecef51b | 3 | 816,245,158 | 0 | 0 | 0 | 294,094,446 |
+| port1-team.30932-04.gz | 3cb7885c72b00b26b11bc1349f1ea076b7455a4193708753fe38e3dbbf68fdb2 | 4 | 726,733,676 | 0 | 0 | 0 | 272,348,331 |
+| port1-team.30932-05.gz | 60795e8f232449f41687c77270d23b94751fd8f1843d535e9e122984a2fd3216 | 5 | 822,993,462 | 0 | 0 | 0 | 268,883,500 |
+| port1-team.30932-06.gz | 8d5e1cd29dc1cfda3193d71d0790e440c7c012ef52be3e8c54836b3e91c28ccc | 6 | 671,891,892 | 0 | 0 | 0 | 0 |
+| port1-team.30932-07.gz | ae45bd9b2652b8459016574d4a5d2d1a253329e742964769708dba8725a79aff | 7 | 678,640,827 | 76 | 181,082,652 | 24,168 | 0 |
+| port1-team.30932-08.gz | 9891ce4a96e47bece8154cfc31388ed52c7e41028d1812e87eea6c76156e83a9 | 8 | 725,783,939 | 76 | 282,843,044 | 24,168 | 0 |
+| port1-team.30932-09.gz | 6e14a461cbda772d60f502bc34778537168fc063fe01d2dcc6aa3a8707b28d4a | 9 | 693,973,255 | 75 | 278,871,007 | 23,850 | 0 |
+| port1-team.30932-10.gz | 6655b2d3ab7e3d2d62a506d8eeb5d49fd41a531c86aeaa493385ad4c3ab72bed | 10 | 584,788,541 | 75 | 178,172,914 | 23,850 | 0 |
+| port1-team.30932-11.gz | 744d01ee9bff9fedd557bc1d69741ef9daf09ffc625dc8304d1cfb18ea535021 | 11 | 801,554,468 | 82 | 305,461,634 | 26,076 | 0 |
+| port1-team.30932-12.gz | 169168bc47543fa0a32f176abf0cd8e76ccbadd157f6fd8bdac8b2c3760bd497 | 12 | 681,882,821 | 82 | 196,502,320 | 26,076 | 0 |
+
+whole process 7,550,366,150 Ir = 36.0055 Ir/D (D = 209,700,196)
+  scanner: 671,595,292 = 3.2026
+  MTF: 988,697,463 = 4.7148
+  build: 1,458,357,492 = 6.9545
+  walk: 3,733,169,793 = 17.8024
+  assembly: 35,581,804 = 0.1697
+  RLE1: 199,207,165 = 0.9500
+  CRC: 101,664,607 = 0.4848
+  coordination: 13,882,145 = 0.0662
+  harness: 329,364,513 = 1.5706
+  other: 18,845,876 = 0.0899
+share symbols ['<mibz2::coop::FusedBuild>::share']
+share: self 1,422,933,571 + arcs out 148,188 = 6.7863 Ir/D inclusive; calls 466, on MTF threads 0
+  pmovmskb: none executed
+  rol: 0xd69f1 ('bwt.rs', 544) x13,106,081
+  store site ['0xd67f4', '0xd67fb'] (2 stores), next line ('coop.rs', 630): executions [14912, 14912]
+  store site ['0xd6817', '0xd6821'] (2 stores), next line ('coop.rs', 649): executions [14912, 14912]
+  store site ['0xd6988', '0xd698e', '0xd6994', '0xd699b'] (4 stores), next line ('coop.rs', 672): executions [10740083, 10740083, 10740083, 10740083]
+
+## port2-team: 12 profiles, threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+| file | sha256 | thread | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|--:|--:|--:|--:|--:|
+| port2-team.31118-01.gz | cb983e1f7039e2628c35844404066cfa8ebfc7a2d75558abe1d64699a730f939 | 1 | 308,887,669 | 0 | 0 | 0 | 0 |
+| port2-team.31118-02.gz | f872a7b180765c6bea18953be8e78060d1c0f365832bc76c54cf82550ea77db6 | 2 | 20,930,265 | 0 | 0 | 0 | 0 |
+| port2-team.31118-03.gz | 7af55de18f77fab24734df1abf060e0246770b414fa96efb112370dc835a5660 | 3 | 677,927,748 | 0 | 0 | 0 | 280,077,313 |
+| port2-team.31118-04.gz | a6e15ebb0e4e02409849cf0065104a505e17bf1eedecd5038072bb88d7ddc5d1 | 4 | 661,019,960 | 0 | 0 | 0 | 271,432,856 |
+| port2-team.31118-05.gz | 28cf55295b5aa7ad4fc7072017726b6566f9a9d7be2951308a97148a070e60b8 | 5 | 618,135,688 | 0 | 0 | 0 | 283,816,108 |
+| port2-team.31118-06.gz | 334081eb855bc47283e5f047dca60dce5c78f86590387ff593d1b95782d13dad | 6 | 671,879,148 | 0 | 0 | 0 | 0 |
+| port2-team.31118-07.gz | c529a429ee95853575250048beef7beb576c51280d9aaae541c900371f643039 | 7 | 743,125,327 | 81 | 155,556,869 | 25,758 | 0 |
+| port2-team.31118-08.gz | 4aac2e0762223995222dbbce938e7ebba06987776a6994f93f27b30188550728 | 8 | 846,931,440 | 80 | 233,185,101 | 25,440 | 0 |
+| port2-team.31118-09.gz | 1e66f7f53ce07df48c04d6cbd3047a38a62dced5452d3124bab591e5b4dfa436 | 9 | 795,672,052 | 81 | 235,829,308 | 25,758 | 0 |
+| port2-team.31118-10.gz | b0c41889d36c6eb7c0aa90eb139f096a58cbfa6b48c8b624c0a2972d19089a36 | 10 | 604,762,713 | 80 | 152,588,047 | 25,440 | 0 |
+| port2-team.31118-11.gz | 7787c408cd762db1b038668a8c2831fde06b9ea486e5772f617ddb35406ccac1 | 11 | 650,219,032 | 72 | 215,425,052 | 22,896 | 0 |
+| port2-team.31118-12.gz | 2e6467d0c32fa06b526d811e06ad269eec0aa601c00c6524fcf2e06e0014e488 | 12 | 634,755,453 | 72 | 140,315,655 | 22,896 | 0 |
+
+whole process 7,234,246,495 Ir = 34.4980 Ir/D (D = 209,700,196)
+  scanner: 671,583,241 = 3.2026
+  MTF: 988,695,280 = 4.7148
+  build: 1,168,322,828 = 5.5714
+  walk: 3,724,957,347 = 17.7633
+  assembly: 35,582,632 = 0.1697
+  RLE1: 197,407,998 = 0.9414
+  CRC: 101,664,607 = 0.4848
+  coordination: 13,885,444 = 0.0662
+  harness: 319,975,510 = 1.5259
+  other: 12,171,608 = 0.0580
+share symbols ['<mibz2::coop::FusedBuild>::share']
+share: self 1,132,900,032 + arcs out 148,188 = 5.4032 Ir/D inclusive; calls 466, on MTF threads 0
+  pmovmskb: 0xd697a ('sse2.rs', 1569) x13,106,081
+  rol: none executed
+  store site ['0xd6804', '0xd680b'] (2 stores), next line ('coop.rs', 728): executions [14912, 14912]
+  store site ['0xd6827', '0xd6831'] (2 stores), next line ('coop.rs', 736): executions [14912, 14912]
+  store site ['0xd6a1b', '0xd6a25', '0xd6a30', '0xd6a3b'] (4 stores), next line ('coop.rs', 618): executions [10740083, 10740083, 10740083, 10740083]
+  store site ['0xd6add', '0xd6ae7', '0xd6af2', '0xd6afd'] (4 stores), next line ('coop.rs', 636): executions [4536329, 4536329, 4536329, 4536329]
+
+## port2-one: 1 profiles, threads [1]
+| file | sha256 | thread | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|--:|--:|--:|--:|--:|
+| port2-one.31604-01.gz | cb572db633f1db58bf286c6bea12f62ce576533e03d0c81f0e3ac313ffe1e21e | 1 | 5,408,534,558 | 0 | 0 | 0 | 773,179,796 |
+
+whole process 5,408,534,558 Ir = 25.7917 Ir/D (D = 209,700,196)
+  scanner: 682,691,202 = 3.2556
+  MTF: 862,123,747 = 4.1112
+  build: 1,082,059,629 = 5.1600
+  walk: 2,136,525,935 = 10.1885
+  assembly: 37,060,864 = 0.1767
+  RLE1: 197,394,556 = 0.9413
+  CRC: 101,664,607 = 0.4848
+  coordination: 135 = 0.0000
+  harness: 308,305,829 = 1.4702
+  other: 708,054 = 0.0034
+share symbols []
+share: self 0 + arcs out 0 = 0.0000 Ir/D inclusive; calls 0, on MTF threads 0
+  pmovmskb: 0xcfc72 ('sse2.rs', 1569) x13,106,541
+  rol: none executed
+  store site ['0xcfd16', '0xcfd20', '0xcfd2c', '0xcfd37'] (4 stores), next line ('bwt.rs', 338): executions [10740086, 10740086, 10740086, 10740086]
+  store site ['0xcfdd3', '0xcfddd', '0xcfde9', '0xcfdf4'] (4 stores), next line ('bwt.rs', 355): executions [4568175, 4568175, 4568175, 4568175]

@@ -1,0 +1,103 @@
+"""The count of 2026-11-10-share-one-pass-registration.md, from the archived profiles only.
+
+    python3 count.py.txt REPO JOURNAL_DIR BIN_PORT1 BIN_PORT2
+
+Reads JOURNAL_DIR/cg/{port1-team,port2-team,port2-one}.*.gz through bench/team_gap_count.py's
+`load` (which refuses raw-and-gzip pairs and repeated threads) and `stages`. The binaries are
+used only by objdump, to name the instructions at the counted addresses.
+"""
+import collections, glob, hashlib, re, subprocess, sys
+sys.path.insert(0, sys.argv[1] + "/bench")
+import team_gap_count as t
+
+J, BINS = sys.argv[2], {"port1-team": sys.argv[3], "port2-team": sys.argv[4], "port2-one": sys.argv[4]}
+D = 209_700_196
+SH = lambda f: f and "FusedBuild" in f and ">::share" in f
+BUILD = lambda f: f == "mibz2::bwt::build"
+
+
+def disasm(binary, lo, hi):
+    out = subprocess.run(["objdump", "-d", "--no-show-raw-insn", f"--start-address={lo:#x}",
+                          f"--stop-address={hi:#x}", binary], capture_output=True, text=True).stdout
+    d = {}
+    for l in out.splitlines():
+        m = re.match(r"\s*([0-9a-f]+):\s+(.*)", l)
+        if m:
+            d[int(m.group(1), 16)] = m.group(2).strip()
+    return d
+
+
+def fn_instrs(profs, pred):
+    ex, where = collections.Counter(), {}
+    for p in profs:
+        for (fn, a), ir in p.instr.items():
+            if pred(fn):
+                ex[a] += ir
+                fl = p.instr_line.get((fn, a))
+                if fl:
+                    where[a] = (fl[0].split("/")[-1], fl[1])
+    return ex, where
+
+
+def sites(ex, where, dis, store_line_after):
+    """groups of four `movdqu %xmm,(mem)` stores, each named by the first coop.rs or bwt.rs
+    line among the executed instructions after it"""
+    addrs = sorted(ex)
+    stores = [a for a in addrs if re.match(r"movdq[au]\s+%xmm\d+,.*\(", dis.get(a, ""))]
+    groups, cur = [], []
+    for a in stores:
+        if cur and a - cur[-1] > 16:
+            groups.append(cur); cur = []
+        cur.append(a)
+    if cur:
+        groups.append(cur)
+    out = []
+    for g in groups:
+        nxt = next((where[a] for a in addrs if a > g[-1] and where.get(a, ("", 0))[0] in store_line_after), None)
+        out.append((g, nxt))
+    return out
+
+
+for arm in ["port1-team", "port2-team", "port2-one"]:
+    profs = t.load(f"{J}/cg/{arm}")
+    files = sorted(glob.glob(f"{J}/cg/{arm}.*"))
+    print(f"\n## {arm}: {len(profs)} profiles, threads {sorted(p.thread for p in profs)}")
+    print("| file | sha256 | thread | total Ir | share calls | share self | share arcs out | MTF self |")
+    print("|---|---|--:|--:|--:|--:|--:|--:|")
+    for f, p in zip(files, profs):
+        assert f == p.path
+        h = hashlib.sha256(open(f, "rb").read()).hexdigest()
+        sc = sum(c for (a, b), c in p.calls.items() if SH(b))
+        ss = sum(ir for fn, ir in p.self_ir.items() if SH(fn))
+        sa = sum(ir for (a, b), ir in p.arcs.items() if SH(a) and not SH(b))
+        mtf = sum(ir for fn, ir in p.self_ir.items() if fn and "mibz2::mtf::" in fn)
+        print(f"| {f.split('/')[-1]} | {h} | {p.thread} | {p.total:,} | {sc} | {ss:,} | {sa:,} | {mtf:,} |")
+    total = sum(p.total for p in profs)
+    st = collections.Counter()
+    for p in profs:
+        st.update(t.stages(p)[0])
+    print(f"\nwhole process {total:,} Ir = {total / D:.4f} Ir/D (D = {D:,})")
+    for s in t.STAGE_ORDER:
+        print(f"  {s}: {st[s]:,} = {st[s] / D:.4f}")
+    ss = sum(ir for p in profs for fn, ir in p.self_ir.items() if SH(fn))
+    sa = sum(ir for p in profs for (a, b), ir in p.arcs.items() if SH(a) and not SH(b))
+    calls = sum(c for p in profs for (a, b), c in p.calls.items() if SH(b))
+    on_mtf = sum(c for p in profs for (a, b), c in p.calls.items() if SH(b)
+                 and any(fn and "mibz2::mtf::" in fn for fn in p.self_ir))
+    names = {fn for p in profs for fn in p.self_ir if SH(fn)}
+    print(f"share symbols {sorted(names)}")
+    print(f"share: self {ss:,} + arcs out {sa:,} = {(ss + sa) / D:.4f} Ir/D inclusive; calls {calls}, on MTF threads {on_mtf}")
+    pred = BUILD if arm == "port2-one" else SH
+    ex, where = fn_instrs(profs, pred)
+    if not ex:
+        continue
+    dis = disasm(BINS[arm], min(ex), max(ex) + 16)
+    named = collections.defaultdict(list)
+    for a in sorted(ex):
+        m = dis.get(a, "?").split()[0]
+        if m in ("pmovmskb", "rol"):
+            named[m].append((a, ex[a], where.get(a)))
+    for m in ("pmovmskb", "rol"):
+        print(f"  {m}: " + (", ".join(f"{a:#x} {where} x{n:,}" for a, n, where in named[m]) or "none executed"))
+    for g, nxt in sites(ex, where, dis, ("coop.rs", "bwt.rs")):
+        print(f"  store site {[hex(a) for a in g]} ({len(g)} stores), next line {nxt}: executions {[ex[a] for a in g]}")
