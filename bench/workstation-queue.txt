@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-team-runs              master                    #359 team-runs port vs its base, wall 6-20 threads, wikidata/text/records/random (rule: note §8, PROPOSAL 6771355497)
