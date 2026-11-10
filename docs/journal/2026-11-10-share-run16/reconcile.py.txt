@@ -1,0 +1,67 @@
+"""The reconciliation of 2026-11-10-share-run16.md (Guardian D085): every figure recomputed
+from the archived profiles alone, each file listed with its digest, thread and totals.
+
+    python3 reconcile.py.txt REPO JOURNAL_DIR
+
+Reads only JOURNAL_DIR/cg/*.gz, one file a thread, through bench/team_gap_count.py's parser
+(`Profile`, `stages`). No binary is needed: instruction identities are the addresses, and the
+mnemonics at those addresses are taken from share-window-instructions.txt's disassembly column.
+"""
+import collections, glob, hashlib, re, sys
+sys.path.insert(0, sys.argv[1] + "/bench")
+import team_gap_count as t
+
+J = sys.argv[2]
+D, N = 209_700_196, 209_706_557
+SH = lambda f: f and "FusedBuild" in f and ">::share" in f
+
+for arm in ["old-team", "new-team", "new-one"]:
+    files = sorted(glob.glob(f"{J}/cg/{arm}.*.gz"))
+    assert all(re.search(r"\.\d+-\d+\.gz$", f) for f in files)
+    print(f"\n## {arm}: {len(files)} files")
+    print("| file | sha256 | thread | cmd | total Ir | share calls | share self | share arcs out | MTF self |")
+    print("|---|---|--:|---|--:|--:|--:|--:|--:|")
+    profs, threads = [], []
+    for f in files:
+        p = t.Profile(f)
+        profs.append(p)
+        threads.append(p.thread)
+        h = hashlib.sha256(open(f, "rb").read()).hexdigest()[:16]
+        sc = sum(c for (a, b), c in p.calls.items() if SH(b))
+        ss = sum(ir for fn, ir in p.self_ir.items() if SH(fn))
+        sa = sum(ir for (a, b), ir in p.arcs.items() if SH(a) and not SH(b))
+        mtf = sum(ir for fn, ir in p.self_ir.items() if fn and "mibz2::mtf::" in fn)
+        print(f"| {f.split('/')[-1]} | {h}… | {p.thread} | {(p.cmd or '')[-40:]} | {p.total:,} | {sc} | {ss:,} | {sa:,} | {mtf:,} |")
+    assert len(set(threads)) == len(threads), "a thread counted twice"
+    total = sum(p.total for p in profs)
+    st = collections.Counter()
+    for p in profs:
+        st.update(t.stages(p)[0])
+    ss = sum(ir for p in profs for fn, ir in p.self_ir.items() if SH(fn))
+    sa = sum(ir for p in profs for (a, b), ir in p.arcs.items() if SH(a) and not SH(b))
+    calls = sum(c for p in profs for (a, b), c in p.calls.items() if SH(b))
+    print(f"\nthreads {sorted(threads)}, each once; D = {D:,}")
+    print(f"whole process {total:,} Ir = {total / D:.4f} Ir/D")
+    for s in t.STAGE_ORDER:
+        print(f"  {s}: {st[s]:,} = {st[s] / D:.4f}")
+    print(f"share: self {ss:,} + arcs out {sa:,} = {ss + sa:,} = {(ss + sa) / D:.4f} Ir/D inclusive; calls {calls}")
+    # share's instructions, executions summed over threads, by address
+    ex, where = collections.Counter(), {}
+    for p in profs:
+        for (fn, a), ir in p.instr.items():
+            if SH(fn):
+                ex[a] += ir
+                fl = p.instr_line.get((fn, a))
+                if fl:
+                    where[a] = (fl[0].split("/")[-1], fl[1])
+    for a in [0xD6988, 0xD698E, 0xD6994, 0xD699B, 0xD6927]:
+        if arm == "new-team":
+            print(f"  {a:#x} {where.get(a)}: {ex[a]:,} executions")
+    byline = collections.Counter()
+    for a, n in ex.items():
+        byline[where.get(a, ("?", 0))] += n
+    win = [k for k in byline if k[0] in ("sse2.rs", "simd.rs", "macros.rs") or k in (("mod.rs", 573), ("mod.rs", 1963))]
+    print(f"  run16's lines in share: {sum(byline[k] for k in win):,} Ir = {sum(byline[k] for k in win) / D:.4f} Ir/D")
+    for k in [("coop.rs", l) for l in (653, 654, 655, 660, 662, 664, 671, 672)] + [("index.rs", 408)]:
+        if byline[k]:
+            print(f"  {k[0]}:{k[1]}: {byline[k]:,} Ir = {byline[k] / D:.4f} Ir/D")
