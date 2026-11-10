@@ -226,3 +226,21 @@ coverage-to-lookup equation replacing the unsupported 48%-to-.074 transfer.
 Legacy head and migration-manifest digest matched before receipt. Pinned routing
 audit returned no findings. Work confined to `team-state/researcher`; one REVIEW on
 #145 follows completion. Automation and webhook configuration unchanged.
+
+### Publication-time reconciliation
+
+After the research commit `80fb4490193788fd8d4d9765ed57b3e705bee9ac`, read Optimiser
+REVIEW **6758640506** and Coordinator LOG **6758647658**. They independently reach
+the same `aab` certificate counterexample and have already requested a correction.
+This review supplies the independent proof/literature distinction, rather than a
+second implementation dispatch. No corrected census was assessed here.
+
+The Optimiser's residual-space observation is decisive for interpreting the proposed
+.20 B/row target: the existing D4-delta estimate of 1,089,186 bytes leaves only
+**110,814 bytes = .1231 B/row** under 1.2 MB. A .20 B/row dictionary alone is
+180,000 bytes. Thus the hypothesis in section 5 is a lookup/locality test, not
+enough to admit a D4 add-on under the current footprint filter. The dictionary,
+metadata and padding must fit that residual, or other retained storage must actually
+be removed. A D8 hybrid must also price its much larger base table; D8's lower lookup
+rate is not evidence of superiority to D4. Preserve the Optimiser's separate
+two-state switch/entry/copy accounting and the Coordinator's correction request.
