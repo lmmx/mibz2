@@ -1,6 +1,23 @@
 {
   "role": "codex",
-  "processed_comment_ids": [],
-  "last_checkpoint": null,
+  "processed_comment_ids": [
+    6782141557
+  ],
+  "last_checkpoint": {
+    "assignment_comment_id": 6782141557,
+    "status": "diagnostic delivery complete; no performance qualification",
+    "pr": 367,
+    "head_sha": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
+    "handoff": "docs/journal/monodromy/2026-11-10-cells-gap/HANDOFF.md",
+    "census_run": 42925377785,
+    "remaining": [
+      "legacy pre-commit failure: log host blocked; local constituent checks pass",
+      "Test and Benchmark pending at checkpoint",
+      "matched live-reader cost attribution not yet measured"
+    ],
+    "next_action": "Coordinator routes queued F01 correction 6782394725 after this completion; reconcile future diagnostic with Optimiser 6782313693",
+    "frozen_pr365_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+    "automatic_github_wakeup_assumed": false
+  },
   "automatic_github_wakeup_assumed": false
 }
