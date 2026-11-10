@@ -1,5 +1,6 @@
 """bench/tg_ni_gate.py: the target-gated noninferiority workflow's verdict gate (D078). A
-qualification run fails its job unless the judge's verdict is a valid pass; a smoke run passes
+qualification run fails its job unless the judge's verdict is a valid pass and the gate's own trend veto
+(registration §2.9) agrees and finds nothing; a smoke run passes
 only when the judge refused it as smoke, and says "smoke: not evidence". Also: the workflow
 calls the gate last in `aggregate`, after the upload, without masking it, and every external
 action in it is pinned to a full commit SHA.
@@ -7,6 +8,7 @@ action in it is pinned to a full commit SHA.
     python3 bench/test_tg_ni_gate.py
 """
 
+import copy
 import json
 import re
 import subprocess
@@ -20,9 +22,28 @@ sys.path.insert(0, str(HERE))
 import tg_ni_gate as g  # noqa: E402
 
 WORKFLOW = HERE.parent / ".github" / "workflows" / "target-gated-ni.yml"
-PASS = {"valid": True, "passes": True, "failing": [], "rss_regression": [], "problems": []}
+
+
+def cells(trend=None):
+    """The 21 cells' wall and CPU batch means as the judge writes them: 24 alternating
+    deviations (no trend), with `trend` = (cell, metric, slope a batch) added to one"""
+    out = {}
+    for key in g.CELLS:
+        out[key] = {}
+        for metric in g.METRICS:
+            means = [0.001 * (-1) ** i for i in range(g.BATCHES)]
+            if trend and trend[:2] == (key, metric):
+                means = [y + trend[2] * i for i, y in enumerate(means)]
+            out[key][metric] = {"batch_means": means}
+    return out
+
+
+PASS = {"valid": True, "passes": True, "failing": [], "rss_regression": [], "problems": [], "vetoed": [],
+        "cells": cells()}
 NOT_SHOWN = {"valid": True, "passes": False, "failing": ["pattern/2 wall upper 1.0310"], "rss_regression": [],
-             "problems": []}
+             "problems": [], "vetoed": [], "cells": cells()}
+VETOED = {"valid": True, "passes": False, "failing": [], "rss_regression": [], "problems": [],
+          "vetoed": ["runs/2 cpu trend t +9.1234"], "cells": cells(("runs/2", "cpu", 0.001))}
 INVALID = {"valid": False, "passes": False, "problems": ["random: shard.json rounds 599, not 600"]}
 SMOKE = {"valid": False, "passes": False,
          "problems": ["the run is labelled 'smoke': not qualification (a smoke check is never evidence)"]}
@@ -41,6 +62,45 @@ class Gate(unittest.TestCase):
                 self.assertEqual(status, 1, line)
         self.assertIn("NOT SHOWN: pattern/2", g.gate("qualification", NOT_SHOWN, 1)[1])
         self.assertIn("INVALID", g.gate("qualification", INVALID, 2)[1])
+
+    def test_the_trend_veto(self):
+        # (the judge's veto, recomputed: condition 2 INVALID, the job failed)
+        status, line = g.gate("qualification", VETOED, 2)
+        self.assertEqual(status, 1)
+        self.assertIn("INVALID (the trend veto", line)
+        self.assertIn("runs/2 cpu", line)
+        # (a judge that passes a trend the gate finds: the disagreement fails)
+        missed = dict(PASS, cells=cells(("text/4", "wall", 0.001)))
+        status, line = g.gate("qualification", missed, 0)
+        self.assertEqual(status, 1)
+        self.assertIn("disagrees", line)
+        # (a judge that vetoes a cell the gate does not find)
+        status, line = g.gate("qualification", dict(PASS, vetoed=["text/4 wall trend t +5.0"], passes=False), 2)
+        self.assertEqual(status, 1)
+        self.assertIn("disagrees", line)
+        # (a vetoed verdict that still claims a pass, or exits 0 or 1)
+        for verdict, code in ((dict(VETOED, passes=True), 0), (VETOED, 0), (VETOED, 1)):
+            self.assertEqual(g.gate("qualification", verdict, code)[0], 1)
+        # (just inside and just outside the cutoff, by the gate's own t)
+        base = [0.001 * (-1) ** i for i in range(g.BATCHES)]
+        for slope, hit in ((1e-5, False), (1e-3, True)):
+            t = g.slope_t([y + slope * i for i, y in enumerate(base)])
+            self.assertEqual(abs(t) > g.TREND_T_MAX, hit, t)
+        # (missing or short batch means, or a non-finite one: INVALID, never a pass)
+        short = copy.deepcopy(PASS)
+        short["cells"]["onebyte/1"]["wall"]["batch_means"] = short["cells"]["onebyte/1"]["wall"]["batch_means"][:20]
+        nan = copy.deepcopy(PASS)
+        nan["cells"]["onebyte/1"]["cpu"]["batch_means"][3] = float("nan")
+        gone = copy.deepcopy(PASS)
+        del gone["cells"]["wikidata/4"]
+        for verdict in (short, gone):
+            status, line = g.gate("qualification", verdict, 0)
+            self.assertEqual(status, 1)
+            self.assertIn("INVALID", line)
+        self.assertEqual(g.gate("qualification", nan, 0)[0], 1)
+        self.assertEqual(g.gate("qualification", dict(PASS, cells={}), 0)[0], 1)
+        for odd in ({"onebyte/1": []}, {"onebyte/1": {"wall": 3}}, []):
+            self.assertEqual(g.gate("qualification", dict(PASS, cells=odd), 0)[0], 1)
 
     def test_smoke(self):
         status, line = g.gate("smoke", SMOKE, 2, STRUCT)
@@ -134,6 +194,16 @@ class Workflow(unittest.TestCase):
         self.assertTrue(builds)
         for b in builds:
             self.assertIn("--locked", b)
+
+    def test_the_final_designs_ceiling_and_rounds(self):
+        # (registration §2.9: a 240-minute job ceiling; a qualification refused at any R but 2880)
+        shard = self.text[self.text.index("\n  shard:"):self.text.index("\n  aggregate:")]
+        self.assertEqual(re.findall(r"timeout-minutes:\s*(\d+)", shard), ["240"])
+        plan = self.text[self.text.index("\n  plan:"):self.text.index("\n  shard:")]
+        self.assertIn('[ "$LABEL" = qualification ] && [ "$ROUNDS" != 2880 ]', plan)
+        import service_tg as tg
+        self.assertEqual(tg.NI_ROUNDS, 2880)
+        self.assertIn('default: "2880"', self.text)
 
     def test_dispatch_only(self):
         on = self.text[self.text.index("\non:"):self.text.index("\npermissions:")]
