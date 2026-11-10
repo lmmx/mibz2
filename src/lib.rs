@@ -105,6 +105,11 @@ pub use coop::wait_stats;
 // (research: the cooperative walk's staged form, selectable for counting; off by default)
 #[doc(hidden)]
 pub use coop::research as coop_research;
+// (research: the walks' per-call records, kept only with the `walk-stats` feature, for
+// the team screen's probes and the native engagement diagnostic)
+#[cfg(feature = "walk-stats")]
+#[doc(hidden)]
+pub use coop::walk_stats;
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 

@@ -301,3 +301,85 @@ No retry, so no doubling. The cost is engineering, not machine time.
   confirm.
 - **(b)'s denominator:** per team, across its assigned blocks, helper-only, in integers. The
   per-block distribution is descriptive only.
+
+## 8. The instrument, as built (`research/walk-stats`, stacked on #334)
+
+The `walk-stats` feature now exists. **This section is the instrument's record. It does not
+freeze or register anything,** and nothing in the diagnostic's sequence has run.
+
+### Where it differs from §2's design, and why
+
+- **One lock per record, not ledgers handed over at pool join.** Each record is pushed whole
+  under one `Mutex` (`coop::walk_stats::push`) by the thread that did the work, once per
+  call. That is never inside a walk's loop, and no record can interleave with another or
+  vanish on a thread's return.
+  - Handing ledgers over at pool join would need the pool's run to carry them out. The
+    lock costs a few uncontended lock operations per block.
+- **The team identity** is a per-thread index (`walk_stats::team`). A pipelined team's
+  leader takes it the first time it asks (its `pipelined_worker` thread) and passes it to
+  the run's helpers in the relay (`RelayStats::team`). Solo records read the same index on
+  the leader.
+- **Counting is arithmetic, through a `Stat` trait** whose every method is a no-op for `()`:
+  - each claim is counted as a take or an exhaustion;
+  - each finished segment adds its length;
+  - each tail byte adds 1;
+  - each non-empty staged fragment adds its length.
+
+  Without the feature, the walkers are called with `()`.
+
+### The records
+
+| record | fields |
+|---|---|
+| `call` | team, block (`place`), thread (pool index, 0 = leader), role, walker, takes, exhausts, bytes, tail, fragments, copied |
+| `share` | team, block, thread, after a completed `FusedBuild::share` |
+| `summary` | team, block, rows, starts, `seg_bytes`, `entered`, `joined`, `built`, by the thread ending the walk |
+| `solo` | team, block, rows |
+| `end` | the record count |
+
+- **The summary counts independently of the calls:**
+  - `seg_bytes` is the segments' lengths summed from the scratch;
+  - `entered` is a bitmask each thread sets on entering `walk_and_leave`, before its share;
+  - `joined` is set by the leader's successful join CAS;
+  - `built` is set by each helper as it counts into the build.
+- **The harness** (`examples/ab.rs`, feature only) writes the records to `AB_WALK_STATS`
+  after the child's own record.
+
+### What was checked (no diagnostic run, and no engagement figure read)
+
+- **Without the feature, the machine code is unchanged.** `coop::traverse::<32>` (1,018
+  instructions), `coop::traverse_staged::<32>` (871) and `bwt::room_segments::<32>` (1,366)
+  are instruction-identical, addresses aside, between `02547e7b`'s `ab` and this branch's
+  featureless `ab` (`objdump`).
+- **No new `unsafe`.** The two `finish` closures compute their segment's length once and
+  reuse it: the same operations, split.
+- **With the feature,** `cargo test --features walk-stats` passes the library's 63 tests
+  (the walk, staged and pipelined oracles), `tests/pipelined.rs` (12) and
+  `tests/staged_traverse.rs` (1).
+- **`walk_stats_reconcile_per_block`** runs pipelined decodes at k = 2, 3 and 4:
+  - **The coverage:** both walkers, with the leader early and late.
+  - **The checks:** every output equals `walk`'s, and every block's records reconcile.
+  - **The mutants it catches:** a lost call record, a zero-work one included (at least
+    one zero-work call is required to occur); a duplicate; a byte miscounted; the wrong
+    walker; a lost share.
+- **Feature on against feature off** on two generated corpora (`records` and `text` at
+  scale 4; not W), `mibz2-pipe3-both` at 3 threads, both walkers:
+  - the outputs are identical (length and SHA-256);
+  - the records are VALID by `bench/walk_stats_check.py`.
+- **`bench/walk_stats_check.py`** is §3 and §5's checker. `bench/test_walk_stats_check.py`
+  has 17 negative controls and positive cases:
+  - a lost zero-work helper record and a lost zero-work leader record: INVALID;
+  - a helper truly absent (not entered): NOT ENGAGED;
+  - a duplicate; a misattributed team or block; a missing summary or solo record; a byte
+    off by one; a negative, overflowed, string or boolean counter; the terminal record; an
+    exhaust count other than 1; a lost share: all INVALID;
+  - an unbalanced team, an exact two-thirds boundary, a zero denominator, the other
+    walker: judged as §5 says.
+
+### Still open before registration
+
+- **The pins:** the instrument's commit (this branch's head, once reviewed), the executable's
+  digest, and the checker's digest.
+- **B5 review** of the instrument.
+- **CI does not yet run** the feature's tests, a deliberate choice for now: adding a
+  `--features walk-stats` test step is a workflow change for review.
