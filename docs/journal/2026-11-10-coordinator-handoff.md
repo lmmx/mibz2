@@ -21,6 +21,17 @@ Agents may be out of flight for several days. This is the state at 17:55Z; GitHu
 | **wikidata-pq `BZ2_THREADS_CAP = 4`** (`src/wikidata/dump.py:170`) | not started | i9 A/B cap 4 vs 8/10 so 0.2.9's team gain reaches the release split. |
 | **Backlog** | ~40 open PRs | Closing #335, #337, #339 was denied by the permission classifier; Louis to allow or close. |
 
+## The cells production PR's gate (decided, LOG on #145)
+- **Slice one** (a new `InverseBwt` type, off by default, plus a third `examples/ab.rs` arm that uses it): it merges if the default arms are level everywhere and the parity, B5 and Miri evidence passes. The new arm is reported, not judged.
+- **The flip:**
+  - `wikidata` at 1 thread faster beyond noise;
+  - every other corpus and thread count level;
+  - peak RSS within +10% everywhere;
+  - then an i9 one-build A/B before release.
+
+  `text` is refused by admission (r/n 0.37, the kernel is 4× slower on prose), so it can only be level.
+- **Memory:** the buffer is bounded by about 13 n + 48 r bytes, and the type's state sits behind a pointer. Design: `docs/journal/monodromy/2026-11-10-cells-production/DESIGN.md` on #362 (head eacce817).
+
 ## The other agents' hand-offs
 - **Architect / Pathfinder:** `docs/journal/2026-11-10-pathfinder-handoff.md` on #313 at f1fe26f4 (LOG 6774893006). Open, in order: #361, blog review round 2 (#357), the cells kernel behind `invert_runs`.
 - **MONODROMY:** PR #362 (docs only; merge on green once its head has been still for ten minutes). It holds the bibliography (stored unfinished, 15 of 23 works) and `docs/journal/monodromy/2026-11-10-cells-production/HANDOFF.md`. The production PR is **not started in code**. Design facts so far:
