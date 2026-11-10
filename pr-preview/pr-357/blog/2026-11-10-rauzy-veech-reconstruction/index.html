@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1ac336a5c45b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1ac336a5c45b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1ac336a5c45b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1ac336a5c45b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1ac336a5c45b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=7945350be146">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=1ac336a5c45b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2221,7 +2221,8 @@
 <p>MONODROMY's experiment never walks the rows. Read along LF, the block is a cyclic word of run letters, one per row. Each step picks one pair of adjacent letters, a <strong>digram</strong>, and replaces every occurrence with a new letter, recording one rule such as <code>X → AB</code>. Because each run moves as a block, a digram's occurrences fill one interval of rows, called a <strong>cell</strong>. So a step costs the same however many occurrences there are. When one letter is left, its rules spell the whole block. The step is Rauzy–Veech induction, and it works like RePair compression on the run letters.</p>
 <p>The work therefore scales with steps, not bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte. The first kernel still lost, at 1.276 times the walk's time, because a step cost 14 ns. The <strong>cells kernel</strong> writes each cell once and moves nothing, cutting a step to 7.7 ns. Per run it executes 184 instructions against production's 260, with 2.1 simulated last-level cache misses against 8.7.</p>
 <p>That kernel recorded less time than its conventional reference, the table build and walk, in two local Wikidata censuses. The second, on an idle core, recorded <strong>1.604 against 2.172 nanoseconds per row</strong>, a derived <strong>26.2% reduction</strong>, and was faster on 204 of 233 blocks. Where runs are short the steps per byte rise and it loses: 3.9 times on prose, 9.8 times on uniform bytes.</p>
-<p>These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is <strong>no demonstrated gain over the shipped decoder</strong>, and the experiment is not in production.</p>
+<p><strong>A correction came the same day.</strong> MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix and a check that now catches it are at <a href="https://github.com/lmmx/mibz2/commit/9e30c338200ff658d8dd9a252a38679caa3fd6e2">9e30c33</a>. The timings above were measured before the fix, which adds 1.2% to the writer's instructions on one block, and they stand pending a re-run census.</p>
+<p>These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is <strong>no demonstrated gain over the shipped decoder</strong>, and the experiment is not in production. Since 0.2.8 the shipped inversion builds from run records, and MONODROMY estimates the cells kernel at about 0.80 of that path's time, from the Pathfinder's figures; that comparison is not yet measured.</p>
 <p>Two structural findings came with it. A <strong>Lyndon word</strong> is strictly smaller, alphabetically, than each of its proper suffixes; <code>aab</code> is one. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a> is a short introduction to these trees.</p>
 <p>The number of steps also depends on which digram goes next. Every order needs at least r₂ − 1 steps, where r₂ counts the distinct digrams: 1.220 per run on Wikidata. The right-end order takes 1.812; taking steps that create no new boundary first takes 1.279. No kernel yet runs that order cheaply, so it is a counted saving, not a measured speedup.</p>
 <p>The <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs">implementation</a> are pinned here at <strong>ae51b11a46014e5fec928b0e25235f532a473a9f</strong>. MONODROMY is the research lane developing this experiment.</p>
@@ -2282,7 +2283,7 @@
 <p>The original 2.770 figure sums the stages' separate fastest rounds. The cells figures time order, induction and output together. Consequently, the apparent 42% drop between the original and latest totals is a historical comparison across runs and timing definitions, not a paired effect estimate.</p>
 <p>The input boundary matters too. The conventional arm builds from a column; the experimental kernel receives runs. The separately measured column-to-run scan costs 0.484 ns/row in the journal. A front end that emits runs directly could avoid that scan, but the published table does not measure that integrated path.</p>
 <p>Nor does it compare against the newer records-based construction associated with <a href="https://github.com/lmmx/mibz2/pull/324">the front-end work</a>. Calling the result a 26% improvement to a released mibz2 version would go beyond the evidence.</p>
-<p>The favourable corpus is not the whole story. The cells experiment is 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table.</p>
+<p>The favourable corpus is not the whole story. The cells experiment is 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table, timed before the writer fix; MONODROMY has withdrawn its periodic, Fibonacci and Thue–Morse figures until they are re-measured.</p>
 <h2 id="3-what-made-the-cells-cheaper">3. What made the cells cheaper?<a class="headerlink" href="#3-what-made-the-cells-cheaper" title="Permanent link">&para;</a></h2>
 <p>Consider a repeated word represented by a rule. The algorithm must retain the word and its destination, but it need not repeatedly update every historical description of that word.</p>
 <p>The first cells version still lost: the journal records a ratio of 1.225 in its development sequence. A new representation was an opening, not an immediate win.</p>
@@ -2321,7 +2322,7 @@
 <h2 id="6-what-remains-before-production">6. What remains before production?<a class="headerlink" href="#6-what-remains-before-production" title="Permanent link">&para;</a></h2>
 <p>The performance reversal is useful evidence for continuing the experiment. It establishes neither a general-purpose replacement nor a release result.</p>
 <p>The next comparison needs matched input boundaries and the relevant records-based reference. The unsafe kernel still needs independent safety review. Tests reported in the journal do not substitute for that argument, and adverse inputs need a bounded fallback or a different reduction.</p>
-<p>At the source pin, the research lane's broader verification was still pending in the assignment record. No completed five-lens review is claimed here.</p>
+<p>The research lane's five-lens verification is under way. Its memory-safety lens found the writer defect above, now fixed; the census and the numbers, proofs and referee lenses are still to come. The code at this post's pin, ae51b11, predates the fix.</p>
 <p>MONODROMY's earlier conjecture, that the grammar follows the Cartesian tree of the rotations' ranks, is now a recorded identity: the grammar is the Lyndon tree. Computing every rotation's rank first, however, could cost as much as the reconstruction this approach seeks to avoid.</p>
 <p>The next question is whether the Lyndon tree can be built more cheaply than by running the induction step by step. Within the induction, the order with fewer steps only pays once the machine can execute it cheaply too.</p>
 
@@ -2484,19 +2485,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/bench.js?v=1ac336a5c45b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1ac336a5c45b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/blog.js?v=1ac336a5c45b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/frontier.js?v=1ac336a5c45b"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/observatory.js?v=1ac336a5c45b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=7945350be146"></script>
+        <script src="../../assets/javascripts/katex.js?v=1ac336a5c45b"></script>
       
     
   </body>

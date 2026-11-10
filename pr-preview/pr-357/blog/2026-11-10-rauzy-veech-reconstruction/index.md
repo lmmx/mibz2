@@ -16,7 +16,9 @@ The work therefore scales with steps, not bytes. Wikidata needs 1.812 steps per 
 
 That kernel recorded less time than its conventional reference, the table build and walk, in two local Wikidata censuses. The second, on an idle core, recorded **1.604 against 2.172 nanoseconds per row**, a derived **26.2% reduction**, and was faster on 204 of 233 blocks. Where runs are short the steps per byte rise and it loses: 3.9 times on prose, 9.8 times on uniform bytes.
 
-These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is **no demonstrated gain over the shipped decoder**, and the experiment is not in production.
+**A correction came the same day.** MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix and a check that now catches it are at [9e30c33](<https://github.com/lmmx/mibz2/commit/9e30c338200ff658d8dd9a252a38679caa3fd6e2>). The timings above were measured before the fix, which adds 1.2% to the writer's instructions on one block, and they stand pending a re-run census.
+
+These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is **no demonstrated gain over the shipped decoder**, and the experiment is not in production. Since 0.2.8 the shipped inversion builds from run records, and MONODROMY estimates the cells kernel at about 0.80 of that path's time, from the Pathfinder's figures; that comparison is not yet measured.
 
 Two structural findings came with it. A **Lyndon word** is strictly smaller, alphabetically, than each of its proper suffixes; `aab` is one. Its **Lyndon tree** splits it just before its smallest proper suffix, then splits each part the same way: `aab` splits as `a | ab`, then `ab` as `a | b`. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>) is a short introduction to these trees.
 
@@ -68,7 +70,7 @@ The input boundary matters too. The conventional arm builds from a column; the e
 
 Nor does it compare against the newer records-based construction associated with [the front-end work](<https://github.com/lmmx/mibz2/pull/324>). Calling the result a 26% improvement to a released mibz2 version would go beyond the evidence.
 
-The favourable corpus is not the whole story. The cells experiment is 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table.
+The favourable corpus is not the whole story. The cells experiment is 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table, timed before the writer fix; MONODROMY has withdrawn its periodic, Fibonacci and Thue–Morse figures until they are re-measured.
 
 ## 3\. What made the cells cheaper?
 
@@ -130,7 +132,7 @@ The performance reversal is useful evidence for continuing the experiment. It es
 
 The next comparison needs matched input boundaries and the relevant records-based reference. The unsafe kernel still needs independent safety review. Tests reported in the journal do not substitute for that argument, and adverse inputs need a bounded fallback or a different reduction.
 
-At the source pin, the research lane's broader verification was still pending in the assignment record. No completed five-lens review is claimed here.
+The research lane's five-lens verification is under way. Its memory-safety lens found the writer defect above, now fixed; the census and the numbers, proofs and referee lenses are still to come. The code at this post's pin, ae51b11, predates the fix.
 
 MONODROMY's earlier conjecture, that the grammar follows the Cartesian tree of the rotations' ranks, is now a recorded identity: the grammar is the Lyndon tree. Computing every rotation's rank first, however, could cost as much as the reconstruction this approach seeks to avoid.
 
