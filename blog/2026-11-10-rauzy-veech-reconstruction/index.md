@@ -10,7 +10,15 @@ mibz2 is our bzip2 decoder, written in Rust. This post follows [The mathematical
 
 **The walk.** bzip2 stores each block as the last column of the block's sorted rotations: the Burrows–Wheeler transform (BWT). [An earlier post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) works through the transform and its inverse on `banana`. To undo it, mibz2 builds a table with one entry per row and walks it. The step from one row to the next is a map called **LF**, for last-to-first. Each entry gives one byte and the address of the next row, so the walk makes one dependent memory lookup per byte. Walking the table takes about 53–60% of a decode ([the concepts page on memory-level parallelism](<https://lmmx.github.io/mibz2/concepts/couriers/index.md>)), and building it adds more.
 
+The walk is a trail of sealed addresses
+
+The envelope is one row lookup; its contents are the byte and the next row address. The wait lies *before* that next address is known. The analogy breaks at the postman: cache hits can be quick and other work can overlap a miss; neither every load nor every decoder thread must stall.
+
 **One shift per run.** A **run** is a maximal stretch of equal bytes in the last column. Within a run, LF sends consecutive rows to consecutive rows, so it moves each run's rows as one block. The whole map is therefore one interval per run, each shifted to a new place, instead of one entry per row. That is the structure the 8 November post set out. On mibz2's main benchmark, an 11.9 MB extract of a Wikidata dump that decompresses to 210 MB, a run averages about 14 rows.
+
+One instruction moves the whole tray
+
+Each compartment is a row in one equal-byte run; the tray is that run’s interval, and sliding it is LF’s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.
 
 **Working on intervals instead of rows.** We wrote an experimental **kernel**, a self-contained routine for this one stage, that never walks the rows. It works on the intervals. Each step compares the last interval of the runs' order in the last column with the last interval of their order after LF. It takes the shorter one's length off the longer one, and gives the shorter interval a longer word to cover the rows removed. It records that word as one rule, such as `X → AB`. When one interval is left, its word is the whole block, and the rules spell it out. One step covers many rows, so the work grows with the number of steps, not the number of bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte, and in the faster kernel a step costs about 7.7 ns. So the induction itself costs about 1 ns per byte, where the shipped decoder's whole inversion stage takes about 2. The step is a known technique, Rauzy–Veech induction, applied here to inverting a BWT.
 
@@ -26,9 +34,9 @@ For a small example, sort the rotations of `aab`: `aab`, `aba`, `baa`. The last 
 
 Name the one-byte run of `b` B and the two-byte run of `a` A. In the last column the runs come in the order B, A: call this the **original order**. LF sends their rows to the first column, where they come in the order A, B: the **image order**. The two orders cut the same three rows into intervals in different places. Together, the intervals and where LF sends them form an **interval exchange**: each interval is moved, whole, to a new place.
 
-Two steps rebuild aab from its last column
+A ticket can remember a longer journey
 
-Each box is one run's interval; its width is the rows it still covers, and its label is the word it holds. Green marks the interval whose word grew. After step 1, B covers one row but holds two bytes: a remaining visit stands for the visits removed from the exchange.
+The number of tickets is an interval’s remaining row count; the stamp is its return word, in reconstruction order. Shortening the longer interval leaves the shorter one representing a longer journey. The lower stack is a separate, generic batch: all occurrences of the chosen pair occupy one cell and share one rule. Counted steps per byte: Wikidata 0.1309, prose 0.6761, uniform random bytes about 1; short runs leave less to batch. The analogy breaks at the stamp: the implementation records that rule once, not once per ticket; expanding it still has to emit the bytes.
 
 Each step looks at the right-hand end of both orders. The last interval of the original order is A, two rows long; the last of the image order is B, one row long. The longer one, A, loses as many rows as B has, one. B's word grows to cover the row A lost: A's `a` followed by B's own `b`, giving `ab`. Both intervals now cover one row. When the two end intervals are the same length, the step joins them: A's `a` and B's `ab` give `aab`, and one interval is left.
 
@@ -42,6 +50,10 @@ The walk does one lookup per byte. The induction does one step per pair of end i
 
 **Against the shipped decoder.** Since mibz2's 0.2.8 release, the shipped decoder builds its table from a list of the block's runs, its **run records**, instead of reading the last column ([\#324](<https://github.com/lmmx/mibz2/pull/324>)). After the bug fix below, we gave that path and the kernel the same run records. We timed both on the 233 blocks of the Wikidata file that have at least 65,536 bytes. The kernel took 1.677 ns per byte against 2.049, 0.818 times as long, and three repeats gave 0.817, 0.820 and 0.818. Nine runs some hours later read 0.836 to 0.858. Every arm was then 6 to 19% slower, and the kernel lost more than the reference. Running the old and new binaries back to back gave the same spread, so the change is in the machine, not the build; its cause on the host is not known. The result is therefore 0.82 to 0.86, not 0.818 with a spread of 0.2%. The kernel was faster on 189 to 197 of the 233 blocks. The 0.818 is higher than the 0.738 in the table below for two reasons of similar size. This reference is faster, 2.049 ns per byte against the column-based path's 2.172, which accounts for slightly more than half of the change. And the kernel's own time rose from 1.604 to 1.677, almost all in its first stage. That stage now reads the run records itself, taking 0.367 ns per byte against 0.29 to 0.31 when it was handed them. The bug fix changed the writer's time only from 0.344 to 0.347.
 
+The cells kernel against the inversion stage mibz2 ships
+
+Both sides start from the same run records, after the writer fix. Fastest of five rounds per block, pooled, on one cloud machine; not CI, and only the inversion stage, not the whole decoder. The induction is the largest stage: about 0.13 steps per byte at about 7.7 ns a step. The nine later runs found the machine in a slower state, which widened the result to 0.82 to 0.86.
+
 **The bug.** Our review of the research record found that the kernel's writer left 126,658 bytes unwritten over 178 of the blocks. The kernel's byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix, and a check that now catches the fault, are in [\#351](<https://github.com/lmmx/mibz2/pull/351>). Everything below was timed before the fix.
 
 **The history.** Our first kernel stored the two orders as linked lists and was slower than mibz2's earlier reference: the table build that reads the last column, plus the walk. The second, the **cells kernel**, named for the cells it writes ([§3](<#3-why-the-cells-kernel-is-cheaper>)), records completed steps without moving anything through linked lists. Each **census** below is one timed pass over the 233 blocks.
@@ -53,10 +65,6 @@ Each census timed its own reference, so each row compares the kernel only with t
 | First kernel (linked lists) | 2.172 | 2.770 | 1.276 |
 | Cells kernel, first census | 2.244 | 1.697 | 0.756 |
 | Cells kernel, second census | 2.172 | 1.604 | 0.738 |
-
-The cells kernel against its own census's reference
-
-Dashed: conventional table build + walk, from a column. Solid: the experimental kernel, from run records (the column-to-run scan, 0.484 ns a row, is excluded). Each kernel is compared only with the reference timed in its own census. Local single-thread fastest-of-five figures from \#351's journal, with no confidence intervals; not CI, not the whole decoder, and not against 0.2.8's records-based path.
 
 The cells kernel recorded lower times on 202 blocks in the first census and 204 in the second. Other work ran on other cores during the first; the second pinned the process to one core with the others idle.
 
@@ -72,6 +80,10 @@ Three changes made the cells kernel cheaper than the first one. They did not all
 
 A cell is the overlap of an interval in the original order with one in the image order. It holds the rows that read the same pair of run letters in succession. The kernel writes each cell once, when its step is done, and records where later work goes. This replaces most of the first kernel's shortening and relinking of list nodes.
 
+Keep finished work still
+
+Hanging cards are letters in the two linked orders; their strings are links that must be patched. A filed receipt is a completed cell, while the clipboard is the live remainder and promised next slot. Keeping completed work still removes the relinking work, and known future addresses permit prefetch. The analogy breaks at the filing cabinet: two slots are written for a cell, destinations can be scattered, and word/output processing still writes memory; this is not a claim that the decoder writes each byte only once.
+
 A second change removes position tracking from the induction loop. The row where the text starts is marked in the rules, and the output stage finds the starting position from that mark afterwards. So the induction no longer updates a position at every step.
 
 Third, the kernel prefetches the addresses of its scattered writes before it makes them. The journal times the changes in sequence on ten blocks. Replacing the linked lists with one buffer took a cell from 13.4 ns to 12.5. Marking the start row instead of following it took it to 9.8 ns, and fetching ahead to 7.2 to 7.7 ns.
@@ -86,9 +98,9 @@ A **primitive** word is not an exact repetition of a shorter word. The smallest 
 
 The journal identifies the right-end induction's expanded derivation tree with the Lyndon tree of that smallest rotation. It first relates the construction to a **Cartesian tree**: a hierarchy formed by repeatedly splitting a sequence at its minimum. Here the sequence contains ranks of rotations beginning at the word's internal boundaries. For `aab`, the rotations at positions zero, one and two have ranks zero, one and two. The internal sequence is therefore \[1,2\]. Its minimum splits after the first `a`, giving `a | ab`; the remaining split gives `a | b`. This agrees with the two rules above. In general, the standard split of a Lyndon word cuts it just before its smallest proper suffix. That a Lyndon tree has the shape of the Cartesian tree of the word's suffix ranks is a 2003 result of Hohlweg and Reutenauer; Crochemore and Russo set it out in §4 of [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>).
 
-How the row map leads to the Lyndon tree
+The rules are a book’s nested bindings
 
-The identity concerns the expanded derivation tree; stored rules share subtrees, and the kernel need not build every node. It is proved in \#351's journal and checked by simulators there, under the primitive-word condition (aab is primitive; abab is not). Green: the two internal nodes, which are the two rules of §1.
+Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s smallest rotation.
 
 Lyndon trees, and their link to Cartesian trees, are long established. \#351 gives a way to reach one from the BWT's runs without rebuilding the text first.
 
@@ -102,9 +114,9 @@ Counts here are steps divided by `r`, the number of runs, so blocks with differe
 
 The favourable order takes available free steps first, then chooses the largest cell. Its count is 1.279 steps per run, compared with 1.812 for the right-end sweep.
 
-The order of steps changes how many there are
+The planner is on the clock too
 
-These are step counts, not times: the cells kernel cannot yet run the cheaper order cheaply. The floor holds for any order of these cell steps (r₂ − 1, the cells of both orders' cuts, minus one); fusion, an operation outside this step model, brings one block of eight 0.16% below its floor, so it is not a lower bound on inverse BWT.
+A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These “free” steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. A different worklist variant was priced higher from counts and estimated costs; it was not a timed comparison of these two orders.
 
 The journal proves that `steps = initial cells − 1 + newly introduced boundaries`, where the initial cells number r₂, one per distinct digram. In the toy example, the union of both orders' cuts gives three initial cells. Two steps leave one, with no new boundary introduced. A step can also move an interval into the middle of another, which adds a cut that a later step must remove.
 
