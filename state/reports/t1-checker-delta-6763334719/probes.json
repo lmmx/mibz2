@@ -1,0 +1,275 @@
+{
+  "cases": [
+    {
+      "case": "complete_96_including_expected_decoder_errors",
+      "old_admits": true,
+      "new_admits": true,
+      "new_failures": []
+    },
+    {
+      "case": "wrong_artifact_head",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "artifacts: the head build is from '9999999999999999999999999999999999999999', not the delta's 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'"
+      ]
+    },
+    {
+      "case": "missing_artifact_sha_head",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "artifacts: the head build is from None, not the delta's 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'"
+      ]
+    },
+    {
+      "case": "wrong_artifact_base",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "artifacts: the base build is from '9999999999999999999999999999999999999999', not the delta's 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'"
+      ]
+    },
+    {
+      "case": "missing_artifact_sha_base",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "artifacts: the base build is from None, not the delta's 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'"
+      ]
+    },
+    {
+      "case": "reject_exit_NoneType_None",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit None, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_int_-9",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit -9, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_int_124",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit 124, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_int_2",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit 2, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_bool_True",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit True, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_str_1",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit '1', not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_float_1.0",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit 1.0, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "reject_exit_int_0",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: lbzip2 exit 0, not its rejection exit 1"
+      ]
+    },
+    {
+      "case": "arm_exit_bool_False",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit False)"
+      ]
+    },
+    {
+      "case": "arm_exit_float_0.0",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit 0.0)"
+      ]
+    },
+    {
+      "case": "arm_exit_NoneType_None",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit None)"
+      ]
+    },
+    {
+      "case": "arm_exit_int_-9",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit -9)"
+      ]
+    },
+    {
+      "case": "arm_exit_int_124",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit 124)"
+      ]
+    },
+    {
+      "case": "arm_exit_int_1",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit 1)"
+      ]
+    },
+    {
+      "case": "arm_exit_str_0",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__E-crc-team__4096: process failure (exit 0)"
+      ]
+    },
+    {
+      "case": "oracle_exit_bool_False",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit False)"
+      ]
+    },
+    {
+      "case": "oracle_exit_float_0.0",
+      "old_admits": true,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit 0.0)"
+      ]
+    },
+    {
+      "case": "oracle_exit_NoneType_None",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit None)"
+      ]
+    },
+    {
+      "case": "oracle_exit_int_-9",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit -9)"
+      ]
+    },
+    {
+      "case": "oracle_exit_int_124",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit 124)"
+      ]
+    },
+    {
+      "case": "oracle_exit_int_1",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit 1)"
+      ]
+    },
+    {
+      "case": "oracle_exit_str_0",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (exit 0)"
+      ]
+    },
+    {
+      "case": "reject_signal",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: process failure (timed out False, signal 9)"
+      ]
+    },
+    {
+      "case": "reject_timed_out",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "reject__E-trunc-team: process failure (timed out True, signal None)"
+      ]
+    },
+    {
+      "case": "arm_signal",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__W__4194304: process failure (timed out False, signal 9)"
+      ]
+    },
+    {
+      "case": "arm_timed_out",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "H-team__W__4194304: process failure (timed out True, signal None)"
+      ]
+    },
+    {
+      "case": "oracle_signal",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (timed out False, signal 9)"
+      ]
+    },
+    {
+      "case": "oracle_timed_out",
+      "old_admits": false,
+      "new_admits": false,
+      "new_failures": [
+        "oracle__W: process failure (timed out True, signal None)"
+      ]
+    }
+  ],
+  "total": 33,
+  "source_sha256": {
+    "bench/team_screen.py": "1a1f6c0b9aaa4752f54455361122ff94b92acdb600dcc42cc7f75927f1374312",
+    "bench/old_team_screen.py": "9454977b3c8ec913de563d1bdd1ad5af5ef981a5e451024b0733a0be735d0a55",
+    "bench/test_team_screen.py": "4bfe0e5108d97f0b642b11cbad2121a8ee27853b284ce969ce19199902293531",
+    "bench/team_gap_count.py": "eb7f78201f78662389d737f66a3adb7ed744495f9de4eae7554e344eab1a30c0",
+    "bench/team-screen/manifest.json": "e9c8064f3900add1c27534fd080831077ae66132dfaec9c54b929099cb86822e"
+  },
+  "native_decoder_executed": false
+}
