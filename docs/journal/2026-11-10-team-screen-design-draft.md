@@ -45,7 +45,7 @@ executed-kernel evidence.
 | `bench/team-screen/w-spans.jsonl`, `w-classes.txt` | W's block map: each block's span, CRC, rows and class |
 | `bench/team_screen.py` | `outputs` (A1, the admission contract); `check` (the full tier's counted A2–A4) |
 | `bench/test_team_screen.py` | 36 negative controls and positive cases, synthetic (§3) |
-| `examples/ab.rs` | the child record, schema `ab-child/2` (§2) |
+| `examples/ab.rs` | the child record, schema `ab-child/2` (§2): from #336 (bench 3.6.0), merged into this branch |
 | `examples/walk_count.rs` | `spans`: the block map |
 
 ## 1. The gap (read: #330 §7, D083)
@@ -56,7 +56,7 @@ physical cores. The pipelined default needs exactly 10 physical cores and a 20 M
 So these never execute on any PR: `mtf_checkpoints_avx2`, `FusedBuild::share`, the
 walkers, the relay, and the pipelined leader's solo path.
 
-## 2. The harness's record, `ab-child/2` (at this head)
+## 2. The harness's record, `ab-child/2` (#336, bench 3.6.0)
 
 **`examples/ab.rs`'s child now writes:**
 
@@ -82,8 +82,8 @@ exit, a timeout or a signal is a **process failure**, judged apart.
 
 **The base harness must be compatible.** The base arm runs the base's own `examples/ab`,
 which must emit `ab-child/2`. A base whose harness predates it is **INCOMPATIBLE**, a named
-failure. So `ab-child/2` lands on master first, in its own measurement-neutral PR, before
-the screen is adopted; every later merge base then has it. The base is never patched
+failure. So `ab-child/2` lands on master first, in its own measurement-neutral PR,
+**#336**, before the screen is adopted; every later merge base then has it. The base is never patched
 (D087 (3)).
 
 ## 3. The PR tier
@@ -258,7 +258,7 @@ about 520–770 s cold.
 
 ## 6. Open
 
-1. **The `ab-child/2` prerequisite PR:** its own registration as measurement-neutral, or a
-   docs-and-harness change under the bench's usual neutrality check?
+1. **The `ab-child/2` prerequisite** is #336 (bench 3.6.0, a minor version), under the
+   bench's usual neutrality check.
 2. **T2:** the instrument's design is the native diagnostic's §2. Its implementation is the
    next deliverable (D087).

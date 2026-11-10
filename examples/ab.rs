@@ -27,6 +27,11 @@
 //!     --machine-state  also record, beside each run, its cycles and instructions and the
 //!                      clock and package temperature before and after (`machine`: off by
 //!                      default, recorded and never judged)
+//!     --sysfs-state    only the parent's half of `--machine-state`: the clock, governor,
+//!                      EPP, turbo and package temperature read from sysfs before each run
+//!                      is spawned and after it exits, with their timestamps. The child is
+//!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
+//!                      cleared (bench 3.5.0; recorded and never judged)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
@@ -122,6 +127,14 @@
 //! the run's CPU. `AB_SAMPLE_MS` sets its interval (0: none, to measure its cost). A
 //! 1-thread run of an in-process arm has no sampler: its split is its own thread's CPU
 //! (RUSAGE_THREAD), and anything else its process spent shows as unattributed.
+//!
+//! **The child's record is schema `ab-child/2`** (bench 3.6.0): beside its figures, `out`
+//! and `hash`, and `err` (the error's text, empty on success), it carries `schema`, and
+//! `err_kind` and `err_block` (a decoder error's kind and block, from the reader's
+//! `mibz2::Error`; both null on success, or where the error carries no block). A decoder
+//! error is reported in the record, and the child exits normally. For untimed checks only,
+//! never set by `ab run`: `AB_SHA256=1` adds `sha256`, a SHA-256 of the output (null
+//! without it), and `AB_READ_BUF=BYTES` sets the read buffer (4 MiB without it).
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -171,8 +184,8 @@ struct Hash {
     tail: [u8; 32],
     nt: usize,
     n: u64,
-    /// with `AB_SHA256=1` only (untimed checks: the team screen's): a SHA-256 of the same
-    /// stream, beside the 64-bit hash, for byte-exact identity
+    /// with `AB_SHA256=1` only (untimed checks): a SHA-256 of the same stream, beside the
+    /// 64-bit hash, for byte-exact identity
     sha: Option<Sha256>,
 }
 
@@ -234,8 +247,8 @@ impl Hash {
     }
 }
 
-/// SHA-256 (FIPS 180-4), streaming: the team screen's byte-exact output identity, only
-/// with `AB_SHA256=1` (never in a timed run's default)
+/// SHA-256 (FIPS 180-4), streaming: a byte-exact output identity for untimed checks, only
+/// with `AB_SHA256=1` (never set by a timed run)
 struct Sha256 {
     st: [u32; 8],
     buf: [u8; 64],
@@ -558,6 +571,89 @@ fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
 }
 
 #[cfg(test)]
+mod child_record_tests {
+    use super::*;
+
+    fn sha(chunks: &[&[u8]]) -> String {
+        let mut s = Sha256::new();
+        for c in chunks {
+            s.update(c);
+        }
+        s.hex()
+    }
+
+    /// FIPS 180-4's vectors, and the same bytes however they are cut into reads
+    #[test]
+    fn sha256_known_answers_and_any_cut() {
+        assert_eq!(
+            sha(&[b""]),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            sha(&[b"abc"]),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        let two = b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+        assert_eq!(
+            sha(&[two]),
+            "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"
+        );
+        let million = vec![b'a'; 1_000_000];
+        let want = "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0";
+        assert_eq!(sha(&[&million]), want);
+        let cuts: Vec<&[u8]> = million
+            .chunks(63)
+            .chain(std::iter::once(&b""[..]))
+            .collect();
+        assert_eq!(sha(&cuts), want);
+        let (a, b) = million.split_at(64);
+        let (b, c) = b.split_at(1);
+        assert_eq!(sha(&[a, b, c]), want);
+    }
+
+    /// A decoder error's kind and block, and nulls where there is none
+    #[test]
+    fn the_error_identity() {
+        *ERR_ID.lock().unwrap() = None;
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":null,\"err_block\":null"
+        );
+        let e = mibz2::Error {
+            kind: mibz2::ErrorKind::BlockCrc {
+                stored: 1,
+                computed: 2,
+            },
+            block: Some(41),
+            bit: Some(80),
+        };
+        record_err_id(&std::io::Error::from(e));
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":\"BlockCrc\",\"err_block\":41"
+        );
+        let e = mibz2::Error::new(mibz2::ErrorKind::Truncated);
+        record_err_id(&std::io::Error::from(e));
+        assert_eq!(
+            err_id_json(),
+            ",\"schema\":\"ab-child/2\",\"err_kind\":\"Truncated\",\"err_block\":null"
+        );
+        // an error that is not the decoder's leaves the identity as it was
+        record_err_id(&std::io::Error::other("a reader's own"));
+        assert!(err_id_json().contains("Truncated"));
+        *ERR_ID.lock().unwrap() = None;
+    }
+
+    #[test]
+    fn the_read_buffer() {
+        assert_eq!(read_buf(None), 4 << 20);
+        assert_eq!(read_buf(Some("4096")), 4096);
+        assert_eq!(read_buf(Some("0")), 4 << 20);
+        assert_eq!(read_buf(Some("x")), 4 << 20);
+    }
+}
+
+#[cfg(test)]
 mod census_tests {
     use super::*;
 
@@ -628,14 +724,9 @@ impl Census {
 /// Every byte of `r` through `h`; `last` runs after the last byte, while `r` (and a
 /// decoder's threads) still lives
 fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> {
-    // (`AB_READ_BUF=BYTES`, untimed checks only: the team screen's read-buffer variants of
-    // its error fixtures; unset, the 4 MiB every run has always read with)
-    let size = std::env::var("AB_READ_BUF")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .filter(|&n: &usize| n > 0)
-        .unwrap_or(4 << 20);
-    let mut buf = vec![0u8; size];
+    // (`AB_READ_BUF=BYTES`, untimed checks only: read-buffer variants of an exact-error
+    // check; unset, the 4 MiB every run has always read with)
+    let mut buf = vec![0u8; read_buf(std::env::var("AB_READ_BUF").ok().as_deref())];
     loop {
         match r.read(&mut buf) {
             Ok(0) => {
@@ -652,9 +743,16 @@ fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> 
     }
 }
 
+/// The read buffer's size: `AB_READ_BUF`'s, where it is a positive number, else 4 MiB
+fn read_buf(v: Option<&str>) -> usize {
+    v.and_then(|v| v.parse().ok())
+        .filter(|&n: &usize| n > 0)
+        .unwrap_or(4 << 20)
+}
+
 /// The decoder's error, as the child's record reports it apart from its text: its kind's
-/// name and its block (`mibz2::Error`'s, where the reader's error carries one), for the
-/// team screen's exact-error contract (docs/journal/2026-11-10-team-screen-design-draft.md)
+/// name and its block (`mibz2::Error`'s, where the reader's error carries one), so that an
+/// untimed check can compare an expected error exactly (record schema `ab-child/2`)
 static ERR_ID: std::sync::Mutex<Option<(String, Option<u64>)>> = std::sync::Mutex::new(None);
 
 fn record_err_id(e: &std::io::Error) {
@@ -1294,6 +1392,7 @@ fn run(args: &[String]) {
     let mut pin = "1".to_string();
     let mut spread = false;
     let mut machine_state = false;
+    let mut sysfs_state = false;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -1317,6 +1416,7 @@ fn run(args: &[String]) {
             }
             "--spread" => spread = true,
             "--machine-state" => machine_state = true,
+            "--sysfs-state" => sysfs_state = true,
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -1388,8 +1488,9 @@ fn run(args: &[String]) {
                     // (--machine-state: the child counts its cycles, and the clock and the
                     // package temperature are read before and after, outside the run's
                     // other readings; without it the variable is cleared, so an inherited
-                    // one never turns the counters on)
-                    let sysfs = machine_state.then(machine::Sysfs::live);
+                    // one never turns the counters on. --sysfs-state: the parent's readings
+                    // alone, the child exactly as without either flag)
+                    let sysfs = (machine_state || sysfs_state).then(machine::Sysfs::live);
                     let mask: Vec<usize> = match &cpus {
                         Some(list) => cpu_list(list),
                         None => cores.iter().flatten().copied().collect(),
@@ -1650,7 +1751,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
