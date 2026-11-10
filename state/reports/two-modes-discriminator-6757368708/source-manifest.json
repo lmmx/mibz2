@@ -1,0 +1,28 @@
+{
+  "repository": "lmmx/mibz2",
+  "commit": "3588d35dc9b2f2f4d4709cf37c4a4bee2afa9dff",
+  "files": [
+    {
+      "path": "docs/journal/2026-11-10-two-modes-discriminator.md",
+      "blob_sha": "1d88a0a36d73beae39da949e03d8ca153fda9d30"
+    },
+    {
+      "path": ".just/two-modes.just",
+      "blob_sha": "dfb2f873cb4dc11ea4eaf09edd1551b4c002236f"
+    },
+    {
+      "path": "bench/two_modes_probe.c",
+      "blob_sha": "1c88fe896704e699a2d3b5b6a6381fd1e917d3eb"
+    },
+    {
+      "path": "bench/two_modes.py",
+      "blob_sha": "156539e6fa7892540eaa95cebc95d166def086a6"
+    },
+    {
+      "path": "bench/test_two_modes.py",
+      "blob_sha": "9d371212db9a2d07947276cf54e6ec3efdc1e1d5"
+    }
+  ],
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "trigger_comment_id": 6757368708
+}

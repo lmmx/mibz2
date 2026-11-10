@@ -1,0 +1,257 @@
+.................DRY (not evidence): ONE MODE: 2 fast and 0 slow runs (fewer than 5 in a class); the table is described, no column matched; sustained block: fast and steady
+  P-idle's rate in slow runs: unread
+  the decoder CPUs' clock during slow runs: unread
+  threads with a busy sibling: unread
+  throttle counts rise: unread
+  power-limit counts rise: unread
+  thp_fault_alloc in fast runs only: unread
+  system time's share grows: unread
+INVALID: the identity says DRY: judge it with --dry; the identity's rounds 3, not 60; the identity's layout {'idle': 3, 'sib': None, 'decoder': '0,1,2'} is not the registered one; pass 1: 3 runs recorded, not 60; pass 1 run 0: the decoder's mask read back '0,1,2' / '0,1,2', not 0-8,10-18; pass 1 run 0: probes [('P-idle', 3)], not [('P-idle', 9)]; pass 1 run 1: the decoder's mask read back '0,1,2' / '0,1,2', not 0-8,10-18; pass 1 run 1: probes [('P-idle', 3)], not [('P-idle', 9)] (and 8 more)
+  P-idle's rate in slow runs: unread
+  the decoder CPUs' clock during slow runs: unread
+  threads with a busy sibling: unread
+  throttle counts rise: unread
+  power-limit counts rise: unread
+  thp_fault_alloc in fast runs only: unread
+  system time's share grows: unread
+VALID: MATCH H1 (the governor's ramp) (resting on the supporting reading: the decoder CPUs' clock during slow runs); sustained block: fast and steady (consistent with H1)
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: low, then rising
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H1 (the governor's ramp) (resting on the supporting reading: the decoder CPUs' clock during slow runs); sustained block: fast and steady (consistent with H1)
+  P-idle's rate in slow runs: rising
+  the decoder CPUs' clock during slow runs: low, then rising
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H2 (sibling packing); sustained block: fast and steady (consistent with H2)
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: most
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H3 (stop-clock throttling); sustained block: fast and steady (not what H3 predicts)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H4 (huge pages); sustained block: fast and steady (consistent with H4)
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: yes
+  system time's share grows: yes
+VALID: MATCH H5 (the package power limit); sustained block: fast and steady (not what H5 predicts)
+  P-idle's rate in slow runs: reduced
+  the decoder CPUs' clock during slow runs: reduced
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: yes
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: SIXTH MECHANISM: no column matches; P-idle's rate in slow runs: full; the decoder CPUs' clock during slow runs: full; threads with a busy sibling: same; throttle counts rise: no; power-limit counts rise: no; thp_fault_alloc in fast runs only: no; system time's share grows: no; sustained block: fast and steady
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: ONE MODE: 0 fast and 40 slow runs (fewer than 5 in a class); the table is described, no column matched; sustained block: fast and steady
+  P-idle's rate in slow runs: unread
+  the decoder CPUs' clock during slow runs: unread
+  threads with a busy sibling: unread
+  throttle counts rise: unread
+  power-limit counts rise: unread
+  thp_fault_alloc in fast runs only: unread
+  system time's share grows: unread
+VALID: MATCH H3 (stop-clock throttling); sustained block: fast and steady (not what H3 predicts)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H3 (stop-clock throttling) (power-limit counts rise unread); sustained block: fast and steady (not what H3 predicts)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: unread
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 2: run index 2, schedule 'PPN', probed True: not slot 2 of 'PPN'; pass1 run 2: None P-idle samples inside the decode
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H3 (stop-clock throttling); sustained block: fast and steady (not what H3 predicts)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: SIXTH MECHANISM: no column matches; P-idle's rate in slow runs: half; the decoder CPUs' clock during slow runs: full; threads with a busy sibling: same; throttle counts rise: no; power-limit counts rise: no; thp_fault_alloc in fast runs only: no; system time's share grows: no; sustained block: fast and steady
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H1 (the governor's ramp) (resting on the supporting reading: the decoder CPUs' clock during slow runs); sustained block: fast and steady (consistent with H1)
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: low, then rising
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H5 (the package power limit); sustained block: alternates (consistent with H5)
+  P-idle's rate in slow runs: reduced
+  the decoder CPUs' clock during slow runs: reduced
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: yes
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: the sustained block: /workspace/scratch/5061ca8365a9/tmp7v4ldkae/sustained/sustained.json does not load: [Errno 2] No such file or directory: '/workspace/scratch/5061ca8365a9/tmp7v4ldkae/sustained/sustained.json'; the sustained block wrote no record
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H3 (stop-clock throttling); sustained block: settles low (consistent with H3)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H1 (the governor's ramp) (resting on the supporting reading: the decoder CPUs' clock during slow runs); sustained block: settles low (not what H1 predicts)...........................
+----------------------------------------------------------------------
+Ran 44 tests in 19.529s
+
+OK
+
+  P-idle's rate in slow runs: full
+  the decoder CPUs' clock during slow runs: low, then rising
+  threads with a busy sibling: same
+  throttle counts rise: no
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+VALID: MATCH H3 (stop-clock throttling); sustained block: fast and steady (not what H3 predicts)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 5: the decoder's mask read back '0-19' / '0-8,10-18', not 0-8,10-18; pass 2 run 5: the decoder's mask read back '0-19' / '0-8,10-18', not 0-8,10-18
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 7: did not succeed ('signal 9', ''); pass 2 run 7: did not succeed ('signal 9', '')
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1: 59 probe records for 60 runs; pass 2: 59 probe records for 60 runs
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 2 run 0: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 1: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 2: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 3: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 4: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 5: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 6: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)]; pass 2 run 7: probes [('P-idle', 9)], not [('P-idle', 9), ('P-sib', 19)] (and 52 more)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 0: output 209700196 '0000', not the registered workload; pass 2 run 0: output 209700196 '0000', not the registered workload
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 3: P-idle not pinned to CPU 9 (read back '0-19'); pass 2 run 3: P-idle not pinned to CPU 9 (read back '0-19')
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 2: the probe record does not fall inside the run (spawn 1794000000850000000, exit 1794000001015000000, probe 1794000001275000005); pass 2 run 2: the probe record does not fall inside the run (spawn 1794000000850000000, exit 1794000001015000000, probe 1794000001275000005)
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1 run 1: P-idle's ring dropped 4 samples; pass 2 run 1: P-idle's ring dropped 4 samples
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+INVALID: pass 1: 59 runs recorded, not 60; pass 2: 59 runs recorded, not 60
+  P-idle's rate in slow runs: half
+  the decoder CPUs' clock during slow runs: full
+  threads with a busy sibling: same
+  throttle counts rise: yes
+  power-limit counts rise: no
+  thp_fault_alloc in fast runs only: no
+  system time's share grows: no
+REFUSED: static facts: no exit status recorded
+REFUSED: exits.txt: lscpu recorded twice
+REFUSED: exits.txt: an unregistered or malformed line 'lscpu: exited fine'
+REFUSED: the collectors' exit statuses (preflight/exits.txt) are missing
+REFUSED: CPUs ['4'] lack constant_tsc or nonstop_tsc
+REFUSED: probe selftest exited 1: its output is not admitted
+REFUSED: ab env: governor 'performance', not the declared 'powersave'
+REFUSED: lscpu's model 'Intel(R) Xeon(R)': not the registered i9-10900K
+PASS
+REFUSED: the probe's selftest was not pinned to CPU 9 and read back: {'cpu': 9, 'pinned': True, 'readback': '0-19', 'samples': 9}
+REFUSED: CPUs ['7']: no core and package throttle counts
+REFUSED: ab sample exited 124 (timed out): its output is not admitted
