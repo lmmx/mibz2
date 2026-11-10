@@ -1105,11 +1105,20 @@
     {
       "comment_id": 6760363087,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Full source/economic review and scoped decision-rule revisions complete; ledger and publication pending.",
-      "report_path": "state/records/reviews/inbox-6760363087/report.md"
+      "progress": "Completed report, ledger and archived variance replay committed; REVIEW publication pending.",
+      "report_path": "state/records/reviews/inbox-6760363087/report.md",
+      "report_commit": "c12282e9b9623f9068889d01b93dc7af484c0839",
+      "audit_scope": {
+        "source_pin": "f918f783aa6b9f683d867c057a4c4937c99392ca",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "archived_rounds_replayed": 60,
+        "raw_instruction_count": false
+      }
     }
   ],
   "migrated_from": {
