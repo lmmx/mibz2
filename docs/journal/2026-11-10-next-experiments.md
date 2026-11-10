@@ -106,3 +106,33 @@ measured once.
 
 W1, then W2, then `bench-team-ports` as queued, then W4. W1 is three minutes and can go ahead
 of everything.
+
+## Results read (10 November, later)
+
+**W3, the ports' busy share** (`release-scaling/run-20261110T095909Z`, SHA-256 `a34231fb…dd84a8`,
+checked). Wikidata, medians of 10 rounds; busy share is CPU-seconds over ten cores' wall.
+
+| threads | ports MB/s | base MB/s | ports CPU s | base CPU s | busy, ports | busy, base |
+|--:|--:|--:|--:|--:|--:|--:|
+| 8 | 1,343 | 1,292 | 1.01 | 1.05 | 0.81 | 0.81 |
+| 10 | 1,557 | 1,504 | 0.95 | 0.99 | 0.71 | 0.71 |
+| 12 | 1,504 | 1,454 | 1.00 | 1.03 | 0.71 | 0.72 |
+| 16 | 1,506 | 1,446 | 1.00 | 1.03 | 0.72 | 0.71 |
+| 20 | 1,497 | 1,462 | 1.00 | 1.03 | 0.71 | 0.72 |
+
+- **The ports saved CPU (about 4%) and left the idle where it was:** 29% of ten cores at every
+  thread count from 10 to 20, in both arms.
+- **By role at 10 threads (base):** three leaders 0.31 CPU-s together, 0.10 each of a 0.139 s
+  wall (74% busy); three first helpers 0.26 (62%); three second helpers 0.26 (62%); the scan
+  thread 0.06 (40%).
+- **The plan does not grow past ten threads:** the same eleven roles at 12, 16 and 20.
+
+**W2, #324 on the i9** (`release-scaling/run-20261110T101103Z`, SHA-256 `2ec7d76d…dad321`,
+checked): 451 against 411 MB/s at 1 thread, 1,119 against 1,036 at 4, 1,497 against 1,514 at
+10. The gain stops where the team path starts.
+- **Four plain workers at 94% busy give 1,119 MB/s for 0.70 CPU-s. Ten threads in teams give
+  1,497 for 1.00 CPU-s at 71% busy:** 1.43× the CPU a byte, and three cores' worth idle.
+
+**W1, the cold start** (`cold-start/20261110T102700Z`, as the Coordinator recorded it): the held
+spinner alone kept the decode fast, 30 of 30. Pinning and the start-up spin did not. By the
+rule set before it: nothing for the library; the bench's settle changes.
