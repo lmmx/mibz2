@@ -83,6 +83,12 @@
     "section": " · Research blog",
     "title": "mibz2 gets a pit crew"
   },
+  "assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png": {
+    "description": "A new way to rebuild text turns repeated pieces into reusable rules and brings a familiar tree into view.",
+    "foot": "lmmx.github.io/mibz2 · 10 November 2026",
+    "section": " · Research blog",
+    "title": "A new way back from the BWT"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
