@@ -98,6 +98,10 @@ pub mod trace;
 #[cfg(feature = "python")]
 mod python;
 
+// (research: the cooperative waits' counts, kept only with the `wait-stats` feature, for
+// examples/wait_audit.rs)
+#[doc(hidden)]
+pub use coop::wait_stats;
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 
