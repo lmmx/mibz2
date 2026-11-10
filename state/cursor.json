@@ -1867,11 +1867,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6763511665,
-    "status": "finished",
-    "decision": "D092",
-    "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7",
-    "review_comment_id": 6763626030
+    "active_comment": 6763772014,
+    "status": "in progress",
+    "decision": "D093"
   },
   "duplicate_events": [
     {
@@ -3292,6 +3290,13 @@
       "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7",
       "review_comment_id": 6763626030,
       "complete_cursor_commit": "7540760ff73bd1f505fa284a880c42da3526221d"
+    },
+    {
+      "comment_id": 6763772014,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D093",
+      "progress": "Migration verified; reviewing revision 4 counter units, historical reference and execution repairs."
     }
   ],
   "migrated_from": {
