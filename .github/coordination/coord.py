@@ -92,10 +92,10 @@ RESOLVED = {
 
 
 def header(body):
-    """The FROM/TO/RE/TYPE/DECISION lines at the top of a message (PROTOCOL.md §2)."""
+    """The FROM/TO/RE/TYPE/DECISION/PRIORITY lines at the top of a message (PROTOCOL.md §3)."""
     h = {}
     for line in (body or "").splitlines()[:8]:
-        m = re.match(r"^\s*(FROM|TO|RE|TYPE|DECISION)\s*:\s*(.*?)\s*$", line)
+        m = re.match(r"^\s*(FROM|TO|RE|TYPE|DECISION|PRIORITY)\s*:\s*(.*?)\s*$", line)
         if m:
             h[m[1]] = m[2]
     return h
@@ -217,12 +217,21 @@ def state(role, channel=None, inbox=None, cur=None):
     # ("dispatching QUEUED <id>"). A mention in a body ("next in your queue: …") is not a
     # dispatch: counting it once dropped #271's queued re-review (6731064440) unsent.
     cited = set(re.findall(r"\d{6,}", " ".join(header(c["body"]).get("RE", "") for c in inbox)))
-    queued = [c["id"] for c in channel
-              if header(c["body"]).get("TYPE", "").upper() == "QUEUED"
-              and role in roles_named(header(c["body"]).get("TO", ""))
-              and str(c["id"]) not in cited]
+    # QUEUED items dispatch by priority (1 first; default 2), then age (PROTOCOL.md §2).
+    queued = sorted((c for c in channel
+                     if header(c["body"]).get("TYPE", "").upper() == "QUEUED"
+                     and role in roles_named(header(c["body"]).get("TO", ""))
+                     and str(c["id"]) not in cited),
+                    key=lambda c: (priority(c["body"]), c["id"]))
+    queued = [c["id"] for c in queued]
     return {"incomplete": [c["id"] for c in mine if c["id"] not in done],
             "unreviewed": unreviewed, "queued": queued}
+
+
+def priority(body):
+    """A QUEUED item's PRIORITY: 1, 2 or 3 (PROTOCOL.md §3). Missing or malformed: 2."""
+    m = re.match(r"^\s*([123])\b", header(body).get("PRIORITY", ""))
+    return int(m[1]) if m else 2
 
 
 def is_bot(c):
@@ -242,7 +251,7 @@ def route(role, kind):
                 "why": f"{role} is busy: stage it on #{CHANNEL} as TYPE: QUEUED"}
     if s["queued"]:
         return {"issue": ROLES[role]["inbox"], "type": kind, "queued": s["queued"],
-                "why": f"{role} is free, but QUEUED {s['queued'][0]} is older: dispatch it "
+                "why": f"{role} is free, but QUEUED {s['queued'][0]} is next by priority then age: dispatch it "
                        f"first, citing its ID"}
     return {"issue": ROLES[role]["inbox"], "type": kind,
             "why": f"{role} is free: its inbox #{ROLES[role]['inbox']}"}
