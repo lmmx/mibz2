@@ -3576,3 +3576,47 @@ This review answers the three gate questions, not the deferred batch-means, powe
 The reported branch-deletion refusal remains respected. Guardian has not deleted it, pushed it, retriggered its push workflow or bypassed the proxy.
 
 Migration checked before receipt: old branch **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Routing audit: five resolved historical findings, zero unresolved. No merge, implementation, timing, compute dispatch or task reconfiguration.
+
+## D079 — #317: narrow queue HOLD for mutation coverage and bounded-failure reporting
+
+**G1: dispute “B5 is complete” for queue admission. G2: HOLD unattended queue admission of bench-par-scan at c2f461491b97a563ca3f8669b5c3d7e14eeff07f.** Repair/testing work may proceed. No production or line STOP. Hand-written mutation testing is acceptable; M28 is not yet an accepted exception.
+
+Inbox [6756994744](https://github.com/lmmx/mibz2/pull/161#issuecomment-6756994744). Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a2da49638ac54d7763de1c167bd054f67ffdc763**. Receipt **795b4ae08d8f51a58286a1989aa93e5ee6004fd9**. [Evidence snapshot](records/d079/evidence.json).
+
+### 1. B5: method accepted; surviving obligation not closed
+
+The journal §8.6 identifies a reviewer other than the implementer, per-block arguments, targeted differential/guard-page fuzzing, Miri configurations and mutation outcomes. B5 names evidence classes, not mandatory brands: offline availability of cargo-mutants or cargo-fuzz is immaterial. Hand-written mutants and seeded differential fuzzing can satisfy their purposes when reproducible and targeted. Equivalent mutants need not be killed; their equivalence arguments must stand independently.
+
+**M28 is explicitly non-equivalent to the promised failure contract.** Removing the getrusage return check leaves a zero-initialised Rusage when a failing call writes nothing. Its timevals pass the subsequent well-formedness assertions and cpu_micros returns zero. Keeping the check in source is good but does not demonstrate that tests detect its loss. “Needs fault injection” identifies the missing test, not an exemption. RULES B6 explicitly stops work whose mutation check misses its target; this scoped admission HOLD records that unresolved obligation.
+
+Finite resolution: inject a nonzero getrusage return through a test seam or controlled interposition, retaining a valid writable buffer. Demonstrate (i) the unmodified error path panics/refuses a CPU figure, (ii) the M28 mutant fails that test, and (iii) the recipe classifies the corresponding cell failure INVALID and retains the failed attempt. Include success and malformed-timeval cases as appropriate. Test the actual checked path, not a duplicate assertion in test code. No need to arrange real kernel failure, loosen the rule, or purchase tooling. A proof of equivalence would be an alternative only if it covers the declared contract; “ordinary valid calls succeed” does not cover the promised handling of a failed call.
+
+**R1/R2:** source inspection corroborates the repairs: Finder::new intersects the request with detected AVX2; find clamps to len.saturating_sub(5) and exits for from >= to before reaching the vector path. The three vector loads then lie within the loop's bounds; fixed 16-byte tables supply their table loads. This removes the two identified entry-path hazards within the stated x86_64 scope. The journal reports before/after Miri UB reproducers and passing fixed configurations. I record those causes as repaired, without calling the whole B5 package complete while M28 remains.
+
+The FFI argument is scoped to the stated LP64 Linux workstation ABI. A Rust size assertion alone is not an ABI proof for every OS/architecture. The current source's repr(C), two i64 timevals plus fourteen i64 fields and valid exclusive buffer support that stated scope; do not generalise this diagnostic's review to arbitrary targets or production. I did not independently replay the reported 43.6M fuzz inputs or Miri runs, and do not label those reports as my own test results.
+
+### 2. Two remaining bounded-failure defects
+
+**A. bounded.py waits without a timeout before reporting failed cleanup.** In the normal deadline path it computes emptied = stop_group(...), then calls child.wait(), and only afterwards checks not emptied and returns 125. If the group cannot be emptied and the leader remains live, that wait can block indefinitely. The signal path also ignores stop_group's false return and waits without a timeout. This contradicts the advertised finite failure path; TERM-ignoring grandchildren that are successfully killed do not test it.
+
+I independently executed the fetched module with a synthetic child and stop_group returning False. It reached child.wait before the NOT_EMPTIED return. This is a control-flow reproduction, not a claim that a real kernel-stuck process occurred. Repair the ordering and bound reaping on both paths. Add a negative test for cleanup failure so it returns its documented failure status within a bounded interval, retaining the remaining-process diagnostic. No user-space supervisor can promise immediate removal of a kernel-uninterruptible process; if cleanup fails, report that explicitly and prevent unattended continuation rather than promising an empty group.
+
+**B. The finalisation path can retain a VALID label after a bundle deadline.** The recipe's finish writes outcome.txt first. It then runs bounded 600 bash bench/bundle.sh; on failure it only prints “bundling failed” and exits 2. A timeout there never calls late or rewrites the already-written VALID/DRY outcome. Section 9.3 says a deadline in any program step, bundling included, is INVALID.
+
+Repair and test finalisation timeout/failure separately: no VALID outcome may survive a required bundling deadline; retain the failure record locally when archiving itself fails, and make the submission/queue path reject incomplete or failed finalisation. A nonzero shell exit is useful, but is not proof that every consumer ignores an inconsistent VALID file. The run must not be silently retried or advanced past unresolved cleanup. These are narrow correctness/admission repairs, not performance-threshold changes.
+
+### 3. Runtime and memory are scoped observations
+
+The fixed recipe has three serial 1800-second cell deadlines, three 900-second checks and three 300-second report deadlines, plus 3600 each for corpus preparation and build, 300 for faults, 600 generation, 900 anchoring and 600 bundling. Their nominal ceilings sum to **18,600 seconds (5 h 10 min)**, before group cleanup/graces and unbounded small metadata queries. This is a ceiling sum, not an expected runtime; a “30-minute deadline” describes each input's cells, not the entire unattended run. Preserve honest runtime wording. A hard whole-run limit would need an explicit prospective choice; I do not invent one from a dry run.
+
+The quoted 592/473/168 MB peaks are observations from the one-round shared-VM dry run, not hard memory limits for the i9 or build/preparation. The journal correctly admits that the candidate list grows with input and slots bounds issued jobs, not all metadata. Scope any permission to these fixed, independently anchored inputs, five rounds and worker grid; do not extrapolate to arbitrary files. Confirm ordinary available memory/disk headroom before queueing, and retain OOM/abort/timeout as unsuccessful evidence. I have no evidence of a new OOM defect and impose no arbitrary RSS threshold or memory cap that would change the experiment.
+
+### 4. Exact-head and release of this HOLD
+
+The compare API confirms that frozen **2e5d0bd2008c9210df80e32958dc2c67f8800e8c** to ready **c2f461491b97a563ca3f8669b5c3d7e14eeff07f** changes only bench/par-scan.frozen to name that frozen commit. That consistency does not close the defects above. Their repairs affect registered measured inputs, so update the freeze prospectively, preserve the earlier heads, rerun the relevant untimed checks and obtain exact-head CI/readiness.
+
+Release this scoped HOLD once M28 is detected and the supervisor/finalisation failure tests demonstrate their stated disposition. The Researcher's final readiness PROCEED, Coordinator's exact-head check and ready tag remain separate queue requirements under PROTOCOL §9. This review supplies none of those tokens. Louis's execution/submission remains C5's workstation authorisation. No workstation run was launched.
+
+The result advances the diagnostic toward a usable unattended run; it rejects neither the scan construction nor the value of the experiment. Production qualification is outside this diagnostic's registration.
+
+Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit: five resolved historical findings, zero unresolved. No implementation, timing, merge, task change or compute dispatch.
