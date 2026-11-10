@@ -1303,6 +1303,20 @@
       "status": "finished",
       "disposition": "Distinct contract experiment conditionally admissible; current screen remains failed; class-counting defect reproduced.",
       "comment": 6760052047
+    },
+    {
+      "id": "D087",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6760224735,
+      "pr": 334,
+      "sha": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
+      "evidence_digest": "native:e182ff339ddf66799142fb616a51f1f1fca6fd04;screen:6a6946ae4814c729540135608b241aae31b4bdb6;inbox:6760224735",
+      "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
+      "status": "complete",
+      "disposition": "First INVALID ends native diagnostic; validated T1+T2 adequate for scoped engagement; S2 separate; current drafts not ready."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1583,7 +1597,9 @@
     "68fb0a3b31c48d664aee9837614f23fc8f71d9ff",
     "043847a4f5a12393f53ebc08de70683a161227fc",
     "532d6342363ed4fc8f7414dcfdd5ba13f7288d4d",
-    "1768982b0435df61c4670c9fe10f59839955a698"
+    "1768982b0435df61c4670c9fe10f59839955a698",
+    "1f1254fc2dd28254d20f7e24ec1f38dab47bdd4f",
+    "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1670,7 +1686,8 @@
     6758683390,
     6759394097,
     6759768735,
-    6759990077
+    6759990077,
+    6760224735
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1750,8 +1767,9 @@
   },
   "current_execution": {
     "active_comment": 6760224735,
-    "status": "in progress",
-    "decision": "D087"
+    "status": "complete",
+    "decision": "D087",
+    "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
   },
   "duplicate_events": [
     {
@@ -2415,6 +2433,13 @@
       "decision": "D086",
       "commit": "532d6342363ed4fc8f7414dcfdd5ba13f7288d4d",
       "comment": 6760052047
+    },
+    {
+      "pr": 334,
+      "sha": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
+      "evidence_digest": "native:e182ff339ddf66799142fb616a51f1f1fca6fd04;screen:6a6946ae4814c729540135608b241aae31b4bdb6;inbox:6760224735",
+      "decision": "D087",
+      "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3062,9 +3087,11 @@
     {
       "comment_id": 6760224735,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D087",
-      "progress": "Receipt; resolving invalidity and prospective tier scope."
+      "progress": "D087 complete; awaiting REVIEW.",
+      "receipt_commit": "1f1254fc2dd28254d20f7e24ec1f38dab47bdd4f",
+      "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
     }
   ],
   "migrated_from": {
