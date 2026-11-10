@@ -86,7 +86,8 @@ ROLES = {
     "codex": {
         "aliases": ("codex",),
         "inbox": 363,
-        "offset": 0,
+        # #363 was created after channel comment 6775049636; protect historical CUTOVER.
+        "offset": 6775049636,
         "cursor": ("team-state/codex", "state/cursor.json"),
     },
 }
