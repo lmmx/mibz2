@@ -1,0 +1,4 @@
+VALID
+  (a) holds: every helper walked every block it built; 0 zero-work helper calls
+  (b) fails: team 0: helper bytes [1, 99], largest share 0.99
+  (c) h

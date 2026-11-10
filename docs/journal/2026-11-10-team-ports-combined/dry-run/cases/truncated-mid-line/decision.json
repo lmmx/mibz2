@@ -1,0 +1,34 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/truncated-mid-line",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 155,
+    "sha256": "94ae54c958a165654e352a39d9265d99952fab886f791c85e05e9f978569ab9b",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stdout does not end with a complete line (truncated)"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "1/99 stdout cut inside the (c) line, exit 1"
+}

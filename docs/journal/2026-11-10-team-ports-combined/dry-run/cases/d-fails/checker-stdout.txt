@@ -1,0 +1,6 @@
+VALID
+  (a) holds: every helper walked every block it built; 0 zero-work helper calls
+  (b) holds: team 0: helper bytes [50, 50], largest share 0.5
+  (c) holds: 1 leader calls of traverse
+  (d) fails: 1 calls of another walker
+NOT ENGAGED

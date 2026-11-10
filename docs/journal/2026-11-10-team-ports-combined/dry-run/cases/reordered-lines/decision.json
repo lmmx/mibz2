@@ -1,0 +1,35 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/reordered-lines",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 239,
+    "sha256": "e2ecc22ad9ab4bb7a3f819af0d245f8eca245beb11abc8ae80356dd98936f8a6",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "the (a) line is '  (b) fails: team 0: helper bytes [1, 99], largest share 0.99'",
+    "the (b) line is '  (a) holds: every helper walked every block it built; 0 zero-work helper calls'"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "1/99 stdout with (a) and (b) swapped, exit 1"
+}

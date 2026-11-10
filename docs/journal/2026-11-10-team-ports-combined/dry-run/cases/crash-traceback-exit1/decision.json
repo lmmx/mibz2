@@ -1,0 +1,70 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/crash-traceback-exit1",
+  "checker": {
+    "blob": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "path": "walk_stats_check.py",
+    "hash_object": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "matches": true,
+    "python3": "/usr/bin/python3",
+    "environment": {
+      "PYTHONUNBUFFERED": "1"
+    }
+  },
+  "inputs": {
+    "records": {
+      "path": "cases/crash-traceback-exit1/records.jsonl",
+      "sha256": "ad8c58bbeb9fdc70f572d32137ebaf3c72d5f7ee1733d4ef1db90aa0a178ff8a",
+      "kind": "file"
+    },
+    "classes": {
+      "path": "cases/crash-traceback-exit1/classes.txt",
+      "sha256": "678f81a714fbc72030f82f9980054d5cf90e6f041a367f7da2f35b0f7dafb0e5",
+      "kind": "file"
+    }
+  },
+  "command": [
+    "timeout",
+    "-s",
+    "TERM",
+    "-k",
+    "30",
+    "600",
+    "python3",
+    "walk_stats_check.py",
+    "cases/crash-traceback-exit1/records.jsonl",
+    "--walker",
+    "traverse",
+    "--helpers",
+    "2",
+    "--classes",
+    "cases/crash-traceback-exit1/classes.txt"
+  ],
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": 0.054
+  },
+  "stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 723,
+    "sha256": "b9f41e674691f0c1a40bf1e933062336de120269736b6691453e8a965f5b716c",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stderr is not empty (723 bytes)",
+    "stdout does not end with a complete line (truncated)"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null
+}

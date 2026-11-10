@@ -1,0 +1,2 @@
+VALID
+  (a) holds: every helper walked every block it built; 0 zero-work helper calls

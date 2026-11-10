@@ -1,0 +1,35 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/crash-no-output-exit1",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 53,
+    "sha256": "05239c71f7615e6c40ccb3d2db6195b30fe272f8a596c65a8f645d6067a73196",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stderr is not empty (53 bytes)",
+    "stdout does not end with a complete line (truncated)"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "no stdout, a traceback on stderr, exit 1"
+}

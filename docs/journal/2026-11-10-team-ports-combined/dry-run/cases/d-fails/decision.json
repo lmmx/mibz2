@@ -1,0 +1,97 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/d-fails",
+  "checker": {
+    "blob": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "path": "walk_stats_check.py",
+    "hash_object": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "matches": true,
+    "python3": "/usr/bin/python3",
+    "environment": {
+      "PYTHONUNBUFFERED": "1"
+    }
+  },
+  "inputs": {
+    "records": {
+      "path": "cases/d-fails/records.jsonl",
+      "sha256": "830c58655d9a56c16d7701aaa22184ef1dcf2f2e8f2314b29aaf03b4d93bc885",
+      "kind": "file"
+    },
+    "classes": {
+      "path": "cases/d-fails/classes.txt",
+      "sha256": "678f81a714fbc72030f82f9980054d5cf90e6f041a367f7da2f35b0f7dafb0e5",
+      "kind": "file"
+    }
+  },
+  "command": [
+    "timeout",
+    "-s",
+    "TERM",
+    "-k",
+    "30",
+    "600",
+    "python3",
+    "walk_stats_check.py",
+    "cases/d-fails/records.jsonl",
+    "--walker",
+    "traverse",
+    "--helpers",
+    "2",
+    "--classes",
+    "cases/d-fails/classes.txt"
+  ],
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": 0.032
+  },
+  "stdout": {
+    "bytes": 239,
+    "sha256": "ff748f955967630dec59bb9c04c574a0311cfdb91cb95716b6429f03cca90e77",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": "NOT ENGAGED",
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 3,
+  "reasons": [
+    "required predicate (d) fails"
+  ],
+  "verdict": {
+    "validity": "VALID",
+    "predicates": {
+      "a": {
+        "holds": true,
+        "detail": "every helper walked every block it built; 0 zero-work helper calls"
+      },
+      "b": {
+        "holds": true,
+        "detail": "team 0: helper bytes [50, 50], largest share 0.5"
+      },
+      "c": {
+        "holds": true,
+        "detail": "1 leader calls of traverse"
+      },
+      "d": {
+        "holds": false,
+        "detail": "1 calls of another walker"
+      }
+    },
+    "outcome": "NOT ENGAGED"
+  },
+  "reported": {
+    "b": {
+      "holds": true,
+      "detail": "team 0: helper bytes [50, 50], largest share 0.5"
+    },
+    "undefined_ratio_teams": 0,
+    "zero_work_helper_calls": 0
+  },
+  "claim_limit": null
+}

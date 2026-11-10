@@ -1,0 +1,35 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/D094-crash",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 19,
+    "sha256": "7b85c23570a23c1ab220470ebd0beba37ce98d19e90db4ae3493b45437e74fd5",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stderr is not empty (19 bytes)",
+    "stdout does not end with a complete line (truncated)"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "no stdout, 'Traceback: fixture' on stderr, exit 1"
+}

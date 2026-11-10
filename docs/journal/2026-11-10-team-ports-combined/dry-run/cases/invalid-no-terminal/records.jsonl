@@ -1,0 +1,6 @@
+{"kind": "share", "team": 0, "block": 0, "thread": 1}
+{"kind": "share", "team": 0, "block": 0, "thread": 2}
+{"kind": "call", "team": 0, "block": 0, "thread": 0, "role": "leader", "walker": "traverse", "takes": 1, "exhausts": 1, "bytes": 100, "tail": 0, "fragments": 0, "copied": 0}
+{"kind": "call", "team": 0, "block": 0, "thread": 1, "role": "helper", "walker": "traverse", "takes": 1, "exhausts": 1, "bytes": 1, "tail": 0, "fragments": 0, "copied": 0}
+{"kind": "call", "team": 0, "block": 0, "thread": 2, "role": "helper", "walker": "traverse", "takes": 1, "exhausts": 1, "bytes": 99, "tail": 0, "fragments": 0, "copied": 0}
+{"kind": "summary", "team": 0, "block": 0, "rows": 200, "starts": 3, "seg_bytes": 200, "entered": 7, "joined": true, "built": 6}

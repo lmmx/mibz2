@@ -1,0 +1,829 @@
+{
+  "schema": "team-ports-combined/dry-run/1",
+  "registration": "docs/journal/2026-11-10-team-ports-combined-registration.md \u00a712a",
+  "checker": {
+    "blob": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "cat_file_exit": 0,
+    "cat_file_stderr": "",
+    "hash_object": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "matches": true,
+    "sha256": "27eaa1043a621aecf89ffa97920add9c9c009014eb0ca2bd29a9d78cf324db0c"
+  },
+  "cases": [
+    {
+      "case": "balanced",
+      "row": "balanced, helpers 100/100",
+      "kind": "real",
+      "description": "VALID, all hold, ENGAGED, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "ENGAGED",
+      "expected": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "reasons": [
+        "VALID, and (a), (c) and (d) hold; (b), the outcome and the exit are reported"
+      ],
+      "zero_work_helper_calls": 0,
+      "match": true
+    },
+    {
+      "case": "balance-only-1-99",
+      "row": "balance-only, helpers 1/99",
+      "kind": "real",
+      "description": "VALID, only (b) fails, NOT ENGAGED, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "NOT ENGAGED",
+      "expected": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "reasons": [
+        "VALID, and (a), (c) and (d) hold; (b), the outcome and the exit are reported"
+      ],
+      "zero_work_helper_calls": 0,
+      "match": true
+    },
+    {
+      "case": "zero-work-0-0",
+      "row": "zero-work, helpers 0/0",
+      "kind": "real",
+      "description": "VALID, (b) fails (ratio n/a), NOT ENGAGED, exit 1; the claim limit",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "NOT ENGAGED",
+      "expected": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "accepted",
+        "rule": 3
+      },
+      "reasons": [
+        "VALID, and (a), (c) and (d) hold; (b), the outcome and the exit are reported"
+      ],
+      "zero_work_helper_calls": 2,
+      "match": true
+    },
+    {
+      "case": "a-fails",
+      "row": "a required predicate fails",
+      "kind": "real",
+      "description": "helper 1 built (share) but never called: (a) fails, VALID, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "NOT ENGAGED",
+      "expected": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "reasons": [
+        "required predicate (a) fails"
+      ],
+      "zero_work_helper_calls": 0,
+      "match": true
+    },
+    {
+      "case": "c-fails",
+      "row": "a required predicate fails",
+      "kind": "real",
+      "description": "the leader never joined (no leader call): (c) fails, VALID, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "NOT ENGAGED",
+      "expected": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "reasons": [
+        "required predicate (c) fails"
+      ],
+      "zero_work_helper_calls": 0,
+      "match": true
+    },
+    {
+      "case": "d-fails",
+      "row": "a required predicate fails",
+      "kind": "real",
+      "description": "helper 1 called traverse_staged, 50/50: (d) fails, VALID, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": "NOT ENGAGED",
+      "expected": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 3
+      },
+      "reasons": [
+        "required predicate (d) fails"
+      ],
+      "zero_work_helper_calls": 0,
+      "match": true
+    },
+    {
+      "case": "invalid-no-terminal",
+      "row": "INVALID",
+      "kind": "real",
+      "description": "the 1/99 ledger without its terminal record: INVALID, exit 2",
+      "checker_exit": 2,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "exit 2: the checker's INVALID, a verdict that fails structural validity"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "timeout",
+      "row": "a timeout",
+      "kind": "real",
+      "description": "records are a FIFO no one writes; a 2 s deadline (TERM, then KILL 30 s later)",
+      "checker_exit": 124,
+      "timed_out": true,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "the step timed out (\u00a73's deadline)",
+        "exit 124 is neither 0 nor 1"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "signal-kill",
+      "row": "a kill by signal",
+      "kind": "real",
+      "description": "the checker, blocked on a FIFO, is sent SIGKILL",
+      "checker_exit": -9,
+      "timed_out": false,
+      "signal": 9,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "the step was killed by signal 9",
+        "exit -9 is neither 0 nor 1"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "signal-term",
+      "row": "a kill by signal",
+      "kind": "real",
+      "description": "the checker, blocked on a FIFO, is sent SIGTERM",
+      "checker_exit": -15,
+      "timed_out": false,
+      "signal": 15,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "the step was killed by signal 15",
+        "exit -15 is neither 0 nor 1"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "crash-traceback-exit1",
+      "row": "a crash: non-zero exit, a traceback, no verdict",
+      "kind": "real",
+      "description": "records that are not UTF-8: the checker's own UnicodeDecodeError traceback, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (723 bytes)",
+        "stdout does not end with a complete line (truncated)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "truncated-no-outcome-exit0",
+      "row": "a truncated report",
+      "kind": "simulated",
+      "description": "balanced stdout cut after the predicates, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 5 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "truncated-no-outcome-exit1",
+      "row": "a truncated report",
+      "kind": "simulated",
+      "description": "1/99 stdout cut after the predicates, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 5 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "truncated-mid-line",
+      "row": "a truncated report",
+      "kind": "simulated",
+      "description": "1/99 stdout cut inside the (c) line, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout does not end with a complete line (truncated)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "truncated-empty",
+      "row": "a truncated report",
+      "kind": "simulated",
+      "description": "no stdout at all, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout does not end with a complete line (truncated)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "crash-no-output-exit1",
+      "row": "a crash: non-zero exit, a traceback, no verdict",
+      "kind": "simulated",
+      "description": "no stdout, a traceback on stderr, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (53 bytes)",
+        "stdout does not end with a complete line (truncated)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "crash-partial-verdict-exit1",
+      "row": "a crash: non-zero exit, a traceback, no verdict",
+      "kind": "simulated",
+      "description": "VALID and (a) printed, then a traceback, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (59 bytes)",
+        "stdout has 2 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "crash-exit3",
+      "row": "a crash: non-zero exit, a traceback, no verdict",
+      "kind": "simulated",
+      "description": "no stdout, exit 3",
+      "checker_exit": 3,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "exit 3 is neither 0 nor 1"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "engaged-exit1",
+      "row": "a verdict whose exit disagrees with its outcome",
+      "kind": "simulated",
+      "description": "balanced (ENGAGED) stdout, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "exit 1 disagrees with the outcome ENGAGED (exit 0)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "not-engaged-exit0",
+      "row": "a verdict whose exit disagrees with its outcome",
+      "kind": "simulated",
+      "description": "1/99 (NOT ENGAGED) stdout, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "exit 0 disagrees with the outcome NOT ENGAGED (exit 1)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "outcome-contradicts-predicates",
+      "row": "a verdict whose exit disagrees with its outcome",
+      "kind": "simulated",
+      "description": "1/99 stdout with its outcome line made ENGAGED ((b) fails), exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "the outcome ENGAGED disagrees with the predicates (not all hold)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "stderr-warning",
+      "row": "non-empty stderr",
+      "kind": "simulated",
+      "description": "balanced stdout, exit 0, a warning on stderr",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (8 bytes)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "duplicate-line",
+      "row": "duplicate output",
+      "kind": "simulated",
+      "description": "1/99 stdout with its (b) line repeated, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 7 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "reordered-lines",
+      "row": "reordered output",
+      "kind": "simulated",
+      "description": "1/99 stdout with (a) and (b) swapped, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "the (a) line is '  (b) fails: team 0: helper bytes [1, 99], largest share 0.99'",
+        "the (b) line is '  (a) holds: every helper walked every block it built; 0 zero-work helper calls'"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "reference-line",
+      "row": "extra output",
+      "kind": "simulated",
+      "description": "balanced stdout with the checker's --reference line appended, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 7 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "invalid-listing-exit1",
+      "row": "INVALID",
+      "kind": "simulated",
+      "description": "the real INVALID listing, exit 1 instead of 2",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 2 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "invalid-listing-exit0",
+      "row": "INVALID",
+      "kind": "simulated",
+      "description": "the real INVALID listing, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 2 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-truncated",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout without its last line, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 5 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-crash",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "no stdout, 'Traceback: fixture' on stderr, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (19 bytes)",
+        "stdout does not end with a complete line (truncated)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-timeout",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout, exit 0, but the deadline expired",
+      "checker_exit": 0,
+      "timed_out": true,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "the step timed out (\u00a73's deadline)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-signal",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout, exit -9 (SIGKILL)",
+      "checker_exit": -9,
+      "timed_out": false,
+      "signal": 9,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 1
+      },
+      "reasons": [
+        "the step was killed by signal 9",
+        "exit -9 is neither 0 nor 1"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-exit-disagrees-engaged",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout, exit 1",
+      "checker_exit": 1,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "exit 1 disagrees with the outcome ENGAGED (exit 0)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-exit-disagrees-not-engaged",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "1/99 stdout, exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "exit 0 disagrees with the outcome NOT ENGAGED (exit 1)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-stderr-warning",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout, exit 0, 'warning' on stderr",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stderr is not empty (8 bytes)"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    },
+    {
+      "case": "D094-extra-stdout",
+      "row": "D094 control",
+      "kind": "simulated",
+      "description": "balanced stdout + 'reference', exit 0",
+      "checker_exit": 0,
+      "timed_out": false,
+      "signal": null,
+      "checker_outcome": null,
+      "expected": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "actual": {
+        "decision": "rejected",
+        "rule": 2
+      },
+      "reasons": [
+        "stdout has 7 lines, a complete verdict has 6"
+      ],
+      "zero_work_helper_calls": null,
+      "match": true
+    }
+  ],
+  "all_match": true
+}

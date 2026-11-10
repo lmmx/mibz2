@@ -1,0 +1,35 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/crash-partial-verdict-exit1",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 1,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 86,
+    "sha256": "ffb078621692557e8bbc086b921f518f37a19d26c3c519d9889aae4611459694",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 59,
+    "sha256": "59363f1b25f00805ae586731057d44cefdadf78f7ce022afa6580e1ad203de20",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 1,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stderr is not empty (59 bytes)",
+    "stdout has 2 lines, a complete verdict has 6"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "VALID and (a) printed, then a traceback, exit 1"
+}

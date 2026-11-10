@@ -1,0 +1,69 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/invalid-no-terminal",
+  "checker": {
+    "blob": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "path": "walk_stats_check.py",
+    "hash_object": "eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+    "matches": true,
+    "python3": "/usr/bin/python3",
+    "environment": {
+      "PYTHONUNBUFFERED": "1"
+    }
+  },
+  "inputs": {
+    "records": {
+      "path": "cases/invalid-no-terminal/records.jsonl",
+      "sha256": "9e89ecb0fbc2d24db38d5e3e8c05c216880d11bf366a5d5563224df1857fdc0c",
+      "kind": "file"
+    },
+    "classes": {
+      "path": "cases/invalid-no-terminal/classes.txt",
+      "sha256": "678f81a714fbc72030f82f9980054d5cf90e6f041a367f7da2f35b0f7dafb0e5",
+      "kind": "file"
+    }
+  },
+  "command": [
+    "timeout",
+    "-s",
+    "TERM",
+    "-k",
+    "30",
+    "600",
+    "python3",
+    "walk_stats_check.py",
+    "cases/invalid-no-terminal/records.jsonl",
+    "--walker",
+    "traverse",
+    "--helpers",
+    "2",
+    "--classes",
+    "cases/invalid-no-terminal/classes.txt"
+  ],
+  "status": {
+    "exit": 2,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": 0.035
+  },
+  "stdout": {
+    "bytes": 47,
+    "sha256": "cc082e7f9533c46a8fc46cb31ee013648c33797fa75e3271a4987d56e70ed426",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 2,
+  "decision": "rejected",
+  "rule": 1,
+  "reasons": [
+    "exit 2: the checker's INVALID, a verdict that fails structural validity"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null
+}

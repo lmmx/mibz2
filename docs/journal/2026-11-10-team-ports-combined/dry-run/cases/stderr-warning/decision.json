@@ -1,0 +1,34 @@
+{
+  "schema": "team-ports-combined/checker-step/1",
+  "step": "cases/stderr-warning",
+  "checker": null,
+  "inputs": null,
+  "command": null,
+  "status": {
+    "exit": 0,
+    "timed_out": false,
+    "signal": null,
+    "elapsed_s": null
+  },
+  "stdout": {
+    "bytes": 237,
+    "sha256": "1dcc0035544bc2f23c37f6e6af85c6e380214994c0c6c1296a74c2ca3ebfef31",
+    "file": "checker-stdout.txt"
+  },
+  "stderr": {
+    "bytes": 8,
+    "sha256": "86a10149acbe95519ea3283d26d57491ede09bd3010cdb756358f66352236b79",
+    "file": "checker-stderr.txt"
+  },
+  "checker_outcome": null,
+  "checker_exit": 0,
+  "decision": "rejected",
+  "rule": 2,
+  "reasons": [
+    "stderr is not empty (8 bytes)"
+  ],
+  "verdict": null,
+  "reported": null,
+  "claim_limit": null,
+  "simulated": "balanced stdout, exit 0, a warning on stderr"
+}

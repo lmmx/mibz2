@@ -1,0 +1,6 @@
+VALID
+  (a) fails: 1 helper-blocks without a matching call; 0 zero-work helper calls
+  (b) fails: team 0: helper bytes [0, 50], largest share 1.0
+  (c) holds: 1 leader calls of traverse
+  (d) holds: 0 calls of another walker
+NOT ENGAGED

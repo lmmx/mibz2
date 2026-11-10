@@ -1,0 +1,2 @@
+INVALID
+  no single terminal record at the end

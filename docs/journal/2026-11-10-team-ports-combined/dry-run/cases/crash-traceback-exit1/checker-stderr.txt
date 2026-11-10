@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/comb-adj/docs/journal/2026-11-10-team-ports-combined/dry-run/walk_stats_check.py", line 252, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/comb-adj/docs/journal/2026-11-10-team-ports-combined/dry-run/walk_stats_check.py", line 232, in main
+    lines = [line for line in open(args.records).read().splitlines() if line.strip()]
+                              ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "<frozen codecs>", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
