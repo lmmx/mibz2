@@ -1114,64 +1114,77 @@ fn room_segments_unrolled<const L: usize, const PF: u8>(
             }
             let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
             for off in 0..room {
-                // The lane loop as constant-index steps, lanes 0..L in order, each step
-                // the shipped body (`continue` leaves its step): no lane counter, pointer
-                // or bound in the round; every lane advanced once before any lane again
+                // The ordinary round as constant-index steps, lanes 0..L in order: a step
+                // whose entry is flagged leaves the round at once, untouched, naming its
+                // lane; the lanes before it have made exactly their step at `off`
                 macro_rules! step {
-                    ($k:literal) => {
+                    ($exit:lifetime, $k:literal) => {
                         if $k < L {
-                            #[allow(clippy::identity_op)]
-                            let k: usize = $k;
-                            'step: {
-                            let l = &mut lanes[k];
                             // SAFETY: rows are below n (TVector), with the flag masked off below
-                            let q = unsafe { *t.add(l.row as usize) };
+                            let q = unsafe { *t.add(lanes[$k].row as usize) };
                             if q & START != 0 {
-                                l.p = base[k].wrapping_add(off);
-                                finish(l, bufs, next);
-                                if queued == ns {
-                                    // the lanes before this one wrote at `off`, those after it not yet
-                                    for (j, lj) in lanes.iter_mut().enumerate() {
-                                        if j < k {
-                                            lj.p = base[j].wrapping_add(off + 1);
-                                        } else if j > k {
-                                            lj.p = base[j].wrapping_add(off);
-                                        }
-                                    }
-                                    transition!(FULL_PHASE_ENDS_MID_PASS);
-#[cfg(test)]
-UNROLLED_END_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
-                                    break 'full;
-                                }
-                                transition!(MID_PASS_TAKES);
-#[cfg(test)]
-UNROLLED_TAKE_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
-                                *l = take(queued, bufs);
-                                if PF != PF_OFF {
-                                    prefetch::<PF>(t, l.row);
-                                }
-                                queued += 1;
-                                // its next byte, at offset off + 1, goes at its p
-                                base[k] = l.p.wrapping_sub(off + 1);
-                                break 'step;
+                                break $exit $k;
                             }
-                            l.row = q >> 8;
+                            lanes[$k].row = q >> 8;
                             if PF != PF_OFF {
-                                prefetch::<PF>(t, l.row);
+                                prefetch::<PF>(t, lanes[$k].row);
                             }
-                            // SAFETY: base + off is below the lane's end: room is at most its spare
-                            // at the pass's start (or, for a buffer taken mid-pass, its capacity
-                            // after its first byte)
-                            debug_assert!(base[k].wrapping_add(off) < l.end);
-                            unsafe { *base[k].wrapping_add(off) = q as u8 };
-                            }
+                            // SAFETY: as the shipped step: base + off is below the lane's end
+                            debug_assert!(base[$k].wrapping_add(off) < lanes[$k].end);
+                            unsafe { *base[$k].wrapping_add(off) = q as u8 };
                         }
                     };
                 }
                 macro_rules! steps {
-                    ($($k:literal)*) => { $( step!($k); )* };
+                    ($exit:lifetime, $($k:literal)*) => { $( step!($exit, $k); )* };
                 }
-                steps!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63);
+                #[allow(clippy::identity_op)]
+                let first: usize = 'ordinary: {
+                    steps!('ordinary, 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63);
+                    L
+                };
+                // The one shared fallback: the shipped lane loop, verbatim, resumed at the
+                // first flagged lane (it rereads that lane's entry; no byte is replayed)
+                for k in first..L {
+                    let l = &mut lanes[k];
+                    // SAFETY: rows are below n (TVector), with the flag masked off below
+                    let q = unsafe { *t.add(l.row as usize) };
+                    if q & START != 0 {
+                        l.p = base[k].wrapping_add(off);
+                        finish(l, bufs, next);
+                        if queued == ns {
+                            // the lanes before this one wrote at `off`, those after it not yet
+                            for (j, lj) in lanes.iter_mut().enumerate() {
+                                if j < k {
+                                    lj.p = base[j].wrapping_add(off + 1);
+                                } else if j > k {
+                                    lj.p = base[j].wrapping_add(off);
+                                }
+                            }
+                            transition!(FULL_PHASE_ENDS_MID_PASS);
+#[cfg(test)]
+UNROLLED_END_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
+                            break 'full;
+                        }
+                        transition!(MID_PASS_TAKES);
+#[cfg(test)]
+UNROLLED_TAKE_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
+                        *l = take(queued, bufs);
+                        if PF != PF_OFF {
+                            prefetch::<PF>(t, l.row);
+                        }
+                        queued += 1;
+                        // its next byte, at offset off + 1, goes at its p
+                        base[k] = l.p.wrapping_sub(off + 1);
+                        continue;
+                    }
+                    l.row = q >> 8;
+                    if PF != PF_OFF {
+                        prefetch::<PF>(t, l.row);
+                    }
+                    debug_assert!(base[k].wrapping_add(off) < l.end);
+                    unsafe { *base[k].wrapping_add(off) = q as u8 };
+                }
             }
             for (l, b) in lanes.iter_mut().zip(base) {
                 l.p = b.wrapping_add(room);
