@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=db24a38b5b54">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=db24a38b5b54">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=db24a38b5b54">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=db24a38b5b54">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=db24a38b5b54">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=61719aee0f15">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=db24a38b5b54">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2244,7 +2244,7 @@
 <p>The kernel's work therefore grows with its steps, not with its bytes. Wikidata's blocks need 1.812 steps per run, and a run averages about 14 rows, so there is one step for about every 7.6 bytes (0.1309 per byte). A step costs about 7.7 ns in the faster kernel, so the steps cost about 1 ns per byte. The decoder's shipped inversion stage, building the table and walking it, takes about 2.05.</p>
 <p><strong>The result.</strong> After a bug fix (<a href="#2-the-timings">§2</a>), the kernel took <strong>0.82 to 0.86 times as long as the inversion stage mibz2 ships</strong>, on the Wikidata blocks, on one thread. The first three runs gave 1.677 against 2.049 ns per byte. Nine runs 34 to 48 minutes later, on the same machine in a slower state, gave 0.84 to 0.86. Where runs are short, steps per byte rise and the kernel is slower: after the fix, it took about 4 times as long as the shipped stage on prose and 9 times on uniform random bytes. These are indicative timings from one cloud machine, not CI measurements. <strong>The whole decoder has not been compared</strong>, and nothing is in production.</p>
 <p><strong>Two structural results.</strong> A <strong>Lyndon word</strong> is one that comes before each of its other rotations in dictionary order, as <code>aab</code> comes before <code>aba</code> and <code>baa</code>. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. The rules the kernel builds are exactly the Lyndon tree of the block's smallest rotation (<a href="#4-the-lyndon-tree">§4</a>). Second, the order of steps changes how many there are: from 1.812 per run down to 1.279. No order of these steps can take fewer than 1.220. The cheaper order is not expected to be faster yet: by a count, finding each step would cost more than the fewer steps save (<a href="#5-fewer-steps-by-a-different-order">§5</a>). The steps could also be shared among threads, but no multi-threaded run has been timed.</p>
-<p><a href="#1-rebuilding-aab-in-two-steps">Section 1</a> runs the induction by hand on a three-byte block. <a href="#2-the-timings">Section 2</a> gives the timings and the bug, and <a href="#3-why-the-cells-kernel-is-cheaper">section 3</a> why this kernel is cheaper than our first one. <a href="#4-the-lyndon-tree">Section 4</a> shows where the Lyndon tree comes from, and <a href="#5-fewer-steps-by-a-different-order">section 5</a> how the order of steps changes their number. <a href="#6-before-production">Section 6</a> lists what stands before any of this reaches the decoder. The work is in pull request <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>, with its <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs">code</a>; those two links show the versions from before the bug fix.</p>
+<p><a href="#1-rebuilding-aab-in-two-steps">Section 1</a> runs the induction by hand on a three-byte block. <a href="#2-the-timings">Section 2</a> gives the timings and the bug, and <a href="#3-why-the-cells-kernel-is-cheaper">section 3</a> why this kernel is cheaper than our first one. <a href="#4-the-lyndon-tree">Section 4</a> shows where the Lyndon tree comes from, and <a href="#5-fewer-steps-by-a-different-order">section 5</a> how the order of steps changes their number. <a href="#6-before-production">Section 6</a> lists what stands before any of this reaches the decoder. The work is in pull request <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>, with its <a href="https://github.com/lmmx/mibz2/blob/d022139b3ba41117aa7d0291e806a4ed39d032cc/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/d022139b3ba41117aa7d0291e806a4ed39d032cc/examples/rauzy.rs">code</a>, as merged.</p>
 <h2 id="1-rebuilding-aab-in-two-steps">1. Rebuilding <code>aab</code> in two steps<a class="headerlink" href="#1-rebuilding-aab-in-two-steps" title="Permanent link">&para;</a></h2>
 <p>For a small example, sort the rotations of <code>aab</code>: <code>aab</code>, <code>aba</code>, <code>baa</code>. The last column is <code>baa</code>; the first is <code>aab</code>. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.</p>
 <p>Name the one-byte run of <code>b</code> B and the two-byte run of <code>a</code> A. In the last column the runs come in the order B, A: call this the <strong>original order</strong>. LF sends their rows to the first column, where they come in the order A, B: the <strong>image order</strong>. The two orders cut the same three rows into intervals in different places. Together, the intervals and where LF sends them form an <strong>interval exchange</strong>: each interval is moved, whole, to a new place.</p>
@@ -2607,19 +2607,19 @@ What a step costs, <a href="#2-the-timings">§2</a> and <a href="#3-why-the-cell
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/bench.js?v=db24a38b5b54"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/couriers.js?v=db24a38b5b54"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/blog.js?v=db24a38b5b54"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/frontier.js?v=db24a38b5b54"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/observatory.js?v=db24a38b5b54"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=61719aee0f15"></script>
+        <script src="../../assets/javascripts/katex.js?v=db24a38b5b54"></script>
       
     
   </body>
