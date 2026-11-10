@@ -1,0 +1,66 @@
+"""The synthetic inputs of the entry's sections 4, 6 and 7, and the prose corpus.
+
+Run: python3 FILE OUTDIR      (then: for f in OUTDIR/*; do bzip2 -9 -k $f; done)
+
+Fourteen files, written exactly as the session wrote them (the random ones depend on the
+order of the draws below and on CPython's `random`). bzip2 -9 cuts each into one to four
+blocks after its own run-length pass, so a "block" of the entry is not the file: a period
+k times over becomes a period, k' times, and a byte or more.
+
+The prose corpus (corpora/prose.bz2) was the repository's Markdown at the session's base
+commit 875ef4a:
+    git ls-files 'docs/**/*.md' '*.md' | sort -u | xargs cat | bzip2 -9 > corpora/prose.bz2
+"""
+import os
+import random
+import sys
+
+out = sys.argv[1]
+os.makedirs(out, exist_ok=True)
+
+
+def w(name, data):
+    with open(os.path.join(out, name), "wb") as f:
+        f.write(data)
+
+
+w("zeros", b"\0" * 1000000)
+w("ab", b"ab" * 450000)
+w("abcx", b"abc" * 300000 + b"x")
+random.seed(1)
+w("random", bytes(random.getrandbits(8) for _ in range(900000)))
+w("rand4", bytes(random.choice(b"ACGT") for _ in range(900000)))
+# the Fibonacci word
+a, b = b"a", b"ab"
+while len(b) < 900000:
+    a, b = b, b + a
+w("fib", b[:900000])
+# the Thue-Morse word, 2^20 letters
+t = bytearray(b"a")
+while len(t) < (1 << 20):
+    t += bytes(195 - x for x in t)
+w("tm", bytes(t[: 1 << 20]))
+w("aaaab", b"aaaab" * 180000)
+# JSON-like, 20,000 records, each with an id of its own and a random 32-bit tail
+recs = []
+for i in range(20000):
+    recs.append(
+        '{"id":"Q%d","type":"item","labels":{"en":{"language":"en","value":"item %d"}},'
+        '"claims":{"P31":[{"rank":"normal","id":"Q%d$%08x"}]}}\n'
+        % (i * 7 + 13, i, i % 977, random.getrandbits(32))
+    )
+w("json", "".join(recs).encode())
+# JSON-like, 12,000 records drawn from 300 ids (json_s) and from 3,000 (json_m)
+random.seed(7)
+for name, ids in (("json_s", 300), ("json_m", 3000)):
+    recs = []
+    for i in range(12000):
+        k = random.randrange(ids)
+        recs.append(
+            '{"id":"Q%d","type":"item","labels":{"en":{"language":"en","value":"item %d"}},'
+            '"claims":{"P31":[{"rank":"normal","id":"Q%d"}]}}\n' % (k * 7 + 13, k, (k * 31) % 977)
+        )
+    w(name, "".join(recs).encode())
+w("abac", b"abac" * 225000 + b"x")
+w("abcabd", b"abcabd" * 150000 + b"x")
+w("p37", (b"the quick brown fox jumps over a lazy "[:37]) * 24000 + b"!")

@@ -6,4 +6,5 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-team-runs              master                    #359 team-runs port vs its base, wall 6-20 threads, wikidata/text/records/random (rule: note §8, PROPOSAL 6771355497)
+bench-team-threshold         master                    plan vs forced teams at 4-8 threads on 0.2.9: does the team threshold move below 6? (rule: LOG on #145)
+bench-cells-vs-prod          master                    MONODROMY cells kernel vs production records path, 1 thread pinned, 3 repeats: is it already better than prod on the i9? (rule: LOG on #145)

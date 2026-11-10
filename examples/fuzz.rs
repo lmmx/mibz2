@@ -24,8 +24,19 @@
 //! more blocks prepared (finished) than the decoder has front (back) sets, so those sets
 //! were reused.
 //!
+//! The team cases (MODE teams): the plain teams, `bwt::Cooperative`, forced by their plan
+//! (`StreamDecoder::planned`: no default selects them below 6 physical cores, so no other
+//! mode runs them on a small machine). The pipeline cases' inputs and edits, held to the
+//! plain parallel decoder and libbzip2 the same way. Each case's blocks are also read here,
+//! apart from the decoder, and counted by the route the decoder takes them by, which is a
+//! function of the block alone: by its run records on the team's pool (a block
+//! `runs::takes_runs` admits, of `bwt::MIN_COOP` rows or more: `Cooperative::invert_runs`'s
+//! fill by shares and walk backward), by its records on one core (an admitted block below
+//! that), or by its column either way.
+//!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure, or -] [MODE]
-//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline or service
+//! MODE: mixed (the default: every 8th case a pipeline case), classic, pipeline, service or
+//! teams
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -43,10 +54,11 @@ fn main() {
     let every = match mode {
         "mixed" => 8,
         "classic" => 0,
-        "pipeline" | "service" => 1,
-        m => panic!("MODE is mixed, classic, pipeline or service, not {m}"),
+        "pipeline" | "service" | "teams" => 1,
+        m => panic!("MODE is mixed, classic, pipeline, service or teams, not {m}"),
     };
     let service = mode == "service";
+    let teams = mode == "teams";
     let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1);
 
     let mut corpus: Vec<Vec<u8>> = Vec::new();
@@ -88,10 +100,28 @@ fn main() {
     let mut pipe_stats = vec![PipeStats::default(); pipes.len()];
     let svcs = service_candidates();
     let mut svc_stats = vec![SvcStats::default(); svcs.len()];
+    let team_cands = team_candidates();
+    let mut team_stats = vec![TeamStats::default(); team_cands.len()];
     let deadline = Instant::now() + Duration::from_secs(secs);
     let (mut cases, mut bad) = (0u64, 0u64);
     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
     while Instant::now() < deadline {
+        if teams {
+            cases += 1;
+            let i = cases as usize % team_cands.len();
+            let outcome = team_case(
+                &team_cands[i],
+                &mut team_stats[i],
+                &pipe_corpus,
+                &corpus,
+                &mut rng,
+                &out_dir,
+                cases,
+                &mut bad,
+            );
+            *outcomes.entry(format!("teams: {outcome}")).or_default() += 1;
+            continue;
+        }
         if service {
             cases += 1;
             let i = cases as usize % svcs.len();
@@ -178,7 +208,33 @@ fn main() {
     for (o, n) in &outcomes {
         println!("{n:>9}  {o}");
     }
-    if service {
+    if teams {
+        println!(
+            "team cases: candidate, cases; cases with a block by records on the team's pool, \
+             by records on one core, by the column on the pool, by the column on one core; \
+             cases with an error; then the blocks by each route, and the blocks whose front \
+             stage fails, admitted to the records and not"
+        );
+        for (c, st) in team_cands.iter().zip(&team_stats) {
+            println!(
+                "{:>9}  {}: records pooled {}, records alone {}, column pooled {}, column \
+                 alone {}, errors {}; blocks {} / {} / {} / {}; front errors {} / {}",
+                st.cases,
+                c.name,
+                st.with[0],
+                st.with[1],
+                st.with[2],
+                st.with[3],
+                st.errors,
+                st.blocks[0],
+                st.blocks[1],
+                st.blocks[2],
+                st.blocks[3],
+                st.front_errors[0],
+                st.front_errors[1]
+            );
+        }
+    } else if service {
         println!(
             "service cases (counted after the completion fence): candidate, cases, with a \
              block on a team's pool, with a block finished, with front sets reused, with \
@@ -237,6 +293,160 @@ struct SvcStats {
     front_reuse: u64,
     back_reuse: u64,
     errors: u64,
+}
+
+/// A plain-team decoder forced by its plan: `teams` teams of `k`, on kernels `kernels`
+struct TeamCand {
+    name: String,
+    teams: usize,
+    k: usize,
+    kernels: mibz2::Kernels,
+}
+
+/// The plain teams to fuzz: each team size `StreamDecoder::planned` runs (2, 3, 4), one
+/// team and two, and one on the portable kernels (the scalar front and fill)
+fn team_candidates() -> Vec<TeamCand> {
+    let detect = mibz2::Kernels::detect();
+    let mut v: Vec<TeamCand> = [(1, 2), (2, 2), (1, 3), (1, 4)]
+        .into_iter()
+        .map(|(teams, k)| TeamCand {
+            name: format!("{teams} plain team(s) of {k}"),
+            teams,
+            k,
+            kernels: detect,
+        })
+        .collect();
+    v.push(TeamCand {
+        name: "1 plain team of 3, scalar kernels".into(),
+        teams: 1,
+        k: 3,
+        kernels: mibz2::Kernels::scalar(),
+    });
+    v
+}
+
+/// A team candidate's counts over the run: the cases, those with a block by each route (by
+/// records on the pool, by records alone, by the column on the pool, by the column alone),
+/// those with an error, the blocks by each route, and the blocks whose front stage fails
+/// (its move-to-front's error, or a primary index past the block): admitted ones, where
+/// the records' front is the one to fail, and the others
+#[derive(Clone, Default)]
+struct TeamStats {
+    cases: u64,
+    with: [u64; 4],
+    errors: u64,
+    blocks: [u64; 4],
+    front_errors: [u64; 2],
+}
+
+/// The blocks of `data` that scan and whose move-to-front stage succeeds, counted by the
+/// route a plain team takes each by (`TeamStats`'s order), up to the input's first error:
+/// read here, with the decoder's own selector and bound, not reported by the decoder
+fn team_routes(data: &[u8]) -> ([u64; 4], [u64; 2]) {
+    use mibz2::stream::{Event, Scanner, SliceSource};
+    let (mut by, mut front_errors) = ([0u64; 4], [0u64; 2]);
+    let mut sc = Scanner::new(SliceSource(data));
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    let mut syms = Vec::new();
+    while let Ok(Event::Block { symbols: b, .. }) = sc.next(std::mem::take(&mut syms)) {
+        let records = mibz2::runs::takes_runs(&b);
+        let n = match mibz2::mtf::mtf(&b, &mut ll, &mut counts, mibz2::Kernels::scalar()) {
+            Ok(n) if (b.orig_ptr as usize) < n => n,
+            _ => {
+                front_errors[!records as usize] += 1;
+                break;
+            }
+        };
+        let pooled = n >= mibz2::bwt::MIN_COOP;
+        by[match (records, pooled) {
+            (true, true) => 0,
+            (true, false) => 1,
+            (false, true) => 2,
+            (false, false) => 3,
+        }] += 1;
+        syms = b.syms;
+    }
+    (by, front_errors)
+}
+
+/// One team case: as `service_case`, for a plain-team candidate
+#[allow(clippy::too_many_arguments)]
+fn team_case(
+    p: &TeamCand,
+    st: &mut TeamStats,
+    pipe_corpus: &[(Vec<u8>, Vec<u64>)],
+    corpus: &[Vec<u8>],
+    rng: &mut Rng,
+    out_dir: &Option<String>,
+    case: u64,
+    bad: &mut u64,
+) -> String {
+    use mibz2::parallel::Plan;
+    let (base, starts) = &pipe_corpus[rng.below(pipe_corpus.len() as u64) as usize];
+    let t = edited(base, starts, corpus, rng);
+    st.cases += 1;
+    let want = oracle(&t);
+    let (plain_out, plain_res) = plain_parallel(&t);
+    let run = || {
+        let plan = Plan::Teams {
+            teams: p.teams,
+            k: p.k,
+        };
+        let dec = mibz2::StreamDecoder::planned(plan, 2 * p.teams, p.kernels);
+        drive(&dec, &t, 1 << 20, 1 << 16)
+    };
+    let (out, res) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(run)) {
+        Ok(r) => r,
+        Err(_) => {
+            *bad += 1;
+            report(out_dir, &t, case, &format!("{}: panic", p.name));
+            return "PANIC".into();
+        }
+    };
+    let (by, front_errors) = team_routes(&t);
+    for (i, &n) in by.iter().enumerate() {
+        st.with[i] += (n > 0) as u64;
+        st.blocks[i] += n;
+    }
+    st.front_errors[0] += front_errors[0];
+    st.front_errors[1] += front_errors[1];
+    st.errors += res.is_err() as u64;
+    if res != plain_res || out != plain_out {
+        *bad += 1;
+        report(
+            out_dir,
+            &t,
+            case,
+            &format!(
+                "{}: not the plain decoder's: {:?} after {} bytes, the plain {:?} after {}",
+                p.name,
+                res,
+                out.len(),
+                plain_res,
+                plain_out.len()
+            ),
+        );
+        return "NOT THE PLAIN DECODER'S BYTES OR ERROR".into();
+    }
+    match (&want, &res) {
+        (Ok(a), Ok(())) if *a == out => "both decode, same bytes".into(),
+        (Ok(_), Ok(())) => {
+            *bad += 1;
+            report(out_dir, &t, case, &format!("{}: different bytes", p.name));
+            "DIFFERENT BYTES".into()
+        }
+        (Err(_), Ok(())) => {
+            *bad += 1;
+            let why = format!("{}: libbzip2 fails, this decodes", p.name);
+            report(out_dir, &t, case, &why);
+            "LIBBZIP2 FAILS, THIS DECODES".into()
+        }
+        (Err(_), Err(e)) => format!("both fail ({}), as the plain decoder", kind_name(e)),
+        (Ok(_), Err(e)) => format!(
+            "libbzip2 decodes, this refuses ({}), as the plain decoder",
+            kind_name(e)
+        ),
+    }
 }
 
 /// One service case: as `pipeline_case`, for a service candidate

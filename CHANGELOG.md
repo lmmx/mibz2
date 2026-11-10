@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9](https://github.com/lmmx/mibz2/compare/v0.2.8...v0.2.9) - 2026-11-10
+
+A speed release for many-core machines. On the i9-10900K the decoder's team path, which it
+plans from 6 threads up, decodes the Wikidata sample 11–15% faster, because #324's run-record
+front now reaches the teams (#359). CI's 4-CPU runners never plan teams and show no change.
+The output, the API and the supported inputs are unchanged.
+
+- **Team paths read run records (#359).** Since 0.2.8 the one-thread `Segmented` kernel has
+  built its backward table from run records, without writing the last column. The plain
+  cooperative teams now do the same: the team's pool fills the table from the records and
+  walks it, and a block below the cooperative size takes the one-core fallback. Its
+  workstation A/B (`release-scaling/run-20261110T160612Z`, the i9-10900K, 10 paired rounds,
+  every arm the same bytes) under a rule written before the data, as base ÷ head wall:
+
+  | corpus | 6 | 8 | 10 | 12 | 16 | 20 threads |
+  |---|--:|--:|--:|--:|--:|--:|
+  | `wikidata` | 1.163 | 1.151 | **1.138** (1.123–1.154) | 1.117 | 1.108 | 1.150 |
+  | `text` | 1.277 | 1.096 | **1.024** (1.010–1.038) | 1.015 | 1.017 | 1.028 |
+  | `records` | 1.000 | 1.000 | 1.001 | 1.007 | 0.989 | 1.004 |
+  | `random` | 1.002 | 0.998 | 0.998 | 1.017 | 0.986 | 1.002 |
+
+  Every `wikidata` interval excludes no change; `records` and `random` are level (random at 12
+  threads, 1.017, is faster). A new fuzz mode forces the plain teams (`examples/fuzz.rs`,
+  `teams`, in CI's fuzz job), and the Guardian's review cleared its coverage (D097, D098).
+- **Admission by the bound and the share of run symbols (#353).** A short block of
+  high-entropy data keeps the column instead of taking the run records, which cost it 10–11%
+  more instructions.
+- **The move-to-front list in one page (#358).** `mtf_checkpoints_avx2`'s list is aligned to
+  512 bytes, so it no longer straddles a page in 4 of its 64 possible layouts.
+- **Harness only (#356).** `ab summary` reads a record's top-level fields only (bench 3.8.1).
+
+**The paired run against 0.2.8** (CI, Intel Xeon Platinum 8370C, 4 CPUs on 2 cores, run
+[42858124938](https://github.com/lmmx/mibz2/actions/runs/42858124938), 10 paired rounds):
+no change detected at 1, 2 and 4 threads on any corpus. Head over base, wall:
+
+| corpus | 1 | 2 | 4 threads |
+|---|--:|--:|--:|
+| `wikidata` | −0.1% (−4.4, +4.3) | +2.3% (−0.5, +5.3) | +0.6% (−1.7, +2.9) |
+| `text` | −1.0% (−2.9, +1.0) | +0.7% (−13.4, +17.1) | −1.1% (−7.2, +5.3) |
+| `records` | −0.2% (−2.7, +2.4) | −1.9% (−6.6, +3.0) | −0.7% (−6.3, +5.3) |
+| `random` | −1.3% (−7.8, +5.7) | −2.1% (−7.1, +3.2) | −2.4% (−6.7, +2.2) |
+
+That is expected: #359's gain is on the team path, which these runners don't plan.
+
+**The cost.** The MTF and RLE2 stage, timed alone, is +3.4% (+2.0%, +4.8%) slower; the wall is
+unchanged. Peak memory on `text` at 4 threads is 53 → 56 MB (+3.6%); every other corpus and
+thread count is within 1%.
+
+**Release scaling on the i9-10900K** (0.2.9 against 0.2.8, `release-scaling/run-20261110T170952Z`,
+SHA-256 33469444…; 0.2.8 ÷ 0.2.9 wall on `wikidata`, paired, with 95% intervals):
+
+| threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `wikidata` | 0.991 (0.983–0.998) | 0.998 | 1.001 | **1.147** | **1.145** | **1.111** | **1.109** | **1.102** |
+
+From 8 threads, where the decoder plans teams, 0.2.9 is 10–15% faster. At 1 thread it is
+0.9% slower beyond noise, the size of #359's first CI flag. The 1-thread code path changed by
+one inlining decision (the Pathfinder's codegen comparison on #145), which a follow-up patch
+restores.
+
+**Caveats.** The gain is measured on one machine, the i9-10900K, in #359's registered run and
+in this release-scaling run; CI can't measure the team path. #351 (Rauzy–Veech induction) merged as a research example and journal only; it
+is not in the library.
+
 ## [0.2.8](https://github.com/lmmx/mibz2/compare/v0.2.7...v0.2.8) - 2026-11-10
 
 A speed release. On the Wikidata sample a decode is 12–19% faster on CI's runner, from a new

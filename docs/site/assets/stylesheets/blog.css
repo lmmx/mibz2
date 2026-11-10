@@ -765,3 +765,62 @@
   2%, 95.9% { opacity: 1; }
 }
 
+
+/* An annotated formal statement: black definitions, each with a coloured note on what it means
+   here (the Rauzy–Veech post). Two columns on a wide screen; the note below its line on a phone. */
+.md-typeset .bf-formal .bf-fstep {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 13rem);
+  gap: 0.6rem 1rem;
+  align-items: start;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--bf-frame);
+}
+.md-typeset .bf-formal .bf-fbody { color: var(--bf-ink); font-size: 0.74rem; line-height: 1.6; }
+.md-typeset .bf-formal .bf-fbody p { margin: 0 0 0.4rem; }
+.md-typeset .bf-formal .bf-fbody .arithmatex { overflow-x: auto; overflow-y: hidden; }
+.md-typeset .bf-formal .bf-fnote {
+  --c: var(--bf-blue); --c-tint: var(--bf-blue-tint);
+  border-left: 3px solid var(--c);
+  background: var(--c-tint);
+  border-radius: 0.3rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--bf-ink);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+.md-typeset .bf-formal .bf-fnote p { margin: 0; }
+.md-typeset .bf-formal .bf-fnote-h { display: block; margin-bottom: 0.2rem; color: var(--c); font-weight: 700; }
+.md-typeset .bf-formal .bf-fterm { border-bottom: 2px solid var(--c); font-weight: 600; }
+.md-typeset .bf-formal .bf-c-blue { --c: var(--bf-blue); --c-tint: var(--bf-blue-tint); }
+.md-typeset .bf-formal .bf-c-green { --c: var(--bf-green-ink); --c-tint: var(--bf-green-tint); }
+.md-typeset .bf-formal .bf-c-amber { --c: var(--bf-amber); --c-tint: var(--bf-amber-tint); }
+.md-typeset .bf-formal .bf-c-ultra { --c: var(--bf-ultra); --c-tint: var(--bf-ultra-tint); }
+.md-typeset .bf-formal .bf-c-claude { --c: var(--bf-claude); --c-tint: var(--bf-claude-tint); }
+.md-typeset .bf-formal .bf-c-steel { --c: var(--bf-steel); --c-tint: var(--bf-steel-tint); }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .bf-formal .bf-fstep { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* .bf-stepper: a process shown one step at a time (blog.js). The controls and the live text
+   appear only with JavaScript; without it the static summary shows. */
+.bf-stepper [hidden] { display: none !important; }
+.md-typeset .bf-stepper .bf-step-stages { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.6rem; }
+.md-typeset .bf-stepper .bf-step-text { min-height: 4.6em; margin: 0.6rem 0 0; color: var(--bf-ink); font-size: 0.72rem; line-height: 1.55; }
+.md-typeset .bf-stepper .bf-step-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.md-typeset .bf-stepper .bf-step-controls input[type="range"] { flex: 1 1 8rem; min-width: 6rem; accent-color: var(--bf-green); }
+.bf-stepper .bf-btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-ink);
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.bf-stepper .bf-btn:hover { background: var(--bf-track); }
+.bf-stepper .bf-btn:disabled { color: var(--bf-muted); opacity: 0.5; cursor: default; background: transparent; }
+.bf-stepper .bf-btn[aria-pressed="true"], .bf-stepper .bf-btn.bf-step-main { border-color: var(--bf-ink); background: var(--bf-ink); color: var(--md-default-bg-color); }
+.bf-stepper .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.bf-stepper .bf-arrow { stroke: var(--bf-muted); }

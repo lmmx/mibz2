@@ -3,10 +3,12 @@
 //! (both kernels) against the column's LF table, word for word; the backward walks (plain,
 //! and the room walk at several lane and segment counts) against `bwt::walk` on the
 //! column's T-vector; every broken tiling refused; and `decode_block` by records against
-//! the column's kernels.
+//! the column's kernels. For a team's fill: the cuts and the shares between them (both
+//! kernels, any number of shares) against `fill`'s table, each share writing its own rows
+//! alone; the cuts refused exactly where `fill` refuses; and cuts that don't tile refused.
 
 use super::*;
-use crate::bwt::{self, Plain, Segmented};
+use crate::bwt::{self, Cooperative, Plain, Segmented};
 use crate::{decode_block, mtf, Scratch};
 
 /// The kernels to check: the scalar ones, and this CPU's where it has more
@@ -230,6 +232,11 @@ fn check_block(b: &Symbols, r: &mut Runs, seen: &mut Seen, what: &str) {
         seen.tables += 1;
     }
     if let Ok(n) = want {
+        // the fill by shares, from the records the last front left (every front's are the
+        // same, above): one block in four
+        if seen.ok % 4 == 1 {
+            check_shares(r, n, &lf_of(&ll), what);
+        }
         // the walks, once a block (they don't depend on the front's kernel)
         if n > 0 && (cfg!(miri) || n < 1 << 16) {
             let mut tt = bwt::TVector::new();
@@ -248,6 +255,54 @@ fn check_block(b: &Symbols, r: &mut Runs, seen: &mut Seen, what: &str) {
         seen.records += runs.len();
         seen.cut += runs.windows(2).filter(|w| w[0] >> 8 == w[1] >> 8).count();
         seen.deep += b.syms.iter().filter(|&&s| s > 32 && s != b.eob).count();
+    }
+}
+
+/// A slot no share wrote (no entry: a link is below 2^24)
+const GUARD: u32 = u32::MAX;
+
+/// The fill by shares against `fill`'s table `want`: the cuts made and tiling; the table
+/// filled by 1 to 13 shares of whole pieces, by each kernel; and each piece filled alone
+/// into a guarded table, writing its own rows and no other slot
+fn check_shares(r: &Runs, n: usize, want: &[u32], what: &str) {
+    let mut cv = vec![];
+    assert!(cuts(r, n, &mut cv), "{what}: the cuts refused");
+    assert_eq!(cv.len(), PIECES + 1, "{what}: the cuts");
+    assert!(cuts_tile(r, n, &cv), "{what}: the cuts don't tile");
+    for k in kernels() {
+        let counts: &[usize] = if cfg!(miri) {
+            &[1, 3, 13]
+        } else {
+            &[1, 2, 3, 4, 5, 12, 13]
+        };
+        for &shares in counts {
+            let mut t = vec![GUARD; n + 9];
+            for j in 0..shares {
+                let (from, to) = (&cv[PIECES * j / shares], &cv[PIECES * (j + 1) / shares]);
+                // SAFETY: the table holds n slots and more, and nothing else touches it
+                let ok = unsafe { fill_share(r, from, to, t.as_mut_ptr(), k) };
+                assert!(ok, "{what}, {k:?}: share {j} of {shares} failed its check");
+            }
+            assert!(
+                t[..n] == *want,
+                "{what}, {k:?}: the table by {shares} shares"
+            );
+            assert!(
+                t[n..] == [GUARD; 9],
+                "{what}, {k:?}: a store past the block"
+            );
+        }
+        for (j, w) in cv.windows(2).enumerate() {
+            let mut t = vec![GUARD; n + 9];
+            // SAFETY: as above
+            assert!(unsafe { fill_share(r, &w[0], &w[1], t.as_mut_ptr(), k) });
+            let (lo, hi) = (w[0].row as usize, w[1].row as usize);
+            assert!(t[lo..hi] == want[lo..hi], "{what}, {k:?}: piece {j}'s rows");
+            assert!(
+                t[..lo].iter().chain(&t[hi..]).all(|&x| x == GUARD),
+                "{what}, {k:?}: piece {j} wrote outside its rows {lo}..{hi}"
+            );
+        }
     }
 }
 
@@ -358,6 +413,14 @@ fn table_of(ll: &[u8], r: &mut Runs, brk: impl Fn(&mut Runs) -> usize) -> Option
         let mut tt = bwt::TVector(vec![3; 4]);
         let ok = fill(r, n, &mut tt, k);
         assert!(ok || tt.0.is_empty(), "{k:?}: a refused table kept");
+        // the cuts are refused exactly where the fill is, and then left empty
+        let mut cv = vec![];
+        assert_eq!(
+            cuts(r, n, &mut cv),
+            ok,
+            "{k:?}: the cuts and the fill disagree"
+        );
+        assert_eq!(cv.len(), if ok { PIECES + 1 } else { 0 });
         got.push(ok.then_some(tt.0));
     }
     assert!(got.windows(2).all(|w| w[0] == w[1]), "the kernels disagree");
@@ -498,12 +561,14 @@ fn miri_runs_avx2_kernels_selected() {
 /// `front` didn't run
 const UNTOUCHED: u16 = 0xffff;
 
-/// `decode_block` takes the records' path exactly where it should: with `Segmented` (which
-/// reads runs) on a block `takes_runs` accepts, and never with `Plain` or on any other block
+/// `decode_block` takes the records' path exactly where it should: with `Segmented` and
+/// `Cooperative` (which read runs) on a block `takes_runs` accepts, and never with `Plain`
+/// or on any other block
 #[test]
 fn runs_path_taken_exactly_where_selected() {
     let mut rng = Rng(0x5eed_0f9a_7e57_0001);
     let (mut sr, mut sp) = (Scratch::<Segmented>::default(), Scratch::<Plain>::default());
+    let mut sc = Scratch::<Cooperative<2>>::default();
     let (mut by_runs, mut by_column) = (0, 0);
     for i in 0..400 {
         let mut b = synthetic(&mut rng, 3000);
@@ -516,11 +581,15 @@ fn runs_path_taken_exactly_where_selected() {
         for k in kernels() {
             sr.runs.runs = vec![UNTOUCHED];
             sp.runs.runs = vec![UNTOUCHED];
+            sc.runs.runs = vec![UNTOUCHED];
             let mut out = Vec::new();
             let _ = decode_block(&b, k, &mut sr, &mut out);
             let _ = decode_block(&b, k, &mut sp, &mut out);
+            let _ = decode_block(&b, k, &mut sc, &mut out);
             let took = sr.runs.runs != [UNTOUCHED];
             assert_eq!(took, want, "case {i}, {k:?}: Segmented by records");
+            let took = sc.runs.runs != [UNTOUCHED];
+            assert_eq!(took, want, "case {i}, {k:?}: Cooperative by records");
             assert_eq!(
                 sp.runs.runs,
                 [UNTOUCHED],
@@ -635,4 +704,275 @@ fn runs_walk_back_room_segments_from_its_bound() {
         let segmented = n >= bwt::MIN_SEGMENTED;
         assert_eq!(seg.n, if segmented { n } else { 0 }, "{n} rows: segmented");
     }
+}
+
+/// Cuts that don't tile the block are refused (`cuts_tile`), each broken one way; and a
+/// share between cuts out of order, or past the records, writes nothing and fails
+#[test]
+fn miri_runs_cuts_that_dont_tile_refused() {
+    let mut rng = Rng(0x7e57_c0de_0bad_cafe);
+    let ll: Vec<u8> = (0..700)
+        .flat_map(|_| {
+            let c = b"abcd"[rng.below(4) as usize];
+            std::iter::repeat(c).take(1 + rng.below(9) as usize)
+        })
+        .collect();
+    let n = ll.len();
+    let r = Runs::of_column(&ll);
+    let mut cv = vec![];
+    assert!(cuts(&r, n, &mut cv) && cuts_tile(&r, n, &cv));
+    // (the pieces are not empty: the breaks below move real cuts)
+    assert!(cv.windows(2).all(|w| w[0].row < w[1].row));
+    type Break = fn(&mut Vec<Cut>);
+    let breaks: [Break; 12] = [
+        |c| c.clear(),
+        |c| c.truncate(1),
+        |c| c[0].rec = 1,
+        |c| c[0].row = 1,
+        |c| c[0].next[b'b' as usize] += 1,
+        |c| c[PIECES].rec -= 1,
+        |c| c[PIECES].row -= 1,
+        |c| c[PIECES].row += 1,
+        |c| c[5].rec = c[6].rec + 1,
+        |c| c[5].row = c[6].row + 1,
+        |c| c[5].next[b'c' as usize] = c[6].next[b'c' as usize] + 1,
+        |c| {
+            for x in &mut c[1..] {
+                x.next[b'd' as usize] += 1;
+            }
+        },
+    ];
+    for (i, brk) in breaks.iter().enumerate() {
+        let mut bad = cv.clone();
+        brk(&mut bad);
+        assert!(!cuts_tile(&r, n, &bad), "break {i} accepted");
+    }
+    // another block's length, either way; and counts that are not these records'
+    assert!(!cuts_tile(&r, n + 1, &cv) && !cuts_tile(&r, n - 1, &cv));
+    let mut other = Runs::of_column(&ll);
+    other.counts[b'a' as usize] -= 1;
+    other.counts[b'b' as usize] += 1;
+    assert!(!cuts_tile(&other, n, &cv));
+    // (a count more for the last byte: every bucket's start is the same, the sum is not)
+    let mut more = Runs::of_column(&ll);
+    more.counts[255] += 1;
+    assert!(!cuts_tile(&more, n, &cv));
+    for k in kernels() {
+        let mut t = vec![GUARD; n + 9];
+        // cuts out of order: by the row, by a byte's value, by the records
+        let mut late = cv[4].clone();
+        late.next[b'a' as usize] = cv[3].next[b'a' as usize] - 1;
+        let mut short = cv[4].clone();
+        short.rec = r.runs.len() + 1;
+        for (from, to) in [(&cv[4], &cv[3]), (&cv[3], &late), (&cv[3], &short)] {
+            // SAFETY: the table holds n slots and more, and nothing else touches it
+            assert!(!unsafe { fill_share(&r, from, to, t.as_mut_ptr(), k) });
+            assert!(
+                t.iter().all(|&x| x == GUARD),
+                "{k:?}: a refused share wrote"
+            );
+        }
+        // rows out of order alone (the records and the values in order)
+        let mut far = cv[3].clone();
+        far.row = cv[4].row + 1;
+        // SAFETY: as above
+        assert!(!unsafe { fill_share(&r, &far, &cv[4], t.as_mut_ptr(), k) });
+        assert!(
+            t.iter().all(|&x| x == GUARD),
+            "{k:?}: a refused share wrote"
+        );
+        // a share whose records are not its cuts': a piece's first record gone, and the
+        // record before the piece added; a cut a row late (the rows end short of it), a cut
+        // with a byte's value one more (the values end short of it), and a cut a row early
+        // (below). Each fails, having written only inside its own rows
+        let (mut late_start, mut early_start) = (cv[3].clone(), cv[3].clone());
+        late_start.rec += 1;
+        early_start.rec -= 1;
+        let (mut row_more, mut value_more) = (cv[4].clone(), cv[4].clone());
+        row_more.row += 1;
+        value_more.next[b'a' as usize] += 1;
+        // and a cut a row early, its values as they were: the share's last record would
+        // pass it by a row, with every byte's values still inside the cut's
+        let mut row_less = cv[4].clone();
+        row_less.row -= 1;
+        for (i, (from, to)) in [
+            (&late_start, &cv[4]),
+            (&early_start, &cv[4]),
+            (&cv[3], &row_more),
+            (&cv[3], &value_more),
+            (&cv[3], &row_less),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let mut t = vec![GUARD; n + 9];
+            // SAFETY: as above
+            assert!(
+                !unsafe { fill_share(&r, from, to, t.as_mut_ptr(), k) },
+                "{k:?}: wrong share {i} passed"
+            );
+            let (lo, hi) = (from.row as usize, to.row as usize);
+            assert!(
+                t[..lo].iter().chain(&t[hi..]).all(|&x| x == GUARD),
+                "{k:?}: wrong share {i} wrote outside its rows"
+            );
+        }
+        // a record of another byte (the same rows): refused at the record, where its byte's
+        // values would pass the cut's, not only by the end check, so the rows after it are
+        // never written
+        let col = [b"b".repeat(5), b"a".repeat(20), b"c".repeat(20)].concat();
+        let mut whole = vec![];
+        assert!(cuts(&Runs::of_column(&col), 45, &mut whole));
+        let mut other = Runs::of_column(&col);
+        other.runs[1] = (b'b' as u16) << 8 | 20;
+        let mut t = vec![GUARD; 45 + 9];
+        // SAFETY: as above
+        assert!(!unsafe { fill_share(&other, &whole[0], &whole[PIECES], t.as_mut_ptr(), k) });
+        assert!(
+            t[8..] == [GUARD; 46],
+            "{k:?}: filled on past a record over its bound"
+        );
+        // an empty record, 7 rows before the share's end (where an 8-slot store from it
+        // would pass the end): refused, nothing written past the share's rows
+        let mut gap = Runs::of_column(&[b"a".repeat(20), b"b".repeat(7)].concat());
+        gap.runs.insert(1, (b'c' as u16) << 8);
+        let mut ends = vec![];
+        assert!(cuts(
+            &Runs::of_column(&[b"a".repeat(20), b"b".repeat(7)].concat()),
+            27,
+            &mut ends
+        ));
+        let mut end = ends[PIECES].clone();
+        end.rec = 3;
+        let mut t = vec![GUARD; 27 + 9];
+        // SAFETY: as above
+        assert!(!unsafe { fill_share(&gap, &ends[0], &end, t.as_mut_ptr(), k) });
+        assert!(
+            t[27..] == [GUARD; 9],
+            "{k:?}: an empty record's store past the block"
+        );
+    }
+}
+
+/// Every length of a record against every distance from its end to the share's: the 8-slot
+/// stores never pass the share's rows (the slots after them stay as they were), and the
+/// table is `fill`'s
+#[test]
+fn miri_runs_fill_share_stores_end_inside_its_rows() {
+    // (under Miri, the lengths either side of a store's 8 slots and the distances either
+    // side of its 7-slot margin)
+    let (lens, afters): (Vec<usize>, Vec<usize>) = if cfg!(miri) {
+        (vec![1, 8, 9, 17], vec![1, 6, 7, 8])
+    } else {
+        ((1..=19).collect(), (1..=9).collect())
+    };
+    for &len in &lens {
+        for &after in &afters {
+            let ll = [b"a".repeat(len), b"b".repeat(after)].concat();
+            let r = Runs::of_column(&ll);
+            let mut tt = bwt::TVector::new();
+            assert!(fill(&r, ll.len(), &mut tt, Kernels::scalar()));
+            check_shares(&r, ll.len(), &tt.0, &format!("{len} then {after}"));
+        }
+    }
+}
+
+/// The pieces are of about equal work: each within a record's of a twelfth of the block's
+/// (a store for each 8 rows, and one for each record)
+#[test]
+fn runs_cuts_balance_the_work() {
+    let mut rng = Rng(0xba1a_9ce0_0f00_d5ed);
+    let ll: Vec<u8> = (0..40_000)
+        .flat_map(|_| {
+            let c = b"abcdefg"[rng.below(7) as usize];
+            std::iter::repeat(c).take(1 + rng.below(40) as usize)
+        })
+        .collect();
+    let (n, r) = (ll.len(), Runs::of_column(&ll));
+    let mut cv = vec![];
+    assert!(cuts(&r, n, &mut cv));
+    let work = |a: &Cut, b: &Cut| (b.row - a.row) as u64 + 8 * (b.rec - a.rec) as u64;
+    let total = work(&cv[0], &cv[PIECES]);
+    assert_eq!(total, n as u64 + 8 * r.runs.len() as u64);
+    for (j, w) in cv.windows(2).enumerate() {
+        let got = work(&w[0], &w[1]);
+        assert!(
+            got.abs_diff(total / PIECES as u64) <= CAP as u64 + 8,
+            "piece {j}: {got} of {total}"
+        );
+    }
+}
+
+/// The cuts' bounds: a block of 2^24 rows, or records, is refused (the sums are 32-bit)
+#[test]
+fn runs_cuts_bounds() {
+    let mut cv = vec![];
+    // 2^24 rows of one byte (the last, so that no bucket starts after its own), in records
+    // of 127 rows and one of the rest
+    let n = 1usize << 24;
+    let z = 0xffusize;
+    let mut r = Runs {
+        runs: vec![(z as u16) << 8 | 127; n / 127],
+        ..Runs::default()
+    };
+    r.runs.push((z as u16) << 8 | (n % 127) as u16);
+    r.counts[z] = n as u32;
+    assert!(!cuts(&r, n, &mut cv), "2^24 rows");
+    // a row fewer: made, and tiling. The same cuts with the row back, whole in every other
+    // way, don't tile 2^24 rows
+    *r.runs.last_mut().unwrap() -= 1;
+    r.counts[z] -= 1;
+    assert!(cuts(&r, n - 1, &mut cv) && cuts_tile(&r, n - 1, &cv));
+    r.runs.push((z as u16) << 8 | 1);
+    r.counts[z] += 1;
+    let mut big = cv.clone();
+    big[PIECES].rec += 1;
+    big[PIECES].row += 1;
+    big[PIECES].next[z] += 1;
+    assert!(!cuts_tile(&r, n, &big), "2^24 rows' cuts");
+    // (whole: one row fewer, with its record and count gone, they tile)
+    r.runs.pop();
+    r.counts[z] -= 1;
+    assert!(cuts_tile(&r, n - 1, &cv));
+    // 2^24 records, of a row each, in a block of 2^24 - 1 rows: refused for their number
+    // (and for their rows; one fewer is made)
+    let mut r = Runs {
+        runs: vec![(b'a' as u16) << 8 | 1; n],
+        ..Runs::default()
+    };
+    r.counts[b'a' as usize] = n as u32 - 1;
+    assert!(!cuts(&r, n - 1, &mut cv), "2^24 records");
+    r.runs.pop();
+    assert!(cuts(&r, n - 1, &mut cv));
+    // records whose rows wrap 32 bits back to the block's 254: refused for their number,
+    // where their sums alone would pass
+    let wrap = (1usize << 32).div_ceil(255);
+    assert_eq!((wrap * 255) as u32, 254);
+    let mut r = Runs {
+        runs: vec![(b'a' as u16) << 8 | 255; wrap],
+        ..Runs::default()
+    };
+    r.counts[b'a' as usize] = 254;
+    assert!(!cuts(&r, 254, &mut cv), "rows that wrap to the block's");
+}
+
+/// A block of fewer records than pieces, and the empty block: the cuts made, the pieces left
+/// over empty at the end, the table `fill`'s
+#[test]
+fn miri_runs_cuts_of_short_blocks() {
+    for ll in [&b""[..], b"a", b"aab", b"abcabcabca"] {
+        let r = Runs::of_column(ll);
+        let mut tt = bwt::TVector::new();
+        assert!(fill(&r, ll.len(), &mut tt, Kernels::scalar()));
+        check_shares(&r, ll.len(), &tt.0, &format!("{ll:?}"));
+    }
+}
+
+/// `Runs::of_column` is `front`'s records for the column (the tests' other maker of them)
+#[test]
+fn miri_runs_of_column_is_the_scan() {
+    let ll = [b"ab".repeat(40), vec![b'q'; 300], b"xyzzy".to_vec()].concat();
+    let r = Runs::of_column(&ll);
+    let (runs, per) = runs_of_column(&ll);
+    assert!(r.runs == runs && r.per == per && r.counts == crate::run_fed::counts_of(&ll));
 }

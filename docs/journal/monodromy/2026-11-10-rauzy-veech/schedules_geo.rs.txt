@@ -1,0 +1,373 @@
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 2). Written
+//! by a sub-agent; the policies "weak_*" (a step told free from links alone: the far end of
+//! its landing place must be a coincidence) and the counters were added after. Not built by
+//! the crate. To run (EVERY = 24: the entry's ten blocks; 1: all 233):
+//!   cp THIS examples/geo.rs
+//!   cargo run --release --example geo -- corpora/wikidata.bz2 24 65536 [POLICIES]
+//! POLICIES: comma-separated numbers (0 reducing_then_right, 1 reducing_then_largest_cell,
+//! 4 largest_cell, 6 right_end, 10 weak_then_right, 11 weak_then_largest_cell, ...); all if
+//! absent. A policy's line is [steps, steps that were not free, ends of segments tested,
+//! tests that found a free step, ends set aside to wait, steps taken where the step before
+//! left off, paid steps].
+//!
+//! Route "cartesian", schedules with geometry: one-cell right-handed Rauzy steps at any
+//! coincidence, the letters kept by fixed row coordinates (rows are never renumbered: a
+//! removed cell is a hole in both tilings), so every coincidence is known, also the ones a
+//! re-seated loser creates. A step lowers the number of boundaries of the common refinement by
+//! one iff it is an equal step or its loser lands on a boundary of the other tiling
+//! ("reducing"); the total is floor + (steps that are not reducing).
+//!
+//! Policies: reducing steps first, wherever they are; else (A) the rightmost coincidence,
+//! (B) the largest cell, (C) the smallest cell, (D) the leftmost coincidence.
+//! The final word is checked (61-bit hash) to be a rotation of the block.
+//!
+//!   geo FILE.bz2 [EVERY] [MIN_ROWS]
+
+use mibz2::bwt::{build, walk, TVector};
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+use std::collections::{BTreeSet, BinaryHeap, HashMap, HashSet};
+
+const M61: u64 = (1 << 61) - 1;
+#[inline]
+fn mulmod(a: u64, b: u64) -> u64 {
+    let p = a as u128 * b as u128;
+    let x = (p & M61 as u128) as u64 + (p >> 61) as u64;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+#[inline]
+fn addmod(a: u64, b: u64) -> u64 {
+    let x = a + b;
+    if x >= M61 {
+        x - M61
+    } else {
+        x
+    }
+}
+const BASE: u64 = 0x1F3D_5B79_2468_ACE1 % M61;
+
+struct Geo<'a> {
+    ts: Vec<u32>,
+    bs: Vec<u32>,
+    lam: Vec<u32>,
+    len: Vec<u32>,
+    hash: Vec<u64>,
+    /// the letter whose top interval ends at a row; whose image ends at a row
+    top_end: HashMap<u32, u32>,
+    bot_end: HashMap<u32, u32>,
+    left: usize,
+    steps: u64,
+    not_reducing: u64,
+    weak: bool,
+    pw: &'a [u64],
+    /// rows that became a boundary of one tiling or a coincidence in the last step
+    fresh: Vec<u32>,
+}
+
+impl<'a> Geo<'a> {
+    fn new(lam: &[u32], byte: &[u8], pw: &'a [u64]) -> Geo<'a> {
+        let r = lam.len();
+        let mut cnt = [0u32; 257];
+        for (i, &b) in byte.iter().enumerate() {
+            cnt[b as usize + 1] += lam[i];
+        }
+        for k in 0..256 {
+            cnt[k + 1] += cnt[k];
+        }
+        let mut g = Geo {
+            ts: vec![0; r],
+            bs: vec![0; r],
+            lam: lam.to_vec(),
+            len: vec![1; r],
+            hash: byte.iter().map(|&b| b as u64 + 1).collect(),
+            top_end: HashMap::with_capacity(2 * r),
+            bot_end: HashMap::with_capacity(2 * r),
+            left: r,
+            steps: 0,
+            not_reducing: 0,
+            weak: false,
+            pw,
+            fresh: Vec::new(),
+        };
+        let mut x = 0u32;
+        for i in 0..r {
+            g.ts[i] = x;
+            x += lam[i];
+            g.top_end.insert(x, i as u32);
+            let c = byte[i] as usize;
+            g.bs[i] = cnt[c];
+            cnt[c] += lam[i];
+            g.bot_end.insert(cnt[c], i as u32);
+        }
+        g
+    }
+
+    /// (top letter, bottom letter) ending at row c, if both do and they differ
+    fn at(&self, c: u32) -> Option<(u32, u32)> {
+        match (self.top_end.get(&c), self.bot_end.get(&c)) {
+            (Some(&a), Some(&b)) if a != b => Some((a, b)),
+            _ => None,
+        }
+    }
+
+    /// Would the step at c lower the boundary count; its cell
+    fn reducing(&self, c: u32) -> Option<(bool, u32)> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        Some(if la > lb {
+            (self.top_end.contains_key(&(self.bs[ai] + la - lb)) && (!self.weak || self.top_end.contains_key(&(self.bs[ai] + la))), lb)
+        } else if la < lb {
+            (self.bot_end.contains_key(&(self.ts[bi] + lb - la)) && (!self.weak || self.bot_end.contains_key(&(self.ts[bi] + lb))), la)
+        } else {
+            (true, la)
+        })
+    }
+
+    /// Where the loser of the step at c would land (a row that, once a boundary of the other
+    /// tiling, makes the step reducing)
+    fn landing(&self, c: u32) -> Option<u32> {
+        let (a, b) = self.at(c)?;
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        if la > lb {
+            Some(self.bs[ai] + la - lb)
+        } else if la < lb {
+            Some(self.ts[bi] + lb - la)
+        } else {
+            None
+        }
+    }
+
+    fn step(&mut self, c: u32) {
+        let (a, b) = self.at(c).unwrap();
+        let (ai, bi) = (a as usize, b as usize);
+        let (la, lb) = (self.lam[ai], self.lam[bi]);
+        let h = addmod(mulmod(self.hash[ai], self.pw[self.len[bi] as usize]), self.hash[bi]);
+        let ln = self.len[ai] + self.len[bi];
+        self.steps += 1;
+        self.fresh.clear();
+        if la > lb {
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            // the cell [c - lb, c) goes; A ends at c - lb; B's image is the tail of A's
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.top_end.insert(c - lb, a);
+            let p = self.bs[ai] + la - lb;
+            self.not_reducing += !self.top_end.contains_key(&p) as u64;
+            self.lam[ai] = la - lb;
+            self.bs[bi] = p;
+            self.bot_end.insert(p + lb, b);
+            self.bot_end.insert(p, a);
+            self.fresh.extend_from_slice(&[c - lb, p, p + lb]);
+        } else if la < lb {
+            self.hash[ai] = h;
+            self.len[ai] = ln;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bot_end.insert(c - la, b);
+            let p = self.ts[bi] + lb - la;
+            self.not_reducing += !self.bot_end.contains_key(&p) as u64;
+            self.lam[bi] = lb - la;
+            self.ts[ai] = p;
+            self.top_end.insert(p + la, a);
+            self.top_end.insert(p, b);
+            self.fresh.extend_from_slice(&[c - la, p, p + la]);
+        } else {
+            self.hash[bi] = h;
+            self.len[bi] = ln;
+            self.left -= 1;
+            self.top_end.remove(&c);
+            self.bot_end.remove(&c);
+            self.bs[bi] = self.bs[ai];
+            self.bot_end.insert(self.bs[ai] + la, b);
+            self.fresh.extend_from_slice(&[c - la, self.bs[ai] + la]);
+        }
+    }
+}
+
+fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64, [u64; 5]) {
+    let mut g = Geo::new(lam, byte, pw);
+    g.weak = policy >= 10;
+    let policy = policy % 10;
+    // [tests of a segment end, tests that found a free step, ends parked waiting, steps taken
+    //  where the step before left off (the same segment, its surviving boundary), paid steps]
+    let mut cnt = [0u64; 5];
+    let mut last_q = u32::MAX;
+    // the coincidences
+    let mut coin: BTreeSet<u32> = BTreeSet::new();
+    let mut bounds: HashSet<u32> = HashSet::new();
+    for &c in g.top_end.keys() {
+        bounds.insert(c);
+        if g.at(c).is_some() {
+            coin.insert(c);
+        }
+    }
+    for &c in g.bot_end.keys() {
+        bounds.insert(c);
+    }
+    let floor = bounds.len() as u64 - 1;
+    let mut ready: Vec<u32> = coin.iter().copied().collect();
+    // coincidences waiting for a row to become a boundary
+    let mut waiting: HashMap<u32, Vec<u32>> = HashMap::new();
+    let mut heap: BinaryHeap<(u64, u32)> = BinaryHeap::new();
+    let key = |g: &Geo, c: u32| -> u64 {
+        let cell = g.reducing(c).unwrap().1 as u64;
+        match policy {
+            1 | 4 | 5 => cell,
+            2 => u64::MAX - cell,
+            _ => 0,
+        }
+    };
+    if matches!(policy, 1 | 2 | 4 | 5) {
+        for &c in &coin {
+            heap.push((key(&g, c), c));
+        }
+    }
+    while g.left > 1 {
+        // a reducing step, if one is ready
+        let mut pick = None;
+        while let Some(c) = ready.pop() {
+            if policy == 4 || policy == 6 {
+                continue;
+            }
+            if policy == 5 {
+                if let Some((a, b)) = g.at(c) {
+                    if g.lam[a as usize] == g.lam[b as usize] {
+                        pick = Some(c);
+                        break;
+                    }
+                }
+                continue;
+            }
+            cnt[0] += 1;
+            match g.reducing(c) {
+                Some((true, _)) => {
+                    cnt[1] += 1;
+                    pick = Some(c);
+                    break;
+                }
+                Some((false, _)) => {
+                    cnt[2] += 1;
+                    let p = g.landing(c).unwrap();
+                    waiting.entry(p).or_default().push(c);
+                }
+                None => {}
+            }
+        }
+        if pick.is_none() {
+            cnt[4] += 1;
+        }
+        let c = match pick {
+            Some(c) => c,
+            None => match policy {
+                0 | 6 => *coin.iter().next_back().unwrap(),
+                3 => *coin.iter().next().unwrap(),
+                _ => loop {
+                    let (k0, c) = heap.pop().unwrap();
+                    if g.at(c).is_none() {
+                        continue;
+                    }
+                    let k1 = key(&g, c);
+                    if k1 != k0 {
+                        heap.push((k1, c));
+                        continue;
+                    }
+                    break c;
+                },
+            },
+        };
+        cnt[3] += (c == last_q) as u64;
+        g.step(c);
+        last_q = g.fresh[0];
+        coin.remove(&c);
+        let fresh = g.fresh.clone();
+        for &p in &fresh {
+            if g.at(p).is_some() {
+                coin.insert(p);
+                ready.push(p);
+                if matches!(policy, 1 | 2 | 4 | 5) {
+                    heap.push((key(&g, p), p));
+                }
+            } else {
+                coin.remove(&p);
+            }
+            if let Some(v) = waiting.remove(&p) {
+                ready.extend(v);
+            }
+        }
+    }
+    let a = *g.top_end.values().next().unwrap() as usize;
+    assert!(g.top_end.len() == 1 && g.len[a] as usize == n && rots.contains(&g.hash[a]), "policy {policy}: not a rotation of the block");
+    assert!(g.steps == floor + g.not_reducing);
+    (g.steps, g.not_reducing, floor, cnt)
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&args[1]).expect("read");
+    let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
+    let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
+    let only: Option<Vec<u32>> = args.get(4).map(|s| s.split(',').map(|x| x.parse().unwrap()).collect());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut ll, mut counts, mut tt) = (Vec::new(), [0u32; 256], TVector::new());
+    let mut syms = Vec::new();
+    let mut walked = Vec::new();
+    let mut pw: Vec<u64> = vec![1];
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        if ll.len() >= min {
+            if i % every == 0 {
+                let n = ll.len();
+                build(&ll, &counts, &mut tt);
+                walked.clear();
+                walk(&tt, b.orig_ptr, &mut walked);
+                while pw.len() <= n {
+                    pw.push(mulmod(*pw.last().unwrap(), BASE));
+                }
+                let mut pre = vec![0u64; n + 1];
+                for j in 0..n {
+                    pre[j + 1] = addmod(mulmod(pre[j], BASE), walked[j] as u64 + 1);
+                }
+                let mut rots = HashSet::with_capacity(n);
+                for s0 in 0..n {
+                    let tail = addmod(pre[n], M61 - mulmod(pre[s0], pw[n - s0]));
+                    rots.insert(addmod(mulmod(tail, pw[s0]), pre[s0]));
+                }
+                let (mut lam, mut byte) = (Vec::new(), Vec::new());
+                let mut x = 0;
+                while x < n {
+                    let mut y = x + 1;
+                    while y < n && ll[y] == ll[x] {
+                        y += 1;
+                    }
+                    lam.push((y - x) as u32);
+                    byte.push(ll[x]);
+                    x = y;
+                }
+                let r = lam.len();
+                let mut out = format!("{{\"block\":{i},\"n\":{n},\"runs\":{r}");
+                for (name, p) in [("reducing_then_right", 0u32), ("reducing_then_largest_cell", 1), ("reducing_then_smallest_cell", 2), ("reducing_then_left", 3), ("largest_cell", 4), ("equal_then_largest_cell", 5), ("right_end", 6), ("weak_then_right", 10), ("weak_then_largest_cell", 11)] {
+                    if only.as_ref().is_some_and(|v| !v.contains(&p)) {
+                        continue;
+                    }
+                    let (steps, bad, floor, cnt) = run(p, &lam, &byte, &pw, &rots, n);
+                    if !out.contains("floor") {
+                        out += &format!(",\"floor\":{floor}");
+                    }
+                    out += &format!(",\"{name}\":[{steps},{bad},{},{},{},{},{}]", cnt[0], cnt[1], cnt[2], cnt[3], cnt[4]);
+                }
+                println!("{out}}}");
+            }
+            i += 1;
+        }
+        syms = b.syms;
+    }
+}

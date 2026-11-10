@@ -704,6 +704,140 @@ impl<'a> FusedBuild<'a> {
     }
 }
 
+/// The LF table of a block's run records (`runs::fill`'s table, word for word) built by
+/// shares on threads of the caller's choosing, as `FusedBuild` builds the column's:
+/// `new` makes the checks and reserves the table, `share(j)` fills share j's rows (on any
+/// thread, each j once), and `finish` makes the end check and sets the table's length.
+///
+/// The records are cut into pieces (`runs::cuts`), each cut holding the fill's state there;
+/// share j of `shares` takes the pieces from `pieces * j / shares` to `pieces * (j + 1) /
+/// shares`, so the shares' rows are disjoint and tile the block.
+///
+/// It is sound whatever the records and the cuts hold, and the table is right only if they
+/// are the block's. Before the run, `runs::cuts_tile`: the cuts start at the block's start
+/// and end at its end, and nothing falls from one to the next. So the shares' rows tile
+/// [0, n), and each share writes only its own (`runs::fill_share`). After the run, every
+/// share must have filled its rows exactly and each byte's values between its cuts exactly
+/// (so with values below n). That proves every slot written, and the table right: the first
+/// share starts from the buckets' starts, so, share by share, each starts from the state
+/// the records before it leave. Only then is the table's length set, so a refused or failed
+/// build leaves it empty, never stale or uninitialised.
+///
+/// It holds the table for its life, and each share claims its index before it writes, as
+/// `FusedBuild`'s.
+pub(crate) struct RunsBuild<'a> {
+    r: &'a crate::runs::Runs,
+    cuts: &'a [crate::runs::Cut],
+    n: usize,
+    shares: usize,
+    k: crate::Kernels,
+    tt: &'a mut TVector,
+    slots: Slots,
+    claimed: AtomicU64,
+    passed: AtomicU64,
+}
+
+impl<'a> RunsBuild<'a> {
+    /// The checks before the fill, the table cleared and reserved, the block of `n` rows cut
+    /// into `shares` shares (1 to `MAX_SHARES`). A refusal gives the table back, empty.
+    pub(crate) fn new(
+        r: &'a crate::runs::Runs,
+        cuts: &'a [crate::runs::Cut],
+        n: usize,
+        shares: usize,
+        k: crate::Kernels,
+        tt: &'a mut TVector,
+    ) -> Result<RunsBuild<'a>, (BuildError, &'a mut TVector)> {
+        tt.0.clear();
+        if shares == 0 || shares > MAX_SHARES {
+            return Err((BuildError("no shares, or more than MAX_SHARES"), tt));
+        }
+        if !crate::runs::cuts_tile(r, n, cuts) {
+            return Err((BuildError("the cuts don't tile the block"), tt));
+        }
+        tt.0.reserve(n);
+        let slots = Slots(tt.0.as_mut_ptr());
+        Ok(RunsBuild {
+            r,
+            cuts,
+            n,
+            shares,
+            k,
+            tt,
+            slots,
+            claimed: AtomicU64::new(0),
+            passed: AtomicU64::new(0),
+        })
+    }
+
+    /// Share j's fill (j below the shares), on any thread; a j already claimed, or out of
+    /// range, writes nothing
+    pub(crate) fn share(&self, j: usize) {
+        if j >= self.shares {
+            return;
+        }
+        let bit = 1u64 << j;
+        if self.claimed.fetch_or(bit, Ordering::Relaxed) & bit != 0 {
+            return;
+        }
+        let pieces = self.cuts.len() - 1;
+        let (from, to) = (
+            &self.cuts[pieces * j / self.shares],
+            &self.cuts[pieces * (j + 1) / self.shares],
+        );
+        // SAFETY: the table has n slots reserved, held (`self.tt`) and not moved until
+        // `finish`, and `to`'s row is at most n (`cuts_tile`). Share j's rows are its own:
+        // the shares' cuts rise with j and the cuts' rows with the cuts (`cuts_tile`), so
+        // two shares' rows are disjoint, and share j is filled only by the one caller that
+        // claimed it.
+        let ok = unsafe { crate::runs::fill_share(self.r, from, to, self.slots.0, self.k) };
+        // the end check (the share's writes released with it)
+        if ok {
+            self.passed.fetch_or(bit, Ordering::Release);
+        }
+    }
+
+    /// The end check over every share, the table's length set only if all passed, and the
+    /// table given back. The shares' writes must happen before this call, as
+    /// `FusedBuild::finish`'s.
+    pub(crate) fn finish(self) -> (Result<(), BuildError>, &'a mut TVector) {
+        let all = if self.shares == MAX_SHARES {
+            u64::MAX
+        } else {
+            (1u64 << self.shares) - 1
+        };
+        let tt = self.tt;
+        if self.passed.load(Ordering::Acquire) != all {
+            return (
+                Err(BuildError(
+                    "a share's records didn't fill its rows: the cuts are not the block's",
+                )),
+                tt,
+            );
+        }
+        // SAFETY: every slot below n was written (the end check, by every share, whose rows
+        // tile [0, n)), and every share's writes are visible here
+        unsafe { tt.0.set_len(self.n) };
+        (Ok(()), tt)
+    }
+}
+
+/// `build_fused` for a block's run records: its LF table built by the pool's threads
+/// (`RunsBuild`)
+pub(crate) fn build_runs(
+    r: &crate::runs::Runs,
+    cuts: &[crate::runs::Cut],
+    n: usize,
+    k: crate::Kernels,
+    pool: &Pool,
+    tt: &mut TVector,
+) -> Result<(), BuildError> {
+    let b =
+        RunsBuild::new(r, cuts, n, pool.threads().min(MAX_SHARES), k, tt).map_err(|(e, _)| e)?;
+    pool.run(&|j| b.share(j));
+    b.finish().0
+}
+
 /// The shared walk's handoffs, counted in the tests (each asserts it reached them)
 #[cfg(test)]
 pub(crate) mod handoffs {
@@ -896,6 +1030,20 @@ pub(crate) fn walk_room<const L: usize>(
     w.finish();
 }
 
+/// `walk_room` on an LF table, walked backward (`RoomWalk::new_back`): its segments left in
+/// `s` for `SegScratch::assemble_reversed`
+pub(crate) fn walk_room_back<const L: usize>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    pool: &Pool,
+    segments: usize,
+) {
+    let w = RoomWalk::new_back(tt, orig_ptr, s, segments);
+    pool.run(&|_| w.share::<L>());
+    w.finish();
+}
+
 /// `walk_room` cut into its parts, for a caller that runs the walk on threads of its own
 /// choosing (the pipelined team, `invert_pipelined`): `new` picks and flags the starts and
 /// sizes the buffers, `share` is one thread's lanes (on any number of threads, each
@@ -929,8 +1077,38 @@ impl<'a> RoomWalk<'a> {
         s: &'a mut SegScratch,
         segments: usize,
     ) -> RoomWalk<'a> {
-        let n = tt.0.len();
         let r0 = tt.0[orig_ptr as usize] >> 8;
+        Self::from_row(tt, r0, s, segments)
+    }
+
+    /// `new` on an LF table (`runs::fill`'s, `RunsBuild`'s), walked backward: the walk's
+    /// first row is the primary index itself, whose byte is the block's last. The shares
+    /// are `new`'s; the segments, joined as `assemble` joins them, are the block's bytes
+    /// last to first (`SegScratch::assemble_reversed`).
+    pub(crate) fn new_back(
+        tt: &'a mut TVector,
+        orig_ptr: u32,
+        s: &'a mut SegScratch,
+        segments: usize,
+    ) -> RoomWalk<'a> {
+        let n = tt.0.len();
+        // (a start is flagged in bit 31, bit 23 of the link: as `bwt::room_segments`)
+        assert!(
+            n <= 1 << 23,
+            "the room walk takes at most 2^23 rows, not {n}"
+        );
+        assert!((orig_ptr as usize) < n, "the primary index past the block");
+        Self::from_row(tt, orig_ptr, s, segments)
+    }
+
+    /// `new`'s walk from the row `r0` (below the table's length)
+    fn from_row(
+        tt: &'a mut TVector,
+        r0: u32,
+        s: &'a mut SegScratch,
+        segments: usize,
+    ) -> RoomWalk<'a> {
+        let n = tt.0.len();
         random_rows(n, segments.max(1) - 1, &mut s.starts);
         s.starts.push(r0);
         s.starts.sort_unstable();
@@ -1202,16 +1380,145 @@ fn wait_until<const SPIN: u32>(f: impl Fn() -> bool, tally: &mut Tally) {
 // (one a run, on the leader's stack: the build's variant is large for its 256 starts)
 #[allow(clippy::large_enum_variant)]
 enum Stage<'a> {
-    Build(Result<FusedBuild<'a>, &'a mut TVector>, &'a mut SegScratch),
+    Build(Building<'a>, &'a mut SegScratch),
     Walk(RoomWalk<'a>),
     Over,
+}
+
+/// What a team inverts a block from: its last column, with the move-to-front stage's counts
+/// and checkpoints (`FusedBuild`, then the walk); or its run records and their cuts, for a
+/// block of `n` rows (`RunsBuild`, then the walk backward)
+#[derive(Clone, Copy)]
+pub(crate) enum Source<'a> {
+    Column {
+        ll: &'a [u8],
+        counts: &'a [u32; 256],
+        checkpoints: &'a [[u32; 256]],
+        stride: usize,
+    },
+    Runs {
+        runs: &'a crate::runs::Runs,
+        cuts: &'a [crate::runs::Cut],
+        n: usize,
+        k: crate::Kernels,
+    },
+}
+
+impl<'a> Source<'a> {
+    /// Whether the table is the records' LF table, walked backward
+    fn back(&self) -> bool {
+        matches!(self, Source::Runs { .. })
+    }
+
+    /// The table built on this thread alone, when the team's build refused its inputs or
+    /// failed its end check (a bug in their maker, never an input error): `bwt::build`, or
+    /// `runs::fill`. Records that don't tile the block, which `runs::cuts` would have
+    /// refused before any team saw them, panic here (the caller's catch makes it the
+    /// block's `Internal` error).
+    fn build_alone(&self, tt: &mut TVector) {
+        match *self {
+            Source::Column { ll, counts, .. } => crate::bwt::build(ll, counts, tt),
+            Source::Runs { runs, n, k, .. } => {
+                assert!(
+                    crate::runs::fill(runs, n, tt, k),
+                    "the run records don't tile the block"
+                );
+            }
+        }
+    }
+
+    /// The team's build in `shares` shares, or, if it refuses its inputs, the table built
+    /// on this thread (`build_alone`; a debug build stops at the assertion)
+    fn building(&self, shares: usize, tt: &'a mut TVector) -> Building<'a> {
+        let refused = match *self {
+            Source::Column {
+                ll,
+                counts,
+                checkpoints,
+                stride,
+            } => match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
+                Ok(b) => return Building::Fused(b),
+                Err(r) => r,
+            },
+            Source::Runs { runs, cuts, n, k } => {
+                match RunsBuild::new(runs, cuts, n, shares, k, tt) {
+                    Ok(b) => return Building::Runs(b),
+                    Err(r) => r,
+                }
+            }
+        };
+        let (e, tt) = refused;
+        debug_assert!(false, "the cooperative build refused its inputs: {}", e.0);
+        let _ = e;
+        self.build_alone(tt);
+        Building::Built(tt)
+    }
+
+    /// The team's walk of the table built from this source
+    fn walk(
+        &self,
+        tt: &'a mut TVector,
+        orig_ptr: u32,
+        seg: &'a mut SegScratch,
+        segments: usize,
+    ) -> RoomWalk<'a> {
+        if self.back() {
+            RoomWalk::new_back(tt, orig_ptr, seg, segments)
+        } else {
+            RoomWalk::new(tt, orig_ptr, seg, segments)
+        }
+    }
+
+    /// The walk's segments joined into `out`, the block's bytes first to last
+    fn assemble(&self, s: &SegScratch, out: &mut Vec<u8>) {
+        if self.back() {
+            s.assemble_reversed(out)
+        } else {
+            s.assemble(out)
+        }
+    }
+}
+
+/// A team's build under way (`Source::building`): the column's, the records', or the table
+/// already built on one thread
+// (one a run, on the leader's stack: the fused build's variant is large for its 256 starts)
+#[allow(clippy::large_enum_variant)]
+enum Building<'a> {
+    Fused(FusedBuild<'a>),
+    Runs(RunsBuild<'a>),
+    Built(&'a mut TVector),
+}
+
+impl<'a> Building<'a> {
+    /// Share j of the build (nothing for a table already built)
+    fn share(&self, j: usize) {
+        match self {
+            Building::Fused(b) => b.share(j),
+            Building::Runs(b) => b.share(j),
+            Building::Built(_) => {}
+        }
+    }
+
+    /// The build's end check; a build that fails it is built again on this thread
+    /// (`Source::build_alone`; a debug build stops at the assertion)
+    fn finish(self, src: &Source<'a>) -> &'a mut TVector {
+        let (r, tt) = match self {
+            Building::Fused(b) => b.finish(),
+            Building::Runs(b) => b.finish(),
+            Building::Built(tt) => return tt,
+        };
+        if let Err(e) = r {
+            debug_assert!(false, "the cooperative build failed its check: {}", e.0);
+            src.build_alone(tt);
+        }
+        tt
+    }
 }
 
 /// A pipelined run's shared state (`invert_pipelined`)
 struct Relay<'a> {
     stage: std::cell::UnsafeCell<Stage<'a>>,
-    ll: &'a [u8],
-    counts: &'a [u32; 256],
+    src: Source<'a>,
     orig_ptr: u32,
     segments: usize,
     out: std::cell::UnsafeCell<&'a mut Vec<u8>>,
@@ -1367,22 +1674,8 @@ impl Relay<'_> {
         }
         tmark!(WalkSetupStart, self.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            let tt = match build {
-                Ok(b) => match b.finish() {
-                    (Ok(()), tt) => tt,
-                    (Err(e), tt) => {
-                        debug_assert!(
-                            false,
-                            "the cooperative build refused its checkpoints: {}",
-                            e.0
-                        );
-                        crate::bwt::build(self.ll, self.counts, tt);
-                        tt
-                    }
-                },
-                Err(tt) => tt,
-            };
-            RoomWalk::new(tt, self.orig_ptr, seg, self.segments)
+            let tt = build.finish(&self.src);
+            self.src.walk(tt, self.orig_ptr, seg, self.segments)
         }));
         tmark!(WalkSetupEnd, self.place);
         match r {
@@ -1427,7 +1720,7 @@ impl Relay<'_> {
                     self.stats.summary(self.place, s);
                     if !self.failed.load(Ordering::Relaxed) {
                         // SAFETY: only the thread ending the walk touches `out`
-                        s.assemble(unsafe { &mut *self.out.get() });
+                        self.src.assemble(s, unsafe { &mut *self.out.get() });
                     }
                 }));
                 tmark!(AssembleEnd, self.place);
@@ -1478,7 +1771,7 @@ impl Relay<'_> {
 /// ends it). The first is returned as an Err; then `out` holds nothing to trust, and the
 /// table and scratch are to be reset. A panic in `lead` is resumed (`Pool::run`) once the
 /// helpers have ended.
-// (the tests' name for the registered waits; the decoder calls `invert_pipelined_with`)
+// (the tests' name for the registered waits; the decoder calls `invert_pipelined_from`)
 #[cfg(test)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn invert_pipelined<const L: usize>(
@@ -1513,6 +1806,8 @@ pub(crate) fn invert_pipelined<const L: usize>(
 /// loop (`PARK` false: at `BARRIER_SPINS`, `invert_pipelined` itself; at `SHORT_SPINS`, the
 /// spin-budget control) or a park (`PARK` true, lever A: research, `parallel::Levers`). The
 /// same output, errors and panics whatever the wait.
+// (the tests' entry for a column; the decoder calls `invert_pipelined_from`)
+#[cfg(test)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN: u32>(
     pool: &Pool,
@@ -1527,28 +1822,41 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
     lead: &(dyn Fn() + Sync),
     place: u64,
 ) -> Result<(), Box<dyn Any + Send>> {
+    let src = Source::Column {
+        ll,
+        counts,
+        checkpoints,
+        stride,
+    };
+    invert_pipelined_from::<L, PARK, SPIN>(pool, src, orig_ptr, tt, seg, out, lead, place)
+}
+
+/// `invert_pipelined_with` for a block's column or its run records (`Source`): the
+/// records' LF table is filled by the helpers' shares (`RunsBuild`) and walked backward,
+/// its segments joined in reverse, where the column's is built (`FusedBuild`) and walked.
+/// The run, its waits, its panics and its output are the same either way.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn invert_pipelined_from<const L: usize, const PARK: bool, const SPIN: u32>(
+    pool: &Pool,
+    src: Source,
+    orig_ptr: u32,
+    tt: &mut TVector,
+    seg: &mut SegScratch,
+    out: &mut Vec<u8>,
+    lead: &(dyn Fn() + Sync),
+    place: u64,
+) -> Result<(), Box<dyn Any + Send>> {
     // (a pool of one thread runs the helpers' part itself, after `lead`)
     let helpers = pool.threads().saturating_sub(1).max(1);
     let shares = helpers.min(MAX_SHARES);
     tmark!(BuildSetupStart, place);
-    let build = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
-        Ok(b) => Ok(b),
-        Err((e, tt)) => {
-            debug_assert!(
-                false,
-                "the cooperative build refused its checkpoints: {}",
-                e.0
-            );
-            // (built on this thread, before the run: a bug's path, as `bwt::Cooperative`)
-            crate::bwt::build(ll, counts, tt);
-            Err(tt)
-        }
-    };
+    // (a build that refuses its inputs is built on this thread, before the run: a bug's
+    // path, as `bwt::Cooperative`)
+    let build = src.building(shares, tt);
     tmark!(BuildSetupEnd, place);
     let relay = Relay {
         stage: std::cell::UnsafeCell::new(Stage::Build(build, seg)),
-        ll,
-        counts,
+        src,
         orig_ptr,
         segments: crate::bwt::FLAGGED_SEGMENTS * helpers,
         out: std::cell::UnsafeCell::new(out),
@@ -1572,7 +1880,9 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
     let helper = |h: usize| {
         tmark!(HelperStart, place);
         // SAFETY: the stage is shared read-only until the last helper counts in below
-        if let Stage::Build(Ok(b), _) = unsafe { &*relay.stage.get() } {
+        if let Stage::Build(b @ (Building::Fused(_) | Building::Runs(_)), _) =
+            unsafe { &*relay.stage.get() }
+        {
             tmark!(BuildStart, place);
             let r = catch_unwind(AssertUnwindSafe(|| b.share(h)));
             #[cfg(feature = "walk-stats")]
@@ -1634,6 +1944,8 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
 /// resumed here once the pool's threads have ended (`Pool::run`); then the table and `seg`
 /// are not to be trusted, and the caller resets them. `panic_on` is the tests' fault hook:
 /// the pool thread of that index panics in its walk share.
+// (the tests' entry for a column; the decoder calls `invert_team_from`)
+#[cfg(test)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn invert_team<const L: usize>(
     pool: &Pool,
@@ -1647,37 +1959,41 @@ pub(crate) fn invert_team<const L: usize>(
     place: u64,
     panic_on: Option<usize>,
 ) {
+    let src = Source::Column {
+        ll,
+        counts,
+        checkpoints,
+        stride,
+    };
+    invert_team_from::<L>(pool, src, orig_ptr, tt, seg, place, panic_on)
+}
+
+/// `invert_team` for a block's column or its run records (`Source`): the records' LF table
+/// is filled by the pool's shares (`RunsBuild`) and walked backward, its segments left in
+/// `seg` for `SegScratch::assemble_reversed`, where the column's are left for `assemble`.
+pub(crate) fn invert_team_from<const L: usize>(
+    pool: &Pool,
+    src: Source,
+    orig_ptr: u32,
+    tt: &mut TVector,
+    seg: &mut SegScratch,
+    place: u64,
+    panic_on: Option<usize>,
+) {
     let _ = place;
     let shares = pool.threads().min(MAX_SHARES);
-    let tt = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
-        Ok(b) => {
-            pool.run(&|j| {
-                tmark!(BuildStart, place);
-                b.share(j);
-                tmark!(BuildEnd, place);
-            });
-            match b.finish() {
-                (Ok(()), tt) => tt,
-                (Err(e), tt) => {
-                    debug_assert!(false, "the cooperative build failed its check: {}", e.0);
-                    crate::bwt::build(ll, counts, tt);
-                    tt
-                }
-            }
-        }
-        Err((e, tt)) => {
-            debug_assert!(
-                false,
-                "the cooperative build refused its checkpoints: {}",
-                e.0
-            );
-            crate::bwt::build(ll, counts, tt);
-            tt
-        }
-    };
+    let b = src.building(shares, tt);
+    if !matches!(b, Building::Built(_)) {
+        pool.run(&|j| {
+            tmark!(BuildStart, place);
+            b.share(j);
+            tmark!(BuildEnd, place);
+        });
+    }
+    let tt = b.finish(&src);
     tmark!(WalkSetupStart, place);
     let segments = crate::bwt::FLAGGED_SEGMENTS * pool.threads();
-    let w = RoomWalk::new(tt, orig_ptr, seg, segments);
+    let w = src.walk(tt, orig_ptr, seg, segments);
     tmark!(WalkSetupEnd, place);
     pool.run(&|j| {
         tmark!(WalkStart, place);
@@ -2191,6 +2507,281 @@ mod tests {
         }
     }
 
+    /// A column's records and their cuts, and its LF table by `runs::fill`
+    fn records_of(ll: &[u8]) -> (crate::runs::Runs, Vec<crate::runs::Cut>, TVector) {
+        let r = crate::runs::Runs::of_column(ll);
+        let mut cuts = Vec::new();
+        assert!(crate::runs::cuts(&r, ll.len(), &mut cuts));
+        let mut lf = TVector::new();
+        assert!(crate::runs::fill(
+            &r,
+            ll.len(),
+            &mut lf,
+            crate::Kernels::scalar()
+        ));
+        (r, cuts, lf)
+    }
+
+    /// The kernels to fill with: the scalar ones, and this CPU's where it has more
+    fn fill_kernels() -> Vec<crate::Kernels> {
+        let mut v = vec![crate::Kernels::scalar()];
+        if crate::Kernels::detect() != crate::Kernels::scalar() {
+            v.push(crate::Kernels::detect());
+        }
+        v
+    }
+
+    /// The team's fill of a column's records (`build_runs`) is `runs::fill`'s table, and
+    /// its walk backward (`walk_room_back`, joined by `assemble_reversed`) `bwt::walk`'s
+    /// output on the column's T-vector, the table left as it was (the flags taken off)
+    fn runs_match(p: &Pool, ll: &[u8], orig_ptrs: &[u32], segments: usize, what: &str) {
+        let (r, cuts, lf) = records_of(ll);
+        let mut fwd = TVector::new();
+        crate::bwt::build(ll, &counts_of(ll), &mut fwd);
+        let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+        for k in fill_kernels() {
+            tt.0 = vec![5; 3];
+            build_runs(&r, &cuts, ll.len(), k, p, &mut tt).unwrap();
+            assert!(
+                tt.0 == lf.0,
+                "{what}: k {}, {k:?}: the team's fill differs from runs::fill's",
+                p.threads()
+            );
+            for &op in orig_ptrs {
+                let mut want = Vec::new();
+                crate::bwt::walk(&fwd, op, &mut want);
+                walk_room_back::<8>(&mut tt, op, &mut seg, p, segments);
+                assert!(tt.0 == lf.0, "{what}: the flags were not all taken off");
+                let mut out = vec![1, 2, 3];
+                seg.assemble_reversed(&mut out);
+                assert!(
+                    out == want,
+                    "{what}: k {}, segments {segments}, from {op}: not walk's output",
+                    p.threads()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn build_runs_and_walk_back_are_fill_and_walk() {
+        for k in 1..=4 {
+            let p = Pool::new(k).unwrap();
+            for (name, ll) in columns(30_000) {
+                if ll.is_empty() {
+                    continue;
+                }
+                let n = ll.len() as u32;
+                for segments in [1, 7, 64, 512 * k] {
+                    runs_match(&p, &ll, &[0, n / 3, n - 1], segments, &name);
+                }
+            }
+        }
+        // (the empty block's table: filled, empty)
+        let p = Pool::new(2).unwrap();
+        let (r, cuts, _) = records_of(&[]);
+        let mut tt = TVector(vec![1]);
+        build_runs(&r, &cuts, 0, crate::Kernels::scalar(), &p, &mut tt).unwrap();
+        assert!(tt.0.is_empty());
+    }
+
+    /// The same under Miri at k = 2 and 3, small blocks: the shares' writes through the
+    /// shared table (its race detector) and the walk's shares on the LF table
+    #[test]
+    fn miri_build_runs_and_walk_back() {
+        let mut r = xorshift(29);
+        let cases: Vec<Vec<u8>> = vec![
+            (0..1100).map(|_| (r() % 4) as u8).collect(),
+            b"ab".repeat(300),
+            (0..900).map(|i| ((i / 37) % 3) as u8).collect(),
+        ];
+        for k in [2, 3] {
+            let p = Pool::new(k).unwrap();
+            for (c, ll) in cases.iter().enumerate() {
+                let n = ll.len() as u32;
+                runs_match(&p, ll, &[n / 2], 24, &format!("case {c}"));
+            }
+        }
+    }
+
+    /// Cuts that are not the block's are refused before any share runs (`cuts_tile`), or
+    /// caught by a share's end check: an error either way, the table left empty. A share
+    /// run twice, or out of range, writes nothing the second time.
+    #[test]
+    fn miri_build_runs_refuses_wrong_cuts() {
+        let mut x = xorshift(31);
+        let ll: Vec<u8> = (0..1200)
+            .flat_map(|_| {
+                let c = (x() % 4) as u8;
+                std::iter::repeat(c).take(1 + (x() % 6) as usize)
+            })
+            .collect();
+        let n = ll.len();
+        let (r, cuts, lf) = records_of(&ll);
+        let p = Pool::new(3).unwrap();
+        let k = crate::Kernels::scalar();
+        let mut tt = TVector(vec![8; 4]);
+        // another block's length; no cuts; no shares, and too many
+        for (n, cuts, shares) in [
+            (n + 1, &cuts[..], 3),
+            (n, &cuts[..1], 3),
+            (n, &cuts[..], 0),
+            (n, &cuts[..], MAX_SHARES + 1),
+        ] {
+            assert!(RunsBuild::new(&r, cuts, n, shares, k, &mut tt).is_err());
+            assert!(tt.0.is_empty());
+        }
+        // records that are not the cuts': two of different bytes, in different pieces, have
+        // changed places. The cuts still tile (the counts are the same), so the build
+        // starts; the two pieces' shares then fail their end checks, and no table comes out
+        let mut bad = crate::runs::Runs::of_column(&ll);
+        let recs = bad.records_mut();
+        let (i, lo) = (cuts[2].rec_for_tests(), cuts[7].rec_for_tests());
+        let j = (lo..recs.len())
+            .find(|&j| recs[j] >> 8 != recs[i] >> 8)
+            .unwrap();
+        assert!(
+            j < cuts[8].rec_for_tests(),
+            "the pieces are too short for the test"
+        );
+        recs.swap(i, j);
+        for shares in [1, 3, 12] {
+            let b = RunsBuild::new(&bad, &cuts, n, shares, k, &mut tt)
+                .ok()
+                .unwrap();
+            (0..shares).for_each(|j| b.share(j));
+            let (res, tt) = b.finish();
+            // (one share holds both pieces, and its rows and values are then whole: the
+            // swapped records' own table, which is theirs, not a wrong one)
+            assert_eq!(res.is_err(), shares > 1, "{shares} shares");
+            assert!(res.is_ok() || tt.0.is_empty());
+        }
+        assert!(build_runs(&bad, &cuts, n, k, &p, &mut tt).is_err() && tt.0.is_empty());
+        // a share run twice, and one out of range
+        tt.0.clear();
+        let b = RunsBuild::new(&r, &cuts, n, 2, k, &mut tt).ok().unwrap();
+        b.share(0);
+        b.share(0);
+        b.share(2);
+        let (res, tt) = b.finish();
+        assert!(res.is_err() && tt.0.is_empty(), "a share never ran");
+        let b = RunsBuild::new(&r, &cuts, n, 2, k, tt).ok().unwrap();
+        b.share(1);
+        b.share(0);
+        // (a slot marked after its share ran: a second run of the share would fill it again)
+        let mark = u32::MAX;
+        // SAFETY: slot 0 is share 0's, which has ended, and no thread is in the build
+        unsafe { *b.slots.0 = mark };
+        b.share(1);
+        b.share(0);
+        let (res, tt) = b.finish();
+        assert!(res.is_ok() && tt.0[0] == mark && tt.0[1..] == lf.0[1..]);
+        // every share the masks hold, most of them of no pieces
+        let b = RunsBuild::new(&r, &cuts, n, MAX_SHARES, k, tt)
+            .ok()
+            .unwrap();
+        (0..MAX_SHARES).rev().for_each(|j| b.share(j));
+        let (res, tt) = b.finish();
+        assert!(res.is_ok() && tt.0 == lf.0);
+    }
+
+    /// A block's records through the teams' entries: the pipelined run
+    /// (`invert_pipelined_from`, each wait) and the service team's (`invert_team_from`),
+    /// against `bwt::walk` on the column's T-vector
+    #[test]
+    fn runs_through_the_pipelined_and_team_runs() {
+        let mut x = xorshift(37);
+        let n = crate::bwt::MIN_COOP + 4321;
+        let ll: Vec<u8> = (0..n)
+            .flat_map(|_| {
+                let c = (x() % 7) as u8;
+                std::iter::repeat(c).take(1 + (x() % 40) as usize)
+            })
+            .take(n)
+            .collect();
+        let (r, cuts, lf) = records_of(&ll);
+        let mut fwd = TVector::new();
+        crate::bwt::build(&ll, &counts_of(&ll), &mut fwd);
+        for kern in fill_kernels() {
+            let src = Source::Runs {
+                runs: &r,
+                cuts: &cuts,
+                n,
+                k: kern,
+            };
+            for k in [1, 2, 3, 4] {
+                let p = Pool::new(k).unwrap();
+                let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+                for op in [0, n as u32 / 2, n as u32 - 1] {
+                    let mut want = Vec::new();
+                    crate::bwt::walk(&fwd, op, &mut want);
+                    let led = AtomicUsize::new(0);
+                    let lead = || {
+                        led.fetch_add(1, Ordering::Relaxed);
+                    };
+                    let mut out = vec![9; 5];
+                    invert_pipelined_from::<8, false, BARRIER_SPINS>(
+                        &p, src, op, &mut tt, &mut seg, &mut out, &lead, 0,
+                    )
+                    .unwrap();
+                    assert!(out == want, "pipelined, k {k}, from {op}");
+                    assert_eq!(led.load(Ordering::Relaxed), 1);
+                    let mut out = vec![9; 5];
+                    invert_pipelined_from::<8, true, SHORT_SPINS>(
+                        &p, src, op, &mut tt, &mut seg, &mut out, &lead, 0,
+                    )
+                    .unwrap();
+                    assert!(out == want, "pipelined and parked, k {k}, from {op}");
+                    invert_team_from::<8>(&p, src, op, &mut tt, &mut seg, 0, None);
+                    let mut out = vec![9; 5];
+                    seg.assemble_reversed(&mut out);
+                    assert!(out == want, "team, k {k}, from {op}");
+                    assert!(tt.0 == lf.0, "k {k}: the table");
+                }
+            }
+        }
+    }
+
+    /// `bwt::Cooperative` on a block's records past `MIN_COOP` really runs the team (its
+    /// pool spawned), and gives `walk`'s output; below it, the one-core kernel
+    #[test]
+    fn cooperative_kernel_engages_on_records() {
+        use crate::bwt::InverseBwt;
+        let mut x = xorshift(41);
+        let big: Vec<u8> = (0..crate::bwt::MIN_COOP + 12_345)
+            .map(|i| {
+                if x() % 5 == 0 {
+                    (x() % 9) as u8
+                } else {
+                    (i / 50 % 3) as u8
+                }
+            })
+            .collect();
+        let small = &big[..crate::bwt::MIN_COOP - 1];
+        for ll in [&big[..], small] {
+            let mut tt = TVector::new();
+            crate::bwt::build(ll, &counts_of(ll), &mut tt);
+            let mut want = Vec::new();
+            crate::bwt::walk(&tt, 17, &mut want);
+            let r = crate::runs::Runs::of_column(ll);
+            for kern in fill_kernels() {
+                let mut c = crate::bwt::Cooperative::<3>::default();
+                assert!(c.reads_runs());
+                let mut out = vec![4; 9];
+                assert!(c.invert_runs(&r, ll.len(), 17, &mut out, kern));
+                assert!(out == want);
+                assert_eq!(c.engaged(), ll.len() >= crate::bwt::MIN_COOP);
+            }
+        }
+        // records that don't tile the block: refused, for the caller's column path
+        let mut bad = crate::runs::Runs::of_column(&big);
+        bad.records_mut().pop();
+        let mut c = crate::bwt::Cooperative::<3>::default();
+        let mut out = Vec::new();
+        assert!(!c.invert_runs(&bad, big.len(), 17, &mut out, crate::Kernels::scalar()));
+        assert!(!c.invert_runs(&bad, small.len(), 17, &mut out, crate::Kernels::scalar()));
+    }
+
     /// The build and the walk cut into their parts (`FusedBuild`, `RoomWalk`), their shares
     /// run on `s` threads of the test's own, against `bwt::build` and `bwt::walk`; then the
     /// pipelined run (`invert_pipelined`) on a pool of s helpers and a leader, the leader's
@@ -2459,9 +3050,13 @@ mod tests {
             let mut seg = SegScratch::default();
             let mut out = Vec::new();
             let relay = Relay {
-                stage: std::cell::UnsafeCell::new(Stage::Build(Err(&mut tt), &mut seg)),
-                ll: &[],
-                counts: &[0; 256],
+                stage: std::cell::UnsafeCell::new(Stage::Build(Building::Built(&mut tt), &mut seg)),
+                src: Source::Column {
+                    ll: &[],
+                    counts: &[0; 256],
+                    checkpoints: &[],
+                    stride: 1,
+                },
                 orig_ptr: 0,
                 segments: 1,
                 out: std::cell::UnsafeCell::new(&mut out),

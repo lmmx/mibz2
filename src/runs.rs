@@ -120,6 +120,46 @@ impl Runs {
     }
 }
 
+#[cfg(test)]
+impl Runs {
+    /// A column's records, as `front` leaves them: its runs cut at CAP, each byte's rows
+    /// and records counted (the tests', where no symbols are at hand)
+    pub(crate) fn of_column(ll: &[u8]) -> Runs {
+        let mut r = Runs::default();
+        let mut i = 0;
+        while i < ll.len() {
+            let c = ll[i];
+            let mut j = i;
+            while j < ll.len() && ll[j] == c {
+                j += 1;
+            }
+            r.counts[c as usize] += (j - i) as u32;
+            let mut left = j - i;
+            while left > 0 {
+                let len = left.min(CAP as usize);
+                r.runs.push((c as u16) << 8 | len as u16);
+                r.per[c as usize] += 1;
+                left -= len;
+            }
+            i = j;
+        }
+        r
+    }
+
+    /// The records, to break them
+    pub(crate) fn records_mut(&mut self) -> &mut Vec<u16> {
+        &mut self.runs
+    }
+}
+
+#[cfg(test)]
+impl Cut {
+    /// The records before the cut
+    pub(crate) fn rec_for_tests(&self) -> usize {
+        self.rec
+    }
+}
+
 /// Whether this CPU has what the AVX2 front needs beyond `Kernels::avx2` (AVX2 and BMI1)
 #[cfg(target_arch = "x86_64")]
 fn front_fast(k: Kernels) -> bool {
@@ -722,6 +762,257 @@ unsafe fn fill_avx2(
     // stores (the slack a record wrote past its end written again by the records after it)
     tt.set_len(n as usize);
     true
+}
+
+// ---- The fill on a team's threads (`coop::RunsBuild`) ----
+//
+// The records are cut into pieces at `cuts`, each cut holding where the fill stands there (the
+// row, and every byte's next LF value), so that a thread can fill any run of whole pieces with
+// no other thread's state: `fill_share`. The cuts are made by one pass over the records, which
+// is also the tiling's whole check, so a block whose cuts are made fills without a refusal.
+
+/// The pieces a block's records are cut into (`cuts`): a team of 1, 2, 3, 4, 6 or 12 threads
+/// takes whole pieces, equal shares of them
+pub(crate) const PIECES: usize = 12;
+
+/// The fill's state at a cut in a block's records
+#[derive(Clone)]
+pub(crate) struct Cut {
+    /// the records before the cut, and their rows
+    rec: usize,
+    row: u32,
+    /// each byte's next LF value: its bucket's start plus its rows before the cut
+    next: [u32; 256],
+}
+
+/// The block's records (as `front` left them in `r`, for a block of `n` rows) cut into
+/// `PIECES` pieces of about equal work in the fill, into `out`: `PIECES + 1` cuts, the first
+/// at the block's start and the last at its end. Returns false, `out` left empty, unless the
+/// records tile the block (`fill`'s checks: the counts sum to n, every record is at least a
+/// row, and the records' rows are n in all and each byte's are its count).
+///
+/// A piece's work is taken as a store for each 8 rows and one more for each record.
+pub(crate) fn cuts(r: &Runs, n: usize, out: &mut Vec<Cut>) -> bool {
+    out.clear();
+    let runs = &r.runs;
+    // (below 2^24 records of at most 255 rows: the sums below fit 32 bits)
+    if n >= 1 << 24 || runs.len() >= 1 << 24 {
+        return false;
+    }
+    let (mut next, mut lim) = ([0u32; 256], [0u32; 256]);
+    let mut cum = 0u64;
+    for c in 0..256 {
+        next[c] = cum as u32;
+        cum += r.counts[c] as u64;
+        lim[c] = cum as u32;
+    }
+    if cum != n as u64 {
+        return false;
+    }
+    let total = n as u64 + 8 * runs.len() as u64;
+    // the work at which the next cut falls: cut j at j / PIECES of it
+    let at = |j: usize| (total * j as u64).div_ceil(PIECES as u64);
+    out.push(Cut {
+        rec: 0,
+        row: 0,
+        next,
+    });
+    let (mut q, mut work) = (0u32, 0u64);
+    let mut due = at(1);
+    let mut empty = false;
+    for (i, &x) in runs.iter().enumerate() {
+        if work >= due {
+            while out.len() < PIECES && work >= at(out.len()) {
+                out.push(Cut {
+                    rec: i,
+                    row: q,
+                    next,
+                });
+            }
+            due = if out.len() < PIECES {
+                at(out.len())
+            } else {
+                u64::MAX
+            };
+        }
+        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
+        empty |= len == 0;
+        next[c] += len;
+        q += len;
+        work += len as u64 + 8;
+    }
+    // (each byte's rows are its count, so the rows in all are the counts' sum, n)
+    if empty || next != lim {
+        out.clear();
+        return false;
+    }
+    // (a block of fewer records than pieces: the pieces left are empty, at the end)
+    let end = Cut {
+        rec: runs.len(),
+        row: q,
+        next,
+    };
+    out.resize(PIECES + 1, end);
+    true
+}
+
+/// Whether `cuts` can be filled by shares for a block of `n` rows with `r`'s records: what
+/// `fill_share`'s callers need of them for the shares to write disjoint rows that tile the
+/// block, whatever made them. The first cut is the block's start (no record, row 0, each
+/// byte's bucket's start by `r`'s counts, which sum to n), the last its end (every record,
+/// row n), and from each cut to the next nothing falls: not the records, the row, or any
+/// byte's value, which stays at or below n.
+pub(crate) fn cuts_tile(r: &Runs, n: usize, cuts: &[Cut]) -> bool {
+    let (Some(first), Some(last)) = (cuts.first(), cuts.last()) else {
+        return false;
+    };
+    if n >= 1 << 24 {
+        return false;
+    }
+    let mut cum = 0u64;
+    for c in 0..256 {
+        if first.next[c] as u64 != cum {
+            return false;
+        }
+        cum += r.counts[c] as u64;
+    }
+    if cum != n as u64 || first.rec != 0 || first.row != 0 {
+        return false;
+    }
+    if last.rec != r.runs.len() || last.row as usize != n {
+        return false;
+    }
+    if last.next.iter().any(|&v| v as usize > n) {
+        return false;
+    }
+    cuts.windows(2).all(|w| {
+        let (a, b) = (&w[0], &w[1]);
+        a.rec <= b.rec && a.row <= b.row && a.next.iter().zip(&b.next).all(|(x, y)| x <= y)
+    })
+}
+
+/// The rows from cut `from` to cut `to` of the block's LF table, written through `out` (the
+/// table's first slot): `fill`'s entries for the records between the cuts, `from`'s state
+/// carried through them. Returns whether they filled the rows between the cuts exactly, and
+/// each byte's values between the cuts exactly (the share's end check).
+///
+/// It writes only slots `from.row .. to.row`, whatever the records and the cuts hold: a
+/// record is refused if it is empty or would pass `to.row` or its byte's value at `to`, and
+/// no store runs past `to.row` (a record whose 8-slot stores would is written a slot at a
+/// time). A share that passes has `fill`'s entry in each of its rows, each byte's values
+/// below `to`'s for it; one that fails may leave anything in its rows, the values of an
+/// 8-slot store's slots past its record's end among them, and the caller must not read
+/// them.
+///
+/// # Safety
+///
+/// `out` must be valid for writes of `to.row` slots, and no other thread may read or write
+/// slots `from.row .. to.row` during the call.
+pub(crate) unsafe fn fill_share(r: &Runs, from: &Cut, to: &Cut, out: *mut u32, k: Kernels) -> bool {
+    let Some(runs) = r.runs.get(from.rec..to.rec) else {
+        return false;
+    };
+    if from.row > to.row || from.next.iter().zip(&to.next).any(|(a, b)| a > b) {
+        return false;
+    }
+    #[cfg(target_arch = "x86_64")]
+    {
+        if k.avx2 {
+            // SAFETY: `k.avx2` is set only when AVX2 was detected; the rest as this
+            // function's contract, with the cuts' order checked above
+            return unsafe { fill_share_avx2(runs, from.row, to.row, from.next, &to.next, out) };
+        }
+    }
+    let _ = k;
+    // SAFETY: as this function's contract, with the cuts' order checked above
+    unsafe { fill_share_scalar(runs, from.row, to.row, from.next, &to.next, out) }
+}
+
+/// `fill_share` in scalar code: each entry stored alone
+///
+/// # Safety
+///
+/// As `fill_share`, for rows `row .. row_end`; `row <= row_end`, and `next[c] <= lim[c]`
+/// for every byte.
+unsafe fn fill_share_scalar(
+    runs: &[u16],
+    row: u32,
+    row_end: u32,
+    mut next: [u32; 256],
+    lim: &[u32; 256],
+    out: *mut u32,
+) -> bool {
+    let mut q = row;
+    for &x in runs {
+        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
+        // (q <= row_end and next[c] <= lim[c]: neither subtraction wraps)
+        if len == 0 || len > row_end - q || len > lim[c] - next[c] {
+            return false;
+        }
+        let e = c as u32 | next[c] << 8;
+        for j in 0..len {
+            // SAFETY: q + j < q + len <= row_end, a slot of this share's rows
+            unsafe { *out.add((q + j) as usize) = e + (j << 8) };
+        }
+        next[c] += len;
+        q += len;
+    }
+    q == row_end && next == *lim
+}
+
+/// `fill_share` with `fill_avx2`'s stores, 8 entries each, for every record whose stores end
+/// inside the share's rows: a record's last store runs up to 7 slots past its end, so a
+/// record ending within 7 rows of the share's end (at most 7 records) is stored a slot at a
+/// time. The slots a store wrote past its record's end are the share's own next records',
+/// which write them again.
+///
+/// # Safety
+///
+/// AVX2 must be available. Otherwise as `fill_share_scalar`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn fill_share_avx2(
+    runs: &[u16],
+    row: u32,
+    row_end: u32,
+    mut next: [u32; 256],
+    lim: &[u32; 256],
+    out: *mut u32,
+) -> bool {
+    use std::arch::x86_64::*;
+    let lanes = _mm256_setr_epi32(0, 256, 512, 768, 1024, 1280, 1536, 1792);
+    let step = _mm256_set1_epi32(2048);
+    let mut q = row;
+    for &x in runs {
+        let (c, len) = ((x >> 8) as usize, (x & 0xff) as u32);
+        // (q <= row_end and next[c] <= lim[c]: neither subtraction wraps)
+        if len == 0 || len > row_end - q || len > lim[c] - next[c] {
+            return false;
+        }
+        let e = c as u32 | next[c] << 8;
+        let end = q + len;
+        if row_end - end >= 7 {
+            let mut v = _mm256_add_epi32(_mm256_set1_epi32(e as i32), lanes);
+            let mut w = q;
+            loop {
+                // SAFETY: w < end, so w + 8 <= end + 7 <= row_end: inside this share's rows
+                unsafe { _mm256_storeu_si256(out.add(w as usize) as *mut __m256i, v) };
+                w += 8;
+                if w >= end {
+                    break;
+                }
+                v = _mm256_add_epi32(v, step);
+            }
+        } else {
+            for j in 0..len {
+                // SAFETY: q + j < end <= row_end, a slot of this share's rows
+                unsafe { *out.add((q + j) as usize) = e + (j << 8) };
+            }
+        }
+        next[c] += len;
+        q = end;
+    }
+    q == row_end && next == *lim
 }
 
 #[cfg(test)]

@@ -340,7 +340,8 @@ pub fn mtf_checkpoints_scalar(
 /// so that it lies in one page wherever the frame falls (its 320 bytes fill one 512-byte
 /// slot, and a page is a whole number of slots).
 ///
-/// Aligned to 64 alone, the list straddled a page boundary at about one stack depth in 13.
+/// Aligned to 64 alone, the list straddled a page boundary at 4 of the 64 places a frame
+/// can put it in a page (the four starts whose 320 bytes run past the page's end).
 /// The kernel's shifts are unaligned loads and stores along the list (`ptr::copy`), and
 /// across a page boundary they cost up to twice the block's move-to-front on a block of a
 /// symbol a row (docs/journal/2026-11-10-team-runs-port.md, section 6). On a worker thread
