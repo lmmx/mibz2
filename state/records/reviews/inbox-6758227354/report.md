@@ -336,3 +336,11 @@ implementation. Do not close the advantage if one staging layout or scalar targe
 No decoder implementation, compilation, candidate execution, new timing or safety certification
 was performed. Only source reads and replay of previously committed counts. The replay helper
 and source identities accompany this report.
+
+## Channel update before publication
+
+Coordinator LOG 6758381275 reports #324 closed after its registered no-harm failed; no fourth
+run, and a possible boxed-Runs successor awaits the Guardian's ruling. This review preserves
+that closure and claims no production adoption for the emitter. “Emitter work” above means
+the surviving research line, within that restriction. Queued tunnel pricing 6758313507 is
+a separate future inbox item, not work undertaken in this report.
