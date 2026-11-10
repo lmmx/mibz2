@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "REVISE before workstation slot: copy-census displacement certificate refuted by valid BWT aab; oracle policy mismatch, cache-level traffic mismatch, unsupported causal branches, reporter admission and B5/readiness gaps. Descriptive scaling retains conditional value.",
+  "state": "REVISE: corrected census source objections closed; bandwidth labels not identified by controls, baseline can shift bottleneck; scoped-thread shutdown can hang; admission and B5 evidence remain. NOT BOUND cannot close cold-write candidates.",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -132,9 +132,10 @@
     6747050053,
     6747581238,
     6750333637,
-    6754859264
+    6754859264,
+    6755685313
   ],
-  "last_processed_comment_id": 6754859264,
+  "last_processed_comment_id": 6755685313,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1385,11 +1386,15 @@
     },
     {
       "trigger_comment_id": 6755685313,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "a68d6099fd44588584ba5e22c1aebbd17fffe6c9"
+      "source_commit": "a68d6099fd44588584ba5e22c1aebbd17fffe6c9",
+      "report_path": "state/reports/bw-titration-6755685313/report.md",
+      "report_commit": "eb2bec61f6921db897e6371e56d55c9cd48764b0",
+      "review_comment_pr": 145,
+      "disposition": "REVISE: corrected census source objections closed; bandwidth labels not identified by controls, baseline can shift bottleneck; scoped-thread shutdown can hang; admission and B5 evidence remain. NOT BOUND cannot close cold-write candidates."
     }
   ],
   "active_delegations": [],
@@ -1409,10 +1414,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6754859264
+      6755685313
     ],
     "handled": [
-      6754859264
+      6755685313
     ],
     "skipped": [],
     "automation_modified": false
