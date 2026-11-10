@@ -1370,7 +1370,7 @@
     },
     {
       "trigger_comment_id": 6754859264,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
@@ -1378,7 +1378,10 @@
       "report_path": "state/reports/phrase-knee-6754859264/report.md",
       "report_commit": "1b08a63e2c8ce6d8231914ec86b1f76af5d148b6",
       "review_comment_pr": 145,
-      "disposition": "REVISE before workstation slot: copy-census displacement certificate refuted by valid BWT aab; oracle policy mismatch, cache-level traffic mismatch, unsupported causal branches, reporter admission and B5/readiness gaps. Descriptive scaling retains conditional value."
+      "disposition": "REVISE before workstation slot: copy-census displacement certificate refuted by valid BWT aab; oracle policy mismatch, cache-level traffic mismatch, unsupported causal branches, reporter admission and B5/readiness gaps. Descriptive scaling retains conditional value.",
+      "review_comment_id": 6755014327,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
