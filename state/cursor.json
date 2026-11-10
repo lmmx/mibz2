@@ -255,6 +255,13 @@
       "type": "REVIEW",
       "sha": "1bac98dff722313c280e610b05fe1dd83a4ba174",
       "checkpoint_comment_id": 6757179363
+    },
+    {
+      "pr": 145,
+      "id": 6757974415,
+      "type": "REVIEW",
+      "sha": "d4c4b41c89db2561bd3b3470670894a4b6d2e318",
+      "checkpoint_comment_id": 6757808815
     }
   ],
   "reviews": [
@@ -862,11 +869,11 @@
     {
       "comment_id": 6757808815,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "84bf177bd0af9fa416964eca2c0f56ad278b119e",
-      "progress": "Final report and ledger complete, incorporating D4-delta proposal and fresh Pathfinder/par-scan evidence; publication pending.",
+      "progress": "Report and ledger committed; one REVIEW on #145 published and exact body/author/destination verified.",
       "report_path": "state/records/reviews/inbox-6757808815/report.md",
       "report_commit": "d4c4b41c89db2561bd3b3470670894a4b6d2e318",
       "audit_scope": {
@@ -875,7 +882,9 @@
         "new_timing": false,
         "implementation": false,
         "raw_callgrind_replay": false
-      }
+      },
+      "reply_id": 6757974415,
+      "routing_verification": "Pinned route/check passed; exact readback passed. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
     }
   ],
   "migrated_from": {
