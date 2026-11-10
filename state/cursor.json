@@ -1451,6 +1451,20 @@
       "status": "finished",
       "disposition": "Record reported policy/withdrawals; prior verdicts retained. No new concrete safety defect established by limited check; B5 not discharged and operating pin unchanged.",
       "comment": 6764503403
+    },
+    {
+      "id": "D097",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6770180620,
+      "pr": 161,
+      "sha": "4ae63fd18819e293b53a04dc83fc9660b9bed7df",
+      "evidence_digest": "mtf-sha256:789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e;team-runs-sha256:3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229;base:8ed2fbdf3e8c05cdbfa426676883c652054ef17d",
+      "commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
+      "status": "complete",
+      "disposition": "#358 source/safety PROCEED; team-run B5 completion HOLD pending forced plain-team fuzz coverage; no new UB established."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1771,7 +1785,9 @@
     "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846",
     "69db0dab9063eed31a1a36817bf905bfd0bd9275",
     "1c87ddf96359885f027e010ec8f624e6864b2235",
-    "b46e0b62bc656426c2785508b8824a4b5fb77339"
+    "b46e0b62bc656426c2785508b8824a4b5fb77339",
+    "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff",
+    "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1868,7 +1884,8 @@
     6763772014,
     6763960879,
     6764248398,
-    6764400880
+    6764400880,
+    6770180620
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1948,8 +1965,9 @@
   },
   "current_execution": {
     "active_comment": 6770180620,
-    "status": "in progress",
-    "decision": "D097"
+    "status": "complete",
+    "decision": "D097",
+    "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
   },
   "duplicate_events": [
     {
@@ -2693,6 +2711,14 @@
       "incoming_comment": 6764400880,
       "decision": "D096",
       "commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
+    },
+    {
+      "pr": 161,
+      "sha": "4ae63fd18819e293b53a04dc83fc9660b9bed7df",
+      "evidence_digest": "mtf-sha256:789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e;team-runs-sha256:3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229;base:8ed2fbdf3e8c05cdbfa426676883c652054ef17d",
+      "incoming_comment": 6770180620,
+      "decision": "D097",
+      "commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3450,10 +3476,11 @@
     {
       "comment_id": 6770180620,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D097",
-      "progress": "Independent source review and arithmetic reproduction complete; preparing D097 and its publication.",
-      "receipt_commit": "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff"
+      "progress": "D097 committed; awaiting deduplicated REVIEW on #145.",
+      "receipt_commit": "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff",
+      "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
     }
   ],
   "migrated_from": {
