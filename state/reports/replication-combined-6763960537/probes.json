@@ -1,0 +1,164 @@
+{
+  "missing_one_shard_completion": {
+    "with_timestamp_valid": false,
+    "known_problems": [
+      "dispatch 2 started before dispatch 1's shards completed"
+    ],
+    "after_deletion_dispatch_valid": true,
+    "after_deletion_program_valid": true,
+    "after_deletion_completed": 1794270600.0
+  },
+  "last_completion_missing": {
+    "dispatch_valid": true,
+    "completed": null,
+    "programme_valid": true
+  },
+  "empty_confirmation_runs": {
+    "valid": true,
+    "registered_run": [],
+    "confirmation_run": [],
+    "confirmed": [
+      "runs/4"
+    ],
+    "unresolved": []
+  },
+  "two_point_mean_boundary": {
+    "12": {
+      "accepted_tail_counts": [
+        0
+      ],
+      "size": 0.5226691292146826,
+      "no_tail": 0.5226691292146822
+    },
+    "24": {
+      "accepted_tail_counts": [
+        0
+      ],
+      "size": 0.27318301863403455,
+      "no_tail": 0.27318301863403416
+    },
+    "56": {
+      "accepted_tail_counts": [
+        0,
+        1
+      ],
+      "size": 0.1990755146117679,
+      "no_tail": 0.048423773824483936
+    },
+    "64": {
+      "accepted_tail_counts": [
+        0,
+        1
+      ],
+      "size": 0.1431367700454303,
+      "no_tail": 0.03142026659533824
+    },
+    "128": {
+      "accepted_tail_counts": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "size": 0.09056137535714955,
+      "no_tail": 0.0009872331529221282
+    },
+    "256": {
+      "accepted_tail_counts": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "size": 0.0744867400621449,
+      "no_tail": 9.74629298228566e-07
+    }
+  },
+  "sign_test_alternative": {
+    "12": {
+      "success_threshold": 10,
+      "boundary_size": 0.019287109375,
+      "power_at_p90": 0.889130022255,
+      "42_cell_union_power_lower_at_p90": 0
+    },
+    "24": {
+      "success_threshold": 17,
+      "boundary_size": 0.03195732831954956,
+      "power_at_p90": 0.9983158923567184,
+      "42_cell_union_power_lower_at_p90": 0.9292674789821698
+    }
+  },
+  "combined_checker": {
+    "balanced": {
+      "exit": 0,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) holds: team 0: helper bytes [1, 1], largest share 0.5\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 0 zero-work helper calls"
+        ],
+        "b": [
+          true,
+          "team 0: helper bytes [1, 1], largest share 0.5"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    },
+    "unbalanced": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) fails: team 0: helper bytes [1, 99], largest share 0.99\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 0 zero-work helper calls"
+        ],
+        "b": [
+          false,
+          "team 0: helper bytes [1, 99], largest share 0.99"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    },
+    "zero_work": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 2 zero-work helper calls\n  (b) fails: team 0: helper bytes [0, 0], largest share n/a\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 2 zero-work helper calls"
+        ],
+        "b": [
+          false,
+          "team 0: helper bytes [0, 0], largest share n/a"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    }
+  }
+}
