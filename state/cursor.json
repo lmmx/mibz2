@@ -146,9 +146,10 @@
     6758126153,
     6758228391,
     6758538763,
-    6758725018
+    6758725018,
+    6759271712
   ],
-  "last_processed_comment_id": 6758725018,
+  "last_processed_comment_id": 6759271712,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1611,14 +1612,18 @@
     },
     {
       "trigger_comment_id": 6759271712,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_path": "state/reports/final-tooling-6759271712/report.md",
       "report_commit": "4abb7d08ee9891f4bc58507a07fee4a6829c5cfd",
       "source_commit": "70c927c3508307b4ccaff7a4421e4d96802c6c53",
-      "disposition": "REVISE qualification freeze on unresolved coverage; REVISE tooling chronology admission and conditional-level wording. Recommend records-only 300-minute ceiling, nine shards retained."
+      "disposition": "REVISE qualification freeze on unresolved coverage; REVISE tooling chronology admission and conditional-level wording. Recommend records-only 300-minute ceiling, nine shards retained.",
+      "review_comment_id": 6759371719,
+      "review_comment_pr": 145,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned verify reports only its hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
