@@ -1,0 +1,1 @@
+{"wall":0.2570,"cpu":0.5400,"rss_kb":56760,"out":899971,"hash":"067381c33bb11c6d","threads_busy":4,"thread_cpu":"main=0.31 mibz2-coop-p2=0.06 mibz2-0=0.05 mibz2-coop-p1=0.01","runq_s":0.0163,"sampler_s":0.0397,"sampler_cpus":"pinned","err":""}

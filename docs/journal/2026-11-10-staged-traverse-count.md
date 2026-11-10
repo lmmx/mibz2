@@ -240,3 +240,205 @@ at exactly 10 physical cores and a 20 MiB L3, and the generic teams from 6.
 ## Results
 
 (Appended after the counts. Nothing above this line changes.)
+
+**Verdict: FAIL-MEASUREMENT under the frozen filter.**
+- **Condition 3, the walk, is met:** 9.97 Ir/D against the 12.0 bar.
+- **Condition 2(b), engagement, is not:** in one team of the staged arm, one helper walked
+  69.5% of the two helpers' bytes, against a bar of two thirds.
+
+By the rule, the measurement is rejected, not the mechanism. The data are recorded here
+and not re-read; no rerun was made to get past the bar. Whether a re-registered count
+follows is the coordinator's call.
+
+### The run
+
+- **Binary:** `examples/ab` and `examples/walk_count` at `c78c18d3d6178caa5abae03f07288974ac995a01`,
+  rustc 1.99.1, valgrind 3.22.0. SHA-256: `ab` `b49a9146…b111c669`,
+  `walk_count` `44e79421…cca6380`.
+- **One change after the registration commit (`6c3bc692`), before any count:** with
+  `share`'s choice of walker beside it, LTO had inlined `traverse` into `RoomWalk::share`.
+  - The default walk's machine code had changed, and the counts would no longer separate
+    it. `#[inline(never)]` on `traverse` restores it as a function of its own, as on
+    master (`c78c18d3`).
+  - No count had been taken: the first build was only inspected (`nm`).
+  - The old arm's walk, 17.771, is within 0.06 of #330's 17.712, inside the registered 0.1.
+- **The inputs, extracted at `c78c18d3`** (`walk_count extract`), each also decoded by
+  libbzip2 (`bzip2 -dc`) to its length:
+
+  | input | SHA-256 | bytes | block CRC |
+  |---|---|--:|---|
+  | I1, block 1 | `c9e36596fa95ef5cb1b865e52fd9027bd01d26994674bec96690b9ada23099d9` | 899,971 | `0f0a732d` |
+  | I2, block 41 | `58c3e4f8fa3db16c4a89170c9f0c42834122282cf6ddedd4dd1fd19dde5cff9b` | 900,000 | `c91a77e1` |
+  | I3, block 233 | `51cec03046c72e92dddc48e386ad3088b9ede2cb6848222543af619472adb954` | 899,978 | `25492446` |
+
+- **The commands:** `run.sh`, run once, sequentially, on the shared machine.
+- **The archive:**
+  - `cg/` holds every profile, gzipped, one file a thread;
+  - `out/` holds each arm's output: the harness's JSON, the control's line;
+  - `report.txt` is the script's output from the archived profiles:
+
+    ```
+    python3 bench/team_gap_count.py staged --binary AB_OR_WALK_COUNT --rows N --decoded D \
+        --arm NAME=docs/journal/2026-11-10-staged-traverse-count/cg/PREFIX ...
+    ```
+
+### Condition 1: the same bytes (met)
+
+- **The team arms** on I4: `old` and `staged` both give 209,700,196 bytes, hash
+  `a8830caee5c511a6`, which is #330's.
+- **The control:** on its 233 cooperative blocks, all four arms give 209,691,304 bytes,
+  hash `db1c87dcd46ca166`.
+- **I1–I3:** each block's team arms agree, and so do its four control arms.
+
+### Condition 3: the walk (met), and the stage table (counted)
+
+**I4, the team arms at 9 threads,** in Ir per decoded byte (D = 209,700,196):
+
+| stage | old | staged | staged − old |
+|---|--:|--:|--:|
+| scanner | 3.203 | 3.203 | 0.000 |
+| MTF | 4.715 | 4.715 | 0.000 |
+| build | 9.106 | 9.106 | 0.000 |
+| **walk (inclusive)** | **17.771** | **9.966** | **−7.805** |
+| assembly | 0.170 | 0.170 | 0.000 |
+| RLE1 | 0.946 | 0.959 | +0.013 |
+| CRC | 0.485 | 0.485 | 0.000 |
+| coordination | 0.073 | 0.071 | −0.002 |
+| harness | 1.533 | 1.497 | −0.036 |
+| other | 0.064 | 0.036 | −0.028 |
+| **full inversion (build + walk + assembly)** | **27.047** | **19.242** | **−7.805** |
+| **whole process** | **38.064** | **30.207** | **−7.857** |
+
+**The walk's parts** (Ir/D):
+
+| part | old | staged |
+|---|--:|--:|
+| the walker, self | 17.584 | 9.631 |
+| the flush (memcpy, from the walker) | none | 0.139 |
+| `RoomWalk::new`, self | 0.041 | 0.041 |
+| the starts' sort | 0.107 | 0.107 |
+| reserve and memset | 0.039 | 0.048 |
+
+**Per walked byte:** M = 209,697,662, so the staged walk is 9.967 Ir/M.
+
+**The model's figures, for comparison:**
+- **Against the one worker:** #330's 10.188. The staged team's walk is below it.
+- **The hypothesis:** 10–11. The count is below its low end.
+- **The registered bar:** 12.0.
+
+### The control: one caller, the same segmentation (counted)
+
+**I4's 233 cooperative blocks** (D = 209,691,304). The walk stage, inclusive, Ir/D:
+
+| arm | walk | the walker's self Ir/D |
+|---|--:|--:|
+| ctl-old (`traverse`, 1,024 segments) | 17.691 | 17.512 |
+| ctl-staged (`traverse_staged`, 1,024) | **9.885** | 9.560 |
+| ctl-room1024 (`room_segments`, 1,024) | 10.096 | 9.821 |
+| ctl-room512 (`room_segments`, 512: the one worker) | 10.220 | 10.026 |
+
+**What the control shows:**
+- **Staged against old:** −7.81 for one caller, the same as in the team (−7.81). The saving
+  is the loop's construction, not anything about the team.
+- **Staged against `room_segments` at the same segments:** 0.21 lower. Below the one-core
+  kernel, not above it.
+- **The doubled segmentation,** room1024 against room512, costs nothing measurable here:
+  it is −0.12, against the +0.3 to +0.6 the model allowed.
+- **The team against one caller:** the staged team's 9.966 against one caller's 9.885 (a
+  slightly different D), +0.08. Coordination, late leaders and the tail together cost
+  less than 0.1 Ir/D.
+
+**I1–I3, the walk stage** (Ir/D, D the block's bytes):
+
+| block | old (team) | staged (team) | ctl-old | ctl-staged | ctl-room1024 | ctl-room512 |
+|---|--:|--:|--:|--:|--:|--:|
+| 1 | 18.296 | 10.567 | 18.210 | 10.488 | 10.686 | 10.581 |
+| 41 | 18.403 | 10.581 | 18.214 | 10.502 | 10.701 | 10.370 |
+| 233 | 18.354 | 10.565 | 18.209 | 10.486 | 10.685 | 10.548 |
+
+**About the single blocks:**
+- **Each runs in a fresh process,** so its figures carry about 0.3 Ir/D of first-allocation
+  `reserve`, which I4 amortises.
+- **No block exceeds 12.5.**
+- **One thread walked almost all of each block** in both team arms: valgrind ran one
+  thread at a time. So the blocks show the per-byte cost, not engagement.
+
+### Condition 2: engagement (not met)
+
+**The staged arm, by thread:** walked bytes are take + full phase + tail, from the
+executions of the walker's byte stores. Fragments are its memcpy calls.
+
+| thread | role | build shares | `traverse_staged` calls | claims | walked bytes | tail | fragments |
+|---|---|--:|--:|--:|--:|--:|--:|
+| 3 | leader | 0 | 44 | 16,586 | 14,576,807 | 526,426 | 77,918 |
+| 4 | leader | 0 | 46 | 17,134 | 15,052,199 | 612,031 | 81,088 |
+| 5 | leader | 0 | 48 | 23,716 | 20,826,369 | 703,323 | 114,036 |
+| 7 | helper, team of 78 | 78 | 78 | 30,636 | 26,897,682 | 976,342 | 145,150 |
+| 9 | helper, team of 78 | 78 | 78 | 32,231 | 28,249,242 | 1,066,210 | 153,529 |
+| 8 | helper, team of 79 | 79 | 79 | 44,742 | 39,282,386 | 1,306,146 | 214,999 |
+| 11 | helper, team of 79 | 79 | 79 | 19,702 | 17,240,070 | 754,948 | 91,719 |
+| 10 | helper, team of 76 | 76 | 76 | 28,213 | 24,732,665 | 898,138 | 135,337 |
+| 12 | helper, team of 76 | 76 | 76 | 26,026 | 22,840,242 | 785,360 | 127,902 |
+
+**Against each part of condition 2:**
+- **(a) Met:** every helper's `traverse_staged` calls equal its build shares (78 + 79 +
+  76 = 233, the cooperative blocks). Helpers are paired into teams by equal share counts,
+  as in #330.
+- **(b) Not met:** the largest helper shares of their team's helper-walked bytes are
+  0.512 (team of 78), **0.695 (team of 79)** and 0.520 (team of 76). The bar is two thirds.
+  For comparison, the old arm's are 0.513, 0.553 and 0.563.
+- **(c) Met:** all three leaders called `traverse_staged`, 44 to 48 times, and walked
+  24.1% of the bytes between them (the old arm: 24.7%).
+- **(d) Met:** in the staged arm `traverse` has no calls, and in the old arm
+  `traverse_staged` has none.
+
+**The arithmetic checks:**
+- **The bytes sum to M:** 238,382 + 201,830,356 + 7,628,924 = 209,697,662 (take, full
+  phase, tail).
+- **The claims:** 238,986 = 238,382 takes + 604 exhausting claims, one a call.
+
+**Why (b) failed, read (not tested):**
+- callgrind runs one thread at a time, so how the claims split between two helpers is
+  valgrind's schedule;
+- thread 11 also built 275 M Ir of its shares before walking;
+- the old arm's split on the same machine was within the bar.
+
+None of this changes the rule. The walk figure is not affected by the split: the control,
+with one caller and no split at all, gives 9.885.
+
+### The residual risks, counted
+
+**The tail:**
+- **In the staged team:** 3.64% of walked bytes, against 5.80% in the old team (this run)
+  and 3.3% in #330's.
+- **In the control:** 3.01% (staged) and 3.02% (old).
+- **The tails did not grow;** the pricing's chief risk is not borne out.
+
+**The flushes:** 1,141,678 fragments, 4.79 a segment, empty copies included. Their memcpy
+costs 0.139 Ir/D, against the one worker's 0.123 at 512 segments.
+
+**The late leaders:**
+- they walked 24% of bytes with no loss visible in Ir;
+- team, 9.966, against one caller, 9.885: +0.08 for everything a team adds, including
+  claims;
+- on real hardware, a leader joining late gets no staging; this count cannot price that.
+
+### What the count does not show
+
+- **Time.** Instructions are not time: the walk waits on memory on the i9. #171's
+  contention evidence was taken on plain workers. The Optimiser's own note stands: missing
+  10–11 Ir would not have disproved a contention gain, and meeting it does not prove a
+  wall gain.
+- **Balance on hardware.** Valgrind's schedule is not the i9's.
+- **The plain teams on a pool** (`walk_room`): covered by the correctness tests, not
+  counted.
+
+### The model, updated (model, not observed)
+
+**#330's model, with the measured walk:** closing the walk gap leaves the team at 30.39
+Ir/B (#330 §6). Counted here, the staged team's whole process is 30.207, and its walk
+9.966, below the one worker's walk.
+
+**What is left of the team's excess over one worker:**
+- **The excess:** 30.207 − #330's 25.792 = 4.42 Ir/B;
+- **The rest of it** is mostly the build (+3.94 in #330) and MTF (+0.60).

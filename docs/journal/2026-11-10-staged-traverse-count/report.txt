@@ -1,0 +1,479 @@
+# I4: the whole corpus, wikidata.bz2; team arms (binary ab)
+denominators: D = 209,700,196 decoded bytes, N = 209,706,557 rows
+
+| stage | old Ir/D | staged Ir/D |
+|---|--:|--:|
+| scanner | 3.203 | 3.203 |
+| MTF | 4.715 | 4.715 |
+| build | 9.106 | 9.106 |
+| walk | 17.771 | 9.966 |
+| assembly | 0.170 | 0.170 |
+| RLE1 | 0.946 | 0.959 |
+| CRC | 0.485 | 0.485 |
+| coordination | 0.073 | 0.071 |
+| harness | 1.533 | 1.497 |
+| other | 0.064 | 0.036 |
+| **inversion (build + walk + assembly)** | 27.047 | 19.242 |
+| **whole process** | 38.064 | 30.207 |
+
+raw Ir:
+- old: total 7,982,119,238; scanner 671,575,285, MTF 988,698,318, build 1,909,438,146, walk 3,726,667,539, assembly 35,581,083, RLE1 198,307,490, CRC 101,664,607, coordination 15,324,590, harness 321,499,797, other 13,362,383
+- staged: total 6,334,318,476; scanner 671,569,606, MTF 988,697,414, build 1,909,438,273, walk 2,089,961,769, assembly 35,580,876, RLE1 201,006,689, CRC 101,664,607, coordination 14,887,941, harness 313,998,054, other 7,513,247
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- old: coop::traverse::<32> 17.584, <coop::RoomWalk>::new 0.041
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.107
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.018
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.012
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+  - malloc <- coop::traverse::<32>: 0.001
+- staged: coop::traverse_staged::<32, 0, coop::Counter> 9.631, <coop::RoomWalk>::new 0.041
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.139
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.107
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.015
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.013
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.011
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+
+## old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 747,464,393 | 12,096,065 | 296,434,067 | 0 | old | 59 | 19,311 | 19,252 | 15,778,347 | 1,042,153 | 0 | 0 |
+| 4 | 817,054,386 | 12,259,757 | 358,994,469 | 0 | old | 60 | 23,209 | 23,149 | 19,108,672 | 1,262,211 | 0 | 0 |
+| 5 | 683,074,348 | 10,995,053 | 257,041,632 | 0 | old | 57 | 16,572 | 16,515 | 13,566,677 | 997,512 | 0 | 0 |
+| 7 | 798,043,121 | 338,173,762 | 453,087,407 | 74 | old | 74 | 28,845 | 28,771 | 23,802,419 | 1,524,534 | 0 | 0 |
+| 8 | 784,461,263 | 365,919,119 | 410,705,114 | 80 | old | 80 | 26,295 | 26,215 | 21,673,466 | 1,365,430 | 0 | 0 |
+| 9 | 738,854,552 | 258,324,760 | 474,162,877 | 74 | old | 74 | 30,496 | 30,422 | 25,176,305 | 1,456,101 | 0 | 0 |
+| 10 | 909,141,992 | 359,147,237 | 542,997,592 | 79 | old | 79 | 34,639 | 34,560 | 29,019,091 | 1,515,002 | 0 | 0 |
+| 11 | 794,661,601 | 278,335,699 | 509,671,046 | 80 | old | 80 | 32,565 | 32,485 | 26,911,876 | 1,595,623 | 0 | 0 |
+| 12 | 704,955,490 | 274,186,694 | 423,573,335 | 79 | old | 79 | 27,092 | 27,013 | 22,264,263 | 1,399,598 | 0 | 0 |
+
+old: calls 642, claims 239,024, walked take 238,382 + full 197,301,116 + tail 12,158,164 = M 209,697,662; tail share 0.0580; fragments 0; flush 0.000 Ir/D
+
+## staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 599,831,116 | 12,115,570 | 142,593,342 | 0 | staged | 44 | 16,586 | 16,542 | 14,033,839 | 526,426 | 77,918 | 2,006,845 |
+| 4 | 587,409,346 | 11,959,890 | 148,098,409 | 0 | staged | 46 | 17,134 | 17,088 | 14,423,080 | 612,031 | 81,088 | 2,064,910 |
+| 5 | 639,338,141 | 11,275,542 | 203,475,690 | 0 | staged | 48 | 23,716 | 23,668 | 20,099,378 | 703,323 | 114,036 | 2,904,347 |
+| 7 | 631,969,910 | 354,843,838 | 269,342,953 | 78 | staged | 78 | 30,636 | 30,558 | 25,890,782 | 976,342 | 145,150 | 3,709,432 |
+| 8 | 757,441,247 | 361,142,775 | 389,227,677 | 79 | staged | 79 | 44,742 | 44,663 | 37,931,577 | 1,306,146 | 214,999 | 5,475,309 |
+| 9 | 562,553,837 | 270,798,622 | 283,351,849 | 78 | staged | 78 | 32,231 | 32,153 | 27,150,879 | 1,066,210 | 153,529 | 3,909,647 |
+| 10 | 602,510,131 | 347,253,505 | 247,597,580 | 76 | staged | 76 | 28,213 | 28,137 | 23,806,390 | 898,138 | 135,337 | 3,439,038 |
+| 11 | 460,446,599 | 275,203,597 | 176,487,097 | 79 | staged | 79 | 19,702 | 19,623 | 16,465,499 | 754,948 | 91,719 | 2,351,459 |
+| 12 | 501,778,039 | 264,844,934 | 229,787,172 | 76 | staged | 76 | 26,026 | 25,950 | 22,028,932 | 785,360 | 127,902 | 3,228,059 |
+
+staged: calls 604, claims 238,986, walked take 238,382 + full 201,830,356 + tail 7,628,924 = M 209,697,662; tail share 0.0364; fragments 1,141,678; flush 0.139 Ir/D
+
+# I4: the control, its 233 cooperative blocks (binary walk_count)
+denominators: D = 209,691,304 decoded bytes, N = 209,697,662 rows
+
+| stage | ctl-old Ir/D | ctl-staged Ir/D | ctl-room1024 Ir/D | ctl-room512 Ir/D |
+|---|--:|--:|--:|--:|
+| scanner | 3.194 | 3.194 | 3.194 | 3.194 |
+| MTF | 4.111 | 4.111 | 4.111 | 4.111 |
+| build | 0.000 | 0.000 | 0.000 | 0.000 |
+| walk | 17.691 | 9.885 | 10.096 | 10.220 |
+| assembly | 0.000 | 0.000 | 0.000 | 0.000 |
+| RLE1 | 0.941 | 0.941 | 0.941 | 0.941 |
+| CRC | 0.000 | 0.000 | 0.000 | 0.000 |
+| coordination | 0.000 | 0.000 | 0.000 | 0.000 |
+| harness | 0.000 | 0.000 | 0.000 | 0.000 |
+| other | 10.145 | 10.145 | 10.145 | 10.160 |
+| **inversion (build + walk + assembly)** | 17.691 | 9.885 | 10.096 | 10.220 |
+| **whole process** | 36.083 | 28.277 | 28.488 | 28.627 |
+
+raw Ir:
+- ctl-old: total 7,566,244,958; scanner 669,845,104, MTF 862,126,764, build 0, walk 3,709,609,095, assembly 0, RLE1 197,322,292, CRC 0, coordination 135, harness 0, other 2,127,341,568
+- ctl-staged: total 5,929,516,282; scanner 669,845,104, MTF 862,126,764, build 0, walk 2,072,879,909, assembly 0, RLE1 197,322,292, CRC 0, coordination 135, harness 0, other 2,127,342,078
+- ctl-room1024: total 5,973,594,883; scanner 669,845,104, MTF 862,126,764, build 0, walk 2,116,962,728, assembly 0, RLE1 197,322,292, CRC 0, coordination 135, harness 0, other 2,127,337,860
+- ctl-room512: total 6,002,895,324; scanner 669,847,644, MTF 862,126,764, build 0, walk 2,143,090,305, assembly 0, RLE1 197,322,292, CRC 0, coordination 135, harness 0, other 2,130,508,184
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- ctl-old: coop::traverse::<32> 17.512, coop::research::walk_one_caller 0.051
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.107
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.007
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.004
+  - malloc <- coop::traverse::<32>: 0.001
+- ctl-staged: coop::traverse_staged::<32, 0, coop::Counter> 9.560, coop::research::walk_one_caller 0.051
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.137
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.107
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.007
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.004
+  - malloc <- coop::traverse_staged::<32, 0, coop::Counter>: 0.001
+- ctl-room1024: bwt::room_segments::<32, 1> 9.821
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.137
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.107
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.018
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.011
+  - malloc <- bwt::room_segments::<32, 1>: 0.001
+- ctl-room512: bwt::room_segments::<32, 1> 10.026
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.123
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.048
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.014
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.009
+
+## ctl-old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 7,566,244,958 | 0 | 3,709,609,095 | 0 | old | 233 | 238,615 | 238,382 | 203,134,770 | 6,324,510 | 0 | 0 |
+
+old: calls 233, claims 238,615, walked take 238,382 + full 203,134,770 + tail 6,324,510 = M 209,697,662; tail share 0.0302; fragments 0; flush 0.000 Ir/D
+
+## ctl-staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 5,929,516,282 | 0 | 2,072,879,909 | 0 | staged | 233 | 238,615 | 238,382 | 203,138,309 | 6,320,971 | 1,133,102 | 28,825,937 |
+
+staged: calls 233, claims 238,615, walked take 238,382 + full 203,138,309 + tail 6,320,971 = M 209,697,662; tail share 0.0301; fragments 1,133,102; flush 0.137 Ir/D
+
+# block 1 of wikidata-independent.bz2: team arms (ab)
+denominators: D = 899,971 decoded bytes, N = 900,000 rows
+
+| stage | old Ir/D | staged Ir/D |
+|---|--:|--:|
+| scanner | 2.835 | 2.836 |
+| MTF | 3.920 | 3.920 |
+| build | 8.910 | 8.910 |
+| walk | 18.296 | 10.567 |
+| assembly | 0.161 | 0.161 |
+| RLE1 | 0.940 | 0.940 |
+| CRC | 0.485 | 0.485 |
+| coordination | 0.145 | 0.110 |
+| harness | 1.675 | 1.716 |
+| other | 1.211 | 1.119 |
+| **inversion (build + walk + assembly)** | 27.367 | 19.638 |
+| **whole process** | 38.578 | 30.765 |
+
+raw Ir:
+- old: total 34,718,936; scanner 2,551,739, MTF 3,528,021, build 8,019,078, walk 16,465,505, assembly 145,036, RLE1 845,855, CRC 436,139, coordination 130,415, harness 1,507,437, other 1,089,711
+- staged: total 27,687,300; scanner 2,552,441, MTF 3,528,021, build 8,019,078, walk 9,509,876, assembly 145,066, RLE1 845,855, CRC 436,139, coordination 99,338, harness 1,544,377, other 1,007,109
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- old: coop::traverse::<32> 17.609, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.367
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.140
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.107
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+- staged: coop::traverse_staged::<32, 0, coop::Counter> 9.700, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.361
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.178
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.140
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.107
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+
+## old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 21,241,329 | 146,429 | 15,973,970 | 0 | old | 1 | 1,024 | 1,023 | 868,313 | 30,664 | 0 | 0 |
+| 4 | 3,730,297 | 3,509,071 | 128 | 1 | old | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 6 | 7,467,229 | 4,363,578 | 491,407 | 1 | old | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+
+old: calls 3, claims 1,026, walked take 1,023 + full 868,313 + tail 30,664 = M 900,000; tail share 0.0341; fragments 0; flush 0.000 Ir/D
+
+## staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 4 | 4,584,829 | 4,363,578 | 145 | 1 | staged | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 5 | 13,051,289 | 3,509,071 | 9,509,731 | 1 | staged | 1 | 1,024 | 1,023 | 868,320 | 30,657 | 7,167 | 160,029 |
+
+staged: calls 2, claims 1,025, walked take 1,023 + full 868,320 + tail 30,657 = M 900,000; tail share 0.0341; fragments 7,167; flush 0.178 Ir/D
+
+# block 1: control (walk_count)
+denominators: D = 899,971 decoded bytes, N = 900,000 rows
+
+| stage | ctl-old Ir/D | ctl-staged Ir/D | ctl-room1024 Ir/D | ctl-room512 Ir/D |
+|---|--:|--:|--:|--:|
+| scanner | 2.787 | 2.787 | 2.787 | 2.787 |
+| MTF | 3.391 | 3.391 | 3.391 | 3.391 |
+| build | 0.000 | 0.000 | 0.000 | 0.000 |
+| walk | 18.210 | 10.488 | 10.686 | 10.581 |
+| assembly | 0.000 | 0.000 | 0.000 | 0.000 |
+| RLE1 | 0.940 | 0.940 | 0.940 | 0.940 |
+| CRC | 0.000 | 0.000 | 0.000 | 0.000 |
+| coordination | 0.000 | 0.000 | 0.000 | 0.000 |
+| harness | 0.000 | 0.000 | 0.000 | 0.000 |
+| other | 10.645 | 10.645 | 10.645 | 10.558 |
+| **inversion (build + walk + assembly)** | 18.210 | 10.488 | 10.686 | 10.581 |
+| **whole process** | 35.973 | 28.251 | 28.449 | 28.257 |
+
+raw Ir:
+- ctl-old: total 32,374,518; scanner 2,507,868, MTF 3,051,741, build 0, walk 16,388,469, assembly 0, RLE1 845,853, CRC 0, coordination 135, harness 0, other 9,580,452
+- ctl-staged: total 25,424,760; scanner 2,507,868, MTF 3,051,741, build 0, walk 9,438,679, assembly 0, RLE1 845,853, CRC 0, coordination 135, harness 0, other 9,580,484
+- ctl-room1024: total 25,603,546; scanner 2,507,868, MTF 3,051,741, build 0, walk 9,617,507, assembly 0, RLE1 845,853, CRC 0, coordination 135, harness 0, other 9,580,442
+- ctl-room512: total 25,430,272; scanner 2,507,868, MTF 3,051,741, build 0, walk 9,522,872, assembly 0, RLE1 845,853, CRC 0, coordination 135, harness 0, other 9,501,803
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- ctl-old: coop::traverse::<32> 17.609, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.126
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.107
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-staged: coop::traverse_staged::<32, 0, coop::Counter> 9.700, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.178
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.126
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.107
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-room1024: bwt::room_segments::<32, 1> 9.968
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.415
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.178
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.107
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.018
+- ctl-room512: bwt::room_segments::<32, 1> 10.132
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.248
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.139
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.048
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.014
+
+## ctl-old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 32,374,518 | 0 | 16,388,469 | 0 | old | 1 | 1,024 | 1,023 | 868,313 | 30,664 | 0 | 0 |
+
+old: calls 1, claims 1,024, walked take 1,023 + full 868,313 + tail 30,664 = M 900,000; tail share 0.0341; fragments 0; flush 0.000 Ir/D
+
+## ctl-staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 25,424,760 | 0 | 9,438,679 | 0 | staged | 1 | 1,024 | 1,023 | 868,320 | 30,657 | 7,167 | 160,029 |
+
+staged: calls 1, claims 1,024, walked take 1,023 + full 868,320 + tail 30,657 = M 900,000; tail share 0.0341; fragments 7,167; flush 0.178 Ir/D
+
+# block 41 of wikidata-independent.bz2: team arms (ab)
+denominators: D = 900,000 decoded bytes, N = 900,000 rows
+
+| stage | old Ir/D | staged Ir/D |
+|---|--:|--:|
+| scanner | 2.564 | 2.563 |
+| MTF | 3.497 | 3.497 |
+| build | 8.707 | 8.707 |
+| walk | 18.403 | 10.581 |
+| assembly | 0.162 | 0.162 |
+| RLE1 | 0.939 | 0.939 |
+| CRC | 0.485 | 0.485 |
+| coordination | 0.067 | 0.127 |
+| harness | 1.748 | 1.596 |
+| other | 1.147 | 1.141 |
+| **inversion (build + walk + assembly)** | 27.271 | 19.450 |
+| **whole process** | 37.717 | 29.798 |
+
+raw Ir:
+- old: total 33,945,481; scanner 2,307,734, MTF 3,147,197, build 7,835,899, walk 16,562,617, assembly 145,503, RLE1 844,730, CRC 436,217, coordination 60,312, harness 1,573,048, other 1,032,224
+- staged: total 26,818,031; scanner 2,307,041, MTF 3,147,197, build 7,835,899, walk 9,523,320, assembly 145,550, RLE1 844,730, CRC 436,217, coordination 114,391, harness 1,436,695, other 1,026,991
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- old: coop::traverse::<32> 17.713, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.361
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.151
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.106
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+  - malloc <- coop::traverse::<32>: 0.001
+- staged: coop::traverse_staged::<32, 0, coop::Counter> 9.704, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.361
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.181
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.149
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.106
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+
+## old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 9,850,439 | 146,429 | 4,977,035 | 0 | old | 1 | 323 | 322 | 246,507 | 30,731 | 0 | 0 |
+| 4 | 9,948,929 | 4,240,880 | 5,514,698 | 1 | old | 1 | 359 | 358 | 285,427 | 23,032 | 0 | 0 |
+| 5 | 9,539,489 | 3,448,590 | 6,070,884 | 1 | old | 1 | 344 | 343 | 289,151 | 24,129 | 0 | 0 |
+
+old: calls 3, claims 1,026, walked take 1,023 + full 821,085 + tail 77,892 = M 900,000; tail share 0.0865; fragments 0; flush 0.000 Ir/D
+
+## staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 13,924,379 | 146,429 | 9,038,918 | 0 | staged | 1 | 1,024 | 1,023 | 867,904 | 31,073 | 7,327 | 162,633 |
+| 6 | 6,615,756 | 4,240,880 | 145 | 1 | staged | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 7 | 4,132,459 | 3,448,590 | 484,257 | 1 | staged | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+
+staged: calls 3, claims 1,026, walked take 1,023 + full 867,904 + tail 31,073 = M 900,000; tail share 0.0345; fragments 7,327; flush 0.181 Ir/D
+
+# block 41: control (walk_count)
+denominators: D = 900,000 decoded bytes, N = 900,000 rows
+
+| stage | ctl-old Ir/D | ctl-staged Ir/D | ctl-room1024 Ir/D | ctl-room512 Ir/D |
+|---|--:|--:|--:|--:|
+| scanner | 2.520 | 2.520 | 2.520 | 2.520 |
+| MTF | 3.059 | 3.059 | 3.059 | 3.059 |
+| build | 0.000 | 0.000 | 0.000 | 0.000 |
+| walk | 18.214 | 10.502 | 10.701 | 10.370 |
+| assembly | 0.000 | 0.000 | 0.000 | 0.000 |
+| RLE1 | 0.939 | 0.939 | 0.939 | 0.939 |
+| CRC | 0.000 | 0.000 | 0.000 | 0.000 |
+| coordination | 0.000 | 0.000 | 0.000 | 0.000 |
+| harness | 0.000 | 0.000 | 0.000 | 0.000 |
+| other | 10.437 | 10.437 | 10.437 | 10.336 |
+| **inversion (build + walk + assembly)** | 18.214 | 10.502 | 10.701 | 10.370 |
+| **whole process** | 35.169 | 27.457 | 27.655 | 27.224 |
+
+raw Ir:
+- ctl-old: total 31,651,678; scanner 2,267,978, MTF 2,753,443, build 0, walk 16,392,349, assembly 0, RLE1 844,728, CRC 0, coordination 135, harness 0, other 9,393,045
+- ctl-staged: total 24,710,965; scanner 2,267,978, MTF 2,753,443, build 0, walk 9,451,604, assembly 0, RLE1 844,728, CRC 0, coordination 135, harness 0, other 9,393,077
+- ctl-room1024: total 24,889,937; scanner 2,267,978, MTF 2,753,443, build 0, walk 9,630,632, assembly 0, RLE1 844,728, CRC 0, coordination 135, harness 0, other 9,393,021
+- ctl-room512: total 24,501,458; scanner 2,267,978, MTF 2,753,443, build 0, walk 9,333,139, assembly 0, RLE1 844,728, CRC 0, coordination 135, harness 0, other 9,302,035
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- ctl-old: coop::traverse::<32> 17.606, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.134
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.106
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-staged: coop::traverse_staged::<32, 0, coop::Counter> 9.704, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.181
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.134
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.106
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-room1024: bwt::room_segments::<32, 1> 9.973
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.423
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.181
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.106
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.018
+- ctl-room512: bwt::room_segments::<32, 1> 9.924
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.239
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.143
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.049
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.014
+
+## ctl-old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 31,651,678 | 0 | 16,392,349 | 0 | old | 1 | 1,024 | 1,023 | 867,882 | 31,095 | 0 | 0 |
+
+old: calls 1, claims 1,024, walked take 1,023 + full 867,882 + tail 31,095 = M 900,000; tail share 0.0345; fragments 0; flush 0.000 Ir/D
+
+## ctl-staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 24,710,965 | 0 | 9,451,604 | 0 | staged | 1 | 1,024 | 1,023 | 867,904 | 31,073 | 7,327 | 162,633 |
+
+staged: calls 1, claims 1,024, walked take 1,023 + full 867,904 + tail 31,073 = M 900,000; tail share 0.0345; fragments 7,327; flush 0.181 Ir/D
+
+# block 233 of wikidata-independent.bz2: team arms (ab)
+denominators: D = 899,978 decoded bytes, N = 900,000 rows
+
+| stage | old Ir/D | staged Ir/D |
+|---|--:|--:|
+| scanner | 2.651 | 2.652 |
+| MTF | 3.974 | 3.974 |
+| build | 8.616 | 8.616 |
+| walk | 18.354 | 10.565 |
+| assembly | 0.172 | 0.172 |
+| RLE1 | 0.941 | 0.941 |
+| CRC | 0.485 | 0.485 |
+| coordination | 0.107 | 0.145 |
+| harness | 1.683 | 1.607 |
+| other | 1.211 | 1.148 |
+| **inversion (build + walk + assembly)** | 27.143 | 19.354 |
+| **whole process** | 38.194 | 30.305 |
+
+raw Ir:
+- old: total 34,373,702; scanner 2,386,231, MTF 3,576,708, build 7,754,354, walk 16,518,603, assembly 155,148, RLE1 846,667, CRC 436,158, coordination 96,081, harness 1,514,298, other 1,089,454
+- staged: total 27,274,092; scanner 2,386,924, MTF 3,576,708, build 7,754,354, walk 9,508,555, assembly 155,179, RLE1 846,667, CRC 436,158, coordination 130,384, harness 1,445,973, other 1,033,190
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- old: coop::traverse::<32> 17.674, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.361
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.142
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.106
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+  - malloc <- coop::traverse::<32>: 0.001
+- staged: coop::traverse_staged::<32, 0, coop::Counter> 9.703, <coop::RoomWalk>::new 0.062
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new: 0.361
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.174
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.141
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new: 0.106
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new: 0.009
+
+## old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 4 | 4,727,986 | 3,385,939 | 1,144,428 | 1 | old | 1 | 40 | 39 | 7,501 | 26,499 | 0 | 0 |
+| 6 | 22,058,095 | 4,221,986 | 15,374,175 | 1 | old | 1 | 985 | 984 | 834,456 | 30,521 | 0 | 0 |
+
+old: calls 2, claims 1,025, walked take 1,023 + full 841,957 + tail 57,020 = M 900,000; tail share 0.0634; fragments 0; flush 0.000 Ir/D
+
+## staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 3 | 14,341,532 | 146,429 | 9,024,252 | 0 | staged | 1 | 1,024 | 1,023 | 868,480 | 30,497 | 7,327 | 156,606 |
+| 4 | 4,754,444 | 4,221,986 | 484,158 | 1 | staged | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 5 | 3,616,658 | 3,385,939 | 145 | 1 | staged | 1 | 1 | 0 | 0 | 0 | 0 | 0 |
+
+staged: calls 3, claims 1,026, walked take 1,023 + full 868,480 + tail 30,497 = M 900,000; tail share 0.0339; fragments 7,327; flush 0.174 Ir/D
+
+# block 233: control (walk_count)
+denominators: D = 899,978 decoded bytes, N = 900,000 rows
+
+| stage | ctl-old Ir/D | ctl-staged Ir/D | ctl-room1024 Ir/D | ctl-room512 Ir/D |
+|---|--:|--:|--:|--:|
+| scanner | 2.602 | 2.602 | 2.602 | 2.602 |
+| MTF | 3.463 | 3.463 | 3.463 | 3.463 |
+| build | 0.000 | 0.000 | 0.000 | 0.000 |
+| walk | 18.209 | 10.486 | 10.685 | 10.548 |
+| assembly | 0.000 | 0.000 | 0.000 | 0.000 |
+| RLE1 | 0.941 | 0.941 | 0.941 | 0.941 |
+| CRC | 0.000 | 0.000 | 0.000 | 0.000 |
+| coordination | 0.000 | 0.000 | 0.000 | 0.000 |
+| harness | 0.000 | 0.000 | 0.000 | 0.000 |
+| other | 10.543 | 10.543 | 10.543 | 10.413 |
+| **inversion (build + walk + assembly)** | 18.209 | 10.486 | 10.685 | 10.548 |
+| **whole process** | 35.758 | 28.035 | 28.234 | 27.967 |
+
+raw Ir:
+- ctl-old: total 32,181,351; scanner 2,342,046, MTF 3,116,265, build 0, walk 16,387,908, assembly 0, RLE1 846,665, CRC 0, coordination 135, harness 0, other 9,488,332
+- ctl-staged: total 25,231,010; scanner 2,342,046, MTF 3,116,265, build 0, walk 9,437,521, assembly 0, RLE1 846,665, CRC 0, coordination 135, harness 0, other 9,488,378
+- ctl-room1024: total 25,409,749; scanner 2,342,046, MTF 3,116,265, build 0, walk 9,616,302, assembly 0, RLE1 846,665, CRC 0, coordination 135, harness 0, other 9,488,336
+- ctl-room512: total 25,169,955; scanner 2,342,046, MTF 3,116,265, build 0, walk 9,493,356, assembly 0, RLE1 846,665, CRC 0, coordination 135, harness 0, other 9,371,488
+
+walk functions (self Ir/D; library arcs from them, inclusive Ir/D):
+- ctl-old: coop::traverse::<32> 17.609, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32>: 0.126
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.106
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-staged: coop::traverse_staged::<32, 0, coop::Counter> 9.703, coop::research::walk_one_caller 0.070
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::research::walk_one_caller: 0.288
+  - __memcpy_avx_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.174
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse_staged::<32, 0, coop::Counter>: 0.126
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- coop::research::walk_one_caller: 0.106
+  - __memset_avx2_unaligned_erms <- coop::traverse_staged::<32, 0, coop::Counter>: 0.009
+  - __memset_avx2_unaligned_erms <- coop::research::walk_one_caller: 0.009
+- ctl-room1024: bwt::room_segments::<32, 1> 9.971
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.415
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.174
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.106
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.018
+- ctl-room512: bwt::room_segments::<32, 1> 10.116
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1>: 0.228
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1>: 0.141
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1>: 0.048
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1>: 0.014
+
+## ctl-old, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 32,181,351 | 0 | 16,387,908 | 0 | old | 1 | 1,024 | 1,023 | 868,473 | 30,504 | 0 | 0 |
+
+old: calls 1, claims 1,024, walked take 1,023 + full 868,473 + tail 30,504 = M 900,000; tail share 0.0339; fragments 0; flush 0.000 Ir/D
+
+## ctl-staged, by thread (threads that built or walked)
+| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |
+|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 25,231,010 | 0 | 9,437,521 | 0 | staged | 1 | 1,024 | 1,023 | 868,480 | 30,497 | 7,327 | 156,606 |
+
+staged: calls 1, claims 1,024, walked take 1,023 + full 868,480 + tail 30,497 = M 900,000; tail share 0.0339; fragments 7,327; flush 0.174 Ir/D
