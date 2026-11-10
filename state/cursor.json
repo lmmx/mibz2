@@ -1000,6 +1000,15 @@
       "report_commit": "9ff1d0e2e4d32921f2400376378fb9efec2f6436",
       "reply_id": 6758879325,
       "routing_verification": "Pinned route/check passed. Exact GitHub readback verified. Pinned coord.py verify rejects FROM optimizer because it requires coordinator; no verify-pass claimed."
+    },
+    {
+      "comment_id": 6759188202,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Migration verified; receipt for D4 construction rescue, whole-decoder load-law price and correction of prior piece-cost assumptions.",
+      "report_path": "state/records/reviews/inbox-6759188202/report.md"
     }
   ],
   "migrated_from": {
