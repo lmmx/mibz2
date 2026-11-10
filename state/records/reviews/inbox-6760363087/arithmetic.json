@@ -62,5 +62,7 @@
       "k10": 6.27,
       "expI": 4.411088050303637
     }
-  ]
+  ],
+  "marker_reads_4on_cells_21rounds": 769020,
+  "marker_cpu_s_at25ns": 0.0192255
 }

@@ -571,3 +571,16 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Correct compulsory-scan arithmetic: f=.78,1862 anchor,g1.18 =>1632.76>1499; proxybreak-even g1.310463. Anchor notbound andg/f unvalidated. Old decoder law prices remain withdrawn.
 - Joint scanner/table2x2 economics justified, mandatory paired implementation notproved. Charge fullfeed,cores,window,constructor,scratch,metadata,fallback,output/tail; no throughput-gain addition.
 - Teamports2then3 remain ahead of speculative three-table engineering under D085/B5. No implementation, compilation, new timing, safety discharge or qualification.
+
+## Addressed-width draft: inbox6760363087
+
+[Report](records/reviews/inbox-6760363087/report.md), [arithmetic](records/reviews/inbox-6760363087/arithmetic.json), [historical variance replay](records/reviews/inbox-6760363087/variance-replay.json). Draft f918f783aa6b9f683d867c057a4c4937c99392ca: REVISE before freeze.
+- Scaled physical u32 index k*r permits identical hot load/shift/prefetch, not demonstrated whole-walk equality. Charge orig_ptr, starts, flag cleanup, tails, logical-n/bounds and constructor addressing. Constant shifts8→10 can have equal Ir; destination scale/reconstruction may add work. Actual delta requires matched inclusive counts and listings; no invented numeric charge.
+- One-row A differs from production; archived f/occupancy not transferable. Same-source const generics do not guarantee same code. First untimed semantic/B5/count admission; no implementation or counts run here.
+- Every row visited once is not a universal walker invariant: periodic/multi-cycle tables are explicitly supported. Build touches all logical records; walk coverage must be measured separately.
+- 200k-row page counts196/782 when page-aligned, up to197/783 with64B alignment. Stores4N both arms; unique dirty-line spans notDRAMtraffic. 1.5/5.9GB uses1831fullblocks; RLE1 boundN<=1.25D gives unique-line budget<=1.049/4.194GB for this decode, actualrowsneeded.
+- B4/A4 does not isolate side effects: table-only12.8MB fitting nominalLLC is notwholeactivefootprint. Traffic/TLB/faults/privatecache/geometry can interact withW. Additive or worker-only multiplicative penalties do not generically cancel on whole-processlogCPU.
+-210timedslots unchanged; optional-9references+42, optionalcontemporaneousproduction-2anchors+42 separately. Fiveclocks/block now9155reads/-2decode,228.875microseconds nominal25ns/read; setup/count/dump/placementruntimeadditional.
+- exp(I)<1.15 rules out only a specified15% interaction undervalidintervals, notallcompacttables. B4=2A4,B10=2A10 givesexpI1 withlargewidthcost. >3.5doesnotrestorelaw. Fixmissing2.8–3.5categoryandE4log-versus-factorunits.
+- RecheckedhistoricalarchiveSHA1e347594…36ad. RetainedloggrowthSD.105273(-2),.057699(-9),paireddifference.111984. ±5%remainsroughiidscenario,notnewwidthcovarianceor20roundmoving-blockcoverage. Researcherfixesprospectiveuncertainty.
+- Teamports2then3ahead asD085/D087/B5allow; retainboundedlayoutdiagnosticafteradmission. No decoder execution, compilation, newtiming, safety discharge or qualification.
