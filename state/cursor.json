@@ -890,11 +890,19 @@
     {
       "comment_id": 6757979390,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt; migration head and manifest verified. Rescue pass and BufRead/PGO/v3 pricing pending.",
-      "report_path": "state/records/reviews/inbox-6757979390/report.md"
+      "progress": "Seven-item rescue pass plus BufRead/PGO/v3 pricing complete; report, arithmetic, evidence and ledger committed; REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6757979390/report.md",
+      "report_commit": "f9e3826e0ef19c6efda88d260b562b2476b7f801",
+      "audit_scope": {
+        "source_pin": "0a649c696db745ce83a1629381590dc9ded061f0",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "raw_profile_replay": false
+      }
     }
   ],
   "migrated_from": {
