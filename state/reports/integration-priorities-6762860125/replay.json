@@ -1,0 +1,17 @@
+{
+  "intact": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": 0
+  },
+  "first_C": {
+    "rc": 2,
+    "label": "INVALID",
+    "problems": 2
+  },
+  "all_C": {
+    "rc": 2,
+    "label": "INVALID",
+    "problems": 61
+  }
+}
