@@ -835,7 +835,7 @@
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "02cc5f89988abb9ab436eae1af4b89576c19d590",
-      "progress": "Migration verified; pool-wait screen and transfer audit started."
+      "progress": "Verified artifact SHA-256 and replayed all 1512 timed rows and 18 count rows; forced-plan/topology, counter semantics and calibration transfer findings committed; final ranking and target design in preparation."
     }
   ],
   "migrated_from": {
