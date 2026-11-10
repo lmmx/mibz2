@@ -39,6 +39,16 @@ brief names:
 - **Visuals:** a figure for each result, comparison, architecture and trade-off, and for
   the key takeaways where it helps. Dense prose where a figure would carry it is a
   failure mode.
+- **Causal visuals, by analogy** (Louis, 10 November 2026). Figures that only draw the data
+  (strips, bars, boxes and arrows) leave a post hard to access. Brief the Researcher, or the
+  drafting agent, for figures that show *why* each step of the argument holds, through an
+  analogy a programmer gets at a glance (the pit-crew post's race track). The brief lists the
+  causal steps in order, asks for each analogy's mapping and where it breaks, and says the
+  figures must read at phone width. Visuals never block a prose revision: they land in their
+  own follow-up.
+- **Grounding** (Louis, 10 November 2026: "death by in medias res"). A follow-up post links
+  the post it builds on in its first paragraph and recaps what it needs from it. Agents'
+  names stay out of research posts; the work is the project's.
 - **The plan's goal questions and held-out goal,** recorded in the PR body for the
   reviewer.
 - **The rules:** Louis's identity on commits, no AI attribution, the footer stripped from the
@@ -107,3 +117,14 @@ Then the review rounds of §2 run on the published post:
   structural revision.
 - **The post is finalised** when a round returns PROCEED. Nothing marks it as unfinished
   before then.
+- **Before publication, one fresh-reader pass at least:** a subagent given only the post
+  reports where it would start, every term met before its explanation, where it felt dropped
+  in medias res, and any mannered sentence. Fix what it finds before the merge. The
+  Researcher's review rounds come after, on the live post.
+- **Fixes to a published post go as a docs commit straight to master** (Louis, 10 November
+  2026: "docs commit not PR"), after the publish-page checks pass on the commit. A new post
+  still goes through a PR.
+- **Facts that arrive after drafting update the post at once.** A correction or a new
+  measurement from the source's owner (a CORRECTION, a later PR head) goes beside the claim
+  it affects. When it supersedes a figure, the post leads with the new one, and the old one
+  is kept only as history.

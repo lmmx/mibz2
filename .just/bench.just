@@ -1298,3 +1298,18 @@ bench-team-ports:
 bench-324-i9:
     git fetch -q origin perf/run-front-records
     just bench-release-scaling e88c063155c3e734e748e99ccda025393302720f 5e7b995471591eacdd5ae32cebfb8bbb578cbff5 10
+
+# #359 (the team-runs port) against its base on the i9: wall at 6-20 threads on wikidata, and on
+# text, records and random from `ab gen` at scale 16 (the CI bench's corpora, four times its scale,
+# compressed at level 9). Pathfinder PROPOSAL 6771355497; the contrast frozen there (its base's
+# source is master 910472e8's). Rule, written before the data: the note's §8
+# (docs/journal/2026-11-10-team-runs-port.md, on #313 at 37268459).
+bench-team-runs:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    git fetch -q origin perf/team-runs
+    G=$PWD/target/team-runs-corpora
+    rm -rf "$G"
+    cargo build -q --release --example ab
+    target/release/examples/ab gen "$G" 16
+    just bench-release-scaling 58e0a4be697f740b339eae1089c40b567a9f6e93 ba52e4d6f05729b6317ac8b7b37e576d79b193d3 10 "6,8,10,12,16,20" "$G/text.bz2" "$G/records.bz2" "$G/random.bz2"
