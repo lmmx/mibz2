@@ -46,7 +46,8 @@
     6739270804,
     6756316971,
     6757179363,
-    6757808815
+    6757808815,
+    6757979390
   ],
   "outgoing_comment_ids": [
     {
@@ -885,6 +886,15 @@
       },
       "reply_id": 6757974415,
       "routing_verification": "Pinned route/check passed; exact readback passed. Pinned verify hardcodes FROM coordinator, so no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6757979390,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt; migration head and manifest verified. Rescue pass and BufRead/PGO/v3 pricing pending.",
+      "report_path": "state/records/reviews/inbox-6757979390/report.md"
     }
   ],
   "migrated_from": {
