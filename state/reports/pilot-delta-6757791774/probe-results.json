@@ -1,0 +1,99 @@
+{
+  "clean": {
+    "valid": true,
+    "cells": 42,
+    "menu": [
+      {
+        "m": 10,
+        "rounds": 600,
+        "batches": 60,
+        "lrv": 1.6769180912197086e-05,
+        "se": 0.00016717845212126415,
+        "lrv_over_marginal": 0.9210931061618718,
+        "lag1_of_means": 0.09622298034740163
+      },
+      {
+        "m": 20,
+        "rounds": 600,
+        "batches": 30,
+        "lrv": 2.027549868917261e-05,
+        "se": 0.0001838273587235798,
+        "lrv_over_marginal": 1.1136871958371692,
+        "lag1_of_means": 0.025351484494164894
+      },
+      {
+        "m": 30,
+        "rounds": 600,
+        "batches": 20,
+        "lrv": 2.0529234545319943e-05,
+        "se": 0.00018497402766028148,
+        "lrv_over_marginal": 1.1276243314138628,
+        "lag1_of_means": -0.2940451888274548
+      },
+      {
+        "m": 48,
+        "rounds": 576,
+        "batches": 12,
+        "lrv": 1.9827572473294543e-05,
+        "se": 0.00018553401002847827,
+        "lrv_over_marginal": 1.088183048323443,
+        "lag1_of_means": -0.10259682752762926
+      },
+      {
+        "m": 60,
+        "rounds": 600,
+        "batches": 10,
+        "lrv": 1.0825798280959714e-05,
+        "se": 0.00013432422393199543,
+        "lrv_over_marginal": 0.5946365667769855,
+        "lag1_of_means": -0.03759744050642785
+      }
+    ]
+  },
+  "missing_times": {
+    "valid": false,
+    "problems": [
+      "runs: row-times.txt has no start time",
+      "runs: row-times.txt covers 0 rows, not 0 .. 3599 once each"
+    ]
+  },
+  "changed_rows": {
+    "valid": false,
+    "problems": [
+      "runs: runs.jsonl does not match the manifest's digest"
+    ]
+  },
+  "backwards_times": {
+    "valid": false,
+    "problems": [
+      "runs: row times go backwards"
+    ]
+  },
+  "stamper_failed": {
+    "valid": false,
+    "problems": [
+      "runs: the row stamper did not exit 0 ('1')"
+    ]
+  },
+  "unlisted": [
+    "unexpected: downloaded but not listed by GitHub"
+  ],
+  "missing_job_start": [
+    "onebyte: the job's start time is missing: setup unknown"
+  ],
+  "empty_smoke": [
+    1,
+    "smoke: not evidence; FAILED: no structural admission for a smoke run"
+  ],
+  "empty_pilot": [
+    1,
+    "pilot: not evidence; FAILED: no structural admission for a pilot run"
+  ],
+  "batch_span": {
+    "median": 129.0,
+    "p95": 129,
+    "max": 129,
+    "n": 20
+  },
+  "unregistered_tail": "refused"
+}

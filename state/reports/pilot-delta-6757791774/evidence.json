@@ -1,0 +1,394 @@
+{
+  "head319": "ba5a363e8364ced3970374479e7fa736573f8e7f",
+  "head316": "30a6620d0a8733536284e82c91ff19be0185f148",
+  "same_files": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": ".github/workflows/target-gated-ni.yml",
+        "sha": "7f90317d93da65deab2daa6010372e3b315d9d71",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/service_tg.py",
+        "sha": "ec849073854b33e739c338a38b778025bd27425b",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/service_tg_power.py",
+        "sha": "8a1d7b88f988b67bdeeb12d4aba1d84b595321f4",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/test_service_tg.py",
+        "sha": "40c5ae1c2112d47e402d75adc70394e7db60dd60",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/test_tg_ni_gate.py",
+        "sha": "af1f9d43274025158a6c0575d64d626abf2d2d32",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/test_tg_ni_pilot.py",
+        "sha": "da443e48393317d5826b018aba298903bf4eafe7",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/tg_ni_gate.py",
+        "sha": "ed435a77d1ce27ae9bc928f234b80f94315a4f29",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/tg_ni_pilot.py",
+        "sha": "9ddf09287d511c274a23f58bb2446373fcd6363b",
+        "same": true
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "path": "bench/tg_ni_stamp.py",
+        "sha": "200b0810ac5a90a2334136e2d95a7e88e758e42b",
+        "same": true
+      }
+    }
+  ],
+  "checks": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "sha": "ba5a363e8364ced3970374479e7fa736573f8e7f",
+        "checks": [
+          {
+            "name": "Release",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "python (3.10)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.15)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.11)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.13)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.14)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.12)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Publish crate",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "macos (macos-15, aarch64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "sdist",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "windows (windows-latest, x64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macos (macos-15, x86_64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "linux (ubuntu-22.04, x86_64, auto)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "bench",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "rust",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "get-python-versions",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "fuzz-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "typing",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "submit",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "check-commit",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "sha": "30a6620d0a8733536284e82c91ff19be0185f148",
+        "checks": [
+          {
+            "name": "Release",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "deploy-branch",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "preview",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "look",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.15)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.14)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.13)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.12)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.11)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "python (3.10)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Publish crate",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "sdist",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macos (macos-15, x86_64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macos (macos-15, aarch64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "linux (ubuntu-22.04, x86_64, auto)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "windows (windows-latest, x64)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "bench",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "occupancy",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "build",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "get-python-versions",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "typing",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "rust",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "submit",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "pages",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "miri",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "fuzz-smoke",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "check-commit",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ]
+      }
+    }
+  ],
+  "delta": [
+    {
+      "path": ".github/workflows/target-gated-ni.yml",
+      "sha": "7f90317d93da65deab2daa6010372e3b315d9d71"
+    },
+    {
+      "path": "bench/service_tg.py",
+      "sha": "ec849073854b33e739c338a38b778025bd27425b"
+    },
+    {
+      "path": "bench/service_tg_power.py",
+      "sha": "8a1d7b88f988b67bdeeb12d4aba1d84b595321f4"
+    },
+    {
+      "path": "bench/test_service_tg.py",
+      "sha": "40c5ae1c2112d47e402d75adc70394e7db60dd60"
+    },
+    {
+      "path": "bench/test_tg_ni_gate.py",
+      "sha": "af1f9d43274025158a6c0575d64d626abf2d2d32"
+    },
+    {
+      "path": "bench/test_tg_ni_pilot.py",
+      "sha": "da443e48393317d5826b018aba298903bf4eafe7"
+    },
+    {
+      "path": "bench/tg_ni_gate.py",
+      "sha": "ed435a77d1ce27ae9bc928f234b80f94315a4f29"
+    },
+    {
+      "path": "bench/tg_ni_pilot.py",
+      "sha": "9ddf09287d511c274a23f58bb2446373fcd6363b"
+    },
+    {
+      "path": "bench/tg_ni_stamp.py",
+      "sha": "200b0810ac5a90a2334136e2d95a7e88e758e42b"
+    }
+  ],
+  "registration_delta": [
+    {
+      "sha": "48db3f68af8d150bce32af58a3606cbf16b924a4",
+      "filename": "docs/journal/2026-11-10-service-guarded-target-gated-registration.md",
+      "status": "modified",
+      "additions": 68,
+      "deletions": 13,
+      "changes": 81,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/30a6620d0a8733536284e82c91ff19be0185f148/docs%2Fjournal%2F2026-11-10-service-guarded-target-gated-registration.md",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/30a6620d0a8733536284e82c91ff19be0185f148/docs%2Fjournal%2F2026-11-10-service-guarded-target-gated-registration.md",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/docs%2Fjournal%2F2026-11-10-service-guarded-target-gated-registration.md?ref=30a6620d0a8733536284e82c91ff19be0185f148",
+      "patch": "@@ -333,9 +333,14 @@ length is balanced. Batch lengths are even: R900/B20, with batches of 45 rounds,\n - **The relevant slowdown:** a true ratio of **1.005**, a quarter of the margin, in every cell.\n - **The target:** all-cell power of at least **0.80** there, by the dependence-free lower\n   bound.\n-- **The variance it is planned against:** the pilot's **long-run** variance per cell, from\n-  its batch-means sensitivity (§2.8), taking the largest across the predeclared batch lengths.\n-  It is not the marginal ten-round sd.\n+- **The variance it is planned against:** the pilot's **long-run** variance per cell, not the\n+  marginal ten-round sd.\n+  - Normalised as LRV_m = m · var(batch means) = n_m · SE_m², over the fixed menu (§2.8).\n+  - The largest across that menu is a **sensitivity choice**: conservative relative to those\n+    point estimates, but not a confidence upper bound on the long-run variance.\n+  - Using its square root as the power model's σ assumes Var(mean) ≈ LRV/R under the chosen\n+    dependence model. One R600 pilot cannot establish that, nor guarantee 80% power. The final\n+    review assesses the uncertainty and any residual low-frequency dependence explicitly.\n \n **The history is a scenario, not an envelope.** The 47-run history (bench-results\n `links.jsonl` at f99e2f35) gives ten-round marginal sds:\n@@ -485,28 +490,62 @@ prospective design work.\n \n **What it is, fixed now:**\n - **One dispatch** of `.github/workflows/target-gated-ni.yml`, once the tooling is on master\n-  (#319) and its admission fixes are in.\n+  (#319) and its admission fixes are in, **and only after a dispatch-path R2 smoke check has\n+  passed the structural admission** (below).\n   - **Inputs:** `label: pilot`, `shards: all` (all nine, the plan job refuses a subset for a\n     pilot), `rounds: 600`.\n   - **The candidate:** this branch's head at dispatch, with the base it names.\n   - **The conditions:** the toolchain and settings registered in §§2.1–2.2: placement, settle\n     0.25 s, `ab`'s two-round order rotation, the read-back.\n - **Every row is timestamped** as it lands (`bench/tg_ni_stamp.py`, passive, beside both arms\n   alike; the same in a qualification dispatch).\n-- **The analysis menu, frozen before it runs:** `bench/tg_ni_pilot.py`, on #319. It admits the\n-  run as the judge does, label `pilot`. For each of the 42 cells, wall and CPU alike:\n+  - **The clock:** the runner's CLOCK_REALTIME (Python's `time.time()`), written to the\n+    millisecond, with a `# start` line when the stamper begins.\n+  - **What a time means:** when a poller running every 0.2 s saw the row. That is an\n+    observation time; 0.2 s is not a hard bound on scheduling latency.\n+  - **The stamper's exit is recorded** (`stamp.exit`) and never masked: a failed stamper fails\n+    the measurement step, after its record is kept.\n+  - **The judge and the pilot refuse incomplete or impossible timing**\n+    (`service_tg.timing_problems`):\n+    - a missing file, or a stamper exit other than 0;\n+    - no start time;\n+    - any row without exactly one finite time;\n+    - times that go backwards (equal times are allowed, under polling);\n+    - times outside the measurement's `date -u` markers (to the second) by more than 2 s.\n+\n+    Missing timing is INVALID, never a printed zero. The same holds for a job start the API\n+    didn't record: setup is unknown, not 0 s.\n+- **The analysis menu, frozen before it runs:** `bench/tg_ni_pilot.py`, on #319.\n+  - **Admission:** the judge's own structural admission (`service_tg.structural`): the\n+    manifest's schema, no unlisted artifact, the history reconciled, every file rehashed\n+    against the manifest, every shard's files, runner, read-back, corpus, rows and timing.\n+    Only the label (`pilot`) and the frozen values (from the command line) differ.\n+  - **For each of the 42 cells, wall and CPU alike:**\n   - the raw order and timestamps;\n   - the marginal sd;\n   - autocorrelation at lags 1, 2, 5, 10, 30 and 60;\n-  - the batch-means standard error for batch lengths 10, 20, 30, 48 and 60, against the iid\n-    one (the long-run-variance sensitivity), and the batch means' lag-1 correlation;\n-  - each batch length's physical duration;\n+  - for each batch length in the menu below, LRV_m = m · var(batch means) = n_m · SE_m²,\n+    against the marginal variance, and the batch means' lag-1 correlation;\n+  - each batch partition's **actual elapsed span** (median, p95, max). It runs from the previous\n+    batch's last round's end (the first batch's from the stamper's start) to its own last\n+    round's end, settle and polling included. It is not m times a median round;\n   - the head-first minus base-first contrast and its standard error;\n   - the OLS trend over the run, with its t;\n   - a CUSUM change-point screen.\n \n-  Per shard: setup and measurement durations and their tails, and the runner model.\n-  **It reports no cell's ratio or bound.** Every series is read centred.\n+  Per shard: setup and measurement durations, the round-duration tail, and the runner model.\n+  One setup observation per shard describes the jobs sampled, not a well-estimated future\n+  setup tail. **It reports no cell's ratio or bound.** Every series is read centred.\n+- **The batch-length menu at R = 600, chosen now, before any dispatch:**\n+  - **m = 10, 20, 30 and 60 over all 600 rounds,** since each divides 600 into an even-length\n+    partition.\n+  - **m = 48 over the first 576 rounds only:** twelve complete 48-round batches. m = 48 is\n+    the R960 candidate's batch length, and 600 = 12 × 48 + 24.\n+  - **The last 24 rounds** are left out of that one diagnostic, disclosed, and kept in the\n+    archive and in every other analysis. Its LRV uses its own n = 576.\n+  - **This is fixed now:** no rounds are added, and the tail's treatment isn't chosen after the\n+    data. The code refuses a batch length that doesn't divide its rounds, rather than silently\n+    dropping it, as the earlier draft's filter did.\n - **Its rules:**\n   - one dispatch, R = 600 whatever it shows;\n   - no extra rounds or shards for a favourable or unfavourable estimate;\n@@ -531,6 +570,22 @@ prospective design work.\n - **What it costs:** about 293–412 shard runner-minutes, as a qualification dispatch (§2.2), on\n   standard hosted compute.\n \n+**The smoke prerequisite, defined now.** Before the pilot, one dispatch-path smoke check, the\n+same command with `-f rounds=2 -f label=smoke`.\n+- **What passes:** the aggregate job's gate (`bench/tg_ni_gate.py`) passes it only if two things\n+  hold:\n+  - the judge refused it as smoke;\n+  - it passes the **structural admission** (`service_tg.py structure`, label smoke, R = 2, the\n+    dispatched toolchain): all nine shards present, their artifacts listed and downloaded, the\n+    manifest valid, the history reconciled, every file rehashed, and every shard's runner,\n+    read-back, corpus, rows and timing admitted.\n+- **The text corpus's digest** is recorded, not checked, before the freeze.\n+- **The label refusal alone** (the negative qualification-label test) with nothing behind it\n+  fails.\n+- **Green on that structure** is the pilot's prerequisite. The pilot's own green means only the\n+  same structural admission, plus \"pilot: not evidence\". Its diagnostic admission is\n+  `tg_ni_pilot.py`'s, offline.\n+\n **The pilot's dispatch, prepared and not dispatched:**\n ```\n gh workflow run target-gated-ni.yml --repo lmmx/mibz2 --ref perf/service-guarded-target-gated \\\n@@ -545,8 +600,8 @@ gh workflow run target-gated-ni.yml --repo lmmx/mibz2 --ref perf/service-guarded\n   python3 bench/tg_ni_pilot.py shards --manifest manifest.json --head <head> --base <base> \\\n     --rustc \"rustc 1.99.1 (58cf8f9c3 2026-10-13)\" --corpus-text <the text shard's corpus.sha256> --out pilot\n   ```\n-  It runs on the aggregate job's archived artifacts. The aggregate job itself ends green with\n-  \"pilot: not evidence\".\n+  It runs on the aggregate job's archived artifacts. The aggregate job itself ends green only\n+  with the structural admission and \"pilot: not evidence\".\n \n ## 3. On-target superiority (condition 3)\n "
+    }
+  ],
+  "audit": []
+}

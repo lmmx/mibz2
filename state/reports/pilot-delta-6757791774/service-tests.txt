@@ -1,0 +1,23 @@
+test_a_null_run_passes_every_cell (__main__.CI.test_a_null_run_passes_every_cell) ... ok
+test_a_setup_failure_before_measuring_may_precede_the_measured_attempt (__main__.CI.test_a_setup_failure_before_measuring_may_precede_the_measured_attempt) ... ok
+test_admission (__main__.CI.test_admission) ... ok
+test_flags_and_rss (__main__.CI.test_flags_and_rss) ... ok
+test_harm_confirmation (__main__.CI.test_harm_confirmation) ... ok
+test_one_cell_over_the_margin_fails_the_condition (__main__.CI.test_one_cell_over_the_margin_fails_the_condition) ... ok
+test_the_bound_is_batch_means_one_sided_95 (__main__.CI.test_the_bound_is_batch_means_one_sided_95) ... ok
+test_the_frozen_file_must_name_the_ci_fields (__main__.CI.test_the_frozen_file_must_name_the_ci_fields) ... ok
+test_the_history_is_reconciled_fail_closed (__main__.CI.test_the_history_is_reconciled_fail_closed) ... ok
+test_the_power_script (__main__.CI.test_the_power_script) ... ok
+test_the_runner_and_its_read_back (__main__.CI.test_the_runner_and_its_read_back) ... ok
+test_the_timing_must_be_complete_and_coherent (__main__.CI.test_the_timing_must_be_complete_and_coherent) ... ok
+test_quantiles (__main__.TStats.test_quantiles) ... ok
+test_a_clean_attempt_meets_the_workstation_conditions (__main__.Workstation.test_a_clean_attempt_meets_the_workstation_conditions) ... ok
+test_admission (__main__.Workstation.test_admission) ... ok
+test_each_condition_fails_on_its_own (__main__.Workstation.test_each_condition_fails_on_its_own) ... ok
+test_structural (__main__.Workstation.test_structural) ... ok
+test_the_bounds_are_the_registered_ones (__main__.Workstation.test_the_bounds_are_the_registered_ones) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 9.611s
+
+OK
