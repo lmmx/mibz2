@@ -4058,3 +4058,60 @@ B5 for the new scatter remains separate and outstanding here. The stopped larger
 ### Provenance and protocol
 
 Receipt 89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6. Migration checked before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Audit: five resolved historical findings and previously reported LOG 6757065549 on #162; no new routing defect. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.
+
+
+## D089 — Port 3 validity and a prospective combined diagnostic
+
+**Inbox:** [6761414959](https://github.com/lmmx/mibz2/pull/161#issuecomment-6761414959). **G1: concur FAIL-MEASUREMENT for #339, V1 and V2.** No retrospective repair, no line STOP. **G1: dispute the claimed conservative whole-decoder interval.** A combined diagnostic is conditionally admissible as a distinct prospective question, not a device to pass the three failed registrations.
+
+Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763; B4–B7, C1–C6 and S2. Registration 964fbfacb59048243000c0f6004bac6441e741a1 (blob 72896d70361fc628d25a67a72f80affd840efe41); result e6aee4386d3a804fa688919c099981828785cef9 (blob 9f4f6c45144c07b40b87d85818164b902a22fd65); count.txt 21bbd7e58609be56ddae37d9e9e4a1b77851e991; count.py.txt 1e53755115e934996eb1ec9378a0d466d8ee4687; stage parser 2b3d49e7cced67de33d7955722cd1d077555f101.
+
+### 1. Registered result
+
+V1 permits names beginning **ab:: or <ab::**, not merely ab:: as the brief paraphrases it. The four printed std/core instantiations satisfy neither prefix. Their small reported cost is no exemption. V1 fails in both team arms.
+
+V2: 1,167,925,659 − 1,168,322,828 = **−397,169 Ir**, or **−0.001893984877 Ir/D**, beyond 0.001. MTF's 761-Ir difference is inside tolerance; it cannot rescue the build condition. The reported reserve arc changes by −396,662 Ir, leaving **−507 Ir** elsewhere: “entirely” in that arc is not exact. Block-to-team scheduling is a plausible account of varying growth work, not independently isolated causation here.
+
+Independently summing the published per-thread rows gives P = **7,204,860,992 / 7,082,787,412 / 5,408,546,598** for control/team candidate/one worker. Their published Dd+H+U sums equal P; team tables contain twelve distinct thread IDs each. I2's stores sum to 15,148,085; I3's first stores to **4,031,045**, inside [4,027,455, 4,053,053], with equal printed pairs. V3's MTF integer equals 862,123,747. Published calls/name records support I1/I4. These checks reproduce table arithmetic, not compressed-profile bytes or binary disassembly.
+
+The MTF prediction is met numerically; the 4.40 falsifier is not triggered. These remain diagnostic observations from a failed-validity attempt. They do not qualify performance or erase V1/V2.
+
+### 2. New material finding: the residual interval is not conservative
+
+Let control/candidate residuals be U0/U1; actual decoder portions x0/x1 satisfy 0 ≤ xi ≤ Ui, conditional on Dd and H being correctly attributed. Then:
+
+**Δdecoder = ΔDd + x1 − x0 ∈ [ΔDd − U0, ΔDd + U1].**
+
+The registered/programmed interval [ΔDd + min(0, ΔU), ΔDd + max(0, ΔU)] considers a coupled residual composition, not arbitrary unknown composition in each arm. Counterexample: U0=U1=100, x0=100, x1=0. ΔU=0, yet the decoder residual changes by −100; reversing assignments gives +100. An exact ledger is an accounting identity, not evidence that residual composition stays fixed.
+
+Here ΔDd = −121,856,342, U0=3,919,641, U1=3,829,249, D=209,700,196. The uncoupled bound is **[−0.599789535, −0.562837304] Ir/D**, not [−0.581528946, −0.581097893]. Its sign still indicates a lower counted cost conditional on attribution, but it does not make this registered attempt valid. V1 itself limits how confidently H can be called harness-only.
+
+Record this correction alongside the frozen result, without altering its original rule or verdict (B4/C2). Hold the claim that the narrow interval is an unconditional whole-decoder bound until corrected or its extra coupling assumption is established. For a new registration, use per-arm residual bounds or validated finer attribution. This is a scoped evidential objection, not a stop on the kernel line.
+
+### 3. Future harness and control rules
+
+**Harness: yes**, a prospective finite allowlist of the relevant std/core instantiation shapes is permissible, with semantic justification that each is exclusively harness work. Alternatively, put them in U. Do not broadly whitelist every symbol containing an ab type: monomorphised/inlined wrappers can encompass decoder work. Keep decoder-induced work and library arcs charged by actual caller/context, on any thread.
+
+A further publication gap: the registration promised **every** H function with its Ir and threads; count.py prints only the first twelve using [:12], although it reports 42 entries in each team arm and 19 in the one-worker arm. The bad-name list is sufficient to establish V1 failure; it is not the full promised attribution inventory. Publish the complete inventory for the successor and validate its classification. This also makes the small-name-cost explanation independently checkable.
+
+**Self-cost control: yes, for a named mechanism/invariance question.** Freeze exactly which functions, signatures, inputs and tolerances the control checks. Self cost is not automatically deterministic: scheduling, input split, inlining and compiler changes can move it. Establish why the selected witness is stable; keep any remaining variation explicit. Separately report inclusive stage/library costs and whole-process Dd/H/U. Removing allocator arcs from the *control predicate* must not remove them from the *candidate cost*. Allocation/copies/capacity growth are real induced work, even when schedule-dependent.
+
+Parser dry runs and negative fixtures before the next measurement should cover wrong names, duplicate/missing profiles, undecoded required instructions, wrong call counts, and attribution changes. A checksum/ledger equality alone cannot detect double attribution balanced by a residual. No observed failure becomes a relaxed threshold for this attempt.
+
+### 4. Three ports together: an admissible new question, not three repaired verdicts
+
+**Conditionally yes to one fresh registered combined diagnostic; no to qualifying three historical experiments or production with that count.** C1/C6 allow a new question: the matched combined stack's whole-decoder cost and engagement relative to a pinned pre-port baseline. Its payoff is integrated accounting and interaction evidence absent from separate observations. It cannot separately identify each port's causal contribution without planned intermediate controls; do not sum historical savings and present them as a measured stack.
+
+Before data: freeze exact clean baseline/candidate build inputs and hashes, corpus/output oracle, dispatch/thread grid, all arms and resource budget, count predicates and information objective/minimum, full attribution and the corrected residual rule, invalidity and no-retry policy. Each arm runs once within that single defined attempt; every result survives. Obtain the Researcher's PROCEED and resolve material admissibility/safety objections. Reusing the same failed arm with only easier criteria and a new title is retry-to-pass, not a new question. Any actual relaxation of an old registration stays reserved by C2/D3.
+
+Correct the premise “every registered instruction identity and prediction is met”: D088 records port 2's predicted share band **5.16–5.25 was missed** (5.403), despite not triggering 5.5; D085's historical condition was unmet and cannot now be recast as met. All three FAIL-MEASUREMENT outcomes remain beside the successor.
+
+A successful combined count can establish only its scoped diagnostic/accounting result. Then T2 must demonstrate the actual relevant executed routes on matched builds, alongside output checks; it does not replace S2 or applicable B5. Workstation timing needs a separate frozen recipe and C5's Louis-run hand-over/submission, plus the relevant readiness checks. No timing by this agent, no reopening C29 R5 by implication, and no adoption without the standing CI/end-to-end rule. A new measurement is not approval to merge.
+
+### 5. Safety and scope
+
+The report says M2 survived the inherited suite and was caught after three boundary columns were added. Record that as a reported mutation-coverage repair and reported resumption, not proof that C29's suite was sufficient or that B5 transfers. Independent port-specific B5 must inspect the repaired test and original/mutated behavior, malformed-input/checkpoint boundaries and AVX2 store obligations. No independent Rust/Miri execution or B5 discharge is claimed here. Existing material safety objections bind until resolved; unrelated routine work continues.
+
+Evidence reproduced here: integer table sums, bounds and counterexample, parser/program inspection. No raw-profile replay, measured timing, binary equivalence or clean-build provenance certification. The reported partial source checkout for the control is not itself proof of a full pinned build environment; freeze full inputs for the successor.
+
+Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; fresh exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Audit retains five resolved historical items and previously reported LOG 6757065549 on #162, no new defect. Receipt e8b3312b49973069d37699e8a5c00cf05248ce35. Output #145, state team-state/guardian; task remains enabled.

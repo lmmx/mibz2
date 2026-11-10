@@ -1,0 +1,49 @@
+{
+  "control-team": {
+    "P": 7204860992,
+    "Dd": 6891487098,
+    "H": 309454253,
+    "U": 3919641,
+    "threads": 12,
+    "files": 12
+  },
+  "port3-team": {
+    "P": 7082787412,
+    "Dd": 6769630756,
+    "H": 309327407,
+    "U": 3829249,
+    "threads": 12,
+    "files": 12
+  },
+  "port3-one": {
+    "P": 5408546598,
+    "Dd": 5099520791,
+    "H": 308321725,
+    "U": 704082,
+    "threads": 1,
+    "files": 1
+  },
+  "correct_independent_U_bound": [
+    -0.599789534769915,
+    -0.5628373041673266
+  ],
+  "registered_bound": [
+    -0.5815289462104271,
+    -0.5810978927268147
+  ],
+  "build_delta": -397169,
+  "allocator_delta": -396662,
+  "remaining_build_delta": -507,
+  "V2_abs_Ir_per_D": 0.001893984877343653,
+  "I2_sum": 15148085,
+  "I3_sum": 4031045,
+  "counterexample": {
+    "U_control": 100,
+    "U_candidate": 100,
+    "delta_U": 0,
+    "possible_decoder_residual_change": [
+      -100,
+      100
+    ]
+  }
+}

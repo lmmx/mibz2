@@ -3141,7 +3141,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D089",
-      "progress": "Receipt: assessing port 3 validity and prospective combined count."
+      "progress": "D089 assessment written; preparing work publication.",
+      "receipt_commit": "e8b3312b49973069d37699e8a5c00cf05248ce35"
     }
   ],
   "migrated_from": {
