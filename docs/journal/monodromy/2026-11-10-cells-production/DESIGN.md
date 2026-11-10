@@ -118,3 +118,37 @@ as the caller gave it.
 3. The differential tests and the forced fuzz mode; the Miri paths.
 4. The journal entry with the safety table and the counted costs of a refusal.
 5. The PR on `claude/sharp-meitner-cx0v78` once #362 has merged; milestones on #145.
+
+## 7. After the bench map (`prod_bench-gates.json`; added 18:00Z)
+
+The third map returned after this note was posted. It settles §5's open point and adds
+four things the PR must be shaped round.
+
+- **How a merge is judged.** One workflow, `Benchmark` (`.github/workflows/bench.yml`): the
+  head and its merge base as two arms of `examples/ab.rs`, 7 corpora, threads 1, 2 and
+  nproc, 10 paired rounds; a row is "faster" or "slower" only when the 95% interval of the
+  head/base ratio excludes 1. The arms are hard-coded and drive `BzReader::new` and
+  `BzReader::parallel`, which reach `decode_block` with `Segmented` at every thread count
+  on CI's runners. **So slice one, with the default unchanged, is neutral by construction,
+  whether the switch is a feature or a type.** To have CI measure the kernel before the
+  flip, slice one adds a third arm to `examples/ab.rs` that decodes with the new type: the
+  bench's own code, not the library's. The same arm is what a workstation A/B on one build
+  needs.
+- **`text` will not be faster.** The assignment's gate reads "wikidata and text faster
+  beyond noise". The kernel's own record puts text outside its domain (prose, r/n 0.367:
+  4.0× slower), so the admission refuses text blocks at the first test and the `text` rows
+  can only be level. What the flip can show is `wikidata` faster and every other corpus
+  level. Whether that meets PERFORMANCE-POLICY's rule 1 is the Coordinator's reading; the
+  bench's `text` corpus was never measured by this lane.
+- **The whole-decoder gain is unmeasured and smaller than the stage's.** 0.82 to 0.86 is
+  the inversion alone; the inversion is a part of a block's decode. The first number that
+  matters is the third arm's row on `wikidata` at one thread.
+- **Peak resident memory has a gate** (rule 4: +10% on any corpus, or a justification).
+  Address space is not counted, touched pages are. A refused block still uses production's
+  table, so on a mixed corpus both sets of pages are resident. The budget-bounded buffer of
+  §3 is what keeps this small; the PR reports the bench's RSS column.
+- **Layout.** #324's two harms (`random`, `records` at one thread) were on blocks that ran
+  none of its code, put down to `Scratch` growing inline. The new type's state goes behind
+  a pointer in `Scratch`, not inline, and the neutral rows of slice one are the check.
+- **One bench run decides, on the final head:** no fix-up pushes to `src/` after the run
+  that is to count.
