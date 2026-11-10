@@ -19,6 +19,8 @@ on:
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
+      - "src/runs.rs"
+      - "src/runs/**"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
@@ -28,6 +30,8 @@ on:
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
+      - "src/runs.rs"
+      - "src/runs/**"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 

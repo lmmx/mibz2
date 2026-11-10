@@ -267,6 +267,100 @@ All local runs were on this branch's final source, with nightly Miri 2026-10-26 
   - **The adversarial review** by an agent other than the implementer is the Coordinator's to
     commission.
 
+### 3.2 Mutation testing (addendum, 10 November 2026, after the owner's adoption decision)
+
+Added after §6, when Louis adopted #324 as a production default (#145, LOG 6764294229). It
+completes the first of §3.1's two outstanding B5 items. The adversarial review remains the
+Guardian's. §2, §4 and §5 are unchanged.
+
+**The method.**
+- **The tool:** cargo-mutants 27.1.0 (`--in-place`, 240 s timeout), on the branch merged with
+  master at `f91f2302`. It mutated:
+  - all of `src/runs.rs`;
+  - in `src/bwt.rs`: `reads_runs`, `invert_runs`, `repeat_cycle`, `assemble_reversed`,
+    `walk_back`, `walk_back_room`, and `room_segments`' first-row lines (the `BACK` choice);
+  - in `src/lib.rs`: `decode_block` and `finish`.
+- **The tests run against each mutant:** the library's tests, except
+  `room_walk_crafted_permutations` (124 s, and on the forward walk only).
+- **What cargo-mutants skips:** `unsafe fn`s. So `front_avx2`, `second` and `fill_avx2` had
+  a hand pass of 34 mutants instead. These were bounds, the cap of 127, span limits of 21
+  and 22 run symbols, the slack, the counts' halves, the shuffle tables' rows, and each of
+  `fill_avx2`'s checks. Each was run against `runs::` on this AVX2/BMI2 machine, where
+  `kernels()` checks both kernel sets.
+
+**The results.**
+
+| pass | mutants | caught | missed | timeouts | unviable |
+|---|--:|--:|--:|--:|--:|
+| cargo-mutants, before the new tests | 192 | 151 | 22 | 3 | 16 |
+| cargo-mutants, the 22 missed, after the new tests | 22 | 12 more | 10 (below) | 0 | 0 |
+| hand pass: `front_avx2`, `second` | 24 | 16 | 8 (below) | 0 | 0 |
+| hand pass: `fill_avx2` | 10 | 8 | 2 (below) | 0 | 0 |
+
+- **The three timeouts** are infinite loops in `repeat_cycle`: `have <= n`, and `have -= take`
+  or `*= take`. A hang is a detection.
+- **The 16 unviable mutants** did not compile.
+- **A few mutants that grow a buffer without bound** were ended by the kernel's OOM killer.
+  cargo-mutants counts these as caught.
+
+**Killed by new tests (12).** In each of these mutants the bytes stay right, but the wrong
+path or kernel runs, so the equivalence tests could not see them. The new tests are in
+`src/runs/tests.rs`:
+
+| mutant | killed by |
+|---|---|
+| `decode_block`: `!cooperative` → `cooperative` (the records' path never taken) | `runs_path_taken_exactly_where_selected` |
+| `Segmented::reads_runs` → false | the same |
+| `walk_back_room`: `< MIN_SEGMENTED` → `==`, `>`, `<=` (3) | `runs_walk_back_room_segments_from_its_bound` |
+| `takes_runs`: `max_len < 1 << 24` → `<=` | `runs_takes_runs_bounds` |
+| `Runs::buffers` → `vec![]` | `runs_buffers_listed` |
+| `front_fast` → true, → false, and each `&&` → `\|\|` (5) | `runs_front_kernel_selected` |
+
+The new tests check:
+- **`runs_path_taken_exactly_where_selected`:** across 400 synthetic blocks, a sentinel
+  record shows that `front` ran with `Segmented` exactly where `takes_runs` holds, and never
+  with `Plain`.
+- **`runs_front_kernel_selected`:** only the AVX2 front writes the bitmaps. So scalar
+  kernels must leave them empty, and `Kernels::detect()` must fill them exactly when AVX2,
+  BMI2, LZCNT and POPCNT are detected. Both kernels give the same records.
+- **`runs_walk_back_room_segments_from_its_bound`:** at `MIN_SEGMENTED − 1` and
+  `MIN_SEGMENTED` rows, it checks `walk`'s bytes, and checks whether the scratch recorded a
+  room walk.
+
+**Missed and equivalent (19).** None of these changes the output on any input:
+
+| mutant | why it is equivalent |
+|---|---|
+| default `InverseBwt::invert_runs` → true, → false (2) | unreachable: `decode_block` calls it only when `reads_runs`, and every kernel that reads runs overrides it |
+| `repeat_cycle`: `m == 0 \|\| m >= n` → `&&` | m ≤ n at both callers. At m = n the copy is of [0, n) onto itself and the loop doesn't run. m = 0 only when n = 0 |
+| `assemble_reversed`: `while at > 0` → `>= 0` | `at` is unsigned. At 0 each further step copies nothing, and the join still stops on returning to its first segment |
+| `MAX_RUN_WEIGHT`: `2 * 1024 * 1024` → `2 + 1024 * 1024` | `weight` is a power of two, and the first one at or above either bound is 2^21 |
+| `close` (`front_scalar`) and `fill_scalar`: `\|` → `^` (2) | disjoint bits: a length below 128 beside `c << 8`, a byte beside `next << 8` |
+| `steps`: `(nn − 16) as u8` → `(nn + 16)` | `pshufb` reads a control byte's low 4 bits and bit 7. nn ± 16 for nn in 16..32 agree in both |
+| `fill_scalar`'s `len > n − q`; `fill_avx2`'s check removed (F3) (2) | implied by the bucket check: each byte's records stay within its bucket, and the buckets sum to n, so q + len ≤ n always. Removing the bucket check (F1) is caught |
+| `fill_avx2`: `w >= end` → `w > end` (F5) | one more store at w = end ≤ n, inside the n + 8 reserved, rewritten by the next record or past n |
+| `front_avx2`: the bitmap loop `ci·32 + 32 <= m` → `<` (A1) | a last whole 32 symbols goes to the tail loop, which takes up to 32 |
+| `front_avx2`: `total > 127` → `>=` (A8) | a run of exactly 127 rows through `long!` is the same single record and count |
+| `front_avx2`: `long!`'s guard `more > slack \|\| big > max_len` → `&&` (A10) | the slack guard is implied: Σ more ≤ big / 127 ≤ max_len / 127 < slack while big ≤ max_len |
+| `front_avx2`: a later word's span `> 22` → `> 23` (A15) | a span of 23 is 22 run symbols, at least 2^22 − 1 rows, so `emit!`'s own span check refuses it |
+| `front_avx2` refusing more often: slack per record (A9), no +1 slack (A17), final length `>=` (A16), in-word span + 1 (A20) (4) | a refusal is `None`, and `front_scalar` then decides the block. Only the time changes |
+
+**Out of scope (1).** `decode_blocks`' `Range { end: start_bit, .. }` field deleted
+(`src/lib.rs:504`) is October code, not #324's. It got past the file filter and is not
+judged here.
+
+**Two findings from the pass.**
+1. **Two of the AVX2 kernels' safety guards are implied by others** (A10, F3). Neither can
+   fail alone:
+   - `long!`'s slack check is implied by the length check;
+   - `fill_avx2`'s block-end check is implied by the bucket check.
+
+   They stay as defence in depth. The bucket check (F1), on which `fill_avx2`'s stores rely,
+   is caught by `miri_runs_broken_tilings_refused`.
+2. **Every refusal mutant of `front_avx2` is masked by the scalar fallback.** A wrong `None`
+   costs time, never bytes. The cases where `front_avx2` returned `Some` when it should not
+   have were caught: A2–A7, A11–A14, A18, A19, A21–A24.
+
 ## 4. Instructions: whole `decode_block`, and by stage
 
 **The method:** inclusive Ir of the driver's `measured`, one `decode_block` on a fresh
