@@ -2,11 +2,17 @@
 rate at each worker count with a sequential scanner thread (`scan`) and with a magic finder and
 workers that read their own blocks (`find`), and the registered reading at the largest count.
 
-    python3 bench/par_scan_knee.py runs.jsonl ROUNDS WORKERS REPORT.json > summary.md
+    python3 bench/par_scan_knee.py runs.jsonl ROUNDS WORKERS REPORT.json EXPECTED_BYTES > summary.md
 
 Exits 1, naming the fault, unless runs.jsonl is exactly the registered grid: every (round, arm,
-workers) once; exactly the fields; whole, positive times; one decoded size, above 0, in every
-cell.
+workers) once; exactly the fields; whole, positive times; and in every cell exactly
+EXPECTED_BYTES decoded bytes. EXPECTED_BYTES is the input's decoded size as recorded apart from
+the run (bench-par-scan takes it from the corpus manifest, bench/wikidata.json, or from the
+records generator, each checked against libbzip2's decode of the input): a run that decoded
+some other size in every cell is refused, not read.
+
+FASTER is a descriptive selection threshold on the median of the paired ratios, not a test of
+a population gain, and qualifies no production change.
 """
 
 import json
@@ -28,9 +34,11 @@ def whole(v) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
 
 
-def load(path: str, rounds: int, workers: list[int]) -> dict:
+def load(path: str, rounds: int, workers: list[int], expected: int) -> dict:
     if rounds < 1 or not workers or len(set(workers)) != len(workers) or min(workers) < 1:
         die("ROUNDS must be at least 1, and WORKERS distinct counts of at least 1")
+    if expected < 1:
+        die("EXPECTED_BYTES must be at least 1")
     cells: dict = {}
     for n, line in enumerate(open(path), 1):
         try:
@@ -60,6 +68,8 @@ def load(path: str, rounds: int, workers: list[int]) -> dict:
     sizes = {r["bytes"] for r in cells.values()}
     if len(sizes) != 1:
         die(f"the cells decoded {sorted(sizes)} bytes, not one size")
+    if sizes != {expected}:
+        die(f"the cells decoded {sorted(sizes)} bytes, not the expected {expected}")
     return cells
 
 
@@ -110,9 +120,13 @@ def report(cells: dict, rounds: int, workers: list[int]) -> tuple[str, dict]:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 6:
+        die("usage: par_scan_knee.py runs.jsonl ROUNDS WORKERS REPORT.json EXPECTED_BYTES")
     path, rounds = sys.argv[1], int(sys.argv[2])
     workers = [int(x) for x in sys.argv[3].split(",")]
-    text, verdict = report(load(path, rounds, workers), rounds, workers)
+    expected = int(sys.argv[5])
+    text, verdict = report(load(path, rounds, workers, expected), rounds, workers)
+    verdict["expected_bytes"] = expected
     with open(sys.argv[4], "w") as f:
         json.dump(verdict, f, indent=1)
     print(text)
