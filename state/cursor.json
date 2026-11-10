@@ -1159,14 +1159,16 @@
     {
       "comment_id": 6767027944,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Static source work, conditional ceilings and exact profile handoff committed; no dynamic counts generated; REVIEW pending.",
+      "progress": "Static review and profiling handoff published; dynamic profiles remain outstanding. Exact REVIEW body, author and #145 destination verified.",
       "report_path": "state/records/reviews/inbox-6767027944/report.md",
       "disposition": "static_review_complete_dynamic_profiles_outstanding",
       "dynamic_profiles_outstanding": true,
-      "report_commit": "373fc8ebcae567715b40de005edf28a38781f2ab"
+      "report_commit": "373fc8ebcae567715b40de005edf28a38781f2ab",
+      "reply_id": 6767132026,
+      "routing_verification": "route/check passed; pinned verify hardcodes FROM coordinator and rejects optimizer. Exact GitHub readback independently verified; no verify-pass claimed."
     }
   ],
   "migrated_from": {
