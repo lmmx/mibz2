@@ -1,0 +1,16 @@
+{
+  "incoming": 6758683390,
+  "review": 6758740649,
+  "work": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
+  "complete_cursor": "3bc34325b08dd8532e6c90408da1b5c6a2c88781",
+  "exact_body_readback": true,
+  "issue": 145,
+  "coord_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "pass",
+  "automation_changed": false
+}

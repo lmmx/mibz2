@@ -1256,8 +1256,9 @@
       "pr": 330,
       "sha": "c47fbe50cf99fbff930526356b9723bfc453ddb9",
       "commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
-      "status": "complete",
-      "disposition": "Forced-team screen admissible prospectively; exact dispatch and claim scopes corrected; tier readiness unestablished"
+      "status": "finished",
+      "disposition": "Forced-team screen admissible prospectively; exact dispatch and claim scopes corrected; tier readiness unestablished",
+      "comment": 6758740649
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1338,7 +1339,8 @@
     6757058587,
     6757246555,
     6757750433,
-    6758456856
+    6758456856,
+    6758740649
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1524,7 +1526,8 @@
     "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
     "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f",
     "0689fbc7904b262d26961a9ea062b340a3fbd79f",
-    "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f"
+    "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
+    "3bc34325b08dd8532e6c90408da1b5c6a2c88781"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1607,7 +1610,8 @@
     6756994744,
     6757176848,
     6757688316,
-    6758376066
+    6758376066,
+    6758683390
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1687,9 +1691,10 @@
   },
   "current_execution": {
     "active_comment": 6758683390,
-    "status": "complete",
+    "status": "finished",
     "decision": "D083",
-    "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f"
+    "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
+    "review_comment_id": 6758740649
   },
   "duplicate_events": [
     {
@@ -2321,6 +2326,14 @@
       "decision": "D082",
       "commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
       "comment": 6758456856
+    },
+    {
+      "pr": 330,
+      "sha": "c47fbe50cf99fbff930526356b9723bfc453ddb9",
+      "evidence_digest": "report:5ab0631f4f1a0a1021e0abb995fdf0435964c36b;parallel:a425a3cd3939f74d9091fca7906122766097e84a;inbox:6758683390",
+      "decision": "D083",
+      "commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
+      "comment": 6758740649
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2924,11 +2937,13 @@
     {
       "comment_id": 6758683390,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D083",
-      "progress": "D083 complete; conditional forced-team screen and prospective path-coverage declaration.",
+      "progress": "REVIEW exact readback verified on #145; pinned verifier only fails hardcoded coordinator FROM; independent Guardian checks pass.",
       "receipt_commit": "0689fbc7904b262d26961a9ea062b340a3fbd79f",
-      "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f"
+      "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
+      "review_comment_id": 6758740649,
+      "complete_cursor_commit": "3bc34325b08dd8532e6c90408da1b5c6a2c88781"
     }
   ],
   "migrated_from": {
