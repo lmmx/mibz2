@@ -328,7 +328,7 @@ Ratios are against master; "–" means no candidates in that class.
 
   **The (c) failure stands.**
 - **`bwt::build`, `room_segments`, and `mtf_avx2`'s and `read_item`'s H←H:** within 1% in
-  every build. The candidate equals master to the instruction-level trace.
+  every build. The candidate equals master in these classes.
 - **Boxing restored nothing D082 asked for.** Its D←H equals the head's.
 
 **What changes against the original screen:**
