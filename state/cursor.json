@@ -1853,11 +1853,15 @@
     },
     {
       "trigger_comment_id": 6769305752,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "scope": "Fact-checked blog manuscript and publication handoff; own-state branch only."
+      "scope": "Fact-checked blog manuscript and publication handoff; own-state branch only.",
+      "source_commit": "ae51b11a46014e5fec928b0e25235f532a473a9f",
+      "report_commit": "3faeafc853dbe632a21b147cdc1f3a4b2223460a",
+      "report_path": "state/reports/monodromy-blog-6769305752/handoff.md",
+      "disposition": "Blog draft and fact audit complete; publication delegated to Coordinator because docs-branch writes exceed pinned Researcher scope. Render/build checks outstanding."
     }
   ],
   "active_delegations": [],
