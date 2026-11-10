@@ -5390,6 +5390,19 @@ mod tests {
         std::path::Path::new(&format!("/proc/self/task/{tid}")).exists()
     }
 
+    /// Whether `cond` holds within 2 s. A joined thread's /proc entry can outlast the join
+    /// briefly (the join returns when the kernel clears its tid, before its task is released)
+    fn soon(cond: impl Fn() -> bool) -> bool {
+        let t = std::time::Instant::now();
+        while t.elapsed() < std::time::Duration::from_secs(2) {
+            if cond() {
+                return true;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        cond()
+    }
+
     #[test]
     fn held_spinner_starts_holds_and_stops() {
         // (one test, so the tests' own threads don't come and go between its readings)
@@ -5419,8 +5432,8 @@ mod tests {
         let spun = h.stop();
         // (only that its CPU was read: how much it gets depends on the runner's load)
         assert!(spun > 0.0, "its own CPU, {spun} s");
-        assert!(!alive(tid), "stopped and joined");
-        assert_eq!(spinners(), 0, "no thread left behind");
+        assert!(soon(|| !alive(tid)), "stopped and joined");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
 
         // a failing child (it exits 1) under the spinner: stopped after the reap, as `run`
         let h = Held::start(cpu, false, false).unwrap();
@@ -5432,7 +5445,7 @@ mod tests {
         assert!(!st.success());
         assert!(alive(tid), "held until the child is reaped");
         h.stop();
-        assert!(!alive(tid));
+        assert!(soon(|| !alive(tid)));
 
         // an error or a panic while it is held: dropped, so stopped and joined
         let tid = std::panic::catch_unwind(|| {
@@ -5445,13 +5458,13 @@ mod tests {
         .downcast::<u32>()
         .map(|b| *b)
         .unwrap();
-        assert!(!alive(tid), "the unwind stopped it");
-        assert_eq!(spinners(), 0, "no thread left behind");
+        assert!(soon(|| !alive(tid)), "the unwind stopped it");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
 
         // a CPU it may not run on: refused, and nothing left running
         assert!(Held::start(4096, false, false).is_err());
         let not_allowed = (0..1024).find(|c| !mine.contains(c)).unwrap();
         assert!(Held::start(not_allowed, false, false).is_err());
-        assert_eq!(spinners(), 0, "no thread left behind");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
     }
 }
