@@ -323,3 +323,13 @@ And later in the same session:
   - SPEC.PATHFINDER.md now says "Follow MODE.md's Pathfinder stanza".
 - **Unchanged:** the spec's operational rules (#327) and the register of the other stanzas.
   MODE.md is changed only by Louis.
+
+## 2026-11-10: Codex implementation delegate and Coordinator continuity (owner request; setup PR proposed)
+
+- **Source:** Louis, directly to ChatGPT after Claude's weekly quota interruption. His words:
+  > sure, do it!
+  >
+  > yes set it all up, we do not want the coordinator to be a single point of failure
+- **Proposed in a separate setup PR; not active until merged:** the new `codex` implementation delegate uses issue #363, `team-state/codex` and `coord.py` routing; actual Codex sessions remain manually launched. The existing Coordinator may be operated by an expressly owner-activated ChatGPT Work session during a Claude outage, with a visible `ACTOR:` attribution, no concurrent operator, and a return-of-control LOG. See `docs/team/CODEX-PILOT.md` and `docs/team/COORDINATOR-FAILOVER.md`.
+- **Not authorised by this decision:** new mathematical authority, self-review of unsafe Rust, relaxed B5 or evidence gates, autonomous workstation runs, automatic paid compute, bypassed merge checks or silent default flips.
+- **Activation check:** the change takes effect only when this setup PR has merged into master; an actual Work task and Codex run must be started and acknowledged separately. No automatic event-trigger has been installed by this PR.
