@@ -1386,7 +1386,7 @@
     },
     {
       "trigger_comment_id": 6755685313,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1394,7 +1394,10 @@
       "report_path": "state/reports/bw-titration-6755685313/report.md",
       "report_commit": "eb2bec61f6921db897e6371e56d55c9cd48764b0",
       "review_comment_pr": 145,
-      "disposition": "REVISE: corrected census source objections closed; bandwidth labels not identified by controls, baseline can shift bottleneck; scoped-thread shutdown can hang; admission and B5 evidence remain. NOT BOUND cannot close cold-write candidates."
+      "disposition": "REVISE: corrected census source objections closed; bandwidth labels not identified by controls, baseline can shift bottleneck; scoped-thread shutdown can hang; admission and B5 evidence remain. NOT BOUND cannot close cold-write candidates.",
+      "review_comment_id": 6755766766,
+      "publication_verified": true,
+      "verification_note": "Exact body and #145 readback pass. Role-aware routing passes; pinned coord.py verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
