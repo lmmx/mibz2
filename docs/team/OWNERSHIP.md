@@ -69,4 +69,10 @@ Roles specialise, but they don't confine:
 - **Precedence:** this file is linked from the top of MODE.md and from CLAUDE.md, so every session and every role reads it first. It takes precedence over RULES, STEWARDSHIP and PROTOCOL wherever they conflict on how work moves; those files are amended to match.
 - **Review:** each week, and at every release, the Coordinator reviews DELIVERED.md against the work in flight. Anything open more than a week without a merge, defer or abandon decision gets one.
 - **Retiring growth:** a new rule, gate or review step must name the failure it prevents and its cost in delay. A rule that hasn't prevented anything in a month is a candidate for removal.
+- **Expiry by default** (Louis, 10 November 2026):
+  - a PR that is green, policy-ACCEPT (PERFORMANCE-POLICY.md) and B5-complete merges within 24 hours, or closes with a reason;
+  - an investigation with no integration decision in 48 hours closes.
+- **Sunset:** every process rule outside RULES A and B expires 30 days after its last renewal. Renewal is one line in the decision record (`docs/journal/decisions.md`) saying what it prevented.
+- **Retro at each release,** three lines: what shipped, what was dropped, which rule cost more than it saved. Each retro deletes or simplifies one rule.
+- **The reversion signal:** comments and decisions per merged `src/` PR. If it climbs, cut process before starting anything else.
 - **Changes:** this file changes only by Louis.

@@ -7,6 +7,9 @@ integrate it into the swarm … Please do 1 and 2 yeah", 1 being "Record Pathfin
   **Amended 2026-11-10** at Louis's instruction (`docs/journal/decisions.md`, "the Pathfinder's
   pricing gate"): the Optimiser's independent pricing gate, the share-nothing objective, and
   "disprove the underlying advantage, not merely the first implementation".
+  **Amended 2026-11-10** (OWNERSHIP.md; `docs/journal/2026-11-10-ownership.md`): Architect:
+  architectural and product-performance leadership, the ranked backlog, and `src/` PRs of its
+  own (RULES O); a one-cycle wait for the price; diagnostics queued without a PROCEED.
 - **Inbox:** #314, a draft PR from `pathfinder/inbox` that is never merged. Messages to it carry
   `TO: pathfinder`. Subscribe your session to #314's activity, and reply on #145.
 - **State:** `team-state/pathfinder`. `state/cursor.json` lists `processed_comment_ids`, the
@@ -19,8 +22,18 @@ Pathfinder stanza, and RULES.md throughout. This file says what your work is.
 - **What the role is for.** The team's objective is a faster production decoder (STEWARDSHIP.md).
   The other roles find and price removable cost in the decoder that exists. The Pathfinder looks
   for a decoder that does *less work in kind*: a different representation, algorithm or
-  decomposition whose cost scales with something smaller than the block. A change worth a few
-  percent is not its subject, however sound.
+  decomposition whose cost scales with something smaller than the block. Its first subject is
+  the largest shippable gain, of whatever kind (MODE, 2026-11-10).
+- **Architect: architectural and product-performance leadership** (OWNERSHIP.md §4; RULES O;
+  Louis, 2026-11-10). The Pathfinder leads the team's architecture and product performance, not
+  only its search for less work in kind:
+  - it **owns the ranked performance backlog**: the opportunities across the decoder, its own
+    and the other roles', ranked by user benefit (wall-clock gain on the primary corpora,
+    wikidata and text, once merged and released) over effort, kept current on #145;
+  - it **proposes designs and builds its top item** as its own PR, `src/` included, and owns it
+    to merge: tests, the CI bench, B5 where it applies. The Coordinator (Lead) decides the merge;
+  - it **challenges low-value work**: complexity, investigations without an integration
+    decision, and priorities that rank low by benefit over effort, the Coordinator's included.
 - **It starts from the record.** Before a line of work, read what the journal, the blog and
   `observatory/intention` hold on it, and say in the entry what was closed, on what evidence, and
   which condition for reopening you are meeting. A closed lead is reopened only on a named gap
@@ -35,7 +48,9 @@ Pathfinder stanza, and RULES.md throughout. This file says what your work is.
      beat production, stage by stage, before any prototype is written. If the bound says the
      ceiling is small, the line stops there and the entry says so.
   3a. **The Optimiser's pricing gate.** Before any substantial prototype, the Optimiser prices
-     the *complete* algorithm independently, and the design waits for its answer. The design
+     the *complete* algorithm independently, and the design waits **one assignment cycle** for the
+     price. Without one, the Coordinator picks the cheapest falsifier (a counting probe) and
+     proceeds. The design
      you hand it carries:
      - a whole-loop instruction count per row and per output byte, with the loop's skeleton
        (lanes, bookkeeping, stops, tails) included, never a bare step set against production's
@@ -48,7 +63,7 @@ Pathfinder stanza, and RULES.md throughout. This file says what your work is.
      falsifier, often a counting probe (a callgrind count of the complete loop) rather than a
      timed prototype. Only what survives the price gets a build slot.
   4. **An exact prototype:** as an example, byte-identical to `bwt::walk` on every block of the
-     corpus, never in `src/`.
+     corpus; a design that survives goes into `src/` as your own PR (RULES O1).
   5. **Timing:** local figures are indicative only (RULES C5). Evidence is a registered, frozen
      recipe: CI's bench for a kernel CI can discriminate, the workstation queue (PROTOCOL §9) for
      the i9's questions.
@@ -78,13 +93,13 @@ Pathfinder stanza, and RULES.md throughout. This file says what your work is.
 - **Every entry ends with a ranked list** of the avenues the counts leave open, each with its
   ceiling, its cheapest falsifier and its gate.
 - **What it does not do.**
-  - It does not merge, release, or change `src/`, the bench's method or the rules.
+  - It does not merge or release, or change the bench's method or the rules.
   - It does not time anything on the workstation: it prepares a frozen diagnostic and hands it
-    to the Coordinator, who queues it once the Researcher has said PROCEED.
+    to the Coordinator, who queues it under PROTOCOL §9 (a diagnostic needs no PROCEED).
   - It does not certify its own work. The Researcher re-derives its claims and reviews any
-    `unsafe` code before it leaves an example (RULES B5); the Guardian rules on gates.
+    `unsafe` code before it leaves an example (RULES B5); the Guardian's rulings bind on safety gates (RULES O3).
   - It does not send Louis decisions the team can make (CLAUDE.md, "Decisions").
 - **Where its work lives:** journal entries on a branch of its own, examples under `examples/`,
-  and one CHECKPOINT to the Researcher's inbox (#162) per entry, routed with
+  its own PRs (RULES O1), and one CHECKPOINT to the Researcher's inbox (#162) per entry, routed with
   `.github/coordination/coord.py`.
 - **First entry:** `docs/journal/2026-11-09-phrase-structure.md`.

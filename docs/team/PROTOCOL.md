@@ -36,6 +36,7 @@ and reads MODE.md first on every run.
 - **When a role is busy:** while any of its inbox comments after its offset is not marked
   complete in its cursor. That includes a brief just posted, which has no receipt yet.
 - **Work for a busy role** is staged on #145 as `TYPE: QUEUED` with `TO: <role>`.
+- **QUEUED items dispatch by priority, then age.**
 - **The next item goes out** when the role's REVIEW citing its current comment is on #145, and
   its cursor marks that comment complete.
 - **Recovering the queue:** a QUEUED comment has been dispatched exactly when an inbox comment
@@ -47,6 +48,15 @@ and reads MODE.md first on every run.
 - **Before posting:** `coord.py route` gives the destination. **After posting:** `coord.py
   verify` must pass. **On every wake:** `coord.py audit`.
 
+## 2a. Bounded review
+
+**Bounded review.** Every review is one round. The author may make one targeted correction
+answering the findings. The Coordinator then decides **merge, defer or abandon**, and logs which.
+There is no second full round. A finding that would enlarge the work (more cells, more
+dispatches, more machines) is recorded as a follow-up item with its own integration decision,
+never folded into the current one. Exception: an open B5 safety objection blocks merge; it can
+only defer or abandon.
+
 ## 3. Message format
 
 ```
@@ -55,6 +65,7 @@ TO:   <role>                (assignments and QUEUED)
 RE:   <subject> @ <commit sha>
 TYPE: CHECKPOINT | PROPOSAL | CORRECTION | QUEUED | REVIEW | DECISION | ACK | LOG | ESCALATION
 DECISION: HOLD | STOP | REVISE <what> | PROCEED      (DECISION only)
+PRIORITY: 1 | 2 | 3                                 (QUEUED only; default 2)
 ```
 
 Long material goes in a committed file, which the comment links at a commit. A comment with a
@@ -64,12 +75,11 @@ counts only from Louis.
 
 ## 4. The Coordinator's duties on each message
 
-1. **Act or record.** Answer with an ACK or LOG on #145 that states:
-   - what it understood;
-   - the rule it relies on (RULES.md);
-   - the action it takes, or that it takes none.
-2. **Treat ambiguity, or conflict between messages, as a HOLD,** and say so.
-3. **A request that needs Louis** (RULES D) is refused in the ACK and escalated (§5).
+1. **Log decisions, not receipts.** One LOG per wake listing the decisions taken (merge,
+   registration, stop, policy) and the rule relied on. Routine REVIEWs need no ACK.
+2. **Ambiguity in a HOLD/STOP holds the named work; any other ambiguity the Coordinator
+   resolves, and logs the decision.**
+3. **A request that needs Louis** (RULES D) is refused in the LOG and escalated (§5).
 4. **Forward an `OBSERVER:` line** (or `ORACLE:`, its earlier form) in a role's REVIEW to the Observer's inbox as one CORRECTION,
    once for each item and its evidence (SPEC.OBSERVER.md).
 
@@ -77,12 +87,12 @@ counts only from Louis.
 
 - **When:**
   - a decision RULES D reserves;
-  - a stop whose resolution would need one;
-  - reviewers who disagree on a decision.
+  - a stop whose resolution would need one.
 - **Not escalated:**
   - a stop under RULES B6: the work stops, the Guardian is told, and the Coordinator fixes it,
     falls back or abandons it;
-  - routine technical direction (RULES A5).
+  - routine technical direction (RULES A5);
+  - reviewers who disagree: the Coordinator decides, logging both positions.
 - **How:** a message in the Coordinator's session saying exactly what is blocked, and what his
   options are.
 - **Meanwhile,** work that doesn't depend on it continues.
@@ -206,7 +216,8 @@ with one command whenever suits him. Nothing about a queued run is left to decid
   - the registration is frozen;
   - the recipe has passed its untimed dry run;
   - CI is green on the commit to run;
-  - a review has said PROCEED: the role's own, or a stand-in's under §8;
+  - for an adoption registration, a PROCEED (RULES C6; a stand-in's under §8 counts). For a
+    diagnostic, the Coordinator's own check of the frozen recipe;
   - the `ready/<recipe>` tag points at exactly that commit, set by the Run signal workflow.
 
   It also posts a LOG on #145 naming the entry, the commit and the review.
@@ -260,10 +271,10 @@ STOP, NO GAIN or INCONCLUSIVE, the Coordinator, in the same wake:
    constructions, each with a CI falsifier.
 2. **Sends the idea to the Researcher for new angles:** adjacent results, other formulations
    and primary sources, each with a falsifiable prediction.
-3. **Builds the best-ranked construction** as the next registered arm, once a review allows.
-
-The line stays open until Louis closes it, or until both roles report no remaining
-construction worth a falsifier. Then the Coordinator states that on #145 and asks Louis.
+3. **Builds the best-ranked construction** if its priced ceiling beats the next-best line in
+   the queue. **One sharpening round per arm.** If no construction clears that bar, the
+   Coordinator parks the line, with its reopening condition, and tells Louis in the LOG. Louis
+   may reopen it.
 
 **Lines this applies to now:** run-fed construction of the navigation table from compressed
 runs (the posts of 8 November, #266, #269, the run-fed leader).
