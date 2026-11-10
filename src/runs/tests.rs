@@ -489,3 +489,150 @@ fn miri_runs_avx2_kernels_selected() {
     assert!(k.avx2 && front_fast(k));
     assert_eq!(kernels().len(), 2);
 }
+
+// ---- Which path, and which kernel, runs: tests added from the mutation testing (§3.2 of
+// docs/journal/2026-11-10-run-front-production.md). Each choice below gives the same bytes
+// either way, so the equivalence tests above can't see a wrong one; these see it.
+
+/// A record the front never writes (its length is over CAP): left in place, it shows that
+/// `front` didn't run
+const UNTOUCHED: u16 = 0xffff;
+
+/// `decode_block` takes the records' path exactly where it should: with `Segmented` (which
+/// reads runs) on a block `takes_runs` accepts, and never with `Plain` or on any other block
+#[test]
+fn runs_path_taken_exactly_where_selected() {
+    let mut rng = Rng(0x5eed_0f9a_7e57_0001);
+    let (mut sr, mut sp) = (Scratch::<Segmented>::default(), Scratch::<Plain>::default());
+    let (mut by_runs, mut by_column) = (0, 0);
+    for i in 0..400 {
+        let mut b = synthetic(&mut rng, 3000);
+        b.max_len = match rng.below(3) {
+            0 => 1 << 20,
+            1 => 2 * b.syms.len(),
+            _ => (2 * b.syms.len()).saturating_sub(1),
+        };
+        let want = takes_runs(&b);
+        for k in kernels() {
+            sr.runs.runs = vec![UNTOUCHED];
+            sp.runs.runs = vec![UNTOUCHED];
+            let mut out = Vec::new();
+            let _ = decode_block(&b, k, &mut sr, &mut out);
+            let _ = decode_block(&b, k, &mut sp, &mut out);
+            let took = sr.runs.runs != [UNTOUCHED];
+            assert_eq!(took, want, "case {i}, {k:?}: Segmented by records");
+            assert_eq!(
+                sp.runs.runs,
+                [UNTOUCHED],
+                "case {i}, {k:?}: Plain by records"
+            );
+        }
+        if want {
+            by_runs += 1;
+        } else {
+            by_column += 1;
+        }
+    }
+    assert!(
+        by_runs > 50 && by_column > 50,
+        "{by_runs} by records, {by_column} not"
+    );
+}
+
+/// The selector's two bounds: below 2^24 rows, and at most a symbol per 2 rows of the bound
+#[test]
+fn runs_takes_runs_bounds() {
+    let mut b = Symbols {
+        crc: 0,
+        orig_ptr: 0,
+        seq_to_unseq: [0; 256],
+        syms: vec![0; 10],
+        eob: 2,
+        max_len: (1 << 24) - 1,
+    };
+    assert!(takes_runs(&b));
+    b.max_len = 1 << 24;
+    assert!(!takes_runs(&b), "a bound of 2^24 rows");
+    b.max_len = 20;
+    assert!(takes_runs(&b));
+    b.max_len = 19;
+    assert!(!takes_runs(&b), "more than a symbol per 2 rows");
+}
+
+/// A small block that decodes: "abc"'s indices, a run, and the end of block
+fn small_block() -> Symbols {
+    let mut seq_to_unseq = [0u8; 256];
+    seq_to_unseq[..3].copy_from_slice(b"abc");
+    Symbols {
+        crc: 0,
+        orig_ptr: 0,
+        seq_to_unseq,
+        syms: vec![2, 0, 1, 3, 0, 2, 4],
+        eob: 4,
+        max_len: 1000,
+    }
+}
+
+/// `front` runs the AVX2 kernel exactly when the kernels and the CPU allow it (it alone
+/// writes the bitmaps), and the scalar one otherwise; both give the same records
+#[test]
+fn runs_front_kernel_selected() {
+    let b = small_block();
+    let mut want = Runs::default();
+    let n = front_scalar(&b, &mut want).unwrap();
+    assert!(want.lit.is_empty() && want.one.is_empty());
+    let mut r = Runs::default();
+    assert_eq!(front(&b, &mut r, Kernels::scalar()), Ok(n));
+    assert!(r.lit.is_empty(), "the scalar kernels took the AVX2 front");
+    assert_eq!(
+        (&r.runs, r.counts, r.per),
+        (&want.runs, want.counts, want.per)
+    );
+    #[cfg(target_arch = "x86_64")]
+    {
+        let k = Kernels::detect();
+        let fast = k.avx2
+            && std::is_x86_feature_detected!("bmi2")
+            && std::is_x86_feature_detected!("lzcnt")
+            && std::is_x86_feature_detected!("popcnt");
+        let mut r = Runs::default();
+        assert_eq!(front(&b, &mut r, k), Ok(n));
+        assert_eq!(!r.lit.is_empty(), fast, "{k:?}: the AVX2 front taken");
+        assert_eq!(
+            (&r.runs, r.counts, r.per),
+            (&want.runs, want.counts, want.per)
+        );
+    }
+}
+
+/// The footprint ledger sees the records' buffers
+#[test]
+fn runs_buffers_listed() {
+    let mut r = Runs::default();
+    front(&small_block(), &mut r, Kernels::detect()).unwrap();
+    let names: Vec<_> = r.buffers().iter().map(|b| b.name).collect();
+    assert_eq!(names, ["runs.runs", "runs.lit", "runs.one"]);
+    assert!(r.buffers()[0].cap >= r.runs.len() * 2 && !r.runs.is_empty());
+}
+
+/// `walk_back_room` segments from `MIN_SEGMENTED` rows and walks plainly below it (the room
+/// walk records its block in the scratch; the plain walk leaves it), with `walk`'s bytes
+/// either side
+#[test]
+fn runs_walk_back_room_segments_from_its_bound() {
+    let mut rng = Rng(0x00c0_ffee_1234_5678);
+    for n in [bwt::MIN_SEGMENTED - 1, bwt::MIN_SEGMENTED] {
+        let ll: Vec<u8> = (0..n).map(|_| b"abcd"[rng.below(4) as usize]).collect();
+        let mut tt = bwt::TVector::new();
+        bwt::build(&ll, &crate::run_fed::counts_of(&ll), &mut tt);
+        let orig = rng.below(n as u64) as u32;
+        let mut want = Vec::new();
+        bwt::walk(&tt, orig, &mut want);
+        let mut seg = bwt::SegScratch::default();
+        let mut got = Vec::new();
+        bwt::walk_back_room(&mut bwt::TVector(lf_of(&ll)), orig, &mut got, &mut seg);
+        assert!(got == want, "{n} rows: the bytes");
+        let segmented = n >= bwt::MIN_SEGMENTED;
+        assert_eq!(seg.n, if segmented { n } else { 0 }, "{n} rows: segmented");
+    }
+}
