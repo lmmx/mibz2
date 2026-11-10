@@ -3532,3 +3532,47 @@ The useful advance is a finite, auditable measurement protocol capable of answer
 Proceed with the workflow/judge implementation and decision record, then Researcher review and reconciliation of these specific protocol points before freeze. This is no blanket gate on routine implementation and no requirement to obtain Louis's choice of R. Do not dispatch a qualification run on the strength of this unimplemented design ruling alone.
 
 Migration verified: old branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Pinned routing audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No implementation, timing, merge, task reconfiguration or external compute dispatch performed.
+
+## D078 — #316 tooling-first admission, immutable action inputs and hosted-runner scope
+
+**G1: PROCEED with a separate measurement-only tooling PR in principle. G3: for this qualification protocol, freeze every external action reference to its full reviewed commit SHA before qualification. G2: no qualification or production approval follows from this review; D077's outstanding statistical and coverage questions remain.** No G8 line STOP. No permission to force-push, add infrastructure or incur charges.
+
+Inbox [6756570238](https://github.com/lmmx/mibz2/pull/161#issuecomment-6756570238), reviewed **eb46b5a80bc1e73f226ebb22a31ef04d3b869f49**. Authority: SPEC/SPEC.GUARDIAN, MODE, RULES, PROTOCOL at **a2da49638ac54d7763de1c167bd054f67ffdc763**. Receipt **5f970b9f85cc38fe121c5509ac52182a3bc0a539**. [Evidence](records/d078/evidence.json).
+
+### 1. Tooling may land before the production candidate
+
+The proposed separation breaks the dispatch/bootstrap dependency without adopting the unqualified decoder. A tooling-only PR may use STEWARDSHIP's measurement-only rule, with green CI and a demonstrated intentional delta. “No src/ changes” alone does not prove measurement-only: inspect Cargo.toml/lock, features, build flags, examples and corpus-generation inputs too. Extract only the tooling dependencies actually needed. In particular, the workflow builds `examples/svc_target.rs`; do not smuggle its candidate production implementation into master to make that build work. A dormant dispatcher may invoke the reviewed candidate's tooling at dispatch time; make the dependency explicit and test the actual extraction.
+
+GitHub's [manual-dispatch documentation](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow) distinguishes default-branch availability from the selected execution ref. The file must be available on the default branch, but a run can select another branch. Thus “only from the default branch” is too broad. Keep the existing plan check that GITHUB_SHA equals the supplied exact head, and preserve GITHUB_WORKFLOW_SHA/ref in evidence. Dispatch the frozen candidate ref, not master with an unrelated candidate checkout.
+
+**Do not rebase the published #316 branch if it requires a force-push.** RULES E4 and STEWARDSHIP prohibit force-pushes. Merge the tooling master commit into the candidate instead; resolve deliberately, preserve the old reviewed heads and pilots, then review/freeze the resulting candidate and exact master baseline. No qualification evidence is carried over to changed measured inputs. The freeze commit is not merely “whatever SHA comes after the rebase”: the draft's C/F/base distinction and freeze-only delta checks must still hold.
+
+No benefit claim is required merely to land legitimate measurement tooling. A green bench with no significant difference is also not proof of identical inputs: use the diff/build-input account to establish what was unchanged. The prospective bench-policy record and its C6 review/log still precede qualification; merging the dispatcher does not enact a production pass or settle the Researcher's sampling-model review.
+
+### 2. Pin the action code as well as the Rust release
+
+At the reviewed head, the qualification workflow uses `actions/checkout@v6`, `dtolnay/rust-toolchain@master` and `actions/upload-artifact@v4`, including repeated checkout/upload uses. Those are mutable references. A fixed toolchain input fixes the requested compiler release, not the installer's code. GitHub [documents full commit SHA references](https://docs.github.com/en/actions/reference/security/secure-use) as immutable action references.
+
+**Narrow prospective G3 constraint:** pin all external `uses:` references in this qualification workflow to verified full commit SHAs, with readable version comments if desired; include any reusable workflow or material transitive action dependency in that review. This is a constraint on this new evidence protocol before freeze, not retroactive invalidation of old runs or a repository-wide migration requirement. Do not choose SHAs blindly from an untrusted fork.
+
+Pinning these references does not make the hosted environment hermetic. The current workflow also obtains runner-image tools and installs lbzip2 through apt; cargo builds do not use `--locked`. Before freeze, declare the build-input boundary: enforce the committed dependency lockfiles, record compiler/cargo/linker and relevant system-library versions and flags, and retain the runner image and binary/corpus digests already collected. Any remaining platform variability is an explicit admitted environment assumption, not “everything pinned.” Do not create custom runner infrastructure merely to remove that variability. The observed-topology checks remain necessary.
+
+**Concrete green-status trap:** the aggregate step invokes `service_tg.py ni ... || true`, then also tolerates missing markdown. The judge's CLI returns 1 for a valid nonpass and 2 for invalid evidence; the workflow masks both. Therefore green workflow status cannot establish a valid or passing qualification. Preserve artifacts on failure, but propagate the qualification verdict to an explicit failing gate (or an equally explicit enforced admission check). A deliberately rejected smoke run can remain a successful plumbing test only when labelled and checked as such. No change to a statistical threshold is implied.
+
+### 3. Existing hosted CI is within C6; zero cost is not established for storage
+
+The fetched PR metadata identifies a public repository; the workflow uses the existing standard `ubuntu-latest` service and read-only built-in token permissions. Adding this dispatch-only measurement workflow on those existing runners is ordinary delegated bench tooling, not itself provisioning a new runner service or credentials.
+
+GitHub's [billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions), checked 10 November 2026, confirms standard hosted compute for public repositories remains free. **For those runner minutes, no new D6 spending approval is needed.** This does not extend to larger runners, paid storage overages, external services or new credentials. Artifact storage has separate allowances; I did not inspect account billing/quota. Bound artifact size/retention and use existing no-charge capacity without changing spending settings. If additional charges would be incurred, D6 remains reserved. Preserve required evidence durably before any retention expiry; do not delete the only evidence to meet a storage budget.
+
+The amended registration budgets approximately 158–277 measurement runner-minutes plus nine times 15 minutes setup, roughly **293–412 total shard runner-minutes**, before plan/aggregate overhead and any predefined confirmation. Ninety minutes is a per-job ceiling, not the expected total cost or a performance guarantee. Its retained estimate of about 54 minutes for the slowest shard is consistent with 38.9 measurement plus 15 setup; the workflow's older comment saying about 47 minutes is stale. Correct that comment. C3's information-value accounting still applies even when the invoice is zero.
+
+### Scope and retained limits
+
+I read the workflow and judge CLI/source, registration and STEWARDSHIP at the reviewed head. API metadata confirms the stated smoke run **42736742147** succeeded on **7e325dd0b106140e223d6039c9704e6cda16d77c**, via **push**, not workflow_dispatch. I did not replay its artifacts or independently verify nine NOT TARGET records. It establishes neither dispatch-path execution nor qualification validity; its exclusion from evidence is appropriate. A default-branch bootstrap must still exercise the dispatch path without consuming or relabelling a qualification attempt.
+
+This review answers the three gate questions, not the deferred batch-means, power, setup-recovery or deployment-coverage review. Twenty batches of thirty do not by themselves prove independent batch means. The prospective policy record and Researcher review remain necessary before qualification. Routine extraction/implementation can proceed now.
+
+The reported branch-deletion refusal remains respected. Guardian has not deleted it, pushed it, retriggered its push workflow or bypassed the proxy.
+
+Migration checked before receipt: old branch **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Routing audit: five resolved historical findings, zero unresolved. No merge, implementation, timing, compute dispatch or task reconfiguration.
