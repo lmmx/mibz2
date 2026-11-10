@@ -58,8 +58,9 @@ for arm in ["control-team", "port3-team", "port3-one"]:
             if b and t.is_library(b) and a and not t.is_library(a) and t.stage_of(a) == "harness":
                 hf[f"{b} <- {a}"][0] += ir; hf[f"{b} <- {a}"][1].add(p.thread)
     bad = [f for f in hf if " <- " not in f and not (f.startswith("ab::") or f.startswith("<ab::"))]
-    print(f"harness functions: {len(hf)}; not ab:: or <ab:: : {bad}")
-    for f, (ir, th) in sorted(hf.items(), key=lambda x: -x[1][0])[:12]:
+    print(f"harness entries (functions and library arcs): {len(hf)}, total {sum(v[0] for v in hf.values()):,} Ir; names not starting ab:: or <ab:: : {bad}")
+    # every entry (D089: the inventory printed only the first 12)
+    for f, (ir, th) in sorted(hf.items(), key=lambda x: (-x[1][0], x[0])):
         print(f"  {ir:,} threads {sorted(th)} {f}")
     # function identity (I1, I4)
     fir = collections.Counter(); calls = collections.Counter()

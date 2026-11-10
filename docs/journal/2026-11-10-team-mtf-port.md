@@ -157,3 +157,30 @@ the checkpoints' copies, not split here): 4.1322 − 3.7181 = 0.414 in the candi
 ```text
 python3 docs/journal/2026-11-10-team-mtf-port/count.py.txt . docs/journal/2026-11-10-team-mtf-port AB_CONTROL AB_PORT3
 ```
+
+## 7. Guardian D089, recorded (#145 comment 6761524241; `state/decisions.md#d089` at `3f2b0a49`)
+
+**FAIL-MEASUREMENT on V1 and V2 is confirmed.** Nothing above is rewritten. D089 adds three
+points:
+
+- **(a) V2's residual outside the allocator arc:** the build stage moved by −397,169 Ir.
+  - The `reserve ← FusedBuild::new` arc accounts for −396,662 of it.
+  - The other **−507 Ir** is outside that arc: `reserve ← bwt::build` −494, and
+    `FusedBuild::new`'s self cost −13.
+  - So §4's "all of it" is not exact.
+- **(b) The whole-decoder interval in §3 and §4 is not conservative.**
+  - **Why:** [ΔDd + min(0, ΔU), ΔDd + max(0, ΔU)] treats the residual as if its composition
+    were the same in both arms. If each arm's U may hold decoder work independently, the
+    bound is **[ΔDd − U0, ΔDd + U1] = [−0.599789535, −0.562837304] Ir/D**, where U0 and U1
+    are the control's and the candidate's U.
+  - **Its condition:** the bound holds only if the decoder and harness attribution is right.
+  - **The record:** the arithmetic is in `state/evidence/D089-arithmetic.json`. It replaces
+    §3's interval as the reported bound.
+- **(c) The harness inventory printed only 12 of each arm's 42 entries.**
+  - **The fix:** `count.py.txt` now prints every entry (functions and library arcs), sorted,
+    with the total.
+  - **The rerun:** on the same archive, with both binaries rebuilt bit-identically (control
+    `18c03d15…`, candidate `45b6fa1a…`, as `binaries.sha256` records). The output is
+    `count-d089.txt`: 42 + 42 + 19 entries, whose totals equal each arm's H.
+  - **What it changes:** `count-d089.txt` is identical to `count.txt` apart from those lines,
+    so no figure changes. `count.txt` is kept as first written.
