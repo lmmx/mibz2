@@ -265,3 +265,61 @@ And later in the same session:
   through the Coordinator (PROTOCOL §9).
 - **Louis's steer for its first follow-up:** take the phrase-structure idea further, and try to
   improve the copy walk (#313).
+
+## 2026-11-10: the Pathfinder's pricing gate (RULES D: a role change, by Louis)
+
+- **Source:** Louis, in the Coordinator's session, asking for the Pathfinder's role to be
+  altered durably. In his words (verbatim, abridged only where marked):
+
+  > What concerns me isn't the number of failed ideas. It's how far some ideas got before
+  > their fundamental costs were properly understood.
+  >
+  > I'd want the Pathfinder to remain ambitious, but introduce a stronger filter between
+  > mathematical insight and implementation. Have the Optimiser independently price the
+  > complete algorithm — construction, traversal, metadata, branch prediction, memory traffic
+  > and parallel coordination — before building substantial prototypes.
+  >
+  > There's also a danger of becoming too conservative. A transformative algorithm can
+  > initially look terrible because its first implementation is terrible. We don't want to
+  > kill those ideas prematurely either.
+  >
+  > The distinction I'd encourage is:
+  >
+  > Disprove the underlying advantage, not merely the first implementation.
+  >
+  > The best thing Pathfinder has uncovered so far might actually be the share-nothing
+  > hypothesis: eliminate costly cooperation by shrinking each worker's memory footprint. That
+  > gives the team a coherent architectural objective, rather than an endless collection of
+  > clever BWT tricks.
+  >
+  > I'd be quite happy with twenty failed, inexpensive experiments leading to one 2×
+  > breakthrough. I'd be considerably less happy with twenty expensive prototypes whose
+  > weaknesses could have been predicted from instruction counts.
+
+- **His examples:** the copy walk's first cost model; design E (a step against a whole loop,
+  3.67× as built, #323); C and D (construction and lane bookkeeping); the parallel scanner as
+  the standout (par-scan/20261110T030608Z, +61.5% on level-1 Wikidata at ten workers).
+- **Decided (in force):**
+  - SPEC.PATHFINDER.md gains step 3a, the Optimiser's independent pricing of the complete
+    algorithm before any substantial prototype, and a whole-loop count with every design.
+  - It also gains the rule "disprove the underlying advantage, not merely the first
+    implementation", the preference for many cheap falsifiers, and share-nothing as the
+    architectural objective.
+  - SPEC.OPTIMIZER.md gains the duty to price each Pathfinder design before it is built.
+  - ROLES.md is updated to match.
+- **Unchanged:** the Pathfinder's limits (no `src/`, no merge, release, workstation timing or
+  self-certification) and PROTOCOL §11 for negative results on a line Louis is pursuing.
+
+## 2026-11-10: the Pathfinder's MODE stanza (by Louis)
+
+- **Source:** Louis, in the Coordinator's session: "we need a durable pathfinder MODE. please
+  provide". He supplied a stanza drafted with ChatGPT, written in MODE.RATIONALE.md's
+  differential recurrence ("Smaller table? Smaller live set. Smaller live set? Independent
+  workers."), to be placed after the Optimiser's stanza, with SPEC.PATHFINDER.md switched from
+  the Researcher stanza to its own.
+- **Decided (in force):**
+  - MODE.md gains the Pathfinder stanza verbatim, after the Optimiser's, and its history line
+    records the amendment.
+  - SPEC.PATHFINDER.md now says "Follow MODE.md's Pathfinder stanza".
+- **Unchanged:** the spec's operational rules (#327) and the register of the other stanzas.
+  MODE.md is changed only by Louis.
