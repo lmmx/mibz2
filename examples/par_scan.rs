@@ -2423,9 +2423,10 @@ mod tests {
         }
     }
 
-    /// RUSAGE_SELF counts every thread's CPU: a second thread burns at least 150 ms of its
+    /// RUSAGE_SELF counts every thread's CPU: a second thread burns at least 1.1 s of its
     /// own CPU (by RUSAGE_THREAD, 1) and the process's figure grows by at least that.
-    /// Catches the wrong `who` (RUSAGE_THREAD or RUSAGE_CHILDREN) and a misread timeval.
+    /// Catches the wrong `who` (RUSAGE_THREAD or RUSAGE_CHILDREN) and a misread timeval
+    /// (past a whole second, so the seconds field is read as well as the microseconds).
     #[cfg(all(target_os = "linux", not(miri)))]
     #[test]
     fn getrusage_counts_every_thread() {
@@ -2438,7 +2439,7 @@ mod tests {
         let a = cpu_micros();
         let burnt = std::thread::spawn(move || {
             let (t0, mut x) = (thread_micros(), 0u64);
-            while thread_micros() - t0 < 150_000 {
+            while thread_micros() - t0 < 1_100_000 {
                 for i in 0..100_000u64 {
                     x = x.wrapping_mul(31).wrapping_add(i);
                 }
