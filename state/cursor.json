@@ -1145,14 +1145,16 @@
     {
       "comment_id": 6765024673,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Pinned-role conflict and concrete implementation handoff recorded; REVIEW pending.",
+      "progress": "Scoped review/handoff published; feature remains unimplemented pending authorized owner or user re-pin.",
       "report_path": "state/records/reviews/inbox-6765024673/report.md",
       "report_commit": "3640bb1e863847c31da7948e77f440e1edac2f7f",
       "disposition": "scoped_review_complete_implementation_not_performed",
-      "implementation_outstanding": true
+      "implementation_outstanding": true,
+      "reply_id": 6765104012,
+      "routing_verification": "route/check passed; pinned verify rejects FROM optimizer because it hardcodes coordinator. Exact body, author and #145 destination independently verified."
     }
   ],
   "migrated_from": {
