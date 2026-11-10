@@ -1,0 +1,107 @@
+denominators: D = 209,700,196 decoded bytes (after RLE1), N = M = 209,706,557 rows
+
+| stage | one worker Ir | Ir/D | team Ir | Ir/D | team - one, Ir/D |
+|---|--:|--:|--:|--:|--:|
+| scanner | 682,691,258 | 3.26 | 671,587,673 | 3.20 | -0.05 |
+| MTF | 862,123,747 | 4.11 | 988,697,875 | 4.71 | +0.60 |
+| build | 1,082,059,629 | 5.16 | 1,909,039,713 | 9.10 | +3.94 |
+| walk | 2,136,525,935 | 10.19 | 3,715,567,559 | 17.72 | +7.53 |
+| assembly | 37,060,864 | 0.18 | 36,482,694 | 0.17 | -0.00 |
+| RLE1 | 197,394,556 | 0.94 | 198,303,139 | 0.95 | +0.00 |
+| CRC | 101,664,607 | 0.48 | 101,664,607 | 0.48 | +0.00 |
+| coordination | 135 | 0.00 | 15,687,669 | 0.07 | +0.07 |
+| harness | 308,305,801 | 1.47 | 309,823,773 | 1.48 | +0.01 |
+| other | 704,753 | 0.00 | 4,186,780 | 0.02 | +0.02 |
+| total | 5,408,531,285 | 25.79 | 7,951,041,482 | 37.92 | +12.12 |
+
+functions by stage (self Ir, all threads; Ir/D), the top of each:
+
+## one worker
+- scanner: block::read_item 2.583, <block::Huff>::new 0.351, <block::Huff>::decode_slow 0.139, <block::Huff>::decode_entry_slow 0.041
+- MTF: mtf::mtf_avx2 3.687
+- build: bwt::build 5.160
+- walk: bwt::room_segments::<32, 1> 9.994
+- assembly: <bwt::SegScratch>::assemble 0.018
+- RLE1: rle::unrle_avx2 0.940, rle::unrle_scalar 0.001
+- CRC: crc::clmul_update 0.485
+- coordination: 
+- harness: <ab::Hash>::update 0.469, ab::drain::<read::BzReader<std::fs::File>> 0.001
+- library routines by caller (inclusive Ir/D):
+  - __memcpy_avx_unaligned_erms <- ab::drain::<read::BzReader<std::fs::File>> [harness]: 1.000
+  - __memset_avx2_unaligned_erms <- mtf::mtf_avx2 [MTF]: 0.424
+  - __memcpy_avx_unaligned_erms <- <bwt::SegScratch>::assemble [assembly]: 0.159
+  - __memcpy_avx_unaligned_erms <- bwt::room_segments::<32, 1> [walk]: 0.123
+  - __memset_avx2_unaligned_erms <- <read::ReadSource<std::fs::File> as stream::Source>::view [scanner]: 0.060
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- bwt::room_segments::<32, 1> [walk]: 0.048
+  - __memcpy_avx_unaligned_erms <- block::read_item [scanner]: 0.039
+  - __memset_avx2_unaligned_erms <- <block::Huff>::new [scanner]: 0.036
+  - __memset_avx2_unaligned_erms <- bwt::room_segments::<32, 1> [walk]: 0.014
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- bwt::room_segments::<32, 1> [walk]: 0.009
+- largest self costs not given a stage (library routines appear here by self cost; their arcs above):
+  - __memcpy_avx_unaligned_erms: 1.332
+  - __memset_avx2_unaligned_erms: 0.534
+  - core::slice::sort::unstable::quicksort::quicksort::<u32, ::lt>'2: 0.037
+  - core::slice::sort::unstable::quicksort::quicksort::<u32, ::lt>: 0.009
+  - _int_malloc: 0.003
+  - core::slice::sort::shared::pivot::median3_rec::<u32, <u32 as core::cmp::PartialOrd>::lt>'2: 0.002
+  - _int_free_merge_chunk: 0.001
+  - core::slice::sort::shared::pivot::median3_rec::<u32, <u32 as core::cmp::PartialOrd>::lt>: 0.001
+  - _int_free: 0.001
+  - realloc: 0.001
+  - _int_realloc: 0.001
+  - __GI___tunables_init: 0.001
+
+## team
+- scanner: block::read_item 2.583, <block::Huff>::new 0.351, <block::Huff>::decode_slow 0.139, <block::Huff>::decode_entry_slow 0.041
+- MTF: mtf::mtf_checkpoints_avx2 3.983
+- build: <coop::FusedBuild>::share 8.937, <coop::FusedBuild>::new 0.162, bwt::build 0.002
+- walk: coop::traverse::<32> 17.533, <coop::RoomWalk>::new 0.041
+- assembly: <bwt::SegScratch>::assemble 0.035
+- RLE1: rle::unrle_avx2 0.940, rle::unrle_scalar 0.001
+- CRC: crc::clmul_update 0.485
+- coordination: std::sys::backtrace::__rust_begin_short_backtrace::<::named::{closure#0}, ()> 0.030, <coop::Relay>::wait_walk_ready_tallied::<true, 4096> 0.026, <coop::Relay>::walk_and_leave::<32> 0.010, <coop::Pool>::run 0.007
+- harness: <ab::Hash>::update 0.469, ab::sample_tasks 0.005, ab::drain::<read::BzReader<std::fs::File>> 0.001
+- library routines by caller (inclusive Ir/D):
+  - __memcpy_avx_unaligned_erms <- ab::drain::<read::BzReader<std::fs::File>> [harness]: 1.000
+  - __memset_avx2_unaligned_erms <- mtf::mtf_checkpoints_avx2 [MTF]: 0.709
+  - __memcpy_avx_unaligned_erms <- <bwt::SegScratch>::assemble [assembly]: 0.126
+  - core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt> <- <coop::RoomWalk>::new [walk]: 0.107
+  - __memcpy_avx_unaligned_erms <- block::read_item [scanner]: 0.039
+  - __memset_avx2_unaligned_erms <- <block::Huff>::new [scanner]: 0.036
+  - __memcpy_avx_unaligned_erms <- mtf::mtf_checkpoints_avx2 [MTF]: 0.022
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- coop::traverse::<32> [walk]: 0.018
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <bwt::SegScratch>::assemble [assembly]: 0.013
+  - <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- <coop::RoomWalk>::new [walk]: 0.010
+  - __memset_avx2_unaligned_erms <- <coop::RoomWalk>::new [walk]: 0.009
+  - __memcpy_avx_unaligned_erms <- <parallel::ChannelSource as stream::Source>::view [scanner]: 0.007
+- largest self costs not given a stage (library routines appear here by self cost; their arcs above):
+  - __memcpy_avx_unaligned_erms: 1.228
+  - __memset_avx2_unaligned_erms: 0.756
+  - core::slice::sort::unstable::quicksort::quicksort::<u32, ::lt>'2: 0.082
+  - core::slice::sort::unstable::quicksort::quicksort::<u32, ::lt>: 0.019
+  - _int_malloc: 0.011
+  - realloc: 0.004
+  - core::slice::sort::shared::pivot::median3_rec::<u32, <u32 as core::cmp::PartialOrd>::lt>'2: 0.004
+  - _int_free: 0.003
+  - _int_free_merge_chunk: 0.003
+  - _int_realloc: 0.003
+  - <alloc::raw_vec::RawVecInner>::finish_grow: 0.003
+  - malloc: 0.002
+
+## team arm, by thread
+| thread | total Ir | MTF | build | walk | assembly | RLE1+CRC | coordination | build shares | walk calls | walk claims | walked: take | full phase | tail |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 308,883,385 | 0 | 0 | 0 | 0 | 0 | 945 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 2 | 2,814,275 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 702,851,200 | 350,068,074 | 12,566,845 | 231,629,538 | 289,592 | 106,144,966 | 1,547,208 | 0 | 49 | 15,090 | 15,041 | 12,728,456 | 463,494 |
+| 4 | 552,359,868 | 299,234,348 | 10,701,128 | 147,829,010 | 434,224 | 92,370,643 | 1,212,208 | 0 | 40 | 9,634 | 9,594 | 7,990,041 | 401,871 |
+| 5 | 561,055,127 | 339,395,453 | 11,684,469 | 106,532,983 | 145,161 | 101,452,137 | 1,279,652 | 0 | 43 | 6,914 | 6,871 | 5,782,114 | 263,618 |
+| 6 | 671,854,911 | 0 | 0 | 0 | 0 | 0 | 21,378 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 7 | 921,033,682 | 0 | 362,069,089 | 550,516,500 | 6,259,650 | 0 | 2,016,716 | 79 | 79 | 35,450 | 35,371 | 30,002,644 | 1,070,980 |
+| 8 | 832,585,649 | 0 | 373,586,696 | 449,422,373 | 7,576,135 | 0 | 1,966,744 | 82 | 82 | 28,788 | 28,706 | 24,357,813 | 862,565 |
+| 9 | 919,420,264 | 0 | 285,463,320 | 625,987,004 | 5,835,809 | 0 | 2,104,630 | 82 | 82 | 40,232 | 40,150 | 34,101,224 | 1,201,423 |
+| 10 | 861,575,480 | 0 | 327,584,333 | 527,135,605 | 5,068,599 | 0 | 1,758,127 | 72 | 72 | 33,748 | 33,676 | 28,559,030 | 1,098,736 |
+| 11 | 731,125,379 | 0 | 250,674,538 | 473,625,906 | 4,922,827 | 0 | 1,877,714 | 72 | 72 | 30,464 | 30,392 | 25,708,123 | 967,985 |
+| 12 | 885,482,262 | 0 | 274,709,295 | 602,888,640 | 5,950,697 | 0 | 1,902,347 | 79 | 79 | 38,660 | 38,581 | 32,721,236 | 1,177,927 |
+
+all threads: claims 238,980, walked bytes take 238,382 + full 201,950,681 + tail 7,508,599 = 209,697,662

@@ -1,0 +1,25 @@
+"""share's instructions summed over threads: executions per address, with file:line, and the
+disassembly of the addresses whose file is given. python3 share_lines.py REPO PREFIX BINARY FILES..."""
+import collections, subprocess, sys, re
+sys.path.insert(0, sys.argv[1] + "/bench")
+import team_gap_count as t
+profs = t.load(sys.argv[2]); binary = sys.argv[3]; files = sys.argv[4:]
+SH = lambda f: f and "FusedBuild" in f and ">::share" in f
+ex = collections.Counter(); where = {}
+for p in profs:
+    for (f, a), ir in p.instr.items():
+        if SH(f):
+            ex[a] += ir
+            fl = p.instr_line.get((f, a))
+            if fl: where[a] = (fl[0].split("/")[-1], fl[1])
+sym = subprocess.run(["nm", "-C", binary], capture_output=True, text=True).stdout
+dis = {}
+lo = min(ex); hi = max(ex) + 16
+out = subprocess.run(["objdump", "-d", "--no-show-raw-insn", f"--start-address={lo:#x}", f"--stop-address={hi:#x}", binary], capture_output=True, text=True).stdout
+for l in out.splitlines():
+    m = re.match(r"\s*([0-9a-f]+):\s+(.*)", l)
+    if m: dis[int(m.group(1), 16)] = m.group(2).strip()
+for a in sorted(ex):
+    fl = where.get(a, ("?", 0))
+    if fl[0] in files:
+        print(f"{a:#x} {fl[0]}:{fl[1]} exec {ex[a]:,}  {dis.get(a, '?')}")

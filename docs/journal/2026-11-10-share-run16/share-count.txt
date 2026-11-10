@@ -1,0 +1,86 @@
+== old-team
+share symbols: {'<mibz2::coop::FusedBuild>::share'}
+share self 3,748,029,150 (17.873 Ir/D), arcs out 296,376 (0.001), inclusive 17.875 Ir/D
+share calls by thread (thread: calls, MTF self Ir):
+  3: 0, MTF 295,751,952
+  4: 0, MTF 252,340,079
+  5: 0, MTF 287,234,246
+  7: 79, MTF 0
+  8: 82, MTF 0
+  9: 82, MTF 0
+  10: 72, MTF 0
+  11: 72, MTF 0
+  12: 79, MTF 0
+total share calls: 466 of them on threads with MTF: 0
+share's lines by file (max executions of one instruction there; Ir/D):
+  atomic.rs:4235: max exec 82, Ir/D 0.000
+  atomic.rs:4237: max exec 82, Ir/D 0.000
+  bwt.rs:544: max exec 2,345,282, Ir/D 0.750
+  cmp.rs:0: max exec 82, Ir/D 0.000
+  cmp.rs:1090: max exec 82, Ir/D 0.000
+  cmp.rs:2144: max exec 9,951,584, Ir/D 0.745
+  coop.rs:0: max exec 2,345,282, Ir/D 0.148
+  coop.rs:634: max exec 9,951,584, Ir/D 1.196
+  coop.rs:635: max exec 9,951,584, Ir/D 0.722
+  coop.rs:636: max exec 9,951,584, Ir/D 0.722
+  coop.rs:643: max exec 9,951,584, Ir/D 2.166
+  coop.rs:644: max exec 9,951,584, Ir/D 0.722
+  coop.rs:649: max exec 2,136,715, Ir/D 0.375
+  coop.rs:651: max exec 2,345,282, Ir/D 0.340
+  coop.rs:653: max exec 2,136,715, Ir/D 0.307
+  coop.rs:654: max exec 2,136,715, Ir/D 0.205
+  coop.rs:655: max exec 2,136,715, Ir/D 0.410
+  coop.rs:660: max exec 2,136,715, Ir/D 1.639
+  coop.rs:662: max exec 2,136,715, Ir/D 5.122
+  coop.rs:664: max exec 2,136,715, Ir/D 0.205
+  equality.rs:157: max exec 82, Ir/D 0.000
+  index.rs:408: max exec 2,136,715, Ir/D 0.205
+  range.rs:1100: max exec 9,951,584, Ir/D 0.407
+  uint_macros.rs:0: max exec 2,345,282, Ir/D 0.125
+  uint_macros.rs:1013: max exec 9,951,584, Ir/D 0.361
+  uint_macros.rs:1092: max exec 2,345,282, Ir/D 1.000
+== new-team
+share symbols: {'<mibz2::coop::FusedBuild>::share'}
+share self 2,845,867,142 (13.571 Ir/D), arcs out 296,376 (0.001), inclusive 13.573 Ir/D
+share calls by thread (thread: calls, MTF self Ir):
+  3: 0, MTF 268,512,421
+  4: 0, MTF 253,061,566
+  5: 0, MTF 313,752,290
+  7: 76, MTF 0
+  8: 76, MTF 0
+  9: 71, MTF 0
+  10: 86, MTF 0
+  11: 71, MTF 0
+  12: 86, MTF 0
+total share calls: 466 of them on threads with MTF: 0
+share's lines by file (max executions of one instruction there; Ir/D):
+  atomic.rs:0: max exec 86, Ir/D 0.000
+  atomic.rs:4235: max exec 86, Ir/D 0.000
+  atomic.rs:4237: max exec 86, Ir/D 0.000
+  bwt.rs:544: max exec 2,459,722, Ir/D 0.750
+  cmp.rs:0: max exec 86, Ir/D 0.000
+  cmp.rs:1090: max exec 86, Ir/D 0.000
+  cmp.rs:2144: max exec 10,607,328, Ir/D 0.745
+  coop.rs:0: max exec 2,459,722, Ir/D 0.148
+  coop.rs:634: max exec 10,607,328, Ir/D 1.196
+  coop.rs:635: max exec 10,607,328, Ir/D 0.722
+  coop.rs:636: max exec 10,607,328, Ir/D 0.722
+  coop.rs:643: max exec 10,607,328, Ir/D 2.166
+  coop.rs:644: max exec 10,607,328, Ir/D 0.722
+  coop.rs:649: max exec 2,459,722, Ir/D 0.375
+  coop.rs:651: max exec 2,459,722, Ir/D 0.340
+  coop.rs:653: max exec 2,240,130, Ir/D 0.307
+  coop.rs:654: max exec 2,240,130, Ir/D 0.205
+  coop.rs:655: max exec 2,240,130, Ir/D 0.410
+  coop.rs:671: max exec 2,240,130, Ir/D 0.102
+  coop.rs:672: max exec 2,240,130, Ir/D 0.205
+  equality.rs:157: max exec 86, Ir/D 0.000
+  macros.rs:173: max exec 2,240,130, Ir/D 0.922
+  mod.rs:573: max exec 2,240,130, Ir/D 0.102
+  mod.rs:1963: max exec 2,240,130, Ir/D 0.410
+  range.rs:1100: max exec 10,607,328, Ir/D 0.407
+  simd.rs:59: max exec 2,240,130, Ir/D 0.307
+  sse2.rs:111: max exec 2,240,130, Ir/D 0.819
+  uint_macros.rs:0: max exec 2,459,722, Ir/D 0.125
+  uint_macros.rs:1013: max exec 10,607,328, Ir/D 0.361
+  uint_macros.rs:1092: max exec 2,459,722, Ir/D 1.000

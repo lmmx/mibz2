@@ -1,0 +1,51 @@
+"""share's inclusive Ir, its calls by thread, and its instructions' executions by source
+line, from callgrind profiles (--dump-instr=yes), with bench/team_gap_count.py's parser.
+
+    python3 share_count.py REPO PREFIX D
+"""
+import collections, sys
+sys.path.insert(0, sys.argv[1] + "/bench")
+import team_gap_count as t
+
+profs = t.load(sys.argv[2])
+D = int(sys.argv[3])
+SH = lambda f: f and "FusedBuild" in f and ">::share" in f
+self_ir = arcs = 0
+calls_by_thread = {}
+mtf_by_thread = {}
+lines = collections.Counter()   # (file, line) -> max executions of an instruction there
+lines_ir = collections.Counter()
+names = set()
+for p in profs:
+    c = 0
+    for f, ir in p.self_ir.items():
+        if SH(f):
+            self_ir += ir
+            names.add(f)
+    for (a, b), ir in p.arcs.items():
+        if SH(a) and not SH(b):
+            arcs += ir
+    for (a, b), n in p.calls.items():
+        if SH(b):
+            c += n
+    calls_by_thread[p.thread] = c
+    mtf_by_thread[p.thread] = sum(ir for f, ir in p.self_ir.items() if f and "mibz2::mtf::" in f)
+    for (f, addr), ir in p.instr.items():
+        if SH(f):
+            fl = p.instr_line.get((f, addr))
+            if fl:
+                key = (fl[0].split("/")[-1], fl[1])
+                lines[key] = max(lines[key], ir)
+                lines_ir[key] += ir
+print("share symbols:", names)
+print(f"share self {self_ir:,} ({self_ir/D:.3f} Ir/D), arcs out {arcs:,} ({arcs/D:.3f}), inclusive {(self_ir+arcs)/D:.3f} Ir/D")
+print("share calls by thread (thread: calls, MTF self Ir):")
+for th in sorted(calls_by_thread):
+    if calls_by_thread[th] or mtf_by_thread[th]:
+        print(f"  {th}: {calls_by_thread[th]}, MTF {mtf_by_thread[th]:,}")
+print("total share calls:", sum(calls_by_thread.values()),
+      "of them on threads with MTF:", sum(c for th, c in calls_by_thread.items() if mtf_by_thread[th]))
+print("share's lines by file (max executions of one instruction there; Ir/D):")
+for (fl, ln), n in sorted(lines.items()):
+    if fl != "coop.rs" or lines_ir[(fl, ln)] / D >= 0.01:
+        print(f"  {fl}:{ln}: max exec {n:,}, Ir/D {lines_ir[(fl, ln)]/D:.3f}")
