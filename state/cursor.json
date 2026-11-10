@@ -1576,6 +1576,14 @@
       "review_comment_id": 6758300190,
       "publication_verified": true,
       "verification_note": "Exact body/author/destination readback and role-aware routing pass; pinned verify flags only hardcoded coordinator FROM."
+    },
+    {
+      "trigger_comment_id": 6758538763,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt; pinned specifications, migration manifest and legacy head verified; routing audit clean. Literature and derivation review only."
     }
   ],
   "active_delegations": [],
