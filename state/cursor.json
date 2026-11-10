@@ -831,12 +831,23 @@
     {
       "comment_id": 6757179363,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "02cc5f89988abb9ab436eae1af4b89576c19d590",
-      "progress": "Archive replay, site-budget proposal, target-cell design and ranking complete; preparing publication.",
-      "report_path": "state/records/reviews/inbox-6757179363/report.md"
+      "progress": "Work committed; publication pending.",
+      "report_path": "state/records/reviews/inbox-6757179363/report.md",
+      "report_commit": "ce84c983e9fe252c66bc816e6b2194c79d8895f3",
+      "audit_scope": {
+        "source_pin": "02cc5f89988abb9ab436eae1af4b89576c19d590",
+        "raw_timing_rows": 1512,
+        "raw_count_rows": 18,
+        "artifact_sha256": "7ef2c489e715bbd591412aa18221e73c27169b9db133b27f4384f5e2d730f1c9",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
