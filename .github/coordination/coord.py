@@ -87,6 +87,7 @@ RESOLVED = {
     6654146350: "a deliberate tripwire test; its first run could not comment on locked #145 (#187)",
     6654371320: "a deliberate tripwire test; its check run did not reopen the finished suite (#188)",
     6654531225: "a deliberate tripwire test; an in-progress check run did not reopen it either",
+    6757065549: "a LOG sent to the Researcher's inbox by mistake; its content is on #145 as LOG 6757065138, and nothing was re-sent (LOG on #145)",
 }
 
 
