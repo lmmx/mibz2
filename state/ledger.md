@@ -560,3 +560,14 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Old production table-only X predictsG9=6.46154; observed/predicted .50472. Small-load flat extension givesG2=1.06809 (strict domain lacks baseline3.2MB). No causal table-byte percentage identified; recompression changes1831/421 blocks, +33.59% compressed input, Huffman/MTF, buffers and scanner occupancy.
 - Whole-decoder-2 anchors1862/1819 at8/10 are scenarios, not candidate bounds. With unmeasuredf=.7,h=1,g estimates, C30≈1653/1616,D4≈1422/1390,chunked≈1193/1166; not forecasts. Real full footprint, scratch, late fallback and supply charged; F2 unchanged.
 - Team ports2 then3 remain ahead of three-table builds, subject to D085/B5. Insert cheap fixed-2 expanded-address-layout contrast4/16B atW4/10 to test shared premise.126 illustrative slots, no build or run authorization. Allocated unused padding is not a footprint experiment.
+
+## Phase census and width intervention: inbox6760167271
+
+[Report](records/reviews/inbox-6760167271/report.md), [arithmetic](records/reviews/inbox-6760167271/arithmetic.json). Source/register4ce34b6093a0f7a10885004dc20c8138602b1ae2. Pricing only.
+- Merge descriptive phase census with addressed4/16B -2 width intervention, after untimed boundary/code/data review. Matched on/off×width×W4/10 =8 cells; +2sentinels×21 rounds=210 illustrative slots vs126. Optional -9W4/10 on-only references give252; no automatic full610-slot census, no power claim or execution authority.
+- Four reads/block:1684 at-9 but7324 at-2; assumed25ns gives42.1/183.1microseconds summedCPU/decode. Logging, allocation/capacity, dump, clock implementation, code/data placement and critical-worker exposure additional; nanoseconds are not instruction counts or wall-overhead bounds.
+- Scratch persists across jobs. Four edges measure build/walk envelopes, not held-table lifetime, cache residency or all running workers. Source walk wrapper includes setup/assembly; RLE/CRC follow. Keep workers arm's2Wslotwindow fixed.
+- Within-block regression remains endogenous: target[0,T], independentneighbor[1,3], T2/3 gives overlap.5/.667 absent any neighbor effect. Shared shocks, collinearity and weak support prevent causal three-model selection;60rounds do not promise power. Cluster decodes, report residual support/rank/uncertainty; retain overlap histogram because mean X(n) differs from X(mean n).
+- Correct compulsory-scan arithmetic: f=.78,1862 anchor,g1.18 =>1632.76>1499; proxybreak-even g1.310463. Anchor notbound andg/f unvalidated. Old decoder law prices remain withdrawn.
+- Joint scanner/table2x2 economics justified, mandatory paired implementation notproved. Charge fullfeed,cores,window,constructor,scratch,metadata,fallback,output/tail; no throughput-gain addition.
+- Teamports2then3 remain ahead of speculative three-table engineering under D085/B5. No implementation, compilation, new timing, safety discharge or qualification.
