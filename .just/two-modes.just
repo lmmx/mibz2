@@ -26,9 +26,15 @@
 # - pass 2: the same, P-idle beside P-sib on CPU 19 in every run; the same deadline.
 # ab itself runs on the decoder's mask (taskset), so nothing of ours shares the probe core.
 # Every stage that can wait runs under bench/bounded.py (its process group TERMed, then
-# KILLed, its descendants reaped); a timeout is recorded, never retried, and makes the
-# attempt INVALID; a group that cannot be emptied stops the attempt there. One attempt; no
-# retry to pass. About 8 minutes; at most about 60 (the stages' deadlines summed). Exit: 0
+# KILLed, its descendants reaped), setup and bundling included; nothing is ever retried. A
+# timeout in setup (fetch, corpus, extraction, compilation, concatenation) REFUSES the attempt
+# before anything is measured; one in a measured stage (the gap block, the sustained block, a
+# pass) is recorded and makes the attempt INVALID; one in the judge is a REPORT ERROR; a group
+# that cannot be emptied (125) stops the attempt there. Every outcome keeps its partial records
+# and is bundled. One attempt; no retry to pass. About 8 minutes; its operational ceiling is
+# OPERATIONAL_CEILING_S in bench/two_modes.py, 8460 s (every supervised call at deadline,
+# grace and both cleanup phases, the bounded collectors and the rest), plus seconds of
+# unsupervised bookkeeping. Exit: 0
 # VALID (whatever the table says: the outcome says), 1 INVALID, 4 REFUSED by the preflight, 2
 # any other refusal or a report error, 3 stopped before its verdict.
 #   just submit bench-two-modes
@@ -53,7 +59,8 @@ bench-two-modes DRY="" CORPUS="":
     finish() {
       echo "$outcome" > "$W/outcome.txt"
       echo "bench-two-modes: OUTCOME: $outcome"
-      bash bench/bundle.sh "$W" || { echo "bench-two-modes: bundling failed"; exit 2; }
+      python3 bench/bounded.py $(python3 bench/two_modes.py get DEADLINES | python3 -c 'import json, sys; print(*json.load(sys.stdin)["bundle"])') \
+        bash bench/bundle.sh "$W" || { echo "bench-two-modes: bundling failed or timed out; $W is kept"; exit 2; }
       case "$outcome" in
         "VALID: "*|"DRY (not evidence): "*) exit 0 ;;
         INVALID*) exit 1 ;;
@@ -114,10 +121,10 @@ bench-two-modes DRY="" CORPUS="":
     S=$B/source-$(reg sha256 | cut -c1-12)
     if [ ! -f "$S/bin/ab" ]; then
       rm -rf "$S.tmp"; mkdir -p "$S.tmp"
-      git show "$ev:$src" > "$S.tmp/bundle.tar.gz"
+      bd setup bash -c 'git show "$1" > "$2"' _ "$ev:$src" "$S.tmp/bundle.tar.gz" || fail "the archived bundle could not be read"
       [ "$(sha256sum "$S.tmp/bundle.tar.gz" | cut -d' ' -f1)" = "$(reg sha256)" ] || fail "the archived bundle's digest is not the registered one"
       top=$(basename "$src" .tar.gz)
-      tar -xzf "$S.tmp/bundle.tar.gz" -C "$S.tmp" "$top/bin/ab" "$top/bin/windows"
+      bd setup tar -xzf "$S.tmp/bundle.tar.gz" -C "$S.tmp" "$top/bin/ab" "$top/bin/windows" || fail "the archived executables could not be extracted"
       mkdir -p "$S.tmp/bin"; mv "$S.tmp/$top/bin/ab" "$S.tmp/$top/bin/windows" "$S.tmp/bin/"
       rm -rf "$S.tmp/$top" "$S.tmp/bundle.tar.gz"; mv "$S.tmp" "$S"
     fi
@@ -127,7 +134,7 @@ bench-two-modes DRY="" CORPUS="":
     [ "$(sha "$W/bin/ab")" = "$(reg ab_sha256)" ] || fail "the archived ab is not the registered executable"
     [ "$(sha "$W/bin/windows")" = "$(reg windows_sha256)" ] || fail "the archived windows is not the registered executable"
     # the probe: a standalone program, compiled here (it never links the decoder)
-    cc -O2 -Wall -Wextra -pthread -o "$W/bin/two_modes_probe" bench/two_modes_probe.c || fail "the probe did not compile"
+    bd setup cc -O2 -Wall -Wextra -pthread -o "$W/bin/two_modes_probe" bench/two_modes_probe.c || fail "the probe did not compile"
     AB=$W/bin/ab; PROBE=$W/bin/two_modes_probe
     if [ -z "$corpus" ]; then
       dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
@@ -185,6 +192,8 @@ bench-two-modes DRY="" CORPUS="":
     # child unchanged, one fresh process a run; GAP_EACH runs after a GAP_S idle gap and
     # GAP_EACH spawned as soon as the run before exits, in the registered seeded order
     mkdir "$W/gaps"
+    # (after one conditioning child, retained and never counted, so that the first G slot has
+    # a run before it to wait after)
     gruns=$(( 2 * $(tm GAP_EACH) )); [ -n "$dry" ] && gruns=$(tm DRY_GAP_RUNS)
     echo "bench-two-modes: the gap block: $gruns runs, order $(tm GAP_ORDER | cut -c1-"$gruns")"
     set +e
@@ -208,7 +217,7 @@ bench-two-modes DRY="" CORPUS="":
     sus_rc=$?
     set -e
     echo "sustained: exit $sus_rc" | tee -a "$W/exits.txt"
-    sus_after=$(python3 bench/two_modes.py digest "$X")
+    sus_after=$(bd concat python3 bench/two_modes.py digest "$X") || sus_after=unread
     rest=$(tm SUSTAINED_REST_S); [ -n "$dry" ] && rest=1
     echo "bench-two-modes: a fixed rest of ${rest} s before pass 1"; sleep "$rest"
     # the two passes: ab exactly as the run-fed leader's recipe ran it, one arm, through the

@@ -274,22 +274,31 @@ SUSTAINED = {
 
 
 def gap_records(slow_after_gap=0, slow_without=0, runs=2 * tm.GAP_EACH):
-    """The gap block's records: the first `slow_after_gap` gap runs and the first
-    `slow_without` no-gap runs slow, the rest fast"""
+    """The gap block's records: the conditioning child, then the first `slow_after_gap` gap
+    runs and the first `slow_without` no-gap runs slow, the rest fast; every endpoint retained"""
     recs, seen = [], {"G": 0, "Z": 0}
-    for i, cond in enumerate(tm.GAP_ORDER[:runs]):
-        k = seen[cond]
-        seen[cond] += 1
-        slow = k < (slow_after_gap if cond == "G" else slow_without)
+    t, prev = 1_000_000_000, None
+    for i, cond in [(None, "C")] + list(enumerate(tm.GAP_ORDER[:runs])):
+        slow = False
+        if cond != "C":
+            k = seen[cond]
+            seen[cond] += 1
+            slow = k < (slow_after_gap if cond == "G" else slow_without)
         wall = 0.305 if slow else 0.155
+        if prev is not None:
+            t = prev + (int(0.2512e9) if cond == "G" else 2_100_000)
+        launch, reap = t, t + int((wall + 0.01) * 1e9)
         recs.append(
             {
                 "schema": tm.GAPS_SCHEMA,
                 "index": i,
                 "condition": cond,
-                "gap_s": None if i == 0 else (0.2512 if cond == "G" else 0.0021),
-                "t_spawn_unix_ns": 1_794_000_000_000_000_000 + i * 10**9,
-                "span_s": wall + 0.01,
+                "prev_reap_mono_ns": prev,
+                "launch_mono_ns": launch,
+                "reap_mono_ns": reap,
+                "gap_s": None if prev is None else (launch - prev) / 1e9,
+                "span_s": (reap - launch) / 1e9,
+                "t_spawn_unix_ns": 1_794_000_000_000_000_000 + launch,
                 "exit": 0,
                 "child": {
                     "wall": wall,
@@ -301,6 +310,7 @@ def gap_records(slow_after_gap=0, slow_without=0, runs=2 * tm.GAP_EACH):
                 "rusage": {"minflt": 20000, "utime_s": 1.0, "stime_s": 0.05, "maxrss_kb": 1},
             }
         )
+        prev = reap
     return recs
 
 
@@ -344,6 +354,7 @@ def identity(n=tm.RUNS, dry=False):
         "schedule": {str(k): v for k, v in tm.SCHEDULE.items()},
         "schedule_seed": tm.SCHEDULE_SEED,
         "preflight_exit": 0,
+        "deadlines": {k: list(v) for k, v in tm.DEADLINES.items()},
         "gaps": {
             "exit": 0,
             "runs": 2 * tm.GAP_EACH if not dry else tm.DRY_GAP_RUNS,
@@ -353,7 +364,13 @@ def identity(n=tm.RUNS, dry=False):
         },
         "passes": [1, 2],
         "pass_exits": {"1": 0, "2": 0},
-        "sustained": {"copies": cat["copies"], "exit": 0, "concat": cat, "sha256_after": H},
+        "sustained": {
+            "copies": cat["copies"],
+            "exit": 0,
+            "rest_s": tm.SUSTAINED_REST_S if not dry else 1,
+            "concat": cat,
+            "sha256_after": H,
+        },
     }
 
 
@@ -548,19 +565,26 @@ class Gaps(unittest.TestCase):
         return tm.gaps_reading(gap_records(g, z))["outcome"]
 
     def test_the_gap_goes_with_the_slow_mode(self):
-        self.assertTrue(self.outcome(12, 2).startswith("THE GAP GOES WITH THE SLOW MODE: 12/30"))
+        self.assertTrue(
+            self.outcome(12, 2).startswith("THE GAP POLICY GOES WITH THE SLOW MODE: 12/30")
+        )
 
     def test_both_conditions_show_the_mode(self):
-        self.assertTrue(self.outcome(12, 10).startswith("BOTH CONDITIONS SHOW THE MODE"))
+        self.assertTrue(self.outcome(12, 10).startswith("BOTH POLICIES SHOW THE MODE"))
 
-    def test_no_slow_mode(self):
-        self.assertTrue(self.outcome(2, 1).startswith("NO SLOW MODE IN THE BLOCK"))
+    def test_no_slow_run(self):
+        self.assertTrue(self.outcome(0, 0).startswith("NO SLOW RUN IN THE BLOCK"))
+
+    def test_a_few_slow_runs_are_insufficient_support_not_absence(self):
+        self.assertTrue(self.outcome(2, 1).startswith("INSUFFICIENT SLOW-CLASS SUPPORT"))
 
     def test_not_separated(self):
         self.assertTrue(self.outcome(6, 3).startswith("NOT SEPARATED"))
 
     def test_the_reverse(self):
-        self.assertTrue(self.outcome(1, 12).startswith("NO GAP GOES WITH THE SLOW MODE"))
+        self.assertTrue(
+            self.outcome(1, 12).startswith("THE IMMEDIATE POLICY GOES WITH THE SLOW MODE")
+        )
 
     def test_cpu_per_block_and_transitions(self):
         r = tm.gaps_reading(gap_records(12, 2))
@@ -570,7 +594,7 @@ class Gaps(unittest.TestCase):
     def test_first_in_the_outcome(self):
         rc, j = judged("H3")
         self.assertTrue(
-            j["result"].startswith("GAP BLOCK (primary): THE GAP GOES WITH"), j["result"]
+            j["result"].startswith("GAP BLOCK (primary): THE GAP POLICY GOES WITH"), j["result"]
         )
         self.assertIn("PROBE TABLE (secondary): COMPATIBLE WITH H3", j["result"])
 
@@ -584,17 +608,161 @@ class Gaps(unittest.TestCase):
             self.assertEqual(rc, 2, what)
 
     def test_a_short_gap_is_invalid(self):
+        recs = gap_records(12, 2)
+        i = 1 + tm.GAP_ORDER.index("G", 1)  # (a G slot after the first)
+        shift = recs[i]["launch_mono_ns"] - recs[i]["prev_reap_mono_ns"] - int(0.1e9)
+        for r in recs[i:]:
+            for k in ("launch_mono_ns", "reap_mono_ns", "t_spawn_unix_ns"):
+                r[k] -= shift
+            if r is not recs[i] and r["prev_reap_mono_ns"] is not None:
+                r["prev_reap_mono_ns"] -= shift
+        recs[i]["gap_s"] = 0.1
+        self.assertTrue(
+            any("a gap run whose gap was 0.1" in x for x in tm.gaps_problems(recs, 60, False))
+        )
+
+    def test_the_driver_conditions_first_and_every_g_has_its_gap(self):
         with tempfile.TemporaryDirectory() as d:
-            attempt(d, "H3")
-            recs = gap_records(12, 2)
-            i = tm.GAP_ORDER.index("G", 1)
-            recs[i]["gap_s"] = 0.1
-            with open(os.path.join(d, "gaps", "runs.jsonl"), "w") as f:
-                f.writelines(json.dumps(r) + "\n" for r in recs)
-            self.assertEqual(quiet(tm.main, ["judge", d]), 2)
-            self.assertIn(
-                "a gap run whose gap was 0.1", load(os.path.join(d, "judgement.json"))["outcome"]
+            fake = os.path.join(d, "ab")
+            Path(fake).write_text(
+                "#!/usr/bin/env python3\nimport json\nprint(json.dumps({'wall': 0.01, 'cpu': 0.02, "
+                f"'out': {tm.WORKLOAD['out']}, 'hash': '{tm.WORKLOAD['hash']}', 'err': ''}}))\n"
             )
+            os.chmod(fake, 0o755)
+            out = os.path.join(d, "runs.jsonl")
+            self.assertEqual(tm.run_gaps(fake, "corpus", out, 4), 0)
+            with open(out) as f:
+                recs = [json.loads(x) for x in f]
+            self.assertEqual([r["condition"] for r in recs], ["C"] + list(tm.GAP_ORDER[:4]))
+            self.assertEqual(tm.GAP_ORDER[0], "G")
+            self.assertGreaterEqual(recs[1]["gap_s"], tm.GAP_S)  # the first G is treated
+            self.assertEqual(tm.gaps_problems(recs, 4, False), [])
+            r = tm.gaps_reading(recs)
+            self.assertEqual(r["conditions"]["G"]["n"] + r["conditions"]["Z"]["n"], 4)
+
+
+class Recheck(unittest.TestCase):
+    """The Researcher's re-review witnesses (REVISE, #145 6759926285; probe.py at d5bb651a),
+    each replaying VALID on 795d4d75 and INVALID now"""
+
+    def replay(self, gap_edit=None, ident_edit=None):
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3", gaps=(0, 0))
+            p = os.path.join(d, "gaps", "runs.jsonl")
+            with open(p) as f:
+                rows = [json.loads(x) for x in f]
+            if gap_edit:
+                gap_edit(rows)
+            with open(p, "w") as f:
+                f.writelines(json.dumps(r) + "\n" for r in rows)
+            if ident_edit:
+                i = load(os.path.join(d, "identity.json"))
+                ident_edit(i)
+                dump(i, os.path.join(d, "identity.json"))
+            rc = quiet(tm.main, ["judge", d])
+            return rc, load(os.path.join(d, "judgement.json"))
+
+    def test_baseline_is_valid(self):
+        rc, j = self.replay()
+        self.assertEqual((rc, j["label"], j["problems"]), (0, "VALID", []))
+
+    def test_missing_g_walls(self):
+        def edit(rows):
+            for r in rows:
+                if r["condition"] == "G":
+                    r["child"].pop("wall")
+
+        rc, j = self.replay(edit)
+        self.assertEqual((rc, j["label"]), (2, "INVALID"))
+        g = j["gaps"]["conditions"]["G"]
+        self.assertEqual((g["slow"], g["unclassified"]), (0, 30))  # never slow by default
+
+    def test_one_missing_g_wall(self):
+        def edit(rows):
+            rows[1]["child"].pop("wall")
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+        self.assertEqual(j["gaps"]["conditions"]["G"]["slow"], 0)
+        self.assertTrue(any("no finite positive wall" in x for x in j["problems"]))
+
+    def test_nonfinite_wall(self):
+        def edit(rows):
+            rows[3]["child"]["wall"] = float("nan")
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+
+    def test_negative_z_gaps(self):
+        def edit(rows):
+            for r in rows:
+                if r["condition"] == "Z":
+                    r["gap_s"] = -1.0
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+
+    def test_reversed_timestamps_and_negative_spans(self):
+        def edit(rows):
+            for i, r in enumerate(rows):
+                r.update(t_spawn_unix_ns=60 - i, span_s=-1)
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("not increasing" in x for x in j["problems"]))
+        self.assertTrue(any("no finite positive span" in x for x in j["problems"]))
+
+    def test_reversed_endpoints(self):
+        def edit(rows):
+            rows[5]["launch_mono_ns"], rows[5]["reap_mono_ns"] = (
+                rows[5]["reap_mono_ns"],
+                rows[5]["launch_mono_ns"],
+            )
+
+        rc, j = self.replay(edit)
+        self.assertEqual(rc, 2)
+
+    def test_no_conditioning_child(self):
+        rc, j = self.replay(lambda rows: rows.pop(0))
+        self.assertEqual(rc, 2)
+        self.assertTrue(any("no conditioning child" in x for x in j["problems"]))
+
+    def test_zero_rest(self):
+        rc, j = self.replay(ident_edit=lambda i: i["sustained"].update(rest_s=0))
+        self.assertEqual(rc, 2)
+
+    def test_empty_deadlines(self):
+        rc, j = self.replay(ident_edit=lambda i: i.update(deadlines={}))
+        self.assertEqual(rc, 2)
+
+    def test_both(self):
+        def edit(i):
+            i.update(deadlines={})
+            i["sustained"].update(rest_s=0)
+
+        rc, j = self.replay(ident_edit=edit)
+        self.assertEqual(rc, 2)
+
+    def test_the_operational_ceiling(self):
+        self.assertGreaterEqual(tm.OPERATIONAL_CEILING_S, 5400)
+        self.assertEqual(tm.OPERATIONAL_CEILING_S, 8460)
+        self.assertIn("gaps", tm.STAGE_CALLS)
+
+    def test_subwindows_need_their_own_coverage(self):
+        probe = probe_record(0, 0.305, "H3", False, 2, 0)
+        p = probe["probes"][0]
+        t0 = probe["tsc"]["exec"]
+        # (a 40 ms pause from 70 ms in, across the first third's end at about 103 ms; samples
+        # appended at the end keep the whole window covered)
+        ts = tm.probe_samples(p)
+        k = next(j for j, t in enumerate(ts) if t > t0 + int(0.07 * HZ)) - 1
+        p["dtsc"][k] += int(0.04 * HZ)
+        p["dtsc"] += [p["dtsc"][-1]] * 300
+        r = tm.readings(run_record(0, 0.305, 0), probe, SIBS)
+        self.assertGreaterEqual(r["p_idle_coverage"], tm.MIN_COVERAGE)
+        self.assertLess(r["p_idle_early_coverage"], tm.MIN_COVERAGE)
+        self.assertIsNone(r["p_idle_early"])
+        self.assertIsNotNone(r["p_idle_late"])
 
 
 class Counterexamples(unittest.TestCase):

@@ -144,7 +144,36 @@ DEADLINES = {
     "sustained": (300, 10),
     "pass": (900, 10),  # each pass, the archived ab's busy-gate waits included
     "judge": (300, 10),
+    "setup": (300, 10),  # the bundle's extraction, the probe's compilation
+    "bundle": (600, 10),
 }
+# Every supervised call the recipe makes, by stage (fetch: the evidence and bench-data
+# branches; corpus: the windows' fetch and the build;
+# setup: reading the archived bundle, extracting it, compiling the probe; concat: the build or
+# check, and the digest after the block)
+STAGE_CALLS = {
+    "fetch": 2,
+    "corpus": 2,
+    "setup": 3,
+    "concat": 2,
+    "gaps": 1,
+    "sustained": 1,
+    "pass": 2,
+    "judge": 1,
+    "bundle": 1,
+}
+BOUNDED_REAP_S = 10  # bench/bounded.py's REAP: up to twice after a call's deadline and grace
+PREFLIGHT_COLLECTOR_S = 35  # each collector's timeout and kill (five, and one sample after)
+# The attempt's operational ceiling: every supervised call at its deadline, grace and both
+# cleanup phases, the six bounded collectors, and the fixed rest. Unsupervised bookkeeping (git
+# status, small digests, writing the identity) adds seconds beyond it
+OPERATIONAL_CEILING_S = (
+    sum(
+        n * (DEADLINES[k][0] + DEADLINES[k][1] + 2 * BOUNDED_REAP_S) for k, n in STAGE_CALLS.items()
+    )
+    + 6 * PREFLIGHT_COLLECTOR_S
+    + 60
+)
 # The sustained block, before the probe passes: one process, ab's own child, unpinned and with
 # no probe, decodes the corpus concatenated SUSTAINED_COPIES times. Its input consumption
 # (rchar) is read every 10 ms; it is reported raw (100 ms windows) and classified only by an
@@ -703,8 +732,11 @@ def readings(rec, probe, siblings):
         out[key + "_n"] = whole["n"]
         out[key + "_longest_ms"] = whole.get("longest_ms")
         out[key + "_gaps_ms"] = [whole.get("gap_start_ms"), whole.get("gap_end_ms")]
-        out[key + "_early"] = early["progress"] if ok else None
-        out[key + "_late"] = late["progress"] if ok else None
+        # (each third read only on its own coverage: the whole window's does not imply it)
+        for part, x in (("_early", early), ("_late", late)):
+            covered = x["coverage"] is not None and x["coverage"] >= MIN_COVERAGE
+            out[key + part] = x["progress"] if covered else None
+            out[key + part + "_coverage"] = x["coverage"]
         cpu_ns = p.get("cpu_ns")
         out[key + "_cpu_share"] = (
             cpu_ns / 1e9 / ((p["last_tsc"] - p["first_tsc"]) / hz)
@@ -752,8 +784,12 @@ def readings(rec, probe, siblings):
     ok = len(clk) >= MIN_FREQ_SAMPLES
     out["freq_samples"] = len(clk)
     out["clock_ghz"] = med(v for _, v in clk) if ok else None
-    out["clock_early"] = med(v for t, v in clk if t <= span_us / 3) if ok else None
-    out["clock_late"] = med(v for t, v in clk if t >= 2 * span_us / 3) if ok else None
+    # (each third read only on its own support: at least MIN_FREQ_SAMPLES readings in it)
+    early = [v for t, v in clk if t <= span_us / 3]
+    late = [v for t, v in clk if t >= 2 * span_us / 3]
+    out["clock_early_n"], out["clock_late_n"] = len(early), len(late)
+    out["clock_early"] = med(early) if len(early) >= MIN_FREQ_SAMPLES else None
+    out["clock_late"] = med(late) if len(late) >= MIN_FREQ_SAMPLES else None
     out["freq_read_us"] = med(read_us)
     b, a = probe.get("before"), probe.get("after")
     out["core_throttle"] = throttle_delta(b, a, "core_throttle_count", "sum")
@@ -984,29 +1020,36 @@ def outcome(table, values):
 
 
 def run_gaps(ab, corpus, out, runs):
-    """The gap block's driver: GAP_ORDER's first `runs` slots, G after an idle gap of GAP_S
-    since the run before exited, Z at once; each run ab's own `child ARM THREADS FILE`, its
-    stdout (the child's record) captured, reaped by wait4. One JSON line a run. Exit 0 only if
-    every run succeeded"""
+    """The gap block's driver. First one conditioning child (condition "C"), retained and
+    never counted; then GAP_ORDER's first `runs` slots: a G slot launched once GAP_S has passed
+    since the parent reaped the child before, a Z slot launched at once. Each run is ab's own
+    `child ARM THREADS FILE`, its stdout (the child's record) captured, reaped by wait4.
+
+    The recorded gap is the parent's: from its reap of the child before (after that child's
+    stdout reached EOF and wait4 returned) to its launch call for this one (before Popen). It is
+    not the child's exit-to-spawn interval: a parent descheduled between the child's exit and
+    its reap, or a slow process creation, adds idle time this scalar does not see. Both
+    endpoints are retained (monotonic, ns) so that the scalar can be checked against them. One
+    JSON line a run. Exit 0 only if every run, the conditioning one included, succeeded"""
     import subprocess
     import time
 
     ok = True
-    prev_exit = None
+    prev_reap = None
     with open(out, "a") as f:
-        for i, cond in enumerate(GAP_ORDER[:runs]):
-            if cond == "G" and prev_exit is not None:
-                left = GAP_S - (time.monotonic() - prev_exit)
+        for i, cond in [(None, "C")] + list(enumerate(GAP_ORDER[:runs])):
+            if cond == "G":
+                left = GAP_S - (time.monotonic_ns() - prev_reap) / 1e9
                 if left > 0:
                     time.sleep(left)
-            t0 = time.monotonic()
-            gap = None if prev_exit is None else t0 - prev_exit
+            launch = time.monotonic_ns()
             u0 = time.time_ns()
             p = subprocess.Popen([ab, "child", ARM, str(THREADS), corpus], stdout=subprocess.PIPE)
-            line = p.stdout.read()
+            with p.stdout:
+                line = p.stdout.read()
             _, status, ru = os.wait4(p.pid, 0)
+            reap = time.monotonic_ns()
             p.returncode = os.waitstatus_to_exitcode(status)
-            prev_exit = time.monotonic()
             try:
                 child = json.loads(line)
             except ValueError:
@@ -1015,9 +1058,12 @@ def run_gaps(ab, corpus, out, runs):
                 "schema": GAPS_SCHEMA,
                 "index": i,
                 "condition": cond,
-                "gap_s": gap,
+                "prev_reap_mono_ns": prev_reap,
+                "launch_mono_ns": launch,
+                "reap_mono_ns": reap,
+                "gap_s": None if prev_reap is None else (launch - prev_reap) / 1e9,
+                "span_s": (reap - launch) / 1e9,
                 "t_spawn_unix_ns": u0,
-                "span_s": prev_exit - t0,
                 "exit": p.returncode,
                 "child": child,
                 "rusage": {
@@ -1027,6 +1073,7 @@ def run_gaps(ab, corpus, out, runs):
                     "maxrss_kb": ru.ru_maxrss,
                 },
             }
+            prev_reap = reap
             ok &= p.returncode == 0 and isinstance(child, dict) and not child.get("err")
             f.write(json.dumps(rec) + "\n")
             f.flush()
@@ -1047,122 +1094,147 @@ def fisher_two_sided(a, b, c, d):
     return min(1.0, sum(pr(x) for x in range(lo, hi + 1) if pr(x) <= p0 * (1 + 1e-9)))
 
 
+def positive(x):
+    return num(x) is not None and x > 0
+
+
+def gap_wall(r):
+    """A treatment run's wall, or None: only a finite, strictly positive wall is classed"""
+    c = r.get("child") if isinstance(r, dict) else None
+    w = c.get("wall") if isinstance(c, dict) else None
+    return w if positive(w) else None
+
+
 def gaps_reading(recs):
-    """Per condition: fast and slow counts, the child's CPU per block (all, fast, slow), the
-    gaps as measured; the Fisher test of slow against condition; the registered outcome. The
-    p value assumes independent runs, which persistence between runs breaks: it is reported as
-    registered and read as descriptive"""
+    """The treatment runs (the conditioning child excluded), per condition: fast and slow
+    counts among runs with a valid wall (a missing or invalid wall is neither, and counted
+    apart), the child's CPU per block (all, fast, slow), the parent-observed gaps; the Fisher
+    test of slow against condition; the registered outcome. The p value assumes independent
+    runs, which persistence breaks: it is reported as registered and read as descriptive"""
+    recs = [r for r in recs if r.get("condition") in ("G", "Z")]
     out = {"conditions": {}}
+
+    def cpb(rs):
+        return med(
+            r["child"]["cpu"] / BLOCKS_PER_CORPUS
+            for r in rs
+            if num(r["child"].get("cpu")) is not None and r["child"]["cpu"] >= 0
+        )
+
     for cond in ("G", "Z"):
-        g = [r for r in recs if r.get("condition") == cond and isinstance(r.get("child"), dict)]
-        fast = [
-            r
-            for r in g
-            if num(r["child"].get("wall")) is not None and r["child"]["wall"] < THRESHOLD_S
-        ]
-        slow = [r for r in g if r not in fast]
-
-        def cpb(rs):
-            return med(
-                r["child"].get("cpu") / BLOCKS_PER_CORPUS
-                for r in rs
-                if num(r["child"].get("cpu")) is not None
-            )
-
+        g = [r for r in recs if r["condition"] == cond]
+        timed = [r for r in g if gap_wall(r) is not None]
+        fast = [r for r in timed if gap_wall(r) < THRESHOLD_S]
+        slow = [r for r in timed if gap_wall(r) >= THRESHOLD_S]
+        gaps = [r["gap_s"] for r in g if num(r.get("gap_s")) is not None]
         out["conditions"][cond] = {
-            "n": len(g),
+            "n": len(timed),
+            "unclassified": len(g) - len(timed),
             "fast": len(fast),
             "slow": len(slow),
-            "cpu_per_block_s": cpb(g),
+            "cpu_per_block_s": cpb(timed),
             "cpu_per_block_fast_s": cpb(fast),
             "cpu_per_block_slow_s": cpb(slow),
-            "wall_median_s": med(r["child"].get("wall") for r in g),
-            "gap_median_s": med(r.get("gap_s") for r in g),
-            "gap_max_s": max(
-                (r["gap_s"] for r in g if num(r.get("gap_s")) is not None), default=None
-            ),
+            "wall_median_s": med(gap_wall(r) for r in timed),
+            "gap_median_s": med(gaps),
+            "gap_min_s": min(gaps, default=None),
+            "gap_max_s": max(gaps, default=None),
         }
     G, Z = out["conditions"]["G"], out["conditions"]["Z"]
     p = fisher_two_sided(G["slow"], G["fast"], Z["slow"], Z["fast"]) if G["n"] and Z["n"] else None
     out["fisher_p"] = p
-    seq = "".join(
-        ("s" if r["child"].get("wall", 0) >= THRESHOLD_S else "F")
-        if isinstance(r.get("child"), dict)
-        else "?"
-        for r in recs
+    out["sequence"] = "".join(
+        "?" if gap_wall(r) is None else ("s" if gap_wall(r) >= THRESHOLD_S else "F") for r in recs
     )
-    out["sequence"] = seq
-    out["order"] = "".join(r.get("condition", "?") for r in recs)
-    # (by the condition of the run before: a carryover check, descriptive)
-    after = {}
+    out["order"] = "".join(r["condition"] for r in recs)
+    after = {}  # (by the condition of the run before: a carryover check, descriptive)
     for a, b in zip(recs, recs[1:]):
-        if isinstance(b.get("child"), dict):
-            k = f"{a.get('condition')}->{b.get('condition')}"
-            x = after.setdefault(k, [0, 0])
-            x[0] += b["child"].get("wall", 0) >= THRESHOLD_S
+        if gap_wall(b) is not None:
+            x = after.setdefault(f"{a['condition']}->{b['condition']}", [0, 0])
+            x[0] += gap_wall(b) >= THRESHOLD_S
             x[1] += 1
     out["slow_by_transition"] = after
-    rg, rz = (G["slow"] / G["n"] if G["n"] else None), (Z["slow"] / Z["n"] if Z["n"] else None)
+    tally = f"{G['slow']}/{G['n']} slow after a gap, {Z['slow']}/{Z['n']} without"
+    slow = G["slow"] + Z["slow"]
     if p is None or G["n"] < GAP_EACH or Z["n"] < GAP_EACH:
-        out["outcome"] = f"INSUFFICIENT: {G['n']} gap and {Z['n']} no-gap runs, not {GAP_EACH} each"
-    elif G["slow"] + Z["slow"] < GAP_MIN_SLOW:
         out["outcome"] = (
-            f"NO SLOW MODE IN THE BLOCK: {G['slow']} slow after a gap, {Z['slow']} without"
+            f"INSUFFICIENT: {G['n']} timed gap and {Z['n']} timed no-gap runs, not {GAP_EACH} each"
         )
-    elif p < GAP_ALPHA and rg > rz:
-        out["outcome"] = (
-            f"THE GAP GOES WITH THE SLOW MODE: {G['slow']}/{G['n']} slow after a gap, "
-            f"{Z['slow']}/{Z['n']} without (Fisher p {p:.3g})"
-        )
+    elif slow == 0:
+        out["outcome"] = f"NO SLOW RUN IN THE BLOCK: {tally}"
+    elif slow < GAP_MIN_SLOW:
+        out["outcome"] = f"INSUFFICIENT SLOW-CLASS SUPPORT: {tally} (a floor of {GAP_MIN_SLOW})"
+    elif p < GAP_ALPHA and G["slow"] / G["n"] > Z["slow"] / Z["n"]:
+        out["outcome"] = f"THE GAP POLICY GOES WITH THE SLOW MODE: {tally} (Fisher p {p:.3g})"
     elif p < GAP_ALPHA:
-        out["outcome"] = (
-            f"NO GAP GOES WITH THE SLOW MODE: {G['slow']}/{G['n']} slow after a gap, "
-            f"{Z['slow']}/{Z['n']} without (Fisher p {p:.3g})"
-        )
+        out["outcome"] = f"THE IMMEDIATE POLICY GOES WITH THE SLOW MODE: {tally} (Fisher p {p:.3g})"
     elif G["slow"] >= GAP_MIN_SLOW and Z["slow"] >= GAP_MIN_SLOW:
-        out["outcome"] = (
-            f"BOTH CONDITIONS SHOW THE MODE: {G['slow']}/{G['n']} slow after a gap, "
-            f"{Z['slow']}/{Z['n']} without (Fisher p {p:.3g})"
-        )
+        out["outcome"] = f"BOTH POLICIES SHOW THE MODE: {tally} (Fisher p {p:.3g})"
     else:
-        out["outcome"] = (
-            f"NOT SEPARATED: {G['slow']}/{G['n']} slow after a gap, {Z['slow']}/{Z['n']} "
-            f"without (Fisher p {p:.3g})"
-        )
+        out["outcome"] = f"NOT SEPARATED: {tally} (Fisher p {p:.3g})"
     return out
 
 
 def gaps_problems(recs, n, dry):
+    """The gap block's records: the conditioning child first, then `n` treatment runs in the
+    registered order; every run succeeded with a finite positive wall and span and a finite
+    nonnegative CPU; launches and reaps ordered (each launch after the reap before it, each reap
+    after its launch); each recorded gap equal to its retained endpoints' difference; G gaps at
+    least GAP_S less 5 ms, Z gaps in [0, 0.05) s"""
     bad = []
-    if len(recs) != n:
-        bad.append(f"the gap block: {len(recs)} runs recorded, not {n}")
-    for i, r in enumerate(recs):
-        w = f"gap block run {i}"
-        if (
+    if not recs or recs[0].get("condition") != "C" or recs[0].get("index") is not None:
+        bad.append("the gap block: no conditioning child first")
+    treat = recs[1:] if recs and recs[0].get("condition") == "C" else recs
+    if len(treat) != n:
+        bad.append(f"the gap block: {len(treat)} treatment runs recorded, not {n}")
+    prev = None
+    for k, r in enumerate(recs):
+        i = r.get("index")
+        w = "the conditioning run" if r.get("condition") == "C" else f"gap block run {i}"
+        if r.get("condition") != "C" and (
             r.get("schema") != GAPS_SCHEMA
-            or r.get("index") != i
+            or i != k - 1
+            or i >= len(GAP_ORDER)
             or r.get("condition") != GAP_ORDER[i]
         ):
-            bad.append(f"{w}: not slot {i} of the registered order")
+            bad.append(f"{w}: not slot {k - 1} of the registered order")
         c = r.get("child")
         if r.get("exit") != 0 or not isinstance(c, dict) or c.get("err"):
             bad.append(f"{w}: did not succeed (exit {r.get('exit')!r})")
+            c = c if isinstance(c, dict) else {}
         elif not dry and (c.get("out"), c.get("hash")) != (WORKLOAD["out"], WORKLOAD["hash"]):
             bad.append(
                 f"{w}: output {c.get('out')!r} {c.get('hash')!r}, not the registered workload"
             )
-        if (
-            i
-            and r.get("condition") == "G"
-            and not (num(r.get("gap_s")) and r["gap_s"] >= GAP_S - 0.005)
-        ):
-            bad.append(f"{w}: a gap run whose gap was {r.get('gap_s')!r} s")
-        if (
-            i
-            and r.get("condition") == "Z"
-            and not (num(r.get("gap_s")) is not None and r["gap_s"] < 0.05)
-        ):
-            bad.append(f"{w}: a no-gap run whose gap was {r.get('gap_s')!r} s")
+        if not positive(c.get("wall")):
+            bad.append(f"{w}: no finite positive wall ({c.get('wall')!r})")
+        if not (num(c.get("cpu")) is not None and c["cpu"] >= 0):
+            bad.append(f"{w}: no finite nonnegative CPU ({c.get('cpu')!r})")
+        if not positive(r.get("span_s")):
+            bad.append(f"{w}: no finite positive span ({r.get('span_s')!r})")
+        la, re_, pr = r.get("launch_mono_ns"), r.get("reap_mono_ns"), r.get("prev_reap_mono_ns")
+        if not (isinstance(la, int) and isinstance(re_, int) and la < re_):
+            bad.append(f"{w}: its launch and reap are not ordered ({la!r}, {re_!r})")
+            prev = None
+            continue
+        if pr != prev or (prev is not None and la < prev):
+            bad.append(f"{w}: its launch does not follow the reap before it")
+        if prev is not None:
+            g = r.get("gap_s")
+            if not (num(g) is not None and abs(g - (la - prev) / 1e9) < 1e-6):
+                bad.append(f"{w}: its gap {g!r} is not its endpoints' difference")
+            elif r.get("condition") == "G" and g < GAP_S - 0.005:
+                bad.append(f"{w}: a gap run whose gap was {g!r} s")
+            elif r.get("condition") == "Z" and not 0 <= g < 0.05:
+                bad.append(f"{w}: a no-gap run whose gap was {g!r} s")
+        elif r.get("condition") != "C":
+            bad.append(f"{w}: a treatment run with no reap before it")
+        if positive(r.get("span_s")) and abs(r["span_s"] - (re_ - la) / 1e9) > 1e-6:
+            bad.append(f"{w}: its span is not its endpoints' difference")
+        prev = re_
+    ts = [r.get("t_spawn_unix_ns") for r in recs]
+    if not all(isinstance(t, int) for t in ts) or any(b <= a for a, b in zip(ts, ts[1:])):
+        bad.append("the gap block: its spawn times are missing or not increasing")
     return bad
 
 
@@ -1381,7 +1453,18 @@ def admission_problems(ident, d, dry):
         bad.append("the gap block's order, seed or gap is not the registered one")
     if gp.get("runs") != (2 * GAP_EACH if not dry else DRY_GAP_RUNS):
         bad.append(f"the gap block's runs {gp.get('runs')!r} are not the registered count")
+    dl = ident.get("deadlines")
+    if not (
+        isinstance(dl, dict)
+        and {k: list(v) for k, v in dl.items()} == {k: list(v) for k, v in DEADLINES.items()}
+    ):
+        bad.append(f"the identity's deadlines {dl!r} are not the registered ones")
     sus = ident.get("sustained") or {}
+    rest = SUSTAINED_REST_S if not dry else 1
+    if sus.get("rest_s") != rest:
+        bad.append(
+            f"the sustained block's rest {sus.get('rest_s')!r} s is not the registered {rest} s"
+        )
     want = SUSTAINED_COPIES if not dry else DRY_SUSTAINED_COPIES
     cat = sus.get("concat") or {}
     if sus.get("exit") != 0:

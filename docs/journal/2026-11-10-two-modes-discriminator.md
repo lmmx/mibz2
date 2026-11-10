@@ -91,18 +91,47 @@ Everything below is fixed before any data:
     `child mibz2-default33 10 FILE` unchanged, one fresh process a run, unpinned on all 20 CPUs,
     with no probe. A small driver (`two_modes.py gaps`) spawns each run, captures the child's own
     record, and reaps it with `wait4`.
-  - **The two conditions, 30 runs each:**
-    - **gap (G):** the run is spawned 0.25 s after the run before exited, idle in between;
-    - **no gap (Z):** it is spawned as soon as the run before exits (a few ms).
+  - **A conditioning child first,** retained and never counted. The registered order begins
+    with G, and a G slot is defined by the run before it, so one conditioning run is decoded
+    first. It is recorded (condition `C`), must succeed, and is excluded from the 60 treatment
+    observations. Every one of the 30 G slots then has a run before it to wait after.
+  - **The two assigned relaunch policies, 30 runs each:**
+    - **gap (G):** the driver launches the run once 0.25 s have passed since it reaped the run
+      before;
+    - **immediate (Z):** it launches the run at once after that reap.
+  - **What the recorded gap is:** the driver's interval from its reap of the run before (after
+    that child's stdout reached EOF and `wait4` returned) to its launch call for this one. It is
+    **not** the child's exit-to-spawn interval, nor the physical idle time between decodes.
+    - A parent descheduled between a child's exit and its reap, or a slow process creation, adds
+      idle time this scalar does not see.
+    - Both endpoints are retained (monotonic, in ns), and each recorded gap must equal their
+      difference.
+    - So the Z check (under 0.05 s) bounds the driver's relaunch latency as observed, not the
+      machine's idle time.
+  - **The estimand:** the slow-class frequency under the registered G policy against the
+    immediate-relaunch policy, at 10 threads on this host. It is a controlled policy contrast
+    whose physical latency is measured imperfectly. It does not replicate §4's six-thread
+    experiment, and it does not identify a critical idle duration.
   - **Why 0.25 s:** it is the settle of the harness that showed the modes at 10 threads, whose
     records put 0.256 to 0.264 s between runs. §4's 0.15 s came from another harness at 6
-    threads.
+    threads. The Researcher confirmed 0.25 s prospectively (#145 6759926285). There is no
+    duration sweep and no retry for a preferred mix.
   - **The order:** drawn once from the fixed seed `20261111` (`GAP_SEED`), 30 of each:
     `GZGZZZGZGZGGZZGZZGGZGZZGZZZZGZGZGGZZGZZZGGGGZZGGGGZZZGGGGGZG`, recorded in the identity.
   - **Its deadline:** 600 s, then KILL 10 s later. It is expected to take about 30 s.
-  - **Its admission:** 60 runs in the registered order, each succeeded with the registered
-    output, each gap run's measured gap at least 0.245 s and each no-gap run's under 0.05 s, the
-    block's exit 0.
+  - **Its admission** is part of the contract (§3). These must all hold:
+    - the conditioning child first;
+    - 60 treatment runs in the registered order;
+    - every run succeeded with the registered output;
+    - every run has a finite, strictly positive wall and span, and a finite, nonnegative CPU;
+    - launches and reaps are ordered: each launch after the reap before it, each reap after its
+      launch, and the spawn times increasing;
+    - each gap equals its endpoints' difference;
+    - each G gap is at least 0.245 s, and each Z gap is in [0, 0.05) s;
+    - the block exited 0.
+
+    A run without a valid wall is never classed fast or slow; it is counted apart and makes the
+    attempt INVALID.
 - **Then the sustained block, with no probe** (the Pathfinder's addition, #145 6756520552).
   - **What runs:** one process, ab's own `child mibz2-default33 10`, unpinned on all 20 CPUs,
     decodes the corpus repeated 50 times end to end: 593 MB in, 10.5 GB out, hashed and dropped.
@@ -134,8 +163,9 @@ Everything below is fixed before any data:
   - **The order:** drawn once, before data, from the fixed seed `20261110` (`SCHEDULE_SEED`).
     It is
     `NPPPPPPPNPNPPPPNPPPPPPPPNPNPPPPPPNNNPPPNPNPNPNPNPPNNPNNNPPNP`, recorded in the identity.
-  - **Why randomised:** a randomised order cannot alias a periodic nuisance, as the earlier
-    fixed PPN could.
+  - **Why randomised:** it removes the deterministic alignment with a period-three nuisance
+    that the earlier fixed PPN had. It does not make an accidental alignment with every periodic
+    nuisance impossible.
   - **What the contrast is:** the probed against unprobed fast/slow mix is a randomised but
     **descriptive** contrast. Persistence between runs widens its uncertainty beyond
     independent draws, and carryover from a probed run to the next is not excluded.
@@ -148,19 +178,33 @@ Everything below is fixed before any data:
   The command runs in a process group of its own, which gets TERM at the deadline and KILL
   after the grace, its descendants included. The deadlines are `DEADLINES` in `two_modes.py`:
 
-  | stage | deadline + grace |
-  |---|--:|
-  | fetches | 120 + 10 s |
-  | corpus build | 900 + 10 s |
-  | the concatenation | 600 + 10 s |
-  | the sustained block | 300 + 10 s |
-  | each pass, the archived ab's busy-gate waits included | 900 + 10 s |
-  | the judge | 300 + 10 s |
+  | stage | calls | deadline + grace | a timeout is |
+  |---|--:|--:|---|
+  | fetches (the evidence and bench-data branches) | 2 | 120 + 10 s | REFUSED (setup) |
+  | corpus (the windows' fetch, the build) | 2 | 900 + 10 s | REFUSED (setup) |
+  | setup (reading the archived bundle, extracting it, compiling the probe) | 3 | 300 + 10 s | REFUSED (setup) |
+  | the concatenation (build or check; the digest after the block) | 2 | 600 + 10 s | REFUSED (before), INVALID (after) |
+  | the gap block | 1 | 600 + 10 s | INVALID |
+  | the sustained block | 1 | 300 + 10 s | INVALID |
+  | each pass, the archived ab's busy-gate waits included | 2 | 900 + 10 s | INVALID |
+  | the judge | 1 | 300 + 10 s | REPORT ERROR |
+  | bundling | 1 | 600 + 10 s | bundling failed (exit 2; the directory is kept) |
 
-  - **A timeout (124)** is recorded, never retried, and makes the attempt INVALID. No pass
-    follows a pass that did not complete.
-  - **A group that cannot be emptied (125)** stops the attempt there.
-  - **The whole attempt:** its bound is the sum, about 60 minutes. It usually takes about 8.
+  - **Every timeout is recorded and never retried.** No pass follows a pass that did not
+    complete.
+  - **A group that cannot be emptied (125)** stops the attempt there. `bench/bounded.py`
+    promises a bounded attempt and a bounded refusal, not that every descendant disappears.
+  - **Partial records are kept and bundled** whatever the outcome.
+  - **The operational ceiling** is `OPERATIONAL_CEILING_S`, **8460 s**, about 2 h 21 min.
+    - **What it sums:**
+      - every supervised call at its deadline and grace, plus `bounded.py`'s two 10 s cleanup
+        phases (7,965 s);
+      - the six bounded collectors at 35 s each (210 s);
+      - the 60 s rest.
+    - **What it leaves out:** a few seconds of unsupervised bookkeeping (`git status`, small
+      digests, writing the identity).
+    - **The figure it replaces:** the earlier "about 60 minutes" was not a bound.
+  - **The usual length:** about 8 minutes.
 - **One attempt; no retry to pass.**
 
 ## 2. The readings
@@ -180,7 +224,9 @@ Each is read only where its coverage holds, and is otherwise **missing**, never 
     - A pause inside the decode lowers the progress.
     - A pause across the decode's start or end lowers the coverage.
   - **Recorded beside it:** the gaps at each boundary, the longest interval, the first and
-    last thirds' progress, and the median interval rate. The median interval rate is an
+    last thirds' progress, and the median interval rate.
+    - **The thirds:** each is read only on its own coverage (at least 0.90 of that third), and
+      that coverage is recorded. The whole window's coverage does not imply a third's. The median interval rate is an
     **active-loop summary only**: one long pause does not move it.
   - **What the TSC cannot say:** why progress stopped (descheduled, halted or slowed). The
     probe's CPU-time share is recorded so that descheduling can be told apart.
@@ -199,7 +245,8 @@ Each is read only where its coverage holds, and is otherwise **missing**, never 
   - **The reading:** at each frequency reading, the median over the CPUs where the placement
     sample nearest it (within 2 ms) saw a running decoder thread. It is not the union of every
     CPU the run ever visited.
-  - **Coverage:** at least 3 aligned readings a run.
+  - **Coverage:** at least 3 aligned readings a run, and at least 3 within each of the first and
+    last thirds before that third is read; the count in each third is recorded.
   - **Supporting, not decisive:** intel_pstate's `scaling_cur_freq` is an average over the
     kernel's recent updates, not an instantaneous clock. It does not establish whether the
     cores share one clock.
@@ -235,12 +282,13 @@ Each is read only where its coverage holds, and is otherwise **missing**, never 
 
   | outcome | rule | what it means |
   |---|---|---|
-  | **THE GAP GOES WITH THE SLOW MODE** | p < 0.05 and the gap condition's slow share is higher | the no-gap condition holds the fast mode: the slow mode is a state a fresh-process, idle-gap harness creates, compatible with H1 (a ramp or an idle-state wake). The registered i9 comparisons taken with a gap read a state a continuous real decode may never meet. It does not identify the wake mechanism |
-  | **BOTH CONDITIONS SHOW THE MODE** | p ≥ 0.05 and at least 5 slow runs in each condition | the gap is not the trigger |
-  | **NO GAP GOES WITH THE SLOW MODE** | p < 0.05 and the no-gap condition's slow share is higher | the reverse association, reported as observed |
-  | **NO SLOW MODE IN THE BLOCK** | fewer than 5 slow runs in all | the mode did not appear in this block |
+  | **THE GAP POLICY GOES WITH THE SLOW MODE** | p < 0.05 and G's slow share is higher | the immediate-relaunch policy holds the fast mode: the slow mode is a state a fresh-process, idle-gap harness creates, compatible with H1 (a ramp or an idle-state wake). The registered i9 comparisons taken with a gap read a state a continuous real decode may never meet. It does not identify the wake mechanism or a critical idle duration |
+  | **BOTH POLICIES SHOW THE MODE** | p ≥ 0.05 and at least 5 slow runs under each | the gap policy is not the trigger |
+  | **THE IMMEDIATE POLICY GOES WITH THE SLOW MODE** | p < 0.05 and Z's slow share is higher | the reverse association, reported as observed |
+  | **NO SLOW RUN IN THE BLOCK** | no slow run at all | the mode did not appear in this block |
+  | **INSUFFICIENT SLOW-CLASS SUPPORT** | 1 to 4 slow runs in all | too few to compare; not the mode's absence |
   | **NOT SEPARATED** | otherwise | neither shown |
-  | **INSUFFICIENT** | fewer than 30 runs in a condition | the block is incomplete |
+  | **INSUFFICIENT** | fewer than 30 timed runs under a policy | the block is incomplete |
 
 - **First in the outcome line:** the gap block's outcome comes first, then the probe table's
   (secondary), then the sustained block's shape.
@@ -258,7 +306,11 @@ Missing or contradictory evidence is never admitted.
   - a clean tree before and after.
 - **Gated stages:** the preflight exited 0 with a PASS judgement, the gap block and the
   sustained block exited 0, and each pass's `ab run` exited 0.
-- **The gap block:** its order, seed, gap and count are the registered ones.
+- **The gap block:** its order, seed, gap and count are the registered ones, and its records
+  meet §1's admission (the conditioning child, valid walls, spans and CPU, ordered endpoints,
+  gaps equal to their endpoints' difference, and the G and Z bounds).
+- **The fixed fields, each checked on its own:** the recorded deadlines equal `DEADLINES` (never
+  empty), and the sustained rest is 60 s (1 s in a DRY check).
 - **Identities before and after:**
   - `ab`, `windows`, the probe and the corpus are each unchanged across the run;
   - `ab` and `windows` are the archived executables, and the corpus is the registered one;
@@ -361,10 +413,17 @@ classified only by a rule whose error bound comes from the chunking.
 - **Input only:** no compression ratio converts it, and no burst threshold classifies it.
 - **The windows:** 1 s windows from 1 s (after the read-ahead fill) to the last input read, each
   window's rate in input bytes/s. At least 4 windows are needed.
-- **The error bound:** `e = (2C + 2 × 0.01 s × rate) / 1 s`, where C is the largest chunk read
-  after the fill. A window's arrived bytes differ from the bytes consumed in it by less than one
-  chunk at its edges plus one chunk of refill jitter, and the 10 ms sampling adds two samples'
-  worth.
+- **The error bound:** `e = (2C + 2 × 0.01 s × rate) / 1 s`. C is the largest read of at least
+  1 MiB after the fill.
+  - **The reasoning:** a window's arrived bytes differ from the bytes consumed in it by less
+    than one chunk at its edges plus one chunk of refill jitter, and the 10 ms sampling adds two
+    samples' worth.
+  - **This envelope is conditional.** It assumes the decoder's buffering and refill are bounded
+    by a chunk and that the samples arrive on time. The largest observed increment is not
+    independent proof of that bound. The collector targets 10 ms, records actual times, and may
+    miss reads.
+  - **Its use is limited:** the raw observations are kept, and the shape describes input
+    arrival only.
 - **A change:** a difference between consecutive windows beyond 2e.
 
 | shape | rule |
