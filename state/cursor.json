@@ -1315,8 +1315,9 @@
       "sha": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
       "evidence_digest": "native:e182ff339ddf66799142fb616a51f1f1fca6fd04;screen:6a6946ae4814c729540135608b241aae31b4bdb6;inbox:6760224735",
       "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
-      "status": "complete",
-      "disposition": "First INVALID ends native diagnostic; validated T1+T2 adequate for scoped engagement; S2 separate; current drafts not ready."
+      "status": "finished",
+      "disposition": "First INVALID ends native diagnostic; validated T1+T2 adequate for scoped engagement; S2 separate; current drafts not ready.",
+      "comment": 6760280679
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1401,7 +1402,8 @@
     6758740649,
     6759487306,
     6759863881,
-    6760052047
+    6760052047,
+    6760280679
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1599,7 +1601,8 @@
     "532d6342363ed4fc8f7414dcfdd5ba13f7288d4d",
     "1768982b0435df61c4670c9fe10f59839955a698",
     "1f1254fc2dd28254d20f7e24ec1f38dab47bdd4f",
-    "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
+    "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
+    "4e49178fbdac0f4932203de1df1df46719503020"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1767,9 +1770,10 @@
   },
   "current_execution": {
     "active_comment": 6760224735,
-    "status": "complete",
+    "status": "finished",
     "decision": "D087",
-    "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
+    "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
+    "review_comment_id": 6760280679
   },
   "duplicate_events": [
     {
@@ -2439,7 +2443,8 @@
       "sha": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf",
       "evidence_digest": "native:e182ff339ddf66799142fb616a51f1f1fca6fd04;screen:6a6946ae4814c729540135608b241aae31b4bdb6;inbox:6760224735",
       "decision": "D087",
-      "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
+      "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
+      "comment": 6760280679
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3087,11 +3092,13 @@
     {
       "comment_id": 6760224735,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D087",
-      "progress": "D087 complete; awaiting REVIEW.",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier fails only coordinator-specific FROM requirement; independent Guardian header/routing checks pass.",
       "receipt_commit": "1f1254fc2dd28254d20f7e24ec1f38dab47bdd4f",
-      "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0"
+      "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
+      "review_comment_id": 6760280679,
+      "complete_cursor_commit": "4e49178fbdac0f4932203de1df1df46719503020"
     }
   ],
   "migrated_from": {
