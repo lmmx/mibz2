@@ -10,6 +10,9 @@
 # checked by digest (nothing of the decoder is built here). In order:
 # - the preflight (read-only, each collector bounded), which refuses the attempt, archived,
 #   unless the registered host and its declared settings are established;
+# - the gap block, the primary cheap discriminator: no probe, all CPUs, ab's own child, the
+#   default plan at 10 threads, 30 runs after a 0.25 s idle gap and 30 spawned at once, in a
+#   seeded order; deadline 600 s + 10 s grace;
 # - the sustained block: one process (ab's own child, unpinned, no probe) decodes the corpus
 #   repeated 50 times (built and checked by content, outside the bundle), its input consumption
 #   read every 10 ms; deadline 300 s + 10 s grace; then a fixed 60 s rest;
@@ -25,7 +28,7 @@
 # Every stage that can wait runs under bench/bounded.py (its process group TERMed, then
 # KILLed, its descendants reaped); a timeout is recorded, never retried, and makes the
 # attempt INVALID; a group that cannot be emptied stops the attempt there. One attempt; no
-# retry to pass. About 7 minutes; at most about 50 (the stages' deadlines summed). Exit: 0
+# retry to pass. About 8 minutes; at most about 60 (the stages' deadlines summed). Exit: 0
 # VALID (whatever the table says: the outcome says), 1 INVALID, 4 REFUSED by the preflight, 2
 # any other refusal or a report error, 3 stopped before its verdict.
 #   just submit bench-two-modes
@@ -178,7 +181,18 @@ bench-two-modes DRY="" CORPUS="":
         exit 4
       fi
     fi
-    # the sustained block, first and with no probe: one process (ab's own child, unpinned)
+    # the gap block, FIRST and the primary cheap discriminator: no probe, all CPUs, ab's own
+    # child unchanged, one fresh process a run; GAP_EACH runs after a GAP_S idle gap and
+    # GAP_EACH spawned as soon as the run before exits, in the registered seeded order
+    mkdir "$W/gaps"
+    gruns=$(( 2 * $(tm GAP_EACH) )); [ -n "$dry" ] && gruns=$(tm DRY_GAP_RUNS)
+    echo "bench-two-modes: the gap block: $gruns runs, order $(tm GAP_ORDER | cut -c1-"$gruns")"
+    set +e
+    bd gaps python3 bench/two_modes.py gaps "$AB" "$W/wikidata.bz2" "$W/gaps/runs.jsonl" --runs "$gruns"
+    gaps_rc=$?
+    set -e
+    echo "gaps: exit $gaps_rc" | tee -a "$W/exits.txt"
+    # the sustained block, then, with no probe: one process (ab's own child, unpinned)
     # decodes the corpus repeated; its input is built or validated by content (the digest of
     # the corpus streamed COPIES times against the file's own), recorded, and digested again
     # after the block. Then a fixed rest before pass 1
@@ -252,6 +266,7 @@ bench-two-modes DRY="" CORPUS="":
         "passes": [$(IFS=,; echo "${passes[*]}")],
         "pass_exits": {$pass_exits},
         "preflight_exit": $pf,
+        "gaps": {"exit": $gaps_rc, "runs": $gruns, "order": t.GAP_ORDER, "seed": t.GAP_SEED, "gap_s": t.GAP_S},
         "sustained": {"copies": $copies, "exit": $sus_rc, "rest_s": $rest,
                       "concat": json.load(open("$W/sustained/concat.json")), "sha256_after": "$sus_after"},
     }, open(sys.argv[1], "w"), indent=1)

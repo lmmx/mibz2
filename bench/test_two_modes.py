@@ -273,6 +273,37 @@ SUSTAINED = {
 }
 
 
+def gap_records(slow_after_gap=0, slow_without=0, runs=2 * tm.GAP_EACH):
+    """The gap block's records: the first `slow_after_gap` gap runs and the first
+    `slow_without` no-gap runs slow, the rest fast"""
+    recs, seen = [], {"G": 0, "Z": 0}
+    for i, cond in enumerate(tm.GAP_ORDER[:runs]):
+        k = seen[cond]
+        seen[cond] += 1
+        slow = k < (slow_after_gap if cond == "G" else slow_without)
+        wall = 0.305 if slow else 0.155
+        recs.append(
+            {
+                "schema": tm.GAPS_SCHEMA,
+                "index": i,
+                "condition": cond,
+                "gap_s": None if i == 0 else (0.2512 if cond == "G" else 0.0021),
+                "t_spawn_unix_ns": 1_794_000_000_000_000_000 + i * 10**9,
+                "span_s": wall + 0.01,
+                "exit": 0,
+                "child": {
+                    "wall": wall,
+                    "cpu": 2.1 if slow else 1.08,
+                    "out": tm.WORKLOAD["out"],
+                    "hash": tm.WORKLOAD["hash"],
+                    "err": "",
+                },
+                "rusage": {"minflt": 20000, "utime_s": 1.0, "stime_s": 0.05, "maxrss_kb": 1},
+            }
+        )
+    return recs
+
+
 def identity(n=tm.RUNS, dry=False):
     cat = {
         "schema": tm.CONCAT_SCHEMA,
@@ -313,14 +344,24 @@ def identity(n=tm.RUNS, dry=False):
         "schedule": {str(k): v for k, v in tm.SCHEDULE.items()},
         "schedule_seed": tm.SCHEDULE_SEED,
         "preflight_exit": 0,
+        "gaps": {
+            "exit": 0,
+            "runs": 2 * tm.GAP_EACH if not dry else tm.DRY_GAP_RUNS,
+            "order": tm.GAP_ORDER,
+            "seed": tm.GAP_SEED,
+            "gap_s": tm.GAP_S,
+        },
         "passes": [1, 2],
         "pass_exits": {"1": 0, "2": 0},
         "sustained": {"copies": cat["copies"], "exit": 0, "concat": cat, "sha256_after": H},
     }
 
 
-def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady"):
+def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady", gaps=(12, 2)):
     """Write a synthetic attempt into d under signature sig"""
+    os.makedirs(os.path.join(d, "gaps"), exist_ok=True)
+    with open(os.path.join(d, "gaps", "runs.jsonl"), "w") as f:
+        f.writelines(json.dumps(r) + "\n" for r in gap_records(*gaps))
     os.makedirs(os.path.join(d, "sustained"), exist_ok=True)
     rec, child = sustained(SUSTAINED[sus])
     for name, obj in (("sustained.json", rec), ("child.json", child)):
@@ -386,8 +427,8 @@ class Signatures(unittest.TestCase):
         rc, j = judged(sig, **kw)
         self.assertEqual(rc, 0, j["outcome"])
         self.assertEqual(j["label"], "VALID")
-        self.assertTrue(j["result"].startswith(f"COMPATIBLE WITH {want}"), j["result"])
-        self.assertFalse(j["result"].startswith(f"COMPATIBLE WITH {want},"), j["result"])
+        self.assertTrue(j["probe_result"].startswith(f"COMPATIBLE WITH {want}"), j["result"])
+        self.assertFalse(j["probe_result"].startswith(f"COMPATIBLE WITH {want},"), j["result"])
         return j
 
     def test_h1_ramp(self):
@@ -424,23 +465,29 @@ class Signatures(unittest.TestCase):
 
     def test_no_difference_matches_nothing(self):
         rc, j = judged("none")
-        self.assertTrue(j["result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"])
+        self.assertTrue(
+            j["probe_result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"]
+        )
 
     def test_a_signature_none_predicts(self):
         rc, j = judged("sixth")  # P-idle half with no throttle count rising
-        self.assertTrue(j["result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"])
+        self.assertTrue(
+            j["probe_result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"]
+        )
         self.assertIn("P-idle's elapsed-time progress in slow runs: half", j["result"])
         self.assertNotIn("SIXTH", j["result"])
 
     def test_insufficient_class_support(self):
         rc, j = judged("H3", fast_runs=0)
-        self.assertTrue(j["result"].startswith("INSUFFICIENT CLASS SUPPORT: 0 fast"), j["result"])
+        self.assertTrue(
+            j["probe_result"].startswith("INSUFFICIENT CLASS SUPPORT: 0 fast"), j["result"]
+        )
         self.assertNotIn("ONE MODE", j["result"])
 
     def test_four_fast_runs_are_not_one_mode(self):
         rc, j = judged("H3", fast_runs=6)  # (four of them probed, at most)
         self.assertLess(j["pass1"]["table"]["fast"]["n"], 5)
-        self.assertTrue(j["result"].startswith("INSUFFICIENT CLASS SUPPORT"), j["result"])
+        self.assertTrue(j["probe_result"].startswith("INSUFFICIENT CLASS SUPPORT"), j["result"])
 
     def test_threshold_is_fixed(self):
         self.assertEqual(tm.THRESHOLD_S, 0.21)
@@ -484,6 +531,70 @@ class Signatures(unittest.TestCase):
         rc, j = judged("H3", mutate=m)
         self.assertEqual(rc, 2)
         self.assertIn("not slot 2 of the registered schedule", j["outcome"])
+
+
+class Gaps(unittest.TestCase):
+    """The gap block (the Pathfinder's CORRECTION): fixed before data"""
+
+    def test_registered_order_and_test(self):
+        self.assertEqual(tm.GAP_ORDER, tm._gap_order(tm.GAP_SEED))
+        self.assertEqual((tm.GAP_ORDER.count("G"), tm.GAP_ORDER.count("Z")), (30, 30))
+        self.assertEqual(tm.GAP_S, 0.25)
+        # §4's 5 of 12 against 0 of 12: two-sided Fisher p = 0.0373
+        self.assertAlmostEqual(tm.fisher_two_sided(5, 7, 0, 12), 0.03727, places=4)
+        self.assertEqual(tm.fisher_two_sided(3, 3, 3, 3), 1.0)
+
+    def outcome(self, g, z):
+        return tm.gaps_reading(gap_records(g, z))["outcome"]
+
+    def test_the_gap_goes_with_the_slow_mode(self):
+        self.assertTrue(self.outcome(12, 2).startswith("THE GAP GOES WITH THE SLOW MODE: 12/30"))
+
+    def test_both_conditions_show_the_mode(self):
+        self.assertTrue(self.outcome(12, 10).startswith("BOTH CONDITIONS SHOW THE MODE"))
+
+    def test_no_slow_mode(self):
+        self.assertTrue(self.outcome(2, 1).startswith("NO SLOW MODE IN THE BLOCK"))
+
+    def test_not_separated(self):
+        self.assertTrue(self.outcome(6, 3).startswith("NOT SEPARATED"))
+
+    def test_the_reverse(self):
+        self.assertTrue(self.outcome(1, 12).startswith("NO GAP GOES WITH THE SLOW MODE"))
+
+    def test_cpu_per_block_and_transitions(self):
+        r = tm.gaps_reading(gap_records(12, 2))
+        self.assertAlmostEqual(r["conditions"]["G"]["cpu_per_block_slow_s"], 2.1 / 431)
+        self.assertEqual(sum(v[1] for v in r["slow_by_transition"].values()), 59)
+
+    def test_first_in_the_outcome(self):
+        rc, j = judged("H3")
+        self.assertTrue(
+            j["result"].startswith("GAP BLOCK (primary): THE GAP GOES WITH"), j["result"]
+        )
+        self.assertIn("PROBE TABLE (secondary): COMPATIBLE WITH H3", j["result"])
+
+    def test_admission(self):
+        for what, edit in {
+            "exit": lambda i: i["gaps"].update(exit=124),
+            "order": lambda i: i["gaps"].update(order="G" * 60),
+            "runs": lambda i: i["gaps"].update(runs=10),
+        }.items():
+            rc, j = judged("H3", edit=edit)
+            self.assertEqual(rc, 2, what)
+
+    def test_a_short_gap_is_invalid(self):
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3")
+            recs = gap_records(12, 2)
+            i = tm.GAP_ORDER.index("G", 1)
+            recs[i]["gap_s"] = 0.1
+            with open(os.path.join(d, "gaps", "runs.jsonl"), "w") as f:
+                f.writelines(json.dumps(r) + "\n" for r in recs)
+            self.assertEqual(quiet(tm.main, ["judge", d]), 2)
+            self.assertIn(
+                "a gap run whose gap was 0.1", load(os.path.join(d, "judgement.json"))["outcome"]
+            )
 
 
 class Counterexamples(unittest.TestCase):
@@ -536,7 +647,7 @@ class Counterexamples(unittest.TestCase):
                             task[2] = "S"
 
         rc, j = judged("H2", mutate=sleeping)
-        self.assertFalse(j["result"].startswith("COMPATIBLE WITH H2"), j["result"])
+        self.assertFalse(j["probe_result"].startswith("COMPATIBLE WITH H2"), j["result"])
         self.assertEqual(j["pass1"]["table"]["slow"]["sibling_running"], 0)
         self.assertGreater(j["pass1"]["table"]["slow"]["sibling_last_cpu"], 0.9)
         self.assertEqual(j["pass1"]["signatures"]["H2"]["status"], "contradicted")
@@ -731,6 +842,8 @@ class Invalid(unittest.TestCase):
             rec, child = sustained(SUSTAINED["steady"], copies=tm.DRY_SUSTAINED_COPIES)
             dump(rec, os.path.join(d, "sustained", "sustained.json"))
             dump(child, os.path.join(d, "sustained", "child.json"))
+            with open(os.path.join(d, "gaps", "runs.jsonl"), "w") as f:
+                f.writelines(json.dumps(r) + "\n" for r in gap_records(1, 0, tm.DRY_GAP_RUNS))
             ident = identity(3, dry=True)
             ident.update(layout={"idle": 3, "sib": None, "decoder": "0,1,2"}, passes=[1])
             ident["pass_exits"] = {"1": 0}
@@ -739,7 +852,8 @@ class Invalid(unittest.TestCase):
             j = load(os.path.join(d, "judgement.json"))
             self.assertEqual(j["label"], "DRY")
             self.assertTrue(
-                j["outcome"].startswith("DRY (not evidence): INSUFFICIENT"), j["outcome"]
+                j["outcome"].startswith("DRY (not evidence): GAP BLOCK (primary): INSUFFICIENT"),
+                j["outcome"],
             )
             self.assertIsNone(j["pass2"])
             # and without --dry the same attempt is INVALID, never VALID

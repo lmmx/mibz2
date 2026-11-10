@@ -12,6 +12,12 @@ workstation recipe for the i9-10900K.
 **What it is for:** at 10 threads the same decode takes about 0.15 s or about 0.30 s, and the
 mode persists from run to run. This run collects bounded, honest observations of that.
 
+**Its blocks, in order:**
+1. **The gap block, primary.** It is the cheap discriminator: the same decode, with no probe,
+   after a 0.25 s idle gap or with none (§1).
+2. **The sustained block.** One long decode, with no probe.
+3. **The probe passes, secondary.** These run the Pathfinder's §3 table.
+
 **What it does not do:** it does not identify a mechanism.
 - Its outcomes say which registered signatures the observations are **compatible with**. The
   signatures are predictions made under assumptions, not an exhaustive causal model, so joint
@@ -24,8 +30,13 @@ mode persists from run to run. This run collects bounded, honest observations of
 - It makes no verdict about the favourable mode.
 - Every record is kept. No run is excluded, replaced or retried because of its mode.
 
-Everything below is fixed before any data: the class threshold, the analysis, the schedule, the
-deadlines and the admission contract.
+Everything below is fixed before any data:
+- the class threshold;
+- the analysis;
+- the gap block's order and test;
+- the probe schedule;
+- the deadlines;
+- the admission contract.
 
 ## 1. The run
 
@@ -58,7 +69,7 @@ deadlines and the admission contract.
     not. This is an explicit intervention: the decoder has nine physical cores, not ten.
   - **ab's own placement:** ab itself runs on the decoder's mask (`taskset`).
 
-### The preflight and the sustained block
+### The preflight, the gap block and the sustained block
 
 - **First, the preflight.** It is read-only, each collector bounded (TERM at 30 s, KILL 5 s
   after), and each collector's exit status is archived in `preflight/exits.txt`. The attempt is
@@ -70,6 +81,28 @@ deadlines and the admission contract.
   - CPUs 9 and 19 are one core's two siblings, and that core is the last;
   - the core and package throttle counts are readable on every CPU;
   - the probe's 0.2 s selftest pinned itself to CPU 9 and read that back.
+- **Then the gap block: FIRST, with no probe, and the primary cheap discriminator** (the
+  Pathfinder's CORRECTION, #145, at `0503526f5` on #313).
+  - **Why it exists:** `2026-10-28-workstation-scaling.md` §4 (`just bench-regimes`, 6 threads, on
+    the i9) found 5 of 12 runs slow after a 0.15 s idle gap, against 0 of 12 with no gap; the
+    slow runs used about 1.5× the CPU per block. The design's earlier "not the gap" was read from
+    a bundle whose gap never varied (0.256 to 0.264 s), so it ruled nothing out.
+  - **What runs:** the default plan (`mibz2-default33`) at 10 threads, ab's own
+    `child mibz2-default33 10 FILE` unchanged, one fresh process a run, unpinned on all 20 CPUs,
+    with no probe. A small driver (`two_modes.py gaps`) spawns each run, captures the child's own
+    record, and reaps it with `wait4`.
+  - **The two conditions, 30 runs each:**
+    - **gap (G):** the run is spawned 0.25 s after the run before exited, idle in between;
+    - **no gap (Z):** it is spawned as soon as the run before exits (a few ms).
+  - **Why 0.25 s:** it is the settle of the harness that showed the modes at 10 threads, whose
+    records put 0.256 to 0.264 s between runs. §4's 0.15 s came from another harness at 6
+    threads.
+  - **The order:** drawn once from the fixed seed `20261111` (`GAP_SEED`), 30 of each:
+    `GZGZZZGZGZGGZZGZZGGZGZZGZZZZGZGZGGZZGZZZGGGGZZGGGGZZZGGGGGZG`, recorded in the identity.
+  - **Its deadline:** 600 s, then KILL 10 s later. It is expected to take about 30 s.
+  - **Its admission:** 60 runs in the registered order, each succeeded with the registered
+    output, each gap run's measured gap at least 0.245 s and each no-gap run's under 0.05 s, the
+    block's exit 0.
 - **Then the sustained block, with no probe** (the Pathfinder's addition, #145 6756520552).
   - **What runs:** one process, ab's own `child mibz2-default33 10`, unpinned on all 20 CPUs,
     decodes the corpus repeated 50 times end to end: 593 MB in, 10.5 GB out, hashed and dropped.
@@ -127,7 +160,7 @@ deadlines and the admission contract.
   - **A timeout (124)** is recorded, never retried, and makes the attempt INVALID. No pass
     follows a pass that did not complete.
   - **A group that cannot be emptied (125)** stops the attempt there.
-  - **The whole attempt:** its bound is the sum, about 50 minutes. It usually takes about 7.
+  - **The whole attempt:** its bound is the sum, about 60 minutes. It usually takes about 8.
 - **One attempt; no retry to pass.**
 
 ## 2. The readings
@@ -188,6 +221,30 @@ Each is read only where its coverage holds, and is otherwise **missing**, never 
 
 ## 3. The analysis (`bench/two_modes.py judge`)
 
+### The gap block's reading (primary, fixed before data)
+
+- **Per condition:** the fast and slow counts (fast: the child's wall below 0.21 s), the
+  child's CPU per block (CPU over the corpus's 431 blocks; all runs, fast runs and slow runs),
+  the median wall and the measured gaps.
+- **The test:** the two-sided Fisher exact test of slow against condition, at level 0.05.
+  - Runs are serially correlated (the modes persist), so the p value's independence assumption
+    does not hold. It is reported as registered and read as descriptive.
+  - The slow counts by the previous run's condition (G→G, G→Z, Z→G, Z→Z) are reported as a
+    carryover check.
+- **The outcome:**
+
+  | outcome | rule | what it means |
+  |---|---|---|
+  | **THE GAP GOES WITH THE SLOW MODE** | p < 0.05 and the gap condition's slow share is higher | the no-gap condition holds the fast mode: the slow mode is a state a fresh-process, idle-gap harness creates, compatible with H1 (a ramp or an idle-state wake). The registered i9 comparisons taken with a gap read a state a continuous real decode may never meet. It does not identify the wake mechanism |
+  | **BOTH CONDITIONS SHOW THE MODE** | p ≥ 0.05 and at least 5 slow runs in each condition | the gap is not the trigger |
+  | **NO GAP GOES WITH THE SLOW MODE** | p < 0.05 and the no-gap condition's slow share is higher | the reverse association, reported as observed |
+  | **NO SLOW MODE IN THE BLOCK** | fewer than 5 slow runs in all | the mode did not appear in this block |
+  | **NOT SEPARATED** | otherwise | neither shown |
+  | **INSUFFICIENT** | fewer than 30 runs in a condition | the block is incomplete |
+
+- **First in the outcome line:** the gap block's outcome comes first, then the probe table's
+  (secondary), then the sustained block's shape.
+
 ### The admission contract
 
 **One contract, `admission_problems`, enforced by the judge on every judgement**, the recipe's
@@ -199,8 +256,9 @@ Missing or contradictory evidence is never admitted.
     its digest at the freeze;
   - the harness bundle's commit, path and digest;
   - a clean tree before and after.
-- **Gated stages:** the preflight exited 0 with a PASS judgement, the sustained block exited 0,
-  and each pass's `ab run` exited 0.
+- **Gated stages:** the preflight exited 0 with a PASS judgement, the gap block and the
+  sustained block exited 0, and each pass's `ab run` exited 0.
+- **The gap block:** its order, seed, gap and count are the registered ones.
 - **Identities before and after:**
   - `ab`, `windows`, the probe and the corpus are each unchanged across the run;
   - `ab` and `windows` are the archived executables, and the corpus is the registered one;
@@ -281,7 +339,8 @@ untestable, not matched.
 
 ### The outcome
 
-The outcome is the first line of `judgement.txt` and `outcome.txt`:
+The probe table's outcome follows the gap block's in the first line of `judgement.txt` and
+`outcome.txt`:
 - **COMPATIBLE WITH Hk[, Hj]:** with any part-compatibility and the untestable signatures
   named. When H1 is among them, it is said to rest on the supporting clock reading: its only
   decisive row.
