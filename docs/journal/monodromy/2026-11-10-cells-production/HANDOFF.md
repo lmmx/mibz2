@@ -71,10 +71,16 @@ one build. An i9 census of the example is already queued by the Coordinator
 4. Evidence to move with it: the complement-before-write check, `--arbitrary` as a test,
    the region-end assertion, the two-run columns `b^k a^l` (closed form: Euclid).
 
-## Next steps, in order
+## Next steps, in order (updated 17:58Z)
 
-1. Finish the literature PR (its fifth reader; see that entry's §3.7).
-2. Read the two missing maps or redo them (`map-production-path`: bench-gates, kernel-gap).
-3. Post the design note on #145 (route with `coord.py`).
-4. Slice one in a scratch worktree off master; onto the branch when the literature PR has
-   merged. One branch only: `claude/sharp-meitner-cx0v78`.
+Done since this note was first stored: the literature entry is complete (PR #362); the
+design note is `DESIGN.md` beside this file and was posted on #145 as milestone 1 (LOG
+6775018669), with three questions open for the Coordinator (who gives the B5 review; Miri
+and cargo-mutants are not on this container; how a bench selects a kernel type on one build).
+
+1. Read the two remaining maps if they arrived (`prod_bench-gates.json`,
+   `prod_kernel-gap.json` beside this file; a background loop stored whatever returned) or
+   redo them: they settle DESIGN.md's open points on the bench and on the records.
+2. Slice one in a scratch worktree off master, in DESIGN.md §6's order; onto the branch
+   when #362 has merged. One branch only: `claude/sharp-meitner-cx0v78`.
+3. Milestones on #145, routed with `coord.py`.
