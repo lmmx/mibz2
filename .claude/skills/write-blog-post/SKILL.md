@@ -630,6 +630,21 @@ technique, and point to the section where it is worked by hand.
   this frame after the Rauzy–Veech post dropped ChatGPT's annotated synthesis
   (10 November 2026): it frames the whole undertaking, and a post that relays such
   material keeps the approach, redrawn and checked, not only its facts.
+- **A process gets a figure that moves.** When the prose describes a process with verbs of
+  motion (a path *visits* and *returns*, a word is *cut*, a cursor goes *down* and comes
+  *back up*), a still picture of the end state leaves the reader to animate it in their
+  head. Give the process a stepper (`.bf-stepper`, `blog.js`): Back, Play, Next and a
+  slider, the state drawn at each step, and one sentence per step saying what is looked at,
+  what is chosen and why, and what happens next. Teach one reading at a time: the rule on
+  a tiny case, then one middling case, then the whole. Keep the static figure as the summary
+  for after the stepper, and give the stepper a static fallback without JavaScript. Drive
+  every step in Chromium and check for script errors before publishing. (Louis, 10 November
+  2026, on the Rauzy–Veech post's Lyndon figure, after ChatGPT's walkthrough of it.)
+- **A figure with several readings teaches them one at a time.** The Lyndon figure first put
+  the tree, the suffix ranks and the Lyndon table on one canvas, and a reader could not see
+  which row answered which question. Start with the rule worked by hand on the highlighted
+  example, then the structure it builds, then each overlay as a shortcut or a second
+  question, each named as such.
 - **A hard figure from a source is worth redrawing,** with what made it hard fixed. The
   Rauzy–Veech post redrew Crochemore and Russo's Lyndon table (p. 7): nested boxes and a
   row of numbers became bars with the split marked and the suffix ranks added, so the
@@ -779,6 +794,8 @@ Before `publish-page`:
 - [ ] No paragraph is a précis passing as an explanation: for every procedure described,
       a reader could do one step of it on a tiny input from the text alone, or the text
       gives only the outcome and its cause and points to where the procedure is worked.
+- [ ] Every process the prose describes with verbs of motion has a stepper, with a static
+      summary and a no-JavaScript fallback, driven through every step without script errors.
 - [ ] Where the work rests on a formal theory, the post states it formally, annotated line
       by line for its own case, with every formula checked and cited.
 - [ ] The domain is explained before the routine, with a diagram for each process or
