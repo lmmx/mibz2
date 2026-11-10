@@ -1200,8 +1200,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6756994744,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "HOLD queue: M28 undetected, supervisor unbounded wait after failed cleanup, finalisation VALID label after timeout"
+      "status": "finished",
+      "disposition": "HOLD queue: M28 undetected, supervisor unbounded wait after failed cleanup, finalisation VALID label after timeout",
+      "comment": 6757058587
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1278,7 +1279,8 @@
     6752741658,
     6754250293,
     6756184275,
-    6756634391
+    6756634391,
+    6757058587
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1456,7 +1458,8 @@
     "68176665565b52ff60f2f6520546522028319586",
     "0a15d1e8d437ae0c698feaaf13c893f825a016bf",
     "795b4ae08d8f51a58286a1989aa93e5ee6004fd9",
-    "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed"
+    "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
+    "8013d01ab7d1a7bdb50746c0b8db8cb3da0c4b31"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1616,9 +1619,10 @@
   },
   "current_execution": {
     "active_comment": 6756994744,
-    "status": "complete",
+    "status": "finished",
     "decision": "D079",
-    "work_commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed"
+    "work_commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
+    "review_comment_id": 6757058587
   },
   "duplicate_events": [
     {
@@ -2240,7 +2244,8 @@
       "sha": "c2f461491b97a563ca3f8669b5c3d7e14eeff07f",
       "evidence_digest": "journal:ea0ebab89c8041f292a7b83eaa390727fd33b647;supervisor:a7b08ba8e60c837ce7b2c63e1e92f15098b2ea50;inbox:6756994744",
       "decision": "D079",
-      "commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed"
+      "commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
+      "comment": 6757058587
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2800,10 +2805,13 @@
     {
       "comment_id": 6756994744,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D079",
       "receipt_commit": "795b4ae08d8f51a58286a1989aa93e5ee6004fd9",
-      "work_commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed"
+      "work_commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
+      "review_comment_id": 6757058587,
+      "complete_cursor_commit": "8013d01ab7d1a7bdb50746c0b8db8cb3da0c4b31",
+      "progress": "Exact REVIEW readback verified; pinned verifier coordinator-only FROM limitation; independent Guardian checks pass."
     }
   ],
   "migrated_from": {
