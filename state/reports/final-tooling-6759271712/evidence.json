@@ -1,0 +1,24 @@
+{
+  "inbox": 6759271712,
+  "registration": "de7caacde06fc93f4c8c477dcacce27e781e68f2",
+  "tooling": "70c927c3508307b4ccaff7a4421e4d96802c6c53",
+  "six_files_identical": [
+    ".github/workflows/target-gated-ni.yml",
+    "bench/service_tg.py",
+    "bench/test_service_tg.py",
+    "bench/test_tg_ni_gate.py",
+    "bench/tg_ni_gate.py",
+    "bench/tg_ni_pilot.py"
+  ],
+  "audit": [],
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06"
+  },
+  "tests": 38,
+  "synthetic_probes": "R96/B24 plus default R2880/B24; no timed run",
+  "limits_source": "https://docs.github.com/en/actions/reference/limits"
+}

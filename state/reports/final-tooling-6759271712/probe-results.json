@@ -1,0 +1,156 @@
+{
+  "clean": {
+    "valid": true,
+    "problems": [],
+    "condition2": "PASS",
+    "first_rows": [
+      [
+        0,
+        1,
+        "mibz2"
+      ],
+      [
+        0,
+        1,
+        "mibz2@base/ab"
+      ],
+      [
+        0,
+        2,
+        "mibz2"
+      ],
+      [
+        0,
+        2,
+        "mibz2@base/ab"
+      ],
+      [
+        0,
+        4,
+        "mibz2"
+      ],
+      [
+        0,
+        4,
+        "mibz2@base/ab"
+      ]
+    ]
+  },
+  "shuffle_rounds": {
+    "valid": true,
+    "problems": [],
+    "condition2": "PASS",
+    "first_rows": [
+      [
+        36,
+        1,
+        "mibz2"
+      ],
+      [
+        36,
+        1,
+        "mibz2@base/ab"
+      ],
+      [
+        36,
+        2,
+        "mibz2"
+      ],
+      [
+        36,
+        2,
+        "mibz2@base/ab"
+      ],
+      [
+        36,
+        4,
+        "mibz2"
+      ],
+      [
+        36,
+        4,
+        "mibz2@base/ab"
+      ]
+    ]
+  },
+  "reverse_rounds": {
+    "valid": true,
+    "problems": [],
+    "condition2": "PASS",
+    "first_rows": [
+      [
+        95,
+        1,
+        "mibz2"
+      ],
+      [
+        95,
+        1,
+        "mibz2@base/ab"
+      ],
+      [
+        95,
+        2,
+        "mibz2"
+      ],
+      [
+        95,
+        2,
+        "mibz2@base/ab"
+      ],
+      [
+        95,
+        4,
+        "mibz2"
+      ],
+      [
+        95,
+        4,
+        "mibz2@base/ab"
+      ]
+    ]
+  },
+  "threads_reversed": {
+    "valid": true,
+    "problems": [],
+    "condition2": "PASS",
+    "first_rows": [
+      [
+        0,
+        4,
+        "mibz2"
+      ],
+      [
+        0,
+        4,
+        "mibz2@base/ab"
+      ],
+      [
+        0,
+        2,
+        "mibz2"
+      ],
+      [
+        0,
+        2,
+        "mibz2@base/ab"
+      ],
+      [
+        0,
+        1,
+        "mibz2"
+      ],
+      [
+        0,
+        1,
+        "mibz2@base/ab"
+      ]
+    ]
+  },
+  "shuffle_rounds_R2880_default": {
+    "valid": true,
+    "problems": [],
+    "condition2": "PASS",
+    "batches": 24
+  }
+}

@@ -1,0 +1,37 @@
+......................................
+----------------------------------------------------------------------
+Ran 38 tests in 21.408s
+
+OK
+# The guarded service default under the target-gated route: CI condition 2 (sharded)
+
+Head over base, the geometric mean of 2880 paired rounds on the cell's own runner; the one-sided 95% upper bound from 24 batch means of 120 rounds (30 complete order cycles; t at 0.95, 23 df), at most 1.02 at every one of the 42 cells (an intersection-union test at level 5%). The trend veto: any cell's batch-mean trend |t| > 4.3806308666 makes condition 2 INVALID, every estimate kept. Lag-1 autocorrelation is reported, not judged.
+
+| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall | trend t wall / CPU |
+|---|---|--:|--:|--:|--:|--:|--:|--:|
+| onebyte/1 | onebyte | 0.9992 | 0.9999 | 1.0002 | 1.0009 | 1.0000 [0.9997, 1.0002] | -0.05 | +0.41 / -0.31 |
+| onebyte/2 | onebyte | 0.9999 | 1.0007 | 0.9999 | 1.0005 | 0.9999 [0.9997, 1.0002] | -0.07 | +0.53 / -0.30 |
+| onebyte/4 | onebyte | 0.9999 | 1.0004 | 1.0000 | 1.0007 | 1.0000 [0.9997, 1.0003] | -0.10 | -0.45 / -1.19 |
+| pattern/1 | pattern | 1.0001 | 1.0008 | 0.9999 | 1.0007 | 0.9999 [0.9997, 1.0001] | -0.03 | +1.58 / -0.10 |
+| pattern/2 | pattern | 0.9997 | 1.0003 | 1.0004 | 1.0011 | 1.0000 [0.9997, 1.0004] | -0.00 | +0.37 / +0.97 |
+| pattern/4 | pattern | 1.0002 | 1.0009 | 0.9998 | 1.0004 | 1.0000 [0.9997, 1.0003] | -0.01 | -0.23 / +1.26 |
+| random/1 | random | 1.0005 | 1.0013 | 1.0003 | 1.0009 | 1.0002 [0.9998, 1.0005] | -0.00 | +0.18 / -1.73 |
+| random/2 | random | 0.9995 | 1.0002 | 1.0000 | 1.0006 | 1.0001 [0.9998, 1.0003] | +0.01 | +0.33 / -0.22 |
+| random/4 | random | 0.9996 | 1.0002 | 0.9997 | 1.0006 | 1.0000 [0.9997, 1.0003] | -0.19 | -1.17 / -0.64 |
+| records/1 | records | 1.0001 | 1.0009 | 1.0008 | 1.0016 | 0.9998 [0.9997, 1.0000] | +0.08 | +0.59 / +0.72 |
+| records/2 | records | 1.0004 | 1.0010 | 0.9992 | 1.0001 | 1.0003 [1.0000, 1.0005] | +0.01 | +0.85 / +2.22 |
+| records/4 | records | 1.0003 | 1.0012 | 1.0000 | 1.0007 | 1.0001 [0.9998, 1.0004] | -0.01 | +1.51 / -0.10 |
+| runs/1 | runs | 1.0005 | 1.0013 | 1.0000 | 1.0008 | 0.9999 [0.9996, 1.0002] | +0.08 | -0.85 / -1.69 |
+| runs/2 | runs | 1.0241 | 1.0293 **FAIL** | 0.9993 | 1.0000 | 0.9999 [0.9996, 1.0002] | +0.89 | +31.61 / +1.80 |
+| runs/4 | runs | 0.9995 | 1.0004 | 0.9994 | 1.0001 | 1.0001 [0.9999, 1.0004] | +0.04 | +0.71 / -0.11 |
+| text/1 | text | 1.0008 | 1.0017 | 1.0002 | 1.0010 | 1.0001 [0.9999, 1.0004] | -0.04 | +0.59 / -2.72 |
+| text/2 | text | 1.0004 | 1.0012 | 1.0002 | 1.0009 | 0.9999 [0.9996, 1.0003] | +0.12 | -0.65 / +0.79 |
+| text/4 | text | 1.0000 | 1.0006 | 1.0004 | 1.0010 | 0.9999 [0.9996, 1.0002] | +0.09 | -0.85 / +0.35 |
+| wikidata/1 | wikidata-1 | 1.0001 | 1.0008 | 0.9997 | 1.0004 | 0.9999 [0.9995, 1.0002] | -0.05 | -0.48 / -0.49 |
+| wikidata/2 | wikidata-2 | 0.9998 | 1.0005 | 0.9999 | 1.0005 | 1.0001 [0.9999, 1.0004] | -0.05 | +1.54 / +0.00 |
+| wikidata/4 | wikidata-4 | 0.9995 | 1.0001 | 0.9993 | 1.0000 | 0.9998 [0.9995, 1.0001] | +0.03 | -1.23 / -0.35 |
+
+**Condition 2:** **INVALID** (the trend veto; rows and estimates kept, nothing re-run): runs/2 wall trend t +31.6143.
+**Wall flags (harm signals, §2.6):** runs/2.
+**Peak RSS regression (condition 7):** none.
+
