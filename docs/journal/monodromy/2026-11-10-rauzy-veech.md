@@ -234,6 +234,12 @@ here.)
 - The stretches are the phrases of the BWT's bidirectional scheme (Navarro–Ochoa–Prezza 2021,
   Def. 5): the induction's steps are the left-to-right and right-to-left minima of ISA inside
   each phrase.
+- **The induction read in the text (P, Invariant I restated):** at the prefix [0, m) the text
+  is cut exactly at the suffixes of rank < m, and the letters' words are the pieces between
+  cuts. A step uncuts the suffixes of rank in [m', m), which are all the places where one
+  piece w_A meets one piece w_B, and names the joined piece. So the grammar is a pair-merging
+  of the text's positions in decreasing order of suffix rank: the largest suffixes lose their
+  cut first.
 
 **Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
 induction is ~10² rounds of independent merges; lanes, or threads, are available at no change
