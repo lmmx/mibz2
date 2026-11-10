@@ -1,4 +1,4 @@
-# The post-BWT passes on a grammar (docs/journal/monodromy/2026-11-10-rauzy-veech.md, 3.4 and 8.4).
+# The post-BWT passes on a grammar (docs/journal/monodromy/2026-11-10-rauzy-veech.md, sections 3.4 and 8, 6).
 #
 #   python3 rle1_crc_on_grammar.py.txt
 #

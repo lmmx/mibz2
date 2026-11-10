@@ -41,8 +41,9 @@
 //! `ns_rec` the records' path (`runs::fill` + the room walk backward: production's since
 //! 0.2.8 for a block `takes`), `ns_mtf` and `ns_front` their fronts; `k_*` are the list
 //! kernel's; `c_*` the cells kernel's from the same records (`c_whole` is order + induce +
-//! write timed as one span, the order stage reading the records). `par` is the turns the rounds take with 2, 4, 8 and 16
-//! workers.
+//! write timed as one span, the order stage reading the records). `par` is the turns the rounds would take with 2, 4, 8 and 16
+//! workers were a merge's steps divisible among them: a ceiling, since a merge's steps are a
+//! chain (`depth`).
 
 use mibz2::bwt::{build, walk, walk_back_room, walk_segments_room, SegScratch, TVector};
 use mibz2::runs::{fill, front, takes_runs, Runs};
@@ -2030,9 +2031,10 @@ fn main() {
                 kern.slots(n, &recs, b.orig_ptr);
                 let c_cells = kern.induce_cells::<true>().2;
                 assert!(out == walked, "the cells' bytes differ from the walk's");
-                // the rounds as a schedule: with P workers a round of w steps takes ceil(w / P)
-                // turns; `par` is the turns at P = 2, 4, 8, 16, and `half` the rounds that
-                // hold half the steps
+                // a ceiling on the rounds as a schedule: were a merge's steps divisible among P
+                // workers, a round of w steps would take ceil(w / P) turns; `par` is those
+                // turns at P = 2, 4, 8, 16 (a merge's steps are a chain: `depth` bounds the
+                // turns from below), and `half` the rounds that hold half the steps
                 let par: Vec<u64> = [2u64, 4, 8, 16]
                     .iter()
                     .map(|&p| c.work.iter().map(|&w| w.div_ceil(p)).sum())
