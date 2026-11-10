@@ -11,6 +11,36 @@ marked:
 
 When the primary Claude Coordinator is unavailable, Louis may launch a new ChatGPT Work session with [WORK-ACTING-COORDINATOR.md](WORK-ACTING-COORDINATOR.md) and the owner-activated succession procedure in [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md). **This is a manual Work launch prompt, not the known-to-work persistent webhook task template below.** The pilot is untested and must not be reported as installed, enabled, or automatically triggered until its settings are verified. It uses the same Coordinator role and is not an independent scientific or safety reviewer.
 
+## Creating the Acting Coordinator's channel monitor — **untested**
+
+This creates **one separate, persistent, event-triggered Work task** on the existing team channel PR #145. It is **not** the existing one-off Acting Coordinator Work session. Only create it **after setup PR #364 has merged into master**. Pin to the exact **40-character commit SHA on master** containing `docs/team/SPEC.COORDINATOR-ACTING-MONITOR.md`; verify the file exists at that commit. Do **not** use #364's unmerged head as a master pin.
+
+**Name:** `mibz2⠶Coordinator⠶Monitor` (rename in Work manually if needed). **Model and effort:** Louis selects them in the Work task window, not in the prompt; Astra Light / default is suitable for event triage, with escalation to a deeper task for nonroutine mathematics/safety.
+
+This follows the *known-to-work* webhook **creation phrasing** below, but the Coordinator-specific single-file pin and event handler are **untested**. Its webhook may fire on the PR's reviews, edits and lifecycle events as well as comments; the pinned spec filters no-op events and self-generated LOGs. The task does not automatically become authorised as Acting Coordinator: it checks #145 for an explicit owner-authorised activation LOG before any dispatch. It must stop when Claude resumes, and the task is then disabled in Work.
+
+Copy this **as a new Work task creation request**, substituting only `FULL_MASTER_SHA` after #364 merges:
+
+```
+Create and enable a persistent GitHub event-triggered Work task for pull request #145 in `lmmx/mibz2`. It must not be a scheduled task or a one-off.
+
+Use the GitHub pull-request webhook subscription supported by the platform. I explicitly accept its full event coverage, including incidental pull-request lifecycle events and review events. No narrower event filter is required. The pinned specification handles ignoring irrelevant events and self-generated messages.
+
+This is my authorisation to create and enable this task with that event coverage. Do not ask me to approve the broader subscription again.
+
+Use my existing GitHub connection and normal Work usage settings. Do not change permissions, billing settings or purchase credits. No preliminary feasibility, permissions or pricing investigation is required.
+
+Create and enable this one task now. Do not run its work immediately. After creation, report the saved trigger, exact instruction text and enabled status. Report settings you cannot inspect as unknown rather than treating them as prerequisites.
+
+The task's instructions are exactly:
+
+You are the GitHub-event-triggered acting Coordinator monitor of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.COORDINATOR-ACTING-MONITOR.md from lmmx/mibz2 at commit FULL_MASTER_SHA and follow it. That file is your complete task instruction. If it cannot be fetched, report that and stop. Keep this task enabled until Louis explicitly disables it or it is handed back to the primary Coordinator.
+```
+
+**Verification:** read back the task's real saved trigger, exact instructions and enabled status. If the task cannot be created or the subscription is unavailable, report that; it is **not** an active monitor. Activate a single Acting Coordinator separately through `COORDINATOR-FAILOVER.md` after #364 merges; the first actionable new event should be read and recorded once. Never post a dummy comment as if it were a real assignment merely to see a wake.
+
+**Loop test before reliance:** after activation, an independently authorised, benign external event on #145 should cause one Work run. The Work task must read its cursor, act once or no-op, and **not produce a second progress LOG merely because its own LOG caused another event**. If the guard fails, disable the task immediately and use the manual Work session.
+
 ## What Work can and can't do (learned)
 
 - **Model and effort can't be set by a prompt.** The task tool doesn't expose them. Louis
