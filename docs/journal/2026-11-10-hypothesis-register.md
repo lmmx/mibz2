@@ -137,11 +137,14 @@ was ever a whole-decoder forecast; as rankings of decoders they are withdrawn):
   -2's own, reaches 1,862 MB/s behind one scanner. The default plan's sentinels in the same
   attempt are 1,499 on the original file (another block stream: context, not a registered
   comparison). A scanner-fed small table can be worth about 1.24 times the default before
-  its own cost g: at g of 1.18, 1.44, 1.7 on 78% of a worker's time that is 1,630, 1,390,
-  1,200 (the Optimiser's surface, f = 0.78). **None beats the default.**
-- **So the small table and the parallel scan are one proposal, not two.** Neither pays alone:
-  the table without the feed is capped at 1.86 GB/s, and the feed without the table meets the
-  knee at four workers.
+  its own cost g: at g of 1.18, 1.44, 1.7 on 78% of a worker's time that is 1,633, 1,386,
+  1,204 (the Optimiser's surface, f = 0.78). **The break-even is g = 1.31:** 1.18 clears the
+  default by 9% in this proxy, 1.44 and 1.7 do not.
+- **Corrected (the Optimiser's REVIEW, #145 6760293462):** this entry first said "none beats
+  the default", against its own 1,630, and concluded that the small table and the parallel
+  scan are one proposal. That does not follow. They are to be priced jointly, since removing
+  one bound can expose the other, and their marginal effects kept apart. 1,862 is another
+  block stream's figure, a proxy and not a ceiling.
 
 **A form that could fit both curves (a hypothesis, to be falsified; fitted to nothing):**
 
@@ -163,8 +166,13 @@ moment, not those requested.
   scanner's own contention, or bandwidth. With that factor carried over from -2 the -9
   prediction overshoots at 8 and 10 (0.85, 0.77). Ten cells cannot choose.
 - **Not out of sample:** it reads "running at once" from the run it predicts.
-- **Its falsifier:** the phase-overlap census (#145, this author's PROPOSAL): each walk's time
-  against the number of tables live while it ran, inside one run.
+- **Its falsifier, as first proposed:** a phase-overlap census, each walk's time against the
+  tables live while it ran. **The Optimiser's counterexample stands against it** (6760293462):
+  a walk's own duration sets the window its overlap is averaged over, so a slower walk reads
+  a higher overlap with no cause between them, and fixing the block does not remove that.
+  The census is kept as a description of occupancy inside the width intervention
+  (`2026-11-10-width-intervention-draft.md`), which assigns the bytes instead of observing
+  them.
 
 **This author's error:** a law fitted where every worker walks all the time was carried to a
 decoder whose workers walk part of the time behind one scanner, and prices were stacked on
