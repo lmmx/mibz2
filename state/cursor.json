@@ -21,6 +21,14 @@
       "master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
       "validation": "Actual supplied webhook matched freshly read GitHub comment. Test stimulus only; recorded as seen without coordination action.",
       "comment_updated_at": null
+    },
+    "6778679718": {
+      "status": "in_progress",
+      "delivery_id": "b8b67310-dd46-11f1-94a3-679fef63a7a1",
+      "comment_updated_at": null,
+      "pr": 365,
+      "head_sha": "b24d9baa167e01d57961b82a9a3c6f4501849190",
+      "planned_action": "Advisory evidence/gate checkpoint only; no assignment while #364 unmerged."
     }
   },
   "automatic_github_wakeup_assumed": false,
