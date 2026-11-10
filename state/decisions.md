@@ -4325,3 +4325,64 @@ No decoder implementation, build, timing, dispatch, workstation run, merge, adop
 Evidence under state/evidence/D093/: exact new/old counter sources, tests, tests.out, independent probes.py and probes.json. Run `cc -O2 agg3.c -o agg3`, `cc -O2 agg3-old.c -o agg3-old`, `bash test_agg3.sh`, `python probes.py`. Old counter SHA-256: 1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0. The oracle tests only synthetic records; it does not create performance evidence.
 
 Migration verified before receipt: previous branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt c84b4173d61ff7d61a061adf70571f50bde637ce. Pinned routing audit: five resolved historical findings and previously reported LOG 6757065549 on #162; no new defect. State team-state/guardian; REVIEW #145; persistent task unchanged.
+
+<a id="d094"></a>
+## D094 — #316 replication: qualification held; combined diagnostic revision 3: text conflict resolved
+
+Incoming: [6763960879](https://github.com/lmmx/mibz2/pull/161#issuecomment-6763960879), dispatching QUEUED 6763823117 and 6763780472. Observed 2026-11-10. Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Decisions **G1, G2, G3 (D094-C7 below)**. This is one decision on the two dispatched items; D093's separate STEPS implementation is not reviewed here.
+
+### 1. #316: disclosed failure is not repaired coverage
+
+Reviewed registration and tooling at **21938d1273d1d1bf3ca0f4bb791333cfa1aa4666**: registration blob 632d18cdb3bc1bca49ff707540f287bfd445a61b; service_tg.py e91625739e9b93434daaead38fdee389d021516e; gate 8b1235b6419cf507f904737dd3cee78100a972a0. The supplied tooling PR #333 head is 47bd387376db701906229ba79c7a7e4992d38f3f; this review tests the code at the candidate pin, not a fresh merge/CI attestation for #333.
+
+**Reproduced:** mixture.py eb20510ba4c41d6e7825378a1996ce416c9300c3 against links.jsonl blob 0bcc2f6bffb8a958296aceecd56973acf0ecff55 at ebb793af produces JSON exactly equal to the archived mixture.json db0335e9a5ac52db6ed47830c69154679f77ea53. Nineteen neutral links: 8 AMD 7763, 8 AMD 9V74, 3 Intel. Eight scenarios, 40,000 draws per cell/scenario, k=12, boundary mean log(1.02). Observed weights: runs/4/wall rejects its boundary null **0.360725**, not 0.05. Scenario maxima range **0.1857–0.39295**. Normal controls with the same variances are near 0.05.
+
+These are sensitivity populations, **not estimated CI error rates**, and ten-round contrasts are not R240 contrasts. Nor are these maxima the all-42 false-pass probability. They nevertheless reproduce the relevant counterexample: rare positive mass raises the population mean while twelve draws often miss it, leaving a low mean and small sample SD. The chance of missing one equally weighted point out of nineteen is (18/19)^12, about 0.52. More rounds within a dispatch do not by themselves remove a between-dispatch rare component.
+
+The dispatch-level t calculation is implemented consistently and is exact under iid normal contrasts. Approximate normality needs support; naming it does not supply that support. Sixty-minute spacing and new run IDs establish the schedule, not independent physical hosts, a stable mix or normal tails. The intersection-union rule needs no 42-fold correction when its marginal tests are valid, but cannot repair invalid marginal coverage. Retiring the old trend veto does not make it a calibration device.
+
+**G1/G2: HOLD #316 qualification freeze/execution and adoption through this unrepaired t12 rule.** This is not a STOP on guarded decoding or on independent tooling/design work. Conditional power 0.934/0.884 is not validity evidence. Do not spend the proposed 2583 runner-minutes merely to obtain a nominal PASS whose load-bearing assumption remains unsupported.
+
+Resolution: a prospective, reviewed rule for the declared estimand, with explicit tail/mixture/dependence assumptions and a justification of its error guarantee; or a separately registered diagnostic that claims no qualification. A larger k requires an actual model/error argument, not an arbitrary increase. Rank/sign procedures generally target a median or probability, not this mean log ratio. Trimming, winsorisation, removing cells, or restricting adoption scope changes the question; none is a drop-in repair. Preserve all 42 cells and the 1.02 meaning unless a forward C6 decision explicitly changes them. C6 permits design and adoption choices under review; it does not let this REVIEW amend RULES/STEWARDSHIP or rewrite prior verdicts. Changes to standing acceptance/adoption need the reviewed decision-record entry and #145 LOG before fresh data.
+
+### 2. Condition 7: retain independent confirmation; do not count primary replication twice
+
+Replication within the primary programme is not a second confirmation. For this prospective design, **retain one separate confirmation programme if confirmation of primary wall flags is pursued**: same frozen candidate/base, settings, cell grid, R and inferential rule; under the submitted design that means another **12 × R240**, not one dispatch or two six-dispatch halves. Every member must be admitted, unique within its programme, with no run shared across programmes. Carry the frozen spacing/no-overlap rule across their boundary too. The same pre-specified wall cell must flag again under the two-sided rule above 1.00. CPU flags do not silently become confirmation gates; the separate peak-RSS rule remains.
+
+Confirmation data never enter condition 2, never replace a primary member, and never rescue a primary NOT SHOWN/INVALID verdict. No second confirmation or search for a quieter draw. If the primary already fails adoption, this ruling does not require spending on confirmation merely to rename the failure. If confirmation is needed for an otherwise eligible adoption, budget it before freeze: roughly another 2583 runner-minutes at the stated pace, before plan/aggregate overhead. Any statistical redesign must state its corresponding confirmation unit prospectively.
+
+**G3, separately identified admission constraint D094-C7:** a primary wall flag cannot be treated as cleared for adoption by a missing, invalid or malformed confirmation. Record the inherited condition-7 classification (including any “unresolved/not confirmed” result) unchanged, but admission under D094-C7 remains unmet until the one registered, valid confirmation is adjudicated. This is a forward narrowing constraint, not a rewrite of earlier condition-7 verdicts and not proof of no harm.
+
+**Executable admission gap:** `confirm` only trusts `valid`, checks integer/disjoint IDs and matching heads, then compares stored flags. It accepts:
+- two empty `runs: []` lists;
+- twelve copies of run 1 against twelve copies of run 2;
+- two single-run lists where programme inputs are required.
+
+All three return valid=true in the archived probes. The CLI loads these verdict JSONs directly; it does not re-judge their artifacts. Distinct IDs are necessary, insufficient. Before using confirmation for adoption, validate the complete programme provenance/settings and recomputed flags (or consume only authenticated outputs freshly re-judged from the archives), enforce exact cardinality/uniqueness/disjointness and cross-programme timing, and reject missing/malformed inputs. Add these controls. Ordinary code tests passing does not establish this admission property.
+
+Reconcile §2.6, §2.11 and §7 in the prospective registration/decision record; the old single-dispatch batch-means wording and new programme wording cannot both silently govern. D094-C7 does not resolve §1's coverage HOLD.
+
+### 3. Combined team-ports diagnostic revision 3
+
+Reviewed **a9e0e5c7377be7c149ace0f65d22bafe1744385f**, registration blob **6c9275f2f1900c88a6f9e3c3b556030f2d01c4b0**. **G1: D091's textual exit-policy contradiction is discharged.** §3 now defers to §8a for checker exits; a complete balance-only NOT ENGAGED/exit 1 can satisfy the explicitly narrower engagement component. The original exit and checker verdict stay intact.
+
+Freshly fetched checker blob **eb7c392d2d766e870de3e14a31b5fe940787dd3f** and its 20 committed tests reproduce. Independent synthetic witnesses:
+- 100/100 helpers: VALID, all hold, ENGAGED, exit 0; accepted.
+- 1/99: VALID, only (b) fails, NOT ENGAGED, exit 1; accepted.
+- 0/0: same admissibility, two zero-work helper calls reported; accepted for presence, not useful work.
+- wrong walker: (d) fails, exit 1; rejected.
+- missing terminal: INVALID, exit 2; rejected.
+
+A small review model of §8a also rejects eight output/status controls: truncation, crash, timeout, signal, both exit/outcome mismatches, stderr warning and extra stdout. It is a review witness, **not the promised production adjudicator or its complete §12a dry run**. In particular this does not attest that an unwritten harness enforces deadlines, captures status, or archives every required case.
+
+The copied-checker hash check enforces the named tool identity without moving either decoder pin. Empty stderr is a prospective fail-closed output contract compatible with the pinned checker; it is not logically equivalent to “complete” (a complete verdict plus a warning is also rejected). Both are acceptable operational validation requirements here, not new scientific performance/positive-byte gates. Do not apply them retroactively to rewrite earlier results.
+
+**G2: freeze/execution remains held only at the still-unmet implementation/dry-run and other recorded pre-data conditions, not at the repaired prose.** Implement and test §8a, archive every §12a case, obtain the Researcher's PROCEED and satisfy D089's remaining conditions before freeze. Ports 2/3 B5 remains independent and outstanding. C1–C5 remain descriptive; W1–W7, attribution, output identity, complete inventories and one attempt stay binding. Native instrumented E arms do not prove counted A-arm engagement. Independent per-arm residual bound and B6 precedence are correctly stated. Earlier FAIL-MEASUREMENT outcomes remain unchanged.
+
+### 4. Reproduction, limits and state
+
+Archived under state/evidence/D094/: review_probes.py, full checker/probe outputs, reproduced mixture JSON, pinned source files and routing audit. Run `python review_probes.py` beside its fetched dependencies; `python -I mixture.py links.jsonl mixture-reproduced.json` reproduces the sensitivity calculation (NumPy/SciPy).
+
+Candidate service_tg suite: 29 tests passed initially; its remaining power test failed only because the local review copy lacked service_tg_power.py, then passed after fetching that exact-pin dependency. Gate/workflow suite: 12 passed. Checker suite: 20 passed. These are synthetic Python checks, not decoder timing, production qualification or full CI. No candidate implementation, merge, dispatch, workstation run, infrastructure or spending performed. #318's old i9 bundle and the fresh full CI/merge status were not independently re-audited here; neither can settle the present qualification objection.
+
+Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 25fff9c07597c9fe1edc8e074182a02df1042ed5. Pinned coord.py audit: five resolved historical findings and already-reported LOG 6757065549 on #162; no new routing finding. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.

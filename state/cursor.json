@@ -3335,7 +3335,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D094",
-      "progress": "Migration verified; reviewing #316 replicated programme/condition 7 and combined diagnostic revision 3."
+      "progress": "D094 assessment and executable witnesses committed; preparing complete cursor and REVIEW.",
+      "receipt_commit": "25fff9c07597c9fe1edc8e074182a02df1042ed5"
     }
   ],
   "migrated_from": {

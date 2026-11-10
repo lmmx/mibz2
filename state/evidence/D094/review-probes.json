@@ -1,0 +1,93 @@
+{
+  "checker": {
+    "balanced": {
+      "exit": 0,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) holds: team 0: helper bytes [100, 100], largest share 0.5\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nENGAGED\n",
+      "stderr": "",
+      "accepted": true
+    },
+    "balance_only": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) fails: team 0: helper bytes [1, 99], largest share 0.99\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "stderr": "",
+      "accepted": true
+    },
+    "zero_helpers": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 2 zero-work helper calls\n  (b) fails: team 0: helper bytes [0, 0], largest share n/a\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "stderr": "",
+      "accepted": true
+    },
+    "wrong_walker": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) holds: team 0: helper bytes [50, 50], largest share 0.5\n  (c) holds: 1 leader calls of traverse\n  (d) fails: 1 calls of another walker\nNOT ENGAGED\n",
+      "stderr": "",
+      "accepted": false
+    },
+    "missing_terminal": {
+      "exit": 2,
+      "stdout": "INVALID\n  no single terminal record at the end\n",
+      "stderr": "",
+      "accepted": false
+    }
+  },
+  "shape_controls": {
+    "truncated": false,
+    "crash": false,
+    "timeout": false,
+    "signal": false,
+    "exit_disagrees_engaged": false,
+    "exit_disagrees_not_engaged": false,
+    "stderr_warning": false,
+    "extra_stdout": false
+  },
+  "confirmation": {
+    "empty": {
+      "valid": true,
+      "registered_run": [],
+      "confirmation_run": [],
+      "confirmed": [],
+      "unresolved": []
+    },
+    "duplicate_members": {
+      "valid": true,
+      "registered_run": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "confirmation_run": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "confirmed": [],
+      "unresolved": []
+    },
+    "single_runs": {
+      "valid": true,
+      "registered_run": 1,
+      "confirmation_run": 2,
+      "confirmed": [],
+      "unresolved": []
+    }
+  }
+}
