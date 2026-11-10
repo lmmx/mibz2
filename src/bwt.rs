@@ -391,7 +391,7 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
 /// The most runs a 16-row window may have for `build_one_pass` to take it run by run
 /// (each run one cursor step and one 16-wide write); a window of more runs takes the
 /// one-row steps
-const RUNS: usize = 6;
+pub(crate) const RUNS: usize = 6;
 
 /// Row i's byte, `ll[i]`, read from memory (a volatile read, bounds checked as `ll[i]`).
 /// Its window's 16 bytes are already in a vector (`run_joins`), and with a plain read the
@@ -399,13 +399,13 @@ const RUNS: usize = 6;
 /// byte, about 30 instructions on every window of more than one run, high-entropy
 /// blocks' above all. Read from `ll`, each is one load, as on master
 #[inline(always)]
-fn row_byte(ll: &[u8], i: usize) -> usize {
+pub(crate) fn row_byte(ll: &[u8], i: usize) -> usize {
     // SAFETY: a reference to the byte, so valid and aligned for the read
     unsafe { core::ptr::read_volatile(&ll[i]) as usize }
 }
 
 /// `run_joins` of a window of one run
-const ALL_JOINED: u32 = 0xfffe;
+pub(crate) const ALL_JOINED: u32 = 0xfffe;
 
 /// Whether a window with these `run_joins` has at most RUNS runs: its heads (`joins ^
 /// 0xffff`) number at most RUNS, so its joins at least 16 - RUNS. Counted without POPCNT,
@@ -414,7 +414,7 @@ const ALL_JOINED: u32 = 0xfffe;
 /// 256-byte table. `build_one_pass` asks only for windows of more than one run and fewer
 /// than 16. Tested against `count_ones` on all 32,768 masks `run_joins` can return
 #[inline(always)]
-fn few_runs(joins: u32) -> bool {
+pub(crate) fn few_runs(joins: u32) -> bool {
     POP8[joins as u8 as usize] + POP8[(joins >> 8) as u8 as usize] >= (16 - RUNS) as u8
 }
 
@@ -433,7 +433,7 @@ static POP8: [u8; 256] = {
 /// equals `w[j - 1]`. A window of one run has all 15 (`ALL_JOINED`), one of 16 runs none:
 /// each one compare, with no count of its runs
 #[inline(always)]
-fn run_joins(w: &[u8]) -> u32 {
+pub(crate) fn run_joins(w: &[u8]) -> u32 {
     let w: &[u8; 16] = w.try_into().unwrap();
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE2 is in x86_64's baseline; w is 16 readable bytes
