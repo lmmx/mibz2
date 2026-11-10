@@ -1,0 +1,349 @@
+# 2026-11-10: The scan without the scanner: found by magic, accepted by chain (#10 reopened)
+
+**Status: an exact prototype, a bound, and a registered diagnostic, revised after the
+Researcher's REVISE (#145 comment 6755860961; §8) and re-frozen. No workstation data yet.**
+- **The design.** One thread finds every bit where a block or end-of-stream magic occurs. Each
+  worker reads and decodes the block at a candidate itself, Huffman included. The caller's thread
+  walks the chain exactly as `stream::Scanner` does, and uses a worker's result only for the
+  candidate at exactly the chain's next bit. So the finder is a hint: a false or missed magic
+  costs time and cannot change a byte or an error.
+- **Exact (checked).** `examples/par_scan.rs` gives `mibz2::decode`'s bytes on the corpus at 1 to
+  4 workers, and the sequential decoder's bytes *and* `Error { kind, block, bit }` on six
+  adversarial files and 4,000 mutated ones (1,500 more rerun for this entry).
+- **The finder is free.** 9.3 GB/s of compressed input on one thread (local): 0.19% of one
+  thread's decode, against the scanner's 11.2%.
+- **What it gains is cores, not cycles.** CPU time is unchanged; the work moves to the workers.
+  On the 4-vCPU VM it is neutral on Wikidata (0.91–0.97 of the library's wall at 4 workers) and
+  13–15% faster on incompressible data. The gain is where a machine has more cores than one
+  scanner can feed.
+- **The bound (model).** One scanner caps the decoder's throughput, relative to the sequential
+  decoder, at 1 ÷ its share s of one thread's decode: 9–11× on Wikidata at level 9, 4.9× on the
+  same text at level 1, 4.0–4.3× on incompressible data. The workers it keeps busy are
+  (1 − s) ÷ s, since their work excludes the scan. A ten-core machine is past the last two
+  today, in this ideal model.
+- **The test (registered below).** `just bench-par-scan`: the two harness arms that differ only
+  in who reads the symbols, at 1 to 10 workers, on three inputs.
+
+Nothing in the decoder changes. `examples/par_scan.rs` uses `block::read_item` and
+`decode_block` as the library does. Its own `unsafe` is at two boundaries: the AVX2 filter, and
+the `getrusage` call that reads its CPU time (§8.4).
+
+Labels: **checked** (equality of bytes and errors), **measured** (local timing on the shared VM:
+indicative only, RULES C5), **model** (arithmetic from stated assumptions), **the record's**.
+
+## 1. What the record decided, and what has changed
+
+- **The scanner was a twelfth of a decode.** `2026-10-27-bz2-decoder.md`: 1.6–1.9 of 24–30 c/B,
+  so "one scanner feeds about 12 workers". Blocks are found exactly, "not by searching for the
+  48-bit magic, so a magic inside a block's data can never be taken for a block".
+- **A speculative scan was planned and never built.** `2026-10-27-mibz2-v2.md` read pbz2's
+  marker scan and planned "workers that decode Huffman from speculative block markers, joined
+  exactly".
+- **#10 was deferred, then closed.** It "binds only from about 10 workers"
+  (`2026-10-27-research-synthesis.md`), and "stays closed" (`2026-10-28-workstation-scaling.md`
+  §9). The level-1 plateau near 1,460 MB/s was "consistent with the scanner bound"; it was not
+  shown. Only a paired experiment reopens it (`2026-10-27-four-thread-ceiling.md`).
+- **What has changed: the workers.** A decode is now 9–10 c/B here, not 24–30, and the scanner
+  about 1 of it. The same scanner now feeds 9 workers, not 12, and fewer on every input that
+  compresses less. The condition for reopening is the paired experiment, registered in §5.
+- **The reason for not searching does not hold for this design.** A magic inside a block's data
+  is found as a candidate and never accepted, because acceptance is the chain's (§2).
+
+## 2. The design, and why it cannot change the output (checked)
+
+- **The finder.** A magic at any of 8 bit shifts covers 5 whole bytes, so 16 byte patterns: a
+  nibble-table filter over 32 positions a step, then the 48 bits compared. A scalar finder and a
+  bit-by-bit one agree with it, as do 20 random cuts of the input into ranges (6 bytes carried
+  across a cut).
+- **The workers.** Each takes the next block-magic candidate and reads one item there with
+  `block::read_item`, then `decode_block`, and reports where the item ended and its CRC.
+- **The joiner** runs on the caller's thread and is the only authority. It parses the stream
+  header, then each item from the last one's end, the combined CRC, the byte alignment and the
+  next header, as the sequential scanner does.
+  - It takes a worker's result only for a candidate at exactly the chain's bit, decoded at
+    exactly the stream's level.
+  - Otherwise it reads the item itself with the same two calls.
+  - Candidates the chain steps over are dropped, with whatever was decoded there.
+- **So:** every accepted block is one the sequential decoder would have read at that bit and
+  level, and every error is raised by the chain at the chain's position. This is an argument and
+  tests, not a proof.
+
+**Against the truth** (`mibz2::scan`): 431 block magics and 12 end magics in 94.8 Mbit, none
+missed, none false.
+
+**False magics.** Uniform bits match one of the two magics at a given bit with probability
+2⁻⁴⁷: 6.7 × 10⁻⁷ expected on the corpus, 6 × 10⁻³ in the 103 GB dump. Crafted input is not
+uniform: a file that uses a chosen set of byte values carries the magic in every block's in-use
+bitmap, in libbzip2's own valid output. That file is case 1.
+
+| case | the sequential decoder | the harness |
+|---|---|---|
+| 1. 31 valid blocks, each with a stream header, a block magic and an end magic in its bitmap | 3,000,000 bytes | identical; 30 candidates stepped over, 31 results dropped |
+| 2. a whole valid block spliced into a block's payload | 299,988 bytes, then `SelectorOverrun` (block 1) | identical; the spliced block decoded by a worker, never emitted |
+| 3. stream, 4 stray bytes, stream | 200,000 bytes, then `TrailingData` | identical; 3 valid blocks beyond decoded and dropped |
+| 4. a block marked randomised | 600,039 bytes, then `Randomised` (block 2) | identical |
+| 5. cut inside a block; cut inside the stream CRC | `Truncated`, both | identical |
+| 6. two blocks exchanged | 1,500,000 bytes, then `StreamCrc` | identical |
+
+**Mutation fuzz:** 4,000 mutated multi-stream files (bit flips, truncation, magics written or
+inserted, a valid block spliced in, deletions, repeats, stray bytes, level digits changed), at
+1–4 workers and windows of 1–12: the bytes before the error and the error equal the sequential
+decoder's in every case, over 14 error kinds. 6,091 blocks with valid CRCs were decoded at places
+the chain never reached; none was emitted.
+
+**Not checked:** a streaming input; `BlockTooLarge`, `Io` and `Cancelled`; a block over 64 MiB;
+aarch64 (the scalar finder is its fallback).
+
+## 3. Measured locally (indicative only)
+
+**The finder:** 9.25 GB/s of compressed input on one thread with the AVX2 filter (164 GB/s of
+decoded Wikidata), 1.08 with the scalar one. `mibz2::scan` reads 0.205.
+
+**The harness's arms,** all exact: `lib` is `decode_parallel(&data, t)`; `scan` is one `Scanner`
+thread and t workers in the harness; `find` is the finder thread and t workers. `scan` and
+`find` differ only in who reads the symbols.
+
+| input | scanner's share of one thread | find / lib, MB/s, 4 workers | find / scan, MB/s, 4 workers |
+|---|--:|--:|--:|
+| Wikidata, level 9 (17.7×) | 9–11% | 1.03–1.10 (three runs) | 1.04–1.05 |
+| text (5×) | 14.7% | 1.13 | 0.99 |
+| random bytes (1.1×) | 23.2% | 1.13 | 1.03 |
+| binary records (1.0×) | 24.8% | 1.15 | 1.14 |
+| 20,000 tiny streams | | 2.65 | 5.3 |
+
+- **Four CPUs hide it.** `lib` at t threads is a scanner and t workers, so on this machine both
+  designs fill the cores. CPU seconds are equal within noise on every input.
+- **At one worker `find` is slower** (1.10–1.41 of `lib`'s wall): `lib` at one thread runs its
+  scanner beside its worker.
+- **Tiny streams** are the one large local effect: per-block headers and tables parallelise.
+
+## 4. The bound (model)
+
+A scanner that is a share s of one thread's decode caps the decoder's throughput at 1/s of the
+sequential decoder's, if everything else scales for free. The workers it keeps busy are
+(1 − s)/s, not 1/s, since their work excludes the scan. Past that the decoder gains nothing
+from cores; the finder design gains all of them, to the next serial stage (the reader's
+in-order copy, unmeasured). Neither figure is the real multicore ceiling: it charges nothing
+for the workers' supply, the joins and copies, or memory.
+
+| input | s (measured, local) | cap today, × one thread | on 10 cores, the finder design over today's |
+|---|--:|--:|--:|
+| Wikidata, level 9 | 0.091–0.112 | 9–11 | 1.0–1.1 |
+| text | 0.147 | 6.8 | 1.5 |
+| Wikidata, level 1 | 0.206 | 4.9 | 2.1 |
+| random bytes | 0.232 | 4.3 | 2.3 |
+| binary records | 0.248 | 4.0 | 2.5 |
+
+- **Ideal cores:** the last column is min(10, anything else that binds) ÷ the cap, with nothing
+  else binding. The cap is in units of one thread's sequential throughput (1/s). On the i9 at level 9 the memory knee binds first (`2026-11-07-knee-mechanism.md`,
+  and `2026-11-10-bandwidth-titration.md`), so Wikidata's own dumps gain nothing from this
+  until that moves.
+- **Level 1 is where the i9 should show it.** Its blocks are 100,000 rows, its tables 0.4 MB,
+  and the record already suspects the scanner there. The README's level-1 slowdown is on the
+  same inputs.
+- **If the workers double in speed, every cap halves** in workers: Wikidata's falls to 4.5–5.5.
+
+## 5. The registration (RULES C1's diagnostic class; the paired experiment #10 asked for)
+
+**The question:** on the i9, at 1 to 10 workers, what does reading the symbols on the workers
+gain over reading them on one scanner thread, on inputs whose scanner share differs?
+
+**It can qualify no production change.** Both arms are a research harness, one table a worker,
+in memory.
+
+- **The recipe:** `just bench-par-scan`, frozen at the commit in `bench/par-scan.frozen`. For
+  each input: `par_scan FILE knee 5 1,2,4,6,8,10`.
+- **What it compares:** the two complete constructions, not Huffman work moved alone. Besides
+  who reads the symbols, the arms differ in symbol-buffer ownership, candidate storage, locking
+  and fallback work, and `find` pays for speculative decodes the chain drops. Its candidate
+  metadata grows with the input: `slots` bounds the speculative jobs issued, not the candidates
+  found (the finder's list is never trimmed). Each input's peak resident memory is recorded.
+- **Placement, recorded, not controlled:** nothing is pinned. A cell at t workers is t + 2
+  threads (the workers, the finder or scanner, and the caller's thread, which is the joiner),
+  so 10 workers are 12 threads sharing the machine's CPUs. The run records the CPUs the process
+  may use (its mask, `nproc`, the cgroup's quota, the topology), and the check samples every
+  thread's CPU mask during a 10-worker decode of each arm.
+- **The inputs:**
+  - `wikidata`: the bench corpus, SHA-256 `82f65ace…c29915`;
+  - `wikidata-l1`: its decoded bytes recompressed by Python's `bz2.compress(data, 1)`
+    (libbzip2): here 19,018,084 bytes in 2,098 blocks, SHA-256 `2ae39adf…0d9e78`. The file's
+    digest the workstation gets is recorded, not required. The file is read back and decoded
+    by libbzip2, and its bytes must have the corpus's decoded SHA-256, or the run is REFUSED;
+  - `records`: `ab gen DIR 8`'s `records.bz2`: here 19,175,457 bytes, SHA-256 `78bc91db…faa4c0`,
+    recorded likewise.
+- **Each input's decoded size, anchored apart from the run** (`bench/par_scan_inputs.py`): the
+  manifest's `decoded_bytes` (bench/wikidata.json) for `wikidata` and `wikidata-l1`; the
+  generator's stated size for `records`. libbzip2's decode of each must have it. The reporter
+  is given it and refuses any cell of another size. The compressor's identity (Python's and
+  libbzip2's versions) and every input's digest are recorded; the inputs themselves are not
+  kept in the bundle.
+- **Liveness, before the cells:** `par_scan - faults` injects a panic at each role of each arm
+  (a worker after claiming a job, the finder before publishing a chunk, the scanner after
+  issuing a block, the joiner after accepting one), at 1 and 4 workers. Each decode must end,
+  with an error or the joiner's own panic, or the run is INVALID (§8.1). Every child runs
+  under a deadline in a process group of its own, killed as a group if it passes it.
+- **Before the cells,** `par_scan FILE check` on each input: `mibz2::decode`'s bytes equal to
+  libbzip2's, and every arm's bytes equal to `mibz2::decode`'s, or the run is INVALID. It also
+  serves as the warm-up.
+- **The cells:** five rounds; in each, the worker counts 1, 2, 4, 6, 8, 10; at each, the arms
+  `scan` and `find`, their order alternating. No gating on the machine's load and no retries.
+- **The figures** (`bench/par_scan_knee.py`, which refuses any file that is not exactly this
+  grid): per worker count, each arm's median MB/s and CPU seconds, and find/scan in MB/s as the
+  median of the rounds' paired ratios, with its range.
+- **The reading, fixed here,** per input, from the 10-worker cells, r the median paired ratio:
+  **FASTER** if r ≥ 1.15; **NOT FASTER** if r ≤ 1.05; **MIXED** otherwise.
+  - FASTER is a descriptive threshold for selecting a construction to build next. It is not a
+    statistical test of a population gain, and it qualifies nothing for production.
+  - NOT FASTER covers small gains and small losses alike. Five rounds' extremes are not
+    confidence intervals.
+  - All rounds and all three inputs' outcomes are reported, with no retry and no selection.
+- **Predictions, written before any i9 data:**
+  - `wikidata`: NOT FASTER or MIXED (r 0.95–1.12): ten tables are past the knee in both arms;
+  - `wikidata-l1`: FASTER, r between 1.3 and 2.2, with the ratio rising from 4 workers;
+  - `records`: FASTER, r between 1.4 and 2.5;
+  - at 1 worker, `find` is slower on every input (r 0.7–0.95).
+- **What each reading directs:**
+  - **FASTER on `wikidata-l1` or `records`:** the design goes to the Coordinator as a build
+    candidate for the parallel decoder, with §6's list as its obligations. It would be the first
+    change in the record aimed at inputs other than level-9 text.
+  - **NOT FASTER on both:** this arm's claim closes: this construction, as built, gains
+    nothing measurable over the scanner here. It does not show that something else holds the
+    workers, nor close every speculative-scan construction: the arm's added parsing,
+    scheduling, allocation and speculative work may hide a scanner saving. Its excess work is
+    inspected before the idea is closed.
+  - **`wikidata` FASTER** would challenge §4's prediction from the knee, and is reported as
+    such. It would not show that memory pressure is absent.
+- **Limits:** one machine; in-memory input; the harness's own worker loop, not the library's
+  teams; unpinned; frequency and thermal state uncontrolled beyond the alternation. All five
+  rounds are reported, and there is no rerun to a reading.
+
+## 6. What a production version would owe (not built)
+
+- **A streaming input.** Today one thread owns the input window. Workers reading their own
+  blocks need shared chunks, held from the oldest unaccepted candidate to the finder's head,
+  bounded by `slots` blocks plus the 64 MiB item cap. A worker that runs out of bytes before the
+  input ends must wait, not fail, and `Truncated` may be decided only at the end. This is where
+  a change of contract could hide.
+- **No guess at the level.** A stream's level enters a block's decode only as the bound on its
+  rows. Workers can decode at level 9's bound and report the rows; the chain accepts if they fit
+  the stream's level. The prototype guesses instead, and re-read 12–14 of 31 blocks in case 1.
+- **A bound on wasted work.** Crafted nested valid blocks can each cost a worker a whole
+  discarded decode: at worst about sequential wall time and threads × the CPU. Never wrong
+  bytes. The window bounds how far ahead it goes.
+- **The one-thread path stays as it is:** `find` is slower there.
+
+## 7. Against other decoders
+
+- **lbzip2** scans with a byte-wise automaton over all 8 alignments and confirms candidates by
+  parsing block headers; magics that straddle its 1 MiB input blocks are recovered by its
+  sequential parser.
+- **indexed_bzip2 / rapidgzip** searches shifted byte strings; a candidate "may be a false
+  positive inside this block, so the decoded encoded size is authoritative".
+- **pbzip2** parallelises only files it wrote itself.
+- **Here** the chain alone accepts, and the errors are the sequential decoder's, bit for bit,
+  which none of those states for itself.
+
+## Reproduce
+
+```text
+cargo build --release --example par_scan --example phases
+target/release/examples/par_scan corpora/wikidata.bz2 finder
+target/release/examples/par_scan corpora/wikidata.bz2 check
+target/release/examples/par_scan corpora/wikidata.bz2 adversarial
+target/release/examples/par_scan corpora/wikidata.bz2 fuzz 4000
+target/release/examples/par_scan corpora/wikidata.bz2 time 11
+target/release/examples/phases corpora/wikidata.bz2        # the scanner's share
+```
+
+The prototype and its measurements are an agent's of this session; the checks, the timings on
+text, random and records, and the scanner's shares were rerun for this entry.
+
+## 8. Revised after review (REVISE, #145 comment 6755860961)
+
+The Researcher's report
+([par-scan-6755779354](https://github.com/lmmx/mibz2/blob/0fb3293015aa0c9676bcbd6ca8c14d37bf0d7dcc/state/reports/par-scan-6755779354/report.md))
+supported the chain's acceptance and asked for bounded failure, recorded placement, an
+independently anchored reporter, B5 evidence and narrower wording before queueing. What
+changed, re-frozen in `bench/par-scan.frozen`:
+
+### 8.1 Liveness (checked)
+
+- **Failure reaches every waiter.** The finder, the scanner and each worker hold a drop guard
+  that, if the thread unwinds, marks the shared state failed and stopped and wakes every
+  waiter. `take`, the scan arm's joiner and every helper's wait check the mark. The joiner holds
+  a guard that stops and wakes the helpers however it leaves, its own panic included.
+- **Every helper is joined explicitly.** One that panicked makes the decode an error, even
+  where the chain had finished. A decode returns or its panic propagates: it never waits on a
+  thread that has gone.
+- **The fault tests** (`par_scan - faults`, and the example's test `faults_end_never_hang`,
+  run in CI): a panic injected at a worker after it claims a job, at the finder before it
+  publishes its first chunk, at the scanner after it issues a block, and at the joiner after it
+  accepts a block, in each arm at 1 and 4 workers, on a 30-block input made in memory. All 12
+  cases end: the helpers' with `Internal("… panicked")`, the joiner's with its panic. Untimed:
+  a 120 s deadline only bounds the wait.
+- **Each guard is needed (checked):** with the helpers' guards removed, the worker case hangs;
+  with only the finder's, the finder case; with only the scanner's, the scanner case; with only
+  the joiner's, the joiner case (each seen as a hang at a 5 s deadline).
+- **The recipe bounds every child:** each runs under `setsid --wait timeout --kill-after=30`,
+  in a session and process group of its own, killed as a group at its deadline (300 s for the
+  fault tests, 600–900 s for the inputs and checks, 1,800 s for each input's cells). A child
+  past its deadline makes the run INVALID; what it wrote is bundled. The dry run checks that a
+  stalled child and its stalled grandchild are both killed.
+- **Not covered:** an allocation failure (an abort, not an unwind) and a thread that stalls
+  without panicking; the recipe's deadline is the bound on both.
+
+### 8.2 Placement (recorded)
+
+As §5 says: nothing pinned; a cell is t + 2 threads; the process's CPU mask, `nproc`, the
+cgroup's quota and the topology recorded (`placement.txt`, and `knee: placement:` in each
+harness log); every thread's mask sampled during a 10-worker decode of each arm (the check).
+The comparison stays unpinned by design: the Researcher did not require the titration's core
+isolation here.
+
+### 8.3 The reporter (checked)
+
+- `bench/par_scan_knee.py` takes each input's expected decoded size, recorded apart from the
+  run (§5), and refuses a file whose cells decoded any other size. Its tests now include grids
+  of uniformly wrong sizes (1, one byte short, one byte over, double), which used to read
+  FASTER and are now refused.
+- `bench/par_scan_inputs.py` anchors the sizes and checks the level-1 file's decoded digest
+  against the corpus's; its tests refuse a manifest size the corpus doesn't decode to, a
+  generator size the records don't decode to, and a level-1 file that decodes to other bytes.
+- A failed `getrusage` is a panic in the cell, so the run is INVALID: no CPU figure is made
+  from a failed call. Its timevals are checked to be well formed.
+
+### 8.4 B5: the example's `unsafe`
+
+The scope is this research example only; it ships in no library code.
+
+- **The AVX2 filter (`Finder::find_avx2`).** Called only when `is_x86_feature_detected!("avx2")`
+  said so, or under a build whose target has AVX2 (where detection is then asserted). Its loads
+  are three unaligned 32-byte loads from `data[k+1..k+35]`, guarded by `k + 40 <= data.len()`,
+  and its candidates are verified by `verify`, safe code that reads 8 bytes with `get` and pads
+  a short tail. The 16-byte table loads read `[u8; 16]` arrays. No writes, no pointers kept.
+  - **Miri (checked):** `miri_finder_matches_naive`, with AVX2 enabled for the target
+    (`RUSTFLAGS="-C target-feature=+avx2" cargo +nightly miri test --example par_scan --
+    miri_`): the filter and the scalar finder against the bit-by-bit reference on lengths 0 to
+    96 bytes, the boundary lengths among them, with magics planted at random bits, at the last
+    bit one fits and one past it, and with each input cut into two ranges. Under Miri a subset
+    of lengths and cuts, chosen for the loop's edges; natively every length and cut. It passed
+    on nightly 2026-10-26 (Miri 0.1.0 16d1ffac17). Miri interprets the intrinsics: this
+    checks bounds and initialisation of every load, not the CPU's instructions.
+  - **Differential (checked):** the same test natively; and the finder against `mibz2::scan`
+    on the corpus and its 20 random cuts (§2), unchanged.
+- **The `getrusage` call (`cpu_micros`).** A foreign call Miri does not run. The bound
+  argument: `who` is RUSAGE_SELF (0); the pointer is to a live, exclusive, zero-initialised
+  `Rusage` of 144 bytes (asserted at compile time on 64-bit Linux), which is `struct rusage`'s
+  size and layout on x86_64 and aarch64 Linux: two `struct timeval` of two `i64` each, then 14
+  `long`s. The kernel writes within it and keeps nothing; the return is checked, and the times
+  are read as plain integers, every bit pattern of which is valid. Tested natively
+  (`getrusage_times_grow`).
+- **Not done here:** fuzz and mutation testing aimed at the `unsafe` blocks themselves, and
+  the adversarial review by an agent other than the implementer, which B5 requires and the
+  Guardian may HOLD on. The harness's thread code is safe Rust and was not run under Miri
+  (it needs libbzip2, a foreign library, to make its inputs).
+
+### 8.5 The dry run, the freeze and CI
+
+The re-frozen commit, the untimed dry run (`just bench-par-scan 1`) and CI at the ready head
+are recorded on the PR that carries this revision.

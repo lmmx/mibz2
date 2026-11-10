@@ -926,3 +926,160 @@ bench-pipelined-default DRY="" CORPUS="":
     else
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
+
+# The scan without the scanner, on the workstation (docs/journal/2026-11-10-parallel-scan.md,
+# section 5, registered and frozen before use): a research harness's two arms, one reading every
+# block's symbols on a scanner thread and one finding blocks by magic and reading them on the
+# workers, at 1 to 10 workers on three inputs. A diagnostic (RULES C1): it qualifies no
+# production change. Run once; no retry. Its exit: 0 VALID (whatever the readings), 1 INVALID
+# or REFUSED, 3 INCOMPLETE, kept through the bundle and `just submit`. About five minutes once
+# built. Every child runs in a session of its own under a deadline (`timeout --kill-after`):
+# a child that hangs is killed with its whole process group, the run is INVALID, and what it
+# wrote is bundled.
+#   just submit bench-par-scan
+# A DRY value is the untimed check of the recipe itself: one round, and a check that the
+# deadline kills a stalled child and its group. Never evidence; it never reads VALID:
+#   just bench-par-scan 1
+
+# Blocks found by magic and read on the workers, against one scanner thread, at 1 to 10 workers
+bench-par-scan DRY="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/par-scan
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-par-scan: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # the outcome decides the exit, whatever the last command's status
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-par-scan: OUTCOME: $outcome"
+      rm -rf "$W/inputs"
+      bash bench/bundle.sh "$W" || { echo "bench-par-scan: bundling failed"; exit 2; }
+      case "$outcome" in
+        VALID*|DRY*) exit 0 ;;
+        INVALID*|REFUSED*) exit 1 ;;
+        *) exit 3 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-par-scan: $*"; exit 1; }
+    # a child in a session and process group of its own, under a deadline: TERM to the group
+    # at SECS, KILL 30 s later (exit 124, or 137). Its output stays where it was sent.
+    bounded() { local secs=$1; shift; setsid --wait timeout --kill-after=30 "$secs" "$@"; }
+    deadline() { [ "$1" -eq 124 ] || [ "$1" -eq 137 ]; }
+    ROUNDS=5
+    WORKERS=1,2,4,6,8,10
+    dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      ROUNDS=1
+      echo "bench-par-scan: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    fi
+    for tool in setsid timeout python3 git cargo; do
+      command -v "$tool" > /dev/null || fail "needs $tool on PATH"
+    done
+    git rev-parse HEAD > "$W/commit.txt"
+    printf 'head %s\n' "$(cat "$W/commit.txt")" > "$W/commits.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/par-scan.frozen): what is built and driven must
+    # be as it was there, and committed
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/par-scan.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/par-scan.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml
+      examples/par_scan.rs examples/ab.rs tests/common bench/bundle.sh bench/corpus.sh
+      bench/wikidata.json bench/wikidata.py bench/par_scan_knee.py bench/par_scan_inputs.py
+      .just/bench.just docs/journal/2026-11-10-parallel-scan.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    if [ -n "$dry" ]; then
+      # the deadline itself: a stalled child with a stalled grandchild, killed as a group
+      set +e
+      bounded 3 bash -c 'echo $$ > "$1"; sleep 600 & echo $! >> "$1"; wait' _ "$W/stall-pids.txt"
+      st=$?
+      set -e
+      deadline "$st" || fail "DRY: the deadline did not stop a stalled child (exit $st)"
+      sleep 1
+      for p in $(cat "$W/stall-pids.txt"); do
+        ! kill -0 "$p" 2> /dev/null || fail "DRY: process $p outlived the deadline"
+      done
+      echo "DRY: a stalled child and its grandchild were killed at the deadline (exit $st)" | tee "$W/stall-check.txt"
+    fi
+    bash bench/corpus.sh
+    lscpu > "$W/lscpu.txt"
+    # where the run may execute: the harness pins nothing, so every thread inherits this. At
+    # t workers a cell is t + 2 threads (the workers, the finder or scanner, and the caller,
+    # which is the joiner): 10 workers are 12 threads sharing these CPUs
+    {
+      echo "nproc $(nproc)"
+      echo "shell affinity: $(taskset -cp $$ 2> /dev/null || grep Cpus_allowed_list /proc/self/status)"
+      grep -E '^Cpus_allowed_list' /proc/self/status
+      echo "cgroup cpu.max: $(cat /sys/fs/cgroup/cpu.max 2> /dev/null || echo none)"
+      lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE 2> /dev/null || true
+    } > "$W/placement.txt"
+    cat /proc/loadavg > "$W/loadavg-before.txt"
+    cargo build --release --example par_scan --example ab
+    P=target/release/examples/par_scan
+    # failure propagation: a panic at each role of each arm ends the decode, never hangs it
+    set +e
+    bounded 300 "$P" - faults > "$W/faults.txt" 2>&1
+    st=$?
+    set -e
+    cat "$W/faults.txt"
+    deadline "$st" && { outcome="INVALID: the fault tests passed their deadline (faults.txt)"; exit 1; }
+    [ "$st" -eq 0 ] || { outcome="INVALID: the fault tests failed (faults.txt)"; exit 1; }
+    # the inputs: the corpus; its bytes at level 1 (Python's bz2, libbzip2); the crate's
+    # records. Each with a decoded size recorded apart from the run, and checked against
+    # libbzip2's decode: the manifest's for the corpus and the level-1 file, whose decode must
+    # also have the corpus's decoded SHA-256; the generator's for the records
+    I=$W/inputs
+    mkdir "$I"
+    bounded 600 target/release/examples/ab gen "$I/gen" 8 > "$W/gen.txt" 2>&1 || fail "ab gen failed (gen.txt)"
+    bounded 900 python3 bench/par_scan_inputs.py bench/wikidata.json corpora/wikidata.bz2 \
+      "$W/gen.txt" "$I/gen/records.bz2" "$I" > "$W/inputs.json" || fail "the inputs are not as recorded (console.log)"
+    cat "$W/inputs.json"
+    expected() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["inputs"][sys.argv[2]]["expected_bytes"])' "$W/inputs.json" "$1"; }
+    readings=""
+    for name in wikidata wikidata-l1 records; do
+      # every arm's bytes equal to mibz2::decode's, and those to libbzip2's, or nothing is
+      # timed (and the warm-up)
+      set +e
+      bounded 900 "$P" "$I/$name.bz2" check > "$W/check-$name.txt" 2>&1
+      st=$?
+      set -e
+      if [ "$st" -ne 0 ]; then
+        tail -5 "$W/check-$name.txt"
+        if deadline "$st"; then outcome="INVALID: the check on $name passed its deadline (check-$name.txt)"
+        else outcome="INVALID: the harness's bytes differ from mibz2::decode's or libbzip2's on $name (check-$name.txt)"; fi
+        exit 1
+      fi
+      set +e
+      bounded 1800 "$P" "$I/$name.bz2" knee "$ROUNDS" "$WORKERS" > "$W/runs-$name.jsonl" 2> "$W/harness-$name.log"
+      st=$?
+      set -e
+      if [ "$st" -ne 0 ]; then
+        tail -5 "$W/harness-$name.log"
+        if deadline "$st"; then outcome="INVALID: the harness passed its deadline on $name (harness-$name.log)"
+        else outcome="INVALID: the harness failed on $name (harness-$name.log)"; fi
+        exit 1
+      fi
+      if ! python3 bench/par_scan_knee.py "$W/runs-$name.jsonl" "$ROUNDS" "$WORKERS" "$W/report-$name.json" "$(expected "$name")" > "$W/summary-$name.md"; then
+        outcome="INVALID: runs-$name.jsonl is not the registered grid, or not the expected size"
+        exit 1
+      fi
+      echo "## $name"; cat "$W/summary-$name.md"
+      readings="$readings $name: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["reading"].split(":")[0])' "$W/report-$name.json");"
+    done
+    cat /proc/loadavg > "$W/loadavg-after.txt"
+    if [ -n "$dry" ]; then
+      outcome="DRY: the recipe ran end to end, one round, untimed; not evidence;$readings"
+    else
+      outcome="VALID:$readings"
+    fi
