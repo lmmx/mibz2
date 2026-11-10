@@ -1,0 +1,75 @@
+{
+  "source_pin": "b23897e89a292221836685eab0f1c8ce944802d2",
+  "hashes": {
+    "agg3.c": "a0e6b030d4bd413140ae2edc1b0309da8b64618126269d3a6a0a0d932d190a63",
+    "test_agg3.sh": "4949ad570621d537fe41093c0e4e339a8f603544286c76d4977dfdac3c1dc7a0"
+  },
+  "oracle_traces": [
+    {
+      "seed": 0,
+      "events": 1205,
+      "pair_rows": 323,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 1,
+      "events": 1205,
+      "pair_rows": 322,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 2,
+      "events": 1205,
+      "pair_rows": 321,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 3,
+      "events": 1205,
+      "pair_rows": 321,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 4,
+      "events": 1205,
+      "pair_rows": 321,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 5,
+      "events": 1205,
+      "pair_rows": 322,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 6,
+      "events": 1205,
+      "pair_rows": 320,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    },
+    {
+      "seed": 7,
+      "events": 1205,
+      "pair_rows": 321,
+      "oracle": "PASS",
+      "legacy": "byte-identical"
+    }
+  ],
+  "historical_class_counts": {
+    "sc-master-rand-0.txt": 13829,
+    "sc-head-rand-0.txt": 56154
+  },
+  "historical_excess_per_byte": 0.0475561797752809,
+  "rounded_reference": 0.0476,
+  "E2_loads": 380800,
+  "integer_named_contrast_lower_bound": 180379,
+  "if_named_hi_zero_lower_bound": 190400,
+  "inclusion_exclusion_cases": 178965
+}
