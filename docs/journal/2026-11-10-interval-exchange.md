@@ -79,11 +79,11 @@ steps** are piece-steps at every level plus the top map's returns; the row walk 
 | build | n writes | r writes, from #324's run records as they arrive |
 | dependent steps | n | about 2.7 r: 0.19 n on Wikidata |
 | the rest | — | copies of return words: 1.7–2.6 n bytes, sequential |
-| a worker's live set | 3.6 MB table and its buffers | under 1 MB on Wikidata |
+| a worker's live set | 3.6 MB table and its buffers | 2.4 MB in the first prototype (§5a): the words held at every level are most of it |
 
-**Where it wins (projected, not timed):** inputs of few runs a row. Wikidata is the primary
-corpus and has 0.07. A live set under 1 MB is the share-nothing regime the i9's level-2 run
-showed scaling in.
+**Where it wins:** inputs of few runs a row. §5a has the first clock: it wins by 14× on the
+Thue–Morse word and loses by 1.25× on Wikidata, whose 0.07 runs a row leave only a factor of
+five in steps to pay for a dearer step.
 
 **Where it does not:** `text` (0.81 n steps, each dearer than a row step) and high-entropy
 data. They keep the row walk. The choice is by runs a row, known when the front ends.
@@ -102,6 +102,36 @@ data. They keep the row walk. The choice is by runs a row, known when the front 
    mispredictions are the event cost that sank the copy walk.
 4. **Prior art.** If this is a known inversion algorithm, the claim of novelty goes and the
    numbers stay.
+
+## 5a. The first clock: falsifier 1 fires on Wikidata, in this construction
+
+`examples/iet_engine.rs`: the tower as a decoder, from a block's runs to its bytes, against
+`bwt::build` plus `bwt::walk_segments_room` on the same blocks. One thread, the fastest of 5
+rounds a block, this container (indicative only; its L2 holds the whole n-entry table, so the
+row walk is at its best here). Bytes compared on every block.
+
+| input | build + walk, ns a row | engine, ns a row | engine ÷ walk |
+|---|--:|--:|--:|
+| Thue–Morse, 8 × 3 | 2.15–2.52 | 0.146–0.185 | **0.07** |
+| `wikidata`, 8 × 2 | 2.33–2.65 | 2.94–3.32 | **1.25** |
+| `wikidata`, 8 × 1 / 8 × 3 / 4 × 2 | 2.35–2.38 | 3.57 / 3.02 / 3.36 | 1.50 / 1.29 / 1.42 |
+| `text`, 8 × 1 | 3.39 | 23.4 | 6.9 |
+
+- **Where Wikidata's 2.95 ns go** (8 × 2, a mean over rounds): the base map 0.48; the first
+  induction 1.71; the second 0.67; the orbit 0.20; the reversal 0.08.
+- **The step's price:** the first induction takes 0.131 n piece-steps: 13 ns a step, about 5.5
+  row-steps' worth of the production path. §5's threshold was 5.
+- **Why, in this construction:** the induction is one dependent chain. Each step is a lookup
+  in the run map (two loads and a popcount), then the run's record, and the next step
+  waits on it. The room walk runs 32 such chains at once; this runs one. The pieces on the
+  stack are independent of each other; only the shared path buffer makes them sequential.
+- **What this closes:** this construction (a depth-first induction with one shared path) on
+  inputs of 0.07 runs a row. **Not the proposition:** the step count stands, and a kernel that
+  advances many pieces at once is the construction that removes the cost named. It needs each
+  piece to own its fragment of the word (a trie of fragments, joined when a leaf returns).
+- **The live set is 2.4 MB, not the 0.4 MB of §4's table alone:** the words held at each level.
+- **On the Thue–Morse word the whole inverse BWT stage runs at 0.146 ns a row,** and most of
+  that is the final copy and reversal.
 
 ## 6. Next
 
