@@ -9,7 +9,7 @@
 Codex is an **implementation delegate** for one scoped production change, not a successor or stand-in to MONODROMY, the Pathfinder, or the Coordinator. The model that runs it does not determine a role's identity or authority.
 
 - **Louis:** directs the pilot and authorises its scope. His workstation access, spending, infrastructure changes and role/rule changes remain his.
-- **Existing Coordinator:** retains priority, merge, release and trade-off decisions according to the live rules. A paused Coordinator has not delegated those powers to Codex or ChatGPT Work.
+- **Existing Coordinator:** retains priority, merge, release and trade-off decisions according to the live rules. Louis may appoint ChatGPT Work to **operate that existing role** during an outage, using the explicit [failover procedure](COORDINATOR-FAILOVER.md); Codex never inherits those powers.
 - **MONODROMY:** owns the frontier mathematical research programme, proofs, hypotheses, and original cells construction. Codex may report errors or counterexamples, not silently rewrite the research record or speak as MONODROMY.
 - **Pathfinder:** owns architectural and product-performance leadership. Codex may point to implementation issues without assuming that identity.
 - **Independent reviewers:** B5 soundness and memory-safety checks are a hard condition for new unsafe code. Codex cannot certify its own work as independently reviewed.
@@ -45,7 +45,7 @@ The [i9 cells-vs-production log](https://github.com/lmmx/mibz2/pull/145#issuecom
 
 1. Start from the current master on a **fresh, isolated branch**, not PR #362's branch. Keep the change small; open a reviewable implementation PR.
 2. Record findings and checkpoints on **that implementation PR**; link it to [the manual inbox #363](https://github.com/lmmx/mibz2/issues/363). A status message or green CI is not a merge decision.
-3. Leave **slice one off by default**. Do not merge, release, spend/dispatch hardware jobs, edit a team role's cursor/state branch, or post messages masquerading as the Coordinator/Guardian/MONODROMY.
+3. Leave **slice one off by default**. Do not merge, release, spend/dispatch hardware jobs, edit **another** role's cursor/state branch, or post messages masquerading as the Coordinator/Guardian/MONODROMY. After a genuinely completed routed assignment, update only `team-state/codex:state/cursor.json` and report `FROM: codex`, `TYPE: REVIEW` on #145 as the relay guide specifies.
 4. If a blocker is genuine, preserve a reproducible example, specific files/lines, and a safe partial PR rather than substituting speculative code. Mark open items as open.
 5. The **second PR** to flip the default is a separate, later decision under the Coordinator's gate in #145 comment 6775049636, including an i9 one-build A/B and performance/RSS constraints.
 
