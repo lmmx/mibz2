@@ -1064,11 +1064,21 @@
     {
       "comment_id": 6759983287,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Verified bundle SHA-256; replayed 732 slot/run identities, excluded warmup, reproduced CPU growth1.183382/3.261240. Old production load-law transfer predicts1.068/6.462 (small-load flat extension); table-only causal share unidentifiable.",
-      "report_path": "state/records/reviews/inbox-6759983287/report.md"
+      "progress": "Archive replay and complete repricing report committed; awaiting REVIEW.",
+      "report_path": "state/records/reviews/inbox-6759983287/report.md",
+      "report_commit": "39c1cd79ffb1f14124aae0a0fb7df8d7c1bcfb21",
+      "audit_scope": {
+        "new_timing": false,
+        "implementation": false,
+        "compilation": false,
+        "archive_sha256_verified": true,
+        "slot_rows": 732,
+        "grid_rows_after_warmup": 600,
+        "full_judge_replay": false
+      }
     }
   ],
   "migrated_from": {
