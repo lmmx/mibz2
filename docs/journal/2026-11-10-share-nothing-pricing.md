@@ -110,7 +110,7 @@ Otherwise the attempt is **REFUSED**, archived, exit 4. A DRY check records the 
 
 ### The bounds
 
-Every step that can wait runs under `bench/bounded.py` (as on #317 at efc1bd88): a process group
+Every step that can wait runs under `bench/bounded.py` (master's, merged with #317): a process group
 of its own, TERM at the deadline, KILL after the grace, then checked empty.
 
 | step | deadline, grace (s) |
@@ -127,7 +127,7 @@ of its own, TERM at the deadline, KILL after the grace, then checked empty.
 - **A slot that fails or passes its deadline** stops the drive there. It is recorded, never
   retried, and the attempt is INVALID.
 - **A group that cannot be emptied** (exit 125) makes the attempt INVALID.
-- **Finalisation** (`bench/par_scan_finish.sh`, #317's): the outcome is written, then the bundle
+- **Finalisation** (`bench/par_scan_finish.sh`, master's, from #317): the outcome is written, then the bundle
   runs under its deadline. If it fails or is late, the outcome is rewritten INVALID, the
   `.tar.gz` is renamed `.failed`, and nothing is left for `just submit` (exit 2). It cannot leave
   VALID after a bundling failure.
