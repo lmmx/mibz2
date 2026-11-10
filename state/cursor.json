@@ -2812,6 +2812,13 @@
       "review_comment_id": 6757058587,
       "complete_cursor_commit": "8013d01ab7d1a7bdb50746c0b8db8cb3da0c4b31",
       "progress": "Exact REVIEW readback verified; pinned verifier coordinator-only FROM limitation; independent Guardian checks pass."
+    },
+    {
+      "comment_id": 6757176848,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D080",
+      "progress": "Receipt; assessing default-neutral pool-wait arms."
     }
   ],
   "migrated_from": {
