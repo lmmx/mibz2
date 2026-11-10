@@ -1045,10 +1045,10 @@
     {
       "comment_id": 6759587407,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Work complete and committed; awaiting deduplicated REVIEW publication.",
+      "progress": "Completed report published; exact REVIEW author, destination and body read back. No further work on this inbox item.",
       "report_path": "state/records/reviews/inbox-6759587407/report.md",
       "report_commit": "976e1478af5e480c3c11f233e6eb4ac60e8d8154",
       "audit_scope": {
@@ -1057,7 +1057,9 @@
         "new_timing": false,
         "checker_only_execution": true,
         "raw_callgrind_replay": false
-      }
+      },
+      "reply_id": 6759713909,
+      "routing_verification": "route/check passed. Exact readback verified. Pinned verify rejects FROM optimizer because it hardcodes coordinator; no verify-pass claimed."
     }
   ],
   "migrated_from": {
