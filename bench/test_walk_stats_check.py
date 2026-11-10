@@ -122,6 +122,83 @@ class Check(unittest.TestCase):
         self.assertEqual(verdict, "NOT ENGAGED")
         self.assertFalse(preds["a"][0])
 
+    def test_helpers_absent_from_a_t_block(self):
+        """The Researcher's counterexample (REVIEW 6763089509 item 3, probes.py at
+        07b453d1): two T blocks, the first with the leader only (no share, no helper call,
+        built 0), the second with both helpers. The team-wide roster held and (a)-(d) all
+        held; the per-block roster must call it INVALID"""
+        classes = {0: "T", 1: "T"}
+
+        def call(b, h):
+            return dict(
+                kind="call",
+                team=0,
+                block=b,
+                thread=h,
+                role="leader" if h == 0 else "helper",
+                walker="traverse",
+                takes=1,
+                exhausts=1,
+                bytes=1,
+                tail=0,
+                fragments=0,
+                copied=0,
+            )
+
+        rows = [
+            call(0, 0),
+            dict(
+                kind="summary",
+                team=0,
+                block=0,
+                rows=1,
+                starts=1,
+                seg_bytes=1,
+                entered=1,
+                joined=True,
+                built=0,
+            ),
+        ]
+        for h in (1, 2):
+            rows += [call(1, h), dict(kind="share", team=0, block=1, thread=h)]
+        rows.append(
+            dict(
+                kind="summary",
+                team=0,
+                block=1,
+                rows=2,
+                starts=2,
+                seg_bytes=2,
+                entered=6,
+                joined=False,
+                built=6,
+            )
+        )
+        by, bad = wc.validate(lines(rows), classes, 2)
+        self.assertTrue(any("block 0: built set 0" in x for x in bad), bad)
+        self.assertTrue(any("block 0: share records from []" in x for x in bad), bad)
+        # the second block alone is correct: the check names only the first
+        self.assertFalse(any("block 1" in x for x in bad), bad)
+
+    def test_one_helper_absent_from_a_t_block(self):
+        r = ledger()
+        del r[find(r, kind="share", block=4, thread=2)]
+        del r[find(r, kind="call", block=4, thread=2)]
+        s = find(r, kind="summary", block=4)
+        r[s]["built"] = 0b010
+        r[s]["entered"] &= ~(1 << 2)
+        r[s]["starts"] -= 4
+        r[s]["seg_bytes"] -= 400
+        r[s]["rows"] -= 400
+        verdict, bad = run(r)
+        self.assertEqual(verdict, "INVALID")
+        self.assertTrue(any("block 4: built set 10" in x for x in bad), bad)
+
+    def test_zero_work_calls_reported(self):
+        verdict, preds = run(ledger())
+        self.assertEqual(verdict, "ENGAGED")
+        self.assertIn("1 zero-work helper calls", preds["a"][1])
+
     def test_duplicate_record(self):
         r = ledger()
         r.append(copy.deepcopy(r[find(r, kind="call", block=1, thread=1)]))
