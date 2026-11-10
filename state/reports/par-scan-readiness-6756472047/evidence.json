@@ -1,0 +1,315 @@
+{
+  "assignment": 6756472047,
+  "source": "665b3bde86443cf802dfd6c5c54260004ce1e08d",
+  "ready": "bfe53a2a235a7e31dedaef715fe34d656597bec9",
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06",
+    "verified": true
+  },
+  "audit_since": 6755860962,
+  "audit_findings": [],
+  "compare_files": [
+    {
+      "sha": "9820f31fef5e4e6afa25b1de16a7f08adb70290d",
+      "filename": "bench/par-scan.frozen",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/bfe53a2a235a7e31dedaef715fe34d656597bec9/bench%2Fpar-scan.frozen",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/bfe53a2a235a7e31dedaef715fe34d656597bec9/bench%2Fpar-scan.frozen",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/bench%2Fpar-scan.frozen?ref=bfe53a2a235a7e31dedaef715fe34d656597bec9",
+      "patch": "@@ -2,4 +2,4 @@\n # The commit the registration, the harness and the recipe are frozen at: just\n # bench-par-scan's measured inputs must match it exactly. Re-frozen if review changes them,\n # before any run.\n-frozen 0fe3e875af9161eb418e3de20d2685c5b4049cae\n+frozen 665b3bde86443cf802dfd6c5c54260004ce1e08d"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566751813"
+    },
+    {
+      "name": "python (3.14)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566088032"
+    },
+    {
+      "name": "python (3.10)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566088014"
+    },
+    {
+      "name": "python (3.12)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566088005"
+    },
+    {
+      "name": "python (3.11)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566087983"
+    },
+    {
+      "name": "python (3.13)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566087970"
+    },
+    {
+      "name": "python (3.15)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566087927"
+    },
+    {
+      "name": "Publish crate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566078691"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566077102"
+    },
+    {
+      "name": "sdist",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566077061"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566077024"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566077005"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566076986"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566076970"
+    },
+    {
+      "name": "check-commit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232818/job/129566041813"
+    },
+    {
+      "name": "bench",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232698/job/129566041355"
+    },
+    {
+      "name": "occupancy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232309/job/129566036887"
+    },
+    {
+      "name": "get-python-versions",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036832"
+    },
+    {
+      "name": "rust",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036793"
+    },
+    {
+      "name": "submit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036720"
+    },
+    {
+      "name": "typing",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036683"
+    },
+    {
+      "name": "fuzz-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036325"
+    }
+  ],
+  "rust_job": [
+    {
+      "id": 129566036793,
+      "run_id": 42736232314,
+      "workflow_name": "Test",
+      "head_branch": "diag/par-scan-ready",
+      "run_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42736232314",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOVZCza88AAAAeKrzTOQ",
+      "head_sha": "bfe53a2a235a7e31dedaef715fe34d656597bec9",
+      "url": "https://api.github.com/repos/lmmx/mibz2/actions/jobs/129566036793",
+      "html_url": "https://github.com/lmmx/mibz2/actions/runs/42736232314/job/129566036793",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-10T01:30:18Z",
+      "started_at": "2026-11-10T01:30:20Z",
+      "completed_at": "2026-11-10T01:33:54Z",
+      "name": "rust",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-10T01:30:20Z",
+          "completed_at": "2026-11-10T01:30:22Z"
+        },
+        {
+          "name": "Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-10T01:30:22Z",
+          "completed_at": "2026-11-10T01:30:25Z"
+        },
+        {
+          "name": "Run dtolnay/rust-toolchain@stable",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-10T01:30:25Z",
+          "completed_at": "2026-11-10T01:30:26Z"
+        },
+        {
+          "name": "Run Swatinem/rust-cache@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-10T01:30:26Z",
+          "completed_at": "2026-11-10T01:30:29Z"
+        },
+        {
+          "name": "Format",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-10T01:30:29Z",
+          "completed_at": "2026-11-10T01:30:30Z"
+        },
+        {
+          "name": "Clippy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-10T01:30:30Z",
+          "completed_at": "2026-11-10T01:30:35Z"
+        },
+        {
+          "name": "Tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-10T01:30:35Z",
+          "completed_at": "2026-11-10T01:33:44Z"
+        },
+        {
+          "name": "Harness tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-10T01:33:44Z",
+          "completed_at": "2026-11-10T01:33:47Z"
+        },
+        {
+          "name": "The scan harness's fault and finder tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-10T01:33:47Z",
+          "completed_at": "2026-11-10T01:33:49Z"
+        },
+        {
+          "name": "The benchmark alternatives' lock",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-10T01:33:49Z",
+          "completed_at": "2026-11-10T01:33:51Z"
+        },
+        {
+          "name": "Post Run Swatinem/rust-cache@v2",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-10T01:33:51Z",
+          "completed_at": "2026-11-10T01:33:51Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-10T01:33:51Z",
+          "completed_at": "2026-11-10T01:33:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-10T01:33:51Z",
+          "completed_at": "2026-11-10T01:33:51Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/lmmx/mibz2/check-runs/129566036793",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000077740,
+      "runner_name": "GitHub Actions 1000077740",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ],
+  "local_tests": {
+    "count": 7,
+    "method": "direct test functions with fixture adapter; pytest absent",
+    "passed": true
+  },
+  "deadline_probe": [
+    {
+      "ignores_term": false,
+      "exit": 124,
+      "grandchild_alive": false
+    },
+    {
+      "ignores_term": true,
+      "exit": 124,
+      "grandchild_alive": true
+    }
+  ],
+  "native_rust_replay": false
+}
