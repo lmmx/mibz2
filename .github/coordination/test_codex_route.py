@@ -14,6 +14,10 @@ coord = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(coord)
 
 assert coord.ROLES["codex"]["inbox"] == 363
+# Adding a fresh inbox must not re-audit old channel traffic.
+assert coord.ROLES["codex"]["offset"] > coord.CUTOVER
+assert coord.CUTOVER == min(r["offset"] for r in coord.ROLES.values())
+assert coord.CUTOVER >= 6646249200
 assert coord.ROLES["codex"]["cursor"] == ("team-state/codex", "state/cursor.json")
 assert coord.canonical("codex") == "codex"
 assert coord.roles_named("codex") == ["codex"]
