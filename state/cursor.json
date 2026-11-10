@@ -987,7 +987,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: migration verified. Price compact30 plain-worker test and load-law transfer; decide separate recipe versus #326, preserving D4 filters.",
+      "progress": "Checkpoint: g=1.18 is cross-host CI inference, not measured target build+walk; X includes build congestion. Separate diagnostic preferred; D4 filters preserved. Full report and archived-grid replay in progress.",
       "report_path": "state/records/reviews/inbox-6758723399/report.md"
     }
   ],
