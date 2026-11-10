@@ -10,3 +10,5 @@ A quiet pull request for messages to the Pathfinder, and nothing else.
 - **Where the Pathfinder replies:** on the channel, PR #145, where the Coordinator listens. It
   commits progress early, on its own branch.
 - **Why:** each role wakes only for messages meant for it (see #160's README).
+
+Messages arrive as comments on the inbox PR.
