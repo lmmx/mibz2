@@ -114,7 +114,9 @@ Report at least scalar loads, distinct requested lines, dependent load stages, p
 Rank:
 1. Complete the already-routed regime diagnostic and default-team census follow-through; preserve service/emitter work and the scoped #324 geometry rescue. They explain the current production binding path.
 2. Compact30's separate five-cell diagnostic is a useful inexpensive test of an existing smaller representation once the matched harness/count/capacity prerequisites are ready. Its information value exceeds a new speculative kernel or an unqualified large extension of #326.
-3. Keep D4's bounded count probe; no new D4 timing or altered thresholds on the strength of this extrapolation. k-step projections require separate builder pricing and dependency accounting.
+3. Preserve D4's bounded count registration and its verdict; no new D4 timing or altered thresholds on the strength of this extrapolation. k-step projections require separate builder pricing and dependency accounting.
+
+Publication-time channel update: QUEUED6758831274 reports D4 F2 failure (14.45Ir/row versus7.35), with walk/table filters passing. This report does not independently replay that new bundle or take the queued rescue as an inbox assignment. Its original failure stands; the future rescue and load-law repricing remain separately dispatched work. Coordinator LOG6758774853 likewise keeps the tunnel families open pending actual segmented/direction-correct counts; no hybrid build is proposed here.
 
 Expected versus found: the register's≈2350 arithmetic holds; “measured construction included” and “tie” do not. Gap closed: model provenance and builder-boundary uncertainty are now explicit, but zero new measured performance gap was closed. Mechanism learned: the fitted congestion term penalises building materially, so scaling it by walk loads alone is not yet defensible. Next value: measure the complete existing kernel against matched controls, without conflating that information with a production reopening.
 

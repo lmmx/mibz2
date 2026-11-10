@@ -521,3 +521,5 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 - Separate diagnostic preferred. #326 adding five level9 cells costs305 slots(+41.7%), both levels610(+83.3%); still lacks1/7 anchors. Five-cell P1/C1/P7/C7/team9 pilot proposed, not frozen; full p-grid transfer test11 cells. Common harness adapter required, no new kernel by this role.
 - D4 walk15Ir/outputbyte, build7.35Ir/row,1.2MB filters unchanged. #195FAIL and production reopening restriction retained. Regime/default-team census and service/emitter/geometry work retain priority; compact30 small diagnostic is information, not adoption.
 - No implementation, compilation, new timing or safety certification. Zero new measured performance credit.
+
+Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle not replayed here, rescue awaits inbox dispatch. No relaxing/reopening. Tunnel families remain open pending actual coverage per6758774853; outside this brief.
