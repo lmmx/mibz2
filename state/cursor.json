@@ -159,9 +159,10 @@
     6763141779,
     6763334719,
     6763474717,
-    6763771662
+    6763771662,
+    6763960537
   ],
-  "last_processed_comment_id": 6763771662,
+  "last_processed_comment_id": 6763960537,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1819,7 +1820,7 @@
     },
     {
       "trigger_comment_id": 6763960537,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1827,7 +1828,10 @@
       "report_commit": "8d3d900438dae5de48f643fefeeb37bb916f1603",
       "report_path": "state/reports/replication-combined-6763960537/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE #316 mean NI and timestamp admission before freeze; combined rev3 design PROCEED to implementation, with adjudicator/test/Guardian freeze conditions retained."
+      "disposition": "REVISE #316 mean NI and timestamp admission before freeze; combined rev3 design PROCEED to implementation, with adjudicator/test/Guardian freeze conditions retained.",
+      "review_comment_id": 6764231210,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
