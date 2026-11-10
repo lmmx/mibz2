@@ -1729,11 +1729,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6759768735,
-    "status": "finished",
-    "decision": "D085",
-    "work_commit": "bb43afdccbee1c35c13002a0de4274507eba0869",
-    "review_comment_id": 6759863881
+    "active_comment": 6759990077,
+    "status": "in progress",
+    "decision": "D086"
   },
   "duplicate_events": [
     {
@@ -3021,6 +3019,13 @@
       "progress": "Work complete; awaiting REVIEW. Cursor persistence defect corrected: intended D085 receipt did not append, and work commit incorrectly overwrote D084 receipt reference. D084 original reference restored; D085 state recorded explicitly without claiming the initial receipt was valid. Exact REVIEW readback verified on #145; pinned verifier fails only its coordinator-specific FROM check; independent Guardian header/body/destination checks pass.",
       "review_comment_id": 6759863881,
       "complete_cursor_commit": "68fb0a3b31c48d664aee9837614f23fc8f71d9ff"
+    },
+    {
+      "comment_id": 6759990077,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D086",
+      "progress": "Receipt; assessing prospective layout contract against D082."
     }
   ],
   "migrated_from": {
