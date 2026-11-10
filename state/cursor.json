@@ -65,9 +65,10 @@
       "planned_action": "Advisory checkpoint of new legacy CI failure; no dispatch",
       "delivery_id": "9b99d590-dd48-11f1-94db-6b0a11d0c478",
       "disposition": "Corrected head and committed handoff verified. Six Actions in progress; legacy pre-commit failure. Failure log unavailable through reader; class D/unexplained, not presumed infrastructure. Independent B5 retained. #364 unmerged; no dispatch.",
-      "log_publication": "pending",
+      "log_publication": "published",
       "log_dedup_key": "corrected-head-6778961765",
-      "comment_updated_at": null
+      "comment_updated_at": null,
+      "log_comment_id": 6778995031
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -95,7 +96,8 @@
   "own_comment_ids": [
     6777025573,
     6777379237,
-    6778716882
+    6778716882,
+    6778995031
   ],
   "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
   "event_execution_verified": true,
