@@ -1835,11 +1835,16 @@
     },
     {
       "trigger_comment_id": 6767025138,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "scope": "Primary literature dossier supporting MONODROMY; delivery through #145 per pinned authority"
+      "scope": "Primary literature dossier supporting MONODROMY; delivery through #145 per pinned authority",
+      "source_commit": "149307d6c20868a18edf9d835c30ca213a54ec6e",
+      "report_commit": "79b50c1a3d58d667d2f44f990099acbe8fcfdd5b",
+      "report_path": "state/reports/rauzy-literature-6767025138/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Literature dossier: correct Erickson–Nayyeri quadratic theorem attribution; separate move-query, construction and expansion costs; route via Coordinator on #145."
     }
   ],
   "active_delegations": [],
