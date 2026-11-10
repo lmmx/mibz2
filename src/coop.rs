@@ -21,7 +21,9 @@
 //! - **Waiting is a short spin, then `park`.** Helpers between runs, and the caller waiting
 //!   for them, spin briefly and then park, and are unparked by the event they wait for. An
 //!   unpark that comes before the park makes the park return at once, so no wake-up is
-//!   lost.
+//!   lost. The spin budget is the pool's, fixed when it is made: `SPINS` for every pool the
+//!   default decoder makes; a research arm's pool (`Pool::pipelined_with`, selected only by
+//!   `parallel::Levers::pool`) may spin less, 0 included, through the same park protocol.
 //!
 //! The memory ordering: the task is published under a mutex and the epoch advanced with
 //! `Release`; helpers load the epoch with `Acquire`. Each helper's writes are released by
@@ -45,7 +47,7 @@ const SHUTDOWN: usize = usize::MAX;
 
 /// Spins before a wait parks: a pool's next run is usually microseconds away, a block's
 /// MTF stage (about 0.4 ms) apart. Miri interprets each spin, so it parks almost at once.
-const SPINS: u32 = if cfg!(miri) { 4 } else { 2_000 };
+pub(crate) const SPINS: u32 = if cfg!(miri) { 4 } else { 2_000 };
 
 /// The waits' accounting (feature `wait-stats`, off by default; research only): per wait
 /// site, the waits, the spins, the parks and the yields, as counts, never times, for
@@ -105,6 +107,10 @@ pub mod wait_stats {
         pub parks: u64,
         /// the `yield_now` calls
         pub yields: u64,
+        /// the `unpark` calls aimed at this site's waiters, by the threads they wait on
+        /// (counted at the pool's two sites; the walk's sites keep 0: their unparks are
+        /// not attributed to a site)
+        pub wakes: u64,
     }
 
     /// One wait's tally, kept on the waiter's stack and added to its site's counts once,
@@ -122,7 +128,7 @@ pub mod wait_stats {
         use super::{Counts, Site, Tally};
         use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 
-        const FIELDS: usize = 9;
+        const FIELDS: usize = 10;
         #[allow(clippy::declare_interior_mutable_const)]
         const Z: AtomicU64 = AtomicU64::new(0);
         #[allow(clippy::declare_interior_mutable_const)]
@@ -159,6 +165,7 @@ pub mod wait_stats {
                     if slept { self.spins } else { 0 },
                     self.parks,
                     self.yields,
+                    0,
                 ];
                 for (a, v) in c.iter().zip(add) {
                     if v != 0 {
@@ -181,7 +188,12 @@ pub mod wait_stats {
                 spins_wasted: v(6),
                 parks: v(7),
                 yields: v(8),
+                wakes: v(9),
             }
+        }
+
+        pub(crate) fn wake(site: Site) {
+            COUNTS[site as usize][9].fetch_add(1, Relaxed);
         }
 
         pub(super) fn reset() {
@@ -213,6 +225,15 @@ pub mod wait_stats {
         pub(crate) fn end(self, _site: Site) {}
     }
 
+    /// An unpark aimed at `site`'s waiters, counted (with the feature; else nothing)
+    #[inline(always)]
+    pub(crate) fn wake(site: Site) {
+        #[cfg(feature = "wait-stats")]
+        imp::wake(site);
+        #[cfg(not(feature = "wait-stats"))]
+        let _ = site;
+    }
+
     /// Whether the counts are kept (the feature `wait-stats`)
     pub const ENABLED: bool = cfg!(feature = "wait-stats");
 
@@ -233,7 +254,7 @@ pub mod wait_stats {
         imp::reset();
     }
 }
-use wait_stats::{Site, Tally};
+use wait_stats::{wake, Site, Tally};
 
 /// The task's fat pointer, its lifetime erased; it is called only inside the run that
 /// posted it (the guard in `run`)
@@ -253,6 +274,27 @@ struct Shared {
     panic: Mutex<Option<Box<dyn Any + Send>>>,
     /// the thread waiting in `run`, for the last helper to unpark
     caller: Mutex<Option<Thread>>,
+    /// the spin budget of the pool's two waits (a helper's between runs, the caller's for
+    /// its helpers), fixed when the pool is made: a wait spins while its count of checks is
+    /// below it, then parks. `SPINS` for every pool but a research arm's
+    spins: u32,
+    /// testing only: a deliberately broken publication, the lost-wakeup tests' negative
+    /// control (`Broken`); `Broken::No` everywhere else
+    #[cfg(test)]
+    broken: Broken,
+}
+
+/// Testing only: a deliberately broken publication (`Shared::broken`), each with its race
+/// window widened by a short sleep so the tests that must catch it see it every time
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Broken {
+    /// the protocol as it is
+    No,
+    /// `run` unparks the helpers before it publishes the run's epoch
+    UnparkBeforeEpoch,
+    /// a helper unparks the caller before it counts itself `done`
+    UnparkBeforeDone,
 }
 
 /// A lock that ignores poisoning: nothing is held across a call that could panic, but a
@@ -277,18 +319,44 @@ impl Pool {
     /// A pool of `k` threads (`k` − 1 spawned; `k` of 0 is taken as 1). A helper that
     /// can't be spawned makes this an error, with those spawned before it shut down.
     pub(crate) fn new(k: usize) -> std::io::Result<Pool> {
-        Self::named(k, HELPER)
+        Self::named(k, HELPER, SPINS)
     }
 
     /// `new`, for a pipelined team (`parallel::StreamDecoder::pipelined`): its helpers are
     /// named `PIPELINED_HELPER` and a number, so an observer of the threads' names (`ab`'s
     /// census and `thread_cpu`) can tell a pipelined team from a plain one. Both names start
     /// `mibz2-coop`, so whatever counts helpers by that prefix counts both.
+    #[cfg(test)]
     pub(crate) fn pipelined(k: usize) -> std::io::Result<Pool> {
-        Self::named(k, PIPELINED_HELPER)
+        Self::pipelined_with(k, SPINS)
     }
 
-    fn named(k: usize, prefix: &str) -> std::io::Result<Pool> {
+    /// `pipelined`, its two waits' spin budget `spins` (`Shared::spins`): `SPINS` for the
+    /// default decoder's teams, another only for a research arm (`parallel::Levers::pool`)
+    pub(crate) fn pipelined_with(k: usize, spins: u32) -> std::io::Result<Pool> {
+        Self::named(k, PIPELINED_HELPER, spins)
+    }
+
+    /// Testing: a plain pool whose waits spin `spins` (the lost-wakeup tests), its
+    /// publication broken as `broken` says
+    #[cfg(test)]
+    pub(crate) fn tested(k: usize, spins: u32, broken: Broken) -> std::io::Result<Pool> {
+        Self::make(k, HELPER, spins, broken)
+    }
+
+    fn named(k: usize, prefix: &str, spins: u32) -> std::io::Result<Pool> {
+        #[cfg(test)]
+        return Self::make(k, prefix, spins, Broken::No);
+        #[cfg(not(test))]
+        Self::make(k, prefix, spins)
+    }
+
+    fn make(
+        k: usize,
+        prefix: &str,
+        spins: u32,
+        #[cfg(test)] broken: Broken,
+    ) -> std::io::Result<Pool> {
         let k = k.max(1);
         let shared = Arc::new(Shared {
             epoch: AtomicUsize::new(0),
@@ -296,6 +364,9 @@ impl Pool {
             task: Mutex::new(None),
             panic: Mutex::new(None),
             caller: Mutex::new(None),
+            spins,
+            #[cfg(test)]
+            broken,
         });
         let mut pool = Pool {
             k: 1,
@@ -341,9 +412,25 @@ impl Pool {
         *lock(&s.caller) = Some(thread::current());
         *lock(&s.task) = Some(erased);
         s.done.store(0, Ordering::Relaxed);
+        #[cfg(test)]
+        if s.broken == Broken::UnparkBeforeEpoch {
+            // (the negative control: the wake-up sent before the work it announces)
+            for h in &self.helpers {
+                wake(Site::HelperIdle);
+                h.thread().unpark();
+            }
+            thread::sleep(std::time::Duration::from_millis(2));
+        }
         s.epoch.fetch_add(1, Ordering::Release);
-        for h in &self.helpers {
-            h.thread().unpark();
+        #[cfg(test)]
+        let unpark = s.broken != Broken::UnparkBeforeEpoch;
+        #[cfg(not(test))]
+        let unpark = true;
+        if unpark {
+            for h in &self.helpers {
+                wake(Site::HelperIdle);
+                h.thread().unpark();
+            }
         }
         let guard = Wait {
             s,
@@ -370,11 +457,12 @@ struct Wait<'a> {
 
 impl Drop for Wait<'_> {
     fn drop(&mut self) {
+        let budget = self.s.spins;
         let mut spins = 0u32;
         let mut tally = Tally::new();
         while self.s.done.load(Ordering::Acquire) != self.helpers {
             spins += 1;
-            if spins < SPINS {
+            if spins < budget {
                 tally.spin();
                 std::hint::spin_loop();
             } else {
@@ -387,6 +475,7 @@ impl Drop for Wait<'_> {
 }
 
 fn helper(s: &Shared, idx: usize) {
+    let budget = s.spins;
     let mut seen = 0;
     loop {
         let mut spins = 0u32;
@@ -397,7 +486,7 @@ fn helper(s: &Shared, idx: usize) {
                 break e;
             }
             spins += 1;
-            if spins < SPINS {
+            if spins < budget {
                 tally.spin();
                 std::hint::spin_loop();
             } else {
@@ -422,9 +511,21 @@ fn helper(s: &Shared, idx: usize) {
             }
         }
         let caller = lock(&s.caller).clone();
+        #[cfg(test)]
+        if s.broken == Broken::UnparkBeforeDone {
+            // (the negative control: the wake-up sent before the count it announces)
+            if let Some(c) = &caller {
+                wake(Site::CallerJoin);
+                c.unpark();
+            }
+            thread::sleep(std::time::Duration::from_millis(2));
+            s.done.fetch_add(1, Ordering::AcqRel);
+            continue;
+        }
         // (the last helper to end wakes the caller; an earlier unpark is harmless)
         s.done.fetch_add(1, Ordering::AcqRel);
         if let Some(c) = caller {
+            wake(Site::CallerJoin);
             c.unpark();
         }
     }
@@ -434,6 +535,7 @@ impl Drop for Pool {
     fn drop(&mut self) {
         self.shared.epoch.store(SHUTDOWN, Ordering::Release);
         for h in &self.helpers {
+            wake(Site::HelperIdle);
             h.thread().unpark();
         }
         for h in self.helpers.drain(..) {
@@ -1596,6 +1698,189 @@ mod tests {
         }
         let want: u64 = (0..n).map(|i| 4 * (i * 4) + 6).sum();
         assert_eq!(sum.load(Ordering::Relaxed), want);
+    }
+
+    /// The pool-wait arms' budgets (`parallel::PoolWait`: 2,000, the default's `SPINS`; 0;
+    /// 64), and a budget of 1, the smallest that is not 0
+    const ARM_SPINS: [u32; 4] = [SPINS, 0, 64, 1];
+
+    /// The lost-wakeup stress: `runs` runs of a `k`-thread pool whose waits spin `spins`
+    /// times before they park, on a thread of its own, with `deadline` for all of them.
+    /// Between runs the caller sometimes goes on at once, sometimes spins, yields or sleeps
+    /// for a few microseconds, and each thread's call does a varying amount of work, so that
+    /// a run's epoch often lands just as a helper's spins run out and it decides to park, and
+    /// a helper's `done` just as the caller's do. Every run checks that each index ran once.
+    /// True if all the runs ended in time; false if the pool hung (a lost wake-up: the
+    /// thread is then left parked, its pool with it).
+    fn stress(
+        k: usize,
+        spins: u32,
+        broken: Broken,
+        runs: u64,
+        deadline: std::time::Duration,
+    ) -> bool {
+        let (tx, rx) = std::sync::mpsc::channel();
+        thread::Builder::new()
+            .name("coop-stress".into())
+            .spawn(move || {
+                let p = Pool::tested(k, spins, broken).unwrap();
+                let mut rnd = xorshift(0x9e37_79b9 ^ (spins as u64) << 8 ^ k as u64);
+                let total = AtomicU64::new(0);
+                for i in 0..runs {
+                    let r = rnd();
+                    // (the caller's gap before the run: none, a spin, a yield or a sleep)
+                    match r % 8 {
+                        0 | 1 => {}
+                        2 | 3 => {
+                            for _ in 0..(r >> 8) % (2 * SPINS as u64 + 1) {
+                                std::hint::spin_loop();
+                            }
+                        }
+                        4 | 5 => thread::yield_now(),
+                        _ => thread::sleep(std::time::Duration::from_micros((r >> 16) % 40)),
+                    }
+                    let work = (r >> 24) % 512;
+                    let hits: Vec<AtomicUsize> = (0..k).map(|_| AtomicUsize::new(0)).collect();
+                    p.run(&|j| {
+                        // (each thread's own amount of work, so the last to end varies)
+                        let n = (work * (j as u64 + 1)) % 1024;
+                        let mut x = i ^ j as u64;
+                        for _ in 0..n {
+                            x = std::hint::black_box(x.wrapping_mul(6364136223846793005) + 1);
+                        }
+                        hits[j].fetch_add(1, Ordering::Relaxed);
+                        total.fetch_add(1, Ordering::Relaxed);
+                    });
+                    assert!(hits.iter().all(|h| h.load(Ordering::Relaxed) == 1));
+                }
+                assert_eq!(total.load(Ordering::Relaxed), runs * k as u64);
+                drop(p);
+                let _ = tx.send(());
+            })
+            .unwrap();
+        match rx.recv_timeout(deadline) {
+            Ok(()) => true,
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => false,
+            Err(e) => panic!("the stress thread failed: {e}"),
+        }
+    }
+
+    /// No wake-up is lost under any pool-wait arm: each budget, at 2, 3 and 4 threads,
+    /// thousands of runs whose work arrives just as a waiter decides to park, each set
+    /// bounded by a deadline (a hang fails the test rather than hanging it)
+    #[test]
+    fn pool_wait_arms_lose_no_wakeup() {
+        for spins in ARM_SPINS {
+            for k in [2, 3, 4] {
+                assert!(
+                    stress(
+                        k,
+                        spins,
+                        Broken::No,
+                        6_000,
+                        std::time::Duration::from_secs(60)
+                    ),
+                    "the pool hung: {k} threads, a budget of {spins} spins"
+                );
+            }
+        }
+    }
+
+    /// The negative control: the same stress with the run's wake-up sent before its epoch is
+    /// published must hang, under every arm, or the stress could not see a lost wake-up
+    #[test]
+    fn pool_wait_stress_catches_an_unpark_before_the_epoch() {
+        for spins in ARM_SPINS {
+            assert!(
+                !stress(
+                    3,
+                    spins,
+                    Broken::UnparkBeforeEpoch,
+                    200,
+                    std::time::Duration::from_secs(5)
+                ),
+                "an unpark before the epoch went uncaught at a budget of {spins} spins"
+            );
+        }
+    }
+
+    /// The negative control at the caller's wait: a helper's wake-up sent before it counts
+    /// itself done must hang, under every arm
+    #[test]
+    fn pool_wait_stress_catches_an_unpark_before_done() {
+        for spins in ARM_SPINS {
+            assert!(
+                !stress(
+                    2,
+                    spins,
+                    Broken::UnparkBeforeDone,
+                    200,
+                    std::time::Duration::from_secs(5)
+                ),
+                "an unpark before done went uncaught at a budget of {spins} spins"
+            );
+        }
+    }
+
+    /// Each pool-wait arm's pool under Miri (its race detector and its check that every
+    /// thread ends): every index once, the helpers' writes visible after the run, a helper's
+    /// panic resumed, and the pool dropped while its helpers park
+    #[test]
+    fn miri_pool_wait_arms() {
+        struct Slots(*mut u64);
+        // SAFETY: each thread writes only its own slots through it
+        unsafe impl Sync for Slots {}
+        for spins in ARM_SPINS {
+            let p = Pool::tested(3, spins, Broken::No).unwrap();
+            let mut v = vec![0u64; 3 * 8];
+            for round in 1..=3u64 {
+                each_index_once(&p);
+                let slots = Slots(v.as_mut_ptr());
+                let slots = &slots;
+                p.run(&|j| {
+                    for i in j * 8..(j + 1) * 8 {
+                        // SAFETY: thread j writes only its own 8 slots, inside v
+                        unsafe { *slots.0.add(i) = round * 100 + i as u64 };
+                    }
+                });
+                assert!(v
+                    .iter()
+                    .enumerate()
+                    .all(|(i, &x)| x == round * 100 + i as u64));
+            }
+            let r = catch_unwind(AssertUnwindSafe(|| {
+                p.run(&|j| {
+                    if j == 1 {
+                        panic!("helper");
+                    }
+                })
+            }));
+            assert!(r.is_err());
+            each_index_once(&p);
+            thread::sleep(std::time::Duration::from_millis(if cfg!(miri) {
+                1
+            } else {
+                5
+            }));
+            drop(p);
+        }
+    }
+
+    /// The pool-wait counts (feature `wait-stats`): at a budget of 0 a wait never spins, so
+    /// every wait that did not end at once parked; every run's unparks are counted as wakes
+    #[cfg(feature = "wait-stats")]
+    #[test]
+    fn wait_stats_count_wakes() {
+        use wait_stats::get;
+        let p = Pool::tested(3, 0, Broken::No).unwrap();
+        let (wakes, cwakes) = (get(Site::HelperIdle).wakes, get(Site::CallerJoin).wakes);
+        for _ in 0..10 {
+            each_index_once(&p);
+        }
+        // (two helpers unparked a run; each helper unparks the caller once a run)
+        assert!(get(Site::HelperIdle).wakes >= wakes + 20);
+        assert!(get(Site::CallerJoin).wakes >= cwakes + 20);
+        drop(p);
     }
 
     fn xorshift(seed: u64) -> impl FnMut() -> u64 {
