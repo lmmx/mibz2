@@ -9,7 +9,7 @@ master (the Guardian's D078); the candidate's decoder is not. Its parts, fixed w
     python3 bench/service_tg.py manifest SHARDS_DIR [--artifacts A.jsonl --jobs J.jsonl --run ID --attempt N --label L]
     python3 bench/service_tg.py ni SHARDS_DIR --manifest MANIFEST.json --head SHA --out PREFIX
     python3 bench/service_tg.py replicated --dispatch ROOT1 MANIFEST1 ... --dispatch ROOT12 MANIFEST12 --head SHA --out PREFIX
-    python3 bench/service_tg.py confirm REGISTERED.json --confirmation CONFIRMATION.json --out PREFIX
+    python3 bench/service_tg.py confirm --primary ROOT MANIFEST ... (12) --confirmation ROOT MANIFEST ... (12) --head SHA --out PREFIX
 
 **`report`: the workstation A/B** (conditions 3, 4 and its share of 7), judged from the
 attempt's directory as `just bench-service-tg` leaves it: the candidate's default decoder
@@ -91,11 +91,20 @@ shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard o
 
 `manifest` writes the aggregate's manifest; the workflow's `aggregate` job runs it and `ni`.
 
-**`confirm`: the inherited harm-confirmation rule**, on the one confirmation allowed (§2.6),
-which must be of distinct dispatches (no run id shared) of the same head. A wall cell flagged slower in the registered run and flagged slower again in the
-confirmation run on the same head is a confirmed harm, and fails condition 7. A cell not
-flagged again is unresolved, and reported. The confirmation run never enters condition 2: it
-cannot rescue a failed cell, replace the registered run, or be pooled with it.
+**`confirm`: the harm confirmation under replication** (§2.6, the Guardian's D094): the one
+confirmation is a second full programme of k dispatches at R 240, at the same freeze, base and
+settings, sharing no run id with the primary and spaced from it. Both programmes are re-judged
+from their archives (never a stored verdict), each admitted whole by `replicated`, and the
+flags recomputed. Beside the inherited classification (confirmed, unresolved), D094-C7: a
+missing, invalid or malformed confirmation never clears a primary wall flag. A wall cell
+flagged slower in the primary and flagged slower again in the confirmation is a confirmed harm,
+and fails condition 7. A cell not flagged again is unresolved, and reported. The confirmation
+never enters condition 2: it cannot rescue a failed cell or a failed primary, replace a primary
+dispatch, or be pooled with it; there is no second confirmation.
+
+**The t12 rule is on HOLD** (the Guardian's D094): `replicated`'s dispatch-level t bound is
+implemented as registered, but qualification and adoption through it are held pending a
+reviewed C6 decision on its error guarantee (registration §2.11).
 
 None of the outcomes is a reason to retry: one attempt (condition 6).
 """
@@ -1063,7 +1072,8 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS):
     start, end = window(man)
     v = {"schema": "mibz2.tg_ni_dispatch/1", "valid": False, "problems": [], "cells": {}, "shards": {},
          "run": man.get("run"), "head": head, "label": man.get("label"), "rounds": rounds,
-         "started": start, "completed": end}
+         "started": start, "completed": end,
+         "settings": {k: fz.get(k) for k in ("candidate", "base", "ni_rustc", "corpus_text")}}
     p = v["problems"]
     p += rounds_problems(rounds)
     for k in ("candidate", "base", "ni_rustc", "corpus_text"):
@@ -1238,29 +1248,76 @@ def ni_markdown(v):
     return "\n".join(out) + "\n"
 
 
-def run_ids(v):
-    return v["runs"] if isinstance(v.get("runs"), list) else [v.get("run")]
+def confirm(primary, confirmation, head, k=NI_DISPATCHES, spacing_min=SPACING_MIN, rounds=NI_ROUNDS):
+    """The harm confirmation under replication (§2.6 as D094 rules it): `primary` and
+    `confirmation` are each a full programme's dispatch verdicts, in dispatch order, freshly
+    judged from their archived artifacts (`ni_judge`; the command line re-judges them, never
+    reading a stored verdict). Admitted only if each is a valid programme by `replicated`'s own
+    admission (exactly k admitted dispatches, unique run ids, one head, R, spacing, every
+    estimate finite); no run id is shared between them; every one of the 2k dispatches has the
+    same frozen settings (candidate, base, toolchain, text corpus); and the confirmation's first
+    dispatch keeps the spacing from the primary's last. The flags are recomputed by
+    `replicated`, never taken from a stored verdict. Anything missing, invalid or malformed
+    fails closed (valid False).
 
-
-def confirm(registered_v, confirmation_v):
-    """The inherited harm-confirmation rule (§2.6): each wall flag of the registered verdict,
-    flagged again (confirmed harm: fails condition 7) or not (unresolved). The two must be of
-    distinct dispatches (no run id shared) of the same head, both valid; the same verdict twice
-    is not a confirmation. It never enters condition 2. Under replication its unit and need are
-    the Guardian's to rule (§2.11); this applies the rule as it stands"""
-    no = {"valid": False, "confirmed": [], "unresolved": []}
-    if not (registered_v.get("valid") and confirmation_v.get("valid")):
-        return dict(no, problems=["a run is invalid"])
-    r1, r2 = run_ids(registered_v), run_ids(confirmation_v)
-    if not all(is_int(r) for r in r1 + r2) or set(r1) & set(r2):
-        return dict(no, problems=[f"not distinct dispatches: runs {r1!r} and {r2!r}"])
-    if registered_v.get("head") != confirmation_v.get("head"):
-        return dict(no, problems=["the confirmation is of another head"])
-    again = set(confirmation_v["flags"])
-    flags = registered_v["flags"]
-    one = lambda r: r[0] if len(r) == 1 else r  # noqa: E731
-    return {"valid": True, "registered_run": one(r1), "confirmation_run": one(r2),
-            "confirmed": [f for f in flags if f in again], "unresolved": [f for f in flags if f not in again]}
+    Two classifications, side by side:
+    - **inherited** (§2.6): each primary wall flag flagged again is a confirmed harm (fails
+      condition 7); one not flagged again is unresolved;
+    - **D094-C7**, a separate admission constraint: met only if there is no primary wall flag,
+      or the one registered confirmation is valid and confirms none. A missing, invalid or
+      malformed confirmation never clears a flag. It never enters condition 2"""
+    out = {"schema": "mibz2.tg_ni_confirm/1", "valid": False, "problems": [], "confirmed": [], "unresolved": [],
+           "primary_flags": [], "d094_c7": {"met": False, "why": "not adjudicated"}}
+    p = out["problems"]
+    for name, prog in (("primary", primary), ("confirmation", confirmation)):
+        if not isinstance(prog, list):
+            p.append(f"the {name} programme is not a list of dispatch verdicts")
+    if p:
+        return out
+    pv = replicated(primary, head, k=k, spacing_min=spacing_min, rounds=rounds)
+    cv = replicated(confirmation, head, k=k, spacing_min=spacing_min, rounds=rounds)
+    out["primary_runs"], out["confirmation_runs"] = pv["runs"], cv["runs"]
+    if pv["valid"]:
+        out["primary_flags"] = list(pv["flags"])
+    else:
+        p += [f"primary: {x}" for x in pv["problems"][:5]]
+    if not cv["valid"]:
+        p += [f"confirmation: {x}" for x in cv["problems"][:5]]
+    if pv["valid"] and cv["valid"]:
+        shared = sorted(set(pv["runs"]) & set(cv["runs"]))
+        if shared:
+            p.append(f"run ids shared between the programmes: {shared}")
+        settings = {json.dumps(d.get("settings"), sort_keys=True) for d in primary + confirmation}
+        if len(settings) != 1 or any(not isinstance(d.get("settings"), dict) or None in d["settings"].values()
+                                     for d in primary + confirmation):
+            p.append("the dispatches' frozen settings (candidate, base, toolchain, text corpus) are not one and the same")
+        last, first = primary[-1], confirmation[0]
+        s0, e0, s1 = last.get("started"), last.get("completed"), first.get("started")
+        if not all(isinstance(x, (int, float)) for x in (s0, e0, s1)):
+            p.append("the boundary between the programmes: times unknown, so the spacing is unshown")
+        else:
+            if s1 < s0 + 60 * spacing_min:
+                p.append(f"the confirmation started {(s1 - s0) / 60:.1f} minutes after the primary's last dispatch, "
+                         f"not {spacing_min}")
+            if s1 < e0:
+                p.append("the confirmation started before the primary's last dispatch completed")
+    if p:
+        if pv["valid"] and not out["primary_flags"]:
+            out["d094_c7"] = {"met": True, "why": "no primary wall flag"}
+        elif pv["valid"]:
+            out["d094_c7"] = {"met": False, "why": "the confirmation is missing, invalid or malformed: "
+                                                   "no primary wall flag is cleared"}
+        else:
+            out["d094_c7"] = {"met": False, "why": "the primary programme is not admitted"}
+        return out
+    out["valid"] = True
+    flags, again = pv["flags"], set(cv["flags"])
+    out["confirmed"] = [f for f in flags if f in again]
+    out["unresolved"] = [f for f in flags if f not in again]
+    out["d094_c7"] = ({"met": True, "why": "no primary wall flag"} if not flags else
+                      {"met": False, "why": f"confirmed harm: {', '.join(out['confirmed'])}"} if out["confirmed"] else
+                      {"met": True, "why": "every primary wall flag adjudicated by the valid confirmation, none confirmed"})
+    return out
 
 
 def write(prefix, v, md):
@@ -1305,8 +1362,11 @@ def main(argv=None):
     st.add_argument("--corpus-text")
     st.add_argument("--out", required=True)
     f = sub.add_parser("confirm")
-    f.add_argument("registered", help="the registered verdict's JSON (`replicated`'s)")
-    f.add_argument("--confirmation", required=True, help="the confirmation verdict's JSON")
+    f.add_argument("--primary", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
+                   help="each primary dispatch's artifacts and manifest, in dispatch order, all k")
+    f.add_argument("--confirmation", nargs=2, action="append", metavar=("ROOT", "MANIFEST"), required=True,
+                   help="each confirmation dispatch's artifacts and manifest, in dispatch order, all k")
+    f.add_argument("--head", required=True)
     f.add_argument("--out", required=True)
     a = p.parse_args(argv)
     if a.cmd == "report":
@@ -1344,14 +1404,24 @@ def main(argv=None):
         v = replicated(ds, a.head)
         write(a.out, v, ni_markdown(v))
         return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
-    def load_v(path):
-        with open(path) as fh:
-            return json.load(fh)
-    v = confirm(load_v(a.registered), load_v(a.confirmation))
-    md = ("# Harm confirmation\n\n" + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. "
-          f"Unresolved: {', '.join(v['unresolved']) or 'none'}.\n" if v["valid"] else "Not admitted: a run is invalid.\n"))
+    def judged(pairs):
+        ds = []
+        for root, mpath in pairs:
+            try:
+                with open(mpath) as fh:
+                    man = json.load(fh)
+            except (OSError, json.JSONDecodeError):
+                ds.append(None)
+                continue
+            ds.append(ni_judge(root, man, a.head))
+        return ds
+    v = confirm(judged(a.primary), judged(a.confirmation), a.head)
+    md = ("# Harm confirmation (two programmes, re-judged from their archives)\n\n"
+          + (f"Confirmed: {', '.join(v['confirmed']) or 'none'}. Unresolved: {', '.join(v['unresolved']) or 'none'}.\n"
+             if v["valid"] else "Not admitted (fails closed):\n" + "".join(f"- {x}\n" for x in v["problems"]))
+          + f"\nD094-C7: {'met' if v['d094_c7']['met'] else 'NOT met'} ({v['d094_c7']['why']}).\n")
     write(a.out, v, md)
-    return 0 if v["valid"] and not v["confirmed"] else 1
+    return 0 if v["valid"] and not v["confirmed"] and v["d094_c7"]["met"] else 1 if v["valid"] else 2
 
 
 if __name__ == "__main__":

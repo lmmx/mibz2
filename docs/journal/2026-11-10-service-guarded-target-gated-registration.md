@@ -19,7 +19,10 @@
   before master's 3.5.0 (`--sysfs-state`) and 3.6.0 (`ab-child/2`) existed, is renumbered
   **3.7.0** (bench/CHANGELOG.md), its content unchanged; every "bench 3.5.0" below now reads
   3.7.0. The judge admits `ab-child/2` rows (a non-null `err_kind` or `err_block`, or another
-  child schema, refuses) and still admits older rows without the fields.
+  child schema, refuses) and still admits older rows without the fields;
+- under the Guardian's D094 (#145 6764159416): the t12 rule marked HOLD; §2.6, §2.11 and §7
+  reconciled to D094's confirmation programme and D094-C7; `confirm` re-judges both programmes
+  from their archives and fails closed.
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -452,28 +455,55 @@ lengths must be even. Its output, reproducing the Researcher's independent integ
   - So a green qualification run means condition 2 passed. The registered verdict is still the
     archived `ni.json`.
 
-### 2.6 The harm-confirmation rule, reconciled
+### 2.6 The harm-confirmation rule, reconciled to D094 (prospective; governs over earlier wording)
 
-The inherited rule stays (D077 keeps it unless a separate forward-only decision changes it). It
-is **retained unchanged with the final design** (§2.9: NI power is not adoption power). It
-cannot touch condition 2, and the trend veto (§2.9) cannot touch it:
-- **Condition 2 is decided by the one qualification dispatch alone.**
-- **A slower flag:** a wall cell whose two-sided 95% batch-means interval lies above 1 in that
-  dispatch is a harm signal.
-- **The confirmation dispatch:** one more full dispatch of the same workflow on the same head,
-  base and settings, labelled `qualification`, settles every signal at once. It is made only if
-  something is flagged.
-  - A cell flagged slower again is a **confirmed harm**, and fails condition 7, even where its
-    U ≤ 1.02.
-  - A cell not flagged again is unresolved, reported with both dispatches.
-- **The confirmation dispatch never enters condition 2.** It can't rescue a failed cell,
-  replace or pool with the first dispatch, or change its verdict. If it is INVALID, the flags
-  stay unresolved, and condition 7 counts them as not confirmed.
-- **What a confirmation tests:** the confirmation dispatch draws its own runners, possibly other
-  CPU models. So confirmation tests **recurrence across runner draws**, not a literal
-  replication of the first runner's conditional estimand. Condition 7 uses it in that sense.
-- `service_tg.py confirm` applies the rule. It requires two valid, **distinct** dispatches (two
-  run ids) of the same head, records both run ids, and refuses the same verdict given twice.
+**Reconciled with §2.11 and §7 under the Guardian's D094** (#145 6764159416;
+`state/decisions.md` at dc1930c1). This text governs. The single-dispatch wording of the earlier
+drafts is superseded and kept only in the history.
+- **Condition 2** is decided by the primary programme alone: 12 dispatches × R240 (§2.11).
+- **A slower flag:** a wall cell whose two-sided 95% dispatch-level interval, over the primary's
+  12 dispatches, lies above 1.00. CPU flags are reported and are not confirmation gates. The
+  peak-RSS rule (§7) is separate and stays.
+- **The confirmation programme**, if a confirmation of primary wall flags is pursued:
+  - **one separate, full programme:** another 12 × R240 at the same freeze, candidate, base,
+    toolchain, settings, cell grid, R and inferential rule. Not one dispatch, and not two halves
+    of six;
+  - every member admitted, its run ids unique within it, **no run id shared** with the primary;
+  - the frozen spacing kept across the boundary as well: its first dispatch starts at least 60
+    minutes after the primary's last dispatch started, and not before that dispatch's shard
+    jobs completed;
+  - **no replacement** of any member, as for the primary.
+  - **Its unit:** the same pre-specified wall cell must flag again, under the same two-sided rule
+    above 1.00, in the confirmation programme.
+- **The classifications:**
+  - **inherited:** a cell flagged again is a **confirmed harm** and fails condition 7, even where
+    its U ≤ 1.02. A cell not flagged again is unresolved, reported with both programmes.
+  - **D094-C7, a separately identified admission constraint:** a primary wall flag is never
+    cleared for adoption by a missing, invalid or malformed confirmation. D094-C7 is met only if
+    there is no primary wall flag, or the one registered, valid confirmation programme confirms
+    none. It is recorded beside the inherited classification, which stays unchanged. It is a
+    forward narrowing constraint, not proof of no harm.
+- **What a confirmation can never do:**
+  - its data never enter condition 2;
+  - it never replaces a primary member;
+  - it never rescues a primary NOT SHOWN or INVALID;
+  - there is no second confirmation, and no search for a quieter draw.
+
+  If the primary already fails adoption, no confirmation is spent to rename the failure.
+- **The budget, stated before the freeze:** about **5,166 runner-minutes** for both programmes,
+  2,583 each at the pilot's pace (plan and aggregate jobs excluded).
+- **What a confirmation tests:** recurrence across fresh runner draws, not a replication of one
+  runner's conditional estimand.
+- **`service_tg.py confirm` applies it and fails closed.**
+  - It takes both programmes' 24 dispatches as archives (`--primary ROOT MANIFEST` ×12,
+    `--confirmation ROOT MANIFEST` ×12) and re-judges every one. It never reads a stored verdict.
+  - Each programme must be admitted whole by `replicated`: exactly 12 admitted dispatches,
+    unique run ids, one head, R 240, the spacing, finite estimates.
+  - Across them: no shared run id, one set of frozen settings (candidate, base, toolchain, text
+    corpus), and the spacing across the boundary.
+  - The flags are recomputed from the archives.
+  - Empty, duplicated, single-run, missing or malformed inputs fail closed. These are the
+    Guardian's D094 witnesses, each a test.
 
 ### 2.7 Data before the freeze, disclosed
 
@@ -1122,6 +1152,13 @@ its own mean first, and no mean, ratio or bound is computed. The construction:
 
 ### 2.11 Replicated independent dispatches: the programme (final design, for review before freeze)
 
+> **HOLD (the Guardian's D094, #145 6764159416).** The t12 rule below, the dispatch-level t
+> bound over 12 dispatches, is **on HOLD** for qualification freeze, execution and adoption. Its
+> load-bearing assumption of approximately normal dispatch contrasts is unsupported, and the
+> mixture sensitivity shows it can fail. It stays implemented as written and is not changed
+> here. The statistical repair awaits the Researcher's review and a C6 decision record before
+> any fresh data. No programme is dispatched while it is held.
+
 **Why.** §2.9 found that no pilot-consistent within-window model keeps a single dispatch's
 size defensible. §2.10's conditional repair was refuted (6760366316). The unit of inference
 is therefore the dispatch: D085's option of independent dispatches.
@@ -1150,7 +1187,7 @@ is therefore the dispatch: D085's option of independent dispatches.
 | one verdict | `service_tg.py replicated --dispatch ROOT MANIFEST` ×12 re-judges every dispatch from its archived artifacts, then gives the programme's single verdict, gated with `tg_ni_gate.py --label replicated`. The gate recomputes the bound apart from the judge (12 distinct run ids, 42 × 12 finite estimates, U_c) and fails on any disagreement. No verdict is computed before all 12 dispatches are archived |
 | trend veto | **retired.** Within-dispatch structure enters only through D_{c,j}. The estimand is the mean under the frozen scheduling policy. Persistent cross-dispatch trends, carryover or arm-position bias are not made innocuous by this; they are inside the estimand, or violate the model below |
 | ceilings | unchanged: `records` 300 minutes, the rest 240. At R240 `records` is about 13.2 minutes of rounds plus 15 of setup: a pace margin of about 21.5× (`text` 18.8×) |
-| condition 7 | **the Guardian's to rule** under replication. Replication changes the unit, and a final additional confirmation dispatch may remain required until ruled otherwise; §2.6's rule is not silently replaced. `replicated` reports the slower flags on the dispatch-level two-sided 95% interval (above 1.00) and peak RSS (lower bound above 1.10, failing). `confirm` takes two programme verdicts with no run id shared |
+| condition 7 | **ruled by D094** (§2.6): if confirmation is pursued, one separate full confirmation programme of 12 × R240 at the same freeze and settings, no run id shared, spaced across the boundary, no replacement; the inherited classification and D094-C7 (a missing, invalid or malformed confirmation never clears a flag) side by side. `replicated` reports the slower flags on the dispatch-level two-sided 95% interval (above 1.00) and peak RSS (lower bound above 1.10, failing). `confirm` re-judges both programmes from their archives and fails closed |
 
 **The model, explicitly conditional.** For each cell, the 12 dispatch contrasts D_{c,1} … D_{c,12}
 are independent, identically distributed and approximately normal. The t bound is
@@ -1575,9 +1612,11 @@ measured.
     few MB on an ordinary 16 GB laptop. The earlier attempt measured svc2 at 0.863 of the
     base's peak at 10 threads.
   - No memory improvement is claimed.
-- **Wall:** CI's cells by condition 2 and the harm-confirmation rule (§2.6, retained unchanged
-  with the final design, §2.9: a confirmed interval above 1.00 fails); the workstation's by
-  conditions 3 and 4.
+- **Wall:** CI's cells by condition 2 (§2.11, HOLD under D094) and the harm-confirmation rule
+  as D094 reconciles it (§2.6). The primary programme's two-sided dispatch-level interval above
+  1.00 flags a cell. If confirmation is pursued, one separate full 12 × R240 programme decides
+  it: flagged again is a confirmed harm, and fails. D094-C7: a missing, invalid or malformed
+  confirmation never clears a flag. The workstation's wall is judged by conditions 3 and 4.
 - **Not judged:** CI's stage table and resources assessment (diagnostics), and the
   workstation's medians.
 
@@ -1624,7 +1663,10 @@ measured.
 - **CI (§2.11):** 12 sequential dispatches, each nine parallel hosted runners at R = 240. The
   slowest shard (`records`) is about 28 minutes a dispatch, setup included. About **2583
   runner-minutes** in all at the pilot's pace (setup 1620 of it). About 12 hours elapsed at the
-  60-minute spacing. A condition-7 confirmation, if the Guardian keeps one, adds its own.
+  60-minute spacing.
+- **With the confirmation programme (§2.6, D094):** another 2583, about **5,166 runner-minutes**
+  for both, budgeted before the freeze. The confirmation follows the primary at the same
+  spacing, about 24 hours elapsed in all.
 
 ## 10. Open before a freeze
 
@@ -1634,8 +1676,10 @@ measured.
    the record (§2.10 refuted, 6760366316).
    - **Before the qualification freeze:**
      - the Researcher's review of the final registration and tooling;
-     - the Guardian's ruling on condition 7 under replication, and on the adoption-policy
-       question the mixture sensitivity raises.
+     - **the t12 rule is on HOLD (D094):** a reviewed C6 decision record on its error guarantee
+       (tails, mixture and dependence stated), before any fresh data;
+     - condition 7 is ruled (D094, §2.6): the confirmation programme's budget, about 5,166
+       runner-minutes with the primary, is stated here before the freeze.
    - **The tooling reaches master by the tooling-only PR #333,** as #319 did, its tooling files
      byte-identical to this branch's. Until #333 merges, master's copies are #319's.
 2. **The Researcher's REVISE** (#145 6756808726). Addressed in this revision:
