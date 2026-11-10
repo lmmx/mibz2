@@ -13,7 +13,22 @@
     "src/block.rs": "7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748",
     "src/mtf.rs": "27716447766a2514e9cd0da34fe617a7143f62a3",
     "examples/lf_fill.rs": "7b4dd789f0a1b213b26b9310f000adaf4e57ad3f",
-    "examples/phrase_lanes.rs": "13cfdd2e8caf3eee94be6ec86c9a9c868feb6cfe"
+    "examples/phrase_lanes.rs": "13cfdd2e8caf3eee94be6ec86c9a9c868feb6cfe",
+    "src/lib.rs": "fa47ab3f02d9d7fd37485cdb6b83aa4cffaaa1c7",
+    "Cargo.toml": "7e9a5a307db639586f06f7a85bc4970e99d71540",
+    "docs/journal/2026-11-09-phrase-structure.md": "6d95a2d2d3507ecf1d7f82757209c0132a96de39"
   },
-  "progress": "Pinned source checked. BufRead feasible only with owned parallel buffer handoff; Dw is access count, not byte count; aggregate memcpy attribution insufficient. Dense-pair source uses zeroing plus overlapping 8-byte stores at stride5; propose split5 layout. Current phrase state writes remain4B/row; contraction one-third not universal maximum."
+  "progress": "Complete source audit and proposal pricing; no implementation, compilation, new timing or raw profile replay.",
+  "scope": {
+    "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+    "implementation": false,
+    "compilation": false,
+    "new_timing": false,
+    "raw_profile_replay": false
+  },
+  "corrections": {
+    "bufread": "Archived Dw is an access count, not bytes; caller attribution remains unverified.",
+    "pair": "Logical store volume is not DRAM traffic.",
+    "negative_results": "No rescue of current constructions is not impossibility of the underlying advantage."
+  }
 }
