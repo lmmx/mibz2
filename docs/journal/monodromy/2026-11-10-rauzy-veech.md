@@ -407,6 +407,7 @@ count equals the example's S on each).
   | largest cell (RePair's choice) | 1.459 | 0.239 |
   | free steps wherever ready, else right end | 1.456 | 0.235 |
   | **free steps wherever ready, else the largest cell** | **1.279** | 0.059 |
+  | the same two with "free" told from links alone (§8, 1a; 10 blocks) | 1.458, 1.305 | 0.239, 0.086 |
   | free first, the paid step on the shortest stretch (8 blocks) | 1.265 | 0.045 |
   | floor, r₂ − 1 | 1.220 | 0 |
 
@@ -420,10 +421,10 @@ count equals the example's S on each).
 - **Below the floor (C).** Two letters with one word, adjacent in both orders, are one letter
   ("fusion"); it never arises at an end. `aaabaabbabb`: r = 10, least number of steps 8. On
   Wikidata it is worth 0.3%.
-- **What this is worth on the clock: not known.** At the cells step's price, 0.53 r fewer
-  steps would be 11 of the kernel's 61 cycles a run: 0.74 → about 0.60. But a step out of
-  order must find the letter that ends at a given row, which the sweep never asks; both
-  simulators keep a hash map by row. Open (§8, 1a).
+- **What this is worth on the clock: nothing yet.** At the cells step's price, 0.53 r fewer
+  steps would be 11 of the kernel's 61 cycles a run: 0.74 → about 0.60. But the cells step
+  is cheap because the sweep reads each order from its end and nothing is moved; a step out
+  of order is the linked orders' step again (§8, 1a).
 
 **Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
 induction is ~10² rounds of independent merges, almost all of its steps in the first few;
@@ -605,12 +606,19 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
    above 0.9 at 10. A recipe and its rule are the Coordinator's and the Pathfinder's to
    frame (PROTOCOL §9, RULES C1a); never run here.
 1a. **A kernel that takes free steps first.** 1.279 r steps against 1.812 r (§5.6): the
-   largest thing left in the count. It needs, at a step out of order, the letter that ends
-   where the loser lands; with each slot holding the slot of the other order that ends at
-   its row, the test is one comparison of lengths when the landing place is a coincidence,
-   and unknown otherwise (then wait, or take the right end). Uncounted: how many free steps
-   that weaker test finds; what a step fetched out of order costs. Falsifier: that count,
-   from `schedules_geo.rs.txt` with the test weakened; dead if above 1.6 r.
+   largest thing left in the count.
+   - **The test is not the obstacle (C, 10 blocks).** A step is known free from links alone
+     when the far end of its landing place is a coincidence (then the letters over the
+     place are walked back from it). Counting only those as free: 1.458 r with the right end
+     as the paid step (1.452 with the full test), 1.305 r with the largest cell (1.278).
+   - **The step is.** Out of order a step is §3.1's, not §3.5's: the winner is shortened
+     where it lies, the loser is taken out of one place of its order and put into another,
+     both orders are linked both ways, and each letter's end must know the letter that ends
+     with it. That step is 152 instructions as built against the swept cell's 64, on memory
+     that nothing can fetch ahead. At 0.80 of the steps it pays only below about 80
+     instructions with its operands in cache. Not in hand. What would change this: an order
+     of the rows, or of the segments, that a sweep can follow and that makes the free steps
+     come first.
 2. **Feed from run records** (#324 / #348, `u16` records cut at 127: merge neighbours, 0.0779 →
    0.0722 a row). Removes the column and the scan, and is where the kernel's 0.25 ns a row of
    front saving would be taken. A port; the front must cut the walk's row out (§2).
