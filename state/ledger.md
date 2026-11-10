@@ -552,3 +552,11 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Reproduced four empty JSON records passing A1. Error block identity not emitted; per-arm source/asm and validated helper identities required. Merge-base standalone walker symbol not guaranteed under LTO; don't mutate base to manufacture attribution.
 - Rank native semantic execution/conservation probes with exact-result checks before full profiles per PR. Symbol presence/sampling cannot replace exact execution/absence assertions. Instrumented binary/probe builds charged; full matched counts remain separate diagnostic with Guardian's prospective disposition.
 - D084 FAIL-MEASUREMENT unchanged. No new decoder execution, compilation, timing or qualification; parser-only counterexample. Team/service/emitter remains ahead of speculative table work.
+
+
+## Share-nothing repricing: inbox6759983287
+
+[Report](records/reviews/inbox-6759983287/report.md). Verified submitted bundle1e347594…36ad;732 matched slots/runs, round0 excluded via slots. Reproduced CPU G2=1.183382,G9=3.261240,R=.362863.
+- Old production table-only X predictsG9=6.46154; observed/predicted .50472. Small-load flat extension givesG2=1.06809 (strict domain lacks baseline3.2MB). No causal table-byte percentage identified; recompression changes1831/421 blocks, +33.59% compressed input, Huffman/MTF, buffers and scanner occupancy.
+- Whole-decoder-2 anchors1862/1819 at8/10 are scenarios, not candidate bounds. With unmeasuredf=.7,h=1,g estimates, C30≈1653/1616,D4≈1422/1390,chunked≈1193/1166; not forecasts. Real full footprint, scratch, late fallback and supply charged; F2 unchanged.
+- Team ports2 then3 remain ahead of three-table builds, subject to D085/B5. Insert cheap fixed-2 expanded-address-layout contrast4/16B atW4/10 to test shared premise.126 illustrative slots, no build or run authorization. Allocated unused padding is not a footprint experiment.
