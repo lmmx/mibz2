@@ -226,10 +226,14 @@
       "dispatches": 0
     },
     "6782590919": {
-      "status": "in_progress",
+      "status": "completed_assessment_routed",
       "delivery_id": "bbe92120-dd61-11f1-917b-dc6327a2c61e",
       "comment_updated_at": null,
-      "planned_action": "Assess narrowly scoped Run signal bridge; route one design-only authority/security review to free Guardian. No implementation or signal."
+      "planned_action": "Assess narrowly scoped Run signal bridge; route one design-only authority/security review to free Guardian. No implementation or signal.",
+      "disposition": "Accept only design assessment under A5/PROTOCOL7; privileged bridge implementation/enablement needs explicit D6 owner decision, plus A4 for any widening. Shared-account/header proof rejected. No readiness or HOLD change.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288"
+      ]
     },
     "6782600574": {
       "status": "completed",
@@ -275,7 +279,8 @@
     6782519694,
     6782527893,
     6782551058,
-    6782560706
+    6782560706,
+    6782662288
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -367,9 +372,11 @@
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694"
     },
     "guardian": {
-      "status": "in_progress_before_post",
+      "status": "posted_verified_not_delivered",
       "scope": "Design-only Run signal bridge security/authority assessment",
-      "source_comment_id": 6782590919
+      "source_comment_id": 6782590919,
+      "comment_id": 6782662288,
+      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288"
     },
     "observer": {
       "status": "completed",
@@ -418,13 +425,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "continuation-6782495828",
-    "status": "published_readback_verified",
+    "key": "bridge-assessment-6782590919",
+    "status": "in_progress_before_log",
     "event_dispositions_persisted": true,
-    "planned_action": "Grouped LOG of D100 decision, actual Codex delivery, F01 dispatch and queued instrument repair",
-    "log_comment_id": 6782560706,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782560706",
-    "wording_correction": "completed: Occupancy job association corrected; original job remains failed."
+    "planned_action": "Grouped assessment decision, Guardian route and current gates"
   },
   "dispatch_history": [
     {
@@ -502,5 +506,13 @@
     },
     "ci": "Census,CI,Test,Benchmark success; legacy pre-commit failure remains",
     "artifact_digest_claim": "08c80df363d8d5db6bdc1310a66a3fa886ca0b0c36262cf43b93edf63a7049aa upload reported; root download not verified"
+  },
+  "bridge_assessment": {
+    "source_comment": 6782590919,
+    "assignment": 6782662288,
+    "status": "independent_design_review_pending",
+    "implementation_authorised": false,
+    "provisional_boundary": "No trust in shared account, mutable headers or self-written cursor; establish independently verifiable authority before privileged signal. D6 new infrastructure/credentials decision required before implementation/enablement.",
+    "test_scope": "offline fixtures then separately authorised read-only report; no actual tag or workstation side effects"
   }
 }
