@@ -1,4 +1,6 @@
 import re,json,collections
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent / 'raw'
 def parse(path):
  names={}; own=collections.Counter(); arcs=collections.Counter(); calls=collections.Counter()
  fn=None; callee=None; pending=None
@@ -25,4 +27,4 @@ def parse(path):
    out.append(dict(name=name,self_ir=cost,inclusive_ir=cost+sum(v for (a,b),v in arcs.items() if a==idx),
     callees=[dict(name=names.get(b,b),ir=v,calls=calls[a,b]) for (a,b),v in arcs.items() if a==idx]))
  return out
-print(json.dumps({p:parse(p) for p in ["rescue-base-random.txt","rescue-head-random.txt","rescue-base-records.txt","rescue-head-records.txt"]},indent=2))
+print(json.dumps({p:parse(ROOT / p) for p in ["rescue-base-random.txt","rescue-head-random.txt","rescue-base-records.txt","rescue-head-records.txt"]},indent=2))
