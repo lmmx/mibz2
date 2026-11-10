@@ -468,8 +468,10 @@ D080 arrived before publication: HOLD measurement-only merge classification; pro
 Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verified; five head stage rows independently replayed. E FALSIFIED3.665[3.591,3.740] preserved.
 - Step22–26Ir plus≈22 bookkeeping; deleting bookkeeping alone still misses15Ir. Build time/Ir≈2.21× scatter; serial distinct-symbol chain plausible, not measured attribution.
 - E2.039B/row=1.835MB/full block before bitmap/scratch: misses1.2MB.
-- Rank D2 first:8-byte two-byte piece records plus explicit20B/64-row SoA directory≈.915MB at r2/n=.088; charge splits, tags, buffers and doubling peak. ≤30Ir/full pair only a target; count all emitted bytes/tails.
-- C second, low-build-cost control≈.801MB at r/n=.0722; per-byte dependent lookup remains. D4 padded records≈1.456MB; packed9-byte≈1.163MB before stop metadata/splits, no fit guaranteed.
--1.44 historical CPU growth is not a derived allowable kernel slowdown.15Ir remains prospective reopen filter, not speed qualification.
-- Share-nothing survives E's failure as a hypothesis. -2/-9 sweep confounds footprint with block/scan/setup/work changes; require counts and within-level scaling. No extrapolated2.7–3.4GB/s result.
-- Service first adoption, emitter useful-work priority, D2 next compact-table construction. No implementation, compilation, new timing, safety certification or gate relaxation.
+- Fresh Pathfinder6757876056 withdraws C; Coordinator6757895217 permits considering a counting probe only. Replaces earlier unpublished D2-first ranking.
+- Rank D4-delta first FOR COUNTING: encode (base−first) mod2^20 with four output bytes and stop length in one u64. At r4/n=.1088, explicit20B/64-row directory gives1.06461MB/900k; conservative3072 singleton records add24,576B. Capacities, buffers and doubling peak remain charged. New proof obligations stated; no implementation.
+- Paper walk12 plus doubling5.91≈17.91Ir/row versus15.3 production, before omitted build terms. Count inclusive walk≤15 and construction≤7.35 prospectively; singleton, tail, validation and directory work included. No speed qualification from these filters.
+- D2 conditional backup only if actual shared skeleton counts can meet15; estimated23 fails. C withdrawn; D8 footprint too large. No parallel builds.
+-1.44 historical CPU growth is not a derived allowable kernel slowdown. Share-nothing survives as a hypothesis.
+- par-scan6757860786 read as reported, raw bundle NOT replayed: level1 finder2563MB/s at10 with near-flat CPU strengthens probe value; level9 still collapses. Block-level/work/mode confounding prevents causal cache-only or production claims.
+- Service first adoption, emitter useful-work priority; bounded D4-delta count before target expenditure. No implementation, compilation, new timing, safety certification or gate relaxation.

@@ -1,4 +1,4 @@
-# E closed; try two-byte pieces, not a smaller version of E
+# E closed; count D4 with a packed translation delta
 Inbox6757808815. Measured source **84bf177bd0af9fa416964eca2c0f56ad278b119e**, PR323.
 Specs **a2da49638ac54d7763de1c167bd054f67ffdc763**.
 Proposal only; no implementation, compilation, new timing or safety certification.
@@ -58,92 +58,106 @@ uniquely identify a hardware bottleneck.
 bitmap, lane buffers, output, column and allocator capacity. E does not meet a1.2MB full-block
 goal even before its timing problem. The1.2MB budget is not an L3 residency guarantee.
 
-## 2. Ranked constructions
+## 2. Ranked constructions: D4-delta is worth a counting probe
 
-All sizes use decimal MB and n≤900000. All instruction targets include step, lanes, segment
-handling and assembly amortised per emitted byte, not an isolated lookup. None is measured.
+Pathfinder REVIEW6757876056 at bb4d19e0a8a8f676d4e9a9326f55522baa33b84f withdraws C and
+revises the inclusive paper estimates to C≈45, D2≈23, D4≈12, D8≈6 Ir/row.
+Coordinator6757895217 limits D's next step to a cheap counting probe before timing.
+These are paper extrapolations, not compiled D measurements. This revision supersedes this
+report's earlier unpublished D2-first ranking; neither the initial hypothesis nor the new
+ranking changes E's frozen verdict.
 
-### First: D2 — two-byte pieces in one u64
+All sizes below use decimal MB, n≤900000, and reported piece densities as estimates rather
+than guarantees. Charge actual capacity, tails, metadata and concurrent scratch.
 
-Compose LF twice over runs; each piece has constant two emitted bytes and an affine next-row
-map. Record first20 + target-base20 + bytes16 =56 bits, leaving8 bits for a length/stop tag
-and representation metadata. One64-bit record load replaces E's byte compare, slot selection
-and two popcounts with directory rank plus affine translation. Unlike D4, it needs only one
-doubling stage, and it amortises the lookup and lane update over two bytes.
+### First: D4-delta — four bytes and the translation in one u64
 
-Use separate arrays for64-bit piece-start words,32-bit prefix ranks,64-bit segment-start words:
-**20 bytes/64 rows**, not an unexplained16-byte directory. The advertised C directory's
-64-bit starts +32-bit rank +64-bit segment flags cannot fit16 bytes. A pointer fits but its
-pointee still costs space. Packed SoA gives.3125n; an aligned24-byte AoS costs.375n.
+On a piece starting at p with target base b, LF^k(i)=b+(i−p).
+Store delta=(b−p) mod 2^20 instead of storing both p and b.
+Then next=(i+delta) & (2^20−1). For a validated piece whose targets lie in [0,n),
+this is the same target: b+i−p is in [0,2^20), and modular reduction preserves it.
+The directory already identifies the piece, and current row i is already available;
+the walk does not need p separately.
 
-At reported r2/n≈.088, D2 uses8r2+.3125n≈**1.0165n=.91485MB**.
-Allow split exceptions, final partial word, metadata and actual Vec capacities. This is a
-corpus-density estimate, not a bound for every block. Admit only when the computed footprint
-meets the frozen cap; otherwise retain ordinary decoding.
+A record can hold delta20 + four bytes32 + length3 + flag1 =56 bits in a u64,
+leaving eight spare bits. Length encodes one through four emitted bytes. This is an
+algebraic proposal, not an implemented packing or a safety certificate. Construction may
+still need explicit boundaries, interval ends and wider intermediate records. Do not
+mistake the smaller final table for smaller peak construction memory.
 
-A k-step must stop before crossing a segment boundary. For k2, a row whose first LF step
-lands on a start needs a one-byte transition with its own target and length tag. Split its
-piece as necessary; each exceptional singleton adds at most two boundaries, so reserve up to
-2S extra records for S starts (≤8192 record bytes for S512), before other metadata. Handle
-short tails and arbitrary permutation cycles, not only valid corpus cycles. Reversed pair
-stores must preserve forward output order at assembly. These are new proof/test obligations.
+Use separate arrays for64-bit boundary words,32-bit prefix ranks and64-bit segment flags:
+20 bytes/64 rows, .3125n. The original directory's starts64+rank32+flags64 cannot fit16 bytes;
+a pointer still requires charging its pointee. An aligned24-byte AoS is larger than this SoA.
+Keeping the full segment bitmap makes the estimate conservative about that particular field.
 
-**Count target:** ≤30 inclusive instructions per full pair corresponds to≤15/byte only if
-almost all pairs are full. Actual bound is I_total/output_bytes; partial pairs, boundaries
-and setup reduce the allowance. Construction, retained emitter records and peak doubling
-scratch are charged independently. No speculative claim that the listing already achieves30.
+At r4/n=.1088:
+- final pieces plus directory: (8×.1088+.3125)n =1.1829n;
+- at n900000: **1,064,610 bytes**, versus1,456,290 for12-byte records;
+- for S512 markers, conservatively reserve2(k−1)S=3072 extra records for interior
+  singleton splits:24,576 bytes, reaching **1,089,186 bytes**, before other capacity/metadata.
 
-**CI falsifier:** first a counted implementation/listing, common room-style skeleton, all
-corpora and adversarial boundaries byte-exact. Fail the candidate if table/capacity or inclusive
-count target is missed. Then separately registered stage comparison on Wikidata AND text,
-build+walk against production, with predeclared threshold and no selected fastest lane count.
-If extra build work exceeds measured walk saving, redirect; no automatic i9 run.
-Text's reported r2/n≈.449 makes this about3.51MB: D2 is not a compact text solution.
+The bound is on additional piece boundaries for a valid permutation: for each marker and
+j=1..k−1, its unique LF^{-j} predecessor can need a singleton, which introduces at most two
+boundaries. Duplicates reduce the count. Malformed cycles, missing-marker termination and
+bounded output still need the ordinary decoder invariants; no claim that markers alone
+prove termination. For a shortened j-step record store LF^j's delta and its j bytes, not
+LF^4's target with a partial store. Initial marker handling, reversed output order, lane
+refill, final partial pieces and safe byte stores all count in the implementation obligation.
 
-### Second: C — one-byte run directory as the low-build-cost control
+**What this removes:** one record field, the first-row subtraction, and the extra load/packing
+work of9–12-byte records. It retains directory rank and the dependent record access. It does
+not inherit E's instruction count or prove D's12-Ir paper forecast.
 
-8r+.3125n at r/n=.0722 gives **.8901n=.80109MB**. Build directly from emitted runs and counts,
-no per-line distinct-byte discovery and no sort. This most directly removes E's serial build
-formulation and leaves headroom for flags/metadata.
+**Construction price:** the reported .197n doubling piece-steps at≈30Ir each cost≈5.91Ir/row.
+That is just a model; full run input, directory production, singleton discovery/splits,
+validation, allocation and retained scratch must be counted too. Against the proposed
+1.5×4.9=7.35Ir/row construction ceiling, only1.44Ir/row remains for any terms omitted from
+5.91. The estimated walk12 plus doubling5.91 is≈17.91 against production15.3, already
+about17% more instructions before omissions. The bet is lower whole-decoder contention at
+many workers, not a one-thread instruction win.
 
-Cost: directory → popcount → dependent run-record load → translation each byte. The source
-proposal's≈17-instruction step is not proof of a≤15 inclusive loop. Retain C as the construction
-control for D2: D2 must repay its extra composition and records through fewer walk operations.
-A possible packed modulo-2^20 translation replaces base−first arithmetic, but is only safe
-after proving each selected interval's LF target is in[0,n); masking cannot substitute for
-validation. It saves no dependent directory lookup.
+**Cheapest CI falsifier, proposed to the Coordinator:** count the full doubling construction
+and one laned k4 walker with the stop fix in the common room-style skeleton, on the registered
+three blocks before timing. Also archive corpus-wide piece counts, allocated footprint and
+fallback frequency, plus adversarial marker/tail correctness. Reject this candidate if the
+inclusive walk exceeds15Ir/output byte, construction exceeds the separately registered
+7.35 ceiling, or final table capacity exceeds1.2MB on the admitted blocks. Charge setup and
+short steps per byte; ≤60Ir/full four-byte step is not sufficient when short steps are common.
+A passing count earns only consideration of a prospectively registered build+walk and
+whole-decoder comparison. No timing or production build slot is authorised by this report.
 
-**CI falsifier:** count whole loop including directory/flags; if it misses the stated reopen
-target, do not call it accepted because the table is small. A forward, separately reviewed
-information experiment can compare its build+walk economics if justified; it does not reopen E
-or quietly relax C's own registered bound. Record high-density fallback and its share.
+### Second, conditional only: D2-delta
 
-### Third: D4 only if packing and stop metadata actually fit
+The same encoding fits delta20+bytes16+length/flags in a u64, with the same directory.
+At r2/n=.088, size≈.91485MB before exceptions/capacity. One doubling pass costs less than D4,
+but the revised≈23Ir/row paper walk misses15. **Do not build it in parallel.** Retain only if
+the D4 probe shows a shared room-loop simplification can bring the whole pair loop below
+30Ir, including tails/setup per emitted byte. That is its CI falsifier; smaller size alone
+is not a reason to reopen. At text r2/n≈.449, even this table is≈3.51MB, so fallback/admission
+is essential. Report corpus-specific densities rather than transfer Wikidata's census.
 
-The published12-byte records at r4/n=.1088 cost12×.1088+.3125=**1.6181B/row=1.45629MB**,
-already over1.2MB. Even the original .25n directory gives1.40004MB.
-Packing first20+base20+fourbytes32 into9 bytes gives1.2917B/row=**1.16253MB**,
-but leaves no tag bits. Stop lengths, singleton splits (up to2(k−1)S boundaries),
-alignment, overreads and capacities can exhaust the≈37.5KB headroom. Nine-byte records also
-require multiple loads, some crossing cache lines. Do not inherit the “one record load”
-model or claim it is below the knee without counting these terms.
+### Withdrawn or behind the probe
 
-**CI falsifier:** exact per-block maximum footprint and doubling peak first, inclusive
-instructions per emitted byte second, total build+walk third. If either footprint or total
-cost fails, prefer D2; no k8 detour (its known footprint is larger).
+C remains withdrawn as a walk table; no C build is requested. Its .80109MB estimated table
+does not rescue a one-byte dependent lookup. C's direct construction is useful only as an
+accounting reference for initial runs, not another experiment.
 
-**Not ranked for build:** E plus room skeleton. It neither meets the footprint nor the
-count target. Further budget spent shaving its bookkeeping is economically inferior to
-amortising the lookup with D2. Dense B and24-bit per-row tables likewise miss1.2MB on full
-blocks. Smaller source blocks are a diagnostic/reference, not a decoder representation
-available for arbitrary existing level9 input.
+D8 stores delta20+bytes64 plus metadata, exceeding one u64;16-byte records at r8/n=.1422
+plus this directory are≈2.329MB. It misses the budget before exceptions and retains more
+doubling work. E with room bookkeeping still misses both count and size. Dense B and
+24-bit per-row tables likewise miss1.2MB for a full block.
+
+**Ranking against other work:** service remains first for adoption closure; emitter reduces
+useful work on the serial front and remains ahead of a full D implementation. Within the
+compact-table investigation, one bounded D4-delta counting probe is economically preferable
+to another E timing or a parallel C/D2/D8 implementation.
 
 ## 3. Share-nothing survives as a hypothesis, not the2.7–3.4GB/s forecast
 
 E falsifies one representation. It does not falsify eliminating cooperative work with a compact
-table; D2/C have distinct costs and footprints. Keep the existing small-block pricing recipe
+table; D4-delta has distinct costs and footprint. Keep the existing small-block pricing recipe
 as a bounded diagnostic after the applicable two-mode review/C5 admission. Service remains
-first for adoption closure, emitter next useful-work opportunity. D2 is the next small-table
+first for adoption closure, emitter next useful-work opportunity. D4-delta is the next small-table
 construction worth counting; do not displace those with another E timing.
 
 The historical1.44=CPU10/CPU4 at level3 is **a contention-growth observation, not a derived
@@ -177,8 +191,34 @@ premise from the new-table engineering, at bounded cost; it does not authorise a
 
 Expected E≤2× inversion; observed3.665×, both build and walk worse. No production gap closed.
 Learned: per-row line decoding overwhelms locality, while the purported compact table remains
-too large. Next information value: count D2's two-byte lookup and exact footprint, with C as
-the low-construction-cost control, before any further target expenditure.
+too large. Next information value: count D4-delta's full four-byte loop, singleton handling, construction
+and exact footprint before further target expenditure.
+
+### New par-scan evidence: premise strengthened, attribution still limited
+
+Coordinator LOG6757860786 reports par-scan/20261110T030608Z at
+efc1bd88c73b07d917617eddfdf008dffc691e3d, archived at
+727674e185744b91077dd4a862f2cd9e1485f0d0 (digest prefix140a0e5b).
+This report read that result, **not its raw bundle**, so it does not independently certify
+VALID or replay its paired estimates.
+
+On the i9 mask0–19, reported Wikidata level9 throughput falls from about1145/1127MB/s
+(scan/find) at4 workers to631/619 at10; CPU grows .58→3.69s. Level1 reaches1598/2563
+at10 versus1524/1255 at4, with CPU .74→.84s. The reported paired finder/scan ratios are
+.981 on level9,1.615 on level1 and1.780 on records at10.
+
+This strengthens the case for **one cheap compact-table counting probe**: supply can scale
+with a parallel finder when the per-block workload is favourable. It does not establish
+that footprint is the sole cause, that D4 reproduces level1's cost, or that the default
+cooperative decoder would lose to D4. Five rounds, uncorrected cross-input comparisons and
+the unresolved two-mode regime remain. Retain the reported NOT FASTER/FASTER readings in
+their registered descriptive scope; no production qualification or new target run follows.
+
+The proposed -2 pricing diagnostic retains information value only for what the existing
+level1/level9 observation leaves unresolved. Prefer its predeclared near-knee question,
+matching CPU/work and whole-decoder references; do not repeat a broad sweep merely to
+re-observe that small blocks scale. Pathfinder's new CPU10/4≤1.3 suggestion is prospective,
+not a threshold retroactively applied to par-scan.
 
 ## Limits and protocol
 No raw callgrind replay, new test execution or independent B5 approval. The raw stage archive
