@@ -494,3 +494,14 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 ## Complete-algorithm pricing: inbox 6758176258
 
 [Record](records/reviews/inbox-6758176258/report.md). Acknowledged complete construction/traversal/metadata pricing before recommending a Pathfinder build, including loop skeleton, lanes, stops/tails, branches, traffic and parallel live state. Return the dominant-cost removal and cheapest falsifier; a failed construction is not an absent advantage. This is within the existing pinned pricing mandate, not a re-pin or added execution authority. Lending copy/allocation counts, dense-pair count against an equally improved ordinary fill, conditional MTF and unchanged D4 filters carried forward. Next named share-nothing design awaits inbox dispatch; no substitute candidate priced or approved.
+
+## Staged cooperative traverse: inbox 6758227354
+
+[Report](records/reviews/inbox-6758227354/report.md). Source 2c70fd13e, coop/bwt matching master ae44497e9.
+- Recommend a bounded private-tile counting prototype, before timing: no shared tile, new per-byte atomic or chunk barrier. Flush old segment before finish/take; take writes first byte directly; new st=j+1. On exhaustion flush all unmarked lanes through j+1, even those after the exhausted lane; pending marked lanes through j.
+- Flush and finish all owned segments before Relay walkers decrement. Existing ownership and AcqRel last-walker publication suffice; no partial-segment transfer between members.
+- Tile 8 KiB per walker, up to24 KiB/team and72 KiB/three teams; rows128B/st256B per walker, replacing oldbase256B. Table, segment buffers and final writes remain; +2B logical tile traffic for B staged bytes.
+- Pipelined K3 requests1024 starts, plain K3 requests1536; tails/late leader matter. Claims S+W, no new per-byte atomic. Full-loop price needs B/T, chunks, fragments, copies, grows, marker searches and all callees.
+- #171 four-thread evidence is independent workers, not teams. Raw historical block1 replay reproduces inclusive −1,132,562 Ir; direct flush memcpy125,321, aggregate memcpy348,489.
+- Published bandwidth snippets have no Ir; 17.6/10.1 and30.5 remain reported hypothesis pending raw same-denominator inclusive attribution. Current share-nothing summary says17.8. 10–11/team is plausible, not established; current staged source still has per-lane START tests.
+- Priority: staged-team kernel count before a new dense-pair implementation; lending attribution count independent. Service/emitter priorities and registered D4 filters unchanged. No measured credit or new timing.
