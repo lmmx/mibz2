@@ -1,0 +1,16 @@
+{
+  "review_comment_id": 6756184275,
+  "incoming_comment_id": 6756084723,
+  "output_pr": 145,
+  "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+  "complete_cursor_commit": "e9eabe68c95d61b7c72404a994b12750653a8457",
+  "exact_readback": true,
+  "pinned_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "PASS",
+  "task_reconfigured": false
+}

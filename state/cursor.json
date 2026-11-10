@@ -1172,8 +1172,9 @@
       "incoming_pr": 161,
       "incoming_comment": 6756084723,
       "output_pr": 145,
-      "status": "complete",
-      "disposition": "PROCEED prospective sharded design; qualification unready pending complete fixed protocol and review"
+      "status": "finished",
+      "disposition": "PROCEED prospective sharded design; qualification unready pending complete fixed protocol and review",
+      "comment": 6756184275
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1248,7 +1249,8 @@
     6750771906,
     6750846374,
     6752741658,
-    6754250293
+    6754250293,
+    6756184275
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1420,7 +1422,8 @@
     "ec9b13f026392484b3e61847cb25aa87337f0320",
     "3e4e31f7a233cf1397c9be478154c15929d7b32a",
     "61eb76814102d61b399c45436c10835ffc4fbe0a",
-    "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
+    "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+    "e9eabe68c95d61b7c72404a994b12750653a8457"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1578,9 +1581,10 @@
   },
   "current_execution": {
     "active_comment": 6756084723,
-    "status": "complete",
+    "status": "finished",
     "decision": "D077",
-    "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
+    "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+    "review_comment_id": 6756184275
   },
   "duplicate_events": [
     {
@@ -2186,7 +2190,8 @@
       "sha": "b63f6bee2e3ceb821198129d649bed2bd2fb349e",
       "evidence_digest": "registration:6c84b47110b3ab6fd77100138501ab6335859acc;freeze:d5935377695733349ecf95417314a6f2b95de172;pilot:42732367790/1;proposal:6756084723",
       "decision": "D077",
-      "commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
+      "commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+      "comment": 6756184275
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2724,10 +2729,13 @@
     {
       "comment_id": 6756084723,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D077",
       "receipt_commit": "61eb76814102d61b399c45436c10835ffc4fbe0a",
-      "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7"
+      "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
+      "review_comment_id": 6756184275,
+      "complete_cursor_commit": "e9eabe68c95d61b7c72404a994b12750653a8457",
+      "progress": "Exact REVIEW readback verified; pinned verifier has sole coordinator-only FROM limitation; independent Guardian routing and provenance checks pass."
     }
   ],
   "migrated_from": {
