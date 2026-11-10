@@ -255,5 +255,15 @@
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
-  "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor."
+  "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor.",
+  "workstation_preparation": {
+    "status": "in_progress",
+    "recipe": "bench-onecore-inline-i9",
+    "decision": "Existing #361 i9 1t A/B highest-value ready-to-prepare; cells requires coverage diagnosis first",
+    "candidate": "d33787e138426cb441db6975f54b2eccca02e89a",
+    "baseline": "b65b2aa54488f072cf005b8fe62461c32e6ef083",
+    "branch": "coord/onecore-inline-i9-20261110",
+    "ready": false,
+    "queue_added": false
+  }
 }
