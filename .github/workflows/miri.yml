@@ -13,6 +13,8 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/mtf.rs"
+      - "src/mtf/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
@@ -22,6 +24,8 @@ on:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/mtf.rs"
+      - "src/mtf/**"
       - "src/parallel.rs"
       - "src/parallel/**"
       - "src/read.rs"
@@ -50,5 +54,15 @@ jobs:
         run: |
           cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
+          grep -q '^mtf::tests::miri_register_checkpoints' miri-list.txt
       - name: Miri
         run: cargo miri test --lib -- miri_
+      # The team path's MTF kernel (C29's register list, port 3) under Miri: its AVX2 run
+      # stores and its column's bound, in a build with AVX2 enabled so that detection
+      # reports it, and the test asserts it (MIBZ2_EXPECT_AVX2); without it the test returns
+      - name: Miri, the checkpoint MTF's AVX2 stores
+        env:
+          RUSTFLAGS: "-C target-feature=+avx2,+bmi1"
+          MIBZ2_EXPECT_AVX2: "1"
+          MIRIFLAGS: "-Zmiri-env-forward=MIBZ2_EXPECT_AVX2"
+        run: cargo miri test --lib -- mtf::tests::miri_
