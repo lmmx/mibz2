@@ -1,0 +1,65 @@
+{
+  "clock_model": {
+    "ns_per_read": 25,
+    "levels": [
+      {
+        "level": 9,
+        "blocks": 421,
+        "reads": 1684,
+        "clock_cpu_us": 42.1,
+        "record_bytes_64": 26944,
+        "record_bytes_96": 40416
+      },
+      {
+        "level": 2,
+        "blocks": 1831,
+        "reads": 7324,
+        "clock_cpu_us": 183.1,
+        "record_bytes_64": 117184,
+        "record_bytes_96": 175776
+      }
+    ],
+    "reads_8cells_60rounds": 2161920,
+    "clock_cpu_seconds_8cells_60rounds": 0.054048,
+    "record_bytes_8cells_60rounds": [
+      34590720,
+      51886080
+    ]
+  },
+  "proxy": {
+    "anchor": 1862,
+    "default": 1499,
+    "f": 0.78,
+    "values": [
+      {
+        "g": 1.18,
+        "proxy": 1632.7604349351104
+      },
+      {
+        "g": 1.44,
+        "proxy": 1386.2418106015487
+      },
+      {
+        "g": 1.7,
+        "proxy": 1204.3984476067271
+      }
+    ],
+    "break_even_g": 1.310463385846975
+  },
+  "slot_counts": {
+    "census_8cells_plus2controls_61rounds": 610,
+    "width4cells_plus2sentinels_21rounds": 126,
+    "paired_census_width8cells_plus2sentinels_21rounds": 210,
+    "with2level9_21rounds": 252
+  },
+  "counterexample": [
+    {
+      "T": 2,
+      "overlap": 0.5
+    },
+    {
+      "T": 3,
+      "overlap": 0.6666666666666666
+    }
+  ]
+}
