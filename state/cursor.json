@@ -1807,11 +1807,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6761414959,
-    "status": "finished",
-    "decision": "D089",
-    "work_commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab",
-    "review_comment_id": 6761524241
+    "active_comment": 6763143812,
+    "status": "in progress",
+    "decision": "D090"
   },
   "duplicate_events": [
     {
@@ -3175,6 +3173,13 @@
       "work_commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab",
       "review_comment_id": 6761524241,
       "complete_cursor_commit": "5a6e77c34d0e2c713092572f802c7c56ed1ba968"
+    },
+    {
+      "comment_id": 6763143812,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D090",
+      "progress": "Receipt: assessing STEPS diagnostic admission and dispatch boundaries."
     }
   ],
   "migrated_from": {
