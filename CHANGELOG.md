@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8](https://github.com/lmmx/mibz2/compare/v0.2.7...v0.2.8) - 2026-11-10
+
+### <!-- 3 -->Performance
+
+- run-record front and LF table on blocks of few symbols, walked backward ([#324](https://github.com/lmmx/mibz2/pull/324))
+- guarded service core as the default on the i9-10900K, target-gated ([#316](https://github.com/lmmx/mibz2/pull/316))
+- *(bwt)* the build's windows cut into runs, with a cheap classifier for high-entropy windows ([#312](https://github.com/lmmx/mibz2/pull/312))
+- count the cooperative waits (wait-stats feature, off by default); the spin hypothesis for the i9 slow mode not confirmed ([#311](https://github.com/lmmx/mibz2/pull/311))
+
+### <!-- 4 -->Documentation
+
+- *(team)* ownership: the team owns mibz2 and ships ([#345](https://github.com/lmmx/mibz2/pull/345))
+- *(changelog)* 0.2.7's notes from its paired run against 0.2.6 ([#307](https://github.com/lmmx/mibz2/pull/307))
+
+### <!-- 9 -->Other
+
+- optional held spinner for workstation runs (W1) ([#350](https://github.com/lmmx/mibz2/pull/350))
+- MONODROMY joins as mathematical inventor (Louis, 10 Nov 2026): exploratory lane exempt from the 48h expiry, peer of the Pathfinder, inbox #346, routing and cursor ([#347](https://github.com/lmmx/mibz2/pull/347))
+- *(coop)* the walk-stats instrument, feature-gated (off by default) ([#338](https://github.com/lmmx/mibz2/pull/338))
+- *(ab)* the child's record, schema ab-child/2 (bench 3.6.0) ([#336](https://github.com/lmmx/mibz2/pull/336))
+- share-nothing pricing, a diagnostic C5 recipe (registration, not frozen) ([#326](https://github.com/lmmx/mibz2/pull/326))
+- bench-par-scan, the parallel scan's knee sweep, its run's result ([#317](https://github.com/lmmx/mibz2/pull/317))
+- RULES C6: delegate bench design, merge acceptance and adoption policy as a class (Louis, 2026-11-09) ([#306](https://github.com/lmmx/mibz2/pull/306))
+
 ## [0.2.7](https://github.com/lmmx/mibz2/compare/v0.2.6...v0.2.7) - 2026-11-09
 
 A safety release. A parallel `BzReader` whose source panics now fails its next read, instead
