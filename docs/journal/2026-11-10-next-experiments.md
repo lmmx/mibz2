@@ -17,8 +17,9 @@ recounted from archived bundles; nothing here was timed.
   (0.09 → 0.23 s); run-queue wait is 0.0002–0.0004 s in both;
 - the gap just before decides it, not history: gap after no-gap 15 of 16 slow, no-gap after gap
   0 of 16;
-- the probed passes had the same 0.26 s gaps and were fast 100 of 100. Something busy during
-  the gap prevents it. That is also why no slow run was ever probed.
+- the two probe passes had the same 0.26 s gaps and were fast 120 of 120 (100 probed, 20 not).
+  Inference, not shown: the harness was at work in those gaps and asleep in the gap block's,
+  so a machine that is not idle stays fast. That would also be why no slow run was probed.
 
 **Why it is a product matter, not a bench artefact.** A command-line decode, or a library call
 from an idle program, starts after an idle gap. On this machine that decode takes 0.30 s, not
