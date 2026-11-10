@@ -83,6 +83,10 @@ pub mod bwt;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
+// (research only, never used by the decoder: design D at k = 4 in the delta packing, a
+// counting probe; docs/journal/2026-11-10-d4-delta-count-registration.md)
+#[doc(hidden)]
+pub mod d4_delta;
 pub mod mtf;
 pub mod parallel;
 mod read;
