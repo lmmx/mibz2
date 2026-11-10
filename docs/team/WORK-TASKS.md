@@ -7,6 +7,10 @@ marked:
 - **untested:** never run yet. It is offered as untested, and is updated here once Louis
   reports the result.
 
+## Coordinator failover — manual pilot, untested
+
+When the primary Claude Coordinator is unavailable, Louis may launch a new ChatGPT Work session with [WORK-ACTING-COORDINATOR.md](WORK-ACTING-COORDINATOR.md) and the owner-activated succession procedure in [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md). **This is a manual Work launch prompt, not the known-to-work persistent webhook task template below.** The pilot is untested and must not be reported as installed, enabled, or automatically triggered until its settings are verified. It uses the same Coordinator role and is not an independent scientific or safety reviewer.
+
 ## What Work can and can't do (learned)
 
 - **Model and effort can't be set by a prompt.** The task tool doesn't expose them. Louis
