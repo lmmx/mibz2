@@ -1,0 +1,170 @@
+{
+ "summary": "H4, built and tested by brute force in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt (DIR below). Its first two clauses hold; its third is false as worded.\n\n1. LF of the alternating BWT is a flip on every run, with no dependence on parity. It is an exchange of the r runs with every interval flipped; the bottom order is by byte and, inside a byte, by position descending.\n2. Rauzy induction at the right end with one orientation bit a letter inverts it. The step table is the entry's, with two changes: the loser is re-seated just after the winner if the winner's bit is 0 and just before it if 1, and bits add mod 2. Proof in DIR/README. No assertion failed on 17,737 exhaustive words, 20,000 random primitive words and 20,000 random columns. The bit is the parity of |w|, so it need not be stored.\n3. The grammar's tree is the min-Cartesian tree of the alternating-order rotation ranks over the least rotation in that order (the entry's Theorem 1 carries over). But not every letter's word is a Galois word: 28,834 of 132,036 rules are squares uu of an odd-length Galois word (abb gives (a)(bb)). The tree therefore differs from the standard-factorisation tree on 16,030 of the 17,737 words.\n\nAlready in print:\n- Reutenauer (Sém. Lothar. Combin. B54h, 2006, Théorème 2.2, Remarque 2.2, Corollaire 2.3) makes Galois words a Hall set with a standard factorisation iterated to a complete bracketing. A \"Galois tree\" in that sense exists; the induction does not produce it.\n- Hendrian et al. (CPM 2024, p. 2) name merging the alternating BWT with the bijective BWT as future work.\n- Gessel–Reutenauer's inverse (any column read as a multiset of necklaces) is reported in Elizalde arXiv:2503.09972 §2.1. I did not find it cited in the sections of the entry I read (0, 1, 2, 5.5, 5.6, 8, 10); the entry treats the arbitrary column operationally.\n- None of the seven alternating-order/Galois papers fetched mentions interval exchanges, flips, Rauzy induction or a grammar for the ABWT.\n\nCounts: on the small words the ABWT has 13.0% more runs than the BWT and 1.3% fewer steps. On two 100,000-byte blocks of the repository's Markdown, runs, steps and r2−1 are within 0.4% of each other.\n\nThe repository was not touched (git status empty).",
+ "claims": [
+  {
+   "claim": "Definition implemented. Alternating order: at the first differing index i (0-based), i even means the smaller letter is smaller, i odd the larger letter is smaller. ABWT of a primitive word: last column L of its rotations sorted in that order, plus the row I of the word. LF(i) = sum_{c<=L[i]} P[c] - rank_{L[i]}(L,i-1) - 1. Inversion: w[n-1-j] = L[LF^j(I)].",
+   "label": "K",
+   "evidence": "Giancarlo, Manzini, Restivo, Rosone, Sciortino, arXiv:1907.02308v1 (whole PDF read): Section 2 p.4 (order), Section 3 p.5 and Fig.1 (transform), Proposition 3.2(3b) p.6 (j-th a in F is the (|w|_a-j+1)-th in L), eq.(3) p.10, eq.(1) p.9. Journal data from Crossref: Theoretical Computer Science 812 (2020) 230-243, doi 10.1016/j.tcs.2019.11.002. Written with locators in DIR/README section 1."
+  },
+  {
+   "claim": "Gessel-Restivo-Reutenauer 2012 introduced the bijection behind the ABWT: replace the standard permutation by the co-standard one, and the inverse is computed with the alternate lexicographic order. Its image is multisets of necklaces that are primitive or (uu) with u primitive of odd length, each odd-length necklace at most once.",
+   "label": "K",
+   "evidence": "Abstract only for the paper itself (read through the Brandeis ScholarWorks record; the publisher page returned 403 and the author page failed TLS). Bibliographic data from Crossref: European Journal of Combinatorics 33(7) (2012) 1537-1546, doi 10.1016/j.ejc.2012.03.016. The image conditions are as reported by Elizalde, arXiv:2503.09972, Section 2.2 (read), citing '[4, Sec. 3]'. I did not read GRR Section 3 itself."
+  },
+  {
+   "claim": "Step 2. On every run [s, s+len) of the ABWT, LF(s+k) = LF(s) - k: an order-reversing isometry (flip). It depends on nothing: not the run's length, start row, byte, or n. The bottom order of the runs is by byte ascending and, inside a byte, by position descending. So LF_alt is a discrete interval exchange on the r runs with every interval flipped.",
+   "label": "P + tested",
+   "evidence": "P: one line from eq.(3), README section 2. Tested: `cd DIR && python3 step2_runs.py` (out_step2.txt). All 17,737 primitive words over 2 letters to length 12 and 3 letters to length 8: LF by eq.(3) equals LF read off the sorted matrix on every word, is one n-cycle, and eq.(1) returns the word. ABWT runs: 71,007 of one row; 35,666 of two or more rows, all flips, 0 translations, 0 neither. Split by parity of length, start, n and by byte: flips in every class. BWT control: 38,424 runs of two or more rows, all translations."
+  },
+  {
+   "claim": "None of the papers read calls the ABWT's LF an interval exchange with flips, applies Rauzy induction to it, or builds a grammar from it. The one paper read that treats exchanges with flips next to the BWT does not mention the alternating order and reports a negative result for flips.",
+   "label": "K (absence in the papers read; not a proof of absence in the literature)",
+   "evidence": "grep over the fetched texts: 'interval exchange', 'flip', 'Rauzy' occur 0 times in arXiv:1907.02308, 1902.01280, 2403.02636, 1812.04515, 1904.00954 and Reutenauer SLC B54h (the only 'flip' hit in Elizalde 2503.09972 is unrelated). Ferenczi-Zamboni, arXiv:2507.17370v2, end of Section 3 and Proposition 10: their clustering results 'do not extend' to exchanges with flips; 'alternating' and 'Galois' occur 0 times there. One web search for the ABWT/flips link found nothing."
+  },
+  {
+   "claim": "Step 3, the step with an orientation bit f a letter (f=1 for every run at the start). A = last on top, B = last on bottom, N -> w_A w_B (the same rule as the entry). Top wins: lam_A -= lam_B; w_B := N; f_B ^= f_A; B is re-seated on the bottom just AFTER A if f_A = 0, just BEFORE A if f_A = 1. Bottom wins: lam_B -= lam_A; w_A := N; f_A ^= f_B; A is re-seated on top just after B if f_B = 0, just before B if f_B = 1 (B then loses its first rows, not its last). Equal: w_B := N; f_B ^= f_A; A deleted; B takes A's bottom place. Invariant: the first-return map sends I_a onto J_a keeping order if f_a=0, reversing if f_a=1, after |w_a| steps, reading w_a reversed.",
+   "label": "P + tested",
+   "evidence": "P: README section 3 (the entry's section 2 proof redone case by case with the bit). Tested: `cd DIR && python3 step3_induction.py` (out_step3.txt). The invariant is checked directly, not through the proof (every point of every letter: image, return time, word read, after every step): 5,191 exhaustive words (2 letters to length 10, 3 letters to length 7), 1,000 of the random words, and all 20,000 random columns. No failure."
+  },
+  {
+   "claim": "The induction with flips inverts the ABWT. It ends on one letter of one row whose expansion E is the least rotation in the alternating order (the Galois rotation). With the row I followed as (letter, offset, v), T[k] = E[(k - v) mod n]. Emission is the entry's formula with pi = LF_alt: x_0 = I, x_{k+1} = pi(x_k), L[x_k] = T[n-1-k]. The followed point's offset is mirrored (lam-1-o) whenever it passes through a flipped loser; formulas in README section 3.",
+   "label": "P + tested",
+   "evidence": "`cd DIR && python3 step3_induction.py`: (a) all 17,737 exhaustive primitive words: 106,673 runs, 132,036 steps; (b) 20,000 random primitive words over 2 to 8 letters, length 1 to 60 (187 non-primitive draws rejected, since the ABWT is defined for primitive words): 474,832 runs, 576,411 steps. E equals row 0's rotation and T[k] = E[(k-v) mod n] asserted on every word. The linked-orders form (O(1) a step) makes the same rules in the same order on every word. The same code with alt=False (the entry's induction) passes the same assertions as a control."
+  },
+  {
+   "claim": "The orientation bit is the parity of the word's length: f_a = |w_a| mod 2 at every moment. A letter with an even-length word is a translation, odd-length a flip. An implementation that keeps |w| needs no stored bit.",
+   "label": "P + tested",
+   "evidence": "P: README section 3 (f := f_A xor f_B and |w| := |w_A| + |w_B| from f=1, |w|=1). Asserted inside abwt.induce after every step of every ABWT run of steps 3, 4, 4b. On the real blocks 33,028 of 79,896 and 31,923 of 76,551 rules have odd length (step5_block.py)."
+  },
+  {
+   "claim": "Any column (not an ABWT): at A = B the letter closes. If f_A = 0 it is lam_A cycles spelling w_A; if f_A = 1 it is floor(lam_A/2) cycles spelling w_A w_A plus, for odd lam_A, one cycle spelling w_A. With the entry's drop rule the induction reproduces T[k] = L[LF^{-(k+1)}(ptr)] for any row ptr.",
+   "label": "P (the closing rule) + tested",
+   "evidence": "P: README section 3, 'A = B'. `python3 step3_induction.py` part (c): 20,000 random columns (2 to 5 letters, length 1 to 40) with a random row: 17,790 with several cycles, 14,817 with a letter dropped, 49,501 letters closed, 6,118 closed flipped letters with lam >= 2; output bytes equal the direct walk on all; closed cycles are cycles of LF on all. BWT control on the same columns: 17,932 / 13,978 / 46,366."
+  },
+  {
+   "claim": "Step 4(a), counts on all 17,737 small primitive words. Runs: BWT 94,401, ABWT 106,673 (1.130x). Steps: BWT 133,817, ABWT 132,036 (0.987x). By kind top/bottom/equal: BWT 29,762 / 27,391 / 76,664; ABWT 20,706 / 22,394 / 88,936 (equal = r - 1 on every word for both). r2 - 1 (cells of the common refinement less one): BWT 110,954, ABWT 119,642; S >= r2 - 1 asserted for both. Per word: S_abwt < S_bwt on 4,845, equal on 9,658, greater on 3,234; r_abwt < r_bwt on 3,392, equal on 3,937, greater on 10,408. At the largest lengths: 2 letters n=12 (4,020 words) r 24,840 vs 28,008 and S 40,272 vs 39,384; 3 letters n=8 (6,480 words) r 34,800 vs 38,784 and S 43,640 vs 43,480. On the 20,000 random words: r 466,934 vs 474,832; S 580,572 vs 576,411.",
+   "label": "tested",
+   "evidence": "`cd DIR && python3 step4_compare.py` part (a); per-length table in out_step4.txt. Random-word sums from step3_induction.py part (b)."
+  },
+  {
+   "claim": "Step 4(b), analogue of the entry's Theorem 1: the derivation tree of the ABWT grammar is the min-Cartesian tree of key(j) = alternating-order rank of the rotation starting at G[j], over G = the least rotation in that order. The rule of step [m', m) sits at exactly the nodes with key in [m', m).",
+   "label": "P + tested",
+   "evidence": "P: README section 4, Theorem A (the entry's proof never uses that a letter is a translation). Tested: `python3 step4_compare.py` part (b): trees equal on 17,737 exhaustive and 5,000 random primitive words; 143,672 and 149,043 nodes checked against their step's interval. BWT control passes the same."
+  },
+  {
+   "claim": "'Every letter's word is a Galois word' is FALSE. Every letter's word is a Galois word or the square uu of a Galois word u of odd length; no other kind occurs. First case: T = abb (G = abb, L = bab) gives abb -> (a)(bb), bb -> (b)(b). The square arises when two different letters carrying one odd word meet; in the BWT's induction no rule is a square.",
+   "label": "P + tested",
+   "evidence": "P: README section 4, Theorem B (from Propositions 7.4, 7.5 and property (4) of arXiv:1907.02308v1: every node's word is below each of its proper suffixes in the order of Definition 6.1, and its borders have odd length). Tested, step4_compare.py B4: exhaustive 103,202 rules Galois, 28,834 squares, 0 other; random 127,136 / 16,838 / 0. Real blocks (step5_block.py): 1,082 and 1,022 square rules for the ABWT, 0 for the BWT."
+  },
+  {
+   "claim": "Each rule N -> X Y of the ABWT grammar splits at the least proper suffix of exp(N) in the order of Definition 6.1 (alternating order extended to different lengths), equivalently the longest proper suffix that is a Galois word or an odd Galois square. Equal words therefore have equal trees.",
+   "label": "P + tested",
+   "evidence": "P: README Theorem B(i). Tested, step4_compare.py B3 and B5: all 132,036 exhaustive and 143,974 random rules. The reading 'longest proper suffix that is a Galois word' fails on 34,293 exhaustive and 18,494 random rules. B6: Definition 6.1 suffix order equals rotation order on every G (Proposition 7.5) on 22,737 words, as a check of the code."
+  },
+  {
+   "claim": "A standard-factorisation tree for Galois words is in print. Generalised Lyndon words (Galois words among them) form a set of Hall words. The standard factorisation w = uv takes v with least v^omega among proper suffixes, shortest such, which is also the longest proper suffix that is a generalised Lyndon word; u and v are again generalised Lyndon words. Iterated, it brackets w completely and gives a basis of the free Lie algebra.",
+   "label": "K",
+   "evidence": "Reutenauer, 'Mots de Lyndon généralisés', Séminaire Lotharingien de Combinatoire B54h (2006), 16 pp. (PDF from the journal's site, Section 2 read): Théorème 2.2 and its proof p.7, Remarque 2.2, Corollaire 2.3 (via [R, Th.4.9] = his Free Lie Algebras, not read by me). Restated in Dolce-Restivo-Reutenauer, arXiv:1812.04515v1, introduction and Theorem 16, Corollaries 17-18 (TCS 777 (2019) 232-242, doi 10.1016/j.tcs.2018.12.015, Crossref). Neither paper mentions the ABWT's LF, a Cartesian tree of alternating ranks, or squares as nodes."
+  },
+  {
+   "claim": "The ABWT induction's tree is NOT that Hall tree in general. The two are equal exactly when the grammar has no square rule. Where the induction has X (v v) with v an odd Galois word, Reutenauer's factorisation of the same word is (X v)(v). A square rule is always (u)(u). Every other rule has the Hall split.",
+   "label": "tested",
+   "evidence": "`cd DIR && python3 step4b_hall.py` part (1), out_step4b.txt. Exhaustive: trees equal on 1,707 words, differ on 16,030 of 17,737; rules: 68,909 same split, 34,293 of the form X(vv) with Hall split (Xv)(v), 28,834 squares (u)(u). 3,000 random primitive words: 522 equal, 2,478 differ; 52,876 / 9,036 / 8,246. 'Equal iff no square rule' asserted on every word. Control: for the BWT the induction's tree equals the iterated standard factorisation (Lyndon tree) on all 17,737 + 3,000 words."
+  },
+  {
+   "claim": "On any column the closed words of the induction with flips, in closing order, are Galois words with non-increasing omega-powers in the alternating order. T(L) = w_1^lam_1 w_2^lam_2 ... has them as its unique non-increasing factorisation into Galois words. 'Factorise T, sort the rotations of the factors by their infinite periodic words in the alternating order, take the letter before each' returns L. L -> T(L) is a bijection of the words of each length tested. Each closed word's tree is the least-proper-suffix tree. The cycles of LF_alt satisfy the image conditions reported for GRR Section 3.",
+   "label": "tested (Conj as a theorem: no proof written)",
+   "evidence": "`python3 step4b_hall.py` part (2), checks C1-C8. Every column over 2 letters to length 10 and 3 letters to length 7 (5,325 columns, 12,311 closed letters, of which 2,214 flipped with lam >= 2 and 268 unflipped with lam >= 2; 2,678 necklaces of the form (uu)); bijection at all 17 lengths. 5,000 random columns (2 to 5 letters, length to 30): 14,560 closed letters. The factorisation criterion used (last factor = shortest suffix of least omega-power) is K: Dolce-Restivo-Reutenauer arXiv:1812.04515v1 Corollary 17; Reutenauer B54h Corollaire 2.2."
+  },
+  {
+   "claim": "An alternating bijective BWT is named in print as future work, not built: an efficient Galois factorisation 'allows us to merge indexing techniques for the alternate BWT with the bijective BWT'.",
+   "label": "K",
+   "evidence": "Hendrian, Köppl, Yoshinaka, Shinohara, 'Algorithms for Galois Words: Detection, Factorization, and Rotation', arXiv:2403.02636v2, Section 1, p.2 (Sections 1-4 read); CPM 2024, LIPIcs 296, 18:1-18:16, doi 10.4230/LIPIcs.CPM.2024.18 (DROPS page fetched). One web search for a later paper defining it found none."
+  },
+  {
+   "claim": "Step 4(c), what the induction needs that the BWT's does not. (1) The bottom order at the start is reversed inside each byte. (2) One bit a letter, which is |w| mod 2, so free if |w| is kept. (3) The loser is re-seated before or after the winner by the winner's bit; when B wins and is flipped, B's surviving part is the end of its top interval, not the start. (4) A followed row's offset is mirrored through a flipped loser. (5) A closing flipped letter with lam >= 2 is cycles spelling ww (never for a primitive text). (6) Words are no longer all primitive: two different letters may carry the same word and merge into a square, and Galois words can have odd borders, so arguments resting on Lyndon words being unbordered do not carry over.",
+   "label": "P (1-5) + tested; K for odd borders",
+   "evidence": "README sections 2-4; tests as above. Odd borders: Reutenauer B54h Proposition 3.1; arXiv:1907.02308v1 Lemma 7.3. Not examined: the entry's cells form (section 3.5, not among the sections I was asked to read) and the mark-instead-of-follow argument with flips."
+  },
+  {
+   "claim": "Step 5, real text: two 100,000-byte blocks of the repository's Markdown (docs/*.md then docs/team/*.md concatenated, 246,293 bytes, 22 files). Block [0,100000): BWT r=47,005, S=79,993 (1.7018 r), top/bottom/equal 24,113/8,876/47,004, r2-1=66,751, distinct rules 30,201. ABWT r=47,080, S=79,896 (1.6970 r), 24,140/8,677/47,079, r2-1=66,771, distinct rules 29,347. Block [100000,200000): BWT r=44,806, S=76,857, r2-1=63,389, distinct 30,144. ABWT r=44,777, S=76,551, r2-1=63,337, distinct 29,044. ABWT/BWT ratios: r 1.0016 and 0.9994; S 0.9988 and 0.9960; r2-1 1.0003 and 0.9992; distinct rules 0.9717 and 0.9635.",
+   "label": "tested",
+   "evidence": "`cd DIR && python3 -I step5_block.py text/repo_markdown.txt` (out_step5.txt). Rotations sorted by numpy prefix doubling, checked against the brute-force sort on 300 random words in both orders. LF checked to be one cycle spelling the block. The root's expansion asserted equal to the least rotation in each order on all four runs. Counts only, no clock. The text is team documentation with r/n 0.45 to 0.47, not the entry's corpus."
+  },
+  {
+   "claim": "H1 (right-end induction on any column inverts the extended BWT; cycles close in non-increasing order; closed words are the Lyndon factorisation, each with its Lyndon tree). My papers state only the background: Gessel-Reutenauer's inverse orders the periodic sequences of the necklaces lexicographically, and the BWT is a particular case of that inverse. None addresses an induction or a closing order. My BWT control agrees with H1 on every column tested.",
+   "label": "K (background) + tested (control); identification with Gil-Scott and Mantaci et al. unverified",
+   "evidence": "K: Elizalde arXiv:2503.09972 Section 2.1, reporting Gessel-Reutenauer 1993 Lemma 3.4; GRR 2012 abstract; arXiv:1907.02308v1 introduction p.2. Tested: step4b_hall.py part (2) with alt=False: 5,325 exhaustive columns (12,311 closed letters) and 5,000 random (14,448). Closed words are Lyndon, omega-powers non-increasing, T(L) factorises into exactly them, the forward map (factorise, sort rotations of factors by periodic words, preceding letters) returns L, bijection at 17 lengths, each closed word's tree is its iterated standard factorisation. I did not fetch Gil-Scott or Mantaci-Restivo-Rosone-Sciortino, so that the forward map is their transform is not checked against their text."
+  },
+  {
+   "claim": "H2 (left-end induction gives the Lyndon tree of the greatest rotation for the inverse order): my papers do not address it, and I did not test it. The only nearby statement: anti-Lyndon words for an order are classical Lyndon words for the opposite order.",
+   "label": "K (the nearby statement only)",
+   "evidence": "Dolce-Restivo-Reutenauer arXiv:1812.04515v1, introduction p.2 ('can be viewed as classical Lyndon words with respect to the order' opposite), referring to their Example 9."
+  },
+  {
+   "claim": "H3 (left Lyndon tree as a tree of Rauzy steps; its node count over the hinges): my papers do not address Rauzy steps. The left Lyndon tree is in print as the Cartesian tree of the prefix standard permutation. Not tested by me.",
+   "label": "K (statement read, proof not)",
+   "evidence": "Dolce-Restivo-Reutenauer, 'Some variations on Lyndon words', arXiv:1904.00954: Section 5.1 (left standard factorisation: u the longest proper prefix that is Lyndon, after Viennot) and Theorem 36 ('The trees L(w) and C(w) are equal'). Introduction and those statements read; proofs not read."
+  },
+  {
+   "claim": "H4 verdict. (i) 'LF is an interval exchange with flips on the runs': true, every run a flip; not stated in those terms in any paper read (Proposition 3.2(3b) and eq.(3) state the reversal inside each letter). (ii) 'Rauzy induction with flips inverts it': true by proof and test; not in the papers read. (iii) 'its grammar is the standard-factorisation tree for the alternating order (a Galois tree)': false as worded. The grammar is the Cartesian tree of alternating ranks; its nodes are Galois words or odd Galois squares; it equals the standard-factorisation tree in print (Reutenauer 2006) only when no square occurs.",
+   "label": "P + tested; K for the tree in print",
+   "evidence": "The claims above; README sections 2-4; out_step2.txt to out_step4b.txt."
+  },
+  {
+   "claim": "H5 (a step is a Lazard elimination; the grammar is the standard bracketing in the free Lie algebra): my papers do not mention Lazard elimination. They do state that the iterated standard factorisation of a (generalised) Lyndon word is a complete bracketing giving a basis of the free Lie algebra, and that for the usual order it is Lothaire's standard factorisation. My control shows the BWT induction's tree equals that iterated factorisation.",
+   "label": "K (bracketing) + tested (control); the Lazard part not addressed",
+   "evidence": "Reutenauer B54h, Remarque 2.2 and Corollaire 2.3. 'Lazard' and 'elimination' occur 0 times in all fetched texts. Tested: step4b_hall.py part (1) control, 17,737 + 3,000 words."
+  },
+  {
+   "claim": "The square nodes of the ABWT grammar correspond to the squares [u,u] of odd elements in a free Lie superalgebra, so the induction's tree would be a standard bracketing there rather than in the free Lie algebra.",
+   "label": "Conj",
+   "evidence": "Suggested only by the GRR 2012 abstract, which links the image of their bijection to 'the oddly generated free Lie superalgebra' (abstract only). Nothing tested or read beyond that sentence."
+  }
+ ],
+ "files": [
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/README",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/abwt.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/step2_runs.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/step3_induction.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/step4_compare.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/step4b_hall.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/step5_block.py",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/out_step2.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/out_step3.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/out_step4.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/out_step4b.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/out_step5.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/text/repo_markdown.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/text/FILES.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1907.02308.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1907.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/s54reut.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/s54reut.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1812.04515.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1812.04515.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1904.00954.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1904.00954.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2403.02636.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2403.02636.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2503.09972.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2503.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2507.17370.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/2507.17370.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1902.01280.pdf",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/1902.01280.txt",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/crossref_tcs.json",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/crossref_ejc.json",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/crossref_drr.json",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/arxiv_q.xml",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/s54reut.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs1907.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs1812.04515.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs1902.01280.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs1904.00954.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs2403.02636.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs2503.html",
+  "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/abwt/dl/abs2507.17370.html"
+ ],
+ "not_done": "Unverified or not read:\n- Gessel-Restivo-Reutenauer 2012: abstract only (publisher 403, author page TLS failure). Its Section 3 is used only through Elizalde's report (arXiv:2503.09972 Section 2.2). Its own definition of the inversion was therefore not read; the definition implemented is Giancarlo et al.'s, which was read in full.\n- DBLP returned a bot check; bibliographic data are from Crossref, arXiv abs pages, the SLC page and DROPS. The arXiv abs page of 2403.02636 shows a truncated related DOI; the DOI given is from the DROPS page.\n- Not fetched: Giancarlo et al., Inf. Comput. 2023 (said by Hendrian et al. to adapt r-indexing to the ABWT; only its 2019 arXiv version 1902.01280v1 was grepped, which has no run-level LF statement); Nogueira 1989 (Rauzy induction with flips; my step table is derived and tested, not matched to his; its reference line was read in Ferenczi-Zamboni's bibliography only); Gil-Scott; Mantaci-Restivo-Rosone-Sciortino; Hohlweg-Reutenauer; Reutenauer's Free Lie Algebras.\n- Hendrian et al. Sections 5-7 and the proofs in arXiv:1904.00954 were not read.\n\nNot tested or not proved:\n- H2 and H3 were not tested (outside this step). H5's Lazard clause is not addressed by anything I read or ran.\n- The any-column statements for the alternating order (closed words are the Galois factorisation; the forward map; bijection) are tested only: exhaustively to length 10 (2 letters) and 7 (3 letters), plus 5,000 random columns. No proof was written.\n- The relation 'X(vv) in the induction corresponds to (Xv)(v) in Reutenauer's tree' is tested, not proved.\n- The entry's closed form for S (section 5.5) and Theorem 4 (steps = r2 - 1 + U) were not re-derived with flips; only S >= r2 - 1 was asserted.\n- The entry's cells form (section 3.5) and its 'no point need be followed' mark were not examined with flips.\n- The ABWT of a non-primitive word is not defined in the paper read and was not tested as a transform; non-primitive cases are covered only as arbitrary columns.\n\nScope of the counts: the exhaustive sets are small (length at most 12); random words go to length 60; the real text is two 100,000-byte blocks of team Markdown (r/n 0.45 to 0.47), not the entry's Wikidata blocks. No timing was done."
+}
