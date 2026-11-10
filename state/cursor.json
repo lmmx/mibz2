@@ -139,9 +139,10 @@
       "delivery_id": "b4bdf140-dd5d-11f1-982d-94ca2216aeb7"
     },
     "6782113588": {
-      "status": "in_progress",
+      "status": "reconciled",
       "delivery_id": "fd4376b0-dd5d-11f1-8bd6-6003a54e35c0",
-      "planned_action": "Reconcile owner's direct Codex launch into one #363 assignment; complementary Optimiser pricing, not duplicate implementation"
+      "planned_action": "Reconcile owner's direct Codex launch into one #363 assignment; complementary Optimiser pricing, not duplicate implementation",
+      "action_link": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782141557"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -245,9 +246,14 @@
       "url": "https://github.com/lmmx/mibz2/pull/160#issuecomment-6782112235"
     },
     "codex": {
-      "status": "in_progress",
+      "status": "posted_verified_existing_session_observed",
       "scope": "Existing direct-owner cells gap investigation; no new task/session",
-      "wake": "Actual Codex report 6782113588 confirms manual owner launch; no restart mechanism"
+      "wake": "Actual Codex report 6782113588 confirms manual owner launch; no restart mechanism",
+      "comment_id": 6782141557,
+      "recipient_report": 6782113588,
+      "receipt_for_formal_assignment_pending": true
     }
-  }
+  },
+  "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
+  "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor."
 }
