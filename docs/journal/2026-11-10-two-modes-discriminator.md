@@ -111,7 +111,7 @@ deadlines and the admission contract.
     pass 1 is a **serial contrast**. It mixes the sibling's load with whatever changed in
     between.
   - **What it is not:** it is not a causal price of a busy sibling.
-- **Every stage that can wait is bounded** by `bench/bounded.py` (taken unchanged from #317).
+- **Every stage that can wait is bounded** by `bench/bounded.py` (master's, from #317).
   The command runs in a process group of its own, which gets TERM at the deadline and KILL
   after the grace, its descendants included. The deadlines are `DEADLINES` in `two_modes.py`:
 
