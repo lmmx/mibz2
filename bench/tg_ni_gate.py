@@ -7,10 +7,11 @@ verdict, after the evidence is uploaded.
 - **qualification:** passes (exit 0) only if the judge exited 0 and its verdict is valid and
   passes condition 2. A valid NOT SHOWN (judge exit 1), invalid evidence (exit 2), a missing or
   unreadable verdict, or any disagreement between the exit and the verdict fails (exit 1).
-- **smoke:** a plumbing check, never evidence. The judge must have refused it as smoke: its
-  verdict present, not valid, and among its problems the smoke label's refusal. That is
-  success (exit 0), and the summary says "smoke: not evidence". A smoke run the judge didn't
-  refuse as smoke, or that produced no verdict, fails (exit 1): the plumbing is broken.
+- **smoke** and **pilot** (the registration's §2.8 design pilot): never evidence. The judge must have refused it as smoke: its
+  verdict present, not valid, and among its problems the label's refusal. That is success
+  (exit 0), and the summary says "smoke: not evidence" (or "pilot: not evidence"). A run the
+  judge didn't refuse for its label, or that produced no verdict, fails (exit 1): the plumbing
+  is broken. The pilot's own analysis is bench/tg_ni_pilot.py's, offline.
 - Any other label fails.
 
 It writes one line to `--summary` (the step summary) either way.
@@ -20,21 +21,18 @@ import argparse
 import json
 import sys
 
-SMOKE_REFUSAL = "labelled 'smoke'"
-
-
 def gate(label, verdict, judge_exit):
     """(exit status, one-line summary)"""
-    if label == "smoke":
+    if label in ("smoke", "pilot"):
         if not isinstance(verdict, dict):
-            return 1, "smoke: not evidence; FAILED: the judge wrote no verdict (the plumbing is broken)"
+            return 1, f"{label}: not evidence; FAILED: the judge wrote no verdict (the plumbing is broken)"
         if verdict.get("valid"):
-            return 1, "smoke: not evidence; FAILED: the judge admitted a smoke run"
-        if not any(SMOKE_REFUSAL in str(p) for p in verdict.get("problems", [])):
-            return 1, "smoke: not evidence; FAILED: the judge did not refuse it as smoke"
+            return 1, f"{label}: not evidence; FAILED: the judge admitted a {label} run"
+        if not any(f"labelled '{label}'" in str(p) for p in verdict.get("problems", [])):
+            return 1, f"{label}: not evidence; FAILED: the judge did not refuse it as {label}"
         if judge_exit != 2:
-            return 1, f"smoke: not evidence; FAILED: the judge exited {judge_exit}, not 2 (refused)"
-        return 0, "smoke: not evidence (the judge refused it as a smoke run, as it must; plumbing OK)"
+            return 1, f"{label}: not evidence; FAILED: the judge exited {judge_exit}, not 2 (refused)"
+        return 0, f"{label}: not evidence (the judge refused it as a {label} run, as it must; plumbing OK)"
     if label == "qualification":
         if not isinstance(verdict, dict):
             return 1, "qualification: FAILED: no readable verdict (INVALID)"

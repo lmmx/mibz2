@@ -85,6 +85,7 @@ jobs:
           python3 bench/test_svc_target_check.py
           python3 bench/test_service_tg.py
           python3 bench/test_tg_ni_gate.py
+          python3 bench/test_tg_ni_pilot.py
       - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_svc_target.py
       - name: The guarded service A/B's judge and admission (its witnesses)

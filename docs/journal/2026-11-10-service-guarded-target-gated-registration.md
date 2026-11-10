@@ -1,6 +1,9 @@
 # The guarded service default under the target-gated route: registration (DRAFT)
 
-10 November 2026; amended the same day under the Guardian's D077 (§2 replaced, §3.1 added).
+10 November 2026. Amended the same day:
+- under the Guardian's D077 (§2 replaced, §3.1 added);
+- under D078 (tooling via #319);
+- under the Researcher's REVISE, 6756808726 (§§2.3, 2.4, 2.8, 3.1).
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -211,6 +214,16 @@ A cell's pairs are (head, base) at one thread count in one round, on that shard'
 cell mixes runners. Nothing is pooled across shards.** Each cell's interval comes from its own
 runner alone.
 
+**The scope of the claim** (the Researcher's §4):
+- The intersection-union test gives a **conjunction of 42 conditional claims, each on the
+  runner model that shard drew**, under this harness.
+- It is not a fleet mean, not one hardware response surface, and it covers no unobserved model.
+- **The model is recorded per shard, and models are not balanced across corpora.** Balancing
+  would still confound corpus with model.
+- A model-general claim would need a prospectively crossed cell × model design, or a reviewed
+  mechanistic extrapolation. It must never come from re-running shards until a convenient model
+  is drawn.
+
 **What sharding changes, and the resulting estimand:**
 - Each corpus's cells now run on their own runner, so they don't share the round with the other
   corpora, as the standing bench's do. Their cache and thermal history is their own corpus's,
@@ -243,111 +256,146 @@ runner alone.
 
 It then runs the judge. Every attempted shard is archived, failures included.
 
-### 2.3 The sampling model, and the estimator
+### 2.3 The sampling model, and the estimator: a candidate, not yet calibrated
 
+**Amended after the Researcher's REVISE** (#145 6756808726; report
+`state/reports/target-gated-ni-6756614616/report.md` on `team-state/researcher` at e1552925).
+
+**The setup:**
 - **For each cell:** X_i = log(head time_i / base time_i), i = 0 … R − 1, in round order.
 - **The estimate:** exp(mean X).
-- **Pairing removes common-mode noise. It doesn't make the X_i independent:** drift, thermal
-  evolution, a runner's noisy episode or order effects can correlate neighbouring rounds, and
-  then s/√R understates the standard error (D077).
-- **So the registered standard error is the batch-means one, chosen now and not after any
-  data.**
-  - The R = 600 rounds form B = **20** consecutive batches of 30 rounds.
-  - se = sd(batch means)/√B.
-  - The upper bound is U = exp(mean X + t(0.95, 19) · se), with t(0.95, 19) = 1.7291.
-  - The cell passes if U ≤ 1.02.
-  - The two-sided 95% interval for flags and RSS uses t(0.975, 19).
-- **What this assumes, stated:**
-  - **Within the run:** the cell's paired logs have a constant mean.
-  - **Dependence:** short-range only, decaying well within a 30-round batch (about 5 to 8
-    minutes of wall clock in a shard). The batch means are then approximately independent and,
-    at 30 rounds each, approximately normal.
-  - **What it tolerates:** autocorrelation within a batch, and heavy tails within a batch.
-  - **What it doesn't:** a trend across the whole run, or dependence lasting longer than a
-    batch. Under positive dependence of that kind the interval is too narrow.
-  - **Arm order:** balanced within every batch.
-- **What the interval is not:** a randomisation inference over runners. Its conclusion is about
-  the run on each shard's runner.
-- **Reported, never judged:**
-  - each cell's lag-1 autocorrelation of X in round order;
-  - its two halves' geometric means.
+- **Pairing doesn't make the X_i independent.** It removes common-mode noise, but drift,
+  thermal evolution, a runner's noisy episode or order effects can still correlate them (D077).
 
-  They are for the Researcher's assessment of the model. They don't select an estimator, and no
-  threshold on them changes a verdict.
-- **The Researcher's review of these assumptions comes before the freeze** (§10). If the review
-  finds the model inadequate, the design changes before any qualification data, never after.
-- **No validity check is applied to the qualification data beyond §2.5's admission.** Interval
-  width is not invalidity.
+**The candidate estimator is batch means:**
+- R rounds form B consecutive batches of m = R/B rounds;
+- se = sd(batch means)/√B;
+- U = exp(mean X + t(0.95, B − 1) · se), and the cell passes if U ≤ 1.02.
 
-### 2.4 Power, and size
+It is a candidate, not a certified design.
+
+**It is not calibrated, and the draft's assumption was wrong:**
+- **Thirty rounds are about 35–67 s of a shard at the pilot pace** (about 61–117 s at 1.75×),
+  not 5–8 minutes. Dependence lasting longer than that is not ruled out by anything measured.
+- **A correct t quantile is not a calibrated test when the batch means are dependent.** The
+  Researcher's falsifier, simulated: a stationary Gaussian AR(1) at the null boundary, R 600,
+  B 20, m 30, exact batch-mean covariance, 100,000 draws.
+
+  | ρ | nominal 5% test passed | E[estimated se²] / true Var(mean) |
+  |--:|--:|--:|
+  | 0.5 | 5.4% | 0.96 |
+  | 0.9 | **8.5%** | 0.69 |
+  | 0.99 | **28.7%** | 0.12 |
+
+  That is not evidence that CI has ρ = 0.9. It refutes the draft's "size 0.05 whatever σ, R
+  and B".
+
+**What is a pilot output, not an assumption:** the batch length m, the number of batches B, R,
+and the dependence model the bound rests on. The pilot (§2.8) estimates these, on the
+workflow's own runners, under the qualification's own conditions:
+- dependence at several lags;
+- the batch means' dependence;
+- the long-run variance's sensitivity to m;
+- order contrasts;
+- trends and change points;
+- each batch length's physical duration.
+
+The final m, B, R and estimator are then frozen against fresh qualification data, never
+against the pilot's.
+
+**Any trend or adequacy veto** is frozen numerically before qualification. A veto:
+- names its statistic, threshold and scope;
+- with the veto triggered, marks the cell's qualification INVALID: rows kept, no retry, no
+  switch to another estimator;
+- can only narrow an already valid test's passes. It cannot calibrate an invalid bound.
+
+A trend test that finds nothing, or a low lag-1 correlation, is not proof of independence. No
+reported 95% coverage is conditioned on passing a screen unless the combined procedure is
+justified.
+
+**Arm order:** balanced over every two rounds from an even round, so every batch of even
+length is balanced. Batch lengths are even: R900/B20, with batches of 45 rounds, is dropped.
+
+### 2.4 Power, size and R: what the pilot must settle
 
 - **Size:** at a cell's null boundary (true ratio 1.02), the test passes that cell with
-  probability 0.05, whatever σ, R and B. That is its level.
-- **Power:** at a true ratio of 1.00, which is inside the alternative, not on its boundary. Low
-  power at R = 10 means the test is unlikely to show noninferiority there. It doesn't mean
-  success is impossible.
-- **The intersection-union test needs no independence across cells or shards.** If any cell is
-  truly at or beyond the margin, passing all 42 has probability at most 0.05.
-- **The all-pass power does depend on dependence across cells,** so two summaries are given:
-  - the dependence-free lower bound, max(0, 1 − Σ misses) (D077);
+  probability 0.05 only if the batch means are iid normal. Under dependence it can be
+  anticonservative (§2.3). Correct uncertainty is kept apart from apparent power.
+- **Power:** at a true ratio of 1.00, which is inside the alternative. Low power at R = 10 is
+  **conditionally low power at R = 10** under every history-based variance input. It does not
+  make passing impossible.
+- **The intersection-union test needs no independence across cells.** The all-pass power does.
+  Two summaries are given:
+  - the dependence-free lower bound, max(0, 1 − Σ misses);
   - the product, which assumes independent cells and is not a bound.
 
-**The inputs:**
-- **History:** the `bench-results` branch's `links.jsonl`, which keeps each merged PR's last
-  paired Benchmark run. Every run there at bench 3.x, 10 rounds and 4 CPUs is taken: 47 runs,
-  2026-10-28 to 2026-11-09, PRs 69 to 311.
-- **Per cell:** the within-run sd of the 10 paired logs on one runner, which is the noise one
-  shard sees. Its median and its 90th percentile over the 47 runs are the planning sds.
-  Examples:
-  - `pattern` 2t wall: median 0.104, p90 0.159;
-  - `wikidata` 1t wall: 0.014 and 0.030;
-  - the whole table is printed by the script.
-- **What these sds are not:** bounds. Each is a 9-df estimate, and the history's runs were real
-  changes, not nulls (their sds, not their means, are used).
+**The power target is defined now.**
+- **The relevant slowdown:** a true ratio of **1.005**, a quarter of the margin, in every cell.
+- **The target:** all-cell power of at least **0.80** there, by the dependence-free lower
+  bound.
+- **The variance it is planned against:** the pilot's **long-run** variance per cell, from
+  its batch-means sensitivity (§2.8), taking the largest across the predeclared batch lengths.
+  It is not the marginal ten-round sd.
 
-**The model:** the batch means are iid normal with sd σ/√(R/B), so a cell passes with
-probability P(T ≥ t(0.95, B − 1)), where T is noncentral t with B − 1 df and noncentrality
-(log 1.02 − μ)·√R/σ. It is computed by `python3 bench/service_tg_power.py links.jsonl`,
-published with this registration for the Researcher to reproduce.
+**The history is a scenario, not an envelope.** The 47-run history (bench-results
+`links.jsonl` at f99e2f35) gives ten-round marginal sds:
+- each is a 9-df estimate, whose own 95% interval is about [0.69 s, 1.83 s];
+- its p90 over runs mixes estimation error, runner and candidate heterogeneity, and a
+  selection of merged PRs' last runs;
+- it says nothing about dependence on the scale of minutes.
 
-| R | B | planning sd, every cell | true ratio | weakest cell | Σ misses | all 42, lower bound | all 42, if independent |
-|--:|--:|---|--:|--:|--:|--:|--:|
-| 300 | 20 | median | 1.000 | 0.938 | 0.062 | 0.938 | 0.938 |
-| 480 | 20 | median | 1.000 | 0.991 | 0.009 | 0.991 | 0.991 |
-| **600** | **20** | **median** | **1.000** | **0.998** | **0.002** | **0.998** | **0.998** |
-| 600 | 20 | median | 1.005 | 0.958 | 0.042 | 0.958 | 0.958 |
-| 600 | 20 | median | 1.010 | 0.721 | 0.317 | 0.683 | 0.694 |
-| 600 | 20 | p90 | 1.000 | 0.902 | 0.193 | **0.807** | 0.819 |
-| 600 | 20 | p90 | 1.005 | 0.710 | 1.002 | 0.000 | 0.333 |
-| 900 | 20 | p90 | 1.000 | 0.975 | 0.035 | 0.965 | 0.965 |
-| 10 (standing) | – | – | 1.000 | – | – | ≈ 0 | ≈ 0 |
+**The calculation:** `bench/service_tg_power.py`, integrating over the batch-variance
+chi-square. That replaces the noncentral-t call, which returned NaN at R900/median. A
+non-finite power is now an error. True ratios are used (log 1.005, not 0.005), and batch
+lengths must be even. Its output, reproducing the Researcher's independent integral:
 
-- **R = 600 is a design candidate, not a guaranteed power.**
-  - At the median sds and no true effect, the all-cell lower bound is 0.998.
-  - With every cell at its 90th-percentile sd at once (pessimistic), it is 0.81.
-  - Power falls sharply as the true ratio nears 1.02: at a true +0.5% everywhere, it is between
-    0.96 and well below 0.5, depending on the sds.
-- **These numbers assume the model:** positive dependence within or across batches lowers them.
-- **The draft's earlier figure is superseded.** The draft's "0.85 at 600" came from a different
-  calculation: each historical run's own sds, an iid t interval, and the product across cells.
-- **The standing 10 rounds** give a conditionally low power, about 0 for the all-cell claim
-  under every history-based variance input. That is low power at R = 10, not a proof that
-  passing is impossible.
+| R / B / m | sd scenario | true ratio | all-42 lower bound | all-42 if independent |
+|---|---|--:|--:|--:|
+| 600 / 20 / 30 | median | 1.000 | 0.9979 | 0.9979 |
+| 600 / 20 / 30 | median | 1.005 | 0.9578 | 0.9578 |
+| 600 / 20 / 30 | p90 | 1.000 | 0.8069 | 0.8193 |
+| 600 / 20 / 30 | p90 | 1.005 | **0.0015** | 0.3344 |
+| 960 / 20 / 48 | median | 1.005 | 0.9956 | 0.9956 |
+| 960 / 20 / 48 | p90 | 1.000 | 0.9747 | 0.9749 |
+| 960 / 20 / 48 | p90 | 1.005 | **0.7192** | 0.7465 |
+
+- **The verdict on R:** R = 600 is not frozen. R960/B20/m48 is a candidate to evaluate. It
+  doesn't meet 0.80 at 1.005 even in the p90 scenario, before any dependence.
+- **Budget:** at 960 rounds the slowest shard is about 15 + 38.9 × 1.6 ≈ 77 minutes, which
+  leaves 13 minutes of the 90. A different prospective partition may be needed. The pilot's
+  setup and runtime tails decide it.
+- **If no feasible design meets the target,** the registration says so and stops. It does not
+  lower the target after seeing data, or proceed at low power without saying so.
 
 ### 2.5 Fixed R, timeouts and invalid runs
 
-- **R = 600 and B = 20 are fixed.** No interim look, no early stop, no extra rounds.
+- **R and B are fixed at the freeze, after the pilot (§2.8), and then never change.** They are
+  not yet fixed: R = 600 / B = 20 was the draft's candidate, and R960/B20 is the one under
+  evaluation (§2.4). Once frozen, there is no interim look, no early stop and no extra rounds.
   - If the realised variance runs high, the result is the registered bound: PASS, or NOT
     SHOWN, which fails qualification.
   - Never more rounds, a re-run, a new shard, another estimator or an easier threshold.
 - **One qualification dispatch**, labelled `qualification`, with `shards: all`, the frozen head
-  and base, `rounds: 600`, and the frozen toolchain.
-- **The only recovery allowed is strictly before measurement.**
-  - A shard job that failed before its measurement step began holds no observations: no
-    `measurement-started.txt` and no `runs.jsonl`. Such a job may be re-run, as the same run's
-    next attempt ("re-run failed jobs"). Its earlier attempt is archived.
-  - Once a shard's measurement has started, that attempt is the shard's attempt. A later
-    attempt of it makes the run INVALID.
+  and base, the frozen `rounds`, and the frozen toolchain.
+- **The only recovery allowed is strictly before measurement, and the judge enforces it
+  fail-closed** (`history_problems`, after the Researcher's probes).
+  - **The history it reads:** every job of every attempt, with its steps, from the API
+    (`filter=all`), and every artifact GitHub lists, downloaded or not.
+  - **Counted as measured:** an attempt whose artifact holds rows, OR a start marker, OR whose
+    measurement step the API shows begun.
+  - **Admitted:** exactly one measured attempt, the shard's last, whose job and measurement step
+    succeeded, and whose artifact is listed and downloaded.
+  - **Recoverable:** an earlier attempt, but only on positive evidence that it never measured:
+    its job failed, its measurement step was skipped, and its artifact (if any) holds no rows
+    and no marker. Such a job may be re-run as the same run's next attempt.
+  - **Refused:**
+    - a cancelled job, even with a complete-looking artifact;
+    - an earlier measured attempt that lacks markers or artifacts;
+    - a job of another head or run;
+    - shard metadata inconsistent with it (workflow SHA, attempt, repository);
+    - unknown steps;
+    - a listed artifact not downloaded, or a downloaded one GitHub didn't list.
+  - **Never recoveries:** a missing download and a terminal failure stay failures.
 - **INVALID fails condition 2, and so the route.** Nothing is re-run to pass. Any of these makes
   the run INVALID:
   - a shard missing;
@@ -387,7 +435,11 @@ cannot touch condition 2:
 - **The confirmation dispatch never enters condition 2.** It can't rescue a failed cell,
   replace or pool with the first dispatch, or change its verdict. If it is INVALID, the flags
   stay unresolved, and condition 7 counts them as not confirmed.
-- `service_tg.py confirm` applies the rule.
+- **What a confirmation tests:** the confirmation dispatch draws its own runners, possibly other
+  CPU models. So confirmation tests **recurrence across runner draws**, not a literal
+  replication of the first runner's conditional estimand. Condition 7 uses it in that sense.
+- `service_tg.py confirm` applies the rule. It requires two valid, **distinct** dispatches (two
+  run ids) of the same head, records both run ids, and refuses the same verdict given twice.
 
 ### 2.7 Data before the freeze, disclosed
 
@@ -419,7 +471,82 @@ None of the following is qualification data, and none can be pooled with the fre
   qualification attempt.
 - **#302's outcomes are preserved unchanged** (§0).
 
+- **The design pilot (§2.8)** is pre-freeze data too, disclosed with every earlier run.
+
 Only fresh observations from the qualification dispatch after the freeze count.
+
+### 2.8 The design pilot: one fixed, nonqualifying dispatch
+
+**What it is for:** the design's missing information, which no ten-round history supplies. That
+is the long-run variance and dependence of a 20–40 minute serial process on a single-corpus
+shard, the order and trend structure, and the real setup and runtime tails. It is not for
+finding whether the candidate passes. The Researcher's REVISE asks for it, and C6 permits it as
+prospective design work.
+
+**What it is, fixed now:**
+- **One dispatch** of `.github/workflows/target-gated-ni.yml`, once the tooling is on master
+  (#319) and its admission fixes are in.
+  - **Inputs:** `label: pilot`, `shards: all` (all nine, the plan job refuses a subset for a
+    pilot), `rounds: 600`.
+  - **The candidate:** this branch's head at dispatch, with the base it names.
+  - **The conditions:** the toolchain and settings registered in §§2.1–2.2: placement, settle
+    0.25 s, `ab`'s two-round order rotation, the read-back.
+- **Every row is timestamped** as it lands (`bench/tg_ni_stamp.py`, passive, beside both arms
+  alike; the same in a qualification dispatch).
+- **The analysis menu, frozen before it runs:** `bench/tg_ni_pilot.py`, on #319. It admits the
+  run as the judge does, label `pilot`. For each of the 42 cells, wall and CPU alike:
+  - the raw order and timestamps;
+  - the marginal sd;
+  - autocorrelation at lags 1, 2, 5, 10, 30 and 60;
+  - the batch-means standard error for batch lengths 10, 20, 30, 48 and 60, against the iid
+    one (the long-run-variance sensitivity), and the batch means' lag-1 correlation;
+  - each batch length's physical duration;
+  - the head-first minus base-first contrast and its standard error;
+  - the OLS trend over the run, with its t;
+  - a CUSUM change-point screen.
+
+  Per shard: setup and measurement durations and their tails, and the runner model.
+  **It reports no cell's ratio or bound.** Every series is read centred.
+- **Its rules:**
+  - one dispatch, R = 600 whatever it shows;
+  - no extra rounds or shards for a favourable or unfavourable estimate;
+  - no re-run except the enforced setup-only recovery (§2.5);
+  - never pooled into, or substituted for, qualification data;
+  - disclosed as pre-freeze data, with run 42732367790 and the smoke run.
+
+  If it is INVALID by the judge's admission, that is recorded. Whether to pilot again is a
+  separate, disclosed decision, never automatic.
+- **What follows:** from its outputs, and before any qualification data, the registration
+  freezes:
+  - one R;
+  - one batch length and B;
+  - the dependence model and its justification;
+  - any numerical veto (§2.3);
+  - the shard partition and timeout, re-checked against its tails;
+  - the power at 1.005 under its long-run variances (§2.4).
+
+  It then goes to the Researcher's review and is frozen against **fresh** qualification
+  observations. A single pilot cannot prove mixing or cover all hosted runners. The residual
+  assumption is stated with the final design, not claimed away.
+- **What it costs:** about 293–412 shard runner-minutes, as a qualification dispatch (§2.2), on
+  standard hosted compute.
+
+**The pilot's dispatch, prepared and not dispatched:**
+```
+gh workflow run target-gated-ni.yml --repo lmmx/mibz2 --ref perf/service-guarded-target-gated \
+  -f head=<this branch's head at dispatch, which must equal the ref's head> \
+  -f base=3e1a7ec361ee6c8ea6b540264aa69189d4823d9e \
+  -f rounds=600 -f toolchain=1.99.1 -f shards=all -f label=pilot
+```
+- **The base:** the master this branch last merged, 3e1a7ec3 at this writing. If master is
+  merged again before the pilot, the base is that commit, and the head is the new merge.
+- **The analysis afterwards:**
+  ```
+  python3 bench/tg_ni_pilot.py shards --manifest manifest.json --head <head> --base <base> \
+    --rustc "rustc 1.99.1 (58cf8f9c3 2026-10-13)" --corpus-text <the text shard's corpus.sha256> --out pilot
+  ```
+  It runs on the aggregate job's archived artifacts. The aggregate job itself ends green with
+  "pilot: not evidence".
 
 ## 3. On-target superiority (condition 3)
 
@@ -469,16 +596,43 @@ workstation data.
   - It adds about ±log 2 ≈ ±0.69 to that pair's log ratio, against a planning sd of 0.05.
   - A few such pairs dominate the variance. If switches favour one arm's position or plan,
     they also bias the mean.
-  - Arm-order rotation balances position, not plan: a mode that the plan itself provokes
-    (more threads, more siblings packed) is a real effect of the plan and belongs in the
-    estimate, while a mode from the machine's state at the moment does not.
+  - Arm-order rotation balances position, not plan. It need not remove the bias or the serial
+    dependence a switch brings.
 - **What the earlier attempts showed:** `service-guarded/20261109T195345Z`'s 60 runs at 10
   threads were all fast (0.126–0.158 s), and `run-fed-leader/20261109T201013Z`'s, 17 minutes
   later on the same machine, mostly slow. So the mode can change between attempts as well as
   within one.
-- **What can't be decided until the mechanism is named:** whether a one-attempt design of 128
-  rounds can estimate the plan's effect without mode exclusion, or a mode covariate,
-  registered beforehand.
+**The causal rules, fixed now** (after the Researcher's §6):
+- **No mode exclusion.** A mode the candidate induces is a mediator of its deployment effect,
+  part of what the change does. Excluding it, or adjusting it away, answers a different
+  question and can erase a real cost or benefit.
+- **No outcome-derived mode.** A fast/slow label inferred from the decoded wall time under test
+  can't be used to exclude, weight or stratify: conditioning on it can manufacture an effect.
+- **Pre-treatment state only.** Only state measured independently *before* a run's treatment
+  may serve for blocking or as a covariate, such as the diagnostic's probe before the child
+  starts. Its use is frozen before any qualification data:
+  - its timing;
+  - its classifier;
+  - its missingness handling;
+  - the arm × state interactions;
+  - the deployment weights;
+  - the estimand.
+
+  The unadjusted and any model-standardised estimates are reported apart. Switch pairs are
+  kept.
+- **An external state isn't irrelevant just because the arm didn't cause it.** Whether its
+  distribution belongs in the estimand is decided by the target usage regime, stated
+  explicitly: fresh processes, as `ab child` measures, or sustained decoding.
+- **128 pairs aren't automatically 128 independent units.** If the state persists across runs,
+  as the 52%-after-fast persistence shows, the on-target interval needs a valid uncertainty at
+  the right unit, frozen before data. The old iid variance is not imported because the mode
+  now has a name.
+- **The design option to weigh:** randomised arm order within fixed balanced blocks, with the
+  seed and schedule archived and carryover addressed, if compatible with the experiment. It
+  protects against deterministic time/order aliasing, not against interference.
+
+These, with the diagnostic's result, decide the on-target design. Until then §§3–4's numbers
+are a candidate, not frozen.
 
 ## 4. Fallback no harm (condition 4)
 
@@ -650,7 +804,7 @@ measured.
   - **CI:** the batch-means bound of §2.3.
 - **Sample size and stopping:**
   - workstation, 128 rounds, fixed;
-  - CI, 600 rounds a cell in batches of 30, fixed (§§2.4–2.5);
+  - CI, R rounds a cell in B batches, fixed at the freeze after the pilot (§§2.4, 2.5, 2.8);
   - no interim look, no early stop, **one attempt**.
 - **Exclusions:** none. Every row is required, and none is deleted, replaced or selected.
   Diagnostics never gate or select.
@@ -745,17 +899,23 @@ measured.
 
 ## 10. Open before a freeze
 
-1. **The Researcher's review** of the amended §2:
-   - the shard plan;
-   - the sampling model and batch-means estimator;
-   - the power calculation (reproduced from `bench/service_tg_power.py`);
-   - the timeout and invalid-run rules;
-   - the workflow, `.github/workflows/target-gated-ni.yml`.
+1. **The design pilot (§2.8):** dispatched once #319 is on master, then analysed. From it, the
+   final R, batch length, dependence model, any veto, partition and power are fixed, and the
+   Researcher reviews the result.
+2. **The Researcher's REVISE** (#145 6756808726). Addressed in this revision:
+   - the admission bugs, in #319: history reconciled fail-closed, `confirm` bound to distinct
+     dispatches, non-finite power rejected;
+   - §2.3: batch means not calibrated;
+   - §2.4: the power target and R;
+   - §2.8: the pilot;
+   - §2.2: the scope;
+   - §3.1: the modes.
 
-   Also the Guardian on the coverage argument (STEWARDSHIP condition 5: "reviewed before the
-   qualification run"), and the bench-policy record D077 asks for.
-2. **The two-modes diagnostic** (§3.1): its result, before the on-target half is frozen.
-3. **The i9's name, read back before the freeze:** `just bench-svc-target`, the untimed
-   preflight-only entry, at a new freeze of its own.
-4. **The freeze's values:** `candidate`, `base`, `base_fetched`, `rustc`, `ni_rustc`,
-   `corpus_text`.
+   It needs re-review.
+3. **The two-modes diagnostic** (§3.1), before the on-target half is frozen.
+4. **The Guardian on coverage** (STEWARDSHIP condition 5), and the bench-policy record D077 asks
+   for.
+5. **The i9's name, read back** before the freeze: `just bench-svc-target`, at a new freeze of
+   its own.
+6. **The freeze's values:** `candidate`, `base`, `base_fetched`, `rustc`, `ni_rustc`,
+   `corpus_text`, and the post-pilot R and B.

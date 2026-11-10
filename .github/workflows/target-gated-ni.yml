@@ -18,8 +18,9 @@
 # which must be identical (the plan job checks GITHUB_SHA is the head). Every external action is
 # pinned to a full commit SHA (the Guardian's D078); cargo builds are --locked.
 #
-# `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze)
-# or `smoke` (a plumbing check, never evidence: the judge refuses it). Nothing here retries a
+# `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze),
+# `pilot` (the registration's §2.8 design pilot: all nine shards, R = 600, never evidence) or
+# `smoke` (a plumbing check, never evidence). The judge refuses both of the latter. Nothing here retries a
 # shard: a shard that fails, times out or is cancelled after its measurement started is part
 # of the attempt as it is (the registration's §2.5).
 name: Target-gated noninferiority
@@ -45,10 +46,10 @@ on:
         required: true
         default: "all"
       label:
-        description: "smoke (a plumbing check, never evidence) or qualification"
+        description: "smoke (a plumbing check), pilot (the registration's §2.8 design pilot) or qualification; only qualification is evidence"
         required: true
         type: choice
-        options: [smoke, qualification]
+        options: [smoke, pilot, qualification]
 
 permissions:
   contents: read
@@ -203,12 +204,19 @@ jobs:
           fi
           sha256sum "corpora/$CORPUS.bz2" | tee "$OUT/corpus.sha256"
 
+      # (each row's time as it lands, bench/tg_ni_stamp.py: passive, beside both arms alike)
       - name: Run (the measurement)
         run: |
           date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/measurement-started.txt"
+          python3 bench/tg_ni_stamp.py "$OUT/runs.jsonl" "$OUT/row-times.txt" "$RUNNER_TEMP/stamp-stop" &
+          stamp=$!
+          rc=0
           bin/ab run "$OUT/runs.jsonl" --arms "mibz2,mibz2@base/ab" --threads "$THREADS" --spread \
-            --rounds "$ROUNDS" --settle "$SETTLE" "corpora/$CORPUS.bz2"
+            --rounds "$ROUNDS" --settle "$SETTLE" "corpora/$CORPUS.bz2" || rc=$?
+          touch "$RUNNER_TEMP/stamp-stop"
+          wait "$stamp" || true
           date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/measurement-ended.txt"
+          exit "$rc"
 
       - name: The shard's files
         if: always()
@@ -240,11 +248,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p shards
+          # (a download that fails leaves a listed artifact without files: the judge refuses it)
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir shards --pattern 'tg-ni-*' || true
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
-            --jq '.artifacts[] | {name, id, digest, size_in_bytes, workflow_run: .workflow_run.id}' > artifacts.jsonl
+            --jq '.artifacts[] | {name, id, digest, size_in_bytes, expired, created_at, workflow_run: .workflow_run.id}' > artifacts.jsonl
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=all" \
-            --jq '.jobs[] | {name, id, run_attempt, status, conclusion, started_at, completed_at}' > jobs.jsonl
+            --jq '.jobs[] | {name, id, run_id, run_attempt, workflow_name, head_sha, status, conclusion, started_at, completed_at, steps: [.steps[]? | {name, number, status, conclusion, started_at, completed_at}]}' > jobs.jsonl
           python3 bench/service_tg.py manifest shards --artifacts artifacts.jsonl --jobs jobs.jsonl \
             --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
           cat manifest.json
