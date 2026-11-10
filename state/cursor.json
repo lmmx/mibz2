@@ -1023,11 +1023,22 @@
     {
       "comment_id": 6759345168,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Migration verified. Pricing chunked-link full fill, diagnostic grid and tunnel rider.",
-      "report_path": "state/records/reviews/inbox-6759345168/report.md"
+      "progress": "Completed source pricing, corrected footprint and tunnel arithmetic; publication pending.",
+      "report_path": "state/records/reviews/inbox-6759345168/report.md",
+      "report_commit": "fcc45cdcfe9ec2270c118ebcdd884746f63d107d",
+      "audit_scope": {
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "raw_profiles_replayed": false,
+        "source_pins": [
+          "7bf5769be304d8908910de76a4fe5050ac8cf8c4",
+          "96b7937be27ede9822dbcbd15e0ac712e5ddd41a"
+        ]
+      }
     }
   ],
   "migrated_from": {
