@@ -145,9 +145,10 @@
     6757791774,
     6758126153,
     6758228391,
-    6758538763
+    6758538763,
+    6758725018
   ],
-  "last_processed_comment_id": 6758228391,
+  "last_processed_comment_id": 6758725018,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1595,7 +1596,7 @@
     },
     {
       "trigger_comment_id": 6758725018,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1603,7 +1604,10 @@
       "report_commit": "e4f1d8be805c5226bcbba9e213459ef4194d69aa",
       "source_commit": "30a6620d0a8733536284e82c91ff19be0185f148",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: concrete R2880/m120/B24 candidate with conditional power, phase-aware order, retained tails, 240-minute timeout; coverage justification remains open and condition-7 harm policy is distinct."
+      "disposition": "REVISE before freeze: concrete R2880/m120/B24 candidate with conditional power, phase-aware order, retained tails, 240-minute timeout; coverage justification remains open and condition-7 harm policy is distinct.",
+      "review_comment_id": 6758898817,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned verify reports only its hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
