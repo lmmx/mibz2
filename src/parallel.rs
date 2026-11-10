@@ -865,6 +865,14 @@ fn solo(shared: &Shared, f: &Front, sc: &mut Solo, s: Staged, k: Kernels) -> boo
         mark!(RunStart, s.place);
         super::bwt::build(&f.ll, &f.counts, &mut sc.tt);
         super::bwt::walk_segments_room(&mut sc.tt, s.symbols.orig_ptr, &mut sc.buf, &mut sc.seg);
+        // (the `walk-stats` feature's record of a block the leader walked alone)
+        #[cfg(feature = "walk-stats")]
+        super::coop::walk_stats::push(format!(
+            "{{\"kind\":\"solo\",\"team\":{},\"block\":{},\"rows\":{}}}",
+            super::coop::walk_stats::team(),
+            s.place,
+            f.ll.len()
+        ));
         mark!(RunEnd, s.place);
         mark!(RleStart, s.place);
         let r = finish_block(&sc.buf, s.symbols.crc, k, &mut out);

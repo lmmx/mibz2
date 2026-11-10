@@ -1,5 +1,15 @@
 # The run-record front in production: no column, and the LF table filled in arrival order (registration)
 
+> **Status (added when #324 closed): closed, failed under its frozen rule.**
+> - **What failed:** the benefit rule was met in all three runs: `wikidata` −12.8% to −15.8%
+>   and `text` −23.3% to −26.2% wall at 1 thread. The no-harm rule failed: `random` and
+>   `records` at 1 thread were flagged slower in runs 2 and 3. See §6.
+> - **The code is not on master.** It is the head of #324,
+>   `e88c063155c3e734e748e99ccda025393302720f`, kept on branch `perf/run-front-records`.
+> - **This construction is closed. Its advantage is not disproved.** It was measured large on
+>   its target data, and the harm appears on blocks where the new code doesn't run.
+> - **Below:** the registration, frozen when #324 opened (§1–§5), and the result (§6).
+
 10 November 2026. A production-path change on the run-fed line (PROTOCOL §11). It comes from
 two of the Pathfinder's leads on #313:
 - the run-record emitter, priced in REVIEW 6755498073 ("For the Optimiser");
@@ -369,6 +379,128 @@ from `2026-11-05-deferred-flag-walk.md` written out in full.
   bitmaps of a bit a symbol, and nothing for the F order. With no column written, `ll` holds
   the output only. Expected ≤ +1 MB a worker; a flagged peak-RSS row is reported, not judged.
 
-## 6. Result
+## 6. Result: the registered rule fails (two confirmed harms on high-entropy corpora)
 
-Recorded after the runs.
+Recorded after the runs; the rule above is unchanged.
+- **The runs:** three, on the benched head **e88c063155c3e734e748e99ccda025393302720f**
+  against its merge base 5e7b99547. They are run 42747668401, attempts 1, 2 and 3, at bench
+  3.4.0 with 10 paired rounds each.
+- **The runners:**
+  - run 1: Intel Xeon Platinum 8370C;
+  - run 2: AMD EPYC 7763;
+  - run 3: AMD EPYC 9V45.
+- **The tables are preserved on #324:** run 1 in comment 6758044068, run 2 in 6758194980 and
+  run 3 in 6758350884. The bench comment 6757883083 holds run 3.
+- **Run 3 was made under the repeat policy,** only to settle the three rows run 2 flagged and
+  run 1 had not.
+- **Every run gave the same bytes on every corpus.** CI was green on the head, Miri and the
+  fuzz smoke included.
+
+**The whole grid, wall change (CPU change), head over base, 95% intervals:**
+
+| corpus | threads | run 1: wall (CPU) | run 2: wall (CPU) | run 3: wall (CPU) |
+|---|--:|--:|--:|--:|
+| `wikidata` | 1 | −12.8% (−13.4%, −12.2%) **faster** (−12.8% faster) | −14.5% (−15.5%, −13.6%) **faster** (−14.5% faster) | −15.8% (−17.3%, −14.2%) **faster** (−15.7% faster) |
+| `wikidata` | 2 | −10.7% (−11.7%, −9.7%) **faster** (−11.1% faster) | −12.7% (−14.6%, −10.7%) **faster** (−12.9% faster) | −12.3% (−17.2%, −7.1%) **faster** (−13.0% faster) |
+| `wikidata` | 4 | −7.7% (−8.4%, −7.0%) **faster** (−8.4% faster) | −9.7% (−11.2%, −8.2%) **faster** (−13.0% faster) | −10.3% (−12.5%, −8.1%) **faster** (−13.2% faster) |
+| `text` | 1 | −23.3% (−24.0%, −22.5%) **faster** (−22.8% faster) | −24.5% (−25.5%, −23.4%) **faster** (−23.9% faster) | −26.2% (−28.5%, −23.9%) **faster** (−25.4% faster) |
+| `text` | 2 | −17.6% (−19.7%, −15.5%) **faster** (−18.2% faster) | −18.7% (−21.3%, −16.0%) **faster** (−18.4% faster) | −19.4% (−23.8%, −14.8%) **faster** (−21.0% faster) |
+| `text` | 4 | −12.4% (−14.5%, −10.2%) **faster** (−15.5% faster) | −10.7% (−13.8%, −7.5%) **faster** (−16.4% faster) | −14.1% (−16.7%, −11.5%) **faster** (−18.4% faster) |
+| `pattern` | 1 | −4.9% (−6.3%, −3.6%) **faster** (−4.6% faster) | −5.2% (−6.9%, −3.5%) **faster** (−4.9% faster) | −6.0% (−6.7%, −5.3%) **faster** (−5.6% faster) |
+| `pattern` | 2 | −1.3% (−4.8%, +2.3%) (−3.8% faster) | −5.3% (−10.8%, +0.5%) (−4.5%) | −8.2% (−14.9%, −0.9%) **faster** (−3.8%) |
+| `pattern` | 4 | −8.7% (−11.7%, −5.7%) **faster** (−6.8% faster) | −3.0% (−7.7%, +1.8%) (−4.3%) | +0.1% (−7.0%, +7.6%) (−4.3% faster) |
+| `onebyte` | 1 | +0.4% (−1.6%, +2.5%) (+0.4%) | −0.6% (−2.5%, +1.2%) (−0.4%) | +1.1% (−2.0%, +4.2%) (+1.2%) |
+| `onebyte` | 2 | −0.2% (−2.1%, +1.6%) (−0.0%) | +1.6% (−2.4%, +5.8%) (+2.0%) | +0.5% (−1.2%, +2.2%) (+0.2%) |
+| `onebyte` | 4 | −0.9% (−2.5%, +0.6%) (−0.5%) | +0.6% (−2.5%, +3.7%) (+0.8%) | +0.7% (−2.1%, +3.5%) (+0.6%) |
+| `runs` | 1 | −1.5% (−2.9%, −0.1%) **faster** (−1.8% faster) | +0.3% (−1.4%, +2.2%) (+0.2%) | +5.3% (−12.0%, +26.1%) (+5.5%) |
+| `runs` | 2 | −1.9% (−4.1%, +0.3%) (−2.3% faster) | −0.4% (−2.9%, +2.2%) (−0.5%) | +0.2% (−1.5%, +1.9%) (+0.4%) |
+| `runs` | 4 | −0.3% (−4.0%, +3.5%) (−0.4%) | −0.7% (−5.2%, +4.1%) (−0.5%) | −1.3% (−4.2%, +1.7%) (−1.5%) |
+| `random` | 1 | +1.3% (−1.1%, +3.8%) (+1.4%) | +3.4% (+2.2%, +4.6%) **slower** (+3.2% slower) | +5.3% (+4.5%, +6.1%) **slower** (+5.2% slower) |
+| `random` | 2 | +0.1% (−3.9%, +4.3%) (+1.0%) | +2.9% (−0.0%, +5.8%) (+3.6% slower) | +0.8% (−2.1%, +3.8%) (+3.5% slower) |
+| `random` | 4 | −0.5% (−4.1%, +3.3%) (+1.7%) | +1.7% (−1.1%, +4.6%) (+4.2% slower) | −1.5% (−16.9%, +16.8%) (−4.7%) |
+| `records` | 1 | −0.6% (−2.7%, +1.5%) (−0.6%) | +1.5% (+0.2%, +2.9%) **slower** (+1.6% slower) | +2.1% (+1.0%, +3.3%) **slower** (+2.1% slower) |
+| `records` | 2 | +4.7% (+0.2%, +9.4%) **slower** (+3.4% slower) | +1.7% (−1.3%, +4.9%) (+1.9% slower) | −2.6% (−7.2%, +2.2%) (−1.4%) |
+| `records` | 4 | +1.2% (−1.2%, +3.7%) (+1.2%) | +4.0% (+1.6%, +6.5%) **slower** (+3.2% slower) | −1.2% (−6.5%, +4.4%) (+2.7%) |
+
+Peak RSS, head over base (run 1 / run 2 / run 3):
+- `wikidata`: 1 threads +1.3% more / +1.2% more / +1.1% more; 2 threads +7.1% more / +6.4% more / +5.0% more; 4 threads +3.6% more / +4.4% more / +4.1% more
+- `text`: 1 threads +3.5% more / +3.5% more / +3.3% more; 2 threads +8.1% more / +7.4% more / +8.0% more; 4 threads +5.6% more / +10.4% more / +7.0% more
+- `pattern`: 1 threads −0.3% / −0.0% / +0.1%; 2 threads −0.2% / +0.4% / −1.1%; 4 threads −2.1% / +2.4% / +1.3%
+- `onebyte`: 1 threads +0.1% / +0.0% / +0.0%; 2 threads +0.0% / +0.2% / +0.2%; 4 threads +0.1% / −0.2% / −0.0%
+- `runs`: 1 threads +0.7% more / +0.6% more / +0.6% more; 2 threads +0.9% more / +0.7% more / +0.9% more; 4 threads +0.6% more / +0.7% more / +0.6% more
+- `random`: 1 threads −0.1% / +0.2% more / −0.2%; 2 threads −2.9% / +0.4% / +1.4%; 4 threads +1.0% / −1.0% / −1.9%
+- `records`: 1 threads −0.1% / −0.0% / +0.1%; 2 threads −1.9% / −1.2% / −1.9%; 4 threads +0.8% / +0.1% / −0.4%
+
+**The stage table** (`examples/phases.rs`, which can't see this change: §2): MTF + RLE2 ran
+−3.0%, −4.4% and −7.7%, and the build +1.0%, +0.0% and +0.0%. The walk was not flagged.
+
+**Resources (`wikidata`):** each run reads "a trade-off: better speed, CPU cost; worse
+contention sensitivity, memory" (run 3: "worse memory").
+- **Amplification:** +1.9% at 2 threads (runs 1 and 2) and +5.0% at 4 threads (run 1),
+  beyond noise. Run 3's is not flagged.
+
+### Against the rule
+- **Correctness:** met.
+- **Benefit:** met, in every run.
+  - **`wikidata` at 1 thread:** wall −12.8%, −14.5% and −15.8%, CPU likewise.
+  - **`wikidata` CPU at 4 threads:** −8.4%, −13.0% and −13.2%.
+- **No harm: fails.**
+  - **`random` at 1 thread:** flagged slower in run 2 (+3.4%) and again in run 3 (+5.3%).
+    **A confirmed harm.**
+  - **`records` at 1 thread:** flagged in run 2 (+1.5%) and again in run 3 (+2.1%).
+    **A confirmed harm.**
+  - **`records` at 2 threads:** flagged in run 1 (+4.7%), not in run 2. Unresolved.
+  - **`records` at 4 threads:** flagged in run 2 (+4.0%), not in run 3. Unresolved.
+- **Verdict:** the registered rule **fails**. Under §5 the PR is closed, unmerged (the
+  Coordinator closed #324), and this head is not re-benched.
+
+### Against the predictions
+- **`wikidata` wall at 1 thread:** predicted −4% to −12%; measured −12.8%, −14.5% and
+  −15.8%, above the range. **CPU at 4 threads:** predicted −3% to −10%; measured −8.4%,
+  −13.0% and −13.2%.
+- **`text` wall at 1 thread:** predicted −8% to −25%; measured −23.3%, −24.5% and −26.2%. That
+  is the Pathfinder's model's range (−21% to −30%), not the instruction count's (−15%).
+- **`pattern`:** faster at 1 thread in every run (−4.9% to −6.0%), as predicted.
+  **`runs` and `onebyte`:** unresolved, as predicted.
+- **`records` and `random`: the prediction failed.** "No change" was predicted, since no
+  block of theirs takes the path and their decode adds 61 instructions a block (+0.00007%).
+  They ran +1.5% to +5.3% slower at 1 thread.
+  - **The mechanism falsifier fired:** a `records` or `random` 1-thread wall row flagged slower
+    in two runs.
+  - **What changed for them:** not the work. Their blocks run the column's path, the same
+    `mtf_avx2` and `bwt::build`, so the change must be in where things sit: the code's layout,
+    and the data's.
+  - **The data's layout:** `Scratch` (on each worker's stack, in the decoder and the bench)
+    grew by `runs::Runs`, about 2.1 KiB inline: two `[u32; 256]` and four `Vec`s. That moves
+    `counts` against `mtf_avx2`'s stack frame.
+  - **That matches the pattern #277's codegen entry found**
+    (`2026-11-09-run-fed-fallback-codegen.md`). There, a fallback path ran 6–37% slower with
+    identical kernels where `counts`, read-modify-written once a literal, fell under
+    `mtf_avx2`'s frame modulo 4 KiB.
+  - **Why only these corpora:** high-entropy blocks have a literal a row, so they are the
+    most sensitive to it, as here. On Wikidata and text, every block now takes the records'
+    path and never runs `mtf_avx2`.
+  - **This is a hypothesis, not a finding:** no listing or address probe was made for this
+    head.
+- **The walk's direction cost nothing visible.** On Wikidata, the wall gain matches the
+  model's high end. The stage table's walk is the forward walk's, so it can't show this.
+
+### What it shows, and the next experiment
+1. **The run-record front and the backward LF table work on the target data.** Wikidata
+   (−13% to −16%) and text (−23% to −26%) gain across three CPU families, with the walk
+   reversed. This is the largest single-thread gain on the run-fed line, and it closes the
+   line's named gaps:
+   - the emitter's cost;
+   - the sort;
+   - the fallback's cost on blocks that take records.
+2. **The harm is on blocks that run none of the new code.** A possible successor is the same
+   change with `Runs` out of `Scratch`'s inline layout (boxed, so `Scratch` grows by one
+   pointer), and the column's path's stack and data positions as master's.
+   - **Its admissibility under C2** is the Guardian's ruling (#161, 6758376066).
+   - **If admitted, it needs:**
+     - its own registration, frozen before data;
+     - a static check first: `counts`' offset from `mtf_avx2`'s frame modulo 4 KiB, in each
+       build, read as #277's entry read it.
+3. **The extra peak RSS** (+4–10% on Wikidata and text at 2–4 threads, about 3 MB) is the
+   records' buffers and the walk's output in `ll`, both kept a worker. It is reported, not
+   judged.

@@ -15,6 +15,17 @@ beside this file, at the same commit. This file says what your work is.
     machines and thread counts that matter;
   - keep `state/ledger.md` current;
   - research and publish proposals where the brief asks for them.
+- **Price every Pathfinder design before it is built** (SPEC.PATHFINDER.md, step 3a; Louis,
+  2026-11-10). Price the complete algorithm independently, not the design's own estimate:
+  - construction, traversal and metadata;
+  - the whole loop, with its skeleton, lanes, stops and tails;
+  - branch behaviour and memory traffic;
+  - parallel coordination, including what each worker keeps live.
+
+  Answer with the price, any construction that removes the dominant cost, and the cheapest
+  falsifier, a counting probe where it suffices. Distinguish a construction that fails from an
+  advantage that is absent: the role disproves the advantage, not merely the first
+  implementation.
 - **Keep your own whole-decoder search.** At a pivot, say whether the current direction is
   economically inferior to another one.
 - **Proposals are proposals only.** Never implement, time anything, merge, or widen authority.

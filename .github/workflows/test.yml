@@ -28,6 +28,10 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # the scanner diagnostic's harness (examples/par_scan.rs): a panic at each role of each
+      # arm ends the decode, and the finder against the bit-by-bit reference
+      - name: The scan harness's fault and finder tests
+        run: timeout 600 cargo test --example par_scan
       # bench/alternatives has its own lock, on this crate by path, and master's benchmark
       # builds it --locked: a version bump that leaves it behind fails here, not only there
       - name: The benchmark alternatives' lock
@@ -66,12 +70,25 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
+      - name: The scan diagnostic's reporter, inputs and supervisor
+        run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py
+      # bench-share-nothing's judge, schedule, preflight and drive (it uses bench/bounded.py and
+      # bench/par_scan_finish.sh, tested above; docs/journal/2026-11-10-share-nothing-pricing.md)
+      - name: The share-nothing diagnostic's judge, schedule, preflight and drive
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && pipx run pytest -p no:cacheprovider bench/test_share_nothing.py
       - name: Install just
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
+      - name: The target-gated noninferiority judge and its verdict gate (untimed; scipy for the power check where installed)
+        run: |
+          python3 bench/test_svc_target_check.py
+          python3 bench/test_service_tg.py
+          python3 bench/test_tg_ni_gate.py
+          python3 bench/test_tg_ni_pilot.py
 
   get-python-versions:
     runs-on: ubuntu-latest
