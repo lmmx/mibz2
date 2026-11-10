@@ -664,8 +664,14 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
 //   whole by the leader, on a one-core kernel's buffers of its own, rather than draining
 //   the pipeline: on the Wikidata sample, 198 of its 431 blocks are below it); then it
 //   joins block i's walk if it is still going.
-// So a team keeps two front sets (`ll`, `counts`, `checkpoints`) and two assembled
-// buffers, one table, pool and segment scratch, and the one-core kernel's small set.
+// So a team keeps two front sets (`ll`, `counts`, `checkpoints`; or, for a block of few
+// symbols, its run records and their cuts: `front_stage`) and two assembled buffers, one
+// table, pool and segment scratch, and the one-core kernel's small set.
+//
+// A block of few symbols (`runs::takes_runs`) goes through the same run by its records:
+// the leader's front is `runs::front` and `runs::cuts`, the helpers' build is the fill of
+// the LF table by shares (`coop::RunsBuild`), and their walk is the same walk from the
+// primary index, its segments joined in reverse (`coop::Source`).
 //
 // The worker never waits for a job while it holds a block not yet published: a job is
 // waited for (`recv`) only with the pipeline empty, so a block the reader needs can never
@@ -694,11 +700,19 @@ pub struct Levers {
     pub small: bool,
 }
 
-/// A block's move-to-front stage's buffers (`Scratch`'s first three)
+/// A block's move-to-front stage's buffers (`Scratch`'s first three), and, for a block of
+/// few symbols (`runs::takes_runs`), its run records and their cuts in their place
+/// (`front_stage`)
 struct Front {
     ll: Vec<u8>,
     counts: [u32; 256],
     checkpoints: Vec<[u32; 256]>,
+    runs: super::runs::Runs,
+    cuts: Vec<super::runs::Cut>,
+    /// whether the block staged here is in `runs` and `cuts` (else in the first three), and
+    /// its rows
+    by_runs: bool,
+    rows: usize,
 }
 
 impl Default for Front {
@@ -707,6 +721,55 @@ impl Default for Front {
             ll: Vec::new(),
             counts: [0; 256],
             checkpoints: Vec::new(),
+            runs: super::runs::Runs::default(),
+            cuts: Vec::new(),
+            by_runs: false,
+            rows: 0,
+        }
+    }
+}
+
+impl Front {
+    /// The block staged here, as a team inverts it
+    fn source(&self, k: Kernels) -> super::coop::Source<'_> {
+        if self.by_runs {
+            super::coop::Source::Runs {
+                runs: &self.runs,
+                cuts: &self.cuts,
+                n: self.rows,
+                k,
+            }
+        } else {
+            super::coop::Source::Column {
+                ll: &self.ll,
+                counts: &self.counts,
+                checkpoints: &self.checkpoints,
+                stride: super::mtf::CHECKPOINT,
+            }
+        }
+    }
+
+    /// The block staged here inverted on this thread alone, on a one-core kernel's table:
+    /// `bwt::walk_segments_room_parts`'s parts, or, for a block in its records,
+    /// `bwt::walk_back_room_parts`'s (the same, joined by `assemble_reversed`). Records that
+    /// don't tile the block, which `front_stage` refuses, panic here.
+    fn invert_alone(
+        &self,
+        orig_ptr: u32,
+        k: Kernels,
+        tt: &mut super::bwt::TVector,
+        seg: &mut super::bwt::SegScratch,
+        direct: &mut Vec<u8>,
+    ) -> bool {
+        if self.by_runs {
+            assert!(
+                super::runs::fill(&self.runs, self.rows, tt, k),
+                "the run records don't tile the block"
+            );
+            super::bwt::walk_back_room_parts(tt, orig_ptr, direct, seg)
+        } else {
+            super::bwt::build(&self.ll, &self.counts, tt);
+            super::bwt::walk_segments_room_parts(tt, orig_ptr, direct, seg)
         }
     }
 }
@@ -742,7 +805,11 @@ impl Team {
         use crate::trace::Buffer;
         let [f0, f1] = &self.fronts;
         let s = &self.seg;
-        vec![
+        // (the records' buffers, `runs.runs`, `runs.lit` and `runs.one`, once for each front)
+        let records = [f0, f1].into_iter().flat_map(|f| f.runs.buffers());
+        let mut v: Vec<Buffer> = records.filter(|b| b.cap > 0).collect();
+        v.extend([Buffer::of("cuts", &f0.cuts), Buffer::of("cuts.b", &f1.cuts)]);
+        v.extend([
             Buffer::of("ll", &f0.ll),
             Buffer::of("ll.b", &f1.ll),
             Buffer::of("checkpoints", &f0.checkpoints),
@@ -757,7 +824,8 @@ impl Team {
                 len: s.bufs.iter().map(Vec::len).sum(),
                 cap: s.bufs.iter().map(Vec::capacity).sum(),
             },
-        ]
+        ]);
+        v
     }
 }
 
@@ -778,12 +846,30 @@ struct Inverted {
 }
 
 /// The move-to-front stage of a block into `f`, and its primary index checked
-/// (`decode_block`'s first steps): its length
+/// (`decode_block`'s first steps): its length. A block of few symbols (`runs::takes_runs`)
+/// is staged as its run records and their cuts (`runs::front`, `runs::cuts`), with no last
+/// column, as `decode_block` stages it for a kernel that reads runs. The cuts are the
+/// tiling's whole check, made here, so that no later stage refuses the records; records
+/// that fail it are a bug in `runs::front` (a debug build stops here), and the block is
+/// then staged by its column, which still gives the right bytes.
 fn front_stage(b: &super::block::Symbols, f: &mut Front, k: Kernels) -> Result<usize, ErrorKind> {
+    f.by_runs = false;
+    if super::runs::takes_runs(b) {
+        let n = super::runs::front(b, &mut f.runs, k)?;
+        if b.orig_ptr as usize >= n {
+            return Err(ErrorKind::BadOrigPtr);
+        }
+        if super::runs::cuts(&f.runs, n, &mut f.cuts) {
+            (f.by_runs, f.rows) = (true, n);
+            return Ok(n);
+        }
+        debug_assert!(false, "the run records don't tile the block");
+    }
     let n = super::mtf::mtf_checkpoints(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
+    f.rows = n;
     Ok(n)
 }
 
@@ -927,15 +1013,21 @@ fn solo(shared: &Shared, f: &Front, sc: &mut Solo, s: Staged, k: Kernels) -> boo
     };
     let r = catch_unwind(AssertUnwindSafe(|| {
         mark!(RunStart, s.place);
-        super::bwt::build(&f.ll, &f.counts, &mut sc.tt);
-        super::bwt::walk_segments_room(&mut sc.tt, s.symbols.orig_ptr, &mut sc.buf, &mut sc.seg);
+        let orig_ptr = s.symbols.orig_ptr;
+        if f.invert_alone(orig_ptr, k, &mut sc.tt, &mut sc.seg, &mut sc.buf) {
+            if f.by_runs {
+                sc.seg.assemble_reversed(&mut sc.buf);
+            } else {
+                sc.seg.assemble(&mut sc.buf);
+            }
+        }
         // (the `walk-stats` feature's record of a block the leader walked alone)
         #[cfg(feature = "walk-stats")]
         super::coop::walk_stats::push(format!(
             "{{\"kind\":\"solo\",\"team\":{},\"block\":{},\"rows\":{}}}",
             super::coop::walk_stats::team(),
             s.place,
-            f.ll.len()
+            f.rows
         ));
         mark!(RunEnd, s.place);
         mark!(RleStart, s.place);
@@ -1154,12 +1246,9 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
         // its `decode_block`, which a pipelined team never runs)
         mark!(RunStart, s.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK, SPIN>(
+            super::coop::invert_pipelined_from::<FLAGGED_LANES, PARK, SPIN>(
                 pool,
-                &hf.ll,
-                &hf.counts,
-                &hf.checkpoints,
-                super::mtf::CHECKPOINT,
+                hf.source(k),
                 s.symbols.orig_ptr,
                 tt,
                 seg,
@@ -1251,6 +1340,11 @@ fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
 //    a front set are free;
 // 4. ends, once the jobs are closed and no block is left in flight; else waits.
 //
+// **Blocks of few symbols** (`runs::takes_runs`) are prepared as their run records and
+// cuts (`front_stage`), filled and walked backward by the team (`coop::invert_team_from`
+// on `coop::Source::Runs`), and their segments joined in reverse by the finisher
+// (`Back::reversed`). Nothing else about a block's way through the hub differs.
+//
 // **Small blocks** (below `MIN_COOP`) are prepared and finished by the service, as every
 // block, and inverted whole by a team's first thread on the one-core kernel (its helpers
 // idle meanwhile), exactly as a `Cooperative` team inverts them today. Not by the service:
@@ -1276,6 +1370,9 @@ struct Back {
     seg: super::bwt::SegScratch,
     direct: Vec<u8>,
     segmented: bool,
+    /// the segments are an LF table's, walked backward (a block staged as its run
+    /// records): joined by `assemble_reversed`
+    reversed: bool,
 }
 
 /// A block prepared (move-to-front done), in its front set
@@ -1717,7 +1814,7 @@ impl StreamDecoder {
             let (s, h) = (shared.clone(), hub.clone());
             handles.push(spawn(
                 format!("mibz2-{i}"),
-                Box::new(move || team_worker(&s, &h, team_k)),
+                Box::new(move || team_worker(&s, &h, team_k, kernels)),
             ));
         }
         let sh = shared.clone();
@@ -1917,7 +2014,11 @@ fn finish(shared: &Shared, hub: &Hub, o: &Outer, w: Walked, asm: &mut Vec<u8>, k
     let r = catch_unwind(AssertUnwindSafe(|| {
         let inverted: &[u8] = if back.segmented {
             mark!(AssembleStart, place);
-            back.seg.assemble(asm);
+            if back.reversed {
+                back.seg.assemble_reversed(asm);
+            } else {
+                back.seg.assemble(asm);
+            }
             mark!(AssembleEnd, place);
             asm
         } else {
@@ -2001,7 +2102,7 @@ fn take_prepared(hub: &Hub, o: &Outer) -> Option<(Prepared, Back)> {
 /// A team: its first thread takes prepared blocks and inverts each on the team's pool
 /// (`coop::invert_team`), or alone for a block below `MIN_COOP` (or with no pool), into a
 /// back set, then queues it for finishing
-fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
+fn team_worker(shared: &Shared, hub: &Hub, team_k: usize, k: Kernels) {
     use super::bwt::FLAGGED_LANES;
     // (made first, so dropped last: after the pool, whose drop joins its helpers)
     let o = Outer::new(shared, hub, "team");
@@ -2038,12 +2139,9 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
         mark!(RunStart, place);
         let r = catch_unwind(AssertUnwindSafe(|| match team {
             Some(pool) => {
-                super::coop::invert_team::<FLAGGED_LANES>(
+                super::coop::invert_team_from::<FLAGGED_LANES>(
                     pool,
-                    &front.ll,
-                    &front.counts,
-                    &front.checkpoints,
-                    super::mtf::CHECKPOINT,
+                    front.source(k),
                     symbols.orig_ptr,
                     &mut tt,
                     &mut back.seg,
@@ -2051,19 +2149,21 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
                     thread_fault,
                 );
                 back.segmented = true;
+                back.reversed = front.by_runs;
             }
             None => {
                 // (the one-core kernel, as `bwt::Cooperative` inverts a small block)
                 if thread_fault == Some(0) {
                     panic!("an injected panic in block {place}'s one-core inversion");
                 }
-                super::bwt::build(&front.ll, &front.counts, &mut tt);
-                back.segmented = super::bwt::walk_segments_room_parts(
-                    &mut tt,
+                back.segmented = front.invert_alone(
                     symbols.orig_ptr,
-                    &mut back.direct,
+                    k,
+                    &mut tt,
                     &mut back.seg,
+                    &mut back.direct,
                 );
+                back.reversed = front.by_runs;
             }
         }));
         mark!(RunEnd, place);
@@ -2842,7 +2942,7 @@ mod service_tests {
                 st.live = 1;
                 st.closed = true;
             }
-            team_worker(&sh, &h, 2);
+            team_worker(&sh, &h, 2, Kernels::detect());
             home(&h, what);
             let r = published(&sh, 4);
             if cancelled {
@@ -3274,6 +3374,191 @@ fn parse_cpu_max(s: &str) -> Quota {
             (None, _) => Quota::Unknown,
         },
         _ => Quota::Unknown,
+    }
+}
+
+#[cfg(test)]
+mod front_tests {
+    //! The teams' front stage: which path it stages a block by, and that the block staged
+    //! inverts to the column's bytes, alone and as a team's source.
+
+    use super::super::block::Symbols;
+    use super::super::bwt::{self, SegScratch, TVector};
+    use super::super::coop::{invert_team_from, Pool, Source};
+    use super::super::runs;
+    use super::*;
+
+    /// A column as a block's symbols: its bytes in use, move-to-front indices, and RUNA and
+    /// RUNB for the zeros (as bzip2 codes them), under a bound of `max_len` rows
+    fn symbols_of(ll: &[u8], max_len: usize) -> Symbols {
+        let mut used = [false; 256];
+        ll.iter().for_each(|&c| used[c as usize] = true);
+        let mut seq_to_unseq = [0u8; 256];
+        let mut list: Vec<u8> = (0..=255u8).filter(|&c| used[c as usize]).collect();
+        seq_to_unseq[..list.len()].copy_from_slice(&list);
+        let eob = list.len() as u16 + 1;
+        let (mut syms, mut zeros) = (Vec::new(), 0u32);
+        let flush = |zeros: &mut u32, syms: &mut Vec<u16>| {
+            // (bijective base 2: RUNA 1, RUNB 2, weights doubling)
+            while *zeros > 0 {
+                syms.push(((*zeros - 1) & 1) as u16);
+                *zeros = (*zeros - 1) >> 1;
+            }
+        };
+        for &c in ll {
+            let i = list.iter().position(|&x| x == c).unwrap();
+            if i == 0 {
+                zeros += 1;
+                continue;
+            }
+            flush(&mut zeros, &mut syms);
+            syms.push(i as u16 + 1);
+            list.remove(i);
+            list.insert(0, c);
+        }
+        flush(&mut zeros, &mut syms);
+        syms.push(eob);
+        Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq,
+            syms,
+            eob,
+            max_len,
+        }
+    }
+
+    /// A record `runs::front` never writes (its length is over a record's cap)
+    const UNTOUCHED: u16 = 0xffff;
+
+    /// `front_stage` stages a block by its records exactly where `runs::takes_runs` admits
+    /// it (one front set reused across both kinds, as a team reuses it), with the block's
+    /// rows; and the block staged gives `bwt::walk`'s bytes, inverted alone
+    /// (`Front::invert_alone`) and as a team's source (`Front::source`), which is the
+    /// records' only when the block was staged by them
+    #[test]
+    fn front_stage_takes_the_records_where_selected() {
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut column = |n: usize, runny: bool| -> Vec<u8> {
+            let mut v = Vec::with_capacity(n + 64);
+            while v.len() < n {
+                let (c, len) = if runny {
+                    ((rnd() % 6) as u8, 1 + (rnd() % 60) as usize)
+                } else {
+                    (rnd() as u8, 1)
+                };
+                v.extend(std::iter::repeat(c).take(len));
+            }
+            v.truncate(n);
+            v
+        };
+        // (no two in a row of the same length: the front set's rows are the block's own)
+        let cases = [
+            (bwt::MIN_SEGMENTED + 4321, true),
+            (bwt::MIN_SEGMENTED + 5000, false),
+            (1000, true),
+            (1200, false),
+            (bwt::MIN_SEGMENTED + 99, true),
+        ];
+        let pool = Pool::new(2).unwrap();
+        let mut f = Front::default();
+        let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+        let (mut by_records, mut by_column) = (0, 0);
+        for kern in [Kernels::scalar(), Kernels::detect()] {
+            for (i, &(n, runny)) in cases.iter().enumerate() {
+                let ll = column(n, runny);
+                // (the bound is the length, so a block of a symbol a row keeps the column)
+                let mut b = symbols_of(&ll, n);
+                b.orig_ptr = (n / 3) as u32;
+                let want_path = runs::takes_runs(&b);
+                assert_eq!(want_path, runny, "case {i}: the selector");
+                let mut want_tt = TVector::new();
+                let mut counts = [0u32; 256];
+                ll.iter().for_each(|&c| counts[c as usize] += 1);
+                bwt::build(&ll, &counts, &mut want_tt);
+                let mut want = Vec::new();
+                bwt::walk(&want_tt, b.orig_ptr, &mut want);
+
+                *f.runs.records_mut() = vec![UNTOUCHED];
+                f.ll = vec![0xee; 3];
+                assert_eq!(front_stage(&b, &mut f, kern), Ok(n), "case {i}");
+                assert_eq!((f.by_runs, f.rows), (want_path, n), "case {i}: staged");
+                let took_records = *f.runs.records_mut() != [UNTOUCHED];
+                assert_eq!(took_records, want_path, "case {i}: the records written");
+                assert_eq!(f.ll == ll, !want_path, "case {i}: the column written");
+                assert_eq!(
+                    matches!(f.source(kern), Source::Runs { .. }),
+                    want_path,
+                    "case {i}: the team's source"
+                );
+
+                let join = |seg: &SegScratch, out: &mut Vec<u8>| {
+                    if want_path {
+                        seg.assemble_reversed(out)
+                    } else {
+                        seg.assemble(out)
+                    }
+                };
+                let mut out = vec![7; 2];
+                let segmented = f.invert_alone(b.orig_ptr, kern, &mut tt, &mut seg, &mut out);
+                assert_eq!(segmented, n >= bwt::MIN_SEGMENTED, "case {i}");
+                if segmented {
+                    join(&seg, &mut out);
+                }
+                assert!(out == want, "case {i}, {kern:?}: inverted alone");
+
+                invert_team_from::<8>(
+                    &pool,
+                    f.source(kern),
+                    b.orig_ptr,
+                    &mut tt,
+                    &mut seg,
+                    0,
+                    None,
+                );
+                let mut out = vec![7; 2];
+                join(&seg, &mut out);
+                assert!(out == want, "case {i}, {kern:?}: inverted by a team");
+                if want_path {
+                    by_records += 1;
+                } else {
+                    by_column += 1;
+                }
+            }
+        }
+        assert!(by_records >= 3 && by_column >= 2);
+    }
+
+    /// A bad primary index is refused on either path, with the same error
+    #[test]
+    fn front_stage_checks_the_primary_index_on_both_paths() {
+        for runny in [true, false] {
+            let ll: Vec<u8> = (0..4000u32)
+                .map(|i| {
+                    if runny {
+                        (i / 90 % 3) as u8
+                    } else {
+                        (i.wrapping_mul(2_654_435_761) >> 13) as u8
+                    }
+                })
+                .collect();
+            let mut b = symbols_of(&ll, ll.len());
+            assert_eq!(runs::takes_runs(&b), runny);
+            let mut f = Front::default();
+            b.orig_ptr = ll.len() as u32;
+            assert_eq!(
+                front_stage(&b, &mut f, Kernels::detect()),
+                Err(ErrorKind::BadOrigPtr)
+            );
+            b.orig_ptr -= 1;
+            assert_eq!(front_stage(&b, &mut f, Kernels::detect()), Ok(ll.len()));
+        }
     }
 }
 

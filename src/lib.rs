@@ -338,7 +338,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
     let cooperative = s.inverse.wants_checkpoints();
     // a block of few symbols, for a kernel that can: its table from its run records, with no
     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
-    if !cooperative && s.inverse.reads_runs() && runs::takes_runs(b) {
+    if s.inverse.reads_runs() && runs::takes_runs(b) {
         let n = runs::front(b, &mut s.runs, k)?;
         if b.orig_ptr as usize >= n {
             return Err(ErrorKind::BadOrigPtr);
