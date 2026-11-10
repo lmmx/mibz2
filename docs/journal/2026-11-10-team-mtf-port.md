@@ -184,3 +184,41 @@ points:
     `count-d089.txt`: 42 + 42 + 19 entries, whose totals equal each arm's H.
   - **What it changes:** `count-d089.txt` is identical to `count.txt` apart from those lines,
     so no figure changes. `count.txt` is kept as first written.
+
+## 8. The independent B5 reviewer's adversarial test, adopted
+
+The independent B5 review of #339 found no material objection (#339, comment 6761884623). Its
+test, `miri_adversarial_reg_checkpoints` in `src/mtf/tests.rs`, is adopted from its diff. **It
+is the reviewer's test, not the implementer's.**
+
+**What it covers:** hand-built and malformed streams against the new kernel, each column fresh
+so that Miri sees any store past `max_len`:
+- a run split at a checkpoint with nothing before it;
+- second-level indices about a checkpoint;
+- symbols past the alphabet and past 257 (the `.min(255)` clamp);
+- run weights at the refusal;
+- bounds of 0, 1, 63, 64 and 65;
+- an end-of-block symbol that is never reached.
+
+**One change, at the Coordinator's request, to bound CI's Miri step:**
+- **Before:** the reviewer's second-level case was cp + 300 cycling bytes and a run of cp.
+  It took about 1,700 s under Miri.
+- **After:** a run of one byte up to 300 rows before the checkpoint, 600 cycling bytes across
+  it (index 255 from the 257th on), then a run across the next checkpoint. It covers the same
+  classes in about 900 byte steps.
+- The other cases are unchanged, including every case past 257 that kills the clamp mutant.
+- `cargo fmt` reformatted nothing else.
+
+**Results:**
+- `cargo test --release --lib mtf::` passes 4 of 4.
+- **The clamp mutant is now killed natively.** It is the reviewer's M2, removing `.min(255)`
+  in the kernel's byte step, and it survived every earlier test. It now fails
+  `miri_adversarial_reg_checkpoints`.
+- **Miri:** the AVX2 filter (`RUSTFLAGS=-C target-feature=+avx2,+bmi1`,
+  `MIBZ2_EXPECT_AVX2=1`, `cargo +nightly miri test --lib -- mtf::tests::miri_`) passes 2 of
+  2. The whole step takes 235 s wall, build included; Miri reports 317 s of test time.
+  Before this, the step was about 60 s, so the adoption adds about 3 minutes.
+- fmt and clippy (`-D warnings`) are clean.
+
+**Not fixed here:** the reviewer's N1, a soundness hole in the public `Kernels` that predates
+this port, is issue #340.

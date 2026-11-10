@@ -391,3 +391,112 @@ fn miri_register_checkpoints() {
         assert!(n > 0, "class not reached: {what}");
     }
 }
+
+/// B5 adversarial (PR #339): hand-built and malformed symbol streams against the
+/// register-list kernel with each column fresh (capacity exactly `max_len`, so Miri sees
+/// any store past it): a run split at a checkpoint with nothing before it (`part` 0),
+/// second-level indices (>= 32, up to 255) about a checkpoint, symbols past the alphabet
+/// and past 257 (clamped; compared with the scalar twin on the clamped stream), runs whose
+/// weights reach the refusal, bounds of 0, 1, 63 and 64 bytes, and an end-of-block symbol
+/// that is never reached (eob 0)
+#[test]
+fn miri_adversarial_reg_checkpoints() {
+    if std::env::var_os("MIBZ2_EXPECT_AVX2").is_some() {
+        assert!(Kernels::detect().avx2, "AVX2 not detected");
+    }
+    let cp = CHECKPOINT;
+    let hand = |syms: Vec<u16>, eob: u16, max_len: usize| Symbols {
+        crc: 0,
+        orig_ptr: 0,
+        seq_to_unseq: std::array::from_fn(|i| (255 - i) as u8),
+        syms,
+        eob,
+        max_len,
+    };
+    let mut cases: Vec<Symbols> = Vec::new();
+    // part 0: a byte lands at cp - 1, then a run of it starts exactly at the checkpoint
+    let a = [vec![1u8; cp - 1], vec![2u8; 5], vec![3u8]].concat();
+    at_bounds(&a, &[0, -1, 64], &mut cases);
+    // the same, the run crossing two checkpoints and ending exactly on the second
+    let a2 = [vec![1u8; cp - 1], vec![2u8; 2 * cp + 1]].concat();
+    at_bounds(&a2, &[0, 63], &mut cases);
+    // second-level moves (every index 255 after the first pass) across a checkpoint,
+    // then a run across the next. Slimmed from the reviewer's cp + 300 cycling bytes and a
+    // run of cp (about 1,700 s under Miri) to the same classes in about 900 byte steps: a
+    // run of one byte up to 300 before the checkpoint, 600 cycling bytes across it (index
+    // 255 from the 257th on), then a run across the next checkpoint
+    let mut b: Vec<u8> = vec![0u8; cp - 300];
+    b.extend((1..=600usize).map(|i| (i % 256) as u8));
+    b.extend(std::iter::repeat(9u8).take(cp));
+    at_bounds(&b, &[0, -1], &mut cases);
+    // symbols past the alphabet (eob 5, an index of 200) and past 257 (u16::MAX, 400:
+    // clamped to index 255), a run of 64 by the vector stores ending one short of `max`
+    // RUNB x5 then RUNA: a run of 2 * 31 + 32 = 94
+    let runa = vec![1u16, 1, 1, 1, 1, 0];
+    cases.push(hand(vec![2, 200, 0, 0, 0, 0, 0, 0, 3, 5], 5, 70));
+    cases.push(hand(
+        vec![u16::MAX, 400, 2, 1, 1, 1, 1, 1, 0, 258, 1000],
+        1000,
+        70,
+    ));
+    cases.push(hand(
+        [vec![300u16], runa.clone(), vec![2, 1000]].concat(),
+        1000,
+        96,
+    ));
+    // the run's weight at the refusal (21 RUNBs: the longest accepted run, BlockTooLong;
+    // 22: RunTooLong)
+    cases.push(hand([vec![1u16; 21], vec![2, 257]].concat(), 257, 64));
+    cases.push(hand([vec![1u16; 22], vec![2, 257]].concat(), 257, 64));
+    // bounds of 0, 1, 63 and 64: a run of exactly the bound, then one byte past it
+    for max in [0usize, 1, 63, 64, 65] {
+        for run in [1usize, 63, 64, 65] {
+            let mut z = run - 1;
+            let mut s = Vec::new();
+            loop {
+                s.push((z & 1) as u16);
+                if z < 2 {
+                    break;
+                }
+                z = (z - 2) / 2;
+            }
+            cases.push(hand([s.clone(), vec![257]].concat(), 257, max));
+            cases.push(hand([s.clone(), vec![2, 257]].concat(), 257, max));
+            cases.push(hand([vec![40u16], s, vec![257]].concat(), 257, max));
+        }
+    }
+    // eob 0 (never reached): the stream runs out with a run pending
+    cases.push(hand(vec![2, 0, 1, 33, 0, 0], 0, 50));
+    let k = Kernels::detect();
+    for (i, b) in cases.iter().enumerate() {
+        // the scalar twin's stream: a symbol past 257 clamped as the kernel clamps it
+        let mut c = b.clone_symbols();
+        for s in c.syms.iter_mut() {
+            if *s > 257 && *s != c.eob {
+                *s = 256;
+            }
+        }
+        let (mut ll, mut cn, mut p) = (Vec::new(), [0; 256], Vec::new());
+        let want = mtf_checkpoints_scalar(&c, &mut ll, &mut cn, &mut p);
+        let (mut ll2, mut cn2, mut p2) = (Vec::new(), [9; 256], vec![[3; 256]]);
+        let got = mtf_checkpoints(b, &mut ll2, &mut cn2, &mut p2, k);
+        assert_eq!(got, want, "case {i}: the result");
+        assert!(ll == ll2 && cn == cn2, "case {i}: the column and counts");
+        if want.is_ok() {
+            assert!(p == p2, "case {i}: the checkpoints");
+        }
+    }
+}
+
+impl Symbols {
+    fn clone_symbols(&self) -> Symbols {
+        Symbols {
+            crc: self.crc,
+            orig_ptr: self.orig_ptr,
+            seq_to_unseq: self.seq_to_unseq,
+            syms: self.syms.clone(),
+            eob: self.eob,
+            max_len: self.max_len,
+        }
+    }
+}
