@@ -490,3 +490,7 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 - Bandwidth question survives; direct copy/column intervention preferred. Hog revision estimates isolated nine-core interference, not full-machine causal bandwidth; no new slot.
 - dir sequence stays closed; no new dir-specific mechanism. No PGO/global-v3 CI slot now; local null not universal, #201 frozen closure preserved, future source changes need a new identified opportunity.
 - No new timing, implementation, compilation, safety certification or measured credit.
+
+## Complete-algorithm pricing: inbox 6758176258
+
+[Record](records/reviews/inbox-6758176258/report.md). Acknowledged complete construction/traversal/metadata pricing before recommending a Pathfinder build, including loop skeleton, lanes, stops/tails, branches, traffic and parallel live state. Return the dominant-cost removal and cheapest falsifier; a failed construction is not an absent advantage. This is within the existing pinned pricing mandate, not a re-pin or added execution authority. Lending copy/allocation counts, dense-pair count against an equally improved ordinary fill, conditional MTF and unchanged D4 filters carried forward. Next named share-nothing design awaits inbox dispatch; no substitute candidate priced or approved.
