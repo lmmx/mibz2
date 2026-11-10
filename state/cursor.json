@@ -160,9 +160,10 @@
     6763334719,
     6763474717,
     6763771662,
-    6763960537
+    6763960537,
+    6767025138
   ],
-  "last_processed_comment_id": 6763960537,
+  "last_processed_comment_id": 6767025138,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1835,7 +1836,7 @@
     },
     {
       "trigger_comment_id": 6767025138,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1844,7 +1845,11 @@
       "report_commit": "79b50c1a3d58d667d2f44f990099acbe8fcfdd5b",
       "report_path": "state/reports/rauzy-literature-6767025138/report.md",
       "review_comment_pr": 145,
-      "disposition": "Literature dossier: correct Erickson–Nayyeri quadratic theorem attribution; separate move-query, construction and expansion costs; route via Coordinator on #145."
+      "disposition": "Literature dossier: correct Erickson–Nayyeri quadratic theorem attribution; separate move-query, construction and expansion costs; route via Coordinator on #145.",
+      "review_comment_id": 6767231791,
+      "publication_verified": true,
+      "verification_note": "Exact full body/author/#145 readback and role-aware routing pass; pinned coord.verify flags only its hardcoded FROM coordinator restriction.",
+      "forwarding": "Coordinator requested to forward dossier; no write to MONODROMY inbox under pinned role authority."
     }
   ],
   "active_delegations": [],
