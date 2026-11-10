@@ -1495,6 +1495,21 @@
       "status": "finished",
       "disposition": "PROCEED bounded diagnostic; exact-head readiness and raw evidence validity remain.",
       "comment": 6782294636
+    },
+    {
+      "id": "D100",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6782334222,
+      "pr": 161,
+      "sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "evidence_digest": "occupancy-job:130205457614;head:ae13742fe4c6e2726c178e2409a1d69ef8fca939;ledger:0f897b72b40202f9eac6885b0f931c0ec1031da6;witness:45e7f3de36aa89cbed023a718cf03f5ed5ae47204c208ffc501e612d1bed36b2",
+      "commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
+      "status": "complete",
+      "disposition": "Class A inherited ledger mismatch; HOLD allocation certification and dependent readiness, no demonstrated UB.",
+      "comment": null
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1827,7 +1842,9 @@
     "6a0b23b203ff5023cc649de6fade27c8cb0e45e5",
     "cac330ad1e62abc09ec3befea2d33547fb30edf3",
     "0e03badbdaf9fd77d29302bab2a39779325cb723",
-    "03d430288631a50874d33cfbc8523899185ebc62"
+    "03d430288631a50874d33cfbc8523899185ebc62",
+    "03676d93b7eff00ee2865da4f2260576d2e23473",
+    "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1927,7 +1944,8 @@
     6764400880,
     6770180620,
     6771542584,
-    6782224690
+    6782224690,
+    6782334222
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2007,8 +2025,9 @@
   },
   "current_execution": {
     "active_comment": 6782334222,
-    "status": "in progress",
-    "decision": "D100"
+    "status": "complete",
+    "decision": "D100",
+    "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
   },
   "duplicate_events": [
     {
@@ -2776,6 +2795,14 @@
       "incoming_comment": 6782224690,
       "decision": "D099",
       "commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
+    },
+    {
+      "pr": 161,
+      "sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "evidence_digest": "occupancy-job:130205457614;head:ae13742fe4c6e2726c178e2409a1d69ef8fca939;ledger:0f897b72b40202f9eac6885b0f931c0ec1031da6;witness:45e7f3de36aa89cbed023a718cf03f5ed5ae47204c208ffc501e612d1bed36b2",
+      "incoming_comment": 6782334222,
+      "decision": "D100",
+      "commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3566,9 +3593,11 @@
     {
       "comment_id": 6782334222,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D100",
-      "progress": "Migration verified; investigating occupancy ledger assertion."
+      "progress": "Completed source/accounting investigation; scoped ledger/readiness HOLD, review publication pending.",
+      "receipt_commit": "03676d93b7eff00ee2865da4f2260576d2e23473",
+      "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
     }
   ],
   "migrated_from": {
