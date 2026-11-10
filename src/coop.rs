@@ -2071,6 +2071,169 @@ mod tests {
         assert!(r.is_err() && tt.0.is_empty(), "a short window accepted");
     }
 
+    // ---- B5 review (#335): adversarial tests ----
+
+    /// Crafted counts that `new` accepts but that leave bucket 255 (the top bucket, whose
+    /// window ends at n) one slot short, with the table's spare capacity pre-filled with a
+    /// sentinel: a guard laxer by one writes slot n (and reads ll[n]), which this detects
+    /// natively, without Miri, by reading the sentinel back. Byte 255 also exercises the
+    /// add-is-OR claim at the byte's top value.
+    #[test]
+    fn b5_guard_top_bucket_sentinel() {
+        for k in 1..=3usize {
+            for extra in [0usize, 16, 32] {
+                let n = 32 + extra;
+                // `extra` leading non-equal rows so the bad window is not at row 0
+                let mut ll: Vec<u8> = (0..extra).map(|i| b"\x01\x02"[i % 2]).collect();
+                ll.extend([255u8; 32]);
+                let mut counts = counts_of(&ll);
+                counts[255] -= 1;
+                counts[254] += 1;
+                let stride = 16;
+                // checkpoints within the lying counts: those of ll, clamped
+                let mut cps = checkpoints_of(&ll, stride);
+                let mut ok = true;
+                for cp in cps.iter_mut() {
+                    if cp[255] > counts[255] {
+                        let d = cp[255] - counts[255];
+                        cp[255] -= d;
+                        cp[254] += d;
+                    }
+                    if cp[254] > counts[254] {
+                        ok = false;
+                    }
+                }
+                if !ok {
+                    continue;
+                }
+                const SENT: u32 = 0xDEAD_BEEF;
+                let mut tt = TVector::new();
+                tt.0 = vec![SENT; n + 64];
+                let cap_ptr = tt.0.as_ptr() as usize;
+                let b = match FusedBuild::new(&ll, &counts, &cps, stride, k, &mut tt) {
+                    Ok(b) => b,
+                    Err(_) => continue,
+                };
+                for j in (0..k).rev() {
+                    b.share(j);
+                }
+                let (r, tt) = b.finish();
+                assert!(
+                    r.is_err() && tt.0.is_empty(),
+                    "k {k} extra {extra}: accepted"
+                );
+                assert_eq!(tt.0.as_ptr() as usize, cap_ptr, "reallocated");
+                // SAFETY (test only): these slots were initialised by the vec! above and the
+                // allocation was not moved (checked); read them back as u32
+                let spare = unsafe { std::slice::from_raw_parts(tt.0.as_ptr(), n + 64) };
+                for (s, &v) in spare.iter().enumerate().skip(n) {
+                    assert_eq!(v, SENT, "k {k} extra {extra}: slot {s} >= n written");
+                }
+            }
+        }
+    }
+
+    /// Byte 255 at every position, and the largest block `new` accepts (2^24 - 1 rows, one
+    /// byte 255 throughout): the top entry 0xFFFF_FEFF, row 2^24 - 2 at byte 255: no carry. And
+    /// 2^24 rows refused. Against `bwt::build` at k 1 to 4.
+    #[test]
+    fn b5_top_byte_and_largest_block() {
+        let mut ll = vec![255u8; 1000];
+        for i in (0..1000).step_by(37) {
+            ll[i] = 254;
+        }
+        run16_matches(&ll, &[1, 2, 3, 4], &[1, 16, 64], "255s");
+        for n in [(1usize << 24) - 1, 900_000, 900_001] {
+            let ll = vec![255u8; n];
+            let counts = counts_of(&ll);
+            let mut want = TVector::new();
+            crate::bwt::build(&ll, &counts, &mut want);
+            let cps = checkpoints_of(&ll, crate::mtf::CHECKPOINT);
+            for k in [1, 2, 3, 4] {
+                let got = split_build(&ll, &counts, &cps, crate::mtf::CHECKPOINT, k);
+                assert!(got.as_deref() == Some(&want.0[..]), "n {n} k {k}");
+            }
+            if n == (1 << 24) - 1 {
+                assert_eq!(want.0[n - 1], ((n as u32 - 1) << 8) | 255);
+            }
+        }
+        let ll = vec![255u8; 1 << 24];
+        let counts = counts_of(&ll);
+        let cps = checkpoints_of(&ll, crate::mtf::CHECKPOINT);
+        let mut tt = TVector::new();
+        assert!(FusedBuild::new(&ll, &counts, &cps, crate::mtf::CHECKPOINT, 2, &mut tt).is_err());
+    }
+
+    /// Random lying counts and checkpoints (perturbed by moving counts between two bytes,
+    /// sums kept) on run-heavy columns, every share order: whatever `new` accepts must give
+    /// either `bwt::build`'s table or a refusal, never a write past n (sentinel) and never a
+    /// panic
+    #[test]
+    fn b5_lying_counts_fuzz() {
+        let mut r = xorshift(0xb5b5);
+        for t in 0..3000 {
+            let mut ll = Vec::new();
+            let n0 = 16 + (r() % 200) as usize;
+            while ll.len() < n0 {
+                let len = 1 + (r() % 40) as usize;
+                let byte = [0u8, 1, 254, 255][(r() % 4) as usize];
+                ll.extend(std::iter::repeat(byte).take(len));
+            }
+            let n = ll.len();
+            let stride = [1usize, 7, 16][(r() % 3) as usize];
+            let mut counts = counts_of(&ll);
+            let mut cps = checkpoints_of(&ll, stride);
+            // perturb: move d of byte a's count to byte b (in counts, and in each
+            // checkpoint where possible)
+            let (a, b) = (
+                [0usize, 1, 254, 255][(r() % 4) as usize],
+                [0usize, 1, 254, 255][(r() % 4) as usize],
+            );
+            let d = (r() % 18) as u32;
+            if a != b && counts[a] >= d {
+                counts[a] -= d;
+                counts[b] += d;
+                if r() % 2 == 0 {
+                    for cp in cps.iter_mut() {
+                        let m = cp[a].min(d);
+                        cp[a] -= m;
+                        cp[b] += m;
+                    }
+                }
+            }
+            let k = 1 + (r() % 4) as usize;
+            let mut want = TVector::new();
+            crate::bwt::build(&ll, &counts_of(&ll), &mut want);
+            const SENT: u32 = 0x5EE5_5EE5;
+            let mut tt = TVector::new();
+            tt.0 = vec![SENT; n + 32];
+            let p = tt.0.as_ptr() as usize;
+            let bld = match FusedBuild::new(&ll, &counts, &cps, stride, k, &mut tt) {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
+            if t % 2 == 0 {
+                for j in 0..k {
+                    bld.share(j);
+                }
+            } else {
+                for j in (0..k).rev() {
+                    bld.share(j);
+                }
+            }
+            let (res, tt) = bld.finish();
+            if res.is_ok() {
+                assert!(tt.0 == want.0, "t {t}: accepted a wrong table");
+            }
+            assert_eq!(tt.0.as_ptr() as usize, p);
+            // SAFETY (test only): initialised by vec!, not moved
+            let all = unsafe { std::slice::from_raw_parts(tt.0.as_ptr(), n + 32) };
+            for (s, &v) in all.iter().enumerate().skip(n) {
+                assert_eq!(v, SENT, "t {t}: slot {s} >= n written");
+            }
+        }
+    }
+
     /// The shared walk on `ll`'s table from `orig_ptr`, against `bwt::walk` and the
     /// segments' oracle, with `segments` a block
     fn walk_matches(
