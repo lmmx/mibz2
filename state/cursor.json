@@ -1580,11 +1580,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6756084723,
-    "status": "finished",
-    "decision": "D077",
-    "work_commit": "6c63ce5edba5e96c654eec7e9109fc604ebe9fd7",
-    "review_comment_id": 6756184275
+    "active_comment": 6756570238,
+    "status": "in progress",
+    "decision": "D078"
   },
   "duplicate_events": [
     {
@@ -2736,6 +2734,12 @@
       "review_comment_id": 6756184275,
       "complete_cursor_commit": "e9eabe68c95d61b7c72404a994b12750653a8457",
       "progress": "Exact REVIEW readback verified; pinned verifier has sole coordinator-only FROM limitation; independent Guardian routing and provenance checks pass."
+    },
+    {
+      "comment_id": 6756570238,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D078"
     }
   ],
   "migrated_from": {
