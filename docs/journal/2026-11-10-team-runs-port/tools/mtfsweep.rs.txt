@@ -1,0 +1,87 @@
+//! scratch: `mtf::mtf_checkpoints`'s time on a file's first block as the caller's counts
+//! move through 4 KiB in 64-byte steps (the list stays where the kernel's frame is).
+//! mtfsweep FILE.bz2 [REPS]
+use mibz2::stream::{Event, Scanner, SliceSource};
+use mibz2::{mtf, Kernels};
+
+#[repr(C, align(4096))]
+struct Page([u8; 8192]);
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    let data = std::fs::read(&a[1]).unwrap();
+    let reps: usize = a.get(2).map_or(15, |s| s.parse().unwrap());
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() else {
+        panic!("no block")
+    };
+    let mut page = Box::new(Page([0; 8192]));
+    let (mut ll, mut cps) = (Vec::new(), Vec::new());
+    let mut row = Vec::new();
+    for step in 0..64 {
+        let off = step * 64;
+        // SAFETY: off + 1024 <= 8192, and the page is 4 KiB-aligned, so the counts are aligned
+        let counts: &mut [u32; 256] =
+            unsafe { &mut *(page.0.as_mut_ptr().add(off) as *mut [u32; 256]) };
+        let mut best = f64::MAX;
+        let mut n = 0;
+        for _ in 0..reps {
+            let t = std::time::Instant::now();
+            n = mtf::mtf_checkpoints(&b, &mut ll, counts, &mut cps, k).unwrap();
+            best = best.min(t.elapsed().as_secs_f64());
+        }
+        row.push(best * 1e9 / n as f64);
+    }
+    report("counts", &row);
+    // the symbols' struct (its byte table inline) moved the same way, the counts fixed
+    let mut page2 = Box::new(Page([0; 8192]));
+    let mut counts = Box::new([0u32; 256]);
+    let mut row = Vec::new();
+    for step in 0..64 {
+        let off = step * 64;
+        let p = unsafe { page2.0.as_mut_ptr().add(off) as *mut mibz2::block::Symbols };
+        // SAFETY: the struct fits 4 KiB after off, aligned to 64; written before it is read
+        unsafe {
+            p.write(mibz2::block::Symbols {
+                crc: b.crc,
+                orig_ptr: b.orig_ptr,
+                seq_to_unseq: b.seq_to_unseq,
+                syms: b.syms.clone(),
+                eob: b.eob,
+                max_len: b.max_len,
+            })
+        };
+        let bb = unsafe { &*p };
+        let table = bb.seq_to_unseq.as_ptr() as usize & 4095;
+        let mut best = f64::MAX;
+        let mut n = 0;
+        for _ in 0..reps {
+            let t = std::time::Instant::now();
+            n = mtf::mtf_checkpoints(bb, &mut ll, &mut counts, &mut cps, k).unwrap();
+            best = best.min(t.elapsed().as_secs_f64());
+        }
+        row.push(best * 1e9 / n as f64);
+        if step == 0 {
+            println!("the byte table's residue at step 0: {table:#x}");
+        }
+        unsafe { p.drop_in_place() };
+    }
+    report("symbols", &row);
+}
+
+fn report(what: &str, row: &[f64]) {
+    let lo = row.iter().cloned().fold(f64::MAX, f64::min);
+    let hi = row.iter().cloned().fold(0.0, f64::max);
+    println!(
+        "ns a row, {what} at 64-byte steps through 4 KiB: min {lo:.2} max {hi:.2} ratio {:.2}",
+        hi / lo
+    );
+    println!(
+        "{}",
+        row.iter()
+            .map(|x| format!("{x:.2}"))
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
+}
