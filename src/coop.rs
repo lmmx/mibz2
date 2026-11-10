@@ -907,11 +907,11 @@ pub mod walk_stats {
     }
 
     /// A walker call's record
-    pub(crate) fn call(team: usize, block: u64, thread: usize, staged: bool, c: &Counts) {
+    pub(crate) fn call(team: usize, block: u64, thread: usize, walker: &str, c: &Counts) {
         push(format!(
             "{{\"kind\":\"call\",\"team\":{team},\"block\":{block},\"thread\":{thread},\"role\":\"{}\",\"walker\":\"{}\",\"takes\":{},\"exhausts\":{},\"bytes\":{},\"tail\":{},\"fragments\":{},\"copied\":{}}}",
             if thread == 0 { "leader" } else { "helper" },
-            if staged { "traverse_staged" } else { "traverse" },
+            walker,
             c.takes.get(),
             c.exhausts.get(),
             c.bytes.get(),
@@ -1996,7 +1996,12 @@ impl Relay<'_> {
             {
                 let c = walk_stats::Counts::default();
                 self.caught(catch_unwind(AssertUnwindSafe(|| w.share_with::<L, _>(&c))));
-                walk_stats::call(self.stats.team, self.place, who, w.staged, &c);
+                let walker = if w.staged {
+                    "traverse_staged"
+                } else {
+                    "traverse"
+                };
+                walk_stats::call(self.stats.team, self.place, who, walker, &c);
             }
             tmark!(WalkEnd, self.place);
         }

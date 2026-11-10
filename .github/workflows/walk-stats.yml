@@ -41,7 +41,7 @@ jobs:
       - name: The checker's negative controls
         run: python3 bench/test_walk_stats_check.py
       - name: The cooperative tests, with the feature
-        run: cargo test --features walk-stats --lib coop::
+        run: cargo test --features walk-stats --lib "coop::"
       - name: The harness, with and without the feature
         run: |
           cargo build --release --example ab
