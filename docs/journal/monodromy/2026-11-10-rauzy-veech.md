@@ -78,8 +78,14 @@ A's bottom place. ∎ *Equal:* both at once; I_A = J_B is cut off whole. ∎
 **Termination (P).** m strictly decreases. Stop at A = B: I_A = J_A, π_m fixes it pointwise, each
 point's π-cycle has length |w_A|. Kac: Σ λ_α |w_α| = (points on cycles meeting [0, m)). π one
 n-cycle ⇒ one letter, λ = 1, |w| = n, m = 1: the root's expansion is row 0's cycle.
-T = v^k (bzip2 sorts rotations, k cycles): A = B with |w_A| = n/k; letters whose cycles the walk
-is not on are dropped. `(ab)^k`, `(aaaab)^k`, zeros: bytes exact (C, §4).
+T = v^k (bzip2 sorts rotations, k cycles): the same steps as for v with every length × k, ending
+at one letter with λ = k, |w| = n/k. `(ab)^k`, `(aaaab)^k`, zeros: bytes exact (C, §4).
+**A column that is no BWT** (a decoder is handed any bytes and any row; a corrupt stream):
+LF has cycles of several kinds, and A = B occurs with other letters left. The last letter is
+then λ_A cycles spelling w_A: if the walk is on it, stop; else drop it from both orders and go
+on. **C:** `rauzy --arbitrary`: 200,000 random columns (178,276 with several cycles, a letter
+dropped in 103,731), reference and kernel equal to `bwt::walk` on all; 3,000 under valgrind,
+clean.
 
 **Counts (P).**
 - Equal steps = r − 1 for one cycle: only they delete letters. **C:** 15,141,369 = 15,141,602 − 233.
@@ -134,7 +140,7 @@ grammar verifies the input; it no longer checks the passes that write the bytes.
 | input | blocks | r/n | S/r | S/n | coincidences/r | rounds (median) |
 |---|--:|--:|--:|--:|--:|--:|
 | `wikidata.bz2` | 233 | 0.0722 | 1.812 | 0.1309 | 0.780 | 93 |
-| prose (the repository's `.md`, 3.5 MB, `bzip2 -9`) | 4 | 0.3672 | 1.841 | 0.6761 | 0.541 | 101 |
+| prose (the repository's `.md`, 3.5 MB, `bzip2 -9`; not the bench's `text`) | 4 | 0.3672 | 1.841 | 0.6761 | 0.541 | 101 |
 
 Synthetic (blocks ≥ 10⁵ rows):
 
@@ -155,9 +161,11 @@ Synthetic (blocks ≥ 10⁵ rows):
   3.3 (few-id JSON) to ~10 (Sturmian-like, where S is tiny anyway). §5.5 says what it is.
 - **Floor (P):** S ≥ r − 1 for any schedule of these steps. So at most 1.81× is left in the count
   on Wikidata. What is undecided is the step's price.
-- Against the record: the tower 8 × 3 is 0.190 n dependent steps on Wikidata and stops at
-  W = n/512 with words materialised at each level (0.68–1.58 n bytes); this is 0.131 n, stops at
-  one point, materialises 0.47 n bytes of small words. PF:`2026-11-10-chunked-link.md` §5a's bound
+- Against the record: the tower 8 × 3 is 0.190 n dependent steps on its 20 Wikidata blocks
+  (every 12th) and stops at W = n/512 with words materialised at each level (0.68–1.58 n
+  bytes); on those same 20 blocks this is 0.1288 n (1.80 a run against 2.65), stops at one
+  point, and materialises 0.47 n bytes of small words. The units differ: a
+  compare-subtract-relink here, a piece pushed through the run map there. PF:`2026-11-10-chunked-link.md` §5a's bound
   (2r a halving, 0.55 n, "pays only below r/n ≈ 0.03") is 4× above the count.
 
 ## 5. Structure: coincidences, segments, rounds
@@ -307,14 +315,14 @@ from #324's emitter (PF:`by-data-class` §2).
 
 | # | attack | outcome |
 |--:|---|---|
-| 1 | bytes ≠ walk on any block | none: 233 Wikidata blocks, 4 prose, 30 synthetic incl. periodic and n < 20 |
+| 1 | bytes ≠ walk on any block | none: 233 Wikidata blocks (and the corpus's 198 tiny ones in the independent check), 4 prose, 30 synthetic incl. periodic and n < 20; 200,000 arbitrary columns |
 | 2 | S ≫ r on natural data | no: 1.29–2.08 r |
 | 3 | S = Θ(n) on some input | **yes**: `(ab)^k`, S = n/2, 7.8× slower. Fix: division rule (q equal-pair steps → one power rule), or a step budget with fallback to the walk. Wikidata: 46 such steps in 27.4 M |
 | 4 | text | **fires**: S/n 0.68, 7.4× slower. Closed for r/n ≳ 0.07 at this step price |
 | 5 | the clock on Wikidata | **fires for this construction**: 1.276×. The step is 6.4 row-steps |
 | 6 | bulk-join the exact chains first (the cheap 63.5%) | **fires as built**: 1.668×; letter-passes at 10 ns each (§6) |
 | 7 | prior art | the mechanism is classical; the transfer is not in print (§10) |
-| 8 | independent implementation from the spec, invariant checked by brute force | see §11 |
+| 8 | independent implementation from the spec, invariant checked by brute force | no counterexample (§11) |
 
 ## 8. Open, ranked: ceiling · cheapest falsifier · gate
 
@@ -365,8 +373,8 @@ from #324's emitter (PF:`by-data-class` §2).
   1 to 11 cycles (median 5; prose 4 to 11); genus = (r − cycles)/2 + 1 ≈ r/2: 26,500 at
   r = 53,001. A block is a surface of genus r/2 with a handful of cone points of very large
   angle. 𝓣 ∩ 𝓑 ↔ vertical saddle connections of length one.
-- **K:** SA conjugates π to the rotation p ↦ p − 1 and τ⁻¹ to φ (GNP Lemma 19; Navarro–Ochoa–
-  Prezza Lemma 6): the dual r-IET in text space is the same surface turned a quarter. §5.5 is
+- **K** (T primitive)**:** SA conjugates π to the rotation p ↦ p − 1 and τ⁻¹ to φ (GNP Lemma 19;
+  Navarro–Ochoa–Prezza Lemma 6): the dual r-IET in text space is the same surface turned a quarter. §5.5 is
   the induction read on that side.
 - Rauzy–Veech induction is the first return of the Teichmüller flow; §5 says that on BWT
   surfaces it is dominated by collapsing unit saddle connections. Nothing computational is
@@ -410,10 +418,29 @@ from #324's emitter (PF:`by-data-class` §2).
   phrases. The step, its morphism, the linked-interval machine and the SLP from accelerated
   induction are others'.
 
-## 11. Independent check
+## 11. Independent check (C)
 
-_Pending at the time of writing: a second implementation from the written spec, the invariant
-checked against a brute-force first-return map after every step. Its outcome is appended below._
+A second implementation, written from the specification of §2 by a sub-agent that did not
+see `examples/rauzy.rs`, in Python, with its own bzip2 parser.
+
+- **Invariant I after every step, by brute force:** for every row of every letter, the true
+  first return of LF to [0, m): time, itinerary, landing; the tracked point as
+  P = π^v(start + o). 8,378 words (all binary to length 10, ternary to 7, random over 2 to 256
+  letters, Fibonacci, Thue–Morse, near-periodic, powers, a^{n−1}b), 248,982 steps: no failure.
+- **The harness can fail:** seven wrong variants of the rules (a concatenation swapped, insert
+  before for after, the equal case left at the end, a level update dropped) all fail by n = 3.
+- **Tracking from any row:** 30,124 (word, row) pairs; every tied row of a power v^k.
+- **Real blocks:** all 435 of `wikidata.bz2` and `prose.bz2` decode through its grammar to
+  bzip2's bytes; its S on the 233 full Wikidata blocks is 27,439,723, this entry's figure, and
+  its split of block 1 is 24,961 / 16,426 / 51,183, the example's.
+- **What it found:** the specification covered BWT images only. On 6,825 arbitrary columns the
+  stop rule met A = B with letters left in 5,987; the drop rule of §2 is what works (44,584
+  (L, P) pairs against the row walk). The example had that rule and had never run it; it is
+  now exercised (`--arbitrary`, §2).
+- **Also its:** the copies are short where they are many (on 20 Wikidata blocks, counting a
+  repeated single byte as a copy: mean 16.2 bytes, median 3, 47% of copies ≤ 2 bytes; copies
+  of ≥ 8 bytes carry 83.8% of the output); words built bottom-up would be 27.7 n bytes (the
+  example builds none above 16 bytes); grammar depth 49 to 300 a block.
 
 ## Reproduce
 

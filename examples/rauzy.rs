@@ -5,6 +5,7 @@
 //! ```text
 //! rauzy FILE.bz2 [EVERY] [MIN_ROWS] [ROUNDS]     one JSON line a block (stdout)
 //! RAUZY_JOIN=1 rauzy ...                         the kernel with its joining pre-pass
+//! rauzy --arbitrary [CASES]                      columns that are no BWT, against the walk
 //! ```
 //!
 //! **The object.** LF is a translation on each run of L: an interval exchange on r letters
@@ -1246,8 +1247,81 @@ fn coincidences(l: &[u8]) -> (u64, [u64; 4]) {
     (coin, shapes)
 }
 
+/// `rauzy --arbitrary CASES`: columns that are the BWT of nothing. A decoder is handed any
+/// bytes as L and any row below n as the walk's start; LF then has cycles of several kinds,
+/// and the induction meets a last letter sent onto itself while others are left (the drop).
+/// Every case is checked against `bwt::walk`, by the reference and by the kernel both ways.
+fn arbitrary(cases: usize) {
+    let mut seed = 0x9E37_79B9_7F4A_7C15u64;
+    let mut rnd = move |m: u64| {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        seed % m
+    };
+    let (mut tt, mut walked, mut out, mut tmp) =
+        (TVector::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut ind, mut g, mut kern) = (Induction::default(), Grammar::default(), Kernel::default());
+    let (mut first, mut stack) = (Vec::new(), Vec::new());
+    let (mut dropped, mut periodic, mut many) = (0u64, 0u64, 0u64);
+    for case in 0..cases {
+        let n = 1 + rnd(if case % 16 == 0 { 3000 } else { 48 }) as usize;
+        let sigma = [1, 2, 2, 3, 4, 26, 256][rnd(7) as usize];
+        // (runs of a letter now and then, so that letters have lengths above one)
+        let mut l = Vec::with_capacity(n);
+        while l.len() < n {
+            let c = rnd(sigma) as u8;
+            let long = rnd(3) == 0;
+            let copies = 1 + rnd(if long { 9 } else { 1 });
+            for _ in 0..copies {
+                l.push(c);
+            }
+        }
+        l.truncate(n);
+        let p = rnd(n as u64) as u32;
+        let mut counts = [0u32; 256];
+        for &c in &l {
+            counts[c as usize] += 1;
+        }
+        build(&l, &counts, &mut tt);
+        walked.clear();
+        walk(&tt, p, &mut walked);
+        let mut c = Counts::default();
+        let (trk, off) = letters(&l, p, &mut ind);
+        let cl = induce(&mut ind, trk, off, &mut g, &mut c);
+        write_block(&g, &cl, n, &mut out, &mut tmp, &mut first, &mut stack);
+        assert!(out == walked, "reference: case {case}, L = {l:?}, row {p}");
+        dropped += (c.dropped > 0) as u64;
+        periodic += ((cl.period as usize) < n) as u64;
+        many += admissible(&l).is_none() as u64;
+        for join in [false, true] {
+            let (trk, off) = kern.runs(&l, p);
+            kern.sort();
+            let (trk, tl, bl, v) = if join {
+                let (trk, tl, bl, v, _) = kern.contract(trk);
+                (trk, tl, bl, v)
+            } else {
+                let (tl, bl) = kern.link();
+                (trk, tl, bl, 0)
+            };
+            let (word, period, t0, _) = kern.induce(trk, off, tl, bl, v);
+            kern.write(word, period, t0, n, &mut out);
+            assert!(
+                out == walked,
+                "kernel (join {join}): case {case}, L = {l:?}, row {p}"
+            );
+        }
+    }
+    println!(
+        "{{\"cases\":{cases},\"several_cycles\":{many},\"dropped_a_letter\":{dropped},\"cycle_shorter_than_n\":{periodic}}}"
+    );
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args.get(1).is_some_and(|a| a == "--arbitrary") {
+        return arbitrary(args.get(2).map_or(100_000, |s| s.parse().unwrap()));
+    }
     let data = std::fs::read(&args[1]).expect("read");
     let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
     let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
