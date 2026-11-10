@@ -1,0 +1,17 @@
+{
+  "inbox_comment_id": 6759385543,
+  "reviewed_head": "482df588e2a97b99c6797c7bc2a24098015968dd",
+  "prior_head": "aae6dc5ed4779c094f1af932a384204f1933a25b",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "dry_report_comment_id": 6759366302,
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06"
+  },
+  "routing_audit": [],
+  "tests": "32 malformed-record controls; 8 quota fixtures; preflight and ordering probes; conditional interpretation replay. pytest unavailable.",
+  "ran_decoder": false
+}

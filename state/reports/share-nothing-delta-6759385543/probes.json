@@ -1,0 +1,236 @@
+{
+  "clean": {
+    "valid": true,
+    "problems": []
+  },
+  "_ab_changed": {
+    "valid": false,
+    "problems": [
+      "the ab executable's digest is missing, or changed during the run"
+    ]
+  },
+  "_ab_digest_gone": {
+    "valid": false,
+    "problems": [
+      "the ab executable's digest is missing, or changed during the run"
+    ]
+  },
+  "_bad_bytes": {
+    "valid": false,
+    "problems": [
+      "run 7: out 1, hash 'a8830caee5c511a6', err '': not the corpus's bytes"
+    ]
+  },
+  "_bad_hash": {
+    "valid": false,
+    "problems": [
+      "run 7: out 209700196, hash '0000', err '': not the corpus's bytes"
+    ]
+  },
+  "_content_not_shown": {
+    "valid": false,
+    "problems": [
+      "the corpora's record does not show the registered content"
+    ]
+  },
+  "_corpora_bad": {
+    "valid": false,
+    "problems": [
+      "the corpora's record is not ok: []"
+    ]
+  },
+  "_corpus_changed": {
+    "valid": false,
+    "problems": [
+      "wikidata-l2: a digest is missing (built 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc', after the run 'other')"
+    ]
+  },
+  "_decode_not_shown": {
+    "valid": false,
+    "problems": [
+      "wikidata-l9: the record does not show it decoding to the content"
+    ]
+  },
+  "_dirty": {
+    "valid": false,
+    "problems": [
+      "the checkout was not clean after the run"
+    ]
+  },
+  "_drive": {
+    "valid": false,
+    "problems": [
+      "the drive exited 124"
+    ]
+  },
+  "_drop_slot": {
+    "valid": false,
+    "problems": [
+      "731 slots ran, not the 732 scheduled",
+      "731 run lines, not the 732 scheduled"
+    ]
+  },
+  "_dry_identity": {
+    "valid": false,
+    "problems": [
+      "the identity's dry True is not this judgement's False"
+    ]
+  },
+  "_empty_telemetry": {
+    "valid": false,
+    "problems": [
+      "run 0's pre-run state: freq_mhz absent",
+      "run 0's pre-run state: governor absent",
+      "run 1's pre-run state: freq_mhz absent",
+      "run 1's pre-run state: governor absent"
+    ]
+  },
+  "_err": {
+    "valid": false,
+    "problems": [
+      "run 7: out 209700196, hash 'a8830caee5c511a6', err 'CRC mismatch': not the corpus's bytes"
+    ]
+  },
+  "_l2_digest_gone_both_sides": {
+    "valid": false,
+    "problems": [
+      "wikidata-l2: a digest is missing (built None, after the run None)"
+    ]
+  },
+  "_nan": {
+    "valid": false,
+    "problems": [
+      "run 9: no finite CPU and wall"
+    ]
+  },
+  "_no_frozen": {
+    "valid": false,
+    "problems": [
+      "the identity's frozen None is not a commit"
+    ]
+  },
+  "_no_head": {
+    "valid": false,
+    "problems": [
+      "the identity's head None is not a commit"
+    ]
+  },
+  "_no_post": {
+    "valid": false,
+    "problems": [
+      "run 5's post-run state: no state"
+    ]
+  },
+  "_no_sources": {
+    "valid": false,
+    "problems": [
+      "the identity records no source digests"
+    ]
+  },
+  "_no_state": {
+    "valid": false,
+    "problems": [
+      "run 9's pre-run state: no state"
+    ]
+  },
+  "_no_wait": {
+    "valid": false,
+    "problems": [
+      "run 3: no busy-gate wait recorded (waited_s)"
+    ]
+  },
+  "_null_without_reason": {
+    "valid": false,
+    "problems": [
+      "run 5's pre-run state: governor null without a reason"
+    ]
+  },
+  "_preflight": {
+    "valid": false,
+    "problems": [
+      "the archived preflight replays PASS, but the recorded exit is 1"
+    ]
+  },
+  "_rc": {
+    "valid": false,
+    "problems": [
+      "slot 4 exited 124"
+    ]
+  },
+  "_runs_out_of_order": {
+    "valid": false,
+    "problems": [
+      "run 6: its spawn and exit times are missing or out of order"
+    ]
+  },
+  "_slot_time_missing": {
+    "valid": false,
+    "problems": [
+      "slot 3: its start and end times are missing or out of order"
+    ]
+  },
+  "_source_not_frozen": {
+    "valid": false,
+    "problems": [
+      "bench/share_nothing.py at the head is not bench/share_nothing.py at the frozen commit"
+    ]
+  },
+  "_spawn_after_exit": {
+    "valid": false,
+    "problems": [
+      "run 5: its spawn and exit times are missing or out of order"
+    ]
+  },
+  "_swap": {
+    "valid": false,
+    "problems": [
+      "run line 1 is mibz2-workers/8/wikidata-l9, not slot 1's",
+      "run line 2 is mibz2-workers/10/wikidata-l9, not slot 2's"
+    ]
+  },
+  "_two_lines": {
+    "valid": false,
+    "problems": [
+      "slot 4 did not add exactly one run line (line 4, after 6)"
+    ]
+  },
+  "_unfrozen": {
+    "valid": false,
+    "problems": [
+      "the inputs did not match the frozen commit"
+    ]
+  },
+  "test_cgroup_quota_delegated_without_cpu_max_is_unknown": "PASS",
+  "test_cgroup_quota_missing_directory_is_unknown": "PASS",
+  "test_cgroup_quota_missing_path_is_unknown": "PASS",
+  "test_cgroup_quota_namespaced_mount_root": "PASS",
+  "test_cgroup_quota_no_mount_is_unknown": "PASS",
+  "test_cgroup_quota_unlimited_and_limited": "PASS",
+  "test_cgroup_quota_unreadable_cpu_max_is_unknown": "PASS",
+  "test_cgroup_quota_v1_cpu_is_unknown": "PASS",
+  "missing_preflight": [
+    "no archived preflight (preflight/)"
+  ],
+  "preflight_disagreement": [
+    "the archived preflight replays REFUSED, but the recorded exit is 0",
+    "the archived preflight does not pass: lscpu's model 'Intel Xeon': not the registered i9-10900K"
+  ],
+  "whole_round_swap": {
+    "valid": false,
+    "problems": [
+      "slot 0 is not the scheduled {'round': 0, 'pos': 0, 'arm': 'mibz2', 'threads': 10, 'corpus': 'wikidata', 'role': 'sentinel'}",
+      "slot 1 is not the scheduled {'round': 0, 'pos': 1, 'arm': 'mibz2-workers', 'threads': 10, 'corpus': 'wikidata-l9', 'role': 'cell'}",
+      "slot 2 is not the scheduled {'round': 0, 'pos': 2, 'arm': 'mibz2-workers', 'threads': 8, 'corpus': 'wikidata-l9', 'role': 'cell'}",
+      "slot 3 is not the scheduled {'round': 0, 'pos': 3, 'arm': 'mibz2-workers', 'threads': 2, 'corpus': 'wikidata-l9', 'role': 'cell'}"
+    ]
+  },
+  "interpretation": {
+    "ratio": 0.9797958971132712,
+    "lo": 0.8793827605401738,
+    "hi": 1.0843224043318136,
+    "class": "includes 1: INCONCLUSIVE",
+    "chronological_rounds": 60,
+    "mode_intervals": false
+  },
+  "scope": "Synthetic fixtures and pinned functions; no decoder execution or timing; not the 91-test pytest suite."
+}
