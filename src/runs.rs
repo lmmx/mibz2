@@ -108,6 +108,11 @@ impl Default for Runs {
 }
 
 impl Runs {
+    /// Read-only records for the experimental cells kernel; format unchanged.
+    pub(crate) fn records(&self) -> &[u16] {
+        &self.runs
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs)
     #[cfg(any(test, feature = "trace"))]
     pub fn buffers(&self) -> Vec<crate::trace::Buffer> {

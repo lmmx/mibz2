@@ -44,6 +44,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "examples/ab.rs"
+      - "examples/ab_cells/**"
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**" # (the corpora's recipe)
@@ -56,6 +57,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "examples/ab.rs"
+      - "examples/ab_cells/**"
       - "examples/windows.rs"
       - "examples/phases.rs"
       - "tests/common/**"
@@ -218,6 +220,15 @@ jobs:
           threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")
           bin/ab run runs.jsonl --arms "$ARMS" --threads "$threads" --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
 
+      # Slice one: a third arm, measured separately to preserve the existing paired
+      # schedule and gate. Its one-thread wall/RSS figures are reported, never judged.
+      - name: Experimental cells arm
+        if: env.MODE == 'pr'
+        run: |
+          bin/ab run cells.jsonl --arms mibz2,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+          bin/ab summary cells.jsonl --ref mibz2 > cells-summary.md
+          cat cells-summary.md >> "$GITHUB_STEP_SUMMARY"
+
       # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
       - name: Stages
         run: |
@@ -279,6 +290,8 @@ jobs:
             result.json
             comment.md
             ab-summary.md
+            cells.jsonl
+            cells-summary.md
           if-no-files-found: ignore
 
       # master only: the commit's result appended to the bench-results branch, and the

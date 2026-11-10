@@ -93,6 +93,7 @@
 //!
 //! Arms, block-parallel unless said:
 //!
+//! - `mibz2-cells` (experimental cells admission plus shipped fallback, sequential only);
 //! - `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`, the cooperative
 //!   policy's plan since it became the default), `mibz2-scalar` (the portable kernels),
 //!   `mibz2-workers` (THREADS workers of a block each, `Plan::Workers`: the decoder before
@@ -169,6 +170,8 @@
 //! error is reported in the record, and the child exits normally. For untimed checks only,
 //! never set by `ab run`: `AB_SHA256=1` adds `sha256`, a SHA-256 of the output (null
 //! without it), and `AB_READ_BUF=BYTES` sets the read buffer (4 MiB without it).
+
+mod ab_cells;
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -1058,7 +1061,13 @@ fn err_id_json() -> String {
 fn parallel(arm: &str) -> bool {
     !matches!(
         arm,
-        "libbzip2" | "libbz2-rs" | "bz2ngrs" | "bz2ngrs-oneshot" | "mibz2-oneshot" | "bz2ng"
+        "mibz2-cells"
+            | "libbzip2"
+            | "libbz2-rs"
+            | "bz2ngrs"
+            | "bz2ngrs-oneshot"
+            | "mibz2-oneshot"
+            | "bz2ng"
     )
 }
 
@@ -1101,6 +1110,7 @@ fn decode(
 ) -> Result<(), String> {
     let open = || std::fs::File::open(path).map_err(|e| e.to_string());
     match arm {
+        "mibz2-cells" => drain(ab_cells::CellsReader::new(open()?), h, last),
         "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
         "mibz2" => drain(mibz2::BzReader::parallel(open()?, threads), h, last),
         "mibz2-scalar" if threads == 1 => drain(

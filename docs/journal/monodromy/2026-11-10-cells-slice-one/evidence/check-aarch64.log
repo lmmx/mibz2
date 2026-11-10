@@ -1,0 +1,16 @@
+    Checking mibz2 v0.2.9 (/workspace/mibz2)
+warning: fields `lit` and `one` are never read
+  --> src/runs.rs:94:5
+   |
+87 | pub struct Runs {
+   |            ---- fields in this struct
+...
+94 |     lit: Vec<u64>,
+   |     ^^^
+95 |     one: Vec<u64>,
+   |     ^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `mibz2` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.29s

@@ -1,0 +1,250 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.81s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 102 tests
+test bits::tests::reads_bits_at_any_offset ... ok
+test bwt::tests::few_runs_counts_the_runs ... ok
+test bits::tests::state_in_a_local_reads_the_bits ... ok
+test bwt::tests::miri_build_one_pass ... ok
+test bwt::tests::miri_inputs_reach_every_window_path ... ok
+test bwt::tests::miri_room_walk_handoffs ... ok
+test bwt::tests::one_pass_build_is_the_two_pass_build ... ok
+test bwt::tests::flagged_walk_equals_plain ... ok
+test bwt::tests::room_walk_refuses_more_than_2_23_rows - should panic ... ok
+test bwt::tests::room_walk_short_cycles ... ok
+test block::tests::table_decodes_as_libbzip2 ... ok
+test bwt::tests::run_stores_equal_one_pass ... ok
+test bwt::tests::room_walk_staged_chunk_edges ... ok
+test bwt::tests::wrong_counts_take_the_two_pass_build ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test bwt::tests::segmented_walks_on_any_length ... ok
+test coop::tests::build_fused_refuses_wrong_checkpoints ... ok
+test coop::tests::build_fused_is_build ... ok
+test coop::tests::cooperative_kernel_engages ... ok
+test coop::tests::cooperative_kernel_engages_on_records ... ok
+test coop::tests::helper_names ... ok
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_build_runs_and_walk_back ... ok
+test coop::tests::miri_build_runs_refuses_wrong_cuts ... ok
+test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+test coop::tests::miri_pool_caller_panic_wins ... ok
+test coop::tests::miri_pool_dropped_while_parked ... ok
+test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+test coop::tests::miri_pool_runs_every_index_once ... ok
+test coop::tests::miri_pool_writes_visible_after_run ... ok
+test coop::tests::miri_split_build_and_walk ... ok
+test coop::tests::miri_team_run_and_its_panic ... ok
+test coop::tests::miri_walk_room_handoffs ... ok
+test coop::tests::build_runs_and_walk_back_are_fill_and_walk ... ok
+test coop::tests::pipelined_leader_panic ... ok
+test coop::tests::pipelined_leader_late_or_early ... ok
+test block::tests::symbols_read_as_in_memory ... ok
+test coop::tests::pool_per_worker ... ok
+test coop::tests::runs_through_the_pipelined_and_team_runs ... ok
+test coop::tests::split_build_and_walk_are_build_and_walk ... ok
+test crc::tests::kernels_agree ... ok
+test parallel::front_tests::front_stage_checks_the_primary_index_on_both_paths ... ok
+test bwt::tests::room_walk_deferred_handovers ... ok
+test parallel::plan_tests::discovery_fails_closed_quota ... ok
+test parallel::plan_tests::discovery_fails_closed_topology ... ok
+test parallel::front_tests::front_stage_takes_the_records_where_selected ... ok
+test parallel::plan_tests::the_default_is_the_plan ... ok
+test parallel::plan_tests::the_policy ... ok
+test coop::tests::pool_many_short_runs ... ok
+test parallel::plan_tests::the_service_target ... ok
+test parallel::plan_tests::the_ten_core_exception ... ok
+test parallel::plan_tests::the_window ... ok
+test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+test parallel::plan_tests::the_service_default ... ok
+test parallel::service_tests::miri_every_retirement_returns_its_buffers ... ok
+test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+test parallel::service_tests::miri_service_core_hub ... ok
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... ok
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... ok
+test coop::tests::walk_room_is_walk ... ok
+test parallel::service_unwind_tests::miri_outer_after_job ... ok
+test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+test parallel::service_unwind_tests::miri_outer_parked ... ok
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... ok
+test parallel::plan_tests::off_target_here_builds_masters_plan ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks ... ok
+test parallel::unwind_tests::miri_run_panic_current ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks ... ok
+test parallel::unwind_tests::the_tiny_blocks ... ok
+test run_fed::tests::census_real_blocks ... ignored
+test parallel::unwind_tests::a_run_panic_retires_the_current_block ... ok
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... ok
+test run_fed::tests::line_b_exhaustive_permutations ... ok
+test run_fed::tests::line_a_random ... ok
+test runs::tests::miri_runs_broken_tilings_refused ... ok
+test runs::tests::miri_runs_cuts_of_short_blocks ... ok
+test runs::tests::miri_runs_cuts_that_dont_tile_refused ... ok
+test parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic ... ok
+test runs::tests::miri_runs_fill_share_stores_end_inside_its_rows ... ok
+test runs::tests::miri_runs_front_edges ... ok
+test runs::tests::miri_runs_of_column_is_the_scan ... ok
+test run_fed::tests::line_a_exhaustive_small ... ok
+test runs::tests::runs_buffers_listed ... ok
+test runs::tests::runs_cuts_balance_the_work ... ok
+test runs::tests::runs_cuts_bounds ... ok
+test runs::tests::runs_front_kernel_selected ... ok
+test runs::tests::runs_path_taken_exactly_where_selected ... ok
+test runs::tests::runs_takes_runs_bounds ... ok
+test runs::tests::runs_walk_back_room_segments_from_its_bound ... ok
+test trace::tests::ledger_at_level_9 ... ok
+test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+test trace::tests::ledger_matches_a_workers_buffers ... ok
+test runs::tests::miri_runs_decode_block_equals_the_column ... ok
+test run_fed::tests::line_b_real_bwts_and_columns ... ok
+test runs::tests::miri_runs_synthetic_blocks ... ok
+
+test result: ok. 101 passed; 0 failed; 1 ignored; 0 measured; 2 filtered out; finished in 19.60s
+
+     Running tests/admission.rs (target/debug/deps/admission-e405319fd011d97c)
+
+running 3 tests
+test a_short_high_entropy_block_takes_the_column ... ok
+test text_and_entity_records_take_the_records ... ok
+test full_blocks_decide_as_the_bound_decides ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.49s
+
+     Running tests/cells.rs (target/debug/deps/cells-c46f96bde86ee8d6)
+
+running 4 tests
+test cells_real_decoder_admission_reach ... ok
+test cells_arbitrary_columns_and_corruption ... ok
+test cells_keeps_text_random_and_records_on_shipped_route ... ok
+test cells_corpora_and_structured_words ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.66s
+
+     Running tests/cooperative.rs (target/debug/deps/cooperative-0e8b1969708d902e)
+
+running 4 tests
+test multi_stream ... ok
+test errors_as_the_default_kernel ... ok
+test every_level_and_shape ... ok
+test three_teams_of_three_as_planned ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.51s
+
+     Running tests/corpus.rs (target/debug/deps/corpus-f570e033d0c0e0a7)
+
+running 2 tests
+test readers_on_short_reads_and_failing_sources ... ok
+test every_entry_point ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.15s
+
+     Running tests/decode.rs (target/debug/deps/decode-bd4ac1227ff0b89b)
+
+running 14 tests
+test bad_header_fields ... ok
+test corrupted_tables_and_selectors ... ok
+test corrupted_symbols ... ok
+test crc_errors ... ok
+test block_size_levels ... ok
+test multi_stream ... ok
+test oversized_runs ... ok
+test block_ranges ... ok
+test randomised_blocks_refused ... ok
+test parallel_any_chunking ... ok
+test reader_stops_early ... ok
+test truncation_and_trailing_bytes ... ok
+test every_level_and_shape ... ok
+test crafted_blocks_match_libbzip2 ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.86s
+
+     Running tests/in_place.rs (target/debug/deps/in_place-3e2c9b0437d08749)
+
+running 7 tests
+test errors_end_as_the_separate_buffer_path_does ... ok
+test a_scratch_reused_after_an_error_decodes_exactly ... ok
+test a_kernel_that_falls_back_changes_nothing ... ok
+test a_scratch_reused_across_levels_and_short_blocks ... ok
+test the_parallel_decoder_in_place ... ok
+test segmented_in_place_equals_segmented_into_its_own_buffer ... ok
+test every_sample_decodes_exactly_in_place ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s
+
+     Running tests/mtf_checkpoints.rs (target/debug/deps/mtf_checkpoints-d8bbbeb5da8af063)
+
+running 3 tests
+test runs_on_checkpoints ... ok
+test edge_cases_at_every_limit ... ok
+test every_shape ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.69s
+
+     Running tests/mtf_kernels.rs (target/debug/deps/mtf_kernels-e81ddc968c4857e8)
+
+running 4 tests
+test corrupt_runs_and_limits ... ok
+test random_streams ... ok
+test every_index_and_row_edge ... ok
+test real_blocks ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.48s
+
+     Running tests/pipelined.rs (target/debug/deps/pipelined-6b6cded48a857b40)
+
+running 12 tests
+test an_mtf_error_on_the_prefetched_block ... ok
+test a_bad_orig_ptr ... ok
+test an_mtf_error_after_a_small_block ... ok
+test one_block_and_none ... ok
+test dropped_mid_stream ... ok
+test other_plans_take_the_plain_path ... ok
+test small_blocks_among_large_and_streams ... ok
+test small_blocks_keep_the_pipeline_primed ... ok
+test a_block_crc_in_the_middle ... ok
+test truncated ... ok
+test the_corpora ... ok
+test every_level_and_shape ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.62s
+
+     Running tests/reader_panic.rs (target/debug/deps/reader_panic-98693900ef28d7e1)
+
+running 1 test
+test a_panicking_source ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.79s
+
+     Running tests/service.rs (target/debug/deps/service-9611303b554b1d45)
+
+running 10 tests
+test a_bad_orig_ptr ... ok
+test an_mtf_error ... ok
+test dropped_and_cancelled ... ok
+test one_block_and_none ... ok
+test injected_panics ... ok
+test a_block_crc_in_the_middle ... ok
+test small_blocks_among_large_and_streams ... ok
+test truncated ... ok
+test the_corpora ... ok
+test every_level_and_shape ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.34s
+
+     Running tests/service_default.rs (target/debug/deps/service_default-b642a381bc3c857e)
+
+running 4 tests
+test custom_windows_scale_to_the_teams ... ok
+test errors_through_the_entry_points ... ok
+test the_existing_plan_otherwise ... ok
+test the_entry_points_reach_the_service_core ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.07s
+
