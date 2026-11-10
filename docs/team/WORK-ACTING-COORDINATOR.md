@@ -1,6 +1,6 @@
 # Launching the acting Coordinator in ChatGPT Work
 
-**Status:** Manual Work-mode handoff, **not** a created or enabled task; use the native Work chat to launch it. This is an **untested** fallback prompt until Louis confirms a successful run. It never claims a GitHub webhook or continuous monitoring.
+**Status:** Manual Work-mode handoff, **not** a created or enabled task; use the native Work chat to launch it. This is an **untested** fallback prompt until Louis confirms a successful run. **This one-off session has no GitHub monitor.** For a separate persistent event-triggered monitor task, after setup PR #364 merges follow the new untested creation template in [WORK-TASKS.md](WORK-TASKS.md) and its [pinned monitor spec](SPEC.COORDINATOR-ACTING-MONITOR.md). Neither this file nor the setup PR creates a webhook.
 
 **Suggested name:** `mibz2⠶Coordinator⠶Acting`  
 **Setting:** highest practical reasoning effort in the selected Work model.
