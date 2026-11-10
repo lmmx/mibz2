@@ -1,6 +1,6 @@
 # 2. Downstream delivery
 
-- **Doing:** bring mibz2 0.2.9's released team-path improvement to wikidata-pq.
+- **Doing:** measure how to make mibz2 0.2.9's released team-path gain usable in wikidata-pq.
 - **In order to:** 0, deliver and measure benefits in a real consumer.
-- **Known:** wikidata-pq previously adopted mibz2 0.2.5 by Louis's one-off decision without an end-to-end automated-runner gain ([decision](https://github.com/lmmx/wikidata-pq/pull/97#issuecomment-6699288552)). Its default pipeline capped decoder threads at four, so earlier team-plan gains did not engage by default ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699649478)).
-- **Next:** wikidata-pq#224 is open for the 0.2.9 bump under that project's bench rules. No end-to-end benchmark or adoption result is established here ([release plan](https://github.com/lmmx/mibz2/pull/145#issuecomment-6773861678), [PR](https://github.com/lmmx/wikidata-pq/pull/224)).
+- **Known:** wikidata-pq#224 merged 0.2.9 after Louis overruled an initial close. Its split caps decoder threads at four, below the retained team threshold of six; the new team-path speedup cannot engage on that default split. Parity passed and no regression was observed in the bump, but no end-to-end gain from #359 is established ([correction](https://github.com/lmmx/mibz2/pull/145#issuecomment-6774165215), [PR](https://github.com/lmmx/wikidata-pq/pull/224)).
+- **Next:** compare a raised cap on Louis's workstation before claiming the team-path gain reaches wikidata-pq ([scaling](https://github.com/lmmx/mibz2/pull/145#issuecomment-6774193623)).
