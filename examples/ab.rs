@@ -825,6 +825,23 @@ fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
 }
 
 #[cfg(test)]
+mod json_field_tests {
+    use super::*;
+
+    #[test]
+    fn a_nested_field_of_the_same_name_is_not_read() {
+        let rec = r#"{"threads":10,"note":"a \"cpu\":7 text","held_spinner":{"cpu":19,"cpu_s":2.1},"wall":0.138,"cpu":0.9824,"err":""}"#;
+        assert_eq!(json_f(rec, "cpu"), 0.9824);
+        assert_eq!(json_f(rec, "wall"), 0.138);
+        assert_eq!(json_str(rec, "err").as_deref(), Some(""));
+        assert!(json_f(rec, "cpu_s").is_nan());
+        let plain = r#"{"wall":0.5,"cpu":0.5,"rss_kb":1}"#;
+        assert_eq!(json_f(plain, "cpu"), 0.5);
+        assert_eq!(json_f(plain, "rss_kb"), 1.0);
+    }
+}
+
+#[cfg(test)]
 mod child_record_tests {
     use super::*;
 
@@ -2148,10 +2165,38 @@ mod facts {
     // (the end of mod facts: its test reads the text above for what it must not call)
 }
 
+/// A top-level field of a one-line JSON record, as text. Only the record's own fields are
+/// read: a nested object's field of the same name (`held_spinner`'s `cpu`, the CPU it held)
+/// is skipped, as are strings.
 fn json_str(line: &str, key: &str) -> Option<String> {
     let k = format!("\"{key}\":");
-    let i = line.find(&k)? + k.len();
-    let rest = &line[i..];
+    let b = line.as_bytes();
+    let (mut depth, mut in_str, mut esc, mut at) = (0usize, false, false, None);
+    for (j, &c) in b.iter().enumerate() {
+        if in_str {
+            if esc {
+                esc = false;
+            } else if c == b'\\' {
+                esc = true;
+            } else if c == b'"' {
+                in_str = false;
+            }
+            continue;
+        }
+        match c {
+            b'{' | b'[' => depth += 1,
+            b'}' | b']' => depth = depth.saturating_sub(1),
+            b'"' => {
+                if depth == 1 && line[j..].starts_with(&k) {
+                    at = Some(j + k.len());
+                    break;
+                }
+                in_str = true;
+            }
+            _ => {}
+        }
+    }
+    let rest = &line[at?..];
     if let Some(r) = rest.strip_prefix('"') {
         Some(r[..r.find('"')?].to_string())
     } else {
