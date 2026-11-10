@@ -143,9 +143,10 @@
     6757368708,
     6757686244,
     6757791774,
-    6758126153
+    6758126153,
+    6758228391
   ],
-  "last_processed_comment_id": 6758126153,
+  "last_processed_comment_id": 6758228391,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1563,14 +1564,18 @@
     },
     {
       "trigger_comment_id": 6758228391,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "aae6dc5ed4779c094f1af932a384204f1933a25b",
       "report_path": "state/reports/share-nothing-pricing-6758228391/report.md",
       "report_commit": "53625b5d483587c9b16028f26793925d3d62cc99",
-      "disposition": "REVISE before freeze: correct null-result/gate interpretation, fail-closed evidence and quota checks, preserve chronology in conditional inference."
+      "disposition": "REVISE before freeze: correct null-result/gate interpretation, fail-closed evidence and quota checks, preserve chronology in conditional inference.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6758300190,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/destination readback and role-aware routing pass; pinned verify flags only hardcoded coordinator FROM."
     }
   ],
   "active_delegations": [],
