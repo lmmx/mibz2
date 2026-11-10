@@ -1,0 +1,28 @@
+{
+  "dependence": [
+    {
+      "rho": 0,
+      "variance_multiplier": 1.0,
+      "effective_n": 20.0,
+      "oracle_iid_interval_coverage": 0.95
+    },
+    {
+      "rho": 0.5,
+      "variance_multiplier": 2.8000001907348633,
+      "effective_n": 7.1428566562886475,
+      "oracle_iid_interval_coverage": 0.7585227826127023
+    },
+    {
+      "rho": 0.8,
+      "variance_multiplier": 7.023058430092139,
+      "effective_n": 2.8477621536373308,
+      "oracle_iid_interval_coverage": 0.5404449039756206
+    }
+  ],
+  "additive_cost_interaction": 0.9411265467280036,
+  "scenario_factors": [
+    1.4161555382413258,
+    2.8549452937032593,
+    4.413763301825297
+  ]
+}
