@@ -204,5 +204,11 @@
     "server_reported_digest": "c36061ac6a7e8ac2991acbd82e2935fd20f9a3d075e102bd42c67b46cb575141",
     "archive_bytes_verified": false,
     "decision": "Refer formal gate decision to Louis/authorised Coordinator; not merge-ready"
+  },
+  "owner_continuation": {
+    "status": "in_progress",
+    "authorisation": "Louis explicitly requested resolve/merge #364, sole acting activation, independent B5, verified dispatch loop and bounded cells gap investigation in this session on 2026-11-10.",
+    "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
+    "action": "merge #364 after green exact-head checks"
   }
 }
