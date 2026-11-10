@@ -1019,6 +1019,15 @@
       },
       "reply_id": 6759278054,
       "routing_verification": "route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator and rejects optimizer; no verify-pass claimed."
+    },
+    {
+      "comment_id": 6759345168,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Migration verified. Pricing chunked-link full fill, diagnostic grid and tunnel rider.",
+      "report_path": "state/records/reviews/inbox-6759345168/report.md"
     }
   ],
   "migrated_from": {
