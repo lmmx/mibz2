@@ -3720,3 +3720,47 @@ C3's four questions: the predicted fallback neutrality failed while target-data 
 Reproduced classification from preserved tables and source-level structural reasoning; did not reproduce raw paired samples, CI executions, Miri/fuzz or machine addresses. No assertion that boxing fixes harm, or that B5 is complete. Evidence snapshots and blob identities are in state/records/D082/evidence.json.
 
 Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit retains five resolved historical findings and the already reported LOG 6757065549 on #162; no new scientific HOLD. REVIEW routes to #145. No implementation, merge, timing, dispatch, spending or task reconfiguration.
+
+## D083 — Team coverage screen admissible; dispatch and qualification scopes corrected
+
+**G1: concur with the standing default A/B coverage gap. A forced-team correctness/engagement and instruction screen is admissible prospectively under C6.** This does not enact a new standing timing gate, certify a candidate, or extend the target-gated route. **G3, separately identified prospective constraint:** registrations for future changes to duplicated worker/team kernels must state the affected dispatch paths, whether each twin changes or deliberately stays unchanged, the reason, and the evidence covering each claimed deployment path. No obligatory port, blanket HOLD or retrospective reversal.
+
+Inbox [6758683390](https://github.com/lmmx/mibz2/pull/161#issuecomment-6758683390); receipt 0689fbc7904b262d26961a9ea062b340a3fbd79f. Authority: SPEC, SPEC.GUARDIAN, MODE, RULES, PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Evidence inspected at #330 merge c47fbe50cf99fbff930526356b9723bfc453ddb9. Counts describe ae44497e99765f3f1570c749ef5b381d7d8799a6, not the later merge binary.
+
+### Findings reproduced
+
+Source plan_with returns Workers when topology is unknown or min(requested threads, physical cores) < 6. bench.yml selects mibz2 and mibz2@base/ab at 1,2,nproc; target-gated-ni selects 1,2,4. Thus their default measured arms cannot select teams on the stated two-physical-core runners. This is a coverage claim about those arms, not all CI code execution: forced correctness tests and target preflight checks are distinct.
+
+**Correct the ≥10 claim.** The special 3×3 plan requires physical cores **equal to 10**, L3 **equal to 20 MiB**, and requested threads ≥10. Ordinary teams of two can engage from six usable physical cores and six requested threads. A change to shared cooperative kernels can therefore affect those other team topologies too. The actual adoption predicate and coverage matrix must follow reachability, not the i9 alone.
+
+**Correct “never reached the path”.** parallel::solo calls bwt::build and walk_segments_room for short blocks and failed pool creation. The archive reports 198 short blocks / 8,895 rows, while 233 blocks / 209,697,662 rows take cooperative traversal. #312's build optimisation therefore does not reach FusedBuild::share, but can reach a team's solo fallback. Do not state that it has zero effect on every decode using teams.
+
+Independently summed report.txt's stage integers: one 5,408,523,023 Ir; team 7,949,791,496 Ir; divided by 209,700,196 decoded bytes gives 25.791693 and 37.910272. These are **whole-process** counts including harness, not pure decoder counts. Replacing only the three stage totals arithmetically gives 25.839441 Ir/B (about 25.84; 25.85 is rounded-stage arithmetic). Walked-byte and claim identities reproduce: 238,382 + 202,498,061 + 6,961,219 = 209,697,662; 238,382 + 594 = 238,976. This checks the published ledger arithmetic, not the compressed profiles' attribution or original execution.
+
+The gap is not a recoverable-time estimate. Extra checkpoints, segmentation, per-share setup and schedule-dependent coordination are not all removed by porting. Aggregated per-thread counts cannot establish every-block balance. Valgrind's scheduling does not model concurrent hardware stalls or races.
+
+### Screen design and tier
+
+Keep three purposes distinct: executed-path correctness/engagement; matched instruction accounting; native target performance qualification. The existing ab arm reports time, CPU, RSS and output hash. Merely adding it does **not** create an instruction counter. Specify the counter/tool, binary and toolchain pins, per-thread aggregation, denominator, stage attribution and excluded harness work; archive profiles and check conservation. Count regressions prompt investigation under C4/S2, not an automatic “Ir must decrease” merge veto.
+
+The existing pipe3-both arm computes teams=max(threads/3,1), so 3 requested threads makes **one** pipelined team, while 9 makes **three**. Neither is the same coverage as a generic team-of-two arm. A proposed small screen must assert actual checkpoint MTF, cooperative build, traversal and relay engagement on sufficiently large blocks; forced naming alone cannot exclude silent solo fallback. Include exact output/error checks and mixed small/large transitions. Team-of-two does not by itself cover the pipeline relay. Use matched forced-head versus forced-base comparisons, with the ordinary pair retained; forced-head versus plain-base conflates construction with topology.
+
+**Tier recommendation:** a bounded one-team pipeline correctness/engagement screen on affected PRs, if its measured resource cost fits the existing PR budget; complete three-team interaction and broader count profiles in full tier. This is a design recommendation, not a claim that the budget has been met. Before standing adoption, fix corpus/block coverage, commands, rounds, timeouts, invalidity and retry rules, acceptable cost and routing. Report total job/setup/counting cost as well as seconds per round. If the minimal adequate screen does not fit, use full tier before a team-path claim is admitted; do not omit coverage silently. Do not take slots or rounds from an already frozen qualification grid to pay for it. Researcher PROCEED and the prospective C6 record/log remain required.
+
+Oversubscribed native timing is CI-specific diagnostic evidence, not target superiority. Keep a diagnostic forced arm separate from the standing acceptance matrix unless a reviewed forward-only policy explicitly changes that matrix; otherwise adding cells could silently change the target route's “complete standing grid”. New arm flags cannot retroactively alter old verdicts.
+
+### Ports, safety and target route
+
+Counting prototypes and independent B5 review remain appropriate. A staged cooperative walk must preserve disjoint writes, segment ownership, publication/relay ordering, cancellation and error behaviour; worker-only staging evidence does not establish these concurrent obligations. Native forced execution complements Miri/differential/fuzz/mutation evidence; it replaces none of them.
+
+The target route is **conditional**, not automatically available because ordinary CI misses teams. STEWARDSHIP requires new behaviour selected only by a frozen pure machine/thread predicate, CI predicate false with public fallback verified, complete target superiority and fallback no-harm evidence, deployment coverage and all remaining conditions. A port reachable through generic teams from six cores needs that reach covered or a justified narrower implementation. Forced CI coverage neither substitutes for that public-dispatch qualification nor qualifies via instruction savings.
+
+### Corrections and disposition
+
+Append an evidence-scope clarification to #312's result/release-facing description: “CI benefit measured on plain workers; the run-split optimisation is in bwt::build, not cooperative FusedBuild::share; team solo fallback can use it. No shared-team speedup established.” Apply equally precise path annotations to #170/#171/#172/#207 where their claims imply team-wide gain. Preserve measured results and original verdicts under B4/C2. At this pin CHANGELOG's Unreleased section has no #312 note; correct the actual result/documentation and future release text, rather than inventing a published note to retract. Existing 0.2.6/0.2.7 notes already disclose that CI does not exercise ten-core plans.
+
+No global claim that all past improvements missed all i9 use: the i9 also runs Workers at low requested budgets. No rollback, new performance PASS or line STOP follows from this coverage finding.
+
+Limits: source dispatch, arm construction, workflow and ledger arithmetic inspected; no native timing, compiled engagement test, raw compressed-profile replay or independent safety review performed. Exact screen cost and registration remain unspecified, so standing-tier readiness is not established. Evidence snapshot accompanies this entry.
+
+Migration checked before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned coord.py audit: five resolved historical findings, previously reported LOG 6757065549 on #162 still unresolved; no new routing defect. REVIEW route #145. No other branch writes, implementation, merge, measurement dispatch or automation changes.
