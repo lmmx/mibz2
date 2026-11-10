@@ -66,6 +66,10 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
+      # bench-share-nothing's judge, schedule, preflight and drive, and the step supervisor and
+      # finalisation it uses (docs/journal/2026-11-10-share-nothing-pricing.md)
+      - name: The share-nothing diagnostic's judge, supervisor and finalisation
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && pipx run pytest -p no:cacheprovider bench/test_share_nothing.py bench/test_bounded.py bench/test_par_scan_finish.py
       - name: Install just
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:

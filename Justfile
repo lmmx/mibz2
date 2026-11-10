@@ -6,6 +6,7 @@ import ".just/python.just"
 import ".just/quality.just"
 import ".just/rust.just"
 import ".just/ship.just"
+import ".just/share-nothing.just"
 
 default: clippy
 
