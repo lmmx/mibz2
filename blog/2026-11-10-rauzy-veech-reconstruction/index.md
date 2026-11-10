@@ -4,7 +4,7 @@
 
 An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.
 
-10 November 2026 · 14 min read · [Research in progress](<#6-before-production>)
+10 November 2026 · 17 min read · [Research in progress](<#6-before-production>)
 
 mibz2 is our bzip2 decoder, written in Rust. This post follows [The mathematical structure of inverse-BWT navigation](<https://lmmx.github.io/mibz2/blog/2026-11-08-inverse-bwt-navigation/index.md>), from 8 November. That post showed that the table mibz2 walks to decode each block has a simple structure, and left open whether anything built on it could beat the table. This post reports the first experiment that does, for one stage of the decoder on one thread.
 
@@ -20,7 +20,11 @@ One instruction moves the whole tray
 
 Each compartment is a row in one equal-byte run; the tray is that run’s interval, and sliding it is LF’s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.
 
-**Working on intervals instead of rows.** We wrote an experimental **kernel**, a self-contained routine for this one stage, that never walks the rows. It works on the intervals. Each step compares the last interval of the runs' order in the last column with the last interval of their order after LF. It takes the shorter one's length off the longer one, and gives the shorter interval a longer word to cover the rows removed. It records that word as one rule, such as `X → AB`. When one interval is left, its word is the whole block, and the rules spell it out. One step covers many rows, so the work grows with the number of steps, not the number of bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte, and in the faster kernel a step costs about 7.7 ns. So the induction itself costs about 1 ns per byte, where the shipped decoder's whole inversion stage takes about 2. The step is a known technique, Rauzy–Veech induction, applied here to inverting a BWT.
+**Working on intervals instead of rows.** The walk needs one lookup per byte because it only ever knows a row's next move. The trays allow a shortcut. Look at the last rows of the block, and say they belong to a tray A of 6 rows. Say also that LF sends another tray, B, of 4 rows, onto exactly the last 4 of them. Then every path through B's rows makes two moves we can predict together: B's shift, then A's. The 4 rows where B lands tell us nothing more, and nothing else lands there, so they can be deleted from the map. A shrinks to 2 rows. B now jumps straight to where A would have sent it, and carries a two-byte word for its two moves. The step read two tray lengths and two shifts, and no rows. (When the two trays are the same length, B lands on all of A, and A disappears.)
+
+Our experimental **kernel**, a self-contained routine for this one stage of the decoder, repeats that step at the right-hand end of the map. Each step deletes a tray's worth of rows and records the new word as one rule, such as `X → AB`. When one tray is left, its word is the whole block, and expanding the rules writes out the bytes. Shrinking a map this way is a classical idea in dynamics, **Rauzy–Veech induction**. [Section 1](<#1-rebuilding-aab-in-two-steps>) states it formally, line by line, and runs it by hand on a three-byte block.
+
+The kernel's work therefore grows with its steps, not with its bytes. Wikidata's blocks need 1.812 steps per run, and a run averages about 14 rows, so there is one step for about every 7.6 bytes (0.1309 per byte). A step costs about 7.7 ns in the faster kernel, so the steps cost about 1 ns per byte. The decoder's shipped inversion stage, building the table and walking it, takes about 2.05.
 
 **The result.** After a bug fix ([§2](<#2-the-timings>)), the kernel took **0.82 to 0.86 times as long as the inversion stage mibz2 ships**, on the Wikidata blocks, on one thread. The first three runs gave 1.677 against 2.049 ns per byte. Nine runs hours later, on the same machine in a slower state, gave 0.84 to 0.86. Where runs are short, steps per byte rise and the kernel is slower: after the fix, it took about 4 times as long as the shipped stage on prose and 9 times on uniform random bytes. These are indicative timings from one cloud machine, not CI measurements. **The whole decoder has not been compared**, and nothing is in production.
 
@@ -33,6 +37,58 @@ Each compartment is a row in one equal-byte run; the tray is that run’s interv
 For a small example, sort the rotations of `aab`: `aab`, `aba`, `baa`. The last column is `baa`; the first is `aab`. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.
 
 Name the one-byte run of `b` B and the two-byte run of `a` A. In the last column the runs come in the order B, A: call this the **original order**. LF sends their rows to the first column, where they come in the order A, B: the **image order**. The two orders cut the same three rows into intervals in different places. Together, the intervals and where LF sends them form an **interval exchange**: each interval is moved, whole, to a new place.
+
+Interval exchanges are a classical object of dynamics, and shrinking one step by step is **Rauzy–Veech induction**. The panel states it formally, line by line, with what each line means in a bzip2 block beside it in colour. The hand-run after the panel is the same induction on `aab`.
+
+Rauzy–Veech induction, stated formally and read in a bzip2 block
+
+**1\. Interval exchange.** Cut an interval \\(I\\) into pieces \\(I\_\\alpha\\), one for each symbol \\(\\alpha\\) of an alphabet \\(\\mathcal{A}\\) of \\(d\\) symbols, with lengths \\(\\lambda\_\\alpha \> 0\\). An interval exchange map \\(f : I \\to I\\) moves each piece by a translation, so pieces keep their length and direction and are laid out again in a new order. Two bijections \\(\\pi\_0, \\pi\_1 : \\mathcal{A} \\to \\{1, \\dots, d\\}\\) give each piece's place before (\\(\\pi\_0\\)) and after (\\(\\pi\_1\\)).
+
+In a block \\(I\\) is the block's \\(n\\) rows. A piece is a run of equal bytes in the last column, \\(\\lambda\_\\alpha\\) its length, and \\(f\\) is LF. \\(\\pi\_0\\) is the runs' order in the last column, \\(\\pi\_1\\) their images' order in the first. For `baa`: \\(\\pi\_0\\) is B, A and \\(\\pi\_1\\) is A, B.
+
+**2\. Monodromy invariant.** The permutation
+
+\\\[p = \\pi\_1 \\circ \\pi\_0^{-1} : \\{1, \\dots, d\\} \\to \\{1, \\dots, d\\}\\\]
+
+sends each place in the old order to the same piece's place in the new.
+
+The shape, without names \\(p\\) does not depend on how the pieces are named. For `baa` it swaps places 1 and 2.
+
+**3\. One step.** Let \\(\\alpha(\\varepsilon) = \\pi\_\\varepsilon^{-1}(d)\\) be the last piece of each order. The step has type 0 if \\(\\lambda\_{\\alpha(0)} \> \\lambda\_{\\alpha(1)}\\) and type 1 if \\(\\lambda\_{\\alpha(0)} \< \\lambda\_{\\alpha(1)}\\). The longer piece is the winner, the shorter the loser. The classical theory excludes equal lengths.
+
+The two right-hand ends For `baa`: \\(\\alpha(0)\\) is A (2 rows), \\(\\alpha(1)\\) is B (1 row), so type 0 and A wins. A finite block does reach equal lengths, and there the kernel joins the two pieces: the step `a + ab` below.
+
+**4\. The induced map.** Remove the loser's end: \\(J = I \\setminus f(I\_{\\alpha(1)})\\) in type 0, \\(J = I \\setminus I\_{\\alpha(0)}\\) in type 1. The first-return map sends each point of \\(J\\) to where its path first comes back:
+
+\\\[\\hat{R}(f)(x) = f^{\\,r(x)}(x),\\\]
+
+\\\[r(x) = \\min\\{\\, n \\ge 1 : f^{\\,n}(x) \\in J \\,\\}.\\\]
+
+In type 0, \\(r(x) = 1\\) everywhere except on the loser's piece, where \\(r(x) = 2\\).
+
+Fewer rows, longer words A row of the loser now stands for two LF steps, and its word records both bytes: B's `ab` in the hand-run below. Each step removes the loser's length in rows from the map.
+
+**5\. Proposition.** \\(\\hat{R}(f)\\) is again an interval exchange on the same alphabet, with a new pair \\(\\pi'\\) and the lengths
+
+\\\[\\lambda'\_{\\text{winner}} = \\lambda\_{\\text{winner}} - \\lambda\_{\\text{loser}},\\\]
+
+\\\[\\lambda'\_\\alpha = \\lambda\_\\alpha \\text{ otherwise.}\\\]
+
+Why it repeats The result is the same kind of object, so the step applies again. For `baa` the lengths go from A 2, B 1 to A 1, B 1, and the equal ends then join.
+
+**6\. Iteration.** Repeated steps give \\((\\pi^{(n)}, \\lambda^{(n)})\\) and a product \\(\\Theta^{(n)}\\) of elementary matrices, with
+
+\\\[\\lambda^{(n)} = \\big(\\Theta^{(n)}\\big)^{-\\mathsf{T}} \\lambda, \\qquad w^{(n)} = \\Theta^{(n)} w,\\\]
+
+where \\(w\\) is the vector of the pieces' translations. For \\(d = 2\\) the lengths follow the subtractive Euclidean algorithm.
+
+Counts and rules An entry of \\(\\Theta^{(n)}\\) counts how often one new piece's path visits one original piece before it returns: the letters in its word. The kernel's rules keep the words themselves, not just the counts.
+
+**7\. Inverting the BWT.** Decoding iterates LF one row at a time, \\(x \\mapsto \\mathrm{LF}(x)\\). Since LF is an interval exchange on the runs, induction can replace that iteration: each step shrinks the map and records a rule, and at the end the rules spell the block. Whether this is faster depends on what a step costs.
+
+The rest of this post What a step costs, [§2](<#2-the-timings>) and [§3](<#3-why-the-cells-kernel-is-cheaper>). The tree the rules form, [§4](<#4-the-lyndon-tree>). How the order of steps changes their number, [§5](<#5-fewer-steps-by-a-different-order>).
+
+Black: the standard definitions (after M. Viana, *Ergodic theory of interval exchange maps*, Rev. Mat. Complut. 19, 2006). Colour: what each line means in a bzip2 block, with the example `aab`, whose last column is `baa`. A block's map is on whole rows, so it is a discrete interval exchange, and it ends in equal lengths, which the classical theory sets aside.
 
 A ticket can remember a longer journey
 
@@ -101,6 +157,12 @@ The journal identifies the right-end induction's expanded derivation tree with t
 The rules are a book’s nested bindings
 
 Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s smallest rotation.
+
+A larger example shows the two descriptions agreeing at every node. Crochemore and Russo draw the Lyndon tree of `#abbabaababbabaab` with its **Lyndon table**, which gives, for each position, the length of the longest Lyndon word starting there. The redrawing adds each position's suffix rank, which shows why each part splits where it does.
+
+One tree, three readings
+
+Redrawn from Crochemore and Russo, [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>), p. 7, with the suffix ranks added. Their figure stacks the same bars as boxes and gives the table under it; the ranks show why the boxes split where they do. The tree, the ranks and the table were recomputed here, and the standard split and the lowest rank agree at all 16 nodes. The \# is the paper’s device for making any word a Lyndon word, and plays no part in a bzip2 block.
 
 Lyndon trees, and their link to Cartesian trees, are long established. \#351 gives a way to reach one from the BWT's runs without rebuilding the text first.
 
