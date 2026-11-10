@@ -78,6 +78,14 @@
       "coordination_writes": 0,
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6779208153": {
+      "status": "in_progress",
+      "delivery_id": "38dd4660-dd4a-11f1-9465-bc8209b29fa8",
+      "comment_updated_at": null,
+      "head_sha": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+      "planned_action": "Advisory checkpoint of isolated-harness primary loss and final follow-up head; no assignment",
+      "log_dedup_key": "isolated-followup-6779208153"
     }
   },
   "automatic_github_wakeup_assumed": false,
