@@ -1,0 +1,44 @@
+"""Compare two builds of the bench harness: where each hot function sits (modulo 64 and
+4 KiB), its size, and whether its machine code is the same once addresses are masked.
+Usage: python3 -I symcmp.py BASE_AB HEAD_AB"""
+import subprocess, sys, re, hashlib
+WANT = ["mibz2::mtf::mtf_avx2", "mibz2::mtf::STEPS", "mibz2::block::read_item", "mibz2::bwt::build",
+        "mibz2::bwt::room_segments", "mibz2::rle::unrle_avx2", "mibz2::crc::crc32_clmul",
+        "mibz2::runs::front_avx2", "mibz2::runs::fill_avx2", "mibz2::runs::STEPS", "mibz2::decode_block",
+        "mibz2::runs::takes_runs", "mibz2::mtf::mtf_checkpoints_avx2", "mibz2::bwt::SegScratch>::assemble_reversed"]
+def syms(path):
+    out = subprocess.run(["nm", "-C", "-S", "--defined-only", path], capture_output=True, text=True).stdout
+    d = {}
+    for l in out.splitlines():
+        p = l.split(None, 3)
+        if len(p) == 4:
+            addr, size, kind, name = p
+            for w in WANT:
+                if w in name:
+                    d.setdefault(name, (int(addr, 16), int(size, 16), kind))
+    return d
+def code(path, addr, size):
+    out = subprocess.run(["objdump", "-d", "--no-show-raw-insn", f"--start-address={addr:#x}",
+                          f"--stop-address={addr+size:#x}", path], capture_output=True, text=True).stdout
+    ins = []
+    for l in out.splitlines():
+        m = re.match(r"\s*[0-9a-f]+:\s+(.*)", l)
+        if m:
+            t = m.group(1)
+            t = re.sub(r"\b[0-9a-f]{4,}\b( <[^>]*>)?", "ADDR", t)   # absolute targets
+            t = re.sub(r"0x[0-9a-f]+\(%rip\)", "RIP", t)
+            t = re.sub(r"#.*", "", t).strip()
+            ins.append(t)
+    return ins
+a, b = syms(sys.argv[1]), syms(sys.argv[2])
+print(f"{'symbol':58} {'base mod64/4K':>16} {'head mod64/4K':>16} {'size b/h':>12}  code")
+for name in sorted(set(a) | set(b)):
+    x, y = a.get(name), b.get(name)
+    if not x or not y:
+        print(f"{name[:58]:58} {'-' if not x else 'present':>16} {'-' if not y else 'present':>16}")
+        continue
+    same = ""
+    if x[2] in "tT":
+        ca, cb = code(sys.argv[1], x[0], x[1]), code(sys.argv[2], y[0], y[1])
+        same = "identical" if ca == cb else f"DIFFERS ({len(ca)} vs {len(cb)} instructions)"
+    print(f"{name[:58]:58} {x[0]%64:>4}/{x[0]%4096:#06x} {y[0]%64:>8}/{y[0]%4096:#06x} {x[1]:>6}/{y[1]:<6} {same}")

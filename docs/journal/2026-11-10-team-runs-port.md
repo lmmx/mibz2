@@ -296,21 +296,61 @@ scalar and with AVX2: exit 0, each, complete runs.
 **The workstation contrast is now frozen as** master `910472e8` against that commit with the
 port. #358 is on both sides, so the contrast isolates the port. The rule of §8 is unchanged.
 
+## 8b. #359's CI bench flagged the one-core path; what the port had changed there, and its removal
+
+The Guardian's D098 cleared F1. #359's CI bench (head `58e0a4b` against `ba52e4d`) then
+flagged cells the port is not meant to move: `wikidata` at 1 thread +0.9% (+0.2, +1.6);
+`records` +1.5% at 1 thread and +2.3% at 2; `random` +3.2% at 1 thread and +2.8% at 4. The
+Coordinator asked whether that path's code had changed. Checked here, with this
+container's toolchain (rustc 1.97, not CI's 1.99.1), on the bench harness's binary at
+master `910472e8` and with the port.
+
+- **The work is the same.** Callgrind, one thread: `random` 2,181,002,269 instructions
+  against 2,181,004,518; `records` 2,846,923,225 against 2,846,925,410. Every hot function's
+  count is equal to the instruction.
+- **Every hot kernel's machine code is the same,** addresses masked: `read_item`,
+  `mtf_avx2`, `build`, both room walks, `unrle_avx2`, `front_avx2`. Their places moved, as
+  any change to the binary moves them.
+- **One thing on that path had changed, and it was the port's doing.** With the teams as
+  further callers, the compiler stopped inlining `assemble_reversed` and `walk_back` into
+  `walk_back_room`, and began inlining `walk_back_room` into `decode_block`. Its frame grew
+  from 0x48 to 0x58 bytes (563 instructions to 574). On a worker thread every kernel then
+  sits 16 bytes lower on the stack, in every block: the kind of fixed, per-build shift §6
+  is about.
+- **Removed.** The teams now call an out-of-line `assemble_reversed`; `walk_back_room`
+  keeps its join and its short-block walk inline. `decode_block::<Segmented>`,
+  `walk_back_room` and the workers' thread body are then **instruction for instruction
+  master's.** Of the 212 `mibz2` functions in both binaries, 170 are identical and 42
+  differ: 40 are the teams' own, and two are the fill's (`runs::fill`: the same
+  instructions with a cold block moved; `fill_avx2`: two more at its edges, outside its
+  loop). Tables and the scripts: [`codegen/`](2026-11-10-team-runs-port/codegen/).
+- **What this does and does not show.** It removes the only change the port made to that
+  path's code. It does not show that the change caused the flags: this machine cannot
+  resolve 1 to 3% at one thread. If the flags stay with identical machine code, what is
+  left is where the code sits, which no patch to this binary avoids; #324's flagged cells
+  had the same corpora, sign and ratio (`records` about half of `random`).
+- **Not checked:** CI's toolchain's own output. The comparison scripts run on any two
+  builds of the harness.
+
+Whole suite in release and debug, the lint with the three features, and 30 s each of the
+`teams` and `classic` fuzz modes: exit 0 on the adjusted port (local commit `a67118a8`).
+The Miri and long fuzz evidence of §8a is for the port before this adjustment, which
+changes two inlining attributes and adds a one-line wrapper, all in safe code.
+
 ## 9. To apply
 
-**Current: one file, against master `910472e8bcb75a09ec2c61db232c98182951ab2b`.**
+**Current, against master `910472e8bcb75a09ec2c61db232c98182951ab2b`** (later master differs
+in documents only):
 
-| file | SHA-256 | touches |
+| file | SHA-256 | what |
 |---|---|---|
-| `2026-11-10-team-runs-port/team-runs-2.diff.txt` | `61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64` | the six files below, `examples/fuzz.rs`, `.github/workflows/test.yml`, and one comment in `src/mtf.rs` |
+| `2026-11-10-team-runs-port/team-runs-3.diff.txt` | `d324353902f81dadcb18af3427cd1f6efc1f96a595a3822c209a2fa8099fce51` | the whole port |
+| `2026-11-10-team-runs-port/team-runs-3-over-2.diff.txt` | `988bba1caa0aadf5bbcc3dffb89594b022cf54816fd6decf5dfa3ee60e24d37a` | the same as a step from `team-runs-2`: `src/bwt.rs` alone, 12 lines (§8b) |
 
-- **The six source files the Guardian reviewed are byte for byte what `team-runs.diff.txt`
-  gives on `910472e8`** (`src/bwt.rs`, `coop.rs`, `lib.rs`, `parallel.rs`, `runs.rs`,
-  `runs/tests.rs`; compared file by file).
-- **Added since the review:** the fuzzer's `teams` mode, its step in CI's fuzz job, and the
-  corrected figure in #358's comment (4 of 64 layouts; a comment only).
-- **Evidence** for it is §8a's, run at local commit `15dfda95`; the comment came after, as
-  `cb198c27`, with fmt and clippy rerun.
+- **Against what the Guardian reviewed:** `src/bwt.rs` gains the 12 lines of §8b; the other
+  five reviewed source files are unchanged.
+- **Added since the first review:** the fuzzer's `teams` mode and its step in CI's fuzz job
+  (§8a), and the corrected figure in #358's comment.
 
 **Superseded, kept as the record of what was reviewed and merged:**
 
@@ -318,6 +358,7 @@ port. #358 is on both sides, so the contrast isolates the port. The rule of §8 
 |---|---|---|
 | `mtf-list-in-one-page.diff.txt` | `789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e` | merged unchanged as #358 |
 | `team-runs.diff.txt` | `3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229` | reviewed in D097; superseded by `team-runs-2.diff.txt` |
+| `team-runs-2.diff.txt` | `61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64` | cleared in D098, opened as #359; superseded by `team-runs-3.diff.txt` |
 
 **Not done:** the Guardian's clearance of D097-F1 on this evidence; any run on the
 workstation; CI on the port.
