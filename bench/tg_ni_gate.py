@@ -4,16 +4,16 @@ verdict, after the evidence is uploaded.
 
     python3 bench/tg_ni_gate.py --label LABEL --verdict ni.json --exit JUDGE_EXIT [--summary FILE]
 
-- **qualification:** passes (exit 0) only if the judge exited 0 and its verdict is valid and
-  passes condition 2. A valid NOT SHOWN (judge exit 1), invalid evidence (exit 2), a missing or
-  unreadable verdict, or any disagreement between the exit and the verdict fails (exit 1).
-- **The trend veto, recomputed here** (registration §2.9, independently of the judge's own):
-  for each of the 42 (21 cells × wall, CPU), the verdict's `B` = 24 batch means regressed on
-  their index 0 … 23 with an intercept, the slope's t on 22 df. Any |t| > 4.3806308666, any
-  cell or metric missing, or not exactly 24 finite batch means: condition 2 is INVALID and the
-  job fails. A zero residual variance gives t = 0 for a zero slope, infinity otherwise. The
-  judge's `vetoed` list must name exactly the cells this finds, or the gate fails on the
-  disagreement. The rows and estimates are kept as the judge wrote them.
+- **qualification** (one dispatch of the replicated programme, registration §2.11): never a
+  verdict. Passes (exit 0) only if the judge (`service_tg.py ni`) exited 0 and its dispatch
+  verdict is admitted; the summary says it is one of k and not a verdict. INVALID (exit 2), a
+  missing or unreadable verdict, or any disagreement between the exit and the verdict fails.
+- **replicated** (the programme's verdict, `service_tg.py replicated`, offline after all k):
+  passes only if the judge exited 0, its verdict is valid and passes, and this gate's own
+  recomputation agrees. The gate recomputes, apart from the judge: exactly k = 12 distinct
+  integer run ids; for each of the 42 (21 cells × wall, CPU) exactly 12 finite dispatch
+  estimates; U = exp(mean + t(0.95, 11) · sd / sqrt(12)) ≤ 1.02, t(0.95, 11) = 1.7958848187.
+  Its failing set must equal the judge's. NOT SHOWN (exit 1) and INVALID (exit 2) fail.
 - **smoke** and **pilot** (the registration's §2.8 design pilot): never evidence. The judge must have refused it as smoke: its
   verdict present, not valid, and among its problems the label's refusal. And the run must
   pass the structural admission (`service_tg.py structure`, `--structure`): every shard present,
@@ -30,46 +30,38 @@ import json
 import math
 import sys
 
-# the registered design (§2.9), restated here so that the veto is computed twice, apart
+# the registered programme (§2.11), restated here so that the bound is computed twice, apart
 CELLS = [f"{c}/{t}" for c in ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata") for t in (1, 2, 4)]
 METRICS = ("wall", "cpu")
-BATCHES = 24
-TREND_T_MAX = 4.3806308666
+K = 12
+T95 = 1.7958848187  # t(0.95, K - 1)
+MARGIN = 1.02
 
 
-def slope_t(means):
-    """The slope's t of `means` on their index with an intercept (None: not computable)"""
-    k = len(means)
-    if k < 3 or not all(isinstance(y, (int, float)) and not isinstance(y, bool) and math.isfinite(y) for y in means):
-        return None
-    xs = range(k)
-    xm, ym = sum(xs) / k, sum(means) / k
-    sxx = sum((x - xm) ** 2 for x in xs)
-    b = sum((x - xm) * (y - ym) for x, y in zip(xs, means)) / sxx
-    ss = sum((y - ym - b * (x - xm)) ** 2 for x, y in zip(xs, means))
-    if ss == 0:
-        return 0.0 if b == 0 else math.copysign(math.inf, b)
-    t = b / math.sqrt(ss / (k - 2) / sxx)
-    return t if math.isfinite(t) else None
-
-
-def veto(verdict):
-    """(vetoed cells as 'cell metric', problems): the trend veto from the verdict's batch means"""
+def recompute(verdict):
+    """(failing as 'cell metric', problems): the programme's bound from the verdict's own
+    dispatch estimates"""
+    problems, failing = [], []
+    runs = verdict.get("runs")
+    if not (isinstance(runs, list) and len(runs) == K and all(isinstance(r, int) and not isinstance(r, bool) for r in runs)
+            and len(set(runs)) == K):
+        problems.append(f"not {K} distinct run ids: {runs!r}")
     cells = verdict.get("cells") if isinstance(verdict.get("cells"), dict) else {}
-    hit, problems = [], []
     for key in CELLS:
         for metric in METRICS:
             cell = cells.get(key)
             st = cell.get(metric) if isinstance(cell, dict) else None
-            means = st.get("batch_means") if isinstance(st, dict) else None
-            if not isinstance(means, list) or len(means) != BATCHES:
-                problems.append(f"{key} {metric}: not {BATCHES} batch means")
-                hit.append(f"{key} {metric}")
+            ds = st.get("d") if isinstance(st, dict) else None
+            if not (isinstance(ds, list) and len(ds) == K and all(
+                    isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) for x in ds)):
+                problems.append(f"{key} {metric}: not {K} finite dispatch estimates")
                 continue
-            t = slope_t(means)
-            if t is None or abs(t) > TREND_T_MAX:
-                hit.append(f"{key} {metric}")
-    return hit, problems
+            m = sum(ds) / K
+            sd = math.sqrt(sum((x - m) ** 2 for x in ds) / (K - 1))
+            if math.exp(m + T95 * sd / math.sqrt(K)) > MARGIN:
+                failing.append(f"{key} {metric}")
+    return failing, problems
+
 
 def gate(label, verdict, judge_exit, structure=None):
     """(exit status, one-line summary)"""
@@ -93,28 +85,37 @@ def gate(label, verdict, judge_exit, structure=None):
                    f"structurally admitted: all {len(structure.get('shards', []))} shards, R {structure.get('rounds')}")
     if label == "qualification":
         if not isinstance(verdict, dict):
-            return 1, "qualification: FAILED: no readable verdict (INVALID)"
-        valid, passes = bool(verdict.get("valid")), bool(verdict.get("passes"))
-        claimed = sorted(" ".join(str(x).split()[:2]) for x in verdict.get("vetoed") or [])
-        if valid:
-            hit, problems = veto(verdict)
-            if problems:
-                return 1, "qualification: INVALID: the verdict lacks what the trend veto needs: " + "; ".join(problems[:3])
-            if sorted(hit) != claimed:
-                return 1, (f"qualification: FAILED: the gate's trend veto ({', '.join(hit) or 'none'}) disagrees "
-                           f"with the judge's ({', '.join(claimed) or 'none'})")
-            if hit:
-                if judge_exit != 2 or passes:
-                    return 1, f"qualification: FAILED: the judge's exit {judge_exit} disagrees with its trend veto"
-                return 1, "qualification: condition 2 INVALID (the trend veto; rows and estimates kept): " + "; ".join(hit)
-        if judge_exit == 0 and valid and passes:
-            return 0, "qualification: condition 2 met at every cell (PASS)"
-        if judge_exit == 1 and valid and not passes:
-            failing = "; ".join(verdict.get("failing", []) + [f"RSS {c}" for c in verdict.get("rss_regression", [])])
-            return 1, f"qualification: condition 2 NOT SHOWN: {failing}"
+            return 1, "qualification dispatch: FAILED: no readable verdict (INVALID)"
+        valid = bool(verdict.get("valid"))
+        if verdict.get("schema") != "mibz2.tg_ni_dispatch/1":
+            return 1, f"qualification dispatch: FAILED: not a dispatch verdict ({verdict.get('schema')!r})"
+        if judge_exit == 0 and valid:
+            return 0, (f"qualification dispatch admitted (run {verdict.get('run')}): one of {K}, not a verdict; "
+                       "condition 2 is judged only from all of them (service_tg.py replicated)")
         if judge_exit == 2 and not valid:
-            return 1, "qualification: INVALID: " + "; ".join(map(str, verdict.get("problems", [])[:5]))
-        return 1, f"qualification: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid {valid}, passes {passes})"
+            return 1, "qualification dispatch: INVALID (the programme fails): " + "; ".join(map(str, verdict.get("problems", [])[:5]))
+        return 1, f"qualification dispatch: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid {valid})"
+    if label == "replicated":
+        if not isinstance(verdict, dict):
+            return 1, "replicated: FAILED: no readable verdict (INVALID)"
+        valid, passes = bool(verdict.get("valid")), bool(verdict.get("passes"))
+        if judge_exit == 2 and not valid:
+            return 1, "replicated: INVALID: " + "; ".join(map(str, verdict.get("problems", [])[:5]))
+        if not valid:
+            return 1, f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (valid False)"
+        failing, problems = recompute(verdict)
+        if problems:
+            return 1, "replicated: INVALID: the verdict lacks what the bound needs: " + "; ".join(problems[:3])
+        claimed = sorted(" ".join(str(x).split()[:2]) for x in verdict.get("failing") or [])
+        if sorted(failing) != claimed:
+            return 1, (f"replicated: FAILED: the gate's bound (failing {', '.join(failing) or 'none'}) disagrees "
+                       f"with the judge's ({', '.join(claimed) or 'none'})")
+        if judge_exit == 0 and passes and not failing:
+            return 0, f"replicated: condition 2 met at every cell over {K} dispatches (PASS)"
+        if judge_exit == 1 and not passes:
+            why = "; ".join(verdict.get("failing", []) + [f"RSS {c}" for c in verdict.get("rss_regression", [])])
+            return 1, f"replicated: condition 2 NOT SHOWN: {why}"
+        return 1, f"replicated: FAILED: the judge's exit {judge_exit} disagrees with its verdict (passes {passes})"
     return 1, f"FAILED: unknown label {label!r}"
 
 
