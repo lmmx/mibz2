@@ -1709,11 +1709,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6759394097,
-    "status": "finished",
-    "decision": "D084",
-    "work_commit": "f4012c4f9c5294ed56086269a7148236c056ee57",
-    "review_comment_id": 6759487306
+    "active_comment": 6759768735,
+    "status": "in progress",
+    "decision": "D085"
   },
   "duplicate_events": [
     {
@@ -2982,6 +2980,13 @@
       "work_commit": "f4012c4f9c5294ed56086269a7148236c056ee57",
       "review_comment_id": 6759487306,
       "complete_cursor_commit": "d2faa9009e86979e8a62ded13a8abaf7331bc3bf"
+    },
+    {
+      "comment_id": 6759768735,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D085",
+      "progress": "Receipt; migration checked; reviewing conditional inference and registered engagement."
     }
   ],
   "migrated_from": {
