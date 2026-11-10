@@ -1318,6 +1318,19 @@
       "status": "finished",
       "disposition": "First INVALID ends native diagnostic; validated T1+T2 adequate for scoped engagement; S2 separate; current drafts not ready.",
       "comment": 6760280679
+    },
+    {
+      "id": "D088",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6760691372,
+      "pr": 337,
+      "sha": "3797905e946f84c7d8439d34849b0a6132cf5396",
+      "evidence_digest": "registration:796e9a7d21e6871188ddc3c2cc92290e2d35d5fa;result:6cd5857a08b1dc9f42a51688f24cf80fdf3c3407;count:11a160bfeee9f737ff017512e7841a927a1d0d7e;inbox:6760691372",
+      "commit": "ee180a6152130a05302544abbf5d191fd1cc69b2",
+      "status": "complete",
+      "disposition": "FAIL-MEASUREMENT condition 6; prospective decoder control permissible with full ledger; instruction registration lesson addressed, binary witness limits retained."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1602,7 +1615,9 @@
     "1768982b0435df61c4670c9fe10f59839955a698",
     "1f1254fc2dd28254d20f7e24ec1f38dab47bdd4f",
     "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
-    "4e49178fbdac0f4932203de1df1df46719503020"
+    "4e49178fbdac0f4932203de1df1df46719503020",
+    "89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6",
+    "ee180a6152130a05302544abbf5d191fd1cc69b2"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1690,7 +1705,8 @@
     6759394097,
     6759768735,
     6759990077,
-    6760224735
+    6760224735,
+    6760691372
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1770,8 +1786,9 @@
   },
   "current_execution": {
     "active_comment": 6760691372,
-    "status": "in progress",
-    "decision": "D088"
+    "status": "complete",
+    "decision": "D088",
+    "work_commit": "ee180a6152130a05302544abbf5d191fd1cc69b2"
   },
   "duplicate_events": [
     {
@@ -2443,6 +2460,13 @@
       "decision": "D087",
       "commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
       "comment": 6760280679
+    },
+    {
+      "pr": 337,
+      "sha": "3797905e946f84c7d8439d34849b0a6132cf5396",
+      "evidence_digest": "registration:796e9a7d21e6871188ddc3c2cc92290e2d35d5fa;result:6cd5857a08b1dc9f42a51688f24cf80fdf3c3407;count:11a160bfeee9f737ff017512e7841a927a1d0d7e;inbox:6760691372",
+      "decision": "D088",
+      "commit": "ee180a6152130a05302544abbf5d191fd1cc69b2"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3101,10 +3125,11 @@
     {
       "comment_id": 6760691372,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D088",
-      "progress": "Assessment complete: condition 6 FAIL-MEASUREMENT; prospective accounting counterexample and witness limits recorded; work commit in progress.",
-      "receipt_commit": "89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6"
+      "progress": "Work committed; awaiting one REVIEW on #145.",
+      "receipt_commit": "89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6",
+      "work_commit": "ee180a6152130a05302544abbf5d191fd1cc69b2"
     }
   ],
   "migrated_from": {
