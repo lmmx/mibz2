@@ -32,9 +32,34 @@
 //!                      is spawned and after it exits, with their timestamps. The child is
 //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
 //!                      cleared (bench 3.5.0; recorded and never judged)
+//!     --hold-cpu N|auto
+//!                      hold one CPU busy around each run (bench 3.8.0; off by default, and
+//!                      for workstation runs: an idle machine starts a decode in a slow mode,
+//!                      cold-start/20261110T102700Z): a spinner, a thread of this process
+//!                      pinned to CPU N, started and seen running there before the settle
+//!                      gate, held through the decode until the child is reaped, then stopped
+//!                      and joined (on an error or a panic too; as a thread it dies with this
+//!                      process). `auto` takes the last CPU of the last core the run's CPUs
+//!                      leave free, else a CPU the run doesn't use (an SMT sibling), else
+//!                      the last CPU (`pick_hold`); `overlap` records whether its core shares
+//!                      a CPU with the run's (always so for an unpinned run). The gate and
+//!                      `others_busy` take the spinner's own CPU off (its raw readings kept),
+//!                      and its CPU is never the decoder's. Never passed to the child, so an
+//!                      ARM@EXE build without the option runs as before. Recorded as
+//!                      `held_spinner`: {cpu, auto, overlap, decoder_cpus, owner, cpu_s,
+//!                      pre_busy_raw, pre_one_raw, others_busy_raw}
+//!     --hold-max-threads T
+//!                      hold only around runs of at most T threads (default: every run)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
-//! ab child ARM THREADS FILE          one run (what `run` spawns)
+//! ab child ARM THREADS FILE [--hold-cpu N|auto]
+//!                                    one run (what `run` spawns, never with the option).
+//!                                    `--hold-cpu`, for a driver spawning the child itself:
+//!                                    the child holds its own spinner thread, started before
+//!                                    the sampler and the counters and stopped before its CPU
+//!                                    is read, that CPU taken off the decode's and left out
+//!                                    of the per-thread split; `auto` picks against the CPUs
+//!                                    the child may run on (`held_spinner`, owner `child`)
 //! ab env                             the machine as the runs see it, one JSON line: the
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
 //!                                    quota, and whether the run-queue counter counts
@@ -164,6 +189,8 @@ struct Rusage {
 extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
     fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+    fn sched_getaffinity(pid: i32, size: usize, mask: *mut u64) -> i32;
+    fn sched_getcpu() -> i32;
 }
 
 /// (CPU seconds, peak RSS in KiB) of this process (who 0), its waited-for children (-1)
@@ -458,7 +485,7 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>, cpus: Option<&SeenCpus>
             + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
         let wait = run_delay(&e.path().join("schedstat"));
         if let Some(c) = cpus {
-            if name != "sampler" {
+            if name != "sampler" && name != "held-spinner" {
                 if let Some(cpu) = f.get(36).and_then(|x| x.parse::<u32>().ok()) {
                     c.lock().unwrap().insert(cpu);
                 }
@@ -542,13 +569,13 @@ impl Threads {
         let m = self.seen.lock().unwrap();
         let runq = m
             .values()
-            .filter(|x| x.0 != "sampler")
+            .filter(|x| x.0 != "sampler" && x.0 != "held-spinner")
             .map(|x| x.2 as f64 * 1e-9)
             .sum();
         // (in this process, the thread whose id is the process's is the reading thread)
         let mut v: Vec<(u64, String)> = m
             .iter()
-            .filter(|(_, x)| x.0 != "sampler")
+            .filter(|(_, x)| x.0 != "sampler" && x.0 != "held-spinner")
             .map(|(&tid, x)| {
                 let main = own && tid == self.pid;
                 (
@@ -570,6 +597,224 @@ impl Threads {
             .collect();
         let away = away.unwrap_or_else(|| "pinned".into());
         (busy.len(), busy.join(" "), runq, sampler, away)
+    }
+}
+
+/// `--hold-cpu`'s choice: a CPU number, or `auto` (`pick_hold`)
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Hold {
+    Cpu(usize),
+    Auto,
+}
+
+impl Hold {
+    fn parse(v: &str) -> Hold {
+        match v {
+            "auto" => Hold::Auto,
+            n => Hold::Cpu(n.parse().unwrap_or_else(|_| {
+                eprintln!("ab: --hold-cpu takes a CPU number or `auto`, not {n:?}");
+                std::process::exit(2)
+            })),
+        }
+    }
+}
+
+/// `--hold-cpu auto`'s CPU, given the allowed CPUs grouped by core (`cores`) and the CPUs
+/// the decoder may run on: the last CPU of the last core the decoder can't use at all; else
+/// the last CPU the decoder can't use (an SMT sibling of one of its CPUs); else the last of
+/// the decoder's own. With whether the held CPU's core shares a CPU with the decoder's
+fn pick_hold(cores: &[Vec<usize>], decoder: &[usize]) -> Option<(usize, bool)> {
+    let free_core = cores
+        .iter()
+        .rev()
+        .find(|c| !c.iter().any(|x| decoder.contains(x)));
+    if let Some(&cpu) = free_core.and_then(|c| c.last()) {
+        return Some((cpu, false));
+    }
+    let all: Vec<usize> = cores.iter().flatten().copied().collect();
+    if let Some(&cpu) = all.iter().rev().find(|x| !decoder.contains(x)) {
+        return Some((cpu, true));
+    }
+    all.last().map(|&cpu| (cpu, true))
+}
+
+/// Whether CPU `cpu`'s core (`siblings`: its thread_siblings_list, itself where unread)
+/// shares a CPU with the decoder's
+fn hold_overlaps(cpu: usize, siblings: &[usize], decoder: &[usize]) -> bool {
+    decoder.contains(&cpu) || siblings.iter().any(|x| decoder.contains(x))
+}
+
+/// The held spinner (bench 3.8.0, W1 of docs/journal/2026-11-10-next-experiments.md): one
+/// thread of the process that holds it, pinned to one CPU and spinning there, so the machine
+/// never goes wholly idle around a decode (cold-start/20261110T102700Z: a decode started
+/// after the machine went idle ran at about 2.1× the wall; one spinner held throughout kept
+/// 30 of 30 runs fast). A thread, never a process: it can't outlive its owner. It is started,
+/// and its affinity and CPU confirmed, before the settle gate; stopped and joined after the
+/// child is reaped, or on drop (an error, a panic). Its CPU is its own (`cpu_s`), never the
+/// decoder's.
+struct Held {
+    cpu: usize,
+    auto: bool,
+    overlap: bool,
+    /// the CPUs the decoder may run on, as the choice saw them
+    decoder: String,
+    tid: u32,
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    handle: Option<std::thread::JoinHandle<f64>>,
+}
+
+impl Held {
+    /// The spinner on `cpu`, once it runs there (Err: the kernel refused the CPU, or the
+    /// thread wasn't seen on it within a second)
+    fn start(cpu: usize, auto: bool, overlap: bool) -> Result<Held, String> {
+        if cpu >= 1024 {
+            return Err(format!("CPU {cpu} is beyond a 1024-bit CPU set"));
+        }
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s = stop.clone();
+        let (tx, rx) = std::sync::mpsc::sync_channel::<Result<u32, String>>(1);
+        let handle = std::thread::Builder::new()
+            .name("held-spinner".into())
+            .spawn(move || {
+                let ready = (|| {
+                    let mut mask = [0u64; 16];
+                    mask[cpu / 64] |= 1 << (cpu % 64);
+                    // SAFETY: a cpu_set_t of 1024 bits, read or written by the kernel; pid 0
+                    // is the calling thread
+                    if unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) }
+                        != 0
+                    {
+                        return Err(format!(
+                            "sched_setaffinity to CPU {cpu}: {}",
+                            std::io::Error::last_os_error()
+                        ));
+                    }
+                    let mut got = [0u64; 16];
+                    // SAFETY: as above
+                    if unsafe {
+                        sched_getaffinity(0, std::mem::size_of_val(&got), got.as_mut_ptr())
+                    } < 0
+                    {
+                        return Err(format!(
+                            "sched_getaffinity: {}",
+                            std::io::Error::last_os_error()
+                        ));
+                    }
+                    if got != mask {
+                        return Err(format!("the affinity read back is not CPU {cpu} alone"));
+                    }
+                    let t = Instant::now();
+                    // SAFETY: no arguments; the CPU the calling thread runs on
+                    while unsafe { sched_getcpu() } != cpu as i32 {
+                        if t.elapsed() > Duration::from_secs(1) {
+                            return Err(format!("not seen running on CPU {cpu} within 1 s"));
+                        }
+                        std::thread::yield_now();
+                    }
+                    // (/proc/thread-self is "PID/task/TID")
+                    std::fs::read_link("/proc/thread-self")
+                        .ok()
+                        .and_then(|p| p.file_name()?.to_str()?.parse().ok())
+                        .ok_or_else(|| "no thread id from /proc/thread-self".to_string())
+                })();
+                let ok = ready.is_ok();
+                let _ = tx.send(ready);
+                // (a plain increment, as bench/cold_start_spin.c's `hold`, the stop flag read
+                // every 4,096 of them)
+                let mut x = 0u64;
+                while ok && !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    for _ in 0..4096 {
+                        x = std::hint::black_box(x.wrapping_add(1));
+                    }
+                }
+                rusage(1).0
+            })
+            .map_err(|e| format!("spawning the spinner: {e}"))?;
+        let mut held = Held {
+            cpu,
+            auto,
+            overlap,
+            decoder: String::new(),
+            tid: 0,
+            stop,
+            handle: Some(handle),
+        };
+        match rx.recv() {
+            Ok(Ok(tid)) => {
+                held.tid = tid;
+                Ok(held)
+            }
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err("the spinner ended before it was ready".into()),
+        }
+    }
+
+    /// `hold` for a decoder on the CPUs `decoder`, among `cores` (`online_cores`)
+    fn for_decoder(hold: Hold, cores: &[Vec<usize>], decoder: &[usize]) -> Result<Held, String> {
+        let (cpu, auto, overlap) = match hold {
+            Hold::Cpu(cpu) => {
+                let sib = std::fs::read_to_string(format!(
+                    "/sys/devices/system/cpu/cpu{cpu}/topology/thread_siblings_list"
+                ))
+                .map(|s| cpu_list(&s))
+                .unwrap_or_default();
+                (cpu, false, hold_overlaps(cpu, &sib, decoder))
+            }
+            Hold::Auto => {
+                let (cpu, overlap) =
+                    pick_hold(cores, decoder).ok_or("no CPU to hold: none allowed")?;
+                (cpu, true, overlap)
+            }
+        };
+        let mut held = Held::start(cpu, auto, overlap)?;
+        held.decoder = decoder
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        Ok(held)
+    }
+
+    /// Its CPU so far, in ticks (/proc's utime + stime)
+    fn ticks(&self) -> u64 {
+        std::fs::read_to_string(format!("/proc/self/task/{}/stat", self.tid))
+            .ok()
+            .and_then(|st| {
+                let f: Vec<u64> = st
+                    .rsplit_once(')')?
+                    .1
+                    .split_whitespace()
+                    .skip(11)
+                    .take(2)
+                    .filter_map(|x| x.parse().ok())
+                    .collect();
+                (f.len() == 2).then(|| f[0] + f[1])
+            })
+            .unwrap_or(0)
+    }
+
+    /// Stop it and wait for it: its own CPU seconds (RUSAGE_THREAD, exact)
+    fn stop(mut self) -> f64 {
+        self.halt()
+    }
+
+    fn halt(&mut self) -> f64 {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        self.handle.take().map_or(0.0, |h| h.join().unwrap_or(0.0))
+    }
+
+    /// The record's `held_spinner` fields before its CPU is known
+    fn facts(&self) -> String {
+        format!(
+            "\"cpu\":{},\"auto\":{},\"overlap\":{},\"decoder_cpus\":\"{}\"",
+            self.cpu, self.auto, self.overlap, self.decoder
+        )
+    }
+}
+
+impl Drop for Held {
+    fn drop(&mut self) {
+        self.halt();
     }
 }
 
@@ -1032,7 +1277,17 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
     (r, wall, threads, startup.unwrap_or(0.0))
 }
 
-fn child(arm: &str, threads: usize, path: &str) {
+fn child(arm: &str, threads: usize, path: &str, hold: Option<Hold>) {
+    // (`ab child ... --hold-cpu`, for a driver that spawns the child itself: the spinner is
+    // this process's thread, started first, before the sampler and the counters, and its CPU
+    // taken off the decode's. `ab run --hold-cpu` holds its own and never passes the option)
+    let held = hold.map(|h| {
+        let decoder: Vec<usize> = cores().into_iter().flatten().collect();
+        Held::for_decoder(h, &online_cores(), &decoder).unwrap_or_else(|e| {
+            eprintln!("ab child: --hold-cpu: {e}");
+            std::process::exit(2)
+        })
+    });
     // (the `walk-stats` feature only: `AB_WALK_STATS=FILE` writes the walks' records there
     // once the child is done, never during the decode)
     #[cfg(feature = "walk-stats")]
@@ -1107,6 +1362,8 @@ fn child(arm: &str, threads: usize, path: &str) {
             (res, wall, w.finish(true), 0.0)
         }
     };
+    // (stopped, and its CPU known, before the process's CPU is read)
+    let held = held.map(|h| (h.facts(), h.stop()));
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
@@ -1115,9 +1372,15 @@ fn child(arm: &str, threads: usize, path: &str) {
     let err = res.err().unwrap_or_default().replace('"', "'");
     let perf = perf.map(machine::Perf::finish).unwrap_or_default()
         + &region.map(machine::Region::json).unwrap_or_default();
+    let (held, held_s) = held.map_or((String::new(), 0.0), |(facts, s)| {
+        (
+            format!(",\"held_spinner\":{{{facts},\"owner\":\"child\",\"cpu_s\":{s:.4}}}"),
+            s,
+        )
+    });
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{},\"err\":\"{err}\"}}",
-        cpu_self + cpu_kids - startup - sampler,
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{held}{},\"err\":\"{err}\"}}",
+        cpu_self + cpu_kids - startup - sampler - held_s,
         h.n,
         h.finish(),
         err_id_json()
@@ -1155,32 +1418,53 @@ fn load1() -> f64 {
 
 const HZ: f64 = 100.0;
 
-/// Busy jiffies of each CPU
-fn per_cpu() -> Vec<u64> {
+/// Busy jiffies of each CPU, by its number
+fn per_cpu() -> Vec<(usize, u64)> {
     let s = std::fs::read_to_string("/proc/stat").unwrap();
     s.lines()
         .filter(|l| l.starts_with("cpu") && l.as_bytes().get(3).is_some_and(u8::is_ascii_digit))
         .map(|l| {
-            let f: Vec<u64> = l
-                .split_whitespace()
-                .skip(1)
-                .map(|x| x.parse().unwrap())
-                .collect();
-            f[0] + f[1] + f[2] + f[5] + f[6] + f[7]
+            let mut it = l.split_whitespace();
+            let cpu = it.next().unwrap()[3..].parse().unwrap();
+            let f: Vec<u64> = it.map(|x| x.parse().unwrap()).collect();
+            (cpu, f[0] + f[1] + f[2] + f[5] + f[6] + f[7])
         })
         .collect()
 }
 
 /// Cores the other processes keep busy, over `secs` while nothing of ours runs: in all,
-/// and the busiest single CPU's share
-fn others_busy(secs: f64) -> (f64, f64) {
+/// and the busiest single CPU's share. With a held spinner (`--hold-cpu`), its own CPU over
+/// the same window is taken off its CPU's share, so the known helper doesn't hold the gate
+/// shut; then also the raw readings, the spinner's CPU left in
+fn others_busy(secs: f64, held: Option<&Held>) -> (f64, f64, Option<(f64, f64)>) {
     let a = per_cpu();
+    let h0 = held.map(Held::ticks);
     let t = Instant::now();
     std::thread::sleep(Duration::from_secs_f64(secs));
     let b = per_cpu();
+    let h1 = held.map(Held::ticks);
     let dt = t.elapsed().as_secs_f64() * HZ;
-    let each: Vec<f64> = a.iter().zip(&b).map(|(x, y)| (y - x) as f64 / dt).collect();
-    (each.iter().sum(), each.iter().cloned().fold(0.0, f64::max))
+    let mut each: Vec<(usize, f64)> = a
+        .iter()
+        .zip(&b)
+        .map(|((c, x), (_, y))| (*c, y.saturating_sub(*x) as f64 / dt))
+        .collect();
+    let sum_max = |e: &[(usize, f64)]| {
+        (
+            e.iter().map(|x| x.1).sum::<f64>(),
+            e.iter().map(|x| x.1).fold(0.0, f64::max),
+        )
+    };
+    let raw = sum_max(&each);
+    let Some(((h, x), y)) = held.zip(h0).zip(h1) else {
+        return (raw.0, raw.1, None);
+    };
+    let spun = y.saturating_sub(x) as f64 / dt;
+    for e in each.iter_mut().filter(|e| e.0 == h.cpu) {
+        e.1 = (e.1 - spun).max(0.0);
+    }
+    let (busy, one) = sum_max(&each);
+    (busy, one, Some(raw))
 }
 
 /// A CPU list ("0-3,6"), as sysfs and /proc write them
@@ -1212,6 +1496,24 @@ fn cores() -> Vec<Vec<usize>> {
             (0..std::thread::available_parallelism().map_or(1, |n| n.get())).collect()
         });
     group(&allowed, |c| {
+        std::fs::read_to_string(format!(
+            "/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"
+        ))
+        .ok()
+        .map(|s| cpu_list(&s))
+    })
+}
+
+/// The online CPUs grouped by physical core, as `cores` groups the allowed ones: where
+/// `--hold-cpu auto` looks, since the spinner may run beyond the CPUs a decoder is pinned to
+fn online_cores() -> Vec<Vec<usize>> {
+    let online = std::fs::read_to_string("/sys/devices/system/cpu/online")
+        .map(|s| cpu_list(&s))
+        .unwrap_or_default();
+    if online.is_empty() {
+        return cores();
+    }
+    group(&online, |c| {
         std::fs::read_to_string(format!(
             "/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"
         ))
@@ -1875,6 +2177,8 @@ fn run(args: &[String]) {
     let mut spread = false;
     let mut machine_state = false;
     let mut sysfs_state = false;
+    let mut hold: Option<Hold> = None;
+    let mut hold_max = usize::MAX;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -1899,6 +2203,14 @@ fn run(args: &[String]) {
             "--spread" => spread = true,
             "--machine-state" => machine_state = true,
             "--sysfs-state" => sysfs_state = true,
+            "--hold-cpu" => {
+                hold = Some(Hold::parse(&args[i + 1]));
+                i += 1;
+            }
+            "--hold-max-threads" => {
+                hold_max = args[i + 1].parse().unwrap();
+                i += 1;
+            }
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -1927,6 +2239,7 @@ fn run(args: &[String]) {
     let fewest = threads.iter().copied().min().unwrap_or(1);
     // (--spread: a run of t threads, where there are t cores, on each core's first CPU)
     let cores = cores();
+    let online = hold.map(|_| online_cores()).unwrap_or_default();
     let spread_cpus = |t: usize| spread.then(|| spread_list(&cores, t)).flatten();
     for round in 0..rounds {
         for file in &files {
@@ -1941,22 +2254,40 @@ fn run(args: &[String]) {
                         continue;
                     }
                     let waited = Instant::now();
-                    // (and no CPU more than half busy: a 1-thread run is pinned to one, and
-                    // a pinned job of someone else's would share it)
-                    let (mut busy, mut one) = others_busy(settle);
-                    while busy > max_busy || one > 0.5 {
-                        eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
-                        std::thread::sleep(Duration::from_secs(20));
-                        (busy, one) = others_busy(settle);
-                    }
-                    let (name, exe) = match arm.split_once('@') {
-                        Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
-                        None => (arm.clone(), me.clone()),
-                    };
                     let cpus = if t == 1 {
                         Some(pin.clone())
                     } else {
                         spread_cpus(t)
+                    };
+                    let mask: Vec<usize> = match &cpus {
+                        Some(list) => cpu_list(list),
+                        None => cores.iter().flatten().copied().collect(),
+                    };
+                    // (--hold-cpu: the spinner, this process's own thread, held from before
+                    // the gate until the child is reaped; never passed to the child, so an
+                    // ARM@EXE build without the option runs as before)
+                    let held = match hold.filter(|_| t <= hold_max) {
+                        Some(h) => match Held::for_decoder(h, &online, &mask) {
+                            Ok(x) => Some(x),
+                            Err(e) => {
+                                eprintln!("ab run: --hold-cpu: {e}");
+                                std::process::exit(2);
+                            }
+                        },
+                        None => None,
+                    };
+                    // (and no CPU more than half busy: a 1-thread run is pinned to one, and
+                    // a pinned job of someone else's would share it. The held spinner's own
+                    // CPU is taken off, its raw readings kept)
+                    let (mut busy, mut one, mut raw) = others_busy(settle, held.as_ref());
+                    while busy > max_busy || one > 0.5 {
+                        eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
+                        std::thread::sleep(Duration::from_secs(20));
+                        (busy, one, raw) = others_busy(settle, held.as_ref());
+                    }
+                    let (name, exe) = match arm.split_once('@') {
+                        Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
+                        None => (arm.clone(), me.clone()),
                     };
                     let mut cmd = match &cpus {
                         Some(list) => {
@@ -1973,10 +2304,6 @@ fn run(args: &[String]) {
                     // one never turns the counters on. --sysfs-state: the parent's readings
                     // alone, the child exactly as without either flag)
                     let sysfs = (machine_state || sysfs_state).then(machine::Sysfs::live);
-                    let mask: Vec<usize> = match &cpus {
-                        Some(list) => cpu_list(list),
-                        None => cores.iter().flatten().copied().collect(),
-                    };
                     if machine_state {
                         cmd.env(machine::ENV, "1");
                     } else {
@@ -1985,6 +2312,7 @@ fn run(args: &[String]) {
                     let state_pre = sysfs.as_ref().map(|s| s.state(&mask).json());
                     let t_spawn = machine::unix_ns();
                     let load = load1();
+                    let spun0 = held.as_ref().map(Held::ticks);
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
                     let w0 = Instant::now();
@@ -2005,6 +2333,10 @@ fn run(args: &[String]) {
                     let t_exit = machine::unix_ns();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
+                    // (the spinner's CPU over the run, taken off the others' busy cores)
+                    let spun = spun0
+                        .zip(held.as_ref().map(Held::ticks))
+                        .map_or(0.0, |(a, b)| b.saturating_sub(a) as f64 / HZ);
                     let state = match (&sysfs, state_pre) {
                         (Some(s), Some(pre)) => format!(
                             "\"machine_pre\":{pre},\"t_spawn_unix_ns\":{},\"t_exit_unix_ns\":{},\"machine_post\":{},",
@@ -2025,7 +2357,16 @@ fn run(args: &[String]) {
                         line.strip_prefix('{').unwrap_or("\"broken\":1}")
                     );
                     let cpu = json_f(line, "cpu");
-                    let others = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
+                    let others_raw = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
+                    let others = ((b1 - b0) as f64 / HZ - cpu - spun).max(0.0) / span;
+                    let held_json = held.map_or(String::new(), |h| {
+                        let facts = h.facts();
+                        let (raw_busy, raw_one) = raw.unwrap_or((busy, one));
+                        format!(
+                            "\"held_spinner\":{{{facts},\"owner\":\"run\",\"cpu_s\":{:.4},\"pre_busy_raw\":{raw_busy:.2},\"pre_one_raw\":{raw_one:.2},\"others_busy_raw\":{others_raw:.2}}},",
+                            h.stop()
+                        )
+                    });
                     let steal = 100.0 * (s1 - s0) as f64 / (tot1 - tot0).max(1) as f64;
                     let base = std::path::Path::new(file)
                         .file_stem()
@@ -2033,7 +2374,7 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{state}{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{held_json}{state}{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),
@@ -2261,7 +2602,14 @@ fn main() {
         .filter(|a| a != "--bench")
         .collect();
     match args.first().map(String::as_str) {
-        Some("child") => child(&args[1], args[2].parse().unwrap(), &args[3]),
+        Some("child") => {
+            let hold = match args.get(4).map(String::as_str) {
+                Some("--hold-cpu") => Some(Hold::parse(args.get(5).map_or("", String::as_str))),
+                Some(a) => panic!("ab child: unknown argument {a}"),
+                None => None,
+            };
+            child(&args[1], args[2].parse().unwrap(), &args[3], hold)
+        }
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
@@ -2279,7 +2627,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] [--hold-cpu N|auto [--hold-max-threads T]] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE [--hold-cpu N|auto] | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
@@ -4990,5 +5338,133 @@ mod tests {
         assert_eq!(cores, vec![vec![0], vec![2]]);
         // siblings unreadable: each CPU a core of its own
         assert_eq!(group(&[0, 1], |_| None), vec![vec![0], vec![1]]);
+    }
+
+    #[test]
+    fn hold_auto_avoids_the_decoders_cores() {
+        // the i9: 10 cores, siblings c and c + 10
+        let cores = group(&(0..20).collect::<Vec<_>>(), |c| {
+            Some(vec![c % 10, c % 10 + 10])
+        });
+        let spread = |t: usize| cpu_list(&spread_list(&cores, t).unwrap());
+        // 4 threads spread on cores 0-3: the last free core's last CPU
+        assert_eq!(pick_hold(&cores, &spread(4)), Some((19, false)));
+        // 10 threads on every core: no free core, so a sibling, the overlap reported
+        assert_eq!(pick_hold(&cores, &spread(10)), Some((19, true)));
+        // a 1-thread run pinned to CPU 1
+        assert_eq!(pick_hold(&cores, &[1]), Some((19, false)));
+        // a decoder on core 9's CPU 19 alone: its sibling 9 is on the same core
+        assert_eq!(pick_hold(&cores, &[19]), Some((18, false)));
+        // unpinned (every CPU): the last, overlapping
+        assert_eq!(
+            pick_hold(&cores, &(0..20).collect::<Vec<_>>()),
+            Some((19, true))
+        );
+        // CI's 4 CPUs on 2 cores, 2 threads spread on 0,2: no free core; 3, 2's sibling
+        let ci = group(&[0, 1, 2, 3], |c| {
+            Some(if c < 2 { vec![0, 1] } else { vec![2, 3] })
+        });
+        assert_eq!(pick_hold(&ci, &[0, 2]), Some((3, true)));
+        assert_eq!(pick_hold(&ci, &[1]), Some((3, false)));
+        assert_eq!(pick_hold(&[], &[]), None);
+        // an explicit CPU: its core against the decoder's CPUs
+        assert!(hold_overlaps(19, &[9, 19], &[9]));
+        assert!(hold_overlaps(3, &[], &[3]));
+        assert!(!hold_overlaps(19, &[9, 19], &[0, 1, 2]));
+    }
+
+    /// The held spinners among this process's threads now
+    fn spinners() -> usize {
+        std::fs::read_dir("/proc/self/task")
+            .unwrap()
+            .flatten()
+            .filter(|e| {
+                std::fs::read_to_string(e.path().join("comm"))
+                    .is_ok_and(|c| c.trim() == "held-spinner")
+            })
+            .count()
+    }
+
+    /// Whether thread `tid` of this process is still there
+    fn alive(tid: u32) -> bool {
+        std::path::Path::new(&format!("/proc/self/task/{tid}")).exists()
+    }
+
+    /// Whether `cond` holds within 2 s. A joined thread's /proc entry can outlast the join
+    /// briefly (the join returns when the kernel clears its tid, before its task is released)
+    fn soon(cond: impl Fn() -> bool) -> bool {
+        let t = std::time::Instant::now();
+        while t.elapsed() < std::time::Duration::from_secs(2) {
+            if cond() {
+                return true;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        cond()
+    }
+
+    #[test]
+    fn held_spinner_starts_holds_and_stops() {
+        // (one test, so the tests' own threads don't come and go between its readings)
+        let cores = cores();
+        let mine: Vec<usize> = cores.iter().flatten().copied().collect();
+        let (cpu, _) = pick_hold(&cores, &mine[..1]).unwrap();
+        assert_eq!(spinners(), 0);
+        let h = Held::start(cpu, true, false).expect("the spinner holds a CPU it may use");
+        let tid = h.tid;
+        assert!(alive(tid));
+        let comm = std::fs::read_to_string(format!("/proc/self/task/{tid}/comm")).unwrap();
+        assert_eq!(comm.trim(), "held-spinner");
+        let status = std::fs::read_to_string(format!("/proc/self/task/{tid}/status")).unwrap();
+        let allowed = status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+            .map(cpu_list)
+            .unwrap();
+        assert_eq!(allowed, vec![cpu]);
+        // it spins: its CPU grows while it is held, and the gate takes it off its CPU
+        let t0 = h.ticks();
+        let (busy, _, raw) = others_busy(0.3, Some(&h));
+        let (raw_busy, _) = raw.expect("the raw readings beside the accounted ones");
+        assert!(h.ticks() > t0, "the spinner ran");
+        assert!(busy <= raw_busy);
+        assert!(h.facts().contains(&format!("\"cpu\":{cpu},\"auto\":true")));
+        let spun = h.stop();
+        // (only that its CPU was read: how much it gets depends on the runner's load)
+        assert!(spun > 0.0, "its own CPU, {spun} s");
+        assert!(soon(|| !alive(tid)), "stopped and joined");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
+
+        // a failing child (it exits 1) under the spinner: stopped after the reap, as `run`
+        let h = Held::start(cpu, false, false).unwrap();
+        let tid = h.tid;
+        let st = std::process::Command::new("sh")
+            .args(["-c", "exit 1"])
+            .status()
+            .unwrap();
+        assert!(!st.success());
+        assert!(alive(tid), "held until the child is reaped");
+        h.stop();
+        assert!(soon(|| !alive(tid)));
+
+        // an error or a panic while it is held: dropped, so stopped and joined
+        let tid = std::panic::catch_unwind(|| {
+            let h = Held::start(cpu, false, false).unwrap();
+            let tid = h.tid;
+            assert!(alive(tid));
+            std::panic::panic_any(tid);
+        })
+        .unwrap_err()
+        .downcast::<u32>()
+        .map(|b| *b)
+        .unwrap();
+        assert!(soon(|| !alive(tid)), "the unwind stopped it");
+        assert!(soon(|| spinners() == 0), "no thread left behind");
+
+        // a CPU it may not run on: refused, and nothing left running
+        assert!(Held::start(4096, false, false).is_err());
+        let not_allowed = (0..1024).find(|c| !mine.contains(c)).unwrap();
+        assert!(Held::start(not_allowed, false, false).is_err());
+        assert!(soon(|| spinners() == 0), "no thread left behind");
     }
 }
