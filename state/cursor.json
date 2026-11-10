@@ -1515,11 +1515,14 @@
     },
     {
       "trigger_comment_id": 6757686244,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "efc1bd88c73b07d917617eddfdf008dffc691e3d",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "4d5166882ddbbbdbcac3ecf34749da9fc9f1c89a",
+      "report_path": "state/reports/par-scan-delta-6757686244/report.md",
+      "disposition": "PROCEED on exact PR317 delta; M28 checked-path distinction, bounded cleanup/reap and finalisation tested. Guardian D079 ruling separate."
     }
   ],
   "active_delegations": [],
