@@ -1769,11 +1769,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6760224735,
-    "status": "finished",
-    "decision": "D087",
-    "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
-    "review_comment_id": 6760280679
+    "active_comment": 6760691372,
+    "status": "in progress",
+    "decision": "D088"
   },
   "duplicate_events": [
     {
@@ -3099,6 +3097,13 @@
       "work_commit": "5059ce63001628f39ba0f4d53446e3ea2e7854f0",
       "review_comment_id": 6760280679,
       "complete_cursor_commit": "4e49178fbdac0f4932203de1df1df46719503020"
+    },
+    {
+      "comment_id": 6760691372,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D088",
+      "progress": "Receipt; assessing port 2 invalidity and prospective control method."
     }
   ],
   "migrated_from": {
