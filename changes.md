@@ -1,5 +1,7 @@
 # Changes since the last version
 
+- 2026-11-10, through [6773033172](https://github.com/lmmx/mibz2/pull/145#issuecomment-6773033172): D098 cleared the forced plain-team fuzz gap; #359's CI one-thread flag cleared on its permitted rerun and its fixed-rule C5 workstation test was queued, without a result. #351 merged as example/journal research only after twelve corrected local runs at 0.82–0.86 of inversion time; the parallel claim was narrowed to a ceiling and a one-versus-ten-copy i9 rule was set before data. The published explanation was revised after review. Recorded the #351 pre-commit status lapse at merge and the Coordinator's gate correction.
+
 - 2026-11-10, through [6770483223](https://github.com/lmmx/mibz2/pull/145#issuecomment-6770483223): #358 merged a neutral one-page MTF alignment fix; the team-runs port was sent back under D097-F1 for forced plain-team fuzz coverage before its i9 A/B.
 - 2026-11-10: MONODROMY found and repaired an unwritten-byte writer/check defect and overlapping copy in #351. Pre-fix sparse timings were withdrawn; latest PR reports a fresh indicative cells-kernel 0.818× the current records inversion on Wikidata, without production qualification.
 - 2026-11-10: the MONODROMY explanation was published after the correction; Pathfinder post-publication review was assigned. #353 admission maintenance merged; 0.2.8 i9 scaling bundle submitted without checked verdict.
