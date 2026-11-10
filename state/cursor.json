@@ -1406,6 +1406,21 @@
       "status": "finished",
       "disposition": "Concur with revision 4; D092 counter/execution HOLD lifted. Researcher PROCEED and registration/execution predicates remain. D082/D086 preserved.",
       "comment": 6763937701
+    },
+    {
+      "id": "D094",
+      "decision": [
+        "G1",
+        "G2",
+        "G3"
+      ],
+      "incoming_comment": 6763960879,
+      "pr": 161,
+      "sha": "21938d1273d1d1bf3ca0f4bb791333cfa1aa4666",
+      "evidence_digest": "registration:632d18cdb3bc1bca49ff707540f287bfd445a61b;service_tg:e91625739e9b93434daaead38fdee389d021516e;mixture:db0335e9a5ac52db6ed47830c69154679f77ea53;combined:6c9275f2f1900c88a6f9e3c3b556030f2d01c4b0",
+      "commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114",
+      "status": "complete",
+      "disposition": "HOLD #316 qualification/adoption through unrepaired t12 rule; D094-C7 separate valid confirmation admission. Combined revision 3 resolves D091 prose conflict; implementation/dry-run and earlier pre-data conditions remain."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1714,7 +1729,9 @@
     "7540760ff73bd1f505fa284a880c42da3526221d",
     "c84b4173d61ff7d61a061adf70571f50bde637ce",
     "71661b1ab04fb408624ac793e29a4970b4485caa",
-    "e773a92d02f2934fc56acd2f4669f47c230b3c40"
+    "e773a92d02f2934fc56acd2f4669f47c230b3c40",
+    "25fff9c07597c9fe1edc8e074182a02df1042ed5",
+    "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1808,7 +1825,8 @@
     6763143812,
     6763334325,
     6763511665,
-    6763772014
+    6763772014,
+    6763960879
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1888,8 +1906,9 @@
   },
   "current_execution": {
     "active_comment": 6763960879,
-    "status": "in progress",
-    "decision": "D094"
+    "status": "complete",
+    "decision": "D094",
+    "work_commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
   },
   "duplicate_events": [
     {
@@ -2609,6 +2628,14 @@
       "incoming_comment": 6763772014,
       "decision": "D093",
       "commit": "71661b1ab04fb408624ac793e29a4970b4485caa"
+    },
+    {
+      "pr": 161,
+      "sha": "21938d1273d1d1bf3ca0f4bb791333cfa1aa4666",
+      "evidence_digest": "registration:632d18cdb3bc1bca49ff707540f287bfd445a61b;service_tg:e91625739e9b93434daaead38fdee389d021516e;mixture:db0335e9a5ac52db6ed47830c69154679f77ea53;combined:6c9275f2f1900c88a6f9e3c3b556030f2d01c4b0",
+      "incoming_comment": 6763960879,
+      "decision": "D094",
+      "commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3333,10 +3360,11 @@
     {
       "comment_id": 6763960879,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D094",
-      "progress": "D094 assessment and executable witnesses committed; preparing complete cursor and REVIEW.",
-      "receipt_commit": "25fff9c07597c9fe1edc8e074182a02df1042ed5"
+      "progress": "D094 work complete; awaiting single REVIEW on #145.",
+      "receipt_commit": "25fff9c07597c9fe1edc8e074182a02df1042ed5",
+      "work_commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
     }
   ],
   "migrated_from": {
