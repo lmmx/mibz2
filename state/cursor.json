@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6778891459,
+  "last_examined_comment_id": 6778961765,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -60,10 +60,14 @@
       "existing_advisory_log": 6778716882
     },
     "6778961765": {
-      "status": "in_progress",
+      "status": "triaged_advisory",
       "head_sha": "989f782719ec69420713f94ed0b79cc5bedc8709",
       "planned_action": "Advisory checkpoint of new legacy CI failure; no dispatch",
-      "delivery_id": "9b99d590-dd48-11f1-94db-6b0a11d0c478"
+      "delivery_id": "9b99d590-dd48-11f1-94db-6b0a11d0c478",
+      "disposition": "Corrected head and committed handoff verified. Six Actions in progress; legacy pre-commit failure. Failure log unavailable through reader; class D/unexplained, not presumed infrastructure. Independent B5 retained. #364 unmerged; no dispatch.",
+      "log_publication": "pending",
+      "log_dedup_key": "corrected-head-6778961765",
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -98,9 +102,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "224977e0-dd48-11f1-92d9-a590cf0c1aa7",
-    "comment_id": 6778891459,
-    "disposition": "rerun_verified_correction_pending"
+    "delivery_id": "9b99d590-dd48-11f1-94db-6b0a11d0c478",
+    "comment_id": 6778961765,
+    "disposition": "corrected_head_legacy_failure"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -113,9 +117,9 @@
   "pending_independent_review": {
     "pr": 365,
     "requested_by_comment": 6778679718,
-    "reiterated_by_comment": 6778891459,
+    "reiterated_by_comment": 6778961765,
     "status": "pending_authorised_dispatch",
-    "head_at_request": "b24d9baa167e01d57961b82a9a3c6f4501849190",
+    "head_at_request": "989f782719ec69420713f94ed0b79cc5bedc8709",
     "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
   }
 }
