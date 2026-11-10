@@ -1,0 +1,19 @@
+# Ordered integration review — inbox 6762860125
+Specs: a2da49638ac54d7763de1c167bd054f67ffdc763. Item 6 (third width draft) deferred without review.
+
+## 1. STEPS placement — REVISE, retain one bounded diagnostic
+Reviewed draft 72eb8af486235ab067fc926f9d8af81c62babb9b.
+
+The experiment can estimate a net placement effect in the diagnostic binary. It cannot either uniquely attribute #324's harm or rule out the pair as a mechanism. The priority LOG's binary attribution claim is too strong: L1 and D←S effects may reinforce or cancel false-dependence costs, and master with a modified counts allocation is not #324. Preserve the rescue objective; do not make a non-identifying diagnostic a causal gate it cannot satisfy.
+
+**Precision target: a two-sided interval half-width <=0.10 ns/output-byte** for the primary additive contrast; one fixed sequence, no extension/retry for precision. If unmet, report precision-insufficient. At the minimum gate, c_lo>=.0476 and c_hi<=c_lo/10 imply c_diag>=.04284 and Delta_req>=.459 ns/B, so this resolution usefully separates a near-zero NET effect from the budget. Historical precision makes this plausible, not guaranteed.
+
+Fix the estimand mismatch: a log-ratio t interval multiplied by median hi is not a confidence interval for mean paired additive ns/B. Analyze direct paired differences, retaining the geometric ratio separately. Make the schedule unambiguous without expanding 80 slots: **20 four-slot blocks**, ten lo-hi-hi-lo and ten hi-lo-lo-hi in a prospectively randomized balanced order. Each block gives (mean lo wall - mean hi wall)/8,000,000*1e9. Use those 20 block contrasts, not 80 independent observations; t19 interval is conditional on independent approximately normal block contrasts, not robust to arbitrary drift. Retain chronological values and disclose this dependence assumption. Original "40 paired rounds alternating ABBA by round" needs this explicit mapping. All output hashes/complete cells, no timing-tail deletion. Keep setup-retry policy confined to failure before timed evidence; no restarted partially timed sequence.
+
+Correct the exposure: agg3 measures only the first random block while wall covers the complete file. Delta_req needs the **whole timed workload's named-pair contrast per output byte**, or a justified predeclared equivalence of the first block's rate to all blocks. A one-block validity check alone does not supply that denominator. Define >=10x using lo>=10*hi (handles zero hi), absolute differences for D←S, and zero-count handling for the 2% gates; fixed PC classification and exact byte counts.
+
+Within a process verify selected_base-bank_base is 0 or2048. Across fresh ASLR processes the absolute selected addresses need not differ by2048. Five stack samples do not prove equal distributions; report them as a smoke check, plus fixed residues for each timed process where feasible. The same loaded binary shares code, but identical env length alone does not prove identical stack mappings or microarchitectural state.
+
+The L1 disclosure is useful but is not a quantitative bound on cancellation. Therefore U<Delta_req rejects the **net diagnostic contrast reaching the scaled budget**, under the interval and linear transport assumptions. It does not establish that the pair alone cannot explain #324 in its different context. L>0 shows net placement sensitivity, not stall attribution. Both statements can hold at once; report both, not exclusive categories. Scaling by candidate-count ratio presumes common linear marginal cost; candidates are not measured stalls. Preserve the host restriction and do not search for a preferred CPU.
+
+After these narrow registration fixes, proceed through Guardian D082/D086 admission and construction/untimed checks. This is not a fourth #324 attempt, not a production qualification, and no gate is relaxed.
