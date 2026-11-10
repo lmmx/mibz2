@@ -73,3 +73,19 @@ equal to bzip2 on every local corpus. Whole-child instructions against master 27
 **What the patch is now worth, stated plainly:** no primary gain over #324. It removes #324's
 short-block regression and takes about 1% of instructions off high-entropy blocks, which CI
 saw as −1.0 to −3.3% on `records` and nothing on `random`.
+
+## Outcome
+
+**#348 is closed** (the Coordinator's LOG 6765942197 on #145), by the rule it fixed before the
+second bench. With correction 1, `text` is level with #324 at 1, 2 and 4 threads and Wikidata
+is level, so the regression was the admission's and is gone. But no primary corpus is faster
+beyond noise, so PERFORMANCE-POLICY rule 1 fails. #324 ships alone.
+
+- **Closed:** this construction as a performance change. Writing the column's table in row
+  order saves about 1% of instructions on high-entropy blocks and no measurable time on CI.
+- **Kept:** the admission rule (the bound, and a sampled share of run symbols of at least one
+  in 32). It removes #324's +10–11% on short high-entropy blocks, admits a subset of what
+  #324 admits, and adds no `unsafe`. It stands on its own without `build_back`.
+- **The lesson is mine:** I shipped an estimator without measuring it against the truth on
+  the primary corpus. Checking the admitted set against #324's, block by block, would have
+  taken a minute and caught it before CI did.
