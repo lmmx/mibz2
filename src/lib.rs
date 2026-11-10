@@ -84,6 +84,8 @@ pub mod bwt;
 mod coop;
 pub mod crc;
 pub mod mtf;
+// (workers in SMT sibling pairs sharing a walk token: parallel's, a design probe)
+mod pairs;
 pub mod parallel;
 mod read;
 pub mod rle;

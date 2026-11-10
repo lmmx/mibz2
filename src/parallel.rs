@@ -125,7 +125,7 @@ impl StreamDecoder {
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
         use super::bwt::{Cooperative, Segmented};
         let mut dec = match plan {
-            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
+            Plan::Workers(n) => Self::with_pairs(n, slots, k),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
             Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
@@ -169,6 +169,92 @@ impl StreamDecoder {
                 std::thread::Builder::new()
                     .name(format!("mibz2-{i}"))
                     .spawn(move || worker::<I>(&shared, &job_rx, k))
+                    .expect("spawn a bz2 worker"),
+            );
+        }
+        let sh = shared.clone();
+        handles.push(
+            std::thread::Builder::new()
+                .name("mibz2-scan".into())
+                .spawn(move || scanner(&sh, in_rx, job_tx))
+                .expect("spawn the bz2 scanner"),
+        );
+        StreamDecoder {
+            input: Mutex::new(Some(in_tx)),
+            shared,
+            handles: Mutex::new(handles),
+            reader: Mutex::default(),
+            threads,
+        }
+    }
+
+    /// Production's `threads` workers (`Segmented`), in SMT sibling pairs where more
+    /// workers than physical cores share them (`pairs::place`): each pair pinned to its
+    /// core, sharing a walk token and the core's two tables (`paired_worker`). Where no
+    /// core is shared (1 or 2 threads on CI's 2 cores, no SMT, the topology unread), it
+    /// is `with_inverse::<Segmented>`, today's decoder.
+    pub fn with_pairs(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+        match super::pairs::allowed_cores() {
+            Some(cores) => Self::with_pairs_on(threads, slots, k, &cores),
+            None => Self::with_inverse::<super::bwt::Segmented>(threads.max(1), slots, k),
+        }
+    }
+
+    /// `with_pairs` on the cores `cores` (each core's CPUs) as if they were this
+    /// machine's: for tests, which impose CI's 2 cores x 2 siblings on any machine
+    #[doc(hidden)]
+    pub fn with_pairs_on(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+        cores: &[Vec<usize>],
+    ) -> StreamDecoder {
+        use super::pairs::{pin, place, Pair};
+        let threads = threads.max(1);
+        let Some(placement) = place(threads, cores) else {
+            return Self::with_inverse::<super::bwt::Segmented>(threads, slots, k);
+        };
+        let slots = slots.max(threads) as u64;
+        let shared = Arc::new(Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+            }),
+            cv: Condvar::new(),
+            slots,
+        });
+        let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
+        let (job_tx, job_rx) = channel::<Job>();
+        let job_rx = Arc::new(Mutex::new(job_rx));
+        let npairs = placement
+            .iter()
+            .filter_map(|p| p.pair)
+            .map(|(p, _)| p + 1)
+            .max();
+        let pairs: Vec<Arc<Pair>> = (0..npairs.unwrap_or(0))
+            .map(|_| Arc::new(Pair::new()))
+            .collect();
+        let mut handles = Vec::with_capacity(threads + 1);
+        for (i, pl) in placement.into_iter().enumerate() {
+            let (shared, job_rx) = (shared.clone(), job_rx.clone());
+            let pair = pl.pair.map(|(p, m)| (pairs[p].clone(), m));
+            handles.push(
+                std::thread::Builder::new()
+                    .name(format!("mibz2-{i}"))
+                    .spawn(move || {
+                        if !pl.cpus.is_empty() {
+                            let _ = pin(&pl.cpus);
+                        }
+                        match pair {
+                            Some((pair, me)) => paired_worker(&shared, &job_rx, k, &pair, me),
+                            None => worker::<super::bwt::Segmented>(&shared, &job_rx, k),
+                        }
+                    })
                     .expect("spawn a bz2 worker"),
             );
         }
@@ -470,6 +556,239 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         mark!(Ready, place);
         shared.cv.notify_all();
     }
+}
+
+/// A block a paired worker holds between its stages: its last column (the walk's output
+/// is written over it) and counts, and once built, one of its core's two tables
+struct Held {
+    place: u64,
+    bit: u64,
+    orig_ptr: u32,
+    crc: u32,
+    ll: Vec<u8>,
+    counts: [u32; 256],
+    tt: Option<super::bwt::TVector>,
+}
+
+/// A worker of a sibling pair (`pairs::Pair`): it holds up to two blocks, and at each
+/// stage's end does the first of these it can:
+/// 1. walk its oldest built block, if the core's token is free (or was handed to it);
+/// 2. build an unbuilt block, if one of the core's two tables is free;
+/// 3. take a new block (fewer than two held) and undo its MTF: waiting for one only when
+///    it holds none, so a worker holding a block never blocks on the queue (`try_lock`:
+///    an idle worker asleep in `recv` holds the lock, and any job goes to it);
+/// 4. sleep until its sibling's walk ends (which hands it the token if it is waiting to
+///    walk, and frees a table either way).
+///
+/// No wait is unbounded while a block is held: the token is held only across a walk,
+/// which waits on nothing, and a worker sleeps only while its sibling is walking (it
+/// holds a built block and the token is taken, or an unbuilt one and both tables are, and
+/// a table is only ever held by a built block or a walk). So every block held reaches the
+/// reader, and the window and the ordered output are as `worker`'s.
+fn paired_worker(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    pair: &super::pairs::Pair,
+    me: usize,
+) {
+    use super::bwt::{build, SegScratch};
+    use super::pairs::Want;
+    use std::sync::mpsc::TryRecvError;
+    let mut held: Vec<Held> = Vec::with_capacity(2);
+    let mut lls: Vec<Vec<u8>> = Vec::with_capacity(2);
+    let mut seg = SegScratch::default();
+    let mut closed = false;
+    loop {
+        // 1. walk
+        if let Some(i) = held.iter().position(|h| h.tt.is_some()) {
+            if pair.try_walk(me) {
+                let h = held.remove(i);
+                walk_and_finish(shared, pair, me, h, &mut seg, k, &mut lls);
+                continue;
+            }
+        }
+        // 2. build
+        if let Some(i) = held.iter().position(|h| h.tt.is_none()) {
+            if let Some(mut tt) = pair.take_table() {
+                let h = &mut held[i];
+                match catch_unwind(AssertUnwindSafe(|| build(&h.ll, &h.counts, &mut tt))) {
+                    Ok(()) => {
+                        h.tt = Some(tt);
+                        pair.built(me);
+                    }
+                    Err(p) => {
+                        pair.give_back(me, super::bwt::TVector::new(), false);
+                        let h = held.remove(i);
+                        publish(
+                            shared,
+                            h.place,
+                            h.bit,
+                            Err(ErrorKind::Internal(panic_message(p))),
+                        );
+                    }
+                }
+                continue;
+            }
+        }
+        // 3. a new block
+        if held.len() < 2 && !closed {
+            let job = if held.is_empty() {
+                mark!(JobLock);
+                let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
+                mark!(JobRecv);
+                rx.recv().map_err(|_| TryRecvError::Disconnected)
+            } else {
+                match jobs.try_lock() {
+                    Ok(rx) => rx.try_recv(),
+                    Err(std::sync::TryLockError::Poisoned(e)) => e.into_inner().try_recv(),
+                    Err(std::sync::TryLockError::WouldBlock) => Err(TryRecvError::Empty),
+                }
+            };
+            match job {
+                Ok(job) => {
+                    if let Some(h) = front_mtf(shared, job, k, &mut lls) {
+                        held.push(h);
+                    }
+                    continue;
+                }
+                Err(TryRecvError::Disconnected) => closed = true,
+                Err(TryRecvError::Empty) => {}
+            }
+        }
+        if held.is_empty() {
+            debug_assert!(closed);
+            return;
+        }
+        // 4. sleep until the sibling's walk ends
+        pair.sleep(
+            me,
+            Want {
+                walk: held.iter().any(|h| h.tt.is_some()),
+                table: held.iter().any(|h| h.tt.is_none()),
+            },
+        );
+    }
+}
+
+/// A new block's first stage (MTF, RLE2), its symbols back to the scanner as soon as it
+/// has read them; None if it fails (its error published) or the decode is cancelled
+fn front_mtf(shared: &Shared, job: Job, k: Kernels, lls: &mut Vec<Vec<u8>>) -> Option<Held> {
+    let (place, bit, symbols) = job;
+    mark!(JobGot, place);
+    if shared.lock().cancelled {
+        return None; // (drain the queue, so the scanner never waits on it)
+    }
+    mark!(DecodeStart, place);
+    let mut ll = lls.pop().unwrap_or_default();
+    let mut counts = [0u32; 256];
+    let res = catch_unwind(AssertUnwindSafe(|| {
+        super::mtf::mtf(&symbols, &mut ll, &mut counts, k)
+    }));
+    let (orig_ptr, crc) = (symbols.orig_ptr, symbols.crc);
+    {
+        let mut st = shared.lock();
+        if st.free_syms.len() < shared.slots as usize {
+            st.free_syms.push(symbols.syms);
+        }
+    }
+    let res = match res {
+        Ok(Ok(n)) if (orig_ptr as usize) < n => Ok(()),
+        Ok(Ok(_)) => Err(ErrorKind::BadOrigPtr),
+        Ok(Err(kind)) => Err(kind),
+        Err(p) => Err(ErrorKind::Internal(panic_message(p))),
+    };
+    match res {
+        Ok(()) => Some(Held {
+            place,
+            bit,
+            orig_ptr,
+            crc,
+            ll,
+            counts,
+            tt: None,
+        }),
+        Err(kind) => {
+            lls.push(ll);
+            publish(shared, place, bit, Err(kind));
+            None
+        }
+    }
+}
+
+/// A built block's walk, holding the core's token, then (the token and its table given
+/// back first, so the sibling may walk) RLE1 and the CRC into an output buffer
+fn walk_and_finish(
+    shared: &Shared,
+    pair: &super::pairs::Pair,
+    me: usize,
+    mut h: Held,
+    seg: &mut super::bwt::SegScratch,
+    k: Kernels,
+    lls: &mut Vec<Vec<u8>>,
+) {
+    let mut tt = h.tt.take().expect("a built block");
+    let walked = catch_unwind(AssertUnwindSafe(|| {
+        super::bwt::walk_segments_room(&mut tt, h.orig_ptr, &mut h.ll, seg)
+    }));
+    if let Err(p) = walked {
+        *seg = super::bwt::SegScratch::default();
+        pair.end_walk(me, super::bwt::TVector::new());
+        publish(
+            shared,
+            h.place,
+            h.bit,
+            Err(ErrorKind::Internal(panic_message(p))),
+        );
+        return;
+    }
+    pair.end_walk(me, tt);
+    let out = {
+        let mut st = shared.lock();
+        if st.cancelled {
+            drop(st);
+            lls.push(h.ll);
+            return;
+        }
+        st.free_out.pop().unwrap_or_default()
+    };
+    let mut out = out;
+    out.clear();
+    let res = catch_unwind(AssertUnwindSafe(|| -> Result<(), ErrorKind> {
+        super::rle::unrle(&h.ll, &mut out, k)?;
+        let computed = super::crc::crc32(&out, k);
+        if computed != h.crc {
+            return Err(ErrorKind::BlockCrc {
+                stored: h.crc,
+                computed,
+            });
+        }
+        Ok(())
+    }));
+    mark!(DecodeEnd, h.place, out.len(), out.capacity());
+    let res = match res {
+        Ok(Ok(())) => Ok(out),
+        Ok(Err(kind)) => Err(kind),
+        Err(p) => Err(ErrorKind::Internal(panic_message(p))),
+    };
+    lls.push(h.ll);
+    publish(shared, h.place, h.bit, res);
+}
+
+/// A block's result to the reader (dropped if the decode is cancelled)
+fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind>) {
+    let res = res.map_err(|kind| Error {
+        kind,
+        block: Some(place),
+        bit: Some(bit),
+    });
+    let mut st = shared.lock();
+    if !st.cancelled {
+        st.ready.insert(place, res);
+    }
+    drop(st);
+    mark!(Ready, place);
+    shared.cv.notify_all();
 }
 
 fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
