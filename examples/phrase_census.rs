@@ -128,15 +128,18 @@ fn lz(c: &Col, policy: u8, reach: usize) -> (usize, usize, [usize; 9], [usize; 9
     };
     let (mut real, mut copies) = (0, 0);
     let (mut bytes, mut count) = ([0usize; 9], [0usize; 9]);
+    // the steps the trajectories from times q < t stay in one cell. Equal row distance is not
+    // enough (the Researcher's `aab`, review 6755014327): two rows of different cells can keep
+    // their distance for a step and emit different bytes. Rows of one cell emit one byte and
+    // keep their distance for one more step, so the certificate is the cell, step by step.
     let coherent = |q: usize, t: usize| -> usize {
-        // the steps the trajectories from times q < t stay a constant row distance apart
-        let d = c.traj[t] as i64 - c.traj[q] as i64;
         let mut m = 0;
-        while t + m < n && c.traj[t + m] as i64 - c.traj[q + m] as i64 == d {
+        while t + m < n && c.cell[c.traj[t + m] as usize] == c.cell[c.traj[q + m] as usize] {
             m += 1;
         }
         m
     };
+    let rows_apart = |q: usize, t: usize| (c.traj[t] as i64 - c.traj[q] as i64).unsigned_abs();
     let mut t = 0;
     while t < n {
         let y = c.traj[t] as usize;
@@ -149,21 +152,28 @@ fn lz(c: &Col, policy: u8, reach: usize) -> (usize, usize, [usize; 9], [usize; 9
                 }
             }
             1 => {
-                for q in [first[k], last[k]] {
-                    if q != NONE {
-                        best = best.max(coherent(q as usize, t));
-                    }
+                // the nearer in rows, as the prototype chooses: never by the copy's length
+                let q = [first[k], last[k]]
+                    .into_iter()
+                    .filter(|&q| q != NONE)
+                    .min_by_key(|&q| rows_apart(q as usize, t));
+                if let Some(q) = q {
+                    best = coherent(q as usize, t);
                 }
             }
             _ => {
                 let (a, b) = (c.a[k] as usize, c.b[k] as usize);
                 let lo = a.max(y.saturating_sub(reach));
-                if let Some(q) = (lo..y).rev().find(|&q| vt[q] != NONE) {
-                    best = coherent(vt[q] as usize, t);
-                }
                 let hi = b.min(y + 1 + reach);
-                if let Some(q) = (y + 1..hi).find(|&q| vt[q] != NONE) {
-                    best = best.max(coherent(vt[q] as usize, t));
+                let above = (lo..y).rev().find(|&q| vt[q] != NONE);
+                let below = (y + 1..hi).find(|&q| vt[q] != NONE);
+                // the nearer in rows of the two, the row above on a tie
+                let q = match (above, below) {
+                    (Some(u), Some(v)) => Some(if y - u <= v - y { u } else { v }),
+                    (u, v) => u.or(v),
+                };
+                if let Some(q) = q {
+                    best = coherent(vt[q] as usize, t);
                 }
             }
         }

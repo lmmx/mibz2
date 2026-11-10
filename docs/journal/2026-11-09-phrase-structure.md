@@ -1,4 +1,4 @@
-# 2026-11-09: The inverse BWT as copies of decoded text: the phrase census, an exact copy walk, and what they bound
+# 2026-11-09: The inverse BWT as copies of decoded text: the phrase census, an exact copy walk, and what they bound (closed 2026-11-10)
 
 **Result: a structural finding, a correct new kernel, and no speed-up yet.**
 - **The finding (counted, all 233 full Wikidata blocks).** The walk lands on the start of one of
@@ -20,7 +20,88 @@
   ceiling this entry derives is about 2× the whole decoder, and it needs every stage rebuilt
   around runs.
 
+**Superseded in part: read "Correction and close" first.**
+
 Nothing in the decoder changes. The census and the prototype are examples; nothing calls them.
+
+## Correction and close (2026-11-10)
+
+**The line is closed for inputs like this corpus. The copy walk is correct and does not win.**
+What follows corrects the entry below it; the original text is kept, and where the two differ
+this section stands (RULES B4).
+
+**1. The census's copy certificate was unsound, and its counts were too kind** (the Researcher's
+REVISE, review 6755014327).
+- **The fault:** the census accepted a copy for as long as the two trajectories kept a constant
+  row distance. Two rows of *different* cells can keep their distance for a step and emit
+  different bytes: the Researcher's `aab`. The certificate is the cell, step by step, which is
+  what the prototype's room check has always used.
+- **A second fault:** one policy chose its source by the length of the copy it would give,
+  which no decoder can know. It now takes the nearer row, as the prototype does.
+- **Recounted** (`examples/phrase_census.rs` at this commit; per-block lines' SHA-256
+  `70ddd5c2…ff1e05c7`):
+
+  | source policy | real steps / n | copies / n | events / n | bytes copied | mean copy | bytes in copies > 128 |
+  |---|--:|--:|--:|--:|--:|--:|
+  | the cell's first visit | 0.0722 | 0.0328 | 0.1050 | 0.928 | 28.3 | 0.566 |
+  | the nearer of its first and latest visits | 0.0722 | 0.0250 | **0.0972** | 0.928 | 37.2 | 0.611 |
+  | the nearest visited row, within 64 | 0.0767 | 0.0176 | 0.0944 | 0.923 | 52.4 | 0.671 |
+
+- **So:** about 0.10 events a row, not 0.078–0.087; 93% of bytes copied, not 94%; and exactly
+  one real step a cell (0.0722), as §2's argument requires. The figures in the summary above
+  and in §3's second table are superseded by these.
+- **Not affected:** the phrase histogram (§3's first table), the Ψ^s cell counts, the
+  first-split words and the tube packets, none of which used that certificate; and the
+  prototype's bytes.
+
+**2. Overlapping the events does not help: the walk is not waiting on memory.**
+- **Built:** `examples/phrase_lanes.rs`, the same walk in lanes over 32 segments, with segment
+  starts as one-row cells and copies allowed from other lanes' segments up to their frontier.
+  Byte-identical to `bwt::walk` on all 431 blocks at 1, 3, 8, 16 and 32 lanes.
+- **Timed locally** (indicative only): its walk takes 3.8–4.0 ns a byte at 1, 4, 8, 16 and 32
+  lanes alike, against the single chain's 3.3 and production's 1.7–1.9.
+- **Counted** (callgrind with branch simulation, the corpus's first 3 blocks, 1,799,936 rows,
+  8 lanes): 15.3 instructions and 0.24 mispredicted branches a row, against the 10.4–10.65
+  instructions a byte the record gives production's room walk
+  (`2026-11-05-partitioned-walk.md`).
+- **So §4's "one unoverlapped cache miss" was wrong.** Each event costs about 150 instructions
+  and two mispredictions, whatever is in flight. 0.1 events a row at that price is more work
+  than one cheap, well-predicted step a row.
+- **The table alone is no better:** the same lanes with no copies (a move-structure walk) take
+  9.3–9.8 ns a byte, about 20 cycles a step, as #42 found.
+
+**3. Copying decoded text during inversion is published.** Kärkkäinen, Kempa and Puglisi's
+Precopy (DCC 2012, §4) copies bytes and per-position states shifted by the row distance from
+the first visit of an s-run, and their Table 3 has copy-based inversion overtaking the
+interleaved super-alphabet walk only from n/r of about 80. This corpus is at 13.9. What is not
+in that paper is the adaptive phrase end found from the source's room, on a table of O(r)
+cells. No priority is claimed for copying, and §8's "not searched afresh" is superseded by this
+paragraph.
+
+**4. §5's traffic comparison is withdrawn** (the Researcher's finding 2: it set the walk's lines
+past any cache against production's misses past L2). Under one cache model
+(`2026-11-10-bandwidth-titration.md`'s, at a 2 MiB last-level share, the same 3 blocks), the
+laned walk reads 0.041 and writes 0.078 cold lines a row; the plain T-vector walk reads 0.128.
+That is no saving.
+
+**5. §6's diagnostic is withdrawn before any run.** `bench-phrase-knee`, its frozen pointer and
+its reporter are removed. It would have spent a workstation slot on a kernel that points 2 and 4
+already place.
+
+**6. §5's budget table is not reachable by this kernel.** Its walk row assumed overlapped misses
+at about 30 cycles a run. The measured structure is instructions and branches, about 210
+instructions a run.
+
+**What would reopen it:**
+- an input that matters with n/r of 80 or more (the walk's events fall with r, and Precopy's
+  crossover is there);
+- or a copy event at 40 instructions and one misprediction or fewer, shown by count before any
+  timing.
+
+**What survives as useful:** the phrase histogram as a description of the data; `phrase_walk.rs`
+and `phrase_lanes.rs` as exact references; and the cells-and-room formulation, should a
+high-ratio input come.
+
 
 Labels: **proved** (the argument is given), **counted** (by the census, with its checks),
 **checked** (byte equality on the corpus), **local** (timed on the shared VM: indicative only,

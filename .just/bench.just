@@ -927,30 +927,30 @@ bench-pipelined-default DRY="" CORPUS="":
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
 
-# The phrase walk against production's one-core kernel at 1 to 10 concurrent blocks, on the
-# workstation (docs/journal/2026-11-09-phrase-structure.md, section 6, registered and frozen
-# before use). A diagnostic (RULES C1): an inversion harness and a research example, so it can
-# qualify no production change and carries no verdict. It first checks the phrase walk's bytes
-# on every block of the corpus. Run once; no retry. Its exit: 0 VALID, 1 INVALID or REFUSED,
-# 3 INCOMPLETE, kept through the bundle and `just submit`. About five minutes once built.
-#   just submit bench-phrase-knee
+# Bandwidth titration on the workstation (docs/journal/2026-11-10-bandwidth-titration.md,
+# section 4, registered and frozen before use): the shipped decoder at 1, 4, 8 and 10 threads
+# beside two threads that take a measured share of the memory bandwidth and nothing else. A
+# diagnostic (RULES C1): it qualifies no production change. Run once; no retry. Its exit:
+# 0 VALID (whatever the reading), 1 INVALID or REFUSED, 3 INCOMPLETE, kept through the bundle
+# and `just submit`. About three minutes once built.
+#   just submit bench-bw-titrate
 
-# The phrase walk's cost a thread against production's, at 1 to 10 concurrent blocks
-bench-phrase-knee:
+# The decoder's rate against memory traffic it does not make, at 1 to 10 threads
+bench-bw-titrate:
     #!/usr/bin/env bash
     set -euo pipefail
     # each attempt in a directory of its own, never overwritten
-    B=$PWD/target/phrase-knee
+    B=$PWD/target/bw-titrate
     W=$B/$(date -u +%Y%m%dT%H%M%SZ)
     mkdir -p "$B"
-    mkdir "$W" || { echo "bench-phrase-knee: $W already exists; not reusing an attempt's directory"; exit 1; }
+    mkdir "$W" || { echo "bench-bw-titrate: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
     # the outcome decides the exit, whatever the last command's status
     outcome="INCOMPLETE: stopped before the run finished (see console.log)"
     finish() {
       echo "$outcome" > "$W/outcome.txt"
-      echo "bench-phrase-knee: OUTCOME: $outcome"
-      bash bench/bundle.sh "$W" || { echo "bench-phrase-knee: bundling failed"; exit 2; }
+      echo "bench-bw-titrate: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W" || { echo "bench-bw-titrate: bundling failed"; exit 2; }
       case "$outcome" in
         VALID*) exit 0 ;;
         INVALID*|REFUSED*) exit 1 ;;
@@ -958,19 +958,23 @@ bench-phrase-knee:
       esac
     }
     trap finish EXIT
-    fail() { outcome="REFUSED: $*"; echo "bench-phrase-knee: $*"; exit 1; }
+    fail() { outcome="REFUSED: $*"; echo "bench-bw-titrate: $*"; exit 1; }
     ROUNDS=5
-    GRID=1,2,4,6,8,10
+    THREADS=1,4,8,10
+    LEVELS=0,33,66,100
+    HOGS=2
+    REPS=3
     git rev-parse HEAD > "$W/commit.txt"
     printf 'head %s\n' "$(cat "$W/commit.txt")" > "$W/commits.txt"
     git status --porcelain --untracked-files=no > "$W/git-status.txt"
-    # the registration's frozen commit (bench/phrase-knee.frozen): what is built and driven
+    # the registration's frozen commit (bench/bw-titrate.frozen): what is built and driven
     # must be as it was there, and committed
-    frozen=$(awk '$1 == "frozen" {print $2}' bench/phrase-knee.frozen)
-    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/phrase-knee.frozen names no frozen commit"
-    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
-      tests/common bench/bundle.sh bench/corpus.sh bench/wikidata.json bench/wikidata.py
-      bench/phrase_knee.py .just/bench.just docs/journal/2026-11-09-phrase-structure.md)
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/bw-titrate.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/bw-titrate.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml
+      examples/bw_titrate.rs tests/common bench/bundle.sh bench/corpus.sh bench/wikidata.json
+      bench/wikidata.py bench/bw_titrate.py .just/bench.just
+      docs/journal/2026-11-10-bandwidth-titration.md)
     [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
     [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
     git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
@@ -982,19 +986,17 @@ bench-phrase-knee:
     bash bench/corpus.sh
     sha256sum corpora/wikidata.bz2 | tee "$W/inputs.txt"
     lscpu > "$W/lscpu.txt"
+    grep . /sys/devices/system/cpu/cpu*/topology/thread_siblings_list > "$W/siblings.txt" 2>/dev/null || true
     cat /proc/loadavg > "$W/loadavg-before.txt"
-    cargo build --release --example phrase_walk
-    # every block's bytes equal to bwt::walk's, or nothing is timed
-    if ! cargo run -q --release --example phrase_walk -- check corpora/wikidata.bz2 | tee "$W/check.txt"; then
-      outcome="INVALID: the phrase walk's bytes differ from bwt::walk's (check.txt)"
-      exit 1
-    fi
-    grep -q 'identical' "$W/check.txt" || { outcome="INVALID: the check did not report identical bytes"; exit 1; }
-    cargo run -q --release --example phrase_walk -- knee corpora/wikidata.bz2 "$ROUNDS" "$GRID" > "$W/runs.jsonl"
+    cargo build --release --example bw_titrate
+    # the harness refuses a decode of another size itself; its stderr names the hogs' CPUs
+    cargo run -q --release --example bw_titrate -- corpora/wikidata.bz2 "$ROUNDS" "$THREADS" "$LEVELS" "$HOGS" "$REPS" \
+      > "$W/runs.jsonl" 2> "$W/harness.log" || { cat "$W/harness.log"; outcome="INVALID: the harness failed (harness.log)"; exit 1; }
+    cat "$W/harness.log"
     cat /proc/loadavg > "$W/loadavg-after.txt"
-    if python3 bench/phrase_knee.py "$W/runs.jsonl" "$ROUNDS" "$GRID" > "$W/summary.md"; then
+    if python3 bench/bw_titrate.py "$W/runs.jsonl" "$ROUNDS" "$THREADS" "$LEVELS" "$HOGS" "$W/report.json" > "$W/summary.md"; then
       cat "$W/summary.md"
-      outcome="VALID: a diagnostic with no verdict; $ROUNDS rounds over $GRID copies (summary.md)"
+      outcome="VALID: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["reading"])' "$W/report.json")"
     else
       outcome="INVALID: runs.jsonl is not the registered grid"
       exit 1
