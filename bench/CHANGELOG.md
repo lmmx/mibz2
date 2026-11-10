@@ -35,6 +35,19 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.8.1] - 2026-11-10
+
+### Fixed
+
+- **`ab summary` read a held run's CPU as the spinner's CPU number** (`examples/ab.rs`, `json_str`). It took
+  the first `"cpu":` anywhere in the record, which since 3.8.0 is the nested `held_spinner.cpu`.
+  The release-scaling run for 0.2.8 (release-scaling/run-20261110T122748Z) showed CPU 19.000 for
+  every arm at 10 threads or fewer.
+  - **The fix:** a field is read only from the record's top level, outside nested objects and strings.
+  - **What was never affected:** the raw records' `cpu`, and every reader that parses JSON (the History
+    page, `bench/report.py`).
+  - **No measured figure changes meaning,** so this is a patch version.
+
 ## [3.8.0] - 2026-11-10
 
 ### Added
