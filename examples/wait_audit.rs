@@ -6,8 +6,14 @@
 //!
 //! ```text
 //! cargo run --release --features wait-stats --example wait_audit -- FILE.bz2 \
-//!     [--teams 3] [--k 3] [--levers both|park|small|none] [--rounds 3] [--label TEXT]
+//!     [--teams 3] [--k 3] [--levers both|park|small|none] [--pool 2000|0|64] [--rounds 3]
+//!     [--label TEXT]
 //! ```
+//!
+//! `--pool` picks the pool-wait arm (`Levers::pool`, docs/journal/2026-11-10-pool-wait-budgets.md):
+//! the spin budget of the pools' own waits, 2,000 (the default's, arm A), 0 (B) or 64 (C).
+//! Each line names its arm (`pool_wait`, `pool_spins`) and, per site, the unparks aimed at
+//! its waiters (`wakes`) beside the spins and parks.
 //!
 //! Each round is one decode of FILE by `BzReader::parallel_pipelined_levers(File, teams, k,
 //! SLOTS_PER_THREAD × teams, Kernels::detect(), levers)` (the default decoder's own
@@ -73,10 +79,13 @@ fn main() -> std::io::Result<()> {
     let rounds: usize = arg(&args, "--rounds", 3);
     let levers_name: String = arg(&args, "--levers", "both".to_string());
     let label: String = arg(&args, "--label", String::new());
+    let pool_name: String = arg(&args, "--pool", "2000".to_string());
+    let pool = mibz2::parallel::PoolWait::parse(&pool_name).expect("--pool 2000, 0 or 64");
     let levers = mibz2::parallel::Levers {
         park: levers_name == "park" || levers_name == "both",
         small: levers_name == "small" || levers_name == "both",
         spin2k: false,
+        pool,
     };
     let spin_ns = spin_cost_ns();
     let tick = 0.01; // (USER_HZ is 100 on Linux)
@@ -118,7 +127,8 @@ fn main() -> std::io::Result<()> {
             all_spins += c.spins;
             sites.push(format!(
                 "\"{}\":{{\"waits\":{},\"immediate\":{},\"ended_spinning\":{},\"parked\":{},\
-                 \"yielded\":{},\"spins\":{},\"spins_wasted\":{},\"parks\":{},\"yields\":{}}}",
+                 \"yielded\":{},\"spins\":{},\"spins_wasted\":{},\"parks\":{},\"yields\":{},\
+                 \"wakes\":{}}}",
                 s.name(),
                 c.waits,
                 c.immediate,
@@ -128,14 +138,18 @@ fn main() -> std::io::Result<()> {
                 c.spins,
                 c.spins_wasted,
                 c.parks,
-                c.yields
+                c.yields,
+                c.wakes
             ));
         }
         println!(
             "{{\"label\":\"{label}\",\"round\":{round},\"teams\":{teams},\"k\":{k},\
-             \"levers\":\"{levers_name}\",\"bytes\":{bytes},\"hash\":\"{hash:016x}\",\
+             \"levers\":\"{levers_name}\",\"pool_wait\":\"{}\",\"pool_spins\":{},\
+             \"bytes\":{bytes},\"hash\":\"{hash:016x}\",\
              \"sites\":{{{}}},\"spins_all\":{all_spins},\"spin_ns_estimate\":{spin_ns:.2},\
              \"spin_cpu_s_estimate\":{:.4},\"process_cpu_s_indicative\":{cpu_s:.2}}}",
+            pool.name(),
+            pool.spins(),
             sites.join(","),
             all_spins as f64 * spin_ns * 1e-9,
         );

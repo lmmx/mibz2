@@ -73,6 +73,13 @@
 //!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
 //!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
 //!   `both`, park and small together), each its pipeK arm's plan and window;
+//! - `mibz2-pool2000`, `-pool0`, `-pool64` (research: the pool-wait arms A, B and C,
+//!   docs/journal/2026-11-10-pool-wait-budgets.md): `mibz2-pipe3-both`'s plan, window and
+//!   levers (THREADS / 3 pipelined teams of 3 with park and small: at 9 threads the
+//!   default's own three teams of three) with its pools' own waits spinning 2,000 (the
+//!   default's budget), 0 or 64 times before they park (`Levers::pool`). A build with the
+//!   feature `wait-stats` adds the run's wait counts to its record (`waits`); the timed
+//!   bench builds without it;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -647,12 +654,37 @@ fn decode(
                 park: lever == "park" || lever == "both",
                 small: lever == "small" || lever == "both",
                 spin2k: lever == "spin2k",
+                pool: mibz2::parallel::PoolWait::Spin2000,
             };
             drain(
                 mibz2::BzReader::parallel_pipelined_levers(
                     open()?,
                     teams,
                     k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                    levers,
+                ),
+                h,
+                last,
+            )
+        }
+        // the pool-wait arms (research, `Levers::pool`): `mibz2-pipe3-both` with its pools'
+        // waits at budget 2,000 (the default's), 0 or 64
+        "mibz2-pool2000" | "mibz2-pool0" | "mibz2-pool64" => {
+            let pool = mibz2::parallel::PoolWait::parse(&arm["mibz2-".len()..])
+                .expect("a registered pool-wait arm");
+            let teams = (threads / 3).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let levers = mibz2::parallel::Levers {
+                pool,
+                ..mibz2::parallel::PIPELINED_LEVERS
+            };
+            drain(
+                mibz2::BzReader::parallel_pipelined_levers(
+                    open()?,
+                    teams,
+                    3,
                     slots,
                     mibz2::Kernels::detect(),
                     levers,
@@ -831,13 +863,42 @@ fn child(arm: &str, threads: usize, path: &str) {
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     let perf = perf.map(machine::Perf::finish).unwrap_or_default()
-        + &region.map(machine::Region::json).unwrap_or_default();
+        + &region.map(machine::Region::json).unwrap_or_default()
+        + &wait_counts();
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
     );
+}
+
+/// The run's wait counts (`mibz2::wait_stats`), as `,"waits":"SITE:waits=..,spins=..,
+/// parks=..,wakes=..;.."` with a build of the feature `wait-stats`; empty without it. A
+/// child decodes once, so the counts are that decode's.
+fn wait_counts() -> String {
+    use mibz2::wait_stats::{self, SITES};
+    if !wait_stats::ENABLED {
+        return String::new();
+    }
+    let sites: Vec<String> = SITES
+        .iter()
+        .map(|&s| {
+            let c = wait_stats::get(s);
+            format!(
+                "{}:waits={},spins={},spins_wasted={},parked={},parks={},wakes={},yields={}",
+                s.name(),
+                c.waits,
+                c.spins,
+                c.spins_wasted,
+                c.parked,
+                c.parks,
+                c.wakes,
+                c.yields
+            )
+        })
+        .collect();
+    format!(",\"waits\":\"{}\"", sites.join(";"))
 }
 
 /// (busy, steal, total) jiffies over all CPUs
