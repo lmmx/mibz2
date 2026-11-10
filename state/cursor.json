@@ -1672,6 +1672,14 @@
       "review_comment_pr": 145,
       "publication_verified": true,
       "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned verify flags only hardcoded FROM coordinator restriction."
+    },
+    {
+      "trigger_comment_id": 6760095177,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "25b778cdd44c2bbf5365fd16f990da5a52a72ebf"
     }
   ],
   "active_delegations": [],
