@@ -111,6 +111,14 @@
       "disposition": "Source-frozen final primary-loss follow-up remains pending. Independent B5 request retained; no assignment while #364 unmerged. Existing checkpoint 6779251105 covers head/gates; no repetitive LOG.",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6779413601": {
+      "status": "in_progress",
+      "delivery_id": "91b1cb70-dd4b-11f1-80a3-1d269efe985d",
+      "comment_updated_at": null,
+      "head_sha": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+      "planned_action": "Advisory final benchmark evidence checkpoint and remaining CI/B5 handoff",
+      "log_dedup_key": "final-followup-6779413601"
     }
   },
   "automatic_github_wakeup_assumed": false,
