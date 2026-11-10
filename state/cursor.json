@@ -1580,7 +1580,7 @@
     },
     {
       "trigger_comment_id": 6758538763,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1588,7 +1588,10 @@
       "report_commit": "ad567c42de4da555117c3f277178f099860fb932",
       "source_commit": "f666ea9f3e611e114211c58172d5d2482ce15010",
       "review_comment_pr": 145,
-      "disposition": "REVISE census: K+1 word and affine landing refuted; retain fixed-k parallel-path identity, reject representation equivalence and absent-advantage claim. Hybrid open with actual aligned coverage accounting."
+      "disposition": "REVISE census: K+1 word and affine landing refuted; retain fixed-k parallel-path identity, reject representation equivalence and absent-advantage claim. Hybrid open with actual aligned coverage accounting.",
+      "review_comment_id": 6758684929,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned verify reports only its hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
