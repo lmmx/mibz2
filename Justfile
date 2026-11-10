@@ -1,4 +1,5 @@
 import ".just/bench.just"
+import ".just/cold-start.just"
 import ".just/commit.just"
 import ".just/docs.just"
 import ".just/submit.just"
