@@ -11,8 +11,8 @@ the decoder changes.**
   alone is 50%.
 - **Stands, 1:** the run emitter is worth more on text than on Wikidata. Its stage is 3.0× the
   production MTF's there, and with a table filled from the runs a text decode loses 21 to 30%.
-- **Stands, 2:** a table of one cache line a 32 rows (2 bytes a row, one access a step), for
-  data whose runs are short. It halves the live table, which is what sets the i9's knee.
+- **Stood, then fell:** a table of one cache line a 32 rows (2 bytes a row, one access a
+  step). Built on #323 and falsified: its walk is 4.34× the room walk. See §3.
 - **Counted out:** overlapping MTF chains, overlapping scanner chains, a pair table filled
   from the runs, and contracting the walk by sequential passes. Each failed a count below.
 - **Added to the two-modes design:** one long decode, the cheapest test of whether the slow
@@ -60,7 +60,15 @@ counts, exact for the input), **model** (derived, not observed).
 - **For the Coordinator:** the emitter's production gate should read text as well as Wikidata.
   The larger gain is there.
 
-## 3. Stands: the line table, design E (counted, then model)
+## 3. The line table, design E (counted, then model): falsified as built
+
+**Result (2026-11-10, #323, `2026-11-10-design-e-result.md`): falsified.** Built and counted by
+the implementer: a one-thread inversion costs 3.67× production's (3.59–3.74), the walk 4.34×
+the room walk. The step is 22 to 26 instructions as compiled, and about 48 a row with the lane
+bookkeeping, against the room walk's 10.4. The estimate below ("about 16 instructions") set the
+step alone against the room walk's whole loop, and was low for the step as well. The census
+stands (98% one-access steps on Wikidata, 2.04 bytes a row). The design does not. What follows
+is kept as written.
 
 **The design.** One 64-byte line a 32 consecutive rows, in the LF direction:
 - the 32 bytes of L;

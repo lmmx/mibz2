@@ -92,6 +92,46 @@ sink. Nothing is shared but the input and the sink.
 400 MB/s, less the all-core clock (about 0.94) and the 1.1 to 1.4× of §2: 2.7 to 3.4 GB/s,
 against about 1.5. The emitter and the k-step walk multiply that; they are not counted in it.
 
+## 3a. Correction after #323: which table, if any (model, with E's count applied)
+
+Design E was built and falsified (`2026-11-10-design-e-result.md`): 48 instructions a row
+against the room walk's 10.4, a one-thread inversion at 3.67×. The gate of this entry's §4.1
+is a one-thread walk within 1.44× of the plain walk, about 15 instructions a row. Read against
+it, with E's as-built step (22 to 26) and bookkeeping (about 22) in place of this author's
+estimates:
+
+| table | a step is | bytes a step | instructions a row | the gate |
+|---|---|--:|--:|---|
+| E, the line table | compare, two popcounts, a base | 1 | 48 (counted, #323) | fails, 4.6× |
+| C, runs and a directory | a directory popcount, an entry, an add | 1 | about 45 (model) | fails, the same way |
+| D, k-step cells, k = 2 | C's step, a 2-byte store | 2 | about 23 | fails |
+| D, k = 4 | C's step, a 4-byte store | 4 | about 12 | passes, narrowly |
+| D, k = 8 | C's step, an 8-byte store | 8 | about 6 | passes |
+
+- **C is withdrawn as a walk table.** Its step is E's in kind and yields one byte. It keeps its
+  use where the fill's cost is what matters (§5's peeks).
+- **Only a table that emits several bytes a step can clear the gate,** because the step itself
+  cannot be brought near the T-vector's three instructions. That leaves D.
+- **D is not yet a design that can be built to the gate.** Two things are open:
+  1. **Lanes.** A lane that steps k rows of text at a time cannot land on a marker that lies
+     inside its step, and `2026-11-10-backward-table.md` §4a did not say how lanes end.
+     A way: for each marker row m, the k rows LF⁻ʲ(m), j < k, are each made a cell of their
+     own while the cells are doubled, flagged with j. A lane that lands on a flagged cell
+     takes the first j bytes of its word and ends there, joined to m's segment. That is at
+     most 512 k cells more, and one flag test a step.
+  2. **The build.** Doubling is a loop a cell with a data-dependent trip count, the shape of
+     E's build, which ran 1.83× the scatter's time at 0.82× its instructions. Counted on
+     paper: 0.197 n cell-steps to k = 4 and 0.34 n to k = 8 on Wikidata, at about 30
+     instructions each: 6 to 10 a row against the build's 4.9.
+- **So the inversion, build and walk together, is about 18 instructions a row at k = 4 and 16
+  at k = 8, against production's 15.3:** near parity on paper, from an author whose last paper
+  count was low by half. At k = 4 the table is 1.44 MB and ten of them sit exactly at the
+  knee; at k = 8 it is 2.25 MB and six fit.
+- **What stands of this entry:** §1 and §2 as readings: what cooperation costs and what a
+  small table is worth. **What does not:** §3's claim that C and E are that table.
+- **What the pricing run (§4.2) now decides:** whether the prize is large enough to take on
+  D's two open problems. It prices the table nobody has, not any design.
+
 ## 4. Falsifiers, cheapest first
 
 1. **Free:** §2 is the experiment, already run. A reading of it that fails: if C's or D's walk
