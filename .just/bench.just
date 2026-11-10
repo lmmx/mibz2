@@ -1313,3 +1313,9 @@ bench-team-runs:
     cargo build -q --release --example ab
     target/release/examples/ab gen "$G" 16
     just bench-release-scaling 58e0a4be697f740b339eae1089c40b567a9f6e93 ba52e4d6f05729b6317ac8b7b37e576d79b193d3 10 "6,8,10,12,16,20" "$G/text.bz2" "$G/records.bz2" "$G/random.bz2"
+
+# Does 0.2.9's faster team path move the workers-to-teams crossover below 6 threads? The plan
+# (mibz2: workers below 6, teams from 6) against forced teams of 2, 3 and 4, at 4, 5, 6 and 8
+# threads on the i9, paired by round. Rule, written before the data: LOG on #145 (team threshold).
+bench-team-threshold:
+    just bench-team-size 20 "4,5,6,8"

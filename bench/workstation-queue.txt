@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-team-threshold         master                    plan vs forced teams at 4-8 threads on 0.2.9: does the team threshold move below 6? (rule: LOG on #145)
