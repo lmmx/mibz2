@@ -134,9 +134,10 @@
     6750333637,
     6754859264,
     6755685313,
-    6755779354
+    6755779354,
+    6756472047
   ],
-  "last_processed_comment_id": 6755779354,
+  "last_processed_comment_id": 6756472047,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1417,7 +1418,7 @@
     },
     {
       "trigger_comment_id": 6756472047,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1426,7 +1427,10 @@
       "report_path": "state/reports/par-scan-readiness-6756472047/report.md",
       "report_commit": "25f4cd29f3dc152dd124cfba6551397664428df8",
       "review_comment_pr": 145,
-      "disposition": "REVISE residual sampler unwind and process-group cleanup; placement, identity/admission and operational interpretation accepted. B5 addendum precedes queue-ready PROCEED."
+      "disposition": "REVISE residual sampler unwind and process-group cleanup; placement, identity/admission and operational interpretation accepted. B5 addendum precedes queue-ready PROCEED.",
+      "review_comment_id": 6756608043,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass; pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
@@ -1446,10 +1450,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6755779354
+      6756472047
     ],
     "handled": [
-      6755779354
+      6756472047
     ],
     "skipped": [],
     "automation_modified": false
