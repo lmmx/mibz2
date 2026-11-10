@@ -1,0 +1,110 @@
+{
+  "checks": {
+    "texts": 510,
+    "counterexamples": 969
+  },
+  "first_bad_landing": {
+    "text": "aa$",
+    "L": "aa$",
+    "F": "$aa",
+    "psi": [
+      2,
+      0,
+      1
+    ],
+    "starts": [
+      0,
+      1
+    ],
+    "K": [
+      0,
+      0,
+      1
+    ],
+    "cell": [
+      1,
+      2
+    ],
+    "safe_length": 1,
+    "claimed_length": 2,
+    "base_word": "a$",
+    "bad": [
+      {
+        "row": 2,
+        "word": "aa",
+        "landing": 0,
+        "claimed_landing": 3
+      }
+    ]
+  },
+  "first_bad_word": {
+    "text": "aa$",
+    "L": "aa$",
+    "F": "$aa",
+    "psi": [
+      2,
+      0,
+      1
+    ],
+    "starts": [
+      0,
+      1
+    ],
+    "K": [
+      0,
+      0,
+      1
+    ],
+    "cell": [
+      1,
+      2
+    ],
+    "safe_length": 1,
+    "claimed_length": 2,
+    "base_word": "a$",
+    "bad": [
+      {
+        "row": 2,
+        "word": "aa",
+        "landing": 0,
+        "claimed_landing": 3
+      }
+    ]
+  },
+  "cyclic_aab": [
+    {
+      "text": "aab",
+      "L": "baa",
+      "F": "aab",
+      "psi": [
+        1,
+        2,
+        0
+      ],
+      "starts": [
+        0,
+        2
+      ],
+      "K": [
+        0,
+        1,
+        0
+      ],
+      "cell": [
+        0,
+        1
+      ],
+      "safe_length": 1,
+      "claimed_length": 2,
+      "base_word": "aa",
+      "bad": [
+        {
+          "row": 1,
+          "word": "ab",
+          "landing": 0,
+          "claimed_landing": 3
+        }
+      ]
+    }
+  ]
+}
