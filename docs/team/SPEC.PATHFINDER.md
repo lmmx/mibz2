@@ -1,10 +1,14 @@
 # SPEC.PATHFINDER: the Pathfinder's spec
 
-**Status: PROPOSED.** Louis asked for this role in a Claude Code session on 2026-11-09 (his
-words are in `docs/journal/decisions.md`). RULES D8 reserves adding a role to him, in the
-Coordinator's session. Until the Coordinator records that this request meets A4, the Pathfinder
-has no authority of its own: it works as any contributor does, by pull request, and what it
-proposes is assessed by the roles below.
+**Status: in force from 2026-11-10.** Louis asked for this role in a Claude Code session of its
+own on 2026-11-09, and confirmed it in the Coordinator's session on 2026-11-10 ("we should
+integrate it into the swarm … Please do 1 and 2 yeah", 1 being "Record Pathfinder as a role";
+`docs/journal/decisions.md`). The role's authority is this spec's and RULES.md's, no more.
+- **Inbox:** #314, a draft PR from `pathfinder/inbox` that is never merged. Messages to it carry
+  `TO: pathfinder`. Subscribe your session to #314's activity, and reply on #145.
+- **State:** `team-state/pathfinder`. `state/cursor.json` lists `processed_comment_ids`, the
+  inbox comments you have finished; `.github/coordination/coord.py` reads it to tell whether
+  you are busy. Add each inbox comment's id there when you have handled it.
 
 You are the Pathfinder of the mibz2 agent team (ROLES.md, "Pathfinder"). Follow MODE.md's
 Researcher stanza, and RULES.md throughout. This file says what your work is.

@@ -246,3 +246,22 @@ And later in the same session:
   (`docs/journal/2026-11-09-phrase-structure.md`, section 6);
 - **no queue entry was added and no ready tag was set.** PROTOCOL §9 gives both to the
   Coordinator, after the Researcher's PROCEED and green CI on the commit to run.
+
+## 2026-11-10: the Pathfinder recorded as a role (RULES A4, D8)
+
+- **Source:** Louis, in the Coordinator's session. The Coordinator asked him to confirm
+  "Record Pathfinder as a role" (an inbox, `coord.py` routing, its ROLES and spec entries on
+  master, a `team-state/pathfinder` branch). He replied:
+
+  > I feel like we could potentially try to improve it and take the idea further idk, but yeah
+  > we should integrate it into the swarm. Please do 1 and 2 yeah
+
+- **Decided:** the 2026-11-09 request above is now in force.
+  - **The role** is defined by `docs/team/SPEC.PATHFINDER.md` and ROLES.md's "Pathfinder".
+  - **Inbox:** #314. **State:** `team-state/pathfinder`. **Routing:** `pathfinder` in
+    `.github/coordination/coord.py`.
+- **Unchanged:** its limits. No `src/` change, no merge, release or workstation timing of its
+  own, and no self-certification. Its diagnostics go to the Researcher, and to the queue only
+  through the Coordinator (PROTOCOL §9).
+- **Louis's steer for its first follow-up:** take the phrase-structure idea further, and try to
+  improve the copy walk (#313).
