@@ -425,3 +425,40 @@ just bench-share-nothing 1 4         # the same with ab's idle gate relaxed (DRY
 just submit bench-share-nothing      # the registered run, once frozen and queued
 python3 -m pytest bench/test_share_nothing.py bench/test_bounded.py bench/test_par_scan_finish.py
 ```
+
+---
+
+## Result: `share-nothing/20261110T052925Z` (the registered run, VALID)
+
+Run once on the workstation at `2ed6aa7e` (frozen `482df588`) and submitted under RULES C5.
+- **Bundle:** `share-nothing/20261110T052925Z.tar.gz` on `evidence` at `6b84f37b`.
+- **SHA-256:** `1e347594515a2215e63fb186c5681f329046844a62ff71f1617763d2f68136ad`, checked by the Coordinator.
+- **Judge:** the Coordinator re-ran it on a copy of the archived files at the frozen commit. It reproduced the recorded judgement exactly, with exit 0.
+- **Preflight:** PASS.
+- **Busy-gate waits:** none in any cell (720 runs).
+- **Sentinels:** 55 rounds fast, 5 mixed, 0 slow.
+
+**Outcome:** VALID.
+
+| 4 → 10 workers | -2 | -9 | ratio of ratios R |
+|---|--:|--:|--:|
+| CPU growth | ×1.18 [1.15–1.22] | ×3.26 [3.21–3.31] | **×0.36 [0.35–0.38]** |
+| wall growth | ×0.75 [0.72–0.78] | ×1.51 [1.49–1.54] | ×0.49 [0.47–0.52] |
+
+The intervals are moving-block bootstrap intervals over 60 chronological rounds. They are conditional on this attempt and its dependence treatment, with no guaranteed coverage. Block lengths 1 and 10 give the same intervals to two decimals, and the lag-1 autocorrelations are 0.20, 0.07 and 0.31.
+
+| corpus | throughput at 2 / 4 / 6 / 8 / 10 workers (MB/s, medians) |
+|---|---|
+| -2 | 689 / 1,309 / 1,792 / **1,862** / 1,819 |
+| -9 | 716 / **1,076** / 994 / 784 / 704 |
+
+**Reading, within §1, §4 and §5's scope:**
+- **R is below 1 and its interval excludes 1,** so the level × worker interaction is favourable. On the same content, recompressed at -2 (about 4.35× as many blocks), plain scanner-fed workers keep scaling to 8. At -9 they lose throughput beyond 4 workers.
+- **R is not isolated table capacity.** Block count, Huffman tables and scanner feed all differ between the levels, as §1 states.
+- **G₂, the -9 growth from 4 to 10, is ×3.26.** Its interval excludes the historical ×3.5. No gate is derived from it, and D4's filters stay as they are.
+- **The -2 growth (×1.18) lies inside the historical 1.1–1.44 band.**
+- **The historical model's 3.76 GB/s ÷ G₂ gives 3.18 GB/s [3.08–3.26].** That is a model, not an observation: it assumes a finder-fed kernel and a 1-to-4 factor of 1.
+- **Limits that bind the result:**
+  - **Quota:** "unlimited" means only that no quota was found on the cgroup path visible at preflight. It does not exclude a quota set higher up.
+  - **The -2 proxy** is an optimistic footprint proxy, not a bound.
+  - **The workers here wait on one scanner,** so nothing transfers to finder-fed workers without a separate measurement.
