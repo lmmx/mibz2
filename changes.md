@@ -1,5 +1,10 @@
 # Changes since the last version
 
+- 2026-11-10, through [6760215954](https://github.com/lmmx/mibz2/pull/145#issuecomment-6760215954): #326's valid whole-decoder run and merge established a small-versus-large configuration contrast; the inversion-only load law and all derived decoder prices were withdrawn.
+- 2026-11-10: #335's count was withdrawn after a duplicate-profile parser defect, then restored by independent archive recount; its registered condition 3 remains FAIL-MEASUREMENT. A further team-build port is under construction.
+- 2026-11-10: D084 upheld #334's failed balance measurement; B5 passed, but the executed-kernel screen and native diagnostic remain REVISE after new counterexamples.
+- 2026-11-10: #316's conditional estimand still lacks an established residual premise; #318 remains REVISE. D086 admitted a distinct layout-contract line in principle and found agg.c's classification defect; #324's screen remains failed.
+
 - 2026-11-10, through [6759415547](https://github.com/lmmx/mibz2/pull/145#issuecomment-6759415547): #334 reduced counted team work but failed helper-balance measurement; fresh count, B5 and kernel screen are pending.
 - 2026-11-10: D4's build failed F2 while walk and size passed; tunnel count survived correction but named build was priced out; the compact30 tie was withdrawn and the revised adaptive-table price remains REVISE.
 - 2026-11-10: #324's boxed rescue failed static restoration, and production outlining claim was corrected; next candidate has a geometry gate before registration.
