@@ -155,9 +155,10 @@
     6760245172,
     6761533298,
     6761932309,
-    6762860125
+    6762860125,
+    6763141779
   ],
-  "last_processed_comment_id": 6762860125,
+  "last_processed_comment_id": 6763141779,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1755,7 +1756,7 @@
     },
     {
       "trigger_comment_id": 6763141779,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1763,7 +1764,10 @@
       "report_commit": "e5409a3fffaefa5ff148a09a28ab32d9e1ce14f0",
       "report_path": "state/reports/steps-placement-delta-6763141779/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE before freeze: additive design/exposure/precision accepted; operational sufficiency claim, t-model/drift language, ASLR and explicit count checks still require corrections. No new experiment."
+      "disposition": "REVISE before freeze: additive design/exposure/precision accepted; operational sufficiency claim, t-model/drift language, ASLR and explicit count checks still require corrections. No new experiment.",
+      "review_comment_id": 6763280324,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
