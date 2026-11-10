@@ -88,6 +88,18 @@ driver's binary (`drv`, base 3e1a7ec3), not to `ab`.
 
 ## 2. Touched slots: candidate false store-to-load dependences (D082 point 1)
 
+> **SUPERSEDED (D086, #145 6760052047).** `agg.c`, which produced this section's class
+> counts, recorded only the class of each load's **first** matching store in ring order. A
+> stack store could take a load that also matched a heap store, so the "fixed" hh and ss
+> classes weren't independent of stack placement (D086's witness). The counts below stay as
+> they were recorded. Corrected, independent per-class counts for master, #324's head, this
+> branch's boxed build and the later candidate are in `2026-11-10-run-front-fallback.md`,
+> §"Corrected counts", on `research/run-front-fallback`.
+>
+> **What the correction changes for this entry:** boxing's `mtf_avx2` D←H count (the
+> `counts`→`STEPS` pair) equals #324's head's (4.06× master on random), so the verdict that
+> boxing doesn't restore master's geometry stands under the corrected counter too.
+
 **The method** (`agg.c`, `run.sh`, `all.sh`; raw output in `lackey/`):
 - `valgrind --tool=lackey --trace-mem=yes` traces every data access of `ab child mibz2 1`.
   Lackey replaces no allocator, so glibc's heap layout within pages is the process's own.
