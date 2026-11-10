@@ -156,9 +156,10 @@
     6761533298,
     6761932309,
     6762860125,
-    6763141779
+    6763141779,
+    6763334719
   ],
-  "last_processed_comment_id": 6763141779,
+  "last_processed_comment_id": 6763334719,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1771,7 +1772,7 @@
     },
     {
       "trigger_comment_id": 6763334719,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1779,7 +1780,10 @@
       "report_commit": "6ffdd56df68b4ef5aee3d8ae369474c0171f4b57",
       "report_path": "state/reports/t1-checker-delta-6763334719/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED T1 checker delta: both artifact pins and typed exits repaired; 40 tests and 33 independent replay cases pass; execution evidence and adoption gates remain separate."
+      "disposition": "PROCEED T1 checker delta: both artifact pins and typed exits repaired; 40 tests and 33 independent replay cases pass; execution evidence and adoption gates remain separate.",
+      "review_comment_id": 6763437520,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
