@@ -2,8 +2,9 @@
 
 **Status: an exact prototype, a bound, and a registered diagnostic, revised after the
 Researcher's REVISE (#145 comment 6755860961; §8), its re-review (#145 comment 6756608043; §9)
-and the Guardian's D079 with the Researcher's final review (§10), and re-frozen. No
-workstation data yet.**
+and the Guardian's D079 with the Researcher's final review (§10), and re-frozen. Run on the
+i9 at `efc1bd88`: VALID; `wikidata` NOT FASTER, `wikidata-l1` FASTER, `records` FASTER
+(`2026-11-10-par-scan-result.md`).**
 - **The design.** One thread finds every bit where a block or end-of-stream magic occurs. Each
   worker reads and decodes the block at a candidate itself, Huffman included. The caller's thread
   walks the chain exactly as `stream::Scanner` does, and uses a worker's result only for the
@@ -572,10 +573,15 @@ review (#145 comment 6757069602) made the supervisor's repair precise.
 - **The defect (D079, reproduced here):** after a failed `stop_group`, `bench/bounded.py`
   called an unbounded `child.wait()` before it could return 125. The signal path discarded the
   cleanup's result and returned 143.
-- **The repair:** the cleanup's result is checked before any wait on the command. A failed
-  cleanup names the survivors and returns 125 at once. The command's reaping is bounded (REAP,
-  10 s) and returns 125 if it times out. Both apply on the deadline path, after a normal exit,
-  and after a signal.
+- **The repair:** the cleanup's result is checked before any wait on the command. After the
+  KILL, cleanup is two phases of at most REAP (10 s) each, so about 20 s in all, not a single
+  10 s bound:
+  - the group must empty within the first phase. If it doesn't, the survivors are named and it
+    returns 125 at once, without the second phase;
+  - the command must be reaped within the second phase, or it returns 125.
+
+  Both apply on the deadline path, after a normal exit, and after a signal. (Corrected after
+  the run: this entry first said "bounded (REAP, 10 s)", as if one phase.)
 - **The promise is narrower:** a bounded attempt at cleanup and a bounded refusal. A process
   blocked in the kernel may outlive any user-space supervisor, and the caller must not carry on
   after 125.
