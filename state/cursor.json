@@ -1388,8 +1388,9 @@
       "sha": "20cfd070010e44264d8482fb1d9ac5e6b366a8e6",
       "evidence_digest": "draft:abe13445e605213993eba288ba085ef3fd2c578d;counter:fa50736678ce0f81f3f21a29201df48923ea48c4",
       "commit": "efa9878748e58df49446d9841ad36e095679a5f7",
-      "status": "complete",
-      "disposition": "Allocation rule accepted; REVISE counter units/completeness and execution definitions before freeze. D082/D086 preserved."
+      "status": "finished",
+      "disposition": "Allocation rule accepted; REVISE counter units/completeness and execution definitions before freeze. D082/D086 preserved.",
+      "comment": 6763626030
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1479,7 +1480,8 @@
     6760796025,
     6761524241,
     6763239132,
-    6763469482
+    6763469482,
+    6763626030
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1692,7 +1694,8 @@
     "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
     "a89216bd904a0c4fcfb290ddc580891c28aaa7b3",
     "6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2",
-    "efa9878748e58df49446d9841ad36e095679a5f7"
+    "efa9878748e58df49446d9841ad36e095679a5f7",
+    "7540760ff73bd1f505fa284a880c42da3526221d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1865,9 +1868,10 @@
   },
   "current_execution": {
     "active_comment": 6763511665,
-    "status": "complete",
+    "status": "finished",
     "decision": "D092",
-    "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7"
+    "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7",
+    "review_comment_id": 6763626030
   },
   "duplicate_events": [
     {
@@ -2577,7 +2581,8 @@
       "sha": "20cfd070010e44264d8482fb1d9ac5e6b366a8e6",
       "evidence_digest": "draft:abe13445e605213993eba288ba085ef3fd2c578d;counter:fa50736678ce0f81f3f21a29201df48923ea48c4",
       "decision": "D092",
-      "commit": "efa9878748e58df49446d9841ad36e095679a5f7"
+      "commit": "efa9878748e58df49446d9841ad36e095679a5f7",
+      "comment": 6763626030
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3280,11 +3285,13 @@
     {
       "comment_id": 6763511665,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D092",
-      "progress": "D092 committed: allocation concurred; counter and timeout defects reproduced; awaiting REVIEW.",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier fails only coordinator-specific FROM requirement; independent Guardian header/routing checks pass.",
       "receipt_commit": "6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2",
-      "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7"
+      "work_commit": "efa9878748e58df49446d9841ad36e095679a5f7",
+      "review_comment_id": 6763626030,
+      "complete_cursor_commit": "7540760ff73bd1f505fa284a880c42da3526221d"
     }
   ],
   "migrated_from": {
