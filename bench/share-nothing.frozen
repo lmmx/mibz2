@@ -1,0 +1,5 @@
+# Share-nothing pricing (docs/journal/2026-11-10-share-nothing-pricing.md): diagnostic only, no
+# merge gate. The commit the registration, the judge and the recipe are frozen at: `just
+# bench-share-nothing`'s measured inputs must match it exactly. Frozen by the coordinator in this
+# commit of its own, after the Researcher's PROCEED (#145 comment 6759461255) at exactly this head.
+frozen 482df588e2a97b99c6797c7bc2a24098015968dd

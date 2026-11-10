@@ -6,20 +6,26 @@
 # each one runner: a corpus a shard, `wikidata` split by thread count. Each shard builds the head
 # and the base, reads its runner back (lscpu, `ab env --facts`, the service core's predicate and
 # dispatch through examples/svc_target.rs: it must be NOT TARGET), and runs its cells paired and
-# interleaved (`ab run`, the two arms alternating, --spread, settle 0.25 s) for ROUNDS rounds.
+# interleaved (`ab run`, the two arms in ab's four-round cycle head/base/base/head, --spread,
+# settle 0.25 s) for ROUNDS rounds: R = 240 for a qualification dispatch, 60 whole cycles (the
+# registration's §2.11: the replicated programme, 12 distinct sequential dispatches; each
+# dispatch's `aggregate` admits it and writes its dispatch-level estimates, and condition 2 is
+# judged offline from all 12 by `bench/service_tg.py replicated`).
 # Every cell is estimated from its own shard's runner alone: nothing is pooled across runners.
 # `aggregate` gathers every shard's artifact, of every attempt, into one manifest with each
 # file's SHA-256 and judges it with `bench/service_tg.py ni`.
 #
 # The dispatched ref is the frozen candidate's freeze commit (the head), not master: the shards
-# build its `ab` (bench 3.5.0's, with `env --facts` and each child's termination) and its
-# `examples/svc_target.rs`, which only the candidate carries. This file is on the default branch
+# build its `ab` (bench 3.7.0's, with `env --facts` and each child's termination; numbered 3.5.0
+# on the branch before master's 3.5.0 and 3.6.0 were merged) and its `examples/svc_target.rs`,
+# which only the candidate carries. This file is on the default branch
 # so that it can be dispatched (GitHub requires that); the run executes the head's own copy,
 # which must be identical (the plan job checks GITHUB_SHA is the head). Every external action is
 # pinned to a full commit SHA (the Guardian's D078); cargo builds are --locked.
 #
-# `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze),
-# `pilot` (the registration's §2.8 design pilot: all nine shards, R = 600, never evidence) or
+# `label` says what a dispatch is: `qualification` (one of the programme's 12 dispatches, after the
+# freeze, at the frozen spacing; never replaced),
+# `pilot` (the registration's §2.8 design pilot, run once: all nine shards, R = 600, never evidence) or
 # `smoke` (a plumbing check, never evidence). The judge refuses both of the latter. Nothing here retries a
 # shard: a shard that fails, times out or is cancelled after its measurement started is part
 # of the attempt as it is (the registration's §2.5).
@@ -35,9 +41,9 @@ on:
         description: "The base commit (40 hex): the frozen master"
         required: true
       rounds:
-        description: "Rounds a shard (the registration's R)"
+        description: "Rounds a shard (the registration's R: 240 for a qualification dispatch)"
         required: true
-        default: "600"
+        default: "240"
       toolchain:
         description: "The Rust toolchain, exactly (the registration's, e.g. 1.99.1)"
         required: true
@@ -77,13 +83,19 @@ jobs:
         run: |
           [[ $HEAD_SHA =~ ^[0-9a-f]{40}$ && $BASE_SHA =~ ^[0-9a-f]{40}$ ]] || { echo "::error::head and base must be 40-hex SHAs"; exit 1; }
           [[ $ROUNDS =~ ^[1-9][0-9]*$ ]] || { echo "::error::rounds must be a positive integer"; exit 1; }
+          # (the registered R, §2.11: the judge refuses any other; refused here before any runner starts)
+          if [ "$LABEL" = qualification ] && [ "$ROUNDS" != 240 ]; then
+            echo "::error::a qualification dispatch is R = 240 rounds (registration §2.11), not $ROUNDS"; exit 1
+          fi
           # (the workflow file run is the head's own: the dispatched ref must be the head)
           [ "$GITHUB_SHA" = "$HEAD_SHA" ] || { echo "::error::dispatched at $GITHUB_SHA, not the head $HEAD_SHA"; exit 1; }
           pick=$(python3 - <<'EOF'
           import json, os, sys
           ids = ["onebyte", "pattern", "random", "records", "runs", "text"]
-          all = [{"id": c, "corpus": c, "threads": "1,2,4"} for c in ids]
-          all += [{"id": f"wikidata-{t}", "corpus": "wikidata", "threads": t} for t in ("1", "2", "4")]
+          # (each shard's job ceiling in minutes, frozen with the design, §2.9: records 300, the rest 240)
+          ceiling = {"records": 300}
+          all = [{"id": c, "corpus": c, "threads": "1,2,4", "timeout": ceiling.get(c, 240)} for c in ids]
+          all += [{"id": f"wikidata-{t}", "corpus": "wikidata", "threads": t, "timeout": 240} for t in ("1", "2", "4")]
           want = os.environ["SHARDS"]
           if want == "all":
               print(json.dumps(all))
@@ -103,9 +115,13 @@ jobs:
   shard:
     needs: plan
     runs-on: ubuntu-latest
-    # (the registration's §2.2: the slowest shard, `records`, is about 38.9 minutes of rounds at
-    # the slowest CI pace seen plus 15 of setup, about 54; 90 is a per-job ceiling, not a cost)
-    timeout-minutes: 90
+    # (the registration's §§2.9, 2.11, frozen prospectively: `records` 300 minutes, every other
+    # shard 240. At R = 240, `records` is about 13.2 minutes of rounds at the pilot's pace plus 15
+    # of setup, a pace margin of (300 - 15) / 13.25 = 21.5x; `text` (240 - 15) / 11.99 = 18.8x. A
+    # ceiling is not a cost. A shard that reaches it is a data-bearing failure: the dispatch is
+    # INVALID, and so the programme; no retry, no replacement, no extension, and the partition is
+    # never changed afterwards)
+    timeout-minutes: ${{ matrix.shard.timeout }}
     strategy:
       fail-fast: false
       matrix:
@@ -146,8 +162,8 @@ jobs:
       - name: The head carries the tooling the shards run
         run: |
           test -f examples/svc_target.rs || { echo "::error::the head has no examples/svc_target.rs: dispatch the frozen candidate's ref"; exit 1; }
-          grep -q -- '--facts' examples/ab.rs || { echo "::error::the head's ab has no env --facts (bench 3.5.0)"; exit 1; }
-          grep -q '"termination"' examples/ab.rs || { echo "::error::the head's ab records no child termination (bench 3.5.0)"; exit 1; }
+          grep -q -- '--facts' examples/ab.rs || { echo "::error::the head's ab has no env --facts (bench 3.7.0)"; exit 1; }
+          grep -q '"termination"' examples/ab.rs || { echo "::error::the head's ab records no child termination (bench 3.7.0)"; exit 1; }
 
       - name: lbzip2 (examples/windows.rs's check of the Wikidata blocks)
         if: matrix.shard.corpus == 'wikidata'
@@ -262,7 +278,7 @@ jobs:
             --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
           cat manifest.json
 
-      # The judge, its exit kept for the gate (0 pass, 1 NOT SHOWN, 2 INVALID), never masked
+      # The dispatch judge, its exit kept for the gate (0 admitted, 2 INVALID), never masked
       - name: The judge (bench/service_tg.py ni, at the head's own frozen file)
         id: judge
         run: |
@@ -298,9 +314,11 @@ jobs:
             ni.md
           if-no-files-found: warn
 
-      # Last, after the evidence is uploaded: the job's status is the verdict's. qualification
-      # fails unless condition 2 passes (NOT SHOWN or INVALID fail the job); smoke passes only
-      # as the judge's deliberate refusal, and says "smoke: not evidence" (bench/tg_ni_gate.py)
+      # Last, after the evidence is uploaded: the job's status is the dispatch's admission. A
+      # qualification dispatch passes only if admitted, and says it is one of 12, not a verdict
+      # (INVALID fails the job, and the programme); smoke passes only as the judge's deliberate
+      # refusal, and says "smoke: not evidence" (bench/tg_ni_gate.py). Condition 2's verdict is
+      # `service_tg.py replicated` over all 12, gated with --label replicated
       - name: The verdict gate
         if: always()
         run: |

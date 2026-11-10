@@ -25,7 +25,7 @@ name = "mibz2"
 readme = "README.md"
 repository = "https://github.com/lmmx/mibz2"
 rust-version = "1.80"
-version = "0.2.7"
+version = "0.2.8"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -45,6 +45,10 @@ trace = []
 # The cooperative waits' counts (coop::wait_stats), for examples/wait_audit.rs: off by
 # default, and without it the waits are exactly as before
 wait-stats = []
+# The walks' per-call records (coop::walk_stats): for the team screen's probes and the native
+# engagement diagnostic (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md); off
+# by default, and without it every count compiles away
+walk-stats = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source

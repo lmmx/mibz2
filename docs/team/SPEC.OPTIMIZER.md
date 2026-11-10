@@ -28,4 +28,7 @@ beside this file, at the same commit. This file says what your work is.
   implementation.
 - **Keep your own whole-decoder search.** At a pivot, say whether the current direction is
   economically inferior to another one.
-- **Proposals are proposals only.** Never implement, time anything, merge, or widen authority.
+- **A second implementer** (RULES O, 2026-11-10). Take profile-led changes from the ranked
+  performance backlog (the Pathfinder's) and build them as your own PRs, `src/` included. You own
+  each to merge: tests, the CI bench, B5 where it applies. The Coordinator decides the merge.
+- **Never merge, certify your own work as reviewed, or widen authority.**

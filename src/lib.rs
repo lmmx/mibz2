@@ -87,6 +87,7 @@ pub mod mtf;
 pub mod parallel;
 mod read;
 pub mod rle;
+pub mod runs;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;
@@ -102,6 +103,11 @@ mod python;
 // examples/wait_audit.rs)
 #[doc(hidden)]
 pub use coop::wait_stats;
+// (research: the walks' per-call records, kept only with the `walk-stats` feature, for
+// the team screen's probes and the native engagement diagnostic)
+#[cfg(feature = "walk-stats")]
+#[doc(hidden)]
+pub use coop::walk_stats;
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 
@@ -280,6 +286,9 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// the inverse BWT's output, for a kernel that doesn't invert in place (never allocated
     /// otherwise)
     rle: Vec<u8>,
+    /// a block's run records and their F order, for a kernel that reads runs
+    /// (`InverseBwt::reads_runs`) on a block of few symbols (`runs::takes_runs`)
+    runs: runs::Runs,
 }
 
 impl<I: bwt::InverseBwt> Scratch<I> {
@@ -299,6 +308,7 @@ impl<I: bwt::InverseBwt> Scratch<I> {
         if self.checkpoints.capacity() > 0 {
             v.push(trace::Buffer::of("checkpoints", &self.checkpoints));
         }
+        v.extend(self.runs.buffers().into_iter().filter(|b| b.cap > 0));
         v.extend(self.inverse.buffers());
         v
     }
@@ -312,6 +322,7 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             checkpoints: Vec::new(),
             inverse: I::default(),
             rle: Vec::new(),
+            runs: runs::Runs::default(),
         }
     }
 }
@@ -325,6 +336,30 @@ pub fn decode_block<I: bwt::InverseBwt>(
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
     let cooperative = s.inverse.wants_checkpoints();
+    // a block of few symbols, for a kernel that can: its table from its run records, with no
+    // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
+    if !cooperative && s.inverse.reads_runs() && runs::takes_runs(b) {
+        let n = runs::front(b, &mut s.runs, k)?;
+        if b.orig_ptr as usize >= n {
+            return Err(ErrorKind::BadOrigPtr);
+        }
+        #[cfg(feature = "trace")]
+        trace::mark_sized(
+            trace::Kind::InvertStart,
+            trace::NONE,
+            n as u64,
+            trace::UNREAD,
+        );
+        let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+        #[cfg(feature = "trace")]
+        trace::mark(trace::Kind::InvertEnd, trace::NONE);
+        if done {
+            return finish(&s.ll, b.crc, k, out);
+        }
+        // a broken tiling is a bug in `runs::front` (a debug build stops here): the column's
+        // path below still gives the right bytes
+        debug_assert!(false, "the run records don't tile the block");
+    }
     let n = if cooperative {
         mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
     } else {
@@ -352,18 +387,21 @@ pub fn decode_block<I: bwt::InverseBwt>(
     #[cfg(feature = "trace")]
     trace::mark(trace::Kind::InvertEnd, trace::NONE);
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+    finish(inverted, b.crc, k, out)
+}
+
+/// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
+/// last steps): the CRC, or the error with `out` as it was
+fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result<u32, ErrorKind> {
     let start = out.len();
     if let Err(kind) = rle::unrle(inverted, out, k) {
         out.truncate(start);
         return Err(kind);
     }
     let computed = crc::crc32(&out[start..], k);
-    if computed != b.crc {
+    if computed != stored {
         out.truncate(start);
-        return Err(ErrorKind::BlockCrc {
-            stored: b.crc,
-            computed,
-        });
+        return Err(ErrorKind::BlockCrc { stored, computed });
     }
     Ok(computed)
 }

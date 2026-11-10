@@ -1,0 +1,95 @@
+# cargo test --lib -- service_unwind_tests
+# src/parallel.rs sha256 336a322786b139637ee382afd563597b7d32e59d661555ea7632ebc3d82d4d1c
+# exit 101
+
+running 7 tests
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop has been running for over 60 seconds
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... FAILED
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+test parallel::service_unwind_tests::miri_outer_after_job has been running for over 60 seconds
+test parallel::service_unwind_tests::miri_outer_after_job ... FAILED
+test parallel::service_unwind_tests::miri_outer_after_publish has been running for over 60 seconds
+test parallel::service_unwind_tests::miri_outer_after_publish ... FAILED
+test parallel::service_unwind_tests::miri_outer_parked has been running for over 60 seconds
+test parallel::service_unwind_tests::miri_outer_parked ... FAILED
+
+failures:
+
+---- parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks stdout ----
+
+thread 'mibz2-svc-0' (24870) panicked at src/parallel.rs:1486:5:
+an injected outer panic at SvcIdle, block None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks' (24867) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: SvcIdle, place: None, parked: 0 } at (1, 3, 1, 4): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure stdout ----
+
+thread 'mibz2-svc-0' (24876) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterJob, block Some(3)
+
+thread 'parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure' (24865) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterJob, place: Some(3), parked: 2 } at (2, 3, 1, 8): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks stdout ----
+
+thread 'mibz2-svc-0' (24887) panicked at src/parallel.rs:1486:5:
+an injected outer panic at SvcIdle, block None
+
+thread 'parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks' (24866) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: SvcIdle, place: None, parked: 0 } at (1, 3, 1, 4): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop stdout ----
+
+thread 'mibz2-svc-0' (24893) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPrepared, block Some(0)
+
+thread 'parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop' (24864) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterPrepared, place: Some(0), parked: 0 } at (1, 3, 1, 1): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::miri_outer_after_job stdout ----
+
+thread 'mibz2-svc-0' (24923) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterJob, block Some(1)
+
+thread 'parallel::service_unwind_tests::miri_outer_after_job' (24920) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterJob, place: Some(1), parked: 0 } at (1, 2, 1, 2): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::miri_outer_after_publish stdout ----
+
+thread 'mibz2-svc-0' (24930) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPublish, block Some(1)
+
+thread 'parallel::service_unwind_tests::miri_outer_after_publish' (24927) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterPublish, place: Some(1), parked: 0 } at (1, 2, 1, 2): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::miri_outer_parked stdout ----
+
+thread 'mibz2-svc-0' (24937) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterJob, block Some(3)
+
+thread 'parallel::service_unwind_tests::miri_outer_parked' (24934) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterJob, place: Some(3), parked: 2 } at (2, 2, 1, 8): hung (the read, the writer or the join)
+
+
+failures:
+    parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop
+    parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure
+    parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks
+    parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks
+    parallel::service_unwind_tests::miri_outer_after_job
+    parallel::service_unwind_tests::miri_outer_after_publish
+    parallel::service_unwind_tests::miri_outer_parked
+
+test result: FAILED. 0 passed; 7 failed; 0 ignored; 0 measured; 67 filtered out; finished in 120.09s
+
+   Compiling mibz2 v0.2.6 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-svc-guarded)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.26s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-ef0dd7d62c41c063)
+error: test failed, to rerun pass `--lib`

@@ -28,6 +28,12 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # the guarded service A/B's judge, with its producer driven for real: `ab run` with
+      # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
+      - name: The guarded service A/B's producer and judge (stand-in children, untimed)
+        run: |
+          cargo build --example ab
+          SG_AB=target/debug/examples/ab SG_REQUIRE_AB=1 python3 bench/test_service_guarded.py
       # the scanner diagnostic's harness (examples/par_scan.rs): a panic at each role of each
       # arm ends the decode, and the finder against the bit-by-bit reference
       - name: The scan harness's fault and finder tests
@@ -54,6 +60,8 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      - name: Service candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/service service
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7
@@ -73,6 +81,10 @@ jobs:
       # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
       - name: The scan diagnostic's reporter, inputs and supervisor
         run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py bench/test_par_scan_finish.py
+      # bench-share-nothing's judge, schedule, preflight and drive (it uses bench/bounded.py and
+      # bench/par_scan_finish.sh, tested above; docs/journal/2026-11-10-share-nothing-pricing.md)
+      - name: The share-nothing diagnostic's judge, schedule, preflight and drive
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && pipx run pytest -p no:cacheprovider bench/test_share_nothing.py
       - name: Install just
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:
@@ -85,6 +97,14 @@ jobs:
           python3 bench/test_service_tg.py
           python3 bench/test_tg_ni_gate.py
           python3 bench/test_tg_ni_pilot.py
+      - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
+        run: python3 bench/test_svc_target.py
+      - name: The guarded service A/B's judge and admission (its witnesses)
+        run: python3 bench/test_service_guarded.py
+      - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_guarded_recipe.py
+      - name: The target-gated registration's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_tg_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest
