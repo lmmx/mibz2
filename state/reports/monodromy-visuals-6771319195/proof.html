@@ -1,0 +1,827 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MONODROMY figure proofs</title><style>
+body {margin:0;background:#fff;color:#252921;font:16px/1.5 system-ui,sans-serif;--md-default-fg-color:#252921;--md-default-fg-color--light:#586052}
+body[data-md-color-scheme="slate"] {background:#191b18;color:#eceee7;--md-default-fg-color:#eceee7;--md-default-fg-color--light:#b5bdaf}
+main {max-width:750px;margin:auto;padding:12px}.bf-fig{margin:24px 0;padding:12px}.bf-fig svg{display:block;width:100%;height:auto}.bf-fig .bf-title{font-size:23px!important;line-height:1.25}.bf-fig figcaption{font-size:16px;line-height:1.55}
+</style><style>/* The blog's figures (blog/*.md): a framed figure holding a title, an inline SVG and a
+   caption. Colours are roles, light by default and stepped for the dark scheme (slate). */
+.bf-fig {
+  --bf-ink: var(--md-default-fg-color);
+  --bf-muted: var(--md-default-fg-color--light);
+  --bf-frame: #e1e0d9;
+  --bf-surface: #f4f3ef;
+  --bf-track: #e9e8e3;
+  --bf-green: #1f9a72;
+  --bf-green-ink: #12805a;
+  --bf-green-tint: #dcefe7;
+  --bf-steel: #4687a8;
+  --bf-steel-tint: #d6e5ec;
+  --bf-blue: #4a8fe8;
+  --bf-blue-tint: #dce9fa;
+  --bf-amber: #b26b00;
+  --bf-amber-tint: #f8ead0;
+  --bf-claude: #d97757;
+  --bf-claude-tint: #f8e8e0;
+  --bf-openai: #10a37f;
+  --bf-openai-tint: #e2f3ec;
+  --bf-xh: #b26b00;
+  --bf-xh-tint: #f8ead0;
+  --bf-ultra: #7b4fd6;
+  --bf-ultra-tint: #ece4fb;
+}
+[data-md-color-scheme="slate"] .bf-fig {
+  --bf-frame: #34342f;
+  --bf-surface: #23231f;
+  --bf-track: #34342f;
+  --bf-green: #22a87c;
+  --bf-green-ink: #4fd1a1;
+  --bf-green-tint: #1b3a2f;
+  --bf-steel: #5199bd;
+  --bf-steel-tint: #1f3440;
+  --bf-blue: #3d86e0;
+  --bf-blue-tint: #1d2f47;
+  --bf-amber: #f2b544;
+  --bf-amber-tint: #3b3020;
+  --bf-claude: #e08a6d;
+  --bf-claude-tint: #3a2821;
+  --bf-openai: #19c37d;
+  --bf-openai-tint: #16302a;
+  --bf-xh: #f2b544;
+  --bf-xh-tint: #3b3020;
+  --bf-ultra: #b195f2;
+  --bf-ultra-tint: #2d2543;
+}
+
+.md-typeset .bf-fig {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 1.4rem 0;
+  padding: 0.8rem 0.9rem 0.7rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.6rem;
+  text-align: left;
+}
+.md-typeset .bf-fig .bf-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.md-typeset .bf-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--md-text-font-family);
+}
+.md-typeset .bf-fig figcaption {
+  max-width: none;
+  margin: 0.7rem 0 0;
+  color: var(--bf-muted);
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+/* text */
+.bf-fig .bf-t { fill: var(--bf-ink); font-size: 13px; }
+.bf-fig .bf-t-strong { fill: var(--bf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-t-green { fill: var(--bf-green-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-ts { fill: var(--bf-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-tm { fill: var(--bf-muted); font-size: 11.5px; }
+.bf-fig .bf-tl { fill: var(--bf-muted); font-size: 15px; }
+.bf-fig .bf-ttiny { fill: var(--bf-ink); font-size: 10px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-num { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big-green { fill: var(--bf-green-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* shapes */
+.bf-fig .bf-card,
+.bf-fig .bf-cell,
+.bf-fig .bf-panel,
+.bf-fig .bf-pill { fill: var(--bf-surface); }
+.bf-fig .bf-pill { stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-card-hi,
+.bf-fig .bf-pill-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-cell-hi { fill: var(--bf-green-tint); }
+.bf-fig .bf-box { fill: none; stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-slot { fill: var(--bf-steel-tint); }
+.bf-fig .bf-track { fill: var(--bf-track); }
+.bf-fig .bf-green { fill: var(--bf-green); }
+.bf-fig .bf-steel { fill: var(--bf-steel); }
+.bf-fig .bf-bar { fill: var(--bf-blue); }
+.bf-fig .bf-bar-est { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-dot { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-dot-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.5; }
+
+/* lines */
+.bf-fig .bf-rule,
+.bf-fig .bf-axis { stroke: var(--bf-frame); stroke-width: 1; fill: none; }
+.bf-fig .bf-grid { stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.bf-fig .bf-arrow,
+.bf-fig .bf-link,
+.bf-fig .bf-icon { stroke: var(--bf-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bf-fig .bf-icon-green { stroke: var(--bf-green); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* status pills (the roadmap) */
+.bf-fig .bf-pill-done,
+.bf-fig .bf-pill-later { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-pill-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1; }
+.bf-fig .bf-pill-next { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1; }
+.bf-fig .bf-dot-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.5; }
+.bf-fig .bf-pill-done-t,
+.bf-fig .bf-pill-later-t { fill: var(--bf-muted); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-ready-t { fill: var(--bf-amber); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-next-t { fill: var(--bf-blue); font-size: 11px; font-weight: 600; }
+
+/* the interactive pointer chain (blog.js): cards, then the walk */
+.bf-chain [hidden] { display: none !important; }
+.md-typeset .bf-chain .bf-cards {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .bf-chain .bf-cards li { margin: 0; padding: 0; }
+.md-typeset .bf-chain .bf-cardx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.2rem 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 0.45rem;
+  background: var(--bf-surface);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.bf-chain .bf-cl { color: var(--bf-muted); font-size: 0.55rem; }
+.bf-chain .bf-cv { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.bf-chain .bf-ca { color: var(--bf-muted); font-size: 0.6rem; line-height: 1; }
+.md-typeset .bf-chain .bf-cardx.is-current { background: var(--bf-green-tint); border-color: var(--bf-green); }
+.bf-chain .is-visited .bf-ca { color: var(--bf-green); }
+.bf-chain .bf-walk {
+  margin-top: 0.7rem;
+  padding: 0.75rem 0.85rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--bf-surface);
+}
+.bf-chain .bf-walk-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+.bf-chain .bf-count { color: var(--bf-muted); font-size: 0.62rem; }
+.md-typeset .bf-fig:has(.bf-anim-controls) { position: relative; }
+.md-typeset .bf-fig:has(.bf-anim-controls) .bf-title { padding-right: 4.5rem; }
+.bf-anim-controls { position: absolute; top: 0.55rem; right: 0.7rem; display: flex; gap: 0.3rem; }
+.bf-anim-controls[hidden] { display: none; }
+.md-typeset .bf-fig .bf-anim-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-muted);
+  cursor: pointer;
+}
+.md-typeset .bf-fig .bf-anim-btn:hover,
+.md-typeset .bf-fig .bf-anim-btn:focus-visible { color: var(--bf-ink); border-color: var(--bf-muted); }
+.md-typeset .bf-fig .bf-anim-btn svg { display: block; width: 0.75rem; height: 0.75rem; fill: currentColor; }
+.md-typeset .bf-fig .bf-anim-btn[data-state="playing"] .i-play,
+.md-typeset .bf-fig .bf-anim-btn[data-state="paused"] .i-pause { display: none; }
+.bf-chain .bf-buttons, .bf-bitbuf .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.bf-chain .bf-btn, .bf-bitbuf .bf-btn {
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.bf-chain .bf-btn:hover, .bf-bitbuf .bf-btn:hover { background: var(--bf-track); }
+.bf-chain .bf-follow, .bf-bitbuf .bf-read {
+  flex: 1;
+  border-color: var(--bf-ink);
+  background: var(--bf-ink);
+  color: var(--md-default-bg-color);
+}
+.bf-bitbuf .bf-read:hover, .bf-chain .bf-follow:hover { opacity: 0.88; background: var(--bf-ink); }
+.bf-bitbuf .bf-read:disabled, .bf-chain .bf-follow:disabled {
+  border-color: var(--bf-track);
+  background: var(--bf-track);
+  color: var(--bf-muted);
+  opacity: 1;
+  cursor: default;
+}
+.bf-bitbuf .bf-btn:focus-visible, .bf-chain .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.md-typeset .bf-chain .bf-path { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.62rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-chain .bf-cardx, .bf-chain .bf-btn { transition: none; }
+}
+
+/* A post's header: the kicker, the title, the summary and the date, beside the home page's
+   illustration, on a panel with the accent bar the social cards have. */
+.md-typeset .post-hero {
+  --post-hero-bg: #f6f4ee;
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0 0 2rem;
+  padding: 1.5rem 1.2rem 1.3rem 1.6rem;
+  border-bottom: 5px solid var(--md-primary-fg-color);
+  border-radius: 0.8rem;
+  background: var(--post-hero-bg);
+  overflow: hidden;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-hero {
+  --post-hero-bg: #22221f;
+}
+.md-typeset .post-hero-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.md-typeset .post-hero .post-kicker {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.md-typeset .post-hero .post-kicker a {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+}
+.md-typeset .post-hero .post-kicker a:hover {
+  text-decoration: underline;
+}
+.md-typeset .post-hero h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-hero h1 .headerlink {
+  display: none;
+}
+.md-typeset .post-hero .post-dek {
+  max-width: 32rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-hero .post-meta {
+  margin: 1.1rem 0 0;
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-meta a,
+.post-card-date {
+  --pill: #b26b00;
+  --pill-bg: #f8ead0;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-meta a,
+[data-md-color-scheme="slate"] .post-card-date {
+  --pill: #f2b544;
+  --pill-bg: #3b3020;
+}
+.md-typeset .post-hero .post-meta a {
+  display: inline-block;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--pill);
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-weight: 600;
+  text-decoration: none;
+}
+/* the illustration's own margin is wide: the negative margins take some of it back */
+.md-typeset .post-hero-art {
+  flex: none;
+  width: 11.5rem;
+  margin: -1.2rem -0.6rem -1.2rem -0.8rem;
+}
+.md-typeset .post-hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-hero {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 1.1rem 1rem 1.1rem;
+  }
+  .md-typeset .post-hero-art {
+    width: 7.5rem;
+    margin: -0.3rem 0 -0.9rem -0.9rem;
+  }
+  .md-typeset .post-hero h1 {
+    font-size: 1.45rem;
+  }
+}
+
+/* The blog index: each post as a card, its social card beside its title and summary. */
+.md-typeset .post-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1.4rem 0;
+}
+.md-typeset .post-card {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.md-typeset .post-card * {
+  text-decoration: none;
+}
+.md-typeset .post-card:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+.md-typeset .post-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.md-typeset .post-card-date {
+  align-self: flex-start;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.md-typeset .post-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.md-typeset .post-card-dek {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.bf-fig .bf-pill-pass { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-pill-pass-t { fill: var(--bf-green-ink); font-size: 11px; font-weight: 600; }
+
+/* the room-walk post: overlap bands, lane slots, latency bars and lane chips */
+.bf-fig .bf-band { fill: var(--bf-green-tint); fill-opacity: 0.6; stroke: var(--bf-green); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-slot-hi { fill: var(--bf-green); }
+.bf-fig .bf-lat { fill: var(--bf-steel-tint); }
+.bf-fig .bf-lat-hi { fill: var(--bf-steel); }
+.bf-fig .bf-cut { stroke: var(--bf-green); stroke-width: 2; fill: none; }
+.bf-fig .bf-chip-on { fill: var(--bf-green); }
+.bf-fig .bf-chip-off { fill: var(--bf-track); }
+
+/* screenshots (the MLP post): one excerpt at a readable size, the rest as thumbnails that open
+   at full size; never inverted in the dark theme */
+.md-typeset .bf-shots img {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.4rem;
+}
+.md-typeset .bf-shot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.6rem;
+  align-items: start;
+  margin: 0.6rem 0 1rem;
+}
+.md-typeset .bf-shot-row img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
+}
+
+/* A post's roadmap: its numbered sections as links, grouped into parts, centred. */
+.md-typeset .post-roadmap {
+  --rm-line: var(--md-default-fg-color--lightest);
+  --rm-dot: #f4f3ef;
+  --rm-dot-ink: var(--md-default-fg-color);
+  --rm-hi: #1f9a72;
+  --rm-hi-tint: #dcefe7;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.6rem;
+  margin: 1.6rem 0 2rem;
+  font-size: 0.8rem;
+}
+@media (max-width: 44em) {
+  .md-typeset .post-roadmap {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 25rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+[data-md-color-scheme="slate"] .md-typeset .post-roadmap {
+  --rm-dot: #23231f;
+  --rm-hi: #22a87c;
+  --rm-hi-tint: #1b3a2f;
+}
+.md-typeset .post-roadmap-part {
+  margin: 1.1rem 0 0.4rem 0.2rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-roadmap ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.md-typeset .post-roadmap li {
+  position: relative;
+  margin: 0;
+}
+.md-typeset .post-roadmap li + li::before {
+  content: "";
+  position: absolute;
+  left: 1.3rem;
+  top: -0.5rem;
+  height: 1rem;
+  border-left: 1.5px solid var(--rm-line);
+}
+.md-typeset .post-roadmap a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.6rem 0.45rem 0.25rem;
+  border-radius: 0.6rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.md-typeset .post-roadmap .rm-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.md-typeset .post-roadmap .rm-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--rm-line);
+  background: var(--rm-dot);
+  font-weight: 700;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.md-typeset .post-roadmap .rm-ours .rm-n {
+  border-color: var(--rm-hi);
+}
+.md-typeset .post-roadmap .rm-t {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.md-typeset .post-roadmap .rm-d {
+  font-size: 0.88em;
+  line-height: 1.35;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-roadmap a {
+  position: relative;
+  padding-right: 1.8rem;
+}
+.md-typeset .post-roadmap a::after {
+  content: "→";
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--rm-hi);
+  font-weight: 700;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.md-typeset .post-roadmap a:hover,
+.md-typeset .post-roadmap a:focus-visible {
+  background: var(--rm-hi-tint);
+  transform: translateX(0.2rem);
+}
+.md-typeset .post-roadmap a:hover .rm-n,
+.md-typeset .post-roadmap a:focus-visible .rm-n {
+  background: var(--rm-hi);
+  border-color: var(--rm-hi);
+  color: #fff;
+}
+.md-typeset .post-roadmap a:hover .rm-t,
+.md-typeset .post-roadmap a:focus-visible .rm-t {
+  color: var(--rm-hi);
+}
+.md-typeset .post-roadmap a:hover::after,
+.md-typeset .post-roadmap a:focus-visible::after {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .post-roadmap a,
+  .md-typeset .post-roadmap .rm-n,
+  .md-typeset .post-roadmap a::after {
+    transition: none;
+  }
+  .md-typeset .post-roadmap a:hover,
+  .md-typeset .post-roadmap a:focus-visible {
+    transform: none;
+  }
+}
+
+/* A results table whose last column is a summary (a mean): set apart by a rule and a tint. */
+.md-typeset .bf-rates th:last-child,
+.md-typeset .bf-rates td:last-child {
+  border-left: 2px solid var(--md-default-fg-color--lighter);
+  background-color: var(--md-code-bg-color);
+}
+.md-typeset .bf-rates th:last-child {
+  font-style: italic;
+}
+.md-typeset .bf-rates table:not([class]) th,
+.md-typeset .bf-rates table:not([class]) td {
+  min-width: 0;
+  padding: 0.55em 0.7em;
+}
+
+/* Data tables in a post: centred in the column, compact cells. */
+.md-typeset .bf-data,
+.md-typeset .bf-rates {
+  text-align: center;
+}
+.md-typeset .bf-data table:not([class]),
+.md-typeset .bf-rates table:not([class]) {
+  text-align: left;
+}
+.md-typeset .bf-data table:not([class]) th,
+.md-typeset .bf-data table:not([class]) td {
+  padding: 0.55em 0.8em;
+}
+/* In the rates table, the second column is memory, a property of the algorithm, not a result. */
+.md-typeset .bf-rates th:nth-child(2),
+.md-typeset .bf-rates td:nth-child(2) {
+  border-right: 2px solid var(--md-default-fg-color--lighter);
+  color: var(--md-default-fg-color--light);
+}
+
+/* the agent-team post: product marks, the agent families and the Codex lane */
+.bf-fig .bf-logo-ink { fill: var(--bf-ink); }
+.bf-fig .bf-logo-claude { fill: var(--bf-claude); }
+.bf-fig .bf-card-claude { fill: var(--bf-claude-tint); stroke: var(--bf-claude); stroke-width: 1.5; }
+.bf-fig .bf-group { fill: none; stroke: var(--bf-frame); stroke-width: 1.5; }
+.bf-fig .bf-lane { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-group-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-card-astra-in { fill: var(--bf-surface); stroke: var(--bf-openai); stroke-width: 1; }
+.bf-fig .bf-card-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-lane-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-pill-xh { fill: var(--bf-xh-tint); stroke: var(--bf-xh); stroke-width: 1; }
+.bf-fig .bf-pill-xh-t { fill: var(--bf-xh); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-pill-ultra { fill: var(--bf-ultra-tint); stroke: var(--bf-ultra); stroke-width: 1; }
+.bf-fig .bf-pill-ultra-t { fill: var(--bf-ultra); font-size: 10px; font-weight: 600; }
+
+/* the agent-team post: product and effort colours in running text and tables */
+.md-typeset .ag-claude { color: #c15f3c; font-weight: 600; }
+.md-typeset .ag-astra { color: #0b8a68; font-weight: 600; }
+.md-typeset .ag-chip { display: inline-block; padding: 0 0.5em; border-radius: 0.7em; font-size: 0.85em; font-weight: 600; white-space: nowrap; }
+.md-typeset .ag-xh { color: #8a5300; background: #f8ead0; box-shadow: inset 0 0 0 1px #b26b00; }
+.md-typeset .ag-ultra { color: #5b33b8; background: #ece4fb; box-shadow: inset 0 0 0 1px #7b4fd6; }
+.md-typeset .ag-high { color: #2f6f8f; background: #d6e5ec; box-shadow: inset 0 0 0 1px #4687a8; }
+.md-typeset .ag-session { color: #c15f3c; background: #f8e8e0; box-shadow: inset 0 0 0 1px #d97757; }
+[data-md-color-scheme="slate"] .md-typeset .ag-claude { color: #e9967a; }
+[data-md-color-scheme="slate"] .md-typeset .ag-astra { color: #3fd69c; }
+[data-md-color-scheme="slate"] .md-typeset .ag-xh { color: #f2b544; background: #3b3020; box-shadow: inset 0 0 0 1px #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .ag-ultra { color: #c4adf6; background: #2d2543; box-shadow: inset 0 0 0 1px #b195f2; }
+[data-md-color-scheme="slate"] .md-typeset .ag-high { color: #8cc3df; background: #1f3440; box-shadow: inset 0 0 0 1px #5199bd; }
+[data-md-color-scheme="slate"] .md-typeset .ag-session { color: #e9967a; background: #3a2821; box-shadow: inset 0 0 0 1px #e08a6d; }
+
+/* The bit buffer read one code at a time (.bf-bitbuf, blog.js) */
+.md-typeset .bf-bitbuf .bf-bits { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; margin: 0.4rem 0 0.2rem; padding: 0; list-style: none; }
+.md-typeset .bf-bitbuf .bf-bit { margin: 0; padding: 0.45rem 0; border: 1px solid var(--bf-frame); border-radius: 6px; background: var(--bf-surface); color: var(--bf-ink); font-family: var(--md-code-font-family); font-size: 0.8rem; text-align: center; transition: background-color 0.15s, border-color 0.15s; }
+.md-typeset .bf-bitbuf .bf-bit.is-next { background: var(--bf-green-tint); border-color: var(--bf-green); font-weight: 700; }
+.md-typeset .bf-bitbuf .bf-bit.is-empty { color: var(--bf-muted); background: transparent; border-style: dashed; }
+.md-typeset .bf-bitbuf .bf-bits-note { margin: 0; color: var(--bf-muted); font-size: 0.62rem; }
+.md-typeset .bf-bitbuf .bf-buf-state { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.8rem; margin: 0.6rem 0 0; font-size: 0.7rem; }
+.md-typeset .bf-bitbuf .bf-buf-state dt { color: var(--bf-muted); }
+.md-typeset .bf-bitbuf .bf-buf-state dd { margin: 0; color: var(--bf-ink); }
+.md-typeset .bf-bitbuf .bf-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.3rem 0 0.5rem; font-size: 0.7rem; }
+.md-typeset .bf-bitbuf .bf-keys-label { color: var(--bf-muted); margin-right: 0.2rem; }
+.md-typeset .bf-bitbuf .bf-key { padding: 0.15rem 0.5rem; border: 1px solid var(--bf-frame); border-radius: 6px; background: var(--bf-surface); color: var(--bf-ink); transition: background-color 0.15s, border-color 0.15s; }
+.md-typeset .bf-bitbuf .bf-key.is-next { background: var(--bf-green-tint); border-color: var(--bf-green); font-weight: 700; }
+.md-typeset .bf-bitbuf .bf-buf-step { margin: 0.6rem 0 0; padding: 0.55rem 0.7rem; border-left: 3px solid var(--bf-green); background: var(--bf-surface); color: var(--bf-ink); font-size: 0.74rem; line-height: 1.55; }
+.md-typeset .bf-bitbuf .bf-buf-static { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.66rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-bitbuf .bf-bit, .md-typeset .bf-bitbuf .bf-key, .bf-bitbuf .bf-btn { transition: none; }
+}
+
+/* A numbered equation (KaTeX \tag) on a phone: the theme sizes a displayed formula to its
+   content and scrolls it sideways, and KaTeX pins the number to the right edge, so the number
+   would cover the formula's end. Set it after the formula instead, where it scrolls with it. */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
+}
+
+/* Frames (the inverse-BWT post): one art-directed sequence of small static frames, each drawn
+   on the same 230-unit width so every figure has the same scale. Typeset rails of letters, small
+   indices, smooth connectors with small heads; green marks the one run being matched, ink the
+   active interval, everything else is quiet. Three across on a wide screen, stacked on a phone. */
+.bf-fig .bf-ch { fill: var(--bf-ink); font-size: 18px; font-weight: 600; }
+.bf-fig .bf-ch-dim { fill: var(--bf-muted); font-size: 18px; }
+.bf-fig .bf-sub { fill: var(--bf-green-ink); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-ix { fill: var(--bf-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-lab { fill: var(--bf-muted); font-size: 14px; font-style: italic; font-weight: 600; }
+.bf-fig .bf-cap { fill: var(--bf-muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.bf-fig .bf-eq { fill: var(--bf-ink); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-eq-l { fill: var(--bf-ink); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-val { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-state { fill: var(--bf-ink); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-note { fill: var(--bf-ink); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-halo { paint-order: stroke; stroke: var(--md-default-bg-color); stroke-width: 5px; stroke-linejoin: round; }
+.bf-fig .bf-tint { fill: var(--bf-green-tint); }
+.bf-fig .bf-act { fill: none; stroke: var(--bf-green); stroke-width: 2; stroke-linecap: round; }
+.bf-fig .bf-quiet { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; stroke-linecap: round; opacity: 0.5; }
+.bf-fig .bf-quiet-ink { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.bf-fig .bf-head { fill: var(--bf-green); }
+.bf-fig .bf-head-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-head-ink { fill: var(--bf-ink); }
+.bf-fig .bf-pin { fill: var(--bf-green); }
+.bf-fig .bf-pin-q { fill: var(--bf-muted); opacity: 0.5; }
+.bf-fig .bf-ribbon { fill: var(--bf-green); fill-opacity: 0.2; stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-seg { fill: none; stroke: var(--bf-muted); stroke-width: 1.2; opacity: 0.7; }
+.bf-fig .bf-seg-a { fill: none; stroke: var(--bf-green); stroke-width: 1.5; }
+.bf-fig .bf-seg-on { fill: none; stroke: var(--bf-ink); stroke-width: 2.2; }
+.bf-fig .bf-seg-a-on { fill: none; stroke: var(--bf-green); stroke-width: 2.4; }
+.bf-fig .bf-segl { fill: var(--bf-muted); font-size: 12.5px; font-weight: 600; }
+.bf-fig .bf-segl-on { fill: var(--bf-ink); font-size: 13.5px; font-weight: 700; }
+.bf-fig .bf-ring { fill: none; stroke: var(--bf-ink); stroke-width: 1.6; }
+.bf-fig .bf-ring-a { fill: none; stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-tick { fill: none; stroke: var(--bf-ink); stroke-width: 1.5; stroke-linecap: round; }
+.md-typeset .bf-frames { display: grid; gap: 1.4rem 1.6rem; margin: 0.2rem 0 0; }
+.md-typeset .bf-frames-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.md-typeset .bf-frames-pair { grid-template-columns: repeat(2, minmax(0, calc((100% - 3.2rem) / 3))); justify-content: center; }
+.md-typeset .bf-frame { min-width: 0; margin: 0; }
+.md-typeset .bf-frame svg { max-width: 13rem; margin: 0 auto; }
+.md-typeset .bf-frame .bf-step { margin: 0.5rem 0 0; color: var(--bf-ink); font-size: 0.68rem; line-height: 1.5; }
+.md-typeset .bf-frame .bf-step code { font-size: 0.92em; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .bf-frames { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
+}
+
+/* A playful figure in the logo's language (the service-threads post's "A block's path", a race
+   circuit): translucent, interlocking bands in the logo's three hues, numbered rounded-triangle
+   stops, and a block that drives the circuit as a car. With reduced motion the car is not
+   shown; parked cars show the way instead. */
+.bf-fig .bf-play { --bf-play-bg: var(--md-default-bg-color); }
+.bf-fig .bf-play-coral { color: rgb(255, 92, 74); }
+.bf-fig .bf-play-blue { color: rgb(40, 92, 255); }
+.bf-fig .bf-play-green { color: rgb(40, 190, 135); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-coral { color: rgb(255, 112, 96); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-blue { color: rgb(92, 132, 255); }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-green { color: rgb(52, 206, 150); }
+.bf-fig .bf-play-glow path { fill: none; stroke: currentColor; stroke-linecap: round; opacity: 0.3; }
+.bf-fig .bf-play-band path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-opacity: 0.42; }
+.bf-fig .bf-play-shine { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 0.1 14; opacity: 0.75; }
+[data-md-color-scheme="slate"] .bf-fig .bf-play-shine { opacity: 0.4; }
+.bf-fig .bf-play-start { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; opacity: 0.9; }
+.bf-fig .bf-play-checkl { fill: #fff; }
+.bf-fig .bf-play-checkd { fill: #1d1d1b; }
+.bf-fig .bf-play-rim { fill: currentColor; stroke: currentColor; stroke-width: 23; stroke-linejoin: round; }
+.bf-fig .bf-play-badge {
+  fill: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke: color-mix(in srgb, currentColor 22%, var(--bf-play-bg));
+  stroke-width: 16;
+  stroke-linejoin: round;
+}
+.bf-fig .bf-play-num { fill: var(--bf-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-play-tag { fill: color-mix(in srgb, currentColor 20%, var(--bf-play-bg)); stroke: color-mix(in srgb, currentColor 70%, var(--bf-play-bg)); stroke-width: 1.5; }
+.bf-fig .bf-play-tagt { fill: var(--bf-ink); font-weight: 600; letter-spacing: 0.02em; }
+.bf-fig .bf-play-key { fill: color-mix(in srgb, currentColor 30%, transparent); stroke: currentColor; stroke-width: 3.5; stroke-linejoin: round; }
+.bf-fig .bf-play-chip { fill: var(--bf-surface); stroke: var(--bf-ink); stroke-width: 2.5; }
+.bf-fig .bf-play-wheel, .bf-fig .bf-play-wing { fill: var(--bf-ink); }
+.bf-fig .bf-play-stripe { fill: none; stroke: rgb(255, 92, 74); stroke-width: 3; stroke-linecap: round; }
+.bf-fig .bf-play-helmet { fill: rgb(40, 92, 255); stroke: var(--bf-ink); stroke-width: 1.5; }
+.bf-fig .bf-play-token { offset-rotate: auto; animation: bf-play-ride 18.1s linear infinite; }
+.bf-fig .bf-play-still { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bf-fig .bf-play-token { display: none; animation: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@supports not (offset-path: path("M0 0")) {
+  .bf-fig .bf-play-token { display: none; }
+  .bf-fig .bf-play-still { display: inline; }
+}
+@keyframes bf-play-ride {
+  0.0% { offset-distance: 0.00%; }
+  2.0% { offset-distance: 3.15%; }
+  6.4% { offset-distance: 3.15%; }
+  10.4% { offset-distance: 9.40%; }
+  14.9% { offset-distance: 9.40%; }
+  18.6% { offset-distance: 15.19%; }
+  23.0% { offset-distance: 15.19%; }
+  50.4% { offset-distance: 57.90%; }
+  54.8% { offset-distance: 57.90%; }
+  73.7% { offset-distance: 87.33%; }
+  78.1% { offset-distance: 87.33%; }
+  81.8% { offset-distance: 93.12%; }
+  86.2% { offset-distance: 93.12%; }
+  90.2% { offset-distance: 99.37%; }
+  94.6% { offset-distance: 99.37%; }
+  95.0% { offset-distance: 100.00%; }
+  100% { offset-distance: 100%; }
+  0%, 100% { opacity: 0; }
+  2%, 95.9% { opacity: 1; }
+}
+
+
+</style><main><figure class="bf-fig" id="mv79-01-hidden-address">
+<p class="bf-title">The walk is a trail of sealed addresses</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 592" role="img" aria-labelledby="mv79-01-hidden-address-title mv79-01-hidden-address-desc">
+<title id="mv79-01-hidden-address-title">The walk is a trail of sealed addresses</title>
+<desc id="mv79-01-hidden-address-desc">A sealed envelope for row p must arrive and open before the next address q is available. If p misses in cache, this dependency can expose its memory latency. This is not a claim that every lookup misses.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">The next address is inside</text><text x="20" y="68" class="bf-tm" text-anchor="start" style="font-size:24px">You cannot order it yet.</text><text x="28" y="116" class="bf-t-strong" text-anchor="start" style="font-size:24px">1  Request this row</text><rect x="38" y="160" width="150" height="86" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M38 160L113.0 206.44L188 160" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="113" y="229" class="bf-t-strong" text-anchor="middle" style="font-size:25px">row p</text><path d="M224 172H292L270 203L292 234H224L246 203Z" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="327" y="186" class="bf-t" text-anchor="start" style="font-size:24px">if it misses,</text><text x="327" y="220" class="bf-t" text-anchor="start" style="font-size:24px">wait for data</text><path d="M112 265L112 313" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M107.2 304.2L112 313L116.8 304.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="151" y="295" class="bf-tm" text-anchor="start" style="font-size:24px">The answer arrives.</text><rect x="38" y="371" width="150" height="86" rx="3" class="bf-card-hi"/><path d="M38 371L113.0 331L188 371" fill="none" stroke="var(--bf-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="57" y="334" width="112" height="86" rx="2" class="bf-card-hi"/><text x="113" y="364" class="bf-t" text-anchor="middle" style="font-size:23px">byte</text><text x="113" y="400" class="bf-t-strong" text-anchor="middle" style="font-size:23px">next: q</text><path d="M208 405L331 405" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M322.2 409.8L331 405L322.2 400.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="356" y="365" width="150" height="86" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M356 365L431.0 411.44L506 365" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="431" y="434" class="bf-t-strong" text-anchor="middle" style="font-size:25px">row q</text><text x="28" y="502" class="bf-t-strong" text-anchor="start" style="font-size:24px">2  Only now is q known</text><path d="M20 529H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="568" class="bf-t" text-anchor="start" style="font-size:24px">One chain reveals one address at a time.</text>
+</svg>
+<figcaption>The envelope is one row lookup; its contents are the byte and the next row address. The wait lies <em>before</em> that next address is known. The analogy breaks at the postman: cache hits can be quick and other work can overlap a miss; neither every load nor every decoder thread must stall.</figcaption>
+</figure>
+<figure class="bf-fig" id="mv79-02-sliding-tray">
+<p class="bf-title">One instruction moves the whole tray</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 600" role="img" aria-labelledby="mv79-02-sliding-tray-title mv79-02-sliding-tray-desc">
+<title id="mv79-02-sliding-tray-title">One instruction moves the whole tray</title>
+<desc id="mv79-02-sliding-tray-desc">Four equal bytes at rows 10 through 13 map to rows 14 through 17. A tray preserves spacing and order under the common translation +4. The example is illustrative, not a block measurement.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Slide the tray. Keep the spacing.</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">A toy run of four equal bytes</text><path d="M32 123V203H360V123" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="44" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="76" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="76" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">10</text><rect x="122" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="154" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="154" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">11</text><rect x="200" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="232" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="232" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">12</text><rect x="278" y="135" width="64" height="53" rx="3" class="bf-card-hi"/><text x="310" y="171" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="310" y="239" class="bf-tm" text-anchor="middle" style="font-size:23px">13</text><path d="M128 308V388H456V308" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="140" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="172" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="172" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">14</text><rect x="218" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="250" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="250" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">15</text><rect x="296" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="328" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="328" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">16</text><rect x="374" y="320" width="64" height="53" rx="3" class="bf-card-hi"/><text x="406" y="356" class="bf-t-strong" text-anchor="middle" style="font-size:30px">a</text><text x="406" y="424" class="bf-tm" text-anchor="middle" style="font-size:23px">17</text><path d="M118 255L214 292" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M204.1 293.3L214 292L207.5 284.4" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="300" y="271" class="bf-t-strong" text-anchor="start" style="font-size:24px">all rows +4</text><path d="M20 455H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="494" class="bf-t-strong" text-anchor="start" style="font-size:25px">LF(10) = 14      LF(11) = 15</text><text x="20" y="535" class="bf-t" text-anchor="start" style="font-size:24px">One start, one length, one shift.</text><text x="20" y="573" class="bf-t" text-anchor="start" style="font-size:24px">r run intervals describe n row mappings.</text>
+</svg>
+<figcaption>Each compartment is a row in one equal-byte run; the tray is that run’s interval, and sliding it is LF’s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.</figcaption>
+</figure>
+<figure class="bf-fig" id="mv79-03-return-tickets">
+<p class="bf-title">A ticket can remember a longer journey</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 775" role="img" aria-labelledby="mv79-03-return-tickets-title mv79-03-return-tickets-desc">
+<title id="mv79-03-return-tickets-title">A ticket can remember a longer journey</title>
+<desc id="mv79-03-return-tickets-desc">For aab, A has two row tickets labelled a and B has one labelled b. A loses one ticket, while B keeps one ticket now labelled ab. The next equal-length step joins a and ab. A separate generic stack shows that one rule represents every occurrence of a selected digram.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Fewer tickets. A longer itinerary.</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">The two right-end intervals of aab</text><text x="25" y="117" class="bf-t-strong" text-anchor="start" style="font-size:24px">A: two row tickets</text><text x="332" y="117" class="bf-t-strong" text-anchor="start" style="font-size:24px">B: one</text><rect x="30" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M46 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="91.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="140" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M156 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="201.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="346" y="142" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M362 149V207" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="407.0" y="187.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">b</text><path d="M140 135V225" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 6"/><circle cx="121" cy="247" r="8" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><circle cx="145" cy="257" r="8" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M127 242L158 220M146 248L141 221" fill="none" stroke="var(--bf-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="299" class="bf-t" text-anchor="start" style="font-size:24px">2 &gt; 1: remove one row from A.</text><path d="M490 234L490 330" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M485.2 321.2L490 330L494.8 321.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="30" y="342" width="110" height="72" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M46 349V407" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="91.0" y="387.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">a</text><rect x="346" y="342" width="110" height="72" rx="2" class="bf-card-hi"/><path d="M362 349V407" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="407.0" y="387.0" class="bf-t-strong" text-anchor="middle" style="font-size:28px">ab</text><text x="25" y="452" class="bf-tm" text-anchor="start" style="font-size:24px">one row</text><text x="333" y="452" class="bf-tm" text-anchor="start" style="font-size:24px">one row</text><text x="20" y="500" class="bf-t-strong" text-anchor="start" style="font-size:24px">B’s ticket now records both bytes.</text><text x="20" y="537" class="bf-t" text-anchor="start" style="font-size:24px">Equal lengths next: a + ab → aab.</text><path d="M20 562H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="602" class="bf-t" text-anchor="start" style="font-size:24px">A larger batch uses the same one rule:</text><rect x="37" y="633" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M53 640V691" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="110.0" y="674.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><rect x="29" y="641" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M45 648V699" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="102.0" y="682.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><rect x="21" y="649" width="134" height="65" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M37 656V707" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="94.0" y="690.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">AB</text><path d="M177 678L310 678" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M301.2 682.8L310 678L301.2 673.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="337" y="633" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M353 640V691" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="410.0" y="674.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><rect x="329" y="641" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M345 648V699" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="402.0" y="682.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><rect x="321" y="649" width="134" height="65" rx="2" class="bf-card-hi"/><path d="M337 656V707" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="394.0" y="690.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X</text><text x="270" y="748" class="bf-t-strong" text-anchor="middle" style="font-size:28px">X → AB</text>
+</svg>
+<figcaption>The number of tickets is an interval’s remaining row count; the stamp is its return word, in reconstruction order. Shortening the longer interval leaves the shorter one representing a longer journey. The lower stack is a separate, generic batch: all occurrences of the chosen pair occupy one cell and share one rule. Counted steps per byte: Wikidata 0.1309, prose 0.6761, uniform random bytes about 1; short runs leave less to batch. The analogy breaks at the stamp: the implementation records that rule once, not once per ticket; expanding it still has to emit the bytes.</figcaption>
+</figure>
+<figure class="bf-fig" id="mv79-04-filed-receipts">
+<p class="bf-title">Keep finished work still</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 675" role="img" aria-labelledby="mv79-04-filed-receipts-title mv79-04-filed-receipts-desc">
+<title id="mv79-04-filed-receipts-title">Keep finished work still</title>
+<desc id="mv79-04-filed-receipts-desc">The linked-list kernel rehangs a letter card and repairs neighbouring links. The cells kernel files a completed cell in its assigned slots without patching old neighbours; a separate clipboard holds the pending remainder and promised slot. Looking ahead permits prefetch of scattered destinations.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Rehang the cards …</text><text x="20" y="72" class="bf-tm" text-anchor="start" style="font-size:24px">Linked lists: the old neighbours change.</text><path d="M35 114H505" fill="none" stroke="var(--bf-muted)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="99" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M99 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="50" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M66 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="105.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">A</text><circle cx="260" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M260 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="211" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M227 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="266.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">B</text><circle cx="421" cy="114" r="5" fill="none" stroke="var(--bf-muted)" stroke-width="3"/><path d="M421 120V149" fill="none" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="372" y="150" width="98" height="67" rx="2" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M388 157V210" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="427.0" y="192.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">C</text><path d="M100 240Q260 300 422 240" fill="none" stroke="var(--bf-amber)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M398 254L422 240" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M416.8 248.6L422 240L412.0 240.3" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M260 147Q337 90 422 147" fill="none" stroke="var(--bf-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 6"/><text x="20" y="307" class="bf-t" text-anchor="start" style="font-size:24px">Re-seat a letter; repair 5–6 links.</text><path d="M20 335H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="380" class="bf-t-strong" text-anchor="start" style="font-size:26px">… or file a finished receipt</text><path d="M24 460L62 416H259L297 460V563H24Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><rect x="48" y="440" width="225" height="67" rx="2" class="bf-card-hi"/><path d="M64 447V500" fill="none" stroke="var(--bf-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 5"/><text x="166.5" y="482.5" class="bf-t-strong" text-anchor="middle" style="font-size:28px">completed cell</text><path d="M24 488H297" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="160" y="547" class="bf-t-strong" text-anchor="middle" style="font-size:26px">stays put</text><rect x="345" y="424" width="167" height="139" rx="3" class="bf-card" style="stroke:var(--bf-frame);stroke-width:1"/><path d="M376 414H481V434H376Z" fill="var(--bf-surface)" stroke="var(--bf-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="429" y="474" class="bf-t" text-anchor="middle" style="font-size:24px">pending</text><text x="429" y="509" class="bf-t" text-anchor="middle" style="font-size:24px">remainder</text><text x="429" y="544" class="bf-t" text-anchor="middle" style="font-size:23px">+ next slot</text><text x="20" y="610" class="bf-t" text-anchor="start" style="font-size:24px">Two cell slots written; no relinking.</text><text x="20" y="648" class="bf-tm" text-anchor="start" style="font-size:24px">Look ahead to future write addresses.</text>
+</svg>
+<figcaption>Hanging cards are letters in the two linked orders; their strings are links that must be patched. A filed receipt is a completed cell, while the clipboard is the live remainder and promised next slot. Keeping completed work still removes the relinking work, and known future addresses permit prefetch. The analogy breaks at the filing cabinet: two slots are written for a cell, destinations can be scattered, and word/output processing still writes memory; this is not a claim that the decoder writes each byte only once.</figcaption>
+</figure>
+<figure class="bf-fig" id="mv79-05-route-planning">
+<p class="bf-title">The planner is on the clock too</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 762" role="img" aria-labelledby="mv79-05-route-planning-title mv79-05-route-planning-desc">
+<title id="mv79-05-route-planning-title">The planner is on the clock too</title>
+<desc id="mv79-05-route-planning-desc">Two schematic warehouse routes compare a fixed sweep with a schedule that seeks free steps and otherwise the largest cell. Wikidata counts are 1.812 and 1.279 cell steps per run, with a model-specific floor of 1.220. Magnifying glasses show extra choice work. Route geometry and drawn stops are not a numeric scale.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">A shorter route can take longer</text><text x="20" y="70" class="bf-tm" text-anchor="start" style="font-size:24px">Count the stops. Also price the planning.</text><text x="20" y="119" class="bf-t-strong" text-anchor="start" style="font-size:24px">Fixed sweep</text><text x="20" y="155" class="bf-t-strong" text-anchor="start" style="font-size:30px">1.812 steps / run</text><path d="M40 207H490V259H40V311H490" fill="none" stroke="var(--bf-steel)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="235" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="400" cy="207" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="445" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="290" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="135" cy="259" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="90" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="270" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><circle cx="450" cy="311" r="6" fill="var(--bf-surface)" stroke="var(--bf-steel)" stroke-width="3"/><text x="20" y="359" class="bf-tm" text-anchor="start" style="font-size:24px">The next end is already chosen.</text><path d="M20 386H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="431" class="bf-t-strong" text-anchor="start" style="font-size:24px">No-new-boundary steps first</text><text x="20" y="469" class="bf-t-strong" text-anchor="start" style="font-size:30px">1.279 steps / run</text><path d="M40 522H240V578H420" fill="none" stroke="var(--bf-green)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="522" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="165" cy="522" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="240" cy="560" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="330" cy="578" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="410" cy="578" r="6" fill="var(--bf-surface)" stroke="var(--bf-green)" stroke-width="3"/><circle cx="330" cy="517" r="18" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M343 530l18 18" fill="none" stroke="var(--bf-amber)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="460" cy="518" r="18" fill="none" stroke="var(--bf-amber)" stroke-width="3"/><path d="M473 531l18 18" fill="none" stroke="var(--bf-amber)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="624" class="bf-tm" text-anchor="start" style="font-size:24px">Finding the next end has a cost.</text><path d="M20 652H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="694" class="bf-t-strong" text-anchor="start" style="font-size:25px">1.220 steps / run: the model’s floor</text><text x="20" y="735" class="bf-t-strong" text-anchor="start" style="font-size:27px">Fewer steps ≠ less elapsed time.</text>
+</svg>
+<figcaption>A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These “free” steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. The reported worklist did not pay on one thread.</figcaption>
+</figure>
+<figure class="bf-fig" id="mv79-06-nested-book">
+<p class="bf-title">The rules are a book’s nested bindings</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 707" role="img" aria-labelledby="mv79-06-nested-book-title mv79-06-nested-book-desc">
+<title id="mv79-06-nested-book-title">The rules are a book’s nested bindings</title>
+<desc id="mv79-06-nested-book-desc">An open book aab has left part a and right part ab; opening the ab part reveals a and b. The first split is before ab, the lexicographically smallest proper suffix; the recursive splits are the standard Lyndon tree. This is a structural analogy, not an extra sorting pass.</desc>
+<text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Bind the parts; keep the seams</text><text x="20" y="73" class="bf-tm" text-anchor="start" style="font-size:24px">aab is its own smallest rotation.</text><path d="M55 124Q130.25 109 205.5 126Q345.25 109 485 124V240Q345.25 226 205.5 242Q130.25 226 55 240Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M205.5 126V242" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="130.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="345.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">ab</text><path d="M206 115V92H226V121L216 110Z" fill="var(--bf-amber-tint)" stroke="var(--bf-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="290" class="bf-t-strong" text-anchor="start" style="font-size:27px">First seam: a | ab</text><text x="20" y="328" class="bf-t" text-anchor="start" style="font-size:24px">ab is smaller than the other suffix, b.</text><path d="M377 350L377 375" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.2 366.2L377 375L381.8 366.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M260 397Q299.375 382 338.75 399Q411.875 382 485 397V500Q411.875 486 338.75 502Q299.375 486 260 500Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M338.75 399V502" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="299.375" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="411.875" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">b</text><text x="20" y="443" class="bf-t-strong" text-anchor="start" style="font-size:24px">Open ab:</text><text x="20" y="482" class="bf-t-strong" text-anchor="start" style="font-size:30px">a | b</text><path d="M20 546H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="589" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and b to make ab.</text><text x="20" y="630" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and ab to make aab.</text><text x="20" y="679" class="bf-t" text-anchor="start" style="font-size:24px">Those nested joins are the Lyndon tree.</text>
+</svg>
+<figcaption>Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s least rotation.</figcaption>
+</figure>
+</main></html>

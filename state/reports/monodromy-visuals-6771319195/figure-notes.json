@@ -1,0 +1,56 @@
+[
+  {
+    "slug": "01-hidden-address",
+    "title": "The walk is a trail of sealed addresses",
+    "caption": "The envelope is one row lookup; its contents are the byte and the next row address. The wait lies <em>before</em> that next address is known. The analogy breaks at the postman: cache hits can be quick and other work can overlap a miss; neither every load nor every decoder thread must stall.",
+    "mapping": "Envelope = row lookup; enclosed address = dependency; hourglass = a possible exposed cache-miss delay.",
+    "placement": "Opening, after the paragraph labelled \u201cThe walk\u201d, ending \u201cand building it adds more.\u201d",
+    "explains": "Puts the unavailable next request on the far side of the wait, rather than merely drawing an LF arrow.",
+    "evidence": "Journal \u00a71 (LF/its inverse and emission); \u00a76 (dependent walk and cache counts). Conceptual dependence, no new measured latency."
+  },
+  {
+    "slug": "02-sliding-tray",
+    "title": "One instruction moves the whole tray",
+    "caption": "Each compartment is a row in one equal-byte run; the tray is that run\u2019s interval, and sliding it is LF\u2019s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.",
+    "mapping": "Tray = maximal equal-byte run; compartment = row; displacement = LF offset.",
+    "placement": "Opening, after the paragraph labelled \u201cOne shift per run\u201d, ending \u201ca run averages about 14 rows.\u201d",
+    "explains": "Shows the invariant that makes compression possible: all relative offsets survive one common translation.",
+    "evidence": "Journal \u00a71: LF(x)=C(L[x])+occurrences before x, hence constant LF(x)\u2212x within a run. Toy addresses chosen only to show translation."
+  },
+  {
+    "slug": "03-return-tickets",
+    "title": "A ticket can remember a longer journey",
+    "caption": "The number of tickets is an interval\u2019s remaining row count; the stamp is its return word, in reconstruction order. Shortening the longer interval leaves the shorter one representing a longer journey. The lower stack is a separate, generic batch: all occurrences of the chosen pair occupy one cell and share one rule. Counted steps per byte: Wikidata 0.1309, prose 0.6761, uniform random bytes about 1; short runs leave less to batch. The analogy breaks at the stamp: the implementation records that rule once, not once per ticket; expanding it still has to emit the bytes.",
+    "mapping": "Ticket count = interval length; stamp = word, not length; cut = removed endpoint rows; stack = occurrences represented by one cell.",
+    "placement": "\u00a71, replace the existing \u201cTwo steps rebuild aab\u201d interval-strip figure, immediately after the paragraph defining B,A and A,B. Keep the subsequent worked-example paragraphs.",
+    "explains": "Makes the otherwise surprising distinction visible: one remaining row can represent two emitted bytes. The generic batch adds the reason a step amortises over rows.",
+    "evidence": "Journal \u00a72 top-wins rule and equal case; \u00a75.6 Theorem 2 digram-cell equivalence. aab gives A:2,a and B:1,b \u2192 A:1,a and B:1,ab. Generic stack is not a second aab census."
+  },
+  {
+    "slug": "04-filed-receipts",
+    "title": "Keep finished work still",
+    "caption": "Hanging cards are letters in the two linked orders; their strings are links that must be patched. A filed receipt is a completed cell, while the clipboard is the live remainder and promised next slot. Keeping completed work still removes the relinking work, and known future addresses permit prefetch. The analogy breaks at the filing cabinet: two slots are written for a cell, destinations can be scattered, and word/output processing still writes memory; this is not a claim that the decoder writes each byte only once.",
+    "mapping": "Card = linked-order letter; string = neighbour link; filed receipt = completed cell; clipboard = live register/pending-slot state.",
+    "placement": "\u00a73 \u201cWhy the cells kernel is cheaper\u201d, insert after paragraph 2 beginning \u201cA cell is the overlap\u201d. This section has no figure in the rewritten post.",
+    "explains": "Makes the removed operation concrete\u2014rewiring old state\u2014and separates immutable finished cells from mutable unfinished work.",
+    "evidence": "Journal \u00a73.1 (5\u20136 links), \u00a73.5 (two slots, promised slots, remainder in registers, prefetch); \u00a76.2 historical combined mechanism evidence. Does not attribute the full gain to write-once cells alone."
+  },
+  {
+    "slug": "05-route-planning",
+    "title": "The planner is on the clock too",
+    "caption": "A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These \u201cfree\u201d steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. The reported worklist did not pay on one thread.",
+    "mapping": "Stop = step; route = schedule; magnifier = candidate/segment search. Numeric labels alone encode the measured counts; no length or stop-count scale.",
+    "placement": "\u00a75 \u201cFewer steps by a different order\u201d, replace the existing step-count bar figure after the three counts are introduced.",
+    "explains": "Adds a visible competing expense to the tempting shorter schedule, without turning a step count into a stopwatch result.",
+    "evidence": "Journal \u00a75.6 exact identity S=r\u2082\u22121+U and counts 1.812/1.279/1.220; \u00a78 worklist: 2.25 segment ends tested/step, two steps in three at another segment; no one-thread payoff."
+  },
+  {
+    "slug": "06-nested-book",
+    "title": "The rules are a book\u2019s nested bindings",
+    "caption": "Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a\u00b7b and aab = a\u00b7ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction\u2019s expanded tree for a primitive block\u2019s least rotation.",
+    "mapping": "Book = word; nested binding = binary concatenation; seam = smallest-proper-suffix split; opening = expansion.",
+    "placement": "\u00a74 \u201cThe Lyndon tree\u201d, replace \u201cHow the row map leads to the Lyndon tree\u201d, after paragraph 3 ending with the Crochemore\u2013Russo reference.",
+    "explains": "Turns a static tree into reversible assembly: the same joins that built the word determine its nested parts. The caption names the split rule so this is not just an arbitrary parse tree.",
+    "evidence": "Journal \u00a75.6 Theorem 1 and \u00a710: Hohlweg\u2013Reutenauer identity and Tsuruta et al. shared Lyndon SLP. Primitive/least-rotation qualification retained."
+  }
+]

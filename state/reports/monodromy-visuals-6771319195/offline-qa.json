@@ -1,0 +1,13 @@
+{
+  "method": "PyMuPDF SVG raster with resolved house CSS variables; DejaVu Sans text bound check",
+  "browser": "Chromium blocked: socket() Operation not permitted; not an integrated browser render",
+  "widths": [
+    312,
+    750
+  ],
+  "themes": [
+    "default",
+    "slate"
+  ],
+  "text_overflow": []
+}
