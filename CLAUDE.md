@@ -20,6 +20,11 @@ Researcher, #222 Observer, #314 Pathfinder, #346 MONODROMY): route every message
   A comment that exists is not a message delivered.
 - **Before any merge:** `coord.py head-sha --pr <n> --sha <sha>` must pass, and its SHA is the
   merge's expected head. It passes only for the PR's exact 40-character head, never a prefix.
+- **Green means both kinds of check:** the Actions check runs *and* the legacy commit
+  statuses (`gh api repos/lmmx/mibz2/commits/<sha>/status`: pre-commit.ci posts one). A status
+  in `error` or `pending` on the head is not green, whatever the check runs say. (#351 was
+  merged at 16:2x on 10 November with pre-commit.ci's class B error still on its head; the
+  re-run passed minutes later.)
 - **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
   silently drops a name it doesn't have, such as `sha`, and then nothing checks the head.
 - **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is
