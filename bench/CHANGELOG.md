@@ -35,6 +35,55 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.8.1] - 2026-11-10
+
+### Fixed
+
+- **`ab summary` read a held run's CPU as the spinner's CPU number** (`examples/ab.rs`, `json_str`). It took
+  the first `"cpu":` anywhere in the record, which since 3.8.0 is the nested `held_spinner.cpu`.
+  The release-scaling run for 0.2.8 (release-scaling/run-20261110T122748Z) showed CPU 19.000 for
+  every arm at 10 threads or fewer.
+  - **The fix:** a field is read only from the record's top level, outside nested objects and strings.
+  - **What was never affected:** the raw records' `cpu`, and every reader that parses JSON (the History
+    page, `bench/report.py`).
+  - **No measured figure changes meaning,** so this is a patch version.
+
+## [3.8.0] - 2026-11-10
+
+### Added
+
+- **The held spinner, `ab run --hold-cpu N|auto [--hold-max-threads T]`** (`examples/ab.rs`;
+  W1, the cold start: on the i9 a decode started after the whole machine went idle ran at
+  about 2.1× the wall, and one spinner held on a spare CPU kept 30 of 30 runs fast,
+  cold-start/20261110T102700Z). Off by default, for workstation runs:
+  - **The spinner** is a thread of the supervising `ab run`, never a process, so it can't
+    outlive it. It is pinned to its CPU, and its affinity read back and the thread seen running
+    there, before the settle gate; it is held through the decode until the child is reaped,
+    then stopped and joined, on an error or a panic too (it is stopped on drop).
+  - **`auto`:** the last CPU of the last physical core (sysfs's `thread_siblings_list`, over
+    the online CPUs) that holds none of the run's CPUs; else a CPU the run doesn't use (an SMT
+    sibling of one it does); else the last CPU. An unpinned run may use every CPU, so its
+    spinner always overlaps.
+  - **Its accounting:** its CPU is its own, never the decoder's (the child is another
+    process). The settle gate and `others_busy` take the spinner's own CPU over the same
+    window off its CPU's share, so the known helper doesn't hold the gate shut; the raw
+    readings are kept.
+  - **The record:** `held_spinner`, only on a held run: `cpu`, `auto`, `overlap` (the held
+    CPU's core shares a CPU with the run's), `decoder_cpus`, `owner` (`run`), `cpu_s` (its
+    CPU, RUSAGE_THREAD), and the raw `pre_busy_raw`, `pre_one_raw` and `others_busy_raw`
+    beside the accounted `pre_busy` and `others_busy`.
+  - **`--hold-max-threads T`:** hold only around runs of at most T threads.
+  - **Never passed to the child:** an `ARM@EXE` build without the option runs as before.
+- **`ab child ARM T FILE --hold-cpu N|auto`**, for a driver that spawns the child itself (a
+  gap block): the child holds its own spinner thread, started before its sampler and counters
+  and stopped before its CPU is read. Its CPU is taken off the child's `cpu`, and it is left
+  out of the per-thread split and of the CPUs seen (`held_spinner`, `owner` `child`).
+- **`just bench-release-scaling`** holds the spinner (`auto`) around its runs of 10 threads or
+  fewer, where NEW's harness has the option (bench 3.8.0 on; the console says which);
+  `HOLD_CPU=off` turns it off.
+- **Nothing measured on CI changes.** The bench workflow passes neither option, and without
+  one no path, reading or record field changes, so this is a minor version.
+
 ## [3.7.0] - 2026-11-10
 
 Numbered 3.5.0 on #316's branch before master's 3.5.0 (`--sysfs-state`) and 3.6.0 (`ab-child/2`)

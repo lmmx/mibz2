@@ -220,6 +220,12 @@ bench-pmu-probe *args:
 # before NEW. The release runbook (docs/RELEASING.md) runs it bare after every release.
 #   just bench-release-scaling
 #   just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" /path/to/big.bz2
+# The held spinner (bench 3.8.0, `ab run --hold-cpu auto --hold-max-threads 10`): around
+# every run of 10 threads or fewer, one CPU the run leaves free is held busy, so no decode
+# starts on an idle machine (cold-start/20261110T102700Z). The runs are NEW's harness, so it
+# is on only where NEW's `ab` has the option (a release or commit from bench 3.8.0 on), and
+# the console says which; both arms run under the same spinner, the pairing untouched. Each
+# held run's record carries `held_spinner`. HOLD_CPU=off turns it off; HOLD_CPU=N holds CPU N.
 
 # Two releases and lbzip2 on this machine, up to its full thread count
 bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
@@ -258,8 +264,18 @@ bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     "$NEWAB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
     rm -f "$W/runs.jsonl"
+    # (the held spinner where NEW's harness has it: runs of 10 threads or fewer)
+    hold=(); hold_cpu=${HOLD_CPU:-auto}
+    if [ "$hold_cpu" = off ]; then
+      echo "bench-release-scaling: held spinner off (HOLD_CPU=off)"
+    elif grep -qa -- '--hold-max-threads' "$NEWAB"; then
+      hold=(--hold-cpu "$hold_cpu" --hold-max-threads 10)
+      echo "bench-release-scaling: held spinner on ($hold_cpu) around runs of 10 threads or fewer"
+    else
+      echo "bench-release-scaling: $NEW's ab has no --hold-cpu (before bench 3.8.0): no held spinner"
+    fi
     "$NEWAB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$OLDAB,lbzip2" \
-      --threads "$threads" --rounds {{ROUNDS}} --spread "$W/wikidata.bz2" {{FILES}}
+      --threads "$threads" --rounds {{ROUNDS}} --spread "${hold[@]}" "$W/wikidata.bz2" {{FILES}}
     "$NEWAB" summary "$W/runs.jsonl" --ref mibz2 | tee "$W/summary.txt"
     lb=$(lbzip2 --version 2>&1 | head -1 | grep -oE '[0-9]+(\.[0-9]+)+' || true)
     files=(--file "wikidata=$W/wikidata.bz2")

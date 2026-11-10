@@ -71,6 +71,32 @@ pub trait InverseBwt: Default + Send {
         let _ = (ll, counts, orig_ptr);
         false
     }
+
+    /// Whether this kernel builds its table from a block's run records (`invert_runs`), so
+    /// that the decoder may take a block of few symbols by the records' path
+    /// (`runs::takes_runs`) instead of the column's. A kernel answers the same for every
+    /// block.
+    fn reads_runs(&self) -> bool {
+        false
+    }
+
+    /// `invert` for the block of `n` rows whose run records `runs::front` left in `r`: the
+    /// LF table `runs::fill` builds from them, walked backward, its bytes into `out`
+    /// (cleared): exactly what `invert` gives for the block's column. `orig_ptr` is below
+    /// n (the caller checks). Returns false if the records don't tile the block (a bug in
+    /// the front: the caller then takes the column's path, which clears `out` itself).
+    /// Called only when `reads_runs` is true.
+    fn invert_runs(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        let _ = (r, n, orig_ptr, out, k);
+        unreachable!("invert_runs on a kernel that doesn't read runs");
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -114,6 +140,27 @@ impl InverseBwt for Segmented {
     fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        true
+    }
+
+    fn reads_runs(&self) -> bool {
+        true
+    }
+
+    // `runs::fill` sets the table only once the records tile the block, and then every link
+    // in it is below its length, as the walks require
+    fn invert_runs(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        if !crate::runs::fill(r, n, &mut self.tt, k) {
+            return false;
+        }
+        walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
         true
     }
 
@@ -610,6 +657,114 @@ impl SegScratch {
     }
 }
 
+/// The forward walk's bytes from the backward walk's: `out[n - m..]` holds the first m bytes
+/// of the LF walk from the primary index, last to first, where m is the length of the
+/// primary index's cycle, or n if that is longer. The forward walk (`walk`) gives n bytes of
+/// Ψ from the same row: that cycle's bytes, first to last, repeated and cut at n. Those are
+/// `out[n - m..]`'s, so they are moved to the front and repeated. (m = n for a block of
+/// distinct rotations; a periodic text's cycle is its period. This makes the backward walk
+/// exactly `walk` on any table, so a corrupt block's error is the same too.)
+fn repeat_cycle<T: Copy>(out: &mut [T], m: usize) {
+    let n = out.len();
+    if m == 0 || m >= n {
+        return;
+    }
+    out.copy_within(n - m.., 0);
+    let mut have = m;
+    while have < n {
+        let take = have.min(n - have);
+        out.copy_within(..take, have);
+        have += take;
+    }
+}
+
+impl SegScratch {
+    /// The room walk's segments of an LF table walked backward (`walk_back_room`): joined
+    /// in the order `assemble` joins them, which is the block's bytes last to first, and
+    /// written into `out` (which they replace) from its end, each segment reversed, so that
+    /// `out` holds the block first to last. The join stops where it comes back to its first
+    /// segment: the primary index's cycle is then complete (`repeat_cycle`).
+    fn assemble_reversed(&self, out: &mut Vec<u8>) {
+        let n = self.n;
+        out.clear();
+        out.reserve(n);
+        let dst = &mut out.spare_capacity_mut()[..n];
+        let mut at = n;
+        let mut seg = self.first;
+        while at > 0 {
+            let b = &self.bufs[seg];
+            let len = b.len().min(at);
+            for (d, &x) in dst[at - len..at].iter_mut().rev().zip(&b[..len]) {
+                d.write(x);
+            }
+            at -= len;
+            seg = self.next[seg];
+            if seg == self.first {
+                break;
+            }
+        }
+        // (the first segment holds its start's byte at least, so at < n here)
+        assert!(at < n || n == 0);
+        repeat_cycle(dst, n - at);
+        // SAFETY: the join wrote dst[at..n], and `repeat_cycle` copies those n - at bytes to
+        // the front and repeats them to n (at > 0 only when the cycle closed, at m = n - at
+        // < n), so every byte of dst[..n] is written
+        unsafe { out.set_len(n) };
+    }
+}
+
+/// The plain walk of an LF table (`runs::fill`'s): from `orig_ptr`, i ← LF(i), the block's
+/// bytes last to first, written into `out` from its end; exactly `walk`'s output on the
+/// block's T-vector (`repeat_cycle`)
+pub fn walk_back(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>) {
+    let t = &tt.0;
+    let n = t.len();
+    out.clear();
+    out.resize(n, 0);
+    let mut i = orig_ptr as usize;
+    let mut m = n;
+    for k in 0..n {
+        let e = t[i];
+        out[n - 1 - k] = e as u8;
+        i = (e >> 8) as usize;
+        if i == orig_ptr as usize {
+            m = k + 1;
+            break;
+        }
+    }
+    repeat_cycle(out, m);
+}
+
+/// `walk_segments_room` on an LF table (`runs::fill`'s), walked backward from `orig_ptr`
+/// (below its length: the caller checks): the room walk's own code with its first row the
+/// primary index, its segments joined in reverse. Exactly `walk`'s output on the block's
+/// T-vector; the plain backward walk for a block too short to segment
+pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk_back(tt, orig_ptr, out);
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    s.assemble_reversed(out);
+}
+
+/// `walk_back_room` with `L` lanes and `segments` segments, on a block of any length (the
+/// tests walk small ones)
+#[cfg(test)]
+pub(crate) fn walk_back_room_with<const L: usize>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    out.clear();
+    if tt.0.is_empty() {
+        return;
+    }
+    room_segments::<L, PREFETCH, true>(tt, orig_ptr, s, segments);
+    s.assemble_reversed(out);
+}
+
 /// The walk, segmented where the block is long enough: exactly `walk`'s output
 pub fn walk_fast(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
     if tt.len() < MIN_SEGMENTED {
@@ -979,7 +1134,7 @@ pub fn walk_segments_room_parts(
         walk(tt, orig_ptr, out);
         return false;
     }
-    room_segments::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, false>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
     true
 }
 
@@ -1014,7 +1169,7 @@ pub fn walk_segments_room_with_prefetch<const L: usize, const PF: u8>(
     if tt.0.is_empty() {
         return;
     }
-    room_segments::<L, PF>(tt, orig_ptr, s, segments);
+    room_segments::<L, PF, false>(tt, orig_ptr, s, segments);
     s.assemble(out);
 }
 
@@ -1023,7 +1178,7 @@ pub fn walk_segments_room_with_prefetch<const L: usize, const PF: u8>(
 /// for `SegScratch::assemble`. Never inlined, so the decoder and the stage table's split
 /// timing (`walk_segments_room_parts`) run the same machine code for the walk
 #[inline(never)]
-fn room_segments<const L: usize, const PF: u8>(
+fn room_segments<const L: usize, const PF: u8, const BACK: bool>(
     tt: &mut TVector,
     orig_ptr: u32,
     s: &mut SegScratch,
@@ -1038,7 +1193,14 @@ fn room_segments<const L: usize, const PF: u8>(
         n <= 1 << 23,
         "the room walk takes at most 2^23 rows, not {n}"
     );
-    let r0 = tt.0[orig_ptr as usize] >> 8;
+    // the walk's first row: Ψ's from the primary index; or, on an LF table walked backward
+    // (`BACK`), the primary index itself, whose byte is the block's last
+    let r0 = if BACK {
+        assert!((orig_ptr as usize) < n, "the primary index past the block");
+        orig_ptr
+    } else {
+        tt.0[orig_ptr as usize] >> 8
+    };
     random_rows(n, segments - 1, &mut s.starts);
     s.starts.push(r0);
     s.starts.sort_unstable();
