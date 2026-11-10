@@ -151,6 +151,13 @@ mechanism-level facts transfer, a build's own class counts don't). Scripts and r
   their mean difference. This is the share the layout check could not estimate from four
   paddings (`2026-11-10-run-front-layout-check.md` §2).
 
+- **The class's size, over the whole 4 KiB** (master, a 200,000-byte block of `random`, the
+  environment padded in 256-byte steps, agg3; `sweep-master.txt`): S←H plus H←S is 0.105–0.109
+  candidates a byte at 11 of 16 paddings and 0.41, 1.06, 1.38, 1.38, 1.39 at the other five.
+  Master reaches the head's archived level (1.10–1.37) where its frame meets `counts`. The
+  exposure's SD over paddings is 0.52, so the two arms' difference has SD 0.73 candidates a
+  byte: the 0.67 used below is slightly conservative.
+
 ### 1: `counts` → `STEPS` fits the dose and is fixed per build. Its price is the problem.
 
 - **Fixed per build:** `counts`' heap residue is constant across launches (above); `STEPS` is
