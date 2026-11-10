@@ -140,7 +140,13 @@ low bytes, directory and records compared whole).
 - **One byte written a row** where the T-vector writes four, and it is not yet cheaper.
 - The room walk's start flag needs a second bit a row in the directory (+0.125 bytes a row).
 
-## 4. What the law says (model)
+## 4. What the law says (model; **withdrawn as a decoder's price**)
+
+**Withdrawn (2026-11-10, later).** The i9's share-nothing run shows the law does not transfer to
+the whole decoder (`2026-11-10-hypothesis-register.md` §1a): it predicts nearly twice the
+inflation ten workers show, and a scanner-fed small table is capped at 1.86 GB/s, 1.24 times
+the default plan, before its own cost. The figures below are the inversion harness's and rank
+no decoder. Kept as written.
 
 Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1.31 to 1.44 MB =
 13.1 to 14.4 MB, so X is 0.40 to 0.49.

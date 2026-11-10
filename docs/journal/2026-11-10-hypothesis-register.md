@@ -95,6 +95,81 @@ link (2.7 MB) that costs 1.466 times `p` at one block.
   buffers are inside X as they were in that harness (**reader's** caution: at the decoder's
   boundary 62% of ten plain workers' cold lines are not the table's).
 
+### 1a. Correction (2026-11-10): the law does not transfer to the whole decoder
+
+**The run:** `share-nothing/20261110T052925Z` on `evidence` at `6b84f37b` (SHA-256
+`1e347594…68136ad`, checked), VALID. Plain workers, the whole decoder, Wikidata recompressed at -9 (421 blocks) and
+-2 (1,831 blocks), 60 rounds. **The Optimiser's replay** (#145 6760081653) applied this section's
+X unchanged. Reproduced here from the bundle's `slots.jsonl` and `runs.jsonl`
+(`sn_cells.py.txt`, `sn_fit.py.txt` in this entry's directory).
+
+| -9, workers | 2 | 4 | 6 | 8 | 10 |
+|---|--:|--:|--:|--:|--:|
+| MB/s (median) | 716 | 1,076 | 994 | 784 | 704 |
+| workers' CPU, against two workers | 1 | 1.31 | 2.15 | 3.67 | 4.45 |
+| the law, every requested worker a live table (f = 0.78) | 1 | 1.37 | 2.50 | 5.03 | 7.64 |
+| measured ÷ predicted | 1 | 0.96 | 0.86 | 0.73 | **0.58** |
+
+(The Optimiser's figures, normalised at four workers on the whole process's CPU: 0.81, 0.63,
+0.50 at 6, 8, 10. The same failure.)
+
+- **Where the law held:** the harness it was fitted in. Inversion alone, every worker walking
+  all the time, to six workers (`u`: 1.00 to 1.12), and already 0.96 and 0.87 at eight and ten.
+- **Where it fails:** the whole decoder past four workers. It predicts nearly twice the
+  inflation that ten workers show.
+- **And it has no term for what -2 shows.** Its tables are 0.8 MB, so X is 0 at every cell.
+  The workers' CPU still grows 1.05, 1.07, 1.12, 1.23 from two workers to 4, 6, 8, 10; and
+  throughput stops at 1,862 MB/s at eight workers, because the one scanner thread is 0.09 s of
+  a 0.113 s wall. The feed binds, not the table.
+
+**What that does to every price built on it** (all were inversion-harness figures, and none
+was ever a whole-decoder forecast; as rankings of decoders they are withdrawn):
+
+| price | was | now |
+|---|---|---|
+| compact30, 2,350 MB/s at seven | "a tie with the teams" | no whole-decoder meaning |
+| D4-delta, 3,570 at ten | "beats the teams" | withdrawn |
+| the chunked link, 3,120 and 2,500 | "ahead on Wikidata, level on text" | withdrawn |
+| N1, 3,470 to 5,260 | the avenue's worth | withdrawn |
+| the tall-tunnel rider, 1,470 to 2,200 | "short of the teams" | withdrawn with the rest |
+
+- **The bound that replaces them (measured):** a plain worker with the smallest table there is,
+  -2's own, reaches 1,862 MB/s behind one scanner. The default plan's sentinels in the same
+  attempt are 1,499 on the original file (another block stream: context, not a registered
+  comparison). A scanner-fed small table can be worth about 1.24 times the default before
+  its own cost g: at g of 1.18, 1.44, 1.7 on 78% of a worker's time that is 1,630, 1,390,
+  1,200 (the Optimiser's surface, f = 0.78). **None beats the default.**
+- **So the small table and the parallel scan are one proposal, not two.** Neither pays alone:
+  the table without the feed is capped at 1.86 GB/s, and the feed without the table meets the
+  knee at four workers.
+
+**A form that could fit both curves (a hypothesis, to be falsified; fitted to nothing):**
+
+    workers' CPU ∝ 1 + f · X(s · n),   n = (workers running at once) × φ,
+    φ = f (1 + X) ÷ (1 + f X): the share of a worker's running time spent inverting.
+
+X is this section's, unchanged; "running at once" is the run's own workers' CPU over wall; f is
+the one-thread stage split. The tables that contend are those being built or walked at that
+moment, not those requested.
+
+| -9, workers | 4 | 6 | 8 | 10 |
+|---|--:|--:|--:|--:|
+| workers running at once | 3.65 | 5.56 | 7.47 | 8.13 |
+| live table bytes by this form, MB | 10.7 | 17.5 | 25.4 | 27.9 |
+| measured ÷ predicted | 1.10 | 1.21 | 0.95 | 0.94 |
+
+- **Better, and not good:** the residual is no longer a trend to 0.58, but it is 20% at six.
+- **It still has nothing for -2's 1.23,** which may be shared cores (12 threads on 10), the
+  scanner's own contention, or bandwidth. With that factor carried over from -2 the -9
+  prediction overshoots at 8 and 10 (0.85, 0.77). Ten cells cannot choose.
+- **Not out of sample:** it reads "running at once" from the run it predicts.
+- **Its falsifier:** the phase-overlap census (#145, this author's PROPOSAL): each walk's time
+  against the number of tables live while it ran, inside one run.
+
+**This author's error:** a law fitted where every worker walks all the time was carried to a
+decoder whose workers walk part of the time behind one scanner, and prices were stacked on
+it. The Optimiser had said X holds building as well as walking; that was the lesser part.
+
 ## 2. The i9 does not pay for instructions at one thread (recomputed from the archived bundles; verified)
 
 `bench/release-scaling/`, the i9, 10 paired rounds, new release over old, wall:
