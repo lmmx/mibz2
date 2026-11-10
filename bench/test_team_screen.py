@@ -265,6 +265,27 @@ class Outputs(unittest.TestCase):
         where(r, arm="H-plain", fixture="E-crc-team")[0]["env"]["AB_READ_BUF"] = "1"
         self.fails(r)
 
+    # the second recheck's witnesses (#145 6763089509, item 5), each admitted at c077cbdc
+    def test_artifacts_head_sha_away_from_the_delta(self):
+        self.art["head"]["sha"] = "9" * 40
+        self.fails(self.good)
+
+    def test_artifacts_base_sha_away_from_the_delta(self):
+        self.art["base"]["sha"] = "8" * 40
+        self.fails(self.good)
+
+    def test_lbzip2_rejection_exit_not_its_typed_error_exit(self):
+        for status in (None, -9, 124, 2, True, "1"):
+            r = copy.deepcopy(self.good)
+            w = where(r, run="reject__E-crc-team")[0]
+            w.update(exit_status=status, timed_out=False, signal=None)
+            self.assertTrue(self.check(r), status)
+
+    def test_ab_exit_must_be_the_integer_zero(self):
+        r = copy.deepcopy(self.good)
+        where(r, kind="arm", fixture="E-crc-team")[0]["exit_status"] = False
+        self.fails(r)
+
     def test_base_harness_older_than_the_schema(self):
         r = copy.deepcopy(self.good)
         for w in where(r, build="base"):

@@ -147,9 +147,16 @@ timeout flag and record. Arm runs also carry arm, build, build SHA and read buff
   - the executable's SHA-256 is the build step's record of that build (ARTIFACTS), the same
     for every run of the build;
   - the build label and build SHA match the delta;
+  - **the build step's artifacts are bound to both of the delta's pins:** ARTIFACTS'
+    head and base SHAs must equal `delta.head` and `delta.base`;
   - lbzip2's digest is recorded.
-- **The process:** a timeout, a signal or a nonzero ab exit is a process failure. A
-  rejection must exit nonzero, not by timeout or signal.
+- **The process:**
+  - **An ab child** must exit with exactly the integer 0, a decoder error included (it is
+    reported in the record). Anything else is a process failure: a timeout, a signal, any
+    other status, or a non-integer status.
+  - **An lbzip2 rejection** must exit with exactly its typed error exit (the manifest's
+    `lbzip2_reject_exit`, 1, seen on all four fixtures), an integer, with no timeout and no
+    signal. A missing status, −9, 124 or any other nonzero exit is not a rejection.
 - **The record:** the full `ab-child/2` schema; a well-formed hash and SHA-256.
 - **The outcomes:**
   - **The oracles** reproduce their frozen out, hash and SHA-256.
@@ -167,7 +174,7 @@ timeout flag and record. Arm runs also carry arm, build, build SHA and read buff
   available, not the complete prefix of preceding blocks;
 - the read-buffer and thread-count variants exercise that.
 
-**The negative controls** (`bench/test_team_screen.py`, 36 tests, all passing). Each
+**The negative controls** (`bench/test_team_screen.py`, 40 tests, all passing). Each
 counterexample is a test that must fail:
 
 | counterexample | source | at `25b778cd` | now |
@@ -179,6 +186,9 @@ counterexample is a test that must fail:
 | four empty objects; one empty record; missing or duplicate run; matching failures on a valid input; agreeing on a wrong output; error without its block; wrong block; one arm's kind differs; wrong prefix; killed | first review | rejected | rejected |
 | timeout flag; missing oracle completion; an oracle that does not reproduce; missing rejection; lbzip2 accepting; wrong command, input, selector or buffer; a base harness older than `ab-child/2`; record without `sha256` | recheck's other points | — | rejected |
 | an expected decoder error with a normal exit | recheck: do not require nonzero | — | **admitted** (positive case) |
+| ARTIFACTS' head SHA, or base SHA, away from the delta's pin | second recheck (#145 6763089509, item 5) | admitted at `c077cbdc` | rejected |
+| an lbzip2 rejection exiting null, −9, 124, 2, `true` or `"1"`, with no timeout or signal | second recheck | admitted at `c077cbdc` | rejected |
+| an ab exit of `false` (equal to 0 in Python, but not the integer) | found while fixing the above | admitted | rejected |
 
 ### T2: per-thread semantic probes (`walk-stats`): the next deliverable, not yet implemented
 

@@ -109,6 +109,13 @@ def outputs_check(manifest, delta, artifacts, wrappers):
     seen = {}
     if not wrappers:
         failed.append("no records")
+    # the build step's artifacts bound to the delta's pins, both builds
+    for build in ("head", "base"):
+        got = (artifacts.get(build) or {}).get("sha")
+        if not SHA.match(str(got)) or got != delta.get(build):
+            failed.append(
+                f"artifacts: the {build} build is from {got!r}, not the delta's {delta.get(build)!r}"
+            )
     for w in wrappers:
         run = w.get("run") if isinstance(w, dict) else None
         if run not in want:
@@ -143,11 +150,17 @@ def outputs_check(manifest, delta, artifacts, wrappers):
                 failed.append(f"{run}: command {w['command']}")
             if w["exe_sha256"] != artifacts["lbzip2"]["exe_sha256"]:
                 failed.append(f"{run}: not the recorded lbzip2")
-            if w["exit_status"] == 0:
-                failed.append(f"{run}: lbzip2 accepted a malformed fixture")
+            # lbzip2's typed rejection of bad data: exactly its normal error exit, an integer
+            # (not a crash's, a timeout's or a missing status)
+            reject_exit = manifest["lbzip2_reject_exit"]
+            if type(w["exit_status"]) is not int or w["exit_status"] != reject_exit:
+                failed.append(
+                    f"{run}: lbzip2 exit {w['exit_status']!r}, not its rejection exit {reject_exit}"
+                )
             continue
-        # ab children (arms and oracles) return normally, a decoder error in the record
-        if w["exit_status"] != 0:
+        # ab children (arms and oracles) return normally, a decoder error in the record:
+        # exit status exactly the integer 0
+        if type(w["exit_status"]) is not int or w["exit_status"] != 0:
             failed.append(f"{run}: process failure (exit {w['exit_status']})")
             continue
         if kind == "oracle":

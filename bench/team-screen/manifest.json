@@ -275,7 +275,7 @@
       }
     }
   ],
-  "lbzip2_check": "one admitted completion record per error fixture: `lbzip2 -dc FILE` exiting nonzero, not by timeout or signal (its text and buffered output are not compared)",
+  "lbzip2_check": "one admitted completion record per error fixture: `lbzip2 -dc FILE` exiting with exactly lbzip2_reject_exit (1, its normal error exit, seen on all four fixtures on 2026-11-10), an integer, not by timeout or signal (its text and buffered output are not compared)",
   "transitions_required": [
     "S->T",
     "T->S",
@@ -335,5 +335,6 @@
     "AB_SHA256": "1"
   },
   "fixture_maker": "bench/team-screen/make_fixtures.py W bench/team-screen/w-spans.jsonl OUT: Python only, no build; the job requires each made fixture's digest to equal the manifest's",
-  "block_map": "bench/team-screen/w-spans.jsonl (walk_count spans W, made 2026-11-10 at 25b778cd + this commit's walk_count)"
+  "block_map": "bench/team-screen/w-spans.jsonl (walk_count spans W, made 2026-11-10 at 25b778cd + this commit's walk_count)",
+  "lbzip2_reject_exit": 1
 }
