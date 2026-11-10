@@ -34,7 +34,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle, Thread};
 
-use crate::bwt::{prefetch, random_rows, read_u64, SegScratch, TVector, LINK, PF_L1, START};
+use crate::bwt::{prefetch, random_rows, SegScratch, TVector, LINK, PF_L1, START};
 
 /// A task for a pool, called once on each of its k threads with the thread's index (the
 /// caller's is 0)
@@ -562,6 +562,104 @@ pub(crate) struct FusedBuild<'a> {
     passed: AtomicU64,
 }
 
+/// Rows `lo..hi`'s scatter into their windows: `bwt::build_one_pass`'s loop (#312) on one
+/// range, its twin. Each 16-row window (from `lo`, a multiple of 16 or `n`: `CHECKPOINT`
+/// is, and a stride that isn't only shifts which rows share a window) is classified by
+/// `run_joins`: one run takes one `run16` write; a window of at most `RUNS` runs takes one
+/// cursor step and one `run16` write a run, its entries above the run's end provisional;
+/// any other window, and a run within 16 slots of its window's end, takes the one-row
+/// steps. False where a step would leave its window (the inputs are not the block's own),
+/// with the rest of the range unwritten. On true, the caller's end check (`ftab == lim`)
+/// proves every slot of every window last written with its final entry.
+///
+/// # Safety
+/// For every byte c, `ftab[c]..lim[c]` (the range's window of bucket c) must lie in
+/// `[0, ll.len())` and be writable through `t` by this thread alone for the call (no other
+/// thread reads or writes it), `t` valid for `ll.len()` entries. `lo <= hi <= ll.len() <
+/// 2^24`.
+#[inline(always)]
+unsafe fn scatter(
+    ll: &[u8],
+    lo: usize,
+    hi: usize,
+    ftab: &mut [u32; 256],
+    lim: &[u32; 256],
+    t: *mut u32,
+) -> bool {
+    use crate::bwt::{few_runs, row_byte, run16, run_joins, ALL_JOINED};
+    // the one-row step: row i's link at its byte's next slot, inside the window
+    let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
+        let c = row_byte(ll, i);
+        let s = ftab[c];
+        if s >= lim[c] {
+            return false;
+        }
+        // SAFETY: s is below its window's end, inside the window (the contract)
+        unsafe { *t.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
+        ftab[c] = s + 1;
+        true
+    };
+    let mut i = lo;
+    while i + 16 <= hi {
+        // bit j set: row i + j continues a run (j > 0, and its byte is row i + j - 1's)
+        let joins = run_joins(&ll[i..i + 16]);
+        if joins == ALL_JOINED {
+            // one run of 16, most of Wikidata's windows
+            let c = row_byte(ll, i);
+            let s = ftab[c] as usize;
+            if s + 16 > lim[c] as usize {
+                return false;
+            }
+            // SAFETY: s..s + 16 is inside the window of bucket c (the check above, and
+            // the window's start is at most s), so inside ll and the table, and this
+            // thread's alone. All 16 entries are final. The links are exact: i + 15 <
+            // 2^24, so (i + j) << 8 fits a u32 and shares no bit with the byte
+            unsafe { run16(ll.as_ptr().add(s), (i as u32) << 8, t.add(s)) };
+            ftab[c] = (s + 16) as u32;
+        } else if joins != 0 && few_runs(joins) {
+            // bit j set: row i + j starts a run
+            let mut heads = joins ^ 0xffff;
+            while heads != 0 {
+                let j = heads.trailing_zeros() as usize;
+                heads &= heads - 1;
+                let len = (heads | 1 << 16).trailing_zeros() as usize - j;
+                let c = row_byte(ll, i + j);
+                let s = ftab[c] as usize;
+                if s + 16 <= lim[c] as usize {
+                    // SAFETY: s..s + 16 is inside the window of bucket c (as above). The
+                    // run's own len entries are final. The rest, s + len..s + 16, are
+                    // slots of this window above its new cursor: no other thread's (the
+                    // contract), and each is written again by the step of this call that
+                    // reaches it, before the caller's end check can pass. The links of
+                    // the provisional entries may wrap; they are overwritten
+                    unsafe { run16(ll.as_ptr().add(s), ((i + j) as u32) << 8, t.add(s)) };
+                    ftab[c] = (s + len) as u32;
+                } else {
+                    // near its window's end: the run's rows one at a time
+                    for i in i + j..i + j + len {
+                        if !one(i, ftab) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        } else {
+            for i in i..i + 16 {
+                if !one(i, ftab) {
+                    return false;
+                }
+            }
+        }
+        i += 16;
+    }
+    for i in i..hi {
+        if !one(i, ftab) {
+            return false;
+        }
+    }
+    true
+}
+
 impl<'a> FusedBuild<'a> {
     /// `build_fused`'s checks before the scatter, the table cleared and reserved, the rows
     /// cut into `shares` ranges (1 to `MAX_SHARES`). A refusal gives the table back, empty.
@@ -629,61 +727,13 @@ impl<'a> FusedBuild<'a> {
             ftab[b] = starts[b] + before[b];
             lim[b] = starts[b] + after[b];
         }
-        // the one-row step: row i's link at its byte's next slot, inside the window
-        let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
-            let c = ll[i] as usize;
-            let s = ftab[c];
-            if s >= lim[c] {
-                return false;
-            }
-            // SAFETY: s is inside this range's window of bucket c, which lies in [0, n)
-            // (checked in `new`) and which no other range's window overlaps; range j is
-            // written only by the share that claimed it, and the table's buffer is held
-            // (`self.tt`), not moved, until `finish`
-            unsafe { *slots.0.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
-            ftab[c] = s + 1;
-            true
-        };
-        let mut i = lo;
-        let mut ok = true;
-        'rows: while i + 16 <= hi {
-            let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
-            if a == b && a == a.rotate_left(8) {
-                // 16 equal bytes: 16 consecutive slots of their bucket, in one store each
-                let c = ll[i] as usize;
-                let s = ftab[c] as usize;
-                if s + 16 > lim[c] as usize {
-                    ok = false;
-                    break 'rows;
-                }
-                // the 16 entries `ll[s + jj] | (i + jj) << 8` in one 16-wide write, as
-                // `bwt::build_one_pass` writes a window of one run. All 16 are final: no
-                // provisional entry is left above the cursor.
-                // SAFETY: s + 16 <= lim[c] (checked just above) and lim[c] <= n, since
-                // lim[c] is starts[c] plus a count of byte c before row hi, which `new`
-                // checked to be at most counts[c] (a checkpoint's `within`, or the counts
-                // themselves at n), and starts[c] + counts[c] <= n (the counts sum to n).
-                // So ll[s..s + 16] is readable, and slots s..s + 16 lie in the table's
-                // reserved capacity, inside this range's window of bucket c, which no
-                // other range's window overlaps (as the one-row step's). The links are
-                // exact: i + 15 < n < 2^24, so (i + jj) << 8 fits in u32 and is disjoint
-                // from the byte's bits, and run16's add is the OR
-                unsafe { crate::bwt::run16(ll.as_ptr().add(s), (i as u32) << 8, slots.0.add(s)) };
-                ftab[c] += 16;
-            } else {
-                for ii in i..i + 16 {
-                    if !one(ii, &mut ftab) {
-                        ok = false;
-                        break 'rows;
-                    }
-                }
-            }
-            i += 16;
-        }
-        while ok && i < hi {
-            ok = one(i, &mut ftab);
-            i += 1;
-        }
+        // SAFETY: (scatter's contract) every window of this range, starts[c] + before[c]
+        // to starts[c] + after[c], lies in [0, n): `new` checked each checkpoint to be
+        // within the counts and the counts to sum to n. No other range's window overlaps
+        // it (the checkpoints rise, `check_inputs`); range j is written only by the share
+        // that claimed it; and the table's buffer, reserved for n entries, is held
+        // (`self.tt`), not moved, until `finish`
+        let ok = unsafe { scatter(ll, lo, hi, &mut ftab, &lim, slots.0) };
         // the end check: every window filled exactly (the share's writes released with it)
         if ok && ftab == lim {
             self.passed.fetch_or(bit, Ordering::Release);
@@ -1414,6 +1464,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bwt::read_u64;
     use std::sync::atomic::AtomicU64;
 
     fn each_index_once(p: &Pool) {
@@ -1868,6 +1919,85 @@ mod tests {
         Some(tt)
     }
 
+    /// Port 1's `share` (#335, `efbdb53af`): the scalar share with `run16` in its equal
+    /// window and nothing else changed. The second reference of port 2's differential
+    fn port1_share_reference(
+        ll: &[u8],
+        counts: &[u32; 256],
+        cps: &[[u32; 256]],
+        stride: usize,
+        k: usize,
+    ) -> Option<Vec<u32>> {
+        let n = ll.len();
+        check_inputs(n, counts, cps, stride, k).ok()?;
+        let mut starts = [0u32; 256];
+        let mut cum = 0u32;
+        for b in 0..256 {
+            starts[b] = cum;
+            cum += counts[b];
+        }
+        let mut tt = vec![u32::MAX; n];
+        let at = |e: usize| if e == n { counts } else { &cps[e / stride] };
+        for j in 0..k {
+            let (lo, hi) = (edge(n, k, stride, j), edge(n, k, stride, j + 1));
+            let (before, after) = (at(lo), at(hi));
+            let mut ftab = [0u32; 256];
+            let mut lim = [0u32; 256];
+            for b in 0..256 {
+                ftab[b] = starts[b] + before[b];
+                lim[b] = starts[b] + after[b];
+            }
+            let one = |i: usize, ftab: &mut [u32; 256], tt: &mut [u32]| -> bool {
+                let c = ll[i] as usize;
+                let s = ftab[c];
+                if s >= lim[c] {
+                    return false;
+                }
+                tt[s as usize] = ll[s as usize] as u32 | (i as u32) << 8;
+                ftab[c] = s + 1;
+                true
+            };
+            let mut i = lo;
+            while i + 16 <= hi {
+                let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+                if a == b && a == a.rotate_left(8) {
+                    let c = ll[i] as usize;
+                    let s = ftab[c] as usize;
+                    if s + 16 > lim[c] as usize {
+                        return None;
+                    }
+                    // SAFETY: s + 16 <= lim[c] <= n = tt.len() (checked above and in
+                    // check_inputs)
+                    unsafe {
+                        crate::bwt::run16(
+                            ll.as_ptr().add(s),
+                            (i as u32) << 8,
+                            tt.as_mut_ptr().add(s),
+                        )
+                    };
+                    ftab[c] += 16;
+                } else {
+                    for ii in i..i + 16 {
+                        if !one(ii, &mut ftab, &mut tt) {
+                            return None;
+                        }
+                    }
+                }
+                i += 16;
+            }
+            while i < hi {
+                if !one(i, &mut ftab, &mut tt) {
+                    return None;
+                }
+                i += 1;
+            }
+            if ftab != lim {
+                return None;
+            }
+        }
+        Some(tt)
+    }
+
     /// The build cut into k shares, each on a thread of its own, `None` where refused
     fn split_build(
         ll: &[u8],
@@ -1966,6 +2096,10 @@ mod tests {
             for &k in ks {
                 let old = scalar_share_reference(ll, &counts, &cps, stride, k);
                 let new = split_build(ll, &counts, &cps, stride, k);
+                assert!(
+                    port1_share_reference(ll, &counts, &cps, stride, k) == old,
+                    "{what}: k {k}, stride {stride}: port 1's share differs from the scalar share"
+                );
                 assert!(
                     new == old,
                     "{what}: k {k}, stride {stride}: the split build differs from the scalar share"
@@ -2069,6 +2203,123 @@ mod tests {
         b.share(0);
         let (r, tt) = b.finish();
         assert!(r.is_err() && tt.0.is_empty(), "a short window accepted");
+    }
+
+    /// Columns of short runs over a few bytes: windows of 2 to 16 runs, the run-by-run
+    /// windows (at most `RUNS` runs) at every offset, and runs ending at every distance
+    /// from a share's window end, at random
+    fn run_columns(
+        r: &mut impl FnMut() -> u64,
+        cases: usize,
+        max_n: usize,
+    ) -> Vec<(String, Vec<u8>)> {
+        let mut v = Vec::new();
+        for t in 0..cases {
+            let n = 16 + (r() % max_n as u64) as usize;
+            let syms = 2 + (r() % 4) as u8;
+            let maxlen = [2u64, 4, 8, 16, 24][(r() % 5) as usize];
+            let mut ll = Vec::with_capacity(n);
+            while ll.len() < n {
+                let len = 1 + (r() % maxlen) as usize;
+                let b = [0u8, 85, 170, 255, 128][(r() % syms as u64) as usize];
+                ll.extend(std::iter::repeat(b).take(len.min(n - ll.len())));
+            }
+            v.push((format!("runs {t}"), ll));
+        }
+        // every window of 2 to 7 runs at every offset, between one-run windows
+        for runs in 2..=7usize {
+            for off in 0..16usize {
+                let mut ll = vec![9u8; 16 + off];
+                let mut w = Vec::new();
+                for q in 0..runs {
+                    let len = if q + 1 == runs {
+                        16 - w.len()
+                    } else {
+                        1 + (q * 5 + off) % 3
+                    };
+                    w.extend(std::iter::repeat([3u8, 7, 3, 7, 5, 3, 7][q]).take(len));
+                }
+                ll.extend(&w);
+                ll.extend(vec![9u8; 32]);
+                v.push((format!("{runs} runs at offset {off}"), ll));
+            }
+        }
+        v
+    }
+
+    /// Port 2 (`build_one_pass`'s loop in `share`): the same table as `bwt::build`, the
+    /// scalar share and port 1's share, entry for entry, or the same refusal, on columns of
+    /// short runs at every share count 1 to 4 and strides 1, 7, 16 and 64
+    #[test]
+    fn share_one_pass_is_the_share() {
+        let mut r = xorshift(0x0e9a55);
+        for (name, ll) in run_columns(&mut r, 600, 1500) {
+            run16_matches(&ll, &[1, 2, 3, 4], &[1, 7, 16, 64], &name);
+        }
+    }
+
+    /// Lying counts and checkpoints (a count moved between two bytes, the sums kept) on
+    /// columns of short runs: port 2 accepts and refuses exactly what port 1's share does,
+    /// and what it accepts is `bwt::build`'s table
+    #[test]
+    fn share_one_pass_refuses_as_port_1() {
+        let mut r = xorshift(0x1a75);
+        let (mut accepted, mut refused) = (0, 0);
+        for (name, ll) in run_columns(&mut r, 1500, 1500) {
+            let n = ll.len();
+            let stride = [1usize, 7, 16][(r() % 3) as usize];
+            let mut counts = counts_of(&ll);
+            let mut cps = checkpoints_of(&ll, stride);
+            let (a, b) = (
+                [0usize, 85, 170, 255][(r() % 4) as usize],
+                [0usize, 85, 170, 255][(r() % 4) as usize],
+            );
+            let d = (r() % 18) as u32;
+            if a != b && counts[a] >= d {
+                counts[a] -= d;
+                counts[b] += d;
+                if r() % 2 == 0 {
+                    for cp in cps.iter_mut() {
+                        let m = cp[a].min(d);
+                        cp[a] -= m;
+                        cp[b] += m;
+                    }
+                }
+            }
+            let k = 1 + (r() % 4) as usize;
+            let old = port1_share_reference(&ll, &counts, &cps, stride, k);
+            let new = split_build(&ll, &counts, &cps, stride, k);
+            assert!(
+                new == old,
+                "{name}: n {n} k {k} stride {stride}: differs from port 1"
+            );
+            match new {
+                Some(t) => {
+                    let mut want = TVector::new();
+                    crate::bwt::build(&ll, &counts_of(&ll), &mut want);
+                    assert!(t == want.0, "{name}: a wrong table accepted");
+                    accepted += 1;
+                }
+                None => refused += 1,
+            }
+        }
+        assert!(
+            accepted > 100 && refused > 100,
+            "{accepted} accepted, {refused} refused"
+        );
+    }
+
+    /// The run-by-run windows under Miri: their 16-wide writes near a share's window end,
+    /// the provisional entries above each cursor, and the shares' disjoint slots under the
+    /// race detector, at k = 2 and 3
+    #[test]
+    fn miri_share_one_pass() {
+        let mut r = xorshift(0x3141);
+        for (name, ll) in run_columns(&mut r, 4, 240).into_iter().filter(|(n, _)| {
+            n.starts_with("runs") || n.ends_with("offset 5") || n.ends_with("offset 15")
+        }) {
+            run16_matches(&ll, &[2, 3], &[16, 7], &name);
+        }
     }
 
     // ---- B5 review (#335): adversarial tests ----

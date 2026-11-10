@@ -280,9 +280,21 @@ def coop_lines(src):
 
 
 def load(prefix):
+    """Every thread's profile under PREFIX, each once. Refuses (SystemExit) a prefix holding
+    both PREFIX.PID-NN and PREFIX.PID-NN.gz, and two files of one thread: either would count
+    a thread twice (2026-11-10-share-run16.md §8, Guardian D085)."""
     # (callgrind leaves an empty PREFIX.PID beside the per-thread PREFIX.PID-NN files)
     files = sorted(f for f in glob.glob(prefix + ".*") if re.search(r"\.\d+-\d+(\.gz)?$", f))
-    return [Profile(f) for f in files]
+    stems = collections.Counter(f[:-3] if f.endswith(".gz") else f for f in files)
+    both = sorted(s for s, c in stems.items() if c > 1)
+    if both:
+        sys.exit(f"{prefix}: raw and gzipped copies of one profile: {both}")
+    profiles = [Profile(f) for f in files]
+    seen = collections.Counter(p.thread for p in profiles)
+    twice = sorted(t for t, c in seen.items() if c > 1)
+    if twice:
+        sys.exit(f"{prefix}: threads appear in more than one file: {twice}")
+    return profiles
 
 
 def report(args):
