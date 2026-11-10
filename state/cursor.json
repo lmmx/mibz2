@@ -1967,12 +1967,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D097",
-    "incoming_comment": 6770180620,
-    "review_comment_id": 6770483223,
-    "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
+    "active_comment": 6771542584,
+    "status": "in progress",
+    "decision": "D098"
   },
   "duplicate_events": [
     {
@@ -3488,6 +3485,13 @@
       "work_commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
       "review_comment_id": 6770483223,
       "complete_cursor_commit": "766f5b01ce2b50f49b30d4dad8518ede332f4397"
+    },
+    {
+      "comment_id": 6771542584,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D098",
+      "progress": "Receipt; migration verified. Reviewing D097-F1 repair at PR359."
     }
   ],
   "migrated_from": {
