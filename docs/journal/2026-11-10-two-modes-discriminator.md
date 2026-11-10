@@ -462,8 +462,29 @@ That gap is why every pass now has a deadline.
 
 ### After the revision
 
-The full in-recipe DRY check, pass 1 included, is recorded in the pull request. Like any DRY
-check, it proves plumbing only, never discrimination on the target.
+**The full in-recipe DRY check at `e5b76ecc`, before the gap block was added.** It ran in an
+idle window: `just bench-two-modes 1`.
+- **Every stage up to pass 1 ran inside the recipe:**
+  - the archived bundle fetched and checked by digest;
+  - the corpus built by the archived `windows`, SHA-256 checked;
+  - the preflight REFUSED, as it must be on that host, recorded;
+  - the 3-copy sustained input verified by content before and after;
+  - the sustained block exited 0;
+  - pass 1 exited 0 under its deadline: three runs in the schedule's first three slots, each
+    with the registered output, the mask read back, and P-idle's coverage 0.999.
+- **The admission contract** found no problems in DRY mode, and the bundle was made.
+- **Its bundle** is the pull request's record (SHA-256 `c49bf2b1…`).
+
+**The gap block's driver, alone** (`two_modes.py gaps`, untimed, on a small bzip2 input with the
+archived `ab`):
+- six runs in the registered order's first six slots;
+- the measured gaps were 0.2501 s for G and 0.0001 s for Z;
+- every run exited 0;
+- the judge's gap checks found no problems.
+
+**A full in-recipe DRY check with the gap block is still to come.** It waits for an idle window,
+which the shared machine did not have for an hour. Like any DRY check, it proves plumbing only,
+never discrimination on the target.
 
 ## Reproduce
 
