@@ -151,6 +151,12 @@
       "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
       "planned_action": "Accept bounded diagnostic preparation, defer ready admission for CI; route new occupancy invariant incident to now-free Guardian and batched material moves to Observer.",
       "recipient_completion": "Guardian cursor f60439676a13328f7a13226f73fd6725c3ee8355 confirms6782224690 finished; immutableD0990e03badbdaf9fd77d29302bab2a39779325cb723."
+    },
+    "6782313693": {
+      "status": "in_progress",
+      "delivery_id": "8d937980-dd5f-11f1-90ad-7b2f4cf9af1b",
+      "comment_updated_at": null,
+      "planned_action": "Accept bounded live-path diagnostic direction and archive replay; reconcile with existing Codex assignment, no duplicate implementation or workstation run; batch material outcome to Observer."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -251,12 +257,14 @@
       "observed": "2026-11-10T23:30Z"
     },
     "optimizer": {
-      "status": "delivered_in_progress",
+      "status": "completed",
       "scope": "Bounded existing-evidence cells stage/end-to-end gap investigation",
       "comment_id": 6782112235,
       "url": "https://github.com/lmmx/mibz2/pull/160#issuecomment-6782112235",
       "recipient_evidence": "team-state/optimizer:state/cursor.json explicitly records assignment 6782112235 in_progress",
-      "observed": "2026-11-10T23:30Z"
+      "observed": "2026-11-10T23:30Z",
+      "review_comment_id": 6782313693,
+      "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
       "status": "posted_verified_existing_session_observed",
@@ -267,12 +275,14 @@
       "receipt_for_formal_assignment_pending": true
     },
     "guardian": {
-      "status": "in_progress_before_post",
-      "scope": "New #366 occupancy invariant incident; independent of completed recipe review and Researcher #365 B5"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6782334222,
+      "scope": "New #366 occupancy invariant incident",
+      "prior_completed": 6782224690
     },
     "observer": {
       "status": "in_progress_before_post",
-      "scope": "Batched material moves: sole activation, cells review/investigation, #366 diagnostic defer and new occupancy incident"
+      "scope": "Batch activation, #365 review and completed pricing, #366 review PROCEED but new ledger failure prevents readiness"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
