@@ -97,6 +97,10 @@ impl Finder {
                 pair[idx >> 6] |= 1 << (idx & 63);
             }
         }
+        // (a safe constructor: AVX2 only where asked for and the CPU has it, so no caller can
+        // reach `find_avx2` on a CPU without it; R1 of the B5 review)
+        #[cfg(target_arch = "x86_64")]
+        let avx2 = avx2 && std::is_x86_feature_detected!("avx2");
         #[cfg(not(target_arch = "x86_64"))]
         let avx2 = {
             let _ = avx2;
@@ -119,10 +123,16 @@ impl Finder {
     fn find(&self, data: &[u8], from: usize, to: usize, v: &mut Vec<Cand>) {
         // (a magic needs 6 bytes from its first)
         let to = to.min(data.len().saturating_sub(5));
+        // (nothing to search: and `from` past the end must never reach the bounds below,
+        // where `k + 40` could wrap; R2 of the B5 review)
+        if from >= to {
+            return;
+        }
         let mut k = from;
         #[cfg(target_arch = "x86_64")]
         if self.avx2 {
-            // SAFETY: `avx2` is set only where the CPU has AVX2
+            // SAFETY: `avx2` is set only where the CPU has AVX2 (`Finder::new` checks it), and
+            // `from < to <= data.len() - 5` here, so `find_avx2`'s bounds cannot wrap
             k = unsafe { self.find_avx2(data, k, to, v) };
         }
         while k < to {
@@ -2484,5 +2494,38 @@ mod tests {
         }
         std::hint::black_box(x);
         assert!(cpu_micros() >= a);
+    }
+
+    /// R1 (the B5 review, #320): `Finder::new` is safe, so it must not let a caller reach
+    /// the AVX2 path on a CPU without AVX2. Under Miri without `+avx2` the request is
+    /// refused, not obeyed (before the fix: "calling a function that requires unavailable
+    /// target features: avx2").
+    #[test]
+    fn miri_r1_avx2_asked_for_without_avx2() {
+        let f = Finder::new(true);
+        let mut v = Vec::new();
+        f.find(&[0u8; 64], 0, 64, &mut v);
+        assert!(v.is_empty());
+        #[cfg(target_arch = "x86_64")]
+        assert_eq!(f.avx2, std::is_x86_feature_detected!("avx2"));
+    }
+
+    /// R2 (the B5 review, #320): a `from` at or past the clamped end searches nothing, and
+    /// never wraps the bounds into out-of-range pointer arithmetic (before the fix, under Miri
+    /// with `+avx2` and overflow checks off: "overflowing pointer arithmetic"; with overflow
+    /// checks on, an overflow panic).
+    #[test]
+    fn miri_r2_from_past_the_end() {
+        let d = [0u8; 64];
+        for avx2 in [true, false] {
+            let f = Finder::new(avx2);
+            let mut v = Vec::new();
+            f.find(&d[1..], usize::MAX - 1, 63, &mut v);
+            f.find(&d[1..], usize::MAX, usize::MAX, &mut v);
+            f.find(&d, 64, 64, &mut v);
+            f.find(&d, 100, 200, &mut v);
+            f.find(&d, 30, 10, &mut v);
+            assert!(v.is_empty(), "avx2 {avx2}: {v:?}");
+        }
     }
 }

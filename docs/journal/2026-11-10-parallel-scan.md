@@ -347,10 +347,115 @@ The scope is this research example only; it ships in no library code.
   `long`s. The kernel writes within it and keeps nothing; the return is checked, and the times
   are read as plain integers, every bit pattern of which is valid. Tested natively
   (`getrusage_times_grow`).
-- **Not done here:** fuzz and mutation testing aimed at the `unsafe` blocks themselves, and
-  the adversarial review by an agent other than the implementer, which B5 requires and the
-  Guardian may HOLD on. The harness's thread code is safe Rust and was not run under Miri
-  (it needs libbzip2, a foreign library, to make its inputs).
+- **Fuzz and mutation testing aimed at the `unsafe` blocks, and the adversarial review by an
+  agent other than the implementer:** done in #320, merged into this branch with its commits;
+  recorded in §8.6. The Guardian may still HOLD (B5). The harness's thread code is safe Rust
+  and was not run under Miri (it needs libbzip2, a foreign library, to make its inputs).
+
+### 8.6 B5: the independent review, fuzzing and mutants (#320)
+
+An agent other than the implementer reviewed the example's `unsafe` adversarially, fuzzed the
+finder and ran hand-written mutants against the tests
+([#320](https://github.com/lmmx/mibz2/pull/320), head `e10d1814`). Its changes are tests only,
+inside `#[cfg(test)]`, and are merged into this branch with their commits. It found no
+reachable unsoundness, and two latent hazards, both now fixed (below).
+
+**Verdicts, block by block:**
+
+| block | invariant | verdict |
+|---|---|---|
+| the call `unsafe { self.find_avx2(..) }` in `find` | the CPU has AVX2, from `self.avx2` | sound as used; latent hazard R1: `Finder::new(true)` is safe, so the invariant was not encapsulated |
+| `find_avx2`'s pointer arithmetic and three 32-byte loads | the loads read `data[k+1..k+35]`; `k + 40 <= len`, or `k + 32 <= to <= len − 5`, each suffices, given `from <= len` | sound for every caller; latent hazard R2: a `from` near `usize::MAX` wraps `k + 32` and `k + 40` (overflow checks off) |
+| `find_avx2`'s two 16-byte table loads | `[u8; 16]`, unaligned load | sound |
+| `find_avx2`'s filter logic | a superset filter; `verify` (safe) is exact | sound and correct (M7–M18, fuzzing) |
+| `cpu_micros`'s `getrusage` call | RUSAGE_SELF; a live, exclusive, zeroed 144-byte `#[repr(C)]` buffer, at least `struct rusage`'s size on LP64 Linux and macOS; any `i64` valid; nothing retained; the return checked | sound |
+| the shared state: `Mutex` + `Condvar`, `thread::scope`, the sampler's `AtomicBool` | no `unsafe impl Send/Sync`; the stop flag only stops, the data comes back through `join`; poisoned locks recovered, read by no `unsafe` code; guards declared so the state's lock drops first | sound (safe Rust) |
+
+**Fuzzing** (`fuzz_finder_differential`, a seeded randomised differential test: cargo-fuzz was
+unavailable offline). The AVX2 filter and the scalar finder are compared with the bit-by-bit
+reference on:
+- each whole input, a random sub-range, and a random partition into 1–8 ranges;
+- natively, placements against a `PROT_NONE` guard page after the end and before the start.
+
+The inputs:
+- *lengths* biased to the AVX2 loop's edges (32i + 30..45), and spread over 0–5,000;
+- *backgrounds*: random, zero, 0xFF, or the magics' own bytes;
+- *plants*: at random bits, at the tail, across step edges, back to back, and one-bit near
+  misses.
+
+The other tests it added:
+- `finder_every_bit_offset`: every bit of lengths 40–104, with cuts and guard pages;
+- `finder_find_chunk_edges`: a magic at each offset 0–48 bits before each chunk edge;
+- `getrusage_counts_every_thread`: a 1.1 s burn on another thread must show.
+
+The bounded run, 2 × 300 s, found no failures:
+
+| seed | inputs | bytes | `find` calls | reference candidates | plants | guarded placements |
+|---|--:|--:|--:|--:|--:|--:|
+| 0x9e3779b9 | 21,788,324 | 8.32 GB | 762,572,188 | 298,806,222 | 394,731,030 | 87,153,296 |
+| 0x13c6ef372 | 21,822,399 | 8.32 GB | 763,784,766 | 299,483,367 | 395,531,502 | 87,289,596 |
+
+In CI the fuzz test runs 3,000 inputs. The Miri subset of `miri_finder_matches_naive` now
+includes the AVX2 loop's tightest lengths (32i + 34..=40).
+
+**Mutants** (hand-written; cargo-mutants was unavailable offline). "Old" is this entry's tests
+before #320, "new" with it:
+
+| # | mutant | old | new |
+|---|---|---|---|
+| M1, M2 | AVX2 bound `k+40` → `k+34`, `k+35` | pass | pass: equivalent (the `to` bound suffices) |
+| M3 | `k+32<=to` → `k+31<=to` | killed | killed |
+| M4 | `k+32<=to` → `k+33<=to` | pass | pass: equivalent (the scalar tail covers it) |
+| M5, M6 | step 31, 33 | killed | killed |
+| M7, M8 | third load `p+2` → `p+1`; base `k+1` → `k` | killed | killed |
+| M9, M10 | low nibble unmasked; high-nibble shift 3 | killed | killed |
+| M11 | third fingerprint byte dropped | pass | pass: equivalent (a weaker filter; `verify` is exact) |
+| M12–M14 | mask inverted; `leading_zeros`; two bits cleared per loop | killed | killed |
+| M15 | scalar tail dropped | killed | killed |
+| M16–M18 | tables swapped or built from the wrong byte | killed | killed |
+| M19 | clamp `len-5` → `len-6` | **pass** | killed |
+| M20 | clamp `len-5` → `len-4` | pass | pass: equivalent (`verify` rejects) |
+| M21 | clamp `len-5` → `len-1` | killed (panic) | killed |
+| M22 | fit check `bit+48` → `bit+47` | killed | killed |
+| M23 | AVX2 dispatch unconditional | pass | equivalent on AVX2 hardware; killed by Miri without `+avx2` (R1) |
+| M24, M25 | `getrusage` `who` = THREAD, CHILDREN | **pass** | killed |
+| M26 | `Rusage` 8 bytes short | fails to build (the compile-time assert) | fails to build |
+| M27 | timeval seconds misread (× 1e3) | **pass** | killed (the test now burns past 1 s) |
+| M28 | `getrusage`'s return unchecked | pass | **survivor** |
+| M29 | both load bounds loosened (the last load 1 byte past, output unchanged) | **pass**, Miri too | killed: SIGSEGV at the guard page; and by Miri on the new length subset |
+
+- **M28, a documented survivor:** a valid `getrusage` call never fails, so its check can't be
+  exercised without fault injection. The defensive check is kept: a failure panics, and the
+  run is INVALID.
+- **Two gaps in this entry's own tests, found by it:**
+  - M29: the old Miri length subset (0, 5–7, 39–41, 45, 70, 96) never reached the lengths
+    where a loosened bound reads past the end, so a 1-byte overread passed under Miri.
+  - M27: the old `getrusage_times_grow` burned about 150 ms, too little to notice seconds
+    misread as milliseconds.
+
+  Both are closed by #320's tests.
+
+**The two hazards, fixed in the measured file** (no caller reached either; both changes are
+equivalent for every caller, which already gated AVX2 and passed `from <= len`):
+- **R1:** `Finder::new` now sets AVX2 only if asked for *and* `is_x86_feature_detected!("avx2")`,
+  so the safe constructor can't reach `find_avx2` on a CPU without it.
+  - *Test:* `miri_r1_avx2_asked_for_without_avx2`.
+  - *Before the fix,* under Miri without `+avx2`: "Undefined Behavior: calling a function that
+    requires unavailable target features: avx2".
+  - *After:* it passes, under Miri with and without `+avx2`, and natively.
+- **R2:** after the clamp, `find` returns when `from >= to`, so a large `from` never reaches
+  the bounds that could wrap.
+  - *Test:* `miri_r2_from_past_the_end`: `from` at `usize::MAX − 1` and `usize::MAX`, at the
+    end, past it, and above `to`, for both finders.
+  - *Before the fix,* under Miri with `+avx2` and `-C overflow-checks=off`: "Undefined
+    Behavior: overflowing pointer arithmetic". Natively with overflow checks on: an overflow
+    panic.
+  - *After:* it passes under Miri (both configurations) and natively.
+
+Miri: nightly 2026-10-26 (Miri 0.1.0 16d1ffac17).
+- *Without `+avx2`, and with `+avx2`:* `cargo +nightly miri test --example par_scan -- miri_`,
+  3 tests, all pass.
+- *With `+avx2 -C overflow-checks=off`:* the R1 and R2 tests pass.
 
 ### 8.5 The dry run, the freeze and CI
 
