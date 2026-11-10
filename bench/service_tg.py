@@ -742,7 +742,8 @@ def read_text(d, name):
         return None
 
 
-def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2"):
+def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2",
+                   label="qualification"):
     """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
     rows by (corpus, threads, arm) and round"""
     p = []
@@ -755,7 +756,7 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
         info = json.loads(read_text(d, "shard.json"))
     except json.JSONDecodeError:
         return [f"{sid}: shard.json unreadable"], {}
-    want = {"schema": "mibz2.tg_ni_shard/1", "label": "qualification", "shard": sid, "corpus": corpus,
+    want = {"schema": "mibz2.tg_ni_shard/1", "label": label, "shard": sid, "corpus": corpus,
             "threads": list(threads), "rounds": expect_rounds, "head": head, "base": fz.get("base"),
             "github_sha": head, "workflow_sha": head, "run_id": run_id, "run_attempt": attempt,
             "repository": repository}
@@ -852,7 +853,7 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
         if k not in fz:
             p.append(f"bench/{FROZEN} names no {k}")
     if man.get("label") != "qualification":
-        p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check is never evidence)")
+        p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
     if check_git and "candidate" in fz:
         p += head_problems(head, fz["candidate"])
     run_id = man.get("run")
