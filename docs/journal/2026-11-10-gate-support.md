@@ -46,8 +46,9 @@ runner-minutes):
 1. **Fewer cells: not within the route.** STEWARDSHIP condition 2: "every cell of the standing
    CI end-to-end bench", and "any omission or change to that standing grid is a separate
    prospective bench-policy decision, not an exclusion available within this route". Such a
-   decision is the team's (RULES C6) and forward-only (C2); the candidate's own PR bench runs
-   on these cells exist, so it can't be taken for #316.
+   decision is the team's (RULES C6) and forward-only (C2). Taken now, to shrink one
+   candidate's qualification, it is the exclusion that sentence forbids; and it could not
+   apply to #316 if any run of the candidate on these cells has been seen.
    - What it would buy: without the four high-τ cells, k 8 × R240 gives 0.874. Three
      dispatches saved, by removing the four cells whose history is least stable: the cells a
      no-harm claim most needs.
