@@ -1,0 +1,549 @@
+{
+  "inbox_comment": 6758452562,
+  "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "candidate_commit": "e88c063155c3e734e748e99ccda025393302720f",
+  "ci_base": "5e7b995471591eacdd5ae32cebfb8bbb578cbff5",
+  "archived_callgrind_base": "3e1a7ec361ee6c8ea6b540264aa69189d4823d9e",
+  "tunnel_pin": "f666ea9f3e611e114211c58172d5d2482ce15010",
+  "files": {
+    "base-random": {
+      "sha": "0f259cac89f11d1108219645acf0c38dfc5fd8f0",
+      "url": "https://github.com/lmmx/mibz2/blob/e88c063155c3e734e748e99ccda025393302720f/docs/journal/2026-11-10-run-front-production/cg/base-random-b0.out"
+    },
+    "head-random": {
+      "sha": "5db04cfbebd3d55a66ee6544b86349c7c984f119",
+      "url": "https://github.com/lmmx/mibz2/blob/e88c063155c3e734e748e99ccda025393302720f/docs/journal/2026-11-10-run-front-production/cg/head-random-b0.out"
+    },
+    "base-records": {
+      "sha": "76c8b2edd597464d9c4bf32bc04c8994ac1b42ec",
+      "url": "https://github.com/lmmx/mibz2/blob/e88c063155c3e734e748e99ccda025393302720f/docs/journal/2026-11-10-run-front-production/cg/base-records-b0.out"
+    },
+    "head-records": {
+      "sha": "fa4589d56d6c3b86fe4732e13d9a551ec71776cd",
+      "url": "https://github.com/lmmx/mibz2/blob/e88c063155c3e734e748e99ccda025393302720f/docs/journal/2026-11-10-run-front-production/cg/head-records-b0.out"
+    },
+    "tunnels": {
+      "sha": "feac6abe1e1e4aeff3a865538ae95d7eb91eee57",
+      "url": "https://github.com/lmmx/mibz2/blob/f666ea9f3/docs/journal/2026-11-10-tunnels.md"
+    },
+    "census": {
+      "sha": "0818b651180416bcfd04536ed9107ded4a55197a",
+      "url": "https://github.com/lmmx/mibz2/blob/f666ea9f3e611e114211c58172d5d2482ce15010/examples/phrase_census.rs"
+    },
+    "backward": {
+      "sha": "d88aed17f90d953f579f0f139dba92814fa8c3b3",
+      "url": "https://github.com/lmmx/mibz2/blob/f666ea9f3e611e114211c58172d5d2482ce15010/docs/journal/2026-11-10-backward-table.md"
+    },
+    "parallel": {
+      "sha": "a425a3cd3939f74d9091fca7906122766097e84a",
+      "url": "https://github.com/lmmx/mibz2/blob/e88c063155c3e734e748e99ccda025393302720f/src/parallel.rs"
+    }
+  },
+  "replay": {
+    "rescue-base-random.txt": [
+      {
+        "name": "__memset_avx2_unaligned_erms",
+        "self_ir": 12541,
+        "inclusive_ir": 12541,
+        "callees": []
+      },
+      {
+        "name": "mibz2::mtf::mtf_avx2",
+        "self_ir": 60252091,
+        "inclusive_ir": 60252556,
+        "callees": [
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 78,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "drv::measured",
+        "self_ir": 13541584,
+        "inclusive_ir": 84474095,
+        "callees": [
+          {
+            "name": "mibz2::mtf::mtf_avx2",
+            "ir": 60252556,
+            "calls": 1
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 149,
+            "calls": 2
+          },
+          {
+            "name": "__memcmp_avx2_movbe",
+            "ir": 162,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::bwt::room_segments::<32, 1>",
+            "ir": 9253915,
+            "calls": 1
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 144675,
+            "calls": 512
+          },
+          {
+            "name": "mibz2::rle::unrle_avx2",
+            "ir": 844499,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::crc::clmul_update",
+            "ir": 436168,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "mibz2::bwt::room_segments::<32, 1>",
+        "self_ir": 8865094,
+        "inclusive_ir": 9253915,
+        "callees": [
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 201166,
+            "calls": 588
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 12314,
+            "calls": 2
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 131259,
+            "calls": 5280
+          },
+          {
+            "name": "malloc",
+            "ir": 346,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+            "ir": 213,
+            "calls": 1
+          },
+          {
+            "name": "free",
+            "ir": 85,
+            "calls": 1
+          },
+          {
+            "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+            "ir": 43438,
+            "calls": 1
+          }
+        ]
+      }
+    ],
+    "rescue-head-random.txt": [
+      {
+        "name": "__memset_avx2_unaligned_erms",
+        "self_ir": 12548,
+        "inclusive_ir": 12548,
+        "callees": []
+      },
+      {
+        "name": "mibz2::mtf::mtf_avx2",
+        "self_ir": 60252091,
+        "inclusive_ir": 60252556,
+        "callees": [
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 78,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "drv::measured",
+        "self_ir": 13541590,
+        "inclusive_ir": 84474156,
+        "callees": [
+          {
+            "name": "mibz2::mtf::mtf_avx2",
+            "ir": 60252556,
+            "calls": 1
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 156,
+            "calls": 2
+          },
+          {
+            "name": "__memcmp_avx2_movbe",
+            "ir": 162,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::bwt::room_segments::<32, 1, false>",
+            "ir": 9253915,
+            "calls": 1
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 144675,
+            "calls": 512
+          },
+          {
+            "name": "mibz2::finish",
+            "ir": 1280715,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "mibz2::bwt::room_segments::<32, 1, false>",
+        "self_ir": 8865094,
+        "inclusive_ir": 9253915,
+        "callees": [
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 201166,
+            "calls": 588
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 12314,
+            "calls": 2
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 131259,
+            "calls": 5280
+          },
+          {
+            "name": "malloc",
+            "ir": 346,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+            "ir": 213,
+            "calls": 1
+          },
+          {
+            "name": "free",
+            "ir": 85,
+            "calls": 1
+          },
+          {
+            "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+            "ir": 43438,
+            "calls": 1
+          }
+        ]
+      }
+    ],
+    "rescue-base-records.txt": [
+      {
+        "name": "__memset_avx2_unaligned_erms",
+        "self_ir": 12541,
+        "inclusive_ir": 12541,
+        "callees": []
+      },
+      {
+        "name": "mibz2::bwt::room_segments::<32, 1>",
+        "self_ir": 9002008,
+        "inclusive_ir": 9392629,
+        "callees": [
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 206719,
+            "calls": 593
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 12314,
+            "calls": 2
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 127873,
+            "calls": 5056
+          },
+          {
+            "name": "malloc",
+            "ir": 352,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+            "ir": 213,
+            "calls": 1
+          },
+          {
+            "name": "free",
+            "ir": 85,
+            "calls": 1
+          },
+          {
+            "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+            "ir": 43065,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "drv::measured",
+        "self_ir": 13494615,
+        "inclusive_ir": 95404355,
+        "callees": [
+          {
+            "name": "mibz2::mtf::mtf_avx2",
+            "ir": 71102362,
+            "calls": 1
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 149,
+            "calls": 2
+          },
+          {
+            "name": "__memcmp_avx2_movbe",
+            "ir": 162,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::bwt::room_segments::<32, 1>",
+            "ir": 9392629,
+            "calls": 1
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 133419,
+            "calls": 512
+          },
+          {
+            "name": "mibz2::rle::unrle_avx2",
+            "ir": 844472,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::crc::clmul_update",
+            "ir": 436160,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "mibz2::mtf::mtf_avx2",
+        "self_ir": 71101897,
+        "inclusive_ir": 71102362,
+        "callees": [
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 78,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          }
+        ]
+      }
+    ],
+    "rescue-head-records.txt": [
+      {
+        "name": "__memset_avx2_unaligned_erms",
+        "self_ir": 12548,
+        "inclusive_ir": 12548,
+        "callees": []
+      },
+      {
+        "name": "drv::measured",
+        "self_ir": 13494621,
+        "inclusive_ir": 95404416,
+        "callees": [
+          {
+            "name": "mibz2::mtf::mtf_avx2",
+            "ir": 71102362,
+            "calls": 1
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 156,
+            "calls": 2
+          },
+          {
+            "name": "__memcmp_avx2_movbe",
+            "ir": 162,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          },
+          {
+            "name": "mibz2::bwt::room_segments::<32, 1, false>",
+            "ir": 9392629,
+            "calls": 1
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 133419,
+            "calls": 512
+          },
+          {
+            "name": "mibz2::finish",
+            "ir": 1280680,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "mibz2::bwt::room_segments::<32, 1, false>",
+        "self_ir": 9002008,
+        "inclusive_ir": 9392629,
+        "callees": [
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 206719,
+            "calls": 593
+          },
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 12314,
+            "calls": 2
+          },
+          {
+            "name": "__memcpy_avx_unaligned_erms",
+            "ir": 127873,
+            "calls": 5056
+          },
+          {
+            "name": "malloc",
+            "ir": 352,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVec<u32>>::grow_one",
+            "ir": 213,
+            "calls": 1
+          },
+          {
+            "name": "free",
+            "ir": 85,
+            "calls": 1
+          },
+          {
+            "name": "core::slice::sort::unstable::ipnsort::<u32, <u32 as core::cmp::PartialOrd>::lt>",
+            "ir": 43065,
+            "calls": 1
+          }
+        ]
+      },
+      {
+        "name": "mibz2::mtf::mtf_avx2",
+        "self_ir": 71101897,
+        "inclusive_ir": 71102362,
+        "callees": [
+          {
+            "name": "__memset_avx2_unaligned_erms",
+            "ir": 78,
+            "calls": 1
+          },
+          {
+            "name": "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+            "ir": 387,
+            "calls": 1
+          }
+        ]
+      }
+    ]
+  },
+  "algebra": {
+    "counterexample": {
+      "text": "aab",
+      "L": "baa",
+      "F": "aab",
+      "psi": [
+        1,
+        2,
+        0
+      ],
+      "starts": [
+        true,
+        false,
+        true
+      ],
+      "cell": [
+        0,
+        2
+      ],
+      "K_at_interior": 1,
+      "claimed_height": 2,
+      "row0_word_exit": [
+        "aa",
+        2
+      ],
+      "row1_word_exit": [
+        "ab",
+        0
+      ]
+    },
+    "conditional_k8": {
+      "f": 0.48,
+      "entries_per_row": 0.0086,
+      "table_lookups_per_row": 0.0736,
+      "lookup_saving_per_row": 0.0514,
+      "switch2_entry12_Ir_per_row": 0.3532,
+      "break_even_lookup_minus_copy_Ir": 6.8715953307393
+    }
+  },
+  "limits": [
+    "No candidate implementation, compilation, decoder execution or new timing.",
+    "Historical Callgrind text replay only; CI wall figures reported, not raw paired reanalysis.",
+    "No fresh corpus tunnel census; a valid three-row BWT algebra counterexample executed.",
+    "No boxed candidate or actual production address/listing evidence supplied."
+  ],
+  "migration": {
+    "old_head": "e6eea5889432aef28f4d9e450cee87dd5bf7bacf",
+    "manifest_sha256": "86d7a8a6ea42c2d2ade70c5ce3f0c82f375c0fd6291dbf452979bf07b100dbde"
+  },
+  "routing": {
+    "audit": "five resolved historical findings plus known LOG6757065549 on162",
+    "latest_channel": 6758603365,
+    "queued_unstarted": 6758603004
+  },
+  "commit_identity": {
+    "name": "Louis Maddox",
+    "email": "lmmx@users.noreply.github.com",
+    "verified_commit": "699aa7f70ad8c3483849ab323d431a8fed303d5d"
+  }
+}

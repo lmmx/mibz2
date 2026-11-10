@@ -1,0 +1,39 @@
+{
+  "counterexample": {
+    "text": "aab",
+    "L": "baa",
+    "F": "aab",
+    "psi": [
+      1,
+      2,
+      0
+    ],
+    "starts": [
+      true,
+      false,
+      true
+    ],
+    "cell": [
+      0,
+      2
+    ],
+    "K_at_interior": 1,
+    "claimed_height": 2,
+    "row0_word_exit": [
+      "aa",
+      2
+    ],
+    "row1_word_exit": [
+      "ab",
+      0
+    ]
+  },
+  "conditional_k8": {
+    "f": 0.48,
+    "entries_per_row": 0.0086,
+    "table_lookups_per_row": 0.0736,
+    "lookup_saving_per_row": 0.0514,
+    "switch2_entry12_Ir_per_row": 0.3532,
+    "break_even_lookup_minus_copy_Ir": 6.8715953307393
+  }
+}
