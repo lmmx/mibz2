@@ -1,0 +1,61 @@
+{
+  "scope": "Derived arithmetic, no new timing. Rounded median baseline times times paired geometric harm; nominal reported clocks; first890000 trace bytes extrapolated.",
+  "rows": [
+    {
+      "corpus": "random",
+      "run": 2,
+      "bytes": 8000000,
+      "base_seconds_rounded": 0.132,
+      "harm_ratio": 0.034,
+      "reported_ghz": 3.2867,
+      "trace_bytes": 890000,
+      "excess": 42325,
+      "e": 0.0475561797752809,
+      "ns_per_byte": 0.561,
+      "nominal_cycles_per_byte": 1.8438387000000003,
+      "required_nominal_cycles_per_candidate": 38.77180018901359
+    },
+    {
+      "corpus": "random",
+      "run": 3,
+      "bytes": 8000000,
+      "base_seconds_rounded": 0.077,
+      "harm_ratio": 0.053,
+      "reported_ghz": 2.5961,
+      "trace_bytes": 890000,
+      "excess": 42325,
+      "e": 0.0475561797752809,
+      "ns_per_byte": 0.5101249999999999,
+      "nominal_cycles_per_byte": 1.3243355124999998,
+      "required_nominal_cycles_per_candidate": 27.84781113112817
+    },
+    {
+      "corpus": "records",
+      "run": 2,
+      "bytes": 9600000,
+      "base_seconds_rounded": 0.146,
+      "harm_ratio": 0.015,
+      "reported_ghz": 3.2867,
+      "trace_bytes": 890000,
+      "excess": 12678,
+      "e": 0.01424494382022472,
+      "ns_per_byte": 0.228125,
+      "nominal_cycles_per_byte": 0.7497784375000001,
+      "required_nominal_cycles_per_candidate": 52.634706529026666
+    },
+    {
+      "corpus": "records",
+      "run": 3,
+      "bytes": 9600000,
+      "base_seconds_rounded": 0.082,
+      "harm_ratio": 0.021,
+      "reported_ghz": 2.5961,
+      "trace_bytes": 890000,
+      "excess": 12678,
+      "e": 0.01424494382022472,
+      "ns_per_byte": 0.179375,
+      "nominal_cycles_per_byte": 0.4656754375,
+      "required_nominal_cycles_per_candidate": 32.69057732883736
+    }
+  ]
+}
