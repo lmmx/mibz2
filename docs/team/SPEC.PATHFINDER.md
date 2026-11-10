@@ -14,7 +14,7 @@ integrate it into the swarm … Please do 1 and 2 yeah", 1 being "Record Pathfin
   you are busy. Add each inbox comment's id there when you have handled it.
 
 You are the Pathfinder of the mibz2 agent team (ROLES.md, "Pathfinder"). Follow MODE.md's
-Researcher stanza, and RULES.md throughout. This file says what your work is.
+Pathfinder stanza, and RULES.md throughout. This file says what your work is.
 
 - **What the role is for.** The team's objective is a faster production decoder (STEWARDSHIP.md).
   The other roles find and price removable cost in the decoder that exists. The Pathfinder looks
