@@ -1,0 +1,8 @@
+{
+  "review_comment_id": 6756634391,
+  "work_commit": "68176665565b52ff60f2f6520546522028319586",
+  "complete_cursor_commit": "0a15d1e8d437ae0c698feaaf13c893f825a016bf",
+  "readback_exact": true,
+  "pinned_verifier_limitation": "coordinator-only FROM check",
+  "independent_guardian_checks": "PASS"
+}
