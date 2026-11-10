@@ -21,6 +21,7 @@ use mibz2::{mtf, Kernels};
 
 const KS: [usize; 3] = [1, 2, 4];
 const WS: [usize; 3] = [8, 16, 32];
+const CHUNKS: [u32; 5] = [4, 6, 8, 10, 12];
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -32,6 +33,7 @@ fn main() {
     // hist[k][w][d]: lines of WS[w] rows holding d distinct KS[k]-step words
     let mut hist = vec![vec![vec![0u64; 33]; WS.len()]; KS.len()];
     let (mut blocks, mut rows, mut runs, mut seen) = (0usize, 0usize, 0usize, 0usize);
+    let mut stretches = [0u64; CHUNKS.len()];
     while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
         let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
         mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
@@ -43,6 +45,20 @@ fn main() {
         }
         blocks += 1;
         rows += n;
+        // distinct bytes of L in aligned chunks of 16 to 4096 rows: the occurrences of a byte
+        // inside one chunk are consecutive rows of its bucket, and their links share every bit
+        // above the chunk's. So this is the count of (bucket, chunk) stretches.
+        for (ci, sh) in CHUNKS.iter().enumerate() {
+            for chunk in ll.chunks(1 << sh) {
+                let mut seen = [false; 256];
+                for &c in chunk {
+                    if !seen[c as usize] {
+                        seen[c as usize] = true;
+                        stretches[ci] += 1;
+                    }
+                }
+            }
+        }
         runs += 1 + ll.windows(2).filter(|w| w[0] != w[1]).count();
         // LF
         let mut next = [0u32; 256];
@@ -79,6 +95,13 @@ fn main() {
         "{blocks} blocks, {rows} rows, {:.4} runs a row",
         runs as f64 / rows as f64
     );
+    for (ci, sh) in CHUNKS.iter().enumerate() {
+        println!(
+            "chunks of {:4} rows: {:.4} (bucket, chunk) stretches a row",
+            1 << sh,
+            stretches[ci] as f64 / rows as f64
+        );
+    }
     for (ki, &kk) in KS.iter().enumerate() {
         for (wi, &w) in WS.iter().enumerate() {
             let h = &hist[ki][wi];

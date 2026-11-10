@@ -449,6 +449,18 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
         }
     }
 
+    // F's byte of each row
+    let fbyte: Vec<u8> = {
+        let mut cnt = [0usize; 256];
+        for &x in l {
+            cnt[x as usize] += 1;
+        }
+        let mut f = Vec::with_capacity(n);
+        for (x, &k) in cnt.iter().enumerate() {
+            f.extend(std::iter::repeat(x as u8).take(k));
+        }
+        f
+    };
     // TUNNEL set: the whole-cell words at several caps (docs/journal/2026-11-10-tunnels.md), and
     // nothing else. A cell of w > 1 rows whose rows stay adjacent for h steps is a tunnel of
     // width w and height h; its word is those h bytes, stored once.
@@ -512,19 +524,77 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
                 if cap == usize::MAX { 0 } else { cap }
             );
         }
+        // cuts[j]: rows with K < w, for w in 2, 4, 8, 16, 32, 33, 64, 128, 256. The cut set
+        // of Ψ^w is C_w = S ∪ LF(C_{w-1}), so C_w \ C_{w-1} ⊂ LF(C_{w-1} \ C_{w-2}): the cuts
+        // are reached by |C_w| evaluations of LF from the starts, none depending on another
+        // of its level.
+        out += "],\"cuts\":[";
+        for (i, w) in [2u32, 4, 8, 16, 32, 33, 64, 128, 256]
+            .into_iter()
+            .enumerate()
+        {
+            let cnt = kk.iter().filter(|&&x| x < w).count();
+            out += &format!("{}[{w},{cnt}]", if i == 0 { "" } else { "," });
+        }
+        // the same cuts built that way, and checked: a frontier of new cuts, each mapped once
+        // by LF (the inverse of the walk's step), dropped where it lands on a cut. No row is
+        // walked. prop[w] = the evaluations spent to reach C_w; it must equal |C_{w-1}|.
+        out += "],\"prop\":[";
+        {
+            let mut inv = vec![0u32; n];
+            for q in 0..n {
+                inv[c.psi[q] as usize] = q as u32;
+            }
+            let mut in_c = c.start.clone();
+            let mut frontier: Vec<u32> = (0..n as u32).filter(|&q| c.start[q as usize]).collect();
+            let mut evals = 0usize;
+            let mut firstp = true;
+            for level in 2..=64u32 {
+                // from C_{level-1} to C_level
+                let mut new = Vec::new();
+                for &q in &frontier {
+                    let p = inv[q as usize];
+                    evals += 1;
+                    if !in_c[p as usize] {
+                        in_c[p as usize] = true;
+                        new.push(p);
+                    }
+                }
+                frontier = new;
+                if [32, 33, 64].contains(&level) {
+                    assert!(
+                        (0..n).all(|q| in_c[q] == (kk[q] < level)),
+                        "the propagated cuts are not the rows with K < {level}"
+                    );
+                    out += &format!("{}[{level},{evals}]", if firstp { "" } else { "," });
+                    firstp = false;
+                }
+            }
+        }
         out += "],\"hybrid\":[";
         // the stride-k walk that copies tall cells: at a landing in a Ψ^k cell (rows with
         // K >= k between them) whose rows stay adjacent 33 steps or more, take the whole word
         // (to the cap); else take k bytes. Every tall step is checked against the cell's head.
         let mut first = true;
-        for k in [4usize, 8] {
-            // head[y]: the first row of y's Ψ^k cell; hk[head]: min K over its interior
+        // (k, thr): the lane's stride, and the cut that makes the cells: rows part where
+        // K < thr. thr = k is the stride table's own cells; thr = 33 is the finest tall
+        // structure (the multi-row cells of Ψ^33), whatever the stride.
+        for (k, thr) in [
+            (1usize, 1usize),
+            (1, 33),
+            (2, 33),
+            (4, 4),
+            (4, 33),
+            (8, 8),
+            (8, 33),
+        ] {
+            // head[y]: the first row of y's cell; hk[head]: min K over its interior
             let mut head = vec![0u32; n];
             let mut hk = vec![0u32; n];
             let mut a = 0usize;
             let mut m = u32::MAX;
             for q in 0..n {
-                if q > 0 && (kk[q] as usize) < k {
+                if q > 0 && (kk[q] as usize) < thr {
                     hk[a] = m;
                     a = q;
                     m = u32::MAX;
@@ -534,7 +604,7 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
                 head[q] = a as u32;
             }
             hk[a] = m;
-            for cap in [64usize, 256] {
+            for cap in [32usize, 64, 256] {
                 let (mut steps, mut tall_steps, mut tall_bytes) = (0usize, 0usize, 0usize);
                 let mut t = 0;
                 while t < n {
@@ -588,8 +658,139 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
                         }
                     }
                 }
+                // in decode order: a tall landing copies its whole capped word from the output,
+                // and only from bytes already written at a place the decoder knows held this
+                // cell. What it knows: a lane that lands at time t in a tall cell a is in a's
+                // successor a_1 (the cell a's rows step into) at t + 1, in a_2 at t + 2,
+                // and so on while the cells stay tall and whole (hk > thr: the image of a
+                // cell with hk = thr is cut; the certificate found it). `slot[x]`: a time a lane is known to be
+                // in tall cell x. Two reaches of that knowledge: the landing's cell alone; the
+                // cells its word passes. (Every tall cell down its chain was counted too: the
+                // same figures as the word's, since a lane lands again every k.) The copy is all
+                // or nothing: the lane's row after the whole word is the cell's one stored
+                // exit, and after a shorter prefix it is not known. Lanes: one over the block,
+                // or 32 over 512 segments in turn, a word never crossing its segment's end.
+                // Every copy is certified: each byte against its source's, and the exit.
+                let tall = |a: usize| hk[a] != u32::MAX && hk[a] as usize >= 33;
+                let succ = |a: usize| head[c.traj[(pos[a] as usize + 1) % n] as usize] as usize;
+                let mut sims = String::new();
+                for (segs, lanes) in [(1usize, 1usize), (512, 32)] {
+                    for reach in 0..3 {
+                        let mut slot = vec![u32::MAX; n];
+                        let mut written = vec![false; n];
+                        let (mut st, mut cp, mut cpb, mut rec, mut marks) = (0usize, 0, 0, 0, 0);
+                        let mut next_seg = 0;
+                        let mut lane: Vec<(usize, usize)> = Vec::new();
+                        // reach 2, the exit learned and not stored: a landing's record is
+                        // good only once its lane has taken the whole word in table steps and
+                        // so stands on the exit. pend[lane]: (due time, cell, landing time).
+                        let mut pend: Vec<Vec<(usize, usize, usize)>> = vec![Vec::new(); lanes];
+                        while lane.len() < lanes && next_seg < segs {
+                            lane.push((next_seg * n / segs, (next_seg + 1) * n / segs));
+                            next_seg += 1;
+                        }
+                        while !lane.is_empty() {
+                            let mut i = 0;
+                            while i < lane.len() {
+                                let (t, e) = lane[i];
+                                let y = c.traj[t] as usize;
+                                let a = head[y] as usize;
+                                let mut w = k.min(e - t);
+                                if tall(a) {
+                                    let full = (hk[a] as usize).min(cap);
+                                    let tau = slot[a] as usize;
+                                    if slot[a] != u32::MAX
+                                        && tau != t
+                                        && t + full <= e
+                                        && tau + full <= n
+                                        && (0..full)
+                                            .all(|j| written[tau + j] || (tau < t && tau + j >= t))
+                                    {
+                                        for j in 0..full {
+                                            assert!(
+                                                fbyte[c.traj[tau + j] as usize]
+                                                    == fbyte[c.traj[t + j] as usize],
+                                                "a tunnel copy takes a different byte"
+                                            );
+                                        }
+                                        if t + full < n {
+                                            assert_eq!(
+                                                c.traj[t + full] as usize
+                                                    - c.traj[(pos[a] as usize + full) % n] as usize,
+                                                y - a,
+                                                "a tunnel copy's exit is not the cell's"
+                                            );
+                                        }
+                                        w = full;
+                                        cp += 1;
+                                        cpb += full;
+                                        pend[i].clear();
+                                    } else if reach == 2 {
+                                        rec += 1;
+                                        if t + full <= e {
+                                            pend[i].push((t + full, a, t));
+                                        }
+                                    } else {
+                                        rec += 1;
+                                        let lim = [1, full][reach];
+                                        let mut x = a;
+                                        for j in 0..lim {
+                                            if t + j >= n {
+                                                break;
+                                            }
+                                            let s = slot[x] as usize;
+                                            if slot[x] == u32::MAX || (s != t + j && !written[s]) {
+                                                slot[x] = (t + j) as u32;
+                                                marks += 1;
+                                            }
+                                            // x's rows step into one cell only if they
+                                            // stay together past the cut: hk[x] - 1 >= thr
+                                            if hk[x] as usize <= thr {
+                                                break;
+                                            }
+                                            x = succ(x);
+                                            if !tall(x) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                for j in 0..w {
+                                    written[t + j] = true;
+                                }
+                                if !pend[i].is_empty() {
+                                    let t2 = t + w;
+                                    for &(due, x, t0) in &pend[i] {
+                                        if due == t2 && slot[x] == u32::MAX {
+                                            slot[x] = t0 as u32;
+                                            marks += 1;
+                                        }
+                                    }
+                                    pend[i].retain(|p| p.0 > t2);
+                                }
+                                st += 1;
+                                if t + w >= e {
+                                    pend[i].clear();
+                                    if next_seg < segs {
+                                        lane[i] = (next_seg * n / segs, (next_seg + 1) * n / segs);
+                                        next_seg += 1;
+                                        i += 1;
+                                    } else {
+                                        lane.swap_remove(i);
+                                        pend.swap_remove(i);
+                                    }
+                                } else {
+                                    lane[i].0 = t + w;
+                                    i += 1;
+                                }
+                            }
+                        }
+                        // st counted every action; table steps are the rest
+                        sims += &format!(",[{segs},{reach},{},{cp},{cpb},{rec},{marks}]", st - cp);
+                    }
+                }
                 out += &format!(
-                    "{}[{k},{cap},{steps},{tall_steps},{tall_bytes},{tall_cells},{tall_words},{pool}]",
+                    "{}[{k},{thr},{cap},{steps},{tall_steps},{tall_bytes},{tall_cells},{tall_words},{pool}{sims}]",
                     if first { "" } else { "," }
                 );
                 first = false;
