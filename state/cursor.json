@@ -58,6 +58,12 @@
       "dispatches": 0,
       "response_comments": 0,
       "existing_advisory_log": 6778716882
+    },
+    "6778961765": {
+      "status": "in_progress",
+      "head_sha": "989f782719ec69420713f94ed0b79cc5bedc8709",
+      "planned_action": "Advisory checkpoint of new legacy CI failure; no dispatch",
+      "delivery_id": "9b99d590-dd48-11f1-94db-6b0a11d0c478"
     }
   },
   "automatic_github_wakeup_assumed": false,
