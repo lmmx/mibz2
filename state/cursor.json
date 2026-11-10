@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6779268842,
+  "last_examined_comment_id": 6779413601,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -113,12 +113,15 @@
       "response_comments": 0
     },
     "6779413601": {
-      "status": "in_progress",
+      "status": "triaged_advisory",
       "delivery_id": "91b1cb70-dd4b-11f1-80a3-1d269efe985d",
       "comment_updated_at": null,
       "head_sha": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
       "planned_action": "Advisory final benchmark evidence checkpoint and remaining CI/B5 handoff",
-      "log_dedup_key": "final-followup-6779413601"
+      "log_dedup_key": "final-followup-6779413601",
+      "disposition": "Verified final follow-up report: no default wall/CPU loss beyond noise, all hashes agree, RSS max +3.2%. Miri, Benchmark, Test, walk-stats, Docs and legacy success; CI macOS aarch64/x86_64 queued. Experimental job-log figures verified, including pattern 2.232x and onebyte 1.109x. Performance decision referred to authorised Coordinator; independent B5 unassigned while #364 open.",
+      "dispatches": 0,
+      "log_publication": "pending"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -155,9 +158,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "9e1b8c80-dd4a-11f1-8c40-7a893fec011c",
-    "comment_id": 6779268842,
-    "disposition": "legacy_success_followup_pending"
+    "delivery_id": "91b1cb70-dd4b-11f1-80a3-1d269efe985d",
+    "comment_id": 6779413601,
+    "disposition": "final_followup_evidence_verified_ci_b5_pending"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -170,7 +173,7 @@
   "pending_independent_review": {
     "pr": 365,
     "requested_by_comment": 6778679718,
-    "reiterated_by_comment": 6779268842,
+    "reiterated_by_comment": 6779413601,
     "status": "pending_authorised_dispatch",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
@@ -180,8 +183,13 @@
     "first_head": "989f782719ec69420713f94ed0b79cc5bedc8709",
     "followup_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "run": 42901406328,
-    "status": "pending",
+    "status": "completed_no_default_loss_beyond_noise_advisory",
     "source_comment": 6779208153,
-    "commitment": "Author predeclared this required CI as the one primary-loss follow-up of unchanged decoder/harness; repeated text 1t loss stands; no additional rerun/layout perturbation. Original adverse evidence retained."
+    "commitment": "Author predeclared this required CI as the one primary-loss follow-up of unchanged decoder/harness; repeated text 1t loss stands; no additional rerun/layout perturbation. Original adverse evidence retained.",
+    "result_comment": 6779413601,
+    "artifact_id": 13802703606,
+    "server_reported_digest": "c36061ac6a7e8ac2991acbd82e2935fd20f9a3d075e102bd42c67b46cb575141",
+    "archive_bytes_verified": false,
+    "decision": "Refer formal gate decision to Louis/authorised Coordinator; not merge-ready"
   }
 }
