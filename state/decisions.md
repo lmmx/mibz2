@@ -4554,3 +4554,47 @@ The indicated local gains and the present model do not decide adoption. Freeze e
 ### State and publication
 
 Migration checked against previous branch `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488` matches. Receipt committed before assessment. Inbox has one unfinished assignment, this one. Pinned `coord.py audit` shows only the already recorded historical findings (including LOG 6757065549 on #162); route for this REVIEW is #145. One decision and one REVIEW; cursor completion/readback follow. Persistent task stays enabled.
+
+## D098 — Forced plain-team fuzz closes D097-F1
+
+Incoming: [6771542584](https://github.com/lmmx/mibz2/pull/161#issuecomment-6771542584), observed 2026-11-10. Active specification: `a2da49638ac54d7763de1c167bd054f67ffdc763`, docs/team/{SPEC.md,SPEC.GUARDIAN.md,MODE.md,RULES.md,PROTOCOL.md}. G1/G2, RULES B1/B5/B7; scope is D097's missing plain-cooperative fuzz route. Reviewer did not implement the patch.
+
+**PROCEED: D097-F1 lifted** at PR #359 head **58e0a4be697f740b339eae1089c40b567a9f6e93**. The forced candidate closes the missing-route objection; the new evidence is meaningful differential fuzz coverage, combined with D097's unchanged production-source review and existing tests. The 30-second teams CI step is adequate standing **smoke coverage**, not a guarantee of a particular count of reached branches. No new B6 violation, line STOP or stricter admission gate. This records resolution of a B5 completion HOLD, not resumption after a demonstrated B6 violation.
+
+### Source identity reproduced
+
+- Delivery #313 at **372684599788d56d9bf693b31be013bd9fefa18e**, note `docs/journal/2026-11-10-team-runs-port.md`, revised `team-runs-2.diff.txt` and `pin-910472e/` logs. Proposal 6771355497 is supporting evidence.
+- Independently recomputed patch SHA-256 **61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64**. Applied that patch locally to the nine baseline files at **910472e8bcb75a09ec2c61db232c98182951ab2b**; all nine resulting files equal #359's exact-head files.
+- Compared all six complete production files with D097's reconstructed source: **byte-identical** `src/bwt.rs`, `src/coop.rs`, `src/lib.rs`, `src/parallel.rs`, `src/runs.rs`, `src/runs/tests.rs`. Their blob identities and SHA-256 values are retained in the evidence. D097's safety argument, objections resolved there, mutation review and arithmetic model transfer to this unchanged scope.
+- `src/mtf.rs` differs only by the requested 4-of-64 explanatory comment. The remaining changes are `examples/fuzz.rs` and its workflow step. The baseline-to-head comparison also has documentation/site/configuration changes; no additional decoder-source delta appeared. This does not assert byte-identical whole binaries.
+
+### Why the fuzz repair reaches the missing construction
+
+`team_candidates` forces `StreamDecoder::planned(Plan::Teams{...})`: one/two teams of two, one of three, one of four, and a scalar-kernel team of three. `planned` selects `Cooperative<2/3/4>` directly, without the default six-core threshold or default pipeline/service substitution. `reads_runs=true`; `decode_block` sends admitted successful fronts to `invert_runs`; n>=262,144 attempts the cooperative pool/build/backward walk. Smaller blocks take the one-core record fallback. A pool-creation failure remains a real fallback, discussed below.
+
+The reused corpus contains full/short blocks, alternating sizes, concatenated streams, structured text/runs and random/record data. One eighth of edits are zero; other cases mutate, truncate, splice, insert or delete, including later block headers. The fuzzer drives the candidate to completion or an ordered error. It compares **both complete emitted prefix and the entire Result/Error** with the two-worker Segmented reference; thus kind, block and bit must agree, not merely success/failure. Successful decoding is also compared byte-for-byte with libbzip2. Candidate panics and mismatches increment the failure count; the process exits nonzero. The fuzz profile enables debug assertions and overflow checks, so rejected cuts/build fallbacks protected by debug assertions cannot silently count as successes.
+
+Read the two route tests, not merely their names: `runs_path_taken_exactly_where_selected` checks changed record scratch versus a sentinel in Cooperative/Segmented and untouched Plain over 400 synthetic cases; `cooperative_kernel_engages_on_records` verifies output against column build/walk and `engaged()` above/below MIN_COOP, plus malformed tilings. The previously reviewed mutation ledger kills disabling the cooperative record kernel and disabling the decode_block record dispatch. Together these support the forced route; no need to make approval wait on a new algorithm or duplicate the unchanged safety review.
+
+### Counts reproduced; inference bounded
+
+Re-tabulated both archived teams logs: **3,755 cases, zero reported failures; 482 successes, 3,273 errors in 18 kinds**. Across the five candidates and two seeds, records/large classifications occur in 163–189 cases per candidate-run, including scalar. Summed case classifications are **1,759 / 1,160 / 973 / 1,078**; block classifications **3,932 / 2,744 / 2,611 / 4,363**, in records-large / records-small / column-large / column-small order. Case classes overlap; they are not a partition. Front-error classifications total **111 / 69**. The classic, pipeline and service logs report 55,682 / 578 / 561 cases and zero failures. They do not directly count their record routes. Same generator does not establish an identical realised admitted fraction across timed modes.
+
+**Correct the interpretation, not these sums.** `team_routes` separately scans and runs scalar `mtf::mtf`; it neither performs the candidate's finish/RLE/CRC nor observes its pool. Consequently:
+- a scan can continue beyond a decoder-side BlockCrc or RLE error, counting later blocks which cancellation need not let the candidate process;
+- n>=MIN_COOP predicts a pool attempt, not successful pool creation; thread-creation failure falls back;
+- its “front errors” are scalar MTF/primary-index classifier failures, not direct observations of `runs::front` failing in the candidate.
+
+The comment “up to the input's first error” is therefore too broad: it means the classifier's first scanner/front error. **Do not call 3,932 a measured count of executed cooperative blocks, or 111 observed record-front failures.** Retain them as input eligibility/classification counts and state these limitations. This is a nonblocking reporting correction: F1 was absence of a forced cooperative fuzz candidate, not a requirement for exact decoder-side telemetry. Forced dispatch, large/small corpus exposure, the differential outcomes and the explicit route tests resolve that objection without treating the classifier as a branch trace. If exact reach is later required, count inside the actual route after pool acquisition and after the completion fence; changing the printed label alone would not create that evidence.
+
+### Standing CI and remaining boundaries
+
+The workflow builds the fuzz profile and invokes `target/fuzz/examples/fuzz 30 1 fuzz-failures/teams teams`; failures propagate and inputs are uploaded. This adds the previously missing forced path on small runners. It is a bounded fixed-seed smoke test alongside unit/differential/Miri/mutation coverage. A time budget and exit zero alone impose no positive reach floor. A deterministic minimum-case prelude or explicit reach assertions would harden it against future corpus/runner changes; recommended, **not a new HOLD**.
+
+No Rust compiler/Cargo was available on this run's PATH. I independently reproduced source identity, patch application, hash and log arithmetic, and inspected the source/test/dispatch chain; **I did not rerun Rust, fuzz, Miri or mutation tests**. The archived verify-summary's exit-zero commands and scalar/AVX2 Miri claims remain attributed run evidence. That summary lists identical Miri command text twice without the AVX2 environment; it alone does not independently establish that configuration. D097's stated proof/coverage limits remain.
+
+The frozen contrast places #358 on both sides (910472e versus that source plus this patch), so it isolates the port's source change. This review does not adjudicate a workstation bundle, acceptance-rule registration, performance PASS or merge eligibility. At the exact-head CI read, rust/Miri/fuzz/bench and several builds were still running; some platform builds were queued. No all-green claim. Coordinator retains the applicable CI, C5/C6 and merge duties.
+
+### State
+
+Migration passed: old branch **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, exact manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Receipt **b2b68314f41c32d629a36798ad24add98c6722af** precedes assessment. Inbox snapshot has one unfinished item; no evidence-pin duplicate. Audit shows only the already-recorded five resolved historical findings and LOG 6757065549 on #162. Route is #145. Evidence under `state/evidence/D098/`; one REVIEW, then cursor finish. State branch only; persistent task unchanged.

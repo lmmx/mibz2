@@ -1,0 +1,47 @@
+[
+  {
+    "path": "src/bwt.rs",
+    "patch_equals_pr359": true,
+    "sha256": "480397e3ada9326292bc78be6d5bf941126387c61ab484bc28a8f33bc0933b32"
+  },
+  {
+    "path": "src/coop.rs",
+    "patch_equals_pr359": true,
+    "sha256": "f7844ca9dda64b571a41c5b6b63b86632963dd882c3b052367268e02f06664f5"
+  },
+  {
+    "path": "src/lib.rs",
+    "patch_equals_pr359": true,
+    "sha256": "5493e2205cf38763d5e999bde442d7a66a6c55456aa034d7dbdb216ffe5dc135"
+  },
+  {
+    "path": "src/parallel.rs",
+    "patch_equals_pr359": true,
+    "sha256": "34c42b31c86319dfdb83e25ee61d2e0bc28a88000d6fb691370b36a1c0a003f5"
+  },
+  {
+    "path": "src/runs.rs",
+    "patch_equals_pr359": true,
+    "sha256": "f6cf74ce06a3afd33cbe9dfd0cc29398329f8242099809f265cafe03c401c91e"
+  },
+  {
+    "path": "src/runs/tests.rs",
+    "patch_equals_pr359": true,
+    "sha256": "bba75d43aee9be3504ec56da956f6bfe11819ebf2a5b84b11dfc498516970219"
+  },
+  {
+    "path": "src/mtf.rs",
+    "patch_equals_pr359": true,
+    "sha256": "253ab5f9d9978c419214b44b3976b8e977d114760457163066dcba1653ab6105"
+  },
+  {
+    "path": "examples/fuzz.rs",
+    "patch_equals_pr359": true,
+    "sha256": "bf3e80877462224b7b189bf81c07441464bfa4da1b5bcd05acea775f5b5dea9a"
+  },
+  {
+    "path": ".github/workflows/test.yml",
+    "patch_equals_pr359": true,
+    "sha256": "eeb8987eda6cbda541d28c3f06561c8987ff21d8e79ec2e23443cff2995bd63a"
+  }
+]
