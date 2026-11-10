@@ -1,74 +1,67 @@
-# Codex ↔ mibz2 relay — manual pilot
+# Codex ↔ mibz2 relay (registered inbox, manual execution)
 
-**Status: manual, explicitly not an automated integration.** The live team protocol is [PROTOCOL.md](PROTOCOL.md); this page only describes the human-invoked pilot proposed in [CODEX-PILOT.md](CODEX-PILOT.md). It does not amend the existing role registry, webhooks, routing checker, cursor branches, authority or merge rules.
+**Status:** This document and the `coord.py` routing change take effect only when the setup PR merges. Until then, [#363](https://github.com/lmmx/mibz2/issues/363) remains a manual pilot issue. Even after merging, **routed ≠ awakened**: no Codex/Work webhook was created. Codex must be started in its own session and given the inbox link.
 
-## Addresses and responsibilities
+## Addresses
 
-| Place | Purpose | Who writes |
-|---|---|---|
-| [#363 — Codex manual inbox](https://github.com/lmmx/mibz2/issues/363) | Durable assignment / correction / reading list. **Codex must open it manually.** | Louis or his explicitly instructed assistant |
-| Codex's new implementation PR | Patch, CI checks, test results, review findings, progress, blockers, resume point | Codex or its operator |
-| [#145 — existing team channel](https://github.com/lmmx/mibz2/pull/145) | The Coordinator's authoritative decision log and existing role messages | **Only through existing PROTOCOL.md pathways** |
-| [MONODROMY #346](https://github.com/lmmx/mibz2/issues/346) / [Pathfinder #314](https://github.com/lmmx/mibz2/pull/314) | Existing agents' inboxes, unchanged | Existing Coordinator under the live routing protocol |
-| [PR #362](https://github.com/lmmx/mibz2/pull/362) | MONODROMY's bibliography and cells production design/handoff | Preserve; do not turn it into Codex's implementation PR |
+| Address | Meaning |
+|---|---|
+| [#363](https://github.com/lmmx/mibz2/issues/363) | Codex's registered **issue** inbox, one new assignment at a time, *manual launch* |
+| `team-state/codex:state/cursor.json` | Completed inbox IDs, written only by Codex after actually finishing |
+| [#145](https://github.com/lmmx/mibz2/pull/145) | Team channel: Codex's REVIEW and the Coordinator's LOG/decisions |
+| Codex's own implementation PR | Source changes, independent review, CI results, exact SHA, resumable checkpoints |
+| [#362](https://github.com/lmmx/mibz2/pull/362) | MONODROMY's research/handoff; preserve this branch and its mathematical claims |
 
-`.github/coordination/coord.py` does **not** know a Codex role or inbox #363; this issue does not wake Codex and `coord.py route --to codex` cannot be used for this pilot. GitHub issue creation alone cannot configure an automatic Codex or Work subscription. Never describe a posted issue comment as dispatched, received or acknowledged unless a Codex session actually reads and acknowledges it.
+## Dispatch and receipt
 
-## Beginning a Codex session
+The current primary or [owner-activated acting Coordinator](COORDINATOR-FAILOVER.md) runs:
 
-1. Open [#363](https://github.com/lmmx/mibz2/issues/363) and read the initial assignment and newer comments. Confirm the assignment is still current.
-2. Fetch `docs/team/CODEX-PILOT.md` and this file from this setup PR's branch (or master **only after merged**). Also read **current master** team policy and the latest #145 gate before implementing.
-3. Read MONODROMY's DESIGN.md and HANDOFF.md at PR #362's branch; inspect the actual existing `src/`, `examples/rauzy.rs`, and benchmark harness.
-4. State the exact branch and head SHA you began from, and the code/testing boundaries. Create **one implementation branch** off master.
-5. Work toward the slice-one PR; do not change the default or treat GitHub status as permission to merge.
+1. `python3 .github/coordination/coord.py audit` and resolve misroutes.
+2. `python3 .github/coordination/coord.py route --to codex --type CHECKPOINT`. If busy, stage the assignment as `TYPE: QUEUED`, `TO: codex` on #145, not in the inbox. Respect queue priority and one in-flight item.
+3. If free, post to #363 with `FROM: coordinator`, `TO: codex`, `RE: ... @ <full head SHA>`, `TYPE: CHECKPOINT`. The acting operator adds a visible `ACTOR: ChatGPT Work (acting)` line; this is attribution, **not** authentication.
+4. `python3 .github/coordination/coord.py verify --comment-id ID --to codex --type CHECKPOINT`. **Separately start Codex** and direct it to that exact inbox comment.
+5. Codex reads the latest specs, performs the scoped work, posts a `FROM: codex`, `TYPE: REVIEW` on #145 explicitly citing the assigned inbox comment ID, and appends the ID to its own `processed_comment_ids` cursor. The Coordinator verifies the result rather than treating a post as a finished implementation.
 
-A suitable **manual launch prompt** for Codex:
-
-> Implement the first, off-by-default cells-kernel production slice for `lmmx/mibz2` as the manual Codex production delegate. Read issue #363 and both `docs/team/CODEX-*-PILOT.md` guides at their setup-PR branch, then the current master policies, #145 gate, and MONODROMY's PR #362 design and handoff. Work on a separate branch and open a reviewable implementation PR. Report tests, proof/safety gaps and exact head SHA. Do not merge, release, change the default, use the i9, or impersonate any agent.
-
-The filename shorthand above means `docs/team/CODEX-PILOT.md` and `docs/team/CODEX-RELAY-PILOT.md`.
-
-## Incoming: assignment or correction on #363
-
-Use plain issue comments; this is a manual mailbox, not the registered team's `CHECKPOINT` format. One scope-changing comment at a time:
+Incoming example (only active Coordinator posts):
 
 ```text
-MANUAL PILOT ASSIGNMENT | CORRECTION | HOLD
-From: Louis / assistant at Louis's request
-For: Codex implementation delegate
-Regarding: <implementation PR and exact head SHA, if known>
-Request: <one bounded change or question>
-Must not change: <safety, default route, release, role authority>
-Reference: <links to evidence/decision>
+FROM: coordinator
+TO: codex
+RE: cells slice one @ <full commit SHA>
+TYPE: CHECKPOINT
+
+ACTOR: ChatGPT Work (acting, if applicable)
+INPUTS: docs/team/CODEX-PILOT.md, PR #362, #145 gate 6775049636
+TASK: Implement the off-by-default first production slice on a fresh branch.
+OUTPUT: implementation PR, tests, exact head SHA, safety gaps and REVIEW on #145
+LIMITS: no default flip, self-approval, merge, release or workstation use.
 ```
 
-An assistant must not invent Louis's authorisation or silently change scope. If the Coordinator later returns, its existing rules still decide production merges.
-
-## Outgoing: one durable checkpoint on the implementation PR
-
-Codex should comment on its **implementation PR** at natural milestones (not every command), and link the message or PR from #363 if Louis requests a mailbox summary:
+Outgoing example (Codex reports on #145, not the inbox):
 
 ```text
-CODEX PILOT CHECKPOINT
-Branch / exact head SHA:
-Scope completed:
-Safety/correctness evidence (with commands and outcomes):
-Bench: default-arm neutral? experimental-arm result? measurement limits?
-Open blocker / uncertainty:
-Decision needed (by whom):
-Next action / how another implementer resumes:
+FROM: codex
+TO: coordinator
+RE: inbox <assigned comment ID>; PR <number> @ <full head SHA>
+TYPE: REVIEW
+
+Changes: ...
+Evidence (commands/results): ...
+Missing checks: ...
+Independent B5 review requested: ...
+Next step: ...
 ```
 
-No `FROM: coordinator`, `FROM: monodromy`, `FROM: guardian` or forged team review headers. A Codex self-review does not substitute for the independent B5 review. Record a genuine mathematical counterexample precisely and flag it without silently changing the proof's claimed scope.
+**No auto-delivery guarantee:** `coord.py verify` proves location/header/one-at-a-time queue state; it does not prove that Codex was running or consumed the message. Check the cursor, PR evidence and actual REVIEW. If Codex can't update its cursor, the item remains busy until reconciled; do not fake a completion ID.
 
-## To get something into the Coordinator's channel
+## Scope
 
-During the pause, **the implementation PR is the live work record**. Only post to #145 when Louis explicitly asks ChatGPT to relay an update. Follow the *current* `CHATGPT.md` and `PROTOCOL.md` §7 exactly: a `FROM: louis via chatgpt`, `TO: coordinator`, `TYPE: PROPOSAL` comment, giving his words verbatim, a factual interpretation, and links to the PR and evidence. Do not call it an ACK, delivery to an agent, acceptance, or approval; it awaits the Coordinator's `TYPE: LOG` after the Coordinator returns.
+[CODEX-PILOT.md](CODEX-PILOT.md) is the current assignment. The new `InverseBwt` implementation remains **off by default**. Default route, cooperative teams, release policy and mathematical programme remain untouched. A different session must supply independent B5 safety review before unsafe code merges. New mathematical counterexamples are preserved with the smallest reproducible case and referred to MONODROMY, not silently repaired as research.
 
-If an existing registered Work reviewer is independently and explicitly asked to stand in, use PROTOCOL.md §8 instead; Codex is not automatically a B5 reviewer or a replacement for any paused role.
+## Coordinator failover
 
-## Resuming the original team
+[COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md) documents how Louis can replace the **operator** of the existing Coordinator role during a quota pause. Its `FROM: coordinator` messages pass current routing checks, with `ACTOR:` explicitly distinguishing the acting executor. No parallel Coordinators, no authority widening, and no claims of running a background Work task until the platform confirms it.
 
-The first restored Coordinator session should read (1) #363, (2) Codex's implementation PR at its exact head, (3) #145 since the handoff, and (4) the saved handoff files, then decide under the existing policy whether to accept, review, reassign, defer or abandon. MONODROMY may assess any discovered mathematical counterexamples independently when it resumes. No cursor or state branch is assumed advanced by this pilot.
+## Direct work before merging this setup PR
 
-If a permanent Codex role or automated inbox is later desired, **that is separate work** requiring Louis's authenticated role/rule decision and a properly tested change to the role registry, `coord.py`, inbox offset/cursor and wake trigger. Do not infer any of that from this manual pilot.
+Louis may already start a Codex task by giving it #363, the current master policies, PR #362 and this branch. In that case it is a **direct manual assignment**, not a verified `coord.py` dispatch; label it so in the implementation PR. Once this setup merges, use the routed procedure for subsequent assignments.
