@@ -33,3 +33,43 @@ Coordinator as a file because this session pushes only to #313's branch.
   | `random` cut to 460 kB | +0.0% | −1.0% |
 
 - **Not timed** beyond a noisy local run. CI's bench under PERFORMANCE-POLICY decides.
+
+## Correction 1: the admission (after #348's first bench)
+
+**CI on #348 at e03dbb97 against #324** (the Coordinator's reading): `text` +4.0% at 1 thread
+and +5.4% at 2, slower beyond noise; `records` −1.0% at 1 thread and −3.3% at 4; `random` and
+`wikidata` level. A primary corpus slower fails PERFORMANCE-POLICY rule 2.
+
+**The cause is mine: the sample of rows is not an estimate of the rows.** A few long runs hold
+most of a block's rows, and 64 windows of 64 symbols mostly miss them.
+- On `text`'s 25 blocks the true figure is 0.474–0.514 symbols a row and the sample gave
+  0.247–0.562: 7 blocks were refused the records' path.
+- On Wikidata's full blocks the sample was wrong more often still.
+
+**The correction:** `2026-11-10-backward-walk/correction-1.diff.txt`, against e03dbb97, one
+file. Admission is #324's bound test **and** a sampled share of run symbols of at least one
+in 32.
+- **A proportion samples well where a heavy-tailed sum does not.** The share of run symbols,
+  whole block against sample: `text` 0.370–0.377 against 0.350–0.395; `random` 0.008 against
+  0.005–0.010; `records` 0.003 against 0.002–0.005.
+- **The cut has room on both sides:** `random` and `records` under 0.01; `text` 0.35 or more;
+  232 of Wikidata's 233 full blocks 0.249 or more, and the other one 0.104.
+- **It admits a subset of what #324 admits,** so #324's guarantee to its front (symbols at most
+  half the bound) holds again, and the B5 question raised with the first patch falls away.
+
+**Checked:** every test suite passes (exit 0); `fmt` and `clippy --all-targets` clean; bytes
+equal to bzip2 on every local corpus. Whole-child instructions against master 27ed84df:
+
+| input | #324's head | corrected patch |
+|---|--:|--:|
+| `text`, whole corpus | −10.62% | −10.58% |
+| a `random` block | +0.00% | −1.00% |
+| a `records` block | +0.00% | −1.07% |
+| `random` cut to 200 kB | +10.29% | −0.89% |
+| `random` cut to 440 kB | +11.37% | −1.04% |
+
+`text` is back on #324's path: the 0.04% is the sample itself.
+
+**What the patch is now worth, stated plainly:** no primary gain over #324. It removes #324's
+short-block regression and takes about 1% of instructions off high-entropy blocks, which CI
+saw as −1.0 to −3.3% on `records` and nothing on `random`.
