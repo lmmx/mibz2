@@ -866,9 +866,9 @@
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "84bf177bd0af9fa416964eca2c0f56ad278b119e",
-      "progress": "Report and ledger complete; publication pending.",
+      "progress": "Final report and ledger complete, incorporating D4-delta proposal and fresh Pathfinder/par-scan evidence; publication pending.",
       "report_path": "state/records/reviews/inbox-6757808815/report.md",
-      "report_commit": "5c1519130f4d681428c73c435a3e254a545796f9",
+      "report_commit": "d4c4b41c89db2561bd3b3470670894a4b6d2e318",
       "audit_scope": {
         "raw_head_stage_rows": 5,
         "artifact_sha256": "3734059c48e66288bb0498a8f55cacbe27cd68c075691e6968358011cafda3ba",
