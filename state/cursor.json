@@ -217,6 +217,13 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6782560706": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "7adb61c0-dd61-11f1-900b-24fbcd5f709d",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -263,8 +270,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6782427449,
-    "delivery_id": "68aca5a0-dd60-11f1-8226-182e0fb5fa03",
+    "comment_id": 6782560706,
+    "delivery_id": "7adb61c0-dd61-11f1-900b-24fbcd5f709d",
     "disposition": "self_generated_noop",
     "new_actionable_external_messages": 0
   },
@@ -414,7 +421,7 @@
     "planned_action": "Grouped LOG of D100 decision, actual Codex delivery, F01 dispatch and queued instrument repair",
     "log_comment_id": 6782560706,
     "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782560706",
-    "wording_correction": "in_progress: change 'Its successful job' to 'Its Occupancy job'; original job remains failed"
+    "wording_correction": "completed: Occupancy job association corrected; original job remains failed."
   },
   "dispatch_history": [
     {
