@@ -154,9 +154,10 @@
     6760095177,
     6760245172,
     6761533298,
-    6761932309
+    6761932309,
+    6762860125
   ],
-  "last_processed_comment_id": 6761932309,
+  "last_processed_comment_id": 6762860125,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1739,7 +1740,7 @@
     },
     {
       "trigger_comment_id": 6762860125,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1747,7 +1748,10 @@
       "report_commit": "07b453d1cd26299450c8ca90f60decd5fcce7fbe",
       "report_path": "state/reports/integration-priorities-6762860125/",
       "review_comment_pr": 145,
-      "disposition": "Ordered review: STEPS REVISE with 0.10 ns/B precision; qualification minimum 12xR240/no A/A prerequisite conditional on model; combined REVISE roster/count rules; #318 source PROCEED with archive verification limit; T1 REVISE two admission holes; width deferred."
+      "disposition": "Ordered review: STEPS REVISE with 0.10 ns/B precision; qualification minimum 12xR240/no A/A prerequisite conditional on model; combined REVISE roster/count rules; #318 source PROCEED with archive verification limit; T1 REVISE two admission holes; width deferred.",
+      "review_comment_id": 6763089509,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
