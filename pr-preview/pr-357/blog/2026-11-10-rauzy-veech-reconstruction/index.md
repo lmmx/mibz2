@@ -2,25 +2,31 @@
 
 # A new way back from the BWT
 
-A new way to rebuild text turns repeated pieces into reusable rules and brings a familiar tree into view.
+An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.
 
-10 November 2026 · 10 min read · [Research in progress](<#6-what-remains-before-production>)
+10 November 2026 · 14 min read · [Research in progress](<#6-what-remains-before-production>)
 
-The Burrows–Wheeler transform rearranges a block's bytes so that compression can exploit repeated text. Reversing that rearrangement is one stage of bzip2 decoding. In mibz2's new experiment, a small program of reusable word-building rules reconstructs the block instead of a conventional pointer walk.
+bzip2 stores each block as the last column of its sorted rotations: the Burrows–Wheeler transform (BWT). To decode it, mibz2 walks a next-row map called **LF**. Each row yields one byte and the address of the next row, so the walk makes one dependent memory lookup per byte.
 
-That experiment has crossed its first performance threshold. A redesigned kernel recorded less time than its conventional inversion-stage reference in two local Wikidata censuses. The second recorded **1.604 against 2.172 nanoseconds per row**, a derived **26.2% reduction**.
+LF has structure that the walk ignores. A **run** is a maximal stretch of equal bytes in the last column. Within a run, LF sends consecutive rows to consecutive rows. So the whole map is fixed by one interval per run, each moved as a block. A Wikidata block has about 14 rows per run.
+
+MONODROMY's experiment never walks the rows. Read along LF, the block is a cyclic word of run letters, one per row. Each step picks one pair of adjacent letters, a **digram**, and replaces every occurrence with a new letter, recording one rule such as `X → AB`. Because each run moves as a block, a digram's occurrences fill one interval of rows, called a **cell**. So a step costs the same however many occurrences there are. When one letter is left, its rules spell the whole block. The step is Rauzy–Veech induction, and it works like RePair compression on the run letters.
+
+The work therefore scales with steps, not bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte. The first kernel still lost, at 1.276 times the walk's time, because a step cost 14 ns. The **cells kernel** writes each cell once and moves nothing, cutting a step to 7.7 ns. Per run it executes 184 instructions against production's 260, with 2.1 simulated last-level cache misses against 8.7.
+
+That kernel recorded less time than its conventional reference, the table build and walk, in two local Wikidata censuses. The second, on an idle core, recorded **1.604 against 2.172 nanoseconds per row**, a derived **26.2% reduction**, and was faster on 204 of 233 blocks. Where runs are short the steps per byte rise and it loses: 3.9 times on prose, 9.8 times on uniform bytes.
 
 These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is **no demonstrated gain over the shipped decoder**, and the experiment is not in production.
 
-There are two further findings. The right-end construction has a connection to a known mathematical object, the Lyndon tree, under the primitive-word condition explained below. Changing the order of operations also reduces their count, but the faster kernel cannot yet execute that order cheaply. Neither finding is an additional measured speedup.
+Two structural findings came with it. A **Lyndon word** is strictly smaller, alphabetically, than each of its proper suffixes; `aab` is one. Its **Lyndon tree** splits it just before its smallest proper suffix, then splits each part the same way: `aab` splits as `a | ab`, then `ab` as `a | b`. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>) is a short introduction to these trees.
+
+The number of steps also depends on which digram goes next. Every order needs at least r₂ − 1 steps, where r₂ counts the distinct digrams: 1.220 per run on Wikidata. The right-end order takes 1.812; taking steps that create no new boundary first takes 1.279. No kernel yet runs that order cheaply, so it is a counted saving, not a measured speedup.
 
 The [research journal](<https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md>) and [implementation](<https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs>) are pinned here at **ae51b11a46014e5fec928b0e25235f532a473a9f**. MONODROMY is the research lane developing this experiment.
 
 ## 1\. How can rules replace a pointer walk?
 
-A conventional inverse transform builds a table telling it which row to visit next. Each row supplies a byte, and the next address depends on the current lookup. That dependency can leave the processor waiting for memory.
-
-The table is more structured than an arbitrary permutation. Within a **run**, a maximal stretch of equal bytes in the transformed column, the next-row map advances by one at each position. The map is called **LF**, for last-to-first: it connects positions in the last and first columns of the sorted rotations.
+Here is the whole mechanism on the smallest useful block. LF is short for last-to-first: it connects positions in the last and first columns of the sorted rotations.
 
 For a small example, sort the rotations of `aab`: `aab`, `aba`, `baa`. The last column is `baa`; the first is `aab`. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.
 
@@ -86,13 +92,13 @@ Joining words builds a tree: its leaves are bytes, and each internal node joins 
 
 A **primitive** word is not an exact repetition of a shorter word. Its lexicographically smallest rotation is a **Lyndon word**, smaller than each of its other rotations. For example, `aab` is smaller than `aba` and `baa`; its standard split is `a | ab`, followed by `a | b`.
 
-The journal identifies the right-end induction's expanded derivation tree with the Lyndon tree of that least rotation. It first relates the construction to a **Cartesian tree**: a hierarchy formed by repeatedly splitting a sequence at its minimum. Here the sequence contains ranks of rotations beginning at the word's internal boundaries. For `aab`, the rotations at positions zero, one and two have ranks zero, one and two. The internal sequence is therefore \[1,2\]. Its minimum splits after the first `a`, giving `a | ab`; the remaining split gives `a | b`. This agrees with the two rules above. In general, the standard Lyndon split uses the longest proper suffix which is itself a Lyndon word.
+The journal identifies the right-end induction's expanded derivation tree with the Lyndon tree of that least rotation. It first relates the construction to a **Cartesian tree**: a hierarchy formed by repeatedly splitting a sequence at its minimum. Here the sequence contains ranks of rotations beginning at the word's internal boundaries. For `aab`, the rotations at positions zero, one and two have ranks zero, one and two. The internal sequence is therefore \[1,2\]. Its minimum splits after the first `a`, giving `a | ab`; the remaining split gives `a | b`. This agrees with the two rules above. In general, the standard split of a Lyndon word cuts it just before its smallest proper suffix. That a Lyndon tree has the shape of the Cartesian tree of the word's suffix ranks is Hohlweg and Reutenauer's result; Crochemore and Russo set it out in §4 of [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>).
 
-From the row map to a known tree
+How the row map leads to the Lyndon tree
 
 The identity concerns the expanded derivation tree; stored rules share subtrees, and the kernel need not build every node. It is proved in \#351's journal and checked by simulators there, under the primitive-word condition (aab is primitive; abab is not). This post checked the record; it does not independently certify the theorem. Green: the two internal nodes, which are the two rules of §1.
 
-The known tree theory is not a new invention. The research contribution under examination is the connection from this interval construction to that tree without first reconstructing the text by a conventional walk.
+Lyndon trees themselves are long established. What is new is the route: this interval construction arrives at the Lyndon tree without first rebuilding the text by a conventional walk.
 
 The journal includes a proof and reports independent simulators and node comparisons. This post has checked that record, not independently certified the theorem. The primitive-word condition matters: `aab` satisfies it, whereas an exact repetition such as `abab` needs separate treatment.
 
@@ -126,6 +132,6 @@ The next comparison needs matched input boundaries and the relevant records-base
 
 At the source pin, the research lane's broader verification was still pending in the assignment record. No completed five-lens review is claimed here.
 
-The earlier conjecture about a tree has become a recorded structural identity. Building the full array of text-position ranks first, however, could pay the very reconstruction cost this approach seeks to avoid.
+MONODROMY's earlier conjecture, that the grammar follows the Cartesian tree of the rotations' ranks, is now a recorded identity: the grammar is the Lyndon tree. Computing every rotation's rank first, however, could cost as much as the reconstruction this approach seeks to avoid.
 
-The deeper opportunity is now clear. The program can exploit the hierarchy of words, but its cost depends on how cheaply it discovers and records that hierarchy. The next improvement must make the cheaper mathematical order cheap for the machine as well.
+The next question is whether the Lyndon tree can be built more cheaply than by running the induction step by step. Within the induction, the order with fewer steps only pays once the machine can execute it cheaply too.
