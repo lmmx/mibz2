@@ -1,0 +1,30 @@
+{
+  "repeated_named_pc": {
+    "trace": "I  400000,4\n S 3000,4\nI  400000,4\n S 5000,4\nI  400080,4\n L 101000,16\n",
+    "stdout": "f loads S=0 D=1 H=0 | any4K=1 any1K=1\n  mod 4K (load<-store): D<-H=1\n  mod 1K (load<-store): D<-H=1\nPAIRS f mod4K D<-H: [store 400000 load 400080 n=2]\nPAIRS f mod1K D<-H: [store 400000 load 400080 n=2]\n"
+  },
+  "named_and_other_overlap": {
+    "trace": "I  400000,4\n S 3000,4\nI  400004,4\n S 5000,4\nI  400080,4\n L 101000,16\n",
+    "stdout": "f loads S=0 D=1 H=0 | any4K=1 any1K=1\n  mod 4K (load<-store): D<-H=1\n  mod 1K (load<-store): D<-H=1\nPAIRS f mod4K D<-H: [store 400004 load 400080 n=1] [store 400000 load 400080 n=1]\nPAIRS f mod1K D<-H: [store 400000 load 400080 n=1] [store 400004 load 400080 n=1]\n"
+  },
+  "six_pairs_top5": {
+    "trace": "I  400000,4\n S 3000,4\nI  400004,4\n S 4000,4\nI  400008,4\n S 5000,4\nI  40000c,4\n S 6000,4\nI  400010,4\n S 7000,4\nI  400014,4\n S 8000,4\nI  400080,4\n L 101000,16\n",
+    "stdout": "f loads S=0 D=1 H=0 | any4K=1 any1K=1\n  mod 4K (load<-store): D<-H=1\n  mod 1K (load<-store): D<-H=1\nPAIRS f mod4K D<-H: [store 400004 load 400080 n=1] [store 400014 load 400080 n=1] [store 400008 load 400080 n=1] [store 40000c load 400080 n=1] [store 400000 load 400080 n=1]\nPAIRS f mod1K D<-H: [store 400010 load 400080 n=1] [store 400000 load 400080 n=1] [store 40000c load 400080 n=1] [store 400008 load 400080 n=1] [store 400014 load 400080 n=1]\n"
+  },
+  "order": {
+    "ABBA": 10,
+    "BAAB": 10,
+    "slots": 80
+  },
+  "decisions": {
+    "invalid": "INVALID",
+    "imprecise": "IMPRECISE",
+    "positive_below": "NEXT",
+    "touch_budget": "CONTRACT_QUALIFICATION",
+    "supports_budget": "CONTRACT_QUALIFICATION",
+    "null": "NEXT"
+  },
+  "s_limit": 0.213668636325424,
+  "rounding_ns_per_byte": 0.0125,
+  "cancellation_interval_upper": 0.054801726494489146
+}

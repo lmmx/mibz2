@@ -4221,3 +4221,56 @@ C1–C5 as descriptive historical-count comparisons are permissible for this unf
 Archived under state/evidence/D091/: fetched checker and tests, independent probes.py, three JSONL fixtures, class map and probes.json. Run `python test_walk_stats_check.py` and `python probes.py` there. Twenty upstream tests pass; independent balanced, balance-only and zero-helper fixtures reproduce the results above. Synthetic records only, no decoder execution or timing.
 
 Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 14268343d174e54e8c5bb95020adb3c30deaa26d. Pinned routing audit: five resolved historical findings and previously reported LOG 6757065549 on #162, no new defect. Output #145; state team-state/guardian; persistent task unchanged.
+
+<a id="d092"></a>
+## D092 — STEPS revision 3: allocation rule accepted; counter and execution definitions need repair
+
+**Inbox:** [6763511665](https://github.com/lmmx/mibz2/pull/161#issuecomment-6763511665), dispatch of QUEUED 6763368408. **G1: concur with §5's precedence and the S+ ∧ B≥ resource-allocation rule. D090's causal-claim and interval-model objections are closed in the revised text. G2: REVISE before freeze/execution; retain the scoped HOLD for the counter-unit and execution defects below.** No line STOP, no fourth #324 attempt, no new performance qualification.
+
+Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Draft 20cfd070010e44264d8482fb1d9ac5e6b366a8e6, docs/journal/2026-11-10-steps-placement-diagnostic-DRAFT.md, blob abe13445e605213993eba288ba085ef3fd2c578d. Counter at that pin: blob fa50736678ce0f81f3f21a29201df48923ea48c4. Exact fetched SHA256 matches the draft: agg3.c 1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0; test_agg3.sh bb2aa4aacdfcc74d5d0bcdd81b9bb627fa69a6a58ebfa492f39dc39ba034971f.
+
+### 1. The requested allocation choice: concur
+
+INVALID precedes precision failure, which precedes interpretation. S+ and B− may both hold; B− wins the allocation decision. Equality U=Δ_req belongs to B≥. With valid precise evidence, S+ ∧ B≥ may justify **investigating/qualifying contract A on master**, even without B+. This is a prospective choice about information value, not demonstrated sufficiency. It need not use B+ as its entry criterion. B+ itself remains a net-contrast claim under the stated interval and transport assumptions, not mechanism attribution.
+
+The operative §5 now preserves cancellation, states iid normal/approximately normal block assumptions, restricts ABBA drift cancellation to slot index, retains chronology, and forbids result/precision retries. The 20-block listing contains ten ABBA and ten BAAB blocks, 80 slots. Reproduced s limit 0.2136686363 ns/B and the cancellation example U=0.0548017265. The wall quantisation is correctly 0.0125 ns/B. “Independent predicates” should mean separately reported logical predicates, not statistical independence of functions of the same interval.
+
+The 2% symmetric-max rule with explicit zero handling, separate S1 comparisons, fixed CPU 1 and descriptive child-frame proxy are admissible design choices. For exact integer evaluation use 50·|x−y|≤max(x,y); E2 is C≥380800 for D=8000000. No new tolerance or additional statistical programme requested. CPU 1 must actually be available and affinity applied; a proxy is not the MTF frame. These are implementation checks, not grounds to select another host.
+
+D086's order is restored: diagnostic → independent master-side contract qualification → only then a materially changed successor against that qualified base under D082's unchanged sequence. No result here spends, resets or replenishes that successor's attempts; this diagnostic still has its own one-attempt budget.
+
+### 2. Material counter defect: S1 subtracts unlike quantities
+
+The pinned agg3 class count is **one hit per load per region class**. Its pair table increments **once for every matching dynamic store in the 48-store ring**, even if several stores have the same store PC. The source comment claiming a distinct pair counted once per load is false. Independently compiled and executed three tiny synthetic traces:
+
+1. Two stores at the same PC, addresses 0x3000 and 0x5000, followed by one static-image load at 0x101000: D←H class count **1**, same-PC pair count **2**.
+2. One named store PC and one other store PC, both matching that load: class count **1**, named-pair count **1**, other-pair count **1**. Class minus named is **0**, although an outside-named pair exists.
+3. Six matching distinct store PCs followed by one load: six real pairs, but the tool prints only **five** for the class. The omitted sixth pair is not zero. A named pair need not be among the top five.
+
+All nine existing shell tests pass; they check class counts, not these pair semantics or output completeness. This is not a failed run of the proposed decoder experiment.
+
+Consequences: N_lo/N_hi as sums of printed pairs need not be complete; class D←H minus N is not an “outside named pairs” count and can be negative. Even deduplicating the same PC per load does not make subtraction valid, because named and other pair populations overlap on a load. E1/E2, c_diag, S1 and the scaled Δ_req depend on precisely this measurement.
+
+**Repair before freeze:** choose and document one exposure unit; compute named and outside-named quantities directly on that unit, including their overlap where relevant. Emit complete counters for every frozen named PC pair, with explicit zeros and completion status; do not infer zero from a top-five report. Add repeated-PC, simultaneous named/other and omitted-sixth-pair negative fixtures. Pin the corrected tool/tests and definition before data. Check that the historical 0.0476 reference uses the same unit; if not, record a reproducible reference conversion or explicitly revise this unfrozen diagnostic's reference with the Researcher. Preserve old observations/verdicts beside any correction; do not silently relabel #324's counts or reuse an incompatible scale.
+
+Keeping trace digests without raw traces limits later replay. It does not itself forbid streaming, but complete named/outside counters, classified totals, source/tool identities and successful stream completion must be archived while the stream is available. A digest cannot reconstruct a missing pair.
+
+### 3. Two stages: permissible, with narrower transfer and recovery claims
+
+**The topology remains admissible:** one binary artifact, no rebuild, frozen stages, native revalidation on the timing runner, no concurrent heavy jobs. The seven-day dispatch deadline and 180/30-minute limits are reasonable prospective bounds; no additional host campaign requested.
+
+**Fix §6.3's blanket timeout exception.** Its first bullet correctly permits only genuine class-B setup failures before any project step. Its later bullet calls *every timeout before slot 1* class B. A 180-minute lackey timeout after tracing ran, or a stage-2 output-check timeout after project execution, is not class B. The pinned CI-INCIDENTS.md (blob 39a9866bd59b82ebcfafa516b76232985d9e9877) requires all three conditions: before any project step, named external acquisition/setup failure, and changed files unable to affect it. Apply those conditions, retain the cap of two paced eligible retries per stage, and make project-stage timeout/partial/failed validity terminate this experiment without restart. The general incident runbook's class-C retry does not override this experiment's narrower no-retry rule. After slot 1 starts nothing restarts, as already stated.
+
+**Narrow §6.2's asserted transfer.** Hashes transfer code and input identity; the checked residues transfer the named geometry. They do not alone transfer every dynamic D/H trace count. agg3 depends on the complete recent-store history; other heap objects' residues, runtime/library paths and host-dependent dispatch are not fixed by checking only STEPS_BANK and counts. S-region gates are now honestly trace-environment checks only, which is appropriate. Treat other unproved dynamic counts likewise, or supply the bounded path/address argument that establishes invariance for each claimed transferable quantity. No need to claim native stall exposure: Δ_req can remain explicitly indexed to the stage-1 trace model and its transport assumption. A failed native revalidation still ends INVALID; no runner search.
+
+Use an externally pinned manifest digest (or detached checksum with immutable artifact/run identity) for stage-2 verification. “Verify the manifest's SHA256 against the manifest” is circular unless a precisely defined canonical payload excluding its digest is specified. Revalidation and timed-slot logs must identify the actual counts allocation used by decoding, not a representative test allocation. Freeze the implementation's measurement boundary and any setup movement; the current ab child source confirms wall surrounds decode, but the diagnostic setup is not yet implemented. Optional PMU recording must have a fixed prospective collection mode and no extra slots.
+
+These are corrections to reproducibility and no-retry semantics, not a request for more timing, calibration, corpora or hosts.
+
+### 4. Disposition and evidence scope
+
+The net-contrast question, limited interpretation, model-conditional interval, precision target and allocation choice are accepted. Admission is held at the counter/execution definitions; the Researcher's PROCEED and applicable safety obligations remain. This review does not authorise a build/run through the draft's explicit pre-build restriction. Routine corrective design/tool validation continues.
+
+Reproduction under state/evidence/D092/: exact fetched agg3.c and shell tests, probes.py and probes.json with full synthetic traces/output and arithmetic. Compile with `cc -O2 agg3.c -o agg3`; run `bash test_agg3.sh` and `python probes.py`. No decoder build, CI dispatch, native decoder timing, production qualification, B5 discharge or implementation change performed.
+
+Migration checked before receipt: previous head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; exact manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2. Pinned routing audit retains the five resolved historical findings and previously reported LOG 6757065549 on #162; no new routing defect. State team-state/guardian, REVIEW #145; persistent task unchanged.
