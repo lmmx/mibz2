@@ -431,3 +431,16 @@ No implementation, compilation, timing, safety certification, admission change o
 - J tuning optional: bare40 decodes; proposed A/A′+joint60, withJ4 80, fullfactorial100, plusdefault120 at20rounds. Cell/family/repeat/workload changes remain C6 proposals.
 - Ranking: service first for adoption closure; C29 first bounded kernel investigation; J4 after diagnostic; C43 behind layout/host. C29 UNJUDGED and D060 unchanged; gains not additive.
 - No raw-bundle replay, timing, implementation, admission change or measured credit.
+
+## Two-mode engineering: inbox6756316971
+
+[Report](records/reviews/inbox-6756316971/report.md). Specs a2da49638ac54d7763de1c167bd054f67ffdc763; baseline3e1a7ec361ee6c8ea6b540264aa69189d4823d9e; #313 ce6954e65f285953b0cb8dd18f2390b4dc2cc91b; #316 b63f6bee2e3ceb821198129d649bed2bd2fb349e.
+
+- Current C6 delegates prospective design/acceptance/adoption with review; prior reserved-C6 statements are historical. C5 and frozen-outcome/no-retry protections remain.
+- H1 favours amortised setup/work-sensitive activation; H2 placement if actual packing established; H3 useful-work reduction without promised duty repair; H4 bounded reuse/footprint; H5 work/traffic reduction with concurrency tradeoff. No measured numeric gain assigned.
+- Endpoints do not exclude in-run events; every arm having both modes does not exclude arm×state effects. No universal SMT2× bound. Spin probe is an intervention/progress meter; CPU seconds are not energy or guaranteed proportional throughput.
+- Buildable proposal A: pool waits2000/0/64, walk policy fixed; coop.rs/parallel.rs/wait_audit/ab, lost-wakeup and whole-decoder falsifiers. Not another bimodality spin explanation. B: readiness-bounded activation, deferred behind A; no compressed-size proxy or duplicate credit for existing lazy pools.
+- Service first for adoption: #302 historical6.37% wall/14.75% CPU central reductions remain scoped; #316 fresh route still needs diagnostic, freeze and D077 protocol. R600 shardedCI is a design candidate, not qualification.
+- Dir attributedCI LEAD preserved; both failed-fidelity target attempts and closed sequence preserved. Off immediate adoption queue; any future registration needs new diagnostic-supported information, explicit reconciliation and route coverage. No gate-renamed third attempt or additive service/dir gain.
+- Rounds require paired-log variance and dependence model; illustrative19 versus460 independent pairs is sensitivity, not a registration.
+- Raw archive not replayed; no implementation, timing, compilation, safety certification or measured credit.

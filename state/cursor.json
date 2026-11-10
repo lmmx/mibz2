@@ -811,10 +811,12 @@
     {
       "comment_id": 6756316971,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Mechanism rankings and buildable pool-wait/activation briefs committed; final ledger and publication pending."
+      "progress": "Report complete; ledger committed; REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6756316971/report.md",
+      "report_commit": "25c64192ce7cc9583e11313a8d5946309d7c4113"
     }
   ],
   "migrated_from": {
