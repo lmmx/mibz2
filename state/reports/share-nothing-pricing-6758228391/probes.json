@@ -1,0 +1,63 @@
+{
+  "fixture": {
+    "admitted": true,
+    "problems": []
+  },
+  "missing_both_corpus_digests": {
+    "admitted": true,
+    "problems": []
+  },
+  "empty_sysfs_and_null_timestamp": {
+    "admitted": true,
+    "problems": []
+  },
+  "missing_head_frozen_sources": {
+    "admitted": true,
+    "problems": []
+  },
+  "wrong_output_hash": {
+    "admitted": false,
+    "problems": [
+      "run 7: out 209700196, hash 'bad', err '': not the corpus's bytes"
+    ]
+  },
+  "deadline_failure": {
+    "admitted": false,
+    "problems": [
+      "slot 7 exited 124"
+    ]
+  },
+  "freeze_mismatch": {
+    "admitted": false,
+    "problems": [
+      "the inputs did not match the frozen commit"
+    ]
+  },
+  "altered_corpus_hash": {
+    "admitted": false,
+    "problems": [
+      "wikidata-l2's digest after the run is not the one built"
+    ]
+  },
+  "baseline_full_judge": {
+    "rc": 0,
+    "outcome": "VALID: -2 CPU growth 4->10 x1.25 [1.25-1.25], against the band 1.1-1.44: within the band; -9 x3.50 [3.50-3.50]; ratio of ratios x0.36 [0.36-0.36]"
+  },
+  "absent_cgroup_mount": {
+    "state": "unlimited",
+    "path": "/missing.scope",
+    "files": {},
+    "limits": []
+  },
+  "schedule_digest": "1fb24aee9592e70f764ee7dc739f2372c18796ef43a30f415eb534a2dc419ad2",
+  "ci_counterexample": {
+    "n": 60,
+    "ratio": 0.9797958971132712,
+    "lo": 0.8793827605401738,
+    "hi": 1.0843224043318138,
+    "block": 5,
+    "t_lo": 0.9293922029943993,
+    "t_hi": 1.0329331329733407,
+    "lag1_autocorr": 0.9499999999999998
+  }
+}
