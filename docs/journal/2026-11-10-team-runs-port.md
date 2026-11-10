@@ -95,7 +95,7 @@ container.
 | whole suite | `cargo test`, `cargo test --release`, `cargo test --features walk-stats --lib coop::`, `cargo test --example ab` | exit 0, each |
 | lint | `cargo fmt --all --check`; `cargo clippy --all-targets -- -D warnings`, and with `trace,wait-stats,walk-stats` | clean |
 | Miri | `cargo miri test --lib -- miri_runs miri_build_runs`: 10 tests scalar; 11 with AVX2, BMI1, BMI2, LZCNT and POPCNT enabled | pass, both; complete runs, no timeout |
-| fuzz | `examples/fuzz 30 1`: classic, pipeline, service | exit 0, each |
+| fuzz | `examples/fuzz 30 1`: classic, pipeline, service | exit 0, each; **none of the three forces the plain teams** (D097-F1: repaired in §8a) |
 | mutation | a hand pass, one edit a mutant, 57 mutants over every new check | 56 killed, 1 equivalent (§4.1) |
 | review | by an agent other than the implementer | **not done: the Coordinator's to arrange** |
 
@@ -180,8 +180,10 @@ this note are applied (§6 explains the second).
   32-byte loads, which cannot cross a page.
 - **Why it is a build's property.** A worker thread's stack starts page-aligned, so the
   depth at which the kernel runs is fixed by the build's frames. A build has the cost on
-  every block of a symbol a row, or on none. About one layout in 13 has it (320 of 4,096
-  bytes). Any change to the binary redraws it. Mine drew it; master's happens not to.
+  every block of a symbol a row, or on none. 4 of the 64 places a 64-aligned frame can put the
+  list in a page have it: the four starts whose 320 bytes run past the page's end. (I first
+  wrote one in 13, which is 320 of 4,096 bytes and ignores the alignment; the Guardian's
+  D097 corrected it.) Any change to the binary redraws it. Mine drew it; master's happens not to.
 - **My first explanation was wrong.** I took it for the 4 KiB aliasing of `counts` against
   the list, which I had analysed for #324 this morning, and a patch moving the counts into
   the frame did restore the speed. A sweep of the counts' address showed no band. That
@@ -226,24 +228,96 @@ back through the bench's history to test that.
   counts, suspect a layout of the kind in §6 before the port, and run the stack sweep on
   that build.
 
+## 8a. The Guardian's review (D097), and the fuzz coverage it found missing
+
+REVIEW 6770483223 on #145. #358 (the list in one page): PROCEED, merged as `910472e8`. The
+port: REVISE, with a narrow HOLD (D097-F1) on B5's fuzz obligation.
+
+- **What it found.** No fuzzer forced the plain teams. The classic mode's parallel decoder
+  asks for 3 threads, which plans workers below 6 cores; the pipeline and service modes
+  force their own routes and hold them to a `Segmented` reference. So
+  `Cooperative::invert_runs` was reached by differential tests and by no fuzz case. It is
+  right, and my §4 table's "fuzz: exit 0" claimed coverage it did not have for that route.
+- **Its two corrections to this note,** both taken: the straddle is 4 of 64 layouts (§6);
+  and the stack sweep supports the page-straddle mechanism without proving the
+  microarchitectural cause, since caller-stack addresses alone do not identify it.
+
+**The repair, in the revised patch (§9):**
+- **`examples/fuzz.rs`, MODE `teams`:** the plain teams forced by their plan
+  (`StreamDecoder::planned`), five candidates: one and two teams of 2, one team of 3 and
+  of 4, and one team of 3 on the scalar kernels. Inputs and edits are the pipeline and
+  service modes' (`pipeline_corpus`, `edited`). Each case is held to the plain parallel
+  decoder exactly (the bytes before any error; the error's kind, block and bit) and to
+  libbzip2.
+- **Reach is counted per case, by route.** The fuzzer reads the case's blocks itself and
+  classes each by the route a plain team takes it by, which is a function of the block
+  alone: `runs::takes_runs` and `bwt::MIN_COOP` rows. That is read beside the decoder, with
+  the decoder's own selector and bound; it is not reported by the decoder. The unit tests
+  that pin the route to those two facts are `runs_path_taken_exactly_where_selected` and
+  `cooperative_kernel_engages_on_records`, both mutation-killed (§4.1).
+- **CI's fuzz job runs it** for 30 s beside the other three modes.
+
+**Evidence at the combined pin** (master `910472e8`, which holds #353 and #358, with the
+port applied: local commit `15dfda95`). Logs kept in
+[`pin-910472e/`](2026-11-10-team-runs-port/pin-910472e/).
+
+| mode | run | cases | failures | reach |
+|---|---|--:|--:|---|
+| teams | 120 s, seed 1 | 1,882 | 0 | below |
+| teams | 120 s, seed 2 | 1,873 | 0 | below |
+| classic | 30 s, seed 1 | 55,682 | 0 | sequential decoders and workers: not the teams |
+| pipeline | 30 s, seed 1 | 578 | 0 | a job overlapped in 56 of 115 (one team of 3), 29 and 27 of 115 and 116 (the default 3 × 3) |
+| service | 30 s, seed 1 | 561 | 0 | a block on a team's pool in 43 to 48 of each candidate's 70 cases |
+
+**The teams mode's reach, both seeds together, 3,755 cases over the five candidates:**
+
+| route | cases with a block by it | blocks |
+|---|--:|--:|
+| by records on the team's pool (admitted, 262,144 rows or more): the new fill and walk | 1,759 | 3,932 |
+| by records on one core (admitted, smaller): the fallback | 1,160 | 2,744 |
+| by the column on the pool | 973 | 2,611 |
+| by the column on one core | 1,078 | 4,363 |
+
+- **Each candidate alone** has 163 to 189 cases a run with a block on the new route, the
+  scalar-kernel one included (the scalar fill by shares).
+- **Malformed inputs:** 3,273 of the 3,755 cases end in an error, of 18 kinds, each equal
+  to the plain decoder's in kind, block and bit. In 111 cases the front stage of an
+  admitted block is what fails (the records' front's error, or a primary index past the
+  block), against 69 on a block that keeps the column.
+- **The pipeline and service modes** draw from the same corpus with the same edits, so the
+  same share of their blocks is admitted; their summaries count overlap and pooling, not
+  the route. I have not added the route count to them.
+
+**Also at that pin:** `cargo fmt --all --check`; `cargo clippy --all-targets -- -D warnings`
+with and without `trace,wait-stats,walk-stats`; `cargo test` and `cargo test --release`;
+`cargo test --features walk-stats --lib coop::`; Miri on `miri_runs` and `miri_build_runs`,
+scalar and with AVX2: exit 0, each, complete runs.
+
+**The workstation contrast is now frozen as** master `910472e8` against that commit with the
+port. #358 is on both sides, so the contrast isolates the port. The rule of §8 is unchanged.
+
 ## 9. To apply
 
-Two files, both against master `47149bff85a13256f36982399d900672ab607254`. They touch
-different files and apply in either order, and over the admission patch.
+**Current: one file, against master `910472e8bcb75a09ec2c61db232c98182951ab2b`.**
 
 | file | SHA-256 | touches |
 |---|---|---|
-| `2026-11-10-team-runs-port/mtf-list-in-one-page.diff.txt` | `789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e` | `src/mtf.rs` |
-| `2026-11-10-team-runs-port/team-runs.diff.txt` | `3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229` | `src/bwt.rs`, `src/coop.rs`, `src/lib.rs`, `src/parallel.rs`, `src/runs.rs`, `src/runs/tests.rs` |
+| `2026-11-10-team-runs-port/team-runs-2.diff.txt` | `61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64` | the six files below, `examples/fuzz.rs`, `.github/workflows/test.yml`, and one comment in `src/mtf.rs` |
 
-**Against today's master too.** Master moved to `8ed2fbdf` while this was measured (0.2.8,
-and the admission patch as #353). Both files apply to it unchanged. With both applied there:
-`cargo fmt --all --check` and `cargo clippy --all-targets -- -D warnings` clean, and
-`cargo test --release` exit 0. Everything else in this note was run on `47149bff`; with
-both applied there, the whole suite (debug and release), the lint and the three fuzzers
-also exit 0.
+- **The six source files the Guardian reviewed are byte for byte what `team-runs.diff.txt`
+  gives on `910472e8`** (`src/bwt.rs`, `coop.rs`, `lib.rs`, `parallel.rs`, `runs.rs`,
+  `runs/tests.rs`; compared file by file).
+- **Added since the review:** the fuzzer's `teams` mode, its step in CI's fuzz job, and the
+  corrected figure in #358's comment (4 of 64 layouts; a comment only).
+- **Evidence** for it is §8a's, run at local commit `15dfda95`; the comment came after, as
+  `cb198c27`, with fmt and clippy rerun.
 
-**I recommend the first on its own merits and first in order:** it removes a cliff from
-master, and without it the port's measurement is at the mercy of the draw.
+**Superseded, kept as the record of what was reviewed and merged:**
 
-**Not done:** the review B5 requires; any run on the workstation; CI on either patch.
+| file | SHA-256 | state |
+|---|---|---|
+| `mtf-list-in-one-page.diff.txt` | `789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e` | merged unchanged as #358 |
+| `team-runs.diff.txt` | `3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229` | reviewed in D097; superseded by `team-runs-2.diff.txt` |
+
+**Not done:** the Guardian's clearance of D097-F1 on this evidence; any run on the
+workstation; CI on the port.
