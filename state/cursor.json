@@ -1788,11 +1788,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6760691372,
-    "status": "finished",
-    "decision": "D088",
-    "work_commit": "ee180a6152130a05302544abbf5d191fd1cc69b2",
-    "review_comment_id": 6760796025
+    "active_comment": 6761414959,
+    "status": "in progress",
+    "decision": "D089"
   },
   "duplicate_events": [
     {
@@ -3137,6 +3135,13 @@
       "work_commit": "ee180a6152130a05302544abbf5d191fd1cc69b2",
       "review_comment_id": 6760796025,
       "complete_cursor_commit": "ab36068ad34795a5aa07ae13bd8851343150074e"
+    },
+    {
+      "comment_id": 6761414959,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D089",
+      "progress": "Receipt: assessing port 3 validity and prospective combined count."
     }
   ],
   "migrated_from": {
