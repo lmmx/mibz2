@@ -88,7 +88,9 @@
       "log_dedup_key": "isolated-followup-6779208153",
       "disposition": "Verified isolated-head benchmark text 1t +2.4% [0.2,4.6], parity yes; fixed gate not passed. Follow-up 57f51bbc0ca62ac3ee1cc148a1010842eea6222a changes cfg formatting/log visibility and archived evidence only. Five Actions running, CI queued; legacy pending. Prior Miri and docs cancelled, not passed. Retain final primary-loss follow-up commitment and independent B5; no dispatch while #364 unmerged.",
       "dispatches": 0,
-      "log_publication": "pending"
+      "log_publication": "published",
+      "log_comment_id": 6779251105,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6779251105"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -117,7 +119,8 @@
     6777025573,
     6777379237,
     6778716882,
-    6778995031
+    6778995031,
+    6779251105
   ],
   "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
   "event_execution_verified": true,
