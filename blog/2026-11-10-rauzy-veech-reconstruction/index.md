@@ -90,6 +90,16 @@ The rest of this post What a step costs, [§2](<#2-the-timings>) and [§3](<#3-w
 
 Black: the standard definitions (after M. Viana, *Ergodic theory of interval exchange maps*, Rev. Mat. Complut. 19, 2006). Colour: what each line means in a bzip2 block, with the example `aab`, whose last column is `baa`. A block's map is on whole rows, so it is a discrete interval exchange, and it ends in equal lengths, which the classical theory sets aside.
 
+Step through the same block below: first the walk, which visits every row, then the induction, which deletes the rows a path can only pass through.
+
+Step through it: the walk visits every row; the induction deletes rows
+
+← BackPlayNext →
+
+1\. \*\*The walk:\*\* start at row 0 and read b; LF sends it to row 2 (read a), then to row 1 (read a), then back to row 0. It visits all three rows, one lookup each, and reads the block backwards. 2. \*\*The right-hand end:\*\* A (rows 1–2) is the last piece; B's row lands on row 2, the last row any arrow lands on. B is shorter. 3. \*\*Delete row 2:\*\* only B lands there, and the path always continues to row 1. So B's row returns straight to row 1, with the word ab. 4. \*\*Join:\*\* B now lands on all of A, at equal length. A's row goes too, and B's row returns to itself in one jump with the word aab, the whole block.
+
+Use Next and Back, or Play. Rows are the block's three rows, with their last-column bytes. Arrows are LF. The green box is the row the path is on, and the green arrow is the one just taken. A path's *visit* is a row it passes through, and its *return* is the next row of the shrunken map it reaches. The induction deletes the rows a path can only pass through, and keeps their bytes in the word it carries.
+
 A ticket can remember a longer journey
 
 The number of tickets is an interval’s remaining row count; the stamp is its return word, in reconstruction order. Shortening the longer interval leaves the shorter one representing a longer journey. The lower stack is a separate, generic batch: all occurrences of the chosen pair occupy one cell and share one rule. Counted steps per byte: Wikidata 0.1309, prose 0.6761, uniform random bytes about 1; short runs leave less to batch. The analogy breaks at the stamp: the implementation records that rule once, not once per ticket; expanding it still has to emit the bytes.
@@ -158,11 +168,37 @@ The rules are a book’s nested bindings
 
 Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s smallest rotation.
 
-A larger example shows the two descriptions agreeing at every node. Crochemore and Russo draw the Lyndon tree of `#abbabaababbabaab` with its **Lyndon table**, which gives, for each position, the length of the longest Lyndon word starting there. The redrawing adds each position's suffix rank, which shows why each part splits where it does.
+A longer word shows the rule at work. Dictionary order puts `a` before `b`, and puts a word before any longer word it begins, so `ab` comes before `aba`. A Lyndon word is cut just before its smallest proper suffix, and each part is cut the same way, until single letters are left. Here is that cut, by hand, on `aab` and on the eight-letter word `aababbab`.
 
-One tree, three readings
+One rule makes the tree
 
-Redrawn from Crochemore and Russo, [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>), p. 7, with the suffix ranks added. Their figure stacks the same bars as boxes and gives the table under it; the ranks show why the boxes split where they do. The tree, the ranks and the table were recomputed here, and the standard split and the lowest rank agree at all 16 nodes. The \# is the paper’s device for making any word a Lyndon word, and plays no part in a bzip2 block.
+The whole of the Lyndon tree is this one step, repeated on each part until single letters are left. Positions count the letters of `abbabaababbabaab` from 0, as in the next two figures.
+
+The cuts happen in an order: a part is cut, then its left half, then its right half, and the cursor returns up when a part is finished. Step through them for `aab`, then for the green word, then for the whole word.
+
+Step through the cuts, one part at a time
+
+aabaababbab\#abbabaababbabaab
+
+← BackPlayNext →
+
+The cuts of \`aab\`, in order: look at \`aab\`; its smallest proper suffix is \`ab\`, so cut \`a | ab\`. The left part is one letter. Look at \`ab\`; cut \`a | b\`. Every part is now one letter: two cuts, two joins. The figures below show the same for the 17-letter word.
+
+Choose a word, then use Next and Back, or Play. Green box: the part being looked at. Circled rank: the lowest inside it, which is its smallest proper suffix. Amber line: the cut. When both halves of a part are finished, the cursor returns up to the part above it.
+
+Repeating the cut on every part of a longer word gives its whole tree. Crochemore and Russo draw it for `#abbabaababbabaab`, where `#` is a letter placed before `a` and `b` so that the whole word is a Lyndon word. The word `aababbab` from the last figure is one of its parts, in green.
+
+The Lyndon tree of \#abbabaababbabaab
+
+Redrawn from Crochemore and Russo, [*Cartesian trees and Lyndon trees*](<https://arxiv.org/abs/1712.08749>), p. 7, and recomputed here. Each bar is a node; read down, the bars are ever finer cuts of the word. The \# is the paper's device for making any word a Lyndon word; it plays no part in a bzip2 block.
+
+Sorting the suffixes of every part to find its cut is slow. Ranking the suffixes of the whole word once, in dictionary order, gives every cut at a glance: inside each part, skip its first letter, and the cut is at the lowest rank. The ranks belong to the whole word, not to the part, so it is not obvious that they pick the right cut inside each part. That they always do is the theorem that ties Lyndon trees to the Cartesian trees of the ranks. The paper's Lyndon table is a separate row, which answers a different question.
+
+Ranks find the cuts; the Lyndon table reads the widths
+
+The ranks are of suffixes of the *whole* word, not of the green part, yet the lowest one inside each bar is always where that bar is cut: all 16 cuts here, and in general (Hohlweg and Reutenauer, 2003). That is the Cartesian-tree reading of §4. The Lyndon table answers a different question, how far a Lyndon word can run from each position, and its entries are the widest bars of the tree.
+
+For the kernel, this means that each rule `X → AB` it records is one join of such a tree: the tree of the block's smallest rotation. The kernel never sorts suffixes or computes these ranks. They are here to show what its rules are.
 
 Lyndon trees, and their link to Cartesian trees, are long established. \#351 gives a way to reach one from the BWT's runs without rebuilding the text first.
 
