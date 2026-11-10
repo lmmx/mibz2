@@ -1463,6 +1463,14 @@
       "review_comment_id": 6757069602,
       "publication_verified": true,
       "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction. D079 acknowledged at publication."
+    },
+    {
+      "trigger_comment_id": 6757065549,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "c2f461491b97a563ca3f8669b5c3d7e14eeff07f"
     }
   ],
   "active_delegations": [],
