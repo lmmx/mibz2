@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6777424023,
+  "last_examined_comment_id": 6778679718,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -23,12 +23,16 @@
       "comment_updated_at": null
     },
     "6778679718": {
-      "status": "in_progress",
+      "status": "triaged_advisory_dispatch_blocked",
       "delivery_id": "b8b67310-dd46-11f1-94a3-679fef63a7a1",
       "comment_updated_at": null,
       "pr": 365,
       "head_sha": "b24d9baa167e01d57961b82a9a3c6f4501849190",
-      "planned_action": "Advisory evidence/gate checkpoint only; no assignment while #364 unmerged."
+      "planned_action": "Advisory evidence/gate checkpoint only; no assignment while #364 unmerged.",
+      "disposition": "PR #365 exact head confirmed; five Actions successful, Benchmark currently in_progress, legacy pre-commit successful. Attempt-one default regressions preserved. Independent B5 pending; not merge-ready. #364 still unmerged, so no reviewer assignment or activation.",
+      "dispatches": 0,
+      "log_publication": "pending",
+      "log_dedup_key": "advisory-365-6778679718"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -62,11 +66,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "c7ab9e20-dd3e-11f1-8bb2-c4e19b8d0497",
-    "comment_id": 6777424023,
-    "event_type": "issue_comment",
-    "disposition": "external_test_non_actionable",
-    "new_actionable_external_messages": 0
+    "delivery_id": "b8b67310-dd46-11f1-94a3-679fef63a7a1",
+    "comment_id": 6778679718,
+    "disposition": "advisory_triage"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
