@@ -1987,12 +1987,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D098",
-    "incoming_comment": 6771542584,
-    "review_comment_id": 6771767708,
-    "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
+    "active_comment": 6782224690,
+    "status": "in progress",
+    "decision": "D099"
   },
   "duplicate_events": [
     {
@@ -3527,6 +3524,13 @@
       "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
       "review_comment_id": 6771767708,
       "complete_cursor_commit": "6a0b23b203ff5023cc649de6fade27c8cb0e45e5"
+    },
+    {
+      "comment_id": 6782224690,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D099",
+      "progress": "Migration passed; receipt before bounded recipe review."
     }
   ],
   "migrated_from": {
