@@ -417,7 +417,7 @@ synthetic records only: balanced, exit 0; 1/99, exit 1; 0/0, exit 1 with "2 zero
 calls"; one helper calling `traverse_staged` with 50/50 bytes, VALID with (d) failing, exit 1;
 and the 1/99 file without its terminal record, INVALID, exit 2. D091 and the Researcher
 report the same for their fixtures. The pinned blob's 20 committed tests pass. The
-adjudicator itself is not written yet (§14, unresolved).
+adjudicator is now written and this dry run archived (§14a).
 
 ## 13. Revision 2 (the Researcher's REVIEW 6763089509 item 3)
 
@@ -446,8 +446,98 @@ adjudicator itself is not written yet (§14, unresolved).
 **No new gate** is added, and nothing is built, timed or run on the decoder.
 
 **Unresolved:**
-- **The adjudicator is not written.** No recipe or harness for this diagnostic exists yet, so
-  no code enforces §3, and §8a is specified here only. It must be written, with tests for
-  every §12a case, and the dry run passed, before the freeze.
+- **The adjudicator** is now written, tested and dry-run (§14a). The rest of the harness
+  (builds, A arms, `count.py`, the recipe) is still unwritten, so §3's deadlines are enforced
+  in code only for the checker step.
 - **The freeze still needs** the Researcher's PROCEED and D089's other pre-data conditions
   (D091 §2 does not assert they are met), and B5 for ports 2 and 3 stays separate.
+
+## 14a. The §8a adjudicator and the §12a dry run (implementation; the Researcher's PROCEED 6764231210 item 2, Guardian D094 §3)
+
+Commit `e9f8833d97fc6590e52c9ebef42a239869ba9f88`. Untimed; no decoder built or run; nothing
+frozen.
+
+| file | what it is |
+|---|---|
+| `bench/team_ports_adjudicate.py` | §8a. `checker --out DIR` copies blob `eb7c392d2d766e870de3e14a31b5fe940787dd3f` out with `git cat-file -p` and checks `git hash-object` of the copy; `run --dir DIR --step E1\|E2 --records … --classes …` re-checks the copy's hash, runs §8's command exactly (`python3 walk_stats_check.py FILE --walker traverse --helpers 2 --classes …`, never `--reference`) under `timeout -s TERM -k 30 600` in its own process group, archives `checker-exit.txt`, `checker-stdout.txt` and `checker-stderr.txt` verbatim, and writes `decision.json`; `judge` adjudicates an archived outcome |
+| `bench/test_team_ports_adjudicate.py` | the tests: 11 test methods, with subtests over every rule and every dry-run case. In CI: `test.yml`, job `submit`, which first fetches #341's merge commit `88768ac15` (the shallow checkout lacks the blob) |
+| `bench/team_ports_dry_run.py` | the §12a dry run: builds every case, runs it and writes `summary.json` |
+| `docs/journal/2026-11-10-team-ports-combined/dry-run/` | the archive: `checker.json` (the copy's `git hash-object`, `eb7c392d…`, and SHA-256 `27eaa104…`), the copy that ran, `summary.json`, and per case `cases/<case>/` with its records, the raw exit, stdout and stderr, and `decision.json` |
+
+**The decision record** (`decision.json`, schema `team-ports-combined/checker-step/1`): the
+command, the status (exit, timed out, signal, elapsed), the stdout and stderr sizes and SHA-256,
+the checker's own outcome and exit (never relabelled), the decision (accepted or rejected), the
+rule that decided it (1, 2 or 3) and its reasons, the parsed verdict, what §8 reports ((b)'s
+line, undefined-ratio teams, zero-work helper calls) and, when accepted, the claim limit. The
+checker's PYTHON* environment variables and `python3`'s path are recorded with it.
+
+**Readings this implementation fixes, each fail-closed:**
+- stdout must be UTF-8, end with a newline, and hold exactly six lines with no carriage return
+  or blank line; a predicate line must read `  (x) holds: ` or `  (x) fails: ` with a non-empty
+  detail, its letter in order;
+- the deadline: `timeout`'s 124 (TERM) or 137 (KILL after 30 s), with the elapsed time at
+  least the deadline, is recorded as a timeout; any other non-0/1 code, and a negative one (a
+  signal re-raised by `timeout`), is rejected under rule 1 anyway;
+- §2's identity check comes before §8a: a copy whose `git hash-object` is not the pin is not
+  run, no checker is substituted, and the step is rejected as `rule 0` (`run` exits 2).
+
+**Tests:** `python3 bench/test_team_ports_adjudicate.py`: 11 tests, all pass (Python 3.13.16).
+They cover rule 1 on 2, 3, 124, 137, −9, −15 and a timeout or signal with good output; rule 2 on
+21 shapes (stderr, truncation, blank line, CRLF, non-UTF-8, INVALID, wrong letter, empty detail,
+duplicate, missing line, reference line, outcome against predicates, exit against outcome); rule
+3 on each of (a), (c) and (d); the exact command; the identity check (a missing blob, a tampered
+copy not run); and the whole dry run, expected against actual for every case.
+
+**The dry run** (`summary.json`, `all_match: true`): 35 cases. *Real* cases run the pinned
+checker on a synthetic one-T-block ledger through `run`'s own path. The timeout is a FIFO no one
+writes, with a 2 s deadline in place of 600 s; the signals are sent to the blocked checker
+process (the dry run's fault injection, never the production path); the crash is the checker's
+own `UnicodeDecodeError` traceback on non-UTF-8 records, exit 1. *Simulated* cases are outcomes
+a correct checker run does not produce, built from the real cases' archived stdout. The
+Researcher's controls (report at `8d3d9004`, §2) and the Guardian's eight (D094 §3,
+`review_probes.py`) are included as given.
+
+| case | §12a row | kind | checker exit | checker outcome | expected | actual |
+|---|---|---|--:|---|---|---|
+| `balanced` | balanced, helpers 100/100 | real | 0 | ENGAGED | accepted, rule 3 | accepted, rule 3 |
+| `balance-only-1-99` | balance-only, helpers 1/99 | real | 1 | NOT ENGAGED | accepted, rule 3 | accepted, rule 3 |
+| `zero-work-0-0` | zero-work, helpers 0/0 | real | 1 | NOT ENGAGED | accepted, rule 3 | accepted, rule 3 |
+| `a-fails` | a required predicate fails | real | 1 | NOT ENGAGED | rejected, rule 3 | rejected, rule 3 |
+| `c-fails` | a required predicate fails | real | 1 | NOT ENGAGED | rejected, rule 3 | rejected, rule 3 |
+| `d-fails` | a required predicate fails | real | 1 | NOT ENGAGED | rejected, rule 3 | rejected, rule 3 |
+| `invalid-no-terminal` | INVALID | real | 2 | — | rejected, rule 1 | rejected, rule 1 |
+| `timeout` | a timeout | real | 124 (timed out) | — | rejected, rule 1 | rejected, rule 1 |
+| `signal-kill` | a kill by signal | real | -9 (signal 9) | — | rejected, rule 1 | rejected, rule 1 |
+| `signal-term` | a kill by signal | real | -15 (signal 15) | — | rejected, rule 1 | rejected, rule 1 |
+| `crash-traceback-exit1` | a crash: non-zero exit, a traceback, no verdict | real | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `truncated-no-outcome-exit0` | a truncated report | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `truncated-no-outcome-exit1` | a truncated report | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `truncated-mid-line` | a truncated report | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `truncated-empty` | a truncated report | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `crash-no-output-exit1` | a crash: non-zero exit, a traceback, no verdict | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `crash-partial-verdict-exit1` | a crash: non-zero exit, a traceback, no verdict | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `crash-exit3` | a crash: non-zero exit, a traceback, no verdict | simulated | 3 | — | rejected, rule 1 | rejected, rule 1 |
+| `engaged-exit1` | a verdict whose exit disagrees with its outcome | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `not-engaged-exit0` | a verdict whose exit disagrees with its outcome | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `outcome-contradicts-predicates` | a verdict whose exit disagrees with its outcome | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `stderr-warning` | non-empty stderr | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `duplicate-line` | duplicate output | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `reordered-lines` | reordered output | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `reference-line` | extra output | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `invalid-listing-exit1` | INVALID | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `invalid-listing-exit0` | INVALID | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-truncated` | D094 control | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-crash` | D094 control | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-timeout` | D094 control | simulated | 0 (timed out) | — | rejected, rule 1 | rejected, rule 1 |
+| `D094-signal` | D094 control | simulated | -9 (signal 9) | — | rejected, rule 1 | rejected, rule 1 |
+| `D094-exit-disagrees-engaged` | D094 control | simulated | 1 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-exit-disagrees-not-engaged` | D094 control | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-stderr-warning` | D094 control | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+| `D094-extra-stdout` | D094 control | simulated | 0 | — | rejected, rule 2 | rejected, rule 2 |
+
+Every actual decision equals its expected one. The 0/0 case is accepted with 2 zero-work
+helper calls and an undefined ratio reported, under the claim limit (§8). Rejections by rule 3
+keep the checker's own NOT ENGAGED and exit 1 in the record; nothing is relabelled.
+
+**Still before the freeze:** the rest of the harness (§14, unresolved), the Researcher's
+review of this implementation, D089's other pre-data conditions, and B5 for ports 2 and 3.
