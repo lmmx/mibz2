@@ -664,8 +664,13 @@ def geo(logs, block=BOOT_BLOCK, resamples=BOOT_RESAMPLES, seed=BOOT_SEED):
     m = sum(logs) / n
     out = {"n": n, "ratio": math.exp(m), "lo": None, "hi": None, "block": block}
     if n >= 2:
-        means = [sum(logs[i] for i in idx) / n for idx in boot_indices(n, block, resamples, seed)]
-        out["lo"], out["hi"] = math.exp(pct(means, 0.025)), math.exp(pct(means, 0.975))
+        # (a block as long as the rounds only rotates them: no bootstrap interval, said so)
+        if block < n:
+            idxs = boot_indices(n, block, resamples, seed)
+            means = [sum(logs[i] for i in idx) / n for idx in idxs]
+            out["lo"], out["hi"] = math.exp(pct(means, 0.025)), math.exp(pct(means, 0.975))
+        else:
+            out["no_interval"] = f"block {block} is not shorter than the {n} rounds"
         sd = st.stdev(logs)
         t = T95.get(n - 1, 1.96)
         out["t_lo"], out["t_hi"] = (

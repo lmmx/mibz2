@@ -72,10 +72,13 @@ def test_geo_constant_and_known():
     g = sn.geo([math.log(1.3)] * 20)
     assert g["ratio"] == pytest.approx(1.3)
     assert g["lo"] == pytest.approx(1.3) and g["hi"] == pytest.approx(1.3)
-    g = sn.geo([math.log(2), math.log(8)])
+    g = sn.geo([math.log(2), math.log(8)], block=1)
     assert g["ratio"] == pytest.approx(4.0)
     assert 2 - 1e-9 <= g["lo"] <= g["hi"] <= 8 + 1e-9
     assert sn.geo([])["ratio"] is None
+    # a block as long as the rounds gives no interval (it would only rotate them)
+    g = sn.geo([0.1, 0.3], block=5)
+    assert g["lo"] is None and "no_interval" in g and g["t_lo"] < g["ratio"] < g["t_hi"]
     assert sn.geo([0.1])["lo"] is None
 
 
@@ -279,6 +282,21 @@ def test_drive_stops_at_the_first_failure(tmp_path):
     assert r.returncode == 1
     slots = [json.loads(x) for x in (d / "slots.jsonl").read_text().splitlines()]
     assert len(slots) == 6 and slots[-1]["rc"] == 3
+
+
+def test_drive_bounds_a_stalled_slot(tmp_path, monkeypatch):
+    # an ab whose busy gate never opens (here: a sleep) is stopped at the slot's deadline,
+    # recorded with 124, and nothing after it runs
+    p = tmp_path / "ab"
+    p.write_text("#!/bin/sh\nexec sleep 600\n")
+    p.chmod(0o755)
+    d = tmp_path / "w"
+    d.mkdir()
+    monkeypatch.setattr(sn, "CELL_DEADLINE", (2, 1))
+    rc = sn.main(["drive", str(d), str(p), "--dry"])
+    assert rc == 124
+    slots = [json.loads(x) for x in (d / "slots.jsonl").read_text().splitlines()]
+    assert len(slots) == 1 and slots[0]["rc"] == 124 and slots[0]["lines_after"] == 0
 
 
 def test_drive_refuses_a_relaxed_gate_outside_dry(tmp_path):
