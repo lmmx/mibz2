@@ -150,9 +150,10 @@
     6759271712,
     6759385543,
     6759589291,
-    6759800960
+    6759800960,
+    6760095177
   ],
-  "last_processed_comment_id": 6759800960,
+  "last_processed_comment_id": 6760095177,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1675,7 +1676,7 @@
     },
     {
       "trigger_comment_id": 6760095177,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1683,7 +1684,10 @@
       "report_commit": "ddd3479c789e5dee2da951eff8346a5fb25298a0",
       "report_path": "state/reports/team-designs-recheck-6760095177/report.md",
       "disposition": "REVISE both before freeze: four screen admission counterexamples; zero-work walker record completeness; precise prefix and two-tier recommendations.",
-      "review_comment_pr": 145
+      "review_comment_pr": 145,
+      "review_comment_id": 6760210997,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
