@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782527893,
+  "last_examined_comment_id": 6782560706,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -254,7 +254,9 @@
     6782363899,
     6782427449,
     6782519694,
-    6782527893
+    6782527893,
+    6782551058,
+    6782560706
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -361,8 +363,9 @@
       "review_comment_id": 6782473662
     },
     "observer": {
-      "status": "in_progress_before_post",
-      "scope": "Batched D100 repair scope and Codex completed census/new F01 dispatch"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6782551058,
+      "scope": "D100 accounting diagnosis and completed Codex census/F01 handoff"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -406,9 +409,12 @@
   },
   "checkpoint": {
     "key": "continuation-6782495828",
-    "status": "in_progress_log_publication",
+    "status": "published_readback_verified",
     "event_dispositions_persisted": true,
-    "planned_action": "Grouped LOG of D100 decision, actual Codex delivery, F01 dispatch and queued instrument repair"
+    "planned_action": "Grouped LOG of D100 decision, actual Codex delivery, F01 dispatch and queued instrument repair",
+    "log_comment_id": 6782560706,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782560706",
+    "wording_correction": "in_progress: change 'Its successful job' to 'Its Occupancy job'; original job remains failed"
   },
   "dispatch_history": [
     {
