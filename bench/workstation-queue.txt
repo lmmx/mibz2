@@ -6,5 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-324-i9                 master                    #324 vs its base on the i9, wikidata wall 1-20 threads (W2, PROPOSAL 6764488488)
 bench-cold-start             master                    W1 cold start: gap/no-gap/pinned/start-spin/held-spinner/x4 arms (rule: docs/journal/2026-11-10-cold-start.md)
