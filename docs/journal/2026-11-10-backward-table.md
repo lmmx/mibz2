@@ -1,6 +1,6 @@
 # 2026-11-10: Walk backward: in the LF direction the table is written in the order the runs arrive
 
-**Status: one observation, checked on the corpus, and three designs it opens. Designs only: each
+**Status: one observation, checked on the corpus, and four designs it opens. Designs only: each
 is handed to the Coordinator with its bound, its falsifier and its gate.**
 
 - **The observation.** mibz2 walks Ψ = LF⁻¹, as libbzip2 does, because Ψ emits a block's bytes
@@ -184,15 +184,47 @@ compact tables either kept every step (the 24-bit table), or paid for their cons
   word marks exact runs of L and the values are the records.
 - **Against #42:** no interval state, no fast-forward, no F-order sort, no merge.
 
+## 4a. Design D: C's table holding B's steps (added after the entry was posted)
+
+B writes a dense entry a row; C looks a row's run up. Put B's k-step pieces in C's table.
+
+- **`pieces`:** one record a piece of LF^k (a maximal row interval on which LF^k is a
+  translation and the k bytes are constant): its first row, its LF^k base, its k bytes. 13 bytes
+  at k = 8, held in 16.
+- **`dir`:** as C's, with a bit at each piece start.
+- **A step:** C's lookup, then one k-byte store: `i = p.base + (i − p.first)`.
+- **Counted:** 0.1088 n pieces at k = 4 and 0.1422 n at k = 8
+  (`2026-11-09-phrase-structure.md`, the cells of Ψ^s). So 1.6 bytes a row at k = 4 (12-byte
+  records) and 2.5 at k = 8, against the T-vector and column's 5.
+- **Segment starts:** a k-step passes over rows. Where a piece's path crosses a start at step j,
+  that one row becomes a piece of its own with "stop after j bytes". The crossing is known while
+  the piece is composed, from its intermediate intervals. 512 starts add about 5% pieces at
+  k = 8.
+- **Build:** by doubling, 1 → 2 → 4 → 8, each level one pass over its pieces with the monotone
+  cursors of B. Piece-steps in all: (0.088 + 0.109 + 0.142) n = 0.34 n to reach k = 8.
+
+**Bound (model).**
+- **Walk:** about 20 instructions for 8 bytes, 2.5 a byte, against 10.5; a quarter of a load a
+  byte, from 2.5 MB.
+- **Build:** 0.34 n piece-steps at about 15 instructions is 5 a row: more than the walk it
+  feeds. This is the term that decides D.
+- **Net, one thread, here:** inversion about 1.4–1.6 ns a row against 2.24. With the emitter,
+  a decode of about 2.4–2.6 ns a row against 3.4: 1.3–1.4×.
+
+- **Cheapest falsifier:** the doubling pass's instructions a piece, by listing, before any walk
+  is written. Over 20, D's build costs what its walk saves at k = 8, and only k = 4 is left.
+- **It replaces B** where it holds: the same steps from a table a third the size.
+
 ## 5. Ranked
 
 | | ceiling | confidence | first step, and whose |
 |---|---|---|---|
 | A. the sequential table | 12% of one thread's decode here; the column and its cold writes on the i9 | high: identity checked, fill timed | the Coordinator's, with the emitter it is already building: the fill replaces the F-order sort and sweep |
 | C. runs with a rank directory | about 2× at ten workers on the i9 (model); nothing at one thread | medium: step cost unmeasured | a listing count, then a registered inversion diagnostic |
-| B. two or four bytes a step | about 0.6 ns of a 3.4 ns row at one thread on a 2 MiB L2; fewer reads past L2 everywhere | medium-low: #34 lost on per-step cost too | a listing count of the four-byte step |
+| D. pieces with a rank directory | 1.3–1.4× one thread's decode with the emitter (model); a table half the T-vector's | medium-low: the doubling build is unpriced | a listing count of the doubling pass |
+| B. two or four bytes a step, dense | about 0.6 ns of a 3.4 ns row at one thread on a 2 MiB L2 | low: D gives the same steps from a third the bytes | a listing count of the four-byte step |
 
-A is a prerequisite of B and C as written: all three walk backward.
+A is a prerequisite of the others as written: all four walk backward.
 
 ## Reproduce
 
