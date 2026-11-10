@@ -555,6 +555,17 @@ class Counterexamples(unittest.TestCase):
             rec, _ = sustained(SUSTAINED["low"], phase=phase)
             self.assertEqual(tm.sustained_reading(rec)["shape"], "a sustained change, down")
 
+    def test_3_small_reads_are_not_chunks(self):
+        # a block whose input was all read in the fill: the harness's own small reads after it
+        # (rchar counts them) never stand in for chunks
+        rec, _ = sustained(lambda t: 1.3, copies=3)
+        t_end = rec["io"]["samples"][-1][0]
+        last = rec["io"]["samples"][-1][1]
+        for k in range(1, 300):
+            rec["io"]["samples"].append([t_end + k * 10000, last + k * 700])
+        s = tm.sustained_reading(rec)
+        self.assertEqual(s["shape"], "too short")
+
     def test_3_no_burst_threshold_or_ratio_classifies(self):
         self.assertFalse(hasattr(tm, "FAST_RATE"))
         rec, _ = sustained(lambda t: 1.0)

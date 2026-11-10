@@ -981,8 +981,10 @@ def sustained_reading(rec):
         return v
 
     incs = [(x, y - y0) for (x, y), (_, y0) in zip(pts[1:], pts)]
-    after = [d for x, d in incs if x > SUSTAINED_SKIP_S and d > 0]
-    chunk = max(after) if after else max((d for _, d in incs), default=0)
+    # (the decoder's chunks, not the harness's own small /proc reads, which rchar also counts:
+    # increments of at least 1 MiB after the fill; none, and there is nothing to classify)
+    after = [d for x, d in incs if x > SUSTAINED_SKIP_S and d >= 1 << 20]
+    chunk = max(after) if after else 0
     reads = [x for x, d in incs if chunk and d > chunk / 2]
     last = max(reads) if reads else None
     end = pts[-1][0]
