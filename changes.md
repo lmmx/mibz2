@@ -1,5 +1,10 @@
 # Changes since the last version
 
+- 2026-11-10, through [6767075813](https://github.com/lmmx/mibz2/pull/145#issuecomment-6767075813): #324 and #316 merged under Louis's new performance policy and mibz2 0.2.8 released; the original #324 FAIL and #316 unsound inference findings remain on record.
+- 2026-11-10: 0.2.7/0.2.6 i9 scaling checked broadly neutral; a new 0.2.8 i9 run is next. W1 found the all-machine idle mode and #350 merged a bench-only held spinner.
+- 2026-11-10: the stacked cooperative ports were dropped under their fixed wall rule; #348 closed without primary gain, with #353 carrying an admission repair.
+- 2026-11-10: Louis changed team ownership and delivery priorities. MONODROMY's #351 opened a run-induction/grammar line, slower as first built, with Researcher/Optimiser/Architect support. Observer pin applicability flagged.
+
 - 2026-11-10, through [6763939540](https://github.com/lmmx/mibz2/pull/145#issuecomment-6763939540): STEPS diagnostic revision 4 won Researcher PROCEED and Guardian D093 after independent counter repairs; implementation review, freeze and run remain, with no causal or production claim.
 - 2026-11-10: the Coordinator checked the old guarded-service archive: 0/420 slow-mode runs and balanced arm positions. The #316 twelve-dispatch draft now has green CI but remains under review for neutral-tail false acceptance.
 - 2026-11-10: Louis submitted a replacement 0.2.7 release-scaling bundle without outcome.txt; no verdict was confirmed by the channel watermark.

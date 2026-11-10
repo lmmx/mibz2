@@ -1,6 +1,6 @@
 # 2. Downstream delivery
 
-- **Status:** 0.2.5 dependency update in wikidata-pq #219 completed by Louis's one-off call, without an end-to-end automated-runner gain. Its ordinary merge rule was not amended ([decision](https://github.com/lmmx/wikidata-pq/pull/97#issuecomment-6699288552)).
-- **In order to:** 0, deliver released decoder improvements through a real consumer.
-- **New limit:** wikidata-pq caps the decoder at four threads in its default pipeline, so neither the 0.2.5 three-team policy nor the 0.2.6 pipelined plan engages there by default ([Coordinator LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699649478)). The extrapolated upstream gain is not a measured end-to-end pipeline gain.
-- **Further work:** #220 adds a workstation-shaped benchmark as measurement-only; a matching integration rule still requires Louis. #221 proposed a 0.2.6 bump; its current merge/benchmark disposition was not established by this record. Do not treat either as automatic downstream adoption.
+- **Doing:** bring released decoder improvements to wikidata-pq after the 0.2.8 release.
+- **In order to:** 0, deliver and measure benefits in a real consumer.
+- **Known:** wikidata-pq previously adopted mibz2 0.2.5 by Louis's one-off decision without an end-to-end automated-runner gain ([decision](https://github.com/lmmx/wikidata-pq/pull/97#issuecomment-6699288552)). Its default pipeline capped decoder threads at four, so earlier team-plan gains did not engage by default ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6699649478)).
+- **Next:** the Coordinator listed a 0.2.8 downstream bump after release scaling and changelog work. No 0.2.8 wikidata-pq benchmark or adoption result is established here ([release LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6767075813)).
