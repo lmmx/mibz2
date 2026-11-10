@@ -1908,12 +1908,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D094",
-    "incoming_comment": 6763960879,
-    "review_comment_id": 6764159416,
-    "work_commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
+    "active_comment": 6764248398,
+    "status": "in progress",
+    "decision": "D095"
   },
   "duplicate_events": [
     {
@@ -3372,6 +3369,13 @@
       "work_commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114",
       "review_comment_id": 6764159416,
       "complete_cursor_commit": "e3d6e174cfea71033c4445d348526c49913de605"
+    },
+    {
+      "comment_id": 6764248398,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D095",
+      "progress": "Migration verified; assessing prospective sign-policy adoption and confirmation under C6."
     }
   ],
   "migrated_from": {
