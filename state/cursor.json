@@ -1060,6 +1060,15 @@
       },
       "reply_id": 6759713909,
       "routing_verification": "route/check passed. Exact readback verified. Pinned verify rejects FROM optimizer because it hardcodes coordinator; no verify-pass claimed."
+    },
+    {
+      "comment_id": 6759983287,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt; migration verified. Reading submitted share-nothing archive for CPU/load-law replay and full-decoder repricing.",
+      "report_path": "state/records/reviews/inbox-6759983287/report.md"
     }
   ],
   "migrated_from": {
