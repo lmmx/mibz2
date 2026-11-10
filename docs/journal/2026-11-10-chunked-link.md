@@ -1,8 +1,8 @@
 # 2026-11-10: The chunked link: a 1.2 MB table with one kind of step, and four ideas closed by arithmetic
 
-**Status: a table checked row by row against the T-vector, its size counted, its step timed in a
-common loop (local, indicative, RULES C5). For the Optimiser's price (SPEC.PATHFINDER 3a).
-Nothing in the decoder changes and no build slot is asked.**
+**Status: a table checked row by row against the T-vector, its size counted, its fill and its
+step counted and timed in common loops (local, indicative, RULES C5). For the Optimiser's
+price (SPEC.PATHFINDER 3a). Nothing in the decoder changes and no build slot is asked.**
 
 - **The question:** share-nothing needs a table near 1 MB a worker on text as well as on
   Wikidata. The k-step table is small only where runs are long; the line table (E) died on its
@@ -13,9 +13,11 @@ Nothing in the decoder changes and no build slot is asked.**
   T-vector is 4 (3.60 MB). Every link and byte checked on 25 blocks.
 - **Timed, the same loop for both tables:** one lane 0.98 to 1.02 of the T-vector's time;
   32 prefetching lanes 1.30 to 1.50. Instructions a row: 22.2 against 8.2.
-- **By the law of the knee:** 2,200 to 3,400 MB/s of inversion at ten plain workers. Three
-  teams measured 2,430 to 2,584. It brackets them. What decides is its one-block cost on the
-  i9, which no local run gives.
+- **Its fill, built and checked:** 6.0 instructions a row on Wikidata against `build`'s 5.06,
+  17.6 on text against 11.5; 1.45 and 1.93 times `build`'s time. The model said `build` + 2.
+- **By the law of the knee:** 2,200 to 3,340 MB/s of inversion at ten plain workers. Three
+  teams measured 2,430 to 2,584. Ahead on Wikidata, level on text as built. What decides is
+  its one-block cost on the i9, which no local run gives.
 - **Closed by arithmetic, no code:** inversion by induction on intervals, tunnels learned on
   the fly, staggered walks, and rank-or-select tables.
 
@@ -91,14 +93,35 @@ difference is the step's.
   directory and `rec` (0.2 to 0.4 MB) contend for a 256 KB L2. Its loads a row there
   are between 1 and 3. Unknown.
 
-## 3. The fill (derived; not built)
+## 3. The fill (built and checked; counted and measured)
 
-One pass over the last column, as the T-vector's: for row i with byte c, y = cursor[c]++;
-low[y] = i's low byte; if i's chunk is not the last chunk c was seen in, set bit y and append a
-record to c's list. Then the lists are packed in bucket order and `base` is summed.
-- one byte written a row where the T-vector writes four;
-- about two instructions a row over `build`'s 4.92 (model);
-- the room walk's start flag needs a second bit a row in the directory (+0.125 bytes a row).
+Two fills in `chunk_table`, each equal to the definition's table on every block (25 blocks:
+low bytes, directory and records compared whole).
+
+- **By rows:** for row i with byte c, y = cursor[c]++; low[y] = i's low byte; if i's chunk is
+  not the last chunk c was seen in, set bit y and append a record to c's span.
+- **By runs:** a run of the column is consecutive rows of its bucket whose low bytes count up,
+  written 16 at a time. It begins a stretch where its chunk is new to its byte, and one more
+  at each chunk it crosses.
+- Both then pack the spans in bucket order and sum the directory. A bucket's span is the lesser
+  of its rows and the block's chunks, so the spans total at most n records and are touched only
+  where written.
+
+| a row | production's `build` | by rows | by runs |
+|---|--:|--:|--:|
+| Wikidata, instructions (callgrind, 2 blocks) | 5.06 | 17.3 | **6.0** |
+| text, instructions (3 blocks) | 11.5 | **17.6** | 20.6 |
+| Wikidata, ns (10 blocks) | 0.48 | 2.49 | **0.70** (1.45×) |
+| text, ns (9 blocks) | 1.23 | 2.60 | **2.37** (1.93×) |
+
+- **The model was "`build` + 2 instructions".** On Wikidata it is + 0.95 by runs: held. On text
+  it is + 6.1 at best: failed. In time it failed on both: 1.45 and 1.93 times `build`.
+- **Which failure:** the construction. `build` is tuned (it takes runs 16 at a time where they
+  are few and rows otherwise); each of these fills is one loop. By rows the cursor is read and
+  written through memory every row, a chain where a byte repeats. A fill that chose by run
+  density as `build` does is not written.
+- **One byte written a row** where the T-vector writes four, and it is not yet cheaper.
+- The room walk's start flag needs a second bit a row in the directory (+0.125 bytes a row).
 
 ## 4. What the law says (model)
 
@@ -107,15 +130,18 @@ Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1
 
 | g, the inversion at one block | a | MB/s at ten plain workers |
 |--:|--:|--:|
-| 1.25 to 1.4 (this container's ratio, with `build`'s cost unchanged) | 1 | 3,140 to 3,440 |
+| 1.34 (Wikidata here: fill by runs and the 32-lane walk, over `build` and T's walk) | 1 | 3,340 |
+| 1.69 (text here, the same) | 1 | 2,630 |
 | 2.0 (the i9's L2 misses bind) | 1.5 | 2,200 |
 
 - **Against:** three teams of three 2,430 to 2,584 (measured, that harness); compact30, 1.95 MB
   at g = 1.18, 2,350 at seven (model); N1 at k = 4, 3,470 to 5,260 (model, unbuilt, long runs
   only).
-- **It brackets the teams.** It beats them if g on the i9 is about 1.8 or less.
+- **It brackets the teams.** It beats them if g on the i9 is about 1.8 or less. As built here
+  it does on Wikidata, where D4-delta's 3,570 is better still, and on text, the class it is
+  for, it is level with them.
 - **What it has that the others lack:** one worker a block with no cooperation, on text and on
-  Wikidata alike, from a fill no dearer than `build`.
+  Wikidata alike. Its fill is dearer than `build` as written (§3).
 - **Cheapest decider:** `chunk_table` on the i9, one block and ten at once. A C5 run; the
   Optimiser's price first.
 
@@ -164,14 +190,15 @@ Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1
 
 | need | candidate | size, MB a block | state |
 |---|---|--:|---|
-| share-nothing on any data | the chunked link | 1.14 to 1.27 | counted and checked; g on the i9 unknown |
+| share-nothing on any data | the chunked link | 1.14 to 1.27 | table, fill and walk checked; g 1.34 to 1.69 here; on the i9 unknown |
 | share-nothing on any data | compact30 | 1.95 | built once; the Optimiser pricing a plain-worker arm |
 | share-nothing on long runs | the k-step table at k = 4 | 0.79 to 0.90 | unbuilt; its cuts cost 0.11 LF evaluations a row (tunnels §0c) |
 | fewer loads on long runs | tall-tunnel copies | +0.6 | certified, and closed as a build (tunnels §0c) |
 
 **Limits.** One container, an EPYC whose caches hold the T-vector: its ratios are instruction
-ratios. `text` and `records` are the bench's synthetic corpora. The fill is not built. The law
-is one run of 29 October on the inversion alone.
+ratios. `text` and `records` are the bench's synthetic corpora. The walk's loop is this
+example's, not the room walk. The law is one run of 29 October on the inversion alone, and
+its X holds building as well as walking (the Optimiser's objection, #145 6759278054).
 
 ## Reproduce
 
@@ -179,6 +206,10 @@ is one run of 29 October on the inversion alone.
 cargo build --release --examples
 target/release/examples/line_census FILE.bz2 [EVERY]             # §1: stretches a row
 target/release/examples/chunk_table FILE.bz2 [EVERY] [ROUNDS]    # §1's bytes, §2's times
+target/release/examples/chunk_table FILE.bz2 [EVERY] [ROUNDS] fill   # §3: checks and times
+valgrind --tool=callgrind target/release/examples/chunk_table FILE.bz2 EVERY 1 fill
+callgrind_annotate --inclusive=yes callgrind.out.* | grep chunk_table::   # §3's instructions;
+                                                   # `build` is called twice a block there
 valgrind --tool=callgrind --toggle-collect='chunk_table::walk_g_lanes' \
   target/release/examples/chunk_table text.bz2 12 1 g            # §2's instructions (t for T)
 ```
