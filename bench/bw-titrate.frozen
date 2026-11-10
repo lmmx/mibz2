@@ -2,4 +2,4 @@
 # The commit the registration, the harness and the recipe are frozen at: just
 # bench-bw-titrate's measured inputs must match it exactly. Re-frozen if review changes them,
 # before any run.
-frozen 6aff22e4388226dc56e61b84506e56e31377fec5
+frozen eed6cc7705c329ed685c00411cf2330e11b95752
