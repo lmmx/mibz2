@@ -1,0 +1,30 @@
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (section 6, "The core's clock").
+//! Not built by the crate. To run (x86-64):
+//!   cp THIS clock_chain.rs && rustc -O clock_chain.rs && taskset -c 3 ./clock_chain
+//! Two chains of dependent operations held in one register: a multiplication (3 cycles of
+//! latency on this core) and four additions (1 cycle each). The time of an iteration gives
+//! the frequency the core runs at, which here is not the one its name or its TSC gives.
+use std::arch::asm;
+use std::time::Instant;
+fn main() {
+    let n: u64 = 2_000_000_000;
+    for name in ["imul (3 cycles)", "add (1 cycle)"] {
+        let mut best = f64::MAX;
+        for _ in 0..5 {
+            let mut x: u64 = 1;
+            let t = Instant::now();
+            unsafe {
+                if name.starts_with("imul") {
+                    asm!("2:", "imul {x}, {k}", "dec {i}", "jnz 2b", x = inout(reg) x, k = in(reg) 3u64, i = inout(reg) n => _);
+                } else {
+                    asm!("2:", "add {x}, {k}", "add {x}, {k}", "add {x}, {k}", "add {x}, {k}", "dec {i}", "jnz 2b", x = inout(reg) x, k = in(reg) 3u64, i = inout(reg) n => _);
+                }
+            }
+            std::hint::black_box(x);
+            best = best.min(t.elapsed().as_secs_f64());
+        }
+        let per = best * 1e9 / n as f64;
+        let cyc = if name.starts_with("imul") { 3.0 } else { 4.0 };
+        println!("{name}: {per:.3} ns an iteration => {:.2} GHz", cyc / per);
+    }
+}

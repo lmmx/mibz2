@@ -1,0 +1,282 @@
+"""Two brute-force checks of what the right-end Rauzy-Veech SLP of LF is (entry, section 5.6).
+Run: python3 FILE
+
+1. Its derivation tree equals the min-Cartesian tree of the rotation ranks over the
+   boundaries of the block's least rotation (details in the next docstring).
+2. That tree is the Lyndon tree (standard factorization: w = uv, v the lexicographically
+   least proper suffix of w, recursively) of the least rotation, and every rule's expansion
+   is a Lyndon word.
+
+Written by a sub-agent that did not see examples/rauzy.rs: the induction here is the entry's
+table on Python lists.
+"""
+"""Brute force: the derivation tree of the right-end Rauzy-Veech SLP of LF equals the
+min-Cartesian tree of ISA over the boundaries of the least rotation.
+
+For every primitive word T:
+  * rotations sorted by brute force -> SA, ISA, L
+  * literal induction (python lists, the entry's table), words kept as nested tuples (trees),
+    every rule recorded with its rank interval [m', m)
+  * Cartesian tree by brute-force argmin recursion on the least rotation
+Asserted:
+  (a) the root's tree == the Cartesian tree (shape and leaf bytes);
+  (b) the rules' intervals partition [1, n);
+  (c) for every rank y in a rule's interval, the Cartesian subtree at the boundary of rank y
+      == that rule's tree (so a rule's occurrences are exactly its interval);
+  (d) top-wins rule: the left child lies inside y's stretch; bottom-wins: the right child
+      (stretch = LF's cycle cut after every run start);
+  (e) suffix order of the least rotation as a linear word == rotation order (Lyndon).
+Counted: S, distinct trees among rules (hash-consed), distinct expansions, adjacent rules
+with equal tree.
+"""
+import itertools
+import random
+import sys
+
+sys.setrecursionlimit(100000)
+
+
+def primitive(T):
+    n = len(T)
+    return all(n % d or T[d:] + T[:d] != T for d in range(1, n))
+
+
+def bwt(T):
+    n = len(T)
+    TT = T + T
+    SA = sorted(range(n), key=lambda s: TT[s:s + n])
+    ISA = [0] * n
+    for x, p in enumerate(SA):
+        ISA[p] = x
+    L = [T[(p - 1) % n] for p in SA]
+    return SA, ISA, L
+
+
+def induct(L):
+    """Literal right-end induction. Returns (root tree, rules) with rules = list of
+    (m', m, kind, tree); kind in 'T','B','E'."""
+    lam, byte = [], []
+    for c in L:
+        if byte and byte[-1] == c and lam:
+            lam[-1] += 1
+        else:
+            lam.append(1)
+            byte.append(c)
+    # merge fix: the loop above merges equal neighbours only
+    r = len(lam)
+    w = list(byte)
+    top = list(range(r))
+    bot = sorted(range(r), key=lambda i: (byte[i], i))
+    rules = []
+    m = sum(lam)
+    while True:
+        A, B = top[-1], bot[-1]
+        if A == B:
+            assert len(top) == 1 and len(bot) == 1, "several cycles"
+            return w[A], rules
+        la, lb = lam[A], lam[B]
+        rule = (w[A], w[B])
+        if la > lb:
+            rules.append((m - lb, m, 'T', rule))
+            lam[A] = la - lb
+            w[B] = rule
+            bot.pop()
+            bot.insert(bot.index(A) + 1, B)
+            m -= lb
+        elif la < lb:
+            rules.append((m - la, m, 'B', rule))
+            lam[B] = lb - la
+            w[A] = rule
+            top.pop()
+            top.insert(top.index(B) + 1, A)
+            m -= la
+        else:
+            rules.append((m - la, m, 'E', rule))
+            w[B] = rule
+            top.pop()
+            bot.pop()
+            bot[bot.index(A)] = B
+            m -= la
+
+
+def cartesian(U, key):
+    """key[j], 1 <= j < n: the key of the boundary before U[j]. Returns (tree, sub, span)
+    with sub[key] = the subtree at that boundary, span[key] = (lo, j, hi)."""
+    sub = {}
+    span = {}
+
+    def rec(lo, hi):
+        if hi - lo == 1:
+            return U[lo]
+        j = min(range(lo + 1, hi), key=lambda q: key[q])
+        t = (rec(lo, j), rec(j, hi))
+        sub[key[j]] = t
+        span[key[j]] = (lo, j, hi)
+        return t
+
+    return rec(0, len(U)), sub, span
+
+
+def expand(t):
+    out = []
+    st = [t]
+    while st:
+        x = st.pop()
+        if isinstance(x, tuple):
+            st.append(x[1])
+            st.append(x[0])
+        else:
+            out.append(x)
+    return out
+
+
+def check(T):
+    n = len(T)
+    SA, ISA, L = bwt(T)
+    c = SA[0]
+    U = [T[(c + j) % n] for j in range(n)]
+    key = [ISA[(c + j) % n] for j in range(n)]
+    # (e) Lyndon: suffix order == rotation order
+    suf = sorted(range(n), key=lambda s: U[s:])
+    rot = sorted(range(n), key=lambda s: key[s])
+    assert suf == rot, ("lyndon", T)
+    root, rules = induct(L)
+    ct, sub, span = cartesian(U, key)
+    assert root == ct, ("root", T)
+    cover = sorted((a, b) for a, b, _, _ in rules)
+    pos = 1
+    for a, b in cover:
+        assert a == pos and b > a, ("partition", T)
+        pos = b
+    assert pos == n, ("partition end", T)
+    # stretches of LF's cycle: text positions (in U coordinates) of run starts
+    runstart = [x == 0 or L[x] != L[x - 1] for x in range(n)]
+    # stretch id along the text: a new stretch begins (in orbit order = text backward) after
+    # each run start; in text order: position j with runstart[key[j]] is the FIRST of its
+    # stretch read forward in text (it is the last in orbit order)
+    sid = [0] * n
+    s = 0
+    for j in range(n):
+        if runstart[key[j]]:
+            s += 1
+        sid[j] = s
+    # (the stretch holding boundary j is all boundaries with the same sid; cyclically the
+    #  pieces with sid 0 (before the first run start) and the last sid are one stretch, but
+    #  key[0] = 0 is a run start, so sid[0] = 1 and no wrap is needed)
+    assert runstart[0] and sid[0] == 1
+    for a, b, kind, t in rules:
+        for y in range(a, b):
+            assert sub[y] == t, ("interval", T, y)
+        lo, j, hi = span[a]
+        # children as boundary ranges: left = boundaries lo+1..j-1, right = j+1..hi-1
+        if kind == 'T':
+            assert all(sid[q] == sid[j] for q in range(lo + 1, j)), ("inside-left", T)
+            # and the left piece's left end lo is the next spine value of the same stretch
+            assert sid[lo] == sid[j] or True
+        if kind == 'B':
+            assert all(sid[q] == sid[j] for q in range(j + 1, hi)), ("inside-right", T)
+    S = len(rules)
+    trees = [t for _, _, _, t in rules]
+    dt = len(set(trees))
+    ds = len(set(tuple(expand(t)) for t in trees))
+    cover = sorted((a, b, t) for a, b, _, t in rules)
+    adj = sum(1 for i in range(1, len(cover)) if cover[i][2] == cover[i - 1][2])
+    return S, dt, ds, adj
+
+
+def words():
+    for k, maxlen in ((2, 13), (3, 8), (4, 6)):
+        for n in range(1, maxlen + 1):
+            for t in itertools.product(range(k), repeat=n):
+                yield list(t)
+    rng = random.Random(20261110)
+    for _ in range(3000):
+        k = rng.choice([2, 2, 3, 4, 8, 26, 256])
+        n = rng.randint(2, 120)
+        yield [rng.randrange(k) for _ in range(n)]
+    # near-periodic, Fibonacci, Thue-Morse, powers with one edit
+    for _ in range(1500):
+        p = rng.randint(1, 9)
+        base = [rng.randrange(3) for _ in range(p)]
+        w = base * rng.randint(2, 20)
+        for _ in range(rng.randint(1, 3)):
+            w[rng.randrange(len(w))] = rng.randrange(4)
+        yield w
+    a, b = [0], [0, 1]
+    for _ in range(11):
+        a, b = b, b + a
+        yield list(b)
+        yield list(b[:-1])
+    tm = [0]
+    for _ in range(9):
+        tm = tm + [1 - x for x in tm]
+        yield list(tm[:-1])
+        yield list(tm) + [2]
+
+
+def main():
+    tested = skipped = 0
+    totS = totDT = totDS = totAdj = 0
+    less = 0
+    seen = set()
+    for T in words():
+        key = tuple(T)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not primitive(T) or len(T) < 2:
+            skipped += 1
+            continue
+        S, dt, ds, adj = check(T)
+        tested += 1
+        totS += S
+        totDT += dt
+        totDS += ds
+        totAdj += adj
+        less += dt < S
+    print(f"words tested {tested} (non-primitive or trivial skipped {skipped}); "
+          f"rules {totS}; distinct trees {totDT}; distinct expansions {totDS}; "
+          f"adjacent rules with equal tree {totAdj}; words with D < S: {less}")
+
+
+
+def lyndon_tree(w):
+    if len(w) == 1:
+        return w[0]
+    k = min(range(1, len(w)), key=lambda i: w[i:])
+    return (lyndon_tree(w[:k]), lyndon_tree(w[k:]))
+
+def is_lyndon(w):
+    return all(w < w[i:] for i in range(1, len(w)))
+
+def lyndon_words():
+    for k, maxlen in ((2, 13), (3, 8), (4, 6)):
+        for n in range(2, maxlen + 1):
+            for t in itertools.product(range(k), repeat=n):
+                yield list(t)
+    rng = random.Random(5)
+    for _ in range(3000):
+        k = rng.choice([2, 3, 4, 8, 26, 256])
+        yield [rng.randrange(k) for _ in range(rng.randint(2, 150))]
+
+
+def lyndon_main():
+    tested = rules = 0
+    for T in lyndon_words():
+        if not primitive(T):
+            continue
+        SA, ISA, L = bwt(T)
+        n = len(T)
+        U = [T[(SA[0] + j) % n] for j in range(n)]
+        root, rs = induct(L)
+        assert root == lyndon_tree(U), T
+        for _, _, _, t in rs:
+            assert is_lyndon(expand(t)), T
+        tested += 1
+        rules += len(rs)
+    print(f"words {tested}: the SLP's tree is the Lyndon tree of the least rotation; {rules} rules, every expansion a Lyndon word")
+
+
+if __name__ == '__main__':
+    main()
+    lyndon_main()

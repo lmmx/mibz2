@@ -1,0 +1,262 @@
+# The post-BWT passes on a grammar (docs/journal/monodromy/2026-11-10-rauzy-veech.md, sections 3.4 and 8, 6).
+#
+#   python3 rle1_crc_on_grammar.py.txt
+#
+# 1. CRC-32/BZIP2 as a monoid morphism: (R, Z) of a word, R(uv) = R(u) Z(v) + R(v).
+# 2. bzip2's RLE1 decoder as a transducer, and a summary of a nonterminal that composes in
+#    O(1) monoid operations a binary rule: the byte and exact length of its first run, and
+#    two continuations (entered not expecting a count; entered from EXPECT).
+# 3. The checks: random strings under random bracketings against the bytewise transducer and
+#    a bytewise CRC, from every entry state.
+#
+# Written by a sub-agent of MONODROMY's first mission from the entry's specification, and
+# found by it: the entry state is NOT forgotten at the first change of byte (one bit
+# survives, carried by run lengths mod 5).
+import random
+
+# ---------------------------------------------------------------------------- crcmon
+# CRC-32/BZIP2 as a monoid homomorphism: reference (portable, no intrinsics).
+# Polynomials over GF(2), non-reflected: bit i of a u32 is the coefficient of x^i.
+POLY, M32 = 0x04C11DB7, 0xFFFFFFFF            # P = x^32 + POLY
+T0 = []
+for i in range(256):                          # T0[b] = b(x) * x^32 mod P  (= master crc.rs TABLES[0])
+    c = i << 24
+    for _ in range(8):
+        c = ((c << 1) ^ POLY) & M32 if c & 0x80000000 else (c << 1) & M32
+    T0.append(c)
+
+def mulmod(a, b):                             # a(x) * b(x) mod P, Horner over b's bits, high first
+    r = 0
+    for i in range(31, -1, -1):
+        r = ((r << 1) ^ POLY) & M32 if r & 0x80000000 else r << 1
+        if (b >> i) & 1:
+            r ^= a
+    return r
+
+def rem(data):                                # R(X) = M_X(x) * x^32 mod P: the register from 0, no init, no xorout
+    s = 0
+    for b in data:
+        s = ((s << 8) & M32) ^ T0[(s >> 24) ^ b]
+    return s
+
+X2N = [2]                                     # X2N[k] = x^(2^k) mod P
+for _ in range(63):
+    X2N.append(mulmod(X2N[-1], X2N[-1]))
+
+def xpow8(n):                                 # Z(n) = x^(8n) mod P
+    r, k = 1, 3
+    while n:
+        if n & 1:
+            r = mulmod(r, X2N[k & 31])        # x^(2^32) = x mod P (checked in the tests)
+        n >>= 1
+        k += 1
+    return r
+
+def combine(ra, la, rb, lb):                  # (R(AB), |AB|) from (R(A), |A|), (R(B), |B|)
+    return mulmod(ra, xpow8(lb)) ^ rb, la + lb
+
+def finalise(r, n):                           # CRC-32/BZIP2 of a string with pure remainder r, length n
+    return mulmod(M32, xpow8(n)) ^ r ^ M32
+
+# ---------------------------------------------------------------------------- rle1mon
+# bzip2's RLE1 decoder as a transducer, and its O(1)-per-rule summary on a grammar.
+# State (c, k): k = 0 FRESH (c ignored, kept 0); k = 1..3: the last k bytes read were literals
+# equal to c; k = 4 EXPECT: four equal literals c read, the next byte is a count (0..255).
+
+FRESH = (0, 0)
+INV = 0xBB2D581E                               # (x^8 + 1)^-1 mod P
+
+def feed(state, data):                         # the transducer, a byte at a time: (output, exit state)
+    c, k = state
+    out = bytearray()
+    for b in data:
+        if k == 4:
+            out += bytes([c]) * b
+            c, k = 0, 0
+        elif k and b == c:
+            out.append(b)
+            k += 1
+        else:
+            out.append(b)
+            c, k = b, 1
+    return bytes(out), (c, k)
+
+# --- the output monoid: (decoded length, R, Z) with Z = x^(8 len); identity (0, 0, 1)
+ONE = (0, 0, 1)
+def omul(a, b):
+    return (a[0] + b[0], mulmod(a[1], b[2]) ^ b[1], mulmod(a[2], b[2]))
+def orun(c, j):                                # the element of c^j, closed form
+    z = xpow8(j)
+    return (j, mulmod(T0[c], mulmod(z ^ 1, INV)), z)
+
+def run_apply(state, a, l):                    # feed a^l (l >= 1): (output element, exit state)
+    c, k = state
+    o = ONE
+    if k == 4:                                 # the run's first byte is a count for c
+        o = orun(c, a)
+        l -= 1
+        k = 0
+        if l == 0:
+            return o, FRESH
+    elif c != a:                               # the counter restarts on a new byte
+        k = 0
+    q, r = divmod(l + k, 5)                    # q whole (4 literals + count) groups, r literals over
+    o = omul(o, orun(a, 4 * q + r - k + q * a))
+    return o, (FRESH if r == 0 else (a, r))
+
+# --- a nonterminal's summary: (a, l, rest)
+#   a, l : byte and exact length of its first maximal run
+#   rest : None if the nonterminal is that one run; else [N, P], each (output element, exit state)
+#          of everything after the first run, entered  N: not expecting a count,  P: from EXPECT(a)
+def leaf(b):
+    return (b, 1, None)
+
+def apply(X, state):                           # (output element, exit state) of X from any state
+    a, l, rest = X
+    o, s = run_apply(state, a, l)
+    if rest is None:
+        return o, s
+    o2, s2 = rest[s[1] == 4]
+    return omul(o, o2), s2
+
+def compose(A, B):                             # the summary of AB: O(1) monoid operations
+    a, l, rest = A
+    if rest is None:
+        if B[0] == a:                          # the first run runs on into B
+            return (a, l + B[1], B[2])
+        return (a, l, [apply(B, FRESH), apply(B, (a, 4))])
+    new = []
+    for o, s in rest:
+        o2, s2 = apply(B, s)
+        new.append((omul(o, o2), s2))
+    return (a, l, new)
+
+def block(X):                                  # a whole block: (decoded length, CRC-32/BZIP2) or None if it
+    (n, r, _), s = apply(X, FRESH)             # ends expecting a count (master: ErrorKind::RunUnfinished)
+    return None if s[1] == 4 else (n, finalise(r, n))
+
+# ---------------------------------------------------------------------------- checks
+
+def unrle_scalar(rle):                          # a port of master:src/rle.rs unrle_scalar (None = RunUnfinished)
+    out, i, n = bytearray(), 0, len(rle)
+    while i < n:
+        c = rle[i]
+        if i + 3 < n and rle[i + 1] == c and rle[i + 2] == c and rle[i + 3] == c:
+            if i + 4 >= n:
+                return None
+            out += bytes([c]) * (4 + rle[i + 4])
+            i += 5
+        else:
+            out.append(c)
+            i += 1
+    return bytes(out)
+
+def crc_bytewise(data):
+    s = M32
+    for b in data:
+        s ^= b << 24
+        for _ in range(8):
+            s = ((s << 1) ^ POLY) & M32 if s & 0x80000000 else (s << 1) & M32
+    return s ^ M32
+
+def elem(out):
+    return (len(out), rem(out), xpow8(len(out)))
+
+rng = random.Random(1110)
+
+def rand_string():
+    kind = rng.randrange(4)
+    alpha = [[0, 1, 2, 3, 4, 5], [0, 1], [3, 4, 5, 9, 251, 255], [7]][kind]
+    s = bytearray()
+    for _ in range(rng.randrange(1, 12)):
+        b = rng.choice(alpha)
+        s += bytes([b]) * rng.choice([1, 1, 1, 2, 3, 4, 4, 5, 5, 6, 8, 9, 10, 11, 14, 15, 20, 25])
+    return bytes(s[: rng.randrange(1, len(s) + 1)])
+
+def rand_tree(lo, hi, data):                    # a random binary bracketing of data[lo:hi] -> summary
+    if hi - lo == 1:
+        return leaf(data[lo])
+    m = rng.randrange(lo + 1, hi)
+    return compose(rand_tree(lo, m, data), rand_tree(m, hi, data))
+
+def balanced_doubling(X, times):                # X -> XX -> XXXX ...: a rule used twice, as in a grammar
+    for _ in range(times):
+        X = compose(X, X)
+    return X
+
+n_strings = n_states = n_blocks = n_err = 0
+for t in range(6000):
+    data = rand_string()
+    X = rand_tree(0, len(data), data)
+    states = [FRESH] + [(c, k) for c in set(data) | {200} for k in (1, 2, 3, 4)]
+    for s in states:
+        out, e = feed(s, data)
+        assert apply(X, s) == (elem(out), e), (data, s)
+        n_states += 1
+    # the whole block, against master's scalar decoder and a bytewise CRC
+    want = unrle_scalar(data)
+    got = block(X)
+    if want is None:
+        assert got is None
+        n_err += 1
+    else:
+        assert feed(FRESH, data)[0] == want
+        assert got == (len(want), crc_bytewise(want)), data
+        n_blocks += 1
+    # a rule reused: X^(2^d)
+    d = rng.randrange(1, 4)
+    Y, rep = balanced_doubling(X, d), data * (1 << d)
+    for s in states[:5]:
+        out, e = feed(s, rep)
+        assert apply(Y, s) == (elem(out), e), (data, d, s)
+    n_strings += 1
+print(f"summary algebra: {n_strings} strings x random bracketings, {n_states} (string, entry state) pairs: "
+      f"decoded length, R, Z and exit state all equal the bytewise transducer")
+print(f"whole blocks from FRESH: {n_blocks} agree with a port of master's unrle_scalar + bytewise CRC-32/BZIP2; "
+      f"{n_err} end expecting a count and are refused by both")
+
+# --- the phase chain: after the first run only one bit of the entry state survives, and it is carried
+# through a later maximal run of length l as:  l mod 5 in {1,2,3}: forgotten;  4: flipped;  0: kept.
+def runs_of(data):
+    r = []
+    for b in data:
+        if r and r[-1][0] == b: r[-1][1] += 1
+        else: r.append([b, 1])
+    return r
+def trace(state, data):
+    st = []
+    for b in data:
+        _, state = feed(state, bytes([b]))
+        st.append(state)
+    return st
+n_pairs = n_late = 0
+worst = 0
+for t in range(20000):
+    data = rand_string()
+    rs = runs_of(data)
+    if len(rs) < 2:
+        continue
+    s1, s2 = FRESH, (rs[0][0], rng.choice([1, 2, 3, 4])) if rng.random() < .7 else (201, 4)
+    t1, t2 = trace(s1, data), trace(s2, data)
+    ph = [run_apply(s, rs[0][0], rs[0][1])[1][1] == 4 for s in (s1, s2)]
+    pos, J = rs[0][1], None                      # pos: index of the first byte of the run being entered
+    for j in range(1, len(rs)):
+        if ph[0] == ph[1]:
+            J = j
+            break
+        # phases differ entering run j: the two states differ at every byte of it
+        assert all(t1[i] != t2[i] for i in range(pos, pos + rs[j][1])), (data, s2)
+        ph = [(rs[j][1] - p) % 5 == 4 for p in ph]
+        pos += rs[j][1]
+    if J is not None:
+        assert t1[pos:] == t2[pos:], (data, s2)  # equal from the first byte of run J on
+        if J > 1: n_late += 1
+        worst = max(worst, J)
+    n_pairs += 1
+print(f"phase chain: {n_pairs} (string, state pair) cases; in {n_late} the two decodings were still different "
+      f"after the first byte change (latest merge at run index {worst}); the l mod 5 rule predicted every merge")
+
+# the counter-example to 'the entry state is forgotten at the first byte change'
+d = b"aaaabbbbb"
+print("aaaabbbbb from FRESH :", [(chr(b), n) for b, n in runs_of(feed(FRESH, d)[0])], "exit", feed(FRESH, d)[1])
+print("aaaabbbbb from (a,1) :", [(chr(b), n) for b, n in runs_of(feed((97, 1), d)[0])], "exit", feed((97, 1), d)[1])
