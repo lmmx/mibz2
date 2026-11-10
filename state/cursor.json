@@ -814,7 +814,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Migration verified; auditing two-mode mechanisms and service/dir alternatives."
+      "progress": "Mechanism rankings and buildable pool-wait/activation briefs committed; final ledger and publication pending."
     }
   ],
   "migrated_from": {
