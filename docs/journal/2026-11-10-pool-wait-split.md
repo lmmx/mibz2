@@ -288,4 +288,64 @@ How it applies here, fixed before the data:
 
 ## Result
 
-(Appended after the one attempt; nothing above changes.)
+**One attempt, valid:** the Pool-wait split run
+[42748112127](https://github.com/lmmx/mibz2/actions/runs/42748112127), at `fa5551b2` (the
+registration's commit). The runner had 4 logical CPUs on 2 physical cores (sibling sets 0,1
+and 2,3), with no CPU quota. There was no setup failure and no re-run. Every run of every arm
+gave the same bytes on every corpus, without error, and the counts' outputs agreed across arms
+and plans. Test, Miri, CI and the default's Benchmark were green at the same head.
+
+**The verdict under the registered rule:** both0 and helper0/join2000 both pass the screen
+against both2000, and neither is rejected.
+- **No regressions:** neither arm has a wall or CPU interval wholly above 1 at any of the 28
+  cells.
+- **No rejection:** no cell shows wall up beyond noise while CPU falls.
+- **Improvements beyond noise:** 21 of the 56 intervals for each arm.
+
+A pass is a screen pass only (D080).
+
+**The secondary contrast, helper0/join2000 over both0: no general recovery.**
+- **Wall below 1 beyond noise at one cell:** random at 9 (3×3), 0.977 [0.956, 0.997].
+- **Wall above 1 beyond noise at two cells:**
+  - wikidata at 1 (1×3): 1.011 [1.003, 1.019];
+  - pattern at 1 (1×3): 1.012 [1.006, 1.018].
+- **CPU above 1 beyond noise at five cells**, about 0.6–1.3% each:
+  - wikidata at 1 and 4 (1×3);
+  - text and random at 9 (3×3);
+  - pattern at 1 (1×3).
+- **All other intervals include 1.**
+
+By the registered reading, the one recovering cell keeps this from being the strict "keep
+both0" case. The weight of the contrast is that helper0/join2000 adds caller CPU without
+recovering wall.
+
+**The mechanism check (the Wikidata blocks, counting build, mean of 3 rounds) fails: the join
+does not recover.**
+- **The restored join budget is nearly all wasted:**
+  - **At 1×3:** of 233 joins a decode, 2 ended inside the spin budget under helper0/join2000,
+    and 4 under both2000. Its 277 k join spins were 99.5% wasted.
+  - **At 3×3:** 2 of 233 joins ended spinning under helper0/join2000, and 7 under both2000.
+- **The joins' parks barely move:**
+  - **At 1×3:** 138 parked joins against both0's 147.
+  - **At 3×3:** 153 against 151.
+- **The parked join's wake latency is the same in every arm:** a median of 12.3 µs at 1×3, and
+  14.3–57 µs at 3×3.
+
+So both0's caller-wake penalty is a few parked joins of about 12 µs each. A 2,000-spin
+join budget is too short to avoid it, and helper0/join2000 does not recover it. By the
+registration, the caller-spin explanation is inadequate.
+
+**The helpers' launch latency, charged:**
+- **At 1×3, both2000:** 95 of 468 helper waits a decode ended spinning, with a median launch
+  of 0.2 µs. Under both0 and helper0/join2000 these park. The parked launch's median is
+  12.3 µs, with p90 16.4 µs. That is about 95 × 12 µs ≈ 1.2 ms of launch latency a decode,
+  some of it overlapped, against a 1×3 Wikidata wall of about 0.27 s.
+- **At 3×3,** a parked helper's launch has a median of 330–390 µs in every arm, both2000
+  included: nine workers on four logical CPUs wait for a CPU, not for the futex.
+
+The latencies come from the counting build, untimed. They describe the mechanism, not the
+timed builds' wall.
+
+**What it shows:** both0 remains the lead. helper0/join2000 is not a latency compromise on
+this runner. Per the Optimiser's falsifier, no further budget is searched. No i9 timing
+follows before the two-modes diagnostic is reviewed.
