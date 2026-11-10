@@ -1382,6 +1382,14 @@
       "review_comment_id": 6755014327,
       "publication_verified": true,
       "verification_note": "Exact body/#145 readback and role-aware routing pass. Pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6755685313,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "a68d6099fd44588584ba5e22c1aebbd17fffe6c9"
     }
   ],
   "active_delegations": [],
@@ -1423,7 +1431,7 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "a4f97714cc14366984015869d9d094d89488ac57",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
   "migrated_from": {
     "branch": "review/compact30-adversarial-scanner-146",
     "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
