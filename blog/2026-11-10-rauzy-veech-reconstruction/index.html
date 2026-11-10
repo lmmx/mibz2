@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.">
+        <meta name="description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that turn out to be the block's Lyndon tree.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9d23949f29d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9d23949f29d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9d23949f29d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9d23949f29d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9d23949f29d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=910472e8bcb7">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9d23949f29d8">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -90,7 +90,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
   <meta property="og:title" content="A new way back from the BWT">
-  <meta property="og:description" content="An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.">
+  <meta property="og:description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that turn out to be the block's Lyndon tree.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-10-rauzy-veech-reconstruction/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png">
   <meta property="og:image:type" content="image/png">
@@ -99,7 +99,7 @@
   <meta property="og:image:alt" content="A new way back from the BWT">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="A new way back from the BWT">
-  <meta name="twitter:description" content="An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.">
+  <meta name="twitter:description" content="An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that turn out to be the block's Lyndon tree.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png">
   <meta name="twitter:image:alt" content="A new way back from the BWT">
 
@@ -1204,10 +1204,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-how-can-rules-replace-a-pointer-walk" class="md-nav__link">
+  <a href="#1-rebuilding-aab-in-two-steps" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. How can rules replace a pointer walk?
+        1. Rebuilding <code>aab</code> in two steps
       </span>
     </span>
   </a>
@@ -1215,10 +1215,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-what-did-the-clock-actually-show" class="md-nav__link">
+  <a href="#2-the-timings" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. What did the clock actually show?
+        2. The timings
       </span>
     </span>
   </a>
@@ -1226,10 +1226,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-made-the-cells-cheaper" class="md-nav__link">
+  <a href="#3-why-the-cells-kernel-is-cheaper" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. What made the cells cheaper?
+        3. Why the cells kernel is cheaper
       </span>
     </span>
   </a>
@@ -1237,10 +1237,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-why-does-a-lyndon-tree-appear" class="md-nav__link">
+  <a href="#4-the-lyndon-tree" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Why does a Lyndon tree appear?
+        4. The Lyndon tree
       </span>
     </span>
   </a>
@@ -1248,10 +1248,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-can-a-better-order-remove-more-work" class="md-nav__link">
+  <a href="#5-fewer-steps-by-a-different-order" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Can a better order remove more work?
+        5. Fewer steps by a different order
       </span>
     </span>
   </a>
@@ -1259,10 +1259,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-what-remains-before-production" class="md-nav__link">
+  <a href="#6-before-production" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. What remains before production?
+        6. Before production
       </span>
     </span>
   </a>
@@ -2112,10 +2112,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-how-can-rules-replace-a-pointer-walk" class="md-nav__link">
+  <a href="#1-rebuilding-aab-in-two-steps" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. How can rules replace a pointer walk?
+        1. Rebuilding <code>aab</code> in two steps
       </span>
     </span>
   </a>
@@ -2123,10 +2123,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-what-did-the-clock-actually-show" class="md-nav__link">
+  <a href="#2-the-timings" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. What did the clock actually show?
+        2. The timings
       </span>
     </span>
   </a>
@@ -2134,10 +2134,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-made-the-cells-cheaper" class="md-nav__link">
+  <a href="#3-why-the-cells-kernel-is-cheaper" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. What made the cells cheaper?
+        3. Why the cells kernel is cheaper
       </span>
     </span>
   </a>
@@ -2145,10 +2145,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-why-does-a-lyndon-tree-appear" class="md-nav__link">
+  <a href="#4-the-lyndon-tree" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Why does a Lyndon tree appear?
+        4. The Lyndon tree
       </span>
     </span>
   </a>
@@ -2156,10 +2156,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-can-a-better-order-remove-more-work" class="md-nav__link">
+  <a href="#5-fewer-steps-by-a-different-order" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. Can a better order remove more work?
+        5. Fewer steps by a different order
       </span>
     </span>
   </a>
@@ -2167,10 +2167,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-what-remains-before-production" class="md-nav__link">
+  <a href="#6-before-production" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. What remains before production?
+        6. Before production
       </span>
     </span>
   </a>
@@ -2211,38 +2211,38 @@
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
 <h1 id="a-new-way-back-from-the-bwt">A new way back from the BWT<a class="headerlink" href="#a-new-way-back-from-the-bwt" title="Permanent link">&para;</a></h1>
-<p class="post-dek">An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.</p>
-<p class="post-meta">10 November 2026 · 14 min read · <a href="#6-what-remains-before-production">Research in progress</a></p>
+<p class="post-dek">An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that turn out to be the block's Lyndon tree.</p>
+<p class="post-meta">10 November 2026 · 14 min read · <a href="#6-before-production">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
 <p>bzip2 stores each block as the last column of its sorted rotations: the Burrows–Wheeler transform (BWT). To decode it, mibz2 walks a next-row map called <strong>LF</strong>. Each row yields one byte and the address of the next row, so the walk makes one dependent memory lookup per byte.</p>
-<p>LF has structure that the walk ignores. A <strong>run</strong> is a maximal stretch of equal bytes in the last column. Within a run, LF sends consecutive rows to consecutive rows. So the whole map is fixed by one interval per run, each moved as a block. A Wikidata block has about 14 rows per run.</p>
-<p>MONODROMY's experiment never walks the rows. Read along LF, the block is a cyclic word of run letters, one per row. Each step picks one pair of adjacent letters, a <strong>digram</strong>, and replaces every occurrence with a new letter, recording one rule such as <code>X → AB</code>. Because each run moves as a block, a digram's occurrences fill one interval of rows, called a <strong>cell</strong>. So a step costs the same however many occurrences there are. When one letter is left, its rules spell the whole block. The step is Rauzy–Veech induction, and it works like RePair compression on the run letters.</p>
-<p>The work therefore scales with steps, not bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte. The first kernel still lost, at 1.276 times the walk's time, because a step cost 14 ns. The <strong>cells kernel</strong> writes each cell once and moves nothing, cutting a step to 7.7 ns. Per run it executes 184 instructions against production's 260, with 2.1 simulated last-level cache misses against 8.7.</p>
+<p>A <strong>run</strong> is a maximal stretch of equal bytes in the last column. Within a run, LF sends consecutive rows to consecutive rows, so the whole map is fixed by one interval per run, each shifted as a block. The walk does not use this. A Wikidata block has about 14 rows per run.</p>
+<p>MONODROMY's experimental kernel does not walk the rows. Read along LF, the block is a cyclic word of run letters, one per row. Each step picks one pair of adjacent letters, a <strong>digram</strong>, and replaces every occurrence with a new letter, recording one rule such as <code>X → AB</code>. Because each run moves as a block, a digram's occurrences fill one interval of rows, called a <strong>cell</strong>. So a step costs the same however many occurrences there are. When one letter is left, its rules spell the whole block. The step is Rauzy–Veech induction, and it works like RePair compression on the run letters.</p>
+<p>The work therefore grows with the number of steps, not the number of bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte. The first kernel still lost, at 1.276 times the walk's time, because a step cost 14 ns. The <strong>cells kernel</strong> writes each cell once and moves nothing, cutting a step to 7.7 ns. Per run it executes 184 instructions against production's 260, with 2.1 simulated last-level cache misses against 8.7.</p>
 <p>That kernel recorded less time than its conventional reference, the table build and walk, in two local Wikidata censuses. The second, on an idle core, recorded <strong>1.604 against 2.172 nanoseconds per row</strong>, a derived <strong>26.2% reduction</strong>, and was faster on 204 of 233 blocks. Where runs are short the steps per byte rise and it loses: 3.9 times on prose, 9.8 times on uniform bytes.</p>
-<p><strong>A correction came the same day.</strong> MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix and a check that now catches it are at <a href="https://github.com/lmmx/mibz2/commit/9e30c338200ff658d8dd9a252a38679caa3fd6e2">9e30c33</a>. The timings above were measured before the fix, which adds 1.2% to the writer's instructions on one block, and they stand pending a re-run census.</p>
+<p>On the same day, MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix, and a check that now catches it, are in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>. The timings above were measured before the fix, which adds 1.2% to the writer's instructions on one block, and they will be re-measured in a new census.</p>
 <p>These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is <strong>no demonstrated gain over the shipped decoder</strong>, and the experiment is not in production. Since 0.2.8 the shipped inversion builds from run records, and MONODROMY estimates the cells kernel at about 0.80 of that path's time, from the Pathfinder's figures; that comparison is not yet measured.</p>
-<p>Two structural findings came with it. A <strong>Lyndon word</strong> is strictly smaller, alphabetically, than each of its proper suffixes; <code>aab</code> is one. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a> is a short introduction to these trees.</p>
+<p>The rules the induction builds form a Lyndon tree. A <strong>Lyndon word</strong> is strictly smaller, alphabetically, than each of its proper suffixes; <code>aab</code> is one. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a> is a short introduction to these trees.</p>
 <p>The number of steps also depends on which digram goes next. Every order needs at least r₂ − 1 steps, where r₂ counts the distinct digrams: 1.220 per run on Wikidata. The right-end order takes 1.812; taking steps that create no new boundary first takes 1.279. No kernel yet runs that order cheaply, so it is a counted saving, not a measured speedup.</p>
-<p>The <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs">implementation</a> are pinned here at <strong>ae51b11a46014e5fec928b0e25235f532a473a9f</strong>. MONODROMY is the research lane developing this experiment.</p>
-<h2 id="1-how-can-rules-replace-a-pointer-walk">1. How can rules replace a pointer walk?<a class="headerlink" href="#1-how-can-rules-replace-a-pointer-walk" title="Permanent link">&para;</a></h2>
-<p>Here is the whole mechanism on the smallest useful block. LF is short for last-to-first: it connects positions in the last and first columns of the sorted rotations.</p>
+<p>The <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs">implementation</a> linked here are the versions in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a> from before the writer fix. MONODROMY is the research lane developing this experiment.</p>
+<h2 id="1-rebuilding-aab-in-two-steps">1. Rebuilding <code>aab</code> in two steps<a class="headerlink" href="#1-rebuilding-aab-in-two-steps" title="Permanent link">&para;</a></h2>
+<p>This section runs the mechanism on a three-byte block. LF is short for last-to-first: it connects positions in the last and first columns of the sorted rotations.</p>
 <p>For a small example, sort the rotations of <code>aab</code>: <code>aab</code>, <code>aba</code>, <code>baa</code>. The last column is <code>baa</code>; the first is <code>aab</code>. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.</p>
 <p>Name the one-byte run of <code>b</code> B and the two-byte run of <code>a</code> A. Their original order is B,A; their image order is A,B. The two orders describe the same three row positions, cut into differently placed intervals.</p>
 <figure class="bf-fig">
 <p class="bf-title">Two steps rebuild aab from its last column</p>
-<svg viewBox="0 0 540 718" role="img" aria-label="For aab the last column is baa: run B of one row, run A of two. The original order is B then A, the image order A then B. Step one shortens A to one row and gives B the word ab. Step two joins a and ab into aab."><text x="0" y="28" class="bf-ts" style="font-size: 25px">Start: the runs of baa</text><text x="0" y="82" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="48" width="119" height="50" rx="6" class="bf-pill"/><text x="212.5" y="81" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · b</text><rect x="278" y="48" width="244" height="50" rx="6" class="bf-pill"/><text x="400.0" y="81" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><text x="0" y="140" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="106" width="244" height="50" rx="6" class="bf-pill"/><text x="275.0" y="139" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><rect x="403" y="106" width="119" height="50" rx="6" class="bf-pill"/><text x="462.5" y="139" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · b</text><text x="0" y="192" class="bf-t" style="font-size: 22px">At the right end, A (2 rows) is longer than B (1).</text><path d="M0 222H540" class="bf-rule"/><text x="0" y="272" class="bf-ts" style="font-size: 25px">Step 1: A loses a row; B takes a + b</text><text x="0" y="326" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="292" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="325" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · ab</text><rect x="278" y="292" width="119" height="50" rx="6" class="bf-pill"/><text x="337.5" y="325" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><text x="0" y="384" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="350" width="119" height="50" rx="6" class="bf-pill"/><text x="212.5" y="383" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><rect x="278" y="350" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="337.5" y="383" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · ab</text><text x="0" y="436" class="bf-t" style="font-size: 22px">Both now cover one row; equal lengths join.</text><path d="M0 466H540" class="bf-rule"/><text x="0" y="516" class="bf-ts" style="font-size: 25px">Step 2: join a + ab</text><text x="0" y="570" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="536" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="569" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · aab</text><text x="0" y="628" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="594" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="627" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · aab</text><text x="0" y="680" class="bf-t" style="font-size: 22px">One interval is left, carrying the whole block.</text></svg>
-<figcaption>Each box is one run's interval; its width is the rows it still covers, and its label is the word it carries. Green marks the interval whose word grew. After step 1, B covers one row but carries two bytes: a remaining visit stands for the visits removed from the exchange.</figcaption>
+<svg viewBox="0 0 540 718" role="img" aria-label="For aab the last column is baa: run B of one row, run A of two. The original order is B then A, the image order A then B. Step one shortens A to one row and gives B the word ab. Step two joins a and ab into aab."><text x="0" y="28" class="bf-ts" style="font-size: 25px">Start: the runs of baa</text><text x="0" y="82" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="48" width="119" height="50" rx="6" class="bf-pill"/><text x="212.5" y="81" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · b</text><rect x="278" y="48" width="244" height="50" rx="6" class="bf-pill"/><text x="400.0" y="81" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><text x="0" y="140" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="106" width="244" height="50" rx="6" class="bf-pill"/><text x="275.0" y="139" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><rect x="403" y="106" width="119" height="50" rx="6" class="bf-pill"/><text x="462.5" y="139" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · b</text><text x="0" y="192" class="bf-t" style="font-size: 22px">At the right end, A (2 rows) is longer than B (1).</text><path d="M0 222H540" class="bf-rule"/><text x="0" y="272" class="bf-ts" style="font-size: 25px">Step 1: A loses a row; B takes a + b</text><text x="0" y="326" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="292" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="325" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · ab</text><rect x="278" y="292" width="119" height="50" rx="6" class="bf-pill"/><text x="337.5" y="325" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><text x="0" y="384" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="350" width="119" height="50" rx="6" class="bf-pill"/><text x="212.5" y="383" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · a</text><rect x="278" y="350" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="337.5" y="383" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">B · ab</text><text x="0" y="436" class="bf-t" style="font-size: 22px">Both now cover one row; equal lengths join.</text><path d="M0 466H540" class="bf-rule"/><text x="0" y="516" class="bf-ts" style="font-size: 25px">Step 2: join a + ab</text><text x="0" y="570" class="bf-tm" style="font-size: 22px">original</text><rect x="153" y="536" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="569" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · aab</text><text x="0" y="628" class="bf-tm" style="font-size: 22px">image</text><rect x="153" y="594" width="119" height="50" rx="6" class="bf-pill-hi"/><text x="212.5" y="627" class="bf-t-strong" text-anchor="middle" style="font-size: 25px">A · aab</text><text x="0" y="680" class="bf-t" style="font-size: 22px">One interval is left, holding the whole block.</text></svg>
+<figcaption>Each box is one run's interval; its width is the rows it still covers, and its label is the word it holds. Green marks the interval whose word grew. After step 1, B covers one row but holds two bytes: a remaining visit stands for the visits removed from the exchange.</figcaption>
 </figure>
 
 <p>Compare the intervals at the right end. A has length two and B length one. Remove one row from the exchange, shorten A to one, and give B the word <code>ab</code>. Both intervals now have length one. Their equal-length step joins A's <code>a</code> to B's <code>ab</code>, leaving the word <code>aab</code>.</p>
-<p>Why retain a longer word on a shorter interval? A remaining visit now represents several visits in the original map. Its word records their bytes. This is the first-return idea behind Rauzy–Veech induction: retain where the path returns, together with what happened along the omitted path.</p>
-<p>Larger inputs repeat this operation and share word rules. If <code>X → ab</code> is reused in <code>Y → XX</code>, Y represents <code>abab</code> without duplicating X's stored definition. That second rule illustrates reuse, rather than another step in this particular example.</p>
-<p>The essential change is where the work happens. The conventional walk repeatedly asks where to go next. Induction changes the description of the remaining problem and saves enough information to reconstruct the answer afterwards.</p>
-<h2 id="2-what-did-the-clock-actually-show">2. What did the clock actually show?<a class="headerlink" href="#2-what-did-the-clock-actually-show" title="Permanent link">&para;</a></h2>
-<p>The original linked-order representation lost. The replacement uses cells that record completed steps without repeatedly moving letters through linked orders.</p>
-<p>The journal reports three censuses below. Each row keeps its own reference beside the candidate, so the separate runs do not become an invented matched comparison. The unit is nanoseconds per BWT row, pooled over 233 Wikidata blocks.</p>
+<p>B now holds a two-byte word on a one-row interval because its remaining visit stands for two visits in the original map, and the word records both bytes. This is the first-return idea behind Rauzy–Veech induction: keep the points where the path returns, with the bytes of the path skipped between them.</p>
+<p>Larger inputs repeat this operation and share word rules. If <code>X → ab</code> is reused in <code>Y → XX</code>, Y represents <code>abab</code> without duplicating X's stored definition. That second rule only illustrates sharing; it is not a step in the <code>aab</code> example.</p>
+<p>The walk asks where to go next once for every byte. Induction instead rewrites the description of the remaining problem, keeping enough to write the text out afterwards.</p>
+<h2 id="2-the-timings">2. The timings<a class="headerlink" href="#2-the-timings" title="Permanent link">&para;</a></h2>
+<p>The first kernel stored the two orders as linked lists and was slower than the reference. The cells kernel instead records completed steps without moving letters through linked lists.</p>
+<p>The journal reports three censuses below. Each census timed its own reference, so each row compares the kernel only with the reference from the same run. The unit is nanoseconds per BWT row, pooled over 233 Wikidata blocks.</p>
 <table>
 <thead>
 <tr>
@@ -2276,23 +2276,22 @@
 <figure class="bf-fig">
 <p class="bf-title">The cells kernel against its own census's reference</p>
 <svg viewBox="0 0 540 524" role="img" aria-label="Three censuses. Original linked orders: reference 2.172, kernel 2.770 ns per row, 1.276 times. Cells first census: reference 2.244, kernel 1.697, 0.756 times. Cells second census: reference 2.172, kernel 1.604, 0.738 times."><text x="0" y="26" class="bf-tm" style="font-size: 21px">ns per BWT row, 233 Wikidata blocks</text><text x="0" y="74" class="bf-ts" style="font-size: 25px">Original linked orders</text><text x="0" y="118" class="bf-tm" style="font-size: 20px">reference</text><rect x="112" y="92" width="156.4" height="36" rx="3" class="bf-bar-est"/><text x="278.384" y="119" class="bf-t-strong" style="font-size: 23px">2.172</text><text x="0" y="164" class="bf-tm" style="font-size: 20px">kernel</text><rect x="112" y="138" width="199.4" height="36" rx="3" class="bf-bar"/><text x="321.44" y="165" class="bf-t-strong" style="font-size: 23px">2.770 (1.276×)</text><text x="0" y="232" class="bf-ts" style="font-size: 25px">Cells, first census</text><text x="0" y="276" class="bf-tm" style="font-size: 20px">reference</text><rect x="112" y="250" width="161.6" height="36" rx="3" class="bf-bar-est"/><text x="283.568" y="277" class="bf-t-strong" style="font-size: 23px">2.244</text><text x="0" y="322" class="bf-tm" style="font-size: 20px">kernel</text><rect x="112" y="296" width="122.2" height="36" rx="3" class="bf-bar"/><text x="244.184" y="323" class="bf-t-strong" style="font-size: 23px">1.697 (0.756×)</text><text x="0" y="390" class="bf-ts" style="font-size: 25px">Cells, second census (idle core)</text><text x="0" y="434" class="bf-tm" style="font-size: 20px">reference</text><rect x="112" y="408" width="156.4" height="36" rx="3" class="bf-bar-est"/><text x="278.384" y="435" class="bf-t-strong" style="font-size: 23px">2.172</text><text x="0" y="480" class="bf-tm" style="font-size: 20px">kernel</text><rect x="112" y="454" width="115.5" height="36" rx="3" class="bf-bar"/><text x="237.488" y="481" class="bf-t-strong" style="font-size: 23px">1.604 (0.738×)</text></svg>
-<figcaption>Dashed: conventional table build + walk, from a column. Solid: the experimental kernel, from run records (the column-to-run scan, 0.484 ns a row, is excluded). Each kernel is compared only with the reference timed in its own census. Local single-thread fastest-of-five figures from #351's journal at ae51b11, with no confidence intervals; not CI, not the whole decoder, and not against 0.2.8's records-based path.</figcaption>
+<figcaption>Dashed: conventional table build + walk, from a column. Solid: the experimental kernel, from run records (the column-to-run scan, 0.484 ns a row, is excluded). Each kernel is compared only with the reference timed in its own census. Local single-thread fastest-of-five figures from #351's journal, with no confidence intervals; not CI, not the whole decoder, and not against 0.2.8's records-based path.</figcaption>
 </figure>
 
 <p>The cells kernel recorded lower times on 202 blocks in the first census and 204 in the second. Other work ran on other cores during the first; the second pinned the process to one core with the others idle.</p>
-<p>The original 2.770 figure sums the stages' separate fastest rounds. The cells figures time order, induction and output together. Consequently, the apparent 42% drop between the original and latest totals is a historical comparison across runs and timing definitions, not a paired effect estimate.</p>
-<p>The input boundary matters too. The conventional arm builds from a column; the experimental kernel receives runs. The separately measured column-to-run scan costs 0.484 ns/row in the journal. A front end that emits runs directly could avoid that scan, but the published table does not measure that integrated path.</p>
-<p>Nor does it compare against the newer records-based construction associated with <a href="https://github.com/lmmx/mibz2/pull/324">the front-end work</a>. Calling the result a 26% improvement to a released mibz2 version would go beyond the evidence.</p>
-<p>The favourable corpus is not the whole story. The cells experiment is 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table, timed before the writer fix; MONODROMY has withdrawn its periodic, Fibonacci and Thue–Morse figures until they are re-measured.</p>
-<h2 id="3-what-made-the-cells-cheaper">3. What made the cells cheaper?<a class="headerlink" href="#3-what-made-the-cells-cheaper" title="Permanent link">&para;</a></h2>
-<p>Consider a repeated word represented by a rule. The algorithm must retain the word and its destination, but it need not repeatedly update every historical description of that word.</p>
-<p>The first cells version still lost: the journal records a ratio of 1.225 in its development sequence. A new representation was an opening, not an immediate win.</p>
-<p>A cell is an overlap between an interval in the original order and one in the image order. It groups rows that take the same pair of run labels in succession.</p>
-<p>The cells representation applies that distinction to the exchange. It writes completed cells and records where later work belongs. This replaces much of the linked representation's shortening and relinking.</p>
-<p>A second change removes position tracking from the induction loop. The original row is marked in the grammar, so the output stage can find the correct starting position afterwards. Moving that information into the representation eliminates work previously repeated at each step.</p>
-<p>Finally, lookahead fetches prepare locations before scattered writes need them. The journal's source and instruction analysis support these mechanisms; they do not isolate three independent end-to-end causal effects. The implementations and timings changed together.</p>
-<p>The result also uses more memory than the conventional table in the journal's representative block. The benefit is how that memory is accessed, not a demonstrated reduction in total storage.</p>
-<h2 id="4-why-does-a-lyndon-tree-appear">4. Why does a Lyndon tree appear?<a class="headerlink" href="#4-why-does-a-lyndon-tree-appear" title="Permanent link">&para;</a></h2>
+<p>The original 2.770 figure sums the stages' separate fastest rounds. The cells figures time order, induction and output together. So the 42% drop between the first and latest totals compares different runs and different timing methods; it is not a paired measurement.</p>
+<p>The two arms also start from different inputs. The conventional arm builds from a column; the experimental kernel receives runs. The separately measured column-to-run scan costs 0.484 ns/row in the journal. A front end that emits runs directly could avoid that scan, but the published table does not measure that integrated path.</p>
+<p>It also does not compare against the records-based construction that shipped in 0.2.8 (<a href="https://github.com/lmmx/mibz2/pull/324">#324</a>). So the 26% figure is not an improvement over any released version of mibz2.</p>
+<p>On other inputs the cells kernel is slower: 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table, timed before the writer fix; MONODROMY has withdrawn its periodic, Fibonacci and Thue–Morse figures until they are re-measured.</p>
+<h2 id="3-why-the-cells-kernel-is-cheaper">3. Why the cells kernel is cheaper<a class="headerlink" href="#3-why-the-cells-kernel-is-cheaper" title="Permanent link">&para;</a></h2>
+<p>A word stored as a rule needs its bytes and its destination recorded once; its earlier descriptions need not be updated.</p>
+<p>The first cells version was still slower: the journal records 1.225 times the reference in its development sequence.</p>
+<p>A cell is the overlap of an interval in the original order with one in the image order. It holds the rows that read the same pair of run letters in succession. The kernel writes each cell once, when its step is done, and records where later work goes. This replaces most of the linked lists' shortening and relinking.</p>
+<p>A second change removes position tracking from the induction loop. The original row is marked in the grammar, and the output stage finds the starting position from that mark afterwards. So the induction no longer updates a position at every step.</p>
+<p>Third, the kernel prefetches the addresses of its scattered writes before it makes them. The journal's code and instruction counts support these three explanations, but the three changes were made and timed together, so their separate effects are not measured.</p>
+<p>The cells kernel also uses more memory than the conventional table in the journal's representative block. The saving comes from the order in which memory is accessed; total memory is not reduced.</p>
+<h2 id="4-the-lyndon-tree">4. The Lyndon tree<a class="headerlink" href="#4-the-lyndon-tree" title="Permanent link">&para;</a></h2>
 <p>Joining words builds a tree: its leaves are bytes, and each internal node joins its children's words. Sharing identical subtrees turns that tree into a reusable grammar.</p>
 <p>A <strong>primitive</strong> word is not an exact repetition of a shorter word. Its lexicographically smallest rotation is a <strong>Lyndon word</strong>, smaller than each of its other rotations. For example, <code>aab</code> is smaller than <code>aba</code> and <code>baa</code>; its standard split is <code>a | ab</code>, followed by <code>a | b</code>.</p>
 <p>The journal identifies the right-end induction's expanded derivation tree with the Lyndon tree of that least rotation. It first relates the construction to a <strong>Cartesian tree</strong>: a hierarchy formed by repeatedly splitting a sequence at its minimum. Here the sequence contains ranks of rotations beginning at the word's internal boundaries. For <code>aab</code>, the rotations at positions zero, one and two have ranks zero, one and two. The internal sequence is therefore [1,2]. Its minimum splits after the first <code>a</code>, giving <code>a | ab</code>; the remaining split gives <code>a | b</code>. This agrees with the two rules above. In general, the standard split of a Lyndon word cuts it just before its smallest proper suffix. That a Lyndon tree has the shape of the Cartesian tree of the word's suffix ranks is Hohlweg and Reutenauer's result; Crochemore and Russo set it out in §4 of <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a>.</p>
@@ -2302,27 +2301,27 @@
 <figcaption>The identity concerns the expanded derivation tree; stored rules share subtrees, and the kernel need not build every node. It is proved in #351's journal and checked by simulators there, under the primitive-word condition (aab is primitive; abab is not). This post checked the record; it does not independently certify the theorem. Green: the two internal nodes, which are the two rules of §1.</figcaption>
 </figure>
 
-<p>Lyndon trees themselves are long established. What is new is the route: this interval construction arrives at the Lyndon tree without first rebuilding the text by a conventional walk.</p>
-<p>The journal includes a proof and reports independent simulators and node comparisons. This post has checked that record, not independently certified the theorem. The primitive-word condition matters: <code>aab</code> satisfies it, whereas an exact repetition such as <code>abab</code> needs separate treatment.</p>
-<h2 id="5-can-a-better-order-remove-more-work">5. Can a better order remove more work?<a class="headerlink" href="#5-can-a-better-order-remove-more-work" title="Permanent link">&para;</a></h2>
-<p>Yes, in the counted schedules. Whether it saves time is still open.</p>
+<p>Lyndon trees are long established. The new result is that this interval construction reaches the Lyndon tree without first rebuilding the text by a conventional walk.</p>
+<p>The journal includes a proof and reports independent simulators and node comparisons. This post has checked that record, not independently certified the theorem. The proof needs the word to be primitive: <code>aab</code> is, while an exact repetition such as <code>abab</code> needs separate treatment.</p>
+<h2 id="5-fewer-steps-by-a-different-order">5. Fewer steps by a different order<a class="headerlink" href="#5-fewer-steps-by-a-different-order" title="Permanent link">&para;</a></h2>
+<p>It does in the step counts. Whether it saves time is not yet known.</p>
 <p>Let <code>r</code> be the number of BWT runs. The journal compares induction steps divided by <code>r</code>, so blocks with different run counts can be compared. A “free” step here means that its bookkeeping creates no new boundary; it still costs processor work.</p>
 <p>The favourable order takes available free steps first, then chooses the largest cell. Its count is 1.279 steps per run, compared with 1.812 for the right-end sweep.</p>
 <figure class="bf-fig">
 <p class="bf-title">The order of steps changes how many there are</p>
 <svg viewBox="0 0 540 414" role="img" aria-label="Steps per run: left end 2.137, right end 1.812, free steps first then largest cell 1.279, against a floor of 1.220 for this step model."><text x="0" y="26" class="bf-tm" style="font-size: 21px">induction steps per BWT run, 233 Wikidata blocks</text><text x="0" y="72" class="bf-ts" style="font-size: 25px">Left end</text><rect x="0" y="86" width="416.7" height="38" rx="3" class="bf-bar"/><text x="428.715" y="114" class="bf-t-strong" style="font-size: 24px">2.137</text><text x="0" y="180" class="bf-ts" style="font-size: 25px">Right end (as built)</text><rect x="0" y="194" width="353.3" height="38" rx="3" class="bf-bar"/><text x="365.34000000000003" y="222" class="bf-t-strong" style="font-size: 24px">1.812</text><text x="0" y="288" class="bf-ts" style="font-size: 25px">Free first, then largest cell</text><rect x="0" y="302" width="249.4" height="38" rx="3" class="bf-bar"/><text x="261.405" y="330" class="bf-t-strong" style="font-size: 24px">1.279</text><path d="M237.9 40V364" class="bf-grid" style="stroke: var(--bf-green); stroke-width: 2.5"/><text x="0" y="396" class="bf-t-green" style="font-size: 23px">dotted: floor r₂ − 1 = 1.220 for these steps</text></svg>
-<figcaption>Counts, not times: the cheaper order is not yet cheap to execute in the cells kernel. The floor holds for any order of these cell steps (r₂ − 1, the cells of both orders' cuts, minus one); a fusion outside this step model can go below it, so it is not a lower bound on inverse BWT.</figcaption>
+<figcaption>These are step counts, not times: the cells kernel cannot yet run the cheaper order cheaply. The floor holds for any order of these cell steps (r₂ − 1, the cells of both orders' cuts, minus one); a fusion outside this step model can go below it, so it is not a lower bound on inverse BWT.</figcaption>
 </figure>
 
 <p>The journal's identity is <code>steps = initial cells − 1 + newly introduced boundaries</code>. In the toy example, the union of both orders' cuts gives three initial cells. Two steps leave one, with no new boundary introduced. A re-seating into an interval's interior can instead add a cut that a later step must remove.</p>
 <p>The identity gives a floor of 1.220 steps per run for these cell-step schedules. The favourable order is about 29.4% below the right-end count and 4.8% above that floor.</p>
-<p>There is already a qualification to the word “floor.” The journal describes an additional fusion operation outside that step model which can go below it. This is not a lower bound on inverse BWT itself.</p>
-<p>The fast cells kernel relies on sweeping the ends of its orders. At the source pin, the journal prices an out-of-order step as built at 152 instructions, against 64 for a swept cell. Fewer steps can therefore lose if each step becomes expensive enough. Whether that cost lies in the step itself or in finding the next useful one is the research lane's next question.</p>
-<p>Parallel rounds face the same distinction. A schedule model suggests ample work for up to sixteen workers, but it omits execution overhead. The sequential round-based implementation took about 1.99 times its reference. A model of available parallelism is not a multi-worker speed measurement.</p>
-<h2 id="6-what-remains-before-production">6. What remains before production?<a class="headerlink" href="#6-what-remains-before-production" title="Permanent link">&para;</a></h2>
-<p>The performance reversal is useful evidence for continuing the experiment. It establishes neither a general-purpose replacement nor a release result.</p>
-<p>The next comparison needs matched input boundaries and the relevant records-based reference. The unsafe kernel still needs independent safety review. Tests reported in the journal do not substitute for that argument, and adverse inputs need a bounded fallback or a different reduction.</p>
-<p>The research lane's five-lens verification is under way. Its memory-safety lens found the writer defect above, now fixed; the census and the numbers, proofs and referee lenses are still to come. The code at this post's pin, ae51b11, predates the fix.</p>
+<p>The floor applies only to this step model. The journal describes a fusion operation outside it that can go below 1.220, so it is not a lower bound on inverse BWT itself.</p>
+<p>The fast cells kernel relies on sweeping the ends of its orders. In the version this post links to, the journal counts an out-of-order step, as built, at 152 instructions, against 64 for a swept cell. Fewer steps can therefore lose if each step becomes expensive enough. MONODROMY is now testing whether that cost is in the step itself or in finding the next useful step.</p>
+<p>The same applies to parallel rounds. A schedule model finds enough independent work for up to sixteen workers, but it leaves out the cost of running them. Run sequentially, the round-based implementation took about 1.99 times its reference, and no multi-worker run has been timed.</p>
+<h2 id="6-before-production">6. Before production<a class="headerlink" href="#6-before-production" title="Permanent link">&para;</a></h2>
+<p>The timings justify continuing the experiment. They do not show a general-purpose replacement or a result for a release.</p>
+<p>The next comparison needs matched input boundaries and the relevant records-based reference. The unsafe kernel still needs independent safety review. The journal's tests do not replace that review, and adverse inputs need a bounded fallback or a different reduction.</p>
+<p>MONODROMY's five-part verification is under way. Its memory-safety check found the writer defect above, now fixed; the new census and the checks of numbers, proofs and the referee reading are still to come. The code this post links to predates the fix.</p>
 <p>MONODROMY's earlier conjecture, that the grammar follows the Cartesian tree of the rotations' ranks, is now a recorded identity: the grammar is the Lyndon tree. Computing every rotation's rank first, however, could cost as much as the reconstruction this approach seeks to avoid.</p>
 <p>The next question is whether the Lyndon tree can be built more cheaply than by running the induction step by step. Within the induction, the order with fewer steps only pays once the machine can execute it cheaply too.</p>
 
@@ -2485,19 +2484,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/bench.js?v=9d23949f29d8"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=9d23949f29d8"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/blog.js?v=9d23949f29d8"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/frontier.js?v=9d23949f29d8"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/observatory.js?v=9d23949f29d8"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=910472e8bcb7"></script>
+        <script src="../../assets/javascripts/katex.js?v=9d23949f29d8"></script>
       
     
   </body>
