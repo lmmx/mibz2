@@ -227,6 +227,7 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
             &mut self.seg,
             pool,
             FLAGGED_SEGMENTS * K,
+            crate::coop::research::staged_traverse(),
         );
         self.seg.assemble(out);
     }
@@ -1338,7 +1339,7 @@ fn room_segments<const L: usize, const PF: u8>(
 
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
-const TILE: usize = 256;
+pub(crate) const TILE: usize = 256;
 
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
 /// next entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that

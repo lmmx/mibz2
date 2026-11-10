@@ -1,0 +1,1 @@
+mode room segments 1024: blocks 1 rows 900000 decoded 899978 hash 434b366c8a3af8bd

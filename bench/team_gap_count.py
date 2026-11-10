@@ -46,7 +46,7 @@ STAGES = [
     ),
     (
         "walk",
-        r"room_segments|mibz2::bwt::walk|coop::traverse|RoomWalk|coop::walk_room|bwt::random_rows|walk_segments",
+        r"room_segments|mibz2::bwt::walk|coop::traverse|RoomWalk|coop::walk_room|coop::research::walk_one_caller|bwt::random_rows|walk_segments",
     ),
     ("assembly", r"SegScratch>::assemble|SegScratch::assemble"),
     ("RLE1", r"mibz2::rle::"),
@@ -276,6 +276,9 @@ def coop_lines(src):
             kinds[i] = "full"
         elif s == "*l.p = q as u8;":
             kinds[i] = "tail"
+        elif s == "*tp.add(k * TILE + j) = q as u8;":
+            # (traverse_staged's tile store, in its macro's body)
+            kinds[i] = "full"
     return kinds
 
 
@@ -362,6 +365,141 @@ def report(args):
     )
 
 
+def walker_counts(profile, dis, lines):
+    """One thread's walk, by walker (`traverse` and `traverse_staged`): calls, claims, bytes
+    walked by kind, and the staged walker's flush fragments (its calls to memcpy, empty
+    ones included) and their inclusive Ir"""
+    out = {}
+    for variant, rx in (
+        ("old", r"coop::traverse(?!_staged)"),
+        ("staged", r"coop::traverse_staged"),
+    ):
+        claims = 0
+        walked = collections.Counter()
+        for (fn, addr), ir in profile.instr.items():
+            if not fn or not re.search(rx, fn) or addr not in dis:
+                continue
+            text, file, line = dis[addr]
+            if text.startswith("lock xadd"):
+                claims += ir
+            elif BYTE_STORE.match(text) and file and file.endswith("coop.rs") and line in lines:
+                walked[lines[line]] += ir
+        calls = sum(
+            c for (caller, callee), c in profile.calls.items() if callee and re.search(rx, callee)
+        )
+        frag = sum(
+            c
+            for (caller, callee), c in profile.calls.items()
+            if caller and re.search(rx, caller) and callee and "memcpy" in callee
+        )
+        frag_ir = sum(
+            ir
+            for (caller, callee), ir in profile.arcs.items()
+            if caller and re.search(rx, caller) and callee and "memcpy" in callee
+        )
+        out[variant] = dict(
+            calls=calls, claims=claims, walked=walked, fragments=frag, flush_ir=frag_ir
+        )
+    return out
+
+
+def staged(args):
+    """The staged walk's count: several arms on one input, each its stage table (Ir a
+    decoded byte), its inclusive walk and inversion, and each team arm's walkers by thread"""
+    d, n = args.decoded, args.rows
+    dis = disasm(args.binary, r"coop::traverse")
+    lines = coop_lines(args.coop_src)
+    arms = []
+    for spec in args.arm:
+        name, prefix = spec.split("=", 1)
+        profs = load(prefix)
+        if not profs:
+            sys.exit(f"no profiles at {prefix}")
+        tot = collections.Counter()
+        for p in profs:
+            st, _ = stages(p)
+            tot.update(st)
+        arms.append((name, profs, tot, sum(p.total for p in profs)))
+    print(f"denominators: D = {d:,} decoded bytes, N = {n:,} rows\n")
+    print("| stage | " + " | ".join(f"{a[0]} Ir/D" for a in arms) + " |")
+    print("|---|" + "--:|" * len(arms))
+    for st in STAGE_ORDER:
+        print(f"| {st} | " + " | ".join(f"{a[2][st] / d:.3f}" for a in arms) + " |")
+    print(
+        "| **inversion (build + walk + assembly)** | "
+        + " | ".join(f"{(a[2]['build'] + a[2]['walk'] + a[2]['assembly']) / d:.3f}" for a in arms)
+        + " |"
+    )
+    print("| **whole process** | " + " | ".join(f"{a[3] / d:.3f}" for a in arms) + " |")
+    print("\nraw Ir:")
+    for name, profs, tot, total in arms:
+        print(f"- {name}: total {total:,}; " + ", ".join(f"{st} {tot[st]:,}" for st in STAGE_ORDER))
+    print("\nwalk functions (self Ir/D; library arcs from them, inclusive Ir/D):")
+    for name, profs, tot, total in arms:
+        selfs = collections.Counter()
+        arcs = collections.Counter()
+        for p in profs:
+            selfs.update(p.self_ir)
+            for (caller, callee), ir in p.arcs.items():
+                if caller and callee and stage_of(caller) == "walk" and is_library(callee):
+                    arcs[(short(callee), short(caller))] += ir
+        fns = sorted(
+            (
+                (f, ir)
+                for f, ir in selfs.items()
+                if f and stage_of(f) == "walk" and not is_library(f)
+            ),
+            key=lambda x: -x[1],
+        )
+        print(
+            f"- {name}: "
+            + ", ".join(f"{short(f)} {ir / d:.3f}" for f, ir in fns if ir / d >= 0.0005)
+        )
+        for (callee, caller), ir in arcs.most_common():
+            if ir / d >= 0.0005:
+                print(f"  - {callee} <- {caller}: {ir / d:.3f}")
+    for name, profs, tot, total in arms:
+        rows = []
+        for p in profs:
+            st, _ = stages(p)
+            w = walker_counts(p, dis, lines)
+            shares = sum(
+                c
+                for (caller, callee), c in p.calls.items()
+                if callee and "FusedBuild" in callee and "share" in callee
+            )
+            if not any(w[v]["calls"] for v in w) and not shares:
+                continue
+            rows.append((p, st, w, shares))
+        if not rows:
+            continue
+        print(f"\n## {name}, by thread (threads that built or walked)")
+        print(
+            "| thread | total Ir | build | walk | build shares | walker | walk calls | claims | take | full phase | tail | fragments | flush Ir |"
+        )
+        print("|---|--:|--:|--:|--:|---|--:|--:|--:|--:|--:|--:|--:|")
+        sums = collections.Counter()
+        for p, st, w, shares in rows:
+            for v in ("old", "staged"):
+                c = w[v]
+                if not c["calls"]:
+                    continue
+                wk = c["walked"]
+                print(
+                    f"| {p.thread} | {p.total:,} | {st['build']:,} | {st['walk']:,} | {shares} | {v} | {c['calls']} | {c['claims']:,} | {wk['take']:,} | {wk['full']:,} | {wk['tail']:,} | {c['fragments']:,} | {c['flush_ir']:,} |"
+                )
+                for key in ("calls", "claims", "fragments", "flush_ir"):
+                    sums[v + key] += c[key]
+                for key in ("take", "full", "tail"):
+                    sums[v + key] += wk[key]
+        for v in ("old", "staged"):
+            if sums[v + "calls"]:
+                m = sums[v + "take"] + sums[v + "full"] + sums[v + "tail"]
+                print(
+                    f"\n{v}: calls {sums[v + 'calls']:,}, claims {sums[v + 'claims']:,}, walked take {sums[v + 'take']:,} + full {sums[v + 'full']:,} + tail {sums[v + 'tail']:,} = M {m:,}; tail share {sums[v + 'tail'] / max(m, 1):.4f}; fragments {sums[v + 'fragments']:,}; flush {sums[v + 'flush_ir'] / d:.3f} Ir/D"
+                )
+
+
 def short(f):
     f = re.sub(r"<[^<>]*>", "", f or "?") if f and len(f) > 90 else (f or "?")
     return f.replace("mibz2::", "")
@@ -379,9 +517,17 @@ def main():
     r.add_argument("--coop-src", default="src/coop.rs")
     r.add_argument("--rows", type=int, required=True)
     r.add_argument("--decoded", type=int, required=True)
+    g = sub.add_parser("staged", help="the staged walk's arms on one input")
+    g.add_argument("--arm", action="append", required=True, help="NAME=PREFIX, repeated")
+    g.add_argument("--binary", required=True)
+    g.add_argument("--coop-src", default="src/coop.rs")
+    g.add_argument("--rows", type=int, required=True)
+    g.add_argument("--decoded", type=int, required=True)
     args = ap.parse_args()
     if args.cmd == "report":
         report(args)
+    elif args.cmd == "staged":
+        staged(args)
 
 
 if __name__ == "__main__":
