@@ -214,7 +214,7 @@ Each is corrected in its entry or here.
 | 2 | the law on a built table | share-nothing at level 9 with no new kernel | compact30 with 6 to 10 plain workers in the grid harness: 2,350 MB/s at seven, ±13% | the Optimiser's price of the arm; then the queue |
 | 3 | N1 at k = 4 | 3.5 to 5.3 GB/s of inversion at ten workers (model) | the counting probe now running, read in loads a row as well as instructions | 3a |
 | 4 | the team path's ports | up to 15% at ten threads | a callgrind count of the default plan at this head | 3a, then the 9-thread sweep |
-| 5 | tall tunnels in a k-step lane, copied from the output | 0.125 to at most 0.068 table accesses a row at k = 8 | **counted, certified** (tunnels §0c): c 0.51 to 0.61 at k = 8, 0.76 at k = 1; the conversion is absent at one thread and at ten | closed as a build |
+| 5 | tall tunnels in a k-step lane, copied from the output | 0.125 to at most 0.068 table accesses a row at k = 8 | **counted, certified** (tunnels §0c): c 0.51 to 0.61 at k = 8, 0.76 at k = 1; a model of the plain-table rider has it short of the teams | deferred on its economics; the family open |
 | 6 | the reader's `BufRead` | the next serial stage past about 5 GB/s | none needed | the Coordinator's schedule |
 
 ## Reproduce

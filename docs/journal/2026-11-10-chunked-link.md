@@ -1,4 +1,4 @@
-# 2026-11-10: The chunked link: a 1.2 MB table with one kind of step, and four ideas closed by arithmetic
+# 2026-11-10: The chunked link: a 1.3 to 1.4 MB table with one kind of step, and four ideas bounded by arithmetic
 
 **Status: a table checked row by row against the T-vector, its size counted, its fill and its
 step counted and timed in common loops (local, indicative, RULES C5). For the Optimiser's
@@ -9,20 +9,37 @@ price (SPEC.PATHFINDER 3a). Nothing in the decoder changes and no build slot is 
   overflow path and its flags. Is there a small table with one rule for every row?
 - **Found:** the links of one bucket's rows are increasing, so their upper bits change rarely.
   Keep the low byte a row and the upper bits once a stretch.
-- **Counted:** 1.27 bytes a row on Wikidata (1.14 MB a block), 1.41 on text (1.27 MB). The
+- **Counted:** 1.46 bytes a row on Wikidata (1.31 MB a block), 1.60 on text (1.44 MB), with
+  the start bit a row the room walk needs (corrected, §0). The
   T-vector is 4 (3.60 MB). Every link and byte checked on 25 blocks.
 - **Timed, the same loop for both tables:** one lane 0.98 to 1.02 of the T-vector's time;
   32 prefetching lanes 1.30 to 1.50. Instructions a row: 22.2 against 8.2.
 - **Its fill, built and checked:** 6.0 instructions a row on Wikidata against `build`'s 5.06,
   17.6 on text against 11.5; 1.45 and 1.93 times `build`'s time. The model said `build` + 2.
-- **By the law of the knee:** 2,200 to 3,340 MB/s of inversion at ten plain workers. Three
+- **By the law of the knee:** 2,000 to 3,120 MB/s of inversion at ten plain workers. Three
   teams measured 2,430 to 2,584. Ahead on Wikidata, level on text as built. What decides is
-  its one-block cost on the i9, which no local run gives.
-- **Closed by arithmetic, no code:** inversion by induction on intervals, tunnels learned on
+  its one-block cost on the i9, which no local run gives, and a complete kernel, which this
+  is not.
+- **Bounded by arithmetic, no code:** inversion by induction on intervals, tunnels learned on
   the fly, staggered walks, and rank-or-select tables.
 
 Labels: **claim** (proved here), **counted** (exact for its blocks), **measured** (local, one
 container, indicative), **model**.
+
+## 0. Correction (2026-11-10, the Optimiser's REVIEW, #145 6759415547)
+
+- **The size was a layout's that was not the one timed.** The tightened step reads a 16-byte
+  directory entry a 64 rows; the size still charged 12. And the room walk's segment starts
+  need a bit a row that this table has no spare bit for: 0.125 bytes a row more. As timed the
+  table is 1.33 bytes a row on Wikidata and 1.47 on text (1.20 and 1.32 MB); with the start
+  bits, 1.46 and 1.60 (**1.31 and 1.44 MB**). "Under 1.3 MB" was wrong. `chunk_table` now
+  charges what it allocates.
+- **The kernel is not complete.** The fill (§3) is from the last column and counts, with its
+  packing, counts and validation; it sets no starts. The walk's loop has its starts from an
+  oracle walk, equal slices, no segment ends and no assembly. The complete kernel is the next
+  falsifier, and it is not built.
+- **The law recomputed at the true size** (§4): text needs g of 1.62 to 1.75 or less; it has
+  1.69 in these loops.
 
 ## 1. The table (claim, proved; checked on every row)
 
@@ -53,15 +70,15 @@ for the bytes):
 | text | 0.223 | 0.114 | 0.0548 | 0.0247 | 0.0104 |
 | records | 0.977 | 0.907 | 0.628 | 0.249 | 0.063 |
 
-| at 256 rows, 4-byte records | bytes a row | a 900,000-row block |
-|---|--:|--:|
-| Wikidata | 1.270 | 1.14 MB |
-| text | 1.408 | 1.27 MB |
-| records | 3.701 | 3.33 MB |
+| at 256 rows, 4-byte records | bytes a row, as timed | with a start bit a row | a 900,000-row block |
+|---|--:|--:|--:|
+| Wikidata | 1.332 | 1.457 | 1.31 MB |
+| text | 1.470 | 1.595 | 1.44 MB |
+| records | 3.764 | 3.889 | 3.50 MB |
 
 - **Records keeps the T-vector.** The choice is made a block, from the stretch count.
-- **The floor of this form is the low byte:** 0.9 MB a block. A 4-bit low part with 16-row
-  chunks is 1.13 bytes a row on Wikidata and 1.58 on text: no better.
+- **The floor of this form is the low byte and the directory:** 1.24 MB a block. A 4-bit low
+  part with 16-row chunks is 1.32 bytes a row on Wikidata (less) and 1.77 on text (more).
 
 ## 2. The step in a common loop (measured; instructions counted)
 
@@ -125,27 +142,27 @@ low bytes, directory and records compared whole).
 
 ## 4. What the law says (model)
 
-Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1.14 to 1.27 MB =
-11.4 to 12.7 MB, so X is 0.29 to 0.38.
+Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1.31 to 1.44 MB =
+13.1 to 14.4 MB, so X is 0.40 to 0.49.
 
 | g, the inversion at one block | a | MB/s at ten plain workers |
 |--:|--:|--:|
-| 1.34 (Wikidata here: fill by runs and the 32-lane walk, over `build` and T's walk) | 1 | 3,340 |
-| 1.69 (text here, the same) | 1 | 2,630 |
-| 2.0 (the i9's L2 misses bind) | 1.5 | 2,200 |
+| 1.34 (Wikidata here: fill by runs and the 32-lane walk, over `build` and T's walk) | 1 | 3,120 |
+| 1.69 (text here, the same) | 1 | 2,500 |
+| 2.0 (the i9's L2 misses bind) | 1.5 | 2,000 to 2,100 |
 
 - **Against:** three teams of three 2,430 to 2,584 (measured, that harness); compact30, 1.95 MB
   at g = 1.18, 2,350 at seven (model); N1 at k = 4, 3,470 to 5,260 (model, unbuilt, long runs
   only).
-- **It brackets the teams.** It beats them if g on the i9 is about 1.8 or less. As built here
-  it does on Wikidata, where D4-delta's 3,570 is better still, and on text, the class it is
-  for, it is level with them.
+- **It brackets the teams.** On text it beats them if g on the i9 is 1.62 to 1.75 or less; on
+  Wikidata, 1.70 to 1.84. As built here it does on Wikidata, where D4-delta's 3,570 is better
+  still, and on text, the class it is for, it is level with them.
 - **What it has that the others lack:** one worker a block with no cooperation, on text and on
   Wikidata alike. Its fill is dearer than `build` as written (§3).
-- **Cheapest decider:** `chunk_table` on the i9, one block and ten at once. A C5 run; the
-  Optimiser's price first.
+- **Next falsifier:** the complete kernel, counted: the fill with its starts, and a walker
+  with segment ends, refills and assembly. Then, and only then, the i9.
 
-## 5. Closed by arithmetic
+## 5. Bounded by arithmetic
 
 ### 5a. Inversion by induction on intervals
 
@@ -190,10 +207,10 @@ Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1
 
 | need | candidate | size, MB a block | state |
 |---|---|--:|---|
-| share-nothing on any data | the chunked link | 1.14 to 1.27 | table, fill and walk checked; g 1.34 to 1.69 here; on the i9 unknown |
+| share-nothing on any data | the chunked link | 1.31 to 1.44 | table, fill and a bare walk checked; g 1.34 to 1.69 here; no complete kernel |
 | share-nothing on any data | compact30 | 1.95 | built once; the Optimiser pricing a plain-worker arm |
 | share-nothing on long runs | the k-step table at k = 4 | 0.79 to 0.90 | unbuilt; its cuts cost 0.11 LF evaluations a row (tunnels §0c) |
-| fewer loads on long runs | tall-tunnel copies | +0.6 | certified, and closed as a build (tunnels §0c) |
+| fewer loads on long runs | tall-tunnel copies | +0.6 | certified; deferred on its economics, the family open (tunnels §0c) |
 
 **Limits.** One container, an EPYC whose caches hold the T-vector: its ratios are instruction
 ratios. `text` and `records` are the bench's synthetic corpora. The walk's loop is this

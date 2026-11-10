@@ -33,6 +33,9 @@ use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, Kernels};
 
 const LANES: usize = 32;
+/// Bytes a row of a segment-start bitmap, which the room walk would need and this table has
+/// no spare bit for
+const STARTS: f64 = 0.125;
 
 struct Chunked {
     low: Vec<u8>,
@@ -91,8 +94,10 @@ impl Chunked {
     }
 
     fn bytes(&self, n: usize) -> usize {
-        // the directory at 12 bytes a word (a u32 count suffices; it is 16 here for one load)
-        n + n.div_ceil(64) * 12 + self.rec.len() * 4
+        // as allocated and as timed: 16 bytes of directory a 64 rows. (Until the Optimiser's
+        // review, #145 6759415547, this charged 12, the size of a layout that was not the one
+        // timed.) The room walk's segment starts would need a bit a row more: `STARTS`.
+        n + n.div_ceil(64) * 16 + self.rec.len() * 4
     }
 }
 
@@ -500,10 +505,12 @@ fn main() {
     }
     let r = rows as f64;
     println!(
-        "{blocks} blocks, {rows} rows: every link and byte checked; {:.4} stretches a row, {:.3} bytes a row ({:.2} MB a 900,000-row block; the T-vector 4, 3.60 MB)",
+        "{blocks} blocks, {rows} rows: every link and byte checked; {:.4} stretches a row, {:.3} bytes a row as timed ({:.2} MB a 900,000-row block), {:.3} with a start bit a row ({:.2} MB); the T-vector 4, 3.60 MB",
         stretches as f64 / r,
         bytes as f64 / r,
-        bytes as f64 / r * 0.9
+        bytes as f64 / r * 0.9,
+        bytes as f64 / r + STARTS,
+        (bytes as f64 / r + STARTS) * 0.9
     );
     if arm == "fill" {
         println!(
