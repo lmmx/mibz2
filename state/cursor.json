@@ -1,7 +1,32 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": null,
+  "last_examined_comment_id": 6777025573,
   "receipts": {},
   "automatic_github_wakeup_assumed": false,
-  "activated": false
+  "activated": false,
+  "mode": "advisory",
+  "automation_id": "Automation_1d33bc7b65c081918245c63fbed13838",
+  "monitor_enabled_verified": true,
+  "trigger_requested": [
+    {
+      "connector_type": "github",
+      "webhook_name": "pull_request",
+      "params": {
+        "repository": "lmmx/mibz2",
+        "pull_request_number": 145,
+        "enable_comments": true,
+        "enable_reviews": true,
+        "enable_commit_updates": true,
+        "include_bot_reviews": true,
+        "only_on_merge": false
+      }
+    }
+  ],
+  "setup_pin": "c848dd0ab06d779c5bf2640a7d702422df15301b",
+  "setup_pin_is_master": false,
+  "own_comment_ids": [
+    6777025573
+  ],
+  "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
+  "event_execution_verified": false
 }
