@@ -1,0 +1,58 @@
+[
+  {
+    "test": "test_status_passes_through",
+    "result": "PASS"
+  },
+  {
+    "test": "test_responsive_grandchild",
+    "result": "PASS"
+  },
+  {
+    "test": "test_term_ignoring_grandchild",
+    "result": "PASS"
+  },
+  {
+    "test": "test_leftovers_after_a_normal_exit",
+    "result": "PASS"
+  },
+  {
+    "test": "test_cleanup_failure_at_the_deadline",
+    "result": "PASS"
+  },
+  {
+    "test": "test_unreapable_at_the_deadline",
+    "result": "PASS"
+  },
+  {
+    "test": "test_cleanup_failure_after_a_signal",
+    "result": "PASS"
+  },
+  {
+    "test": "test_signal_with_a_clean_stop",
+    "result": "PASS"
+  },
+  {
+    "test": "test_exited_parent_survivors_at_the_deadline",
+    "result": "PASS"
+  },
+  {
+    "test": "test_exited_parent_survivors_after_a_signal",
+    "result": "PASS"
+  },
+  {
+    "test": "test_success",
+    "result": "PASS"
+  },
+  {
+    "test": "test_bundling_timeout",
+    "result": "PASS"
+  },
+  {
+    "test": "test_bundle_made_then_late",
+    "result": "PASS"
+  },
+  {
+    "test": "test_bundling_failure",
+    "result": "PASS"
+  }
+]

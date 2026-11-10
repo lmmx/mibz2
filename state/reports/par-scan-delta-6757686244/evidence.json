@@ -1,0 +1,172 @@
+{
+  "trigger": 6757686244,
+  "ready": "efc1bd88c73b07d917617eddfdf008dffc691e3d",
+  "frozen": "243051248de80ebc88066c8f2db3b3852c47d1f8",
+  "delta": [
+    ".github/workflows/test.yml",
+    ".just/bench.just",
+    "bench/bounded.py",
+    "bench/par-scan.frozen",
+    "bench/par_scan_finish.sh",
+    "bench/test_bounded.py",
+    "bench/test_par_scan_finish.py",
+    "docs/journal/2026-11-10-parallel-scan.md",
+    "examples/par_scan.rs",
+    "tests/pipelined.rs"
+  ],
+  "frozen_to_ready": [
+    "bench/par-scan.frozen",
+    "tests/pipelined.rs"
+  ],
+  "sources": [
+    {
+      "path": "bench/bounded.py",
+      "sha": "d580724c96ba52460e662a9b357fc8e789fba49d"
+    },
+    {
+      "path": "bench/par_scan_finish.sh",
+      "sha": "2ed736722c4a1c10e173826ef6b7c955f8cd9d76"
+    },
+    {
+      "path": "bench/test_bounded.py",
+      "sha": "d5b01a05229c289ad35fadb6e980784788d9affd"
+    },
+    {
+      "path": "bench/test_par_scan_finish.py",
+      "sha": "6d2cf6b1db96f52c54650f817230cd2e18ac2862"
+    },
+    {
+      "path": "bench/bundle.sh",
+      "sha": "1ce3e2a20b63032ad53a42945e14393c5e968231"
+    },
+    {
+      "path": "bench/submit.sh",
+      "sha": "55ad3b296b1595025236b59213f461672bc487fa"
+    },
+    {
+      "path": "examples/par_scan.rs",
+      "sha": "eaa9c31b192e089b8e76038f203797c843db440e"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Release",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595993520"
+    },
+    {
+      "name": "python (3.13)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460600"
+    },
+    {
+      "name": "python (3.14)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460483"
+    },
+    {
+      "name": "python (3.15)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460429"
+    },
+    {
+      "name": "python (3.11)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460397"
+    },
+    {
+      "name": "python (3.12)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460366"
+    },
+    {
+      "name": "python (3.10)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595460295"
+    },
+    {
+      "name": "Publish crate",
+      "conclusion": "skipped",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595433388"
+    },
+    {
+      "name": "macos (macos-15, aarch64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431552"
+    },
+    {
+      "name": "macos (macos-15, x86_64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431493"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431476"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431463"
+    },
+    {
+      "name": "sdist",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431461"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595431448"
+    },
+    {
+      "name": "submit",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595407678"
+    },
+    {
+      "name": "rust",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595407618"
+    },
+    {
+      "name": "typing",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595407589"
+    },
+    {
+      "name": "fuzz-smoke",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595407521"
+    },
+    {
+      "name": "get-python-versions",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168254/job/129595407267"
+    },
+    {
+      "name": "occupancy",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745169313/job/129595407189"
+    },
+    {
+      "name": "bench",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168072/job/129595404733"
+    },
+    {
+      "name": "check-commit",
+      "conclusion": "success",
+      "url": "https://github.com/lmmx/mibz2/actions/runs/42745168073/job/129595402923"
+    }
+  ],
+  "native_log_lines": [
+    "2026-11-10T02:50:16.2620018Z test tests::miri_getrusage_bad_micros_is_a_panic - should panic ... ok",
+    "2026-11-10T02:50:16.2620426Z test tests::miri_getrusage_bad_secs_is_a_panic - should panic ... ok",
+    "2026-11-10T02:50:16.2620810Z test tests::miri_getrusage_failure_is_a_panic - should panic ... ok",
+    "2026-11-10T02:50:16.2621199Z test tests::miri_getrusage_injected_failure_is_a_panic - should panic ... ok",
+    "2026-11-10T02:50:16.2621541Z test tests::miri_getrusage_known_times ... ok",
+    "2026-11-10T02:50:16.2621887Z test tests::miri_getrusage_unknown_injection_refused - should panic ... ok"
+  ],
+  "audit": []
+}

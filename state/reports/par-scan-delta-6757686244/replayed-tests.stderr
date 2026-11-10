@@ -1,0 +1,11 @@
+bounded: bash passed its deadline of 0.5 s: stopping its process group
+bounded: process group 20 still has live members [20] after KILL
+bounded: sleep passed its deadline of 0.5 s: stopping its process group
+bounded: the command (pid 21) could not be reaped within 1 s of KILL
+bounded: stopped by signal 15: stopping the group
+bounded: process group 23 still has live members [23] after KILL
+bounded: stopped by signal 15: stopping the group
+bounded: sleep passed its deadline of 0.5 s: stopping its process group
+bounded: process group 27 still has live members [] after KILL
+bounded: stopped by signal 15: stopping the group
+bounded: process group 29 still has live members [] after KILL
