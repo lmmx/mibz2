@@ -1,0 +1,27 @@
+{
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "delivery_pin": "4ae63fd18819e293b53a04dc83fc9660b9bed7df",
+  "baseline": "8ed2fbdf3e8c05cdbfa426676883c652054ef17d",
+  "pr358_head": "1b564c7b74c6d45b35064e0d3db9230ed4cb0d2a",
+  "source_blobs": {
+    "src/bwt.rs": "86e6e5381abe41e350686e22ee87bcc16ae09989",
+    "src/coop.rs": "322ac5fbb39403c66f41409c630aa084ef75e84c",
+    "src/lib.rs": "f77f1a73577dab579502693922c88a845018afd5",
+    "src/parallel.rs": "f042135de89a80bb1e4dced2cf01c02b41e318ab",
+    "src/runs.rs": "fde481f918ea3f8123abe7428c625d15027cce20",
+    "src/runs/tests.rs": "9b17693a8d1b2817fadce2a924d7d95f66057e45",
+    "src/mtf.rs": "27716447766a2514e9cd0da34fe617a7143f62a3",
+    "tests/pipelined.rs": "6f68f11194ead47c53b110303c1241f8b680e035",
+    "tests/service.rs": "9f5f4ee6cbedb0f3affba29c73742ea1a8e966b3",
+    "tests/admission.rs": "384973649b2ff58f9b8259626826169aa212c8e9",
+    "examples/fuzz.rs": "6b852aacb0aab64d8228e86c496ef930e4f5d7b0",
+    "tests/common/mod.rs": "579d92047c533a0ed82950cf26610cda39124f2d",
+    "src/parallel/unwind_tests.rs": "0db3348b459d65532b8ba5e8a3e185e038ded72b"
+  },
+  "patch_sha256": {
+    "mtf": "789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e",
+    "team_runs": "3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229"
+  },
+  "mutation_ledger_blob": "8f047305e5e208be55dad9a7c20ba14d5d4a19aa",
+  "mutation_script_blob": "fc2d3ac20db2e926df84b5864f9677ad82f9db79"
+}

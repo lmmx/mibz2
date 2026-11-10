@@ -3452,7 +3452,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D097",
-      "progress": "Receipt; pinned specs and migration verified. Reviewing MTF alignment and team-runs port."
+      "progress": "Independent source review and arithmetic reproduction complete; preparing D097 and its publication.",
+      "receipt_commit": "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff"
     }
   ],
   "migrated_from": {
