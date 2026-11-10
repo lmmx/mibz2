@@ -1,0 +1,116 @@
+"""A hand mutation pass over the team-path port's new checks: each mutant is one edit,
+built and run against the port's own tests in a debug build (CI's `cargo test`).
+Usage: python3 -I mutate.py WORKTREE OUT.tsv"""
+import subprocess, sys, os, time
+
+wt, out = sys.argv[1], sys.argv[2]
+LIB = ["cargo", "test", "--lib", "--", "runs::", "coop::tests::miri_build_runs", "coop::tests::build_runs",
+       "coop::tests::runs_through", "coop::tests::cooperative", "front_tests", "--skip", "miri_runs_synthetic_blocks",
+       "--skip", "miri_runs_decode_block_equals_the_column"]
+SLOW = ["cargo", "test", "--lib", "--", "runs::tests::miri_runs_synthetic_blocks", "runs::tests::miri_runs_decode_block_equals_the_column"]
+INTEG = ["cargo", "test", "--test", "service", "--test", "pipelined", "--", "the_corpora", "small_blocks", "every_level"]
+
+R, C, P = "src/runs.rs", "src/coop.rs", "src/parallel.rs"
+CHK = "if len == 0 || len > row_end - q || len > lim[c] - next[c] {"
+END = "q == row_end && next == *lim"
+M = [
+ # (name, file, old, new, occurrence (0-based) of old, of how many, suites)
+ ("cuts: rows bound", R, "if n >= 1 << 24 || runs.len() >= 1 << 24 {", "if runs.len() >= 1 << 24 {", 0, 1, "L"),
+ ("cuts: records bound", R, "if n >= 1 << 24 || runs.len() >= 1 << 24 {", "if n >= 1 << 24 {", 0, 1, "L"),
+ ("cuts: counts sum", R, "    if cum != n as u64 {\n        return false;\n    }\n    let total", "    if false {\n        return false;\n    }\n    let total", 0, 1, "L"),
+ ("cuts: empty record", R, "empty |= len == 0;", "empty |= false;", 0, 1, "L"),
+ ("cuts: each byte's rows", R, "if empty || next != lim {", "if empty {", 0, 1, "L"),
+ ("cuts: a record's work", R, "work += len as u64 + 8;", "work += len as u64;", 0, 1, "L"),
+ ("cuts: where a cut falls", R, "(total * j as u64).div_ceil(PIECES as u64)", "(total * j as u64).div_ceil(PIECES as u64 + 1)", 0, 1, "L"),
+ ("cuts: the cut's record", R, "                    rec: i,\n", "                    rec: i + 1,\n", 0, 1, "L"),
+ ("tile: rows bound", R, "    if n >= 1 << 24 {\n        return false;\n    }\n    let mut cum = 0u64;", "    if false {\n        return false;\n    }\n    let mut cum = 0u64;", 0, 1, "L"),
+ ("tile: first values", R, "if first.next[c] as u64 != cum {", "if false {", 0, 1, "L"),
+ ("tile: counts sum", R, "if cum != n as u64 || first.rec != 0 || first.row != 0 {", "if first.rec != 0 || first.row != 0 {", 0, 1, "L"),
+ ("tile: first rec", R, "if cum != n as u64 || first.rec != 0 || first.row != 0 {", "if cum != n as u64 || first.row != 0 {", 0, 1, "L"),
+ ("tile: first row", R, "if cum != n as u64 || first.rec != 0 || first.row != 0 {", "if cum != n as u64 || first.rec != 0 {", 0, 1, "L"),
+ ("tile: last rec", R, "if last.rec != r.runs.len() || last.row as usize != n {", "if last.row as usize != n {", 0, 1, "L"),
+ ("tile: last row", R, "if last.rec != r.runs.len() || last.row as usize != n {", "if last.rec != r.runs.len() {", 0, 1, "L"),
+ ("tile: last values", R, "if last.next.iter().any(|&v| v as usize > n) {", "if false {", 0, 1, "L"),
+ ("tile: recs rise", R, "a.rec <= b.rec && a.row <= b.row", "a.row <= b.row", 0, 1, "L"),
+ ("tile: rows rise", R, "a.rec <= b.rec && a.row <= b.row", "a.rec <= b.rec", 0, 1, "L"),
+ ("tile: values rise", R, "a.next.iter().zip(&b.next).all(|(x, y)| x <= y)", "true", 0, 1, "L"),
+ ("share: rows in order", R, "if from.row > to.row || from.next.iter().zip(&to.next).any(|(a, b)| a > b) {", "if from.next.iter().zip(&to.next).any(|(a, b)| a > b) {", 0, 1, "L"),
+ ("share: values in order", R, "if from.row > to.row || from.next.iter().zip(&to.next).any(|(a, b)| a > b) {", "if from.row > to.row {", 0, 1, "L"),
+ ("scalar: empty record", R, CHK, "if len > row_end - q || len > lim[c] - next[c] {", 0, 2, "L"),
+ ("scalar: rows bound", R, CHK, "if len == 0 || len > lim[c] - next[c] {", 0, 2, "L"),
+ ("scalar: values bound", R, CHK, "if len == 0 || len > row_end - q {", 0, 2, "L"),
+ ("avx2: empty record", R, CHK, "if len > row_end - q || len > lim[c] - next[c] {", 1, 2, "L"),
+ ("avx2: rows bound", R, CHK, "if len == 0 || len > lim[c] - next[c] {", 1, 2, "L"),
+ ("avx2: values bound", R, CHK, "if len == 0 || len > row_end - q {", 1, 2, "L"),
+ ("scalar: end rows", R, END, "next == *lim", 0, 2, "L"),
+ ("scalar: end values", R, END, "q == row_end", 0, 2, "L"),
+ ("avx2: end rows", R, END, "next == *lim", 1, 2, "L"),
+ ("avx2: end values", R, END, "q == row_end", 1, 2, "L"),
+ ("avx2: store margin 6", R, "if row_end - end >= 7 {", "if row_end - end >= 6 {", 0, 1, "L"),
+ ("avx2: store always", R, "if row_end - end >= 7 {", "if true {", 0, 1, "L"),
+ ("avx2: store never", R, "if row_end - end >= 7 {", "if false {", 0, 1, "L"),
+ ("build: no shares", C, "        if shares == 0 || shares > MAX_SHARES {\n            return Err((BuildError(\"no shares, or more than MAX_SHARES\"), tt));", "        if shares > MAX_SHARES {\n            return Err((BuildError(\"no shares, or more than MAX_SHARES\"), tt));", 0, 1, "L"),
+ ("build: too many shares", C, "        if shares == 0 || shares > MAX_SHARES {\n            return Err((BuildError(\"no shares, or more than MAX_SHARES\"), tt));", "        if shares == 0 {\n            return Err((BuildError(\"no shares, or more than MAX_SHARES\"), tt));", 0, 1, "L"),
+ ("build: cuts tile", C, "if !crate::runs::cuts_tile(r, n, cuts) {", "if false {", 0, 1, "L"),
+ ("build: share in range", C, "        if j >= self.shares {\n            return;\n        }", "        if false {\n            return;\n        }", 1, 2, "L"),
+ ("build: share claimed", C, "if self.claimed.fetch_or(bit, Ordering::Relaxed) & bit != 0 {", "if self.claimed.fetch_or(bit, Ordering::Relaxed) & bit != 0 && false {", 1, 2, "L"),
+ ("build: passed only if ok", C, "        if ok {\n            self.passed.fetch_or(bit, Ordering::Release);", "        if true {\n            self.passed.fetch_or(bit, Ordering::Release);", 0, 1, "L"),
+ ("build: all passed", C, "if self.passed.load(Ordering::Acquire) != all {", "if false {", 1, 2, "L"),
+ ("build: every share's mask", C, "        let all = if self.shares == MAX_SHARES {", "        let all = if false {", 1, 2, "L"),
+ ("source: backward", C, "matches!(self, Source::Runs { .. })", "false", 0, 1, "L"),
+ ("walk: first row", C, "Self::from_row(tt, orig_ptr, s, segments)", "Self::from_row(tt, orig_ptr ^ 1, s, segments)", 0, 1, "L"),
+ ("front: staged by records", P, "(f.by_runs, f.rows) = (true, n);", "(f.by_runs, f.rows) = (false, n);", 0, 1, "L"),
+ ("front: flag reset", P, "    f.by_runs = false;\n    if super::runs::takes_runs(b) {", "    if super::runs::takes_runs(b) {", 0, 1, "L"),
+ ("front: selector never", P, "    f.by_runs = false;\n    if super::runs::takes_runs(b) {", "    f.by_runs = false;\n    if false {", 0, 1, "L"),
+ ("front: selector always", P, "    f.by_runs = false;\n    if super::runs::takes_runs(b) {", "    f.by_runs = false;\n    if true {", 0, 1, "L"),
+ ("front: primary index", P, "        let n = super::runs::front(b, &mut f.runs, k)?;\n        if b.orig_ptr as usize >= n {", "        let n = super::runs::front(b, &mut f.runs, k)?;\n        if false {", 0, 1, "L"),
+ ("front: column's rows", P, "    f.rows = n;\n    Ok(n)", "    Ok(n)", 0, 1, "L"),
+ ("alone: by records", P, "        if self.by_runs {\n            assert!(", "        if false {\n            assert!(", 0, 1, "L"),
+ ("solo: join reversed", P, "            if f.by_runs {\n                sc.seg.assemble_reversed(&mut sc.buf);", "            if !f.by_runs {\n                sc.seg.assemble_reversed(&mut sc.buf);", 0, 1, "I"),
+ ("team: reversed (pool)", P, "                back.segmented = true;\n                back.reversed = front.by_runs;", "                back.segmented = true;\n                back.reversed = false;", 0, 1, "I"),
+ ("team: reversed (alone)", P, "                );\n                back.reversed = front.by_runs;", "                );\n                back.reversed = false;", 0, 1, "I"),
+ ("finish: join reversed", P, "            if back.reversed {", "            if false {", 0, 1, "I"),
+ ("kernel: team on records", "src/bwt.rs", "let pool = if K < 2 || n < MIN_COOP {", "let pool = if true {", 0, 1, "L"),
+ ("decode_block: kernel reads runs", "src/lib.rs", "if s.inverse.reads_runs() && runs::takes_runs(b) {", "if !cooperative && s.inverse.reads_runs() && runs::takes_runs(b) {", 0, 1, "L"),
+]
+
+env = dict(os.environ, CARGO_TARGET_DIR=os.path.join(wt, "target"))
+def run(cmd):
+    p = subprocess.run(cmd, cwd=wt, env=env, capture_output=True, text=True, timeout=3000)
+    tail = (p.stdout + p.stderr)
+    return p.returncode, tail
+
+def failed_tests(text):
+    return sorted({l.split()[1] for l in text.splitlines() if l.startswith("test ") and l.rstrip().endswith("FAILED")})
+
+only = sys.argv[3:]  # optional: names to run
+with open(out, "a") as f:
+    for name, path, old, new, occ, of, suites in M:
+        if only and name not in only:
+            continue
+        full = os.path.join(wt, path)
+        src = open(full).read()
+        if src.count(old) != of:
+            f.write(f"{name}\tSKIPPED\tfound {src.count(old)} of {of}\n"); f.flush(); continue
+        i = -1
+        for _ in range(occ + 1):
+            i = src.index(old, i + 1)
+        open(full, "w").write(src[:i] + new + src[i + len(old):])
+        t = time.time()
+        try:
+            verdict, why = "SURVIVED", ""
+            for kind, cmd in (("L", LIB), ("I", INTEG), ("S", SLOW)):
+                if kind == "L" and "L" not in suites: continue
+                if kind == "I" and "I" not in suites: continue
+                rc, text = run(cmd)
+                if rc != 0:
+                    ft = failed_tests(text)
+                    if not ft and "error" in text and "could not compile" in text:
+                        verdict, why = "UNBUILDABLE", text[-300:].replace("\n", " ")
+                    else:
+                        verdict, why = "KILLED", (kind + ": " + ", ".join(ft)[:400]) if ft else kind + ": nonzero exit"
+                    break
+        finally:
+            open(full, "w").write(src)
+        f.write(f"{name}\t{verdict}\t{why}\t{time.time()-t:.0f}s\n"); f.flush()
+    f.write("END\n")

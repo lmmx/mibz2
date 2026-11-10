@@ -47,7 +47,64 @@ rows. Everything else is sequential copying.
   time); BWT tunnelling; precopying; a grammar of size O(r log(n/r)) from the runs;
   inversion in O(n / log n + r polylog n). **What I believe is new:** first-return induction
   as the decoding algorithm, with pieces as the unit of work, so that the n-entry table is
-  never built. Not searched today; a prior-art check is owed.
+  never built. ~~Not searched today; a prior-art check is owed.~~ Checked on 10 November,
+  in §2a: the claim is narrower than this paragraph says.
+
+## 2a. Prior art, checked (10 November, six searches and one paper read in full)
+
+**The closest work is Kärkkäinen and Puglisi, "Cache Friendly Burrows-Wheeler Inversion"
+(2011), read in full.** It weakens what I called new.
+- **Their observation is the proposition's width-2 case.** Two adjacent rows of one byte
+  have adjacent images, and "two access paths sometimes stay together for a while; we call
+  this a chain … a chain corresponds to a repetition in the text" (their §IV).
+- **Their algorithm `copy`** walks as usual, compares L[j] with L[j + 1] at each step, and
+  records a chain (its end, its place in the text, its length) in the table's own slots.
+  When the walk later reaches the chain's second path, it jumps to the chain's end and
+  copies the bytes from the text already decoded. So: copying in place of dependent steps,
+  from a rigid motion of rows under LF. That idea is theirs, not mine.
+- **Their result:** fastest of their set on every file: 1.03 to 1.29× the speed of the
+  merged-table walk on their 50 MB files (DNA least, English most), and 1.8× on a file that
+  is two copies of one (13.58 s against 24.72 s).
+- **What they leave open:** "copy only follows one chain at a time. If a triple (or longer
+  run) of symbols appears in the BWT, there is an opportunity to follow three (or more)
+  chains simultaneously … makes implementation more difficult." And: the copying "is
+  reminiscent of … LZ77. It would be interesting if this apparent relationship … could be
+  formalized."
+
+**Also prior:**
+- **LF as r translations, in O(r) space:** the move structure (Nishimoto and Tabei, 2021).
+  Its inversion is still n steps: "inverting the BWT requires performing n consecutive move
+  query steps" (Brown and Langmead, 2026, on length capping).
+- **The link in combinatorics on words:** a word's BWT is clustered exactly when the word
+  codes a trajectory of an interval exchange (Ferenczi and Zamboni, 2013); return words of
+  symmetric exchanges are perfectly clustering (2025).
+- **Kärkkäinen, Kempa and Puglisi (2012)** report a separate algorithm for highly
+  repetitive data. I could not get its text today; not read.
+
+**What is left that I can still call mine, after this:**
+1. Following **all** the chains of an interval at once, as one object (a piece), which is
+   the case their paper names and leaves open.
+2. **Induction as the organising step:** the first-return map on a window is again an
+   exchange, so the construction repeats, and a tower of windows is a grammar for the
+   block. Their chains are found one at a time during the walk and are not composed.
+3. **The counts:** dependent steps of 0.19 n on Wikidata and 0.0024 n on Thue–Morse (§3).
+
+**What the prior art says about the promise.** Their gain on ordinary text was 3 to 29%,
+with the copying already in place. Mine, on Wikidata, was a loss of 25% in the first
+construction (§5a). Fewer dependent steps did not buy a faster decoder in either case
+unless the text was repetitive on the scale of the whole file. That is evidence against a
+large gain on Wikidata from this family, and I weigh it as such.
+
+Not found in these searches: first-return or Rauzy induction used to invert a BWT. A
+search of six queries is not proof of absence.
+
+Sources: [Kärkkäinen and Puglisi 2011](https://www.cs.helsinki.fi/u/tpkarkka/publications/ccp2011.pdf);
+[Nishimoto and Tabei 2021](https://arxiv.org/pdf/2006.05104);
+[Brown and Langmead 2026](https://arxiv.org/abs/2602.11029);
+[Ferenczi and Zamboni 2013](https://arxiv.org/pdf/1204.1541) and
+[2025](https://arxiv.org/abs/2507.17370v2);
+[Kärkkäinen, Kempa and Puglisi 2012](https://researchconnect.stonybrook.edu/en/publications/slashing-the-time-for-bwt-inversion/)
+(abstract only).
 
 ## 3. Counted
 
