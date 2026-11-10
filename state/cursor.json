@@ -1125,11 +1125,20 @@
     {
       "comment_id": 6761295924,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Substantive pricing: archived CI scale implies 28–53 nominal cycles/excess candidate; A preferred only for diagnostic, B deferred. Final causal design and ledger being recorded.",
-      "report_path": "state/records/reviews/inbox-6761295924/report.md"
+      "progress": "Report, archived CI arithmetic and ledger complete; REVIEW publication pending.",
+      "report_path": "state/records/reviews/inbox-6761295924/report.md",
+      "report_commit": "d7492ec32b6c01a6d65eddab6256a635abc5398a",
+      "audit_scope": {
+        "source_pin": "78c91f7013fa37bf7ab830fb3e89ccb3d8835930",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "raw_trace_replay": false,
+        "nominal_cycle_conversion": true
+      }
     }
   ],
   "migrated_from": {
