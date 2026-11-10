@@ -157,9 +157,10 @@
     6761932309,
     6762860125,
     6763141779,
-    6763334719
+    6763334719,
+    6763474717
   ],
-  "last_processed_comment_id": 6763334719,
+  "last_processed_comment_id": 6763474717,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1787,7 +1788,7 @@
     },
     {
       "trigger_comment_id": 6763474717,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1795,7 +1796,10 @@
       "report_commit": "ee1b1f8097217558b03a45d3c536c29444a06e4b",
       "report_path": "state/reports/diagnostic-revisions-6763474717/report.md",
       "review_comment_pr": 145,
-      "disposition": "REVISE both: accept STEPS B>= allocation rule but pinned agg3 mixes count units and truncates pairs; correct project-timeout retries. Combined roster passes 20 tests; fix balance-only exit-1 adjudication, consistent with D091."
+      "disposition": "REVISE both: accept STEPS B>= allocation rule but pinned agg3 mixes count units and truncates pairs; correct project-timeout retries. Combined roster passes 20 tests; fix balance-only exit-1 adjudication, consistent with D091.",
+      "review_comment_id": 6763607539,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
