@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782394725,
+  "last_examined_comment_id": 6782427449,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -183,6 +183,13 @@
       "coordination_writes": 0,
       "response_comments": 0,
       "comment_updated_at": null
+    },
+    "6782427449": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "68aca5a0-dd60-11f1-8226-182e0fb5fa03",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -217,17 +224,18 @@
     6782075529,
     6782394725,
     6782334222,
-    6782363899
+    6782363899,
+    6782427449
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6782113588,
-    "delivery_id": "fd4376b0-dd5d-11f1-8bd6-6003a54e35c0",
-    "disposition": "reconciled_existing_owner_launched_codex_work",
-    "new_actionable_external_messages": 1
+    "comment_id": 6782427449,
+    "delivery_id": "68aca5a0-dd60-11f1-8226-182e0fb5fa03",
+    "disposition": "self_generated_noop",
+    "new_actionable_external_messages": 0
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -311,10 +319,17 @@
       "receipt_for_formal_assignment_pending": true
     },
     "guardian": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_in_progress",
       "comment_id": 6782334222,
       "scope": "New #366 occupancy invariant incident",
-      "prior_completed": 6782224690
+      "prior_completed": 6782224690,
+      "recipient_receipt": {
+        "comment_id": 6782334222,
+        "pr": 161,
+        "status": "in progress",
+        "decision": "D100",
+        "progress": "Migration verified; investigating occupancy ledger assertion."
+      }
     },
     "observer": {
       "status": "posted_verified_not_delivered",
@@ -362,9 +377,11 @@
   },
   "checkpoint": {
     "key": "active-programme-6782367271",
-    "status": "in_progress_log_publication",
+    "status": "published_verified",
     "event_dispositions_persisted": true,
-    "planned_action": "One grouped substantive LOG for completed external reviews6782294636/6782313693/6782367271, not a response to own6782394725."
+    "planned_action": "One grouped substantive LOG for completed external reviews6782294636/6782313693/6782367271, not a response to own6782394725.",
+    "log_comment_id": 6782427449,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782427449"
   },
   "dispatch_history": [
     {
