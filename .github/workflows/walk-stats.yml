@@ -1,0 +1,63 @@
+# The `walk-stats` feature (src/coop.rs, `walk_stats`): the cooperative walks' per-call
+# records, for the team screen's T2 probes and the native engagement diagnostic
+# (docs/journal/2026-11-10-team-screen-design-draft.md and
+# 2026-11-10-staged-engagement-diagnostic-draft.md, on #334). Off by default, so the other
+# workflows never build it (Test's clippy does, with --all-features). Here, on the paths
+# it instruments:
+# - the library's cooperative tests with the feature on: every walk against its oracle,
+#   and every pipelined block's records reconciled, with their mutants
+#   (`walk_stats_reconcile_per_block`);
+# - the records' checker's negative controls (bench/test_walk_stats_check.py);
+# - the harness built with and without the feature: the same output, by SHA-256, on the
+#   generated corpora, in the plain and the pipelined arm.
+# Untimed: it measures nothing.
+name: walk-stats
+
+on:
+  pull_request:
+    paths:
+      - "src/coop.rs"
+      - "src/parallel.rs"
+      - "src/bwt.rs"
+      - "Cargo.toml"
+      - "examples/ab.rs"
+      - "bench/walk_stats_check.py"
+      - "bench/test_walk_stats_check.py"
+      - ".github/workflows/walk-stats.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  walk-stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: The checker's negative controls
+        run: python3 bench/test_walk_stats_check.py
+      - name: The cooperative tests, with the feature
+        run: cargo test --features walk-stats --lib coop::
+      - name: The harness, with and without the feature
+        run: |
+          cargo build --release --example ab
+          cp target/release/examples/ab ab-off
+          cargo build --release --features walk-stats --example ab
+          cp target/release/examples/ab ab-on
+          ./ab-off gen corpora 1 > /dev/null
+      - name: The same output with and without the feature
+        run: |
+          set -euo pipefail
+          for f in corpora/*.bz2; do
+            for arm in "mibz2 3" "mibz2-pipe3-both 3"; do
+              off=$(AB_SHA256=1 ./ab-off child $arm "$f" | python3 -c 'import json,sys; j=json.load(sys.stdin); print(j["out"], j["sha256"], j["err"])')
+              on=$(AB_SHA256=1 AB_WALK_STATS=records.jsonl ./ab-on child $arm "$f" | python3 -c 'import json,sys; j=json.load(sys.stdin); print(j["out"], j["sha256"], j["err"])')
+              echo "$f $arm: $on"
+              [ "$off" = "$on" ] || { echo "::error::$f $arm: the feature changed the output ($off against $on)"; exit 1; }
+              tail -1 records.jsonl | grep -q '"kind":"end"' || { echo "::error::$f $arm: no terminal record"; exit 1; }
+            done
+          done
