@@ -1478,9 +1478,9 @@
       "sha": "58e0a4be697f740b339eae1089c40b567a9f6e93",
       "evidence_digest": "patch-sha256:61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64;delivery:372684599788d56d9bf693b31be013bd9fefa18e;head:58e0a4be697f740b339eae1089c40b567a9f6e93",
       "commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
-      "status": "complete",
+      "status": "finished",
       "disposition": "PROCEED; D097-F1 lifted. Forced plain-team fuzz closes missing route; counters are eligibility classifications, not exact execution counts.",
-      "comment": null
+      "comment": 6771767708
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1576,7 +1576,8 @@
     6764159416,
     6764381812,
     6764503403,
-    6770483223
+    6770483223,
+    6771767708
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1807,7 +1808,8 @@
     "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
     "766f5b01ce2b50f49b30d4dad8518ede332f4397",
     "b2b68314f41c32d629a36798ad24add98c6722af",
-    "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
+    "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
+    "6a0b23b203ff5023cc649de6fade27c8cb0e45e5"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1985,9 +1987,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6771542584,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D098",
+    "incoming_comment": 6771542584,
+    "review_comment_id": 6771767708,
     "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
   },
   "duplicate_events": [
@@ -3516,11 +3520,13 @@
     {
       "comment_id": 6771542584,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D098",
-      "progress": "D098 completed: D097-F1 lifted; route totals classified, not measured execution. Awaiting REVIEW publication.",
+      "progress": "Exact REVIEW body/destination read back on #145. Pinned verifier fails only hardcoded coordinator FROM; independent Guardian header/routing checks pass.",
       "receipt_commit": "b2b68314f41c32d629a36798ad24add98c6722af",
-      "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
+      "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
+      "review_comment_id": 6771767708,
+      "complete_cursor_commit": "6a0b23b203ff5023cc649de6fade27c8cb0e45e5"
     }
   ],
   "migrated_from": {
