@@ -3179,7 +3179,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D090",
-      "progress": "Receipt: assessing STEPS diagnostic admission and dispatch boundaries."
+      "progress": "D090 assessment complete; preparing publication.",
+      "receipt_commit": "752adab13940ab24a8b73d5f7751d244f4fe351d"
     }
   ],
   "migrated_from": {

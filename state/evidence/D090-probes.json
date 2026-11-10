@@ -1,0 +1,19 @@
+{
+  "ABBA_linear_index_drift": 0.0,
+  "ABBA_linear_walltime_drift_at_0_1_2_4": 0.5,
+  "lo_full_extent_overlap_bytes": 1024,
+  "hi_full_extent_overlap_bytes": 0,
+  "same_mod_1024": true,
+  "decision_overlap_example": {
+    "L": 0.2,
+    "U": 0.4,
+    "req": 0.51,
+    "L_positive": true,
+    "U_below_req": true
+  },
+  "cancellation_example_ns_per_B": {
+    "alias_component": 1.0,
+    "other_placement_component": -1.0,
+    "net": 0.0
+  }
+}

@@ -4115,3 +4115,64 @@ The report says M2 survived the inherited suite and was caught after three bound
 Evidence reproduced here: integer table sums, bounds and counterexample, parser/program inspection. No raw-profile replay, measured timing, binary equivalence or clean-build provenance certification. The reported partial source checkout for the control is not itself proof of a full pinned build environment; freeze full inputs for the successor.
 
 Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; fresh exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Audit retains five resolved historical items and previously reported LOG 6757065549 on #162, no new defect. Receipt e8b3312b49973069d37699e8a5c00cf05248ce35. Output #145, state team-state/guardian; task remains enabled.
+
+
+## D090 — STEPS placement diagnostic: admissible question, REVISE before freeze
+
+**Inbox:** [6763143812](https://github.com/lmmx/mibz2/pull/161#issuecomment-6763143812). **G1/G2:** the distinct master-based placement diagnostic is admissible in principle under D082/D086 and C1/C6. **HOLD freeze/timing of draft 41be4c2707768e89e4ca41d8ebe5ba8c930dff66 pending the corrections below and the Researcher's PROCEED.** No line STOP; no fourth #324 run; no production qualification. This is a bounded documentary/admissibility finding, not implementation or dispatch.
+
+Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Read current D082/D086, draft blob 744579718f46cd0850ea79887b6129f3358579ee, Researcher report fc63f14022f65ba6eb5bdd660477c7bf2d15defc at 07b453d1cd26299450c8ca90f60decd5fcce7fbe, REVIEW 6763089509 and LOGs 6763024788/6763118519. Researcher's new confirmation is requested, not assumed supplied.
+
+### 1. Admission and scope
+
+A single binary selecting between two fixed copies tests a new intervention's **net placement sensitivity** on the recorded host/workload. This differs materially from rerunning #324 or selecting a favourable padding offset after timing. Its bounded information objective can justify C1 diagnostic work without making it a production gate. Keep one 80-slot sequence and one predetermined lo/hi geometry, complete evidence and no retry for precision or result.
+
+The full-extent residue arithmetic checks: lo [0,2048), hi [2048,4096), counts [256,1280). The first overlaps counts across 1024 bytes; the second is disjoint modulo 4096. A 2048 displacement preserves modulo-1024 residues. These are geometry facts, not a guarantee of the required dynamic PC-pair exposure or elapsed-time effect.
+
+**Fix §5 before freeze.** It still says U < Δ_req means “this pair alone can't explain all of #324's ... harm” and “Full attribution is rejected,” despite its later caveat and the corrected LOG. A net effect cannot establish that. For example, a +1 ns/B alias component and −1 ns/B other placement effect give zero net effect while the alias component alone exceeds 0.51. This is an identifiability counterexample, not measured costs. Use the corrected meaning throughout: the net diagnostic contrast did not reach the reference budget under the stated model. No inference ruling out #324's underlying mechanism.
+
+Likewise Δ_req = 0.51(c_diag/0.0476) is a **reference scaled by an assumed common linear marginal cost per counted candidate**, not a measured stall budget transferable automatically between binaries/hosts. Whole-file exposure fixes one denominator mismatch, not this transport assumption. Retain that limitation beside any comparison; candidate counts are not outstanding-store or stall counts. “Both arms share the pointer load, so it cancels” is at most a shared-code statement: interaction with placement need not cancel. This does not defeat the scoped net-effect experiment.
+
+### 2. Fix the decision table and inference claims
+
+The scientific predicates are not exclusive. L=0.20, U=0.40, Δ_req=0.51 satisfies both positive sensitivity and below-budget upper bound. Report both independently.
+
+The action phrase **“Δ covering Δ_req” must become an executable predicate**, naming estimate versus interval, equality cases and precedence. A defensible exploratory policy may choose L>0 and U≥Δ_req as “positive net sensitivity, required size not excluded”; it may not label that demonstrated sufficient size. To claim the interval supports at least the required size requires L≥Δ_req. The team must choose and freeze which is its resource-allocation rule before data; no silent interpretation later. INVALID or half-width >0.10 overrides any point estimate. If both positive sensitivity and U<Δ_req hold, the stated next-mechanism branch takes precedence. Keep observed findings distinct from the decision to invest in a contract.
+
+A t19 interval is conditional on independent, sufficiently approximately normal block contrasts (or a justified approximation). Exchangeability plus ABBA/BAAB does not itself establish coverage. Restore the Researcher's explicit distributional qualification and retain all chronological block contrasts and slot timestamps. The draft's unconditional “trend ... inflates the interval; it doesn't bias” statement is too broad: balanced orders do not eliminate arbitrary dependence, order-correlated drift or carryover in this realised sequence.
+
+The exact linear-drift cancellation is in **equally spaced slot index**, or elapsed time with symmetric slot times. ABBA weights are (1/2,−1/2,−1/2,1/2); they cancel (0,1,2,3) but give 0.5 on times (0,1,2,4). Fresh processes and differing durations can produce unequal spacing. State the assumption accurately; report timestamps and departures, without inventing a post-hoc deletion or rerun rule. This is a small conditional diagnostic, not a demand for a new large calibration campaign or a claim of arbitrary-drift robustness.
+
+### 3. Finish the untimed validity definitions
+
+These were already in the peer report and remain incompletely applied:
+
+- Verify **selected_base − bank_base = 0 or 2048 inside each process**. Absolute selected addresses in two ASLR processes need not differ by 2048. Verify actual representation, Step size/stride and field offsets, ELF alignment and counts residue; an aligned outer allocation alone does not prove field offset.
+- Five gdb samples are a geometry smoke check, not proof that stack distributions match. Equal-length environment strings do not prove identical frames or microarchitectural state. Record relevant geometry for timed processes outside the measured region where feasible; retain D←S and L1 confounds.
+- Define the 10× predicate as **n_lo ≥ 10 n_hi**, including hi=0, with the separate c_diag ≥0.0476 requirement. Freeze exact PC identities/ranges and access widths for the actual binary, accounting for ASLR relocation.
+- Define the 2% comparison denominator and zero case. For example, a symmetric 2|a−b|/(a+b) rule with both-zero passing is one possible prospective choice, not an imposed replacement. Name every class tested. Define D←S's contrast as an absolute count difference on the same whole-file denominator; say which moduli and whether separate or summed comparisons apply. Raw counts alone do not bound opposing timing effects, even when this validity gate passes.
+- Freeze exact input/output byte counts, all output hashes, complete trace inventories, corrected agg3 version/digest and its class/ring tests, and full binary/build identity. The proposal has no built/listed/address-verified artifact yet; this review certifies none.
+
+### 4. One experiment may have two dispatches
+
+**Yes: untimed first, timing gated second.** Workflow topology is not the scientific unit. Freeze both stages, dependencies, deadlines, budget and failure/retry policy together before the first run; a second dispatch is not a fresh attempt after seeing an unattractive result.
+
+The timing stage must consume a verified immutable manifest: exact binary and input hashes, tool/classifier versions, trace evidence, completed validity predicates and selected order. Prefer the same binary artifact, not a rebuild merely sharing a source SHA. Freeze the full 20-block order (ten of each) or exact PRNG/permutation algorithm as well as seed 20261110.
+
+Separate GitHub jobs/dispatches need not share a physical runner. Do not imply that the lackey host's native checks certify the later timing host. If hosts differ, record both; recheck cheap native layout, output and relevant platform/build conditions on the actual timing host, and justify which trace predicates transfer because they are fixed by byte residues and path identity. Stack-dependent classes do not transfer merely because the binary hash matches. If required validity cannot transfer, keep those checks with timing on the same allocated runner, or prospectively specify their required revalidation and budget. Do not sample runners until one fits.
+
+Prevent overlapping heavy jobs under E4. A fresh-process timing preflight should use the same frozen setup for both arms; an untimed tracing phase can alter resource state, so the boundary/setup is part of the recipe, not an afterthought. No unregistered warmup or extra observations chosen from results.
+
+The draft correctly limits setup retries to **before any timed slot**, but later says more generally that incomplete runs with setup failures rerun. Make the narrow cutoff authoritative throughout. Once any timed evidence exists, partial/invalid/precision-insufficient runs are retained and terminate this sequence; no restarting eighty slots. Pre-slot infrastructure recovery must preserve exact artifacts and be paced under CI-INCIDENTS, not become geometry/host selection.
+
+### 5. The next construction does not inherit a pass
+
+The LOG's shortcut from “covers Δ_req” to “contract A becomes a #324 successor” omits D086's separate qualification of the independent master-side contract. If that is the route, first judge contract A's full costs and standing CI/no-harm/applicable B5 obligations against its pinned master baseline. Only then test a materially changed fallback successor against that qualified contract base, with D082's unchanged benefit/no-harm grid and planned two runs plus narrowly conditional third. No conflating a diagnostic signal with a qualified base or silently granting another successor sequence.
+
+A full no-harm grid establishes its registered net performance result, **not causal attribution** of #324's old regression. Moving to another ranked mechanism after this diagnostic is a bounded allocation decision, not proof this mechanism is absent. Preserve #324's failure, D086's failed restoration screen and unresolved stack classes. No offsets-to-pass search, merge, workstation timing or adoption authorised here. Routine corrective design and safety work remain delegated, subject to the draft's explicit current pre-build restriction until revised/admitted.
+
+### Evidence and protocol
+
+Independently reproduced residue-set geometry, decision-predicate overlap, a cancellation counterexample and the ABBA time-spacing counterexample; probes archived with this entry. No decoder implementation, native timing, lackey execution, CI dispatch, raw-trace replay or B5 certification. No new infrastructure/spending.
+
+Migration checked before receipt: old branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged, exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 752adab13940ab24a8b73d5f7751d244f4fe351d. Pinned audit retains five resolved items and previously reported LOG 6757065549 on #162; no new routing defect. Output #145, state team-state/guardian; task unchanged.
