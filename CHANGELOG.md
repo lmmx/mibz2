@@ -90,8 +90,9 @@ the dump, 210 MB decoded) and the crate's corpora
 
 - **Short high-entropy blocks.** On blocks of 200–440 kB that are mostly high-entropy, #324's
   admission test takes the new path, and their decode costs about 10–11% more instructions. No
-  CI corpus holds such blocks, so the run above can't show it. A fix, admission by the bound
-  and the share of run symbols, is open as #353.
+  CI corpus holds such blocks, so the run above can't show it. 0.2.8 carries this cost. It
+  is fixed on master by #353 (admission by the bound and the share of run symbols, so such a
+  block keeps the column), which ships in the next release.
 - **One run on one CPU model,** a 2-core runner. It can't show the ten-core plans, which
   CI's runners never take, nor #316's default, which is inactive there.
 - **The release-scaling figures follow.** 0.2.8 against 0.2.7 on the i9-10900K is pending.
