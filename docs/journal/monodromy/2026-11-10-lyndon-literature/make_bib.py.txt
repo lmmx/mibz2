@@ -1,7 +1,6 @@
-# Scratch helper kept for whoever finishes section 2: it writes sections 1 and 2 of the entry from
-# the readers reports (readers/lit2_*.json). Its path S pointed at the session scratch; point it at
-# the directory that holds a reports/ folder with those files. The fifth cluster keys are passed
-# as arguments: READERKEY=ENTRYKEY (entry keys: BDZZ26 Wols26 LZJ22 BDZZ18 BIKKP24 BDZZ21 LZJ26 BDZZ20).
+# Scratch helper kept beside the entry: it wrote sections 1 and 2 from the readers reports
+# (readers/lit2_*.json). Its path S pointed at the session scratch (a folder holding reports/).
+# Run as: python3 make_bib.py BDZZ18=BDZZ18 BDZZ20=BDZZ20 BDZZ26=BDZZ26 BDRZZ24=BDRZZ24 LZJ22=LZJ22 BIKKP22=BIKKP24 Wols26=Wols26 DNSZZ26=DNSZZ26
 #!/usr/bin/env python3
 """Sections 1 and 2 of the entry from the readers' reports (scratch; not for the repository)."""
 import json
@@ -40,8 +39,8 @@ LINES = [
     (2, 5, "Constructing the bijective and the extended Burrows-Wheeler transform in linear time", "BKKP"),
     (2, 6, "[HTML] The alternating BWT: an algorithmic perspective", "GMRRS20"),
     (2, 7, "Computing longest Lyndon subsequences and longest common Lyndon subsequences", "BIKKP24"),
-    (2, 8, "[HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties", "BDZZ21"),
-    (2, 9, "Simple linear time algorithm for sorting strings in omega-order with applications", "LZJ26"),
+    (2, 8, "[HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties", "BDZZ20"),
+    (2, 9, "Simple linear time algorithm for sorting strings in omega-order with applications", "LZJ22"),
     (2, 10, "Lyndon words versus inverse Lyndon words: Queries on suffixes and bordered words", "BDZZ20"),
 ]
 

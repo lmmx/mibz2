@@ -12,12 +12,10 @@ entry: nothing here was timed.
   generalized Lyndon words*, to be recorded verbatim, made an itemised bibliography, and
   mined.
 - **Verbatim:** `2026-11-10-lyndon-literature/scholar-results.txt`, 32 result lines as pasted.
-- **Bibliography (§2):** the 32 lines are **23 works** (§1 maps each line); 25 more works
-  were fetched to state things exactly. Every field is from a page fetched on 10 November;
-  what could not be fetched is said, item by item. **Stored unfinished:** 15 of the 23 have
-  their record; the reader of the other 8 (inverse Lyndon words, sorting in the infinite
-  order, Lyndon subsequences, one thesis: lines A12, A14, A17, A18, B4, B7 to B10) had not
-  returned when the session neared a usage limit. They are marked pending.
+- **Bibliography (§2):** the 32 lines are **21 works** (§1 maps each line: conference,
+  journal, reprint and proceedings-copy lines of one work are merged, each merge from the
+  sources); 27 more works were fetched to state things exactly. Every field is from a page
+  fetched on 10 November; what could not be fetched is said, item by item.
 - **For the decoder's speed: nothing.** No paper of the lists inverts a transform in fewer
   than n steps of LF, builds a Lyndon tree, array or grammar from a column, or works from
   the run-length form in time that depends on r alone (§3.4, §3.1).
@@ -91,8 +89,8 @@ first item and are not in the file. A line's number is its place in its list.
 | B5 | Constructing the bijective and the extended Burrows-Wheeler transform in linear time | [BKKP] |
 | B6 | [HTML] The alternating BWT: an algorithmic perspective | [GMRRS20] |
 | B7 | Computing longest Lyndon subsequences and longest common Lyndon subsequences | [BIKKP24] |
-| B8 | [HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties | [BDZZ21] |
-| B9 | Simple linear time algorithm for sorting strings in omega-order with applications | [LZJ26] |
+| B8 | [HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties | [BDZZ20] |
+| B9 | Simple linear time algorithm for sorting strings in omega-order with applications | [LZJ22] |
 | B10 | Lyndon words versus inverse Lyndon words: Queries on suffixes and bordered words | [BDZZ20] |
 | (heading) | On generalized Lyndon words | [DRR-gen] |
 
@@ -102,7 +100,7 @@ Every field is from a page fetched on 10 November 2026 by the reader named in §
 "record from" of each item); nothing is filled from memory. "Not verified" is the
 reader's own list of what it could not reach.
 
-### 2.1 The works behind the 32 lines (23)
+### 2.1 The works behind the 32 lines (21)
 
 - **[DRR-gen]** Francesco Dolce, Antonio Restivo, Christophe Reutenauer. *On generalized Lyndon words.*
   Theoretical Computer Science, 2019.
@@ -191,9 +189,28 @@ reader's own list of what it could not reach.
   *What it is:* Machine-checked basics of Lyndon words: unborderedness, suffix characterisation, concatenation, longest Lyndon suffix, existence and uniqueness of the Lyndon factorization, existence of a factorization into two Lyndon words; no tree, no Hall set, no BWT.
   *Record from:* Crossref API records of the chapter and the book; isa-afp.org entry page and outline.pdf
   *Not verified:* LNCS volume number; the paper's own text (only the AFP outline was read).
-- **[BDZZ26]** (record pending)
-- **[Wols26]** (record pending)
-- **[LZJ22]** (record pending)
+- **[BDZZ26]** Paola Bonizzoni, Clelia De Felice, Rocco Zaccagnino, Rosalba Zizza. *From the Lyndon factorization to the canonical inverse Lyndon factorization: back and forth.*
+  Computability 15(1-2), pp. 152-176, 2026.
+  Versions and what was read: Journal: Computability vol. 15, issue 1-2, pp. 152-176, issue dated May 2026, published online 5 Aug 2026, SAGE (Crossref). Preprint: arXiv:2404.17969v1, 27 Apr 2024. Numbers below are arXiv v1's.
+  DOI `10.1177/22113568251406824`; arXiv `2404.17969 (v1 read)`.
+  Scholar lines: A12.
+  *What it is:* Gives both directions between CFL_in(w) (Lyndon factorization for the inverse order) and ICFL(w): CFL_in(w) is the concatenation of the 'unbordered border' decompositions NB(m_i) of the ICFL factors, and ICFL is computed locally inside the maximal prefix-chains of CFL_in; closes by naming BWT variants built on inverse Lyndon words as open.
+  *Record from:* Crossref record of the DOI; arXiv API record and arXiv v1 PDF (read: abstract, sections 1, 8, 9 statements, 10).
+  *Not verified:* SAGE page not fetched (403); journal numbering not checked. The arXiv record does not itself carry the journal reference: the link arXiv <-> Computability is by identical title and authors only.
+- **[Wols26]** Richard Wols. *Synchronous Combinatorial Games.*
+  Master thesis, Utrecht University (Mathematical Sciences); advisor W. Kets, 2026.
+  Versions and what was read: Utrecht University student theses repository, handle 20.500.12932/51048, deposited 12 Feb 2026, open access CC-BY-NC-ND (repository API record). Chapter 7 'Absolute-Lyndon words', section 7.1, pp. 85-86 of the PDF.
+  Scholar lines: A14.
+  *What it is:* A game-theory thesis; it cites Dolce-Restivo-Reutenauer's generalized Lyndon words once, in a survey paragraph of Lyndon-word variants said to have no direct connection with its own 'absolute-Lyndon words' (binary words whose rotations pair with complemented Lyndon words), and conjectures, without construction, a bijective-BWT variant from those. Nothing for the mission.
+  *Record from:* Repository API record (metadata) and the thesis PDF (abstract and chapter 7 read).
+- **[LZJ22]** Ruixi Luo, Taikun Zhu, Kai Jin. *String Rearrangement Inequalities and a Total Order Between Primitive Words (conference); extended journal version: Simple linear time algorithm for sorting strings in omega-order with applications.*
+  IJTCS-FAW 2022 (Frontiers of Algorithmic Wisdom), LNCS 13461, pp. 206-218; Acta Informatica 63, article 17, 2022 (conference; first online 1 Jan 2023), 2026 (journal).
+  Versions and what was read: Conference: Frontiers of Algorithmic Wisdom, IJTCS-FAW 2022, eds. Minming Li, Xiaoming Sun, LNCS vol. 13461, Springer, pp. 206-218, copyright 2022, first online 01 Jan 2023 (Springer chapter page; Crossref). Preprint: arXiv:2204.11213v1, 24 Apr 2022. Journal: Acta Informatica vol. 63, issue 2, article 17, published 15 Apr 2026, open access CC BY-NC-ND (Springer article page; issue number from Crossref); its publisher's note says it is an extended version of the IJTCS-FAW 2022 paper, which is why the lines are merged.
+  DOI `10.1007/978-3-031-20796-9_15 (FAW); 10.1007/s00236-026-00530-5 (Acta Informatica)`; arXiv `2204.11213 (v1, the conference text; read in full). No arXiv record of the journal version was found (arXiv API searches by each author, 10 Nov 2026).`.
+  Scholar lines: A17, A18, B9.
+  *What it is:* Sorts n words by their infinite powers (omega-order) in O(L), L the total length, by reducing to an ordinary sort of the powers M_i = A_i^(deg+2); smallest/largest concatenation of n words is the omega-sorted order; the journal version adds O(L+sigma) and O(L+n log n) variants and a section saying the extended BWT sorts all conjugates, which this algorithm does not.
+  *Record from:* Springer chapter page and Crossref (FAW); arXiv PDF v1 read in full; Springer article page of the Acta version, read through a fetch tool that returns a model's rendering of the page (three passes, with short verbatim quotes on the eBWT section); Crossref record.
+  *Not verified:* Acta received/accepted dates not shown; the Acta lemma numbers are as relayed by the fetch tool, not read in the raw PDF (direct download met a browser check and was not forced). FAW conference dates/place not fetched. The books.google page itself was not opened; it is matched by title, authors and venue string.
 - **[Postic20]** Mickaël Postic. *Local and Global Regularities in Infinite Words.*
   Ph.D. dissertation, 2020.
   Versions and what was read: Not read. The Mathematics Genealogy Project page (id 299538, fetched) gives: Ph.D. 2020, dissertation title, advisors Luca Zamboni and Gabriele Fici. No PDF found: math.univ-lyon1.fr/~postic/ is 404, HAL API has no record, theses.fr reset the connection.
@@ -216,7 +233,14 @@ reader's own list of what it could not reach.
   *What it is:* History, construction, indexing, runs r_B against r, other bijective variants, six open problems; inversion only by LF cycles; no Lyndon tree, grammar or interval exchange.
   *Record from:* drops.dagstuhl.de/entities/document/10.4230/OASIcs.Manzini.2 (meta tags) and the PDF, read in full
   *Not verified:* Scholar's other four versions not identified.
-- **[BDZZ18]** (record pending)
+- **[BDZZ18]** Paola Bonizzoni, Clelia De Felice, Rocco Zaccagnino, Rosalba Zizza. *Inverse Lyndon words and inverse Lyndon factorizations of words.*
+  Advances in Applied Mathematics 101, pp. 281-319, 2018.
+  Versions and what was read: Journal: Adv. Appl. Math. 101 (Oct 2018) 281-319 (Crossref). Preprint: arXiv:1705.10277v7 [cs.FL], submitted 29 May 2017, v7 17 Dec 2017 (arXiv API; its record carries the journal reference and DOI). All theorem numbers below are those of arXiv v7.
+  DOI `10.1016/j.aam.2018.08.005`; arXiv `1705.10277 (v7 read)`.
+  Scholar lines: B4.
+  *What it is:* Defines inverse Lyndon words (greater than every proper suffix), shows they are the sesquipowers of anti-Lyndon words (Lyndon words for the inverse alphabet order), and defines the canonical inverse Lyndon factorization ICFL(w): unique, linear time, a grouping of the Lyndon factorization for the inverse order.
+  *Record from:* Crossref API record of the DOI (authors, volume, pages, date); arXiv API record and the arXiv v7 PDF (read: abstract, sections 1-4, 6.1, 7).
+  *Not verified:* The Elsevier page was not fetched (403); the journal's own theorem numbering was not checked against arXiv v7.
 - **[GMRRS20]** Raffaele Giancarlo, Giovanni Manzini, Antonio Restivo, Giovanna Rosone, Marinella Sciortino. *The Alternating BWT: An algorithmic perspective.*
   Theoretical Computer Science 812, pp. 230-243, 2020.
   Versions and what was read: Journal: Theor. Comput. Sci. vol. 812, pp. 230-243, April 2020 (copyright line 2019). Preprint: arXiv:1907.02308v1 [cs.DS], 4 Jul 2019, 28 pp., headed 'Preprint submitted to Elsevier'. It is the full version of GMRRS-DLT18 (the DLT paper says details 'will be given in the full paper'; this paper calls the DLT paper 'a preliminary version'), but it is a separate publication with new sections 6-7, so it is listed as its own work.
@@ -225,12 +249,24 @@ reader's own list of what it could not reach.
   *What it is:* The ABWT's LF map reverses the order inside each letter's bucket (eq. (3)); backward search works; BWT and ABWT are the only rank-invertible BWT_K; ABWT computed in linear time via difference covers and a linear-time Galois-rotation algorithm.
   *Record from:* Crossref record of the DOI (title, authors, volume, pages, date); arXiv API entry and the PDF itself.
   *Not verified:* The journal text was not fetched (ScienceDirect answered 403). Read arXiv v1 in full. Numbering cross-checked only indirectly: GMRRS-IC23 cites 'Theorem 5.9' and 'Theorem 4.4' of the journal paper and DMS-VWORDS cites its 'Lemma 7.3' and 'Proposition 7.4', which match the arXiv numbering.
-- **[BIKKP24]** (record pending)
-- **[BDZZ21]** (record pending)
-- **[LZJ26]** (record pending)
-- **[BDZZ20]** (record pending)
+- **[BIKKP24]** Hideo Bannai, Tomohiro I, Tomasz Kociumaka, Dominik Koeppl, Simon J. Puglisi. *Computing Longest Lyndon Subsequences and Longest Common Lyndon Subsequences (journal); conference title: Computing Longest (Common) Lyndon Subsequences.*
+  Algorithmica 86(3), pp. 735-756; conference IWOCA 2022, LNCS 13270, pp. 128-142, 2022 (conference), 2024 (journal issue; online 6 May 2023).
+  Versions and what was read: Conference: Combinatorial Algorithms (IWOCA 2022), LNCS, pp. 128-142, online 29 May 2022 (Crossref; volume 13270 as given on the Algorithmica page). Preprint: arXiv:2201.06773v1, 18 Jan 2022; also Research Square preprint DOI 10.21203/rs.3.rs-2118135/v1 (2022, Crossref). Journal: Algorithmica vol. 86, issue 3, pp. 735-756, published online 6 May 2023, print March 2024, open access (Springer page, Crossref).
+  DOI `10.1007/s00453-023-01125-z (Algorithmica); 10.1007/978-3-031-06678-8_10 (IWOCA)`; arXiv `2201.06773 (v1 read: abstract, sections 1-3)`.
+  Scholar lines: B7.
+  *What it is:* Dynamic programming for the longest subsequence of T that is a Lyndon word: O(n^3) time and O(n) space offline, O(n^3) time and space online in the journal version, O(n^4 sigma) for the common variant; no BWT, no Lyndon tree. Nothing for the mission.
+  *Record from:* Crossref records of both DOIs; arXiv API and PDF v1; Springer article page (abstract, extension note) through the fetch tool.
+  *Not verified:* IWOCA LNCS volume number is second-hand (Algorithmica page's reference).
+- **[BDZZ20]** Paola Bonizzoni, Clelia De Felice, Rocco Zaccagnino, Rosalba Zizza. *Lyndon words versus inverse Lyndon words: queries on suffixes and bordered words (conference, arXiv) = On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties (journal).*
+  LATA 2020, LNCS 12038, pp. 385-396; journal version Theoretical Computer Science 862, pp. 24-41, 2020 (conference), 2021 (journal).
+  Versions and what was read: Conference: Language and Automata Theory and Applications (LATA 2020), eds. Leporati, Martin-Vide, Shapira, Zandron, LNCS vol. 12038, Springer, pp. 385-396, first online 25 Feb 2020 (Springer chapter page). Journal: Theor. Comput. Sci. 862 (Mar 2021) 24-41 (Crossref). Preprint: arXiv:1911.01851v1, 2 Nov 2019, titled as the LATA paper; the arXiv record gives journal-ref 'Theoretical Computer Science, 2020' and the TCS DOI, which is why the two Scholar lines are merged as one work. Numbers below are arXiv v1's (the Springer page shows the bound as 'Proposition 6', Section 6, in the LATA text).
+  DOI `10.1007/978-3-030-40608-0_27 (LATA); 10.1016/j.tcs.2020.10.034 (TCS)`; arXiv `1911.01851 (v1 read)`.
+  Scholar lines: B8, B10.
+  *What it is:* Proves that in ICFL(w) a nonempty border of a factor is never a prefix of the next factor, and that the longest common prefix of any two factors of w is at most M = max |m_i m_{i+1}| over consecutive ICFL factors; also how the Lyndon factorization of a factor of w reuses that of w.
+  *Record from:* Springer chapter page (LATA volume, pages, editors, abstract, section list); Crossref record of the TCS DOI; arXiv API record and arXiv v1 PDF (read: abstract, sections 1, 3, 7, 8, 9).
+  *Not verified:* The TCS text was not readable (ScienceDirect 403): that it is the journal version of the LATA paper rests on the arXiv record's journal-ref/DOI, not on the TCS page. LATA conference dates and place not shown on the page fetched.
 
-### 2.2 Fetched to state things exactly (25)
+### 2.2 Fetched to state things exactly (27)
 
 - **[CR]** Maxime Crochemore, Luís M. S. Russo. *Cartesian and Lyndon trees (arXiv title: Cartesian trees and Lyndon trees).*
   Theoretical Computer Science, 2020.
@@ -402,12 +438,26 @@ reader's own list of what it could not reach.
   DOI `10.1016/j.aam.2021.102249`; arXiv `1908.04056`.
   *What it is:* Restates Melançon's contraction algorithm for any right Hall set (conjugate and factorization versions) and studies how long the right Lazard procedure takes to produce the Nyldon words.
   *Record from:* Crossref API record; arXiv API record; arXiv v3 PDF
+- **[BDRZZ24]** Paola Bonizzoni, Clelia De Felice, Brian Riccardi, Rocco Zaccagnino, Rosalba Zizza. *Unveiling the Connection Between the Lyndon Factorization and the Canonical Inverse Lyndon Factorization via a Border Property.*
+  MFCS 2024, LIPIcs 306, 31:1-31:14, 2024.
+  Versions and what was read: 49th International Symposium on Mathematical Foundations of Computer Science (MFCS 2024), LIPIcs vol. 306, article 31, pp. 31:1-31:14, published 23 Aug 2024 (DROPS page). arXiv:2406.18473v2.
+  DOI `10.4230/LIPIcs.MFCS.2024.31`; arXiv `2406.18473`.
+  *What it is:* ICFL is the unique inverse Lyndon factorization with the border property, and is obtained in linear time by compacting factors of CFL_in (abstract only).
+  *Record from:* DROPS document page; arXiv API record. Abstract only.
+  *Not verified:* Body not read.
+- **[DNSZZ26]** Clelia De Felice, Pietro Negri, Manuel Sica, Rocco Zaccagnino, Rosalba Zizza (arXiv:2609.23401), earlier version by Pietro Negri, Manuel Sica, Rocco Zaccagnino, Rosalba Zizza (arXiv:2603.17537). *The Inverse Lyndon Array (2609.23401); The Inverse Lyndon Array: Definition, Properties, and Linear-Time Construction (2603.17537).*
+  arXiv preprints (comment on 2609.23401: 'SOFSEM conference'), 2026.
+  Versions and what was read: arXiv:2609.23401v1, sections 1-3 read (Lemmas 2, 6, 7, 8, Corollary 1); arXiv:2603.17537v1 skimmed (Lemma 7, Lemma 10).
+  arXiv `2609.23401v1 (20 Sep 2026); 2603.17537v1 (18 Mar 2026)`.
+  *What it is:* For the inverse setting, the Lyndon array for the inverse order equals the distance to the next GREATER suffix, the next/previous-greater-suffix edges are non-crossing, and the inverse Lyndon array is that distance plus an LCE (border) term; O(n) on general ordered alphabets; ICFL from it in O(n). No tree is named.
+  *Record from:* arXiv API records and PDFs.
+  *Not verified:* Whether the two arXiv records are versions of one paper (author lists differ) is my reading of titles and abstracts; no proceedings record fetched.
 
 
 ## 3. In print (K), by what it bears on
 
-Read by sub-agents, one cluster of works each (four returned; §3.7), every statement with
-the place it was read at.
+Read by five sub-agents, one cluster of works each, every statement with the place it was
+read at.
 Keys are §2's. "Not in print" means: not in the works read, which §7 bounds.
 
 **3.1 The tree.**
@@ -508,10 +558,32 @@ Dolce–Restivo–Reutenauer: the factorization is Viennot's; theirs is the Cart
   existence of a factorization into two Lyndon words; no tree ([HS21], from the AFP
   outline).
 
-**3.7 Inverse Lyndon words, sorting in the infinite order, Lyndon subsequences, and [Wols26]**
-(lines A12, A14, A17, A18, B4, B7, B8, B9, B10). The reader of these had not returned when
-this entry was stored: the session was near a usage limit, and what was in hand was
-committed first. Their records are marked pending in §2.1 and nothing is claimed from them.
+**3.7 Inverse Lyndon words, sorting in the infinite order, Lyndon subsequences.**
+- An anti-Lyndon word is a Lyndon word for the inverse alphabet order: the greatest
+  rotation of a primitive word ([BDZZ18] Definition 2.3). Inverse Lyndon words are the
+  non-empty prefixes of powers of anti-Lyndon words; they may be bordered and need not be
+  primitive ([BDZZ18] Definition 3.1, §4.1). The canonical inverse Lyndon factorization is
+  unique, linear-time, and groups the Lyndon factors for the inverse order ([BDZZ18]
+  Definitions 4.2 and 4.3; back and forth: [BDZZ26] Proposition 8.2). No tree of an
+  anti-Lyndon word, no standard factorization of one, and no greatest rotation as a root
+  is in these works; the nearest is the Lyndon array for the inverse order as distances to
+  the next greater suffix ([DNSZZ26] Lemma 2, a 2026 preprint).
+- The longest common prefix of two factors of w is at most the longest product of two
+  consecutive factors of that factorization ([BDZZ20] Proposition 7.5, Lemma 9.6). The
+  reader's answer on its use here: none. A step compares two lengths, not two strings; and
+  on block-like words the bound is of the order of n (12,966 of 20,000 bytes on a text
+  sample whose longest repeat is 34; its count).
+- [BDZZ26] §10 names as open "new bijective variants of the Burrows Wheeler Transform,
+  based on multisets of inverse words".
+- Sorting n words by their infinite powers in O(L) time, L their total length ([LZJ22]):
+  A^ω < B^ω iff AB < BA; on Lyndon words that order is the lexicographic one. It sorts the
+  given words, not their rotations, and its authors say it is not the extended BWT's sort.
+- A second-hand note: [DNSZZ26]'s introduction says Louza, Smyth, Manzini and Telles (JDA
+  50, 2018, which entry 1 cites for the walk) get the Lyndon array "as a byproduct of the
+  inversion of the bijective" BWT. If so that is the nearest work to §4.2, by a walk of n
+  steps; the paper itself was not reread here.
+- Nothing for the mission in the longest Lyndon subsequence ([BIKKP24]: O(n³) dynamic
+  programming) or in [Wols26], which cites the root paper in one background sentence.
 
 ## 4. Derived while reading (P + C; `lyndon_induction_tests.py.txt`, about two minutes)
 
@@ -743,8 +815,8 @@ count of S on any corpus, or the cells form.
     tree.
 12. A machine-checked Theorem 2 on top of [HS21]: weeks; the standard factorization is not
     in the formal development yet.
-13. The works on inverse Lyndon words, ω-order sorting and Lyndon subsequences: not read
-    yet (§3.7).
+13. The bound on common prefixes from inverse Lyndon factorizations, the linear sort in
+    the infinite order, Lyndon subsequences (§3.7): no use in the induction.
 
 **What no work read offers:** a way to make the Lyndon tree cheaper than by the induction.
 Theorem 5 says where the cost is: one node above a hinge a step, whatever the order.
@@ -763,7 +835,7 @@ Theorem 5 says where the cost is: one node above a hinge a step, whatever the or
   were run here, and only those are in the file beside this entry.
 - **The brute force is small:** words to length 14 at most; nothing in §4 was run on a
   bzip2 block. Theorem 5 and its corollaries are proved; §4.4 and §4.8 are counts.
-- **"Not in print" is four readers on one day**, on the two lists and what they cite. It is
+- **"Not in print" is five readers on one day**, on the two lists and what they cite. It is
   not a search of the field.
 
 ## Reproduce
@@ -773,7 +845,7 @@ python3 docs/journal/monodromy/2026-11-10-lyndon-literature/lyndon_induction_tes
 ```
 About two minutes; no dependency; its output as run here is `lyndon_induction_tests.out.txt`
 (T1 to T7; the figures of §4.1 to §4.7). Beside it: `scholar-results.txt` (the lists,
-verbatim), `readers/` (the readers' reports as they returned them: bibliography,
+verbatim), `readers/` (the five readers' reports as they returned them: bibliography,
 findings with their places, verdicts on five conjectures, ideas) and
 `readers-code.tar.gz` (their own test scripts and outputs, as left in the session's
 scratch; none was rerun here).
