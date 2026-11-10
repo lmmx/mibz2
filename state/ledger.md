@@ -594,3 +594,11 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - B4KiB activecounts/64lines vs1KiB/16; counts+STEPS48→96lines. Dense consumer temporary can make5KiB peak. Charge~3ALU/literal as instructions notcycles, run updates,reset,256counterload/storecompaction and consumers. At1exposedcycle/literal withL/D≈1, records overhead already exceeds observed wholeharm; break-even>21.0/70.2cycles/excesscandidate beforefixed/cachecosts. No1K latency evidence.
 - Choose neither forproduction; A-style causal diagnostic beforeB. Two fixed STEPS offsets2048apart in onebinary, fixedcounts/frame andmatchinghotwork, preserves1K/64 whilechanges4K. Nativeaddresses/allclasses/remainingcacheandstackconfounds required. Random1t first, fixedbounded pairedCI onlyafteradmission; interval mustexclude requiredcontribution torefutefullharm. Notfourth#324run orno-harmqualification.
 - Stack classes offer larger candidate budgets but areplacement-dependent andoverlapping; no summedstallclaim. Ifpairinsufficient, controlledcounts/stackandcallerspillcausesnext. Teamports2then3remainahead ofBrewriteasD085/D087/B5allow. Noimplementation,compilation,decoderexecution,newtiming orsafetydischarge.
+
+## Held-spinner implementation handoff: inbox6765024673
+
+[Report](records/reviews/inbox-6765024673/report.md). Build not performed: active pin a2da4963 forbids implementation/merge; newer O1 at3664ada282fb6e3cedf4c6ad91053725d9ced18f is not the user-selected pin. Newer Optimiser spec itself still forbids merge. Response complete, feature outstanding; route to authorized implementer or re-pin before redispatch.
+- Source ab.rs inspected: supervisor-owned spinner, one instance, readiness before settle, explicit cleanup/reap across error/interruption, unchanged old ARM@EXE interface.
+- Account spinner separately from decoder CPU and max-busy; highest logical CPU may share a physical core at10threads. Validate actual allowed topology rather than assume spare core.
+- W1 B30/30 and0.141s versusG0.293s are reported, not independently replayed. Benchmark conditioning is not library speedup; preserve cold-start/old result meanings. Auxiliary CPU cost includes settling/gaps.
+- No code, PR, timing, merge, or prompt change. Implementation request remains outstanding; scoped response only.
