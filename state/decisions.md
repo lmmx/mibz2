@@ -3475,3 +3475,60 @@ I concur with the **statistical** pass, not an unconditional “all production o
 The correction removed the previously observed 1-thread harm flags while retaining a qualifying CPU benefit. That closes the observed performance defect under its registered test, not every possible small cost or a causal proof separating popcount, stack-copy and layout effects. The useful next action is the finite merge-policy reconciliation and existing safety/integration accounting, not another benchmark. D075's failed #310 head stays failed and is not a fallback.
 
 Migration check passed before receipt: old head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Pinned routing audit: five resolved findings, zero unresolved. No implementation, timing, merge, task or authority change.
+
+## D077 — #316: prospective sharded noninferiority design may proceed; freeze needs a complete protocol
+
+**G1: concur that within-runner, per-cell estimation can support condition 2 across shards. PROCEED with drafting the workflow and prospective bench-policy record under C6. G2: qualification remains unready until the concrete protocol below is fixed and reviewed.** No relaxation of the 1.02 margin, full 42-cell requirement or no-retry rule; no G8 line STOP. This is a design ruling, not a claim that #316 qualifies, a dispatch instruction, or approval of the unimplemented workflow.
+
+Inbox [6756084723](https://github.com/lmmx/mibz2/pull/161#issuecomment-6756084723). Reviewed head **b63f6bee2e3ceb821198129d649bed2bd2fb349e**. Authority: SPEC, SPEC.GUARDIAN, MODE, RULES and PROTOCOL at the user's new pin **a2da49638ac54d7763de1c167bd054f67ffdc763**. Receipt **61eb76814102d61b399c45436c10835ffc4fbe0a**. [Evidence snapshot](records/d077/evidence.json).
+
+### (a) Authority and prospective application
+
+**No amendment to RULES is needed to design this experiment. A separately recorded prospective bench-policy decision is needed to replace its evidence-production protocol.** C6 now expressly delegates design, repeats/multiplicity, standing acceptance and adoption, with Researcher PROCEED, the Guardian's admissibility ruling, a reviewed decision record and channel log where standing acceptance/adoption changes. D4 is retired. Increasing a genuinely unregistered sample size is not itself relaxing a performance minimum. This ruling does not authorise infrastructure, credentials or spending reserved by D6.
+
+There is already #316 data: run **42732367790**, attempt 1, completed successfully on b63f6bee. Change “before any #316 data” to **before any qualification observations under the new frozen registration**, and disclose that pilot. The draft at this exact head predates the run, marks CI rounds OPEN, expressly excludes pre-freeze runs, and says the registration is not freezable pending the policy decision. The fetched `bench/service-tg.frozen` is comments only, naming no commits. That supports treating this run as the declared exploratory pilot, not converting a failed qualification attempt into a new first attempt.
+
+Preserve #302's outcomes and all pilot results. Neither can qualify, be pooled into the fresh sample, or have its verdict rewritten. C2/B4 still forbid changing an already frozen rule after its data. A later SHA or a new workflow name alone never resets an attempt.
+
+The prospective record must explicitly replace the draft's **first completed PR Benchmark run on F / mode pr / bench 3.5.0 / single artifact** admission path with the proposed dispatch protocol, identify its effective revision and measured inputs, and reconcile condition 7. The draft currently permits one separate harm-confirmation run when flagged; the proposal's blanket “no repeats” is ambiguous against that. Keep condition 2 confined to its one primary attempt. Any retained, predefined harm confirmation cannot replace, pool with, or rescue it. Any intended change to the standing confirmation policy needs its own forward-only C6 decision, before qualification data. Nothing here silently removes that obligation.
+
+### (b) IUT across shards: valid marginal tests are the requirement
+
+For cell j let Xji = log(head time / base time), mu_j its registered mean and delta = log(1.02). Its upper limit is exp(mean(Xj) + t_0.95,n-1 s_j/sqrt(n)). Condition 2 requires every upper limit at most 1.02.
+
+The global null is the union of cell nulls mu_j >= delta. If any component j is truly null, the probability that **all** tests pass is no larger than that component's rejection probability, at most 0.05. Thus the IUT needs **no independence across cells or shards, and no 42-way Bonferroni correction for this all-cells claim**. It is not simultaneous 95% coverage, nor proof that every possible off-target machine stays within 2%.
+
+That argument cannot repair an invalid marginal interval. The t interval requires a defensible sampling model for each series of paired logs; 600 consecutive pairs are not automatically 600 independent observations. Drift, thermal evolution, order effects or autocorrelation can invalidate s/sqrt(n). Pairing helps common-mode noise but does not prove independence. Preserve interleaving, register warm-up/settling and pair order, and have the Researcher assess the time-series assumptions before freezing. Do not choose a variance estimator after seeing which makes qualification pass. A material sampling-model failure needs the predeclared invalid disposition; interval width by itself is not invalidity.
+
+Fix these concrete details before the qualification run:
+
+- Enumerate all 42 cells, their unique shard assignment and exact rounds. Pin the seven corpora/digests, scale, thread/affinity grid, toolchain/build inputs, head/base, harness/estimator revision and runner requirements. Do not inherit mutable `ubuntu-latest` or `nproc` as proof of the registered 4-CPU/2-core configuration; admit only the specified observed topology.
+- One paired series per cell, both arms on that shard's runner. No mixing observations from different runners into one cell, selecting a quieter shard, dropping slow pairs, or replacing a completed shard. Sharding changes corpus order, thermal/cache history and potentially CPU-model allocation: preserve what can be preserved and state the resulting estimand/scope explicitly. A predicate-false read-back does not establish coverage of every non-target CPU.
+- Record runner identity, actual affinity/topology, predicate false and public-dispatch fallback on **every** measurement shard. A test on a different CI job's machine is insufficient. Equal plans still do not prove zero overhead.
+- Aggregate by a frozen manifest: exact run/attempt, job/shard IDs, artifact digests, candidate/base identity, full pair count, parity and termination checks. Reject missing, duplicate or mismatched cells; archive all attempted shards, including failures. Predefine cancellation/timeouts and whether any strictly pre-measurement setup recovery is allowed. No data-bearing failed attempt gets a fresh chance by calling it an infrastructure retry.
+- Freeze the partition before data. “Split further by thread count if needed” is a design option **now**, not an escape after observing a timeout, large variance or failing interval.
+
+### (c) R=600: reasonable design candidate, not a reproduced 85% guarantee
+
+Distinguish size from power. A true ratio of 1 is inside the noninferiority alternative, not its null boundary at 1.02. Low power at ten rounds does not make success mathematically impossible. Replace “not attainable, whatever the candidate does” / “unreachable for any true-zero change” with the supported, conditional low-power claim.
+
+I did not replay the 47 historical artifacts or reproduce the claimed 0.85 power or 18 failed cells from raw observations. The journal supplies the table and modelling description; the fetched workflow independently establishes ROUNDS=10, a 60-minute job and no rounds dispatch input. Run metadata and the published #316 report establish a pre-freeze 10-round run on b63f6bee. No flagged slowdown is not the all-cell noninferiority verdict.
+
+For planning under independent normal paired logs within each cell:
+- power_j is approximately Phi(sqrt(R)*(delta-mu_j)/sigma_j - z_0.95), or use the noncentral-t calculation including estimated variance;
+- multiplying marginal powers requires a cross-cell dependence model. Wall/CPU and cells sharing runners are correlated;
+- a dependence-free sufficient bound is P(all pass) >= max(0, 1-sum_j beta_j), where beta_j = 1-power_j. To target 0.85, sum_j beta_j <= 0.15 suffices. This is a **power-planning** bound, not a changed testing threshold.
+
+An independent arithmetic check with the illustrative assumptions mu_j=0 and sigma_j<=0.10 for every cell gives normal-approximate marginal power 0.99933 at R=600, and an all-pass lower bound about 0.9717. Approximately 480 rounds meet the same approximation's 0.85 union-bound target. **These are not estimates for the actual runners:** the journal's median sigma for a noisy cell is not a universal bound. The discrepancy does not refute its 0.85 table; it shows that the empirical variance distribution, dependence assumptions and uncertainty must be exposed to justify that number. Preserve the history selection, calculation code and per-cell inputs for Researcher reproduction. Evaluate plausible positive costs as well as exactly zero: power shrinks sharply as mu approaches delta.
+
+**Use a fixed R justified before the sample. If R=600 is chosen, finish at 600 and use the registered bound.** A realised sigma above the planning assumption does not permit extra rounds, a rerun, a new shard, or an easier threshold. If the model remains valid, report the resulting PASS or NOT SHOWN; the latter fails qualification. If predeclared validity checks fail, record INVALID and its frozen disposition. A variance-adaptive design would be a different prospectively justified design, not an improvised fallback.
+
+Also verify the resource estimate before freezing. At the supplied aggregate 16–28 seconds/round, 600 rounds cost **160–280 minutes of measurement in total**, excluding builds and setup. Dividing by seven gives only an average; corpora need not cost equally. “42 minutes per shard” and fitting every shard below 60 minutes are not established by that total. Use existing timing evidence to choose a conservative fixed partition and timeout budget, including the slowest corpus, setup and any predefined confirmation. State expected information value against this cost and alternatives under C3.
+
+### Scope and next action
+
+The useful advance is a finite, auditable measurement protocol capable of answering condition 2; repeating ten-round runs cannot supply it. The discovery-cost fix and narrowed predicate are plausible mechanism changes, but their production benefit and all safety/coverage obligations are not certified by this design review. The target/fallback matrix, extrapolation argument and conditions 1–7 still need their ordinary pre-freeze review.
+
+Proceed with the workflow/judge implementation and decision record, then Researcher review and reconciliation of these specific protocol points before freeze. This is no blanket gate on routine implementation and no requirement to obtain Louis's choice of R. Do not dispatch a qualification run on the strength of this unimplemented design ruling alone.
+
+Migration verified: old branch head **f9dab3d2b40739d89d613f86e8c2d67bec3159e4**, manifest SHA-256 **60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488**. Pinned routing audit: five resolved historical findings, zero unresolved; REVIEW routes to #145. No implementation, timing, merge, task reconfiguration or external compute dispatch performed.
