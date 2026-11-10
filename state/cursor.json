@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782075529,
+  "last_examined_comment_id": 6782113588,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -176,15 +176,15 @@
     6779454057,
     6782075529
   ],
-  "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
+  "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "delivery_id": "d6e60300-dd4b-11f1-92b2-6f2340d116da",
-    "comment_id": 6779454057,
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "comment_id": 6782113588,
+    "delivery_id": "fd4376b0-dd5d-11f1-8bd6-6003a54e35c0",
+    "disposition": "reconciled_existing_owner_launched_codex_work",
+    "new_actionable_external_messages": 1
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -198,9 +198,9 @@
     "pr": 365,
     "requested_by_comment": 6778679718,
     "reiterated_by_comment": 6779413601,
-    "status": "posted_verified_awaiting_actual_recipient_action",
+    "status": "delivered_in_progress",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
-    "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer.",
+    "note": "Researcher cursor confirms6782111848 in progress against frozen57f51bbc0ca62ac3ee1cc148a1010842eea6222a; no B5 verdict yet.",
     "assignment_id": 6782111848
   },
   "performance_followup": {
@@ -221,7 +221,7 @@
     "status": "active_dispatching",
     "authorisation": "Louis explicitly requested resolve/merge #364, sole acting activation, independent B5, verified dispatch loop and bounded cells gap investigation in this session on 2026-11-10.",
     "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
-    "action": "activation pending publication",
+    "action": "sole activation complete; bounded role work actually running",
     "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "next": "Researcher B5 and Optimiser price actual runs in progress; Codex direct session running and formal receipt pending; Guardian recipe review dispatched; #366 CI pending. On actual completion, decide then dispatch next bounded item."
   },
@@ -259,9 +259,10 @@
       "receipt_for_formal_assignment_pending": true
     },
     "guardian": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_in_progress",
       "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5",
-      "comment_id": 6782224690
+      "comment_id": 6782224690,
+      "recipient_evidence": "team-state/guardian cursor blob7c6462f7478ca48f4547e91ad2743818bec306ca records6782224690 in progress, decisionD099"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -277,7 +278,7 @@
     "queue_added": false,
     "pr": 366,
     "head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
-    "validation": "3 local untimed tests pass; real just dry run required in CI",
+    "validation": "Local3 passed1 skipped; exact-head CI submit job130205458620 completed all steps successfully, including required real just untimed recipe check; overall CI still pending.",
     "dispatch_blocker": "No workflow_dispatch tool; no GH_TOKEN/GITHUB_TOKEN; inspected Run signal browser page is signed out."
   },
   "ci_incident_365": {
@@ -287,7 +288,12 @@
       130128069626,
       130128069688
     ],
-    "classification": "D unexplained cancellation",
-    "evidence": "Both macOS jobs cancelled with no steps; both log reads BlobNotFound404. No pass or infrastructure-cause claim; no rerun requested."
+    "classification": "D under strict workflow-change exclusion; runner acquisition cause evidenced",
+    "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
+  },
+  "checkpoint": {
+    "key": "active-programme-6782113588",
+    "status": "in_progress",
+    "planned_action": "Grouped substantive LOG with fixed performance decision, actual role activity, #366 preparation, CI and access blockers."
   }
 }
