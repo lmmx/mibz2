@@ -66,6 +66,13 @@ ROLES = {
         # migration manifest that SPEC.md's check fails closed on, for no reader's benefit)
         "cursor": ("team-state/oracle", "state/cursor.json"),
     },
+    # (a Claude Code session, not a Work task: in force from 2026-11-10, decisions.md)
+    "pathfinder": {
+        "aliases": ("pathfinder",),
+        "inbox": 314,
+        "offset": 6754918407,
+        "cursor": ("team-state/pathfinder", "state/cursor.json"),
+    },
 }
 INBOXES = {r["inbox"]: name for name, r in ROLES.items()}
 # The first inbox comment: before it, assignments on #145 with a TO: line were correct.
@@ -189,7 +196,7 @@ def completed(role, cur):
                 if b.get("completed") or b.get("status") in ("completed", "finished")}
     if role == "guardian":
         return set(cur.get("consumed_incoming_comment_ids", []))
-    if role in ("researcher", "observer"):
+    if role in ("researcher", "observer", "pathfinder"):
         return set(cur.get("processed_comment_ids", []))
     raise ValueError(role)
 

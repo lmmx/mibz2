@@ -47,6 +47,194 @@ const SHUTDOWN: usize = usize::MAX;
 /// MTF stage (about 0.4 ms) apart. Miri interprets each spin, so it parks almost at once.
 const SPINS: u32 = if cfg!(miri) { 4 } else { 2_000 };
 
+/// The waits' accounting (feature `wait-stats`, off by default; research only): per wait
+/// site, the waits, the spins, the parks and the yields, as counts, never times, for
+/// `examples/wait_audit.rs`. Without the feature a `Tally` is empty and every call on it
+/// compiles to nothing, so the decoder is unchanged.
+pub mod wait_stats {
+    /// A wait site in this module
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Site {
+        /// a pool's helper, between runs, waiting for the next (`helper`)
+        HelperIdle = 0,
+        /// a pool's caller waiting for its helpers to end the run (`Wait`)
+        CallerJoin = 1,
+        /// a pipelined team's helper waiting for the build's end (`wait_walk_ready`)
+        WalkHelper = 2,
+        /// a pipelined team's leader waiting for the build's end (`Relay::join`)
+        WalkLeader = 3,
+    }
+
+    /// The sites, in their index order
+    pub const SITES: [Site; 4] = [
+        Site::HelperIdle,
+        Site::CallerJoin,
+        Site::WalkHelper,
+        Site::WalkLeader,
+    ];
+
+    impl Site {
+        pub fn name(self) -> &'static str {
+            match self {
+                Site::HelperIdle => "pool_helper_idle",
+                Site::CallerJoin => "pool_caller_join",
+                Site::WalkHelper => "walk_ready_helper",
+                Site::WalkLeader => "walk_ready_leader",
+            }
+        }
+    }
+
+    /// One site's counts since the last `reset`
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub struct Counts {
+        /// the waits entered
+        pub waits: u64,
+        /// those whose condition held at the first check (no spin, no park)
+        pub immediate: u64,
+        /// those that ended inside the spin budget, after at least one spin
+        pub ended_spinning: u64,
+        /// those that parked at least once
+        pub parked: u64,
+        /// those that yielded at least once
+        pub yielded: u64,
+        /// the `spin_loop` iterations, all waits
+        pub spins: u64,
+        /// the spins of the waits that went on to park or yield (budget spent for nothing)
+        pub spins_wasted: u64,
+        /// the `park` calls (a parked wait can park more than once)
+        pub parks: u64,
+        /// the `yield_now` calls
+        pub yields: u64,
+    }
+
+    /// One wait's tally, kept on the waiter's stack and added to its site's counts once,
+    /// when the wait ends (`end`)
+    #[cfg(feature = "wait-stats")]
+    #[derive(Default)]
+    pub(crate) struct Tally {
+        spins: u64,
+        parks: u64,
+        yields: u64,
+    }
+
+    #[cfg(feature = "wait-stats")]
+    mod imp {
+        use super::{Counts, Site, Tally};
+        use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+
+        const FIELDS: usize = 9;
+        #[allow(clippy::declare_interior_mutable_const)]
+        const Z: AtomicU64 = AtomicU64::new(0);
+        #[allow(clippy::declare_interior_mutable_const)]
+        const ROW: [AtomicU64; FIELDS] = [Z; FIELDS];
+        static COUNTS: [[AtomicU64; FIELDS]; 4] = [ROW; 4];
+
+        impl Tally {
+            #[inline]
+            pub(crate) fn new() -> Tally {
+                Tally::default()
+            }
+            #[inline]
+            pub(crate) fn spin(&mut self) {
+                self.spins += 1;
+            }
+            #[inline]
+            pub(crate) fn park(&mut self) {
+                self.parks += 1;
+            }
+            #[inline]
+            pub(crate) fn yielded(&mut self) {
+                self.yields += 1;
+            }
+            pub(crate) fn end(self, site: Site) {
+                let c = &COUNTS[site as usize];
+                let slept = self.parks > 0 || self.yields > 0;
+                let add = [
+                    1,
+                    (self.spins == 0 && !slept) as u64,
+                    (self.spins > 0 && !slept) as u64,
+                    (self.parks > 0) as u64,
+                    (self.yields > 0) as u64,
+                    self.spins,
+                    if slept { self.spins } else { 0 },
+                    self.parks,
+                    self.yields,
+                ];
+                for (a, v) in c.iter().zip(add) {
+                    if v != 0 {
+                        a.fetch_add(v, Relaxed);
+                    }
+                }
+            }
+        }
+
+        pub(super) fn get(site: Site) -> Counts {
+            let c = &COUNTS[site as usize];
+            let v = |i: usize| c[i].load(Relaxed);
+            Counts {
+                waits: v(0),
+                immediate: v(1),
+                ended_spinning: v(2),
+                parked: v(3),
+                yielded: v(4),
+                spins: v(5),
+                spins_wasted: v(6),
+                parks: v(7),
+                yields: v(8),
+            }
+        }
+
+        pub(super) fn reset() {
+            for c in &COUNTS {
+                for a in c {
+                    a.store(0, Relaxed);
+                }
+            }
+        }
+    }
+
+    /// Without the feature: nothing kept, nothing counted
+    #[cfg(not(feature = "wait-stats"))]
+    pub(crate) struct Tally;
+
+    #[cfg(not(feature = "wait-stats"))]
+    impl Tally {
+        #[inline(always)]
+        pub(crate) fn new() -> Tally {
+            Tally
+        }
+        #[inline(always)]
+        pub(crate) fn spin(&mut self) {}
+        #[inline(always)]
+        pub(crate) fn park(&mut self) {}
+        #[inline(always)]
+        pub(crate) fn yielded(&mut self) {}
+        #[inline(always)]
+        pub(crate) fn end(self, _site: Site) {}
+    }
+
+    /// Whether the counts are kept (the feature `wait-stats`)
+    pub const ENABLED: bool = cfg!(feature = "wait-stats");
+
+    /// A site's counts since the last `reset` (all zero without the feature)
+    pub fn get(site: Site) -> Counts {
+        #[cfg(feature = "wait-stats")]
+        return imp::get(site);
+        #[cfg(not(feature = "wait-stats"))]
+        {
+            let _ = site;
+            Counts::default()
+        }
+    }
+
+    /// Every site's counts back to zero
+    pub fn reset() {
+        #[cfg(feature = "wait-stats")]
+        imp::reset();
+    }
+}
+use wait_stats::{Site, Tally};
+
 /// The task's fat pointer, its lifetime erased; it is called only inside the run that
 /// posted it (the guard in `run`)
 #[derive(Clone, Copy)]
@@ -183,14 +371,18 @@ struct Wait<'a> {
 impl Drop for Wait<'_> {
     fn drop(&mut self) {
         let mut spins = 0u32;
+        let mut tally = Tally::new();
         while self.s.done.load(Ordering::Acquire) != self.helpers {
             spins += 1;
             if spins < SPINS {
+                tally.spin();
                 std::hint::spin_loop();
             } else {
+                tally.park();
                 thread::park();
             }
         }
+        tally.end(Site::CallerJoin);
     }
 }
 
@@ -198,6 +390,7 @@ fn helper(s: &Shared, idx: usize) {
     let mut seen = 0;
     loop {
         let mut spins = 0u32;
+        let mut tally = Tally::new();
         let e = loop {
             let e = s.epoch.load(Ordering::Acquire);
             if e != seen {
@@ -205,11 +398,14 @@ fn helper(s: &Shared, idx: usize) {
             }
             spins += 1;
             if spins < SPINS {
+                tally.spin();
                 std::hint::spin_loop();
             } else {
+                tally.park();
                 thread::park();
             }
         };
+        tally.end(Site::HelperIdle);
         if e == SHUTDOWN {
             return;
         }
@@ -854,13 +1050,15 @@ pub(crate) const SHORT_SPINS: u32 = SPINS;
 
 /// Wait, spinning `SPIN` times then yielding, until `f` holds (the registered pipelined
 /// team's wait at `BARRIER_SPINS`)
-fn wait_until<const SPIN: u32>(f: impl Fn() -> bool) {
+fn wait_until<const SPIN: u32>(f: impl Fn() -> bool, tally: &mut Tally) {
     let mut spins = 0u32;
     while !f() {
         if spins < SPIN {
             spins += 1;
+            tally.spin();
             std::hint::spin_loop();
         } else {
+            tally.yielded();
             thread::yield_now();
         }
     }
@@ -921,19 +1119,27 @@ impl Relay<'_> {
     /// first, its store happened before the waiter's lock, so the waiter's load sees the
     /// flag and it never parks. A spurious wake-up, or a token left from an earlier
     /// unpark, only makes it check the flag again.
-    fn wait_walk_ready<const PARK: bool, const SPIN: u32>(&self) {
+    fn wait_walk_ready<const PARK: bool, const SPIN: u32>(&self, site: Site) {
+        let mut tally = Tally::new();
+        self.wait_walk_ready_tallied::<PARK, SPIN>(&mut tally);
+        tally.end(site);
+    }
+
+    fn wait_walk_ready_tallied<const PARK: bool, const SPIN: u32>(&self, tally: &mut Tally) {
         let ready = || self.walk_ready.load(Ordering::Acquire);
         if !PARK {
-            return wait_until::<SPIN>(ready);
+            return wait_until::<SPIN>(ready, tally);
         }
         for _ in 0..SPIN {
             if ready() {
                 return;
             }
+            tally.spin();
             std::hint::spin_loop();
         }
         lock(&self.sleepers).push(thread::current());
         while !ready() {
+            tally.park();
             thread::park();
         }
     }
@@ -1032,7 +1238,7 @@ impl Relay<'_> {
     /// The leader's join, once its own work is done: into the walk if it has not ended
     fn join<const L: usize, const PARK: bool, const SPIN: u32>(&self) {
         tmark!(BuildWaitStart, self.place);
-        self.wait_walk_ready::<PARK, SPIN>();
+        self.wait_walk_ready::<PARK, SPIN>(Site::WalkLeader);
         tmark!(BuildWaitEnd, self.place);
         let mut v = self.walkers.load(Ordering::Acquire);
         loop {
@@ -1170,7 +1376,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
             relay.set_walk_ready::<PARK>();
         } else {
             tmark!(BuildWaitStart, place);
-            relay.wait_walk_ready::<PARK, SPIN>();
+            relay.wait_walk_ready::<PARK, SPIN>(Site::WalkHelper);
             tmark!(BuildWaitEnd, place);
         }
         relay.walk_and_leave::<L>();
@@ -1233,6 +1439,32 @@ mod tests {
                 .iter()
                 .all(|n| n.len() <= 15 && n.starts_with("mibz2-coop")));
             each_index_once(&p);
+        }
+    }
+
+    /// The waits' counts (feature `wait-stats`): a pool's waits are counted at their sites,
+    /// each wait ends one way, and a helper left idle long enough parks. The counts are
+    /// global and other tests add to them meanwhile, so only what they can't take away is
+    /// checked: lower bounds, and each site's own sums.
+    #[cfg(feature = "wait-stats")]
+    #[test]
+    fn wait_stats_count_the_pools_waits() {
+        use wait_stats::{get, SITES};
+        let p = Pool::new(3).unwrap();
+        let before = get(Site::CallerJoin).waits;
+        let parks = get(Site::HelperIdle).parks;
+        for _ in 0..20 {
+            each_index_once(&p);
+        }
+        thread::sleep(std::time::Duration::from_millis(20));
+        each_index_once(&p);
+        assert!(get(Site::CallerJoin).waits >= before + 21);
+        assert!(get(Site::HelperIdle).parks > parks, "an idle helper parked");
+        drop(p);
+        for s in SITES {
+            let c = get(s);
+            assert!(c.spins_wasted <= c.spins, "{s:?}");
+            assert!(c.parked <= c.parks && c.yielded <= c.yields, "{s:?}");
         }
     }
 
@@ -1958,7 +2190,7 @@ mod tests {
             thread::scope(|sc| {
                 for _ in 0..3 {
                     sc.spawn(|| {
-                        relay.wait_walk_ready::<true, BARRIER_SPINS>();
+                        relay.wait_walk_ready::<true, BARRIER_SPINS>(Site::WalkHelper);
                         woke.fetch_add(1, Ordering::Relaxed);
                     });
                 }

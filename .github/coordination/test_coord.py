@@ -83,12 +83,21 @@ class Channel(unittest.TestCase):
 
     def test_assignments_to_any_role_are_flagged(self):
         for to, inbox in (("optimizer", "#160"), ("Astra", "#160"), ("guardian", "#161"),
-                          ("researcher", "#162"), ("observer", "#222"), ("oracle", "#222")):
+                          ("researcher", "#162"), ("observer", "#222"), ("oracle", "#222"),
+                          ("pathfinder", "#314")):
             for kind in ("CHECKPOINT", "PROPOSAL", "CORRECTION"):
                 reason = coord.misrouted(145, msg(FROM="coordinator", TO=to, TYPE=kind),
                                          self.new)
                 self.assertIsNotNone(reason, (to, kind))
                 self.assertIn(inbox, reason)
+
+    def test_the_pathfinder_inbox_takes_only_its_own_work(self):
+        new = coord.ROLES["pathfinder"]["offset"] + 1
+        self.assertIsNone(coord.misrouted(314, msg(FROM="coordinator", TO="pathfinder",
+                                                   TYPE="CHECKPOINT"), new))
+        self.assertIsNotNone(coord.misrouted(314, msg(FROM="coordinator", TO="researcher",
+                                                      TYPE="CHECKPOINT"), new))
+        self.assertEqual(coord.completed("pathfinder", {"processed_comment_ids": [new]}), {new})
 
     def test_a_broadcast_names_every_inbox(self):
         reason = coord.misrouted(

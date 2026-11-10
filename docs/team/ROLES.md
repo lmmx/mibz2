@@ -13,6 +13,7 @@ responsibilities, not by the model a role runs on.
 | Guardian | a ChatGPT Work task, **mibz2⠶Guardian⠶…** (Astra ⠶ Extra High) | #161 | `team-state/guardian` | `FROM: guardian` |
 | Researcher | a ChatGPT Work task, **mibz2⠶Researcher⠶…** (Astra ⠶ Extra High) | #162 | `team-state/researcher` | `FROM: researcher` |
 | Observer | a ChatGPT Work task, **mibz2⠶Observer⠶…** (Astra ⠶ High) | #222 | `team-state/oracle` (its earlier name, kept); its record is on `observatory/intention` | `FROM: observer` (earlier: `oracle`) |
+| Pathfinder | a Claude Code session of its own, opened by Louis | #314 | `team-state/pathfinder` | `FROM: pathfinder` |
 
 ## Coordinator
 
@@ -73,6 +74,21 @@ are one cost among several.
   intention the record shows abandoned (SPEC.OBSERVER.md).
 - **Does not** decide, gate, rank, review code or rewrite registrations.
 - The Guardian, the Researcher and the Coordinator correct it only for major discrepancies.
+
+## Pathfinder
+
+**Looks for a decoder that does less work in kind, and proves or closes each route by counting.**
+- **Status:** in force from 2026-11-10, at Louis's request of 2026-11-09 and his confirmation in
+  the Coordinator's session (`docs/journal/decisions.md`).
+- It runs in a Claude Code session of its own, separate from the Coordinator's. It is woken by
+  its inbox, #314, and works by pull request.
+- It starts from the record: a closed lead is reopened only on a named gap in its evidence.
+- It goes from a proved claim to a census on real blocks, to a bound, to an exact prototype in
+  `examples/`, and only then to a registered timing.
+- It ends every entry with the avenues the counts leave open, ranked, each with a ceiling and a
+  falsifier.
+- **Does not** change `src/`, merge, release, time anything on the workstation, or certify its
+  own work. Its spec is `SPEC.PATHFINDER.md`.
 
 ## How the roles relate
 
