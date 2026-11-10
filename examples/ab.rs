@@ -765,6 +765,11 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
 }
 
 fn child(arm: &str, threads: usize, path: &str) {
+    // (research, for counting only: `AB_STAGED_TRAVERSE=1` stages the teams' walks,
+    // `coop_research::set_staged_traverse`; unset, every arm runs as it always has)
+    if std::env::var("AB_STAGED_TRAVERSE").is_ok_and(|v| v == "1") {
+        mibz2::coop_research::set_staged_traverse(true);
+    }
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();

@@ -1094,6 +1094,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
                 hb,
                 &leader,
                 s.place,
+                super::coop::research::staged_traverse(),
             )
         }));
         mark!(RunEnd, s.place);

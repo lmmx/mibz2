@@ -102,6 +102,9 @@ mod python;
 // examples/wait_audit.rs)
 #[doc(hidden)]
 pub use coop::wait_stats;
+// (research: the cooperative walk's staged form, selectable for counting; off by default)
+#[doc(hidden)]
+pub use coop::research as coop_research;
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 

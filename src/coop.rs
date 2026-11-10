@@ -34,7 +34,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle, Thread};
 
-use crate::bwt::{prefetch, random_rows, read_u64, SegScratch, TVector, LINK, PF_L1, START};
+use crate::bwt::{prefetch, random_rows, read_u64, SegScratch, TVector, LINK, PF_L1, START, TILE};
 
 /// A task for a pool, called once on each of its k threads with the thread's index (the
 /// caller's is 0)
@@ -725,6 +725,74 @@ macro_rules! handoff {
     ($c:ident) => {};
 }
 
+/// The staged walk's transitions (`traverse_staged`), counted per thread in the tests, so
+/// that a test running its walkers on its own thread counts only its own
+#[cfg(test)]
+pub(crate) mod staged_seen {
+    use std::cell::Cell;
+    pub(crate) const GROWS: usize = 0;
+    pub(crate) const PASS_ENDS_FULL: usize = 1;
+    pub(crate) const ROOM_OVER_TILE: usize = 2;
+    pub(crate) const MID_PASS_TAKES: usize = 3;
+    pub(crate) const MARKED_SEVERAL: usize = 4;
+    pub(crate) const DONE_IN_TAKING_CHUNK: usize = 5;
+    pub(crate) const TAKE_AT_CHUNK_END: usize = 6;
+    pub(crate) const TAKE_IN_LATER_CHUNK: usize = 7;
+    pub(crate) const MARK_AT_LATER_CHUNK_START: usize = 8;
+    pub(crate) const EXHAUSTED_MID_PASS: usize = 9;
+    pub(crate) const EXHAUSTED_AT_CHUNK_START: usize = 10;
+    pub(crate) const EXHAUSTED_AT_CHUNK_END: usize = 11;
+    pub(crate) const EXHAUSTED_AT_PASS_END: usize = 12;
+    pub(crate) const ENDS_WITH_LANES_WAITING: usize = 13;
+    pub(crate) const ENDS_AFTER_A_TAKE: usize = 14;
+    pub(crate) const LATER_STEPPED: usize = 15;
+    pub(crate) const LATER_STEPPED_ON_START: usize = 16;
+    pub(crate) const LATER_STEPPED_FULL: usize = 17;
+    pub(crate) const TAIL_ENTERED_FULL: usize = 18;
+    pub(crate) const NEVER_FULL: usize = 19;
+    pub(crate) const NO_SEGMENT: usize = 20;
+    pub(crate) const N: usize = 21;
+    pub(crate) const NAMES: [&str; N] = [
+        "GROWS",
+        "PASS_ENDS_FULL",
+        "ROOM_OVER_TILE",
+        "MID_PASS_TAKES",
+        "MARKED_SEVERAL",
+        "DONE_IN_TAKING_CHUNK",
+        "TAKE_AT_CHUNK_END",
+        "TAKE_IN_LATER_CHUNK",
+        "MARK_AT_LATER_CHUNK_START",
+        "EXHAUSTED_MID_PASS",
+        "EXHAUSTED_AT_CHUNK_START",
+        "EXHAUSTED_AT_CHUNK_END",
+        "EXHAUSTED_AT_PASS_END",
+        "ENDS_WITH_LANES_WAITING",
+        "ENDS_AFTER_A_TAKE",
+        "LATER_STEPPED",
+        "LATER_STEPPED_ON_START",
+        "LATER_STEPPED_FULL",
+        "TAIL_ENTERED_FULL",
+        "NEVER_FULL",
+        "NO_SEGMENT",
+    ];
+    thread_local! {
+        static SEEN: [Cell<usize>; N] = Default::default();
+    }
+    pub(crate) fn hit(i: usize) {
+        SEEN.with(|s| s[i].set(s[i].get() + 1));
+    }
+    /// This thread's counts since the last `take`
+    pub(crate) fn take() -> [usize; N] {
+        SEEN.with(|s| std::array::from_fn(|i| s[i].replace(0)))
+    }
+}
+macro_rules! seen {
+    ($c:ident) => {
+        #[cfg(test)]
+        staged_seen::hit(staged_seen::$c)
+    };
+}
+
 /// One lane's state in the shared walk: the row it reads next, and where its segment's
 /// bytes go (`p` up to `end`, the segment's buffer's spare capacity)
 #[derive(Clone, Copy)]
@@ -769,8 +837,9 @@ pub(crate) fn walk_room<const L: usize>(
     s: &mut SegScratch,
     pool: &Pool,
     segments: usize,
+    staged: bool,
 ) {
-    let w = RoomWalk::new(tt, orig_ptr, s, segments);
+    let w = RoomWalk::new(tt, orig_ptr, s, segments, staged);
     pool.run(&|_| w.share::<L>());
     w.finish();
 }
@@ -795,6 +864,8 @@ pub(crate) struct RoomWalk<'a> {
     segs: Segs,
     taken: AtomicUsize,
     cap: usize,
+    /// each share's walk: the staged one (`traverse_staged`, research) or not (`traverse`)
+    staged: bool,
 }
 // SAFETY: the raw pointers are into the table and the scratch it holds: the table and the
 // starts are read-only while shares run, and each segment's buffer and successor slot has
@@ -807,6 +878,7 @@ impl<'a> RoomWalk<'a> {
         orig_ptr: u32,
         s: &'a mut SegScratch,
         segments: usize,
+        staged: bool,
     ) -> RoomWalk<'a> {
         let n = tt.0.len();
         let r0 = tt.0[orig_ptr as usize] >> 8;
@@ -841,6 +913,7 @@ impl<'a> RoomWalk<'a> {
             segs,
             taken: AtomicUsize::new(0),
             cap,
+            staged,
         }
     }
 
@@ -850,6 +923,62 @@ impl<'a> RoomWalk<'a> {
         let starts = unsafe { std::slice::from_raw_parts(self.starts.0, self.starts.1) };
         // SAFETY: as `walk_room`'s contract: rows below n, starts flagged, each segment
         // taken once, every buffer with `cap` spare bytes
+        unsafe {
+            if self.staged {
+                let claim = Counter {
+                    taken: &self.taken,
+                    ns: starts.len(),
+                };
+                traverse_staged::<L, 0, _>(
+                    self.t.0 as *const u32,
+                    starts,
+                    self.segs,
+                    &claim,
+                    self.cap,
+                )
+            } else {
+                traverse::<L>(
+                    self.t.0 as *const u32,
+                    starts,
+                    self.segs,
+                    &self.taken,
+                    self.cap,
+                )
+            }
+        }
+    }
+
+    /// One walker of the transition tests: the staged walk with mutation `MUT`, its claims
+    /// from the shared counter until `budget` of them have been made, after which it finds
+    /// the queue exhausted (as if another walker had taken the rest); `None` for no budget
+    #[cfg(test)]
+    pub(crate) fn share_staged_budget<const L: usize, const MUT: u8>(&self, budget: Option<usize>) {
+        let starts = unsafe { std::slice::from_raw_parts(self.starts.0, self.starts.1) };
+        let claim = tests_claim::Budget {
+            inner: Counter {
+                taken: &self.taken,
+                ns: starts.len(),
+            },
+            left: std::cell::Cell::new(budget.unwrap_or(usize::MAX)),
+        };
+        // SAFETY: as `share`
+        unsafe {
+            traverse_staged::<L, MUT, _>(
+                self.t.0 as *const u32,
+                starts,
+                self.segs,
+                &claim,
+                self.cap,
+            )
+        }
+    }
+
+    /// The unstaged walk as one walker of the transition tests (the rest of a queue a staged
+    /// walker left)
+    #[cfg(test)]
+    pub(crate) fn share_unstaged<const L: usize>(&self) {
+        let starts = unsafe { std::slice::from_raw_parts(self.starts.0, self.starts.1) };
+        // SAFETY: as `share`
         unsafe {
             traverse::<L>(
                 self.t.0 as *const u32,
@@ -1033,6 +1162,435 @@ unsafe fn traverse<const L: usize>(
     }
 }
 
+/// The research selector of the cooperative walk (`set_staged_traverse`), and the walk's
+/// one-caller form for counting it (`walk_one_caller`). Off by default: the decoder's teams
+/// then walk unstaged (`traverse`), exactly as before. Research only: no part of the API.
+#[doc(hidden)]
+pub mod research {
+    use super::*;
+
+    static STAGED: AtomicBool = AtomicBool::new(false);
+
+    /// The teams' walks from now on staged (`traverse_staged`) or not (`traverse`, the
+    /// default). Read when a walk is set up (`RoomWalk::new`'s callers), so a block whose
+    /// walk is already set up keeps the walk it has; the output is the same either way.
+    pub fn set_staged_traverse(on: bool) {
+        STAGED.store(on, Ordering::Relaxed);
+    }
+
+    /// Whether the teams' walks are staged
+    #[inline]
+    pub fn staged_traverse() -> bool {
+        STAGED.load(Ordering::Relaxed)
+    }
+
+    /// The cooperative walk of a built table on the calling thread alone, as one share of a
+    /// team's (`RoomWalk::new` with `segments`, one `share`, `finish`), staged or not: the
+    /// same-segmentation control of the staged walk's count. Its segments are left in `s`
+    /// for `SegScratch::assemble`, as a team's are.
+    #[inline(never)]
+    pub fn walk_one_caller(
+        tt: &mut TVector,
+        orig_ptr: u32,
+        s: &mut SegScratch,
+        segments: usize,
+        staged: bool,
+    ) {
+        let w = RoomWalk::new(tt, orig_ptr, s, segments, staged);
+        w.share::<{ crate::bwt::FLAGGED_LANES }>();
+        w.finish();
+    }
+}
+
+/// Where a staged walker's next segment comes from: the shared counter (`Counter`) in the
+/// decoder; in the transition tests, a counter that finds the queue exhausted early
+trait Claim {
+    fn claim(&self) -> Option<usize>;
+}
+
+/// The team's one segment counter: each index below `ns` taken once (`fetch_add`)
+struct Counter<'a> {
+    taken: &'a AtomicUsize,
+    ns: usize,
+}
+
+impl Claim for Counter<'_> {
+    #[inline(always)]
+    fn claim(&self) -> Option<usize> {
+        let s = self.taken.fetch_add(1, Ordering::Relaxed);
+        (s < self.ns).then_some(s)
+    }
+}
+
+#[cfg(test)]
+mod tests_claim {
+    /// A walker that, after `left` claims, finds the queue exhausted: another walker took
+    /// the rest of it (the test runs that one next)
+    pub(crate) struct Budget<'a> {
+        pub(crate) inner: super::Counter<'a>,
+        pub(crate) left: std::cell::Cell<usize>,
+    }
+    impl super::Claim for Budget<'_> {
+        fn claim(&self) -> Option<usize> {
+            let l = self.left.get();
+            if l == 0 {
+                return None;
+            }
+            self.left.set(l - 1);
+            self.inner.claim()
+        }
+    }
+}
+
+/// The transition tests' deliberately broken staged walks (`traverse_staged`'s `MUT`, 0 in
+/// the decoder): each a construction error the tests must catch
+#[allow(dead_code)]
+pub(crate) mod mutation {
+    /// On exhaustion, the unstaged walk's rule: the lanes after the exhausting lane "have
+    /// not stepped", so are flushed through j, not j + 1
+    pub(crate) const OLD_RULE: u8 = 1;
+    /// After a take, the new segment's staged start at j: the tile's stale byte at j copied
+    pub(crate) const ST_AT_J: u8 = 2;
+    /// A segment's length published before its last fragment is flushed
+    pub(crate) const FINISH_BEFORE_FLUSH: u8 = 3;
+    /// On exhaustion, a still-marked (waiting) lane flushed through j + 1, as if it stepped
+    pub(crate) const WAITING_AS_STEPPED: u8 = 4;
+    /// On exhaustion, the rows not copied back into the lanes before the tail
+    pub(crate) const NO_ROWS_BACK: u8 = 5;
+    /// On exhaustion, the other lanes' staged bytes not flushed (the share returns with
+    /// owned data uncommitted)
+    pub(crate) const NO_EXHAUST_FLUSH: u8 = 6;
+    /// A lane entering the tail exactly full not grown first (a stale end pointer)
+    pub(crate) const NO_TAIL_GROW: u8 = 7;
+    pub(crate) const ALL: [u8; 7] = [1, 2, 3, 4, 5, 6, 7];
+}
+
+/// One thread's lanes of `walk_room`, staged as the one-core walk's busy phase is
+/// (`bwt::room_segments`, #171), its next segment taken from `claim` (the team's one
+/// counter) instead of a local count. Research, behind `research::set_staged_traverse`.
+///
+/// While all L lanes are busy, the rows are held together in `rows`, and offset j of a
+/// chunk of at most `TILE` offsets puts lane k's byte at `tile[k][j]`; each lane's bytes
+/// from `st[k]` are copied to its segment's buffer when the chunk ends or the segment does.
+/// The tile, rows and staged starts are this walker's own: nothing staged is shared, and a
+/// segment, once claimed, is walked to its end by the lane that claimed it. A marked lane
+/// (its entry a start) is handled after the offset, in lane order:
+/// - its staged bytes up to j flushed, then its segment finished (length, successor);
+/// - the next segment claimed; its first byte written to its buffer directly (`take`),
+///   and its staging starting at j + 1.
+///
+/// When a claim finds the queue exhausted (other walkers may still hold segments), every
+/// other lane's staged bytes are flushed: an unmarked lane stepped at j, so through j + 1;
+/// a marked lane not yet handled did not, so through j; a lane that took a segment at j
+/// has nothing staged (st = j + 1). Its rows are copied back, and the unstaged tail walks
+/// what is left. So every owned byte is in its buffer, and every owned segment finished,
+/// before this returns: before `Relay::walk_and_leave`'s decrement, or the pool's run end.
+///
+/// SAFETY: as `walk_room`'s contract (`traverse`'s), and `claim` gives each segment index
+/// below `starts.len()` once, across every walker
+#[inline(never)]
+unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
+    t: *const u32,
+    starts: &[u32],
+    segs: Segs,
+    claim: &C,
+    cap: usize,
+) {
+    // a pass marks its lanes in a u64
+    const { assert!(L <= 64) };
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let take = |seg: usize| -> Lane {
+        // SAFETY: seg < ns, taken once, so this lane is its buffer's one user
+        let b = unsafe { &mut *segs.bufs.add(seg) };
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        prefetch::<PF_L1>(t, q >> 8);
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    let finish = |l: &Lane| {
+        // SAFETY: the lane holds segment l.seg, its buffer's one user and its successor's
+        // one writer; p is within the buffer, every byte below it written
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        unsafe { *segs.next.add(l.seg) = seg_of(l.row) };
+    };
+    let grow = |l: &mut Lane| {
+        seen!(GROWS);
+        // SAFETY: as `finish`; every byte below p is committed (no staged byte is pending
+        // when a lane grows: at a pass's start, and in the tail, which stages nothing)
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+    // copy lane k's tile row from `from` to `to` into its buffer at p
+    let flush = |l: &mut Lane, row: &[u8; TILE], from: usize, to: usize| {
+        let len = to - from;
+        // SAFETY: from..to is inside the row; the lane's buffer has room for the chunk's
+        // bytes (the pass's room, as for the unstaged writes), so p + len is at most its end
+        debug_assert!(from <= to && to <= TILE);
+        if MUT != 0 {
+            // (a mutated walk, the tests' only: checked in every build, so that a
+            // mutation that would overrun a buffer panics here instead)
+            assert!(
+                len <= unsafe { l.end.offset_from(l.p) } as usize,
+                "a flush past its buffer"
+            );
+        }
+        debug_assert!(len <= unsafe { l.end.offset_from(l.p) } as usize);
+        unsafe {
+            std::ptr::copy_nonoverlapping(row.as_ptr().add(from), l.p, len);
+            l.p = l.p.add(len);
+        }
+    };
+
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L {
+        let Some(seg) = claim.claim() else { break };
+        lanes[active] = take(seg);
+        active += 1;
+    }
+    if active == 0 {
+        seen!(NO_SEGMENT);
+    } else if active < L {
+        seen!(NEVER_FULL);
+    }
+    if active == L {
+        let mut rows = [0u32; L];
+        for (k, l) in lanes.iter().enumerate() {
+            rows[k] = l.row;
+        }
+        let mut tile = [[0u8; TILE]; L];
+        'full: loop {
+            // the pass's room: what every lane has spare, and no more than a buffer taken
+            // mid-pass has after its first byte (`cap` - 1)
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l);
+                }
+                room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+            }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                seen!(PASS_ENDS_FULL);
+            }
+            if room > TILE {
+                seen!(ROOM_OVER_TILE);
+            }
+            let mut done = 0;
+            while done < room {
+                let w = (room - done).min(TILE);
+                let mut st = [0usize; L];
+                for j in 0..w {
+                    // the offset: every lane whose entry doesn't start a segment steps; a
+                    // lane whose entry does is only marked, and handled below, in lane order
+                    let rs = &mut rows;
+                    let mut marked: u64 = 0;
+                    let tp = tile.as_mut_ptr().cast::<u8>();
+                    macro_rules! sstep {
+                        ($k:expr) => {{
+                            let k = $k;
+                            // SAFETY: k < L; rows are below n (TVector); k * TILE + j is
+                            // inside the tile (j < w <= TILE)
+                            unsafe {
+                                let r = rs.get_unchecked_mut(k);
+                                let q = *t.add(*r as usize);
+                                if q & START != 0 {
+                                    marked |= 1 << k;
+                                } else {
+                                    *tp.add(k * TILE + j) = q as u8;
+                                    *r = q >> 8;
+                                    prefetch::<PF_L1>(t, q >> 8);
+                                }
+                            }
+                        }};
+                    }
+                    let mut c = 0;
+                    while c + 8 <= L {
+                        sstep!(c);
+                        sstep!(c + 1);
+                        sstep!(c + 2);
+                        sstep!(c + 3);
+                        sstep!(c + 4);
+                        sstep!(c + 5);
+                        sstep!(c + 6);
+                        sstep!(c + 7);
+                        c += 8;
+                    }
+                    while c < L {
+                        sstep!(c);
+                        c += 1;
+                    }
+                    if marked != 0 && j == 0 && done > 0 {
+                        seen!(MARK_AT_LATER_CHUNK_START);
+                    }
+                    #[cfg(test)]
+                    if marked.count_ones() > 1 {
+                        seen!(MARKED_SEVERAL);
+                    }
+                    #[cfg(test)]
+                    let mut took = false;
+                    while marked != 0 {
+                        let k = marked.trailing_zeros() as usize;
+                        marked &= marked - 1;
+                        let l = &mut lanes[k];
+                        l.row = rs[k];
+                        if st[k] > 0 {
+                            seen!(DONE_IN_TAKING_CHUNK);
+                        }
+                        // its segment's bytes end before offset j: committed, then its end
+                        if MUT == mutation::FINISH_BEFORE_FLUSH {
+                            finish(l);
+                            flush(l, &tile[k], st[k], j);
+                        } else {
+                            flush(l, &tile[k], st[k], j);
+                            finish(l);
+                        }
+                        let Some(seg) = claim.claim() else {
+                            // No segment is left unclaimed (other walkers may still hold
+                            // theirs). Every lane's staged bytes are committed: an unmarked
+                            // lane stepped at j (its byte is at j), a marked lane not yet
+                            // handled did not (it sits on its segment's end), and a lane
+                            // that took a segment at j has none staged (st = j + 1)
+                            for (i, li) in lanes.iter_mut().enumerate() {
+                                if MUT != mutation::NO_ROWS_BACK {
+                                    li.row = rs[i];
+                                }
+                                if i == k || MUT == mutation::NO_EXHAUST_FLUSH {
+                                    continue;
+                                }
+                                let waiting = marked >> i & 1 != 0;
+                                let to = if MUT == mutation::OLD_RULE {
+                                    if i < k {
+                                        j + 1
+                                    } else {
+                                        j
+                                    }
+                                } else if MUT == mutation::WAITING_AS_STEPPED {
+                                    j + 1
+                                } else {
+                                    j + usize::from(!waiting)
+                                };
+                                flush(li, &tile[i], st[i], to);
+                                #[cfg(test)]
+                                if i > k && !waiting {
+                                    seen!(LATER_STEPPED);
+                                    if li.p == li.end {
+                                        seen!(LATER_STEPPED_FULL);
+                                    }
+                                    // SAFETY: the lane's row is below n
+                                    if unsafe { *t.add(rs[i] as usize) } & START != 0 {
+                                        seen!(LATER_STEPPED_ON_START);
+                                    }
+                                }
+                            }
+                            seen!(EXHAUSTED_MID_PASS);
+                            #[cfg(test)]
+                            {
+                                if j == 0 && done > 0 {
+                                    seen!(EXHAUSTED_AT_CHUNK_START);
+                                }
+                                if j + 1 == w && done + w < room {
+                                    seen!(EXHAUSTED_AT_CHUNK_END);
+                                }
+                                if done + j + 1 == room {
+                                    seen!(EXHAUSTED_AT_PASS_END);
+                                }
+                                if marked != 0 {
+                                    seen!(ENDS_WITH_LANES_WAITING);
+                                }
+                                if took {
+                                    seen!(ENDS_AFTER_A_TAKE);
+                                }
+                            }
+                            break 'full;
+                        };
+                        seen!(MID_PASS_TAKES);
+                        *l = take(seg);
+                        rs[k] = l.row;
+                        // its first byte is in its buffer; its next, at offset j + 1, is
+                        // staged
+                        st[k] = if MUT == mutation::ST_AT_J { j } else { j + 1 };
+                        #[cfg(test)]
+                        {
+                            took = true;
+                            if j + 1 == w {
+                                seen!(TAKE_AT_CHUNK_END);
+                            }
+                            if done > 0 {
+                                seen!(TAKE_IN_LATER_CHUNK);
+                            }
+                        }
+                    }
+                }
+                for (k, l) in lanes.iter_mut().enumerate() {
+                    flush(l, &tile[k], st[k], w);
+                }
+                done += w;
+            }
+        }
+    }
+    // the lanes still walking: a finished lane's successor is set, and this thread holds
+    // every segment its lanes took, so it alone reads those slots
+    let unfinished =
+        |l: &Lane| l.seg != usize::MAX && unsafe { *segs.next.add(l.seg) } == usize::MAX;
+    let mut live: Vec<Lane> = lanes[..active].iter().copied().filter(unfinished).collect();
+    // a pass can end with a lane's buffer exactly full (its room was all its spare): the
+    // tail writes before it tests, so each lane comes into it with a byte to spare
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            seen!(TAIL_ENTERED_FULL);
+            if MUT != mutation::NO_TAIL_GROW {
+                grow(l);
+            }
+        }
+        // (checked before any tail write, in every build: the mutation above must panic
+        // here, never write past the buffer)
+        assert!(l.p < l.end, "a lane entered the tail full");
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l);
+                live.swap_remove(i);
+                continue;
+            }
+            l.row = q >> 8;
+            prefetch::<PF_L1>(t, l.row);
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            if l.p == l.end {
+                grow(l);
+            }
+            i += 1;
+        }
+    }
+}
+
 /// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only
 macro_rules! tmark {
     ($kind:ident, $place:expr) => {
@@ -1081,6 +1639,8 @@ struct Relay<'a> {
     counts: &'a [u32; 256],
     orig_ptr: u32,
     segments: usize,
+    /// the walk's shares staged (`RoomWalk`'s `staged`)
+    staged: bool,
     out: std::cell::UnsafeCell<&'a mut Vec<u8>>,
     /// the block's place, for the trace's marks only
     #[cfg_attr(not(feature = "trace"), allow(dead_code))]
@@ -1198,7 +1758,7 @@ impl Relay<'_> {
                 },
                 Err(tt) => tt,
             };
-            RoomWalk::new(tt, self.orig_ptr, seg, self.segments)
+            RoomWalk::new(tt, self.orig_ptr, seg, self.segments, self.staged)
         }));
         tmark!(WalkSetupEnd, self.place);
         match r {
@@ -1303,6 +1863,7 @@ pub(crate) fn invert_pipelined<const L: usize>(
         out,
         lead,
         place,
+        false,
     )
 }
 
@@ -1323,6 +1884,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
     out: &mut Vec<u8>,
     lead: &(dyn Fn() + Sync),
     place: u64,
+    staged: bool,
 ) -> Result<(), Box<dyn Any + Send>> {
     // (a pool of one thread runs the helpers' part itself, after `lead`)
     let helpers = pool.threads().saturating_sub(1).max(1);
@@ -1348,6 +1910,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
         counts,
         orig_ptr,
         segments: crate::bwt::FLAGGED_SEGMENTS * helpers,
+        staged,
         out: std::cell::UnsafeCell::new(out),
         built: AtomicUsize::new(0),
         walk_ready: AtomicBool::new(false),
@@ -1792,6 +2355,7 @@ mod tests {
         segments: usize,
         s: &mut SegScratch,
         what: &str,
+        staged: bool,
     ) {
         let counts = counts_of(ll);
         let mut tt = TVector::new();
@@ -1799,7 +2363,7 @@ mod tests {
         let mut want = Vec::new();
         crate::bwt::walk(&tt, orig_ptr, &mut want);
         let before = tt.0.clone();
-        walk_room::<8>(&mut tt, orig_ptr, s, p, segments);
+        walk_room::<8>(&mut tt, orig_ptr, s, p, segments, staged);
         assert!(tt.0 == before, "{what}: the flags were not all taken off");
         // the segments are the oracle's, on every cycle, not only those the output joins
         let oracle = crate::bwt::tests::segment_oracle(&tt, &s.starts);
@@ -1832,7 +2396,9 @@ mod tests {
                 let n = ll.len() as u32;
                 for segments in [1, 2, 7, 64, 512 * k, 4096] {
                     for orig_ptr in [0, n / 3, n - 1] {
-                        walk_matches(&p, &ll, orig_ptr, segments, &mut s, &name);
+                        for staged in [false, true] {
+                            walk_matches(&p, &ll, orig_ptr, segments, &mut s, &name, staged);
+                        }
                     }
                 }
             }
@@ -1857,14 +2423,17 @@ mod tests {
             let p = Pool::new(k).unwrap();
             for (c, ll) in cases.iter().enumerate() {
                 for segments in [24, 96] {
-                    walk_matches(
-                        &p,
-                        ll,
-                        (ll.len() / 2) as u32,
-                        segments,
-                        &mut s,
-                        &format!("case {c}"),
-                    );
+                    for staged in [false, true] {
+                        walk_matches(
+                            &p,
+                            ll,
+                            (ll.len() / 2) as u32,
+                            segments,
+                            &mut s,
+                            &format!("case {c}"),
+                            staged,
+                        );
+                    }
                 }
             }
         }
@@ -1948,25 +2517,28 @@ mod tests {
             let mut want = Vec::new();
             crate::bwt::walk(&want_tt, op, &mut want);
             // the walk's shares on s threads
-            let before = tt.0.clone();
-            let w = RoomWalk::new(&mut *tt, op, &mut seg, 64 * s);
-            thread::scope(|sc| {
-                for _ in 0..s {
-                    let w = &w;
-                    sc.spawn(move || w.share::<8>());
-                }
-            });
-            let (tt2, seg2) = w.finish();
-            assert!(tt2.0 == before, "{what}: the flags were not all taken off");
-            let mut out = vec![9];
-            seg2.assemble(&mut out);
-            assert!(
-                out == want,
-                "{what}: shares {s}, orig_ptr {op}: the split walk"
-            );
+            for staged in [false, true] {
+                let before = tt.0.clone();
+                let w = RoomWalk::new(&mut *tt, op, &mut seg, 64 * s, staged);
+                thread::scope(|sc| {
+                    for _ in 0..s {
+                        let w = &w;
+                        sc.spawn(move || w.share::<8>());
+                    }
+                });
+                let (tt2, seg2) = w.finish();
+                assert!(tt2.0 == before, "{what}: the flags were not all taken off");
+                let mut out = vec![9];
+                seg2.assemble(&mut out);
+                assert!(
+                    out == want,
+                    "{what}: shares {s}, orig_ptr {op}, staged {staged}: the split walk"
+                );
+            }
             // the pipelined run: s helpers, and the leader's work meanwhile, its waits
-            // spinning and yielding (as registered) or parking (lever A)
-            for wait in WAITS {
+            // spinning and yielding (as registered) or parking (lever A), its walk staged
+            // or not
+            for (wait, staged) in WAITS.into_iter().flat_map(|w| [(w, false), (w, true)]) {
                 let p = Pool::new(s + 1).unwrap();
                 let mut pt = TVector::new();
                 let mut ps = SegScratch::default();
@@ -1986,12 +2558,13 @@ mod tests {
                     &|| {
                         led.fetch_add(1, Ordering::Relaxed);
                     },
+                    staged,
                 )
                 .unwrap();
                 assert_eq!(led.load(Ordering::Relaxed), 1);
                 assert!(
                     out == want,
-                    "{what}: {s} helpers, orig_ptr {op}, {wait:?}: the pipelined run"
+                    "{what}: {s} helpers, orig_ptr {op}, {wait:?}, staged {staged}: the pipelined run"
                 );
                 assert!(pt.0 == want_tt.0, "{what}: the pipelined run's table");
             }
@@ -2023,6 +2596,7 @@ mod tests {
         seg: &mut SegScratch,
         out: &mut Vec<u8>,
         lead: &(dyn Fn() + Sync),
+        staged: bool,
     ) -> Result<(), Box<dyn Any + Send>> {
         let f = match wait {
             Wait2::Yield => invert_pipelined_with::<L, false, BARRIER_SPINS>,
@@ -2042,6 +2616,7 @@ mod tests {
             out,
             lead,
             0,
+            staged,
         )
     }
 
@@ -2092,7 +2667,11 @@ mod tests {
         crate::bwt::walk(&tt, 77, &mut want);
         for k in [2, 3, 4] {
             let p = Pool::new(k).unwrap();
-            for (late, wait) in WAITS.into_iter().flat_map(|w| [(false, w), (true, w)]) {
+            for (late, wait, staged) in WAITS
+                .into_iter()
+                .flat_map(|w| [(false, w), (true, w)])
+                .flat_map(|(l, w)| [(l, w, false), (l, w, true)])
+            {
                 let (mut tt, mut seg, mut out) =
                     (TVector::new(), SegScratch::default(), Vec::new());
                 let lead = || {
@@ -2102,9 +2681,10 @@ mod tests {
                 };
                 pipelined::<32>(
                     wait, &p, &ll, &counts, &cps, CP, 77, &mut tt, &mut seg, &mut out, &lead,
+                    staged,
                 )
                 .unwrap();
-                assert!(out == want, "k {k}, late {late}, {wait:?}");
+                assert!(out == want, "k {k}, late {late}, {wait:?}, staged {staged}");
             }
         }
     }
@@ -2177,6 +2757,7 @@ mod tests {
                 counts: &[0; 256],
                 orig_ptr: 0,
                 segments: 1,
+                staged: false,
                 out: std::cell::UnsafeCell::new(&mut out),
                 place: 0,
                 built: AtomicUsize::new(0),
@@ -2220,5 +2801,345 @@ mod tests {
                 });
             }
         });
+    }
+
+    // ---- The staged walk's transitions (`traverse_staged`), forced ----
+    //
+    // A walker's claims are cut off after a budget of b (`RoomWalk::share_staged_budget`): it
+    // then finds the queue exhausted, exactly as when another walker has claimed the rest,
+    // and a second walker (staged, or the unstaged `traverse`) walks what is left. Every b
+    // from 0 to past the segment count is tried, so the exhaustion lands at every claim
+    // the walk makes: in the first lanes' takes, mid-pass, after a take in the same
+    // offset, at chunk starts and ends and pass ends. Each case checks every segment and
+    // successor against the oracle, and the output against `bwt::walk` and against the
+    // unstaged team walk's.
+
+    /// One case: Ok, or what went wrong (a panic counts as caught, for the mutations)
+    #[allow(clippy::too_many_arguments)]
+    fn staged_case<const L: usize, const MUT: u8>(
+        tt: &mut TVector,
+        orig_ptr: u32,
+        segments: usize,
+        budget: Option<usize>,
+        second_staged: bool,
+        want: &[u8],
+        old: &[u8],
+        s: &mut SegScratch,
+    ) -> Result<(), String> {
+        // (fresh buffers, so each case's capacities are `cap`: a buffer grown in an earlier
+        // case would hide the grows)
+        *s = SegScratch::default();
+        let before = tt.0.clone();
+        let r = catch_unwind(AssertUnwindSafe(|| {
+            let w = RoomWalk::new(&mut *tt, orig_ptr, &mut *s, segments, true);
+            w.share_staged_budget::<L, MUT>(budget);
+            if second_staged {
+                w.share_staged_budget::<L, MUT>(None);
+            } else {
+                w.share_unstaged::<L>();
+            }
+            w.finish();
+        }));
+        if r.is_err() {
+            tt.0 = before;
+            *s = SegScratch::default();
+            return Err("panicked".into());
+        }
+        if tt.0 != before {
+            return Err("the flags were not all taken off".into());
+        }
+        let oracle = crate::bwt::tests::segment_oracle(tt, &s.starts);
+        for (i, (bytes, next)) in oracle.iter().enumerate() {
+            if s.bufs[i] != *bytes {
+                return Err(format!("segment {i}'s bytes"));
+            }
+            if s.next[i] != *next {
+                return Err(format!("segment {i}'s successor"));
+            }
+        }
+        let mut out = vec![5];
+        s.assemble(&mut out);
+        if out != want {
+            return Err("not walk's output".into());
+        }
+        if out != old {
+            return Err("not the unstaged team walk's output".into());
+        }
+        Ok(())
+    }
+
+    /// The crafted tables of the transition tests: periodic and multicycle tables, runs,
+    /// one byte value (every row its own cycle), random, and few symbols
+    fn staged_tables(scale: usize) -> Vec<(String, Vec<u8>)> {
+        let mut r = xorshift(41);
+        let mut v = vec![
+            (
+                "random 4".to_string(),
+                (0..4 * scale).map(|_| (r() % 4) as u8).collect::<Vec<u8>>(),
+            ),
+            ("period 2".into(), b"ab".repeat(scale)),
+            (
+                "blocks of 37".into(),
+                (0..3 * scale).map(|i| ((i / 37) % 3) as u8).collect(),
+            ),
+            ("one value".into(), vec![7; scale / 2 + 3]),
+            // a real BWT (one cycle: long segments, grows, a tail entered full)
+            (
+                "bwt of random 3".into(),
+                bwt_of(&(0..2 * scale).map(|_| (r() % 3) as u8).collect::<Vec<u8>>()),
+            ),
+            (
+                "bwt of text".into(),
+                bwt_of(
+                    &b"the cat sat on the mat; "
+                        .repeat(scale / 12)
+                        .iter()
+                        .enumerate()
+                        .map(|(i, &c)| if i % 97 == 0 { b'#' } else { c })
+                        .collect::<Vec<u8>>(),
+                ),
+            ),
+        ];
+        for (name, ll) in columns(scale) {
+            if ll.len() >= 64 {
+                v.push((name, ll));
+            }
+        }
+        v
+    }
+
+    /// The last column of `text`'s sorted rotations (its permutation one cycle when the
+    /// text is primitive)
+    fn bwt_of(text: &[u8]) -> Vec<u8> {
+        let n = text.len();
+        let mut rot: Vec<usize> = (0..n).collect();
+        rot.sort_by(|&a, &b| {
+            (0..n)
+                .map(|i| text[(a + i) % n].cmp(&text[(b + i) % n]))
+                .find(|o| o.is_ne())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        rot.iter().map(|&r| text[(r + n - 1) % n]).collect()
+    }
+
+    /// Runs every case of the sweep for mutation `MUT`: (cases, failures, first failure);
+    /// with `seen`, this thread's transition counts are added to it
+    fn staged_sweep<const L: usize, const MUT: u8>(
+        scale: usize,
+        segment_counts: &[usize],
+        step: usize,
+        seen: &mut [usize; staged_seen::N],
+    ) -> (usize, usize, Option<String>) {
+        let mut s = SegScratch::default();
+        let (mut cases, mut failures, mut first) = (0, 0, None);
+        staged_seen::take();
+        // (under Miri, the crafted tables only: `columns`' add little there but time)
+        let tables = staged_tables(scale);
+        let keep = if cfg!(miri) { 6 } else { tables.len() };
+        for (name, ll) in tables.into_iter().take(keep) {
+            let counts = counts_of(&ll);
+            let mut tt = TVector::new();
+            crate::bwt::build(&ll, &counts, &mut tt);
+            let n = ll.len() as u32;
+            for orig_ptr in [0, n / 2] {
+                let mut want = Vec::new();
+                crate::bwt::walk(&tt, orig_ptr, &mut want);
+                for &segments in segment_counts {
+                    // the unstaged team walk's output, the same starts (one walker)
+                    let mut old = Vec::new();
+                    {
+                        let w = RoomWalk::new(&mut tt, orig_ptr, &mut s, segments, false);
+                        w.share::<L>();
+                        let (_, s2) = w.finish();
+                        s2.assemble(&mut old);
+                    }
+                    let ns = s.starts.len();
+                    let mut budgets: Vec<Option<usize>> =
+                        (0..=ns + 1).step_by(step).map(Some).collect();
+                    budgets.extend([Some(ns), None]);
+                    for (bi, &budget) in budgets.iter().enumerate() {
+                        let second_staged = bi % 2 == 0;
+                        cases += 1;
+                        if let Err(e) = staged_case::<L, MUT>(
+                            &mut tt,
+                            orig_ptr,
+                            segments,
+                            budget,
+                            second_staged,
+                            &want,
+                            &old,
+                            &mut s,
+                        ) {
+                            failures += 1;
+                            first.get_or_insert(format!(
+                                "{name}, orig_ptr {orig_ptr}, segments {segments}, budget {budget:?}: {e}"
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        for (a, b) in seen.iter_mut().zip(staged_seen::take()) {
+            *a += b;
+        }
+        (cases, failures, first)
+    }
+
+    /// Every transition of the staged walk, forced and observed, each case exact
+    #[test]
+    fn staged_transitions() {
+        let mut seen = [0; staged_seen::N];
+        // short segments at 8 lanes (many takes, exhaustion everywhere), and long ones
+        // (passes over several chunks, grows, a tail entered full)
+        let (cases, failures, first) = staged_sweep::<8, 0>(3_000, &[3, 24, 96, 400], 1, &mut seen);
+        assert_eq!(failures, 0, "{first:?}");
+        let (c2, f2, first2) = staged_sweep::<32, 0>(3_000, &[40, 300], 1, &mut seen);
+        assert_eq!(f2, 0, "{first2:?}");
+        eprintln!("staged transitions: {} cases", cases + c2);
+        for (i, name) in staged_seen::NAMES.iter().enumerate() {
+            eprintln!("  {name}: {}", seen[i]);
+        }
+        for (i, name) in staged_seen::NAMES.iter().enumerate() {
+            assert!(seen[i] > 0, "never reached: {name}");
+        }
+    }
+
+    /// The negative controls: each deliberately broken transition (`mutation`) fails the
+    /// same sweep, by a wrong segment, successor or output, or a panic before any write
+    /// past a buffer. The unstaged walk's exhaustion rule ("the lanes after k have not
+    /// stepped") among them.
+    #[test]
+    fn staged_mutations_are_caught() {
+        fn caught<const MUT: u8>(what: &str) {
+            let mut seen = [0; staged_seen::N];
+            let (cases, f8, _) = staged_sweep::<8, MUT>(3_000, &[3, 24, 96, 400], 1, &mut seen);
+            let (_, f32, _) = staged_sweep::<32, MUT>(3_000, &[40, 300], 1, &mut seen);
+            eprintln!("mutation {what}: {} of {cases}+ cases failed", f8 + f32);
+            assert!(f8 + f32 > 0, "mutation {what} was not caught");
+        }
+        caught::<{ mutation::OLD_RULE }>("OLD_RULE");
+        caught::<{ mutation::ST_AT_J }>("ST_AT_J");
+        caught::<{ mutation::FINISH_BEFORE_FLUSH }>("FINISH_BEFORE_FLUSH");
+        caught::<{ mutation::WAITING_AS_STEPPED }>("WAITING_AS_STEPPED");
+        caught::<{ mutation::NO_ROWS_BACK }>("NO_ROWS_BACK");
+        caught::<{ mutation::NO_EXHAUST_FLUSH }>("NO_EXHAUST_FLUSH");
+        caught::<{ mutation::NO_TAIL_GROW }>("NO_TAIL_GROW");
+        assert_eq!(mutation::ALL.len(), 7);
+    }
+
+    /// The staged walk under Miri, small tables, a coarse budget sweep: its unchecked tile
+    /// writes and flushes (and, with the threads of `miri_walk_room_handoffs` and
+    /// `miri_split_build_and_walk`, its buffers' one writer each)
+    #[test]
+    fn miri_staged_transitions() {
+        let mut seen = [0; staged_seen::N];
+        let scale = if cfg!(miri) { 240 } else { 3_000 };
+        let step = if cfg!(miri) { 9 } else { 1 };
+        let (_, failures, first) = staged_sweep::<8, 0>(scale, &[3, 24, 96], step, &mut seen);
+        assert_eq!(failures, 0, "{first:?}");
+        for name in [
+            "MID_PASS_TAKES",
+            "EXHAUSTED_MID_PASS",
+            "LATER_STEPPED",
+            "GROWS",
+        ] {
+            let i = staged_seen::NAMES.iter().position(|n| *n == name).unwrap();
+            assert!(seen[i] > 0, "never reached: {name}");
+        }
+    }
+
+    /// The staged walk on real blocks: every block of each file in `MIBZ2_STAGED_CORPORA`
+    /// (colon-separated .bz2 paths) at least `MIN_COOP` rows, at the decoder's lanes and the
+    /// pipelined team's segment count, forced exhaustion at a spread of claims, then two
+    /// and three walkers on threads; every segment, successor and output exact.
+    /// `MIBZ2_STAGED_CORPORA=a.bz2:b.bz2 cargo test --release --lib staged_on_corpora -- --ignored`
+    #[test]
+    #[ignore]
+    fn staged_on_corpora() {
+        use crate::stream::{Event, Scanner, SliceSource};
+        let Ok(paths) = std::env::var("MIBZ2_STAGED_CORPORA") else {
+            eprintln!("MIBZ2_STAGED_CORPORA unset: skipped");
+            return;
+        };
+        const L: usize = crate::bwt::FLAGGED_LANES;
+        let k = crate::Kernels::detect();
+        let mut seen = [0; staged_seen::N];
+        let mut s = SegScratch::default();
+        let (mut blocks, mut cases) = (0, 0);
+        staged_seen::take();
+        for path in paths.split(':') {
+            let data = std::fs::read(path).unwrap();
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+            while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap()
+            {
+                let n = crate::mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+                let orig_ptr = b.orig_ptr;
+                syms = b.syms;
+                if n < crate::bwt::MIN_COOP {
+                    continue;
+                }
+                blocks += 1;
+                let mut tt = TVector::new();
+                crate::bwt::build(&ll[..n], &counts, &mut tt);
+                let mut want = Vec::new();
+                crate::bwt::walk(&tt, orig_ptr, &mut want);
+                for segments in [1024, 1536] {
+                    let mut old = Vec::new();
+                    {
+                        let w = RoomWalk::new(&mut tt, orig_ptr, &mut s, segments, false);
+                        w.share::<L>();
+                        let (_, s2) = w.finish();
+                        s2.assemble(&mut old);
+                    }
+                    assert!(old == want, "{path}: the unstaged walk");
+                    let ns = s.starts.len();
+                    for (bi, budget) in [0, 1, L - 1, L, L + 1, ns / 3, ns / 2, ns - 1, ns]
+                        .into_iter()
+                        .map(Some)
+                        .chain([None])
+                        .enumerate()
+                    {
+                        cases += 1;
+                        staged_case::<L, 0>(
+                            &mut tt,
+                            orig_ptr,
+                            segments,
+                            budget,
+                            bi % 2 == 0,
+                            &want,
+                            &old,
+                            &mut s,
+                        )
+                        .unwrap_or_else(|e| {
+                            panic!("{path}, block {blocks}, budget {budget:?}: {e}")
+                        });
+                    }
+                    for walkers in [2, 3] {
+                        let w = RoomWalk::new(&mut tt, orig_ptr, &mut s, segments, true);
+                        thread::scope(|sc| {
+                            for _ in 0..walkers {
+                                let w = &w;
+                                sc.spawn(move || w.share::<L>());
+                            }
+                        });
+                        let (_, s2) = w.finish();
+                        let mut out = Vec::new();
+                        s2.assemble(&mut out);
+                        assert!(out == want, "{path}: {walkers} staged walkers");
+                        cases += 1;
+                    }
+                }
+            }
+        }
+        for (a, b) in seen.iter_mut().zip(staged_seen::take()) {
+            *a += b;
+        }
+        eprintln!("staged on corpora: {blocks} blocks, {cases} cases, every one exact");
+        for (i, name) in staged_seen::NAMES.iter().enumerate() {
+            eprintln!("  {name}: {}", seen[i]);
+        }
+        assert!(blocks > 0);
     }
 }
