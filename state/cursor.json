@@ -1067,7 +1067,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt; migration verified. Reading submitted share-nothing archive for CPU/load-law replay and full-decoder repricing.",
+      "progress": "Verified bundle SHA-256; replayed 732 slot/run identities, excluded warmup, reproduced CPU growth1.183382/3.261240. Old production load-law transfer predicts1.068/6.462 (small-load flat extension); table-only causal share unidentifiable.",
       "report_path": "state/records/reviews/inbox-6759983287/report.md"
     }
   ],
