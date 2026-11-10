@@ -1690,11 +1690,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6758683390,
-    "status": "finished",
-    "decision": "D083",
-    "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
-    "review_comment_id": 6758740649
+    "active_comment": 6759394097,
+    "status": "in progress",
+    "decision": "D084"
   },
   "duplicate_events": [
     {
@@ -2944,6 +2942,13 @@
       "work_commit": "d6fa7bda4deceffa1d0a53d5aeb71aa5a8fe976f",
       "review_comment_id": 6758740649,
       "complete_cursor_commit": "3bc34325b08dd8532e6c90408da1b5c6a2c88781"
+    },
+    {
+      "comment_id": 6759394097,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D084",
+      "progress": "Receipt; migration verified; assessing registered count invalidity and prospective methods."
     }
   ],
   "migrated_from": {
