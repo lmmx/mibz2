@@ -1437,6 +1437,19 @@
       "status": "finished",
       "disposition": "Concur with sign-test mathematics; HOLD B as sole replacement criterion for production default pending explicit unacceptable-loss/exposure policy. A lacks independent variance bound; C7 flag unspecified.",
       "comment": 6764381812
+    },
+    {
+      "id": "D096",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6764400880,
+      "pr": 161,
+      "sha": "12f0e192c3d7f3768b3e21d1ca01fa8762b2f0b7",
+      "evidence_digest": "checkpoint-sha256:45283a7cbd55632de6087849af353998414d2665fb8e971fa080af46858a23f0;policy:8014b49128bffbe954d9e90389c4aa7b5113e9bd",
+      "commit": "1c87ddf96359885f027e010ec8f624e6864b2235",
+      "status": "complete",
+      "disposition": "Record reported policy/withdrawals; prior verdicts retained. No new concrete safety defect established by limited check; B5 not discharged and operating pin unchanged."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1753,7 +1766,9 @@
     "e3d6e174cfea71033c4445d348526c49913de605",
     "7be711cfc792143f8277717d837d18e97308190b",
     "1794faef8c66ddc53abe5b165be88052f82119d6",
-    "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846"
+    "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846",
+    "69db0dab9063eed31a1a36817bf905bfd0bd9275",
+    "1c87ddf96359885f027e010ec8f624e6864b2235"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1849,7 +1864,8 @@
     6763511665,
     6763772014,
     6763960879,
-    6764248398
+    6764248398,
+    6764400880
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1929,8 +1945,9 @@
   },
   "current_execution": {
     "active_comment": 6764400880,
-    "status": "in progress",
-    "decision": "D096"
+    "status": "complete",
+    "decision": "D096",
+    "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
   },
   "duplicate_events": [
     {
@@ -2666,6 +2683,14 @@
       "incoming_comment": 6764248398,
       "decision": "D095",
       "commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
+    },
+    {
+      "pr": 161,
+      "sha": "12f0e192c3d7f3768b3e21d1ca01fa8762b2f0b7",
+      "evidence_digest": "checkpoint-sha256:45283a7cbd55632de6087849af353998414d2665fb8e971fa080af46858a23f0;policy:8014b49128bffbe954d9e90389c4aa7b5113e9bd",
+      "incoming_comment": 6764400880,
+      "decision": "D096",
+      "commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3412,10 +3437,11 @@
     {
       "comment_id": 6764400880,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D096",
-      "progress": "Policy transition and scoped safety boundaries recorded; preparing complete cursor and REVIEW.",
-      "receipt_commit": "69db0dab9063eed31a1a36817bf905bfd0bd9275"
+      "progress": "D096 complete; awaiting one REVIEW on #145.",
+      "receipt_commit": "69db0dab9063eed31a1a36817bf905bfd0bd9275",
+      "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
     }
   ],
   "migrated_from": {
