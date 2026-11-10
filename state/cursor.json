@@ -1466,6 +1466,21 @@
       "status": "finished",
       "disposition": "#358 source/safety PROCEED; team-run B5 completion HOLD pending forced plain-team fuzz coverage; no new UB established.",
       "comment": 6770483223
+    },
+    {
+      "id": "D098",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6771542584,
+      "pr": 161,
+      "sha": "58e0a4be697f740b339eae1089c40b567a9f6e93",
+      "evidence_digest": "patch-sha256:61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64;delivery:372684599788d56d9bf693b31be013bd9fefa18e;head:58e0a4be697f740b339eae1089c40b567a9f6e93",
+      "commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3",
+      "status": "complete",
+      "disposition": "PROCEED; D097-F1 lifted. Forced plain-team fuzz closes missing route; counters are eligibility classifications, not exact execution counts.",
+      "comment": null
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1790,7 +1805,9 @@
     "b46e0b62bc656426c2785508b8824a4b5fb77339",
     "e0a3ccbe0fc86e34d5e020f4d6f498ee5e8e95ff",
     "6d7bd32d1a9b6bed3b3893279302eba07574f28d",
-    "766f5b01ce2b50f49b30d4dad8518ede332f4397"
+    "766f5b01ce2b50f49b30d4dad8518ede332f4397",
+    "b2b68314f41c32d629a36798ad24add98c6722af",
+    "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1888,7 +1905,8 @@
     6763960879,
     6764248398,
     6764400880,
-    6770180620
+    6770180620,
+    6771542584
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1968,8 +1986,9 @@
   },
   "current_execution": {
     "active_comment": 6771542584,
-    "status": "in progress",
-    "decision": "D098"
+    "status": "complete",
+    "decision": "D098",
+    "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
   },
   "duplicate_events": [
     {
@@ -2721,6 +2740,14 @@
       "incoming_comment": 6770180620,
       "decision": "D097",
       "commit": "6d7bd32d1a9b6bed3b3893279302eba07574f28d"
+    },
+    {
+      "pr": 161,
+      "sha": "58e0a4be697f740b339eae1089c40b567a9f6e93",
+      "evidence_digest": "patch-sha256:61922ff226712f11e6846ff9794deea2960fe469f6ae1c9ddb7e0945da706d64;delivery:372684599788d56d9bf693b31be013bd9fefa18e;head:58e0a4be697f740b339eae1089c40b567a9f6e93",
+      "incoming_comment": 6771542584,
+      "decision": "D098",
+      "commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3489,9 +3516,11 @@
     {
       "comment_id": 6771542584,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D098",
-      "progress": "Receipt; migration verified. Reviewing D097-F1 repair at PR359."
+      "progress": "D098 completed: D097-F1 lifted; route totals classified, not measured execution. Awaiting REVIEW publication.",
+      "receipt_commit": "b2b68314f41c32d629a36798ad24add98c6722af",
+      "work_commit": "e97a1416dc27a9ba4110d6f6c32d721e2e23afb3"
     }
   ],
   "migrated_from": {
