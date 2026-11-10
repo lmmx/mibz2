@@ -28,6 +28,12 @@ jobs:
       # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
       - name: Harness tests
         run: cargo test --example ab
+      # the guarded service A/B's judge, with its producer driven for real: `ab run` with
+      # stand-in children that succeed, exit 17, are killed or write nothing, each record judged
+      - name: The guarded service A/B's producer and judge (stand-in children, untimed)
+        run: |
+          cargo build --example ab
+          SG_AB=target/debug/examples/ab SG_REQUIRE_AB=1 python3 bench/test_service_guarded.py
       # the scanner diagnostic's harness (examples/par_scan.rs): a panic at each role of each
       # arm ends the decode, and the finder against the bit-by-bit reference
       - name: The scan harness's fault and finder tests
@@ -54,6 +60,8 @@ jobs:
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/classic classic
       - name: Pipeline candidates
         run: target/fuzz/examples/fuzz 30 1 fuzz-failures/pipeline pipeline
+      - name: Service candidates
+        run: target/fuzz/examples/fuzz 30 1 fuzz-failures/service service
       - name: The failing inputs
         if: failure()
         uses: actions/upload-artifact@v7
@@ -89,6 +97,14 @@ jobs:
           python3 bench/test_service_tg.py
           python3 bench/test_tg_ni_gate.py
           python3 bench/test_tg_ni_pilot.py
+      - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
+        run: python3 bench/test_svc_target.py
+      - name: The guarded service A/B's judge and admission (its witnesses)
+        run: python3 bench/test_service_guarded.py
+      - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_guarded_recipe.py
+      - name: The target-gated registration's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_tg_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest

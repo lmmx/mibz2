@@ -91,6 +91,11 @@ class Channel(unittest.TestCase):
                 self.assertIsNotNone(reason, (to, kind))
                 self.assertIn(inbox, reason)
 
+    def test_the_monodromy_inbox_is_routed(self):
+        self.assertEqual(coord.INBOXES[346], "monodromy")
+        new = coord.ROLES["monodromy"]["offset"] + 1
+        self.assertEqual(coord.completed("monodromy", {"processed_comment_ids": [new]}), {new})
+
     def test_the_pathfinder_inbox_takes_only_its_own_work(self):
         new = coord.ROLES["pathfinder"]["offset"] + 1
         self.assertIsNone(coord.misrouted(314, msg(FROM="coordinator", TO="pathfinder",

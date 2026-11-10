@@ -33,7 +33,7 @@
 //!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
 //!                      cleared (bench 3.5.0; recorded and never judged)
 //!     --hold-cpu N|auto
-//!                      hold one CPU busy around each run (bench 3.7.0; off by default, and
+//!                      hold one CPU busy around each run (bench 3.8.0; off by default, and
 //!                      for workstation runs: an idle machine starts a decode in a slow mode,
 //!                      cold-start/20261110T102700Z): a spinner, a thread of this process
 //!                      pinned to CPU N, started and seen running there before the settle
@@ -64,7 +64,16 @@
 //!                                    CPUs allowed, their physical cores, the cgroup's CPU
 //!                                    quota, and whether the run-queue counter counts
 //!                                    (and `machine`: the cpufreq driver, governor, EPP,
-//!                                    turbo, and what perf can count)
+//!                                    turbo, and what perf can count). Active: it spins
+//!                                    2 x CPUs threads for 0.3 s and opens perf counters
+//! ab env --facts                     passive: the same machine facts read from procfs,
+//!                                    sysfs and sched_getaffinity alone, no spin thread and
+//!                                    no perf counter opened; the CPUs allowed (the
+//!                                    affinity and Cpus_allowed_list, which must agree), the
+//!                                    cores, and the CPU quota of the process's effective
+//!                                    cgroup hierarchy, every ancestor read (v1 or v2):
+//!                                    established unlimited, a limit, or unknown with why
+//!                                    (`facts`; bench 3.5.0)
 //! ab settle [--seconds N] [--interval S]
 //!                                    untimed: sample the clock and the package temperature
 //!                                    until they hold within a registered tolerance or N
@@ -635,7 +644,7 @@ fn hold_overlaps(cpu: usize, siblings: &[usize], decoder: &[usize]) -> bool {
     decoder.contains(&cpu) || siblings.iter().any(|x| decoder.contains(x))
 }
 
-/// The held spinner (bench 3.7.0, W1 of docs/journal/2026-11-10-next-experiments.md): one
+/// The held spinner (bench 3.8.0, W1 of docs/journal/2026-11-10-next-experiments.md): one
 /// thread of the process that holds it, pinned to one CPU and spinning there, so the machine
 /// never goes wholly idle around a decode (cold-start/20261110T102700Z: a decode started
 /// after the machine went idle ran at about 2.1× the wall; one spinner held throughout kept
@@ -1593,11 +1602,19 @@ fn opt(v: Option<f64>) -> String {
     v.map_or("null".into(), |x| format!("{x:.3}"))
 }
 
+thread_local! {
+    /// The spin threads `env_line` has started on this thread (`facts`'s test reads it: the
+    /// passive path must start none, the active one does)
+    static SPIN_SPAWNS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 /// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
 /// checked, not assumed: twice as many threads as CPUs spin for 0.3 s, and it counts if
 /// their summed wait is at least a quarter of their summed time off a CPU (most of it
-/// should be wait); a counter that reads zero there is never read as no wait
-fn env() {
+/// should be wait); a counter that reads zero there is never read as no wait. Active: the
+/// spin loads every CPU, and `machine`'s `perf` field opens (and closes) perf counters.
+/// `ab env --facts` (`facts`) is the passive reading
+fn env_line() -> String {
     let cores = cores();
     let ncpu: usize = cores.iter().map(Vec::len).sum();
     let quota = std::fs::read_to_string("/sys/fs/cgroup/cpu.max")
@@ -1628,6 +1645,7 @@ fn env() {
     let t0 = Instant::now();
     let hs: Vec<_> = (0..spin)
         .map(|_| {
+            SPIN_SPAWNS.with(|n| n.set(n.get() + 1));
             std::thread::spawn(move || {
                 let t = Instant::now();
                 let mut x = 0u64;
@@ -1673,7 +1691,461 @@ fn env() {
         throttled().is_some(),
         psi_cpu().is_some(),
     );
-    println!("{}", machine::extend_env(&line));
+    machine::extend_env(&line)
+}
+
+/// `ab env --facts` (bench 3.5.0; docs/journal/2026-11-09-run-fed-leader.md §R11): the
+/// machine facts a preflight needs, read passively. Procfs, sysfs, cgroupfs and
+/// `sched_getaffinity` only: no thread is started, nothing spins, and no perf counter is
+/// opened (`machine`'s `perf` field is null, "not probed"). Every fact is established or
+/// null with why; nothing is defaulted.
+///
+/// - **The CPUs allowed** (`cpus_allowed`): `sched_getaffinity` and `/proc/self/status`'s
+///   `Cpus_allowed_list`, each read strictly, and they must agree; `cpus` is their count.
+/// - **The cores** (`cores`, `core_cpus`): the allowed CPUs grouped by
+///   `thread_siblings_list`, every one of them read (a CPU whose siblings can't be read is
+///   no core of its own here: the count is null).
+/// - **The CPU quota** (`cpu_quota`): of this process's effective cgroup hierarchy, as
+///   `mibz2::parallel::cpu_quota` establishes it on `perf/service-guarded` (#302: Unlimited,
+///   Cpus or Unknown, fail closed), ported here with cgroup v1 covered too: the hierarchy
+///   that holds the `cpu` controller (a v1 one, where any v1 hierarchy names it, else the
+///   unified v2 one), the process's cgroup in it, then every directory up to the mount
+///   point, each level's limit parsed strictly and the tightest kept; the mount point must
+///   be the hierarchy's true root (v2: no `cgroup.type`; v1: its `release_agent`, which only
+///   a hierarchy's root has). Anything not so established is `unknown`, with why.
+mod facts {
+    use std::path::{Path, PathBuf};
+
+    use super::machine::js;
+
+    extern "C" {
+        fn sched_getaffinity(pid: i32, size: usize, mask: *mut u64) -> i32;
+    }
+
+    /// A cgroup's CPU quota, as `cpu_quota` establishes it
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Quota {
+        /// established: no limit on this process's cgroup or any ancestor, up to and
+        /// including the hierarchy's true root
+        Unlimited,
+        /// established: the tightest limit on the way up is this many CPUs' time
+        Cpus(f64),
+        /// not established: the preflight refuses
+        Unknown,
+    }
+
+    /// The quota with what established it: the hierarchy, every level read, or why not
+    pub struct QuotaFacts {
+        pub quota: Quota,
+        pub hierarchy: Option<&'static str>,
+        pub levels: Vec<String>,
+        pub why: Option<String>,
+    }
+
+    impl QuotaFacts {
+        pub fn json(&self) -> String {
+            let (state, cpus) = match self.quota {
+                Quota::Unlimited => ("unlimited", "null".to_string()),
+                Quota::Cpus(c) => ("limited", format!("{c}")),
+                Quota::Unknown => ("unknown", "null".to_string()),
+            };
+            format!(
+                "{{\"state\":\"{state}\",\"cpus\":{cpus},\"hierarchy\":{},\"levels\":[{}],\"why\":{}}}",
+                self.hierarchy.map_or("null".into(), js),
+                self.levels.iter().map(|l| js(l)).collect::<Vec<_>>().join(","),
+                self.why.as_deref().map_or("null".into(), js),
+            )
+        }
+    }
+
+    fn unknown(hierarchy: Option<&'static str>, why: impl Into<String>) -> QuotaFacts {
+        QuotaFacts {
+            quota: Quota::Unknown,
+            hierarchy,
+            levels: Vec::new(),
+            why: Some(why.into()),
+        }
+    }
+
+    /// The tree read from: `/` live, a fake tree in tests. Paths are absolute, as procfs
+    /// and the mount table write them
+    pub struct Root(PathBuf);
+
+    impl Root {
+        pub fn at(p: impl AsRef<Path>) -> Root {
+            Root(p.as_ref().to_path_buf())
+        }
+        fn path(&self, abs: &str) -> PathBuf {
+            self.0.join(abs.trim_start_matches('/'))
+        }
+        fn read(&self, abs: &str) -> std::io::Result<String> {
+            std::fs::read_to_string(self.path(abs))
+        }
+        fn is_dir(&self, abs: &str) -> bool {
+            self.path(abs).is_dir()
+        }
+        fn is_file(&self, abs: &str) -> bool {
+            self.path(abs).is_file()
+        }
+    }
+
+    /// A cgroup path from /proc/self/cgroup, accepted only plain and absolute
+    fn plain(path: &str) -> bool {
+        path.starts_with('/') && !path.contains("..") && !path.contains(' ') && !path.contains('\\')
+    }
+
+    /// This process's CPU quota, established or `Unknown` with why (Linux only)
+    pub fn cpu_quota(r: &Root) -> QuotaFacts {
+        if !cfg!(target_os = "linux") {
+            return unknown(None, "not Linux");
+        }
+        let cg = match r.read("/proc/self/cgroup") {
+            Ok(s) => s,
+            Err(e) => return unknown(None, format!("/proc/self/cgroup: {e}")),
+        };
+        let mut v1 = Vec::new();
+        for l in cg.lines().filter(|l| !l.is_empty()) {
+            let mut f = l.splitn(3, ':');
+            let (Some(_), Some(ctl), Some(path)) = (f.next(), f.next(), f.next()) else {
+                return unknown(None, format!("/proc/self/cgroup: an unparsable line {l:?}"));
+            };
+            if ctl.split(',').any(|c| c == "cpu") {
+                v1.push(path.to_string());
+            }
+        }
+        let (hier, got) = match v1.as_slice() {
+            [] => ("v2", v2(r, &cg)),
+            [path] => ("v1", self::v1(r, path)),
+            _ => {
+                return unknown(
+                    Some("v1"),
+                    "several cgroup v1 entries name the cpu controller",
+                )
+            }
+        };
+        match got {
+            Ok((quota, levels)) => QuotaFacts {
+                quota,
+                hierarchy: Some(hier),
+                levels,
+                why: None,
+            },
+            Err(why) => unknown(Some(hier), why),
+        }
+    }
+
+    /// The directories from the mount point down to the process's cgroup
+    fn levels(root: &str, point: &str, path: &str) -> Result<Vec<String>, String> {
+        if root.contains('\\') || point.contains('\\') || !point.starts_with('/') {
+            return Err(format!(
+                "an escaped or relative mount ({root:?} at {point:?})"
+            ));
+        }
+        let rel = if root == "/" {
+            path
+        } else {
+            let r = path.strip_prefix(root).ok_or_else(|| {
+                format!("the cgroup {path:?} is not under the mount's root {root:?}")
+            })?;
+            if !(r.is_empty() || r.starts_with('/')) {
+                return Err(format!(
+                    "the cgroup {path:?} is not under the mount's root {root:?}"
+                ));
+            }
+            r
+        };
+        let point = point.trim_end_matches('/');
+        let point = if point.is_empty() { "/" } else { point };
+        let mut out = vec![point.to_string()];
+        let mut at = point.trim_end_matches('/').to_string();
+        for part in rel.split('/').filter(|p| !p.is_empty()) {
+            at = format!("{at}/{part}");
+            out.push(at.clone());
+        }
+        Ok(out)
+    }
+
+    /// The one mount of `fstype` whose super options satisfy `want`: (root, mount point)
+    fn one_mount(
+        r: &Root,
+        fstype: &str,
+        want: impl Fn(&str) -> bool,
+    ) -> Result<(String, String), String> {
+        let info = r
+            .read("/proc/self/mountinfo")
+            .map_err(|e| format!("/proc/self/mountinfo: {e}"))?;
+        let mut found = info.lines().filter_map(|l| {
+            let (pre, post) = l.split_once(" - ")?;
+            let mut p = post.split_whitespace();
+            let (t, _src, opts) = (p.next()?, p.next()?, p.next().unwrap_or(""));
+            (t == fstype && want(opts)).then_some(pre)
+        });
+        let pre = found.next().ok_or_else(|| format!("no {fstype} mount"))?;
+        if found.next().is_some() {
+            return Err(format!("several {fstype} mounts"));
+        }
+        let f: Vec<&str> = pre.split_whitespace().collect();
+        match (f.get(3), f.get(4)) {
+            (Some(root), Some(point)) => Ok((root.to_string(), point.to_string())),
+            _ => Err(format!("an unparsable {fstype} mount")),
+        }
+    }
+
+    /// Positive decimal, strictly (no sign, no space)
+    fn pos(t: &str) -> Option<u64> {
+        (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| t.parse::<u64>().ok())
+            .flatten()
+            .filter(|&n| n > 0)
+    }
+
+    /// The tighter of two established quotas
+    fn tighter(a: Quota, b: Quota) -> Quota {
+        match (a, b) {
+            (Quota::Cpus(x), Quota::Cpus(y)) => Quota::Cpus(x.min(y)),
+            (Quota::Unlimited, b) => b,
+            (a, _) => a,
+        }
+    }
+
+    /// A v2 `cpu.max`, strictly: one line, `max PERIOD` or `QUOTA PERIOD`
+    pub fn parse_cpu_max(s: &str) -> Quota {
+        let line = s.strip_suffix('\n').unwrap_or(s);
+        match line.split(' ').collect::<Vec<_>>().as_slice() {
+            [q, p] => match (pos(p), *q) {
+                (Some(_), "max") => Quota::Unlimited,
+                (Some(p), q) => pos(q).map_or(Quota::Unknown, |q| Quota::Cpus(q as f64 / p as f64)),
+                (None, _) => Quota::Unknown,
+            },
+            _ => Quota::Unknown,
+        }
+    }
+
+    /// cgroup v2, as #302's `cpu_quota_of`: the one `0::` entry and the one `cgroup2` mount
+    fn v2(r: &Root, cg: &str) -> Result<(Quota, Vec<String>), String> {
+        use std::io::ErrorKind::NotFound;
+        let mut entries = cg.lines().filter_map(|l| l.strip_prefix("0::"));
+        let path = entries
+            .next()
+            .ok_or("no cgroup v2 entry and no v1 cpu controller")?
+            .trim()
+            .to_string();
+        if entries.next().is_some() || !plain(&path) {
+            return Err(format!("an ambiguous or escaped cgroup v2 entry {path:?}"));
+        }
+        let (root, point) = one_mount(r, "cgroup2", |_| true)?;
+        let levels = levels(&root, &point, &path)?;
+        let mut q = Quota::Unlimited;
+        for dir in &levels {
+            if !r.is_dir(dir) {
+                return Err(format!("{dir}: not a directory"));
+            }
+            let f = format!("{}/cpu.max", dir.trim_end_matches('/'));
+            match r.read(&f) {
+                Ok(text) => match parse_cpu_max(&text) {
+                    Quota::Unknown => return Err(format!("{f} reads {text:?}")),
+                    b => q = tighter(q, b),
+                },
+                // (the cpu controller not enabled at that level: no limit there)
+                Err(e) if e.kind() == NotFound => {}
+                Err(e) => return Err(format!("{f}: {e}")),
+            }
+        }
+        let top = format!("{}/cgroup.type", levels[0].trim_end_matches('/'));
+        match r.read(&top) {
+            Err(e) if e.kind() == NotFound => Ok((q, levels)),
+            Ok(_) => Err(format!(
+                "{top} exists: the mount is a cgroup below the hierarchy's root, whose ancestors can't be read"
+            )),
+            Err(e) => Err(format!("{top}: {e}")),
+        }
+    }
+
+    /// cgroup v1: the hierarchy holding the cpu controller, its bandwidth files at every
+    /// level (`cpu.cfs_quota_us`, -1 for none, and `cpu.cfs_period_us`), each required
+    fn v1(r: &Root, path: &str) -> Result<(Quota, Vec<String>), String> {
+        let path = path.trim();
+        if !plain(path) {
+            return Err(format!("an escaped cgroup v1 entry {path:?}"));
+        }
+        let (root, point) = one_mount(r, "cgroup", |o| o.split(',').any(|x| x == "cpu"))?;
+        let levels = levels(&root, &point, path)?;
+        let mut q = Quota::Unlimited;
+        for dir in &levels {
+            if !r.is_dir(dir) {
+                return Err(format!("{dir}: not a directory"));
+            }
+            let d = dir.trim_end_matches('/');
+            let read = |name: &str| -> Result<String, String> {
+                let f = format!("{d}/{name}");
+                let s = r.read(&f).map_err(|e| format!("{f}: {e}"))?;
+                Ok(s.strip_suffix('\n').unwrap_or(&s).to_string())
+            };
+            let (quota, period) = (read("cpu.cfs_quota_us")?, read("cpu.cfs_period_us")?);
+            let p =
+                pos(&period).ok_or_else(|| format!("{d}/cpu.cfs_period_us reads {period:?}"))?;
+            let here = if quota == "-1" {
+                Quota::Unlimited
+            } else {
+                Quota::Cpus(
+                    pos(&quota).ok_or_else(|| format!("{d}/cpu.cfs_quota_us reads {quota:?}"))?
+                        as f64
+                        / p as f64,
+                )
+            };
+            q = tighter(q, here);
+        }
+        let top = format!("{}/release_agent", levels[0].trim_end_matches('/'));
+        if r.is_file(&top) {
+            Ok((q, levels))
+        } else {
+            Err(format!(
+                "no {top}: the mount is not the hierarchy's root, whose ancestors can't be read"
+            ))
+        }
+    }
+
+    /// A CPU list ("0-3,6"), strictly: every part a CPU or an ascending range, at least one
+    pub fn cpu_list(s: &str) -> Option<Vec<usize>> {
+        let n = |t: &str| {
+            (!t.is_empty() && t.bytes().all(|b| b.is_ascii_digit()))
+                .then(|| t.parse::<usize>().ok())
+                .flatten()
+        };
+        let mut out = Vec::new();
+        for part in s.trim().split(',') {
+            match part.split_once('-') {
+                Some((a, b)) => {
+                    let (a, b) = (n(a)?, n(b)?);
+                    if a > b {
+                        return None;
+                    }
+                    out.extend(a..=b);
+                }
+                None => out.push(n(part)?),
+            }
+        }
+        out.sort_unstable();
+        let len = out.len();
+        out.dedup();
+        (len == out.len() && !out.is_empty()).then_some(out)
+    }
+
+    /// This process's CPU affinity mask (`sched_getaffinity`), as CPU ids
+    pub fn affinity() -> Result<Vec<usize>, String> {
+        let mut mask = [0u64; 64];
+        // SAFETY: an out-parameter of the size given (4096 CPUs' bits)
+        let rc = unsafe { sched_getaffinity(0, std::mem::size_of_val(&mask), mask.as_mut_ptr()) };
+        if rc < 0 {
+            return Err(format!(
+                "sched_getaffinity failed: {}",
+                std::io::Error::last_os_error()
+            ));
+        }
+        let cpus: Vec<usize> = (0..mask.len() * 64)
+            .filter(|&c| mask[c / 64] >> (c % 64) & 1 == 1)
+            .collect();
+        if cpus.is_empty() {
+            return Err("sched_getaffinity: an empty mask".into());
+        }
+        Ok(cpus)
+    }
+
+    /// The CPUs allowed: the affinity mask and Cpus_allowed_list, which must agree
+    pub fn allowed(r: &Root, mask: Result<Vec<usize>, String>) -> Result<Vec<usize>, String> {
+        let mask = mask?;
+        let status = r
+            .read("/proc/self/status")
+            .map_err(|e| format!("/proc/self/status: {e}"))?;
+        let line = status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+            .ok_or("no Cpus_allowed_list in /proc/self/status")?;
+        let listed =
+            cpu_list(line).ok_or_else(|| format!("Cpus_allowed_list reads {:?}", line.trim()))?;
+        if listed != mask {
+            return Err(format!(
+                "Cpus_allowed_list ({} CPUs) and sched_getaffinity ({} CPUs) disagree",
+                listed.len(),
+                mask.len()
+            ));
+        }
+        Ok(listed)
+    }
+
+    /// The allowed CPUs grouped by core, every CPU's siblings read
+    pub fn cores(r: &Root, allowed: &[usize]) -> Result<Vec<Vec<usize>>, String> {
+        let mut sib = std::collections::BTreeMap::new();
+        for &c in allowed {
+            let f = format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list");
+            let s = r.read(&f).map_err(|e| format!("{f}: {e}"))?;
+            let v = cpu_list(&s).ok_or_else(|| format!("{f} reads {:?}", s.trim()))?;
+            if !v.contains(&c) {
+                return Err(format!("{f} does not list cpu{c} itself"));
+            }
+            sib.insert(c, v);
+        }
+        Ok(super::group(allowed, |c| sib.get(&c).cloned()))
+    }
+
+    /// The facts line, from the tree `r` and the affinity mask given
+    pub fn line(
+        r: &Root,
+        mask: Result<Vec<usize>, String>,
+        throttling: bool,
+        psi: bool,
+        machine: &str,
+    ) -> String {
+        let ids = |v: &[usize]| v.iter().map(usize::to_string).collect::<Vec<_>>().join(",");
+        let allowed = allowed(r, mask);
+        let cores = allowed
+            .as_ref()
+            .map_err(Clone::clone)
+            .and_then(|a| cores(r, a));
+        let mut f = vec!["\"facts\":\"ab env --facts/1\"".to_string()];
+        match &allowed {
+            Ok(a) => {
+                f.push(format!("\"cpus\":{}", a.len()));
+                f.push(format!("\"cpus_allowed\":[{}]", ids(a)));
+            }
+            Err(why) => {
+                f.push(format!(
+                    "\"cpus\":null,\"cpus_allowed\":null,\"cpus_allowed_why\":{}",
+                    js(why)
+                ));
+            }
+        }
+        match &cores {
+            Ok(c) => {
+                f.push(format!("\"cores\":{}", c.len()));
+                let cc: Vec<String> = c.iter().map(|x| js(&ids(x))).collect();
+                f.push(format!("\"core_cpus\":[{}]", cc.join(",")));
+            }
+            Err(why) => f.push(format!(
+                "\"cores\":null,\"core_cpus\":null,\"cores_why\":{}",
+                js(why)
+            )),
+        }
+        f.push(format!("\"cpu_quota\":{}", cpu_quota(r).json()));
+        f.push(format!("\"throttling\":{throttling},\"psi_cpu\":{psi}"));
+        f.push("\"spin_threads\":0,\"perf_probed\":false".into());
+        f.push(format!("\"machine\":{machine}"));
+        format!("{{{}}}", f.join(","))
+    }
+
+    /// `ab env --facts`, live
+    pub fn live() -> String {
+        let machine = super::machine::Sysfs::live()
+            .env_json("\"perf\":null,\"perf_why\":\"not probed: ab env --facts opens no counter\"");
+        line(
+            &Root::at("/"),
+            affinity(),
+            super::throttled().is_some(),
+            super::psi_cpu().is_some(),
+            &machine,
+        )
+    }
+    // (the end of mod facts: its test reads the text above for what it must not call)
 }
 
 fn json_str(line: &str, key: &str) -> Option<String> {
@@ -1855,6 +2327,8 @@ fn run(args: &[String]) {
                     let census = Census::watch(child.id());
                     let o = child.wait_with_output().unwrap();
                     let observed = census.finish();
+                    // (how it ended, the signal's number included: `termination`, bench 3.5.0)
+                    let term = Term::of(o.status);
                     let span = w0.elapsed().as_secs_f64();
                     let t_exit = machine::unix_ns();
                     let (b1, s1, tot1) = stat();
@@ -1876,6 +2350,12 @@ fn run(args: &[String]) {
                     let psi_ms = psi0.zip(psi1).map(|(a, b)| (b - a) as f64 / 1000.0);
                     let line = String::from_utf8_lossy(&o.stdout);
                     let line = line.trim();
+                    // (the record's tail: the termination, then the child's own fields)
+                    let fields = format!(
+                        "{},{}",
+                        term.json(),
+                        line.strip_prefix('{').unwrap_or("\"broken\":1}")
+                    );
                     let cpu = json_f(line, "cpu");
                     let others_raw = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
                     let others = ((b1 - b0) as f64 / HZ - cpu - spun).max(0.0) / span;
@@ -1901,7 +2381,7 @@ fn run(args: &[String]) {
                         opt(throttle.map(|x| x.1 as f64 / 1000.0)),
                         opt(psi_ms),
                         waited.elapsed().as_secs_f64() - settle,
-                        line.strip_prefix('{').unwrap_or("\"broken\":1}")
+                        fields
                     );
                     eprintln!(
                         "r{round} {base:<12} t={t} {arm:<16} wall {:>7.3} cpu {:>7.3} rss {:>5.0}MB others {others:.2} steal {steal:.1}% {}",
@@ -1915,6 +2395,40 @@ fn run(args: &[String]) {
                 }
             }
         }
+    }
+}
+
+/// How a run's child ended (bench 3.5.0): success, a nonzero exit code, or the signal that
+/// killed it. Recorded in every run's record (`termination`), so output written before a
+/// failure is never taken for a run that succeeded
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Term {
+    Success,
+    Code(i32),
+    Signal(i32),
+    /// neither a code nor a signal (not on Unix): never success
+    Unknown,
+}
+
+impl Term {
+    fn of(status: std::process::ExitStatus) -> Term {
+        use std::os::unix::process::ExitStatusExt;
+        match (status.code(), status.signal()) {
+            (Some(0), _) => Term::Success,
+            (Some(c), _) => Term::Code(c),
+            (None, Some(s)) => Term::Signal(s),
+            (None, None) => Term::Unknown,
+        }
+    }
+    /// The record's field: `"termination":"success"`, `"exit N"`, `"signal N"` or `"unknown"`
+    fn json(self) -> String {
+        let t = match self {
+            Term::Success => "success".to_string(),
+            Term::Code(c) => format!("exit {c}"),
+            Term::Signal(s) => format!("signal {s}"),
+            Term::Unknown => "unknown".to_string(),
+        };
+        format!("\"termination\":\"{t}\"")
     }
 }
 
@@ -2099,7 +2613,11 @@ fn main() {
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
-        Some("env") => env(),
+        Some("env") => match args.get(1).map(String::as_str) {
+            None => println!("{}", env_line()),
+            Some("--facts") if args.len() == 2 => println!("{}", facts::live()),
+            Some(a) => panic!("ab env: unknown argument {a} (ab env [--facts])"),
+        },
         Some("settle") => {
             let cpus: Vec<usize> = cores().into_iter().flatten().collect();
             machine::settle(&args[1..], &cpus)
@@ -2911,7 +3429,14 @@ mod machine {
         }
     }
 
+    thread_local! {
+        /// Every `perf_event_open` this thread has attempted through `open` (`facts`'s test
+        /// reads it: the passive path must attempt none, the active one does)
+        pub static PERF_OPENS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
     fn open(kind: u64, config: u64, user_only: bool) -> Result<i32, i32> {
+        PERF_OPENS.with(|n| n.set(n.get() + 1));
         let Some(nr) = SYS_PERF_EVENT_OPEN else {
             return Err(38);
         };
@@ -4348,6 +4873,441 @@ mod tests {
         // two arms: head (0) and base (1) alternate first, in a balanced pattern
         let first: Vec<usize> = (0..4).map(|r| arm_order(r, 2)[0]).collect();
         assert_eq!(first, vec![0, 1, 1, 0]);
+    }
+
+    /// A fake procfs, sysfs and cgroupfs under the test's own directory, removed when dropped
+    struct Fake(std::path::PathBuf);
+    impl Fake {
+        fn new(name: &str) -> Fake {
+            let p = std::env::temp_dir().join(format!("ab-facts-{}-{name}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&p);
+            std::fs::create_dir_all(&p).unwrap();
+            Fake(p)
+        }
+        fn put(&self, rel: &str, v: &str) -> &Self {
+            let p = self.0.join(rel.trim_start_matches('/'));
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, v).unwrap();
+            self
+        }
+        fn dir(&self, rel: &str) -> &Self {
+            std::fs::create_dir_all(self.0.join(rel.trim_start_matches('/'))).unwrap();
+            self
+        }
+        fn root(&self) -> facts::Root {
+            facts::Root::at(&self.0)
+        }
+    }
+    impl Drop for Fake {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    const MOUNT_V2: &str = "30 23 0:26 / /sys/fs/cgroup rw,nosuid - cgroup2 cgroup2 rw\n";
+
+    /// cgroup v2, the process in /user.slice/run.scope, its root unlimited
+    fn v2(name: &str) -> Fake {
+        let t = Fake::new(name);
+        t.put("/proc/self/cgroup", "0::/user.slice/run.scope\n")
+            .put("/proc/self/mountinfo", MOUNT_V2)
+            .dir("/sys/fs/cgroup/user.slice/run.scope")
+            .put("/sys/fs/cgroup/user.slice/cpu.max", "max 100000\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+                "max 100000\n",
+            )
+            .put("/sys/fs/cgroup/user.slice/cgroup.type", "domain\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cgroup.type",
+                "domain\n",
+            );
+        t
+    }
+
+    const MOUNT_V1: &str = "36 23 0:28 / /sys/fs/cgroup rw - tmpfs tmpfs rw,mode=755\n\
+        37 36 0:29 / /sys/fs/cgroup/cpu,cpuacct rw - cgroup cgroup rw,cpu,cpuacct\n\
+        40 36 0:32 / /sys/fs/cgroup/memory rw - cgroup cgroup rw,memory\n\
+        46 36 0:38 / /sys/fs/cgroup/unified rw - cgroup2 cgroup2 rw\n";
+
+    /// cgroup v1 (hybrid), the process in /job, every level unlimited
+    fn v1(name: &str) -> Fake {
+        let t = Fake::new(name);
+        let h = "/sys/fs/cgroup/cpu,cpuacct";
+        t.put(
+            "/proc/self/cgroup",
+            "4:memory:/\n3:cpu,cpuacct:/job\n0::/\n",
+        )
+        .put("/proc/self/mountinfo", MOUNT_V1)
+        .put(&format!("{h}/release_agent"), "")
+        .put(&format!("{h}/cpu.cfs_quota_us"), "-1\n")
+        .put(&format!("{h}/cpu.cfs_period_us"), "100000\n")
+        .put(&format!("{h}/job/cpu.cfs_quota_us"), "-1\n")
+        .put(&format!("{h}/job/cpu.cfs_period_us"), "100000\n");
+        t
+    }
+
+    #[test]
+    fn the_quota_is_established_unlimited_only_through_every_level() {
+        use facts::Quota::*;
+        let q = |t: &Fake| facts::cpu_quota(&t.root());
+        // positive controls: v2 and v1, every level read and none limited
+        let t = v2("v2-ok");
+        let got = q(&t);
+        assert_eq!(got.quota, Unlimited, "{:?}", got.why);
+        assert_eq!(got.hierarchy, Some("v2"));
+        assert_eq!(
+            got.levels,
+            [
+                "/sys/fs/cgroup",
+                "/sys/fs/cgroup/user.slice",
+                "/sys/fs/cgroup/user.slice/run.scope"
+            ]
+        );
+        assert!(got
+            .json()
+            .starts_with("{\"state\":\"unlimited\",\"cpus\":null,\"hierarchy\":\"v2\""));
+        let t = v1("v1-ok");
+        let got = q(&t);
+        assert_eq!(got.quota, Unlimited, "{:?}", got.why);
+        assert_eq!(got.hierarchy, Some("v1"));
+        assert_eq!(got.levels.len(), 2);
+        // (the Researcher's case: a limited child under an unlimited root, which a fixed
+        // read of /sys/fs/cgroup/cpu.max calls unlimited) negative controls: limited
+        let t = v2("v2-child-limited");
+        t.put(
+            "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+            "400000 100000\n",
+        );
+        assert_eq!(q(&t).quota, Cpus(4.0));
+        assert!(q(&t)
+            .json()
+            .starts_with("{\"state\":\"limited\",\"cpus\":4,"));
+        let t = v2("v2-tightest");
+        t.put("/sys/fs/cgroup/user.slice/cpu.max", "200000 100000\n")
+            .put(
+                "/sys/fs/cgroup/user.slice/run.scope/cpu.max",
+                "800000 100000\n",
+            );
+        assert_eq!(q(&t).quota, Cpus(2.0));
+        let t = v1("v1-child-limited");
+        t.put("/sys/fs/cgroup/cpu,cpuacct/job/cpu.cfs_quota_us", "50000\n");
+        assert_eq!(q(&t).quota, Cpus(0.5));
+        // (v2: a level without cpu.max has the controller off there, no limit)
+        let t = v2("v2-no-controller");
+        std::fs::remove_file(t.0.join("sys/fs/cgroup/user.slice/cpu.max")).unwrap();
+        assert_eq!(q(&t).quota, Unlimited);
+        // unknown controls: each refuses to establish anything
+        let unknown: Vec<(&str, Box<dyn Fn(&Fake)>)> = vec![
+            (
+                "no /proc/self/cgroup",
+                Box::new(|t| {
+                    std::fs::remove_file(t.0.join("proc/self/cgroup")).unwrap();
+                }),
+            ),
+            (
+                "no mountinfo",
+                Box::new(|t| {
+                    std::fs::remove_file(t.0.join("proc/self/mountinfo")).unwrap();
+                }),
+            ),
+            (
+                "an unparsable cpu.max",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/user.slice/cpu.max", "max\n");
+                }),
+            ),
+            (
+                "a fractional cpu.max",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/user.slice/cpu.max", "1.5 100000\n");
+                }),
+            ),
+            (
+                "an unreadable cpu.max",
+                Box::new(|t| {
+                    let p = t.0.join("sys/fs/cgroup/user.slice/run.scope/cpu.max");
+                    std::fs::remove_file(&p).unwrap();
+                    std::fs::create_dir(&p).unwrap();
+                }),
+            ),
+            (
+                "a missing level",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "0::/user.slice/gone.scope\n");
+                }),
+            ),
+            (
+                "a namespaced mount (cgroup.type at the top)",
+                Box::new(|t| {
+                    t.put("/sys/fs/cgroup/cgroup.type", "domain\n");
+                }),
+            ),
+            (
+                "two cgroup2 mounts",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/mountinfo",
+                        &format!("{MOUNT_V2}{}", MOUNT_V2.replace("30 23", "31 23")),
+                    );
+                }),
+            ),
+            (
+                "two v2 entries",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/cgroup",
+                        "0::/user.slice\n0::/user.slice/run.scope\n",
+                    );
+                }),
+            ),
+            (
+                "an escaped path",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "0::/user.slice/../run.scope\n");
+                }),
+            ),
+            (
+                "no v2 entry, no v1 cpu",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "4:memory:/\n");
+                }),
+            ),
+        ];
+        for (what, mutate) in unknown {
+            let t = v2(&format!("v2-{}", what.len()));
+            mutate(&t);
+            let got = q(&t);
+            assert_eq!(got.quota, Unknown, "{what}: {:?}", got.levels);
+            assert!(got.why.is_some(), "{what}");
+            assert!(
+                got.json()
+                    .starts_with("{\"state\":\"unknown\",\"cpus\":null"),
+                "{what}"
+            );
+        }
+        let h = "sys/fs/cgroup/cpu,cpuacct";
+        let unknown_v1: Vec<(&str, Box<dyn Fn(&Fake)>)> = vec![
+            (
+                "no release_agent (not the hierarchy's root)",
+                Box::new(move |t| {
+                    std::fs::remove_file(t.0.join(format!("{h}/release_agent"))).unwrap();
+                }),
+            ),
+            (
+                "no cfs_quota_us at a level",
+                Box::new(move |t| {
+                    std::fs::remove_file(t.0.join(format!("{h}/job/cpu.cfs_quota_us"))).unwrap();
+                }),
+            ),
+            (
+                "a zero period",
+                Box::new(move |t| {
+                    t.put(&format!("/{h}/cpu.cfs_period_us"), "0\n");
+                }),
+            ),
+            (
+                "a quota of -2",
+                Box::new(move |t| {
+                    t.put(&format!("/{h}/job/cpu.cfs_quota_us"), "-2\n");
+                }),
+            ),
+            (
+                "two v1 cpu entries",
+                Box::new(|t| {
+                    t.put("/proc/self/cgroup", "3:cpu,cpuacct:/job\n2:cpu:/job\n");
+                }),
+            ),
+            (
+                "no v1 cpu mount",
+                Box::new(|t| {
+                    t.put("/proc/self/mountinfo", MOUNT_V2);
+                }),
+            ),
+            (
+                "a mount below the hierarchy's root",
+                Box::new(|t| {
+                    t.put(
+                        "/proc/self/mountinfo",
+                        &MOUNT_V1.replace("0:29 / ", "0:29 /other "),
+                    );
+                }),
+            ),
+        ];
+        for (what, mutate) in unknown_v1 {
+            let t = v1(&format!("v1-{}", what.len()));
+            mutate(&t);
+            let got = q(&t);
+            assert_eq!(got.quota, Unknown, "{what}: {:?}", got.levels);
+            assert_eq!(got.hierarchy, Some("v1"), "{what}");
+        }
+    }
+
+    #[test]
+    fn the_allowed_cpus_are_the_affinity_and_the_status_agreeing() {
+        let t = Fake::new("allowed");
+        t.put("/proc/self/status", "Name:\tab\nCpus_allowed_list:\t0-3\n");
+        let r = t.root();
+        assert_eq!(
+            facts::allowed(&r, Ok(vec![0, 1, 2, 3])),
+            Ok(vec![0, 1, 2, 3])
+        );
+        assert!(facts::allowed(&r, Ok(vec![0, 1]))
+            .unwrap_err()
+            .contains("disagree"));
+        assert!(facts::allowed(&r, Err("no mask".into())).is_err());
+        t.put("/proc/self/status", "Cpus_allowed_list:\t0-3,x\n");
+        assert!(facts::allowed(&r, Ok(vec![0, 1, 2, 3])).is_err());
+        assert_eq!(facts::cpu_list("0-3,6\n"), Some(vec![0, 1, 2, 3, 6]));
+        for bad in ["", "3-1", "0,0", "a", "1-", " - "] {
+            assert_eq!(facts::cpu_list(bad), None, "{bad:?}");
+        }
+        // the live process: whatever this machine is, the two sources agree
+        let live = facts::allowed(&facts::Root::at("/"), facts::affinity());
+        assert!(live.as_ref().is_ok_and(|v| !v.is_empty()), "{live:?}");
+    }
+
+    #[test]
+    fn the_facts_line_is_null_with_why_where_a_fact_is_not_read() {
+        let t = v2("line");
+        t.put("/proc/self/status", "Cpus_allowed_list:\t0-3\n");
+        for c in 0..4 {
+            t.put(
+                &format!("/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"),
+                if c % 2 == 0 { &"0,2"[..] } else { "1,3" },
+            );
+        }
+        let l = facts::line(&t.root(), Ok(vec![0, 1, 2, 3]), false, true, "{}");
+        assert!(l.starts_with("{\"facts\":\"ab env --facts/1\",\"cpus\":4,\"cpus_allowed\":[0,1,2,3],\"cores\":2,\"core_cpus\":[\"0,2\",\"1,3\"],\"cpu_quota\":{\"state\":\"unlimited\""), "{l}");
+        assert!(
+            l.ends_with("\"spin_threads\":0,\"perf_probed\":false,\"machine\":{}}"),
+            "{l}"
+        );
+        std::fs::remove_file(t.0.join("sys/devices/system/cpu/cpu3/topology/thread_siblings_list"))
+            .unwrap();
+        let l = facts::line(&t.root(), Ok(vec![0, 1, 2, 3]), false, true, "{}");
+        assert!(
+            l.contains("\"cores\":null,\"core_cpus\":null,\"cores_why\":"),
+            "{l}"
+        );
+        let l = facts::line(&t.root(), Ok(vec![0, 1]), false, true, "{}");
+        assert!(
+            l.contains("\"cpus\":null,\"cpus_allowed\":null,\"cpus_allowed_why\":"),
+            "{l}"
+        );
+    }
+
+    /// The passive path's witness, at run time and by its text. At run time: `facts::live`
+    /// on this thread attempts no `perf_event_open` through ab's one wrapper
+    /// (`machine::PERF_OPENS`) and starts no spin thread (`SPIN_SPAWNS`), while the active
+    /// `env_line`, through the same counters, does both (the positive control). By its text:
+    /// the module calls no counter, spawns no thread and spins nothing. Neither shows what a
+    /// library call might do underneath (sysfs reads, `sched_getaffinity`): only ab's own
+    /// counter and spin paths are witnessed
+    #[test]
+    fn the_facts_path_opens_no_counter_and_spawns_no_spin_thread() {
+        let opens = || machine::PERF_OPENS.with(std::cell::Cell::get);
+        let spins = || SPIN_SPAWNS.with(std::cell::Cell::get);
+        let (o0, s0) = (opens(), spins());
+        let l = facts::live();
+        assert_eq!(
+            (opens(), spins()),
+            (o0, s0),
+            "the passive path opened or spun: {l}"
+        );
+        assert!(l.contains("\"perf\":null,\"perf_why\":\"not probed"), "{l}");
+        let active = env_line();
+        assert!(
+            opens() > o0,
+            "the positive control opened nothing: {active}"
+        );
+        assert!(spins() > s0, "the positive control spun nothing: {active}");
+        let src = include_str!("ab.rs");
+        let start = src.find("\nmod facts {").expect("mod facts");
+        let end = src.find("// (the end of mod facts").expect("its end");
+        let body = &src[start..end];
+        for banned in [
+            "Perf::",
+            "Perf {",
+            "perf_event_open",
+            "probe()",
+            "fn open(",
+            "thread::spawn",
+            "spin(",
+            "extend_env",
+            "env_line",
+        ] {
+            assert!(!body.contains(banned), "mod facts names {banned}");
+        }
+    }
+
+    /// The producer keeps every child's termination: `ab run` itself, its children stand-in
+    /// scripts (ARM@EXE) that write a valid-looking record and then succeed, exit 17, or are
+    /// killed by a signal, and one that writes nothing (the controls). Output before a
+    /// failure is recorded with that failure, never as a success
+    #[test]
+    fn the_run_records_each_childs_termination() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("ab-term-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let rec = r#"echo '{"wall":0.5,"cpu":0.5,"rss_kb":1,"out":3,"hash":"0123456789abcdef"}'"#;
+        let mut arms = Vec::new();
+        for (name, tail) in [
+            ("ok", format!("{rec}\nexit 0")),
+            ("seventeen", format!("{rec}\nexit 17")),
+            ("killed", format!("{rec}\nkill -KILL $$")),
+            ("empty", "exit 0".to_string()),
+        ] {
+            let p = dir.join(name);
+            std::fs::write(&p, format!("#!/bin/sh\n{tail}\n")).unwrap();
+            std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o755)).unwrap();
+            arms.push(format!("{name}@{}", p.display()));
+        }
+        let corpus = dir.join("c.bz2");
+        std::fs::write(&corpus, b"BZh9").unwrap();
+        let out = dir.join("runs.jsonl");
+        let args: Vec<String> = [
+            out.to_str().unwrap(),
+            "--arms",
+            &arms.join(","),
+            "--threads",
+            "2",
+            "--rounds",
+            "1",
+            "--max-busy",
+            "64",
+            "--settle",
+            "0.2",
+            corpus.to_str().unwrap(),
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        run(&args);
+        let text = std::fs::read_to_string(&out).unwrap();
+        let by = |arm: &str| {
+            text.lines()
+                .find(|l| l.contains(&format!("\"arm\":\"{arm}@")))
+                .unwrap_or_else(|| panic!("no {arm} record in {text}"))
+                .to_string()
+        };
+        let ok = by("ok");
+        assert!(ok.contains("\"termination\":\"success\""), "{ok}");
+        assert!(ok.contains("\"hash\":\"0123456789abcdef\""), "{ok}");
+        let r = by("seventeen");
+        assert!(r.contains("\"termination\":\"exit 17\""), "{r}");
+        assert!(
+            r.contains("\"hash\":\"0123456789abcdef\""),
+            "its output kept beside: {r}"
+        );
+        let r = by("killed");
+        assert!(r.contains("\"termination\":\"signal 9\""), "{r}");
+        assert!(r.contains("\"hash\":\"0123456789abcdef\""), "{r}");
+        let r = by("empty");
+        assert!(r.contains("\"termination\":\"success\""), "{r}");
+        assert!(r.contains("\"broken\":1"), "{r}");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

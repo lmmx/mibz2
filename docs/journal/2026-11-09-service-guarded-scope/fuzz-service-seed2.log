@@ -1,0 +1,30 @@
+# target/fuzz/examples/fuzz 120 2 - service  (source: see the journal's pin)
+2724 cases in 120 s (seed 2, mode service), 0 failures
+      361  service: both decode, same bytes
+      193  service: both fail (BadBlockMagic), as the plain decoder
+      291  service: both fail (BadCodeLength), as the plain decoder
+       56  service: both fail (BadGroups), as the plain decoder
+      203  service: both fail (BadHuffmanCode), as the plain decoder
+       66  service: both fail (BadOrigPtr), as the plain decoder
+      119  service: both fail (BadSelector), as the plain decoder
+        2  service: both fail (BadSelectors), as the plain decoder
+      544  service: both fail (BlockCrc), as the plain decoder
+       71  service: both fail (BlockTooLong), as the plain decoder
+        1  service: both fail (NoSymbols), as the plain decoder
+        2  service: both fail (NotBz2), as the plain decoder
+       10  service: both fail (Randomised), as the plain decoder
+        2  service: both fail (RunTooLong), as the plain decoder
+        6  service: both fail (RunUnfinished), as the plain decoder
+      124  service: both fail (SelectorOverrun), as the plain decoder
+       73  service: both fail (StreamCrc), as the plain decoder
+        3  service: both fail (TrailingData), as the plain decoder
+      597  service: both fail (Truncated), as the plain decoder
+service cases (counted after the completion fence): candidate, cases, with a block on a team's pool, with a block finished, with front sets reused, with back sets reused, with an error
+      340  mibz2 default svc2 StreamDecoder::new w1048576 r65536: pooled 233, finished 288, fronts reused 40, backs reused 91, errors 301
+      341  mibz2 default svc2 StreamDecoder::new w997 r509: pooled 224, finished 281, fronts reused 58, backs reused 96, errors 292
+      341  mibz2 default svc2 BzReader::parallel r4093: pooled 242, finished 304, fronts reused 48, backs reused 96, errors 296
+      341  mibz2 default svc2 decode_parallel: pooled 232, finished 290, fronts reused 47, backs reused 88, errors 298
+      341  mibz2 service 1x3+1 s1: pooled 237, finished 286, fronts reused 114, backs reused 161, errors 300
+      340  mibz2 service 3x3+1 s12: pooled 242, finished 285, fronts reused 16, backs reused 34, errors 290
+      340  mibz2 service 1x4+2 s2: pooled 225, finished 286, fronts reused 76, backs reused 153, errors 293
+      340  mibz2 service 2x2+1 s3 scalar: pooled 216, finished 271, fronts reused 61, backs reused 85, errors 293

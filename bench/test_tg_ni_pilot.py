@@ -247,8 +247,7 @@ class Pilot(unittest.TestCase):
             self.assertTrue(structure["valid"], structure["problems"])
             self.assertEqual(len(structure["shards"]), 9)
             self.assertTrue(structure["unchecked"])
-            refused = tg.ni_judge(self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False, rounds=2,
-                                  batches=1)
+            refused = tg.ni_judge(self.root, man, T.HEAD, reg={"frozen": {}, "bench": None}, check_git=False, rounds=2)
             status, line = gate.gate("smoke", refused, 2, structure)
             self.assertEqual(status, 0, line)
             self.assertIn("smoke: not evidence", line)

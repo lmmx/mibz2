@@ -1,0 +1,9 @@
+# The guarded service default's workstation A/B (docs/journal/2026-11-09-service-guarded-registration.md).
+# DRAFT: not frozen. A freeze sets, in its own commit, `candidate <40-hex>` (the commit whose
+# build and workload inputs HEAD must match), `base <40-hex>` (master as fetched at the freeze,
+# the current default's commit, merged into the candidate: an ancestor of it) and
+# `base_fetched <YYYY-MM-DDTHH:MM:SSZ>` (the UTC time that master was fetched; ancestry alone
+# does not say the base was current). Until then `just bench-service-guarded` refuses.
+candidate d136df7e31903bb7c18c3f90d7fa499985adb544
+base a2da49638ac54d7763de1c167bd054f67ffdc763
+base_fetched 2026-11-09T18:10:21Z
