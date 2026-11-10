@@ -101,7 +101,7 @@ load 1.38/1.23/1.13, 4 CPUs, 5.0 G free. ab's `runq_s` was 0.209, 0.118 and 0.00
   - `mtf_checkpoints_reg_avx2` self is 779,679,144 Ir (3.718 Ir/D), against
     `mtf_checkpoints_avx2`'s 835,326,277 (3.983) and one worker's `mtf_avx2`, 773,179,796
     (3.687);
-  - the rest of the drop is the memset arc (§6).
+  - the rest of the drop is in its library arcs (§6).
 
 ## 4. Conditions
 
@@ -146,9 +146,9 @@ load 1.38/1.23/1.13, 4 CPUs, 5.0 G free. ab's `runq_s` was 0.209, 0.118 and 0.00
 | plain worker `mtf::mtf` / `mtf_avx2` | **no** | V3 |
 | `mtf_checkpoints_scalar` | **no** | the tests |
 
-**The memset arc:** in the candidate, MTF's memset arc falls with the 32-byte run stores, as
-#170 did on one worker. Read off the stage: 4.1322 − 3.718 = 0.414, against one worker's
-0.424.
+**MTF less its kernel's self cost** (every library arc out of the kernel: memset, memmove and
+the checkpoints' copies, not split here): 4.1322 − 3.7181 = 0.414 in the candidate, against
+4.7148 − 3.9834 = 0.731 in the control and 4.1112 − 3.6871 = 0.424 on one worker.
 
 **Not claimed:** time, adoption, merge. C29's timed R5 (INCONCLUSIVE) is not reopened.
 
