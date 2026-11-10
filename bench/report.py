@@ -1441,7 +1441,11 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
             "|---|--:|---|--:|",
         ]
         for label, f in research.items():
-            v = f["cycles_per_byte"] if cycles and f["cycles_per_byte"] is not None else f["ns_per_byte"]
+            v = (
+                f["cycles_per_byte"]
+                if cycles and f["cycles_per_byte"] is not None
+                else f["ns_per_byte"]
+            )
             against = " + ".join(f["against"].split("+")) if f["against"] else "–"
             out.append(f"| {label} | {v:.2f} | {against} | {change(f['ratio'])} |")
     errors = {arm: a["errors"] for arm, a in arms.items() if a["errors"]}

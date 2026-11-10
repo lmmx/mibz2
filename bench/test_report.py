@@ -131,9 +131,7 @@ class ResearchRows(unittest.TestCase):
             if r["arm"] == "head":
                 # the rows move with the run; their ratio to their stage does not
                 r["ps_per_byte"] = {k: v * (1 + i / 10) for k, v in WITH.items()}
-                r["others"] = {
-                    k: dict(v, ps=v["ps"] * 1000 * (1 + i / 10)) for k, v in o.items()
-                }
+                r["others"] = {k: dict(v, ps=v["ps"] * 1000 * (1 + i / 10)) for k, v in o.items()}
         st = report.stage_figures(lines, MHZ, True)
         res = st["arms"]["head"]["research"]
         self.assertEqual(st["arms"]["base"]["research"], {})
