@@ -1643,11 +1643,14 @@
     },
     {
       "trigger_comment_id": 6759589291,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "ffb568913ce9bd6eeb807082ac935570e36c3c8d"
+      "source_commit": "ffb568913ce9bd6eeb807082ac935570e36c3c8d",
+      "report_commit": "5326b6fdd25847278863e8c148d60548b442cccb",
+      "report_path": "state/reports/team-designs-6759589291/report.md",
+      "disposition": "REVISE both drafts: mandatory screen admission, per-team accounting, first-invalid single-sequence native diagnostic and bounded instrument."
     }
   ],
   "active_delegations": [],
