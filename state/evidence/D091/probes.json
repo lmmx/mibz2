@@ -1,0 +1,80 @@
+{
+  "balanced": {
+    "structural_valid": true,
+    "predicates": {
+      "a": [
+        true,
+        "every helper walked every block it built; 0 zero-work helper calls"
+      ],
+      "b": [
+        true,
+        "team 0: helper bytes [100, 100], largest share 0.5"
+      ],
+      "c": [
+        true,
+        "1 leader calls of traverse"
+      ],
+      "d": [
+        true,
+        "0 calls of another walker"
+      ]
+    },
+    "exit": 0,
+    "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) holds: team 0: helper bytes [100, 100], largest share 0.5\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nENGAGED\n",
+    "stderr": "",
+    "section8_accepts": true,
+    "section3_accepts_exit": true
+  },
+  "balance_only": {
+    "structural_valid": true,
+    "predicates": {
+      "a": [
+        true,
+        "every helper walked every block it built; 0 zero-work helper calls"
+      ],
+      "b": [
+        false,
+        "team 0: helper bytes [1, 99], largest share 0.99"
+      ],
+      "c": [
+        true,
+        "1 leader calls of traverse"
+      ],
+      "d": [
+        true,
+        "0 calls of another walker"
+      ]
+    },
+    "exit": 1,
+    "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) fails: team 0: helper bytes [1, 99], largest share 0.99\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+    "stderr": "",
+    "section8_accepts": true,
+    "section3_accepts_exit": false
+  },
+  "zero_helpers": {
+    "structural_valid": true,
+    "predicates": {
+      "a": [
+        true,
+        "every helper walked every block it built; 2 zero-work helper calls"
+      ],
+      "b": [
+        false,
+        "team 0: helper bytes [0, 0], largest share n/a"
+      ],
+      "c": [
+        true,
+        "1 leader calls of traverse"
+      ],
+      "d": [
+        true,
+        "0 calls of another walker"
+      ]
+    },
+    "exit": 1,
+    "stdout": "VALID\n  (a) holds: every helper walked every block it built; 2 zero-work helper calls\n  (b) fails: team 0: helper bytes [0, 0], largest share n/a\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+    "stderr": "",
+    "section8_accepts": true,
+    "section3_accepts_exit": false
+  }
+}

@@ -4176,3 +4176,48 @@ A full no-harm grid establishes its registered net performance result, **not cau
 Independently reproduced residue-set geometry, decision-predicate overlap, a cancellation counterexample and the ABBA time-spacing counterexample; probes archived with this entry. No decoder implementation, native timing, lackey execution, CI dispatch, raw-trace replay or B5 certification. No new infrastructure/spending.
 
 Migration checked before receipt: old branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged, exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 752adab13940ab24a8b73d5f7751d244f4fe351d. Pinned audit retains five resolved items and previously reported LOG 6757065549 on #162; no new routing defect. Output #145, state team-state/guardian; task unchanged.
+
+<a id="d091"></a>
+## D091 — Combined ports: balance descriptive; exit-policy conflict before freeze
+
+**Inbox:** [6763334325](https://github.com/lmmx/mibz2/pull/161#issuecomment-6763334325), dispatch of QUEUED 6763186902. **G1: concur prospectively that helper balance (b) may be reported rather than gated for this distinct combined diagnostic. G2: HOLD freeze/execution of revision 2 until the checker-exit contradiction below is resolved.** No line STOP, no reopening of earlier attempts. Routine correction continues.
+
+Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763; B4–B7, C1/C2/C6, E4. Draft: docs/journal/2026-11-10-team-ports-combined-registration.md at 3b77fd4d6293b22ddcbc73fe706ed556cd89b7c4, blob 9dd05c39f8dfc0addd2b9d80c2485f12c62951da. Researcher report: 07b453d1cd26299450c8ca90f60decd5fcce7fbe, state/reports/integration-priorities-6762860125/03-combined.md, blob 02502a76a18edb8b46cbcb5b55144d9245845d76.
+
+### 1. The prospective rule is admissible
+
+D089 admitted a new integrated-cost question, not a repeat to pass #335/#337/#339. Revision 2 retains those FAIL-MEASUREMENT results, no per-port attribution, no production qualification, one attempt and no individual-arm retries. Its diagnostic acceptance may require structural VALID plus (a), (c), (d), while displaying (b) and the checker's original ENGAGED/NOT ENGAGED separately. This is a C1/C6 design choice before this registration's data, not a relaxation of any earlier (b), M gate, control or verdict under C2.
+
+The rationale is limited: oversubscription can produce imbalance without a broken port; it does not prove that observed imbalance is caused by scheduling or is harmless for performance. Dropping (b) is justified by the scoped information objective, not by asserting balance unimportant. Preserve actual helper byte totals, ratios and zero cases. No shrinking the forced team plan or changing the checker classification to obtain ENGAGED.
+
+The #341 prerequisite is met for the **checker source**. API readback confirms merged head 8b62e14d3e8e0bfd4b07ae8503ca89cbcbba5e9c, squash 88768ac15924b08ceb039169690c942542791f7e. Checker blob eb7c392d2d766e870de3e14a31b5fe940787dd3f requires built mask 6 and shares from exactly helpers {1,2} for each T block. All 20 committed synthetic tests pass, including the two-block absent-helper witness and one-helper omission. Pin this actual checker blob at freeze; “merged to master” does not make it present in the older 8f540ef1 build checkout automatically. No widening of decoder source pins is implied.
+
+### 2. Material contradiction reproduced: §3 reinstates (b) through exit status
+
+The checker returns 0 for ENGAGED, 1 for structurally VALID but NOT ENGAGED, and 2 for INVALID. Draft §3 says **any step exiting nonzero is FAIL-MEASUREMENT and its output is partial, never read as measurement**; §8 and §10 say (b) is not required. Those rules disagree on a normal, complete balance-only failure.
+
+Independent CLI fixture: one T block, both build/share members present, entered mask 7, leader 100 walked bytes, helpers 1 and 99 bytes, exact conservation and terminal count. The checker prints VALID, (a)/(c)/(d) hold, (b) fails, NOT ENGAGED; **exit 1**. §8 accepts this engagement component; §3 rejects it. Balanced 100/100 helper control exits 0.
+
+**Minimal correction before freeze:** distinguish a completed checker's verdict exit from execution failure. Preserve raw stdout/stderr/exit and evaluate structural validity and each predicate explicitly. A normal exit 1 with complete VALID output and only (b) failing may satisfy this diagnostic's engagement component; (a), (c), (d) failure, INVALID, malformed/missing output, crash, signal or timeout still fails. Exit 1 alone never proves a balance-only failure. Do not use blanket `|| true`, `--reference`, an edited checker outcome, or relabel a completed report partial merely because of exit 1. Add the balance-only witness to the orchestration/adjudication dry run; no native decoder measurement needed to close this conflict.
+
+This is the sole new material freeze HOLD from this review. The Researcher's PROCEED and D089's other pre-data conditions remain; this entry does not assert they have been met.
+
+### 3. Presence is the exact conclusion
+
+A second complete fixture has leader 100 bytes, both helpers' build/share and walker calls present but **zero helper walked bytes**. It is structurally VALID with (a)/(c)/(d) true, (b) false, exit 1. Thus the proposed rule admits call presence even if no helper performs useful walk work. This is consistent with reporting zero-work calls, not proof that every helper processed bytes, achieved balanced execution, or supplied parallel speedup.
+
+Use “structural validity plus presence/call integrity” for the diagnostic component. Narrow §1's “actually engage” accordingly. Report zero denominator as undefined ratio with (b) failed; don't manufacture a balance fraction. I impose no new positive-byte minimum here: that would answer a different question. E1/E2 remain instrumented native observations of the source and forced plan; they do not establish engagement in A1/A2's different binaries or schedules.
+
+### 4. Remaining accounting and safety scope
+
+The formula in §5 is correct: if independently 0≤x0≤U0 and 0≤x1≤U1, Δdecoder=ΔDd+x1−x0 lies in [ΔDd−U0, ΔDd+U1]. Call this the **independent per-arm residual bound**, not “coupled-residual”; D089 rejected the narrower coupled-composition rule. Normalize every term by the same decoded-byte denominator. Correct disjoint attribution, complete thread coverage and full H/U inventories remain necessary; ledger closure alone is insufficient.
+
+C1–C5 as descriptive historical-count comparisons are permissible for this unfrozen diagnostic; no old M gate is changed. W1–W7 and output identity remain actual predicates, with absent/undecoded sites unmet. Source similarity and historical agreement are not new-binary evidence. This review has not built the binaries, verified site counts, replayed profiles or discharged B5.
+
+§3's “every later step still runs” cannot override B6: stop affected work on unresolved UB/invariant/safety failures. For ordinary measurement failures retain artifacts and continue only independent safe observations; never consume incomplete builds or stale outputs. This is application of the standing rule, not an added attempt. Keep one heavy job at a time. No native timing, merge, adoption, infrastructure or spend authorised by this diagnostic.
+
+### Reproduction and protocol
+
+Archived under state/evidence/D091/: fetched checker and tests, independent probes.py, three JSONL fixtures, class map and probes.json. Run `python test_walk_stats_check.py` and `python probes.py` there. Twenty upstream tests pass; independent balanced, balance-only and zero-helper fixtures reproduce the results above. Synthetic records only, no decoder execution or timing.
+
+Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; exact-content manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 14268343d174e54e8c5bb95020adb3c30deaa26d. Pinned routing audit: five resolved historical findings and previously reported LOG 6757065549 on #162, no new defect. Output #145; state team-state/guardian; persistent task unchanged.
