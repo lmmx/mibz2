@@ -423,6 +423,66 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
         }
     }
 
+    // TUNNEL set: the whole-cell words at several caps (docs/journal/2026-11-10-tunnels.md), and
+    // nothing else. A cell of w > 1 rows whose rows stay adjacent for h steps is a tunnel of
+    // width w and height h; its word is those h bytes, stored once.
+    if std::env::var_os("TUNNEL").is_some() {
+        let multi: Vec<usize> = (0..cells).filter(|&k| c.b[k] - c.a[k] > 1).collect();
+        // the uncapped height of each multi-row cell
+        let raw: Vec<usize> = (0..cells)
+            .map(|k| {
+                let (a, b) = (c.a[k] as usize, c.b[k] as usize);
+                (a + 1..b).map(|q| kk[q] as usize + 1).min().unwrap_or(1)
+            })
+            .collect();
+        let rows_multi: usize = multi.iter().map(|&k| (c.b[k] - c.a[k]) as usize).sum();
+        // (w - 1)(h - 1) summed: the rows a tunnelling of every cell's block would remove,
+        // were the blocks disjoint (they are not: an upper bound on what collapses)
+        let area: usize = multi
+            .iter()
+            .map(|&k| ((c.b[k] - c.a[k]) as usize - 1) * (raw[k].min(n) - 1))
+            .sum();
+        let mut out = format!(
+            "{{\"n\":{n},\"cells\":{cells},\"multi\":{},\"rows_multi\":{rows_multi},\"area\":{area},\"tun\":[",
+            multi.len()
+        );
+        for (i, cap) in [2usize, 4, 8, 16, 32, 64, 128, 256, usize::MAX]
+            .into_iter()
+            .enumerate()
+        {
+            let mut seen = vec![false; cells];
+            let (mut events, mut used, mut used_bytes, mut single_events) = (0usize, 0, 0, 0);
+            let (mut short_events, mut short_bytes) = (0usize, 0usize);
+            let mut t = 0;
+            while t < n {
+                let k = c.cell[c.traj[t] as usize] as usize;
+                let single = c.b[k] - c.a[k] == 1;
+                let full = if single { 1 } else { raw[k].min(cap) };
+                let w = full.min(n - t);
+                events += 1;
+                single_events += single as usize;
+                if w <= 2 {
+                    short_events += 1;
+                    short_bytes += w;
+                }
+                if !single && !seen[k] {
+                    seen[k] = true;
+                    used += 1;
+                    used_bytes += full;
+                }
+                t += w;
+            }
+            // every multi-row cell's word, were all of them built
+            let all_bytes: usize = multi.iter().map(|&k| raw[k].min(cap).min(n)).sum();
+            out += &format!(
+                "{}[{},{events},{single_events},{used},{used_bytes},{all_bytes},{short_events},{short_bytes}]",
+                if i == 0 { "" } else { "," },
+                if cap == usize::MAX { 0 } else { cap }
+            );
+        }
+        return out + "]}";
+    }
+
     // the cells of Ψ^s, and those a stride-s walk from the origin lands in
     let mut rs = Vec::new();
     {
