@@ -88,6 +88,10 @@ jobs:
         run: python3 bench/test_service_guarded.py
       - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
         run: python3 bench/test_service_guarded_recipe.py
+      - name: The target-gated registration's judge, workstation and CI (its witnesses)
+        run: python3 bench/test_service_tg.py
+      - name: The target-gated registration's recipe end to end, every exit (stand-ins, untimed)
+        run: python3 bench/test_service_tg_recipe.py
 
   get-python-versions:
     runs-on: ubuntu-latest

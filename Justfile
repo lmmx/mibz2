@@ -1,5 +1,6 @@
 import ".just/bench.just"
 import ".just/service-guarded.just"
+import ".just/service-tg.just"
 import ".just/commit.just"
 import ".just/docs.just"
 import ".just/submit.just"
