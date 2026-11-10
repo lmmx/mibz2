@@ -161,6 +161,14 @@ checked. Plain workers, one process, five rounds a cell, medians:
   Break-even with the cooperative default (about 1.5 GB/s) is near g = 2.5. E at 3.67 loses, as
   its result said. A table at 1.2 would be worth 2.6 GB/s. This assumes the table is small
   enough to behave as level 1's does; the `lbzip2 -2` run measures that.
+- **Corrected (the register's close reading): the break-even above mixes two harnesses.** The
+  3.0 GB/s comes from long-lived processes run back to back; the default plan's 1.5 GB/s from
+  one fresh process a run. Four plain workers on level 9 read 1,145 MB/s here and 1,016 to
+  1,021 there. On one harness the break-even is nearer g = 2.1 than 2.5. `par_scan`'s `lib`
+  arm in the same sweep would give the default plan's figure directly.
+- **And at 1.2 MB a table the old ladder has ten workers behind eight** (§2's run: 1,729 MB/s
+  at eight, 1,604 at ten, at level 3). Level 1's 0.4 MB scales from eight to ten; whether
+  0.9 to 1.4 MB does is what the `lbzip2 -2` and `-3` cells measure.
 - **No second mode in this bundle.** 180 cells in three long-lived processes, and no cell's
   rounds differ by 2×: level 1 at ten workers reads 81, 83, 81, 82, 83 ms. The two modes of
   `2026-11-10-two-modes.md` were seen with one fresh process a run and cooperative plans. This
