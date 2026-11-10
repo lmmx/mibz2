@@ -10,8 +10,12 @@
 # its own; the EXAMPLEs built with the profile are copied into OUT.
 #
 # - **Training data:** the crate's generated corpora only (`ab gen`, tests/common's recipe),
-#   at PGO_SCALE (default 2, not the bench's 4: other files from the same recipe), never
-#   the Wikidata blocks, so the bench's Wikidata rows are out of sample.
+#   never the Wikidata blocks, so the bench's Wikidata rows are out of sample. Weighted
+#   towards text, as the release's input is: `text` at PGO_TEXT_SCALE (default 8), the
+#   others at PGO_SCALE (default 1), other files than the bench's (scale 4) from the same
+#   recipe. Unweighted, `random` sets the MTF kernel's layout: its uniform indices make the
+#   move of 32 or more the hot path, which text's are not (the journal entry, variant A).
+#   PGO_CORPORA (default all six) names the corpora trained on.
 # - **Training decodes,** each corpus through every path a release build takes on a
 #   machine like the runner's, or a bigger one: the reader on one thread
 #   (`BzReader::new`), the workers on PGO_THREADS (default nproc), the cooperative teams of
@@ -48,9 +52,12 @@ echo "pgo: instrumented build $((SECONDS - start)) s"
 
 # 2. Training (the corpora's generation profiled apart, and dropped)
 start=$SECONDS
-LLVM_PROFILE_FILE="$work/gen.profraw" "$ab" gen "$work/corpora" "${PGO_SCALE:-2}" 2> /dev/null
-rm -f "$work/gen.profraw"
-for f in "$work"/corpora/*.bz2; do
+LLVM_PROFILE_FILE="$work/gen.profraw" "$ab" gen "$work/corpora" "${PGO_SCALE:-1}" 2> /dev/null
+LLVM_PROFILE_FILE="$work/gen.profraw" "$ab" gen "$work/corpora/text-scale" "${PGO_TEXT_SCALE:-8}" 2> /dev/null
+mv "$work/corpora/text-scale/text.bz2" "$work/corpora/text.bz2"
+rm -rf "$work/gen.profraw" "$work/corpora/text-scale"
+for name in ${PGO_CORPORA:-text random onebyte pattern runs records}; do
+  f="$work/corpora/$name.bz2"
   first=
   for run in "mibz2 1" "mibz2 $threads" "mibz2-coop2 $threads" "mibz2-scalar 1" "mibz2-oneshot 1"; do
     # shellcheck disable=SC2086 # (the arm and its threads, two words)
