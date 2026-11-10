@@ -1,1 +1,0 @@
-TOTAL blocks 431 rows 209706557 decoded 209700196 multicycle_blocks 0 coop_blocks 233 coop_rows 209697662

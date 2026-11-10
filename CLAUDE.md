@@ -1,7 +1,5 @@
 # mibz2
 
-**Ownership first:** [`docs/team/OWNERSHIP.md`](docs/team/OWNERSHIP.md). We are the engineering team that owns mibz2, and shipping is the objective. Correctness and memory safety never bend. Performance trade-offs follow [`docs/team/PERFORMANCE-POLICY.md`](docs/team/PERFORMANCE-POLICY.md). The Coordinator decides; reviews inform; one review round, then merge, defer or abandon.
-
 Publishing a page of the site (a blog post above all): use the `publish-page` skill
 (`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
 two rounds of review by the Researcher: the `coordinate-blog-post` skill.
@@ -83,16 +81,18 @@ command, `just workstation-queue`, runs every ready entry once, then suspends.
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
 
-## Decisions: decide, record why, carry on
+## Decisions: ask the Guardian, not Louis
 
-**Decisions: the Coordinator decides.** Within the team's authority it decides, records why in one
-LOG, and proceeds. It asks the Guardian only about the admissibility of a registered gate or a
-safety call, and proceeds if no HOLD comes within one assignment cycle. Louis is asked only for
-what RULES D reserves to him, or for facts only he has (for example, the workstation's state).
+Louis's instruction (9 November 2026): don't use him as a blocker. When the coordinator is
+genuinely unsure about a decision within the team's authority (a rule's admissibility, a
+measurement's design, a safety call), it asks the Guardian (#161), not Louis, and proceeds on
+the Guardian's ruling. Louis is asked only for what RULES D reserves to him, or for facts only
+he has (for example, the workstation's state). Otherwise the coordinator decides, records why,
+and carries on.
 
 ## Delegated as a class: design, acceptance, adoption
 
-Louis delegated, in the Coordinator's session on 2026-11-09, experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities), master's merge acceptance rule and adoption policy, as a class (RULES C6, amended). The team decides them under review: an **adoption registration** (one whose verdict decides a production default or a merge outside PERFORMANCE-POLICY.md; an ordinary merge under that policy needs no registration) is frozen before its data with one review: the Researcher's PROCEED, or one targeted correction and then the Coordinator's decision. The Guardian rules only when it raises a HOLD on gate or safety grounds. Any other experiment needs only a decision rule posted on #145 before its data (RULES C1a). C2 is never relaxed after the data is seen. Don't send these back to Louis one by one. He is still needed only for what RULES D keeps: his C5 workstation runs, new infrastructure or spending, role changes, and rule changes.
+Louis delegated, in the Coordinator's session on 2026-11-09, experiment and bench design (workload, corpora, thread grid, method, repeats, evidence criteria, priorities), master's merge acceptance rule and adoption policy, as a class (RULES C6, amended). The team decides them under review: pre-registered and frozen before data, the Researcher's PROCEED, the Guardian on gate and safety questions, and C2 never relaxed after the data is seen. Don't send these back to Louis one by one. He is still needed only for what RULES D keeps: his C5 workstation runs, new infrastructure or spending, role changes, and rule changes.
 
 ## The agent team
 
@@ -122,6 +122,6 @@ or state.
 
 The Observer (#222) keeps a behind-the-scenes account of what the team is doing and why, on the
 orphan branch `observatory/intention`.
-- **Dispatching to it:** one batched CHECKPOINT per wake, listing the material moves (a result,
-  a decision, a merge, a change of direction).
+- **Dispatching to it:** send it a CHECKPOINT whenever the record moves materially (a result,
+  a decision, a merge, a change of direction), one at a time.
 - **Correcting it:** correct only major discrepancies, through a CORRECTION, never on wording.

@@ -12,11 +12,6 @@ judge (docs/journal/2026-11-10-service-guarded-target-gated-registration.md).
   digests, completeness, termination, placement), each cell's batch-means one-sided bound,
   the all-pass rule, wall flags and the harm-confirmation rule, peak RSS.
 - Student's t quantiles against fixed values (and scipy's, where it is installed).
-- The final design (registration §2.9): R 2880 in B 24 batches of 120, each 30 complete
-  four-round order cycles, ab's own schedule; the full file-order chronology enforced before
-  grouping, with its negative controls and a default-size control; the trend
-  veto's statistic, cutoff and effect (condition 2 INVALID, every estimate kept, condition 7's
-  flags and confirmation unchanged); every row kept.
 
     python3 bench/test_service_tg.py
 """
@@ -237,8 +232,7 @@ class Workstation(unittest.TestCase):
 # CI: the sharded workflow's artifacts
 
 
-R = 16  # (small, for speed: four whole cycles a dispatch; the registered 240 is the constant)
-K = 12  # (the registered programme's dispatches)
+R, B = 40, 4  # (small, for speed: the judge takes them as parameters; the registered 600 and 20 are constants)
 RUN = 4242
 
 
@@ -250,7 +244,7 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
     out = []
     for rnd in range(R):
         for t in threads:
-            for arm in (tg.CI_ARMS if tg.ORDER_CYCLE[rnd % 4] else tg.CI_ARMS[::-1]):  # (ab's schedule)
+            for arm in tg.CI_ARMS:
                 w, c, r = 0.05 * rng.gauss(1, sd), 0.08 * rng.gauss(1, sd), 30000 * rng.gauss(1, 0.001)
                 if arm == "mibz2":
                     w *= effect.get((t, "wall"), 1.0)
@@ -258,20 +252,12 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
                     r *= effect.get((t, "rss"), 1.0)
                 out.append({"round": rnd, "corpus": corpus, "threads": t, "arm": arm, "wall": w, "cpu": c,
                             "rss_kb": r, "out": 1000, "hash": "0123456789abcdef", "termination": "success",
-                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t],
-                            # (bench 3.6.0's child record, `ab-child/2`, as `ab run` writes it)
-                            "schema": "ab-child/2", "err_kind": None, "err_block": None, "sha256": None})
+                            "err": "", "cpus": {1: "1", 2: "0,2", 4: "all"}[t]})
     return out
 
 
 HISTORY = {"artifacts": [], "jobs": []}
 T0 = 1794268800.0  # (2026-11-10T00:00:00Z, the fixtures' measurement start)
-WINDOW = {"start": 0.0, "length": 1800.0, "seed": 5}  # (each job's start and duration, seconds from T0, as GitHub records it)
-
-
-def iso(t):
-    import datetime
-    return datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=(),
@@ -285,7 +271,6 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
     HISTORY["jobs"].append({
         "name": f"shard ({sid}, {corpus}, {','.join(map(str, threads))})", "run_attempt": attempt,
         "run_id": run, "head_sha": HEAD,
-        "started_at": iso(T0 + WINDOW["start"]), "completed_at": iso(T0 + WINDOW["start"] + WINDOW["length"]),
         "status": "completed", "conclusion": job or ("success" if measured else "failure"),
         **({"steps": [{"name": "Build the head and the base", "conclusion": "success"},
                       {"name": tg.MEASURE_STEP, "conclusion": step or ("success" if measured else "skipped"),
@@ -316,14 +301,13 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
         "preflight.exit": f"{ex}\n",
         "preflight-check.json": json.dumps({"verdict": "NOT TARGET"}),
         "corpus.sha256": f"{digest}  corpora/{corpus}.bz2\n",
-        "runs.jsonl": "".join(json.dumps(r) + "\n" for r in (shard_rows(sid, seed=WINDOW["seed"]) if rows is None else rows)),
+        "runs.jsonl": "".join(json.dumps(r) + "\n" for r in (shard_rows(sid) if rows is None else rows)),
     }
     if measured:
         files["measurement-started.txt"] = "2026-11-10T00:00:00Z\n"
         files["measurement-ended.txt"] = "2026-11-10T00:30:00Z\n"
         n = files["runs.jsonl"].count("\n")
-        step = min(1.0, 1700.0 / max(n, 1))  # (inside the 30-minute markers at any R)
-        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * step:.3f}\n" for i in range(n))
+        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i:.3f}\n" for i in range(n))
         files["stamp.exit"] = "0\n"
     else:
         del files["runs.jsonl"]
@@ -332,11 +316,9 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
             (d / name).write_text(text)
 
 
-def build(root, label="qualification", run=RUN, start=0.0, length=1800.0, seed=5, **per):
-    """Every registered shard's attempts; `per[sid]` gives write_shard's arguments for each; the
-    run's jobs start `start` seconds after T0 and last `length`"""
+def build(root, label="qualification", run=RUN, **per):
+    """Every registered shard's attempts; `per[sid]` gives write_shard's arguments for each"""
     HISTORY["artifacts"], HISTORY["jobs"] = [], []
-    WINDOW["start"], WINDOW["length"], WINDOW["seed"] = start, length, seed
     for sid in tg.SHARDS:
         for kw in per.get(sid, [{}]):
             kw = dict(kw)
@@ -356,60 +338,49 @@ class CI(unittest.TestCase):
         shutil.rmtree(self.root)
 
     def ni(self, man, reg=REG):
-        return tg.ni_judge(self.root, man, HEAD, reg=reg, check_git=False, rounds=R)
+        return tg.ni_judge(self.root, man, HEAD, reg=reg, check_git=False, rounds=R, batches=B)
 
-    def test_a_dispatch_is_admitted_with_its_estimates(self):
+    def test_a_null_run_passes_every_cell(self):
+        v = self.ni(build(self.root))
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(len(v["cells"]), 21)
+        self.assertEqual(sorted(v["cells"]), sorted(f"{c}/{t}" for c in tg.CI_CORPORA for t in tg.CI_THREADS))
+        self.assertTrue(v["passes"], v["failing"])
+        self.assertEqual(v["cells"]["wikidata/2"]["shard"], "wikidata-2")
+        self.assertIn("met** at every cell", tg.ni_markdown(v))
+
+    def test_the_bound_is_batch_means_one_sided_95(self):
         rows = shard_rows("runs")
         v = self.ni(build(self.root, runs=[{"rows": rows}]))
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertEqual(v["schema"], "mibz2.tg_ni_dispatch/1")
-        self.assertEqual(sorted(v["cells"]), sorted(f"{c}/{t}" for c in tg.CI_CORPORA for t in tg.CI_THREADS))
-        self.assertEqual(v["cells"]["wikidata/2"]["shard"], "wikidata-2")
-        self.assertNotIn("passes", v)  # (one dispatch is never a verdict)
         by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
         logs = [math.log(by[(2, "mibz2", i)]["wall"] / by[(2, "mibz2@base/ab", i)]["wall"]) for i in range(R)]
-        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["d"], sum(logs) / R, places=12)
-        self.assertEqual((v["started"], v["completed"]), (T0, T0 + 1800))
-        self.assertEqual(v["shards"]["runs"]["model"], "AMD EPYC 7763 64-Core Processor")
-        self.assertIn("not a verdict", tg.dispatch_markdown(v))
+        k = R // B
+        means = [sum(logs[i * k:(i + 1) * k]) / k for i in range(B)]
+        m = sum(logs) / R
+        mm = sum(means) / B
+        se = math.sqrt(sum((x - mm) ** 2 for x in means) / (B - 1)) / math.sqrt(B)
+        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["upper"], math.exp(m + tg.t_ppf(0.95, B - 1) * se), places=9)
+        self.assertAlmostEqual(tg.t_ppf(0.95, 19), 1.729133, places=5)
 
-    def test_child_records_old_and_new(self):
-        # (an `ab-child/2` row, as bench 3.6.0's `ab run` writes it, is admitted; so is an older
-        # child's row without the new fields, as the pilot's were)
-        rows = shard_rows("runs")
-        self.assertEqual(rows[0]["schema"], "ab-child/2")
-        self.assertTrue(self.ni(build(self.root, runs=[{"rows": rows}]))["valid"])
-        shutil.rmtree(self.root)
-        self.root = tempfile.mkdtemp()
-        old = [{k: v for k, v in r.items() if k not in ("schema", "err_kind", "err_block", "sha256")} for r in rows]
-        v = self.ni(build(self.root, runs=[{"rows": old}]))
+    def test_one_cell_over_the_margin_fails_the_condition(self):
+        for metric in ("wall", "cpu"):
+            with self.subTest(metric):
+                shutil.rmtree(self.root)
+                self.root = tempfile.mkdtemp()
+                v = self.ni(build(self.root, onebyte=[{"rows": shard_rows("onebyte", {(4, metric): 1.025})}]))
+                self.assertTrue(v["valid"], v["problems"])
+                self.assertFalse(v["passes"])
+                self.assertEqual(len(v["failing"]), 1, v["failing"])
+                self.assertIn(f"onebyte/4 {metric}", v["failing"][0])
+
+    def test_flags_and_rss(self):
+        v = self.ni(build(self.root, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001)}],
+                          text=[{"rows": shard_rows("text", {(4, "rss"): 1.15})}]))
         self.assertTrue(v["valid"], v["problems"])
-
-    def test_the_tails_are_kept(self):
-        # (one round's long settle wait and slow child stay in: the dispatch's estimate is the
-        # mean of all R paired logs)
-        rows = shard_rows("runs")
-        for r in rows:
-            if r["round"] == 5 and r["threads"] == 4:
-                r["waited_s"] = 41
-                if r["arm"] == tg.CI_ARMS[0]:
-                    r["wall"] *= 3.0
-        v = self.ni(build(self.root, runs=[{"rows": rows}]))
-        self.assertTrue(v["valid"], v["problems"])
-        by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
-        logs = [math.log(by[(4, tg.CI_ARMS[0], i)]["wall"] / by[(4, tg.CI_ARMS[1], i)]["wall"]) for i in range(R)]
-        self.assertAlmostEqual(v["cells"]["runs/4"]["wall"]["d"], sum(logs) / R, places=12)
-
-    def test_partial_cycles_are_refused(self):
-        global R
-        saved = R
-        try:
-            R = 18
-            v = tg.ni_judge(self.root, build(self.root), HEAD, reg=REG, check_git=False, rounds=18)
-        finally:
-            R = saved
-        self.assertFalse(v["valid"])
-        self.assertIn("not whole 4-round order cycles", "; ".join(v["problems"]))
+        self.assertEqual(v["flags"], ["runs/2"])
+        self.assertEqual(v["rss_regression"], ["text/4"])
+        self.assertFalse(v["passes"])
+        self.assertEqual(v["failing"], [])
 
     def test_admission(self):
         rows = shard_rows("records")
@@ -421,14 +392,10 @@ class CI(unittest.TestCase):
             "another head": dict(text=[{"over": {"head": "0" * 40}}]),
             "another base": dict(text=[{"over": {"base": "0" * 40}}]),
             "another run": dict(text=[{"over": {"run_id": 1}}]),
-            "another rounds": dict(text=[{"over": {"rounds": R + 4}}]),
+            "another rounds": dict(text=[{"over": {"rounds": R + 1}}]),
             "another workflow": dict(text=[{"over": {"workflow_ref": "x/bench.yml@y"}}]),
             "a failed child": dict(records=[{"rows": [dict(r, termination="signal 9") if i == 3 else r
                                                       for i, r in enumerate(rows)]}]),
-            "a decoder error's kind (ab-child/2)": dict(records=[{"rows": [dict(r, err_kind="BlockCrc", err_block=41)
-                                                                            if i == 3 else r for i, r in enumerate(rows)]}]),
-            "another child schema": dict(records=[{"rows": [dict(r, schema="ab-child/3") if i == 3 else r
-                                                            for i, r in enumerate(rows)]}]),
             "a round missing": dict(records=[{"rows": rows[1:]}]),
             "two digests": dict(records=[{"rows": [dict(r, hash="fedcba9876543210") if i == 3 else r
                                                    for i, r in enumerate(rows)]}]),
@@ -592,6 +559,27 @@ class CI(unittest.TestCase):
             shutil.rmtree(self.root)
             self.root = tempfile.mkdtemp()
 
+    def test_harm_confirmation(self):
+        flagged = self.ni(build(self.root, runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001)}],
+                                text=[{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001)}]))
+        other = tempfile.mkdtemp()
+        try:
+            man = build(other, run=RUN + 1,
+                        runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=9)}])
+            again = tg.ni_judge(other, man, HEAD, reg=REG, check_git=False, rounds=R, batches=B)
+        finally:
+            shutil.rmtree(other)
+        self.assertTrue(again["valid"], again["problems"])
+        self.assertEqual(tg.confirm(flagged, again), {"valid": True, "registered_run": RUN, "confirmation_run": RUN + 1,
+                                                      "confirmed": ["runs/2"], "unresolved": ["text/1"]})
+        self.assertFalse(tg.confirm(flagged, {"valid": False})["valid"])
+        # (the Researcher's finding: the same verdict twice is not a confirmation)
+        same = tg.confirm(flagged, flagged)
+        self.assertFalse(same["valid"])
+        self.assertIn("distinct", same["problems"][0])
+        # (nor a confirmation of another head)
+        self.assertFalse(tg.confirm(flagged, dict(again, head="0" * 40))["valid"])
+
     def test_the_power_script(self):
         try:
             from scipy import integrate
@@ -614,443 +602,7 @@ class CI(unittest.TestCase):
         # (batches of an odd length break the arms' two-round order balance: refused)
         with self.assertRaises(ValueError):
             pw.power(900, 20, 0.05, 1.0)
-        # (the final design's limiting cell, pattern/2/wall at the pilot's largest LRV over the
-        # five registered lengths, sigma 0.20139894: the Researcher's 0.98548, and 0.85610 at
-        # twice the LRV, reproduced; conditional on iid normal batch means, not a guarantee)
-        sigma = 0.20139894418068915
-        self.assertAlmostEqual(pw.power(2880, 24, sigma, 1.005), 0.9854840380109718, places=6)
-        self.assertAlmostEqual(pw.power(2880, 24, sigma * math.sqrt(2), 1.005), 0.8561073746929773, places=6)
 
-
-def ab_arm_order(rnd, n=2):
-    """examples/ab.rs `arm_order`, restated: rotated a step each round, reversed every other
-    cycle of n rounds"""
-    order = list(range(n))
-    order = order[rnd % n:] + order[:rnd % n]
-    return order[::-1] if (rnd // n) % 2 else order
-
-
-class Design(unittest.TestCase):
-    def test_the_registered_programme(self):
-        self.assertEqual((tg.NI_ROUNDS, tg.NI_DISPATCHES, tg.SPACING_MIN), (240, 12, 60))
-        self.assertEqual(tg.rounds_problems(tg.NI_ROUNDS), [])
-        # (the cycle is ab's own, and both a constant and a linear order coefficient cancel in it)
-        self.assertEqual(tg.ORDER_CYCLE, tuple(ab_arm_order(r)[0] == 0 for r in range(4)))
-        for r in range(tg.NI_ROUNDS):
-            self.assertEqual(ab_arm_order(r)[0] == 0, tg.ORDER_CYCLE[r % 4])
-        sign = [1 if h else -1 for h in tg.ORDER_CYCLE]
-        self.assertEqual(sum(sign), 0)
-        self.assertEqual(sum(i * x for i, x in enumerate(sign)), 0)
-        # (a dispatch is 60 whole cycles: 120 rounds in each order)
-        self.assertEqual(sum(tg.ORDER_CYCLE[r % 4] for r in range(tg.NI_ROUNDS)), 120)
-        for r_ in (238, 242, 0, -4, 240.0):
-            self.assertTrue(tg.rounds_problems(r_), r_)
-        # (the gate restates the programme apart from the judge, and agrees)
-        import tg_ni_gate as gate
-        self.assertEqual(gate.K, tg.NI_DISPATCHES)
-        self.assertEqual(gate.MARGIN, tg.MARGIN)
-        self.assertAlmostEqual(gate.T95, tg.t_ppf(0.95, tg.NI_DISPATCHES - 1), places=8)
-        try:
-            from scipy import stats
-            self.assertAlmostEqual(gate.T95, stats.t.ppf(0.95, 11), places=9)
-        except ImportError:
-            pass
-
-    def test_the_dispatch_bound(self):
-        rng = random.Random(4)
-        ds = [rng.gauss(0.001, 0.004) for _ in range(12)]
-        st = tg.dispatch_stats(ds)
-        m = sum(ds) / 12
-        sd = math.sqrt(sum((x - m) ** 2 for x in ds) / 11)
-        self.assertAlmostEqual(st["upper"], math.exp(m + tg.t_ppf(0.95, 11) * sd / math.sqrt(12)), places=12)
-        self.assertAlmostEqual(st["lo95"], math.exp(m - tg.t_ppf(0.975, 11) * sd / math.sqrt(12)), places=12)
-        self.assertEqual(st["d"], ds)
-
-
-def by_round(rows):
-    """The shard's rows as complete round groups, in file order"""
-    groups = {}
-    for r in rows:
-        groups.setdefault(r["round"], []).append(r)
-    return [groups[k] for k in sorted(groups)]
-
-
-def flat(groups):
-    return [r for g in groups for r in g]
-
-
-def shuffled_rounds(rows, seed=64):
-    g = by_round(rows)
-    random.Random(seed).shuffle(g)
-    return flat(g)
-
-
-def shuffled_cycles(rows, seed=64):
-    # (whole four-round cycles moved: every round keeps ab's arm order for its own label)
-    g = by_round(rows)
-    cycles = [g[i:i + 4] for i in range(0, len(g), 4)]
-    random.Random(seed).shuffle(cycles)
-    return flat(flat(cycles))
-
-
-def threads_421(rows):
-    out = []
-    for g in by_round(rows):
-        pairs = {}
-        for r in g:
-            pairs.setdefault(r["threads"], []).append(r)
-        out += [r for t in sorted(pairs, reverse=True) for r in pairs[t]]
-    return out
-
-
-def head_first_always(rows):
-    out = []
-    for i in range(0, len(rows), 2):
-        out += sorted(rows[i:i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
-    return out
-
-
-def base_moved(rows):
-    rows = list(rows)
-    rows.append(rows.pop(1))
-    return rows
-
-
-# (the Researcher's REVIEW 6759371719 §1: complete, internally consistent artifacts whose rows
-# ran in an order the registration doesn't name; each must be refused, never sorted back)
-CONTROLS = {
-    "whole-round permutation (seed 64)": shuffled_rounds,
-    "whole-cycle permutation (seed 64)": shuffled_cycles,
-    "reversed rounds": lambda rows: flat(by_round(rows)[::-1]),
-    "thread order 4, 2, 1 in every round": threads_421,
-    "head first in every round": head_first_always,
-    "a base run moved to the end": base_moved,
-}
-
-
-class Chronology(unittest.TestCase):
-    def setUp(self):
-        self.root = tempfile.mkdtemp()
-
-    def tearDown(self):
-        shutil.rmtree(self.root)
-
-    def judged(self, rows=None, rounds=R):
-        man = build(self.root, **({} if rows is None else {"runs": [{"rows": rows}]}))
-        v = tg.ni_judge(self.root, man, HEAD, reg=REG, check_git=False, rounds=rounds)
-        code = 0 if v["valid"] else 2
-        import tg_ni_gate as gate
-        return v, gate.gate("qualification", v, code)
-
-    def test_the_traversal(self):
-        want = list(tg.traversal("runs", (1, 2, 4), 4))
-        self.assertEqual(want[:6], [(0, "runs", 1, "mibz2"), (0, "runs", 1, "mibz2@base/ab"), (0, "runs", 2, "mibz2"),
-                                    (0, "runs", 2, "mibz2@base/ab"), (0, "runs", 4, "mibz2"),
-                                    (0, "runs", 4, "mibz2@base/ab")])
-        self.assertEqual([w[3] for w in want if w[2] == 1], ["mibz2", "mibz2@base/ab", "mibz2@base/ab", "mibz2",
-                                                              "mibz2@base/ab", "mibz2", "mibz2", "mibz2@base/ab"])
-        # (the fixtures emit it)
-        rows = shard_rows("runs")
-        self.assertEqual(tg.sequence_problems("runs", rows, "runs", (1, 2, 4), R), [])
-
-    def test_every_negative_control_is_refused(self):
-        clean, (status, line) = self.judged()
-        self.assertTrue(clean["valid"], clean["problems"])
-        self.assertEqual(status, 0, line)
-        for name, change in CONTROLS.items():
-            with self.subTest(name):
-                shutil.rmtree(self.root)
-                self.root = tempfile.mkdtemp()
-                rows = change(shard_rows("runs"))
-                self.assertEqual(len(rows), len(shard_rows("runs")))  # (complete: nothing missing)
-                self.assertNotEqual(rows, shard_rows("runs"))
-                v, (status, line) = self.judged(rows)
-                self.assertFalse(v["valid"], name)
-                self.assertTrue(any("not in the registered order" in p for p in v["problems"]), v["problems"])
-                self.assertEqual(v["cells"], {})
-                self.assertEqual(status, 1, line)
-                self.assertIn("INVALID", line)
-
-    def test_the_default_size(self):
-        # (R 240, the registered constant, as the judge is called: a clean dispatch is admitted;
-        # the Researcher's shuffled-round witness, with increasing observation times and a
-        # regenerated manifest, is INVALID)
-        global R
-        saved = R
-        import tg_ni_gate as gate
-        try:
-            R = tg.NI_ROUNDS
-            v = tg.ni_judge(self.root, build(self.root), HEAD, reg=REG, check_git=False)
-            self.assertTrue(v["valid"], v["problems"])
-            self.assertEqual(v["rounds"], 240)
-            self.assertEqual(gate.gate("qualification", v, 0)[0], 0)
-            shutil.rmtree(self.root)
-            self.root = tempfile.mkdtemp()
-            build(self.root, runs=[{"rows": shuffled_rounds(shard_rows("runs"))}])
-            for p in Path(self.root).glob("*/*/row-times.txt"):
-                n = len(p.read_text().splitlines()) - 1
-                p.write_text(f"# start {T0 + .5:.3f}\n" + "".join(f"{i} {T0 + 1 + i * .01:.3f}\n" for i in range(n)))
-            v = tg.ni_judge(self.root, remanifest(self.root), HEAD, reg=REG, check_git=False)
-            self.assertFalse(v["valid"])
-            self.assertTrue(any("runs: rows not in the registered order" in p for p in v["problems"]), v["problems"])
-            self.assertEqual(gate.gate("qualification", v, 2)[0], 1)
-        finally:
-            R = saved
-
-
-class Replicated(unittest.TestCase):
-    """The programme (§2.11): k dispatches, each its own run id, hourly; condition 2 per cell on
-    the dispatch-level estimates"""
-
-    def setUp(self):
-        self.roots = []
-
-    def tearDown(self):
-        for r in self.roots:
-            shutil.rmtree(r)
-
-    def dispatch(self, j, label="qualification", start=None, length=1800.0, run=None, **per):
-        root = tempfile.mkdtemp()
-        self.roots.append(root)
-        man = build(root, label=label, run=RUN + j if run is None else run,
-                    start=3600.0 * j if start is None else start, length=length, seed=1000 + j, **per)
-        return root, man
-
-    def programme(self, k=K, per=lambda j: {}, **kw):
-        out = []
-        for j in range(k):
-            root, man = self.dispatch(j, **dict(kw, **per(j)))
-            out.append(tg.ni_judge(root, man, HEAD, reg=REG, check_git=False, rounds=R))
-        return out
-
-    def judge(self, ds):
-        v = tg.replicated(ds, HEAD, rounds=R)
-        import tg_ni_gate as gate
-        code = 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
-        return v, code, gate.gate("replicated", v, code)
-
-    def test_a_null_programme_passes_every_cell(self):
-        ds = self.programme(per=lambda j: {"runs": [{"rows": shard_rows("runs", seed=j)}]})
-        v, code, (status, line) = self.judge(ds)
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertTrue(v["passes"], v["failing"])
-        self.assertEqual(v["condition2"], "PASS")
-        self.assertEqual(v["runs"], [RUN + j for j in range(K)])
-        self.assertEqual(len(v["cells"]), 21)
-        # (the bound is the dispatch-level one: the k estimates, t with k - 1 df)
-        ds_ = [d["cells"]["runs/2"]["wall"]["d"] for d in ds]
-        self.assertEqual(v["cells"]["runs/2"]["wall"]["d"], ds_)
-        m = sum(ds_) / K
-        sd = math.sqrt(sum((x - m) ** 2 for x in ds_) / (K - 1))
-        self.assertAlmostEqual(v["cells"]["runs/2"]["wall"]["upper"], math.exp(m + tg.t_ppf(0.95, K - 1) * sd / math.sqrt(K)),
-                               places=12)
-        self.assertEqual((status, code), (0, 0), line)
-        md = tg.ni_markdown(v)
-        self.assertIn("met** at every cell", md)
-        self.assertIn("nominal 5%, conditional on the dispatch model", md)
-        self.assertIn("does not repair a cell's size", md)
-
-    def test_one_cell_over_the_margin_is_not_shown(self):
-        ds = self.programme(per=lambda j: {"onebyte": [{"rows": shard_rows("onebyte", {(4, "cpu"): 1.025}, seed=j)}]})
-        v, code, (status, line) = self.judge(ds)
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertFalse(v["passes"])
-        self.assertEqual([f.split()[:2] for f in v["failing"]], [["onebyte/4", "cpu"]])
-        self.assertEqual((code, status), (1, 1))
-        self.assertIn("NOT SHOWN", line)
-
-    def test_the_spread_between_dispatches_is_the_uncertainty(self):
-        # (each dispatch tight, the dispatches apart: +-5% alternately at runs/2 wall. Within a
-        # dispatch the estimate is precise; across them it is not, and the bound says so)
-        ds = self.programme(per=lambda j: {"runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.05 if j % 2 else 1 / 1.05},
-                                                                         sd=0.001, seed=j)}]})
-        v, code, _ = self.judge(ds)
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertIn("runs/2", " ".join(v["failing"]))
-        self.assertGreater(v["cells"]["runs/2"]["wall"]["upper"], 1.02)
-
-    def test_flags_and_rss(self):
-        ds = self.programme(per=lambda j: {"runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=j)}],
-                                           "text": [{"rows": shard_rows("text", {(4, "rss"): 1.15}, seed=j)}]})
-        v, code, _ = self.judge(ds)
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertEqual(v["flags"], ["runs/2"])
-        self.assertEqual(v["rss_regression"], ["text/4"])
-        self.assertFalse(v["passes"])
-        self.assertEqual(code, 1)
-
-    def test_the_programme_is_admitted_whole_or_not_at_all(self):
-        good = self.programme()
-        bad = {
-            "11 dispatches": good[:11],
-            "13 dispatches": good + [good[0]],
-            "a run twice": good[:11] + [good[10]],
-            "a run id missing": good[:11] + [dict(good[11], run=None)],
-            "one dispatch INVALID": good[:11] + [self.programme(k=1, label="smoke", start=3600.0 * 11, run=RUN + 11)[0]],
-            "another head": good[:11] + [dict(good[11], head="0" * 40)],
-            "another R": good[:11] + [dict(good[11], rounds=R + 4)],
-            "too close: 30 minutes apart": good[:11] + [dict(good[11], started=good[10]["started"] + 1800)],
-            "before the previous completed (an overrun not waited for)":
-                good[:10] + [dict(good[10], completed=good[10]["started"] + 4 * 3600)] + [good[11]],
-            "times unknown": good[:11] + [dict(good[11], started=None)],
-            "a verdict unreadable": good[:11] + [None],
-            "a cell's estimate missing": good[:11] + [dict(good[11], cells={k_: c for k_, c in good[11]["cells"].items()
-                                                                          if k_ != "text/2"})],
-        }
-        v, code, (status, _) = self.judge(good)
-        self.assertEqual((v["valid"], status), (True, 0), v["problems"])
-        for what, ds in bad.items():
-            with self.subTest(what):
-                v, code, (status, line) = self.judge(ds)
-                self.assertFalse(v["valid"], what)
-                self.assertEqual(v["cells"], {})
-                self.assertEqual((code, status), (2, 1), line)
-                self.assertIn("INVALID", line)
-        # (an overrun waited for is admitted: the next dispatch starts after the previous completes)
-        late = good[:10] + [dict(good[10], completed=good[10]["started"] + 5000)] + [dict(good[11], started=good[10]["started"] + 5400)]
-        self.assertTrue(tg.replicated(late, HEAD, rounds=R)["valid"])
-
-    def test_the_gate_recomputes_the_bound(self):
-        import copy
-        import tg_ni_gate as gate
-        v, code, _ = self.judge(self.programme())
-        self.assertEqual(gate.gate("replicated", v, 0)[0], 0)
-        # (a judge claiming a pass the dispatch estimates don't support)
-        bent = copy.deepcopy(v)
-        bent["cells"]["pattern/2"]["cpu"]["d"] = [0.05] * 11 + [0.0]
-        status, line = gate.gate("replicated", bent, 0)
-        self.assertEqual(status, 1)
-        self.assertIn("disagrees", line)
-        # (11 estimates, 11 run ids, a run id twice, a non-finite estimate: INVALID)
-        for change in (lambda x: x["cells"]["text/1"]["wall"].__setitem__("d", x["cells"]["text/1"]["wall"]["d"][:11]),
-                       lambda x: x.__setitem__("runs", x["runs"][:11]),
-                       lambda x: x.__setitem__("runs", x["runs"][:11] + [x["runs"][0]]),
-                       lambda x: x["cells"]["text/1"]["cpu"]["d"].__setitem__(3, float("nan"))):
-            w = copy.deepcopy(v)
-            change(w)
-            status, line = gate.gate("replicated", w, 0)
-            self.assertEqual(status, 1, line)
-            self.assertIn("INVALID", line)
-        # (an exit that disagrees)
-        self.assertEqual(gate.gate("replicated", v, 1)[0], 1)
-        self.assertEqual(gate.gate("replicated", v, 2)[0], 1)
-
-    def test_the_command_line(self):
-        pairs = []
-        for j in range(K):
-            root, man = self.dispatch(j)
-            mpath = Path(root) / "manifest.json"
-            mpath.write_text(json.dumps(man))
-            pairs += ["--dispatch", root, str(mpath)]
-        out = Path(self.roots[0]) / "verdict"
-        real = tg.ni_judge
-        try:
-            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R)
-            real_rep = tg.replicated
-            tg.replicated = lambda ds, head: real_rep(ds, head, rounds=R)
-            code = tg.main(["replicated", *pairs, "--head", HEAD, "--out", str(out)])
-            code11 = tg.main(["replicated", *pairs[:-3], "--head", HEAD, "--out", str(out) + "11"])
-        finally:
-            tg.ni_judge, tg.replicated = real, real_rep
-        self.assertEqual(code, 0)
-        self.assertEqual(code11, 2)
-        v = json.loads(Path(str(out) + ".json").read_text())
-        import tg_ni_gate as gate
-        self.assertEqual(gate.gate("replicated", v, code)[0], 0)
-
-    def flagged_programme(self, base=0, first=0.0, extra=lambda j: {}):
-        """A programme whose runs/2 wall is 0.8% slower in every dispatch (flagged), dispatches
-        hourly from `first` seconds, run ids from RUN + base"""
-        return self.programme(per=lambda j: dict({
-            "run": RUN + base + j, "start": first + 3600.0 * j,
-            "runs": [{"rows": shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001, seed=base + j)}]}, **extra(j)))
-
-    def test_harm_confirmation(self):
-        primary = self.flagged_programme(extra=lambda j: {
-            "text": [{"rows": shard_rows("text", {(1, "wall"): 1.008}, sd=0.001, seed=j)}]})
-        confirmation = self.flagged_programme(base=100, first=3600.0 * K)
-        c = tg.confirm(primary, confirmation, HEAD, rounds=R)
-        self.assertTrue(c["valid"], c["problems"])
-        self.assertEqual(c["primary_flags"], ["runs/2", "text/1"])
-        self.assertEqual((c["confirmed"], c["unresolved"]), (["runs/2"], ["text/1"]))
-        self.assertFalse(c["d094_c7"]["met"])  # (a confirmed harm)
-        # (no flag confirmed: the valid confirmation adjudicates them, D094-C7 met)
-        quiet = self.programme(per=lambda j: {"run": RUN + 200 + j, "start": 3600.0 * (K + j)})
-        c = tg.confirm(primary, quiet, HEAD, rounds=R)
-        self.assertTrue(c["valid"], c["problems"])
-        self.assertEqual((c["confirmed"], c["unresolved"]), ([], ["runs/2", "text/1"]))
-        self.assertTrue(c["d094_c7"]["met"], c["d094_c7"])
-        self.assertIn("unresolved", " ".join(c))  # (the inherited classification kept beside it)
-
-    def test_confirm_fails_closed(self):
-        primary = self.flagged_programme()
-        confirmation = self.flagged_programme(base=100, first=3600.0 * K)
-        self.assertTrue(tg.confirm(primary, confirmation, HEAD, rounds=R)["valid"])
-        bad = {
-            # (the Guardian's D094 witnesses: empty lists, twelve copies of one run, single runs)
-            "empty programmes": ([], []),
-            "twelve copies of one run each": ([primary[0]] * K, [confirmation[0]] * K),
-            "single-run programmes": (primary[:1], confirmation[:1]),
-            # (and the rest)
-            "a run id shared between the programmes": (primary, confirmation[:11] + [dict(confirmation[11], run=primary[3]["run"])]),
-            "another base in one dispatch": (primary, confirmation[:11] + [dict(confirmation[11], settings=dict(
-                confirmation[11]["settings"], base="0" * 40))]),
-            "another toolchain in one dispatch": (primary[:11] + [dict(primary[11], settings=dict(
-                primary[11]["settings"], ni_rustc="rustc 0.0.0"))], confirmation),
-            "settings missing": (primary, confirmation[:11] + [{k: v for k, v in confirmation[11].items() if k != "settings"}]),
-            "another R": (primary, confirmation[:11] + [dict(confirmation[11], rounds=R + 4)]),
-            "another head": (primary, [dict(d, head="0" * 40) for d in confirmation]),
-            "spacing broken across the boundary": (primary, self.flagged_programme(base=300, first=3600.0 * (K - 1) + 1800)),
-            "started before the primary's last completed": (
-                primary[:11] + [dict(primary[11], completed=primary[11]["started"] + 7200)], confirmation),
-            "boundary times unknown": (primary, [dict(confirmation[0], started=None)] + confirmation[1:]),
-            "an INVALID confirmation dispatch": (primary, confirmation[:11] + [dict(confirmation[11], valid=False,
-                                                                                     problems=["x"])]),
-            "a missing confirmation": (primary, None),
-            "a malformed dispatch": (primary, confirmation[:11] + [None]),
-        }
-        for what, (a, b) in bad.items():
-            with self.subTest(what):
-                c = tg.confirm(a, b, HEAD, rounds=R)
-                self.assertFalse(c["valid"], what)
-                self.assertTrue(c["problems"])
-                self.assertEqual((c["confirmed"], c["unresolved"]), ([], []))
-                # (D094-C7: a flagged primary is never cleared by a missing, invalid or malformed confirmation)
-                self.assertFalse(c["d094_c7"]["met"], what)
-
-    def test_confirm_from_the_archives(self):
-        # (the command line re-judges every dispatch of both programmes from its artifacts;
-        # it reads no stored verdict)
-        def args(base, first, flag):
-            out = []
-            for j in range(K):
-                root, man = self.dispatch(j, run=RUN + base + j, start=first + 3600.0 * j,
-                                          runs=[{"rows": shard_rows("runs", {(2, "wall"): 1.008 if flag else 1.0},
-                                                                    sd=0.001, seed=base + j)}])
-                mpath = Path(root) / "manifest.json"
-                mpath.write_text(json.dumps(man))
-                out.append((root, str(mpath)))
-            return out
-        prim, conf = args(0, 0.0, True), args(100, 3600.0 * K, False)
-        out = Path(self.roots[0]) / "confirm"
-        real, real_rep = tg.ni_judge, tg.replicated
-        try:
-            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R)
-            tg.replicated = lambda ds, head, **kw: real_rep(ds, head, **dict(kw, rounds=R))
-            flat = lambda flag, pairs: [x for pr in pairs for x in (flag, *pr)]  # noqa: E731
-            code = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf), "--head", HEAD,
-                            "--out", str(out)])
-            v = json.loads(Path(str(out) + ".json").read_text())
-            code_short = tg.main(["confirm", *flat("--primary", prim), *flat("--confirmation", conf[:1]), "--head",
-                                  HEAD, "--out", str(out) + "-short"])
-        finally:
-            tg.ni_judge, tg.replicated = real, real_rep
-        self.assertTrue(v["valid"], v["problems"])
-        self.assertEqual(v["unresolved"], ["runs/2"])
-        self.assertTrue(v["d094_c7"]["met"])
-        self.assertEqual(code, 0)
-        self.assertEqual(code_short, 2)
-        self.assertFalse(json.loads(Path(str(out) + "-short.json").read_text())["d094_c7"]["met"])
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

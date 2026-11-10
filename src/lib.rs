@@ -102,11 +102,6 @@ mod python;
 // examples/wait_audit.rs)
 #[doc(hidden)]
 pub use coop::wait_stats;
-// (research: the walks' per-call records, kept only with the `walk-stats` feature, for
-// the team screen's probes and the native engagement diagnostic)
-#[cfg(feature = "walk-stats")]
-#[doc(hidden)]
-pub use coop::walk_stats;
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 

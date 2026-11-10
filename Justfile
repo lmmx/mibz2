@@ -1,7 +1,6 @@
 import ".just/bench.just"
 import ".just/service-guarded.just"
 import ".just/service-tg.just"
-import ".just/cold-start.just"
 import ".just/commit.just"
 import ".just/docs.just"
 import ".just/submit.just"
@@ -9,7 +8,6 @@ import ".just/python.just"
 import ".just/quality.just"
 import ".just/rust.just"
 import ".just/ship.just"
-import ".just/share-nothing.just"
 
 default: clippy
 

@@ -382,9 +382,7 @@ fn one_block_and_none() {
 /// before it delivered
 #[test]
 fn a_block_crc_in_the_middle() {
-    // (scale 2: the text corpus is the repository's own files, about 3 MB at scale 1, which
-    // can compress to only 3 blocks at level 9 as those files change; this needs at least 4)
-    let corp = corpora(2);
+    let corp = corpora(1);
     let text = &corp[0].1[..];
     let z = compress(text, 9);
     let starts = block_starts(&z);

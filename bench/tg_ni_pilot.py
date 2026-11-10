@@ -66,9 +66,6 @@ sys.path.insert(0, HERE)
 import service_tg as tg  # noqa: E402
 
 LAGS = (1, 2, 5, 10, 30, 60)
-# the pilot's own R (registration §2.8), not the final design's (`service_tg.NI_ROUNDS`, §2.9):
-# its analysis stays replayable at the R it ran
-PILOT_ROUNDS = 600
 # The batch-length menu at R = 600, fixed before the pilot (registration §2.8): 10, 20, 30 and 60
 # over all 600 rounds; 48 (the R960 candidate's batch length) over the first 576 rounds only,
 # twelve complete batches, the last 24 rounds left out of that one diagnostic and kept in every
@@ -185,7 +182,7 @@ def ts(s):
     return dt.datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp() if s else None
 
 
-def analyse(root, man, head, base, rustc, corpus_text, rounds=PILOT_ROUNDS, menu=BATCH_MENU):
+def analyse(root, man, head, base, rustc, corpus_text, rounds=tg.NI_ROUNDS, menu=BATCH_MENU):
     """The pilot's analysis, after the judge's own structural admission (`service_tg.structural`,
     label pilot: the manifest, unlisted artifacts, the history, every file rehashed, every
     shard's files, runner, read-back, corpus, rows and timing)"""

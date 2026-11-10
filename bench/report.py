@@ -70,7 +70,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.7.0"
+BENCH = "3.5.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
