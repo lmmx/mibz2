@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)
+bench-two-modes              bench/two-modes-discriminator fast/slow mode discriminator (#318, frozen 339f745f, PROCEED 6763089509)
