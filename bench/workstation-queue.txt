@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-release-scaling        master                    release scaling, 0.2.7 against 0.2.6 (RELEASING.md §5)
+bench-par-scan               diag/par-scan-ready       the parallel scan's paired knee sweep (#317, frozen at 24305124, ready at efc1bd88)
