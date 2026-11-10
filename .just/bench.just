@@ -1001,3 +1001,93 @@ bench-bw-titrate:
       outcome="INVALID: runs.jsonl is not the registered grid"
       exit 1
     fi
+
+# The scan without the scanner, on the workstation (docs/journal/2026-11-10-parallel-scan.md,
+# section 5, registered and frozen before use): a research harness's two arms, one reading every
+# block's symbols on a scanner thread and one finding blocks by magic and reading them on the
+# workers, at 1 to 10 workers on three inputs. A diagnostic (RULES C1): it qualifies no
+# production change. Run once; no retry. Its exit: 0 VALID (whatever the readings), 1 INVALID
+# or REFUSED, 3 INCOMPLETE, kept through the bundle and `just submit`. About five minutes once
+# built.
+#   just submit bench-par-scan
+
+# Blocks found by magic and read on the workers, against one scanner thread, at 1 to 10 workers
+bench-par-scan:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/par-scan
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-par-scan: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # the outcome decides the exit, whatever the last command's status
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-par-scan: OUTCOME: $outcome"
+      rm -rf "$W/inputs"
+      bash bench/bundle.sh "$W" || { echo "bench-par-scan: bundling failed"; exit 2; }
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*|REFUSED*) exit 1 ;;
+        *) exit 3 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-par-scan: $*"; exit 1; }
+    ROUNDS=5
+    WORKERS=1,2,4,6,8,10
+    git rev-parse HEAD > "$W/commit.txt"
+    printf 'head %s\n' "$(cat "$W/commit.txt")" > "$W/commits.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/par-scan.frozen): what is built and driven must
+    # be as it was there, and committed
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/par-scan.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/par-scan.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml
+      examples/par_scan.rs examples/ab.rs tests/common bench/bundle.sh bench/corpus.sh
+      bench/wikidata.json bench/wikidata.py bench/par_scan_knee.py .just/bench.just
+      docs/journal/2026-11-10-parallel-scan.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    bash bench/corpus.sh
+    lscpu > "$W/lscpu.txt"
+    cat /proc/loadavg > "$W/loadavg-before.txt"
+    cargo build --release --example par_scan --example ab
+    # the inputs: the corpus; its bytes at level 1 (Python's bz2, libbzip2); the crate's records
+    I=$W/inputs
+    mkdir "$I"
+    cp corpora/wikidata.bz2 "$I/wikidata.bz2"
+    python3 -c 'import bz2, hashlib, sys
+    d = bz2.decompress(open(sys.argv[1], "rb").read())
+    print("decoded", len(d), hashlib.sha256(d).hexdigest())
+    open(sys.argv[2], "wb").write(bz2.compress(d, 1))' corpora/wikidata.bz2 "$I/wikidata-l1.bz2" | tee "$W/decoded.txt"
+    cargo run -q --release --example ab -- gen "$I/gen" 8 > "$W/gen.txt" 2>&1 || fail "ab gen failed (gen.txt)"
+    cp "$I/gen/records.bz2" "$I/records.bz2"
+    ( cd "$I" && sha256sum wikidata.bz2 wikidata-l1.bz2 records.bz2 && wc -c wikidata.bz2 wikidata-l1.bz2 records.bz2 ) | tee "$W/inputs.txt"
+    readings=""
+    for name in wikidata wikidata-l1 records; do
+      # every arm's bytes equal to mibz2::decode's, or nothing is timed (and the warm-up)
+      if ! cargo run -q --release --example par_scan -- "$I/$name.bz2" check > "$W/check-$name.txt" 2>&1; then
+        tail -5 "$W/check-$name.txt"
+        outcome="INVALID: the harness's bytes differ from mibz2::decode's on $name (check-$name.txt)"
+        exit 1
+      fi
+      cargo run -q --release --example par_scan -- "$I/$name.bz2" knee "$ROUNDS" "$WORKERS" \
+        > "$W/runs-$name.jsonl" 2> "$W/harness-$name.log" || { tail -5 "$W/harness-$name.log"; outcome="INVALID: the harness failed on $name (harness-$name.log)"; exit 1; }
+      if ! python3 bench/par_scan_knee.py "$W/runs-$name.jsonl" "$ROUNDS" "$WORKERS" "$W/report-$name.json" > "$W/summary-$name.md"; then
+        outcome="INVALID: runs-$name.jsonl is not the registered grid"
+        exit 1
+      fi
+      echo "## $name"; cat "$W/summary-$name.md"
+      readings="$readings $name: $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["reading"].split(":")[0])' "$W/report-$name.json");"
+    done
+    cat /proc/loadavg > "$W/loadavg-after.txt"
+    outcome="VALID:$readings"
