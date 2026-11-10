@@ -455,6 +455,7 @@ pub fn decode_blocks(
 ) -> Result<Range, Error> {
     let mut s = Scratch::<bwt::Segmented>::default();
     let mut syms = Vec::new();
+    let mut tables = block::Tables::default();
     let mut range = Range {
         end: start_bit,
         ..Range::default()
@@ -468,7 +469,7 @@ pub fn decode_blocks(
             bit: Some(bit),
         };
         let mut br = bits::Bits::at(data, bit);
-        let item = block::read_item(&mut br, level, syms);
+        let item = block::read_item_with(&mut br, level, syms, &mut tables);
         if br.overran() {
             return Err(at(ErrorKind::Truncated));
         }

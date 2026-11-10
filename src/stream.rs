@@ -4,7 +4,7 @@
 //! held only from the block being read on.
 
 use super::bits::Bits;
-use super::block::{self, Item, Symbols};
+use super::block::{self, Item, Symbols, Tables};
 use super::{Error, ErrorKind};
 
 /// The input, by absolute byte offset
@@ -60,6 +60,8 @@ pub struct Scanner<S> {
     blocks: u64,
     streams: u64,
     lookahead: usize,
+    /// each block's Huffman tables, their memory reused
+    tables: Tables,
 }
 
 impl<S: Source> Scanner<S> {
@@ -71,6 +73,7 @@ impl<S: Source> Scanner<S> {
             blocks: 0,
             streams: 0,
             lookahead: LOOKAHEAD,
+            tables: Tables::default(),
         }
     }
 
@@ -122,7 +125,7 @@ impl<S: Source> Scanner<S> {
                     let base = at / 8;
                     let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
                     let mut br = Bits::at(data, at % 8);
-                    let item = block::read_item(&mut br, level, syms);
+                    let item = block::read_item_with(&mut br, level, syms, &mut self.tables);
                     let used = br.bit_pos() - at % 8;
                     if br.overran() {
                         // an item past the input held: more input, or the input's end
