@@ -1285,8 +1285,9 @@
       "sha": "313558570e454e98a3dd861a8b0d6cb813a286c2",
       "evidence_digest": "draft:4413f50f8d35496756215cb2a37bd018a6acd6f7;result:4076b534f0a03d82ecb817abcccbe705081b6f7d;share:ef6f9a93938294ab9ea6b66cbe24883a94635249;instructions:663f66c61c46fd726db8846feb7ce11fa3e691f2;inbox:6759768735",
       "commit": "bb43afdccbee1c35c13002a0de4274507eba0869",
-      "status": "complete",
-      "disposition": "Window-conditioning inference remains REVISE; run16 literal condition unmet and archived accounting conflicts require reconciliation; no line STOP."
+      "status": "finished",
+      "disposition": "Window-conditioning inference remains REVISE; run16 literal condition unmet and archived accounting conflicts require reconciliation; no line STOP.",
+      "comment": 6759863881
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1369,7 +1370,8 @@
     6757750433,
     6758456856,
     6758740649,
-    6759487306
+    6759487306,
+    6759863881
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1561,7 +1563,8 @@
     "f4012c4f9c5294ed56086269a7148236c056ee57",
     "d2faa9009e86979e8a62ded13a8abaf7331bc3bf",
     "b25b0ce08459c2a55c16f08f835b993a02e722f4",
-    "bb43afdccbee1c35c13002a0de4274507eba0869"
+    "bb43afdccbee1c35c13002a0de4274507eba0869",
+    "68fb0a3b31c48d664aee9837614f23fc8f71d9ff"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1727,9 +1730,10 @@
   },
   "current_execution": {
     "active_comment": 6759768735,
-    "status": "complete",
+    "status": "finished",
     "decision": "D085",
-    "work_commit": "bb43afdccbee1c35c13002a0de4274507eba0869"
+    "work_commit": "bb43afdccbee1c35c13002a0de4274507eba0869",
+    "review_comment_id": 6759863881
   },
   "duplicate_events": [
     {
@@ -2383,7 +2387,8 @@
       "sha": "313558570e454e98a3dd861a8b0d6cb813a286c2",
       "evidence_digest": "draft:4413f50f8d35496756215cb2a37bd018a6acd6f7;result:4076b534f0a03d82ecb817abcccbe705081b6f7d;share:ef6f9a93938294ab9ea6b66cbe24883a94635249;instructions:663f66c61c46fd726db8846feb7ce11fa3e691f2;inbox:6759768735",
       "decision": "D085",
-      "commit": "bb43afdccbee1c35c13002a0de4274507eba0869"
+      "commit": "bb43afdccbee1c35c13002a0de4274507eba0869",
+      "comment": 6759863881
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3009,11 +3014,13 @@
     {
       "comment_id": 6759768735,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D085",
       "receipt_commit": "b25b0ce08459c2a55c16f08f835b993a02e722f4",
       "work_commit": "bb43afdccbee1c35c13002a0de4274507eba0869",
-      "progress": "Work complete; awaiting REVIEW. Cursor persistence defect corrected: intended D085 receipt did not append, and work commit incorrectly overwrote D084 receipt reference. D084 original reference restored; D085 state recorded explicitly without claiming the initial receipt was valid."
+      "progress": "Work complete; awaiting REVIEW. Cursor persistence defect corrected: intended D085 receipt did not append, and work commit incorrectly overwrote D084 receipt reference. D084 original reference restored; D085 state recorded explicitly without claiming the initial receipt was valid. Exact REVIEW readback verified on #145; pinned verifier fails only its coordinator-specific FROM check; independent Guardian header/body/destination checks pass.",
+      "review_comment_id": 6759863881,
+      "complete_cursor_commit": "68fb0a3b31c48d664aee9837614f23fc8f71d9ff"
     }
   ],
   "migrated_from": {
