@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-team-ports             master                    cooperative ports stack f76f0e3c vs base 8f540ef1, wikidata wall 8-20 threads (rule: LOG 6764355047)

@@ -1135,3 +1135,9 @@ bench-par-scan DRY="":
     else
       outcome="VALID:$readings"
     fi
+
+# The cooperative ports (#335, #337, #339 stacked) against their base, on the i9's team path:
+# wikidata wall at 8-20 threads. Decision rule set before the run: #145 LOG 6764355047.
+bench-team-ports:
+    git fetch -q origin research/team-mtf-port
+    just bench-release-scaling f76f0e3cdeec9260179eacd5e1a111a5a434bec5 8f540ef1190689f59a279f081d8405f46669fba0 10 "8,10,12,16,20"
