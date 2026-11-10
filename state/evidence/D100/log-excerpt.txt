@@ -1,0 +1,63 @@
+2026-11-10T23:30:43.7430902Z  * [new branch]          feat/ledger                              -> origin/feat/ledger
+2026-11-10T23:30:43.7567013Z  * [new branch]          review/compact30-instruction-ledger      -> origin/review/compact30-instruction-ledger
+2026-11-10T23:30:43.8961057Z HEAD is now at eccead562 Merge ae13742fe4c6e2726c178e2409a1d69ef8fca939 into 2635f04e9155dd31388b24fd3f7248f87b3ddcda
+2026-11-10T23:31:33.8924137Z test trace::tests::ledger_at_level_9 ... ok
+2026-11-10T23:31:33.9255059Z test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+2026-11-10T23:31:33.9405171Z test trace::tests::ledger_matches_a_workers_buffers ... ok
+2026-11-10T23:33:53.6112213Z test result: ok. 98 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 145.94s
+2026-11-10T23:33:53.6286236Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-11-10T23:34:20.2679571Z r0 t=1           timeline wall 0.574342 s  trace complete: yes
+2026-11-10T23:34:20.8506408Z r0 t=1           full     wall 0.577970 s  trace complete: yes
+2026-11-10T23:34:21.4126305Z r0 t=2           timeline wall 0.279213 s  trace complete: yes
+2026-11-10T23:34:21.6967136Z r0 t=2           full     wall 0.279081 s  trace complete: yes
+2026-11-10T23:34:22.2595547Z r0 t=4           timeline wall 0.278403 s  trace complete: yes
+2026-11-10T23:34:22.5538835Z r0 t=4           full     wall 0.286041 s  trace complete: yes
+2026-11-10T23:34:23.1287347Z r1 t=1           timeline wall 0.570458 s  trace complete: yes
+2026-11-10T23:34:23.7123393Z r1 t=1           full     wall 0.578534 s  trace complete: yes
+2026-11-10T23:34:24.5832285Z r1 t=2           timeline wall 0.281597 s  trace complete: yes
+2026-11-10T23:34:24.8638900Z r1 t=2           full     wall 0.275425 s  trace complete: yes
+2026-11-10T23:34:25.4554378Z r1 t=4           timeline wall 0.276374 s  trace complete: yes
+2026-11-10T23:34:25.7384864Z r1 t=4           full     wall 0.275635 s  trace complete: yes
+2026-11-10T23:34:26.6082859Z r2 t=1           full     wall 0.577335 s  trace complete: yes
+2026-11-10T23:34:27.7728896Z r2 t=1           timeline wall 0.580049 s  trace complete: yes
+2026-11-10T23:34:28.0581188Z r2 t=2           full     wall 0.279305 s  trace complete: yes
+2026-11-10T23:34:28.9268026Z r2 t=2           timeline wall 0.464639 s  trace complete: yes
+2026-11-10T23:34:29.2999898Z r2 t=4           full     wall 0.365046 s  trace complete: yes
+2026-11-10T23:34:29.9479322Z r2 t=4           timeline wall 0.278742 s  trace complete: yes
+2026-11-10T23:34:31.1164366Z r3 t=1           timeline wall 0.585097 s  trace complete: yes
+2026-11-10T23:34:31.6989214Z r3 t=1           full     wall 0.577737 s  trace complete: yes
+2026-11-10T23:34:32.2599927Z r3 t=2           timeline wall 0.273193 s  trace complete: yes
+2026-11-10T23:34:32.5480410Z r3 t=2           full     wall 0.282791 s  trace complete: yes
+2026-11-10T23:34:33.2174833Z r3 t=4           timeline wall 0.326678 s  trace complete: yes
+2026-11-10T23:34:33.4983903Z r3 t=4           full     wall 0.272319 s  trace complete: yes
+2026-11-10T23:34:34.0808731Z r4 t=1           timeline wall 0.577815 s  trace complete: yes
+2026-11-10T23:34:34.6728068Z r4 t=1           full     wall 0.587087 s  trace complete: yes
+2026-11-10T23:34:35.5625416Z r4 t=2           timeline wall 0.292392 s  trace complete: yes
+2026-11-10T23:34:35.8506615Z r4 t=2           full     wall 0.282386 s  trace complete: yes
+2026-11-10T23:34:36.4529101Z r4 t=4           timeline wall 0.306331 s  trace complete: yes
+2026-11-10T23:34:36.7406181Z r4 t=4           full     wall 0.279041 s  trace complete: yes
+2026-11-10T23:34:37.6161858Z r5 t=1           full     wall 0.585146 s  trace complete: yes
+2026-11-10T23:34:38.7715817Z r5 t=1           timeline wall 0.578118 s  trace complete: yes
+2026-11-10T23:34:39.0521515Z r5 t=2           full     wall 0.275520 s  trace complete: yes
+2026-11-10T23:34:39.6199854Z r5 t=2           timeline wall 0.273813 s  trace complete: yes
+2026-11-10T23:34:39.9056908Z r5 t=4           full     wall 0.277350 s  trace complete: yes
+2026-11-10T23:34:40.4598611Z r5 t=4           timeline wall 0.269488 s  trace complete: yes
+2026-11-10T23:34:40.6702873Z occupancy: AMD EPYC 7763 64-Core Processor · 4 CPUs allowed (0-3) · physical cores 2 · SMT siblings 0-1 | 2-3 · parity ok
+2026-11-10T23:34:40.6718858Z Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (431 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+2026-11-10T23:34:40.6737396Z Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+2026-11-10T23:34:40.6750067Z   worker buffers (each at its end, mean MB): 17.63 total = seg.bufs 7.74 + tt 7.20 + ll 1.80 + runs.runs 0.77 · ledger check: VIOLATED: ll 1799862 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-10T23:34:40.6766585Z   worker buffers (each at its end, mean MB): 16.96 total = tt 7.20 + seg.bufs 7.06 + ll 1.80 + runs.runs 0.80 · ledger check: VIOLATED: ll 1799923 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-10T23:34:40.6777621Z   worker buffers (each at its end, mean MB): 13.49 total = seg.bufs 6.10 + tt 5.40 + ll 1.35 + runs.runs 0.52 · ledger check: VIOLATED: ll 1349962 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-10T23:34:40.6866398Z [36;1massert "events reconciled: ok" in text, "the events don't reconcile under teams"[0m
+2026-11-10T23:34:40.6867000Z [36;1massert "ledger check: VIOLATED" not in text, "the ledger check fails under teams"[0m
+2026-11-10T23:34:40.6867905Z [36;1mprint(f"teams of 2: every traced round complete ({rounds} of {rounds}), every run on teams2x2, the events reconciled")[0m
+2026-11-10T23:34:41.7041860Z r0 t=4           timeline wall 0.383472 s  trace complete: yes
+2026-11-10T23:34:42.0670352Z r0 t=4           full     wall 0.357915 s  trace complete: yes
+2026-11-10T23:34:42.4441864Z r1 t=4           timeline wall 0.371902 s  trace complete: yes
+2026-11-10T23:34:42.8056624Z r1 t=4           full     wall 0.355581 s  trace complete: yes
+2026-11-10T23:34:43.3751695Z occupancy: AMD EPYC 7763 64-Core Processor · 4 CPUs allowed (0-3) · physical cores 2 · SMT siblings 0-1 | 2-3 · parity ok
+2026-11-10T23:34:43.3767295Z Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (431 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+2026-11-10T23:34:43.3780803Z Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+2026-11-10T23:34:43.3792213Z   worker buffers (each at its end, mean MB): 17.04 total = tt 7.20 + seg.bufs 7.09 + ll 1.80 + runs.runs 0.80 · ledger check: VIOLATED: ll 1799923 outside 900000..=Some(900000.0); rle 38 outside 900000..=Some(1799999.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-10T23:34:43.4721424Z AssertionError: the ledger check fails under teams
+2026-11-10T23:34:43.4904916Z ##[error]Process completed with exit code 1.

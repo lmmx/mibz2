@@ -1,0 +1,63 @@
+{
+  "decision": "D100",
+  "incoming_comment": 6782334222,
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "reviewed_head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+  "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "actual_ci_checkout": "eccead562adc546c16db1e272af4b670cc130310",
+  "ci_job": 130205457614,
+  "ci_run": 42923929886,
+  "files": [
+    {
+      "path": "src/lib.rs",
+      "head_blob": "275bc3990d851d024c94ef7aa76ff3d0e88ab48e",
+      "base_blob": "275bc3990d851d024c94ef7aa76ff3d0e88ab48e",
+      "identical": true
+    },
+    {
+      "path": "src/parallel.rs",
+      "head_blob": "483233086def374dbe43f3d580eaddc4f4e9c26b",
+      "base_blob": "483233086def374dbe43f3d580eaddc4f4e9c26b",
+      "identical": true
+    },
+    {
+      "path": "src/bwt.rs",
+      "head_blob": "1c48e30e3f07a58897b914c332dd4bfe9f2d54dd",
+      "base_blob": "1c48e30e3f07a58897b914c332dd4bfe9f2d54dd",
+      "identical": true
+    },
+    {
+      "path": "src/mtf.rs",
+      "head_blob": "778d9b84ecc9fcae587730a3ce88faecead47f1d",
+      "base_blob": "778d9b84ecc9fcae587730a3ce88faecead47f1d",
+      "identical": true
+    },
+    {
+      "path": "src/trace.rs",
+      "head_blob": "0f897b72b40202f9eac6885b0f931c0ec1031da6",
+      "base_blob": "0f897b72b40202f9eac6885b0f931c0ec1031da6",
+      "identical": true
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "head_blob": "14412a2f04662929cb60593f842688a25de94626",
+      "base_blob": "14412a2f04662929cb60593f842688a25de94626",
+      "identical": true
+    }
+  ],
+  "occupancy_workflow_blob": "49fd486f6b6f641016b03cc35b9e05bcda99ec0a",
+  "occupancy_workflow_identical_on_base": true,
+  "runs_blob": "5a2b872f78d759a0f59eadb995e9a9eac73cb7a7",
+  "local_execution": "Python analytical counterexample only; rustc, cargo and just absent on PATH.",
+  "limits": [
+    "No Rust/Miri/decoder/benchmark execution",
+    "No per-worker per-block native allocation replay",
+    "No whole-program safety certification",
+    "No repair, workflow dispatch, merge, ready-tag or production edit"
+  ],
+  "evidence_sha256": {
+    "witness.py": "45e7f3de36aa89cbed023a718cf03f5ed5ae47204c208ffc501e612d1bed36b2",
+    "witness-result.json": "17f8491897119c17ab8cb678faadf0449209e31f6aeb9405ef526e64abdd1a4d",
+    "log-excerpt.txt": "0f3e711f8e1a3e9e79b4a9f62b19baeef39c38a86cc1b245bd4883dca7899593"
+  }
+}

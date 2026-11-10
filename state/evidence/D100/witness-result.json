@@ -1,0 +1,28 @@
+{
+  "kind": "analytical source counterexample; no Rust execution",
+  "states": [
+    {
+      "rows": 600000,
+      "ll_capacity_model": 600000,
+      "rle_capacity_exact": 0
+    },
+    {
+      "rows": 800000,
+      "ll_capacity_model": 1200000,
+      "rle_capacity_exact": 0
+    }
+  ],
+  "old_ledger_ll": [
+    900000,
+    900000
+  ],
+  "old_ledger_rle": [
+    800000,
+    1599999
+  ],
+  "reported_team_capacities": {
+    "ll": 1799923,
+    "rle": 38
+  },
+  "conclusion": "rle lower bound contradicted without a growth assumption; ll contradiction also reproduced under the existing doubling model"
+}
