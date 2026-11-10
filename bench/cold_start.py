@@ -243,8 +243,8 @@ def judge(d):
         decision = "NONE: no arm fast in 25 of 30; nothing integrates"
     if dry:
         decision = f"DRY (not evidence, {each} runs an arm): {decision}"
-    tally = " ".join(f"{a} {arms[a]['fast']}/{arms[a]['timed']}" for a in ARMS)
-    lines = [decision, f"fast (wall < {THRESHOLD_S} s) / timed: {tally}"]
+    tally = " ".join(f"{a} {arms[a]['fast']}/{arms[a]['timed']}" for a in ARMS if a != "L")
+    lines = [decision, f"fast (wall < {THRESHOLD_S} s) / timed: {tally} (judged: P W B; L is x4 input, not classed)"]
     for a in ARMS:
         x = arms[a]
         lines.append(
