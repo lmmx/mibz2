@@ -1,11 +1,17 @@
-# 2026-11-10: The staged walk's native engagement diagnostic (C1, DRAFT, revision 2, not frozen)
+# 2026-11-10: The staged walk's native engagement diagnostic (C1, DRAFT, revision 3, not frozen)
 
 **Status: DRAFT.** Not registered and not frozen; nothing built or run for it.
-- **Revision 2** applies the Researcher's REVISE (#145 6759658271; report
-  `state/reports/team-designs-6759589291` at `5326b6fd`). Revision 1 was at `ffb56891`.
-- **It becomes a registration** only after the Researcher's PROCEED and the Guardian's
-  confirmation of the resolved invalidity rule (§4). Every pin below is filled in and
-  committed before any data.
+
+**The history of this draft:**
+
+| revision | at | what it answered |
+|---|---|---|
+| 1 | `ffb56891` | — |
+| 2 | `25b778cd` | the Researcher's REVISE (#145 6759658271) |
+| 3 | this head | the Researcher's recheck (#145 6760210997; `state/reports/team-designs-recheck-6760095177` at `ddd3479c`), and it cites the Guardian's **D087** (#145 6760280679; `state/records/D087/decision.md` at `5059ce63`) |
+
+**It becomes a registration** only after the Researcher's PROCEED, with every pin in §4
+filled and committed before any data.
 
 **Authority:** the Guardian's D084 (G2.1, item 4), #145 6759487306; record
 `state/records/D084` at `f4012c4f`. This is the native-instrumentation option, framed as a
@@ -29,6 +35,15 @@ separate engagement diagnostic.
     different loops.
   - So ENGAGED says nothing about uninstrumented balance, or about the cause of the
     counted run's imbalance.
+
+**D087 (1) resolves the sequence's terms:**
+- **The first INVALID execution ends the sequence INCONCLUSIVE.** The order is old,
+  cleanup, staged. An invalid old arm means the staged arm is never launched.
+- **No rerun and no method switch.**
+- **A VALID but unbalanced old arm** is reference evidence, not an abort.
+- **A VALID staged arm that fails a predicate** is NOT ENGAGED, with no retry.
+- **D084's ambiguous sentence** ("a second invalid execution … ends this diagnostic
+  sequence") is superseded for this sequence; the original record is kept.
 
 ## 1. The information question
 
@@ -65,10 +80,17 @@ PR-tier probes (`2026-11-10-team-screen-design-draft.md`, T2).
     helper's call and a leader's join through `Relay::join`.
   - the leader's solo block, on the return from `parallel::solo`.
 - **One summary record per cooperative block,** pushed by the thread that ends its walk
-  (the last decrement in `Relay::walk_and_leave`):
+  (the last decrement in `Relay::walk_and_leave`). It counts independently of the call
+  records:
   - S, the deduplicated starts;
   - the sum of the segments' lengths;
-  - the walkers counted in.
+  - **the entered set:** a per-block bitmask of the pool indices that entered
+    `walk_and_leave`, each thread setting its bit with a Relaxed `fetch_or` on entry,
+    before its `share`. The bits are published by the walkers' AcqRel decrement, as the
+    output is;
+  - **the leader's join:** whether its `Relay::join` CAS succeeded, a separate bit set by
+    the leader;
+  - **the build's members:** the helpers counted into `built`.
 - **At the decoder's end,** each pool's threads hand their ledgers to the pool at join
   (the pool's run end already orders them). The harness child writes them all to
   `AB_WALK_STATS` as JSON lines. Nothing is written from a hot path, and no record can
@@ -86,7 +108,7 @@ kind (take, full phase and tail); and the staged walker's fragments.
 - **bytes are counted arithmetically:** per chunk (the lanes' flushed spans), per take, and
   per tail step. There are no per-byte atomics.
 
-## 3. Validity: identity and conservation (each check independent)
+## 3. Validity: identity, reconciliation and conservation (each check independent)
 
 **An execution is VALID only if all of these hold.** Otherwise it is INVALID.
 
@@ -107,17 +129,43 @@ kind (take, full phase and tail); and the staged walker's fragments.
    - each has exactly one block summary.
 5. **Team rosters:** each team's members and roles are exactly one leader and two helpers,
    the same members in every block of that team.
-6. **Per-block conservation,** checked against the summary, which counts differently from
-   the walker records:
-   - the walker records' successful claims sum to the summary's S;
-   - their walked bytes sum to the summary's segment lengths;
-   - the exhausting claims equal the block's walker calls.
-7. **The totals** reconcile: walked bytes over all blocks = 209,697,662.
+6. **Reconciling calls with records, per block.** The completed walker-call records must be
+   exactly the summary's entered set: the same threads, no more and no fewer.
+   - **A lost record** is a thread in the entered set with no call record. That makes the
+     execution INVALID, **even when the lost call did zero work** (no take, no bytes, its
+     one exhausting claim).
+   - **An absent call** is a thread not in the entered set, and so with no record. That is
+     a fact about the run, judged by the predicates: a helper absent from its block fails
+     (a), making the outcome NOT ENGAGED.
+   - So a deleted zero-work record can no longer pass as an absent call. The terminal
+     record's count is not used as a witness.
+   - **The leader:** its call record must exist if and only if the summary's join bit is
+     set. A lost leader record is INVALID.
+   - **The build:** each helper's share record must exist if and only if the helper is
+     counted in `built`.
+7. **Per-block conservation,** against the summary:
+   - the successful claims sum to its S;
+   - the walked bytes sum to its segment lengths;
+   - each call record has exactly one exhausting claim.
+8. **The totals** reconcile. Walked bytes summed over the 233 cooperative blocks =
+   **M = 209,697,662**.
+   - **M counts** only the cooperative walkers' bytes (take, full phase and tail over the
+     T blocks' segments).
+   - **The 198 S blocks** are walked by the leader's solo path. They have their own solo
+     records, are not walker calls, and are not in M.
+   - **The S blocks' check:** their rows plus M plus the T blocks' unwalked rows (none on
+     W, every T block one cycle) reconcile to N = 209,706,557.
 
 **A failure of any check makes the execution INVALID,** whatever its balance.
 
 **The checker's own tests,** run before registration on synthetic ledgers, must each fail:
 - a missing record;
+- **a missing zero-work helper record** (zero bytes, zero takes, one exhausting claim),
+  with the terminal count adjusted: the Researcher's counterexample, which passed byte
+  and take conservation in revision 2;
+- **a missing zero-work leader record,** likewise;
+- a helper truly absent from a block (not in the entered set), which must give NOT
+  ENGAGED, not INVALID;
 - a duplicate record;
 - a record attributed to the wrong team or block;
 - a missing summary;
@@ -134,13 +182,23 @@ kind (take, full phase and tail); and the staged walker's fragments.
   context, not an equivalence with the counted run's serialised execution.
 - **No i9 generalisation, and no C5 run,** follows.
 
-**The pins,** to be filled in and committed before the job:
-- the source commit, with the instrument and the inlining arrangement fixed;
-- the toolchain (rustc, cargo) and the build command, `cargo build --release --features
-  walk-stats --example ab`;
-- the executable's SHA-256, recorded after the build and before either arm;
-- the input's digest (`82f65ace…`);
-- the checker's digest and its version.
+**The pins, filled as far as they can be now:**
+
+| pin | value |
+|---|---|
+| input | `wikidata.bz2`, SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`; output 209,700,196 B, hash `a8830caee5c511a6`, SHA-256 `3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf` (the lbzip2 oracle, `bench/team-screen/manifest.json`) |
+| cooperative block set | the 233 T places in `bench/team-screen/w-classes.txt` |
+| toolchain | the runner's `dtolnay/rust-toolchain@stable`, **pinned to 1.99.1** (rustc `58cf8f9c3`, cargo `5f94df478`), as the counted run used |
+| build | `cargo build --release --features walk-stats --example ab`; release profile (fat LTO, one codegen unit, line tables only) |
+| harness record | `ab-child/2`, with `AB_SHA256=1` |
+| run | `AB_WALK_STATS=FILE ab child mibz2-pipe3-both 9 wikidata.bz2`; `AB_STAGED_TRAVERSE=1` for the staged arm |
+
+**Still to fill** (they do not exist yet):
+- the source commit (the instrument's head, with the inlining arrangement fixed);
+- the executable's SHA-256 (recorded after the build, before either arm);
+- the checker (`bench/walk_stats_check.py`): its digest and version.
+
+Bounds alone are not readiness: none of this is registrable until those are filled.
 
 **Hard bounds,** in seconds:
 
@@ -161,13 +219,10 @@ A bound exceeded is an INVALID execution.
 3. **The staged arm:** `AB_WALK_STATS=staged.jsonl AB_STAGED_TRAVERSE=1 ab child
    mibz2-pipe3-both 9 wikidata.bz2`.
 
-**The first INVALID execution ends the diagnostic: INCONCLUSIVE.**
+**The first INVALID execution ends the diagnostic: INCONCLUSIVE** (D087 (1)).
 - If the old arm is invalid, the staged arm is not launched (after cleanup).
-- **No rerun,** automatic or manual, and no selection among executions.
-
-This is the stricter of the readings of D084's "a second invalid execution is retained and
-ends this diagnostic sequence", which is ambiguous beside its no-retry terms. The Guardian
-is asked to confirm it before registration.
+- **A VALID but unbalanced old arm** is reference evidence, not an abort.
+- **No rerun,** automatic or manual, no method switch, and no selection among executions.
 
 **Everything is retained:** records, child JSON, stdout, stderr, exit statuses, the
 topology record, the checker's output, and the build log, whether valid or not. The
@@ -229,7 +284,17 @@ justification under C6.
 
 No retry, so no doubling. The cost is engineering, not machine time.
 
-## 7. Resolved from revision 1
+## 7. Resolved
+
+**From revision 2 (the recheck):**
+- **A lost zero-work record** is now caught. The calls are reconciled against the
+  summary's independently counted entered set, join bit and build members, and a lost
+  record is told apart from an absent call (§3).
+- **M** is defined (§3, item 8).
+- **The pins** are filled as far as they can be (§4).
+- **D087** is cited for the sequence's terms.
+
+**From revision 1:**
 
 - **The host:** the runner, chosen; its actual topology and quotas recorded.
 - **The retry:** removed. The first invalid execution ends INCONCLUSIVE; the Guardian is to

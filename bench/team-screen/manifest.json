@@ -1,6 +1,6 @@
 {
-  "version": "team-screen/0-draft",
-  "status": "DRAFT: not frozen, not adopted; every FREEZE value is filled, and every regex checked against the frozen build's symbol table, before registration",
+  "version": "team-screen/0-draft.3",
+  "status": "DRAFT: not frozen, not adopted. Fixture digests and oracle values below were made and checked on 2026-11-10 (fixtures: make_fixtures.py; oracles: `AB_SHA256=1 ab child lbzip2 1 FILE`, each SHA-256 also checked against `lbzip2 -dc | sha256sum`). No mibz2 arm has run on any fixture.",
   "design": "docs/journal/2026-11-10-team-screen-design-draft.md",
   "roles": {
     "leader": {
@@ -54,9 +54,27 @@
       "threads": 3,
       "env": {},
       "team": false
+    },
+    {
+      "id": "H-plain1",
+      "build": "head",
+      "arm": "mibz2",
+      "threads": 1,
+      "env": {},
+      "team": false,
+      "only": "error"
+    },
+    {
+      "id": "B-plain1",
+      "build": "base",
+      "arm": "mibz2",
+      "threads": 1,
+      "env": {},
+      "team": false,
+      "only": "error"
     }
   ],
-  "oracle": "the record of `ab child lbzip2 1 FILE` (the same hash over lbzip2's output), frozen below; the screen re-runs it and requires the frozen values",
+  "oracle": "one admitted completion record per valid fixture and per error fixture's prefix: `ab child lbzip2 1 FILE` with AB_SHA256=1, run by the head's harness; its out, hash and sha256 must equal the frozen values (C-text: the per-head record itself)",
   "fixtures": [
     {
       "id": "W",
@@ -65,157 +83,203 @@
       "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
       "expect": {
         "out": 209700196,
-        "hash": "a8830caee5c511a6"
+        "hash": "a8830caee5c511a6",
+        "sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf"
       },
       "counted": {
         "coop_blocks": 233,
         "solo_blocks": 198,
         "walked": 209697662,
+        "walked_note": "M: the cooperative walkers' bytes over the 233 T blocks; the 198 S blocks' rows are walked by the leader's solo path and are not in M",
         "takes": 238382,
         "decoded": 209700196
       },
-      "block_classes": "FREEZE: the 431 blocks' classes in order (T: rows >= MIN_COOP, S: below), from `scan`"
+      "block_classes_file": "bench/team-screen/w-classes.txt"
     },
     {
       "id": "C-text",
       "kind": "valid",
       "file": "corpora/text.bz2",
-      "sha256": "FREEZE",
-      "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
-      }
+      "sha256": "PER-HEAD: `ab gen corpora 4` builds text from the crate's own src/, tests/ and examples/, so its digest and oracle change with the head; the run's input and oracle completion records carry them",
+      "expect": "PER-HEAD"
     },
     {
       "id": "C-random",
       "kind": "valid",
       "file": "corpora/random.bz2",
-      "sha256": "FREEZE",
+      "sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
       "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "out": 8000000,
+        "hash": "1babb3d0a3067133",
+        "sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0"
       }
     },
     {
       "id": "C-records",
       "kind": "valid",
       "file": "corpora/records.bz2",
-      "sha256": "FREEZE",
+      "sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
       "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "out": 9600000,
+        "hash": "4599c7f300345f3f",
+        "sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd"
       }
     },
     {
       "id": "C-runs",
       "kind": "valid",
       "file": "corpora/runs.bz2",
-      "sha256": "FREEZE",
+      "sha256": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
       "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "out": 10000235,
+        "hash": "be4a032f8c306f41",
+        "sha256": "6969ab7dedc57f7965fc4745e7ae0ec062f02b2eeb35510fa52ae75226fad6a2"
       }
     },
     {
       "id": "C-pattern",
       "kind": "valid",
       "file": "corpora/pattern.bz2",
-      "sha256": "FREEZE",
+      "sha256": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
       "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "out": 19600000,
+        "hash": "f83ded83d55cc011",
+        "sha256": "b23397674d9cede1cca8b4654870946900a1a364b9f1779d6f64df4a88d61946"
       }
     },
     {
       "id": "C-onebyte",
       "kind": "valid",
       "file": "corpora/onebyte.bz2",
-      "sha256": "FREEZE",
+      "sha256": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e",
       "expect": {
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "out": 20000000,
+        "hash": "263ce790704607c5",
+        "sha256": "aded0ea9b4d06589b13d00bab483faf479d61ed5de21f1760aa7018a28e330e5"
       }
+    },
+    {
+      "id": "V-SS",
+      "kind": "valid",
+      "file": "fixtures/V-SS.bz2",
+      "sha256": "bc065cbdbcb5529ce8a09e9a4061bc7e5647bec4b2a2fde824616a057e19850e",
+      "expect": {
+        "out": 1800010,
+        "hash": "3a1fad91434e6973",
+        "sha256": "2a25b78608e9cd9f6f78589109fa8806f3c0738fcf38c8ede90eaad746efec22"
+      },
+      "made": "make_fixtures.py: W's blocks 3, 4, 6, 7 (T, S, S, T), bits untouched, framed as one stream with its combined CRC (byte-identical to walk_count extract's); classes verified at freeze by walk_count spans: TSST"
     },
     {
       "id": "E-trunc-team",
       "kind": "error",
+      "file": "fixtures/E-trunc-team.bz2",
+      "sha256": "1e8b2159eb7b2bff2ff0776a2df354a4386813fd7c22c1f4166e723b382a358c",
       "from": "W",
       "edit": {
         "op": "truncate",
-        "byte": "FREEZE: floor(mid bit of block B / 8)"
+        "byte": 63572
       },
-      "block": "FREEZE: a T block, not the first",
+      "block": 2,
       "class": "T",
-      "sha256": "FREEZE",
       "expect": {
         "kind": "Truncated",
-        "block": "FREEZE",
-        "out": "FREEZE: the blocks before B, decoded",
-        "hash": "FREEZE"
+        "block": 2,
+        "out": 900013,
+        "hash": "dd06df997669f952",
+        "sha256": "190e63427791e5741450451eb4c2c57da57feaed9cd364bebdc9fae9ce2d110d"
+      },
+      "prefix_oracle": {
+        "file": "fixtures/prefix-E-trunc-team.bz2",
+        "sha256": "fc3ac235cf13db943d9d5d8ed4c670ec36cc5d025000099eab921d1e5d20e52a",
+        "made": "make_fixtures.py: W's blocks 0..1, framed as one stream (byte-identical to walk_count extract's)"
       }
     },
     {
       "id": "E-trunc-solo",
       "kind": "error",
+      "file": "fixtures/E-trunc-solo.bz2",
+      "sha256": "c4275f684c8c7b36c23c0f7848b53ef26a9033b273c587ae93dac6779dddd72e",
       "from": "W",
       "edit": {
         "op": "truncate",
-        "byte": "FREEZE"
+        "byte": 131799
       },
-      "block": "FREEZE: an S block between two T blocks",
+      "block": 4,
       "class": "S",
-      "sha256": "FREEZE",
       "expect": {
         "kind": "Truncated",
-        "block": "FREEZE",
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "block": 4,
+        "out": 2699951,
+        "hash": "75944457255c4d96",
+        "sha256": "25e1ffb455a7ba67dcd6fad09affc1cefaa7626ae42bd7c7b7f1b4ab2188ee6d"
+      },
+      "prefix_oracle": {
+        "file": "fixtures/prefix-E-trunc-solo.bz2",
+        "sha256": "9c3de7c16f6c4f2c7ea6c9810041ca337a1eedcf0feaea9368b9c54bf16d870c",
+        "made": "make_fixtures.py: W's blocks 0..3, framed as one stream (byte-identical to walk_count extract's)"
       }
     },
     {
       "id": "E-crc-team",
       "kind": "error",
+      "file": "fixtures/E-crc-team.bz2",
+      "sha256": "d7aacfd12b4490705c8d91fac23f3f236802ae8cf785c3edcde99c1e2ad522b9",
       "from": "W",
       "edit": {
         "op": "xor",
-        "bit": "FREEZE: the block's start_bit + 48 + 31 (the stored CRC's last bit, from scan's span)",
+        "bit": 684063,
+        "byte": 85507,
         "mask": 1
       },
-      "block": "FREEZE: a T block",
+      "block": 3,
       "class": "T",
-      "sha256": "FREEZE",
       "expect": {
         "kind": "BlockCrc",
-        "block": "FREEZE",
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "block": 3,
+        "out": 1800013,
+        "hash": "6ba3c97f2fbd61b1",
+        "sha256": "0087fc164998e8e3a5eea8812629b0478c5979d598c3b90f030d98c53a415048"
+      },
+      "prefix_oracle": {
+        "file": "fixtures/prefix-E-crc-team.bz2",
+        "sha256": "2ae717fb5c6942e1fc4072af5bb0dd895d3f407d650e7123a448364ec95b6b92",
+        "made": "make_fixtures.py: W's blocks 0..2, framed as one stream (byte-identical to walk_count extract's)"
       }
     },
     {
       "id": "E-crc-solo",
       "kind": "error",
+      "file": "fixtures/E-crc-solo.bz2",
+      "sha256": "62f8ec3778eb87094350302f914bbbed5211f7ecd5b2288da308826b093b5c62",
       "from": "W",
       "edit": {
         "op": "xor",
-        "bit": "FREEZE",
+        "bit": 1448263,
+        "byte": 181032,
         "mask": 1
       },
-      "block": "FREEZE: an S block",
+      "block": 6,
       "class": "S",
-      "sha256": "FREEZE",
       "expect": {
         "kind": "BlockCrc",
-        "block": "FREEZE",
-        "out": "FREEZE",
-        "hash": "FREEZE"
+        "block": 6,
+        "out": 3599983,
+        "hash": "8ae1a9e498dc537d",
+        "sha256": "93dfcf58c71d860bf6bc2872f6135561209e9b85c1f8acd100ad446e4d1ac49c"
+      },
+      "prefix_oracle": {
+        "file": "fixtures/prefix-E-crc-solo.bz2",
+        "sha256": "66cc96a72feffba0d389acb12d2ae283eb5bfc44cc64951a0bcf3aaa02a3f75d",
+        "made": "make_fixtures.py: W's blocks 0..5, framed as one stream (byte-identical to walk_count extract's)"
       }
     }
   ],
-  "lbzip2_check": "each E fixture: `lbzip2 -dc` exits nonzero (rejection only; its text and buffered output are not compared)",
+  "lbzip2_check": "one admitted completion record per error fixture: `lbzip2 -dc FILE` exiting nonzero, not by timeout or signal (its text and buffered output are not compared)",
   "transitions_required": [
     "S->T",
     "T->S",
-    "S->S",
+    "S->S within a stream (V-SS)",
     "T->T",
     "end after T",
     "end after S",
@@ -223,7 +287,7 @@
     "error in S",
     "leader joins a walk"
   ],
-  "transitions_covered_by": "FREEZE: from W's block_classes and the E fixtures; a crafted fixture is added for any required transition W lacks",
+  "transitions_covered_by": "W's frozen class sequence (w-classes.txt: S->T 189, T->S 189, T->T 44; its 8 S->S pairs all cross a stream boundary, so V-SS supplies S->S within one stream; streams end after T at blocks 373 and 389, after S elsewhere); the E fixtures; T2's per-block records or the full tier's leader counts for the join",
   "limits_s": {
     "job": 1200,
     "build_each": 720,
@@ -255,5 +319,21 @@
     ".github/workflows/team-screen.yml"
   ],
   "checksum_scope": "length plus the harness's 64-bit non-cryptographic hash: a regression checksum, not byte-exact proof (open: add a SHA-256 of the stream)",
-  "error_fields": "the child's record: err_kind and err_block (examples/ab.rs, from the reader's mibz2::Error)"
+  "error_fields": "the child's record: err_kind and err_block (examples/ab.rs, from the reader's mibz2::Error)",
+  "record_schema": "ab-child/2: out, hash (64-bit), sha256 (with AB_SHA256=1), err, err_kind, err_block (null on success)",
+  "base_harness": "the base's own examples/ab must emit ab-child/2; a base whose harness predates it is INCOMPATIBLE (a named failure), so ab-child/2 lands on master first, in its own measurement-neutral PR, before the screen is adopted",
+  "read_buffers": {
+    "valid": [
+      4194304
+    ],
+    "error": [
+      4096,
+      4194304
+    ]
+  },
+  "common_env": {
+    "AB_SHA256": "1"
+  },
+  "fixture_maker": "bench/team-screen/make_fixtures.py W bench/team-screen/w-spans.jsonl OUT: Python only, no build; the job requires each made fixture's digest to equal the manifest's",
+  "block_map": "bench/team-screen/w-spans.jsonl (walk_count spans W, made 2026-11-10 at 25b778cd + this commit's walk_count)"
 }

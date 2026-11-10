@@ -7,17 +7,20 @@ limits) and the PR's pinned delta (bench/team-screen/deltas/PR.json: its selecto
 walker), never from free-form arguments. Every failed assertion is named; the exit status
 is 1 on any.
 
-    python3 bench/team_screen.py outputs MANIFEST DELTA RECORDS_DIR
+    python3 bench/team_screen.py outputs MANIFEST DELTA ARTIFACTS RECORDS_DIR
     python3 bench/team_screen.py check MANIFEST DELTA ARM PREFIX --binary AB [--table OUT.json]
 
-- `outputs` (A1, an admission contract): RECORDS_DIR holds one wrapper a (arm, fixture),
-  `ARM__FIXTURE.json`: {arm, fixture, build, build_sha, exe_sha256, env, exit_status,
-  signal, record}, `record` the harness child's JSON. Every expected pair is present
-  exactly once; every wrapper and record has its schema; valid fixtures succeed with the
-  oracle's length and hash; error fixtures fail with the manifest's kind and block, which
-  the harness emits as structured fields (`err_kind`, `err_block`: examples/ab.rs's child,
-  from the reader's `mibz2::Error`), and the promised prefix (length and hash); matched
-  arms agree on (exit, out, hash, kind, block).
+- `outputs` (A1, an admission contract): RECORDS_DIR holds one completion record a run
+  the manifest implies (`expected_runs`): every arm on every fixture and read buffer, one
+  oracle decode a valid fixture and a prefix oracle an error fixture (`ab child lbzip2 1`),
+  one lbzip2 rejection an error fixture. Each is bound to its command, its input's digest,
+  its environment and its executable's digest (ARTIFACTS, the build step's record), and
+  its process status is judged apart from any decoder error in its record: an ab child
+  returns normally and reports a decoder error in the record (schema ab-child/2:
+  `err_kind`, `err_block`, null on success; `sha256` beside the 64-bit hash), so a nonzero
+  exit, a timeout or a signal is a process failure. Valid fixtures give their oracle's
+  length, hash and SHA-256 with null error fields; error fixtures give the frozen kind and
+  block and their prefix oracle's output; the matched arms agree.
 - `check` (the full tier's A2-A4: one team arm's callgrind profiles, matched to that arm's
   own binary and source, one file a thread): the leader and
   both helpers identified by role; the required events on those same threads; forbidden
@@ -40,95 +43,195 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import team_gap_count as tg  # noqa: E402
 
 WRAPPER = {
-    "arm",
+    "kind",
+    "run",
     "fixture",
-    "build",
-    "build_sha",
-    "exe_sha256",
+    "command",
+    "input_sha256",
     "env",
+    "exe_sha256",
     "exit_status",
     "signal",
+    "timed_out",
     "record",
 }
-RECORD = {"out", "hash", "err", "err_kind", "err_block"}
+ARM_WRAPPER = WRAPPER | {"arm", "build", "build_sha", "read_buffer"}
+RECORD = {"schema", "out", "hash", "sha256", "err", "err_kind", "err_block"}
+SCHEMA = "ab-child/2"
 HASH = re.compile(r"^[0-9a-f]{16}$")
 SHA = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
-def outputs_check(manifest, delta, wrappers):
-    """A1 on already-loaded wrappers: a list of failure messages (empty: admitted)"""
+def expected_runs(manifest):
+    """Every completion record the screen must admit: {run id: (kind, arm or None,
+    fixture, read buffer or None)}. Arm runs for every arm, fixture and read buffer the
+    manifest names; one oracle decode per valid fixture and per error fixture's prefix;
+    one lbzip2 rejection per error fixture"""
+    runs = {}
+    for f in manifest["fixtures"]:
+        for a in manifest["arms"]:
+            if a.get("only") and a["only"] != f["kind"]:
+                continue
+            for buf in manifest["read_buffers"][f["kind"]]:
+                runs[f"{a['id']}__{f['id']}__{buf}"] = ("arm", a["id"], f["id"], buf)
+        runs[f"oracle__{f['id']}"] = ("oracle", None, f["id"], None)
+        if f["kind"] == "error":
+            runs[f"reject__{f['id']}"] = ("reject", None, f["id"], None)
+    return runs
+
+
+def _file(f, kind):
+    return f["prefix_oracle"]["file"] if kind == "oracle" and f["kind"] == "error" else f["file"]
+
+
+def _frozen(f, artifacts):
+    """A fixture's input digest and expected output: frozen in the manifest, or, for a
+    per-head input (the text corpus is built from the head's own sources), the run's
+    artifacts record"""
+    if f["expect"] == "PER-HEAD":
+        per = artifacts["per_head_inputs"][f["id"]]
+        return per["sha256"], per["expect"]
+    return f["sha256"], f["expect"]
+
+
+def outputs_check(manifest, delta, artifacts, wrappers):
+    """A1, the admission contract, on already-loaded completion records: a list of
+    failure messages (empty: admitted).
+
+    `artifacts` is the build step's record: {head: {sha, exe_sha256}, base: {...},
+    lbzip2: {exe_sha256}, per_head_inputs: {fixture: {sha256, expect}}}"""
     failed = []
     arms = {a["id"]: a for a in manifest["arms"]}
     fixtures = {f["id"]: f for f in manifest["fixtures"]}
+    want = expected_runs(manifest)
+    common = manifest["common_env"]
     seen = {}
-    for w in wrappers:
-        missing = WRAPPER - set(w)
-        if missing:
-            failed.append(f"schema: a wrapper lacks {sorted(missing)}")
-            continue
-        key = (w["arm"], w["fixture"])
-        if key[0] not in arms or key[1] not in fixtures:
-            failed.append(f"unexpected record {key}")
-            continue
-        if key in seen:
-            failed.append(f"duplicate record {key}")
-            continue
-        seen[key] = w
-        rmiss = RECORD - set(w["record"] or {})
-        if rmiss:
-            failed.append(f"{key}: record lacks {sorted(rmiss)}")
-        if not SHA.match(str(w["build_sha"])) or not SHA256.match(str(w["exe_sha256"])):
-            failed.append(f"{key}: build identity malformed")
-        if w["build_sha"] != delta.get(arms[key[0]]["build"]):
-            failed.append(
-                f"{key}: built from {w['build_sha']}, not the delta's {arms[key[0]]['build']}"
-            )
-        want_env = (
-            delta["head_team_env"]
-            if arms[key[0]]["env"] == "delta.head_team_env"
-            else arms[key[0]]["env"]
-        )
-        if w["env"] != want_env:
-            failed.append(f"{key}: environment {w['env']} is not {want_env}")
-        if w["signal"] not in (None, 0):
-            failed.append(f"{key}: killed by signal {w['signal']}")
-    for a in arms:
-        for f in fixtures:
-            if (a, f) not in seen:
-                failed.append(f"missing record {(a, f)}")
-    tuples = {}
-    for (a, f), w in seen.items():
-        r = w["record"] or {}
-        if not RECORD <= set(r):
-            continue
-        fx = fixtures[f]
-        exp = fx["expect"]
-        kind, block = r["err_kind"], r["err_block"]
-        if not HASH.match(str(r["hash"])):
-            failed.append(f"{(a, f)}: hash malformed")
-        if fx["kind"] == "valid":
-            if w["exit_status"] != 0 or r["err"]:
-                failed.append(
-                    f"{(a, f)}: a valid input failed (exit {w['exit_status']}, err {r['err']!r})"
-                )
-            if r["out"] != exp["out"] or r["hash"] != exp["hash"]:
-                failed.append(f"{(a, f)}: not the oracle's output ({r['out']}, {r['hash']})")
-        else:
-            if not r["err"] or w["exit_status"] is None:
-                failed.append(f"{(a, f)}: an error fixture succeeded")
-            if kind != exp["kind"] or block is None or block != exp["block"]:
-                failed.append(
-                    f"{(a, f)}: error {kind} at block {block}, expected {exp['kind']} at {exp['block']}"
-                )
-            if r["out"] != exp["out"] or r["hash"] != exp["hash"]:
-                failed.append(f"{(a, f)}: not the promised prefix ({r['out']}, {r['hash']})")
-        tuples.setdefault(f, {})[a] = (w["exit_status"], r["out"], r["hash"], kind, block)
-    for f, by_arm in tuples.items():
-        if len(set(by_arm.values())) > 1:
-            failed.append(f"{f}: the matched arms differ: {by_arm}")
     if not wrappers:
         failed.append("no records")
+    for w in wrappers:
+        run = w.get("run") if isinstance(w, dict) else None
+        if run not in want:
+            failed.append(f"unexpected record {run!r}")
+            continue
+        if run in seen:
+            failed.append(f"duplicate record {run}")
+            continue
+        kind, arm_id, fx_id, buf = want[run]
+        need = ARM_WRAPPER if kind == "arm" else WRAPPER
+        missing = need - set(w)
+        if missing:
+            failed.append(f"{run}: wrapper lacks {sorted(missing)}")
+            continue
+        seen[run] = w
+        f = fixtures[fx_id]
+        if w["kind"] != kind or w["fixture"] != fx_id:
+            failed.append(f"{run}: labelled {w['kind']}/{w['fixture']}")
+        in_sha, _ = _frozen(f, artifacts)
+        if kind == "oracle" and f["kind"] == "error":
+            in_sha = f["prefix_oracle"]["sha256"]
+        if w["input_sha256"] != in_sha:
+            failed.append(f"{run}: input {w['input_sha256']} is not the fixture's {in_sha}")
+        # the process, apart from any decoder error the record reports
+        if w["timed_out"] or w["signal"] not in (None, 0):
+            failed.append(
+                f"{run}: process failure (timed out {w['timed_out']}, signal {w['signal']})"
+            )
+            continue
+        if kind == "reject":
+            if w["command"] != ["lbzip2", "-dc", f["file"]]:
+                failed.append(f"{run}: command {w['command']}")
+            if w["exe_sha256"] != artifacts["lbzip2"]["exe_sha256"]:
+                failed.append(f"{run}: not the recorded lbzip2")
+            if w["exit_status"] == 0:
+                failed.append(f"{run}: lbzip2 accepted a malformed fixture")
+            continue
+        # ab children (arms and oracles) return normally, a decoder error in the record
+        if w["exit_status"] != 0:
+            failed.append(f"{run}: process failure (exit {w['exit_status']})")
+            continue
+        if kind == "oracle":
+            build, argv, env = "head", ["child", "lbzip2", "1", _file(f, kind)], dict(common)
+        else:
+            a = arms[arm_id]
+            build = a["build"]
+            argv = ["child", a["arm"], str(a["threads"]), f["file"]]
+            env = dict(common, AB_READ_BUF=str(buf))
+            env.update(delta["head_team_env"] if a["env"] == "delta.head_team_env" else a["env"])
+            if w["arm"] != arm_id or w["build"] != build or w["read_buffer"] != buf:
+                failed.append(
+                    f"{run}: labelled arm {w['arm']}, build {w['build']}, buffer {w['read_buffer']}"
+                )
+            if w["build_sha"] != delta.get(build) or not SHA.match(str(w["build_sha"])):
+                failed.append(f"{run}: built from {w['build_sha']}, not the delta's {build}")
+        if w["command"][1:] != argv or not str(w["command"][0]).endswith("ab"):
+            failed.append(f"{run}: command {w['command']}, expected ab {argv}")
+        if w["exe_sha256"] != artifacts[build]["exe_sha256"] or not SHA256.match(
+            str(w["exe_sha256"])
+        ):
+            failed.append(f"{run}: executable {w['exe_sha256']} is not the {build} build's")
+        if w["env"] != env:
+            failed.append(f"{run}: environment {w['env']}, expected {env}")
+        r = w["record"]
+        if not isinstance(r, dict) or RECORD - set(r):
+            failed.append(f"{run}: record lacks {sorted(RECORD - set(r or {}))}")
+            continue
+        if r["schema"] != SCHEMA:
+            failed.append(
+                f"{run}: record schema {r['schema']!r}: a harness older than {SCHEMA} is INCOMPATIBLE"
+            )
+        if not HASH.match(str(r["hash"])) or not SHA256.match(str(r["sha256"])):
+            failed.append(f"{run}: hash or sha256 malformed")
+    for run in want:
+        if run not in seen:
+            failed.append(f"missing record {run}")
+    # the outcomes: oracles against their frozen values, arms against their oracles
+    oracle = {}
+    for run, w in seen.items():
+        kind, arm_id, fx_id, buf = want[run]
+        r = w["record"]
+        if kind != "oracle" or not isinstance(r, dict) or RECORD - set(r):
+            continue
+        f = fixtures[fx_id]
+        _, exp = _frozen(f, artifacts)
+        got = {k: r[k] for k in ("out", "hash", "sha256")}
+        if r["err"] or r["err_kind"] is not None or r["err_block"] is not None:
+            failed.append(f"{run}: the oracle failed: {r['err']!r}")
+        elif f["kind"] == "valid" and got != {k: exp[k] for k in got}:
+            failed.append(f"{run}: the oracle gave {got}, frozen {exp}")
+        elif f["kind"] == "error" and got != {k: exp[k] for k in got}:
+            failed.append(f"{run}: the prefix oracle gave {got}, frozen {exp}")
+        oracle[fx_id] = got
+    by_fixture = {}
+    for run, w in seen.items():
+        kind, arm_id, fx_id, buf = want[run]
+        r = w["record"]
+        if kind != "arm" or not isinstance(r, dict) or RECORD - set(r) or w["exit_status"] != 0:
+            continue
+        f = fixtures[fx_id]
+        exp = _frozen(f, artifacts)[1]
+        got = {k: r[k] for k in ("out", "hash", "sha256")}
+        if fx_id in oracle and got != oracle[fx_id]:
+            failed.append(f"{run}: output {got} is not the oracle's {oracle[fx_id]}")
+        if f["kind"] == "valid":
+            if r["err"] or r["err_kind"] is not None or r["err_block"] is not None:
+                failed.append(
+                    f"{run}: a valid fixture reported an error ({r['err']!r}, {r['err_kind']}, {r['err_block']})"
+                )
+        elif not r["err"] or r["err_kind"] != exp["kind"] or r["err_block"] != exp["block"]:
+            failed.append(
+                f"{run}: error {r['err_kind']} at block {r['err_block']}, expected {exp['kind']} at {exp['block']}"
+            )
+        by_fixture.setdefault(fx_id, {})[run] = (
+            r["out"],
+            r["hash"],
+            r["sha256"],
+            r["err_kind"],
+            r["err_block"],
+        )
+    for fx_id, runs in by_fixture.items():
+        if len(set(runs.values())) > 1:
+            failed.append(f"{fx_id}: the matched arms differ: {runs}")
     return failed
 
 
@@ -240,6 +343,9 @@ def main():
     o = sub.add_parser("outputs")
     o.add_argument("manifest")
     o.add_argument("delta")
+    o.add_argument(
+        "artifacts", help="the build step's record of the builds, lbzip2 and per-head inputs"
+    )
     o.add_argument("records")
     c = sub.add_parser("check")
     c.add_argument("manifest")
@@ -260,7 +366,7 @@ def main():
             if name.endswith(".json"):
                 with open(os.path.join(args.records, name)) as f:
                     wrappers.append(json.load(f))
-        failed = outputs_check(manifest, delta, wrappers)
+        failed = outputs_check(manifest, delta, json.load(open(args.artifacts)), wrappers)
     else:
         profs = tg.load(args.prefix)
         dis = tg.disasm(args.binary, r"coop::traverse")

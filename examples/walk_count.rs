@@ -5,6 +5,9 @@
 //!   file's streams) as a stream of their own, their bits untouched (a header at their
 //!   level, their bits, an end marker and their combined CRC), so that a decoder arm can
 //!   be counted on exactly those blocks.
+//! - `walk_count spans FILE`: each block's index, bits, stored CRC, level, rows and class
+//!   (T: a team's, at least `MIN_COOP` rows; S: the leader's solo), one JSON line each: the
+//!   team screen's fixture map.
 //! - `walk_count control FILE MODE SEGMENTS`: the same-segmentation single-caller control.
 //!   Every block of at least `MIN_COOP` rows: its move-to-front and one-core build, then
 //!   its walk on this thread alone, `MODE` one of
@@ -136,6 +139,29 @@ fn control(file: &str, mode: &str, segments: usize) {
     println!("mode {mode} segments {segments}: blocks {blocks} rows {rows} decoded {decoded} hash {h:016x}");
 }
 
+/// Every block's span and class, one JSON line each: its index, bits, stored CRC, level,
+/// rows and class (`T`: at least `MIN_COOP` rows, walked by a team; `S`: below, the
+/// leader's solo path): the team screen's fixture map
+fn spans(file: &str) {
+    let data = std::fs::read(file).unwrap();
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(&data));
+    let (mut syms, mut ll, mut counts) = (Vec::new(), Vec::new(), [0u32; 256]);
+    let spans: Vec<_> = mibz2::scan(&data).map(|s| s.unwrap()).collect();
+    let mut i = 0;
+    while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
+        let n = mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        let s = &spans[i];
+        let class = if n >= bwt::MIN_COOP { "T" } else { "S" };
+        println!(
+            "{{\"index\":{},\"start_bit\":{},\"end_bit\":{},\"crc\":\"{:08x}\",\"stream\":{},\"level\":{},\"rows\":{n},\"class\":\"{class}\"}}",
+            s.index, s.start_bit, s.end_bit, s.crc, s.stream, s.level
+        );
+        syms = b.syms;
+        i += 1;
+    }
+}
+
 fn main() {
     let a: Vec<String> = std::env::args().collect();
     match a.get(1).map(String::as_str) {
@@ -144,6 +170,7 @@ fn main() {
             extract(&a[2], &a[3], &idx)
         }
         Some("control") => control(&a[2], &a[3], a[4].parse().unwrap()),
+        Some("spans") => spans(&a[2]),
         _ => eprintln!(
             "walk_count extract FILE OUT INDEX... | walk_count control FILE MODE SEGMENTS"
         ),
