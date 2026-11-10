@@ -964,11 +964,20 @@
     {
       "comment_id": 6758452562,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Parts A/B findings committed: #324 alternatives and raw replay; valid aab counterexample to tunnel height; complete two-state price and constrained census recommendation. Evidence packaging and final publication pending.",
-      "report_path": "state/records/reviews/inbox-6758452562/report.md"
+      "progress": "Completed A/B report, four-profile raw replay and algebra counterexample. Awaiting single REVIEW publication; do not redo work.",
+      "report_path": "state/records/reviews/inbox-6758452562/report.md",
+      "report_commit": "696addcc87b23835421b69b51f14a4d496bbc8ee",
+      "audit_scope": {
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "historical_profiles_replayed": 4,
+        "algebra_counterexamples": 1,
+        "production_geometry_verified": false
+      }
     }
   ],
   "migrated_from": {
