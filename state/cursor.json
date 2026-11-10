@@ -1422,6 +1422,20 @@
       "status": "finished",
       "disposition": "HOLD #316 qualification/adoption through unrepaired t12 rule; D094-C7 separate valid confirmation admission. Combined revision 3 resolves D091 prose conflict; implementation/dry-run and earlier pre-data conditions remain.",
       "comment": 6764159416
+    },
+    {
+      "id": "D095",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6764248398,
+      "pr": 161,
+      "sha": "21938d1273d1d1bf3ca0f4bb791333cfa1aa4666",
+      "evidence_digest": "policy-comment-sha256:c513cf82f08de94d3244eedb13e512ab1f7223fd443b91dbceb8ee9ad7534736",
+      "commit": "1794faef8c66ddc53abe5b165be88052f82119d6",
+      "status": "complete",
+      "disposition": "Concur with sign-test mathematics; HOLD B as sole replacement criterion for production default pending explicit unacceptable-loss/exposure policy. A lacks independent variance bound; C7 flag unspecified."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1734,7 +1748,9 @@
     "e773a92d02f2934fc56acd2f4669f47c230b3c40",
     "25fff9c07597c9fe1edc8e074182a02df1042ed5",
     "dc1930c101ab7a7dff23b49bc42df446d5fdb114",
-    "e3d6e174cfea71033c4445d348526c49913de605"
+    "e3d6e174cfea71033c4445d348526c49913de605",
+    "7be711cfc792143f8277717d837d18e97308190b",
+    "1794faef8c66ddc53abe5b165be88052f82119d6"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1829,7 +1845,8 @@
     6763334325,
     6763511665,
     6763772014,
-    6763960879
+    6763960879,
+    6764248398
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1909,8 +1926,9 @@
   },
   "current_execution": {
     "active_comment": 6764248398,
-    "status": "in progress",
-    "decision": "D095"
+    "status": "complete",
+    "decision": "D095",
+    "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
   },
   "duplicate_events": [
     {
@@ -2638,6 +2656,14 @@
       "incoming_comment": 6763960879,
       "decision": "D094",
       "commit": "dc1930c101ab7a7dff23b49bc42df446d5fdb114"
+    },
+    {
+      "pr": 161,
+      "sha": "21938d1273d1d1bf3ca0f4bb791333cfa1aa4666",
+      "evidence_digest": "policy-comment-sha256:c513cf82f08de94d3244eedb13e512ab1f7223fd443b91dbceb8ee9ad7534736",
+      "incoming_comment": 6764248398,
+      "decision": "D095",
+      "commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3373,10 +3399,11 @@
     {
       "comment_id": 6764248398,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D095",
-      "progress": "D095 policy ruling and exact probability witnesses complete; preparing publication.",
-      "receipt_commit": "7be711cfc792143f8277717d837d18e97308190b"
+      "progress": "D095 completed; awaiting one REVIEW on #145.",
+      "receipt_commit": "7be711cfc792143f8277717d837d18e97308190b",
+      "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
     }
   ],
   "migrated_from": {
