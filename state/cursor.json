@@ -1595,11 +1595,15 @@
     },
     {
       "trigger_comment_id": 6758725018,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "report_path": "state/reports/pilot-final-design-6758725018/report.md"
+      "report_path": "state/reports/pilot-final-design-6758725018/report.md",
+      "report_commit": "e4f1d8be805c5226bcbba9e213459ef4194d69aa",
+      "source_commit": "30a6620d0a8733536284e82c91ff19be0185f148",
+      "review_comment_pr": 145,
+      "disposition": "REVISE before freeze: concrete R2880/m120/B24 candidate with conditional power, phase-aware order, retained tails, 240-minute timeout; coverage justification remains open and condition-7 harm policy is distinct."
     }
   ],
   "active_delegations": [],
