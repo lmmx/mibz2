@@ -4009,3 +4009,52 @@ C4/S2 retired the “at or below master's Ir” automatic veto. Counts account f
 This is a scoped interpretation of existing D083/D084 and the exact two drafts, with an independent ledger-completeness counterexample derived from their equations. No decoder build, measurement, raw-profile replay, peer-checker reproduction or B5 discharge claimed. Peer REVISE findings are not declared fixed. No production PASS, new entitlement, merge, timing or dispatch.
 
 Migration verified before receipt: source head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; fresh manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit retains five resolved historical findings and the already reported LOG 6757065549 on #162. No new routing defect. Output #145; state team-state/guardian; task unchanged.
+
+
+## D088 — Port 2 control failure; prospective scope and instruction witnesses
+
+**Inbox:** [6760691372](https://github.com/lmmx/mibz2/pull/161#issuecomment-6760691372). **Candidate:** #337. **G1: concur FAIL-MEASUREMENT under condition 6.** No line STOP; no production qualification. Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763; C1–C6, B4–B7 and S2.
+
+**Evidence:** registration bd7a6b75fe858d115c2a7455a216325c6a030a0f, result 3797905e946f84c7d8439d34849b0a6132cf5396. Registration blob 796e9a7d21e6871188ddc3c2cc92290e2d35d5fa; report 6cd5857a08b1dc9f42a51688f24cf80fdf3c3407; count.txt 11a160bfeee9f737ff017512e7841a927a1d0d7e; count.py.txt a1b1166e120e89b67eca45440a945957aca4af2e. Read the counting program, stage parser, source around both scatter sites, binary hashes and arm JSONs. Independently summed published per-profile integer rows and reproduced the stage-partition counterexample below. This is not a raw compressed-profile recount, binary disassembly reproduction or B5 review.
+
+### 1. Exact gate: failed, with useful observations retained
+
+D = 209,700,196 decoded bytes. The printed twelve control-thread totals sum to 7,550,366,150: **36.0055273863 Ir/D**. Its distance from the registered **35.800** is **0.2055273863 > 0.1**. The share half passes numerically: (1,422,933,571 + 148,188)/D = 6.7862681397. Each condition must hold. Hence **FAIL-MEASUREMENT**, even though the reported share cost 5.4031815020 lies below 5.5. Preserve the failed attempt, raw archive, original rule and supplement; no retry to pass. Nothing here substitutes another endpoint into condition 6.
+
+The candidate total sums to 7,234,246,495 (34.4980435545 Ir/D); the one-worker total to 5,408,534,558 (25.7917477483). Each printed stage ledger sums to its process total. Both team inventories list twelve distinct filenames, hashes and thread IDs; share-call rows sum to 466, with zero MTF self cost on those rows. These are checks of the published inventory, not independent validation of its compressed bytes.
+
+The predicted 5.16–5.25 share band was missed; the separate 5.5 numerical falsifier was not triggered. Neither fact overrides validity. Retain the 1.3830866376 Ir/D share reduction as a reported diagnostic observation from this invalid registered attempt, not a qualifying performance gain.
+
+The sampler explanation is incomplete as a causal attribution: (36,978,340 − 5,041,849)/D = **0.1522959521**, not the entire approximately 0.205 process discrepancy. The reported changed walk/coordination/harness/remainder rows must remain visible. Run queue and sampler counts are consistent with load-sensitive work, but this comparison does not isolate external load as the cause of every changed instruction.
+
+### 2. A prospective decoder control is permissible; subtraction is not its proof
+
+**Yes**, a genuinely prospective port-3 registration can define a decoder-scoped control and separately exclude verified harness-only sampling. C1/C6 delegate experiment design, with their registration/review protections. This is not permission to replace port 2's endpoint after seeing it, or to rerun port 2 under a lower bar.
+
+The current supplement is numerically reproducible:
+- process minus harness minus other: **34.3450120619 → 32.9141293554**;
+- difference: **1.4308827065 Ir/D**.
+
+But “decoder alone” is not established. In bench/team_gap_count.py, stage_of is a first-match regex list; stages sets **other = process total − assigned stages**. Thus other means residual attribution, not proven non-decoder work. Executing the pinned stage function on a synthetic ledger with 60 self instructions in an unmatched decoder helper and 40 in ab::child yields harness=40, other=60; subtracting both reports zero while decoder work is 60. This is a counterexample to the classification rule, not a claim that precisely those costs occur in this archive.
+
+Freeze the next endpoint's function/thread membership, library-call attribution, denominator, baseline/binary/input identities, tolerances, validity and no-retry policy before its data. Validate a non-overlapping ledger: decoder + verified harness-only + unattributed = process total. Charge decoder-induced allocation, coordination, fallback, synchronization and runtime work, including on mixed-purpose threads; neither a thread number nor a function-name prefix alone proves exclusion. Keep unattributed work visible and resolve or conservatively bound it before making a complete whole-decoder claim. S2 whole-cost accounting survives an endpoint change. The whole-process ledger remains reported even if it is no longer the chosen control gate.
+
+### 3. Idle machine: operational policy, not a new universal gate
+
+**No blanket “idle machine” prerequisite is imposed.** Record resource conditions; prefer controlled isolation when feasible. “Idle” needs an operational definition (competing jobs, CPU affinity/quota and a fixed preflight window), not an impression after a result. Any load-based invalidity condition must be justified and frozen in the next registration, along with what happens when it fails. Retain every attempt; no repeated sampling or waiting until an attractive result appears.
+
+Run queue and sampler work are useful diagnostics but can also change with the candidate's runtime and scheduling. Thresholding them can select on an effect of the candidate, rather than solely on external interference. Do not retrofit thresholds from this failure or assume low run queue guarantees identical dynamic counts. A prospectively matched harness with optional sampling disabled is another design option, with its changed binaries/reference and lost telemetry explicit; it does not inherit the old process-control target automatically. These are design choices for the Coordinator and Researcher, not a dispatch or workstation-run authorisation.
+
+### 4. D085's lesson: registration corrected; witness scope stays exact
+
+**Yes as to the registration defect:** conditions 3–5 now explicitly name instruction identities and exact/bounded counts before the kernel. They do not replace a source-line predicate after its result. Core::arch debug labels alone are not a reason to reject an instruction-identity condition.
+
+The published witness is numerically consistent: pmovmskb 13,106,081, old rol zero; four ALL_JOINED stores at 0xd6a1b/25/30/3b each 10,740,083; four second-site stores at 0xd6add/ae7/af2/afd each 4,536,329, within [3,670,695, 4,568,175]. The fetched source's cursor updates at lines 618 and 636 agree with the reported site labels. This addresses the prospective D085 mismatch; it does not revise D085's historical verdict.
+
+**Limit:** count.py groups nearby executed stores and labels them by the next executed source address; that is supporting location evidence, not a general control-flow proof. Mnemonics/counts alone do not identify an ALL_JOINED versus few_runs site. Keep the exact binary hash and instruction-to-site mapping. The script also ignores objdump's exit status and maps missing disassembly to “?”: “none executed” must not be interpreted as proven zero when disassembly/attribution failed. An unmapped named instruction remains unmet under the existing registration. I have checked the published numbers and source agreement, not independently certified all binary-site identities. The decisive condition-6 disposition needs no assumption that those identities are proved.
+
+B5 for the new scatter remains separate and outstanding here. The stopped larger Miri attempt is partial coverage; the smaller reported completed run has its stated scope. No safety certification, timing, merge/adoption authority, or broader HOLD is issued.
+
+### Provenance and protocol
+
+Receipt 89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6. Migration checked before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Audit: five resolved historical findings and previously reported LOG 6757065549 on #162; no new routing defect. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.

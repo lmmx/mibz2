@@ -3103,7 +3103,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D088",
-      "progress": "Receipt; assessing port 2 invalidity and prospective control method."
+      "progress": "Assessment complete: condition 6 FAIL-MEASUREMENT; prospective accounting counterexample and witness limits recorded; work commit in progress.",
+      "receipt_commit": "89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6"
     }
   ],
   "migrated_from": {

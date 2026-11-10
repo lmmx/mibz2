@@ -1,0 +1,53 @@
+{
+  "port1-team": {
+    "files": 12,
+    "unique_files": 12,
+    "unique_hashes": 12,
+    "unique_threads": 12,
+    "total": 7550366150,
+    "sum_stage_rows": 7550366150,
+    "Ir_per_D": 36.005527386345406,
+    "share_calls": 466,
+    "share_Ir_per_D": 6.786268139682616,
+    "process_less_harness_other": 34.34501206188668
+  },
+  "port2-team": {
+    "files": 12,
+    "unique_files": 12,
+    "unique_hashes": 12,
+    "unique_threads": 12,
+    "total": 7234246495,
+    "sum_stage_rows": 7234246495,
+    "Ir_per_D": 34.49804355452295,
+    "share_calls": 466,
+    "share_Ir_per_D": 5.403181502033503,
+    "process_less_harness_other": 32.914129355415575
+  },
+  "port2-one": {
+    "files": 1,
+    "unique_files": 1,
+    "unique_hashes": 1,
+    "unique_threads": 1,
+    "total": 5408534558,
+    "sum_stage_rows": 5408534558,
+    "Ir_per_D": 25.791747748294902,
+    "share_calls": 0,
+    "share_Ir_per_D": 0.0,
+    "process_less_harness_other": 24.3181493020636
+  },
+  "condition6_excess_from_registered_35.800": 0.205527386345409,
+  "sampler_delta_per_D": 0.15229595207436047,
+  "supplement_drop": 1.4308827064711025,
+  "partition_counterexample": {
+    "self_costs": {
+      "mibz2::new_decoder_helper": 60,
+      "ab::child": 40
+    },
+    "stages": {
+      "harness": 40,
+      "other": 60
+    },
+    "true_decoder_cost": 60,
+    "process_less_harness_other": 0
+  }
+}
