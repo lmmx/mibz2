@@ -1847,11 +1847,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6763334325,
-    "status": "finished",
-    "decision": "D091",
-    "work_commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
-    "review_comment_id": 6763469482
+    "active_comment": 6763511665,
+    "status": "in progress",
+    "decision": "D092"
   },
   "duplicate_events": [
     {
@@ -3253,6 +3251,13 @@
       "work_commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
       "review_comment_id": 6763469482,
       "complete_cursor_commit": "a89216bd904a0c4fcfb290ddc580891c28aaa7b3"
+    },
+    {
+      "comment_id": 6763511665,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D092",
+      "progress": "Migration verified; reviewing STEPS revision 3 against D090."
     }
   ],
   "migrated_from": {
