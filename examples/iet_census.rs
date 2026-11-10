@@ -89,13 +89,27 @@ struct Piece {
 fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
     let (ja, jb) = (a, a + big_w);
     let mut c = Count::default();
-    let mut nodes: Vec<Node> = vec![Node { parent: u32::MAX, from: 0, len: 0 }];
+    let mut nodes: Vec<Node> = vec![Node {
+        parent: u32::MAX,
+        from: 0,
+        len: 0,
+    }];
     let mut arena: Vec<u8> = Vec::new();
     // (origin, width, land, node)
     let mut leaves: Vec<(u32, u32, u32, u32)> = Vec::new();
-    let mut stack = vec![Piece { x: a, w: big_w, origin: a, node: 0, age: 0 }];
+    let mut stack = vec![Piece {
+        x: a,
+        w: big_w,
+        origin: a,
+        node: 0,
+        age: 0,
+    }];
     let child = |nodes: &mut Vec<Node>, arena: &Vec<u8>, parent: u32| -> u32 {
-        nodes.push(Node { parent, from: arena.len() as u32, len: 0 });
+        nodes.push(Node {
+            parent,
+            from: arena.len() as u32,
+            len: 0,
+        });
         nodes.len() as u32 - 1
     };
     while let Some(mut p) = stack.pop() {
@@ -113,7 +127,13 @@ fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
                 while s < e {
                     let t = m.end(kk).min(e);
                     let node = child(&mut nodes, &arena, p.node);
-                    stack.push(Piece { x: s, w: t - s, origin: p.origin + (s - p.x), node, age: p.age });
+                    stack.push(Piece {
+                        x: s,
+                        w: t - s,
+                        origin: p.origin + (s - p.x),
+                        node,
+                        age: p.age,
+                    });
                     c.splits += 1;
                     s = t;
                     kk += 1;
@@ -145,7 +165,13 @@ fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
                     if s >= ja && t <= jb {
                         leaves.push((origin, t - s, s, node));
                     } else {
-                        stack.push(Piece { x: s, w: t - s, origin, node, age: p.age });
+                        stack.push(Piece {
+                            x: s,
+                            w: t - s,
+                            origin,
+                            node,
+                            age: p.age,
+                        });
                     }
                     c.splits += 1;
                     s = t;
@@ -156,7 +182,14 @@ fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
     }
     leaves.sort_unstable();
     c.leaves = leaves.len() as u64;
-    let mut out = Iet { size: big_w, starts: vec![], lands: vec![], from: vec![], len: vec![], bytes: vec![] };
+    let mut out = Iet {
+        size: big_w,
+        starts: vec![],
+        lands: vec![],
+        from: vec![],
+        len: vec![],
+        bytes: vec![],
+    };
     let mut path = Vec::new();
     let mut at = ja;
     for &(origin, width, land, node) in &leaves {
@@ -171,7 +204,8 @@ fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
         let from = out.bytes.len() as u32;
         for &k in path.iter().rev() {
             let nd = &nodes[k as usize];
-            out.bytes.extend_from_slice(&arena[nd.from as usize..(nd.from + nd.len) as usize]);
+            out.bytes
+                .extend_from_slice(&arena[nd.from as usize..(nd.from + nd.len) as usize]);
         }
         out.starts.push(origin - ja);
         out.lands.push(land - ja);
@@ -186,7 +220,13 @@ fn induce(m: &Iet, a: u32, big_w: u32) -> (Iet, Count) {
 /// A tower of inductions, each on the middle 1 / ratio of the level below, and the block
 /// rebuilt from it: (each level's count, the steps before the walk enters each J, the top
 /// map's steps). Panics if the bytes differ from `back` (the block's bytes last to first)
-fn tower(base: &Iet, ratio: u32, levels: usize, orig_ptr: u32, back: &[u8]) -> (Vec<Count>, u64, u64) {
+fn tower(
+    base: &Iet,
+    ratio: u32,
+    levels: usize,
+    orig_ptr: u32,
+    back: &[u8],
+) -> (Vec<Count>, u64, u64) {
     let n = back.len();
     let mut maps: Vec<Iet> = Vec::new();
     let mut offs: Vec<u32> = Vec::new();
@@ -241,7 +281,14 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
         cum += cnt[c];
     }
     // the runs of L: LF's pieces, each emitting its byte
-    let mut base = Iet { size: n as u32, starts: vec![], lands: vec![], from: vec![], len: vec![], bytes: vec![] };
+    let mut base = Iet {
+        size: n as u32,
+        starts: vec![],
+        lands: vec![],
+        from: vec![],
+        len: vec![],
+        bytes: vec![],
+    };
     for i in 0..n {
         let c = l[i] as usize;
         if i == 0 || l[i] != l[i - 1] {
@@ -256,21 +303,44 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
     let runs = base.starts.len();
     let back: Vec<u8> = walked.iter().rev().copied().collect();
     let mut rows = Vec::new();
-    for (ratio, levels) in [(4u32, 1usize), (8, 1), (16, 1), (32, 1), (4, 2), (4, 3), (4, 4), (4, 5), (2, 4), (2, 6), (2, 8), (8, 2), (8, 3), (16, 2)] {
+    for (ratio, levels) in [
+        (4u32, 1usize),
+        (8, 1),
+        (16, 1),
+        (32, 1),
+        (4, 2),
+        (4, 3),
+        (4, 4),
+        (4, 5),
+        (2, 4),
+        (2, 6),
+        (2, 8),
+        (8, 2),
+        (8, 3),
+        (16, 2),
+    ] {
         if (n as u64) < (ratio as u64).pow(levels as u32) * 64 {
             continue;
         }
         let (counts, pre, returns) = tower(&base, ratio, levels, orig_ptr, &back);
         let per: Vec<String> = counts
             .iter()
-            .map(|c| format!("[{},{},{},{},{}]", c.steps, c.leaves, c.splits, c.words, c.longest))
+            .map(|c| {
+                format!(
+                    "[{},{},{},{},{}]",
+                    c.steps, c.leaves, c.splits, c.words, c.longest
+                )
+            })
             .collect();
         rows.push(format!(
             "{{\"ratio\":{ratio},\"levels\":{levels},\"per\":[{}],\"pre\":{pre},\"returns\":{returns}}}",
             per.join(",")
         ));
     }
-    format!("{{\"n\":{n},\"runs\":{runs},\"towers\":[{}]}}", rows.join(","))
+    format!(
+        "{{\"n\":{n},\"runs\":{runs},\"towers\":[{}]}}",
+        rows.join(",")
+    )
 }
 
 fn main() {
