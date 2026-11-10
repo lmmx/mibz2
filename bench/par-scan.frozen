@@ -2,4 +2,4 @@
 # The commit the registration, the harness and the recipe are frozen at: just
 # bench-par-scan's measured inputs must match it exactly. Re-frozen if review changes them,
 # before any run.
-frozen 2e5d0bd2008c9210df80e32958dc2c67f8800e8c
+frozen 243051248de80ebc88066c8f2db3b3852c47d1f8
