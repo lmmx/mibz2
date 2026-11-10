@@ -1,0 +1,106 @@
+# cargo test --lib -- service_unwind_tests
+# src/parallel.rs sha256 8b86c04efeb21a0ff4fb0d68c5dd745fcebc067b699cafd621620e138a260199
+# exit 101
+
+running 7 tests
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... ok
+test parallel::service_unwind_tests::miri_outer_after_job ... ok
+test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+test parallel::service_unwind_tests::miri_outer_parked ... ok
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks has been running for over 60 seconds
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... FAILED
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... FAILED
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... FAILED
+
+failures:
+
+---- parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks stdout ----
+
+thread 'mibz2-svc-0' (25646) panicked at src/parallel.rs:1486:5:
+an injected outer panic at SvcIdle, block None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'mibz2-svc-0' (25652) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterJob, block Some(1)
+
+thread 'mibz2-svc-0' (25658) panicked at src/parallel.rs:1486:5:
+an injected outer panic at BeforePrepared, block Some(1)
+
+thread 'mibz2-svc-0' (25664) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPrepared, block Some(1)
+
+thread 'mibz2-0' (25671) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterTake, block Some(1)
+
+thread 'mibz2-0' (25677) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterWalked, block Some(1)
+
+thread 'mibz2-svc-0' (25682) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterFinishTake, block Some(1)
+
+thread 'mibz2-svc-0' (25688) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPublish, block Some(1)
+
+thread 'mibz2-svc-feed' (25693) panicked at src/parallel.rs:1486:5:
+an injected outer panic at Feeder, block Some(1)
+
+thread 'parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks' (25643) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: Feeder, place: Some(1), parked: 0 } at (1, 3, 1, 4): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop stdout ----
+
+thread 'mibz2-svc-0' (25707) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPrepared, block Some(0)
+
+thread 'mibz2-svc-0' (25733) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPrepared, block Some(0)
+
+thread 'parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop' (25640) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: AfterPrepared, place: Some(0), parked: 0 } at (2, 3, 2, 8): hung (the read, the writer or the join)
+
+---- parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks stdout ----
+
+thread 'mibz2-svc-0' (25713) panicked at src/parallel.rs:1486:5:
+an injected outer panic at SvcIdle, block None
+
+thread 'mibz2-svc-0' (25720) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterJob, block Some(1)
+
+thread 'mibz2-svc-0' (25741) panicked at src/parallel.rs:1486:5:
+an injected outer panic at BeforePrepared, block Some(1)
+
+thread 'mibz2-svc-0' (25757) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPrepared, block Some(1)
+
+thread 'mibz2-0' (25788) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterTake, block Some(1)
+
+thread 'mibz2-0' (25811) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterWalked, block Some(1)
+
+thread 'mibz2-svc-0' (25818) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterFinishTake, block Some(1)
+
+thread 'mibz2-svc-0' (25826) panicked at src/parallel.rs:1486:5:
+an injected outer panic at AfterPublish, block Some(1)
+
+thread 'mibz2-svc-feed' (25833) panicked at src/parallel.rs:1486:5:
+an injected outer panic at Feeder, block Some(1)
+
+thread 'parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks' (25642) panicked at src/parallel/service_unwind_tests.rs:210:29:
+OuterFault { at: Feeder, place: Some(1), parked: 0 } at (1, 3, 1, 4): hung (the read, the writer or the join)
+
+
+failures:
+    parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop
+    parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks
+    parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks
+
+test result: FAILED. 4 passed; 3 failed; 0 ignored; 0 measured; 67 filtered out; finished in 60.14s
+
+   Compiling mibz2 v0.2.6 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-svc-guarded)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.83s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-ef0dd7d62c41c063)
+error: test failed, to rerun pass `--lib`

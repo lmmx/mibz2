@@ -746,6 +746,207 @@ pub fn pipeline_corpus(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
     v
 }
 
+/// How a service-core candidate (`Serviced`) is built and driven: the shipped default's own
+/// entry points at 10 threads on the service core's target (`parallel::with_machine`, the
+/// machine's facts substituted, never the plan forced), or an explicit shape
+/// (`StreamDecoder::service`)
+#[derive(Clone, Copy, Debug)]
+pub enum SvcShape {
+    /// `StreamDecoder::new(10, 40, ..)` on the target, fed `chunk` bytes at a time from
+    /// another thread, read `read` bytes at a time
+    Push { chunk: usize, read: usize },
+    /// `BzReader::parallel(.., 10)` on the target, read `read` bytes at a time
+    Reader { read: usize },
+    /// `decode_parallel(.., 10)` on the target
+    Whole,
+    /// `StreamDecoder::service(teams, k, services, slots, kernels)`
+    Explicit {
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        scalar: bool,
+    },
+}
+
+/// A service-core decoder under test (`SvcShape`)
+pub struct Serviced {
+    pub shape: SvcShape,
+}
+
+/// A service-core candidate's run: its output up to its end or first error, that result,
+/// and the service core's counts read after the completion fence (every hub thread ended:
+/// `ServiceCounts::ended`), with its front and back sets' numbers, so that a count above
+/// them shows those buffers reused
+pub struct SvcRun {
+    pub out: Vec<u8>,
+    pub res: Result<(), Error>,
+    pub counts: mibz2::parallel::ServiceCounts,
+    pub fronts: u64,
+    pub backs: u64,
+}
+
+impl Serviced {
+    pub fn name(&self) -> String {
+        match self.shape {
+            SvcShape::Push { chunk, read } => {
+                format!("mibz2 default svc2 StreamDecoder::new w{chunk} r{read}")
+            }
+            SvcShape::Reader { read } => format!("mibz2 default svc2 BzReader::parallel r{read}"),
+            SvcShape::Whole => "mibz2 default svc2 decode_parallel".into(),
+            SvcShape::Explicit {
+                teams,
+                k,
+                services,
+                slots,
+                scalar,
+            } => format!(
+                "mibz2 service {teams}x{k}+{services} s{slots}{}",
+                if scalar { " scalar" } else { "" }
+            ),
+        }
+    }
+
+    /// The decode of a whole .bz2. Panics if the decoder built is not the service core, or
+    /// if its threads have not all ended when its counts are read.
+    pub fn run(&self, data: &[u8]) -> SvcRun {
+        use mibz2::parallel::{observe_builds, with_machine, Machine, SERVICE_PLAN};
+        use std::io::Read;
+        let target = Machine::service_target;
+        let (teams, services) = match self.shape {
+            SvcShape::Explicit {
+                teams, services, ..
+            } => (teams, services),
+            _ => (SERVICE_PLAN.teams, SERVICE_PLAN.services),
+        };
+        let (out, res, counts) = if let SvcShape::Explicit {
+            teams,
+            k,
+            services,
+            slots,
+            scalar,
+        } = self.shape
+        {
+            let kernels = if scalar {
+                Kernels::scalar()
+            } else {
+                Kernels::detect()
+            };
+            let dec = mibz2::StreamDecoder::service(teams, k, services, slots, kernels);
+            assert!(dec.is_service());
+            let (out, res) = drive(&dec, data, 100_003, 1 << 16);
+            dec.join(); // (the completion fence)
+            (out, res, dec.service_counts().unwrap())
+        } else {
+            let ((out, res), built) = observe_builds(|| match self.shape {
+                SvcShape::Push { chunk, read } => {
+                    let dec = with_machine(target(), || {
+                        mibz2::StreamDecoder::new(10, 40, Kernels::detect())
+                    });
+                    let r = drive(&dec, data, chunk, read);
+                    dec.join(); // (the completion fence)
+                    r
+                }
+                SvcShape::Reader { read } => {
+                    let mut r = with_machine(target(), || {
+                        mibz2::BzReader::parallel(std::io::Cursor::new(data.to_vec()), 10)
+                    });
+                    let mut out = Vec::new();
+                    let mut buf = vec![0u8; read.max(1)];
+                    let res = loop {
+                        match r.read(&mut buf) {
+                            Ok(0) => break Ok(()),
+                            Ok(n) => out.extend_from_slice(&buf[..n]),
+                            Err(e) => {
+                                break Err(e
+                                    .get_ref()
+                                    .and_then(|x| x.downcast_ref::<Error>())
+                                    .cloned()
+                                    .unwrap_or_else(|| {
+                                        Error::new(mibz2::ErrorKind::Io(e.kind(), e.to_string()))
+                                    }))
+                            }
+                        }
+                    };
+                    // (the completion fence: the reader's own drop may leave its feeder
+                    // holding the decoder)
+                    r.parallel_decoder().unwrap().join();
+                    (out, res)
+                }
+                // (its decoder is dropped, so joined, before it returns)
+                SvcShape::Whole => {
+                    match with_machine(target(), || mibz2::decode_parallel(data, 10)) {
+                        Ok(out) => (out, Ok(())),
+                        Err(e) => (Vec::new(), Err(e)),
+                    }
+                }
+                SvcShape::Explicit { .. } => unreachable!(),
+            });
+            assert_eq!(built.len(), 1, "{}: one decoder built", self.name());
+            let b = built[0];
+            assert!(b.service, "{}: not the service core: {b:?}", self.name());
+            (out, res, b.counts.expect("the service core's counts"))
+        };
+        assert!(
+            counts.ended,
+            "{}: counts read before the fence",
+            self.name()
+        );
+        SvcRun {
+            out,
+            res,
+            counts,
+            fronts: (teams + teams + services) as u64,
+            backs: (2 * teams) as u64,
+        }
+    }
+
+    /// Whether a run gives the bytes before its error (all but `Whole`)
+    pub fn partial(&self) -> bool {
+        !matches!(self.shape, SvcShape::Whole)
+    }
+}
+
+/// The service-core candidates the fuzz loop checks (examples/fuzz.rs, MODE service): the
+/// default svc2 through each default entry point on its target, at large and small write
+/// and read sizes, and explicit shapes: one service worker in a window of one block a team
+/// (tight), three teams of three in 12 (wide), a team of four with two service workers,
+/// two teams of two on the scalar kernels
+pub fn service_candidates() -> Vec<Serviced> {
+    let e = |teams, k, services, slots, scalar| SvcShape::Explicit {
+        teams,
+        k,
+        services,
+        slots,
+        scalar,
+    };
+    [
+        SvcShape::Push {
+            chunk: 1 << 20,
+            read: 1 << 16,
+        },
+        SvcShape::Push {
+            chunk: 997,
+            read: 509,
+        },
+        SvcShape::Reader { read: 4093 },
+        SvcShape::Whole,
+        e(1, 3, 1, 1, false),
+        e(3, 3, 1, 12, false),
+        e(1, 4, 2, 2, false),
+        e(2, 2, 1, 3, true),
+    ]
+    .into_iter()
+    // (the default shapes only where the predicate can hold: x86-64 Linux, both kernels)
+    .filter(|shape| {
+        let k = Kernels::detect();
+        matches!(shape, SvcShape::Explicit { .. })
+            || (cfg!(all(target_os = "linux", target_arch = "x86_64")) && k.avx2 && k.clmul)
+    })
+    .map(|shape| Serviced { shape })
+    .collect()
+}
+
 /// A candidate's decode, a panic caught and reported as one
 pub fn try_decode(c: &dyn Candidate, data: &[u8]) -> Result<Result<Vec<u8>, String>, String> {
     catch_unwind(AssertUnwindSafe(|| c.decode(data))).map_err(|_| "PANIC".to_string())

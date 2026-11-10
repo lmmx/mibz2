@@ -1,0 +1,33 @@
+diff --git a/src/parallel.rs b/src/parallel.rs
+index a889bbf1..2bb5aac4 100644
+--- a/src/parallel.rs
++++ b/src/parallel.rs
+@@ -1356,7 +1356,7 @@ impl HubState {
+     /// The decode's end for the hub's threads: every job taken and every block taken
+     /// retired after the scanner's end, or the decode failed as a whole
+     fn done(&self) -> bool {
+-        self.failed || (self.closed && self.jobs.is_empty() && self.live == 0)
++        self.closed && self.jobs.is_empty() && self.live == 0
+     }
+ }
+ 
+@@ -1771,9 +1771,6 @@ fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
+             let mut st = hub.lock();
+             let mut idle = false;
+             let task = loop {
+-                if st.failed {
+-                    break None;
+-                }
+                 let can_prepare = !st.jobs.is_empty() && !st.fronts.is_empty();
+                 if can_prepare && st.prepared.is_empty() {
+                     break Some(take_job(&mut st, &o));
+@@ -1947,9 +1944,6 @@ fn take_prepared(hub: &Hub, o: &Outer) -> Option<(Prepared, Back)> {
+     let mut st = hub.lock();
+     let mut idle = false;
+     let got = loop {
+-        if st.failed {
+-            break None;
+-        }
+         if !st.prepared.is_empty() && !st.backs.is_empty() {
+             let p = st.prepared.pop_front().expect("a prepared block");
+             let b = st.backs.pop().expect("a back set");

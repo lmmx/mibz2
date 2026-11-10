@@ -139,6 +139,7 @@ fn team(
             cancelled: false,
             free_out: Vec::new(),
             free_syms: Vec::new(),
+            terminal: None,
         }),
         cv: Condvar::new(),
         slots: n.max(1),
@@ -174,6 +175,7 @@ fn team(
         reader: Mutex::default(),
         threads: team_k,
         pipelined: true,
+        hub: None,
     })
 }
 
