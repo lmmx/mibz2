@@ -1045,11 +1045,19 @@
     {
       "comment_id": 6759587407,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed source/log price, checker counterexample, tier ranking and prospective falsifier; report committed next, no decoder build or timing.",
-      "report_path": "state/records/reviews/inbox-6759587407/report.md"
+      "progress": "Work complete and committed; awaiting deduplicated REVIEW publication.",
+      "report_path": "state/records/reviews/inbox-6759587407/report.md",
+      "report_commit": "976e1478af5e480c3c11f233e6eb4ac60e8d8154",
+      "audit_scope": {
+        "native_decoder_execution": false,
+        "compilation": false,
+        "new_timing": false,
+        "checker_only_execution": true,
+        "raw_callgrind_replay": false
+      }
     }
   ],
   "migrated_from": {
