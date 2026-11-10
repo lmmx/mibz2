@@ -47,7 +47,8 @@
     6756316971,
     6757179363,
     6757808815,
-    6757979390
+    6757979390,
+    6758176258
   ],
   "outgoing_comment_ids": [
     {
@@ -912,6 +913,15 @@
       },
       "reply_id": 6758172458,
       "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator; no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6758176258,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: migration head and manifest digest verified. Acknowledge complete-algorithm pricing duty; next named share-nothing design remains a follow-on.",
+      "report_path": "state/records/reviews/inbox-6758176258/report.md"
     }
   ],
   "migrated_from": {
