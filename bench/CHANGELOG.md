@@ -35,6 +35,24 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.5.0] - 2026-11-10
+
+### Added
+
+- **`ab run --sysfs-state`** (`examples/ab.rs`), ported unchanged from
+  `research/run-fed-leader-ws2` (eddfcca0, where it is part of that branch's own numbering) for
+  the share-nothing pricing diagnostic (`docs/journal/2026-11-10-share-nothing-pricing.md`): the
+  parent's half of `--machine-state` alone. The clock (each CPU's `scaling_cur_freq`, and their
+  mean), the governor, EPP and turbo of the policies holding the run's CPUs, and the package
+  temperature, read from sysfs in the parent before each run is spawned and after it exits
+  (`machine_pre`, `machine_post`, `t_spawn_unix_ns`, `t_exit_unix_ns`), exactly as 3.3.0's
+  `--machine-state` records them, each null with its reason where it can't be read. The child is
+  untouched: no counters are opened, its sampler records no CPU set, and `AB_MACHINE_STATE` is
+  cleared, as without either flag. The readings are endpoint snapshots outside the run's every
+  reading, not the clock during the decode. Opt-in, recorded and never judged: nothing changes
+  without the flag, and no measured figure changes meaning. A branch that carries its own
+  numbering of the same flag reconciles at merge, as #305's 3.6.0 did.
+
 ## [3.4.0] - 2026-11-09
 
 ### Fixed

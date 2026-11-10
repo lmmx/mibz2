@@ -27,6 +27,11 @@
 //!     --machine-state  also record, beside each run, its cycles and instructions and the
 //!                      clock and package temperature before and after (`machine`: off by
 //!                      default, recorded and never judged)
+//!     --sysfs-state    only the parent's half of `--machine-state`: the clock, governor,
+//!                      EPP, turbo and package temperature read from sysfs before each run
+//!                      is spawned and after it exits, with their timestamps. The child is
+//!                      untouched: no counters, no CPU-set sampling, `AB_MACHINE_STATE`
+//!                      cleared (bench 3.5.0; recorded and never judged)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
@@ -1124,6 +1129,7 @@ fn run(args: &[String]) {
     let mut pin = "1".to_string();
     let mut spread = false;
     let mut machine_state = false;
+    let mut sysfs_state = false;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -1147,6 +1153,7 @@ fn run(args: &[String]) {
             }
             "--spread" => spread = true,
             "--machine-state" => machine_state = true,
+            "--sysfs-state" => sysfs_state = true,
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -1218,8 +1225,9 @@ fn run(args: &[String]) {
                     // (--machine-state: the child counts its cycles, and the clock and the
                     // package temperature are read before and after, outside the run's
                     // other readings; without it the variable is cleared, so an inherited
-                    // one never turns the counters on)
-                    let sysfs = machine_state.then(machine::Sysfs::live);
+                    // one never turns the counters on. --sysfs-state: the parent's readings
+                    // alone, the child exactly as without either flag)
+                    let sysfs = (machine_state || sysfs_state).then(machine::Sysfs::live);
                     let mask: Vec<usize> = match &cpus {
                         Some(list) => cpu_list(list),
                         None => cores.iter().flatten().copied().collect(),
@@ -1480,7 +1488,7 @@ fn main() {
             machine::sample(&args[1..], &cpus)
         }
         Some("telemetry-check") => std::process::exit(machine::check()),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] [--machine-state | --sysfs-state] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env | ab settle [--seconds N] [--interval S] | ab sample [--count N] [--interval S] | ab telemetry-check"),
     }
 }
 
