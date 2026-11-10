@@ -13,8 +13,14 @@
 //!
 //! **The walk.** From `orig_ptr`, i ← LF(i), emitting L[i]: the block's bytes last to first.
 //!
+//! **The pair table** (docs/journal/2026-11-10-by-data-class.md). Q[i] = L[i] | L[LF(i)] << 8 |
+//! LF²(i) << 16, in 5 bytes. A run's rows go under LF to consecutive rows, so where those lie in
+//! one run of L the entries are again an arithmetic progression: the table is filled from the
+//! runs alone, with one cursor a byte into the run list, and no one-step table is made first.
+//! Its walk takes two bytes a step.
+//!
 //! It checks, on every block, that the bytes written backward equal `bwt::walk`'s, and times
-//! the fill (from a run list made before timing) against `bwt::build` (from the column), in
+//! the fills (from a run list made before timing) against `bwt::build` (from the column), in
 //! decode order with the arms alternating.
 
 use std::time::Instant;
@@ -82,6 +88,90 @@ fn fill_wide(runs: &[(u8, u32)], counts: &[u32; 256], p: &mut Vec<u32>) {
     unsafe { p.set_len(n) };
 }
 
+/// The pair table from the runs: 5 bytes a row, in row order. `starts` and `bases` are scratch:
+/// each run's first row and the row LF sends it to.
+fn fill_pairs(
+    runs: &[(u8, u32)],
+    counts: &[u32; 256],
+    starts: &mut Vec<u32>,
+    bases: &mut Vec<u32>,
+    q: &mut Vec<u8>,
+) {
+    let mut first = [0u32; 256];
+    let mut cum = 0u32;
+    for c in 0..256 {
+        first[c] = cum;
+        cum += counts[c];
+    }
+    let n = cum as usize;
+    // each run's first row and its LF base
+    let mut next = first;
+    starts.clear();
+    bases.clear();
+    let mut row = 0u32;
+    for &(c, len) in runs {
+        starts.push(row);
+        bases.push(next[c as usize]);
+        next[c as usize] += len;
+        row += len;
+    }
+    // a cursor a byte: the run that holds the first row of the byte's F interval
+    let mut cur = [0u32; 256];
+    let mut k = 0usize;
+    for c in 0..256 {
+        if counts[c] == 0 {
+            continue;
+        }
+        while starts[k] + runs[k].1 <= first[c] {
+            k += 1;
+        }
+        cur[c] = k as u32;
+    }
+    q.clear();
+    q.resize(5 * n + 3, 0);
+    let mut at = 0usize;
+    for (j, &(c, len)) in runs.iter().enumerate() {
+        let (mut row, end) = (bases[j], bases[j] + len);
+        let mut k = cur[c as usize] as usize;
+        while row < end {
+            let (c2, len2) = runs[k];
+            let stop = (starts[k] + len2).min(end);
+            let mut e =
+                (c as u64) | (c2 as u64) << 8 | ((bases[k] + (row - starts[k])) as u64) << 16;
+            for _ in row..stop {
+                // SAFETY: at < n, and 5 n + 3 bytes are allocated: 8 bytes at 5 at fit
+                unsafe { (q.as_mut_ptr().add(5 * at) as *mut u64).write_unaligned(e) };
+                at += 1;
+                e += 1 << 16;
+            }
+            if stop == starts[k] + len2 {
+                k += 1;
+            }
+            row = stop;
+        }
+        cur[c as usize] = k as u32;
+    }
+    assert_eq!(at, n);
+}
+
+/// The pair table's backward walk: two bytes a step
+fn walk_back_pairs(q: &[u8], n: usize, orig_ptr: u32, out: &mut Vec<u8>) {
+    out.clear();
+    out.resize(n, 0);
+    let mut i = orig_ptr as usize;
+    let mut t = n;
+    while t >= 2 {
+        let e = u64::from_le_bytes(q[5 * i..5 * i + 8].try_into().unwrap());
+        out[t - 1] = e as u8;
+        out[t - 2] = (e >> 8) as u8;
+        i = (e >> 16) as usize & 0xff_ffff;
+        t -= 2;
+    }
+    if t == 1 {
+        out[0] = q[5 * i];
+    }
+}
+
 /// The plain backward walk: n bytes, written last to first
 fn walk_back(p: &[u32], orig_ptr: u32, out: &mut Vec<u8>) {
     let n = p.len();
@@ -123,6 +213,7 @@ fn main() {
     // the check: every block's bytes, backward, are bwt::walk's
     let (mut tt, mut p, mut want, mut got) = (TVector::new(), Vec::new(), Vec::new(), Vec::new());
     let (mut rows, mut runs) = (0usize, 0usize);
+    let (mut starts, mut bases, mut q5) = (Vec::new(), Vec::new(), Vec::new());
     for (i, b) in bs.iter().enumerate() {
         if b.ll.is_empty() {
             continue;
@@ -134,11 +225,14 @@ fn main() {
         assert_eq!(p.len(), b.ll.len());
         walk_back(&p, b.orig_ptr, &mut got);
         assert!(want == got, "block {i} differs");
+        fill_pairs(&b.runs, &b.counts, &mut starts, &mut bases, &mut q5);
+        walk_back_pairs(&q5, b.ll.len(), b.orig_ptr, &mut got);
+        assert!(want == got, "block {i} differs (pairs)");
         rows += b.ll.len();
         runs += b.runs.len();
     }
     println!(
-        "{} blocks, {rows} rows, {runs} runs ({:.4} a row): the backward walk's bytes are bwt::walk's",
+        "{} blocks, {rows} rows, {runs} runs ({:.4} a row): the backward walks' bytes, one and two a step, are bwt::walk's",
         bs.len(),
         runs as f64 / rows as f64
     );
@@ -152,10 +246,10 @@ fn main() {
             assert!(p == q);
         }
     }
-    let mut best = [f64::MAX; 3];
+    let mut best = [f64::MAX; 4];
     for round in 0..rounds {
-        for a in 0..3 {
-            let arm = (a + round) % 3;
+        for a in 0..4 {
+            let arm = (a + round) % 4;
             let t0 = Instant::now();
             for b in &bs {
                 match arm {
@@ -167,9 +261,13 @@ fn main() {
                         fill(&b.runs, &b.counts, &mut p);
                         std::hint::black_box(&p);
                     }
-                    _ => {
+                    2 => {
                         fill_wide(&b.runs, &b.counts, &mut p);
                         std::hint::black_box(&p);
+                    }
+                    _ => {
+                        fill_pairs(&b.runs, &b.counts, &mut starts, &mut bases, &mut q5);
+                        std::hint::black_box(&q5);
                     }
                 }
             }
@@ -180,16 +278,19 @@ fn main() {
                 [
                     "bwt::build, from the column  ",
                     "fill, from the runs (LF)     ",
-                    "fill, 8 entries a store (LF) "
+                    "fill, 8 entries a store (LF) ",
+                    "pair fill, 5 bytes a row (LF²)"
                 ][arm]
             );
         }
     }
     println!(
-        "fastest rounds: build {:.3}, fill {:.3}, wide fill {:.3} ns a row ({:.2} of the build)",
+        "fastest rounds: build {:.3}, fill {:.3}, wide fill {:.3}, pair fill {:.3} ns a row (wide {:.2}, pairs {:.2} of the build)",
         best[0],
         best[1],
         best[2],
-        best[2] / best[0]
+        best[3],
+        best[2] / best[0],
+        best[3] / best[0]
     );
 }
