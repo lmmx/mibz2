@@ -1,11 +1,13 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6777025573,
+  "last_examined_comment_id": 6777379237,
   "receipts": {
     "6777379237": {
-      "status": "self_generated_setup_log",
+      "status": "observed_self_generated_noop",
       "action": "ignore as wake source",
-      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6777379237"
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6777379237",
+      "delivery_id": "7f1db440-dd3e-11f1-8018-831275aba9fb",
+      "coordination_writes": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -35,6 +37,15 @@
     6777379237
   ],
   "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
-  "event_execution_verified": false,
-  "setup_log_comment_id": 6777379237
+  "event_execution_verified": true,
+  "setup_log_comment_id": 6777379237,
+  "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
+  "last_event": {
+    "delivery_id": "7f1db440-dd3e-11f1-8018-831275aba9fb",
+    "comment_id": 6777379237,
+    "event_type": "issue_comment",
+    "disposition": "self_generated_noop",
+    "new_actionable_external_messages": 0
+  },
+  "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation."
 }
