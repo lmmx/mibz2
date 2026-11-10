@@ -1,8 +1,8 @@
 # Codex production delegate — manual pilot specification
 
-**Status:** Proposed operational guide for a temporary, **human-invoked** Codex implementation delegate. This document is not an amendment to [OWNERSHIP.md](OWNERSHIP.md), [RULES.md](RULES.md), [ROLES.md](ROLES.md), [PROTOCOL.md](PROTOCOL.md), or [MODE.md](MODE.md), and does not create a registered team role. Do not claim automatic notifications or delegated Coordinator authority.
+**Status:** Owner-authorised Codex implementation delegate. This document and its routing changes are a **proposal until the setup PR merges**. Once merged, Codex is a registered but **manually launched** role: `coord.py` can route and audit its inbox, but nothing automatically wakes Codex. It has no Coordinator authority.
 
-**Mailbox:** [issue #363](https://github.com/lmmx/mibz2/issues/363), manual only. **Relay:** [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md). **Assignment:** the first production slice of MONODROMY's cells inverse-BWT kernel.
+**Mailbox:** [issue #363](https://github.com/lmmx/mibz2/issues/363), routed by `coord.py` after merge; human-launched execution only. **Relay:** [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md). **Assignment:** the first production slice of MONODROMY's cells inverse-BWT kernel.
 
 ## Position in the team
 
@@ -13,7 +13,7 @@ Codex is an **implementation delegate** for one scoped production change, not a 
 - **MONODROMY:** owns the frontier mathematical research programme, proofs, hypotheses, and original cells construction. Codex may report errors or counterexamples, not silently rewrite the research record or speak as MONODROMY.
 - **Pathfinder:** owns architectural and product-performance leadership. Codex may point to implementation issues without assuming that identity.
 - **Independent reviewers:** B5 soundness and memory-safety checks are a hard condition for new unsafe code. Codex cannot certify its own work as independently reviewed.
-- **ChatGPT Work:** may assist Louis with evidence gathering and administrative relay; it cannot silently act as the team's authorised Coordinator.
+- **ChatGPT Work:** may serve as the acting operator of the **existing** Coordinator role only following Louis's explicit activation and an attributed #145 handoff under [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md), not silently.
 
 If the research design conflicts with verified code or correctness, stop that approach, record the smallest counterexample, propose a narrow correction, and flag it for review. Do not broaden the mission into a new invention programme.
 
