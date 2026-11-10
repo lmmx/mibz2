@@ -37,6 +37,22 @@ class Check(unittest.TestCase):
         # ok=true beside it (the R2 witness): refused
         self.assertEqual(check(unknown, 0)[0], "INVALID RECORD")
 
+    def test_the_narrowed_predicate_reported_honestly_is_not_target(self):
+        # (another 10-core Comet Lake-S, and the i9 under any quota, as the binary must
+        # report them: not ok, the predicate false, the pipelined default built at 10)
+        r, _ = record(True)
+        for what, f in (
+            ("i9-10900", lambda r: r["machine"]["target"]["cpu"].__setitem__(
+                "name", "Intel(R) Core(TM) i9-10900 CPU @ 2.80GHz")),
+            ("quota 20", lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 20})),
+        ):
+            with self.subTest(what):
+                honest = edit(r, lambda r: (
+                    f(r), r.__setitem__("ok", False), r["why"].append("10 threads: the predicate is false"),
+                    r["at"][1].__setitem__("predicate", False),
+                    r["at"][1]["built"].update(service=False, pipelined=True, threads=9, window=12, counts=None)))
+                self.assertEqual(check(honest, 3), ("NOT TARGET", []))
+
     def test_fail_open_witnesses(self):
         r, _ = record(True)
         cases = {
@@ -45,6 +61,11 @@ class Check(unittest.TestCase):
             "no observations": edit(r, lambda r: r.__setitem__("at", [])),
             "a quota below 10, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 8})),
             "another model, ok": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__("model", 166)),
+            # (the narrowed predicate, schema 2: the measured SKU's name, and unlimited alone)
+            "another 10-core Comet Lake-S, ok": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__(
+                "name", "Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz")),
+            "a quota of 20, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 20})),
+            "a quota of 10, ok": edit(r, lambda r: r["machine"].__setitem__("quota", {"kind": "cpus", "cpus": 10})),
             "scalar kernels, ok": edit(r, lambda r: r["kernels"].__setitem__("avx2", False)),
         }
         for what, bad in cases.items():
@@ -55,6 +76,9 @@ class Check(unittest.TestCase):
         r, x = record(True)
         cases = {
             "schema": edit(r, lambda r: r.__setitem__("schema", "mibz2.svc_target/0")),
+            "schema 1 (the earlier predicate's)": edit(r, lambda r: r.__setitem__("schema", "mibz2.svc_target/1")),
+            "no name": edit(r, lambda r: r["machine"]["target"]["cpu"].pop("name")),
+            "a name not a string": edit(r, lambda r: r["machine"]["target"]["cpu"].__setitem__("name", 10900)),
             "ok as 1": edit(r, lambda r: r.__setitem__("ok", 1)),
             "predicate as 0": edit(r, lambda r: r["at"][0].__setitem__("predicate", 0)),
             "threads as a string": edit(r, lambda r: r["at"][1]["built"].__setitem__("threads", "8")),

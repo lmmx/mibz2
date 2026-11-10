@@ -2,10 +2,12 @@
 //! DRAFT): untimed and read-only, run by `just bench-service-guarded` before anything is
 //! measured, and alone by `just bench-svc-target` (the preflight-only entry,
 //! docs/journal/2026-11-09-svc-target-registration.md). It prints one JSON object, schema
-//! `mibz2.svc_target/1` (checked by bench/svc_target_check.py):
+//! `mibz2.svc_target/2` (checked by bench/svc_target_check.py):
 //! - the machine's facts as `parallel::Machine::here` reads them on this machine, now: the
-//!   plan policy's (physical cores, L3) and the predicate's (the topology snapshot, the cgroup
-//!   quota), and the kernels `Kernels::detect` finds;
+//!   plan policy's (physical cores, L3) and the predicate's (the topology snapshot with the
+//!   processor's name, the cgroup quota), and the kernels `Kernels::detect` finds (schema 2:
+//!   the name added for the narrowed predicate,
+//!   docs/journal/2026-11-10-service-guarded-target-gated-registration.md);
 //! - `service_target` at 9, 10 and 11 requested threads, and `Plan::for_threads` at each;
 //! - what `BzReader::parallel(.., t)` builds at each, by its own dispatch
 //!   (`parallel::observe_builds`): the service core or not, pipelined or not, its decoding
@@ -137,13 +139,14 @@ fn main() {
     let opt = |v: Option<String>| v.unwrap_or_else(|| "null".into());
     let target = opt(m.target.as_ref().map(|t| {
         format!(
-            "{{\"phys\":{},\"logical\":{},\"l3\":{},\"cpu\":{{\"vendor\":{},\"family\":{},\"model\":{}}}}}",
+            "{{\"phys\":{},\"logical\":{},\"l3\":{},\"cpu\":{{\"vendor\":{},\"family\":{},\"model\":{},\"name\":{}}}}}",
             t.phys,
             t.logical,
             t.l3,
             js(&t.cpu.0),
             t.cpu.1,
-            t.cpu.2
+            t.cpu.2,
+            js(&t.name)
         )
     }));
     let quota = match m.quota {
@@ -152,7 +155,7 @@ fn main() {
         Quota::Unknown => "{\"kind\":\"unknown\"}".to_string(),
     };
     println!(
-        "{{\"schema\":\"mibz2.svc_target/1\",\"ok\":{ok},\"why\":[{}],\"kernels\":{{\"avx2\":{},\"clmul\":{}}},\"machine\":{{\"phys\":{},\"l3\":{},\"target\":{target},\"quota\":{quota}}},\"service_plan\":{{\"teams\":{},\"k\":{},\"services\":{}}},\"input_bytes\":{},\"at\":[{}]}}",
+        "{{\"schema\":\"mibz2.svc_target/2\",\"ok\":{ok},\"why\":[{}],\"kernels\":{{\"avx2\":{},\"clmul\":{}}},\"machine\":{{\"phys\":{},\"l3\":{},\"target\":{target},\"quota\":{quota}}},\"service_plan\":{{\"teams\":{},\"k\":{},\"services\":{}}},\"input_bytes\":{},\"at\":[{}]}}",
         why.iter().map(|w| js(w)).collect::<Vec<_>>().join(","),
         k.avx2,
         k.clmul,

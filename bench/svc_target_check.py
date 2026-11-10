@@ -1,5 +1,5 @@
 """The service core's target preflight record (`examples/svc_target.rs`, schema
-`mibz2.svc_target/1`), checked as a whole: not only its `ok` bit. Used by the preflight-only
+`mibz2.svc_target/2`), checked as a whole: not only its `ok` bit. Used by the preflight-only
 entry (`just bench-svc-target`, docs/journal/2026-11-09-svc-target-registration.md) and by
 the timed A/B's judge (bench/service_guarded.py).
 
@@ -8,8 +8,14 @@ never numbers, the three budgets 9, 10, 11 in order) and the predicate is recomp
 record's own facts, independently of the binary's answer:
 
     target = kernels AVX2 and CLMUL, a topology snapshot read (not null) of 10 physical
-             cores, 20 logical CPUs, a 20 MiB L3, GenuineIntel family 6 model 165, and an
-             established quota of none or at least 10 CPUs (not unknown)
+             cores, 20 logical CPUs, a 20 MiB L3, GenuineIntel family 6 model 165, every
+             CPU named "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz" (the measured SKU), and
+             an established quota of none (unlimited; any limit, or unknown, is not)
+
+Schema 2 adds the processor's name (`machine.target.cpu.name`) and narrows the quota to
+unlimited, for the target-gated registration
+(docs/journal/2026-11-10-service-guarded-target-gated-registration.md); a schema 1 record
+(the earlier attempt's) is not this predicate's and is refused as malformed.
 
 Verdicts:
 - TARGET: the facts are the target's; the record says ok with no reasons; the predicate holds
@@ -37,10 +43,11 @@ import json
 import math
 import sys
 
-SCHEMA = "mibz2.svc_target/1"
+SCHEMA = "mibz2.svc_target/2"
 BUDGETS = (9, 10, 11)
 TARGET = {"phys": 10, "logical": 20, "l3": 20 << 20}
 CPU = ("GenuineIntel", 6, 165)
+NAME = "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz"
 SVC2 = {"teams": 2, "k": 3, "services": 2}
 
 
@@ -129,8 +136,9 @@ def shape_problems(r):
             and set(t) == {"phys", "logical", "l3", "cpu"}
             and all(pos_int(t[f]) for f in ("phys", "logical", "l3"))
             and isinstance(cpu, dict)
-            and set(cpu) == {"vendor", "family", "model"}
+            and set(cpu) == {"vendor", "family", "model", "name"}
             and isinstance(cpu["vendor"], str)
+            and isinstance(cpu["name"], str)
             and nonneg_int(cpu["family"])
             and nonneg_int(cpu["model"])
         ):
@@ -173,13 +181,14 @@ def facts_are_target(r):
     """The predicate, recomputed from the record's facts (fail-closed: unknown is not target)"""
     k, m = r["kernels"], r["machine"]
     t, q = m["target"], m["quota"]
-    quota_ok = q["kind"] == "unlimited" or (q["kind"] == "cpus" and q["cpus"] >= 10)
+    quota_ok = q["kind"] == "unlimited"
     return bool(
         k["avx2"]
         and k["clmul"]
         and t is not None
         and all(t[f] == v for f, v in TARGET.items())
         and (t["cpu"]["vendor"], t["cpu"]["family"], t["cpu"]["model"]) == CPU
+        and t["cpu"]["name"] == NAME
         and quota_ok
     )
 

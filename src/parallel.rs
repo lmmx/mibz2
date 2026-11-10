@@ -2172,8 +2172,13 @@ impl Plan {
         if let Some(plan) = FORCED.with(|c| c.get()) {
             return plan;
         }
-        let m = Machine::here();
-        plan_with(threads.max(1), m.phys, m.l3)
+        // (the plan policy's two facts only, read as master reads them: the predicate's
+        // topology snapshot and quota are read by `StreamDecoder::new` at the service
+        // core's one budget alone, so no other budget pays for their discovery)
+        let (phys, l3) = MACHINE
+            .with(|c| c.borrow().as_ref().map(|m| (m.phys, m.l3)))
+            .unwrap_or_else(|| (physical_cores(), l3_bytes()));
+        plan_with(threads.max(1), phys, l3)
     }
 
     /// The decoder's worker threads (teams count as one each) and its threads in all
@@ -2256,6 +2261,13 @@ pub const SERVICE_THREADS: usize = 10;
 /// a core) and a 20 MiB L3, every one of them this process's to use
 const SERVICE_CPU: (&str, u32, u32) = ("GenuineIntel", 6, 165);
 const SERVICE_LOGICAL: usize = 20;
+/// The supported target's processor name, as `/proc/cpuinfo`'s `model name` gives it on
+/// the one measured machine: the i9-10900K alone. CPUID's family and model admit the whole
+/// 10-core Comet Lake-S class (the i9-10900, 10900F, 10900T, 10850K, 10910, 10900KF, the
+/// Xeon W-1290 parts), whose clocks, power limits and SKU differ from the measured part's;
+/// the name narrows the predicate to the SKU measured
+/// (docs/journal/2026-11-10-service-guarded-target-gated-registration.md, coverage)
+const SERVICE_NAME: &str = "Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz";
 
 /// What the plan policy and the service core's target predicate read of the machine
 /// (`Machine::here`). The plan policy's two facts are as it has always read them (`phys`,
@@ -2292,6 +2304,8 @@ pub struct Topology {
     pub l3: u64,
     /// each one's vendor, family and model (all the same)
     pub cpu: (String, u32, u32),
+    /// each one's processor name, `/proc/cpuinfo`'s `model name`, trimmed (all the same)
+    pub name: String,
 }
 
 /// A cgroup's CPU quota, as `cpu_quota` establishes it
@@ -2346,6 +2360,7 @@ impl Machine {
                 logical: SERVICE_LOGICAL,
                 l3: TEN_CORES.1,
                 cpu: (SERVICE_CPU.0.into(), SERVICE_CPU.1, SERVICE_CPU.2),
+                name: SERVICE_NAME.into(),
             }),
             quota: Quota::Unlimited,
         }
@@ -2435,11 +2450,13 @@ fn record_built(dec: &StreamDecoder) {
 /// - an x86-64 Linux machine (the only OS whose topology this reads);
 /// - the CPUs this process may use, online, read as one coherent snapshot
 ///   (`target_topology`): every one `GenuineIntel`, family 6, model 165, with a 20 MiB L3,
-///   20 of them on 10 physical cores. This is a microarchitecture and topology class (the
-///   10-core Comet Lake-S parts), not the one i9-10900K measured: its other members are
-///   unmeasured, and that one result does not qualify them. The existing 10-core / 20 MiB
+///   20 of them on 10 physical cores, and every one named `SERVICE_NAME`
+///   (`Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz`): the measured SKU, not the 10-core
+///   Comet Lake-S class that family and model alone admit (its other members are
+///   unmeasured, and the one result does not qualify them). The existing 10-core / 20 MiB
 ///   rule's wider reach (any CPU of that shape) is not inherited;
-/// - an established cgroup CPU quota (`cpu_quota`) of none, or at least 10 CPUs.
+/// - an established cgroup CPU quota (`cpu_quota`) of none: unlimited, as measured. Any
+///   limit, however large, keeps the existing plan.
 ///
 /// Discovery fails closed: any fact that can't be established (`Machine::target` None,
 /// `Quota::Unknown`) makes the predicate false. On any other machine or budget the decoder
@@ -2451,15 +2468,12 @@ pub fn service_target(threads: usize, k: Kernels, m: &Machine) -> bool {
         && cfg!(all(target_os = "linux", target_arch = "x86_64"))
         && m.target.as_ref().is_some_and(|t| {
             (t.cpu.0.as_str(), t.cpu.1, t.cpu.2) == SERVICE_CPU
+                && t.name == SERVICE_NAME
                 && t.phys == TEN_CORES.0
                 && t.logical == SERVICE_LOGICAL
                 && t.l3 == TEN_CORES.1
         })
-        && match m.quota {
-            Quota::Unlimited => true,
-            Quota::Cpus(c) => c >= SERVICE_THREADS as f64,
-            Quota::Unknown => false,
-        }
+        && m.quota == Quota::Unlimited
 }
 
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
@@ -3106,6 +3120,7 @@ fn target_topology(fs: &dyn Fs) -> Option<Topology> {
             field("vendor_id")?,
             field("cpu family")?.parse::<u32>().ok()?,
             field("model")?.parse::<u32>().ok()?,
+            field("model name")?,
         );
         if ids.insert(n, id).is_some() {
             return None;
@@ -3130,11 +3145,13 @@ fn target_topology(fs: &dyn Fs) -> Option<Topology> {
             return None;
         }
     }
+    let (vendor, family, model, name) = cpu?;
     Some(Topology {
         phys: cores.len(),
         logical: cpus.len(),
         l3: l3?,
-        cpu: cpu?,
+        cpu: (vendor, family, model),
+        name,
     })
 }
 
@@ -3430,6 +3447,28 @@ mod plan_tests {
             ("model 158", with(&|t| t.cpu.2 = 158)),
             ("family 15", with(&|t| t.cpu.1 = 15)),
             ("AMD", with(&|t| t.cpu.0 = "AuthenticAMD".into())),
+            // the other 10-core Comet Lake-S parts: CPUID's family and model, another name
+            (
+                "i9-10900KF",
+                with(&|t| t.name = "Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz".into()),
+            ),
+            (
+                "i9-10900",
+                with(&|t| t.name = "Intel(R) Core(TM) i9-10900 CPU @ 2.80GHz".into()),
+            ),
+            (
+                "i9-10850K",
+                with(&|t| t.name = "Intel(R) Core(TM) i9-10850K CPU @ 3.60GHz".into()),
+            ),
+            (
+                "Xeon W-1290P",
+                with(&|t| t.name = "Intel(R) Xeon(R) W-1290P CPU @ 3.70GHz".into()),
+            ),
+            ("no name", with(&|t| t.name = String::new())),
+            (
+                "the name padded",
+                with(&|t| t.name = format!(" {SERVICE_NAME}")),
+            ),
             (
                 "no snapshot",
                 Machine {
@@ -3470,13 +3509,13 @@ mod plan_tests {
             ..i9.clone()
         };
         assert_eq!(service_target(10, both, &m), here);
-        // a quota of 10 CPUs or more leaves it on
-        for q in [10.0, 12.5, 20.0] {
+        // any established limit, however large, turns it off: unlimited alone was measured
+        for q in [10.0, 12.5, 20.0, 64.0, 1e9] {
             let m = Machine {
                 quota: Quota::Cpus(q),
                 ..i9.clone()
             };
-            assert_eq!(service_target(10, both, &m), here, "quota {q}");
+            assert!(!service_target(10, both, &m), "quota {q}");
         }
         assert_eq!(Quota::default(), Quota::Unknown);
         assert_eq!(SERVICE_PLAN.threads(), 8);
@@ -3696,8 +3735,7 @@ mod plan_tests {
         ];
         for (what, fs, want) in &cases {
             assert_eq!(cpu_quota(fs), *want, "{what}");
-            let admits =
-                matches!(want, Quota::Unlimited) || matches!(want, Quota::Cpus(c) if *c >= 10.0);
+            let admits = matches!(want, Quota::Unlimited);
             assert_eq!(on(fs), here && admits, "{what}: the predicate");
         }
         // `cpu.max`, strictly
@@ -3742,7 +3780,8 @@ mod plan_tests {
                 .file(&format!("{t}/cache/index3/level"), "3\n")
                 .file(&format!("{t}/cache/index3/size"), "20480K\n");
             info += &format!(
-                "processor\t: {c}\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n"
+                "processor\t: {c}\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\
+                 model name\t: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n\n"
             );
         }
         fs.file("/proc/cpuinfo", &info)
@@ -3811,10 +3850,32 @@ mod plan_tests {
             ("a CPU with no cpuinfo record", {
                 let fs = cpus();
                 let info = fs.read("/proc/cpuinfo").unwrap().replacen(
-                        "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\n",
-                        "",
-                        1,
-                    );
+                    "processor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 165\n\
+                         model name\t: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n\n",
+                    "",
+                    1,
+                );
+                assert_ne!(info, fs.read("/proc/cpuinfo").unwrap());
+                fs.file("/proc/cpuinfo", &info)
+            }),
+            ("a CPU of another name", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                    "model\t\t: 165\nmodel name\t: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n\n",
+                    "model\t\t: 165\nmodel name\t: Intel(R) Core(TM) i9-10900KF CPU @ 3.70GHz\n\n",
+                    1,
+                );
+                assert_ne!(info, fs.read("/proc/cpuinfo").unwrap());
+                fs.file("/proc/cpuinfo", &info)
+            }),
+            ("a CPU with no model name", {
+                let fs = cpus();
+                let info = fs.read("/proc/cpuinfo").unwrap().replacen(
+                    "model name\t: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\n",
+                    "",
+                    1,
+                );
+                assert_ne!(info, fs.read("/proc/cpuinfo").unwrap());
                 fs.file("/proc/cpuinfo", &info)
             }),
         ];
@@ -3938,6 +3999,81 @@ mod plan_tests {
         // (none of these blocks is big enough for a team's pool: tests/service_default.rs
         // reaches it, on full blocks)
         assert_eq!(c.pooled, 0);
+    }
+
+    /// The target-gated route's condition 1 (docs/STEWARDSHIP.md;
+    /// docs/journal/2026-11-10-service-guarded-target-gated-registration.md): on the machine
+    /// the tests run on, as discovery reads it now (no `with_machine`), the predicate is
+    /// evaluated at every budget, and wherever it is false the public dispatch builds
+    /// master's decoder: `Plan::for_threads`'s plan, pipelined exactly at `PIPELINED_PLAN`,
+    /// its threads and its window (`window`), never the service core, through
+    /// `StreamDecoder::new`, `BzReader::parallel` and `decode_parallel`. On a CI runner
+    /// (`GITHUB_ACTIONS=true`) the predicate must be false at every budget: a runner where
+    /// it held would be a runner the off-target bench does not describe. The facts read are
+    /// printed, so each runner's log records them. This shows fallback selection only, not
+    /// that discovery, layout or shared code cost nothing there: the CI bench bounds that
+    #[test]
+    fn off_target_here_builds_masters_plan() {
+        let here = Machine::here();
+        let k = Kernels::detect();
+        let ci = std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true");
+        eprintln!("off_target_here: CI {ci}, kernels {k:?}, machine {here:?}");
+        let budgets: Vec<usize> = (1..=24).chain([32, 48, 64]).collect();
+        for &t in &budgets {
+            let on = service_target(t, k, &here);
+            if ci {
+                assert!(
+                    !on,
+                    "the predicate holds on this CI runner at {t} threads: {here:?}"
+                );
+            }
+            if on {
+                continue; // (the target itself: tests/service_default.rs and the_service_default)
+            }
+            let plan = Plan::for_threads(t);
+            let want = (false, plan == PIPELINED_PLAN, plan.threads());
+            let slots = SLOTS_PER_THREAD * t;
+            let (dec, b) = observe_builds(|| StreamDecoder::new(t, slots, k));
+            assert_eq!(b.len(), 1, "{t}");
+            let got = (b[0].service, b[0].pipelined, b[0].threads);
+            assert_eq!(got, want, "StreamDecoder::new at {t} threads: {plan:?}");
+            assert_eq!(
+                b[0].window,
+                window(plan, t, slots) as u64,
+                "{t}: the window"
+            );
+            assert!(dec.service_counts().is_none());
+            dec.close();
+            let (out, b) = observe_builds(|| {
+                let mut r = crate::BzReader::parallel(service_tests::Z, t);
+                let mut out = Vec::new();
+                std::io::Read::read_to_end(&mut r, &mut out).unwrap();
+                out
+            });
+            assert_eq!(out, service_tests::want(), "BzReader::parallel at {t}");
+            assert_eq!(b.len(), 1, "{t}");
+            let got = (b[0].service, b[0].pipelined, b[0].threads);
+            assert_eq!(got, want, "BzReader::parallel at {t} threads: {plan:?}");
+            assert_eq!(
+                b[0].window,
+                window(plan, t, slots) as u64,
+                "{t}: the window"
+            );
+            let (out, b) = observe_builds(|| crate::decode_parallel(service_tests::Z, t).unwrap());
+            assert_eq!(out, service_tests::want(), "decode_parallel at {t}");
+            assert_eq!(b.len(), 1, "{t}");
+            let got = (b[0].service, b[0].pipelined, b[0].threads);
+            assert_eq!(got, want, "decode_parallel at {t} threads: {plan:?}");
+        }
+        // the plan itself is master's: the policy over the plan policy's two facts alone,
+        // read as master reads them
+        for &t in &budgets {
+            assert_eq!(
+                Plan::for_threads(t),
+                plan_with(t, physical_cores(), l3_bytes()),
+                "{t}"
+            );
+        }
     }
 
     /// Whatever this machine is, the plan is one of the two shapes and never more threads
