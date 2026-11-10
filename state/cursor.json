@@ -45,7 +45,8 @@
     6735168430,
     6739270804,
     6756316971,
-    6757179363
+    6757179363,
+    6757808815
   ],
   "outgoing_comment_ids": [
     {
@@ -857,6 +858,15 @@
       },
       "reply_id": 6757343704,
       "routing_verification": "Pinned route/check passed; exact author/body/destination readback verified. Pinned verify hardcodes coordinator FROM; no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6757808815,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "baseline_commit": "84bf177bd0af9fa416964eca2c0f56ad278b119e",
+      "progress": "Migration checked; design E cost audit started."
     }
   ],
   "migrated_from": {
