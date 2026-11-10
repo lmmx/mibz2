@@ -23,6 +23,16 @@ grammar and asserts its bytes against `bwt::walk`.
 - **C:** the induction is not one chain. Its 15,141,369 segments order into **93 rounds** (median;
   63 to 337) of independent two-pointer merges; 63.5% of the runs are sent exactly onto one
   run.
+- **K + C, what the grammar is (§5.6):** the Lyndon tree of the block's least rotation
+  (Hohlweg–Reutenauer 2003: the Cartesian tree of its suffix ranks). Every letter's word, at
+  every moment, is a Lyndon word. With equal rules shared it is the Lyndon SLP: 0.470 S =
+  0.852 r rules.
+- **P + C, what a step is (§5.6):** one digram of the text written in run letters, replaced
+  at all its occurrences at once: they are one interval of rows. For every order of steps,
+  steps = r₂ − 1 + (re-seatings that land on no boundary). The right end has 0.592 r of those;
+  "steps that land on a boundary first, then the largest cell" has 0.059 r: **1.279 r steps,
+  1.048 of the floor**. Counted, each run checked to end on the block; no kernel takes its
+  steps in that order yet.
 - **C:** the rounds are no limit on a schedule: half the steps lie in the first 4 rounds, and P
   workers taking a round's steps P at a time need S/P turns to within 1% up to P = 16 (§5.4).
 - **M, the clock. The first construction lost; the second wins** (kernel from run records
@@ -33,6 +43,7 @@ grammar and asserts its bytes against `bwt::walk`.
     **0.756×**. 202 of 233 blocks faster (0.867 of rows). Per block 0.46 / 0.57 / 0.66 / 1.12 /
     1.82 (min, p10, median, p90, max). r/n < 0.06 (40% of rows): 0.618. r/n ≥ 0.12: 1.479.
     Chosen by r/n < 0.10, a number the front has before the inversion: **0.712×** (§6.2).
+    A second run, pinned to an idle core: 1.604 against 2.172, **0.738×**, 204 blocks.
   - Per run of L: 184 instructions against production's 260; 2.1 simulated last-level misses
     (2 MiB) against 8.7.
 - **Where else it wins (M, cells):** Fibonacci and Thue–Morse 0.02×; period 37 0.18×; JSON of
@@ -221,10 +232,10 @@ Synthetic (blocks ≥ 10⁵ rows):
 
 - **S/r is 1.8 on both natural corpora, five-fold apart in r/n.** Not a law: 1.0 (random) to
   3.3 (few-id JSON) to ~10 (Sturmian-like, where S is tiny anyway). §5.5 says what it is.
-- **Floor (P):** S ≥ r − 1 for any schedule of these steps on a BWT image. For the endpoint
-  schedule S ≥ r₂ − 1 = |𝓣 ∪ 𝓑| − 1 (§5.5: every boundary of either tiling is passed), 1.22 r on
-  Wikidata: at most 1.49× is left in this schedule's count. S = (r₂ − 1) + S₀, S₀ = 0.59 r the
-  boundaries that re-seating makes. What is undecided is the step's price.
+- **Floor (P, §5.6):** for any order of these steps, steps ≥ r₂ − 1 = |𝓣 ∪ 𝓑| − 1, 1.220 r on
+  Wikidata (prose 1.459 r): at most 1.49× is left in the count. S = (r₂ − 1) + S₀, S₀ = 0.592 r
+  the boundaries that re-seating makes at the right end. Another order of steps makes
+  0.059 r. (This entry first gave r − 1, and "1.81×".)
 - Against the record: the tower 8 × 3 is 0.190 n dependent steps on its 20 Wikidata blocks
   (every 12th) and stops at W = n/512 with words materialised at each level (1.58 n bytes
   at 8 × 3); on those same 20 blocks this is 0.1288 n (1.80 a run against 2.65), stops at one
@@ -324,9 +335,95 @@ here.)
   reason).** LF is an exchange in the order of the rows turned to begin at any row p, on at
   most two letters more (the run of p and the image holding p are cut there), and the
   induction then ends on p's letter. Turned to orig_ptr it makes 0.98 to 1.20 times the cells
-  of the order from row 0: +11% pooled. **Conj:** ranks from row 0 are lexicographic, the
-  minima-so-far along a stretch are next-smaller-suffix chains (Lyndon factors), and a turned
-  order is no lexicographic order. Not tested against a re-ordered alphabet.
+  of the order from row 0: +11% pooled. From row 0 the grammar is the Lyndon tree (§5.6);
+  from another row it is the Cartesian tree of a rank order that is no lexicographic order.
+  That this must make more cells is not proved. The left end makes more too (§5.6).
+
+**5.6 What the grammar is; what a step is; the count is the schedule's.** Two sweeps of this
+mission, each with its own simulator and neither using the example's code. Reproduced here:
+`lyndon_cartesian.py.txt` (34,267 words) and `schedules_geo.rs.txt` (10 blocks; its right-end
+count equals the example's S on each).
+
+- **Theorem 1 (P; C on every node of every block).** T primitive, U its least rotation,
+  key(j) = the rank of the rotation that starts at U[j], 0 < j < n. The derivation tree of
+  the right-end grammar is the min-Cartesian tree of key, and the rule of step [m', m) sits
+  at exactly the nodes with key in [m', m).
+  *Proof.* By Invariant I read in the text (§5.5) the cuts at prefix m are the boundaries
+  with key < m. A step removes the cuts with key in [m', m), each a junction w_A | w_B. No two
+  of them share a piece: a junction's right piece ends at a cut with key in I_B, its left
+  piece at one with key in [m', m) ⊂ I_A, and I_A ∩ I_B = ∅. So removing them together is
+  removing them one at a time in decreasing key: the Cartesian tree. ∎
+  **C:** 209,697,429 nodes (233 blocks) and 3,535,835 (prose): each node's two children and
+  span are its rule's two symbols and length; no mismatch.
+- **Theorem 2 (K + C).** That tree is the Lyndon tree of U, its standard factorisation
+  taken recursively (Hohlweg–Reutenauer 2003: the Lyndon tree of a Lyndon word is the
+  Cartesian tree of its suffix ranks; for a Lyndon word suffix order is rotation order).
+  Every letter's word at every moment is a Lyndon word, every rule a standard factorisation
+  (**C:** 468,657 rules on 34,267 words).
+- **Corollary (P).** Equal words have equal trees, so the grammar with equal rules shared is
+  the Lyndon SLP (Tsuruta et al. 2020). **C:** D = 12,904,656 distinct rules = **0.470 S =
+  0.852 r** (per block 0.43 to 0.53 S; prose 0.303 S = 0.559 r); the strings compared byte for
+  byte. For scale, on the same least rotations: LZ77 0.295 r phrases (longest previous
+  factor and a byte; 0.385 r without the byte), batch RePair 0.530 r (rules and final
+  sequence). S is 4.7 to 6.1 z: this grammar is cheap to make, not small.
+- **Where the duplicates are (C).** 0.224 S repeat the rule made just before: one top letter
+  taking in consecutive bottom letters that carry one word (61.6% of top-wins steps; the runs
+  of a byte lie together on the bottom). 0.306 S repeat an earlier one. Two top-adjacent
+  letters never carry one word (**P:** their orbits would stay adjacent through the run
+  start that parts them).
+- **Theorem 3 (P from §5.5; C).** Call the r run-start boundaries hinges. S = the Lyndon-tree
+  nodes on the hinges' paths to the root. Equal steps are the nodes with a hinge on both
+  sides; a top-wins or bottom-wins step is a node whose other child lies inside one stretch.
+  The r − 1 equal steps, as a tree, are the Cartesian tree of the stretch minima in the
+  order LF's cycle meets them.
+- **A step is a digram (P).** Write LF's cycle as a cyclic word of n run letters (the run each
+  row lies in). The cell I_A ∩ J_B is every occurrence of one digram, and they are one interval
+  of rows. r₂ = the distinct digrams. A step replaces all occurrences of a digram by a new
+  letter: a step of RePair on the run letters, in O(1) whatever the occurrences number. The
+  right end chooses the digram holding the largest row; RePair's own choice is the largest
+  cell.
+- **Theorem 4 (P): steps = r₂ − 1 + U, for every schedule of cell steps,** U = the rows that
+  become a boundary by a re-seating that lands on none (a new digram). *Proof.* A step merges
+  one boundary of the common refinement into the next; no other boundary ever ceases; a
+  re-seated loser adds at most one; one cell is left. ∎ So r₂ − 1 is the floor, and a step is
+  free iff it is equal or its loser lands on a boundary of the other tiling. In §5.5's
+  picture: a stretch's first row is a bottom boundary and its last a top one; a step removes
+  one end of a stretch and, for nothing, interior rows of others; U = the interior rows that
+  ever become the first or last survivor of their stretch. The right end makes them the
+  minima-so-far; an order that empties a stretch's interior before it touches the ends
+  makes none.
+- **S is not the schedule's invariant (C).** Smallest case: `abacb` (L = `bbcaa`, r = 3,
+  r₂ = 4): right end 4 steps, left end 3. On Wikidata (all 233 blocks unless said; every run
+  ends on a word checked to be the block, by bytes or by a 61-bit hash against all its
+  rotations):
+
+  | order of steps | steps / r | U / r |
+  |---|--:|--:|
+  | left end | 2.137 | 0.917 |
+  | a random coincidence | 1.981 | 0.761 |
+  | **right end** (this entry's) | **1.812** | 0.592 |
+  | equal steps wherever ready, else right end | 1.714 | 0.494 |
+  | free steps to exhaustion once, then right end (8 blocks) | 1.627 | 0.407 |
+  | largest cell (RePair's choice) | 1.459 | 0.239 |
+  | free steps wherever ready, else right end | 1.456 | 0.235 |
+  | **free steps wherever ready, else the largest cell** | **1.279** | 0.059 |
+  | free first, the paid step on the shortest stretch (8 blocks) | 1.265 | 0.045 |
+  | floor, r₂ − 1 | 1.220 | 0 |
+
+  Prose: right end 1.841, free then largest cell 1.521, floor 1.459. The left end is worse
+  than the right on every block (1.08 to 1.27×); two-sided rules and orders by bucket are
+  worse than the right end too (8 blocks: 1.84 to 2.13).
+- **The free steps alone (C, 8 blocks):** done to exhaustion before anything else they are
+  0.911 r steps (0.809 r in their first layer) and leave 0.176 r letters, 0.309 r cells and
+  36.9% of the rows. A pass of free steps and then the right end is 1.627 r; only free and
+  paid steps interleaved reach 1.3.
+- **Below the floor (C).** Two letters with one word, adjacent in both orders, are one letter
+  ("fusion"); it never arises at an end. `aaabaabbabb`: r = 10, least number of steps 8. On
+  Wikidata it is worth 0.3%.
+- **What this is worth on the clock: not known.** At the cells step's price, 0.53 r fewer
+  steps would be 11 of the kernel's 61 cycles a run: 0.74 → about 0.60. But a step out of
+  order must find the letter that ends at a given row, which the sweep never asks; both
+  simulators keep a hash map by row. Open (§8, 1a).
 
 **Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
 induction is ~10² rounds of independent merges, almost all of its steps in the first few;
@@ -420,6 +517,10 @@ Same arms, same blocks, a later run (production 2.244 in it; the list kernel 2.8
 - **Chosen by r/n** (the front has r before the inversion): cells below 0.10, else the walk:
   1.597 ns a row, **0.712×**; any threshold from 0.08 to 0.12 is within 0.007 of it; the
   better arm chosen block by block with hindsight is 0.711.
+- **A second run,** the process pinned to one core and the others idle (during the first,
+  other work ran on the machine's other cores): 1.604 against 2.172, **0.738×** (order 0.286,
+  induce 0.947, write 0.344); 204 of 233 blocks faster; per block 0.39 / 0.55 / 0.65 / 1.05 /
+  2.37; by r/n < 0.10: 0.702; the list kernel 1.199. The table is the first run.
 - Cells: 27,439,756, the reference's S and 33 more (the walk's row cut out, 233 blocks).
 - **A cell is 7.68 ns = 21 cycles, 64 instructions.** A run: 64 cycles (order 11.5, induce 38.0,
   write 13.7) against production's 85.
@@ -470,6 +571,9 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
   as bytes 0.47 n; rules 16 B × 0.54 r; a position a rule; the output. About 5.5 MB and the
   output at n = 9·10⁵, r = 6.5·10⁴: more than production's table. What differs is how it is
   touched: two forward streams and writes that are fetched ahead.
+- **Tried, not kept: one word for consecutive bottom letters that carry one word** (§5.6:
+  17% of cells need no new word). Two runs each way on 20 blocks: write 0.335 → 0.32, induce
+  0.91 → 0.92 to 0.96, whole 1.545 → 1.545 to 1.59. The word was not the cell's cost.
 - **Memory safety:** the kernel is `unsafe` (unchecked offsets in one buffer sized for n
   cells). valgrind: 3,000 arbitrary columns and three real blocks, no error. Not reviewed.
 - **Not measured:** the i9; ten workers on a shared 20 MB last level, where production's walk
@@ -486,6 +590,7 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
 | 4 | text | **fires**: S/n 0.68, 3.9× slower (cells; 7.4× lists). Closed for r/n ≳ 0.10 at this step price |
 | 5 | the clock on Wikidata | **fired for the linked orders**: 1.276×. **Does not fire for the cells**: 0.756×, 202 of 233 blocks (§6.2) |
 | 5a | the orders turned to orig_ptr, to follow no point | **fires**: +11% cells (§5.5). The mark replaces it |
+| 5b | "S is what the block costs, whatever the order of steps" (this entry, before §5.6) | **false**: 1.279 r to 2.137 r by the order; `abacb` already. The floor is r₂ − 1, not r − 1 |
 | 6 | bulk-join the exact chains first (the cheap 63.5%) | **fires as built**: 1.668×; letter-passes at 10 ns each (§6) |
 | 7 | prior art | the mechanism is classical; the transfer is not in print (§10) |
 | 8 | independent implementation from the spec, invariant checked by brute force | no counterexample (§11) |
@@ -499,6 +604,13 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
    example's two arms on the workstation, at 1 and at 10 copies; dead if the cells arm is
    above 0.9 at 10. A recipe and its rule are the Coordinator's and the Pathfinder's to
    frame (PROTOCOL §9, RULES C1a); never run here.
+1a. **A kernel that takes free steps first.** 1.279 r steps against 1.812 r (§5.6): the
+   largest thing left in the count. It needs, at a step out of order, the letter that ends
+   where the loser lands; with each slot holding the slot of the other order that ends at
+   its row, the test is one comparison of lengths when the landing place is a coincidence,
+   and unknown otherwise (then wait, or take the right end). Uncounted: how many free steps
+   that weaker test finds; what a step fetched out of order costs. Falsifier: that count,
+   from `schedules_geo.rs.txt` with the test weakened; dead if above 1.6 r.
 2. **Feed from run records** (#324 / #348, `u16` records cut at 127: merge neighbours, 0.0779 →
    0.0722 a row). Removes the column and the scan, and is where the kernel's 0.25 ns a row of
    front saving would be taken. A port; the front must cut the walk's row out (§2).
@@ -528,10 +640,12 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
    stretches of rows whose letters do not cross. Uncounted: how many letters cross a cut of
    the rows into P parts. Low rank while blocks outnumber workers.
 6. **The chains.** 0.635 r cells are whole runs onto whole runs (§5.2); a cell is 64
-   instructions, a link in a chain walk about 15. Ceiling ≈ 15% of the kernel. §6.1's attempt
-   failed on its passes; in the cells form a chain needs no renumbering (its head's slot and
-   its tail's slot are the letter's).
-7. **Why row 0** (§5.5, Conj), and whether another order of the alphabet makes fewer cells.
+   instructions, a link in a chain walk about 15. Ceiling ≈ 15% of the kernel, and 5% of the
+   steps besides (§5.6: equal steps first, 1.714 r). §6.1's attempt failed on its passes; in
+   the cells form a chain needs no renumbering (its head's slot and its tail's slot are the
+   letter's). Subsumed by 1a if that is built.
+7. **Why row 0, and why the right end** (§5.5, §5.6): both are counted, neither is proved.
+   Whether another order of the alphabet makes fewer cells.
 8. **Smaller.** Slots of 16 bytes with |w| kept at the word: 33% off the largest region.
 
 ## 9. Frame (not used above)
@@ -579,6 +693,14 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
   LCP array, built from the plain array; their text structure is built by an LF-guided scan.
 - **K:** Precopy (Kärkkäinen–Kempa–Puglisi 2012): O(√(rn) + n/B) misses, with the n-entry LF
   array kept; its published crossover against the lane walk is n/r ≈ 50–90. Wikidata is 13.9.
+- **K, found after the grammar was counted (§5.6):** the Lyndon tree of a Lyndon word is the
+  Cartesian tree of its suffix ranks: Hohlweg–Reutenauer 2003 (TCS 307). The Lyndon SLP:
+  Tsuruta, Köppl, Nakashima, Inenaga, Bannai, Takeda 2020 (arXiv:2004.05309), built there
+  from the text in O(n lg n) expected time. The Lyndon array as a by-product of walking LF,
+  with a stack: Louza, Smyth, Manzini, Telles 2018 (JDA 50). Here the direction is the other
+  one: the tree's part above the run starts, made without the walk, gives the text. Digram
+  replacement at all occurrences: RePair (Larsson–Moffat 1999); that on run letters a
+  digram's occurrences are one interval of rows was not found stated.
 - **Not found:** endpoint induction as a BWT inversion or RLBWT decompression; a count of S on
   any corpus; the coincidence/segment/round structure; output passes on the induced grammar.
   The words "interval exchange", "Rauzy", "first return" do not occur in the r-index and
@@ -587,9 +709,10 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
   (PF:`interval-exchange` §1; `chunked-link` §5a). Absent: endpoint induction, a built grammar,
   S, CRC on a structure (two readers of pr/313 and the 420-row register).
 - **What is claimed as new, and no more:** the transfer (runs of L as the letters, the block
-  as the induction's SLP, the two-pass write, the CRC and RLE1 by morphism), the counts of
-  §4–§5, and §5.5's reading of the step count as records of suffix ranks inside the BWT's
-  phrases. The step, its morphism, the linked-interval machine and the SLP from accelerated
+  as the induction's SLP, the two-pass write, the CRC and RLE1 by morphism), the cells form
+  with its marked row (§3.5), the counts of §4–§5, §5.5's reading of the step count as
+  records of suffix ranks inside the BWT's phrases, and §5.6's: that this SLP is the Lyndon
+  tree above the run starts, that a step is a digram at O(1), and steps = r₂ − 1 + U. The step, its morphism, the linked-interval machine and the SLP from accelerated
   induction are others'.
 
 ## 11. Independent check (C)
@@ -616,6 +739,13 @@ see `examples/rauzy.rs`, in Python, with its own bzip2 parser.
   of ≥ 8 bytes carry 83.8% of the output); words built bottom-up would be 27.7 n bytes (the
   example builds none above 16 bytes); grammar depth 49 to 300 a block.
 
+- **Two more, for §5.6,** by two further sub-agents with their own simulators. One checks
+  the true first return (LF iterated) after every step of 29,480 random schedules on 3,685
+  words, and bytes against `bwt::walk` on 396 runs of real blocks under 33 schedules. The
+  other checks every Cartesian-tree node against its rule on every block, and a 61-bit hash
+  of each schedule's last word against all rotations of the block. Each derived the floor
+  r₂ − 1 and the dependence on the schedule without the other.
+
 ## Reproduce
 
 ```text
@@ -624,8 +754,10 @@ cargo build --release --example rauzy
 target/release/examples/rauzy corpora/wikidata.bz2 1 65536 5 > out.jsonl
 RAUZY_JOIN=1 target/release/examples/rauzy corpora/wikidata.bz2 1 65536 3 > join.jsonl
 ```
-Beside this entry: `2026-11-10-rauzy-veech/identities.py.txt` (§5.1 and §9 by brute force) and
-`rle1_crc_on_grammar.py.txt` (§8, 4); each runs as `python3 FILE`.
+Beside this entry: `2026-11-10-rauzy-veech/identities.py.txt` (§5.1 and §9 by brute force),
+`rle1_crc_on_grammar.py.txt` (§8, 4) and `lyndon_cartesian.py.txt` (§5.6, Theorems 1 and 2);
+each runs as `python3 FILE`. `schedules_geo.rs.txt` (§5.6, the orders of steps on real
+blocks): its first lines say how to run it.
 
 One JSON line a block: `n, runs, steps, top, bottom, equal, dropped, coincide` (row 0 not
 counted)`, shapes, repeats, divisions, depth, widest, rounds, selfish, selfish_steps, copies,
