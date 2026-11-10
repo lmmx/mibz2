@@ -287,6 +287,15 @@ no letter (**P**: a shared letter orders them).
   takes ⌈w/P⌉ turns; S over the turns is **2.00, 3.99, 7.97, 15.89** at P = 2, 4, 8, 16 (pooled;
   the worst block 15.82 at 16). This is a count of a schedule, with free hand-offs: what a
   thread pays to take a segment is not in it, and a segment is 1.8 steps.
+- **Rounds as passes over arrays: built by a third sweep, and dead on one thread (C, M).** A
+  round = an independent set of segments (no letter with its top place in one and its image
+  in another), all consumed at once (**P:** the first return to what is left is then again
+  an exchange, each cell a letter). Largest segments first: 24 rounds (median; 23 to 26), the
+  rows shrinking ×0.58 a round; exact chains taken whole first: 17. But the letters are read
+  again every round, 2.4 to 3.8 r letter-rounds in all, and the cells are 1.85 to 2.06 r, more
+  than the right end's. Built as two arrays rebuilt a round, bytes exact on all 233 blocks:
+  the induction alone is 1.99× build + walk (385 to 550 instructions a run). The sweep is the
+  one-thread form; rounds buy one block's latency on idle cores, nothing else.
 - A segment that meets a letter it re-seated itself is a genuine Euclid stretch: **84 of
   15,141,369** (1,901 steps of 27,439,723). On real blocks the Euclidean part is absent.
 - Counted a step at a time (a step needs the last step on either letter and the one before it
@@ -643,10 +652,11 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
    ≡ 4 mod 5, kept by ≡ 0, forgotten by 1, 2, 3 (`aaaabbbbb`). Not in the example. Ceiling 4% of
    a Wikidata decode (PF:`by-data-class` §1): low. Line offsets for `wikidata-pq` by the same
    morphism: uncounted.
-5. **Rounds, threads.** The schedule's ceiling is P (§5.4). What is open is the grain: a
-   segment is 1.8 cells of 21 cycles, so segments must be handed out by the thousand, by
-   stretches of rows whose letters do not cross. Uncounted: how many letters cross a cut of
-   the rows into P parts. Low rank while blocks outnumber workers.
+5. **Rounds, threads.** The schedule's ceiling is P (§5.4), and rounds as array passes are
+   dead on one thread (§5.4: 1.99×). What is open is the grain for threads: a segment is 1.8
+   cells of 21 cycles, so segments must be handed out by the thousand, by stretches of rows
+   whose letters do not cross. Uncounted: how many letters cross a cut of the rows into P
+   parts. Low rank while blocks outnumber workers.
 6. **The chains.** 0.635 r cells are whole runs onto whole runs (§5.2); a cell is 64
    instructions, a link in a chain walk about 15. Ceiling ≈ 15% of the kernel, and 5% of the
    steps besides (§5.6: equal steps first, 1.714 r). §6.1's attempt failed on its passes; in
