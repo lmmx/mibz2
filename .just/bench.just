@@ -1146,4 +1146,4 @@ bench-team-ports:
 # Pathfinder W2 (#145 PROPOSAL 6764488488). Decision: PERFORMANCE-POLICY.md, primary corpus.
 bench-324-i9:
     git fetch -q origin perf/run-front-records
-    just bench-release-scaling e88c063155c3e734e748e99ccda025393302720f 5e7b9954ad0c7c46f8d68bbaaa3b6cf6c6dc8b1b 10
+    just bench-release-scaling e88c063155c3e734e748e99ccda025393302720f 5e7b995471591eacdd5ae32cebfb8bbb578cbff5 10
