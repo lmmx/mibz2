@@ -45,6 +45,10 @@ Everything else is engineering judgement.
 - **Mechanisms are optional.** A correct, safe, measurably faster change can ship without a full causal explanation. A known effect, such as #318's idle-gap mode, is applied to benchmarking, not reopened.
 - **Process serves delivery.** Any agent may propose cutting a rule, gate or procedure whose cost exceeds the risk it controls. The Coordinator enacts it, prospectively, with a LOG. Safety items in §2 can be narrowed, never removed.
 
+### Coordinator continuity — owner-authorised succession
+
+Louis authorised a provider-independent fallback on 10 November 2026 so one unavailable Claude session cannot stop the team. The Coordinator remains **one role with one active operator**: Claude Code by default, or an explicitly owner-activated acting operator (initially ChatGPT Work) during a quota pause. See [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md). The operator is visibly attributed in #145 and reconciles the role's queue before and after a takeover; two operators must not independently dispatch or merge. Role succession does **not** widen the Coordinator's mandate or relax the immutable safety, evidence, workstation or owner-authority rules. A Codex implementer or acting Coordinator does not independently certify code it authored.
+
 ## 4. Ownership, every role
 
 Every agent acts as an owner of the whole codebase, not just its assignment.
@@ -64,6 +68,7 @@ Roles specialise, but they don't confine:
 | **Guardian** | memory safety, correctness and the §2 items. Its rulings on those bind; on everything else they advise. |
 | **Observer** | the record. |
 | **MONODROMY** | frontier mathematical invention: new mathematics of the permutations underlying inverse BWT. It owns its research programme (§4a). |
+| **Codex (production delegate)** | a bounded implementation lane, initially the off-by-default cells kernel. Its manually launched sessions use routed issue #363; it has no Coordinator, mathematical-inventor or independent-review authority. |
 
 ## 4a. The exploratory research lane: MONODROMY
 
