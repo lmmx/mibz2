@@ -17,7 +17,12 @@
 # of the attempt as it is (the registration's §2.5).
 name: Target-gated noninferiority
 
+# SMOKE BRANCH ONLY (never merged): the dispatch-only workflow can't be dispatched before it is
+# on the default branch, so this copy also runs on a push to this branch, with the smoke
+# inputs as defaults: R = 2, label smoke, every shard. A plumbing check, never evidence.
 on:
+  push:
+    branches: [smoke/target-gated-ni]
   workflow_dispatch:
     inputs:
       head:
@@ -61,11 +66,11 @@ jobs:
       - name: The shards, and the inputs checked
         id: plan
         env:
-          HEAD_SHA: ${{ inputs.head }}
-          BASE_SHA: ${{ inputs.base }}
-          ROUNDS: ${{ inputs.rounds }}
-          SHARDS: ${{ inputs.shards }}
-          LABEL: ${{ inputs.label }}
+          HEAD_SHA: ${{ inputs.head || github.sha }}
+          BASE_SHA: ${{ inputs.base || '3e1a7ec361ee6c8ea6b540264aa69189d4823d9e' }}
+          ROUNDS: ${{ inputs.rounds || '2' }}
+          SHARDS: ${{ inputs.shards || 'all' }}
+          LABEL: ${{ inputs.label || 'smoke' }}
         run: |
           [[ $HEAD_SHA =~ ^[0-9a-f]{40}$ && $BASE_SHA =~ ^[0-9a-f]{40}$ ]] || { echo "::error::head and base must be 40-hex SHAs"; exit 1; }
           [[ $ROUNDS =~ ^[1-9][0-9]*$ ]] || { echo "::error::rounds must be a positive integer"; exit 1; }
@@ -106,15 +111,15 @@ jobs:
       SHARD: ${{ matrix.shard.id }}
       CORPUS: ${{ matrix.shard.corpus }}
       THREADS: ${{ matrix.shard.threads }}
-      ROUNDS: ${{ inputs.rounds }}
-      HEAD_SHA: ${{ inputs.head }}
-      BASE_SHA: ${{ inputs.base }}
-      LABEL: ${{ inputs.label }}
+      ROUNDS: ${{ inputs.rounds || '2' }}
+      HEAD_SHA: ${{ inputs.head || github.sha }}
+      BASE_SHA: ${{ inputs.base || '3e1a7ec361ee6c8ea6b540264aa69189d4823d9e' }}
+      LABEL: ${{ inputs.label || 'smoke' }}
       OUT: out/${{ matrix.shard.id }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.head }}
+          ref: ${{ inputs.head || github.sha }}
           fetch-depth: 0
 
       - name: Provenance
@@ -140,7 +145,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ inputs.toolchain }}
+          toolchain: ${{ inputs.toolchain || '1.99.1' }}
 
       - name: Build the head and the base
         run: |
@@ -217,7 +222,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.head }}
+          ref: ${{ inputs.head || github.sha }}
           fetch-depth: 0
 
       - name: Every shard's artifact, of every attempt
@@ -231,12 +236,12 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=all" \
             --jq '.jobs[] | {name, id, run_attempt, status, conclusion, started_at, completed_at}' > jobs.jsonl
           python3 bench/service_tg.py manifest shards --artifacts artifacts.jsonl --jobs jobs.jsonl \
-            --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
+            --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label || 'smoke' }}" > manifest.json
           cat manifest.json
 
       - name: The judge (bench/service_tg.py ni, at the head's own frozen file)
         run: |
-          python3 bench/service_tg.py ni shards --manifest manifest.json --head "${{ inputs.head }}" --out ni || true
+          python3 bench/service_tg.py ni shards --manifest manifest.json --head "${{ inputs.head || github.sha }}" --out ni || true
           cat ni.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Upload
