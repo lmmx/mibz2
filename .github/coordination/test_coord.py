@@ -248,6 +248,24 @@ class Queue(unittest.TestCase):
         r = self.run_route([item], [queued, review], [self.off + 6])
         self.assertEqual(r["queued"], [self.off + 5])
 
+    def test_a_priority_1_item_dispatches_before_an_older_priority_3_one(self):
+        older = comment(145, self.off + 5, msg(FROM="coordinator", TO="optimizer",
+                                               TYPE="QUEUED", PRIORITY=3))
+        urgent = comment(145, self.off + 6, msg(FROM="coordinator", TO="optimizer",
+                                                TYPE="QUEUED", PRIORITY=1))
+        r = self.run_route([], [older, urgent], [])
+        self.assertEqual(r["issue"], 160)
+        self.assertEqual(r["queued"], [self.off + 6, self.off + 5])
+        self.assertIn(f"QUEUED {self.off + 6} is next by priority then age", r["why"])
+
+    def test_queued_items_of_equal_priority_dispatch_by_age(self):
+        newer = comment(145, self.off + 6, msg(FROM="coordinator", TO="optimizer",
+                                               TYPE="QUEUED", PRIORITY=2))
+        older = comment(145, self.off + 5, msg(FROM="coordinator", TO="optimizer",
+                                               TYPE="QUEUED"))  # default 2
+        r = self.run_route([], [newer, older], [])
+        self.assertEqual(r["queued"], [self.off + 5, self.off + 6])
+
     def test_publications_always_go_to_the_channel(self):
         self.assertEqual(coord.route("optimizer", "ACK")["issue"], 145)
 

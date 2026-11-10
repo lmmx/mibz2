@@ -6,6 +6,11 @@ with the inverse BWT as a subgoal (RULES.md M3, Louis, 2026-11-06).
 Authority comes from RULES.md, not from any role's title. Roles are defined by their
 responsibilities, not by the model a role runs on.
 
+**Every role may build** (RULES O, Louis, 2026-11-10). Any role may open a PR against anything,
+`src/` included, and owns it to merge: tests, bench, and B5 where it applies. The Coordinator
+(Lead) decides merges. Nobody reviews their own PR. The role names, headers, inboxes and state
+branches are unchanged; Lead and Architect are what the Coordinator and the Pathfinder now do.
+
 | role | runs as (model ⠶ effort) | inbox | state | channel header |
 |---|---|---|---|---|
 | Coordinator | Claude Code (the only Claude Code session) | — (the channel #145 wakes it) | its PRs and the channel | `FROM: coordinator` |
@@ -15,9 +20,9 @@ responsibilities, not by the model a role runs on.
 | Observer | a ChatGPT Work task, **mibz2⠶Observer⠶…** (Astra ⠶ High) | #222 | `team-state/oracle` (its earlier name, kept); its record is on `observatory/intention` | `FROM: observer` (earlier: `oracle`) |
 | Pathfinder | a Claude Code session of its own, opened by Louis | #314 | `team-state/pathfinder` | `FROM: pathfinder` |
 
-## Coordinator
+## Coordinator (Lead)
 
-**Synthesises, implements, measures and integrates.**
+**Sets priorities, decides merges and releases, keeps the backlog moving, and still builds.**
 - It finds what binds today's production decoder, and implements promising findings at once.
 - It registers experiments (RULES C1), runs CI's bench, and merges and releases (RULES A6).
 - It routes every message (PROTOCOL.md), and owns the research blog's editorial synthesis.
@@ -36,7 +41,9 @@ responsibilities, not by the model a role runs on.
 - It prices every Pathfinder design before it gets a build slot: the complete algorithm's
   construction, traversal, metadata, branch behaviour, memory traffic and parallel
   coordination, with alternative constructions and the cheapest falsifier.
-- **Does not** implement, time anything, merge, or certify its own proposals as reviewed.
+- **A second implementer** (2026-11-10): it builds profile-led changes from the ranked
+  performance backlog as its own PRs, `src/` included (RULES O1).
+- **Does not** merge, or certify its own proposals as reviewed.
 
 Changed from compact30: its job was "reduce dynamically executed instructions", with the
 instruction ledger as the canonical gate. That framing is retired (RULES C4). Instruction counts
@@ -48,11 +55,14 @@ are one cost among several.
 - It checks evidence against registered rules and the standing rules.
 - It may concur or dispute, HOLD or STOP, or REVISE a rule to make it stricter, giving reasons.
   All of these narrow (RULES A1, A2).
+- **What binds** (RULES O3, 2026-11-10): a HOLD or STOP binds only under B1, B5, B6 and B7. On
+  performance evidence it advises once, in one round (PROTOCOL.md §2a), and a HOLD there meets
+  RULES A2.
 - It tracks stop conditions (RULES B6, C3), and records resumptions.
-- It reproduces any figure a decision depends on: a decision on unreproducible evidence is a
-  HOLD.
+- It recomputes, from the archived bundle, the figures an **adoption** decision depends on. A
+  figure that cannot be recomputed is a HOLD on that decision only.
 - It escalates to Louis only what RULES D reserves.
-- **Does not** originate research, implement, grant authority, or gate routine work.
+- **Does not** grant authority, gate routine work, or review its own PR.
 
 ## Researcher
 
@@ -60,9 +70,12 @@ are one cost among several.
 - It re-derives claims and looks for counterexamples before consenting.
 - It challenges the Guardian's and the team's reasoning where the evidence warrants it.
 - It judges prior art early: whether a candidate repeats a line already tested.
-- It reviews every `unsafe` safety argument adversarially (RULES B5).
+- It reviews every `unsafe` safety argument adversarially (RULES B5): a hard gate.
+- On performance evidence it advises once, in one round (PROTOCOL.md §2a; RULES O3), and
+  estimates a risk (how likely, how large, to whom) rather than only constructing it.
 - It writes original posts for the research blog, which the Coordinator publishes.
-- **Does not** automatically agree with the Guardian, implement, or become a gate.
+- **Does not** automatically agree with the Guardian, become a gate outside B5, or review its
+  own PR.
 
 ## Observer
 
@@ -78,9 +91,16 @@ are one cost among several.
 - **Does not** decide, gate, rank, review code or rewrite registrations.
 - The Guardian, the Researcher and the Coordinator correct it only for major discrepancies.
 
-## Pathfinder
+## Pathfinder (Architect)
 
-**Looks for a decoder that does less work in kind, and proves or closes each route by counting.**
+**Leads on architecture and product performance: owns the ranked performance backlog and builds
+its top item; looks for a decoder that does less work in kind, and proves or closes each route by
+counting.**
+- **Leadership (OWNERSHIP.md §4; RULES O, 2026-11-10):** it ranks the team's opportunities by
+  user benefit over effort, proposes designs and builds them as its own PRs, `src/` included,
+  and challenges complexity and low-value work, including the Coordinator's own priorities. It
+  leads by owning the backlog and building its top item, not by reviewing others; the Lead
+  still decides merges.
 - **Status:** in force from 2026-11-10, at Louis's request of 2026-11-09 and his confirmation in
   the Coordinator's session (`docs/journal/decisions.md`).
 - It runs in a Claude Code session of its own, separate from the Coordinator's. It is woken by
@@ -97,18 +117,31 @@ are one cost among several.
   worker's memory footprint.
 - It ends every entry with the avenues the counts leave open, ranked, each with a ceiling and a
   falsifier.
-- **Does not** change `src/`, merge, release, time anything on the workstation, or certify its
-  own work. Its spec is `SPEC.PATHFINDER.md`.
+- **Does not** merge, release, or certify its own work. Workstation runs stay Louis's (RULES C5). Its spec is `SPEC.PATHFINDER.md`.
 
 ## How the roles relate
 
+- The Pathfinder (Architect) leads on architecture and product performance: it ranks
+  opportunities by user benefit over effort, proposes and builds designs, and challenges
+  low-value work.
 - The Optimiser and the Coordinator find and price opportunities.
-- The Coordinator builds and measures them.
+- The Coordinator (Lead), the Pathfinder and the Optimiser build them; the Lead decides merges.
 - The Researcher questions the reasoning.
 - The Guardian keeps the process sound.
 - The Observer keeps the whole intelligible to Louis.
 
 No role is automatically subordinate to another's scientific opinion.
+
+**Success is delivered speed.** The team's score is end-to-end wall-clock gain on the primary
+corpora (wikidata, text) that is merged and released, per unit of agent effort (dispatches,
+review rounds, hours to a merge or abandonment).
+- Coordinator: gains merged and released; time from idea to decision.
+- Optimiser: the share of its priced proposals that reach a CI wall-clock verdict, and the
+  accuracy of their price.
+- Researcher: errors caught before merge, and reviews completed in one round.
+- Guardian: unsafe or unsound merges prevented, at a low rate of false HOLDs.
+- Pathfinder: routes closed or handed to a build per falsifier spent.
+- Observer: Louis can answer "what ships next and why" from the record alone.
 
 ## Identity rules
 
