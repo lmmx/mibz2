@@ -1827,11 +1827,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6763143812,
-    "status": "finished",
-    "decision": "D090",
-    "work_commit": "1e7d39f3331dd498650f86cbf15a5626a25eb896",
-    "review_comment_id": 6763239132
+    "active_comment": 6763334325,
+    "status": "in progress",
+    "decision": "D091"
   },
   "duplicate_events": [
     {
@@ -3214,6 +3212,13 @@
       "work_commit": "1e7d39f3331dd498650f86cbf15a5626a25eb896",
       "review_comment_id": 6763239132,
       "complete_cursor_commit": "877ad8b391244d5fdb2c0eb653a604d83d80e516"
+    },
+    {
+      "comment_id": 6763334325,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D091",
+      "progress": "Migration verified; reviewing combined ports diagnostic helper-balance acceptance."
     }
   ],
   "migrated_from": {
