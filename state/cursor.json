@@ -862,12 +862,20 @@
     {
       "comment_id": 6757808815,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "84bf177bd0af9fa416964eca2c0f56ad278b119e",
-      "progress": "Stage replay and ranked compact-table report completed.",
-      "report_path": "state/records/reviews/inbox-6757808815/report.md"
+      "progress": "Report and ledger complete; publication pending.",
+      "report_path": "state/records/reviews/inbox-6757808815/report.md",
+      "report_commit": "5c1519130f4d681428c73c435a3e254a545796f9",
+      "audit_scope": {
+        "raw_head_stage_rows": 5,
+        "artifact_sha256": "3734059c48e66288bb0498a8f55cacbe27cd68c075691e6968358011cafda3ba",
+        "new_timing": false,
+        "implementation": false,
+        "raw_callgrind_replay": false
+      }
     }
   ],
   "migrated_from": {
