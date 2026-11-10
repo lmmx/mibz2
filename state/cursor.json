@@ -158,9 +158,10 @@
     6762860125,
     6763141779,
     6763334719,
-    6763474717
+    6763474717,
+    6763771662
   ],
-  "last_processed_comment_id": 6763474717,
+  "last_processed_comment_id": 6763771662,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1803,7 +1804,7 @@
     },
     {
       "trigger_comment_id": 6763771662,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1811,7 +1812,10 @@
       "report_commit": "44443eca7bdcc4a6e7ce98f98c4d053a72179937",
       "report_path": "state/reports/steps-rev4-6763771662/report.md",
       "review_comment_pr": 145,
-      "disposition": "PROCEED bounded STEPS revision 4 diagnostic; 15 tests plus independent 8-trace oracle pass; class reference and all four design choices accepted. Guardian admission, safety and independent contract qualification remain."
+      "disposition": "PROCEED bounded STEPS revision 4 diagnostic; 15 tests plus independent 8-trace oracle pass; class reference and all four design choices accepted. Guardian admission, safety and independent contract qualification remain.",
+      "review_comment_id": 6763939540,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
