@@ -1,4 +1,4 @@
-# 2026-11-10 · MONODROMY 1 · LF's interval exchange, renormalised at its endpoint: a block is 1.81 r binary rules
+# 2026-11-10 · MONODROMY 1 · LF's interval exchange, renormalised at its endpoint: a block is 1.81 r binary rules, and is written from them in 0.756 of the walk's time
 
 Labels: **P** proved here · **C** counted (exact for its input) · **M** measured (this container,
 one thread, indicative, RULES C5) · **Conj** conjecture · **K** known, cited. "PF:" is a path on
@@ -23,17 +23,27 @@ grammar and asserts its bytes against `bwt::walk`.
 - **C:** the induction is not one chain. Its 15,141,369 segments order into **93 rounds** (median;
   63 to 337) of independent two-pointer merges; 63.5% of the runs are sent exactly onto one
   run.
-- **M, the clock, and it loses:** kernel from run records (order 0.525 + induce 1.826 + write
-  0.419 = 2.770 ns a row) against build + room walk 2.172: **1.276×**, pooled. Parity (0.99)
-  on blocks with r/n < 0.06 (40% of rows); 2.6× at r/n ≥ 0.12. 62 of 233 blocks faster.
-  A run costs production 63 cycles here and the kernel 81.
-- **Where it wins as built (M):** Fibonacci and Thue–Morse 0.05×; period 37 0.27×; JSON of 300
-  ids (r/n 0.022) 0.60×.
-- **Where it must not be used:** prose (r/n 0.367) 7.4×; `(ab)^k` 7.8× (S = n/2, §2).
-- **Status:** the count is a floor-level result (§4: at most 1.81× is left in it). The
-  construction is not competitive on Wikidata. The price of a step, 14 ns ≈ 6.4 row-steps, is
-  the whole question; §5 shows the step need not be serial; §6 shows the first attempt to
-  exploit that failed, and why.
+- **C:** the rounds are no limit on a schedule: half the steps lie in the first 4 rounds, and P
+  workers taking a round's steps P at a time need S/P turns to within 1% up to P = 16 (§5.4).
+- **M, the clock. The first construction lost; the second wins** (kernel from run records
+  against `bwt::build` + the room walk, all 233 blocks, pooled, ns a row):
+  - linked orders, a step that re-seats a letter (§3.1): 2.770 against 2.172, **1.276×** (§6.1);
+  - **cells** (§3.5: a step's cell is a letter written once; nothing is moved; no point is
+    followed): order 0.305 + induce 1.005 + write 0.363, 1.697 as one span, against 2.244:
+    **0.756×**. 202 of 233 blocks faster (0.867 of rows). Per block 0.46 / 0.57 / 0.66 / 1.12 /
+    1.82 (min, p10, median, p90, max). r/n < 0.06 (40% of rows): 0.618. r/n ≥ 0.12: 1.479.
+    Chosen by r/n < 0.10, a number the front has before the inversion: **0.712×** (§6.2).
+  - Per run of L: 184 instructions against production's 260; 2.1 simulated last-level misses
+    (2 MiB) against 8.7.
+- **Where else it wins (M, cells):** Fibonacci and Thue–Morse 0.02×; period 37 0.18×; JSON of
+  300 ids (r/n 0.022) 0.38×; of 3,000 ids (0.057) 0.79×.
+- **Where it must not be used:** JSON of 20k records (r/n 0.151) 1.76×; prose (0.367) 3.9×;
+  uniform bytes 9.8×; `(ab)^k a` 8.3× (S = n/2, §2: needs the division rule or a step budget).
+- **Status:** the count stands at its floor for this schedule (§4: at most 1.49× is left in
+  it). The step went from 14 ns to 7.7: 64 instructions, a three-way branch, two slots and one
+  word written, the scattered writes fetched ahead. One container, one thread, indicative
+  (RULES C5): the i9, its ten workers and a front that emits run records are not measured
+  (§8).
 
 ## 1. Objects
 
@@ -43,7 +53,9 @@ grammar and asserts its bytes against `bwt::walk`.
   each ρᵢ. So π is a discrete interval exchange (IET) on r letters:
   - TOP order: ρ₁ … ρ_r as they lie in L (the domain's tiling);
   - BOTTOM order: the runs sorted stably by byte (the tiling by images π(ρᵢ)).
-- Emission: x₀ = orig_ptr, x_{k+1} = π(x_k), L[x_k] = T[n − 1 − k].
+- Emission: x₀ = orig_ptr, x_{k+1} = π(x_k), L[x_k] = T[n − 1 − k]. (A column that is no BWT:
+  the decoder still writes n bytes, round the cycle of orig_ptr, `bwt::walk`; the formula is
+  read round that cycle.)
 - 𝓣 = {run starts}, 𝓑 = π(𝓣) = {image starts}; |𝓣| = |𝓑| = r, 0 ∈ 𝓣 ∩ 𝓑.
 
 ## 2. Proposition (P)
@@ -79,7 +91,8 @@ A's bottom place. ∎ *Equal:* both at once; I_A = J_B is cut off whole. ∎
 point's π-cycle has length |w_A|. Kac: Σ λ_α |w_α| = (points on cycles meeting [0, m)). π one
 n-cycle ⇒ one letter, λ = 1, |w| = n, m = 1: the root's expansion is row 0's cycle.
 T = v^k (bzip2 sorts rotations, k cycles): the same steps as for v with every length × k, ending
-at one letter with λ = k, |w| = n/k. `(ab)^k`, `(aaaab)^k`, zeros: bytes exact (C, §4).
+at one letter with λ = k, |w| = n/k (one step for `(ab)^k` itself). `(ab)^k a`, `(aaaab)^k`,
+zeros: bytes exact (C, §4).
 **A column that is no BWT** (a decoder is handed any bytes and any row; a corrupt stream):
 LF has cycles of several kinds, and A = B occurs with other letters left. The last letter is
 then λ_A cycles spelling w_A: if the walk is on it, stop; else drop it from both orders and go
@@ -89,20 +102,36 @@ clean.
 
 **Counts (P).**
 - Equal steps = r − 1 for one cycle: only they delete letters. **C:** 15,141,369 = 15,141,602 − 233.
-- r − 1 ≤ S ≤ n − 1: a step deletes at most one letter, and removes at least one point.
-- S is not O(r polylog) as written: `(ab)^k` has r = 2, S = n/2 (**C**: 449,991 of n = 899,981).
-  The same two letters stay last: q steps = one division, one rule w^q. See §7.
+- r − 1 ≤ S ≤ n − 1 for a BWT image: a step deletes at most one letter, and removes at least one
+  point. (With several kinds of cycle, dropped letters take the place of equal steps.)
+- S is not O(r polylog) as written: `(ab)^k a` has r = 2, S = n/2 (**C**: 449,991 of
+  n = 899,981). The same two letters stay last: q steps = one division, one rule w^q. See §7.
 
 **The tracked point (P).** orig_ptr as (α, o, v): orig_ptr = π^v(start(I_α) + o), 0 ≤ v < |w_α|.
+With |w_B| its value before the step:
 - Top wins: if α = A and o ≥ λ_A − λ_B: α := B, o −= λ_A − λ_B, v += |w_B|.
 - Bottom wins: if α = A: v += |w_B|. If α = B and o ≥ λ_B − λ_A: α := A, o −= λ_B − λ_A.
 - Equal: if α = A: α := B, v += |w_B|.
 At the end t₀ = v, and T[k] = E[(k − t₀) mod p], E the root's expansion, p its length.
 
+**No point need be followed (P; C on 200,000 arbitrary columns and every block).** Cut the run
+of orig_ptr so that the row is a letter Z of its own (at most two letters more), and mark
+its word; a word made with a marked word is marked.
+- A letter whose word is marked has one point: all its points share one itinerary through
+  the original letters, and that itinerary passes Z, which is one row.
+- So the walk's cycle is the closed letter whose word is marked, and Z's byte lies once in
+  that word, at a place j read off the marked rules from the root down.
+- By Invariant I a letter's word ends with the byte of its own row, and by the emission T
+  ends with L[orig_ptr]. So **T is the cycle's word read from place j + 1 round**, n bytes.
+- A block that is a power v^k closes k letters of one point each; the marked one is the
+  walk's, the others are dropped.
+The induction then carries no (α, o, v), and the writer starts at j + 1: nothing is turned
+afterwards (§3.5).
+
 ## 3. Construction
 
 **3.1 Induction.** Two doubly linked orders over r nodes (λ, |w|, w, prev₂, next₂), 32 bytes a
-letter. A step: 2 lengths read, 1 rule, ≤ 4 links written. No rank, no select, no run map, no
+letter. A step: 2 lengths read, 1 rule, 5 or 6 links written. No rank, no select, no run map, no
 n-entry table, no column: the input is (byte, length) per run, which #324's front emits.
 
 **3.2 Grammar → bytes, each byte written once (P).** pos(j) = where rule j's expansion first lies
@@ -115,7 +144,7 @@ in E. A rule's children were made before it, so:
 
 Two sequential passes over S rules, no recursion. Copies never overlap (distinct occurrences
 of one symbol are disjoint). **C:** 0.0409 copies a row carry 91.0% of the bytes, mean 22.2 B.
-The record's first-visit copy walk counts the same object (PF:`2026-11-09-phrase-structure.md`,
+The record's first-visit copy walk counts a similar object (PF:`2026-11-09-phrase-structure.md`,
 correction §1: 0.0328 copies, 0.928 of bytes, on its sample); here it is reached without
 walking.
 
@@ -128,10 +157,43 @@ run.
 monoid morphism h: Σ* → M, h(N) = h(left) h(right): S products, not n. CRC-32/BZIP2:
 R(w) = w(x)·x³² mod P, X(w) = x^{8|w|} mod P, R(uv) = R(u)X(v) + R(v), X(uv) = X(u)X(v);
 crc = ¬(R + ones·X). The rotation costs one descent from the root. **C:** 0.262 multiplications a
-row; equal to `crc::crc32` of the walked bytes on all 233 blocks and every synthetic input.
+row; equal to `crc::crc32` of the walked bytes on all 233 blocks and every synthetic input
+that is no power (for a power the example skips the check).
 bzip2's stored CRC is over the RLE1-decoded bytes: the RLE1 decoder composes over rules too
 (§8, 4), checked in Python beside this entry, not in the example. A CRC taken from the
 grammar verifies the input; it no longer checks the passes that write the bytes.
+
+**3.5 The cells form (P for its steps being §2's; C: bytes on every input of §7).** The
+second construction. What §3.1 moves, this writes once.
+- **State.** Two arrays of 24-byte slots, one an order, each in the order the induction
+  reads it (last letter first): (the slot before, λ, |w|, w, the letter's slot in the other
+  order). In registers: A and B, what is left of each (ra, rb), their words, the slot before
+  each, and for each the slot its next cell takes in the other order.
+- **A step is a cell:** the last min(ra, rb) points of both, word w_A w_B. It is §2's loser
+  under its new name (top wins: B; bottom wins: the part named A; equal: B), and it is never
+  changed again. On top it lies in B's place, on the bottom in A's image, each time to the
+  left of the cells already cut from that letter.
+- **Where it is written.** The first cell cut from a letter takes the letter's own slot in the
+  other order: whatever pointed at the letter now points at its rightmost cell, and nothing
+  else is touched. If the letter goes on, its next cell is promised a fresh slot, and the
+  letter's "slot before" moves into the promised slot: the last cell cut finds it there. So
+  a cell writes two slots (three fields each; five on the side that goes on) and patches
+  nothing. The winner's remainder is in registers only.
+- **A cell is read once, on the side the front reaches first,** as A or as B; on the other
+  side its slot is by then its own first cell.
+- **The three cases are a three-way branch** on ra against rb (equal 55%, top 28%, bottom 17%
+  of cells on Wikidata); the word is made before it, as bytes and as a rule, one of them kept.
+- **One buffer,** every reference a 32-bit offset in it: slots, the words kept as bytes, the
+  rules. A rule is its two factors as their slots held them, (|w|, w) twice: two stores.
+- **Fetch ahead.** The slot 12 before the last in an order holds, as memory has it now, the
+  place its letter's cells will be written and its word: both are fetched then. This is what
+  makes the scattered writes free (§6.2).
+- **No point is followed** (§2): the mark rides in |w|'s top bit, so a marked word is never
+  kept as bytes and its rules are a path from the root to Z.
+- **The write** walks that path once, places each unmarked factor where it lies from j + 1
+  on, and then is §3.2's two passes, into the output itself.
+- **Not done:** the division rule (a streak of one winner is one cell a turn here too); a
+  bound on the buffer other than n cells; records from the front (§8).
 
 ## 4. Counted (C)
 
@@ -140,7 +202,7 @@ grammar verifies the input; it no longer checks the passes that write the bytes.
 | input | blocks | r/n | S/r | S/n | coincidences/r | rounds (median) |
 |---|--:|--:|--:|--:|--:|--:|
 | `wikidata.bz2` | 233 | 0.0722 | 1.812 | 0.1309 | 0.780 | 93 |
-| prose (the repository's `.md`, 3.5 MB, `bzip2 -9`; not the bench's `text`) | 4 | 0.3672 | 1.841 | 0.6761 | 0.541 | 101 |
+| prose (the repository's `.md`, 3.5 MB, `bzip2 -9`; not the bench's `text`) | 4 | 0.3672 | 1.841 | 0.6761 | 0.541 | 98.5 |
 
 Synthetic (blocks ≥ 10⁵ rows):
 
@@ -148,8 +210,8 @@ Synthetic (blocks ≥ 10⁵ rows):
 |---|--:|--:|--:|--:|---|
 | Fibonacci word | 899,982 | 16 | 175 | 0.0002 | |
 | Thue–Morse 2²⁰ (2 blocks) | 1,048,576 | 102 | 875 | 0.0008 | |
-| period 37 | 888,001 | 37 | 24,044 | 0.027 | 23,998 steps are one division |
-| `(ab)^k` | 899,981 | 2 | 449,991 | 0.500 | one division |
+| period 37, and one byte | 888,001 | 37 | 24,044 | 0.027 | 23,998 steps are one division |
+| `(ab)^k a` | 899,981 | 2 | 449,991 | 0.500 | one division |
 | `(abac)^k x`, `(abcabd)^k x` | 899,981 | 4, 6 | n/4, n/6 | | one division each |
 | JSON-like, 300 ids (2 blocks) | 1,560,097 | 34,903 | 115,983 | 0.074 | S/r 3.32 |
 | JSON-like, 3,000 ids (2 blocks) | 1,584,100 | 89,712 | 233,383 | 0.147 | S/r 2.60 |
@@ -159,11 +221,13 @@ Synthetic (blocks ≥ 10⁵ rows):
 
 - **S/r is 1.8 on both natural corpora, five-fold apart in r/n.** Not a law: 1.0 (random) to
   3.3 (few-id JSON) to ~10 (Sturmian-like, where S is tiny anyway). §5.5 says what it is.
-- **Floor (P):** S ≥ r − 1 for any schedule of these steps. So at most 1.81× is left in the count
-  on Wikidata. What is undecided is the step's price.
+- **Floor (P):** S ≥ r − 1 for any schedule of these steps on a BWT image. For the endpoint
+  schedule S ≥ r₂ − 1 = |𝓣 ∪ 𝓑| − 1 (§5.5: every boundary of either tiling is passed), 1.22 r on
+  Wikidata: at most 1.49× is left in this schedule's count. S = (r₂ − 1) + S₀, S₀ = 0.59 r the
+  boundaries that re-seating makes. What is undecided is the step's price.
 - Against the record: the tower 8 × 3 is 0.190 n dependent steps on its 20 Wikidata blocks
-  (every 12th) and stops at W = n/512 with words materialised at each level (0.68–1.58 n
-  bytes); on those same 20 blocks this is 0.1288 n (1.80 a run against 2.65), stops at one
+  (every 12th) and stops at W = n/512 with words materialised at each level (1.58 n bytes
+  at 8 × 3); on those same 20 blocks this is 0.1288 n (1.80 a run against 2.65), stops at one
   point, and materialises 0.47 n bytes of small words. The units differ: a
   compare-subtract-relink here, a piece pushed through the run map there. PF:`2026-11-10-chunked-link.md` §5a's bound
   (2r a halving, 0.55 n, "pays only below r/n ≈ 0.03") is 4× above the count.
@@ -182,7 +246,9 @@ LF's discontinuities land on discontinuities after one step.
 union of bottom intervals. The endpoint induction consumes the last segment as a two-pointer
 merge of its top lengths against its bottom lengths: one step a cell, the equal step exactly
 at the segment's end. So
-**S = Σ over the r − 1 segments consumed of (cells in it when consumed).**
+**S = Σ over the r − 1 segments consumed of (cells in it when consumed)**, for a segment that
+meets no letter it re-seated itself (§5.4: all but 84 on Wikidata; such a segment grows while
+it is consumed).
 
 **Shapes at the start (C;** Wikidata, 233 blocks; prose in brackets**):** of 0.780 r [0.541 r]
 segments,
@@ -192,8 +258,8 @@ segments,
 - both sides plural: 0.014 r [0.042 r].
 
 On Wikidata LF sends 63.5% of the runs exactly onto another run: the exchange is mostly a
-permutation of runs (the record's tunnels, as a count of runs), and only 1.4% of its segments
-need a two-sided merge.
+permutation of runs (the record's tunnels, as a count of runs), and only 1.8% of its segments
+(0.014 r) need a two-sided merge.
 
 **5.3 (P) Coincidences persist.** A step removes an interval that is one set of points in both
 tilings and contains no top boundary inside; every other coincidence survives. Hence a
@@ -203,13 +269,18 @@ there) and B (image ending there), same table. Steps on disjoint letters commute
 **5.4 (C) The induction's dependency order.** Segment σ needs segment σ' iff σ' re-seated or
 shortened a letter σ consumes. Longest chain, 233 blocks: **63 / 78 / 93 / 119 / 337** rounds
 (min, p10, median, p90, max); median 606 segments a round. Prose: 79 to 118 rounds for
-3·10⁵ segments; uniform bytes: 47. Same-round segments share no letter (**P**: a shared letter
-orders them).
+3·10⁵ segments; uniform bytes: 47; JSON of 20k records: 660 to 944. Same-round segments share
+no letter (**P**: a shared letter orders them).
+- **The rounds are no limit (C;** 30 blocks, every 8th**).** Half of a block's steps lie in its
+  first 4 rounds (5 at most): the tail is long and thin. With P workers a round of w steps
+  takes ⌈w/P⌉ turns; S over the turns is **2.00, 3.99, 7.97, 15.89** at P = 2, 4, 8, 16 (pooled;
+  the worst block 15.82 at 16). This is a count of a schedule, with free hand-offs: what a
+  thread pays to take a segment is not in it, and a segment is 1.8 steps.
 - A segment that meets a letter it re-seated itself is a genuine Euclid stretch: **84 of
   15,141,369** (1,901 steps of 27,439,723). On real blocks the Euclidean part is absent.
 - Counted a step at a time (a step needs the last step on either letter and the one before it
-  in its segment): depth median 3,861; widest segment 1,562 steps (one long run absorbing its
-  predecessors, itself a prefix sum).
+  in its segment): depth median 3,861; widest segment 1,562 steps (median over blocks; 4,232
+  at most): one long run absorbing its predecessors, itself a prefix sum.
 
 **5.5 (P; C on every block) The count without the induction.** Cut π's cycle after every run
 start: r stretches (x, πx, …, t], t ∈ 𝓣. In the text a stretch is what lies between two
@@ -244,21 +315,40 @@ here.)
   each phrase.
 - **The induction read in the text (P, Invariant I restated):** at the prefix [0, m) the text
   is cut exactly at the suffixes of rank < m, and the letters' words are the pieces between
-  cuts. A step uncuts the suffixes of rank in [m', m), which are all the places where one
+  cuts (as letters: two letters may spell one word, and the grammar is not reduced). A step uncuts the suffixes of rank in [m', m), which are all the places where one
   piece w_A meets one piece w_B, and names the joined piece. So the grammar is a pair-merging
   of the text's positions in decreasing order of suffix rank: the largest suffixes lose their
   cut first.
 
-**Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
-induction is ~10² rounds of independent merges; lanes, or threads, are available at no change
-to the grammar. Not built; the first step toward it failed on its constants (§6).
+- **The count depends on where the rows begin (C;** 10 blocks, every 24th**; Conj for the
+  reason).** LF is an exchange in the order of the rows turned to begin at any row p, on at
+  most two letters more (the run of p and the image holding p are cut there), and the
+  induction then ends on p's letter. Turned to orig_ptr it makes 0.98 to 1.20 times the cells
+  of the order from row 0: +11% pooled. **Conj:** ranks from row 0 are lexicographic, the
+  minima-so-far along a stretch are next-smaller-suffix chains (Lyndon factors), and a turned
+  order is no lexicographic order. Not tested against a re-ordered alphabet.
 
-## 6. Clock (M; one thread, fastest of 5 rounds a block, Xeon 2.1 GHz, 2 MiB L2; indicative)
+**Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
+induction is ~10² rounds of independent merges, almost all of its steps in the first few;
+lanes, or threads, are available at no change to the grammar. Not built: on one thread the
+step turned out to be bound by memory and by what the compiler kept on the stack, not by
+its chain (§6.2).
+
+## 6. Clock (M; one thread, fastest of 5 rounds a block, Xeon "2.1 GHz", 2 MiB L2; indicative)
 
 Arms. Production: `bwt::build` + `walk_segments_room` from the column. Kernel, from the run
-list: **order** (the runs sorted by byte, both orders linked: this exchange's "build"),
-**induce**, **write**. The scan of the column into runs is apart: 0.484 ns a row here, 0.173
-from #324's emitter (PF:`by-data-class` §2).
+list: **order** (the runs sorted by byte, both orders laid out: this exchange's "build"),
+**induce**, **write**. The scan of the column into runs is apart: 0.484 ns a row here. #324's
+front emits the records in place of the column's MTF stage (0.173 against 0.423 ns a row,
+PF:`by-data-class` §2): a saving on the kernel's side that no figure below takes. Production
+here is master's column path; #324's records path (closed, not on master) is the nearer
+rival for a run-fed kernel and is not an arm.
+
+**The core's clock.** A chain of dependent multiplications (3 cycles each) runs at 1.100 ns:
+2.73 GHz, not the 2.10 the processor's name and its TSC give. §6.1's cycles are at 2.10 and
+are 1.30 times too few; §6.2's are at 2.73.
+
+### 6.1 The first construction: linked orders (§3.1). It loses.
 
 | Wikidata, 233 blocks, ns a row | build + walk | order | induce | write | kernel | ÷ |
 |---|--:|--:|--:|--:|--:|--:|
@@ -278,14 +368,16 @@ from #324's emitter (PF:`by-data-class` §2).
 | JSON-like, 3,000 ids (r/n 0.057, S/r 2.60) | 2.50 | 3.325 | 1.33 |
 | JSON-like, 20k records (r/n 0.151) | 2.04 | 6.321 | 3.10 |
 | prose (r/n 0.367) | 2.766 | 20.38 | 7.37 |
-| `(ab)^k` (no division rule) | 1.27 | 9.958 | 7.83 |
+| `(ab)^k a` (no division rule) | 1.27 | 9.958 | 7.83 |
 | uniform bytes | 3.29 | 53.4 | 16.3 |
 
 - **The write is not the cost:** 0.419 ns a row for the whole block from the grammar, 0.10 on
   the Sturmian inputs (the n bytes themselves).
-- **The step is:** 14.0 ns (≈ 29 cycles), 66% of the kernel. With the word work removed it is
-  still 10.6–11.5 ns: the order surgery, branch-free, about a dozen stores a step. A branchy
-  step costs the same in mispredictions. Not cache misses: 11 ns at r = 2·10⁴.
+- **The step is:** 14.0 ns, 66% of the kernel: the order surgery, branch-free, 152
+  instructions and 31 stores a step (callgrind, block 1). It rises with r, 12.8 ns in the
+  lowest band of r/n to 18.9 in the highest. §6.2 finds where it went.
+- The kernel's figure is the sum of its stages' fastest rounds; timed as one span it is
+  about 1.2% more (1.29).
 - **The budget, in cycles a run** (2.1 GHz, r/n 0.0722): production's build + walk is 63 here
   (the record: 72 on its VM, 110 on the i9). The kernel is 81: order 15, induce 53 (1.81 steps
   × 29), write 12. Parity alone needs induce ≤ 1.228 ns a row with order and write as they
@@ -296,44 +388,123 @@ from #324's emitter (PF:`by-data-class` §2).
   (`RAUZY_JOIN=1`; §5.2: one merge of the two tilings, a walk down each chain, the letters left
   renumbered and relinked; bytes exact on all 233 blocks). It joins 0.635 r letters, leaves
   1.101 r steps, and takes the induction from 1.826 to 0.928 ns a row. Its own passes over the
-  letters take the order stage from 0.525 to 2.448: about 10 ns a letter each, in mispredicted
-  branches (which run is joined, where a chain ends). Kernel 1.668× the walk. A pass over the
-  letters must cost ≤ 3 ns a letter to pay; none here does. The construction failed, not the
+  letters take the order stage from 0.525 to 2.448: about 6.7 ns a letter a pass, in
+  mispredicted branches (which run is joined, where a chain ends). Kernel 1.668× the walk. A
+  pass over the letters must cost ≤ 3.1 ns a letter to pay; none here does. The construction failed, not the
   count: the 63.5% is still the cheapest work in the block.
 - **Live set as built:** 32 r (nodes) + 0.47 n (arena) + 16 B × 0.039 n (rules) + 4 B a rule + n
   (the expansion before rotation): about 4 MB at n = 9·10⁵, r = 6.5·10⁴. Not smaller than
   production's table. The nodes halve with 16-bit links (r < 2¹⁶ on three blocks in four); the
   n goes when the rotation is folded into pass 1.
-- **Verdict on the clock:** this construction (one chain, linked orders) loses on Wikidata by
-  28%, is level below r/n ≈ 0.06, and wins from r/n ≈ 0.02 down. The advantage in kind (0.13 n
-  dependent steps, r-sized state, no column) is not disproved and not converted.
+- **Verdict on this construction** (one chain, linked orders): it loses on Wikidata by 28%, is
+  level below r/n ≈ 0.06, and wins from r/n ≈ 0.02 down.
 - **Correction made while writing:** the first table of this entry excluded the order stage
   (it had been timed with the scan) and read 1.078×. The exchange's build is the kernel's
   work; 1.276 is the figure.
+
+### 6.2 The second construction: cells (§3.5). It wins.
+
+Same arms, same blocks, a later run (production 2.244 in it; the list kernel 2.808, 1.251×).
+"Whole" is order + induce + write as one timed span; the stages are their own fastest rounds.
+
+| Wikidata, 233 blocks, ns a row | build + walk | order | induce | write | whole | ÷ | lists ÷ |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| pooled | 2.244 | 0.305 | 1.005 | 0.363 | 1.697 | **0.756** | 1.251 |
+| r/n < 0.06 (93 blocks, 0.399 of rows) | 2.198 | 0.240 | 0.778 | 0.315 | 1.358 | 0.618 | 0.986 |
+| 0.06–0.07 (71, 0.305) | 2.292 | 0.274 | 0.892 | 0.344 | 1.534 | 0.669 | 1.065 |
+| 0.07–0.09 (32, 0.137) | 2.240 | 0.307 | 1.009 | 0.358 | 1.700 | 0.759 | 1.275 |
+| 0.09–0.12 (19, 0.082) | 2.266 | 0.442 | 1.462 | 0.460 | 2.379 | 1.050 | 1.803 |
+| ≥ 0.12 (18, 0.077) | 2.277 | 0.609 | 2.128 | 0.602 | 3.367 | 1.479 | 2.691 |
+
+- 202 of 233 blocks faster, 0.867 of rows. Per block: 0.460 / 0.570 / 0.662 / 1.120 / 1.823.
+- **Chosen by r/n** (the front has r before the inversion): cells below 0.10, else the walk:
+  1.597 ns a row, **0.712×**; any threshold from 0.08 to 0.12 is within 0.007 of it; the
+  better arm chosen block by block with hindsight is 0.711.
+- Cells: 27,439,756, the reference's S and 33 more (the walk's row cut out, 233 blocks).
+- **A cell is 7.68 ns = 21 cycles, 64 instructions.** A run: 64 cycles (order 11.5, induce 38.0,
+  write 13.7) against production's 85.
+
+| other inputs, ns a row | build + walk | cells | ÷ | (lists ÷) |
+|---|--:|--:|--:|--:|
+| Fibonacci | 1.905 | 0.039 | 0.02 | 0.05 |
+| Thue–Morse | 2.342 | 0.047 | 0.02 | 0.05 |
+| period 37, and one byte | 1.988 | 0.366 | 0.18 | 0.23 |
+| JSON-like, 300 ids (r/n 0.022) | 1.977 | 0.755 | 0.38 | 0.57 |
+| JSON-like, 3,000 ids (r/n 0.057, S/r 2.60) | 2.148 | 1.707 | 0.79 | 1.17 |
+| JSON-like, 20k records (r/n 0.151) | 1.829 | 3.215 | 1.76 | 3.20 |
+| prose (r/n 0.367) | 2.769 | 10.89 | 3.93 | 7.46 |
+| 4 letters, uniform | 2.644 | 17.15 | 6.48 | 11.4 |
+| uniform bytes | 3.686 | 36.06 | 9.78 | 16.3 |
+| `(ab)^k a` (no division rule) | 1.309 | 10.84 | 8.28 | 8.41 |
+
+**What moved it** (10 blocks, every 24th, the same each time; production 2.14 to 2.34 between
+runs, so the last column is good to a few per cent; instructions from callgrind on block 1):
+
+| the step | instructions a cell | ns a cell | whole ÷ walk |
+|---|--:|--:|--:|
+| lists (§6.1) | 152 | 14.0 | 1.29 to 1.40 |
+| cells; no branch in the step; slots as three 64-bit fields, two patched a cell; a point followed | 161 | 13.4 | 1.225 |
+| one buffer; a three-way branch; no patch (the promise); the slot before read with the letter | 91 | 12.5 | 1.063 |
+| no point followed: the walk's row marked, the block written unrotated | 62 | 9.8 | 0.936 |
+| fetch ahead, 8 to 16 slots (12 kept) | 64 | 7.2 to 7.7 | 0.78 to 0.81 |
+| *(orders turned to orig_ptr in place of the mark: +11% cells, §5.5)* | 73 | 10.2 | 1.038 |
+
+- **The first two rows cost the same and were not bound by their instructions.** 161 → 91
+  bought 7%. The compiler had made the followed point 15 branch-free instructions a cell
+  with their operands on the stack, and had put the slot-before of both letters there too:
+  the chain from a letter to the next ran through a store and a reload. Removing the point
+  (§2) removed the chain: 91 → 62 instructions, 12.5 → 9.8 ns.
+- **Then it was memory.** A cell is written to two places a counting sort apart. Fetching
+  them when the letter is 12 slots from the front: 9.8 → 7.2 ns. What is left of the rise
+  with the block's runs (all 233 blocks): 7.3 to 7.5 ns a cell for r below 7·10⁴, 7.7 to 10⁵,
+  8.9 above.
+- **Per run of L (callgrind, block 1, r/n 0.057):**
+
+  | | instructions | simulated misses of a 2 MiB last level |
+  |---|--:|--:|
+  | production: build 85 + room walk 175 | 260 | 8.7 |
+  | cells: order 27 + induce 1.81 × 64 + write 41 | 184 | 2.1 |
+
+  The predictor callgrind models misses 0.20 branches a cell.
+- **Live set:** slots 24 B × (2 r + the cells that took a fresh one, 0.81 r) = 67 B a run; words
+  as bytes 0.47 n; rules 16 B × 0.54 r; a position a rule; the output. About 5.5 MB and the
+  output at n = 9·10⁵, r = 6.5·10⁴: more than production's table. What differs is how it is
+  touched: two forward streams and writes that are fetched ahead.
+- **Memory safety:** the kernel is `unsafe` (unchecked offsets in one buffer sized for n
+  cells). valgrind: 3,000 arbitrary columns and three real blocks, no error. Not reviewed.
+- **Not measured:** the i9; ten workers on a shared 20 MB last level, where production's walk
+  is the known sufferer and the model above says this is not; records from the front
+  instead of the scan; a decoder that calls it.
 
 ## 7. Falsifiers run
 
 | # | attack | outcome |
 |--:|---|---|
-| 1 | bytes ≠ walk on any block | none: 233 Wikidata blocks (and the corpus's 198 tiny ones in the independent check), 4 prose, 30 synthetic incl. periodic and n < 20; 200,000 arbitrary columns |
+| 1 | bytes ≠ walk on any block | none, for the reference and both kernels: 233 Wikidata blocks (and the corpus's 198 tiny ones in the independent check), 4 prose, 28 synthetic incl. periodic and n < 20; 200,000 arbitrary columns |
 | 2 | S ≫ r on natural data | no: 1.29–2.08 r |
-| 3 | S = Θ(n) on some input | **yes**: `(ab)^k`, S = n/2, 7.8× slower. Fix: division rule (q equal-pair steps → one power rule), or a step budget with fallback to the walk. Wikidata: 46 such steps in 27.4 M |
-| 4 | text | **fires**: S/n 0.68, 7.4× slower. Closed for r/n ≳ 0.07 at this step price |
-| 5 | the clock on Wikidata | **fires for this construction**: 1.276×. The step is 6.4 row-steps |
+| 3 | S = Θ(n) on some input | **yes**: `(ab)^k a`, S = n/2, 8× slower. Fix: division rule (q equal-pair steps → one power rule), or a step budget with fallback to the walk. Wikidata: 46 such steps in 27.4 M |
+| 4 | text | **fires**: S/n 0.68, 3.9× slower (cells; 7.4× lists). Closed for r/n ≳ 0.10 at this step price |
+| 5 | the clock on Wikidata | **fired for the linked orders**: 1.276×. **Does not fire for the cells**: 0.756×, 202 of 233 blocks (§6.2) |
+| 5a | the orders turned to orig_ptr, to follow no point | **fires**: +11% cells (§5.5). The mark replaces it |
 | 6 | bulk-join the exact chains first (the cheap 63.5%) | **fires as built**: 1.668×; letter-passes at 10 ns each (§6) |
 | 7 | prior art | the mechanism is classical; the transfer is not in print (§10) |
 | 8 | independent implementation from the spec, invariant checked by brute force | no counterexample (§11) |
 
 ## 8. Open, ranked: ceiling · cheapest falsifier · gate
 
-1. **Segment-parallel induction.** Arrays, not lists: a round = the two-pointer merge of each
-   ready segment; re-seating = a scatter into next round's orders. Ceiling: 32 cycles a run
-   all told ⇒ 0.5× on Wikidata, and no dependent chain at all (the i9's currency). §6's
-   pre-pass is its warning: every pass branch-free, ≤ 3 ns a letter. Falsifier: an instruction
-   and misprediction count of the merge and scatter per cell (callgrind, an untimed probe);
-   dead above ~35 Ir or 0.3 mispredictions a cell. Gate: mine.
+1. **The i9, and its ten workers.** Here: 0.756× on one thread, 184 instructions a run against
+   260, a quarter of the modelled last-level misses. Production's inversion is 110 cycles a
+   run there (PF:`phrase-structure` §5) against 85 here, on a 256 KiB L2 and 2 MB of last
+   level a worker. **Conj:** the gap widens there. Falsifier: one diagnostic run of this
+   example's two arms on the workstation, at 1 and at 10 copies; dead if the cells arm is
+   above 0.9 at 10. A recipe and its rule are the Coordinator's and the Pathfinder's to
+   frame (PROTOCOL §9, RULES C1a); never run here.
 2. **Feed from run records** (#324 / #348, `u16` records cut at 127: merge neighbours, 0.0779 →
-   0.0722 a row). Removes the column and the scan. A port, after 1.
+   0.0722 a row). Removes the column and the scan, and is where the kernel's 0.25 ns a row of
+   front saving would be taken. A port; the front must cut the walk's row out (§2).
+2a. **Admission.** r/n < 0.10 (§6.2), and a budget on the cells (S is known only as it is
+   made; S/r is 1.3 to 2.1 on Wikidata and n/2r on `(ab)^k a`): past, say, 4 r, stop and walk.
+   The work thrown away is bounded by the budget. Not built.
 3. **Division (Zorich) rule** for equal-pair streaks, needed before any admission (or a step
    budget with fallback). Known for the related accelerated algorithm on k pairings of
    [1, N]: at most 5k²(2 + log₂ N) cycles (Agol–Hass–Thurston 2006, Thm 12). The complexity
@@ -346,20 +517,22 @@ from #324's emitter (PF:`by-data-class` §2).
    (byte, count 0..4). A nonterminal's summary: its first run's byte and exact length, and two
    continuations (entered not expecting a count; entered expecting one), each a decoded
    length, (R, X) and an exit state. It composes in O(1) products a rule (≤ 24 multiplications
-   mod P as counted); 75,532 (word, entry state) pairs under random bracketings and 4,878 whole
+   mod P as counted, the powers of x tabulated; 38 to 48 without); 75,532 (word, entry state) pairs under random bracketings and 4,878 whole
    blocks equal the bytewise decoder and CRC. This entry's first guess, that the entry state
    dies at the first change of byte, was false: one bit survives, flipped by a run of length
    ≡ 4 mod 5, kept by ≡ 0, forgotten by 1, 2, 3 (`aaaabbbbb`). Not in the example. Ceiling 4% of
    a Wikidata decode (PF:`by-data-class` §1): low. Line offsets for `wikidata-pq` by the same
    morphism: uncounted.
-5. **Rounds.** **Conj:** O(log r) for sources with bounded-memory statistics (93 at r = 5·10⁴,
-   101 at 3.7·10⁵, 47 on uniform bytes). And §5.5 in text space: an induction that never
-   leaves the text's phrases, or a count of S from the front's run records alone.
-6. **The i9.** Production's inversion is 110 cycles a run there (PF:`phrase-structure` §5), 63
-   here; the kernel is 81 here with 0.13 dependent steps a row against 1. Whether its 81 holds
-   on a 256 KiB L2 is unknown. A diagnostic for the Coordinator's queue (PROTOCOL §9, RULES
-   C1a) only after 1 or a leaner step; never run here.
-7. **Admission** by r/n (known after MTF): nothing to admit until the ratio moves. Not proposed.
+5. **Rounds, threads.** The schedule's ceiling is P (§5.4). What is open is the grain: a
+   segment is 1.8 cells of 21 cycles, so segments must be handed out by the thousand, by
+   stretches of rows whose letters do not cross. Uncounted: how many letters cross a cut of
+   the rows into P parts. Low rank while blocks outnumber workers.
+6. **The chains.** 0.635 r cells are whole runs onto whole runs (§5.2); a cell is 64
+   instructions, a link in a chain walk about 15. Ceiling ≈ 15% of the kernel. §6.1's attempt
+   failed on its passes; in the cells form a chain needs no renumbering (its head's slot and
+   its tail's slot are the letter's).
+7. **Why row 0** (§5.5, Conj), and whether another order of the alphabet makes fewer cells.
+8. **Smaller.** Slots of 16 bytes with |w| kept at the word: 33% off the largest region.
 
 ## 9. Frame (not used above)
 
@@ -370,7 +543,8 @@ from #324's emitter (PF:`by-data-class` §2).
   Zograf–Zorich 2020; Jeffreys 2021).
 - **Its cone points are the commutator's cycles, not the runs** (the sweep's correction to this
   entry's first wording). **C:** on the 233 Wikidata blocks the r image boundaries fall into
-  1 to 11 cycles (median 5; prose 4 to 11); genus = (r − cycles)/2 + 1 ≈ r/2: 26,500 at
+  1 to 11 cycles (median 5; prose 4 to 11); genus = (moved − cycles)/2 + 1 ≈ r/2 (moved: the
+  points the commutator moves, r less at most σ): 26,500 at
   r = 53,001. A block is a surface of genus r/2 with a handful of cone points of very large
   angle. 𝓣 ∩ 𝓑 ↔ vertical saddle connections of length one.
 - **K** (T primitive)**:** SA conjugates π to the rotation p ↦ p − 1 and τ⁻¹ to φ (GNP Lemma 19;
@@ -453,10 +627,15 @@ RAUZY_JOIN=1 target/release/examples/rauzy corpora/wikidata.bz2 1 65536 3 > join
 Beside this entry: `2026-11-10-rauzy-veech/identities.py.txt` (§5.1 and §9 by brute force) and
 `rle1_crc_on_grammar.py.txt` (§8, 4); each runs as `python3 FILE`.
 
-One JSON line a block: `n, runs, steps, top, bottom, equal, dropped, coincide, shapes, repeats,
-divisions, depth, widest, rounds, selfish, selfish_steps, copies, copied, hist` (rule lengths:
-count and bytes by class), `crc_muls`, `closed` (§5.5 asserted), `cone` (points the commutator
-moves, its cycles), and ns a row: `ns_walk` (build + room walk); the kernel's
-`k_runs` (the scan), `k_order`, `k_induce`, `k_write`, with `k_joined`, `k_steps`, `k_rules`; the
-reference's `ns_runs`, `ns_induce`, `ns_expand` (a rule a step, no arena). The reference asserts
-bytes and CRC; the kernel asserts bytes.
+One JSON line a block: `n, runs, steps, top, bottom, equal, dropped, coincide` (row 0 not
+counted)`, shapes, repeats, divisions, depth, widest, rounds, selfish, selfish_steps, copies,
+copied, hist` (rule lengths: count and bytes by class), `crc_muls`, `closed` (§5.5 asserted),
+`cone` (points the commutator moves, its cycles), `par` (the turns the rounds take with 2, 4,
+8, 16 workers), `half` (the rounds holding half the steps), and ns a row: `ns_walk` (build +
+room walk); the list kernel's `k_runs` (the scan), `k_order`, `k_induce`, `k_write`, with
+`k_joined`, `k_steps`, `k_rules`; the cells kernel's `c_order`, `c_induce`, `c_write`, `c_whole`
+(one span), with `c_cells`; the reference's `ns_runs`, `ns_induce`, `ns_expand` (a rule a step,
+no arena). The reference asserts bytes and CRC; both kernels assert bytes.
+
+`rauzy --arbitrary 200000`: columns that are no BWT, the reference and both kernels against
+`bwt::walk`.
