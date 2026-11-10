@@ -197,11 +197,17 @@ impl InverseBwt for Segmented {
 /// couldn't be spawned. If the cooperative build refuses the checkpoints, a bug in their
 /// maker, the block is built on one core instead, so its output is still right (and a
 /// debug build stops at the assertion).
+///
+/// A block of few symbols comes as its run records (`invert_runs`), and the team then fills
+/// their LF table by shares and walks it backward (`coop::build_runs`,
+/// `coop::walk_room_back`), with the same fallbacks to the one-core kernel.
 pub struct Cooperative<const K: usize> {
     /// None until the first cooperative block; an Err if its threads couldn't be spawned
     pool: Option<std::io::Result<crate::coop::Pool>>,
     tt: TVector,
     seg: SegScratch,
+    /// a block's records' cuts, for the team's fill (`invert_runs`)
+    cuts: Vec<crate::runs::Cut>,
 }
 
 /// The rows below which `Cooperative` runs the one-core kernel: 16 checkpoints, 4 ×
@@ -223,6 +229,7 @@ impl<const K: usize> Default for Cooperative<K> {
             pool: None,
             tt: TVector::new(),
             seg: SegScratch::default(),
+            cuts: Vec::new(),
         }
     }
 }
@@ -278,6 +285,58 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
         self.seg.assemble(out);
     }
 
+    fn reads_runs(&self) -> bool {
+        true
+    }
+
+    // The team's fill and walk of the records' LF table (`coop::build_runs`, then
+    // `coop::walk_room_back`), where `invert_checkpointed` runs the team's build and walk
+    // of the column's; the one-core kernel's (`Segmented::invert_runs`) where it runs that.
+    // The cuts are the tiling's check (`runs::cuts`): refused, the records are not the
+    // block's, and the caller takes the column's path.
+    fn invert_runs(
+        &mut self,
+        r: &crate::runs::Runs,
+        n: usize,
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+        k: crate::Kernels,
+    ) -> bool {
+        let pool = if K < 2 || n < MIN_COOP {
+            None
+        } else {
+            self.pool
+                .get_or_insert_with(|| crate::coop::Pool::new(K))
+                .as_ref()
+                .ok()
+        };
+        let Some(pool) = pool else {
+            if !crate::runs::fill(r, n, &mut self.tt, k) {
+                return false;
+            }
+            walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+            return true;
+        };
+        if !crate::runs::cuts(r, n, &mut self.cuts) {
+            return false;
+        }
+        if let Err(e) = crate::coop::build_runs(r, &self.cuts, n, k, pool, &mut self.tt) {
+            debug_assert!(false, "the team's fill failed its check: {}", e.0);
+            if !crate::runs::fill(r, n, &mut self.tt, k) {
+                return false;
+            }
+        }
+        crate::coop::walk_room_back::<FLAGGED_LANES>(
+            &mut self.tt,
+            orig_ptr,
+            &mut self.seg,
+            pool,
+            FLAGGED_SEGMENTS * K,
+        );
+        self.seg.assemble_reversed(out);
+        true
+    }
+
     #[cfg(any(test, feature = "trace"))]
     fn buffers(&self) -> Vec<crate::trace::Buffer> {
         use crate::trace::Buffer;
@@ -292,6 +351,9 @@ impl<const K: usize> InverseBwt for Cooperative<K> {
             v.push(Buffer::of("seg.bufs.outer", &s.bufs));
             v.push(Buffer::of("seg.starts", &s.starts));
             v.push(Buffer::of("seg.next", &s.next));
+        }
+        if self.cuts.capacity() > 0 {
+            v.push(Buffer::of("cuts", &self.cuts));
         }
         v
     }
@@ -684,7 +746,7 @@ impl SegScratch {
     /// written into `out` (which they replace) from its end, each segment reversed, so that
     /// `out` holds the block first to last. The join stops where it comes back to its first
     /// segment: the primary index's cycle is then complete (`repeat_cycle`).
-    fn assemble_reversed(&self, out: &mut Vec<u8>) {
+    pub(crate) fn assemble_reversed(&self, out: &mut Vec<u8>) {
         let n = self.n;
         out.clear();
         out.reserve(n);
@@ -745,6 +807,24 @@ pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mu
     }
     room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
     s.assemble_reversed(out);
+}
+
+/// `walk_back_room` in its two parts, as `walk_segments_room_parts`: the room walk of the LF
+/// table, which leaves each segment's bytes in `s` and returns true, for
+/// `SegScratch::assemble_reversed` to join into the output; or, for a block too short to
+/// segment, `walk_back`'s output written to `out`, returning false
+pub(crate) fn walk_back_room_parts(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) -> bool {
+    if tt.len() < MIN_SEGMENTED {
+        walk_back(tt, orig_ptr, out);
+        return false;
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    true
 }
 
 /// `walk_back_room` with `L` lanes and `segments` segments, on a block of any length (the
