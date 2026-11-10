@@ -368,6 +368,23 @@ interaction | INCONCLUSIVE>`.
 
 ## 6. The local checks (DRY, untimed, never evidence)
 
+### After the revision
+
+- **The Researcher's counterexamples** (#145 6758300190), each now a negative test and replayed
+  against the judge:
+  - both copies of a corpus digest deleted: was VALID, now INVALID ("a digest is missing");
+  - every run's `machine_pre` empty and its spawn time null: was VALID, now INVALID (readings
+    absent);
+  - no head, frozen commit, source digests or archived preflight: was VALID, now INVALID (each
+    named);
+  - the quota on `0::/missing.scope` with no hierarchy: was `unlimited`, now `unknown`;
+  - R at 0.8 in 30 rounds and 1.2 in 30 (×0.980, [0.879–1.084]): was read as "buys nothing", now
+    INCONCLUSIVE.
+- **The end-to-end DRY at the head intended for freezing** is recorded on #326, not here, so that
+  recording it does not move the head it describes.
+
+### Before the revision
+
 On the shared dev VM (4 vCPUs of a Xeon, no cpufreq, other agents building), untimed. Its
 figures are not evidence: 10 workers on 4 vCPUs cannot grow, and nothing here is a reading.
 
