@@ -11,9 +11,9 @@ Nothing in the decoder changes and no build slot is asked.**
   Keep the low byte a row and the upper bits once a stretch.
 - **Counted:** 1.27 bytes a row on Wikidata (1.14 MB a block), 1.41 on text (1.27 MB). The
   T-vector is 4 (3.60 MB). Every link and byte checked on 25 blocks.
-- **Timed, the same loop for both tables:** one lane 0.96 to 1.04 of the T-vector's time;
-  32 prefetching lanes 1.58 to 1.75. Instructions a row: 25.2 against 8.2.
-- **By the law of the knee:** 2,200 to 3,300 MB/s of inversion at ten plain workers. Three
+- **Timed, the same loop for both tables:** one lane 0.98 to 1.02 of the T-vector's time;
+  32 prefetching lanes 1.30 to 1.50. Instructions a row: 22.2 against 8.2.
+- **By the law of the knee:** 2,200 to 3,400 MB/s of inversion at ten plain workers. Three
   teams measured 2,430 to 2,584. It brackets them. What decides is its one-block cost on the
   i9, which no local run gives.
 - **Closed by arithmetic, no code:** inversion by induction on intervals, tunnels learned on
@@ -33,9 +33,10 @@ Row y of the T-vector links to Ψ(y). Rows are in first-column order, and the ro
   in a chunk. Stretches = the distinct bytes of each aligned 256-row chunk of L, summed.
 - **The table:**
   - `low[y]`: the link's low byte. One byte a row.
-  - `bits`: one bit a row, set where a stretch begins; `base`: the set bits before each word.
+  - `dir`: one bit a row, set where a stretch begins, and beside each word of 64 the set
+    bits before it.
   - `rec[k]`: stretch k's upper bits and its bucket's byte.
-- **A step:** k = base[y / 64] + popcount(bits[y / 64] up to y) − 1; Ψ(y) = rec[k]'s upper
+- **A step:** k = (the count before y's word) + popcount(its bits up to y) − 1; Ψ(y) = rec[k]'s upper
   bits with low[y]; the byte is rec[k]'s. It is the first column's byte of y, which is the
   T-vector's byte one step on: the same output from the origin.
 - **One rule.** No row has a second access of another kind, no line overflows, nothing is
@@ -69,23 +70,25 @@ difference is the step's.
 
 | | T-vector | chunked | ratio |
 |---|--:|--:|--:|
-| instructions a row, one lane (callgrind, text) | 3.4 | 18.0 | |
-| instructions a row, 32 lanes | 8.2 | 25.2 | |
-| ns a row, one lane, Wikidata | 13.2 | 13.8 | 1.04 |
-| ns a row, one lane, text | 14.4 | 13.7 | 0.96 |
-| ns a row, 32 lanes, Wikidata | 1.61 | 2.54 | 1.58 |
-| ns a row, 32 lanes, text | 1.53 | 2.68 | 1.75 |
+| instructions a row, one lane (callgrind, text) | 3.4 | 14.0 | |
+| instructions a row, 32 lanes | 8.2 | 22.2 | |
+| ns a row, one lane, Wikidata | 14.4 | 14.7 | 1.02 |
+| ns a row, one lane, text | 14.5 | 14.2 | 0.98 |
+| ns a row, 32 lanes, Wikidata | 1.68 | 2.19 | 1.30 |
+| ns a row, 32 lanes, text | 1.52 | 2.28 | 1.50 |
 
 - **Compiled with popcnt.** Without it the count is a routine of shifts and masks: 32.0 and
   39.3 instructions a row, and 2.3 to 2.5 times the T-vector's time. The first run was that.
-- **The step is 17 instructions over the T-vector's in the laned loop.** On the room walk's
-  10.41 that would be about 27 a row (model). E's was 48 as built.
-- **A first cut.** Three separate arrays, the stretch record not prefetched (its index is
-  known only after the count). Interleaving `bits` with `base` and a second stage would trim
-  it; not done.
+- **Two cuts.** The first kept the bits and their counts in two arrays: 18.0 and 25.2
+  instructions a row, 1.58 to 1.75 of the T-vector's time at 32 lanes. With one directory
+  entry a word (one load, the count stored less one) it is the table above.
+- **The step is 14 instructions over the T-vector's in the laned loop.** On the room walk's
+  10.41 that would be about 24 a row (model). E's was 48 as built.
+- **Not done:** the stretch record is not prefetched (its index is known only after the
+  count); a second stage would.
 - **This container's caches hold the T-vector.** The ratio here is an instruction ratio. On
   the i9 the T-vector's walk waits on L3; the chunked walk's `low` (0.9 MB) does too, and its
-  `bits`, `base` and `rec` (0.2 to 0.4 MB) contend for a 256 KB L2. Its loads a row there
+  directory and `rec` (0.2 to 0.4 MB) contend for a 256 KB L2. Its loads a row there
   are between 1 and 3. Unknown.
 
 ## 3. The fill (derived; not built)
@@ -95,7 +98,7 @@ low[y] = i's low byte; if i's chunk is not the last chunk c was seen in, set bit
 record to c's list. Then the lists are packed in bucket order and `base` is summed.
 - one byte written a row where the T-vector writes four;
 - about two instructions a row over `build`'s 4.92 (model);
-- the room walk's start flag needs a second bit a row beside `bits` (+0.125 bytes a row).
+- the room walk's start flag needs a second bit a row in the directory (+0.125 bytes a row).
 
 ## 4. What the law says (model)
 
@@ -104,8 +107,7 @@ Time a row = g + a · X(L), `2026-11-10-hypothesis-register.md` §1. L = 10 × 1
 
 | g, the inversion at one block | a | MB/s at ten plain workers |
 |--:|--:|--:|
-| 1.3 (tuned, loads do not bind) | 1 | 3,300 |
-| 1.5 (this container's ratio, with `build`'s cost unchanged) | 1 | 3,000 |
+| 1.25 to 1.4 (this container's ratio, with `build`'s cost unchanged) | 1 | 3,140 to 3,440 |
 | 2.0 (the i9's L2 misses bind) | 1.5 | 2,200 |
 
 - **Against:** three teams of three 2,430 to 2,584 (measured, that harness); compact30, 1.95 MB

@@ -10,11 +10,11 @@
 //! (a bucket) have increasing links, so consecutive rows of a bucket share their links' upper
 //! bits for as long as the links stay inside one chunk of 256 rows: a *stretch*. The table is
 //! - `low[y]`: the link's low byte, one byte a row;
-//! - `bits`: one bit a row, set where a stretch begins, with the count of set bits before
-//!   each word of 64 (`base`);
+//! - `dir`: one bit a row, set where a stretch begins, with the count of set bits before
+//!   each word of 64;
 //! - `rec[k]`: the k-th stretch's upper bits and its bucket's byte, `link >> 8 << 8 | byte`.
 //!
-//! A step from row y: k = base[y / 64] + (the set bits of its word up to y) - 1, then
+//! A step from row y: k = (the count before y's word) + (the set bits of its word up to y) - 1, then
 //! Ψ(y) = (rec[k] >> 8) << 8 | low[y], and the byte is rec[k]'s. One rule for every row: no
 //! overflow, no flag, no second kind of step.
 //!
@@ -36,8 +36,8 @@ const LANES: usize = 32;
 
 struct Chunked {
     low: Vec<u8>,
-    bits: Vec<u64>,
-    base: Vec<u32>,
+    /// a 64 rows: the stretch-start bits, and the stretches before the word, less one
+    dir: Vec<[u64; 2]>,
     rec: Vec<u32>,
 }
 
@@ -48,8 +48,7 @@ impl Chunked {
         let n = t.len();
         let mut g = Chunked {
             low: Vec::with_capacity(n + 64),
-            bits: vec![0; n / 64 + 2],
-            base: vec![0; n / 64 + 2],
+            dir: vec![[0; 2]; n / 64 + 2],
             rec: Vec::new(),
         };
         let mut y = 0usize;
@@ -60,16 +59,16 @@ impl Chunked {
                 g.low.push(link as u8);
                 if link >> 8 != prev {
                     prev = link >> 8;
-                    g.bits[y / 64] |= 1 << (y % 64);
+                    g.dir[y / 64][0] |= 1 << (y % 64);
                     g.rec.push(prev << 8 | c as u32);
                 }
                 y += 1;
             }
         }
-        let mut sum = 0u32;
-        for w in 0..g.bits.len() {
-            g.base[w] = sum;
-            sum += g.bits[w].count_ones();
+        let mut sum = 0u64;
+        for d in g.dir.iter_mut() {
+            d[1] = sum.wrapping_sub(1);
+            sum += d[0].count_ones() as u64;
         }
         g.low.resize(n + 64, 0);
         g
@@ -80,8 +79,9 @@ impl Chunked {
     fn step(&self, y: usize) -> (usize, u8) {
         // SAFETY: y is a row, below n; k is below the stretches (row 0 begins one)
         unsafe {
-            let w = *self.bits.get_unchecked(y >> 6) & (!0u64 >> (63 - (y & 63)));
-            let k = *self.base.get_unchecked(y >> 6) + w.count_ones() - 1;
+            let d = self.dir.get_unchecked(y >> 6);
+            // the set bits at or below y: the shift takes its count mod 64
+            let k = d[1].wrapping_add((d[0] << (63 - (y & 63))).count_ones() as u64);
             let r = *self.rec.get_unchecked(k as usize);
             (
                 ((r >> 8) << 8) as usize | *self.low.get_unchecked(y) as usize,
@@ -91,6 +91,7 @@ impl Chunked {
     }
 
     fn bytes(&self, n: usize) -> usize {
+        // the directory at 12 bytes a word (a u32 count suffices; it is 16 here for one load)
         n + n.div_ceil(64) * 12 + self.rec.len() * 4
     }
 }
@@ -162,7 +163,7 @@ unsafe fn walk_g_lanes(g: &Chunked, starts: &[usize; LANES], out: &mut [u8]) {
             unsafe {
                 *p.add(j * len + i) = b;
                 pf(g.low.as_ptr().add(next));
-                pf(g.bits.as_ptr().add(next >> 6));
+                pf(g.dir.as_ptr().add(next >> 6));
             }
             *y = next;
         }
