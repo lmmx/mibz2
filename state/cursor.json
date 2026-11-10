@@ -1232,6 +1232,18 @@
       "status": "finished",
       "disposition": "D079 three scoped holds lifted; remaining readiness/admission conditions retained",
       "comment": 6757750433
+    },
+    {
+      "id": "D082",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6758376066,
+      "pr": 324,
+      "sha": "e88c063155c3e734e748e99ccda025393302720f",
+      "commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+      "status": "complete",
+      "disposition": "#324 no-harm FAIL; materially changed boxed successor conditionally admissible"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1492,7 +1504,9 @@
     "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
     "8013d01ab7d1a7bdb50746c0b8db8cb3da0c4b31",
     "b4d7a4a755510af80d9c6a369a43d8b54364c3be",
-    "820e507106a064d9d6706b9a205fed368a5e209f"
+    "820e507106a064d9d6706b9a205fed368a5e209f",
+    "54ec91e9c74707f6a0c71a6350d2d5810a292e78",
+    "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1653,11 +1667,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6756994744,
-    "status": "finished",
-    "decision": "D079",
-    "work_commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
-    "review_comment_id": 6757058587
+    "active_comment": 6758376066,
+    "status": "complete",
+    "decision": "D082",
+    "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
   },
   "duplicate_events": [
     {
@@ -2873,9 +2886,11 @@
     {
       "comment_id": 6758376066,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D082",
-      "progress": "Receipt; examining successor admissibility under C2."
+      "progress": "D082 complete: #324 FAIL retained; distinct boxed successor conditionally admissible; corrected causal claim and frozen sequence.",
+      "receipt_commit": "54ec91e9c74707f6a0c71a6350d2d5810a292e78",
+      "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
     }
   ],
   "migrated_from": {
