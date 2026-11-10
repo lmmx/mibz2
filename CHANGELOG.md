@@ -55,9 +55,20 @@ That is expected: #359's gain is on the team path, which these runners don't pla
 unchanged. Peak memory on `text` at 4 threads is 53 → 56 MB (+3.6%); every other corpus and
 thread count is within 1%.
 
-**Caveats.** The gain is measured on one machine, the i9-10900K, by one registered run; CI
-can't measure the team path. The release-scaling run of 0.2.9 against 0.2.8 on that machine
-is to follow. #351 (Rauzy–Veech induction) merged as a research example and journal only; it
+**Release scaling on the i9-10900K** (0.2.9 against 0.2.8, `release-scaling/run-20261110T170952Z`,
+SHA-256 33469444…; 0.2.8 ÷ 0.2.9 wall on `wikidata`, paired, with 95% intervals):
+
+| threads | 1 | 2 | 4 | 8 | 10 | 12 | 16 | 20 |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| `wikidata` | 0.991 (0.983–0.998) | 0.998 | 1.001 | **1.147** | **1.145** | **1.111** | **1.109** | **1.102** |
+
+From 8 threads, where the decoder plans teams, 0.2.9 is 10–15% faster. At 1 thread it is
+0.9% slower beyond noise, the size of #359's first CI flag. The 1-thread code path changed by
+one inlining decision (the Pathfinder's codegen comparison on #145), which a follow-up patch
+restores.
+
+**Caveats.** The gain is measured on one machine, the i9-10900K, in #359's registered run and
+in this release-scaling run; CI can't measure the team path. #351 (Rauzy–Veech induction) merged as a research example and journal only; it
 is not in the library.
 
 ## [0.2.8](https://github.com/lmmx/mibz2/compare/v0.2.7...v0.2.8) - 2026-11-10
