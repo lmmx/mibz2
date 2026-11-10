@@ -1,0 +1,26 @@
+{
+  "baseline": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gap_outcome": "NO SLOW RUN IN THE BLOCK: 0/30 slow after a gap, 0/30 without",
+    "G_n": 30,
+    "Z_n": 30
+  },
+  "extra_C": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gap_outcome": "INSUFFICIENT: 29 timed gap and 30 timed no-gap runs, not 30 each",
+    "G_n": 29,
+    "Z_n": 30
+  },
+  "all_treatments_C": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gap_outcome": "INSUFFICIENT: 0 timed gap and 0 timed no-gap runs, not 30 each",
+    "G_n": 0,
+    "Z_n": 0
+  }
+}

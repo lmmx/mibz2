@@ -1,0 +1,30 @@
+{
+  "repository": "lmmx/mibz2",
+  "commit": "7af2b970cf97b5414a766359c8363c419fd45124",
+  "files": [
+    {
+      "path": "bench/two_modes.py",
+      "sha256": "7dbcdfc24c5fe1528d5e33d340a519cc87ed5ae4793d768e0befd0a7bf09ca00"
+    },
+    {
+      "path": "bench/test_two_modes.py",
+      "sha256": "c74d4bed6b335cea243b730114280c2826a5e0b1f5effd3da09b03859953a9b8"
+    },
+    {
+      "path": "bench/two_modes_probe.c",
+      "sha256": "42bb5d05345f9396e60303de1c9051a13682cc2b86d7297f8f42825b01064514"
+    },
+    {
+      "path": ".just/two-modes.just",
+      "sha256": "079a33ba86ff86821c64a029df6fbf833b782dd2ace22ff4de3b5fd9f2d1b956"
+    },
+    {
+      "path": "bench/two-modes.frozen",
+      "sha256": "fcec671ed480f46c917a93038da5251da4b9face833aecef59ac6927178bbc94"
+    },
+    {
+      "path": "docs/journal/2026-11-10-two-modes-discriminator.md",
+      "sha256": "a8a8a7d94709f13992868e6f6d2149afdb928009b3932d669b4388071676b5cc"
+    }
+  ]
+}
