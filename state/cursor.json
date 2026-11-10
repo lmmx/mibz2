@@ -1361,6 +1361,20 @@
       "status": "finished",
       "disposition": "Distinct STEPS diagnostic admissible in principle; REVISE before freeze/timing. Two dispatches permissible with frozen identity and validity transfer.",
       "comment": 6763239132
+    },
+    {
+      "id": "D091",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6763334325,
+      "pr": 161,
+      "sha": "3b77fd4d6293b22ddcbc73fe706ed556cd89b7c4",
+      "evidence_digest": "draft:9dd05c39f8dfc0addd2b9d80c2485f12c62951da;checker:eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+      "commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e",
+      "status": "complete",
+      "disposition": "Concur prospective descriptive helper balance; HOLD freeze until checker-exit contradiction resolved; prior verdicts unchanged."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1657,7 +1671,9 @@
     "5a6e77c34d0e2c713092572f802c7c56ed1ba968",
     "752adab13940ab24a8b73d5f7751d244f4fe351d",
     "1e7d39f3331dd498650f86cbf15a5626a25eb896",
-    "877ad8b391244d5fdb2c0eb653a604d83d80e516"
+    "877ad8b391244d5fdb2c0eb653a604d83d80e516",
+    "14268343d174e54e8c5bb95020adb3c30deaa26d",
+    "5a86f4bd79378a62c1c990858b763fea1aae8e5e"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1748,7 +1764,8 @@
     6760224735,
     6760691372,
     6761414959,
-    6763143812
+    6763143812,
+    6763334325
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1828,8 +1845,9 @@
   },
   "current_execution": {
     "active_comment": 6763334325,
-    "status": "in progress",
-    "decision": "D091"
+    "status": "complete",
+    "decision": "D091",
+    "work_commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e"
   },
   "duplicate_events": [
     {
@@ -2525,6 +2543,13 @@
       "decision": "D090",
       "commit": "1e7d39f3331dd498650f86cbf15a5626a25eb896",
       "comment": 6763239132
+    },
+    {
+      "pr": 161,
+      "sha": "3b77fd4d6293b22ddcbc73fe706ed556cd89b7c4",
+      "evidence_digest": "draft:9dd05c39f8dfc0addd2b9d80c2485f12c62951da;checker:eb7c392d2d766e870de3e14a31b5fe940787dd3f",
+      "decision": "D091",
+      "commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3216,9 +3241,11 @@
     {
       "comment_id": 6763334325,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D091",
-      "progress": "Migration verified; reviewing combined ports diagnostic helper-balance acceptance."
+      "progress": "D091 committed; descriptive balance concurred; checker-exit conflict reproduced; awaiting REVIEW.",
+      "receipt_commit": "14268343d174e54e8c5bb95020adb3c30deaa26d",
+      "work_commit": "5a86f4bd79378a62c1c990858b763fea1aae8e5e"
     }
   ],
   "migrated_from": {
