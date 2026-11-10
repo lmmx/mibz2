@@ -1,0 +1,330 @@
+{
+  "scope": "archive arithmetic; admission predicted on census, not measured in CI",
+  "digests": {
+    "cells-evidence.tar.gz": "552e26aaf3b41636afdbd5a195ad5f0ce1c66aed945ec2911a508057baed705c",
+    "cells-final.zip": "c36061ac6a7e8ac2991acbd82e2935fd20f9a3d075e102bd42c67b46cb575141"
+  },
+  "i9": [
+    {
+      "repeat": 1,
+      "rows": 209697662,
+      "blocks": 233,
+      "whole_ratio": 0.814954128155861,
+      "phases_ns_row": {
+        "c_order": 0.2793896719935771,
+        "c_induce": 0.7454823068413611,
+        "c_write": 0.23069043039688253,
+        "c_whole": 1.2581804204283402,
+        "ns_rec": 1.54386655268002,
+        "ns_front": 0.14016262700630397
+      },
+      "groups": {
+        "column": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "density": {
+          "blocks": 35,
+          "rows": 31498722
+        },
+        "floor": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "budget": {
+          "blocks": 2,
+          "rows": 1799975
+        },
+        "admitted": {
+          "blocks": 196,
+          "rows": 176398965
+        }
+      },
+      "admitted_row_share": 0.8412061599427847,
+      "admitted_production_time_share": 0.8351045952864204,
+      "ideal_selected_ratio": 0.7725086275382959,
+      "linear_budget_proxy_ratio": 0.7795563879886087,
+      "gain_ns_per_all_rows": 0.35121632096689753,
+      "budget_proxy_ns_per_all_rows": 0.010880801630538993,
+      "predicted_buffer_growths": [
+        {
+          "index": 0,
+          "requested_bytes": 14230096
+        },
+        {
+          "index": 1,
+          "requested_bytes": 14314896
+        },
+        {
+          "index": 2,
+          "requested_bytes": 14379472
+        },
+        {
+          "index": 3,
+          "requested_bytes": 14483728
+        },
+        {
+          "index": 8,
+          "requested_bytes": 14505088
+        },
+        {
+          "index": 21,
+          "requested_bytes": 14873008
+        },
+        {
+          "index": 40,
+          "requested_bytes": 15113392
+        },
+        {
+          "index": 51,
+          "requested_bytes": 15133696
+        },
+        {
+          "index": 85,
+          "requested_bytes": 15587280
+        },
+        {
+          "index": 202,
+          "requested_bytes": 15778576
+        }
+      ],
+      "sum_requested_growth_bytes": 148399232
+    },
+    {
+      "repeat": 2,
+      "rows": 209697662,
+      "blocks": 233,
+      "whole_ratio": 0.8265968999722636,
+      "phases_ns_row": {
+        "c_order": 0.28217936303934565,
+        "c_induce": 0.7503492470602748,
+        "c_write": 0.2308878546533342,
+        "c_whole": 1.2657040092321106,
+        "ns_rec": 1.5312227874004622,
+        "ns_front": 0.14014117067742987
+      },
+      "groups": {
+        "column": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "density": {
+          "blocks": 35,
+          "rows": 31498722
+        },
+        "floor": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "budget": {
+          "blocks": 2,
+          "rows": 1799975
+        },
+        "admitted": {
+          "blocks": 196,
+          "rows": 176398965
+        }
+      },
+      "admitted_row_share": 0.8412061599427847,
+      "admitted_production_time_share": 0.8350715352768553,
+      "ideal_selected_ratio": 0.7820435489643978,
+      "linear_budget_proxy_ratio": 0.7892899826482549,
+      "gain_ns_per_all_rows": 0.33373988448664726,
+      "budget_proxy_ns_per_all_rows": 0.011095904384108334,
+      "predicted_buffer_growths": [
+        {
+          "index": 0,
+          "requested_bytes": 14230096
+        },
+        {
+          "index": 1,
+          "requested_bytes": 14314896
+        },
+        {
+          "index": 2,
+          "requested_bytes": 14379472
+        },
+        {
+          "index": 3,
+          "requested_bytes": 14483728
+        },
+        {
+          "index": 8,
+          "requested_bytes": 14505088
+        },
+        {
+          "index": 21,
+          "requested_bytes": 14873008
+        },
+        {
+          "index": 40,
+          "requested_bytes": 15113392
+        },
+        {
+          "index": 51,
+          "requested_bytes": 15133696
+        },
+        {
+          "index": 85,
+          "requested_bytes": 15587280
+        },
+        {
+          "index": 202,
+          "requested_bytes": 15778576
+        }
+      ],
+      "sum_requested_growth_bytes": 148399232
+    },
+    {
+      "repeat": 3,
+      "rows": 209697662,
+      "blocks": 233,
+      "whole_ratio": 0.8175784378298213,
+      "phases_ns_row": {
+        "c_order": 0.28093044369278664,
+        "c_induce": 0.7463492518958079,
+        "c_write": 0.23084493503795003,
+        "c_whole": 1.2602705287720375,
+        "ns_rec": 1.5414674243578357,
+        "ns_front": 0.14021413141935746
+      },
+      "groups": {
+        "column": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "density": {
+          "blocks": 35,
+          "rows": 31498722
+        },
+        "floor": {
+          "blocks": 0,
+          "rows": 0
+        },
+        "budget": {
+          "blocks": 2,
+          "rows": 1799975
+        },
+        "admitted": {
+          "blocks": 196,
+          "rows": 176398965
+        }
+      },
+      "admitted_row_share": 0.8412061599427847,
+      "admitted_production_time_share": 0.8350818233280344,
+      "ideal_selected_ratio": 0.77522001839036,
+      "linear_budget_proxy_ratio": 0.7822693140126991,
+      "gain_ns_per_all_rows": 0.34649101929901344,
+      "budget_proxy_ns_per_all_rows": 0.010866259566503849,
+      "predicted_buffer_growths": [
+        {
+          "index": 0,
+          "requested_bytes": 14230096
+        },
+        {
+          "index": 1,
+          "requested_bytes": 14314896
+        },
+        {
+          "index": 2,
+          "requested_bytes": 14379472
+        },
+        {
+          "index": 3,
+          "requested_bytes": 14483728
+        },
+        {
+          "index": 8,
+          "requested_bytes": 14505088
+        },
+        {
+          "index": 21,
+          "requested_bytes": 14873008
+        },
+        {
+          "index": 40,
+          "requested_bytes": 15113392
+        },
+        {
+          "index": 51,
+          "requested_bytes": 15133696
+        },
+        {
+          "index": 85,
+          "requested_bytes": 15587280
+        },
+        {
+          "index": 202,
+          "requested_bytes": 15778576
+        }
+      ],
+      "sum_requested_growth_bytes": 148399232
+    }
+  ],
+  "ci": {
+    "onebyte": {
+      "pairs": 10,
+      "wall_ratio": 1.1090009875525657,
+      "decoded_bytes": 20000000,
+      "hashes_match": true
+    },
+    "pattern": {
+      "pairs": 10,
+      "wall_ratio": 2.2316632680186768,
+      "decoded_bytes": 19600000,
+      "hashes_match": true
+    },
+    "random": {
+      "pairs": 10,
+      "wall_ratio": 1.0064979389210047,
+      "decoded_bytes": 8000000,
+      "hashes_match": true
+    },
+    "records": {
+      "pairs": 10,
+      "wall_ratio": 0.9969517883599235,
+      "decoded_bytes": 9600000,
+      "hashes_match": true
+    },
+    "runs": {
+      "pairs": 10,
+      "wall_ratio": 1.0042551169986822,
+      "decoded_bytes": 10000235,
+      "hashes_match": true
+    },
+    "text": {
+      "pairs": 10,
+      "wall_ratio": 1.0121327441021242,
+      "decoded_bytes": 13238014,
+      "hashes_match": true
+    },
+    "wikidata": {
+      "pairs": 10,
+      "wall_ratio": 1.0000931467095062,
+      "decoded_bytes": 209700196,
+      "hashes_match": true
+    }
+  },
+  "amdahl_scenarios": [
+    {
+      "f": 0.1,
+      "R_s815": 0.9815,
+      "R_s827": 0.9827
+    },
+    {
+      "f": 0.25,
+      "R_s815": 0.95375,
+      "R_s827": 0.95675
+    },
+    {
+      "f": 0.5,
+      "R_s815": 0.9075,
+      "R_s827": 0.9135
+    },
+    {
+      "f": 1.0,
+      "R_s815": 0.815,
+      "R_s827": 0.827
+    }
+  ]
+}

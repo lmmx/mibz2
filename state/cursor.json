@@ -1176,7 +1176,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Both raw archives verified; admission replay and CI ratios reproduced. Finishing complete cost accounting and one diagnostic proposal.",
+      "progress": "Analysis complete: verified archives, predicted admission and allocation replay, live-path mismatch identified, one bounded diagnostic recommended. Publishing work before completion marker.",
       "report_path": "state/records/reviews/inbox-6782112235/report.md"
     }
   ],

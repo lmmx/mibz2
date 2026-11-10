@@ -612,3 +612,14 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Node link narrowing alone leaves20usefulbytes,align32still32, not16. SoA alone preservesdependentindices.
 - Fixed order+write.944ns/row; parity induction<=1.228 (1.487×); halfproduction<=.142 (12.859×), beforecoordination. No93×ceiling. Fullr scans93times≈6.715n visits;35Ir/cell would≈235Ir/row, notobservedcost. Needactivefrontiercensus.
 - Deliveron145forCoordinatorforwarding;346outsidepinnedwriteauthority. Staticresponsecomplete; countrequestexplicitlyoutstanding. Noimplementation/timing.
+
+
+## Cells stage-to-decoder gap: inbox6782112235
+
+[Report](records/reviews/inbox-6782112235/report.md), [archive arithmetic](records/reviews/inbox-6782112235/arithmetic.json). Frozen #365 57f51bbc0ca62ac3ee1cc148a1010842eea6222a; #362 design/handoff7611f52b. Recommend one cells-live-path-gap diagnostic for Coordinator preparation; no implementation or launch.
+- Downloaded and SHA256-verified i9 bundle552e26aa…57baed705c and final CI artifactc36061ac…cb575141. Reproduced all7 raw paired wall ratios; Wikidata1.000093, pattern2.231663, onebyte1.109001. Original intervals/outcomes retained; hashes match.
+- Archived census predicts196 admissions/35density/0floor/2budget refusals,84.1206% row coverage. All233 takes=true is only records-path eligibility. Ideal selected inversion0.773–0.782 beforeattemptcosts; coverage alone cannot explain loss. Linear budget-prefix scenario0.780–0.789 is not measurement/bound.
+- Same compressed corpus manifest/hash in both builds; i9 warm minimum-of5 unbounded example versus EPYC fresh-process bounded decoder. Ordering/writer already in c_whole. Frozen stages.jsonl is old column/forward path, not live run-front/backward path; no valid live f from it.
+- Cells scratch48r+84B+4528 plus baseline/output/front buffers. Census size replay predicts10 buf growths,148399232 cumulative zero-initialized requestedbytes; not physical traffic/time. Full validation/budgetchecks,writerpasses/copies,latefallback must be charged. No CI route census or causal allocation attribution claimed.
+- Conditional Amdahl originalstagegain17.3–18.5% timeslivef minusoverhead; f=.25 yields4.33–4.63% beforecosts. No i9→EPYC causal subtraction or W4/W10 forecast.
+- Rank production-transport/firsttouch, fallbackmix, hardware/commonwork. Proposed fixed3corpora×4off/on-baseline/cells×10rounds=120 diagnosticdecodes plus9untimedchecks; ~50s historicalarithmetic withsettle beforebuild/overhead, not runtimepromise/powerclaim. Separate registration, no365edits, no caps/defaultchanges, no B5claim.
