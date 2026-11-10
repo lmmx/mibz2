@@ -2006,12 +2006,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D099",
-    "incoming_comment": 6782224690,
-    "review_comment_id": 6782294636,
-    "work_commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
+    "active_comment": 6782334222,
+    "status": "in progress",
+    "decision": "D100"
   },
   "duplicate_events": [
     {
@@ -3565,6 +3562,13 @@
       "work_commit": "0e03badbdaf9fd77d29302bab2a39779325cb723",
       "review_comment_id": 6782294636,
       "complete_cursor_commit": "03d430288631a50874d33cfbc8523899185ebc62"
+    },
+    {
+      "comment_id": 6782334222,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D100",
+      "progress": "Migration verified; investigating occupancy ledger assertion."
     }
   ],
   "migrated_from": {
