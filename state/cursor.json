@@ -1819,11 +1819,15 @@
     },
     {
       "trigger_comment_id": 6763960537,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "scope": "#316 final replication and mixture first; combined diagnostic rev3 second"
+      "scope": "#316 final replication and mixture first; combined diagnostic rev3 second",
+      "report_commit": "8d3d900438dae5de48f643fefeeb37bb916f1603",
+      "report_path": "state/reports/replication-combined-6763960537/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE #316 mean NI and timestamp admission before freeze; combined rev3 design PROCEED to implementation, with adjudicator/test/Guardian freeze conditions retained."
     }
   ],
   "active_delegations": [],
