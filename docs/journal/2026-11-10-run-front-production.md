@@ -4,11 +4,23 @@
 > - **What failed:** the benefit rule was met in all three runs: `wikidata` −12.8% to −15.8%
 >   and `text` −23.3% to −26.2% wall at 1 thread. The no-harm rule failed: `random` and
 >   `records` at 1 thread were flagged slower in runs 2 and 3. See §6.
-> - **The code is not on master.** It is the head of #324,
+> - **The code was not on master at close.** It was the head of #324,
 >   `e88c063155c3e734e748e99ccda025393302720f`, kept on branch `perf/run-front-records`.
 > - **This construction is closed. Its advantage is not disproved.** It was measured large on
 >   its target data, and the harm appears on blocks where the new code doesn't run.
 > - **Below:** the registration, frozen when #324 opened (§1–§5), and the result (§6).
+>
+> **Adopted (10 November 2026).** Louis adopted #324 despite its frozen verdict (LOG 6764294229),
+> and it was judged prospectively under `docs/team/PERFORMANCE-POLICY.md` on a fresh CI bench.
+> The FAIL above stands as its registered verdict.
+> - **Merged** at head `b380afe8996364b339a2ed929a04449bb51e231a`, as master `47149bff`.
+> - **The bench at that head** ([run](https://github.com/lmmx/mibz2/actions/runs/42808607358)):
+>   `wikidata` −13.5%, −13.9% and −9.6% wall at 1, 2 and 4 threads; `text` −21.8%, −15.7% and
+>   −10.3%. No corpus was slower beyond noise; peak RSS was at most +5.4%.
+> - **B5:** mutation testing (§3.2), and an independent adversarial review with no material
+>   objection: a 50,000-block differential fuzz and every unchecked access bound-asserted.
+> - **Known cost:** about +10–11% instructions on short high-entropy blocks (200–440 kB), which no
+>   CI corpus holds. A fix by the share of run symbols is queued as a maintenance change.
 
 10 November 2026. A production-path change on the run-fed line (PROTOCOL §11). It comes from
 two of the Pathfinder's leads on #313:
