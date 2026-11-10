@@ -218,11 +218,12 @@
     "decision": "Refer formal gate decision to Louis/authorised Coordinator; not merge-ready"
   },
   "owner_continuation": {
-    "status": "in_progress",
+    "status": "active_dispatching",
     "authorisation": "Louis explicitly requested resolve/merge #364, sole acting activation, independent B5, verified dispatch loop and bounded cells gap investigation in this session on 2026-11-10.",
     "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
     "action": "activation pending publication",
-    "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+    "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "next": "Researcher B5 and Optimiser price actual runs in progress; Codex direct session running and formal receipt pending; Guardian recipe review dispatched; #366 CI pending. On actual completion, decide then dispatch next bounded item."
   },
   "activation": {
     "status": "active",
@@ -258,8 +259,9 @@
       "receipt_for_formal_assignment_pending": true
     },
     "guardian": {
-      "status": "in_progress",
-      "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5"
+      "status": "posted_verified_not_delivered",
+      "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5",
+      "comment_id": 6782224690
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
