@@ -462,7 +462,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IDLE",
+  "status": "in_progress",
   "published_evidence_commit": "c8914b4ef433640a62ca5b09bd41bacd32b4ddf7",
   "incoming_experiment_comment_ids": [
     {
@@ -1169,6 +1169,15 @@
       "report_commit": "373fc8ebcae567715b40de005edf28a38781f2ab",
       "reply_id": 6767132026,
       "routing_verification": "route/check passed; pinned verify hardcodes FROM coordinator and rejects optimizer. Exact GitHub readback independently verified; no verify-pass claimed."
+    },
+    {
+      "comment_id": 6782112235,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt. Migration head and exact manifest digest verified. Source and archived evidence review only; no implementation or timing.",
+      "report_path": "state/records/reviews/inbox-6782112235/report.md"
     }
   ],
   "migrated_from": {
