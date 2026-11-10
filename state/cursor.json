@@ -980,6 +980,15 @@
       },
       "reply_id": 6758640506,
       "routing_verification": "Pinned route/check passed. Exact GitHub readback verified. Pinned coord.py verify assumes FROM coordinator; no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6758723399,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: migration verified. Price compact30 plain-worker test and load-law transfer; decide separate recipe versus #326, preserving D4 filters.",
+      "report_path": "state/records/reviews/inbox-6758723399/report.md"
     }
   ],
   "migrated_from": {
