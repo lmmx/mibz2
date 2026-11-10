@@ -33,16 +33,16 @@
     "mapping": "Card = linked-order letter; string = neighbour link; filed receipt = completed cell; clipboard = live register/pending-slot state.",
     "placement": "\u00a73 \u201cWhy the cells kernel is cheaper\u201d, insert after paragraph 2 beginning \u201cA cell is the overlap\u201d. This section has no figure in the rewritten post.",
     "explains": "Makes the removed operation concrete\u2014rewiring old state\u2014and separates immutable finished cells from mutable unfinished work.",
-    "evidence": "Journal \u00a73.1 (5\u20136 links), \u00a73.5 (two slots, promised slots, remainder in registers, prefetch); \u00a76.2 historical combined mechanism evidence. Does not attribute the full gain to write-once cells alone."
+    "evidence": "Journal \u00a73.1 (5\u20136 links), \u00a73.5 (two slots, promised slots, remainder in registers, prefetch); \u00a76.2 staged ten-block, one-run-per-stage timings. Does not attribute the full gain to write-once cells alone."
   },
   {
     "slug": "05-route-planning",
     "title": "The planner is on the clock too",
-    "caption": "A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These \u201cfree\u201d steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. The reported worklist did not pay on one thread.",
+    "caption": "A stop is a cell step; the route is their order, and the magnifying glasses are the search for the next eligible step. The second order takes steps that create no new boundary first, otherwise the largest cell. These \u201cfree\u201d steps still cost CPU work. The analogy breaks at distance: routes and drawn stops are schematic, not a scale of counts, memory distance or time; 1.220 is a lower bound for this cell-step model, not every inversion algorithm. A different worklist variant was priced higher from counts and estimated costs; it was not a timed comparison of these two orders.",
     "mapping": "Stop = step; route = schedule; magnifier = candidate/segment search. Numeric labels alone encode the measured counts; no length or stop-count scale.",
     "placement": "\u00a75 \u201cFewer steps by a different order\u201d, replace the existing step-count bar figure after the three counts are introduced.",
     "explains": "Adds a visible competing expense to the tempting shorter schedule, without turning a step count into a stopwatch result.",
-    "evidence": "Journal \u00a75.6 exact identity S=r\u2082\u22121+U and counts 1.812/1.279/1.220; \u00a78 worklist: 2.25 segment ends tested/step, two steps in three at another segment; no one-thread payoff."
+    "evidence": "Journal \u00a75.6 exact identity S=r\u2082\u22121+U and counts 1.812/1.279/1.220; \u00a78 different worklist (free-first, else right end): 1.458 steps/run on ten blocks, 2.25 segment ends tested/step, two steps in three at another segment; 150 versus 115 instructions/run is a cost model with two estimated unit costs, not timing."
   },
   {
     "slug": "06-nested-book",
