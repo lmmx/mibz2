@@ -8,10 +8,11 @@ verdict, after the evidence is uploaded.
   passes condition 2. A valid NOT SHOWN (judge exit 1), invalid evidence (exit 2), a missing or
   unreadable verdict, or any disagreement between the exit and the verdict fails (exit 1).
 - **smoke** and **pilot** (the registration's §2.8 design pilot): never evidence. The judge must have refused it as smoke: its
-  verdict present, not valid, and among its problems the label's refusal. That is success
-  (exit 0), and the summary says "smoke: not evidence" (or "pilot: not evidence"). A run the
-  judge didn't refuse for its label, or that produced no verdict, fails (exit 1): the plumbing
-  is broken. The pilot's own analysis is bench/tg_ni_pilot.py's, offline.
+  verdict present, not valid, and among its problems the label's refusal. And the run must
+  pass the structural admission (`service_tg.py structure`, `--structure`): every shard present,
+  its artifacts listed and downloaded, the manifest valid, the history reconciled, the files
+  whole. Only then is it success (exit 0), and the summary says "smoke: not evidence" (or
+  "pilot: not evidence"). A refused label with nothing behind it fails (exit 1). The pilot's own analysis is bench/tg_ni_pilot.py's, offline.
 - Any other label fails.
 
 It writes one line to `--summary` (the step summary) either way.
@@ -21,7 +22,7 @@ import argparse
 import json
 import sys
 
-def gate(label, verdict, judge_exit):
+def gate(label, verdict, judge_exit, structure=None):
     """(exit status, one-line summary)"""
     if label in ("smoke", "pilot"):
         if not isinstance(verdict, dict):
@@ -32,7 +33,15 @@ def gate(label, verdict, judge_exit):
             return 1, f"{label}: not evidence; FAILED: the judge did not refuse it as {label}"
         if judge_exit != 2:
             return 1, f"{label}: not evidence; FAILED: the judge exited {judge_exit}, not 2 (refused)"
-        return 0, f"{label}: not evidence (the judge refused it as a {label} run, as it must; plumbing OK)"
+        # (the refusal alone shows only that the label is refused: the plumbing is shown by the
+        # structural admission, every shard present, listed, downloaded, reconciled and whole)
+        if not isinstance(structure, dict) or structure.get("label") != label:
+            return 1, f"{label}: not evidence; FAILED: no structural admission for a {label} run"
+        if not structure.get("valid"):
+            why = "; ".join(map(str, structure.get("problems", [])[:3])) or "not admitted"
+            return 1, f"{label}: not evidence; FAILED: the structural admission failed: {why}"
+        return 0, (f"{label}: not evidence (the judge refused it as a {label} run, as it must); "
+                   f"structurally admitted: all {len(structure.get('shards', []))} shards, R {structure.get('rounds')}")
     if label == "qualification":
         if not isinstance(verdict, dict):
             return 1, "qualification: FAILED: no readable verdict (INVALID)"
@@ -53,6 +62,7 @@ def main(argv=None):
     p.add_argument("--label", required=True)
     p.add_argument("--verdict", required=True)
     p.add_argument("--exit", type=int, required=True)
+    p.add_argument("--structure", help="smoke and pilot: service_tg.py structure's JSON")
     p.add_argument("--summary")
     a = p.parse_args(argv)
     try:
@@ -60,7 +70,14 @@ def main(argv=None):
             verdict = json.load(f)
     except (OSError, json.JSONDecodeError):
         verdict = None
-    status, line = gate(a.label, verdict, a.exit)
+    structure = None
+    if a.structure:
+        try:
+            with open(a.structure) as f:
+                structure = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            structure = None
+    status, line = gate(a.label, verdict, a.exit, structure)
     print(line)
     if a.summary:
         with open(a.summary, "a") as f:

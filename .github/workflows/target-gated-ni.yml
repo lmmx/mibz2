@@ -214,9 +214,13 @@ jobs:
           bin/ab run "$OUT/runs.jsonl" --arms "mibz2,mibz2@base/ab" --threads "$THREADS" --spread \
             --rounds "$ROUNDS" --settle "$SETTLE" "corpora/$CORPUS.bz2" || rc=$?
           touch "$RUNNER_TEMP/stamp-stop"
-          wait "$stamp" || true
+          src=0
+          wait "$stamp" || src=$?
+          echo "$src" > "$OUT/stamp.exit"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/measurement-ended.txt"
-          exit "$rc"
+          # (never masked: a failed stamper fails the measurement, after its record is kept)
+          [ "$rc" = 0 ] || exit "$rc"
+          [ "$src" = 0 ] || { echo "::error::the row stamper exited $src"; exit 1; }
 
       - name: The shard's files
         if: always()
@@ -268,12 +272,25 @@ jobs:
           [ -f ni.md ] && cat ni.md >> "$GITHUB_STEP_SUMMARY"
           exit 0
 
+      # The structural admission alone (every shard present, listed, downloaded, reconciled and
+      # whole): what a smoke check or the pilot must pass for green plumbing
+      - name: The structural admission
+        run: |
+          set +e
+          python3 bench/service_tg.py structure shards --manifest manifest.json --head "${{ inputs.head }}" \
+            --base "${{ inputs.base }}" --rounds "${{ inputs.rounds }}" --label "${{ inputs.label }}" \
+            --toolchain "${{ inputs.toolchain }}" --out structure
+          [ -f structure.md ] && cat structure.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
+
       - name: Upload
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 (the v4 tag, resolved 2026-11-10)
         with:
           name: tg-ni-aggregate-a${{ github.run_attempt }}
           path: |
+            structure.json
+            structure.md
             manifest.json
             artifacts.jsonl
             jobs.jsonl
@@ -288,4 +305,4 @@ jobs:
         if: always()
         run: |
           python3 bench/tg_ni_gate.py --label "${{ inputs.label }}" --verdict ni.json \
-            --exit "${{ steps.judge.outputs.exit || 2 }}" --summary "$GITHUB_STEP_SUMMARY"
+            --exit "${{ steps.judge.outputs.exit || 2 }}" --structure structure.json --summary "$GITHUB_STEP_SUMMARY"

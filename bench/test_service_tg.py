@@ -257,6 +257,7 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
 
 
 HISTORY = {"artifacts": [], "jobs": []}
+T0 = 1794268800.0  # (2026-11-10T00:00:00Z, the fixtures' measurement start)
 
 
 def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured=True, over=None, drop=(),
@@ -305,6 +306,9 @@ def write_shard(root, sid, attempt=1, rows=None, label="qualification", measured
     if measured:
         files["measurement-started.txt"] = "2026-11-10T00:00:00Z\n"
         files["measurement-ended.txt"] = "2026-11-10T00:30:00Z\n"
+        n = files["runs.jsonl"].count("\n")
+        files["row-times.txt"] = f"# start {T0 + 0.5:.3f}\n" + "".join(f"{i} {T0 + 1 + i:.3f}\n" for i in range(n))
+        files["stamp.exit"] = "0\n"
     else:
         del files["runs.jsonl"]
     for name, text in files.items():
@@ -515,6 +519,37 @@ class CI(unittest.TestCase):
         man = build(self.root)
         man["schema"] = "mibz2.tg_ni_manifest/1"
         self.assertFalse(self.ni(man)["valid"])
+
+    def test_the_timing_must_be_complete_and_coherent(self):
+        # (the Researcher's §2 probes on the pilot review, 6757361275: each was admitted before)
+        cases = {
+            "no row-times.txt": ("row-times.txt", None),
+            "the stamper failed": ("stamp.exit", "1\n"),
+            "no stamper exit": ("stamp.exit", None),
+            "times backwards": ("row-times.txt", lambda t: "\n".join(
+                [t.splitlines()[0]] + [f"{i} {T0 + 1000 - i:.3f}" for i in range(len(t.splitlines()) - 1)]) + "\n"),
+            "a row missing its time": ("row-times.txt", lambda t: "\n".join(t.splitlines()[:-1]) + "\n"),
+            "a row timed twice": ("row-times.txt", lambda t: t + t.splitlines()[-1] + "\n"),
+            "no start time": ("row-times.txt", lambda t: "\n".join(t.splitlines()[1:]) + "\n"),
+            "a time not finite": ("row-times.txt", lambda t: t.replace(f"0 {T0 + 1:.3f}", "0 nan")),
+            "times outside the measurement": ("row-times.txt", lambda t: "\n".join(
+                [f"# start {T0 + 9000:.3f}"] + [f"{i} {T0 + 9001 + i:.3f}" for i in range(len(t.splitlines()) - 1)]) + "\n"),
+            "a malformed line": ("row-times.txt", lambda t: t + "garbage\n"),
+        }
+        for what, (name, change) in cases.items():
+            with self.subTest(what):
+                self.fresh()
+                build(self.root)
+                path = Path(self.root) / "tg-ni-records-a1" / "records" / name
+                if change is None:
+                    path.unlink()
+                elif isinstance(change, str):
+                    path.write_text(change)
+                else:
+                    path.write_text(change(path.read_text()))
+                v = self.ni(remanifest(self.root))
+                self.assertFalse(v["valid"], what)
+                self.assertTrue(any(x.startswith("records") for x in v["problems"]), v["problems"])
 
     def test_the_frozen_file_must_name_the_ci_fields(self):
         for k in ("ni_rustc", "corpus_text"):
