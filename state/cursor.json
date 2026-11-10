@@ -1583,7 +1583,7 @@
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt; pinned specifications, migration manifest and legacy head verified; routing audit clean. Literature and derivation review only."
+      "progress": "Confirmed off-by-one certificate failure in phrase_census.rs: cyclic aab yields L=baa, F=aab, psi=[1,2,0], K=[0,1,0]; cell [0,2) supports one byte, not raw=2. 510 sentinel-terminated binary texts checked; 969 cell witnesses refute K+1. Literature review in progress."
     }
   ],
   "active_delegations": [],
