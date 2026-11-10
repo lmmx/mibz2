@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c265dfb294d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c265dfb294d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c265dfb294d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c265dfb294d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c265dfb294d8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9d23949f29d8">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=c265dfb294d8">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2221,8 +2221,8 @@
 <p>MONODROMY's experimental kernel does not walk the rows. Read along LF, the block is a cyclic word of run letters, one per row. Each step picks one pair of adjacent letters, a <strong>digram</strong>, and replaces every occurrence with a new letter, recording one rule such as <code>X → AB</code>. Because each run moves as a block, a digram's occurrences fill one interval of rows, called a <strong>cell</strong>. So a step costs the same however many occurrences there are. When one letter is left, its rules spell the whole block. The step is Rauzy–Veech induction, and it works like RePair compression on the run letters.</p>
 <p>The work therefore grows with the number of steps, not the number of bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte. The first kernel still lost, at 1.276 times the walk's time, because a step cost 14 ns. The <strong>cells kernel</strong> writes each cell once and moves nothing, cutting a step to 7.7 ns. Per run it executes 184 instructions against production's 260, with 2.1 simulated last-level cache misses against 8.7.</p>
 <p>That kernel recorded less time than its conventional reference, the table build and walk, in two local Wikidata censuses. The second, on an idle core, recorded <strong>1.604 against 2.172 nanoseconds per row</strong>, a derived <strong>26.2% reduction</strong>, and was faster on 204 of 233 blocks. Where runs are short the steps per byte rise and it loses: 3.9 times on prose, 9.8 times on uniform bytes.</p>
-<p>On the same day, MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix, and a check that now catches it, are in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>. The timings above were measured before the fix, which adds 1.2% to the writer's instructions on one block, and they will be re-measured in a new census.</p>
-<p>These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. The new kernel starts with a run list; scanning a column to obtain that list is excluded. There is <strong>no demonstrated gain over the shipped decoder</strong>, and the experiment is not in production. Since 0.2.8 the shipped inversion builds from run records, and MONODROMY estimates the cells kernel at about 0.80 of that path's time, from the Pathfinder's figures; that comparison is not yet measured.</p>
+<p>On the same day, MONODROMY's verification pass found that the cells kernel's writer left some bytes unwritten: 126,658 over 178 of the 233 blocks. Its byte check could not see this, because the output buffer already held the right bytes from another kernel. The fix, and a check that now catches it, are in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a>. The timings above were measured before the fix. MONODROMY's re-run after it compared the kernel with the inversion path mibz2 has shipped since 0.2.8, which builds from run records, giving both the same records: 1.677 against 2.049 ns per row. That is 0.818 times the shipped path's time over three runs (0.817 to 0.820), faster on 192 to 197 of the 233 blocks.</p>
+<p>These are indicative single-thread results from the research container, using the fastest of five rounds per block. They are not CI performance evidence, and no confidence intervals accompany them. Against the column path, the new kernel starts from a run list, and the scan that would produce that list is excluded. The gain over the shipped decoder is for its inversion stage only: <strong>the whole decoder has not been compared</strong>, and the experiment is not in production.</p>
 <p>The rules the induction builds form a Lyndon tree. A <strong>Lyndon word</strong> is strictly smaller, alphabetically, than each of its proper suffixes; <code>aab</code> is one. Its <strong>Lyndon tree</strong> splits it just before its smallest proper suffix, then splits each part the same way: <code>aab</code> splits as <code>a | ab</code>, then <code>ab</code> as <code>a | b</code>. Expanded, the induction's rules are exactly the Lyndon tree of the block's smallest rotation. The journal proves this for any block that is not an exact repetition of a shorter word. Crochemore and Russo's <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a> is a short introduction to these trees.</p>
 <p>The number of steps also depends on which digram goes next. Every order needs at least r₂ − 1 steps, where r₂ counts the distinct digrams: 1.220 per run on Wikidata. The right-end order takes 1.812; taking steps that create no new boundary first takes 1.279. No kernel yet runs that order cheaply, so it is a counted saving, not a measured speedup.</p>
 <p>The <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/docs/journal/monodromy/2026-11-10-rauzy-veech.md">research journal</a> and <a href="https://github.com/lmmx/mibz2/blob/ae51b11a46014e5fec928b0e25235f532a473a9f/examples/rauzy.rs">implementation</a> linked here are the versions in <a href="https://github.com/lmmx/mibz2/pull/351">#351</a> from before the writer fix. MONODROMY is the research lane developing this experiment.</p>
@@ -2282,7 +2282,7 @@
 <p>The cells kernel recorded lower times on 202 blocks in the first census and 204 in the second. Other work ran on other cores during the first; the second pinned the process to one core with the others idle.</p>
 <p>The original 2.770 figure sums the stages' separate fastest rounds. The cells figures time order, induction and output together. So the 42% drop between the first and latest totals compares different runs and different timing methods; it is not a paired measurement.</p>
 <p>The two arms also start from different inputs. The conventional arm builds from a column; the experimental kernel receives runs. The separately measured column-to-run scan costs 0.484 ns/row in the journal. A front end that emits runs directly could avoid that scan, but the published table does not measure that integrated path.</p>
-<p>It also does not compare against the records-based construction that shipped in 0.2.8 (<a href="https://github.com/lmmx/mibz2/pull/324">#324</a>). So the 26% figure is not an improvement over any released version of mibz2.</p>
+<p>This table also leaves out the records-based construction that shipped in 0.2.8 (<a href="https://github.com/lmmx/mibz2/pull/324">#324</a>), so its 26% figure is not an improvement over a released version. The re-run after the writer fix makes that comparison: 1.677 against 2.049 ns per row, 0.818 times.</p>
 <p>On other inputs the cells kernel is slower: 3.93 times its reference on prose, 9.78 times on uniform bytes, and 8.28 times on a near-periodic adversarial input. Those are reported local ratios from the same journal's other-input table, timed before the writer fix; MONODROMY has withdrawn its periodic, Fibonacci and Thue–Morse figures until they are re-measured.</p>
 <h2 id="3-why-the-cells-kernel-is-cheaper">3. Why the cells kernel is cheaper<a class="headerlink" href="#3-why-the-cells-kernel-is-cheaper" title="Permanent link">&para;</a></h2>
 <p>A word stored as a rule needs its bytes and its destination recorded once; its earlier descriptions need not be updated.</p>
@@ -2316,7 +2316,7 @@
 <p>The journal's identity is <code>steps = initial cells − 1 + newly introduced boundaries</code>. In the toy example, the union of both orders' cuts gives three initial cells. Two steps leave one, with no new boundary introduced. A re-seating into an interval's interior can instead add a cut that a later step must remove.</p>
 <p>The identity gives a floor of 1.220 steps per run for these cell-step schedules. The favourable order is about 29.4% below the right-end count and 4.8% above that floor.</p>
 <p>The floor applies only to this step model. The journal describes a fusion operation outside it that can go below 1.220, so it is not a lower bound on inverse BWT itself.</p>
-<p>The fast cells kernel relies on sweeping the ends of its orders. In the version this post links to, the journal counts an out-of-order step, as built, at 152 instructions, against 64 for a swept cell. Fewer steps can therefore lose if each step becomes expensive enough. MONODROMY is now testing whether that cost is in the step itself or in finding the next useful step.</p>
+<p>The fast cells kernel relies on sweeping the ends of its orders. In the version this post links to, the journal counts an out-of-order step, as built, at 152 instructions, against 64 for a swept cell. Fewer steps can therefore lose if each step becomes expensive enough. MONODROMY has since counted a worklist that takes steps in the cheaper order. It does not pay on one thread: it tests 2.25 segment ends per step, and two steps in three move to another segment.</p>
 <p>The same applies to parallel rounds. A schedule model finds enough independent work for up to sixteen workers, but it leaves out the cost of running them. Run sequentially, the round-based implementation took about 1.99 times its reference, and no multi-worker run has been timed.</p>
 <h2 id="6-before-production">6. Before production<a class="headerlink" href="#6-before-production" title="Permanent link">&para;</a></h2>
 <p>The timings justify continuing the experiment. They do not show a general-purpose replacement or a result for a release.</p>
@@ -2484,19 +2484,19 @@
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/bench.js?v=c265dfb294d8"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/couriers.js?v=c265dfb294d8"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/blog.js?v=c265dfb294d8"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/frontier.js?v=c265dfb294d8"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/observatory.js?v=c265dfb294d8"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=9d23949f29d8"></script>
+        <script src="../../assets/javascripts/katex.js?v=c265dfb294d8"></script>
       
     
   </body>
