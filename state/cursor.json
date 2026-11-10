@@ -121,7 +121,9 @@
       "log_dedup_key": "final-followup-6779413601",
       "disposition": "Verified final follow-up report: no default wall/CPU loss beyond noise, all hashes agree, RSS max +3.2%. Miri, Benchmark, Test, walk-stats, Docs and legacy success; CI macOS aarch64/x86_64 queued. Experimental job-log figures verified, including pattern 2.232x and onebyte 1.109x. Performance decision referred to authorised Coordinator; independent B5 unassigned while #364 open.",
       "dispatches": 0,
-      "log_publication": "pending"
+      "log_publication": "published",
+      "log_comment_id": 6779454057,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6779454057"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -151,7 +153,8 @@
     6777379237,
     6778716882,
     6778995031,
-    6779251105
+    6779251105,
+    6779454057
   ],
   "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
   "event_execution_verified": true,
