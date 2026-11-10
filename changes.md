@@ -1,3 +1,11 @@
+# Changes since the last version
+
+- 2026-11-10, through [6759415547](https://github.com/lmmx/mibz2/pull/145#issuecomment-6759415547): #334 reduced counted team work but failed helper-balance measurement; fresh count, B5 and kernel screen are pending.
+- 2026-11-10: D4's build failed F2 while walk and size passed; tunnel count survived correction but named build was priced out; the compact30 tie was withdrawn and the revised adaptive-table price remains REVISE.
+- 2026-11-10: #324's boxed rescue failed static restoration, and production outlining claim was corrected; next candidate has a geometry gate before registration.
+- 2026-11-10: #316 final design and #333 tooling remain REVISE after the judge chronology defect and unresolved slow-drift coverage; #318 idle-gap probe remains under revision.
+- 2026-11-10: D083 corrected CI kernel coverage for the team path; #329 and #330 merged.
+
 # Changes, newest first
 
 - **2026-11-10, channel through 6758055231:** #317 cleared narrow Researcher/Guardian holds, ran VALID on Louis's workstation and merged with its diagnostic result: parallel finder FASTER on small-table Wikidata and records, NOT FASTER on ordinary level-nine Wikidata. Design E's line table was FALSIFIED as built; Optimiser ranked D4 for count-only probe, with no qualifying table yet. #319's #316 tooling merged; R2 dispatch smoke was structurally admitted and refused as evidence; a single nonqualifying R600 pilot was dispatched while #318's two-modes instrument remained REVISE. #321's screen passed, but D080 held a measurement-only merge claim. Release scaling remains queued without a bundle and #312 remains unreleased.
