@@ -161,9 +161,10 @@
     6763474717,
     6763771662,
     6763960537,
-    6767025138
+    6767025138,
+    6769305752
   ],
-  "last_processed_comment_id": 6767025138,
+  "last_processed_comment_id": 6769305752,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1853,7 +1854,7 @@
     },
     {
       "trigger_comment_id": 6769305752,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1861,7 +1862,11 @@
       "source_commit": "ae51b11a46014e5fec928b0e25235f532a473a9f",
       "report_commit": "3faeafc853dbe632a21b147cdc1f3a4b2223460a",
       "report_path": "state/reports/monodromy-blog-6769305752/handoff.md",
-      "disposition": "Blog draft and fact audit complete; publication delegated to Coordinator because docs-branch writes exceed pinned Researcher scope. Render/build checks outstanding."
+      "disposition": "Blog draft and fact audit complete; publication delegated to Coordinator because docs-branch writes exceed pinned Researcher scope. Render/build checks outstanding.",
+      "review_comment_id": 6769522898,
+      "review_comment_pr": 145,
+      "publication_verified": true,
+      "verification_note": "Exact full comment body/author/destination verified. Role-aware routing passes; pinned coord.verify flags only hardcoded FROM coordinator requirement. Draft not site-published."
     }
   ],
   "active_delegations": [],
