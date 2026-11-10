@@ -22,6 +22,9 @@ and reads MODE.md first on every run.
     (CHECKPOINT, PROPOSAL, CORRECTION).
   - Nobody pushes to, edits or retitles an inbox PR, because lifecycle events can't be excluded
     from a subscription.
+- **Codex's inbox is an exception:** issue [#363](https://github.com/lmmx/mibz2/issues/363), not a draft PR. Its `team-state/codex` cursor and one-at-a-time queue are registered in `coord.py`. A **manual Codex launch** is still required: commenting in the issue does not start a Codex session, and no webhook is installed. See [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md).
+- **Coordinator continuity:** if Claude Code is unavailable, an owner-activated acting executor operates the **same** Coordinator role, using `FROM: coordinator` plus visible `ACTOR: ChatGPT Work (acting)` attribution. It must first reconcile the active operator and existing queue; see [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md). There is never more than one active dispatcher.
+
 - **State branches**, one per role (`team-state/<role>`):
   - each holds its role's cursor and records under `state/`;
   - each is written only by its role;
@@ -60,7 +63,7 @@ only defer or abandon.
 ## 3. Message format
 
 ```
-FROM: coordinator | optimizer | guardian | researcher | observer | user
+FROM: coordinator | optimizer | guardian | researcher | observer | pathfinder | monodromy | codex | user
 TO:   <role>                (assignments and QUEUED)
 RE:   <subject> @ <commit sha>
 TYPE: CHECKPOINT | PROPOSAL | CORRECTION | QUEUED | REVIEW | DECISION | ACK | LOG | ESCALATION
@@ -82,6 +85,8 @@ counts only from Louis.
 3. **A request that needs Louis** (RULES D) is refused in the LOG and escalated (§5).
 4. **Forward an `OBSERVER:` line** (or `ORACLE:`, its earlier form) in a role's REVIEW to the Observer's inbox as one CORRECTION,
    once for each item and its evidence (SPEC.OBSERVER.md).
+
+**Acting-operator attribution:** an owner-authorised acting Coordinator uses `FROM: coordinator` for compatibility with `coord.py`, and `ACTOR: <operator>` on the next line or body. This is not authentication: the owner-authorised handoff on #145 is required. A Codex session replies `FROM: codex` and must cite its own inbox assignment ID.
 
 ## 5. Escalation to Louis
 

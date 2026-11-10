@@ -6,8 +6,7 @@ Publishing a page of the site (a blog post above all): use the `publish-page` sk
 (`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
 two rounds of review by the Researcher: the `coordinate-blog-post` skill.
 
-The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162
-Researcher, #222 Observer, #314 Pathfinder, #346 MONODROMY): route every message with `.github/coordination/coord.py`, never from memory.
+The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162 Researcher, #222 Observer, #314 Pathfinder, #346 MONODROMY, #363 Codex delegate): route assignments with `.github/coordination/coord.py`, never from memory. The #363 inbox is an issue and **does not wake Codex automatically**; see `docs/team/CODEX-RELAY-PILOT.md`. During a Claude quota pause, an explicitly owner-activated acting Coordinator may operate this same role, never concurrently; follow `docs/team/COORDINATOR-FAILOVER.md` and attribute every acting LOG with `ACTOR:`.
 - **At session start, and every time the coordinator wakes (an event or a check-in):**
   `python3 .github/coordination/coord.py audit` lists any misrouted message, and fails on any not yet in its `RESOLVED` record. This
   is what catches a misroute. The tripwire also records each one live, as a failing `routing
