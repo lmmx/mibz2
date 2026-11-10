@@ -256,18 +256,36 @@
       "comment_id": 6782141557,
       "recipient_report": 6782113588,
       "receipt_for_formal_assignment_pending": true
+    },
+    "guardian": {
+      "status": "in_progress",
+      "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
   "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor.",
   "workstation_preparation": {
-    "status": "in_progress",
+    "status": "pr_open_waiting_checks",
     "recipe": "bench-onecore-inline-i9",
     "decision": "Existing #361 i9 1t A/B highest-value ready-to-prepare; cells requires coverage diagnosis first",
     "candidate": "d33787e138426cb441db6975f54b2eccca02e89a",
     "baseline": "b65b2aa54488f072cf005b8fe62461c32e6ef083",
     "branch": "coord/onecore-inline-i9-20261110",
     "ready": false,
-    "queue_added": false
+    "queue_added": false,
+    "pr": 366,
+    "head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "validation": "3 local untimed tests pass; real just dry run required in CI",
+    "dispatch_blocker": "No workflow_dispatch tool; no GH_TOKEN/GITHUB_TOKEN; inspected Run signal browser page is signed out."
+  },
+  "ci_incident_365": {
+    "head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+    "run": 42901404948,
+    "jobs": [
+      130128069626,
+      130128069688
+    ],
+    "classification": "D unexplained cancellation",
+    "evidence": "Both macOS jobs cancelled with no steps; both log reads BlobNotFound404. No pass or infrastructure-cause claim; no rerun requested."
   }
 }
