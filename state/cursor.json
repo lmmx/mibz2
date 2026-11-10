@@ -1752,6 +1752,14 @@
       "review_comment_id": 6763089509,
       "publication_verified": true,
       "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator requirement."
+    },
+    {
+      "trigger_comment_id": 6763141779,
+      "status": "in progress",
+      "pr": 162,
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "41be4c2707768e89e4ca41d8ebe5ba8c930dff66"
     }
   ],
   "active_delegations": [],
