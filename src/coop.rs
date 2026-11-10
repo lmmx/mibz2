@@ -1007,6 +1007,9 @@ impl<'a> RoomWalk<'a> {
 /// `taken` instead of a local count
 ///
 /// SAFETY: as `walk_room`'s contract
+// (never inlined: with `share`'s choice of walker beside it, it would be inlined there,
+// changing the default walk's machine code; kept a function of its own, as it was)
+#[inline(never)]
 unsafe fn traverse<const L: usize>(
     t: *const u32,
     starts: &[u32],
