@@ -1,4 +1,4 @@
-//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 1a). Written
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 2). Written
 //! by a sub-agent; the policies "weak_*" (a step told free from links alone: the far end of
 //! its landing place must be a coincidence) and the counters were added after. Not built by
 //! the crate. To run (EVERY = 24: the entry's ten blocks; 1: all 233):

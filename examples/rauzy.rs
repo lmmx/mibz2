@@ -26,11 +26,16 @@
 //! row cut out: a few cells more), each checked against `bwt::walk` on every block:
 //! - the reference (`letters`, `induce`, `write_block`): safe, counted, slow;
 //! - the list kernel (`Kernel::link`, `induce`, `write`): both orders as linked lists, a step
-//!   without a data-dependent branch. Its clock is the entry's first (1.276 of production);
+//!   written as selects (as compiled one conditional branch stays, on la == lb). Its clock is
+//!   the entry's first: 1.276 of the column's path (`bwt::build` + the room walk, production
+//!   then), Wikidata's 233 blocks pooled, one thread, from the run list;
 //! - the cells kernel (`Kernel::slots`, `induce_cells`, `write_cells`): a step's cell is a
 //!   letter written once; no letter is moved or shortened in memory; the walk's row is a
 //!   letter of its own whose mark rides in the words made with it, so no point is followed
-//!   and the block is written unrotated. Its clock is the entry's second (0.756).
+//!   and the block is written unrotated. Its clock on the same terms, before its writer was
+//!   fixed: 0.756. From the front's records, after the fix: 0.82 to 0.86 of the records'
+//!   path, production's since 0.2.8, by the machine's state (the entry's section 6.3).
+//!   Indicative: one container.
 //!
 //! JSON fields (ns a row): `ns_walk` is the column's path (`bwt::build` + the room walk),
 //! `ns_rec` the records' path (`runs::fill` + the room walk backward: production's since
@@ -1079,6 +1084,14 @@ impl Kernel {
                 if bs == sb {
                     // one letter, last in both orders: its points' cycles are closed
                     if aw as u32 & MARK != 0 {
+                        // the four regions' ends: unchecked above, and valgrind cannot see
+                        // a write from one region into the next inside the one allocation
+                        debug_assert!(
+                            ft <= lay.bots
+                                && fb <= lay.arena
+                                && top + 32 <= lay.rules
+                                && rp + 16 <= self.buf.len()
+                        );
                         self.rule_end = rp;
                         let cells = (whole.max(1 + dropped) - 1 - dropped)
                             + ((ft - ft0) / SLOT) as u64
@@ -1307,7 +1320,8 @@ impl Kernel {
     /// The induction, to the tracked point's cycle. Returns (the cycle's word, its length,
     /// t0, steps).
     ///
-    /// A step without a data-dependent branch. With la, lb the last letters' lengths:
+    /// A step written without a data-dependent `if`; as compiled one conditional branch
+    /// stays, on la == lb. With la, lb the last letters' lengths:
     /// - la > lb: B takes the word and moves, in the bottom order, to just after A;
     /// - la < lb: A takes the word and moves, in the top order, to just after B;
     /// - la = lb: as la < lb, and then B, now of no length, is unlinked from both orders (A
