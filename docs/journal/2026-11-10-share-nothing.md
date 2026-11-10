@@ -132,6 +132,40 @@ estimates:
 - **What the pricing run (§4.2) now decides:** whether the prize is large enough to take on
   D's two open problems. It prices the table nobody has, not any design.
 
+## 3b. The prize, measured (read: `par-scan/20261110T030608Z`, the i9, VALID)
+
+The parallel-scan diagnostic ran on the workstation. Bundle SHA-256 `140a0e5b…bab4d152`,
+checked. Plain workers, one process, five rounds a cell, medians:
+
+| input | arm | 1 | 4 | 8 | 10 | CPU-seconds, 1 → 10 |
+|---|---|--:|--:|--:|--:|--:|
+| level 9 (3.6 MB a table) | scanner | 455 | 1,145 | 741 | 631 MB/s | 0.58 → 3.69 |
+| level 9 | finder | 409 | 1,127 | 744 | 619 | 0.57 → 3.63 |
+| level 1 (0.4 MB a table) | scanner | 413 | 1,524 | 1,600 | 1,598 | 0.70 → 0.82 |
+| level 1 | finder | 348 | 1,255 | 2,429 | 2,563 | 0.66 → 0.84 |
+
+- **Small tables and the finder: 2.56 GB/s today,** on level-1 input, with CPU-seconds nearly
+  flat. At ten workers the wall is the CPU divided by ten (0.84 s, 0.082 s): the cores are
+  full and nothing else binds.
+- **Large tables: the knee, as before.** Level 9 peaks at four workers and its CPU grows 6.4×.
+- **One scanner caps level 1 at 1.6 GB/s.** The finder removes the cap: 1.6× at ten workers.
+- **The gate, from these figures and no longer from §2's 1.44×.** A level-9 block costs 0.57
+  CPU-seconds here, 70% of it the build and walk. With a small table whose inversion costs g
+  times production's, and level 1's CPU growth (1.13 to 1.27), ten cores give about
+  3.0 GB/s ÷ (0.3 + 0.7 g):
+
+  | inversion, g | 1.0 | 1.2 | 1.44 | 2.0 | 2.5 | 3.67 (E) |
+  |---|--:|--:|--:|--:|--:|--:|
+  | GB/s at ten (model) | 3.0 | 2.6 | 2.3 | 1.8 | 1.5 | 1.0 |
+
+  Break-even with the cooperative default (about 1.5 GB/s) is near g = 2.5. E at 3.67 loses, as
+  its result said. A table at 1.2 would be worth 2.6 GB/s. This assumes the table is small
+  enough to behave as level 1's does; the `lbzip2 -2` run measures that.
+- **No second mode in this bundle.** 180 cells in three long-lived processes, and no cell's
+  rounds differ by 2×: level 1 at ten workers reads 81, 83, 81, 82, 83 ms. The two modes of
+  `2026-11-10-two-modes.md` were seen with one fresh process a run and cooperative plans. This
+  harness differs in both, so it separates neither; it is an observation for the discriminator.
+
 ## 4. Falsifiers, cheapest first
 
 1. **Free:** §2 is the experiment, already run. A reading of it that fails: if C's or D's walk
