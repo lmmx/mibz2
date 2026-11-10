@@ -143,6 +143,14 @@
       "delivery_id": "fd4376b0-dd5d-11f1-8bd6-6003a54e35c0",
       "planned_action": "Reconcile owner's direct Codex launch into one #363 assignment; complementary Optimiser pricing, not duplicate implementation",
       "action_link": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782141557"
+    },
+    "6782294636": {
+      "status": "in_progress",
+      "delivery_id": "6734c820-dd5f-11f1-9871-41870731916c",
+      "comment_updated_at": null,
+      "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "planned_action": "Accept bounded diagnostic preparation, defer ready admission for CI; route new occupancy invariant incident to now-free Guardian and batched material moves to Observer.",
+      "recipient_completion": "Guardian cursor f60439676a13328f7a13226f73fd6725c3ee8355 confirms6782224690 finished; immutableD0990e03badbdaf9fd77d29302bab2a39779325cb723."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -259,16 +267,18 @@
       "receipt_for_formal_assignment_pending": true
     },
     "guardian": {
-      "status": "delivered_in_progress",
-      "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5",
-      "comment_id": 6782224690,
-      "recipient_evidence": "team-state/guardian cursor blob7c6462f7478ca48f4547e91ad2743818bec306ca records6782224690 in progress, decisionD099"
+      "status": "in_progress_before_post",
+      "scope": "New #366 occupancy invariant incident; independent of completed recipe review and Researcher #365 B5"
+    },
+    "observer": {
+      "status": "in_progress_before_post",
+      "scope": "Batched material moves: sole activation, cells review/investigation, #366 diagnostic defer and new occupancy incident"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
   "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor.",
   "workstation_preparation": {
-    "status": "pr_open_waiting_checks",
+    "status": "deferred_ci_failure",
     "recipe": "bench-onecore-inline-i9",
     "decision": "Existing #361 i9 1t A/B highest-value ready-to-prepare; cells requires coverage diagnosis first",
     "candidate": "d33787e138426cb441db6975f54b2eccca02e89a",
@@ -279,7 +289,19 @@
     "pr": 366,
     "head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
     "validation": "Local3 passed1 skipped; exact-head CI submit job130205458620 completed all steps successfully, including required real just untimed recipe check; overall CI still pending.",
-    "dispatch_blocker": "No workflow_dispatch tool; no GH_TOKEN/GITHUB_TOKEN; inspected Run signal browser page is signed out."
+    "dispatch_blocker": "No workflow_dispatch tool; no GH_TOKEN/GITHUB_TOKEN; inspected Run signal browser page is signed out.",
+    "review": {
+      "verdict": "PROCEED diagnostic preparation",
+      "comment": 6782294636,
+      "commit": "0e03badbdaf9fd77d29302bab2a39779325cb723"
+    },
+    "ci_incident": {
+      "run": 42923929886,
+      "job": 130205457614,
+      "class": "A project assertion failed; causality not established",
+      "failure": "teams ledger ll1799923 exceeds900000; rle38 below900000; assertion ledger check fails under teams",
+      "action": "no retry; Guardian bounded invariant classification"
+    }
   },
   "ci_incident_365": {
     "head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
@@ -295,5 +317,15 @@
     "key": "active-programme-6782113588",
     "status": "in_progress",
     "planned_action": "Grouped substantive LOG with fixed performance decision, actual role activity, #366 preparation, CI and access blockers."
-  }
+  },
+  "dispatch_history": [
+    {
+      "status": "completed",
+      "scope": "Independent bounded #366 recipe/decision-rule review, not #365 B5",
+      "comment_id": 6782224690,
+      "recipient_evidence": "team-state/guardian cursor blob7c6462f7478ca48f4547e91ad2743818bec306ca records6782224690 in progress, decisionD099",
+      "review_comment_id": 6782294636,
+      "decision": "Accept preparation; defer ready admission until exact-head gates."
+    }
+  ]
 }
