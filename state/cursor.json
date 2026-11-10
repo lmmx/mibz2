@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782113588,
+  "last_examined_comment_id": 6782394725,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -145,25 +145,44 @@
       "action_link": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782141557"
     },
     "6782294636": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "6734c820-dd5f-11f1-9871-41870731916c",
       "comment_updated_at": null,
       "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
       "planned_action": "Accept bounded diagnostic preparation, defer ready admission for CI; route new occupancy invariant incident to now-free Guardian and batched material moves to Observer.",
-      "recipient_completion": "Guardian cursor f60439676a13328f7a13226f73fd6725c3ee8355 confirms6782224690 finished; immutableD0990e03badbdaf9fd77d29302bab2a39779325cb723."
+      "recipient_completion": "Guardian cursor f60439676a13328f7a13226f73fd6725c3ee8355 confirms6782224690 finished; immutableD0990e03badbdaf9fd77d29302bab2a39779325cb723.",
+      "disposition": "Accepted D099 diagnostic preparation. Deferred readiness on project ledger assertion. Next distinct Guardian assignment6782334222 posted and verified.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782334222"
+      ]
     },
     "6782313693": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "8d937980-dd5f-11f1-90ad-7b2f4cf9af1b",
       "comment_updated_at": null,
-      "planned_action": "Accept bounded live-path diagnostic direction and archive replay; reconcile with existing Codex assignment, no duplicate implementation or workstation run; batch material outcome to Observer."
+      "planned_action": "Accept bounded live-path diagnostic direction and archive replay; reconcile with existing Codex assignment, no duplicate implementation or workstation run; batch material outcome to Observer.",
+      "disposition": "Accepted archive replay and bounded live-path diagnostic direction. Existing Codex assignment remains in-flight; no duplicate implementation or new timing. Observer batched checkpoint6782363899.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6782363899"
+      ]
     },
     "6782367271": {
-      "status": "in_progress",
+      "status": "completed_HOLD_enforced",
       "delivery_id": "f4a3e790-dd5f-11f1-9a42-86edc1d61da5",
       "comment_updated_at": null,
       "planned_action": "Enforce B5 HOLD F01 and queue priority1 targeted Codex correction; do not overlap active assignment; independent recheck required.",
-      "report_commit": "9693874f0795083d4dabb5caec9a6b28af6a928e"
+      "report_commit": "9693874f0795083d4dabb5caec9a6b28af6a928e",
+      "disposition": "B5 F01 blocks #365 integration until targeted writer-reach correction and independent recheck; queued priority1 under6782394725 because Codex6782141557 busy.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782394725"
+      ]
+    },
+    "6782394725": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "2d002860-dd60-11f1-8d3a-96accbad4fae",
+      "coordination_writes": 0,
+      "response_comments": 0,
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -195,7 +214,10 @@
     6778995031,
     6779251105,
     6779454057,
-    6782075529
+    6782075529,
+    6782394725,
+    6782334222,
+    6782363899
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -229,14 +251,20 @@
     "first_head": "989f782719ec69420713f94ed0b79cc5bedc8709",
     "followup_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "run": 42901406328,
-    "status": "completed_no_default_loss_beyond_noise_advisory",
+    "status": "slice_one_default_performance_condition_accepted_not_merge_ready",
     "source_comment": 6779208153,
     "commitment": "Author predeclared this required CI as the one primary-loss follow-up of unchanged decoder/harness; repeated text 1t loss stands; no additional rerun/layout perturbation. Original adverse evidence retained.",
     "result_comment": 6779413601,
     "artifact_id": 13802703606,
     "server_reported_digest": "c36061ac6a7e8ac2991acbd82e2935fd20f9a3d075e102bd42c67b46cb575141",
     "archive_bytes_verified": false,
-    "decision": "Refer formal gate decision to Louis/authorised Coordinator; not merge-ready"
+    "decision": "At frozen57f51bbc final predeclared run supports fixed6775049636 default no-loss condition; experimental arm reported only. No additional timing rerun. Independent B5 F01 HOLD and exact-head CI still block integration.",
+    "independent_archive_replay": {
+      "actor": "optimizer",
+      "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4",
+      "archive_digest_verified_by_recipient": true,
+      "root_archive_bytes_verified": false
+    }
   },
   "owner_continuation": {
     "status": "active_dispatching",
@@ -333,9 +361,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "active-programme-6782113588",
-    "status": "in_progress",
-    "planned_action": "Grouped substantive LOG with fixed performance decision, actual role activity, #366 preparation, CI and access blockers."
+    "key": "active-programme-6782367271",
+    "status": "in_progress_log_publication",
+    "event_dispositions_persisted": true,
+    "planned_action": "One grouped substantive LOG for completed external reviews6782294636/6782313693/6782367271, not a response to own6782394725."
   },
   "dispatch_history": [
     {
@@ -348,9 +377,18 @@
     }
   ],
   "codex_correction": {
-    "status": "in_progress_before_queue",
+    "status": "queued_verified_not_dispatched",
     "priority": 1,
     "scope": "F01 long writer Miri reach and targeted compiling mutation; no default/performance changes",
-    "blocked_by_assignment": 6782141557
-  }
+    "blocked_by_assignment": 6782141557,
+    "queue_comment_id": 6782394725,
+    "link": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782394725"
+  },
+  "next_actions": [
+    "Preserve Codex6782141557; upon actual REVIEW+cursor completion dispatch priority1 correction6782394725, with manual wake limitation explicit.",
+    "Guardian6782334222 returns occupancy invariant classification; decide smallest repair before #366 ready admission.",
+    "Researcher independent targeted F01 recheck only after corrected exact-head evidence.",
+    "Observer6782363899 updates programme; no duplicate assignment.",
+    "No ready job queued; #366 CI failed and Run signal authenticated dispatch unavailable. No automatic merge or i9 execution."
+  ]
 }
