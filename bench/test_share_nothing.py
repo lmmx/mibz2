@@ -210,18 +210,93 @@ def test_preflight_reads_its_files(tmp_path):
     assert sn.main(["preflight", str(tmp_path)]) == 1
 
 
-def test_cgroup_quota(tmp_path):
+def cgroup_root(tmp_path, path="/user.slice/a.scope", mount="/sys/fs/cgroup", mroot="/"):
     (tmp_path / "proc/self").mkdir(parents=True)
-    (tmp_path / "proc/self/cgroup").write_text("0::/user.slice/a.scope\n")
-    cg = tmp_path / "sys/fs/cgroup/user.slice/a.scope"
-    cg.mkdir(parents=True)
-    (tmp_path / "sys/fs/cgroup/user.slice/cpu.max").write_text("max 100000\n")
-    assert sn.cgroup_quota(str(tmp_path))["state"] == "unlimited"
-    (cg / "cpu.max").write_text("200000 100000\n")
+    (tmp_path / "proc/self/cgroup").write_text(f"0::{path}\n")
+    (tmp_path / "proc/self/mountinfo").write_text(
+        f"25 1 0:22 / /proc rw - proc proc rw\n"
+        f"30 25 0:26 {mroot} {mount} rw,nosuid - cgroup2 cgroup2 rw\n"
+    )
+    base = tmp_path / mount.lstrip("/")
+    base.mkdir(parents=True)
+    (base / "cgroup.controllers").write_text("cpuset cpu io memory pids\n")
+    (base / "cgroup.subtree_control").write_text("cpu memory pids\n")
+    return base
+
+
+def test_cgroup_quota_unlimited_and_limited(tmp_path):
+    base = cgroup_root(tmp_path)
+    (base / "user.slice/a.scope").mkdir(parents=True)
+    (base / "user.slice/cpu.max").write_text("max 100000\n")
+    (base / "user.slice/cgroup.subtree_control").write_text("memory\n")
     q = sn.cgroup_quota(str(tmp_path))
-    assert q["state"] == "limited" and q["limits"]
-    (tmp_path / "proc/self/cgroup").write_text("12:cpu:/x\n")
+    assert q["state"] == "unlimited", q
+    assert [lv.get("why") for lv in q["levels"]] == [
+        "the hierarchy's root",
+        None,
+        "the cpu controller is not delegated",
+    ]
+    (base / "user.slice/cpu.max").write_text("200000 100000\n")
+    q = sn.cgroup_quota(str(tmp_path))
+    assert q["state"] == "limited" and q["limits"] == ["/sys/fs/cgroup/user.slice/cpu.max"]
+
+
+def test_cgroup_quota_missing_path_is_unknown(tmp_path):
+    # the Researcher's counterexample: a path with no hierarchy behind it
+    (tmp_path / "proc/self").mkdir(parents=True)
+    (tmp_path / "proc/self/cgroup").write_text("0::/missing.scope\n")
+    q = sn.cgroup_quota(str(tmp_path))
+    assert q["state"] == "unknown", q
+
+
+def test_cgroup_quota_missing_directory_is_unknown(tmp_path):
+    cgroup_root(tmp_path, path="/missing.scope")
+    q = sn.cgroup_quota(str(tmp_path))
+    assert q["state"] == "unknown" and "does not exist" in q["why"]
+
+
+def test_cgroup_quota_no_mount_is_unknown(tmp_path):
+    cgroup_root(tmp_path)
+    (tmp_path / "proc/self/mountinfo").write_text("25 1 0:22 / /proc rw - proc proc rw\n")
     assert sn.cgroup_quota(str(tmp_path))["state"] == "unknown"
+
+
+def test_cgroup_quota_delegated_without_cpu_max_is_unknown(tmp_path):
+    base = cgroup_root(tmp_path, path="/a")
+    (base / "a").mkdir()
+    q = sn.cgroup_quota(str(tmp_path))
+    assert q["state"] == "unknown" and "delegated" in q["why"]
+
+
+def test_cgroup_quota_unreadable_cpu_max_is_unknown(tmp_path):
+    base = cgroup_root(tmp_path, path="/a")
+    (base / "a").mkdir()
+    (base / "a/cpu.max").mkdir()  # (a directory: reading it fails)
+    assert sn.cgroup_quota(str(tmp_path))["state"] == "unknown"
+
+
+def test_cgroup_quota_v1_cpu_is_unknown(tmp_path):
+    cgroup_root(tmp_path, path="/")
+    (tmp_path / "proc/self/cgroup").write_text("1:cpu,cpuacct:/\n0::/\n")
+    assert "v1" in sn.cgroup_quota(str(tmp_path))["why"]
+
+
+def test_cgroup_quota_namespaced_mount_root(tmp_path):
+    base = cgroup_root(tmp_path, path="/ns/a", mroot="/ns")
+    (base / "a").mkdir()
+    (base / "cpu.max").write_text("max 100000\n")
+    (base / "a/cpu.max").write_text("max 100000\n")
+    assert sn.cgroup_quota(str(tmp_path))["state"] == "unlimited"
+    (base / "cpu.max").unlink()
+    assert sn.cgroup_quota(str(tmp_path))["state"] == "unknown"
+
+
+def test_count_blocks(tmp_path):
+    raw = tmp_path / "x"
+    rng = __import__("random").Random(1)
+    raw.write_bytes(bytes(rng.randrange(97, 123) for _ in range(250_000)))
+    subprocess.run(["bzip2", "-1", "-k", str(raw)], check=True)
+    assert sn.count_blocks((tmp_path / "x.bz2").read_bytes()) == 3
 
 
 # ---- the drive ---------------------------------------------------------------------------
@@ -318,12 +393,43 @@ def cpu_model(corpus, w, slow):
     return c * (2.0 if slow and w == 10 else 1.0)
 
 
-def make_attempt(tmp_path, dry=False, slow_rounds=(), mutate=None):
+HEAD = "1" * 40
+FROZEN = "2" * 40
+AB = "a" * 64
+L2, L9 = "c" * 64, "d" * 64
+
+
+def state(t, **over):
+    """A sysfs state as ab's --sysfs-state records it on the i9"""
+    s = {
+        "freq_mhz": 4600.0,
+        "governor": "powersave",
+        "epp": "balance_performance",
+        "turbo": True,
+        "pkg_temp_c": 50.0,
+        "t_unix_ns": t,
+    }
+    s.update(over)
+    return s
+
+
+def write_preflight(d, passing=True):
+    pdir = d / "preflight"
+    pdir.mkdir()
+    (pdir / "exits.txt").write_text("lscpu: exit 0\nab sample: exit 0\nstatic facts: exit 0\n")
+    (pdir / "lscpu.txt").write_text(LSCPU if passing else "Model name: Intel Xeon\n")
+    (pdir / "sample.jsonl").write_text("".join(json.dumps(x) + "\n" for x in samples()))
+    (pdir / "static.json").write_text(json.dumps(i9_static()))
+
+
+def make_attempt(tmp_path, dry=False, slow_rounds=(), mutate=None, preflight=True):
     d = tmp_path / ("dry" if dry else "full")
     d.mkdir()
     (d / "corpora").mkdir()
+    write_preflight(d, preflight)
     sched = sn.schedule(dry)
     slots, runs = [], []
+    t = 1_000.0
     for i, s in enumerate(sched):
         slow = s["round"] in slow_rounds
         if s["role"] == "sentinel":
@@ -332,16 +438,29 @@ def make_attempt(tmp_path, dry=False, slow_rounds=(), mutate=None):
             cpu = cpu_model(s["corpus"], s["threads"], slow)
             wall = cpu / s["threads"]
         slots.append(
-            {"schema": sn.SCHEMA["slot"], "index": i, **s, "rc": 0, "line": i, "lines_after": i + 1}
+            {
+                "schema": sn.SCHEMA["slot"],
+                "index": i,
+                **s,
+                "rc": 0,
+                "line": i,
+                "lines_after": i + 1,
+                "t_start_unix": t,
+                "t_end_unix": t + 0.7,
+            }
         )
+        ns = int((t + 0.3) * 1e9)
         runs.append(
             {
                 "round": 0,
                 "corpus": s["corpus"],
                 "threads": s["threads"],
                 "arm": s["arm"],
-                "machine_pre": {"freq_mhz": 4600.0},
-                "t_spawn_unix_ns": 1,
+                "waited_s": 0,
+                "machine_pre": state(ns - 1000),
+                "t_spawn_unix_ns": ns,
+                "t_exit_unix_ns": ns + int(wall * 1e9),
+                "machine_post": state(ns + int(wall * 1e9) + 1000),
                 "wall": wall,
                 "cpu": cpu,
                 "out": sn.CONTENT_BYTES,
@@ -349,19 +468,33 @@ def make_attempt(tmp_path, dry=False, slow_rounds=(), mutate=None):
                 "err": "",
             }
         )
-    files = {n: {"sha256": f"{n}-sha"} for n in sn.CORPORA}
-    corpora = {"schema": sn.SCHEMA["corpora"], "ok": True, "problems": [], "files": files}
+        t += 0.8
+    files = {
+        n: {"sha256": h, "decoded_sha256": sn.CONTENT_SHA256, "decoded_bytes": sn.CONTENT_BYTES}
+        for n, h in (("wikidata-l2", L2), ("wikidata-l9", L9))
+    }
+    corpora = {
+        "schema": sn.SCHEMA["corpora"],
+        "ok": True,
+        "problems": [],
+        "files": files,
+        "content": {"sha256": sn.CONTENT_SHA256, "bytes": sn.CONTENT_BYTES},
+        "source": {"sha256": sn.CORPUS_SHA256},
+    }
     ident = {
         "schema": sn.SCHEMA["identity"],
         "dry": dry,
+        "head": HEAD,
+        "frozen": None if dry else FROZEN,
         "inputs_match_frozen": not dry,
-        "preflight_exit": 0,
+        "preflight_exit": 0 if preflight else 1,
         "drive_exit": 0,
-        "ab_sha256": "a",
-        "ab_sha256_after": "a",
+        "ab_sha256": AB,
+        "ab_sha256_after": AB,
         "tree_clean_after": True,
         "schedule_sha256": sn.digest(sched),
-        "corpora_after": {**{n: f"{n}-sha" for n in sn.CORPORA}, "wikidata": sn.CORPUS_SHA256},
+        "sources": {x: {"head": "e" * 64, "frozen": None if dry else "e" * 64} for x in sn.SOURCES},
+        "corpora_after": {"wikidata-l2": L2, "wikidata-l9": L9, "wikidata": sn.CORPUS_SHA256},
     }
     parts = {"slots": slots, "runs": runs, "corpora": corpora, "identity": ident}
     if mutate:
@@ -387,9 +520,15 @@ def test_judge_valid_and_its_figures(tmp_path):
     assert p["ratio_of_ratios"]["ratio"] == pytest.approx(1.25 / 3.5)
     m = j["result"]["model_check"]
     assert m["l2_interval_vs_band"] == "within the band" and m["l2_point_in_band"]
-    assert m["l9_interval_contains_s2"] and m["ratio_of_ratios_below_1"]
+    assert m["l9_against_s2"].startswith("compatible") and "not equivalence" in m["l9_against_s2"]
+    assert m["ratio_of_ratios"].startswith("below 1: a favourable level x worker interaction")
     assert m["model_gb_s"]["point"] == pytest.approx(3.76 / 1.25)
-    assert m["model_gb_s"]["label"].startswith("MODEL")
+    assert m["model_gb_s"]["label"].startswith("HISTORICAL MODEL")
+    assert "VALID" in j["outcome"] and "ratio of ratios" in j["outcome"]
+    r = j["result"]
+    assert len(r["chronological"]) == sn.ROUNDS
+    assert r["pre_state"]["unread"]["freq_mhz"] == 0
+    assert r["waits"]["by_cell"]["wikidata-l2@10"]["runs"] == sn.ROUNDS
     assert j["result"]["rounds"] == sn.ROUNDS
     assert j["result"]["modes"]["counts"]["fast"] == sn.ROUNDS
     # (the wall: here cpu / workers, so its growth is the CPU's x 4/10)
@@ -406,9 +545,12 @@ def test_judge_keeps_every_round_and_splits_modes_descriptively(tmp_path):
     assert r["rounds"] == sn.ROUNDS  # nothing excluded
     assert r["modes"]["counts"]["slow"] == 20 and r["modes"]["counts"]["fast"] == sn.ROUNDS - 20
     assert r["modes"]["label"].startswith("DESCRIPTIVE")
-    fast = r["modes"]["classes"]["fast"]["cpu"]["growth"]["wikidata-l2"]["ratio"]
-    slowg = r["modes"]["classes"]["slow"]["cpu"]["growth"]["wikidata-l2"]["ratio"]
-    assert fast == pytest.approx(1.25) and slowg == pytest.approx(2.5)
+    fast = r["modes"]["classes"]["fast"]["cpu"]["growth"]["wikidata-l2"]
+    slowg = r["modes"]["classes"]["slow"]["cpu"]["growth"]["wikidata-l2"]
+    assert fast["ratio"] == pytest.approx(1.25) and slowg["ratio"] == pytest.approx(2.5)
+    # point estimates only: no class interval (a selection's blocks would compress time)
+    assert "lo" not in fast and "lo" not in slowg
+    assert [c["class"] for c in r["chronological"]][:20] == ["slow"] * 20
     full = r["primary"]["cpu"]["growth"]["wikidata-l2"]
     assert 1.25 < full["ratio"] < 2.5 and full["hi"] > full["lo"]
 
@@ -504,6 +646,71 @@ def _dry_identity(p):
     p["identity"]["dry"] = True
 
 
+# the Researcher's counterexamples (#145 6758300190), each now refused
+def _l2_digest_gone_both_sides(p):
+    p["corpora"]["files"]["wikidata-l2"].pop("sha256")
+    p["identity"]["corpora_after"].pop("wikidata-l2")
+
+
+def _empty_telemetry(p):
+    for r in p["runs"]:
+        r["machine_pre"] = {}
+        r["t_spawn_unix_ns"] = None
+
+
+def _no_head(p):
+    p["identity"].pop("head")
+
+
+def _no_frozen(p):
+    p["identity"]["frozen"] = None
+
+
+def _no_sources(p):
+    p["identity"].pop("sources")
+
+
+def _source_not_frozen(p):
+    p["identity"]["sources"]["bench/share_nothing.py"]["frozen"] = "f" * 64
+
+
+def _null_without_reason(p):
+    p["runs"][5]["machine_pre"]["governor"] = None
+
+
+def _no_post(p):
+    del p["runs"][5]["machine_post"]
+
+
+def _spawn_after_exit(p):
+    r = p["runs"][5]
+    r["t_spawn_unix_ns"] = r["t_exit_unix_ns"] + 1
+
+
+def _runs_out_of_order(p):
+    p["runs"][6]["t_spawn_unix_ns"] = p["runs"][4]["t_spawn_unix_ns"]
+
+
+def _slot_time_missing(p):
+    p["slots"][3].pop("t_end_unix")
+
+
+def _no_wait(p):
+    del p["runs"][3]["waited_s"]
+
+
+def _ab_digest_gone(p):
+    p["identity"]["ab_sha256"] = p["identity"]["ab_sha256_after"] = None
+
+
+def _content_not_shown(p):
+    p["corpora"].pop("content")
+
+
+def _decode_not_shown(p):
+    p["corpora"]["files"]["wikidata-l9"]["decoded_sha256"] = None
+
+
 @pytest.mark.parametrize(
     "mutate",
     [
@@ -524,6 +731,21 @@ def _dry_identity(p):
         _corpora_bad,
         _dirty,
         _dry_identity,
+        _l2_digest_gone_both_sides,
+        _empty_telemetry,
+        _no_head,
+        _no_frozen,
+        _no_sources,
+        _source_not_frozen,
+        _null_without_reason,
+        _no_post,
+        _spawn_after_exit,
+        _runs_out_of_order,
+        _slot_time_missing,
+        _no_wait,
+        _ab_digest_gone,
+        _content_not_shown,
+        _decode_not_shown,
     ],
 )
 def test_judge_invalid(tmp_path, mutate):
@@ -533,11 +755,97 @@ def test_judge_invalid(tmp_path, mutate):
 
 
 def test_judge_dry_admits_an_unfrozen_failed_preflight(tmp_path):
-    def m(p):
-        p["identity"]["preflight_exit"] = 1
+    rc, j = judge(make_attempt(tmp_path, dry=True, preflight=False), dry=True)
+    assert rc == 0 and j["preflight_replay"]["verdict"] == "REFUSED"
 
-    rc, j = judge(make_attempt(tmp_path, dry=True, mutate=m), dry=True)
+
+def test_judge_replays_the_archived_preflight(tmp_path):
+    # a recorded exit 0 is not a pass: the archived files are judged again
+    rc, j = judge(
+        make_attempt(
+            tmp_path, preflight=False, mutate=lambda p: p["identity"].update(preflight_exit=0)
+        )
+    )
+    assert rc == 2 and "replays REFUSED" in j["outcome"]
+
+
+def test_judge_needs_the_archived_preflight(tmp_path):
+    d = make_attempt(tmp_path)
+    shutil.rmtree(d / "preflight")
+    rc, j = judge(d)
+    assert rc == 2 and "no archived preflight" in j["outcome"]
+
+
+def test_judge_dry_refuses_a_disagreeing_preflight_record(tmp_path):
+    rc, j = judge(
+        make_attempt(
+            tmp_path,
+            dry=True,
+            preflight=False,
+            mutate=lambda p: p["identity"].update(preflight_exit=0),
+        ),
+        dry=True,
+    )
+    assert rc == 2
+
+
+def test_judge_keeps_explicitly_unread_telemetry(tmp_path):
+    # unread readings with their reasons are explicit missingness: admitted, counted apart
+    def m(p):
+        for r in p["runs"]:
+            for st_ in (r["machine_pre"], r["machine_post"]):
+                for k in ("freq_mhz", "governor", "epp", "turbo", "pkg_temp_c"):
+                    st_[k] = None
+                    st_[k + "_why"] = "no cpufreq driver"
+
+    rc, j = judge(make_attempt(tmp_path, mutate=m))
     assert rc == 0
+    ps = j["result"]["pre_state"]
+    assert ps["unread"]["governor"] == ps["runs"]
+    assert ps["read_not_as_declared"]["governor"] == 0
+
+
+def test_judge_counts_read_deviations_without_excluding(tmp_path):
+    def m(p):
+        p["runs"][20]["machine_pre"]["governor"] = "performance"
+
+    rc, j = judge(make_attempt(tmp_path, mutate=m))
+    assert rc == 0 and j["result"]["pre_state"]["read_not_as_declared"]["governor"] == 1
+    assert j["result"]["rounds"] == sn.ROUNDS
+
+
+def test_judge_r_including_1_is_inconclusive(tmp_path):
+    # the Researcher's series: R at 0.8 in 30 rounds and 1.2 in 30, its interval spanning 1
+    def m(p):
+        k = 0
+        for s, r in zip(p["slots"], p["runs"]):
+            if (
+                s["role"] == "cell"
+                and s["corpus"] == "wikidata-l2"
+                and s["threads"] == 10
+                and s["round"] >= 1
+            ):
+                f = 0.8 if (s["round"] - 1) < 30 else 1.2
+                r["cpu"] = cpu_model("wikidata-l2", 4, False) * 3.5 * f
+                k += 1
+        assert k == sn.ROUNDS
+
+    rc, j = judge(make_attempt(tmp_path, mutate=m))
+    assert rc == 0
+    rr = j["result"]["primary"]["cpu"]["ratio_of_ratios"]
+    assert rr["lo"] < 1 < rr["hi"]
+    assert j["result"]["model_check"]["ratio_of_ratios"].startswith("includes 1: INCONCLUSIVE")
+    assert "INCONCLUSIVE" in j["outcome"]
+
+
+def test_judge_r_above_1_closes_nothing(tmp_path):
+    def m(p):
+        for s, r in zip(p["slots"], p["runs"]):
+            if s["role"] == "cell" and s["corpus"] == "wikidata-l2" and s["threads"] == 10:
+                r["cpu"] = cpu_model("wikidata-l2", 4, False) * 4.0
+
+    rc, j = judge(make_attempt(tmp_path, mutate=m))
+    assert rc == 0 and "closes nothing" in j["result"]["model_check"]["ratio_of_ratios"]
 
 
 def test_judge_unreadable_records_are_invalid(tmp_path):
@@ -589,6 +897,7 @@ def test_corpora_builds_and_checks(tmp_path, monkeypatch):
     assert rc == 0 and rec["ok"], rec
     for n in sn.CORPORA:
         f = rec["files"][n]
+        assert f["blocks_by_magic"] >= 1
         assert f["decoded_sha256"] == hashlib.sha256(content).hexdigest()
         assert f["thread_invariant"] is True
         assert f["sha256"] == sn.sha256_file(out / f"{n}.bz2")

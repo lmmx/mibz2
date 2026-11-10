@@ -1,46 +1,58 @@
 # 2026-11-10: Share-nothing pricing: registration (diagnostic only)
 
-**Status: registered as a draft, NOT FROZEN.**
+**Status: registered as a draft, NOT FROZEN; revised after the Researcher's REVISE** (#145
+6758300190; report `state/reports/share-nothing-pricing-6758228391` at `53625b5d`).
 - **The recipe:** `just bench-share-nothing` (`.just/share-nothing.just`). It refuses every run
   but a DRY one until `bench/share-nothing.frozen` names a commit.
 - **Who freezes it:** only the Coordinator freezes and queues it, after the Researcher's review.
 
 **What it is:** falsifier 2 of `2026-11-10-share-nothing.md` §4 (the Pathfinder's proposal, #145
 6757754125, on #313), built as a C5 workstation recipe for the i9-10900K. Plain independent
-workers (`mibz2-workers`, today's decoder) on Wikidata recompressed with `lbzip2 -2`, at 2 to 10
-workers, read as CPU-seconds and wall. It prices §3's model before any small table is built.
+workers (`mibz2-workers`, today's decoder) on Wikidata recompressed with `lbzip2 -2` and `-9`, at
+2 to 10 workers, read as CPU-seconds and wall.
+
+**What it is for:** a bounded, descriptive workload-scaling diagnostic. It measures how the CPU of
+a decode grows from 4 to 10 plain workers at two recompression levels, and their interaction.
+
+**What it does not do:** it sets no kernel budget, and qualifies or closes no design. It cannot:
+- falsify share-nothing, or a compact table, by an interval that spans 1;
+- validate §2's historical ladder by being compatible with one of its points;
+- identify a finder-fed kernel's contention, or table capacity in isolation (§4, §5).
 
 **Diagnostic only** (RULES C1). No merge gate, acceptance rule or adoption decision reads its
-outcome. Every record is kept: no run is excluded, replaced or retried because of its mode or its
-value.
+outcome. Every record is kept: no run is excluded, replaced or retried because of its mode, its
+wait or its value.
 
 Everything below is fixed before any data: the corpora, the worker counts, the schedule and its
 seed, the rounds, the analysis, the intervals, the mode split and the deadlines.
 
-Labels: **read** (from the record), **model** (derived, not observed), **registered** (fixed here
-before data).
+Labels: **read** (from the record), **historical model** (derived in the share-nothing entry, not
+observed), **registered** (fixed here before data).
 
-## 1. The hypothesis
+## 1. What is measured
 
-**The claim under test** (the share-nothing entry, §2 and §3):
-- the CPU a decode costs with plain workers grows with the table a block, and not with
-  cooperation's absence;
-- so at about 0.8 MB of table a block (`lbzip2 -2`, 200 k rows × 4 B: the footprint of design C,
-  0.75 MB), ten independent workers pay **1.10 to 1.44×** the CPU of four. That band is §2's
-  -1 (0.4 MB) and -3 (1.2 MB) points, read from the workstation's 28 October run
-  (`2026-10-28-workstation-scaling.md` §9), with the decoder of that date.
+**The estimand** (registered): with today's decoder and this harness (the sentinels included), on
+the i9:
+- **G₂:** the growth in CPU-seconds from **4 to 10** workers on the -2 corpus. It is 4-to-10
+  inflation, not 1-to-10: there is no one-thread anchor, and none is claimed.
+- **G₉:** the same growth on the -9 corpus, in the same rounds.
+- **R = G₂ / G₉:** the **recompression-level × worker-count interaction**. Recompression changes
+  the block size and with it the block count, the tables, the buffers and the run structure, and
+  a decoder change need not affect the two corpora equally. R is not a measure of table capacity
+  in isolation.
 
-**§3's model** (model): ten workers at one thread's 400 MB/s at the all-core clock (about 0.94),
-divided by that growth: 3.76 GB/s / G, so **2.7 to 3.4 GB/s** for G in 1.10 to 1.44, against about
-1.5 for today's cooperative default on level-9 input.
+**The historical context it is read beside** (read, not re-established):
+- §2 of the share-nothing entry read, from the workstation's 28 October run
+  (`2026-10-28-workstation-scaling.md` §9) with the decoder of that date, a 4-to-10 CPU growth of
+  ×1.10 at -1 (0.4 MB a block), ×1.44 at -3 (1.2 MB) and ×3.50 at -9 (3.6 MB);
+- the band 1.10–1.44 is where the entry expected G₂ at -2 (0.8 MB a block).
 
-**What this run measures** (registered):
-- **The primary reading:** G₂, the growth in CPU-seconds from 4 to 10 workers on the -2 corpus,
-  with today's decoder.
-- **The in-run comparator:** G₉, the same growth on the -9 corpus. §2's ×3.50 at -9 came from an
-  earlier decoder; this run measures it again beside G₂, in the same rounds.
-- **The ratio of ratios:** R = G₂ / G₉. What a smaller table buys in CPU growth under today's
-  decoder, with whatever the decoder changed since 28 October common to both.
+**§3's model** (historical model, labelled so wherever it is shown): 3.76 GB/s / G₂. The numerator
+is fixed: ten workers at one thread's 400 MB/s at an all-core clock of about 0.94. It transfers
+two assumptions this run does not test:
+- dividing a one-thread rate by a 4-to-10 factor takes the 1-to-4 factor as 1;
+- it takes the Workers arm's growth as the growth of ten continuously supplied, finder-fed
+  workers, which this arm does not reproduce (§5).
 
 ## 2. The run
 
@@ -60,7 +72,9 @@ divided by that growth: 3.76 GB/s / G, so **2.7 to 3.4 GB/s** for G in 1.10 to 1
   - **Decoded back:** each file is decoded by bzip2 and its SHA-256 must equal the content's, or
     the attempt is refused.
   - **Recorded:** lbzip2's version line, the flags, each file's size and SHA-256 and whether it
-    matches the digests registered here for lbzip2 2.5 (another version is recorded, not refused).
+    matches the digests registered here for lbzip2 2.5 (another version is recorded, not refused),
+    and each file's block headers counted by their 48-bit magic, for context (it counts the bench's
+    corpus's 431 blocks exactly).
 - **Registered digests** (lbzip2 2.5, Ubuntu 2.5-2.3, on the dev VM, where `-n 1` and `-n 4` gave
   byte-identical files):
 
@@ -80,7 +94,13 @@ Read-only and passive, after the build and before anything is timed, each collec
 `share_nothing.py static` (procfs, sysfs and cgroupfs only). It passes only if:
 - every collector's exit status is recorded once in `preflight/exits.txt` and is 0;
 - lscpu's and /proc/cpuinfo's model is the **i9-10900K**;
-- all 20 CPUs are online and allowed, and the cgroup v2 path has no CPU quota at any level;
+- all 20 CPUs are online and allowed;
+- no CPU quota is **established**: the cgroup2 mount is found in mountinfo; every directory on the
+  process's path exists; and at each level `cpu.max` reads `max`, or is absent where the parent's
+  `cgroup.subtree_control` (read) does not delegate the cpu controller, or the level is the
+  hierarchy's root. A missing mount, path, directory or file is **unknown** and refuses, as does a
+  cpu controller on a cgroup v1 hierarchy. Levels above a cgroup namespace's root cannot be read
+  by anyone; that is a limit (§5), not established;
 - every cpufreq policy reads `intel_pstate`, `powersave` and `balance_performance` and together
   they cover the 20 CPUs; `intel_pstate/no_turbo` reads 0;
 - each of the three samples reads that governor and EPP, and turbo `true`.
@@ -105,8 +125,14 @@ Otherwise the attempt is **REFUSED**, archived, exit 4. A DRY check records the 
 - **Pre-treatment state:** `--sysfs-state` (bench 3.5.0, ported unchanged from the run-fed
   leader's branch, eddfcca0): the clock of each CPU, the governor, EPP, turbo and package
   temperature, read in the parent before each run is spawned and after it exits, with timestamps.
-  Recorded per run, never an exclusion.
-- **About 12 minutes** once built (about 1 s a slot).
+  Each reading is a value, or null with its reason. Recorded per run, never an exclusion.
+- **Times:** each run's spawn and exit (`t_spawn_unix_ns`, `t_exit_unix_ns`, ab's
+  CLOCK_REALTIME in ns) and each slot's start and end (`time.time()`, the same clock, in s), and
+  ab's busy-gate wait before each run (`waited_s`, whole seconds). The clock is the wall clock: a
+  step backwards (an NTP correction) would put the record out of order, and the judge refuses an
+  out-of-order record rather than repair it.
+- **About 9 to 12 minutes** once built (about 0.7 s a slot on the dev VM), more with the busy
+  gate's waits: a round's length varies with the waits and is recorded, not assumed.
 
 ### The bounds
 
@@ -134,18 +160,38 @@ of its own, TERM at the deadline, KILL after the grace, then checked empty.
 
 ## 3. The analysis (`bench/share_nothing.py judge`, registered)
 
-### Admission
+### Admission: fail closed on missing evidence
 
-The attempt is INVALID, and nothing is reported, unless:
-- the identity records the frozen inputs (`inputs_match_frozen`), the preflight's pass, the
-  drive's exit 0, the schedule's registered digest, the same `ab` digest before and after, and a
-  clean checkout after;
-- the corpora's record is ok, and each corpus's digest after the run is the one built (the
-  sentinel's, the registered corpus's);
-- every scheduled slot ran in order with exit 0 and added exactly one run line, whose arm, thread
-  count and corpus are the slot's;
-- every run decoded 209,700,196 bytes with ab's hash `a8830caee5c511a6` and no error, with a
-  finite CPU and wall, and a pre-run sysfs state.
+The attempt is INVALID, and nothing is reported, unless every item below is present and agrees.
+Absent evidence never counts as evidence: a missing digest is not equal to another missing digest,
+and an empty state is not an observation.
+- **Identity:** a 40-hex head; outside DRY, a 40-hex frozen commit, `inputs_match_frozen`, and the
+  registered schedule digest; the identity's schedule digest equal to the schedule's; the drive's
+  exit 0; a clean checkout after.
+- **Sources:** every registered source's SHA-256 at the head (64-hex), and outside DRY equal to
+  its SHA-256 at the frozen commit (read by `git show`).
+- **The executable:** `ab`'s SHA-256 present (64-hex) before and after, and equal.
+- **Corpora:**
+  - the record shows the registered source corpus and content (digest and bytes);
+  - each corpus's digest is present on both sides (as built, and after the run) and equal;
+  - each corpus is recorded decoding to the content;
+  - the sentinel's corpus after the run is the registered corpus.
+- **The preflight, replayed:** the archived files (`preflight/`) are judged again by the same code.
+  The replayed verdict must agree with the recorded exit, and outside DRY it must PASS. A recorded
+  exit 0 alone is not a pass.
+- **Slots and runs:**
+  - every scheduled slot ran, in order, with exit 0, and added exactly one run line, whose arm,
+    thread count and corpus are the slot's;
+  - every run decoded 209,700,196 bytes with ab's hash `a8830caee5c511a6` and no error, with a
+    finite CPU, wall and `waited_s`.
+- **Telemetry, with explicit missingness:**
+  - each run's pre- and post-run state carries every reading (clock, governor, EPP, turbo,
+    package temperature), each as a value or as null **with its reason**, and its own reading
+    time;
+  - each run's spawn ≤ exit, each spawn ≥ the previous run's exit, and each slot's start ≤ end in
+    order;
+  - an unread reading (null, with its reason) is admitted and counted as unread. A reading that is
+    absent, or null without a reason, is INVALID.
 
 A failure of the judge itself is INVALID with its reason, never a VALID.
 
@@ -154,10 +200,22 @@ A failure of the judge itself is INVALID with its reason, never a VALID.
 - **The unit is the round.** Within a round, a cell at 10 workers and the same corpus's cell at
   4 are paired: per-round ratio r = CPU₁₀ / CPU₄.
 - **G₂ and G₉:** the geometric mean of the 60 per-round ratios on each corpus.
-- **R:** the geometric mean of the per-round r₂ / r₉.
-- **The same in wall**, reported beside, never judged (the scanner binds the wall; §4).
-- **The grid:** each cell's median CPU-seconds, wall, MB/s and pre-run clock; each worker count's
-  CPU growth against 4, with intervals.
+- **R:** the geometric mean of the per-round r₂ / r₉: the simultaneous within-round pairing,
+  over all rounds.
+- **The same in wall**, reported beside, never judged (the scanner binds the wall; §5).
+- **The grid:** each cell's median CPU-seconds, wall, MB/s and pre-run clock (with its count of
+  unread readings), and each worker count's CPU growth against 4, with intervals.
+- **The pre-run state:** unread readings counted apart from read ones that differ from the
+  declared settings. Counted, never an exclusion.
+- **The busy gate's waits:** `waited_s` by cell and by position in the round (runs, runs that
+  waited, total, maximum). Described, never an exclusion or an adjustment: a wait follows prior
+  load, perhaps the previous treatment's.
+- **The chronological record:** every measured round in order, with:
+  - its start (relative) and its actual duration;
+  - its summed wait;
+  - its sentinels' walls and class;
+  - its per-round log ratios on each corpus, and log R;
+  - its median pre-run clock.
 
 ### The intervals and the dependence treatment
 
@@ -165,96 +223,144 @@ A failure of the judge itself is INVALID with its reason, never a VALID.
   independent, and a mode change inside a round can enter a pair.
 - **Within a round:** the seeded order spreads each cell's position across the round, so a mode
   switch at a fixed point in the round does not fall on one cell systematically.
-- **Between rounds:** a **circular moving-block bootstrap over rounds**, block 5 rounds (about a
-  minute), 10,000 resamples, seed 20261110, 95% percentile interval. Every statistic of one
-  length and block uses the same draws.
+- **Between rounds:** a **circular moving-block bootstrap over the chronological rounds**, block 5
+  rounds, 10,000 resamples, seed 20261110, 95% percentile interval. Every statistic of one length
+  and block uses the same draws.
+- **What the interval is:** conditional on this attempt and on the assumed dependence treatment.
+  It is **not guaranteed 95% coverage** under the modes' unknown persistence:
+  - dependence longer than the block is not bounded;
+  - a shock common to the whole attempt can make every round alike and the interval narrow while
+    another attempt's uncertainty is not.
 - **Sensitivity** (reported, never chosen between after the data): blocks of 1 (independent
-  rounds) and 10; the t interval on the log ratios beside each; and each reading's lag-1
-  autocorrelation over rounds.
+  rounds) and 10; the t interval on the log ratios; and each reading's lag-1 autocorrelation. The
+  chronological record is the time-series reading. No interval is chosen for being narrowest, and
+  there is no retry.
+- **A block as long as the rounds** only rotates them, so it gives no interval, and the judge
+  says so (a DRY check's two rounds, never the registered run's 60).
 
 ### The model check (registered classes)
 
-- **G₂ against §2's band 1.10–1.44**, by its interval: within the band; below it; above it; or
-  overlapping its lower edge, its upper edge, or both (wider than the band). The point's place in
-  the band is reported beside.
-- **G₉ against §2's ×3.50:** whether its interval contains 3.50.
-- **R:** whether its interval lies below 1.
-- **§3 restated** (model, labelled so): 3.76 GB/s / G₂ with G₂'s interval. Not observed.
+- **G₂ against the historical band 1.10–1.44**, by its interval: within the band; below it; above
+  it; or overlapping its lower edge, its upper edge, or both (wider than the band). The point's
+  place in the band is reported beside.
+- **G₉ against the historical ×3.50:** "compatible" if its interval contains 3.50, else
+  "excludes". Compatibility is not equivalence, and does not validate the historical ladder: no
+  intermediate level is measured.
+- **R**, by its interval:
+  - below 1: a favourable level × worker interaction;
+  - above 1: a contrary interaction;
+  - including 1: **INCONCLUSIVE**.
+  None of these isolates table capacity (§1).
+- **§3, the historical model**, restated with G₂ and labelled so (§1).
 
-The outcome line: `VALID: -2 CPU growth 4->10 ×G₂ [lo–hi], against the band 1.1-1.44: <class>;
--9 ×G₉ [lo–hi]; ratio of ratios ×R [lo–hi]`. A block as long as the rounds only rotates them, so
-it gives no bootstrap interval, and the judge says so (a DRY check's two rounds, never the
-registered run's 60).
+The outcome line: `VALID: -2 CPU growth 4->10 ×G₂ [lo–hi], against the historical band 1.1-1.44:
+<class>; -9 ×G₉ [lo–hi]; ratio of ratios ×R [lo–hi]: <a favourable interaction | a contrary
+interaction | INCONCLUSIVE>`.
 
 ### The mode caveat, and the registered mode split (descriptive)
 
 - **The i9 has two persistent modes at 10 threads** (about 0.15 s and about 0.30 s for the default
   plan, with per-thread CPU doubled in the slow mode). CPU-seconds are therefore contaminated
   too, and the mechanism is unresolved (the discriminator is #318).
-- **The primary readings use every measured round.** No round or run is excluded by its value or
-  its mode.
+- **The primary readings use every measured round.** No round or run is excluded by its value, its
+  wait or its mode.
 - **The split** (DESCRIPTIVE, registered): a round is **fast** if both its sentinels' own walls are
   below 0.21 s (`two_modes.py`'s separator), **slow** if both are at or above it, and **mixed**
-  otherwise. G₂, G₉ and R are given for the fast and the slow rounds where a class has at least
-  5 rounds; the counts of each class are given always.
-- **What the split is not:** the sentinels are runs of another plan on another corpus, so the
-  class is an indicator of the round's machine state, not an identified mode of the cells, and a
-  mode can change between a sentinel and a cell. It is reported beside the primary readings and
-  never replaces them.
-- **The pre-run sysfs state:** the runs whose governor, EPP or turbo read otherwise than declared
-  are counted, never excluded.
+  otherwise. For each class present: its count, G₂, G₉ and R as **point estimates only**, and its
+  median pre-run clock.
+- **Why no class interval:** selecting a class's rounds and then block-resampling the selection
+  would compress the time axis (a block of five fast rounds can span many more chronological
+  rounds), so its interval would not mean what the primary interval means.
+- **What the split is:** an endpoint-bracketed indicator of another plan's state.
+  - The sentinels are runs of another plan on another corpus. Matching sentinels, and their class,
+    do not identify each intervening cell's mode.
+  - The scheduled sentinel can itself affect the next runs' thermal and cache state, so the
+    estimand includes this harness.
+  - The pre-run clock is a covariate, reported with its missingness. It is not an exclusion, and a
+    low pre-run clock is not a diagnosis of the mode during the decode.
 
-## 4. What each outcome means for designs C, D and E
+## 4. What each outcome means
 
-**The common gate** (the share-nothing entry, §4.1): a design's one-thread walk must stay within
-**1.44×** the plain walk a byte, or the cooperative plan on the plain table still wins at ten.
-That gate assumed §2's factor at a small table.
+**No kernel budget comes from this run.**
+- **The 1.44× "common gate" of the share-nothing entry is withdrawn here.** It compared
+  concurrency, not kernels (REVIEW 6758204909).
+- **No replacement gate is derived from G₂ alone, before or after the data.**
+- **The design record stands as reviewed:**
+  - C is withdrawn;
+  - E is falsified as built;
+  - D4-delta (about 1.089 MB, estimated) keeps its own registered filters unchanged (15 Ir a row,
+    7.35 Ir a build row, 1.2 MB);
+  - the entry's 1.44 MB D table and its proposed C step are historical.
+  This run reopens none of them, by implication or otherwise.
+- **The conditional surface** (REVIEW 6758204909, recorded before data):
 
-| table a block | design |
-|---|---|
-| 0.75 MB | C, runs and a directory (Wikidata) |
-| 0.8 MB | this run's -2 |
-| 1.2 MB | §2's -3 |
-| 1.44 MB | D, k-step cells at k = 4 (Wikidata) |
-| 1.8 MB | E, the line table |
-| 3.6 MB | -9, today's T-vector |
+  T_new(g) ≤ min(Q, A / ((1 − f + f·g)·h(g))),
 
-- **G₂ within or below the band:** §3's factor holds for a 0.8 MB table with today's decoder.
-  - C sits in the priced regime: its gate stands as written, and its next step is its own cheapest
-    falsifier (the step's instructions, then a one-thread inversion).
-  - D and E have larger tables than -2. This run does not price them. Their premise still rests on
-    §2's -3 and -6 points, from the earlier decoder; G₉ and R say whether §2's ladder still
-    describes today's decoder.
-- **G₂ above the band:** at 0.8 MB the workers inflate more than §2 implied.
-  - The model's range falls to 3.76 / G₂ GB/s, and the gate as written is no longer sufficient:
-    the margin it leaves is consumed by the factor itself.
-  - C, D and E each need their walk cost priced against the measured G₂ before a build. D and E
-    have larger tables, and in §2 the growth rose with the table at every point, so they are not
-    expected to fare better.
-  - The share-nothing direction moves down the queue until a design shows a walk cheap enough.
+  where:
+  - A is the prospective small-table throughput at g = 1;
+  - f is the share of matched one-thread CPU that is build and walk;
+  - g is a candidate's one-thread build-and-walk CPU ratio;
+  - h(g) is its added concurrency inflation;
+  - Q is the scanner and sink supply ceiling.
+
+  **This run observes none of these terms directly.**
+  - G₂ is not h(g): it is the Workers arm's 4-to-10 growth on recompressed input, with no
+    candidate table.
+  - Q is not observed here: the Workers arm is scanner-fed.
+  - A, f and g belong to a concrete candidate.
+
+  A later qualification compares a concrete candidate with matched default throughput, and
+  charges construction, traversal and the full live state.
+
+**Each registered outcome:**
+- **G₂ within or below the historical band:** the Workers arm's 4-to-10 growth on -2 input is
+  compatible with what §2 read near that block size, under today's decoder. That supports, and
+  does not establish, the favourable regime the share-nothing entry describes. No budget changes.
+- **G₂ above the band:**
+  - the observation is reported as it is: at -2 the Workers arm inflates more than §2's points
+    suggested;
+  - prospective experiments are revisited. The D4 filters do not change, and no new kernel budget
+    is assigned after seeing it.
 - **G₂ overlapping an edge, or wider than the band:** inconclusive at this resolution. Nothing
   changes, and the interval is reported as it is.
 - **G₉:**
-  - if its interval contains 3.50, §2's ladder still describes today's decoder;
-  - if it lies well below, today's decoder has changed the plain workers' scaling, and R, not §2's
-    band, is the figure to carry.
-- **R's interval including 1:** a smaller table buys nothing in CPU growth under today's
-  decoder, and the share-nothing premise fails whatever the band says.
+  - compatible with 3.50: compatibility only;
+  - excluding it: the Workers arm's -9 scaling under today's decoder differs from §2's record,
+    and §2's band is a weaker reference for G₂.
+- **R:**
+  - **below 1:** a favourable level × worker interaction, useful evidence of a favourable workload
+    regime;
+  - **including 1:** INCONCLUSIVE. Not "a smaller table buys nothing", and not share-nothing
+    falsified;
+  - **above 1:** a contrary interaction. It closes neither compact representation nor
+    share-nothing.
 
-## 5. Limits
+## 5. Limits, which constrain every conclusion above
 
-- **The scanner binds near 5×** on small blocks (`2026-11-10-parallel-scan.md`): one scanner
-  thread caps the wall, so the wall at -2 cannot show what ten free workers would deliver. That
-  is why CPU-seconds are the reading, as in §2. The wall is reported and never judged.
-- **CPU growth from 4 to 10 workers is not a design's walk cost.** It prices the factor §3's
-  model applies; it says nothing about a smaller table's instructions a byte.
-- **A -2 block is not a -9 block in a small table.** It has 200 k rows, so its output buffer,
-  its symbols and its MTF state are also smaller, and there are about 4.5× as many blocks
-  (headers, tables, scanner work). A design C block keeps 900 k rows and their buffers. -2 is
-  therefore an optimistic proxy for C's footprint.
-- **Recompression changes more than the block size:** the boundaries, the Huffman tables and
-  the run structure (§2's confound, unchanged).
-- **The modes** (§3): the primary readings carry them; the split only describes them.
+- **The scanner binds near 5×** on small blocks (`2026-11-10-parallel-scan.md`). One scanner thread
+  caps the wall, so the wall at -2 cannot show what ten free workers would deliver; CPU-seconds are
+  the reading, as in §2.
+- **Scanner-limited workers are not finder-fed workers.** In the Workers arm, workers wait on one
+  scanner:
+  - idle workers can lower cache contention;
+  - the scanner and its queue add CPU of their own.
+  So G₂ does not identify a finder-fed kernel's inflation, in either direction.
+- **4-to-10 only.** The grid (2, 4, 6, 8, 10, as §2's) answers the registered 4-to-10 question and
+  describes the knee. It does not establish 1-to-10 inflation or calibrate the 400 MB/s numerator.
+- **-2 is an optimistic footprint proxy, not a bound.** A -2 block has 200 k rows, so its table,
+  output buffer, symbols and MTF state are all smaller, and there are about 4.5× as many blocks
+  (headers, tables, scanner work). A compact table for a -9 block keeps 900 k rows and their
+  buffers.
+  - More blocks can raise setup cost while smaller buffers lower cache pressure, and neither sign
+    dominates in general.
+  - The record gives each file's compressed bytes and block count for context. No result here is
+    presented as isolated cache evidence.
+- **Recompression measures a level × worker interaction:** the boundaries, the Huffman tables and
+  the run structure change with the level (§2's confound, unchanged).
+- **The modes** (§3): the primary readings carry them; the split only describes them, without
+  intervals.
+- **The quota:** levels above a cgroup namespace's root cannot be read. The preflight establishes
+  the visible path only.
 - **One machine, one attempt, one corpus content.** No retry to pass.
 - **A whole-process CPU total** (getrusage, exact) includes the scanner, the reader, the sink
   and the main thread (ab's sampler's own CPU is left out). The six more threads at 10 workers

@@ -31,7 +31,8 @@ command or digest mismatch: exit 1.
 preflight needs. `preflight` judges what the recipe collected before any run (DIR/preflight/):
 every registered collector completed (exits.txt), the i9-10900K, its declared cpufreq settings
 (intel_pstate, powersave, balance_performance, turbo on) in the static facts and in three sysfs
-samples, every CPU online and allowed, and no CPU quota. PASS or REFUSED.
+samples, every CPU online and allowed, and no CPU quota established (cgroup_quota: unknown
+refuses). PASS or REFUSED.
 
 `drive` runs the schedule: one `ab run` a slot (one arm, one thread count, one file, one round,
 --settle 0.25, --max-busy 1.5, --sysfs-state), each under bench/bounded.py's deadline
@@ -39,14 +40,19 @@ samples, every CPU online and allowed, and no CPU quota. PASS or REFUSED.
 at the first slot that fails or passes its deadline: no retry. Exit 0 if every slot ran, 1 if
 one failed, 124 if one passed its deadline, 125 if a slot's group could not be emptied.
 
-`judge` applies the admission checks (the identity, every slot as scheduled with exactly one
-run line, every run's bytes and hash the corpus's, the corpora's record) and then the
-registered analysis: the growth from 4 to 10 workers in CPU-seconds and wall for each corpus
-and their ratio of ratios, each a geometric mean of per-round paired ratios with a
-moving-block bootstrap interval (block 5 rounds; blocks of 1 and 10 as sensitivity), the -2
-growth against §2's band 1.10-1.44, the -9 growth against §2's 3.50, the whole grid, and a
-descriptive split by the sentinels' mode. Exit 0 VALID or DRY, 2 INVALID (the outcome on the
-first line); a failure of the judge itself is INVALID with its reason, never a VALID.
+`judge` applies the admission checks, failing closed on missing evidence (the identity with its
+head, frozen commit and sources; the corpora's digests present on both sides; the archived
+preflight replayed; every slot as scheduled with exactly one run line; every run's bytes and hash
+the corpus's; every run's telemetry a value or null with its reason, and its times in order),
+then the registered analysis: the growth from 4 to 10 workers in CPU-seconds and wall for each
+corpus and their ratio of ratios (the level x worker interaction), each a geometric mean of
+per-round paired ratios with a moving-block bootstrap interval over the chronological rounds
+(block 5; 1 and 10 as sensitivity), conditional on the attempt and that dependence treatment;
+the -2 growth against the historical band 1.10-1.44, the -9 growth against the historical 3.50
+(compatibility only), R classed favourable, contrary or INCONCLUSIVE; the grid, the waits, the
+pre-run state with its missingness, the chronological rounds, and a descriptive split by the
+sentinels' walls (point estimates only). Exit 0 VALID or DRY, 2 INVALID (the outcome on the first
+line); a failure of the judge itself is INVALID with its reason, never a VALID.
 """
 
 import argparse
@@ -70,8 +76,8 @@ SCHEMA = {
     "static": "share_nothing/static/1",
     "preflight": "share_nothing/preflight/1",
     "slot": "share_nothing/slot/1",
-    "identity": "share_nothing/identity/1",
-    "judgement": "share_nothing/judgement/1",
+    "identity": "share_nothing/identity/2",
+    "judgement": "share_nothing/judgement/2",
 }
 
 ARM = "mibz2-workers"  # THREADS workers of a block each (Plan::Workers), today's decoder
@@ -260,6 +266,33 @@ def _decode_sha(path):
     return h.hexdigest(), n, None
 
 
+BLOCK_MAGIC = 0x314159265359  # a bzip2 block header's 48 bits (pi), at any bit offset
+
+
+def count_blocks(data):
+    """The bzip2 block headers in DATA, at any bit offset: a count of the 48-bit magic, for
+    context (a coincidental match inside compressed bits is possible and not excluded)"""
+    n = 0
+    for s in range(8):
+        if s == 0:
+            pat = BLOCK_MAGIC.to_bytes(6, "big")
+            i = data.find(pat)
+            while i >= 0:
+                n += 1
+                i = data.find(pat, i + 1)
+            continue
+        # the magic at bit s of byte i: (8 - s) bits in byte i, 5 whole bytes, s bits in i + 6
+        mid = ((BLOCK_MAGIC >> s) & ((1 << 40) - 1)).to_bytes(5, "big")
+        head = BLOCK_MAGIC >> (40 + s)
+        tail = BLOCK_MAGIC & ((1 << s) - 1)
+        j = data.find(mid, 1)
+        while 0 <= j <= len(data) - 6:
+            if (data[j - 1] & ((1 << (8 - s)) - 1)) == head and (data[j + 5] >> (8 - s)) == tail:
+                n += 1
+            j = data.find(mid, j + 1)
+    return n
+
+
 def corpora(args):
     os.makedirs(args.outdir, exist_ok=True)
     rec = {"schema": SCHEMA["corpora"], "ok": False, "problems": [], "files": {}}
@@ -324,6 +357,7 @@ def corpora(args):
             "matches_registered": f_sha == reg["sha256"] and os.path.getsize(out) == reg["bytes"],
             "decoded_sha256": dsha,
             "decoded_bytes": dn,
+            "blocks_by_magic": count_blocks(open(out, "rb").read()),
         }
         if why:
             bad.append(why)
@@ -340,36 +374,102 @@ def corpora(args):
 
 
 def cgroup_quota(root="/"):
-    """The CPU quota over the process's cgroup v2 path: 'unlimited' (every cpu.max on the path
-    reads max, or there is none), 'limited' (with the files that limit) or 'unknown' (why)"""
+    """The CPU quota over the process's cgroup v2 path, established or not:
+    - 'unlimited': the cgroup2 mount is found in mountinfo, every directory on the process's
+      path from the mount's root exists, and at each level cpu.max reads "max ..." or is absent
+      where the parent's cgroup.subtree_control (read) does not delegate the cpu controller (the
+      mount's root has no cpu.max when it is the hierarchy's root);
+    - 'limited': some cpu.max on the path sets a quota (the files listed);
+    - 'unknown' (why): anything else, a missing mount, path, directory or file included. Absence
+      of evidence is never read as no limit, and the preflight refuses 'unknown'.
+    Levels above a cgroup namespace's root are not visible to any reader; that limit is stated
+    in the registration, not established here."""
 
     def p(x):
         return os.path.join(root, x.lstrip("/"))
 
+    def unknown(why, **kw):
+        return {"state": "unknown", "why": why, **kw}
+
     cg = read_file(p("/proc/self/cgroup"))
     if not isinstance(cg, str):
-        return {"state": "unknown", "why": f"/proc/self/cgroup: {cg}"}
+        return unknown(f"/proc/self/cgroup: {cg}")
     lines = [ln for ln in cg.splitlines() if ln.startswith("0::")]
     if len(lines) != 1:
-        return {"state": "unknown", "why": "not a cgroup v2 (unified) hierarchy"}
-    path = lines[0][3:].strip() or "/"
-    files, limits = {}, []
-    parts = [x for x in path.split("/") if x]
+        return unknown("not one cgroup v2 (unified) entry in /proc/self/cgroup")
+    v1cpu = [
+        ln
+        for ln in cg.splitlines()
+        if not ln.startswith("0::") and "cpu" in ln.split(":")[1].split(",")
+    ]
+    if v1cpu:
+        return unknown(f"the cpu controller is on a cgroup v1 hierarchy ({v1cpu[0]}): not read")
+    path = lines[0][3:].strip()
+    if not path.startswith("/"):
+        return unknown(f"the cgroup path {path!r} is not absolute")
+    mi = read_file(p("/proc/self/mountinfo"))
+    if not isinstance(mi, str):
+        return unknown(f"/proc/self/mountinfo: {mi}", path=path)
+    mounts = []
+    for ln in mi.splitlines():
+        left, sep, right = ln.partition(" - ")
+        f = left.split()
+        if sep and right.split()[:1] == ["cgroup2"] and len(f) >= 5:
+            mounts.append((f[3], f[4]))
+    if len(mounts) != 1:
+        return unknown(f"{len(mounts)} cgroup2 mounts in mountinfo, not one", path=path)
+    mroot, mpoint = mounts[0]
+    if mroot != "/" and not (path == mroot or path.startswith(mroot.rstrip("/") + "/")):
+        return unknown(f"the cgroup path {path} is outside the mount's root {mroot}", path=path)
+    rel = path[len(mroot.rstrip("/")) :] if mroot != "/" else path
+    parts = [x for x in rel.split("/") if x]
+    files, limits, levels = {}, [], []
+    base = p(mpoint)
+    if not os.path.isfile(os.path.join(base, "cgroup.controllers")):
+        return unknown(f"no cgroup.controllers at the cgroup2 mount {mpoint}", path=path)
     for k in range(len(parts) + 1):
-        d = "/sys/fs/cgroup/" + "/".join(parts[:k])
-        f = p(d.rstrip("/") + "/cpu.max")
-        if not os.path.exists(f):
+        d = os.path.join(base, *parts[:k])
+        shown = os.path.join(mpoint, *parts[:k])
+        if not os.path.isdir(d):
+            return unknown(f"the cgroup directory {shown} does not exist", path=path, files=files)
+        f = os.path.join(d, "cpu.max")
+        if os.path.exists(f):
+            v = read_file(f)
+            files[shown + "/cpu.max"] = v
+            if not isinstance(v, str) or not v.split():
+                return unknown(f"{shown}/cpu.max: {v!r}", path=path, files=files)
+            if v.split()[0] != "max":
+                limits.append(shown + "/cpu.max")
+            levels.append({"dir": shown, "cpu.max": v})
             continue
-        v = read_file(f)
-        files[f] = v
-        if not isinstance(v, str):
-            return {"state": "unknown", "why": f"{f}: {v}", "files": files}
-        if v.split()[0] != "max":
-            limits.append(f)
+        if k == 0 and mroot == "/":
+            levels.append({"dir": shown, "cpu.max": None, "why": "the hierarchy's root"})
+            continue
+        if k == 0:
+            return unknown(
+                f"no cpu.max at the mount's root {shown} (not the hierarchy's root)", path=path
+            )
+        sc = read_file(os.path.join(os.path.dirname(d), "cgroup.subtree_control"))
+        files[os.path.dirname(shown) + "/cgroup.subtree_control"] = sc
+        if not isinstance(sc, str):
+            return unknown(
+                f"no cpu.max in {shown}, and its parent's subtree_control is unreadable",
+                path=path,
+                files=files,
+            )
+        if "cpu" in sc.split():
+            return unknown(
+                f"the cpu controller is delegated to {shown} but it has no cpu.max",
+                path=path,
+                files=files,
+            )
+        levels.append({"dir": shown, "cpu.max": None, "why": "the cpu controller is not delegated"})
     return {
         "state": "limited" if limits else "unlimited",
         "path": path,
+        "mount": mpoint,
         "files": files,
+        "levels": levels,
         "limits": limits,
     }
 
@@ -600,6 +700,38 @@ def drive(args):
 # ---- the identity -------------------------------------------------------------------------
 
 
+HEX40 = re.compile(r"[0-9a-f]{40}")
+HEX64 = re.compile(r"[0-9a-f]{64}")
+# the sysfs readings each run's pre and post state must carry: a value, or null with its reason
+TELEMETRY = ("freq_mhz", "governor", "epp", "turbo", "pkg_temp_c")
+
+
+def is_hex(x, rx):
+    return isinstance(x, str) and rx.fullmatch(x) is not None
+
+
+def is_ns(x):
+    return isinstance(x, int) and not isinstance(x, bool) and x > 0
+
+
+def telemetry_problems(state, what):
+    """A sysfs state is evidence only as recorded: each reading a value, or null with its
+    reason, and its own timestamp. An empty or reasonless state is not an observation"""
+    if not isinstance(state, dict):
+        return [f"{what}: no state"]
+    bad = []
+    for k in TELEMETRY:
+        if k not in state:
+            bad.append(f"{what}: {k} absent")
+        elif state[k] is None and not (
+            isinstance(state.get(k + "_why"), str) and state[k + "_why"].strip()
+        ):
+            bad.append(f"{what}: {k} null without a reason")
+    if not is_ns(state.get("t_unix_ns")):
+        bad.append(f"{what}: no reading time")
+    return bad
+
+
 def identity(args):
     rec = {"schema": SCHEMA["identity"]}
     for kv in args.kv:
@@ -613,7 +745,18 @@ def identity(args):
     rec["schedule_seed"] = SCHEDULE_SEED
     rec["deadlines"] = DEADLINES
     rec["cell_deadline"] = CELL_DEADLINE
-    rec["sources"] = {s: sha256_file(s) if os.path.exists(s) else None for s in SOURCES}
+    frozen = rec.get("frozen")
+
+    def at_frozen(path):
+        if not is_hex(frozen, HEX40):
+            return None
+        r = subprocess.run(["git", "show", f"{frozen}:{path}"], capture_output=True)
+        return hashlib.sha256(r.stdout).hexdigest() if r.returncode == 0 else None
+
+    rec["sources"] = {
+        s: {"head": sha256_file(s) if os.path.exists(s) else None, "frozen": at_frozen(s)}
+        for s in SOURCES
+    }
     cdir = os.path.join(args.dir, "corpora")
     rec["corpora_after"] = {
         n: sha256_file(os.path.join(cdir, n + ".bz2"))
@@ -734,54 +877,113 @@ def fmt(g):
     return s
 
 
-def admission_problems(d, dry):
+def identity_problems(ident, sched, dry):
     bad = []
-    ident, why = load_json(os.path.join(d, "identity.json"), "identity")
-    if why:
-        return [why], None
-    sched = schedule(dry)
     if ident.get("schema") != SCHEMA["identity"]:
         bad.append("the identity is not the registered schema")
-    if bool(ident.get("dry")) != dry:
+    if ident.get("dry") is not dry:
         bad.append(f"the identity's dry {ident.get('dry')!r} is not this judgement's {dry}")
+    if not is_hex(ident.get("head"), HEX40):
+        bad.append(f"the identity's head {ident.get('head')!r} is not a commit")
+    fz = ident.get("frozen")
     if not dry:
         if digest(sched) != SCHEDULE_SHA256:
             bad.append("the schedule's digest is not the registered one")
+        if not is_hex(fz, HEX40):
+            bad.append(f"the identity's frozen {fz!r} is not a commit")
         if ident.get("inputs_match_frozen") is not True:
             bad.append("the inputs did not match the frozen commit")
-        if ident.get("preflight_exit") != 0:
-            bad.append(f"the preflight did not pass (exit {ident.get('preflight_exit')!r})")
+    elif fz is not None and not is_hex(fz, HEX40):
+        bad.append(f"the identity's frozen {fz!r} is neither a commit nor null")
     if ident.get("schedule_sha256") != digest(sched):
         bad.append("the identity's schedule digest is not this schedule's")
     if ident.get("drive_exit") != 0:
         bad.append(f"the drive exited {ident.get('drive_exit')!r}")
-    if not ident.get("ab_sha256") or ident.get("ab_sha256") != ident.get("ab_sha256_after"):
-        bad.append("the ab executable's digest changed during the run, or was not recorded")
+    if not (
+        is_hex(ident.get("ab_sha256"), HEX64)
+        and ident.get("ab_sha256") == ident.get("ab_sha256_after")
+    ):
+        bad.append("the ab executable's digest is missing, or changed during the run")
     if ident.get("tree_clean_after") is not True:
         bad.append("the checkout was not clean after the run")
-    cor, why = load_json(os.path.join(d, "corpora.json"), "corpora")
-    if why:
-        bad.append(why)
-    elif not cor.get("ok"):
-        bad.append(f"the corpora's record is not ok: {cor.get('problems')}")
+    src = ident.get("sources")
+    if not isinstance(src, dict):
+        bad.append("the identity records no source digests")
     else:
-        after = ident.get("corpora_after") or {}
-        for n in CORPORA:
-            if after.get(n) != cor["files"].get(n, {}).get("sha256"):
-                bad.append(f"{n}'s digest after the run is not the one built")
-        if after.get(SENTINEL["corpus"]) != CORPUS_SHA256:
-            bad.append("the sentinel's corpus after the run is not the registered corpus")
+        for s in SOURCES:
+            e = src.get(s) if isinstance(src.get(s), dict) else {}
+            if not is_hex(e.get("head"), HEX64):
+                bad.append(f"no digest of {s} at the head")
+            elif not dry and e.get("frozen") != e.get("head"):
+                bad.append(f"{s} at the head is not {s} at the frozen commit")
+    return bad
+
+
+def corpora_problems(cor, ident):
+    bad = []
+    if not cor.get("ok"):
+        bad.append(f"the corpora's record is not ok: {cor.get('problems')}")
+    content = cor.get("content") if isinstance(cor.get("content"), dict) else {}
+    if content.get("sha256") != CONTENT_SHA256 or content.get("bytes") != CONTENT_BYTES:
+        bad.append("the corpora's record does not show the registered content")
+    if (cor.get("source") or {}).get("sha256") != CORPUS_SHA256:
+        bad.append("the corpora's record does not show the registered source corpus")
+    after = ident.get("corpora_after") if isinstance(ident.get("corpora_after"), dict) else {}
+    files = cor.get("files") if isinstance(cor.get("files"), dict) else {}
+    for n in CORPORA:
+        f = files.get(n) if isinstance(files.get(n), dict) else {}
+        built, now = f.get("sha256"), after.get(n)
+        if not (is_hex(built, HEX64) and is_hex(now, HEX64)):
+            bad.append(f"{n}: a digest is missing (built {built!r}, after the run {now!r})")
+        elif built != now:
+            bad.append(f"{n}'s digest after the run is not the one built")
+        if f.get("decoded_sha256") != CONTENT_SHA256 or f.get("decoded_bytes") != CONTENT_BYTES:
+            bad.append(f"{n}: the record does not show it decoding to the content")
+    if after.get(SENTINEL["corpus"]) != CORPUS_SHA256:
+        bad.append("the sentinel's corpus after the run is not the registered corpus")
+    return bad
+
+
+def preflight_replay(d, ident, dry):
+    """The archived preflight judged again; it must agree with the recorded exit, and pass
+    unless DRY"""
+    pdir = os.path.join(d, "preflight")
+    if not os.path.isdir(pdir):
+        return ["no archived preflight (preflight/)"], None
+    replay = preflight_problems(pdir)
+    verdict = "PASS" if not replay else "REFUSED"
+    bad = []
+    pe = ident.get("preflight_exit")
+    if pe not in (0, 1) or (pe == 0) != (verdict == "PASS"):
+        bad.append(f"the archived preflight replays {verdict}, but the recorded exit is {pe!r}")
+    if not dry and verdict != "PASS":
+        bad.append("the archived preflight does not pass: " + "; ".join(replay[:3]))
+    return bad, {"verdict": verdict, "problems": replay}
+
+
+def admission_problems(d, dry):
+    bad = []
+    ident, why = load_json(os.path.join(d, "identity.json"), "identity")
+    if why or not isinstance(ident, dict):
+        return [why or "the identity is not an object"], None, None
+    sched = schedule(dry)
+    bad += identity_problems(ident, sched, dry)
+    cor, why = load_json(os.path.join(d, "corpora.json"), "corpora")
+    bad += [why] if why else corpora_problems(cor if isinstance(cor, dict) else {}, ident)
+    pbad, replay = preflight_replay(d, ident, dry)
+    bad += pbad
     slots, why = load_jsonl(os.path.join(d, "slots.jsonl"), "slots")
     runs, why2 = load_jsonl(os.path.join(d, "runs.jsonl"), "runs")
     bad += [w for w in (why, why2) if w]
     if why or why2:
-        return bad, None
+        return bad, None, replay
     if len(slots) != len(sched):
         bad.append(f"{len(slots)} slots ran, not the {len(sched)} scheduled")
     if len(runs) != len(sched):
         bad.append(f"{len(runs)} run lines, not the {len(sched)} scheduled")
     keys = ("round", "pos", "arm", "threads", "corpus", "role")
     joined = []
+    last_exit, last_end = 0, 0.0
     for i, (want, got) in enumerate(zip(sched, slots)):
         if any(got.get(k) != want[k] for k in keys) or got.get("index") != i:
             bad.append(f"slot {i} is not the scheduled {want}")
@@ -794,6 +996,11 @@ def admission_problems(d, dry):
                 f"slot {i} did not add exactly one run line (line {got.get('line')!r}, after {got.get('lines_after')!r})"
             )
             continue
+        t0, t1 = got.get("t_start_unix"), got.get("t_end_unix")
+        if not (num(t0) and num(t1) and last_end <= t0 <= t1):
+            bad.append(f"slot {i}: its start and end times are missing or out of order")
+            continue
+        last_end = t1
         if i >= len(runs):
             continue
         r = runs[i]
@@ -818,11 +1025,78 @@ def admission_problems(d, dry):
         if not (num(r.get("cpu")) and r["cpu"] > 0 and num(r.get("wall")) and r["wall"] > 0):
             bad.append(f"run {i}: no finite CPU and wall")
             continue
-        if not isinstance(r.get("machine_pre"), dict) or "t_spawn_unix_ns" not in r:
-            bad.append(f"run {i}: no pre-run sysfs state (--sysfs-state)")
+        if not (num(r.get("waited_s")) and r["waited_s"] >= -1):
+            bad.append(f"run {i}: no busy-gate wait recorded (waited_s)")
             continue
-        joined.append({**want, "cpu": r["cpu"], "wall": r["wall"], "pre": r["machine_pre"]})
-    return bad, joined
+        tb = telemetry_problems(r.get("machine_pre"), f"run {i}'s pre-run state")
+        tb += telemetry_problems(r.get("machine_post"), f"run {i}'s post-run state")
+        ts, te = r.get("t_spawn_unix_ns"), r.get("t_exit_unix_ns")
+        if not (is_ns(ts) and is_ns(te) and last_exit <= ts <= te):
+            tb.append(f"run {i}: its spawn and exit times are missing or out of order")
+        if tb:
+            bad += tb[:2]
+            continue
+        last_exit = te
+        joined.append(
+            {
+                **want,
+                "cpu": r["cpu"],
+                "wall": r["wall"],
+                "waited_s": r["waited_s"],
+                "pre": r["machine_pre"],
+                "t_spawn_ns": ts,
+                "t_exit_ns": te,
+                "slot_s": t1 - t0,
+                "t_start": t0,
+            }
+        )
+    return bad, joined, replay
+
+
+INTERVAL_LABEL = (
+    "conditional on this attempt and on the assumed dependence (a circular moving-block "
+    "bootstrap over chronological rounds); not a guaranteed 95% coverage: dependence longer "
+    "than the block, or a shock common to the whole attempt, is not bounded"
+)
+R_CLASSES = {
+    "below": "below 1: a favourable level x worker interaction (not isolated table capacity)",
+    "above": "above 1: a contrary interaction (it closes nothing)",
+    "includes": "includes 1: INCONCLUSIVE",
+    "none": "no interval",
+}
+
+
+R_TAGS = {
+    R_CLASSES["below"]: "a favourable interaction",
+    R_CLASSES["above"]: "a contrary interaction",
+    R_CLASSES["includes"]: "INCONCLUSIVE",
+    R_CLASSES["none"]: "no interval",
+}
+
+
+def r_class(g):
+    lo, hi = g.get("lo"), g.get("hi")
+    if lo is None or hi is None:
+        return R_CLASSES["none"]
+    if hi < 1:
+        return R_CLASSES["below"]
+    if lo > 1:
+        return R_CLASSES["above"]
+    return R_CLASSES["includes"]
+
+
+def g9_class(g):
+    lo, hi = g.get("lo"), g.get("hi")
+    if lo is None or hi is None:
+        return "no interval"
+    if lo <= S2_L9 <= hi:
+        return f"compatible with x{S2_L9} (not equivalence, and not the ladder's validation)"
+    return f"excludes x{S2_L9}"
+
+
+def med_or_none(xs):
+    xs = [x for x in xs if num(x)]
+    return st.median(xs) if xs else None
 
 
 def analyse(rows, dry):
@@ -830,7 +1104,9 @@ def analyse(rows, dry):
     rounds = sorted({r["round"] for r in measured})
     cell = {}
     sentinels = {}
+    by_round = {}
     for r in measured:
+        by_round.setdefault(r["round"], []).append(r)
         if r["role"] == "cell":
             cell[(r["corpus"], r["threads"], r["round"])] = r
         else:
@@ -839,46 +1115,70 @@ def analyse(rows, dry):
     def logs(corpus, w, what, rs, ref=REF):
         return [math.log(cell[(corpus, w, k)][what] / cell[(corpus, ref, k)][what]) for k in rs]
 
-    def summary(rs, block=BOOT_BLOCK):
+    def summary(rs, block=BOOT_BLOCK, intervals=True):
         out = {}
         for what in ("cpu", "wall"):
-            g = {c: geo(logs(c, TOP, what, rs), block) for c in CORPORA}
-            rr = [
-                a - b for a, b in zip(logs(PRIMARY, TOP, what, rs), logs(COMPARATOR, TOP, what, rs))
-            ]
-            out[what] = {"growth": g, "ratio_of_ratios": geo(rr, block)}
+            l2, l9 = logs(PRIMARY, TOP, what, rs), logs(COMPARATOR, TOP, what, rs)
+            rr = [a - b for a, b in zip(l2, l9)]
+            if intervals:
+                g = {PRIMARY: geo(l2, block), COMPARATOR: geo(l9, block)}
+                q = geo(rr, block)
+            else:  # a point estimate only (no interval; see the mode split)
+                g = {
+                    c: {"n": len(x), "ratio": math.exp(sum(x) / len(x)) if x else None}
+                    for c, x in ((PRIMARY, l2), (COMPARATOR, l9))
+                }
+                q = {"n": len(rr), "ratio": math.exp(sum(rr) / len(rr)) if rr else None}
+            out[what] = {"growth": g, "ratio_of_ratios": q}
         return out
 
-    res = {"rounds": len(rounds), "warmup_rounds": WARMUP_ROUNDS}
+    res = {"rounds": len(rounds), "warmup_rounds": WARMUP_ROUNDS, "interval_label": INTERVAL_LABEL}
     res["primary"] = summary(rounds)
     res["sensitivity"] = {f"block{b}": summary(rounds, b) for b in BOOT_SENSITIVITY}
     grid = {}
     for c in CORPORA:
         grid[c] = {}
         for w in WORKERS:
-            cpus = [cell[(c, w, k)]["cpu"] for k in rounds]
-            walls = [cell[(c, w, k)]["wall"] for k in rounds]
-            pre = [cell[(c, w, k)]["pre"].get("freq_mhz") for k in rounds]
-            pre = [x for x in pre if num(x)]
+            cs = [cell[(c, w, k)] for k in rounds]
+            walls = [x["wall"] for x in cs]
             grid[c][w] = {
-                "cpu_median": st.median(cpus),
+                "cpu_median": st.median([x["cpu"] for x in cs]),
                 "wall_median": st.median(walls),
                 "mb_s_median": CONTENT_BYTES / 1e6 / st.median(walls),
                 "cpu_growth_vs_4": geo(logs(c, w, "cpu", rounds)) if w != REF else None,
-                "pre_freq_mhz_median": st.median(pre) if pre else None,
+                "pre_freq_mhz_median": med_or_none([x["pre"].get("freq_mhz") for x in cs]),
+                "pre_freq_unread": sum(1 for x in cs if x["pre"].get("freq_mhz") is None),
             }
     res["grid"] = grid
-    # the pre-run sysfs state against the declared settings: counted, never excluded
+    # the pre-run sysfs state: unread readings (null, with their reasons) apart from read ones
+    # that differ from the declared settings. Counted, never an exclusion
+    unread = {k: 0 for k in TELEMETRY}
     dev = {k: 0 for k in ("governor", "epp", "turbo")}
     for r in measured:
+        for k in TELEMETRY:
+            if r["pre"].get(k) is None:
+                unread[k] += 1
         for k in dev:
-            if r["pre"].get(k) != DECLARED[k]:
+            if r["pre"].get(k) is not None and r["pre"][k] != DECLARED[k]:
                 dev[k] += 1
     res["pre_state"] = {
         "runs": len(measured),
-        "not_as_declared": dev,
+        "unread": unread,
+        "read_not_as_declared": dev,
         "label": "recorded, never an exclusion",
     }
+    # the busy gate's waits (ab's waited_s), by cell and by position: described, never an
+    # exclusion or an adjustment
+    waits = {"by_cell": {}, "by_position": {}}
+    for r in measured:
+        key = f"{r['corpus']}@{r['threads']}" if r["role"] == "cell" else "sentinel"
+        for grp, k in (("by_cell", key), ("by_position", str(r["pos"]))):
+            e = waits[grp].setdefault(k, {"runs": 0, "waited": 0, "total_s": 0.0, "max_s": 0.0})
+            e["runs"] += 1
+            e["waited"] += r["waited_s"] > 0
+            e["total_s"] += max(0.0, r["waited_s"])
+            e["max_s"] = max(e["max_s"], r["waited_s"])
+    res["waits"] = waits
     g2, g9 = res["primary"]["cpu"]["growth"][PRIMARY], res["primary"]["cpu"]["growth"][COMPARATOR]
     rr = res["primary"]["cpu"]["ratio_of_ratios"]
     res["model_check"] = {
@@ -886,17 +1186,22 @@ def analyse(rows, dry):
         "l2_point_in_band": g2["ratio"] is not None and BAND[0] <= g2["ratio"] <= BAND[1],
         "l2_interval_vs_band": band_class(g2),
         "l9_s2": S2_L9,
-        "l9_interval_contains_s2": g9.get("lo") is not None and g9["lo"] <= S2_L9 <= g9["hi"],
-        "ratio_of_ratios_below_1": rr.get("hi") is not None and rr["hi"] < 1,
+        "l9_against_s2": g9_class(g9),
+        "ratio_of_ratios": r_class(rr),
         "model_gb_s": {
-            "label": "MODEL (§3 restated with the measured -2 growth), not observed",
+            "label": "HISTORICAL MODEL (§3 of the share-nothing entry), not observed: "
+            "3.76 GB/s / G2, its numerator fixed (10 x one thread's 400 MB/s x 0.94); it "
+            "takes the unmeasured 1-to-4 factor as 1, and the Workers arm's 4-to-10 growth "
+            "as a finder-fed kernel's, which it does not identify",
             "point": MODEL_GB_S_NUMERATOR / g2["ratio"] if g2["ratio"] else None,
             "lo": MODEL_GB_S_NUMERATOR / g2["hi"] if g2.get("hi") else None,
             "hi": MODEL_GB_S_NUMERATOR / g2["lo"] if g2.get("lo") else None,
         },
     }
     # the descriptive mode split (registered; never an exclusion): a round is fast if both its
-    # sentinels' walls are below the threshold, slow if both are at or above it, else mixed
+    # sentinels' walls are below the threshold, slow if both are at or above it, else mixed.
+    # Point estimates only: selecting rounds by class and then block-resampling the selection
+    # would compress the time axis, so no class gets an interval
     cls = {}
     for k in rounds:
         ws = sentinels.get(k, [])
@@ -910,23 +1215,46 @@ def analyse(rows, dry):
             cls[k] = "mixed"
     modes = {
         "label": "DESCRIPTIVE: rounds classed by their two sentinels' walls (threshold "
-        f"{MODE_THRESHOLD_S} s); not a mode identification and never an exclusion",
+        f"{MODE_THRESHOLD_S} s), an endpoint-bracketed indicator of another plan's state; "
+        "not a mode identification of the cells, never an exclusion; point estimates only",
         "counts": {
             c: sum(1 for v in cls.values() if v == c) for c in ("fast", "slow", "mixed", "unread")
         },
         "classes": {},
     }
-    for c in ("fast", "slow"):
+    for c in ("fast", "slow", "mixed"):
         rs = [k for k in rounds if cls[k] == c]
-        if len(rs) >= MIN_CLASS:
-            modes["classes"][c] = summary(rs)
-        elif rs:
+        if rs:
             modes["classes"][c] = {
                 "rounds": len(rs),
-                "note": f"fewer than {MIN_CLASS} rounds: described, no figures",
+                **summary(rs, intervals=False),
+                "pre_freq_mhz_median": med_or_none(
+                    [r["pre"].get("freq_mhz") for k in rs for r in by_round[k]]
+                ),
             }
-    modes["sentinel_walls"] = {str(k): sentinels.get(k) for k in rounds}
     res["modes"] = modes
+    # the chronological record: every measured round in order, for the time-series reading
+    t0 = min(r["t_start"] for r in measured) if measured else 0.0
+    chron = []
+    for k in rounds:
+        rs = by_round[k]
+        chron.append(
+            {
+                "round": k,
+                "start_s": round(min(r["t_start"] for r in rs) - t0, 3),
+                "duration_s": round(
+                    max(r["t_start"] + r["slot_s"] for r in rs) - min(r["t_start"] for r in rs), 3
+                ),
+                "waited_s": sum(max(0.0, r["waited_s"]) for r in rs),
+                "sentinel_walls": sentinels.get(k),
+                "class": cls[k],
+                "log_r_cpu": {c: logs(c, TOP, "cpu", [k])[0] for c in CORPORA},
+                "log_rr_cpu": logs(PRIMARY, TOP, "cpu", [k])[0]
+                - logs(COMPARATOR, TOP, "cpu", [k])[0],
+                "pre_freq_mhz_median": med_or_none([r["pre"].get("freq_mhz") for r in rs]),
+            }
+        )
+    res["chronological"] = chron
     return res
 
 
@@ -939,6 +1267,10 @@ def _gb(x):
     return s
 
 
+def _f(x, spec):
+    return format(x, spec) if num(x) else "n/a"
+
+
 def render(outcome, res, bad):
     lines = [outcome, ""]
     if bad:
@@ -947,11 +1279,10 @@ def render(outcome, res, bad):
     p = res["primary"]
     lines += [
         f"Rounds analysed: {res['rounds']} (after {res['warmup_rounds']} warm-up). Intervals: "
-        f"moving-block bootstrap, block {BOOT_BLOCK} rounds, {BOOT_RESAMPLES} resamples, 95% percentile.",
+        f"moving-block bootstrap, block {BOOT_BLOCK} rounds, {BOOT_RESAMPLES} resamples, 95% "
+        f"percentile, {res['interval_label']}.",
         "",
-    ]
-    lines += [
-        "## Growth from 4 to 10 workers",
+        "## Growth from 4 to 10 workers (4-to-10 inflation, not 1-to-10)",
         "",
         "| reading | -2 | -9 | ratio of ratios |",
         "|---|--:|--:|--:|",
@@ -966,58 +1297,92 @@ def render(outcome, res, bad):
         "",
         "## Model check (CPU-seconds)",
         "",
-        f"- -2 growth against §2's band {BAND[0]}-{BAND[1]}: {m['l2_interval_vs_band']} "
+        f"- -2 growth against §2's historical band {BAND[0]}-{BAND[1]}: {m['l2_interval_vs_band']} "
         f"(point in band: {m['l2_point_in_band']})",
-        f"- -9 growth against §2's x{S2_L9}: interval contains it: {m['l9_interval_contains_s2']}",
-        f"- ratio of ratios below 1 (interval): {m['ratio_of_ratios_below_1']}",
+        f"- -9 growth against §2's historical x{S2_L9}: {m['l9_against_s2']}",
+        f"- ratio of ratios (the level x worker interaction): {m['ratio_of_ratios']}",
         f"- {m['model_gb_s']['label']}: {_gb(m['model_gb_s'])}",
         "",
+        "## Sensitivity (block length)",
+        "",
     ]
-    lines += ["## Sensitivity (block length)", ""]
     for k, s in res["sensitivity"].items():
         g = s["cpu"]["growth"]
         lines.append(
             f"- {k}: -2 {fmt(g[PRIMARY])}, -9 {fmt(g[COMPARATOR])}, ratio of ratios {fmt(s['cpu']['ratio_of_ratios'])}"
         )
+    pg = p["cpu"]["growth"]
+    lines.append(
+        "- t intervals (independent rounds) and lag-1 autocorrelation: "
+        + ", ".join(
+            f"{n} [{_f(g.get('t_lo'), '.2f')}-{_f(g.get('t_hi'), '.2f')}] lag1 {_f(g.get('lag1_autocorr'), '.2f')}"
+            for n, g in (
+                ("-2", pg[PRIMARY]),
+                ("-9", pg[COMPARATOR]),
+                ("R", p["cpu"]["ratio_of_ratios"]),
+            )
+        )
+    )
     lines += [
         "",
         "## Grid (medians)",
         "",
-        "| corpus | workers | CPU s | wall s | MB/s | CPU growth vs 4 | pre-run clock MHz |",
+        "| corpus | workers | CPU s | wall s | MB/s | CPU growth vs 4 | pre-run clock MHz (unread) |",
         "|---|--:|--:|--:|--:|--:|--:|",
     ]
     for c in CORPORA:
         for w in WORKERS:
             x = res["grid"][c][w]
             gr = fmt(x["cpu_growth_vs_4"]) if x["cpu_growth_vs_4"] else "1"
-            fq = f"{x['pre_freq_mhz_median']:.0f}" if x["pre_freq_mhz_median"] else "n/a"
             lines.append(
-                f"| {c} | {w} | {x['cpu_median']:.3f} | {x['wall_median']:.3f} | {x['mb_s_median']:.0f} | {gr} | {fq} |"
+                f"| {c} | {w} | {x['cpu_median']:.3f} | {x['wall_median']:.3f} | {x['mb_s_median']:.0f} | {gr} | {_f(x['pre_freq_mhz_median'], '.0f')} ({x['pre_freq_unread']}) |"
             )
     ps = res["pre_state"]
     lines += [
         "",
-        f"Pre-run sysfs state not as declared (of {ps['runs']} runs; {ps['label']}): "
-        f"{ps['not_as_declared']}",
+        f"Pre-run sysfs state ({ps['runs']} runs; {ps['label']}): unread {ps['unread']}; "
+        f"read but not as declared {ps['read_not_as_declared']}",
+        "",
+        "## Busy-gate waits (described, never an exclusion)",
+        "",
+        "| group | runs | runs that waited | total s | max s |",
+        "|---|--:|--:|--:|--:|",
     ]
+    for grp in ("by_cell", "by_position"):
+        for k, e in sorted(res["waits"][grp].items()):
+            lines.append(
+                f"| {grp[3:]} {k} | {e['runs']} | {e['waited']} | {e['total_s']:.0f} | {e['max_s']:.0f} |"
+            )
     md = res["modes"]
     lines += ["", "## Mode split", "", md["label"], "", f"Rounds: {md['counts']}", ""]
     for c, s in md["classes"].items():
-        if "cpu" in s:
-            g = s["cpu"]["growth"]
-            lines.append(
-                f"- {c}: -2 {fmt(g[PRIMARY])}, -9 {fmt(g[COMPARATOR])}, ratio of ratios {fmt(s['cpu']['ratio_of_ratios'])}"
-            )
-        else:
-            lines.append(f"- {c}: {s['note']} ({s['rounds']} rounds)")
+        g = s["cpu"]["growth"]
+        lines.append(
+            f"- {c} ({s['rounds']} rounds): -2 {fmt(g[PRIMARY])}, -9 {fmt(g[COMPARATOR])}, "
+            f"ratio of ratios {fmt(s['cpu']['ratio_of_ratios'])}, pre-run clock median "
+            f"{_f(s['pre_freq_mhz_median'], '.0f')} MHz"
+        )
+    lines += [
+        "",
+        "## Chronological rounds",
+        "",
+        "| round | start s | duration s | waited s | sentinel walls | class | log r -2 | log r -9 | log R | pre clock |",
+        "|--:|--:|--:|--:|---|---|--:|--:|--:|--:|",
+    ]
+    for c in res["chronological"]:
+        sw = ", ".join(f"{w:.3f}" for w in (c["sentinel_walls"] or []))
+        lines.append(
+            f"| {c['round']} | {c['start_s']:.1f} | {c['duration_s']:.1f} | {c['waited_s']:.0f} | {sw} | {c['class']} | "
+            f"{c['log_r_cpu'][PRIMARY]:.3f} | {c['log_r_cpu'][COMPARATOR]:.3f} | {c['log_rr_cpu']:.3f} | {_f(c['pre_freq_mhz_median'], '.0f')} |"
+        )
     return "\n".join(lines) + "\n"
 
 
 def judge(args):
     d, dry = args.dir, args.dry
-    res, bad = None, []
+    res, bad, replay = None, [], None
     try:
-        bad, rows = admission_problems(d, dry)
+        bad, rows, replay = admission_problems(d, dry)
         if not bad:
             res = analyse(rows, dry)
     except Exception as e:  # (the judge's own failure is INVALID, never a crash or a VALID)
@@ -1031,10 +1396,11 @@ def judge(args):
         )
     else:
         p = res["primary"]["cpu"]
+        m = res["model_check"]
         body = (
-            f"-2 CPU growth 4->10 {fmt(p['growth'][PRIMARY])}, against the band {BAND[0]}-{BAND[1]}: "
-            f"{res['model_check']['l2_interval_vs_band']}; -9 {fmt(p['growth'][COMPARATOR])}; "
-            f"ratio of ratios {fmt(p['ratio_of_ratios'])}"
+            f"-2 CPU growth 4->10 {fmt(p['growth'][PRIMARY])}, against the historical band "
+            f"{BAND[0]}-{BAND[1]}: {m['l2_interval_vs_band']}; -9 {fmt(p['growth'][COMPARATOR])}; "
+            f"ratio of ratios {fmt(p['ratio_of_ratios'])}: {R_TAGS[m['ratio_of_ratios']]}"
         )
         outcome = ("DRY (not evidence): " if dry else "VALID: ") + body
     out = {
@@ -1042,6 +1408,7 @@ def judge(args):
         "outcome": outcome,
         "dry": dry,
         "problems": bad,
+        "preflight_replay": replay,
         "result": res,
     }
     with open(os.path.join(d, "judgement.json"), "w") as f:
