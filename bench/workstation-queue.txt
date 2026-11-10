@@ -6,4 +6,3 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
-bench-cells-vs-prod          master                    MONODROMY cells kernel vs production records path, 1 thread pinned, 3 repeats: is it already better than prod on the i9? (rule: LOG on #145)
