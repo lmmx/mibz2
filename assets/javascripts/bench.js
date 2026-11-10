@@ -353,9 +353,20 @@
   // rounds) against threads, and its paired wall change against the reference arm. A run is
   // one machine's: runs are never combined, and they inform rather than decide.
   function releaseScaling(ws, box, seg) {
+    // A newly recorded run (ws[0], the newest) is shown first, whatever run a reader last
+    // picked: a remembered choice only holds until a newer release's run arrives.
+    if (state.wsNewest !== ws[0].id) {
+      state.wsNewest = ws[0].id;
+      state.wsRun = ws[0].id;
+    }
     if (!ws.some((r) => r.id === state.wsRun)) state.wsRun = ws[0].id;
     const run = ws.find((r) => r.id === state.wsRun);
-    if (ws.length > 1) seg("Run", ws.map((r) => [r.id, `${r.date} · ${r.cpu}`]), state.wsRun, (v) => (state.wsRun = v));
+    // Each run is named by its releases, so runs on one day and machine can be told apart
+    const name = (r) => {
+      const older = r.arms.filter((a) => a !== r.ref && /^\d+\.\d+\.\d+$/.test(a));
+      return `${r.ref}${older.length ? " against " + older.join(", ") : ""} · ${r.date} · ${r.cpu}`;
+    };
+    if (ws.length > 1) seg("Run", ws.map((r) => [r.id, name(r)]), state.wsRun, (v) => (state.wsRun = v));
     const corpora = Object.keys(run.corpora).sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
     if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
     if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
