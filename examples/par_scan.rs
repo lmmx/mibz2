@@ -2022,8 +2022,12 @@ mod tests {
         } else {
             vec![Finder::new(false)]
         };
+        // (under Miri: the AVX2 loop's tightest lengths too, 32i + 34..=40, where its last
+        // load ends within a few bytes of the input's end, and a loosened bound reads past)
         let lens: Vec<usize> = if cfg!(miri) {
-            vec![0, 5, 6, 7, 39, 40, 41, 45, 70, 96]
+            vec![
+                0, 5, 6, 7, 34, 35, 36, 37, 38, 39, 40, 41, 45, 66, 69, 70, 72, 96,
+            ]
         } else {
             (0..=96).collect()
         };
