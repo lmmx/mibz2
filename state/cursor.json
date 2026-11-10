@@ -1771,11 +1771,15 @@
     },
     {
       "trigger_comment_id": 6763334719,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "9a37e9924e0b3fa0004344dcac45808aa1f9f733"
+      "source_commit": "9a37e9924e0b3fa0004344dcac45808aa1f9f733",
+      "report_commit": "6ffdd56df68b4ef5aee3d8ae369474c0171f4b57",
+      "report_path": "state/reports/t1-checker-delta-6763334719/report.md",
+      "review_comment_pr": 145,
+      "disposition": "PROCEED T1 checker delta: both artifact pins and typed exits repaired; 40 tests and 33 independent replay cases pass; execution evidence and adoption gates remain separate."
     }
   ],
   "active_delegations": [],
