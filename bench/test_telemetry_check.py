@@ -73,9 +73,7 @@ print("https://github.com/lmmx/mibz2/pull/145#issuecomment-1")
 
 
 def git(cwd, *args):
-    return subprocess.run(
-        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
-    ).stdout.strip()
+    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout.strip()
 
 
 def recipe_body() -> str:
@@ -95,13 +93,8 @@ class EndToEnd(unittest.TestCase):
         self.remote.parent.mkdir()
         git(self.tmp, "init", "-q", "--bare", str(self.remote))
         self.work = self.tmp / "work"
-        for rel in (
-            "Justfile",
-            ".just",
-            "bench/bundle.sh",
-            "bench/submit.sh",
-            "docs/journal/2026-11-09-telemetry-check-registration.md",
-        ):
+        for rel in ("Justfile", ".just", "bench/bundle.sh", "bench/submit.sh",
+                    "docs/journal/2026-11-09-telemetry-check-registration.md"):
             src, dst = ROOT / rel, self.work / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             (shutil.copytree if src.is_dir() else shutil.copy)(src, dst)
@@ -120,24 +113,15 @@ class EndToEnd(unittest.TestCase):
         bin_.mkdir()
         elsewhere = self.tmp / "other-target" / "release" / "examples"
         elsewhere.mkdir(parents=True)
-        for name, body, where in (
-            ("ab", FAKE_AB, elsewhere),
-            ("cargo", FAKE_CARGO, bin_),
-            ("rustc", FAKE_RUSTC, bin_),
-            ("lscpu", FAKE_LSCPU, bin_),
-            ("gh", FAKE_GH, bin_),
-        ):
+        for name, body, where in (("ab", FAKE_AB, elsewhere), ("cargo", FAKE_CARGO, bin_),
+                                  ("rustc", FAKE_RUSTC, bin_), ("lscpu", FAKE_LSCPU, bin_),
+                                  ("gh", FAKE_GH, bin_)):
             p = where / name
             p.write_text(body)
             p.chmod(0o755)
         self.ab = elsewhere / "ab"
-        self.env = {
-            **os.environ,
-            "PATH": f"{bin_}:{os.environ['PATH']}",
-            "FAKE_AB": str(self.ab),
-            "FAKE_COMMENTS": str(self.tmp / "comments.json"),
-            "GH": str(bin_ / "gh"),
-        }
+        self.env = {**os.environ, "PATH": f"{bin_}:{os.environ['PATH']}", "FAKE_AB": str(self.ab),
+                    "FAKE_COMMENTS": str(self.tmp / "comments.json"), "GH": str(bin_ / "gh")}
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -160,21 +144,12 @@ class EndToEnd(unittest.TestCase):
         time.sleep(1.1)  # (an attempt's directory is named to the second)
         script = self.tmp / "recipe.sh"
         script.write_text(recipe_body())
-        return subprocess.run(
-            ["bash", str(script)],
-            cwd=self.work,
-            env={**self.env, "FAKE_CHECK": mode},
-            capture_output=True,
-            text=True,
-        )
+        return subprocess.run(["bash", str(script)], cwd=self.work, env={**self.env, "FAKE_CHECK": mode},
+                              capture_output=True, text=True)
 
     def test_exit_follows_the_check_through_the_bundle(self):
-        for mode, code, word in (
-            ("pass", 0, "CHECKED"),
-            ("unavailable", 0, "CHECKED"),
-            ("fail", 1, "FAILED"),
-            ("incomplete", 3, "INCOMPLETE"),
-        ):
+        for mode, code, word in (("pass", 0, "CHECKED"), ("unavailable", 0, "CHECKED"),
+                                 ("fail", 1, "FAILED"), ("incomplete", 3, "INCOMPLETE")):
             with self.subTest(mode=mode):
                 before = set(self.bundles())
                 r = self.direct(mode)
@@ -184,15 +159,11 @@ class EndToEnd(unittest.TestCase):
                 self.assertTrue(got["outcome.txt"].startswith(word), got["outcome.txt"])
                 # the executable Cargo reported, and its digest
                 self.assertIn(f"executable {self.ab}", got["build.txt"])
-                digest = subprocess.run(
-                    ["sha256sum", str(self.ab)], capture_output=True, text=True
-                ).stdout.split()[0]
+                digest = subprocess.run(["sha256sum", str(self.ab)], capture_output=True, text=True).stdout.split()[0]
                 self.assertEqual(got["inputs.txt"].split()[0], digest)
 
     def test_dirty_inputs_refuse_nonzero(self):
-        (self.work / ".just" / "bench.just").write_text(
-            (self.work / ".just" / "bench.just").read_text() + "\n# edit\n"
-        )
+        (self.work / ".just" / "bench.just").write_text((self.work / ".just" / "bench.just").read_text() + "\n# edit\n")
         r = self.direct("pass")
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertIn("REFUSED", self.outcome(self.bundles()[-1])["outcome.txt"])
@@ -202,13 +173,8 @@ class EndToEnd(unittest.TestCase):
         for mode, code in (("fail", 1), ("incomplete", 3), ("pass", 0)):
             with self.subTest(mode=mode):
                 time.sleep(1.1)
-                r = subprocess.run(
-                    [JUST, "submit", RECIPE],
-                    cwd=self.work,
-                    env={**self.env, "FAKE_CHECK": mode},
-                    capture_output=True,
-                    text=True,
-                )
+                r = subprocess.run([JUST, "submit", RECIPE], cwd=self.work, env={**self.env, "FAKE_CHECK": mode},
+                                   capture_output=True, text=True)
                 self.assertEqual(r.returncode, code, r.stdout + r.stderr)
                 self.assertIn("archived", r.stdout + r.stderr)
         tree = git(self.remote, "ls-tree", "-r", "--name-only", "evidence").split()

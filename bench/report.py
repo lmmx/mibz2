@@ -605,10 +605,7 @@ def faults(r: dict) -> str:
     multiplexed counter; "none" where the counters recorded neither, "–" where none ran."""
     if "perf_ctl_errors" not in r and "perf_multiplexed" not in r:
         return "–"
-    f = [
-        f"{e.get('counter')} {e.get('op')} errno {e.get('errno')}"
-        for e in r.get("perf_ctl_errors") or []
-    ]
+    f = [f"{e.get('counter')} {e.get('op')} errno {e.get('errno')}" for e in r.get("perf_ctl_errors") or []]
     f += [f"{c} multiplexed" for c in r.get("perf_multiplexed") or []]
     return "; ".join(f) or "none"
 
