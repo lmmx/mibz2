@@ -87,6 +87,7 @@ pub mod mtf;
 pub mod parallel;
 mod read;
 pub mod rle;
+pub mod runs;
 // (research, test builds only: the run-fed T-vector and the Ψ² census, #145)
 #[cfg(test)]
 mod run_fed;
@@ -324,6 +325,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
+    // a block of few symbols, under a kernel that reads runs, by the run records: one call,
+    // so that every other block runs the code below as it was (`decode_runs`)
+    if s.inverse.reads_runs() {
+        if let Some(crc) = decode_runs(b, k, s, out) {
+            return Ok(crc);
+        }
+    }
     let cooperative = s.inverse.wants_checkpoints();
     let n = if cooperative {
         mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
@@ -366,6 +374,60 @@ pub fn decode_block<I: bwt::InverseBwt>(
         });
     }
     Ok(computed)
+}
+
+/// `decode_block` by the run records (src/runs.rs), for a kernel that reads runs: if the
+/// block takes them (`runs::takes_runs`), the records, the LF table from them, the walk
+/// backward, then RLE1 and the CRC as `decode_block` does them, and the CRC. None otherwise,
+/// with `out` as it was: a block that doesn't take the records, or any error (the column's
+/// path then decodes the block again and returns the same error; the tests check the two
+/// paths' errors are equal), or records that don't tile the block (a bug in the front: a
+/// debug build stops there).
+///
+/// Never inlined, and its result an `Option<u32>` in registers, so that `decode_block`'s
+/// column path, inlined where the decoder inlines it, is unchanged but for this call and its
+/// test (#324's no-harm failure: docs/journal/2026-11-10-run-front-fallback.md). The records'
+/// buffers are this call's own, so `Scratch` is unchanged and a process that never takes the
+/// records allocates nothing for them.
+#[inline(never)]
+fn decode_runs<I: bwt::InverseBwt>(
+    b: &block::Symbols,
+    k: Kernels,
+    s: &mut Scratch<I>,
+    out: &mut Vec<u8>,
+) -> Option<u32> {
+    if s.inverse.wants_checkpoints() || !runs::takes_runs(b) {
+        return None;
+    }
+    let mut r = runs::Runs::default();
+    let n = runs::front(b, &mut r, k).ok()?;
+    if b.orig_ptr as usize >= n {
+        return None;
+    }
+    #[cfg(feature = "trace")]
+    trace::mark_sized(
+        trace::Kind::InvertStart,
+        trace::NONE,
+        n as u64,
+        trace::UNREAD,
+    );
+    if !s.inverse.invert_runs(&r, n, b.orig_ptr, &mut s.ll, k) {
+        debug_assert!(false, "the run records don't tile the block");
+        return None;
+    }
+    #[cfg(feature = "trace")]
+    trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    let start = out.len();
+    if rle::unrle(&s.ll, out, k).is_err() {
+        out.truncate(start);
+        return None;
+    }
+    let computed = crc::crc32(&out[start..], k);
+    if computed != b.crc {
+        out.truncate(start);
+        return None;
+    }
+    Some(computed)
 }
 
 /// A whole .bz2 (its streams one after another) decoded on this thread, every block's and

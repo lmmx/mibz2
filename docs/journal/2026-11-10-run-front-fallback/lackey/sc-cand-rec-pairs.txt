@@ -1,0 +1,13 @@
+heap loads by mtf:1f3530:1f39ea: 3376796, 4K heap-heap candidates: 24036
+  n=6192 store_pc=1f3963 load_pc=1f38e0 | store 5532f60..560af7f (span 884767) | load 110f60..110f60 (span 0)
+  n=6162 store_pc=1f3963 load_pc=1f3851 | store 5532e60..560ae7e (span 884766) | load 110e60..110e60 (span 0)
+  n=5781 store_pc=1f3960 load_pc=1f3670 | store 403b060..403b45c (span 1020) | load 537a064..552c3ca (span 1778534)
+  n=1993 store_pc=1f3963 load_pc=1f3960 | store 553207b..560b43d (span 889794) | load 403b060..403b45c (span 1020)
+  n=1705 store_pc=1f3963 load_pc=1f3670 | store 5533003..560b022 (span 884767) | load 537c002..552c022 (span 1769504)
+  n=454 store_pc=1f3963 load_pc=1f379c | store 5532901..560ae4b (span 886090) | load 11e880..11f000 (span 1920)
+  n=447 store_pc=1f3963 load_pc=1f37a8 | store 553289f..560a99d (span 884990) | load 11e890..11f010 (span 1920)
+  n=410 store_pc=1f3963 load_pc=1f37a2 | store 55328a0..560a9a0 (span 884992) | load 11e8a0..11f020 (span 1920)
+  n=137 store_pc=1f36e1 load_pc=1f3960 | store 553229e..560938a (span 880876) | load 403b064..403b45c (span 1016)
+  n=131 store_pc=1f36e1 load_pc=1f3670 | store 553c054..5605071 (span 823325) | load 538e05c..5520090 (span 1646644)
+  n=123 store_pc=1f36db load_pc=1f3960 | store 5533271..560a326 (span 880821) | load 403b060..403b458 (span 1016)
+  n=102 store_pc=1f36db load_pc=1f38e0 | store 5533f74..5604f59 (span 856037) | load 110f60..110f60 (span 0)

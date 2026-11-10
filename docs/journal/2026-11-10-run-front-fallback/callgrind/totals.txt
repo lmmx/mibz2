@@ -1,0 +1,14 @@
+base-random-b0 84,474,095
+base-records-b0 95,404,355
+cand-pattern-b0 12,581,993
+cand-random-b0 84,474,146
+cand-records-b0 95,404,406
+cand-text-b0 30,702,433
+cand-wikidata-b1 16,001,964
+cand-wikidata-b233 15,781,368
+cand-wikidata-b38 20,016,626
+head-pattern-b0 12,580,643
+head-text-b0 30,700,964
+head-wikidata-b1 16,000,507
+head-wikidata-b233 15,779,759
+head-wikidata-b38 20,015,061

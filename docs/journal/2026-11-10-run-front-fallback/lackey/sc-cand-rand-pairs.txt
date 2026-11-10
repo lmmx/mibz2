@@ -1,0 +1,13 @@
+heap loads by mtf:1f3530:1f39ea: 3322869, 4K heap-heap candidates: 27473
+  n=7283 store_pc=1f3960 load_pc=1f3670 | store 403b060..403b45c (span 1020) | load 537a098..552c442 (span 1778602)
+  n=4431 store_pc=1f3963 load_pc=1f3851 | store 5532e60..560ae7e (span 884766) | load 110e60..110e60 (span 0)
+  n=4374 store_pc=1f3963 load_pc=1f38e0 | store 5532f60..560af7f (span 884767) | load 110f60..110f60 (span 0)
+  n=2419 store_pc=1f3963 load_pc=1f3960 | store 5532079..560b420 (span 889767) | load 403b060..403b45c (span 1020)
+  n=2121 store_pc=1f3963 load_pc=1f3670 | store 5532ff8..560b07c (span 884868) | load 537bff8..552c07c (span 1769604)
+  n=1305 store_pc=1f3963 load_pc=1f379c | store 553294a..560af0f (span 886213) | load 11e880..11f000 (span 1920)
+  n=1248 store_pc=1f3963 load_pc=1f37a8 | store 5532950..560af5f (span 886287) | load 11e890..11f010 (span 1920)
+  n=1233 store_pc=1f3963 load_pc=1f37a2 | store 5532a22..560af60 (span 886078) | load 11e8a0..11f020 (span 1920)
+  n=409 store_pc=1f36e1 load_pc=1f3960 | store 5533211..560b1da (span 884681) | load 403b060..403b45c (span 1020)
+  n=407 store_pc=1f36db load_pc=1f3670 | store 5534002..560b099 (span 880791) | load 537e002..552c0b8 (span 1761462)
+  n=369 store_pc=1f36db load_pc=1f3960 | store 5532252..560b099 (span 888391) | load 403b060..403b450 (span 1008)
+  n=366 store_pc=1f36e1 load_pc=1f3670 | store 5535055..560b0b9 (span 876644) | load 538005e..552c0c8 (span 1753194)
