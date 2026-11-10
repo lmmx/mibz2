@@ -1141,3 +1141,9 @@ bench-par-scan DRY="":
 bench-team-ports:
     git fetch -q origin research/team-mtf-port
     just bench-release-scaling f76f0e3cdeec9260179eacd5e1a111a5a434bec5 8f540ef1190689f59a279f081d8405f46669fba0 10 "8,10,12,16,20"
+
+# #324 (run-record front) against its base on the i9, wikidata wall at 1-20 threads, the team path included.
+# Pathfinder W2 (#145 PROPOSAL 6764488488). Decision: PERFORMANCE-POLICY.md, primary corpus.
+bench-324-i9:
+    git fetch -q origin perf/run-front-records
+    just bench-release-scaling e88c063155c3e734e748e99ccda025393302720f 5e7b9954ad0c7c46f8d68bbaaa3b6cf6c6dc8b1b 10
