@@ -1,0 +1,25 @@
+{
+  "reviewed_head": "9323525026d9dcea55cc1e7956a604241c426f9a",
+  "sources": [
+    {
+      "path": "bench/phrase_knee.py",
+      "git_blob_sha": "20f42b0cf3d9f6efde8cc2d54383ef6cfd69e59d"
+    },
+    {
+      "path": "bench/test_phrase_knee.py",
+      "git_blob_sha": "bb469b9409f7e5139ed3897210325f5f10150a44"
+    },
+    {
+      "path": "docs/journal/2026-11-09-phrase-structure.md",
+      "git_blob_sha": "9a6b4406a86fd115a825fbc733f79b22af5be21d"
+    },
+    {
+      "path": "examples/phrase_census.rs",
+      "git_blob_sha": "8229edbb53bec904a2c8fe5b9a3596e93c4abac7"
+    },
+    {
+      "path": "examples/phrase_walk.rs",
+      "git_blob_sha": "195cca98e37cdaad2207fe8ea61c78581780a15b"
+    }
+  ]
+}

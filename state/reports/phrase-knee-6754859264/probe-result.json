@@ -1,0 +1,50 @@
+{
+  "census": {
+    "text": "aab",
+    "L": "baa",
+    "origin": 0,
+    "F": "aab",
+    "psi": [
+      1,
+      2,
+      0
+    ],
+    "trajectory": [
+      0,
+      1,
+      2
+    ],
+    "cells": [
+      0,
+      0,
+      1
+    ],
+    "q": 0,
+    "t": 1,
+    "displacement": 1,
+    "coherent_length": 2,
+    "source": "aa",
+    "target": "ab",
+    "same_cell_length": 1,
+    "scope": "Python replay of census displacement predicate; not native Rust execution"
+  },
+  "reporter": {
+    "valid": {
+      "exit": 0,
+      "stdout": "| copies | production ns/B a thread | MB/s | inflation | phrase ns/B a thread | MB/s | inflation | phrase / production, MB/s |\n|--:|--:|--:|--:|--:|--:|--:|--:|\n| 1 | 2.000 | 500 | 1.00 | 4.000 | 250 | 1.00 | 0.500 |\n| 2 | 4.000 | 500 | 2.00 | 8.000 | 250 | 2.00 | 0.500 |\n\nMedians over 3 rounds; inflation is against 1 copy; the last column is the median of the rounds' paired ratios.\n"
+    },
+    "nan_wall": {
+      "exit": 0,
+      "stdout": "| copies | production ns/B a thread | MB/s | inflation | phrase ns/B a thread | MB/s | inflation | phrase / production, MB/s |\n|--:|--:|--:|--:|--:|--:|--:|--:|\n| 1 | 2.000 | 500 | 1.00 | 4.000 | nan | 1.00 | nan |\n| 2 | 4.000 | 500 | 2.00 | 8.000 | nan | 2.00 | nan |\n\nMedians over 3 rounds; inflation is against 1 copy; the last column is the median of the rounds' paired ratios.\n"
+    },
+    "negative_build": {
+      "exit": 0,
+      "stdout": "| copies | production ns/B a thread | MB/s | inflation | phrase ns/B a thread | MB/s | inflation | phrase / production, MB/s |\n|--:|--:|--:|--:|--:|--:|--:|--:|\n| 1 | 2.000 | 500 | 1.00 | -998.000 | 250 | 1.00 | 0.500 |\n| 2 | 4.000 | 500 | 2.00 | -496.000 | 250 | 0.50 | 0.500 |\n\nMedians over 3 rounds; inflation is against 1 copy; the last column is the median of the rounds' paired ratios.\n"
+    },
+    "wrong_bytes": {
+      "exit": 0,
+      "stdout": "| copies | production ns/B a thread | MB/s | inflation | phrase ns/B a thread | MB/s | inflation | phrase / production, MB/s |\n|--:|--:|--:|--:|--:|--:|--:|--:|\n| 1 | 2.000 | 500 | 1.00 | 4000.000 | 0 | 1.00 | 0.001 |\n| 2 | 4.000 | 500 | 2.00 | 16000.000 | 0 | 4.00 | 0.000 |\n\nMedians over 3 rounds; inflation is against 1 copy; the last column is the median of the rounds' paired ratios.\n"
+    }
+  },
+  "existing_tests": "3 passed (direct invocation)"
+}
