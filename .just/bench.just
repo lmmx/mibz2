@@ -1006,9 +1006,11 @@ bench-par-scan DRY="":
       st=$?
       set -e
       deadline "$st" || fail "DRY: the deadline did not stop a stalled child (exit $st)"
-      sleep 1
+      # (killed means gone or a zombie not yet reaped, within 10 s)
+      alive() { local s; s=$(awk '{print $3}' "/proc/$1/stat" 2> /dev/null) && [ "$s" != Z ]; }
       for p in $(cat "$W/stall-pids.txt"); do
-        ! kill -0 "$p" 2> /dev/null || fail "DRY: process $p outlived the deadline"
+        for _ in $(seq 20); do alive "$p" || break; sleep 0.5; done
+        ! alive "$p" || fail "DRY: process $p outlived the deadline"
       done
       echo "DRY: a stalled child and its grandchild were killed at the deadline (exit $st)" | tee "$W/stall-check.txt"
     fi
