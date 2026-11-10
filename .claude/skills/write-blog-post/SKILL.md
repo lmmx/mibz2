@@ -478,6 +478,40 @@ a compressed sentence:
 The fix is one idea a sentence, in the order the reader needs them, each case after the
 reason it arises.
 
+### A précis is not an explanation
+
+The worst failure is a paragraph that looks like an explanation and can't be followed. It
+names each moving part of a mechanism in a sentence apiece, in the mechanism's own terms,
+before the reader has a picture of any of them. It reads as thorough, but it is a skimmed
+summary of an exposition that isn't there: it gives no example, no state before and after,
+and no reason for any move. Louis called the Rauzy–Veech post's draft "toxic" (10 November
+2026):
+
+> We wrote an experimental kernel … that never walks the rows. It works on the intervals.
+> Each step compares the last interval of the runs' order in the last column with the last
+> interval of their order after LF. It takes the shorter one's length off the longer one,
+> and gives the shorter interval a longer word to cover the rows removed. …
+
+Every clause is true, and no reader can carry out a step from it. The rewrite followed one
+concrete case through one step: a tray of 6 rows and one of 4 landing on its end. It said
+why those 4 rows can be deleted: nothing else lands there, and the paths through them are
+predictable. It said what the shorter tray gains in exchange. Only then did it name the
+technique, and point to the section where it is worked by hand.
+
+- **The test:** if a paragraph describes a procedure, could a reader do one step of it,
+  on a tiny input, from that paragraph alone? If not, either make it followable or cut it
+  to the outcome and its cause, and say where the procedure is worked through.
+- **Signs:**
+  - a sentence per moving part, each naming objects not yet pictured;
+  - "it compares … it takes … it gives … it records …" in a row;
+  - the technique's name as the paragraph's last word, as if naming it explained it.
+- **The fix:** build on a picture the reader already has (a figure just shown, a running
+  example), then give one concrete step with numbers, the reason for each move, and what
+  changed. Numbers that follow (costs, rates) are arithmetic the reader can check.
+- **Where a formal statement exists,** give it in full and annotate it (below, "An
+  annotated formal frame"), rather than paraphrasing it into prose that keeps its
+  vocabulary and loses its content.
+
 ## The house rules
 
 ### Voice and register
@@ -586,6 +620,21 @@ reason it arises.
   - **Draw the real mechanism,** with the decoder's own names and numbers.
   - **The caption says** whether the figure is conceptual or measured
     [P: "Conceptual timing, not measured values."].
+- **An annotated formal frame.** When the work rests on a formal theory, state it formally
+  and translate it line by line: black definitions and equations, each with a coloured
+  note on what it means here, on the post's running example. The markup is
+  `<figure class="bf-fig bf-formal" markdown>`, with one `bf-fstep` per line and a
+  `bf-fbody` and a `bf-fnote bf-c-<colour>` in each (blog.css; two columns, stacked on a
+  phone; KaTeX inside). Check every formula against a primary source and cite it in the
+  caption, and say where the post's case departs from the classical one. Louis asked for
+  this frame after the Rauzy–Veech post dropped ChatGPT's annotated synthesis
+  (10 November 2026): it frames the whole undertaking, and a post that relays such
+  material keeps the approach, redrawn and checked, not only its facts.
+- **A hard figure from a source is worth redrawing,** with what made it hard fixed. The
+  Rauzy–Veech post redrew Crochemore and Russo's Lyndon table (p. 7): nested boxes and a
+  row of numbers became bars with the split marked and the suffix ranks added, so the
+  reader can see why each part splits where it does, and what each table entry is.
+  Recompute every value, and cite the page.
 - **Tables** have numbers right-aligned (`---:`), units in the header, and a lead-in
   sentence [E: 9c4d2572, 7474ac78; P].
 - **Maths is set as maths** with KaTeX: `$x$` inline and `$$…$$` displayed. Never use
@@ -727,6 +776,11 @@ Before `publish-page`:
 - [ ] The key-facts audit is done and in the PR body. Every fact the introduction relies on
       is established in the introduction or section 1, and no question raised by the
       introduction's own figures is left open there.
+- [ ] No paragraph is a précis passing as an explanation: for every procedure described,
+      a reader could do one step of it on a tiny input from the text alone, or the text
+      gives only the outcome and its cause and points to where the procedure is worked.
+- [ ] Where the work rests on a formal theory, the post states it formally, annotated line
+      by line for its own case, with every formula checked and cited.
 - [ ] The domain is explained before the routine, with a diagram for each process or
       structure and a worked example for the central idea.
 - [ ] No section is dense prose where a figure would carry it. Results, comparisons,

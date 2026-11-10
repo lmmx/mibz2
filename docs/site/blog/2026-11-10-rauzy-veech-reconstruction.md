@@ -16,7 +16,7 @@ description: "An experimental mibz2 kernel rebuilds bzip2 text without a row-by-
 An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.
 {: .post-dek }
 
-10 November 2026 · 14 min read · [Research in progress](#6-before-production)
+10 November 2026 · 17 min read · [Research in progress](#6-before-production)
 {: .post-meta }
 
 </div>
@@ -51,7 +51,11 @@ mibz2 is our bzip2 decoder, written in Rust. This post follows [The mathematical
 <figcaption>Each compartment is a row in one equal-byte run; the tray is that run’s interval, and sliding it is LF’s constant offset. The unchanged spacing explains why one interval describes all four mappings. The analogy breaks at physical movement: this describes a map; the kernel does not move the stored bytes in a tray, and the shift can also be negative.</figcaption>
 </figure>
 
-**Working on intervals instead of rows.** We wrote an experimental **kernel**, a self-contained routine for this one stage, that never walks the rows. It works on the intervals. Each step compares the last interval of the runs' order in the last column with the last interval of their order after LF. It takes the shorter one's length off the longer one, and gives the shorter interval a longer word to cover the rows removed. It records that word as one rule, such as `X → AB`. When one interval is left, its word is the whole block, and the rules spell it out. One step covers many rows, so the work grows with the number of steps, not the number of bytes. Wikidata needs 1.812 steps per run, about 0.13 per byte, and in the faster kernel a step costs about 7.7 ns. So the induction itself costs about 1 ns per byte, where the shipped decoder's whole inversion stage takes about 2. The step is a known technique, Rauzy–Veech induction, applied here to inverting a BWT.
+**Working on intervals instead of rows.** The walk needs one lookup per byte because it only ever knows a row's next move. The trays allow a shortcut. Look at the last rows of the block, and say they belong to a tray A of 6 rows. Say also that LF sends another tray, B, of 4 rows, onto exactly the last 4 of them. Then every path through B's rows makes two moves we can predict together: B's shift, then A's. The 4 rows where B lands tell us nothing more, and nothing else lands there, so they can be deleted from the map. A shrinks to 2 rows. B now jumps straight to where A would have sent it, and carries a two-byte word for its two moves. The step read two tray lengths and two shifts, and no rows. (When the two trays are the same length, B lands on all of A, and A disappears.)
+
+Our experimental **kernel**, a self-contained routine for this one stage of the decoder, repeats that step at the right-hand end of the map. Each step deletes a tray's worth of rows and records the new word as one rule, such as `X → AB`. When one tray is left, its word is the whole block, and expanding the rules writes out the bytes. Shrinking a map this way is a classical idea in dynamics, **Rauzy–Veech induction**. [Section 1](#1-rebuilding-aab-in-two-steps) states it formally, line by line, and runs it by hand on a three-byte block.
+
+The kernel's work therefore grows with its steps, not with its bytes. Wikidata's blocks need 1.812 steps per run, and a run averages about 14 rows, so there is one step for about every 7.6 bytes (0.1309 per byte). A step costs about 7.7 ns in the faster kernel, so the steps cost about 1 ns per byte. The decoder's shipped inversion stage, building the table and walking it, takes about 2.05.
 
 **The result.** After a bug fix ([§2](#2-the-timings)), the kernel took **0.82 to 0.86 times as long as the inversion stage mibz2 ships**, on the Wikidata blocks, on one thread. The first three runs gave 1.677 against 2.049 ns per byte. Nine runs hours later, on the same machine in a slower state, gave 0.84 to 0.86. Where runs are short, steps per byte rise and the kernel is slower: after the fix, it took about 4 times as long as the shipped stage on prose and 9 times on uniform random bytes. These are indicative timings from one cloud machine, not CI measurements. **The whole decoder has not been compared**, and nothing is in production.
 
@@ -64,6 +68,104 @@ mibz2 is our bzip2 decoder, written in Rust. This post follows [The mathematical
 For a small example, sort the rotations of `aab`: `aab`, `aba`, `baa`. The last column is `baa`; the first is `aab`. Matching equal letters in occurrence order gives LF mappings 0→2, 1→0 and 2→1.
 
 Name the one-byte run of `b` B and the two-byte run of `a` A. In the last column the runs come in the order B, A: call this the **original order**. LF sends their rows to the first column, where they come in the order A, B: the **image order**. The two orders cut the same three rows into intervals in different places. Together, the intervals and where LF sends them form an **interval exchange**: each interval is moved, whole, to a new place.
+
+Interval exchanges are a classical object of dynamics, and shrinking one step by step is **Rauzy–Veech induction**. The panel states it formally, line by line, with what each line means in a bzip2 block beside it in colour. The hand-run after the panel is the same induction on `aab`.
+
+<figure class="bf-fig bf-formal" id="formal-frame" markdown>
+<p class="bf-title">Rauzy–Veech induction, stated formally and read in a bzip2 block</p>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**1. Interval exchange.** Cut an interval $I$ into pieces $I_\alpha$, one for each symbol $\alpha$ of an alphabet $\mathcal{A}$ of $d$ symbols, with lengths $\lambda_\alpha > 0$. An <span class="bf-fterm bf-c-blue">interval exchange map</span> $f : I \to I$ moves each piece by a translation, so pieces keep their length and direction and are laid out again in a new order. Two bijections $\pi_0, \pi_1 : \mathcal{A} \to \{1, \dots, d\}$ give each piece's place <span class="bf-fterm bf-c-blue">before</span> ($\pi_0$) and <span class="bf-fterm bf-c-blue">after</span> ($\pi_1$).
+</div>
+<div class="bf-fnote bf-c-blue" markdown>
+<span class="bf-fnote-h">In a block</span>
+$I$ is the block's $n$ rows. A piece is a run of equal bytes in the last column, $\lambda_\alpha$ its length, and $f$ is LF. $\pi_0$ is the runs' order in the last column, $\pi_1$ their images' order in the first. For `baa`: $\pi_0$ is B, A and $\pi_1$ is A, B.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**2. Monodromy invariant.** The permutation
+
+$$p = \pi_1 \circ \pi_0^{-1} : \{1, \dots, d\} \to \{1, \dots, d\}$$
+
+sends each place in the old order to the same piece's place in the new.
+</div>
+<div class="bf-fnote bf-c-green" markdown>
+<span class="bf-fnote-h">The shape, without names</span>
+$p$ does not depend on how the pieces are named. For `baa` it swaps places 1 and 2.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**3. One step.** Let $\alpha(\varepsilon) = \pi_\varepsilon^{-1}(d)$ be the last piece of each order. The step has <span class="bf-fterm bf-c-amber">type 0</span> if $\lambda_{\alpha(0)} > \lambda_{\alpha(1)}$ and <span class="bf-fterm bf-c-amber">type 1</span> if $\lambda_{\alpha(0)} < \lambda_{\alpha(1)}$. The longer piece is the <span class="bf-fterm bf-c-amber">winner</span>, the shorter the <span class="bf-fterm bf-c-amber">loser</span>. The classical theory excludes equal lengths.
+</div>
+<div class="bf-fnote bf-c-amber" markdown>
+<span class="bf-fnote-h">The two right-hand ends</span>
+For `baa`: $\alpha(0)$ is A (2 rows), $\alpha(1)$ is B (1 row), so type 0 and A wins. A finite block does reach equal lengths, and there the kernel joins the two pieces: the step `a + ab` below.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**4. The induced map.** Remove the loser's end: $J = I \setminus f(I_{\alpha(1)})$ in type 0, $J = I \setminus I_{\alpha(0)}$ in type 1. The <span class="bf-fterm bf-c-ultra">first-return map</span> sends each point of $J$ to where its path first comes back:
+
+$$\hat{R}(f)(x) = f^{\,r(x)}(x),$$
+
+$$r(x) = \min\{\, n \ge 1 : f^{\,n}(x) \in J \,\}.$$
+
+In type 0, $r(x) = 1$ everywhere except on the loser's piece, where $r(x) = 2$.
+</div>
+<div class="bf-fnote bf-c-ultra" markdown>
+<span class="bf-fnote-h">Fewer rows, longer words</span>
+A row of the loser now stands for two LF steps, and its word records both bytes: B's `ab` in the hand-run below. Each step removes the loser's length in rows from the map.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**5. Proposition.** $\hat{R}(f)$ is again an interval exchange on the same alphabet, with a new pair $\pi'$ and the lengths
+
+$$\lambda'_{\text{winner}} = \lambda_{\text{winner}} - \lambda_{\text{loser}},$$
+
+$$\lambda'_\alpha = \lambda_\alpha \text{ otherwise.}$$
+
+</div>
+<div class="bf-fnote bf-c-claude" markdown>
+<span class="bf-fnote-h">Why it repeats</span>
+The result is the same kind of object, so the step applies again. For `baa` the lengths go from A 2, B 1 to A 1, B 1, and the equal ends then join.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**6. Iteration.** Repeated steps give $(\pi^{(n)}, \lambda^{(n)})$ and a product $\Theta^{(n)}$ of elementary matrices, with
+
+$$\lambda^{(n)} = \big(\Theta^{(n)}\big)^{-\mathsf{T}} \lambda, \qquad w^{(n)} = \Theta^{(n)} w,$$
+
+where $w$ is the vector of the pieces' translations. For $d = 2$ the lengths follow the subtractive Euclidean algorithm.
+</div>
+<div class="bf-fnote bf-c-steel" markdown>
+<span class="bf-fnote-h">Counts and rules</span>
+An entry of $\Theta^{(n)}$ counts how often one new piece's path visits one original piece before it returns: the letters in its word. The kernel's rules keep the words themselves, not just the counts.
+</div>
+</div>
+
+<div class="bf-fstep" markdown>
+<div class="bf-fbody" markdown>
+**7. Inverting the BWT.** Decoding iterates LF one row at a time, $x \mapsto \mathrm{LF}(x)$. Since LF is an interval exchange on the runs, induction can replace that iteration: each step shrinks the map and records a rule, and at the end the rules spell the block. Whether this is faster depends on what a step costs.
+</div>
+<div class="bf-fnote bf-c-blue" markdown>
+<span class="bf-fnote-h">The rest of this post</span>
+What a step costs, [§2](#2-the-timings) and [§3](#3-why-the-cells-kernel-is-cheaper). The tree the rules form, [§4](#4-the-lyndon-tree). How the order of steps changes their number, [§5](#5-fewer-steps-by-a-different-order).
+</div>
+</div>
+
+<figcaption>Black: the standard definitions (after M. Viana, <em>Ergodic theory of interval exchange maps</em>, Rev. Mat. Complut. 19, 2006). Colour: what each line means in a bzip2 block, with the example <code>aab</code>, whose last column is <code>baa</code>. A block's map is on whole rows, so it is a discrete interval exchange, and it ends in equal lengths, which the classical theory sets aside.</figcaption>
+</figure>
+
 
 <figure class="bf-fig" id="mv79-03-return-tickets">
 <p class="bf-title">A ticket can remember a longer journey</p>
@@ -153,6 +255,14 @@ The journal identifies the right-end induction's expanded derivation tree with t
 <text x="20" y="35" class="bf-t-strong" text-anchor="start" style="font-size:26px">Bind the parts; keep the seams</text><text x="20" y="73" class="bf-tm" text-anchor="start" style="font-size:24px">aab is its own smallest rotation.</text><path d="M55 124Q130.25 109 205.5 126Q345.25 109 485 124V240Q345.25 226 205.5 242Q130.25 226 55 240Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M205.5 126V242" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="130.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="345.25" y="191.36" class="bf-t-strong" text-anchor="middle" style="font-size:38px">ab</text><path d="M206 115V92H226V121L216 110Z" fill="var(--bf-amber-tint)" stroke="var(--bf-amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="290" class="bf-t-strong" text-anchor="start" style="font-size:27px">First seam: a | ab</text><text x="20" y="328" class="bf-t" text-anchor="start" style="font-size:24px">ab is smaller than the other suffix, b.</text><path d="M377 350L377 375" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M372.2 366.2L377 375L381.8 366.2" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M260 397Q299.375 382 338.75 399Q411.875 382 485 397V500Q411.875 486 338.75 502Q299.375 486 260 500Z" fill="var(--bf-green-tint)" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M338.75 399V502" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="299.375" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">a</text><text x="411.875" y="456.3" class="bf-t-strong" text-anchor="middle" style="font-size:38px">b</text><text x="20" y="443" class="bf-t-strong" text-anchor="start" style="font-size:24px">Open ab:</text><text x="20" y="482" class="bf-t-strong" text-anchor="start" style="font-size:30px">a | b</text><path d="M20 546H520" fill="none" stroke="var(--bf-frame)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="20" y="589" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and b to make ab.</text><text x="20" y="630" class="bf-t-strong" text-anchor="start" style="font-size:24px">Join a and ab to make aab.</text><text x="20" y="679" class="bf-t" text-anchor="start" style="font-size:24px">Those nested joins are the Lyndon tree.</text>
 </svg>
 <figcaption>Each bound part is a word; its binding seam is the standard Lyndon split, before its smallest proper suffix. Reading the joins from the smaller book upward gives the rules ab = a·b and aab = a·ab. The analogy breaks at the bookbinder: the kernel does not first sort suffixes or build a separate book tree, and shared equal rules form a grammar rather than a physically duplicated tree. The stated identity concerns right-end induction’s expanded tree for a primitive block’s smallest rotation.</figcaption>
+</figure>
+
+A larger example shows the two descriptions agreeing at every node. Crochemore and Russo draw the Lyndon tree of `#abbabaababbabaab` with its **Lyndon table**, which gives, for each position, the length of the longest Lyndon word starting there. The redrawing adds each position's suffix rank, which shows why each part splits where it does.
+
+<figure class="bf-fig" id="lyndon-table">
+<p class="bf-title">One tree, three readings</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 746" role="img" aria-labelledby="lyndon-table-title lyndon-table-desc"><title id="lyndon-table-title">One tree, three readings</title><desc id="lyndon-table-desc">The Lyndon tree of #abbabaababbabaab drawn as nested bars, root at the top, each bar split by an amber mark before its smallest proper suffix. Below the letters, each position's suffix rank: every bar splits at the lowest rank inside it, so the tree is the Cartesian tree of the ranks. The bottom row is the Lyndon table, Lyn[i] = 3 1 1 2 1 8 5 1 3 1 1 2 1 3 2 1; each value is the width of the widest bar starting at i, for example Lyn[5] = 8, the bar aababbab, highlighted green.</desc><text x="20.0" y="34.0" class="bf-t-strong" text-anchor="start" style="font-size:24px">The Lyndon tree of #abbabaababbabaab</text><text x="20.0" y="64.0" class="bf-tm" text-anchor="start" style="font-size:17px"># comes before every letter, so the whole word is a Lyndon word.</text><text x="20.0" y="104.0" class="bf-tm" text-anchor="start" style="font-size:17px">i</text><text x="92.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">0</text><text x="120.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">1</text><text x="148.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">2</text><text x="176.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">3</text><text x="204.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">4</text><text x="232.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">5</text><text x="260.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">6</text><text x="288.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">7</text><text x="316.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">8</text><text x="344.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">9</text><text x="372.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">10</text><text x="400.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">11</text><text x="428.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">12</text><text x="456.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">13</text><text x="484.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">14</text><text x="512.0" y="104.0" class="bf-tm" text-anchor="middle" style="font-size:15px">15</text><text x="64.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">#</text><text x="92.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="120.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="148.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="176.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="204.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="232.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="260.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="288.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="316.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="344.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="372.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="400.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="428.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><text x="456.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="484.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">a</text><text x="512.0" y="136.0" class="bf-t-strong" text-anchor="middle" style="font-size:23px">b</text><rect x="52" y="152" width="472" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M442 149V181" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="188" width="388" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M218 185V217" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="224" width="164" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M162 221V253" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="52" y="260" width="108" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M78 257V289" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="80" y="296" width="80" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M134 293V325" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="80" y="332" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M106 329V361" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="164" y="260" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M190 257V289" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="220" y="224" width="220" height="26" rx="6" class="bf-pill-hi" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M386 221V253" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="220" y="260" width="164" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M246 257V289" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="248" y="296" width="136" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M302 293V325" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="248" y="332" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M274 329V361" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="304" y="332" width="80" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M358 329V361" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="304" y="368" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M330 365V397" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="388" y="260" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M414 257V289" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="444" y="188" width="80" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M470 185V217" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><rect x="472" y="224" width="52" height="26" rx="6" class="bf-pill" style="stroke:var(--bf-frame);stroke-width:1.5"/><path d="M498 221V253" fill="none" stroke="var(--bf-amber)" stroke-width="3.5" stroke-linecap="round"/><text x="20.0" y="438.0" class="bf-tm" text-anchor="start" style="font-size:17px">rank</text><text x="20.0" y="478.0" class="bf-tm" text-anchor="start" style="font-size:17px">Lyn</text><text x="64.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">0</text><text x="92.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">8</text><text x="120.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">16</text><text x="148.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">13</text><text x="176.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">5</text><text x="204.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">11</text><text x="232.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">2</text><text x="260.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">6</text><text x="288.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">14</text><text x="316.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">7</text><text x="344.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">15</text><text x="372.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">12</text><text x="400.0" y="438.0" class="bf-t-strong" text-anchor="middle" style="font-size:17px;fill:var(--bf-amber)">4</text><text x="428.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">10</text><text x="456.0" y="438.0" class="bf-t-strong" text-anchor="middle" style="font-size:17px;fill:var(--bf-amber)">1</text><text x="484.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">3</text><text x="512.0" y="438.0" class="bf-t" text-anchor="middle" style="font-size:17px">9</text><text x="92.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">3</text><text x="120.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="148.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="176.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">2</text><text x="204.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="232.0" y="478.0" class="bf-t-green" text-anchor="middle" style="font-size:18px">8</text><text x="260.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">5</text><text x="288.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="316.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">3</text><text x="344.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="372.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="400.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">2</text><text x="428.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><text x="456.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">3</text><text x="484.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">2</text><text x="512.0" y="478.0" class="bf-t" text-anchor="middle" style="font-size:17px">1</text><path d="M222 492H438" fill="none" stroke="var(--bf-green)" stroke-width="4" stroke-linecap="round"/><path d="M222 484V500M438 484V500" fill="none" stroke="var(--bf-green)" stroke-width="3" stroke-linecap="round"/><path d="M20 516H520" fill="none" stroke="var(--bf-frame)" stroke-width="2"/><text x="20.0" y="552.0" class="bf-t-strong" text-anchor="start" style="font-size:20px">Read down: every bar is a Lyndon word.</text><text x="20.0" y="586.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-amber)">It splits (amber) before its smallest proper</text><text x="20.0" y="620.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-amber)">suffix: the position whose rank is lowest inside it.</text><text x="20.0" y="654.0" class="bf-t" text-anchor="start" style="font-size:20px">Root: rank 1 at aab. Green bar: rank 4 at ab.</text><text x="20.0" y="688.0" class="bf-t-strong" text-anchor="start" style="font-size:20px">Read across: Lyn[i] is the widest bar from i.</text><text x="20.0" y="722.0" class="bf-t" text-anchor="start" style="font-size:20px;fill:var(--bf-green-ink)">Lyn[5] = 8 is the green bar, aababbab.</text></svg>
+<figcaption>Redrawn from Crochemore and Russo, <a href="https://arxiv.org/abs/1712.08749"><em>Cartesian trees and Lyndon trees</em></a>, p. 7, with the suffix ranks added. Their figure stacks the same bars as boxes and gives the table under it; the ranks show why the boxes split where they do. The tree, the ranks and the table were recomputed here, and the standard split and the lowest rank agree at all 16 nodes. The # is the paper’s device for making any word a Lyndon word, and plays no part in a bzip2 block.</figcaption>
 </figure>
 
 Lyndon trees, and their link to Cartesian trees, are long established. #351 gives a way to reach one from the BWT's runs without rebuilding the text first.
