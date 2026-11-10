@@ -3,7 +3,7 @@
 
 The coordinator's messages have one correct place each (PROTOCOL.md §1):
 
-    an assignment for a role   -> the role's inbox (#160, #161, #162, #222), one in flight
+    an assignment for a role   -> its inbox (#160, #161, #162, #222, #314, #346, #363), one in flight
     the same, role busy        -> the channel PR #145 as TYPE: QUEUED
     findings, ACKs, decisions  -> the channel PR #145
 
@@ -80,6 +80,14 @@ ROLES = {
         "inbox": 346,
         "offset": 6765000000,
         "cursor": ("team-state/monodromy", "state/cursor.json"),
+    },
+    # Codex production delegate: #363 is a manual issue inbox, not an automatic wake.
+    # It follows the existing queue/receipt protocol after owner adoption of this role.
+    "codex": {
+        "aliases": ("codex",),
+        "inbox": 363,
+        "offset": 0,
+        "cursor": ("team-state/codex", "state/cursor.json"),
     },
 }
 INBOXES = {r["inbox"]: name for name, r in ROLES.items()}
@@ -205,7 +213,7 @@ def completed(role, cur):
                 if b.get("completed") or b.get("status") in ("completed", "finished")}
     if role == "guardian":
         return set(cur.get("consumed_incoming_comment_ids", []))
-    if role in ("researcher", "observer", "pathfinder", "monodromy"):
+    if role in ("researcher", "observer", "pathfinder", "monodromy", "codex"):
         return set(cur.get("processed_comment_ids", []))
     raise ValueError(role)
 
