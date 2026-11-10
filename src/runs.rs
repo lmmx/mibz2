@@ -32,15 +32,55 @@ const CAP: u32 = 127;
 /// A run's weight (N in libbzip2) refused at this, as `mtf::mtf` refuses it
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
+/// Symbols in a window of the admission's sample, and the most windows it reads
+const WINDOW: usize = 64;
+const WINDOWS: usize = 64;
+
+/// The least share of run symbols (RUNA, RUNB) among a block's symbols for the records'
+/// path: one in this many
+const RUN_SHARE: usize = 32;
+
 /// Whether the decoder takes the run records' path for `b` (else the column's): the block is
-/// below 2^24 rows, and its symbols number at most half its bound. The bound, not the
-/// length, as the length is known only after the front; for a full block they are about
-/// equal. The cut is set by instruction counts (docs/journal/2026-11-10-run-front-production.md
-/// §4): Wikidata's blocks (0.05-0.22 symbols a row) and text's (0.47) decode in 10-16% fewer
-/// instructions by records; high-entropy blocks (a symbol a row: a record a row, each dearer
-/// to fill than the build's row) in 18-19% more, so they keep the column.
+/// below 2^24 rows, its symbols number at most half its bound, and at least one in RUN_SHARE
+/// of them, in a sample, is a run symbol.
+///
+/// **The bound,** not the length, as the length is known only after the front; for a full
+/// block they are about equal. The cut is set by instruction counts
+/// (docs/journal/2026-11-10-run-front-production.md §4): Wikidata's blocks (0.05-0.22 symbols
+/// a row) and text's (0.47) decode in 10-16% fewer instructions by records; high-entropy
+/// blocks (a symbol a row: a record a row, each dearer to fill than the column's row) in
+/// 18-19% more, so they keep the column.
+///
+/// **The run symbols.** A short block of high entropy (a small incompressible file, a
+/// stream's last block) also has few symbols against its bound, and by the bound alone it
+/// took the records' path at that 18-19%. Such a block has almost no run symbols: under 1%
+/// of `random`'s and `records`' symbols, against 37% of text's and 25% or more of all but
+/// one of Wikidata's full blocks (that one: 10%). So a block of fewer than one run symbol
+/// in RUN_SHARE keeps the column. The share is read from up to WINDOWS windows of WINDOW
+/// symbols, evenly spaced (a block of at most WINDOW x WINDOWS symbols is counted whole): a
+/// proportion, which a sample of 4,096 gives within a point or two. (The rows themselves are
+/// not sampled: a few long runs hold most of a block's rows, and a sample misses them.)
+///
+/// Every block this admits, `2 * syms <= max_len` admits too.
 pub fn takes_runs(b: &Symbols) -> bool {
-    b.max_len < 1 << 24 && 2 * b.syms.len() <= b.max_len
+    let syms = &b.syms;
+    if b.max_len >= 1 << 24 || 2 * syms.len() > b.max_len {
+        return false;
+    }
+    let (mut runs, mut seen) = (0usize, 0usize);
+    let mut window = |w: &[u16]| {
+        runs += w.iter().filter(|&&s| s <= 1).count();
+        seen += w.len();
+    };
+    if syms.len() <= WINDOW * WINDOWS {
+        window(syms);
+    } else {
+        let step = syms.len() / WINDOWS;
+        for i in 0..WINDOWS {
+            window(&syms[i * step..i * step + WINDOW]);
+        }
+    }
+    RUN_SHARE * runs >= seen
 }
 
 /// A block's run records and the path's scratch, kept from block to block
