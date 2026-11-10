@@ -247,7 +247,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-10-rauzy-veech-reconstruction.md" = "A new way to rebuild text turns repeated pieces into reusable rules and brings a familiar tree into view." },
+  { "blog/2026-11-10-rauzy-veech-reconstruction.md" = "An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree." },
   { "blog/2026-11-09-pit-crew-service-threads.md" = "Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU." },
   { "blog/2026-11-08-bwt-runs-from-mtf-codes.md" = "bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built." },
   { "blog/2026-11-08-inverse-bwt-navigation.md" = "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven." },
