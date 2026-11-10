@@ -1,7 +1,8 @@
 # 2026-11-10: The scan without the scanner: found by magic, accepted by chain (#10 reopened)
 
 **Status: an exact prototype, a bound, and a registered diagnostic, revised after the
-Researcher's REVISE (#145 comment 6755860961; §8) and re-frozen. No workstation data yet.**
+Researcher's REVISE (#145 comment 6755860961; §8) and its re-review (#145 comment 6756608043;
+§9), and re-frozen. No workstation data yet.**
 - **The design.** One thread finds every bit where a block or end-of-stream magic occurs. Each
   worker reads and decodes the block at a candidate itself, Huffman included. The caller's thread
   walks the chain exactly as `stream::Scanner` does, and uses a worker's result only for the
@@ -21,8 +22,10 @@ Researcher's REVISE (#145 comment 6755860961; §8) and re-frozen. No workstation
   same text at level 1, 4.0–4.3× on incompressible data. The workers it keeps busy are
   (1 − s) ÷ s, since their work excludes the scan. A ten-core machine is past the last two
   today, in this ideal model.
-- **The test (registered below).** `just bench-par-scan`: the two harness arms that differ only
-  in who reads the symbols, at 1 to 10 workers, on three inputs.
+- **The test (registered below).** `just bench-par-scan`: the harness's two complete
+  constructions, one reading the symbols on a scanner thread and one on the workers, at 1 to 10
+  workers, on three inputs. They also differ in buffer ownership, locking and speculative work
+  (§5).
 
 Nothing in the decoder changes. `examples/par_scan.rs` uses `block::read_item` and
 `decode_block` as the library does. Its own `unsafe` is at two boundaries: the AVX2 filter, and
@@ -101,7 +104,8 @@ decoded Wikidata), 1.08 with the scalar one. `mibz2::scan` reads 0.205.
 
 **The harness's arms,** all exact: `lib` is `decode_parallel(&data, t)`; `scan` is one `Scanner`
 thread and t workers in the harness; `find` is the finder thread and t workers. `scan` and
-`find` differ only in who reads the symbols.
+`find` differ in who reads the symbols, and with it in who owns the symbol buffers, in their
+locking, and in `find`'s candidates and speculative decodes (§5).
 
 | input | scanner's share of one thread | find / lib, MB/s, 4 workers | find / scan, MB/s, 4 workers |
 |---|--:|--:|--:|
@@ -135,9 +139,11 @@ for the workers' supply, the joins and copies, or memory.
 | binary records | 0.248 | 4.0 | 2.5 |
 
 - **Ideal cores:** the last column is min(10, anything else that binds) ÷ the cap, with nothing
-  else binding. The cap is in units of one thread's sequential throughput (1/s). On the i9 at level 9 the memory knee binds first (`2026-11-07-knee-mechanism.md`,
-  and `2026-11-10-bandwidth-titration.md`), so Wikidata's own dumps gain nothing from this
-  until that moves.
+  else binding. The cap is in units of one thread's sequential throughput (1/s).
+- **The prediction for level 9:** on the i9 at level 9 the memory knee is predicted to bind
+  first (`2026-11-07-knee-mechanism.md`, and `2026-11-10-bandwidth-titration.md`, which left
+  the memory cause unresolved), so Wikidata's own dumps would gain nothing from this until that
+  moves. This is a prediction the diagnostic tests (§5), not an established consequence.
 - **Level 1 is where the i9 should show it.** Its blocks are 100,000 rows, its tables 0.4 MB,
   and the record already suspects the scanner there. The README's level-1 slowdown is on the
   same inputs.
@@ -180,8 +186,12 @@ in memory.
 - **Liveness, before the cells:** `par_scan - faults` injects a panic at each role of each arm
   (a worker after claiming a job, the finder before publishing a chunk, the scanner after
   issuing a block, the joiner after accepting one), at 1 and 4 workers. Each decode must end,
-  with an error or the joiner's own panic, or the run is INVALID (§8.1). Every child runs
-  under a deadline in a process group of its own, killed as a group if it passes it.
+  with an error or the joiner's own panic, or the run is INVALID (§8.1, §9). Every step that
+  runs a program of the run's (the corpus's preparation, the build, the fault tests, the
+  inputs' generation and anchoring, the checks, the cells, the reports and the bundle) runs
+  under a deadline in a process group of its own (`bench/bounded.py`). Past it the group is
+  stopped and must be empty, and the run is INVALID. The small queries (git, lscpu, taskset,
+  reading /proc) are not bounded.
 - **Before the cells,** `par_scan FILE check` on each input: `mibz2::decode`'s bytes equal to
   libbzip2's, and every arm's bytes equal to `mibz2::decode`'s, or the run is INVALID. It also
   serves as the warm-up.
@@ -284,11 +294,10 @@ changed, re-frozen in `bench/par-scan.frozen`:
 - **Each guard is needed (checked):** with the helpers' guards removed, the worker case hangs;
   with only the finder's, the finder case; with only the scanner's, the scanner case; with only
   the joiner's, the joiner case (each seen as a hang at a 5 s deadline).
-- **The recipe bounds every child:** each runs under `setsid --wait timeout --kill-after=30`,
-  in a session and process group of its own, killed as a group at its deadline (300 s for the
-  fault tests, 600–900 s for the inputs and checks, 1,800 s for each input's cells). A child
-  past its deadline makes the run INVALID; what it wrote is bundled. The dry run checks that a
-  stalled child and its stalled grandchild are both killed.
+- **The recipe bounds its children** (300 s for the fault tests, 600–900 s for the inputs and
+  checks, 1,800 s for each input's cells). A child past its deadline makes the run INVALID;
+  what it wrote is bundled. Superseded in §9: the first construction, `setsid --wait timeout
+  --kill-after`, did not stop a grandchild that ignores TERM.
 - **Not covered:** an allocation failure (an abort, not an unwind) and a thread that stalls
   without panicking; the recipe's deadline is the bound on both.
 
@@ -347,3 +356,62 @@ The scope is this research example only; it ships in no library code.
 
 The re-frozen commit, the untimed dry run (`just bench-par-scan 1`) and CI at the ready head
 are recorded on the PR that carries this revision.
+
+## 9. Revised after the re-review (REVISE, #145 comment 6756608043)
+
+The Researcher accepted placement, the input anchoring and the interpretation, and found two
+residual liveness holes
+([par-scan-readiness-6756472047](https://github.com/lmmx/mibz2/blob/25f4cd29f3dc152dd124cfba6551397664428df8/state/reports/par-scan-readiness-6756472047/report.md)).
+
+### 9.1 The sampler's unwind (checked)
+
+- **The hole:** `sampled`, the check's wrapper that samples the threads' CPU masks, stopped its
+  sampler only after the decode returned. A joiner panic propagating out of the decode left the
+  scope waiting on the sampler forever.
+- **The repair:** a drop guard stops the sampler on every exit, an unwinding decode included.
+- **The test:** `faults` now also injects the joiner's panic through `sampled`, for each arm at
+  1 and 4 workers. All 16 cases end.
+- **The negative control:** with the guard removed, the first sampled case hangs (at a 5 s
+  deadline).
+
+### 9.2 The process group's cleanup (checked)
+
+- **The hole:** `setsid --wait timeout --kill-after` returns once its direct child has gone. A
+  grandchild that ignores TERM, under a parent that exits on TERM, survives the grace.
+  Reproduced here with GNU coreutils 9.4, at a 1 s deadline and 1 s grace: exit 124, and the
+  grandchild still running (in state S), until killed by hand.
+- **The repair:** `bench/bounded.py` supervises the group itself. It starts the step in a new
+  session, so the group's id is the step's pid. At the deadline it sends TERM to the whole
+  group, waits the grace, then sends KILL to the whole group whether or not the step itself has
+  exited. It returns only once no live process is left in the group (a killed one not yet
+  reaped counts as gone), and fails with 125 if one is. A step that exits normally but leaves
+  processes in its group has them stopped the same way. A signal to the supervisor stops the
+  group too.
+- **Out of scope:** a descendant that starts a session of its own leaves the group. The
+  diagnostic's steps don't do that; the decode's workers are threads.
+- **The tests** (`bench/test_bounded.py`, in CI):
+  - a step's own status passes through;
+  - a grandchild that answers TERM is stopped (exit 124);
+  - a grandchild that ignores TERM under a parent that exits on it is stopped (exit 124, gone
+    within the grace);
+  - a step that exits 0 and leaves a TERM-ignoring descendant has it stopped.
+- **The dry run's self-check** runs the supervisor itself, at 2 s and a 2 s grace, on both
+  grandchild cases, and refuses the run unless both are stopped.
+
+### 9.3 Classification and coverage
+
+- **Classification:** a step past its deadline is the registered INVALID whatever the step,
+  the inputs' generation and anchoring included. A failure that isn't a timeout keeps its
+  earlier classification: REFUSED for inputs that are not as recorded, INVALID for the
+  harness, INCOMPLETE for the corpus's preparation or the build. None of them is VALID, and
+  none licenses a retry.
+- **Coverage:** every step that runs a program of the run's is bounded, as §5 now lists. The
+  claim no longer says "every child".
+
+### 9.4 Wording
+
+- The summaries that said the arms differ "only in who reads the symbols" (the opening and §3)
+  now name the other differences, as §5 does.
+- The memory knee at level 9 is stated as a prediction (§4).
+- **Placement:** `cpu.max` is the file at the mounted path, not necessarily the effective
+  quota of a nested cgroup. The recipe now records `/proc/self/cgroup` beside it.

@@ -70,9 +70,9 @@ jobs:
       - uses: actions/checkout@v6
       - name: Submission tests
         run: python3 bench/test_submit.py
-      # bench-par-scan's reporter and input anchoring (docs/journal/2026-11-10-parallel-scan.md)
-      - name: The scan diagnostic's reporter and inputs
-        run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py
+      # bench-par-scan's reporter, input anchoring and step supervisor (docs/journal/2026-11-10-parallel-scan.md)
+      - name: The scan diagnostic's reporter, inputs and supervisor
+        run: pipx run pytest -p no:cacheprovider bench/test_par_scan_knee.py bench/test_par_scan_inputs.py bench/test_bounded.py
       - name: Install just
         uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
         with:

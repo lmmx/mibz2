@@ -690,8 +690,9 @@ struct ScanState {
 /// `data` decoded as the library's parallel decoder does it (one scanner thread reading
 /// every block's symbols in order, `threads` workers finishing a block each, at most
 /// `slots` blocks in flight), in this harness's shape: the input a slice, the output
-/// joined once. The control arm: it differs from `decode_find` only in who reads the
-/// symbols.
+/// joined once. The control arm. Besides who reads the symbols, it differs from
+/// `decode_find` in who owns the symbol buffers, in its locking and in having no candidates
+/// or speculative work.
 fn decode_scan(data: &[u8], threads: usize, slots: usize, k: Kernels) -> Run {
     decode_scan_with(data, threads, slots, k, Fault::None)
 }
@@ -1115,10 +1116,14 @@ fn peak_rss() -> String {
 }
 
 /// `run` with a thread beside it sampling every thread's CPU mask until it returns: the
-/// most threads seen at once, and each mask with the most threads seen holding it
+/// most threads seen at once, and each mask with the most threads seen holding it. The
+/// sampler stops however `run` ends: a panic in it propagates, and never leaves the scope
+/// waiting on the sampler.
 fn sampled<T: Send>(run: impl FnOnce() -> T + Send) -> (T, usize, BTreeMap<String, usize>) {
     let done = std::sync::atomic::AtomicBool::new(false);
     std::thread::scope(|s| {
+        // (set on every exit, an unwinding `run` included)
+        let _stop = OnDrop(|| done.store(true, std::sync::atomic::Ordering::Relaxed));
         let sampler = s.spawn(|| {
             let (mut most, mut masks) = (0, BTreeMap::new());
             while !done.load(std::sync::atomic::Ordering::Relaxed) {
@@ -1233,10 +1238,11 @@ enum Ended {
     Ok,
 }
 
-/// Each arm with a panic injected at each of its roles, at 1 and 4 workers: each must end
-/// within `deadline` seconds, with an error (a helper's panic) or a panic (the joiner's),
-/// never Ok and never a hang. Untimed: the deadline only bounds the wait. Returns the
-/// lines it reports, or the first failure.
+/// Each arm with a panic injected at each of its roles, at 1 and 4 workers, and the
+/// joiner's panic again through `sampled` (the check's wrapper): each must end within
+/// `deadline` seconds, with an error (a helper's panic) or a panic (the joiner's), never
+/// Ok and never a hang. Untimed: the deadline only bounds the wait. Returns the lines it
+/// reports, or the first failure.
 fn run_faults(deadline: u64) -> Result<Vec<String>, String> {
     let data = std::sync::Arc::new(fault_input());
     let want = mibz2::decode(&data).unwrap();
@@ -1253,6 +1259,8 @@ fn run_faults(deadline: u64) -> Result<Vec<String>, String> {
         ("scan", Fault::Worker),
         ("scan", Fault::Scanner),
         ("scan", Fault::Joiner),
+        ("find, sampled", Fault::Joiner),
+        ("scan, sampled", Fault::Joiner),
     ];
     for t in [1, 4] {
         for (arm, fault) in cases {
@@ -1262,10 +1270,13 @@ fn run_faults(deadline: u64) -> Result<Vec<String>, String> {
             std::thread::spawn(move || {
                 let r = std::panic::catch_unwind(|| {
                     let (k, f) = (Kernels::detect(), Finder::detect());
-                    if arm == "find" {
-                        decode_find_with(&d, t, 4 * t, k, &f, fault).res
-                    } else {
-                        decode_scan_with(&d, t, 4 * t, k, fault).res
+                    match arm {
+                        "find" => decode_find_with(&d, t, 4 * t, k, &f, fault).res,
+                        "scan" => decode_scan_with(&d, t, 4 * t, k, fault).res,
+                        "find, sampled" => {
+                            sampled(|| decode_find_with(&d, t, 4 * t, k, &f, fault).res).0
+                        }
+                        _ => sampled(|| decode_scan_with(&d, t, 4 * t, k, fault).res).0,
                     }
                 });
                 let ended = match r {
@@ -1980,7 +1991,7 @@ mod tests {
     #[test]
     fn faults_end_never_hang() {
         let lines = run_faults(120).unwrap_or_else(|e| panic!("{e}"));
-        assert_eq!(lines.len(), 1 + 12, "{lines:#?}");
+        assert_eq!(lines.len(), 1 + 16, "{lines:#?}");
     }
 
     /// Bytes with both magics planted at chosen bits (any shift, near either end)
