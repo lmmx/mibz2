@@ -164,6 +164,10 @@ fn fast() -> bool {
     }
 }
 
+/// The lanes' buffers grown (the tests check that a walk grows one mid-segment)
+#[cfg(test)]
+static GROWS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 /// The index of the piece holding row i, in a directory of `bits` and `rank`.
 ///
 /// # Safety
@@ -241,7 +245,7 @@ impl D4Table {
             // SAFETY: the CPU has popcnt and BMI2 (`fast`)
             return unsafe { self.build_fast(ll, counts, orig_ptr, segments) };
         }
-        self.build_impl(ll, counts, orig_ptr, segments)
+        self.build_impl::<6>(ll, counts, orig_ptr, segments)
     }
 
     /// `build` with production's choice of segments: `SEGMENTS` for a block the room walk
@@ -264,11 +268,49 @@ impl D4Table {
         orig: u32,
         segs: usize,
     ) -> bool {
-        self.build_impl(ll, counts, orig, segs)
+        self.build_impl::<6>(ll, counts, orig, segs)
+    }
+
+    /// The build's first `upto` steps only (1 to 5), leaving no table: the count's
+    /// attribution by difference (examples/d4_delta.rs `phases`), descriptive only
+    pub fn build_partial(&mut self, ll: &[u8], counts: &[u32; 256], orig: u32, upto: u8) -> bool {
+        assert!(fast(), "the attribution counts the popcnt/BMI2 build only");
+        #[cfg(target_arch = "x86_64")]
+        // SAFETY: the CPU has popcnt and BMI2 (asserted)
+        unsafe {
+            match upto {
+                1 => self.partial_fast::<1>(ll, counts, orig),
+                2 => self.partial_fast::<2>(ll, counts, orig),
+                3 => self.partial_fast::<3>(ll, counts, orig),
+                4 => self.partial_fast::<4>(ll, counts, orig),
+                _ => self.partial_fast::<5>(ll, counts, orig),
+            }
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        unreachable!()
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    #[target_feature(enable = "popcnt,bmi1,bmi2")]
+    unsafe fn partial_fast<const UPTO: u8>(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        orig: u32,
+    ) -> bool {
+        let r = self.build_impl::<UPTO>(ll, counts, orig, SEGMENTS);
+        self.n = 0;
+        r
     }
 
     #[inline(always)]
-    fn build_impl(&mut self, ll: &[u8], counts: &[u32; 256], orig: u32, segments: usize) -> bool {
+    fn build_impl<const UPTO: u8>(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        orig: u32,
+        segments: usize,
+    ) -> bool {
         let n = ll.len();
         self.n = 0;
         self.recs.clear();
@@ -353,6 +395,9 @@ impl D4Table {
             c: 0,
         });
 
+        if UPTO == 1 {
+            return false;
+        }
         // 2. Level 2 = level 1 ∘ level 1. A run's image [b, b + len) lies in its byte's bucket,
         // and its byte's runs' images follow each other up the bucket, so one cursor a byte
         // finds the runs that cover it.
@@ -419,6 +464,9 @@ impl D4Table {
             l2.set_len(r2 + 1);
         }
 
+        if UPTO == 2 {
+            return false;
+        }
         // 3. A directory over level 2
         let words = n.div_ceil(64);
         let l2 = &s.l2[..];
@@ -436,6 +484,9 @@ impl D4Table {
             (q.m + (z - q.s), q.b + (z - q.s))
         };
 
+        if UPTO == 3 {
+            return false;
+        }
         // 4. The stops, their chains and the singletons. Y is orig_ptr and segments - 1
         // pseudo-random rows; the proper stops are M = LF³(Y), the segments' starts
         s.single.clear();
@@ -507,6 +558,9 @@ impl D4Table {
             start: false,
         });
 
+        if UPTO == 4 {
+            return false;
+        }
         // 5. Level 4 = level 2 ∘ level 2, written as records, split at the singletons
         self.recs.reserve(2 * r2 + 2 * nsingle + 1);
         let rp = self.recs.as_mut_ptr();
@@ -582,6 +636,9 @@ impl D4Table {
         // SAFETY: nr records written, below the reserved capacity
         unsafe { self.recs.set_len(nr) };
 
+        if UPTO == 5 {
+            return false;
+        }
         // 6. The final directory's ranks
         self.rank.clear();
         self.rank.reserve(words);
@@ -814,6 +871,8 @@ impl D4Table {
             next[l.seg] = seg_of(l.row);
         };
         let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+            #[cfg(test)]
+            GROWS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             let b = &mut bufs[l.seg];
             // SAFETY: p is within b's allocation, every byte below it written; p and end are
             // taken again from the grown buffer
@@ -1230,7 +1289,14 @@ mod tests {
     #[test]
     fn miri_d4_grows() {
         let mut rng = Rng(0x0d4d_e17a_5eed_0005);
-        let ll = column(&mut rng, 1500, 3, 3);
-        check(&ll, 3, &[4], true);
+        // a text (one cycle) with few segments: some segment runs past twice its share
+        let text: Vec<u8> = (0..1200).map(|_| b'a' + rng.below(3) as u8).collect();
+        let (ll, orig) = bwt_of(&text);
+        let before = GROWS.load(std::sync::atomic::Ordering::Relaxed);
+        check(&ll, orig, &[3, 5, 9], true);
+        assert!(
+            GROWS.load(std::sync::atomic::Ordering::Relaxed) > before,
+            "no lane's buffer grew"
+        );
     }
 }

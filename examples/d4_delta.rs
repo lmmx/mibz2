@@ -173,6 +173,7 @@ fn census(path: &str, data: &[u8], first: usize) {
     let mut hs = Heights::default();
     let mut hfirst = Heights::default();
     let mut un = [0u64; 4];
+    let mut fulls: Vec<(u64, u64, u64, u64, u64)> = Vec::new();
     let name = std::path::Path::new(path)
         .file_name()
         .map_or(path.into(), |f| f.to_string_lossy());
@@ -206,6 +207,7 @@ fn census(path: &str, data: &[u8], first: usize) {
         }
         hs.merge(&h);
         if c.rows >= 899_000 {
+            fulls.push((cap, c.r1, c.r2, c.r4, c.used()));
             full += 1;
             maxcap = maxcap.max(cap);
             if cap > 1_200_000 {
@@ -230,6 +232,22 @@ fn census(path: &str, data: &[u8], first: usize) {
         all.records as f64 / n,
         full - over,
     );
+    if !fulls.is_empty() {
+        let med = |f: fn(&(u64, u64, u64, u64, u64)) -> u64| {
+            let mut v: Vec<u64> = fulls.iter().map(f).collect();
+            v.sort_unstable();
+            let q = |p: usize| v[(v.len() - 1) * p / 100];
+            format!("{} / {} / {} / {} / {}", q(0), q(10), q(50), q(90), q(100))
+        };
+        println!(
+            "{name}: full blocks (min / p10 / median / p90 / max): r1 {}; r2 {}; r4 {}; used B {}; admitted capacity B {}",
+            med(|x| x.1),
+            med(|x| x.2),
+            med(|x| x.3),
+            med(|x| x.4),
+            med(|x| x.0)
+        );
+    }
     println!(
         "{name}: parents passing whole, 1 -> 2: {:.3}; 2 -> 4: {:.3} (a split at a singleton counts as a split)",
         un[0] as f64 / un[1] as f64,
@@ -270,6 +288,53 @@ fn count_d4_build(ll: &[u8], counts: &[u32; 256], orig: u32, d: &mut D4Table) {
 #[inline(never)]
 fn count_d4_walk(d: &D4Table, out: &mut Vec<u8>, w: &mut WalkScratch) {
     d.walk_room::<LANES>(out, w)
+}
+
+#[inline(never)]
+fn phase_build(ll: &[u8], counts: &[u32; 256], orig: u32, d: &mut D4Table, upto: u8) {
+    d.build_partial(ll, counts, orig, upto);
+}
+
+/// The build's steps by difference (post hoc, descriptive): `phase_build` is called once a
+/// block for each of steps 1 to 5 (each time from the start), as `phase_1` ... `phase_5`
+#[inline(never)]
+fn phase_1(ll: &[u8], c: &[u32; 256], o: u32, d: &mut D4Table) {
+    phase_build(ll, c, o, d, 1)
+}
+#[inline(never)]
+fn phase_2(ll: &[u8], c: &[u32; 256], o: u32, d: &mut D4Table) {
+    phase_build(ll, c, o, d, 2)
+}
+#[inline(never)]
+fn phase_3(ll: &[u8], c: &[u32; 256], o: u32, d: &mut D4Table) {
+    phase_build(ll, c, o, d, 3)
+}
+#[inline(never)]
+fn phase_4(ll: &[u8], c: &[u32; 256], o: u32, d: &mut D4Table) {
+    phase_build(ll, c, o, d, 4)
+}
+#[inline(never)]
+fn phase_5(ll: &[u8], c: &[u32; 256], o: u32, d: &mut D4Table) {
+    phase_build(ll, c, o, d, 5)
+}
+
+fn phases(path: &str, data: &[u8], max: usize) {
+    let mut d = D4Table::new();
+    let (mut nblocks, mut rows) = (0, 0);
+    blocks(data, |ll, counts, orig, _| {
+        if nblocks == max {
+            return;
+        }
+        phase_1(ll, counts, orig, &mut d);
+        phase_2(ll, counts, orig, &mut d);
+        phase_3(ll, counts, orig, &mut d);
+        phase_4(ll, counts, orig, &mut d);
+        phase_5(ll, counts, orig, &mut d);
+        count_d4_build(ll, counts, orig, &mut d);
+        nblocks += 1;
+        rows += ll.len();
+    });
+    println!("{path}: {nblocks} blocks, {rows} rows: partial builds counted");
 }
 
 fn count(path: &str, data: &[u8], max: usize) {
@@ -313,6 +378,10 @@ fn main() {
         match cmd {
             "check" => check(path, &data),
             "census" => census(path, &data, 3),
+            "phases" => {
+                phases(path, &data, args.get(3).map_or(3, |s| s.parse().unwrap()));
+                break;
+            }
             "count" => {
                 count(path, &data, args.get(3).map_or(3, |s| s.parse().unwrap()));
                 break;
