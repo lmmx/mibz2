@@ -181,8 +181,10 @@ A failure of the judge itself is INVALID with its reason, never a VALID.
 - **R:** whether its interval lies below 1.
 - **§3 restated** (model, labelled so): 3.76 GB/s / G₂ with G₂'s interval. Not observed.
 
-The outcome line: `VALID: -2 CPU growth 4->10 ×G₂ [lo–hi], <class> 1.1-1.44; -9 ×G₉ [lo–hi];
-ratio of ratios ×R [lo–hi]`.
+The outcome line: `VALID: -2 CPU growth 4->10 ×G₂ [lo–hi], against the band 1.1-1.44: <class>;
+-9 ×G₉ [lo–hi]; ratio of ratios ×R [lo–hi]`. A block as long as the rounds only rotates them, so
+it gives no bootstrap interval, and the judge says so (a DRY check's two rounds, never the
+registered run's 60).
 
 ### The mode caveat, and the registered mode split (descriptive)
 
@@ -254,13 +256,43 @@ That gate assumed §2's factor at a small table.
   the run structure (§2's confound, unchanged).
 - **The modes** (§3): the primary readings carry them; the split only describes them.
 - **One machine, one attempt, one corpus content.** No retry to pass.
-- **A whole-process CPU total** (getrusage, exact) includes the scanner, the reader, the sink and
-  the main thread (ab's sampler's own CPU is left out). The six more threads at 10 workers carry their own
-  overhead, as §2 said of its 10% at -1.
+- **A whole-process CPU total** (getrusage, exact) includes the scanner, the reader, the sink
+  and the main thread (ab's sampler's own CPU is left out). The six more threads at 10 workers
+  carry their own overhead, as §2 said of its 10% at -1.
 
 ## 6. The local checks (DRY, untimed, never evidence)
 
-To be filled in from the DRY run on the shared dev VM: see §6 below once run.
+On the shared dev VM (4 vCPUs of a Xeon, no cpufreq, other agents building), untimed. Its
+figures are not evidence: 10 workers on 4 vCPUs cannot grow, and nothing here is a reading.
+
+- **DRY 1, head `bee5bb8c`** (`just bench-share-nothing 1`), exit 0:
+  - the build, the bench-data fetch, the windows' check (431 blocks, every CRC identical in
+    libbzip2, lbzip2 and mibz2) and the corpus's digest;
+  - the corpora: the content decoded by bzip2 to `3f075e30…`; -2 and -9 at `-n 4` gave the
+    registered digests, `-n 1` gave the same bytes (`thread_invariant` true at both levels), and
+    each decoded back by bzip2 to the content's digest;
+  - the preflight ran its three collectors (each exit 0) and was REFUSED on this host, as it must
+    be (model, 4 CPUs, no cpufreq policies, no turbo file, the samples' governor, EPP and turbo
+    null), recorded and passed over because DRY;
+  - the drive ran all 36 slots (3 rounds × 12), each adding one run line with ab's hash
+    `a8830caee5c511a6` and a `machine_pre` (here every field null with its reason: a VM);
+  - the judge admitted it and wrote its table; the bundle (2.5 MB: the attempt's files and its
+    `ab`, the corpora left out) was made.
+- **The registered run refused, head `765cdf3b`** (`just bench-share-nothing`), exit 1:
+  `REFUSED: bench/share-nothing.frozen names no frozen commit yet; nothing to run`, bundled.
+- **The never-reused directory:** a second attempt started in the same second refused to reuse
+  the first's directory (exit 1) and made no bundle.
+- **The idle gate, bounded:**
+  - the gate cannot be made to stall on demand here (the machine was quiet enough to pass it);
+    forced to stall (`--max-busy -1`), ab waited and `bench/bounded.py 30 10` stopped it at 30 s,
+    exit 124, its group empty, no run line written;
+  - the drive's own handling of a stalled slot (exit 124 recorded, nothing after it run) is a
+    test (`test_drive_bounds_a_stalled_slot`).
+- **DRY 2, head `765cdf3b`** (`just bench-share-nothing 1 4`, the gate relaxed to 4 cores), exit
+  0: all 36 slots, about 0.7 s a slot. The first slot still waited 41 s: ab's gate also requires
+  that no one CPU be more than half busy, and `--max-busy` does not relax that condition. The
+  registered run on the workstation keeps the gate as the run-fed harness ran it; each slot's
+  120 s deadline bounds any wait.
 
 ## Reproduce
 

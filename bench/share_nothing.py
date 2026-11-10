@@ -1032,8 +1032,9 @@ def judge(args):
     else:
         p = res["primary"]["cpu"]
         body = (
-            f"-2 CPU growth 4->10 {fmt(p['growth'][PRIMARY])}, {res['model_check']['l2_interval_vs_band']} "
-            f"{BAND[0]}-{BAND[1]}; -9 {fmt(p['growth'][COMPARATOR])}; ratio of ratios {fmt(p['ratio_of_ratios'])}"
+            f"-2 CPU growth 4->10 {fmt(p['growth'][PRIMARY])}, against the band {BAND[0]}-{BAND[1]}: "
+            f"{res['model_check']['l2_interval_vs_band']}; -9 {fmt(p['growth'][COMPARATOR])}; "
+            f"ratio of ratios {fmt(p['ratio_of_ratios'])}"
         )
         outcome = ("DRY (not evidence): " if dry else "VALID: ") + body
     out = {
