@@ -14,6 +14,12 @@ Louis activates a named operator explicitly. Before dispatching, the acting oper
 
 Only **one operator** may dispatch or merge at a time. A recovered Claude Coordinator must read the acting handoff and explicitly take control back on #145 before doing work. On uncertainty or simultaneous operators: stop writes and reconcile with Louis. All prior assignments, cursor IDs, PRs and run digests survive that handoff unchanged. GitHub account names and message headers are **not** authentication.
 
+## Event-triggered monitor (optional, **not yet installed**)
+
+The [acting Coordinator monitor spec](SPEC.COORDINATOR-ACTING-MONITOR.md) and [Work-task creation template](WORK-TASKS.md) allow one persistent GitHub event-triggered task to watch PR #145. **No such task is created by GitHub files or by this PR**: Louis must create it in Work, inspect its saved webhook and enabled state, and explicitly activate it on #145 after this setup merges.
+
+The monitor uses `team-state/coordinator-acting:state/cursor.json` to avoid repeated actions and self-triggered LOG loops. Its automatic event work is limited to read/triage/routing, not automatic merge, release or workstation use. The primary Claude Coordinator and an acting event monitor cannot concurrently dispatch. On primary return, log deactivation and disable the Work task, then read back its disabled state.
+
 ## First session checklist
 
 1. Read current `OWNERSHIP.md`, `RULES.md`, `PROTOCOL.md`, `ROLES.md`, `MODE.md`, `PERFORMANCE-POLICY.md`, `CLAUDE.md`, `docs/RELEASING.md` and `docs/journal/2026-11-10-coordinator-handoff.md`; compare with later master commits.
