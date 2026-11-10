@@ -1,6 +1,10 @@
 # 2026-11-10: master against the three stacked team ports, one combined diagnostic (DRAFT registration)
 
-**Status: DRAFT, revision 2. Not frozen, nothing built or run for it.** Revision 2 answers the
+**Status: DRAFT, revision 3. Not frozen, nothing built or run for it.** Revision 3 answers
+Guardian D091 (#145 comment 6763469482; `state/decisions.md` at `5a86f4bd`, section D091: G1
+concurs that (b) is reported, G2 HOLDs the freeze on the checker-exit contradiction) and the
+Researcher's REVISE (6763607539, item 2; `state/reports/diagnostic-revisions-6763474717/report.md`
+at `ee1b1f80`), as listed in §14. Revision 2 answered the
 Researcher's REVIEW 6763089509 item 3 (REVISE; `03-combined.md` and `probes.py` at
 `07b453d1`), as listed in §13. This is the one
 combined diagnostic Guardian D089 admits (#145 comment 6761524241; `state/decisions.md#d089`
@@ -30,11 +34,12 @@ that, with no retry.
 **What it asks:**
 - On all of `wikidata.bz2`, how many instructions per decoded byte does the stacked team path
   execute in the decoder, against master's, under the frozen partition?
-- Does the stack's team actually engage? Each helper shares the build and the walk in each
-  of its team's blocks, as master's walk-stats instrument (#338) records it.
+- Is the stack's team present, with call integrity? Each helper is in the build and calls
+  the walker in each of its team's blocks, as master's walk-stats instrument (#338) records
+  it. This is presence, not useful work (§8, "The claim limit").
 
 **The information objective:**
-- ΔDd, with D089's coupled-residual interval;
+- ΔDd, with the independent per-arm residual bound (§5);
 - the instruction witnesses (§7), each met or not, and the self-cost conformance observations
   (§6), each reported;
 - the engagement predicates (§8), each met or not, in both arms.
@@ -59,7 +64,7 @@ No outcome of this diagnostic is a pass or a fail of the ports. It is a validity
 | input | `wikidata.bz2`, SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`, 431 blocks, D = 209,700,196 decoded bytes |
 | block-class map | `wm-classes.txt`, made **before any arm** from the input alone. Each block is `T` if its MTF length is at least `MIN_COOP` (`16 × CHECKPOINT` = 262,144 rows, `src/bwt.rs`), else `S`. It is made by a ≤ 40-line example using master's public API (scanner and `mtf::mtf`), committed with its SHA-256. Expected 233 `T` and 198 `S` (#330); a different count is reported, not corrected |
 | parser | `bench/team_gap_count.py` at the freeze commit. `load` refuses raw-and-gzip pairs and repeated threads. `STAGES` and `LIBRARY` are as at `be23a2be0` |
-| checker | `bench/walk_stats_check.py` **with the per-T-block roster check of #341** (head `8b62e14d3e8e0bfd4b07ae8503ca89cbcbba5e9c`; the Researcher's counterexample closed). The freeze needs #341 merged or its blob pinned by SHA-1; master's `8f540ef11` checker admits a T block that no helper built, so it is not usable here |
+| checker | `bench/walk_stats_check.py` **with the per-T-block roster check of #341** (head `8b62e14d3e8e0bfd4b07ae8503ca89cbcbba5e9c`, merged as `88768ac15924b08ceb039169690c942542791f7e`; the Researcher's counterexample closed), **pinned as git blob `eb7c392d2d766e870de3e14a31b5fe940787dd3f`** (D091 §1). The merge does not put it in the decoder checkouts: master's pin `8f540ef11` carries the older checker, which admits a T block that no helper built, and is not usable here. The run copies the blob out with `git cat-file -p eb7c392d2d766e870de3e14a31b5fe940787dd3f` into its own directory, checks `git hash-object` of the copy equals the pin before the first E arm, and runs only that copy. A mismatch is a failed checker step (§3): no other checker is substituted. No decoder source pin widens |
 
 ## 3. Arms and budget
 
@@ -92,7 +97,27 @@ TERM -k 30 <limit>`:
   - its partial output is archived as it stands and marked partial;
   - it is never read as a measurement;
   - the diagnostic is **FAIL-MEASUREMENT**, naming the step.
-- **Every later step still runs,** and its outputs are archived as observations.
+- **The one exception: the checker's exit 1** (revision 3; D091 §2). The pinned checker exits
+  0 for ENGAGED, 1 for a structurally VALID record set that is NOT ENGAGED, and 2 for
+  INVALID. Exit 1 is therefore a completed verdict, not necessarily a failed process. A
+  checker step is adjudicated by §8a, and only by §8a:
+  - a complete, parsed verdict with exit 0 or 1 is a completed step, never marked partial
+    merely for its exit status;
+  - everything else (exit 2, any other exit, a signal, a timeout, an output that does not
+    parse completely, or an output that contradicts its exit) is a failed step under the
+    rule above.
+
+  No other step has an exception. No exit status is ever discarded (`|| true` or the like),
+  and the original exit code, stdout and stderr are archived verbatim either way.
+- **Every later step still runs,** and its outputs are archived as observations, within
+  these limits:
+  - it never overrides B6: on an unresolved undefined-behaviour, invariant or safety
+    failure, the affected work stops;
+  - a step whose input is missing, partial or stale (an incomplete build, a timed-out
+    profile, an earlier attempt's output) does not run on it; it is recorded as unavailable,
+    naming the input;
+  - only independent steps on complete inputs continue, as observations, one heavy job at a
+    time.
 - **No step is rerun,** individually or as a whole.
 
 **Archiving:** profiles are written to a directory that only ever holds raw files, gzipped
@@ -140,10 +165,14 @@ Over each counted arm's profiles (each thread once), with process total **P**:
   - every thread once;
   - objdump exits 0 on every range read.
 
-## 5. The reported interval (D089)
+## 5. The independent per-arm residual bound (D089, D091 §4)
 
 **ΔDd** = Dd(A2) − Dd(A1), per decoded byte, reported with **[ΔDd − U(A1), ΔDd + U(A2)]**.
-- This is D089's coupled-residual bound. Each arm's U may hold decoder work independently.
+- This is the **independent per-arm residual bound** (renamed in revision 3; D089 rejected
+  the narrower coupled-composition rule, so "coupled-residual" was the wrong name). Each
+  arm's U may hold decoder work independently: if 0 ≤ x₁ ≤ U(A1) and 0 ≤ x₂ ≤ U(A2), the
+  decoder difference ΔDd + x₂ − x₁ lies in the bound.
+- Every term is divided by the same denominator, D = 209,700,196 decoded bytes.
 - It holds only if the Dd and H attribution is correct.
 - The difference in P is reported beside it, and is not a gate.
 - Every stage's difference is reported. No stage is predicted to the third decimal.
@@ -156,8 +185,10 @@ without a shown proof.
 - **A self cost is schedule-independent only where paths and work partitions are.**
 - **M3's agreement of `share` + `new` to 13 Ir does not establish `share` alone.**
 
-**None of them is a gate now.** The same figures are reported as **conformance
-observations**:
+**None of them is a gate now.** C1–C5 stay descriptive in revision 3 (D091 §4). What stays
+binding is unchanged: W1–W7 and the call conditions (§7), the attribution and its validity
+(§4), output identity (§9), one attempt (§3, §10) and the complete inventories (§4, §11a).
+The same figures are reported as **conformance observations**:
 
 | observation | arm | function (self Ir) | historical value | its source |
 |---|---|---|---|---|
@@ -214,14 +245,16 @@ proof (D088 §4). The binary and the instruction-to-site map are recorded.
 `mibz2-pipe3-both 9`, natively, with walk-stats builds. The team is not shrunk to make
 balance easier.
 
-**The checker:** `python3 bench/walk_stats_check.py FILE --walker traverse --helpers 2
---classes wm-classes.txt` (#341's version).
-- Its **full output** is archived verbatim, with its **original classification**, ENGAGED
-  or NOT ENGAGED, and exit code.
-- NOT ENGAGED is never relabelled ENGAGED.
+**The checker:** `python3 walk_stats_check.py FILE --walker traverse --helpers 2
+--classes wm-classes.txt`, run from the pinned blob's copy (§2), never with `--reference`.
+- Its **full stdout and stderr** are archived verbatim, with its **original classification**,
+  ENGAGED or NOT ENGAGED, and its **original exit code**.
+- NOT ENGAGED is never relabelled ENGAGED, and is never hidden: `--reference` (which
+  suppresses the outcome) is not used.
 
-**This diagnostic's acceptance rule,** different from the checker's and stated as such, needs
-the Guardian's concurrence before the freeze. For each of E1 and E2:
+**This diagnostic's acceptance rule,** different from the checker's and stated as such. The
+Guardian concurred prospectively that (b) may be reported rather than gated (D091 G1). For
+each of E1 and E2:
 - **Structural validity (required):** the checker's VALID. That includes #341's per-T-block
   roster: in every T block, `built` is exactly helpers 1 and 2, with share records from both;
   every record reconciles with entered, joined and conservation; and the terminal record is
@@ -239,6 +272,23 @@ the Guardian's concurrence before the freeze. For each of E1 and E2:
     port.
   - **Not retrospective:** no earlier registration's (b) is relaxed. It still gates where it
     was registered.
+  - **The limit of that reason** (D091 §1): oversubscription can produce imbalance without a
+    broken port, but that does not show an observed imbalance is caused by scheduling, or
+    harmless for performance. (b) is dropped as a requirement for the scoped information
+    objective, not because balance is unimportant.
+  - **What is reported:** each team's actual helper byte totals and ratios, and every zero
+    case. A team whose helpers walked zero bytes in total has an **undefined** ratio, reported
+    as such with (b) failed; no balance fraction is made up for it.
+
+**The claim limit** (D091 §3; the Researcher's second fixture). A complete record set in which
+both helpers are present in every T block, but walk **zero bytes**, is also structurally
+VALID with (a), (c) and (d) true (and (b) false, exit 1). This rule accepts it. So E1 and E2
+can show only **structural validity plus presence and call integrity**:
+- **reported:** presence, call integrity and the zero-work helper call counts;
+- **not claimed:** that any helper did useful walk work, that the team ran balanced, or any
+  parallel speedup.
+
+No positive-byte minimum is added: it would answer a different question.
 
 **What E cannot show:**
 - **E1 and E2 are different binaries** (the walk-stats feature) **and a different schedule**
@@ -246,8 +296,38 @@ the Guardian's concurrence before the freeze. For each of E1 and E2:
   engagement in the counted binaries.
 - **They are evidence about the same source and plan only.**
 
-**On failure:** INVALID, or (a), (c) or (d) failing, makes the diagnostic
-**FAIL-MEASUREMENT**. The counts are still reported as observations.
+**On failure:** INVALID, (a), (c) or (d) failing, or a checker step that §8a does not accept,
+makes the diagnostic **FAIL-MEASUREMENT**. The counts are still reported as observations.
+
+## 8a. Adjudicating a checker step (revision 3; D091 §2)
+
+The checker's exit status alone never decides. **Exit 1 alone never proves a balance-only
+failure:** an uncaught Python exception also exits 1. Each of E1's and E2's checker steps is
+read in this order, and the first rule that applies decides it.
+
+1. **Execution failure, rejected:**
+   - the step timed out (§3) or was killed by a signal;
+   - its exit code is anything but 0 or 1. Exit 2 is the checker's INVALID: a completed
+     verdict, but one that fails structural validity, so it is rejected too.
+2. **A complete, parsed verdict, or rejected.** Rejected unless all of these hold:
+   - stderr is empty;
+   - stdout is exactly: `VALID`; then one line each for (a), (b), (c) and (d), in that order,
+     each `  (x) holds: …` or `  (x) fails: …`; then `ENGAGED` or `NOT ENGAGED`; and nothing
+     else, with no `reference` line;
+   - the outcome line agrees with the predicates: ENGAGED exactly when all four hold;
+   - the exit code agrees with the outcome: 0 for ENGAGED, 1 for NOT ENGAGED.
+
+   A truncated or partial output, a traceback, a crash with a non-zero exit and no verdict, an
+   INVALID listing, or any other shape is rejected under this rule.
+3. **The engagement component, checked explicitly.** Only for a complete, parsed verdict:
+   accepted exactly when it is structurally VALID (its first line) and (a), (c) and (d) each
+   read `holds`. (b)'s line, the outcome and the exit code are reported as the checker gave
+   them, whatever they are.
+
+So a complete verdict with exit 1 is accepted only when its own predicate lines explain it:
+(b) alone fails. Exit 1 with (a), (c) or (d) failing is a completed verdict that is
+rejected. The adjudicator's decision for each step (the rule that decided it, and why) is
+archived beside the checker's raw output.
 
 ## 9. Output identity
 
@@ -257,10 +337,11 @@ All six arms write 209,700,196 bytes with hash `a8830caee5c511a6`. This is requi
 
 **VALID** only if all of these hold:
 - §4's validity;
-- every step inside its deadline (§3), with complete artefacts;
+- every step inside its deadline (§3), with complete artefacts; each checker step is judged
+  by §8a, not by its exit status alone;
 - W1 to W7 and the call conditions;
-- E1 and E2 structurally VALID with (a), (c) and (d), as in §8. (b) and the checker's own
-  ENGAGED/NOT ENGAGED are reported, not required;
+- E1 and E2 structurally VALID with (a), (c) and (d), each accepted by §8a. (b), the
+  checker's own ENGAGED/NOT ENGAGED and its exit code are reported, not required;
 - §9.
 
 Then the result reports ΔDd with §5's interval, every stage, P, U and the engagement
@@ -295,8 +376,10 @@ figures are reported as observations.
 - **Per binary:** objdump listings of `FusedBuild::share`, `mtf_checkpoints_avx2` or
   `mtf_checkpoints_reg_avx2`, and `mtf_avx2`, as the site maps of W1–W7 (each address
   executed and its text).
-- **Per E arm:** the JSONL records, the checker's full output and exit code, the child's
-  JSON, and the walk-stats binary's SHA-256.
+- **Per E arm:** the JSONL records, the checker's full stdout and stderr and its original
+  exit code, §8a's decision, the child's JSON, and the walk-stats binary's SHA-256.
+- **The checker:** the copy that ran, and its `git hash-object` (the pin
+  `eb7c392d2d766e870de3e14a31b5fe940787dd3f`).
 - **The class map:** `wm-classes.txt`, its tool, and the SHA-256 of both.
 - **The count:** `count.py`, its full output (the complete H and U inventories), and the
   verdict with every condition.
@@ -309,6 +392,33 @@ figures are reported as observations.
 - **B5** for ports 2 and 3 is separate and outstanding. This diagnostic does not discharge
   it.
 
+## 12a. The adjudication dry run (untimed, synthetic records only)
+
+Before the freeze, §8a's adjudicator runs on synthetic walk-stats records against the pinned
+checker blob, with no decoder build or run and no timing. Each case's checker output, exit
+code and §8a decision are archived. The cases (the D091 and Researcher fixtures are one T
+block, both helpers in the built set and share records, entered mask 7, the leader 100 walked
+bytes, exact conservation and terminal count):
+
+| case | checker | §8a |
+|---|---|---|
+| balanced, helpers 100/100 | VALID, all hold, ENGAGED, exit 0 | accepted |
+| **balance-only, helpers 1/99** | VALID, (a)/(c)/(d) hold, (b) fails, NOT ENGAGED, **exit 1** | **accepted** for engagement; NOT ENGAGED and exit 1 reported |
+| zero-work, helpers 0/0 | VALID, (a)/(c)/(d) hold, (b) fails (ratio n/a), NOT ENGAGED, exit 1 | accepted, with the claim limit (§8): presence only, 2 zero-work calls |
+| a required predicate fails ((a), (c) or (d)) | VALID, NOT ENGAGED, exit 1 | rejected (rule 3) |
+| INVALID (for example, the terminal record missing) | INVALID, exit 2 | rejected (rule 1) |
+| a timeout, or a kill by signal | anything | rejected (rule 1) |
+| a truncated or partial report (stdout cut after the predicates, no outcome line) | exit 0 or 1 | rejected (rule 2) |
+| a crash: non-zero exit, a traceback, no verdict | exit 1 | rejected (rule 2) |
+| a verdict whose exit disagrees with its outcome | ENGAGED with exit 1, or NOT ENGAGED with exit 0 | rejected (rule 2) |
+
+The checker's side of five rows was reproduced in revision 3 against the pinned blob, on
+synthetic records only: balanced, exit 0; 1/99, exit 1; 0/0, exit 1 with "2 zero-work helper
+calls"; one helper calling `traverse_staged` with 50/50 bytes, VALID with (d) failing, exit 1;
+and the 1/99 file without its terminal record, INVALID, exit 2. D091 and the Researcher
+report the same for their fixtures. The pinned blob's 20 committed tests pass. The
+adjudicator itself is not written yet (§14, unresolved).
+
 ## 13. Revision 2 (the Researcher's REVIEW 6763089509 item 3)
 
 | point | change |
@@ -318,3 +428,26 @@ figures are reported as observations.
 | exact M gates without a codegen or path proof; M3 rests on share + new | M1–M5 dropped as gates. Reported as conformance observations C1–C5, with no tolerance and stated meaning, and the condition for restoring a gate stated (§6) |
 | budget a forecast | per-step deadlines, partial-output treatment, no rerun (§3) |
 | inventories | complete H and U inventories (§4), and a complete artefact inventory with toolchain and site maps (§11a) |
+
+## 14. Revision 3 (Guardian D091, 6763469482; the Researcher's REVISE, 6763607539 item 2)
+
+| review point | change |
+|---|---|
+| D091 §2, Researcher item 2: §3 rejects every non-zero exit, but §8 and §10 accept a balance-only failure, which the pinned checker reports as a complete NOT ENGAGED verdict with **exit 1** (fixture: helpers 1/99) | §3's one exception for the checker's exit 1, decided only by the new §8a: a complete, parsed verdict is told apart from a timeout, signal, crash, INVALID, partial or contradictory output; the original exit, stdout and stderr are kept verbatim; the engagement component is accepted only after checking the verdict is VALID and that (a), (c) and (d) read `holds`. No `|| true`, no `--reference`, no relabelling (§3, §8, §8a, §10, §11a) |
+| D091 §2, Researcher item 2: add the balance-only witness (and balanced, required-predicate failure, invalid and truncated cases) to the untimed adjudication check | §12a lists the dry run's cases, with the 1/99 fixture accepted for engagement, a timeout or partial output rejected, and a crash with a non-zero exit and no verdict rejected; the checker's side reproduced on synthetic records |
+| D091 §1, Researcher item 2: pin the checker blob; its merge does not install it in the older decoder checkout | §2 pins blob `eb7c392d2d766e870de3e14a31b5fe940787dd3f`, copied out and hash-checked before the E arms; no decoder pin widens |
+| D091 §3, Researcher item 2: a complete 0/0 fixture also satisfies VALID + (a)/(c)/(d) | §8's claim limit: presence, call integrity and zero-work counts are reported; no useful helper work, balance or speedup is claimed; undefined ratios reported as undefined; no positive-byte gate. §1's question narrowed to presence |
+| D091 §1: the limit of the oversubscription reason for not gating (b) | stated in §8; actual helper byte totals, ratios and zero cases reported |
+| D091 §4: "coupled-residual" is the wrong name | §1 and §5 now say **independent per-arm residual bound**, with its derivation and one denominator |
+| D091 §4, Researcher item 2: "every later step runs" | §3: never overrides B6, never consumes a missing, partial or stale input (an incomplete build or stale output); only independent steps on complete inputs continue, as observations |
+| D091 §4: C1–C5 descriptive; the rest binding | §6 states C1–C5 stay descriptive, and W1–W7, attribution, output identity, one attempt and the complete inventories stay binding |
+| D091 G1: concurrence on (b) reported, not gated | §8 cites it in place of "needs the Guardian's concurrence" |
+
+**No new gate** is added, and nothing is built, timed or run on the decoder.
+
+**Unresolved:**
+- **The adjudicator is not written.** No recipe or harness for this diagnostic exists yet, so
+  no code enforces §3, and §8a is specified here only. It must be written, with tests for
+  every §12a case, and the dry run passed, before the freeze.
+- **The freeze still needs** the Researcher's PROCEED and D089's other pre-data conditions
+  (D091 §2 does not assert they are met), and B5 for ports 2 and 3 stays separate.
