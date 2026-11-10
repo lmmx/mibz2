@@ -140,9 +140,10 @@
     6756992499,
     6757065549,
     6757210413,
-    6757368708
+    6757368708,
+    6757686244
   ],
-  "last_processed_comment_id": 6757368708,
+  "last_processed_comment_id": 6757686244,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1515,14 +1516,18 @@
     },
     {
       "trigger_comment_id": 6757686244,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "efc1bd88c73b07d917617eddfdf008dffc691e3d",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "4d5166882ddbbbdbcac3ecf34749da9fc9f1c89a",
       "report_path": "state/reports/par-scan-delta-6757686244/report.md",
-      "disposition": "PROCEED on exact PR317 delta; M28 checked-path distinction, bounded cleanup/reap and finalisation tested. Guardian D079 ruling separate."
+      "disposition": "PROCEED on exact PR317 delta; M28 checked-path distinction, bounded cleanup/reap and finalisation tested. Guardian D079 ruling separate.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6757772619,
+      "publication_verified": true,
+      "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction. Guardian D081 lifted D079 before publication."
     }
   ],
   "active_delegations": [],
