@@ -2026,12 +2026,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D100",
-    "incoming_comment": 6782334222,
-    "review_comment_id": 6782473662,
-    "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
+    "active_comment": 6782662288,
+    "status": "in progress",
+    "decision": "D101"
   },
   "duplicate_events": [
     {
@@ -3604,6 +3601,13 @@
       "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
       "review_comment_id": 6782473662,
       "complete_cursor_commit": "62ae55c706fe2c7734dfbca8ceaafc539c739e6f"
+    },
+    {
+      "comment_id": 6782662288,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D101",
+      "progress": "Migration verified; design-only trust-boundary assessment."
     }
   ],
   "migrated_from": {
