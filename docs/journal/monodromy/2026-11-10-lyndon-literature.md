@@ -639,8 +639,9 @@ closed form on both sides. A reader notes that the rule would not change what th
 is: one elimination of z makes the letters y z^k for every k at once, and y z^k bracketed
 ((y z) z)… is already a node chain of the Lyndon tree.
 
-**4.8 What the readers counted beyond the papers** (their programs, in the session's record
-only; each is one sub-agent's, checked here only where §4.1 to §4.7 say so).
+**4.8 What the readers counted beyond the papers** (their programs are in
+`readers-code.tar.gz`, not rerun here; each count is one sub-agent's, checked here only where
+§4.1 to §4.7 say so).
 - **The left tree at size.** Its nodes over the hinges against the right tree's: 2,518
   against 1,944 on a JSON-like text of 6,000 bytes (r = 804) by one reader; 29,011 against
   8,581 on one of 30,000 by another (0.97 n against 1.9 r), who gives the reason: every
