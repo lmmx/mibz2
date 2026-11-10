@@ -1,0 +1,16 @@
+{
+  "n": 209697662,
+  "S": 27439723,
+  "s_per_n": 0.13085373836929093,
+  "order": 0.525,
+  "induce": 1.826,
+  "write": 0.419,
+  "production": 2.172,
+  "fixed": 0.944,
+  "parity_induce": 1.2280000000000002,
+  "parity_speedup": 1.4869706840390877,
+  "half_induce": 0.14200000000000013,
+  "half_speedup": 12.859154929577453,
+  "max_speedup": 2.300847457627119,
+  "source_store_bytes_per_row": 10.991714023020439
+}

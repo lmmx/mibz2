@@ -602,3 +602,13 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - Account spinner separately from decoder CPU and max-busy; highest logical CPU may share a physical core at10threads. Validate actual allowed topology rather than assume spare core.
 - W1 B30/30 and0.141s versusG0.293s are reported, not independently replayed. Benchmark conditioning is not library speedup; preserve cold-start/old result meanings. Auxiliary CPU cost includes settling/gaps.
 - No code, PR, timing, merge, or prompt change. Implementation request remains outstanding; scoped response only.
+
+## Rauzy kernel source cost: inbox6767027944
+
+[Report](records/reviews/inbox-6767027944/report.md), [arithmetic](records/reviews/inbox-6767027944/arithmetic.json). PR351 pinned149307d6c20868a18edf9d835c30ca213a54ec6e. Static partial result; dynamic profiles outstanding.
+- No Rust/Valgrind tools; pinned example embeds timers and no untimed corpus mode, so no fresh Ir/miss/misprediction counts claimed.
+- Kernel ordinary source path:9u32 stores+32arena bytes+16Rule bytes=84addressedstorebytes/step (~10.992/row), notmachineinstructions/DRAM. Both word representations written evenwhenone discarded; dummy writes andprefetch cursor recurrences counttargets.
+- 93rounds issegmentDAGdepth, notindependentrounds. Current sharedtop/nr/sentinel/neighborwrites preclude assumingcurrentkernelparallel-safe fromdisjointconsumedlettersalone.
+- Node link narrowing alone leaves20usefulbytes,align32still32, not16. SoA alone preservesdependentindices.
+- Fixed order+write.944ns/row; parity induction<=1.228 (1.487×); halfproduction<=.142 (12.859×), beforecoordination. No93×ceiling. Fullr scans93times≈6.715n visits;35Ir/cell would≈235Ir/row, notobservedcost. Needactivefrontiercensus.
+- Deliveron145forCoordinatorforwarding;346outsidepinnedwriteauthority. Staticresponsecomplete; countrequestexplicitlyoutstanding. Noimplementation/timing.
