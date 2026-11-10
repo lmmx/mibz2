@@ -1173,11 +1173,13 @@
     {
       "comment_id": 6782112235,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Analysis complete: verified archives, predicted admission and allocation replay, live-path mismatch identified, one bounded diagnostic recommended. Publishing work before completion marker.",
-      "report_path": "state/records/reviews/inbox-6782112235/report.md"
+      "progress": "Source/archive analysis complete; verified i9 and CI archives, replayed admission/ratios, recommended one diagnostic. REVIEW pending.",
+      "report_path": "state/records/reviews/inbox-6782112235/report.md",
+      "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4",
+      "disposition": "diagnostic_preparation_recommended_no_implementation"
     }
   ],
   "migrated_from": {
