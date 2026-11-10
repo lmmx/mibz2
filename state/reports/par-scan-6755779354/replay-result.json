@@ -1,0 +1,8 @@
+{
+  "existing_tests": "3 passed",
+  "uniform_wrong_size": {
+    "exit": 0,
+    "reading": "FASTER: at 10 workers find ran at 1.500 of scan's rate, at least 1.15"
+  },
+  "native_rust_execution": false
+}
