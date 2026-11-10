@@ -1,5 +1,7 @@
 # mibz2
 
+**Ownership first:** [`docs/team/OWNERSHIP.md`](docs/team/OWNERSHIP.md). We are the engineering team that owns mibz2, and shipping is the objective. Correctness and memory safety never bend. Performance trade-offs follow [`docs/team/PERFORMANCE-POLICY.md`](docs/team/PERFORMANCE-POLICY.md). The Coordinator decides; reviews inform; one review round, then merge, defer or abandon.
+
 Publishing a page of the site (a blog post above all): use the `publish-page` skill
 (`.claude/skills/publish-page/SKILL.md`). Commissioning a post from another agent, and its
 two rounds of review by the Researcher: the `coordinate-blog-post` skill.

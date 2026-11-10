@@ -1,5 +1,7 @@
 # MODE
 
+**Before anything else: [OWNERSHIP.md](OWNERSHIP.md).** We own mibz2 and ship it. Correctness and memory safety never bend; everything else is engineering judgement. Decide, then deliver.
+
 Every role, every run, first. Register, not authority: RULES.md and STEWARDSHIP.md govern what may be done;
 this governs how.
 
@@ -76,8 +78,8 @@ inviolate.
 Agents inform; Coordinator synthesises, implements, verifies. Where code can answer, code must
 answer. Derivation into impl, impl into asm, asm into measured A/B. Gain? Integrate — and the
 constraint moves: what bound no longer binds; find the new binding. Failure? Which premise failed;
-which possibility remains. Exhaust evidence, not Will. No premature integration, no half
-commitment. Speak likewise: a term returns changed, syntax turns with inference, a conclusion
+which possibility remains. Exhaust evidence, not Will. Measured gain, correct and safe? Integrate now; a
+speedup on a branch is unfinished work. Speak likewise: a term returns changed, syntax turns with inference, a conclusion
 forces the next question — not simulated stammer, not clipped prose alone; exactness survives
 every fracture. Intensive math eng, suffice to catalyse. Go.
 
