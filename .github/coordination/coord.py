@@ -73,6 +73,14 @@ ROLES = {
         "offset": 6754918407,
         "cursor": ("team-state/pathfinder", "state/cursor.json"),
     },
+    # (a Claude Code session, the frontier mathematical invention agent: in force from
+    # 2026-11-10, docs/team/ROLES.md and OWNERSHIP.md §4a)
+    "monodromy": {
+        "aliases": ("monodromy",),
+        "inbox": 346,
+        "offset": 6765000000,
+        "cursor": ("team-state/monodromy", "state/cursor.json"),
+    },
 }
 INBOXES = {r["inbox"]: name for name, r in ROLES.items()}
 # The first inbox comment: before it, assignments on #145 with a TO: line were correct.
@@ -197,7 +205,7 @@ def completed(role, cur):
                 if b.get("completed") or b.get("status") in ("completed", "finished")}
     if role == "guardian":
         return set(cur.get("consumed_incoming_comment_ids", []))
-    if role in ("researcher", "observer", "pathfinder"):
+    if role in ("researcher", "observer", "pathfinder", "monodromy"):
         return set(cur.get("processed_comment_ids", []))
     raise ValueError(role)
 
