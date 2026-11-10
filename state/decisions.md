@@ -4386,3 +4386,70 @@ Archived under state/evidence/D094/: review_probes.py, full checker/probe output
 Candidate service_tg suite: 29 tests passed initially; its remaining power test failed only because the local review copy lacked service_tg_power.py, then passed after fetching that exact-pin dependency. Gate/workflow suite: 12 passed. Checker suite: 20 passed. These are synthetic Python checks, not decoder timing, production qualification or full CI. No candidate implementation, merge, dispatch, workstation run, infrastructure or spending performed. #318's old i9 bundle and the fresh full CI/merge status were not independently re-audited here; neither can settle the present qualification objection.
 
 Migration verified before receipt: old head f9dab3d2b40739d89d613f86e8c2d67bec3159e4, manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 25fff9c07597c9fe1edc8e074182a02df1042ed5. Pinned coord.py audit: five resolved historical findings and already-reported LOG 6757065549 on #162; no new routing finding. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.
+
+<a id="d095"></a>
+## D095 — #316: valid sign inference does not yet justify the proposed default policy
+
+Incoming [6764248398](https://github.com/lmmx/mibz2/pull/161#issuecomment-6764248398), observed 2026-11-10; body SHA256 c513cf82f08de94d3244eedb13e512ab1f7223fd443b91dbceb8ee9ad7534736. Operating SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at **a2da49638ac54d7763de1c167bd054f67ffdc763**. **G1/G2:** concur with B's stated sign-test mathematics; **HOLD B as the sole replacement off-target acceptance criterion for a production default as proposed**. A is mathematically sufficient under its assumptions but presently unsupported. D094's t12 qualification HOLD and separately identified D094-C7 remain. No line-level STOP and no permanent rule that every future adoption policy must use a mean estimator.
+
+### 1. Exact mathematics, independently reproduced
+
+Researcher REVIEW 6764231210 and its report at **8d3d900438dae5de48f643fefeeb37bb916f1603**, state/reports/replication-combined-6763960537/report.md, distinguish a proposed metric from an adoption decision. The supplied policy has no new implementation pin; the prior candidate/tooling context remains 21938d1273d1d1bf3ca0f4bb791333cfa1aa4666 / 47bd387376db701906229ba79c7a7e4992d38f3f. This review concerns the policy in this checkpoint, not code repairs asserted to be in progress.
+
+For cell c define S_c = sum_j 1[D_cj < log(1.02)], with ties failures. Under independent identically distributed dispatch signs, at p_c=1/2:
+
+- P(S_c ≥17), n=24, is **0.03195732831954956**. Monotonicity bounds the composite null p_c≤1/2.
+- At p_c=.9, single-cell power is **0.9983158923567184**.
+- The all-42 union-bound lower power is **0.9292674789821711**. This needs no cross-cell independence; it does assume the stated per-cell success probabilities.
+- The intersection-union rule needs no 42-fold size correction: if any cell's null is true, all-cell acceptance implies acceptance of that null cell.
+
+This is exact inference for **each cell's probability that its R240 dispatch-average log ratio is strictly below log(1.02)**. It is not a guarantee about an individual decode, all 42 cells jointly on a typical single runner draw, the mean log ratio, a later fleet mix, or harmful-tail severity. “Typical CI runner draw not >2% slower” is too compressed for release language unless the per-cell, R240-average, sampled scheduling-period and probability meaning are supplied. A lower probability bound above one half does not mean p=.9 has been established. Serial dependence and a drifting mixture still require a design argument; hourly spacing does not prove iid.
+
+The Researcher's two-point mean-null example also reproduces by exact binomial summation: size **52.2669%, 27.3183%, 19.9076%, 14.3137%, 9.0561%, 7.4487%** at k=12,24,56,64,128,256 respectively. The fixed 18/19 mixture alone does not prove that every larger k is useless. The stronger statement is uniform: without a tail restriction, for any finite k an adversary can make the compensating positive component rarer and larger, keeping the population mean at the boundary and the all-ordinary acceptance probability high. Increasing k alone supplies no distribution-free mean guarantee over that unrestricted class.
+
+**A:** if independent dispatches have a justified population variance bound Var(D_cj)≤V_c and the same target mean, Var(mean)≤V_c/k. Cantelli with t=√(19V_c/k) gives probability at most 1/20 for the lower deviation that would falsely pass. Thus exp(mean+t) is a sufficient 95% upper bound. No population V_c is supplied here. Sample variance, fitted τ and the largest observed contrast are not such bounds. Cross-dispatch covariance would require its own bound. This is one sufficient route, not proof that Cantelli is the only possible mean method.
+
+### 2. Why B is held for default adoption as proposed
+
+The recommendation's premise is “the mean gate cannot bound the tail affordably either.” That establishes a missing protection, not the acceptability of discarding it. Reporting magnitudes without a disposition cannot stop adoption when those reported magnitudes contradict the intended no-unacceptable-regression objective.
+
+A concrete **constructed population, not an allegation about #316**: for each dispatch, every cell has head/base ratio .999 with probability .9 and ratio 10 with probability .1. Let all cells share that draw; such cross-cell dependence is allowed by the proposed IUT.
+
+- B passes all 42 cells with probability **0.9983158924**.
+- The population geometric ratio is **1.2577923223**; the arithmetic mean ratio is **1.8991**.
+- Two independent programmes both passing B have probability **0.9966346209**. Replicating this probability claim does not turn it into a severity bound.
+- A *hypothetical* sign-based wall-harm flag requiring 17/24 ratios above 1.00 has probability about **1.73×10^-12** here. Moreover primary B acceptance and that primary flag are mutually exclusive in this two-point population. This is a counterexample to that possible extension, **not a claim that the checkpoint actually specified it**.
+
+B is not statistically wrong in that example: p=.9 is true. It answers a different question very reliably while leaving a material adverse outcome admissible. That is precisely the adoption trade-off needing justification. The existing target-gated route at STEWARDSHIP blob 9a295edc2c239461ce4a69cfc135cce22caf1c6f exchanges off-target mean/geometric noninferiority for on-target superiority; an off-target probability claim alone does not preserve that exchange. Equal fallback plans do not prove zero discovery/layout/shared-code cost.
+
+**Disposition:** B is admissible as a probability endpoint or diagnostic metric. **B plus disclosure, descriptive magnitudes, no inheritance and tooling repairs is insufficient as the sole replacement criterion for the requested production default.** Keep the present mean route NOT SHOWN and its qualification/adoption HOLD. This is a scoped evidence/adoption ruling under G1/G2 and C6, not a claim that C6 forbids quantile policies or reserves them all to Louis.
+
+A revised prospective package may resolve it by:
+- supplying a justified tail/variance model for mean protection; or
+- supplying a concrete, reviewed alternative control of unacceptable loss/exposure and its adoption scope, coupled to an explicit risk-benefit case. State which harmful outcomes stop adoption, what risk remains unbounded, why accepting it serves the decoder objective, and which deployment class bears it. A frequency endpoint or a “no bad events observed” screen alone still cannot bound unobserved severity.
+
+Do not demand an impossible universal no-tail theorem, but do not let inability to prove one become the approval argument. An opt-in/non-default or narrower deployment proposal is a distinct route to assess, not approval granted here. Routine implementation, safety work and the separate diagnostic can continue; no qualification spending is authorised by this ruling. C3 favours resolving this design/risk question before allocating approximately 10,332 runner-minutes.
+
+C6 delegates prospective policy selection; no routine request for Louis to select a statistic is needed. A material unresolved disagreement over this scoped HOLD follows PROTOCOL §5, rather than being bypassed by renaming the gate. The Coordinator can record the present negative decision and continue alternatives. If a standing policy is changed, its exact decision-record entry, Guardian review, Researcher PROCEED and channel LOG precede fresh data. C2/B4 preserve all old registrations and outcomes; this REVIEW does not amend RULES or STEWARDSHIP.
+
+### 3. D094-C7 under a possible future B policy
+
+**The independent-confirmation principle still applies; the proposed “another 24×R240” is not yet a complete condition-7 specification.** B defines success relative to 1.02. It does not define a wall-harm flag relative to 1.00, that flag's population quantity, confidence rule, or the resulting confirmed/unresolved classification.
+
+- Do not retain the unsupported t-based mean flag while calling the inference repaired.
+- Do not silently replace it with a sign flag; that changes the protected quantity again and can miss severe minority harm, as above.
+- If the future reviewed rule uses 24 dispatches as its programme unit, confirmation means one additional full **24×R240** programme when the registered trigger calls for it, with the same candidate/base/settings and frozen inferential rule, 24 unique IDs per programme, no shared IDs, fully checked windows and spacing across the boundary.
+- Freeze trigger, thresholds, wall-only scope, ties, invalid/missing disposition, confirmation unit and budget together. No confirmation data enter primary condition 2; no replacement, repeated confirmation, split-sample recycling, or rescue of a failed primary.
+- D094-C7 separately blocks clearing a primary flag for adoption with missing/invalid/malformed confirmation. Preserve the inherited classification beside that additional admission constraint. No confirmation is required merely to relabel an already failed primary.
+
+A second B programme is neither a cure for omitted severity nor an automatic substitute for condition 7. No 24-programme dispatch is authorised now. Timestamp/confirm repairs must be checked at their actual new pin when supplied; this policy review cannot attest them.
+
+### 4. Cost, evidence and state
+
+At the submitted pace: primary 5166 runner-minutes / 216 shard jobs; primary plus full confirmation 10,332 / 432. With independent per-job invalidity probability q (a sensitivity assumption, not measured), all-valid exposure is (1−q)^216 or (1−q)^432. At q=.002 these are **.649/.421**; at q=.01 **.114/.0130**. Do not multiply a power claim by these as if actual failure probabilities and independence were established. Forty-eight hourly dispatches are roughly two days, with completion/overrun overhead and possible mix drift.
+
+Expected: a calibrated, affordable default-adoption rule. Found: exact calibration for a narrower probability statement, no evidence closing the omitted severity/exposure question, and an unspecified confirmation flag. No production performance gap closed. Mechanism learned: sign inference discards magnitudes deliberately, so repetition cannot recover their protection. Highest next value is the explicit risk-control/adoption design or a non-default route, not qualification runs under the present proposal.
+
+Evidence under state/evidence/D095/: exact policy.py and results.json, incoming checkpoint snapshot and cited Researcher report. The script recomputes binomial tails and the constructed witnesses; no simulation or decoder timing, build, CI dispatch, merge, infrastructure or spending. It uses existing SciPy only for t quantiles.
+
+Migration verified before receipt: old branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 7be711cfc792143f8277717d837d18e97308190b. Pinned routing audit: five resolved historical findings and already-reported LOG 6757065549 on #162; no new routing finding. REVIEW routes to #145. State only team-state/guardian; persistent task unchanged.

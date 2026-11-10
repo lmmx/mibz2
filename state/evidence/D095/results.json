@@ -1,0 +1,86 @@
+{
+  "sign": {
+    "k": 24,
+    "threshold": 17,
+    "null_size": 0.03195732831954956,
+    "individual_power_p09": 0.9983158923567184,
+    "all_42_union_lower_power_p09": 0.9292674789821711
+  },
+  "mean_t_witness": {
+    "12": {
+      "accepted_rare_counts": [
+        0
+      ],
+      "probability": 0.5226691292146822
+    },
+    "24": {
+      "accepted_rare_counts": [
+        0
+      ],
+      "probability": 0.27318301863403416
+    },
+    "56": {
+      "accepted_rare_counts": [
+        0,
+        1
+      ],
+      "probability": 0.19907551461176728
+    },
+    "64": {
+      "accepted_rare_counts": [
+        0,
+        1
+      ],
+      "probability": 0.14313677004542977
+    },
+    "128": {
+      "accepted_rare_counts": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "probability": 0.0905613753571488
+    },
+    "256": {
+      "accepted_rare_counts": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "probability": 0.07448674006214377
+    }
+  },
+  "default_risk_witness": {
+    "good_ratio": 0.999,
+    "good_probability": 0.9,
+    "bad_ratio": 10,
+    "bad_probability": 0.1,
+    "geometric_population_ratio": 1.2577923222511258,
+    "arithmetic_population_ratio": 1.8991,
+    "all42_pass_probability_identical_cells": 0.9983158923567184,
+    "two_independent_programmes_both_sign_pass_probability": 0.9966346209319908,
+    "hypothetical_sign_harm_flag_probability_17of24_above1": 1.7295155695630022e-12,
+    "joint_primary_sign_pass_and_harm_flag_probability": 0
+  },
+  "rare_tail_missing_probability": {
+    "q01_k24": 0.7856781408072188,
+    "q01_k48": 0.617290140942288
+  },
+  "cost": {
+    "primary_runner_minutes_at_stated_pace": 5166,
+    "with_full_confirmation_runner_minutes": 10332,
+    "primary_shard_jobs": 216,
+    "with_confirmation_shard_jobs": 432,
+    "all_valid_q002_primary": 0.6489286044601651,
+    "all_valid_q002_both": 0.4211083336866173,
+    "all_valid_q01_primary": 0.1140780353265762,
+    "all_valid_q01_both": 0.01301379814397157
+  }
+}

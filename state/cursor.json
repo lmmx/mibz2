@@ -3375,7 +3375,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D095",
-      "progress": "Migration verified; assessing prospective sign-policy adoption and confirmation under C6."
+      "progress": "D095 policy ruling and exact probability witnesses complete; preparing publication.",
+      "receipt_commit": "7be711cfc792143f8277717d837d18e97308190b"
     }
   ],
   "migrated_from": {
