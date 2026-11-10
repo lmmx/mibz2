@@ -236,6 +236,13 @@ different files and apply in either order, and over the admission patch.
 | `2026-11-10-team-runs-port/mtf-list-in-one-page.diff.txt` | `789aad9cac21be2323f6a6698370d556612a58f0e0868213b445bfe0fc721c4e` | `src/mtf.rs` |
 | `2026-11-10-team-runs-port/team-runs.diff.txt` | `3ab375a7bcdee3ca3edca9813100afa90cb30b016dbb9ee6bcc278d3efa22229` | `src/bwt.rs`, `src/coop.rs`, `src/lib.rs`, `src/parallel.rs`, `src/runs.rs`, `src/runs/tests.rs` |
 
+**Against today's master too.** Master moved to `8ed2fbdf` while this was measured (0.2.8,
+and the admission patch as #353). Both files apply to it unchanged. With both applied there:
+`cargo fmt --all --check` and `cargo clippy --all-targets -- -D warnings` clean, and
+`cargo test --release` exit 0. Everything else in this note was run on `47149bff`; with
+both applied there, the whole suite (debug and release), the lint and the three fuzzers
+also exit 0.
+
 **I recommend the first on its own merits and first in order:** it removes a cliff from
 master, and without it the port's measurement is at the mercy of the draw.
 
