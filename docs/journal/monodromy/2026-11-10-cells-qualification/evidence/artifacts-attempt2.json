@@ -1,0 +1,42 @@
+{
+  "artifacts": [
+    {
+      "id": 13802041847,
+      "name": "bench-pr-b24d9baa167e01d57961b82a9a3c6f4501849190",
+      "size_in_bytes": 35416,
+      "url": "https://api.github.com/repos/lmmx/mibz2/actions/artifacts/13802041847",
+      "archive_download_url": "https://api.github.com/repos/lmmx/mibz2/actions/artifacts/13802041847/zip",
+      "expired": false,
+      "created_at": "2026-11-10T20:47:25Z",
+      "expires_at": "2027-02-08T20:39:03Z",
+      "updated_at": "2026-11-10T20:47:25Z",
+      "digest": "sha256:a9201085b4e296e5676005883340855c677b958197cc49403f91911c6b27572a",
+      "workflow_run": {
+        "id": 42883082689,
+        "repository_id": 1435546475,
+        "head_repository_id": 1435546475,
+        "head_branch": "feat/monodromy-cells-slice-one",
+        "head_sha": "b24d9baa167e01d57961b82a9a3c6f4501849190"
+      }
+    },
+    {
+      "id": 13794754212,
+      "name": "bench-pr-b24d9baa167e01d57961b82a9a3c6f4501849190",
+      "size_in_bytes": 35484,
+      "url": "https://api.github.com/repos/lmmx/mibz2/actions/artifacts/13794754212",
+      "archive_download_url": "https://api.github.com/repos/lmmx/mibz2/actions/artifacts/13794754212/zip",
+      "expired": false,
+      "created_at": "2026-11-10T19:22:35Z",
+      "expires_at": "2027-02-08T19:13:22Z",
+      "updated_at": "2026-11-10T19:22:35Z",
+      "digest": "sha256:e6675ef4ee11d4d5e0f5752ced5a959424a5028922c68572c00cf41d86dbe50e",
+      "workflow_run": {
+        "id": 42883082689,
+        "repository_id": 1435546475,
+        "head_repository_id": 1435546475,
+        "head_branch": "feat/monodromy-cells-slice-one",
+        "head_sha": "b24d9baa167e01d57961b82a9a3c6f4501849190"
+      }
+    }
+  ]
+}

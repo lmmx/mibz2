@@ -1,0 +1,1 @@
+PASS: separate-executable producer/summary; 2 rounds, 4 successful records, identical output hashes, cells parallel=false. Timing intentionally excluded: this is a correctness smoke check on a shared machine.

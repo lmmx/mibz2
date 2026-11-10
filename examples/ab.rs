@@ -93,7 +93,11 @@
 //!
 //! Arms, block-parallel unless said:
 //!
-//! - `mibz2-cells` (experimental cells admission plus shipped fallback, sequential only);
+//! - `mibz2-cells@PATH` (experimental cells admission plus shipped fallback, sequential
+//!   only). Build its separate harness with `cargo rustc --release --example ab --
+//!   --cfg mibz2_cells_bench`, then copy it to PATH. The ordinary build omits this arm
+//!   to keep its generated default-reader code independent of the experimental reader;
+//!   the library type itself is always compiled, with no feature or default change;
 //! - `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`, the cooperative
 //!   policy's plan since it became the default), `mibz2-scalar` (the portable kernels),
 //!   `mibz2-workers` (THREADS workers of a block each, `Plan::Workers`: the decoder before
@@ -171,6 +175,7 @@
 //! never set by `ab run`: `AB_SHA256=1` adds `sha256`, a SHA-256 of the output (null
 //! without it), and `AB_READ_BUF=BYTES` sets the read buffer (4 MiB without it).
 
+#[cfg(mibz2_cells_bench)]
 mod ab_cells;
 
 #[path = "../tests/common/mod.rs"]
@@ -1059,15 +1064,13 @@ fn err_id_json() -> String {
 /// smallest thread count (pinned to one CPU, as every 1-thread run), and the summaries
 /// pair that run with the reference's at every thread count
 fn parallel(arm: &str) -> bool {
+    #[cfg(mibz2_cells_bench)]
+    if arm == "mibz2-cells" {
+        return false;
+    }
     !matches!(
         arm,
-        "mibz2-cells"
-            | "libbzip2"
-            | "libbz2-rs"
-            | "bz2ngrs"
-            | "bz2ngrs-oneshot"
-            | "mibz2-oneshot"
-            | "bz2ng"
+        "libbzip2" | "libbz2-rs" | "bz2ngrs" | "bz2ngrs-oneshot" | "mibz2-oneshot" | "bz2ng"
     )
 }
 
@@ -1110,6 +1113,7 @@ fn decode(
 ) -> Result<(), String> {
     let open = || std::fs::File::open(path).map_err(|e| e.to_string());
     match arm {
+        #[cfg(mibz2_cells_bench)]
         "mibz2-cells" => drain(ab_cells::CellsReader::new(open()?), h, last),
         "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
         "mibz2" => drain(mibz2::BzReader::parallel(open()?, threads), h, last),

@@ -113,13 +113,27 @@ the tests; there is no claim of independent review or merge readiness.
 
 ## Benchmark arm
 
-`ab ... --arms mibz2,mibz2-cells --threads 1` selects the experimental type in the real
+Build the ordinary harness and copy it before building the experimental executable:
+
+```sh
+cargo build --release --example ab
+mkdir -p bin
+cp target/release/examples/ab bin/ab
+cargo rustc --release --example ab -- --cfg mibz2_cells_bench
+cp target/release/examples/ab bin/cells-ab
+bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 corpora/*.bz2
+bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab
+```
+
+This selects the experimental type in the real
 block decoder. Its sequential `Read` adapter is local to the example, with the shipped
 reader's chunking, compaction, error behavior and buffer reuse. Adapter tests compare
 bytes and errors with several read sizes. It is explicitly a single-thread arm; it never
 selects cooperative paths or claims multi-thread scaling.
 
 CI keeps its existing paired default arms and their schedule unchanged. A separate
-same-build paired run writes `cells.jsonl` and `cells-summary.md` (wall, CPU, RSS, byte
+same-source, separate-executable paired run writes `cells.jsonl` and `cells-summary.md` (wall, CPU, RSS, byte
 hash parity and confidence intervals) into the benchmark artifact and job summary.
 Those figures are observational. No statistical method or default acceptance rule changes.
+See the [qualification handoff](../2026-11-10-cells-qualification/HANDOFF.md) for why
+the benchmark executables are isolated and the original CI/rerun evidence.

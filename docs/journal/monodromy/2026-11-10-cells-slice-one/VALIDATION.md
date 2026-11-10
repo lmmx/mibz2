@@ -1,5 +1,10 @@
 # Slice-one validation, 10 November 2026
 
+This is the original local validation record. The later CI verdict, single permitted
+rerun and benchmark isolation correction are in the
+[qualification handoff](../2026-11-10-cells-qualification/HANDOFF.md). Original raw
+evidence below is retained unchanged; its pending-CI statements describe that earlier point.
+
 Scope and proof: [SAFETY.md](SAFETY.md). Source/evidence digests are in
 [evidence/SHA256SUMS](evidence/SHA256SUMS). These are correctness checks on a shared
 cloud machine, **not performance evidence**. Native toolchain: Rust 1.90.0; Miri:
