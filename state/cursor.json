@@ -1434,8 +1434,9 @@
       "sha": "21938d1273d1d1bf3ca0f4bb791333cfa1aa4666",
       "evidence_digest": "policy-comment-sha256:c513cf82f08de94d3244eedb13e512ab1f7223fd443b91dbceb8ee9ad7534736",
       "commit": "1794faef8c66ddc53abe5b165be88052f82119d6",
-      "status": "complete",
-      "disposition": "Concur with sign-test mathematics; HOLD B as sole replacement criterion for production default pending explicit unacceptable-loss/exposure policy. A lacks independent variance bound; C7 flag unspecified."
+      "status": "finished",
+      "disposition": "Concur with sign-test mathematics; HOLD B as sole replacement criterion for production default pending explicit unacceptable-loss/exposure policy. A lacks independent variance bound; C7 flag unspecified.",
+      "comment": 6764381812
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1528,7 +1529,8 @@
     6763469482,
     6763626030,
     6763937701,
-    6764159416
+    6764159416,
+    6764381812
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1750,7 +1752,8 @@
     "dc1930c101ab7a7dff23b49bc42df446d5fdb114",
     "e3d6e174cfea71033c4445d348526c49913de605",
     "7be711cfc792143f8277717d837d18e97308190b",
-    "1794faef8c66ddc53abe5b165be88052f82119d6"
+    "1794faef8c66ddc53abe5b165be88052f82119d6",
+    "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1925,9 +1928,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6764248398,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D095",
+    "incoming_comment": 6764248398,
+    "review_comment_id": 6764381812,
     "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
   },
   "duplicate_events": [
@@ -3399,11 +3404,13 @@
     {
       "comment_id": 6764248398,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D095",
-      "progress": "D095 completed; awaiting one REVIEW on #145.",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier fails only coordinator-specific FROM requirement; independent Guardian header/routing checks pass.",
       "receipt_commit": "7be711cfc792143f8277717d837d18e97308190b",
-      "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
+      "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6",
+      "review_comment_id": 6764381812,
+      "complete_cursor_commit": "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846"
     }
   ],
   "migrated_from": {
