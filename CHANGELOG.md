@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9](https://github.com/lmmx/mibz2/compare/v0.2.8...v0.2.9) - 2026-11-10
+
+### <!-- 2 -->Bug Fixes
+
+- *(ab)* summary reads a record's top-level fields only (bench 3.8.1) ([#356](https://github.com/lmmx/mibz2/pull/356))
+- *(runs)* admission by the bound and the share of run symbols, so a short high-entropy block keeps the column ([#353](https://github.com/lmmx/mibz2/pull/353))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.2.8's notes from its paired run against 0.2.7 ([#354](https://github.com/lmmx/mibz2/pull/354))
+
+### <!-- 9 -->Other
+
+- the Rauzy–Veech post's steppers (the walk and the induction on aab; the Lyndon tree cut by cut, with returns) and its Lyndon figure taught one reading at a time
+- Team paths read the run-record front (#324's records and backward table on teams) ([#359](https://github.com/lmmx/mibz2/pull/359))
+- a green head includes the legacy commit statuses (pre-commit.ci), not only the check runs
+- *(monodromy)* the inverse BWT by Rauzy–Veech induction on LF's interval exchange: witness, census, and a kernel at 0.82 to 0.86 of production's inversion ([#351](https://github.com/lmmx/mibz2/pull/351))
+- the Rauzy–Veech post's formal frame, Lyndon table and a followable step
+- rebuild the Rauzy–Veech post's opening around its key ideas, ground it in the earlier posts, define every term in place; blog skills: grounding, aha-early, causal visuals, no hashes in prose, de-slop tics, headless-shell cards, docs commits for fixes
+- the Rauzy–Veech post in plainer prose; PR links in place of commit hashes; a whole social card
+- keep mtf_checkpoints_avx2's list in one page (align 512) ([#358](https://github.com/lmmx/mibz2/pull/358))
+- a new way back from the BWT (MONODROMY's Rauzy–Veech kernel, #351) ([#357](https://github.com/lmmx/mibz2/pull/357))
+
 ## [0.2.8](https://github.com/lmmx/mibz2/compare/v0.2.7...v0.2.8) - 2026-11-10
 
 A speed release. On the Wikidata sample a decode is 12–19% faster on CI's runner, from a new
