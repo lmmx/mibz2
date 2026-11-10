@@ -1,0 +1,464 @@
+{
+ "bibliography": [
+  {
+   "key": "DRR-gen",
+   "authors": "Francesco Dolce; Antonio Restivo; Christophe Reutenauer",
+   "title": "On generalized Lyndon words",
+   "venue": "Theoretical Computer Science",
+   "year": "2019",
+   "arxiv": "1812.04515",
+   "doi": "10.1016/j.tcs.2018.12.015",
+   "url": "https://arxiv.org/abs/1812.04515",
+   "locator": "Journal: Theoretical Computer Science 777 (July 2019) 232-242. Preprint: arXiv:1812.04515v1 [cs.DM], 11 Dec 2018, 16 pp. (the version read; it already thanks the referee).",
+   "scholar_entries": "\"On generalized Lyndon words\" (the bare heading line the second list hangs from, after the dash line of scholar-results.txt)",
+   "source_of_record": "Crossref API record of the DOI (fetched: authors, journal, volume 777, pages 232-242, issued 2019-07); arXiv abs page 1812.04515 (fetched). DBLP could not be used: it answered with a bot wall.",
+   "one_line": "Re-proves by word combinatorics that generalized Lyndon words (one alphabet order per position) factorize the free monoid; characterizes first and last factors; Galois words. No tree and no BWT in it.",
+   "unverified": "Journal text not read (sciencedirect.com returned 403); all locators below are pages of arXiv v1."
+  },
+  {
+   "key": "CR",
+   "authors": "Maxime Crochemore; Luís M. S. Russo",
+   "title": "Cartesian and Lyndon trees (arXiv title: Cartesian trees and Lyndon trees)",
+   "venue": "Theoretical Computer Science",
+   "year": "2020",
+   "arxiv": "1712.08749",
+   "doi": "10.1016/j.tcs.2018.08.011",
+   "url": "https://arxiv.org/abs/1712.08749",
+   "locator": "Journal: Theoretical Computer Science 806 (February 2020) 1-9. Preprint: arXiv:1712.08749v1 [cs.DS], 23 Dec 2017, 12 pp. (the version read).",
+   "scholar_entries": "none: not in the pasted lists (it is the arXiv paper whose references led to them)",
+   "source_of_record": "Crossref API record of the DOI (fetched); arXiv abs page (fetched).",
+   "one_line": "Proposition 1 (u < v iff uw < w) makes the Lyndon tree the Cartesian tree of suffix ranks, and the Lyndon table the next-smaller table of the ranks; O(n) after suffix sorting; runs.",
+   "unverified": "Journal text not read (403); locators are pages of arXiv v1. The DOI was first seen in the reference list of arXiv:1904.00954 and then confirmed at Crossref."
+  },
+  {
+   "key": "DRR-var",
+   "authors": "Francesco Dolce; Antonio Restivo; Christophe Reutenauer",
+   "title": "Some variations on Lyndon words",
+   "venue": "arXiv preprint; 30th Annual Symposium on Combinatorial Pattern Matching (CPM 2019), LIPIcs 128, as an invited talk",
+   "year": "2019",
+   "arxiv": "1904.00954",
+   "doi": "10.4230/LIPIcs.CPM.2019.2",
+   "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CPM.2019.2",
+   "locator": "(1) arXiv:1904.00954v1 [cs.DM], 1 Apr 2019, 16 pp. (2) \"Some Variations on Lyndon Words (Invited Talk)\", CPM 2019, LIPIcs vol. 128, pp. 2:1-2:14, Schloss Dagstuhl, 2019. Both PDFs read; the statements carry the same numbers in both (Theorem 36 is on arXiv p. 12 and LIPIcs p. 2:11).",
+   "scholar_entries": "\"Some variations on Lyndon words\" (F Dolce, A Restivo, C Reutenauer - arXiv preprint arXiv:1904.00954, 2019) and \"Some variations on Lyndon words (invited talk)\" (… 30th Annual Symposium on …, 2019 - drops.dagstuhl.de)",
+   "source_of_record": "DROPS landing page of the DOI (fetched: title, authors, volume 128, pages 2:1-2:14); arXiv abs page (fetched).",
+   "one_line": "Compares words by u^ω against v^ω; the prefix standard permutation of a Lyndon word; Theorem 36: its decreasing Cartesian tree is the left Lyndon tree (Viennot's left standard factorization).",
+   "unverified": "No journal version was looked for beyond these two."
+  },
+  {
+   "key": "BC",
+   "authors": "Golnaz Badkobeh; Maxime Crochemore",
+   "title": "Linear construction of a left Lyndon tree (arXiv and PSC title: Left Lyndon tree construction)",
+   "venue": "Information and Computation",
+   "year": "2022",
+   "arxiv": "2011.12742",
+   "doi": "10.1016/j.ic.2022.104884",
+   "url": "https://arxiv.org/abs/2011.12742",
+   "locator": "(1) Journal: Information and Computation 285 (May 2022), article 104884. (2) arXiv:2011.12742v1 [cs.DS], 25 Nov 2020, 18 pp. (the version read). (3) Prague Stringology Conference 2020, pp. 84-95, as the arXiv version's footnote and its reference [1] give it.",
+   "scholar_entries": "\"[HTML] Linear construction of a left Lyndon tree\" (G Badkobeh, M Crochemore - Information and Computation, 2022 - Elsevier) and \"Left Lyndon tree construction\" (G Badkobeh, M Crochemore - arXiv preprint arXiv:2011.12742, 2020)",
+   "source_of_record": "Crossref API record of the DOI (fetched: volume 285, article 104884, 2022-05); arXiv abs page (fetched).",
+   "one_line": "Builds the left Lyndon tree of a Lyndon word online, left to right, in O(n) letter comparisons from Duval's periodicity; its nodes are made in the order of the prefix ranks, which is the postorder.",
+   "unverified": "Journal text not read (403). The PSC 2020 data are copied from the arXiv PDF, not from a PSC page."
+  },
+  {
+   "key": "HR",
+   "authors": "Christophe Hohlweg; Christophe Reutenauer",
+   "title": "Lyndon words, permutations and trees",
+   "venue": "Theoretical Computer Science",
+   "year": "2003",
+   "doi": "10.1016/S0304-3975(03)00099-9",
+   "url": "https://doi.org/10.1016/S0304-3975(03)00099-9",
+   "locator": "Theoretical Computer Science 307(1) (September 2003) 173-178.",
+   "scholar_entries": "none: not in the pasted lists",
+   "source_of_record": "Crossref API (fetched: authors, volume 307, issue 1, pages 173-178, 2003-09); Semantic Scholar API record of the DOI (fetched: date 2003-09-26, and the article's opening paragraphs).",
+   "one_line": "A note: the tree (standard bracketing) of a Lyndon word is the completed increasing tree of its suffix standard permutation.",
+   "unverified": "Full text NOT obtained: sciencedirect.com 403, core.ac.uk 403 (challenge page), web.archive.org 429 and resets. So the theorem's number and exact wording in the original are not read; what is reported is the article's own opening paragraphs as the Semantic Scholar API returns them, and the restatements in CR, DRR-var, BC, Ellert22 and BE23."
+  },
+  {
+   "key": "Reut06",
+   "authors": "Christophe Reutenauer",
+   "title": "Mots de Lyndon généralisés",
+   "venue": "Séminaire Lotharingien de Combinatoire",
+   "year": "2006",
+   "url": "https://www.mat.univie.ac.at/~slc/wpapers/s54reut.html",
+   "locator": "Séminaire Lotharingien de Combinatoire 54 (2006), Article B54h, 16 pp. (received 6 May 2005, accepted 14 March 2006, final 20 April 2006). DRR cite it as \"54:Art. B54h, 16, 2005/07\".",
+   "scholar_entries": "none: not in the pasted lists (reference [18]/[22] of the two DRR papers)",
+   "source_of_record": "The journal's page for B54h and its PDF (both fetched; read sections 1, 2, 3.1-3.4, 3.7, 3.8 and the references).",
+   "one_line": "Generalized Lyndon words form a Hall set with a standard factorization (Th. 2.2), hence a bracketing and a Lie basis; section 3.4 states the circular Schützenberger–Melançon rewriting that finds the Hall conjugate of a word.",
+   "unverified": "Sections 3.5 and 3.6 (quadratic forms, Markoff numbers) only skimmed."
+  },
+  {
+   "key": "Ellert22",
+   "authors": "Jonas Ellert",
+   "title": "Lyndon Arrays Simplified",
+   "venue": "30th Annual European Symposium on Algorithms (ESA 2022), LIPIcs 244",
+   "year": "2022",
+   "doi": "10.4230/LIPIcs.ESA.2022.48",
+   "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ESA.2022.48",
+   "locator": "LIPIcs vol. 244, pp. 48:1-48:14.",
+   "scholar_entries": "none: not in the pasted lists (found by this sweep's search)",
+   "source_of_record": "DROPS landing page (fetched) and PDF.",
+   "one_line": "Simplified O(n) Lyndon array on general alphabets; its section 2 states the next/previous-smaller-suffix lemmas in the form used below.",
+   "unverified": "Only section 2 (p. 48:3: Definition 2, Lemmas 3 and 4) was read."
+  },
+  {
+   "key": "BE23",
+   "authors": "Hideo Bannai; Jonas Ellert",
+   "title": "Lyndon Arrays in Sublinear Time",
+   "venue": "31st Annual European Symposium on Algorithms (ESA 2023), LIPIcs 274",
+   "year": "2023",
+   "doi": "10.4230/LIPIcs.ESA.2023.14",
+   "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.ESA.2023.14",
+   "locator": "LIPIcs vol. 274, pp. 14:1-14:16.",
+   "scholar_entries": "none: not in the pasted lists (found by this sweep's search)",
+   "source_of_record": "DROPS landing page (fetched) and PDF.",
+   "one_line": "The succinct 2n-bit Lyndon array (the Lyndon tree's information) of a packed string in O(n / log_σ n) time on a word RAM.",
+   "unverified": "Abstract and introduction only (pp. 14:1-14:3)."
+  },
+  {
+   "key": "Mel92",
+   "authors": "G. Melançon",
+   "title": "Combinatorics of Hall trees and Hall words",
+   "venue": "Journal of Combinatorial Theory, Series A",
+   "year": "1992",
+   "locator": "Journal of Combinatorial Theory A 59 (1992) 285-308, as Reutenauer 2006 lists it under [Me].",
+   "scholar_entries": "none",
+   "source_of_record": "The reference list of Reut06 (a fetched PDF), nothing else.",
+   "one_line": "Named by Reut06 section 3.4 as the source of the algorithm that finds, for any Hall set, the power of a Hall word conjugate to a given word.",
+   "unverified": "NOT read and no landing page fetched: every field is copied from Reut06's reference list; given names, DOI and the content are unverified. It should be read before its content is cited in the entry."
+  }
+ ],
+ "findings": [
+  {
+   "statement": "The tree of a Lyndon word (equivalently its standard bracketing) is obtained from its suffix standard permutation: that permutation's increasing tree, once completed with the letters as leaves, is the tree of the Lyndon word. The authors say the tree \"encodes a nonassociative operation\", a commutator in the free group or a Lie bracketing. The wording \"Cartesian tree\" is CR's and DRR's, not this note's opening.",
+   "source_key": "HR",
+   "locator": "Opening paragraphs of the note as the Semantic Scholar API returns them (body not obtained). Restated: DRR-var section 1 p. 2 and section 5 p. 9 (arXiv); CR section 1 p. 2 and section 4 p. 8; BC section 1 p. 2.",
+   "label": "K",
+   "bears_on": "§5.6 Theorem 2; §10; H5"
+  },
+  {
+   "statement": "Proposition 1: for a Lyndon word u and a word w whose Lyndon factorisation starts with v, u < v iff uw < w. From it: the Lyndon tree of y has the structure of the Cartesian tree built from the ranks of y's suffixes. Stated for suffixes of a word only; a non-Lyndon word gives the forest of its factors' trees, or is made Lyndon by a smaller first letter. Nothing in the paper speaks of rotations, conjugates or a BWT.",
+   "source_key": "CR",
+   "locator": "Proposition 1 and the paragraph before it, p. 8; section 3, p. 6 (arXiv v1)",
+   "label": "K",
+   "bears_on": "question (a); §5.6 Theorem 1-2"
+  },
+  {
+   "statement": "The Lyndon factorisation of y is read off the ranks: follow the longest decreasing sequence of ranks from the first one (the left-to-right minima of Rank). And NNS[i] = i + Lyn[i]: the longest Lyndon factor starting at i ends at the next smaller rank.",
+   "source_key": "CR",
+   "locator": "Section 4, p. 9 (arXiv v1)",
+   "label": "K",
+   "bears_on": "§5.5 (minima-so-far of suffix ranks); H1"
+  },
+  {
+   "statement": "Algorithms LyndonTree and LongestLyndon go right to left and merge two adjacent Lyndon phrases u, v when u < v; with the table Rank the test is O(1) and the whole is O(n), after a suffix sort on a linearly-sortable alphabet. No construction from a BWT or a run-length BWT, nothing below linear time.",
+   "source_key": "CR",
+   "locator": "Section 3 p. 6; section 4 p. 9; \"Running time of Runs\" p. 10 (arXiv v1)",
+   "label": "K",
+   "bears_on": "question (b); §10"
+  },
+  {
+   "statement": "To find all runs the Lyndon tables are needed twice: for an alphabet order and for the inverse order. No statement about the greatest rotation or a left-end construction.",
+   "source_key": "CR",
+   "locator": "Section 5, p. 10 (arXiv v1)",
+   "label": "K",
+   "bears_on": "H2"
+  },
+  {
+   "statement": "The Cartesian tree with its nodes labelled by the ranks is \"richer\" than the Lyndon tree: the labels seem hard to recover without sorting the suffixes.",
+   "source_key": "CR",
+   "locator": "Section 6, p. 10 (arXiv v1)",
+   "label": "K",
+   "bears_on": "§5.5 (rank orders that are no lexicographic order)"
+  },
+  {
+   "statement": "u^ω < v^ω iff uv < vu (Corollary 13). For Lyndon words u < v iff u^ω < v^ω (Theorem 20, credited there to Bonomo et al. 2014, Theorem 8), so the Lyndon factorisation is non-increasing in the infinite order as well. The last factor is the shortest suffix s with s^ω minimum (Theorem 21); the first factor is the shortest prefix p with p^ω ≥ w^ω (Theorem 23).",
+   "source_key": "DRR-var",
+   "locator": "Corollary 13 p. 6; Theorem 20 and 21 p. 7; Theorem 23 p. 8 (arXiv v1); LIPIcs pp. 2:5-2:8",
+   "label": "K",
+   "bears_on": "H1 (the eBWT's row order is this infinite order)"
+  },
+  {
+   "statement": "The infinite order is the one of the Gessel–Reutenauer bijection, said to be at the basis of extensions of the BWT (Mantaci et al.; Kufleitner); the alternating order has an analogous bijection (Gessel–Restivo–Reutenauer 2012) that leads to the alternating BWT. These are mentions in the introduction: the paper proves nothing about a BWT.",
+   "source_key": "DRR-var",
+   "locator": "Introduction, pp. 2-3 (arXiv v1)",
+   "label": "K",
+   "bears_on": "H1; H4"
+  },
+  {
+   "statement": "Which permutation gives the left tree. Order ≺ on words: u ≺ v if u^ω < v^ω, or u^ω = v^ω and u is the longer. The prefix standard permutation pstd(w) ranks the non-empty prefixes of w by ≺ (the \"inverse prefix array\"); for a Lyndon word the whole word is last (Ufnarovskij, Corollary 17: w is Lyndon iff p^ω < w^ω for every proper prefix p). Drop that last entry, take the decreasing tree (maximum at the root) and complete it with the letters: Theorem 36 says this tree C(w) equals the left Lyndon tree L(w) (u = the longest proper prefix that is a Lyndon word). In the proof the node with k leaves on its left carries the prefix of length k. Example: pstd(aabaacab) = 21543768.",
+   "source_key": "DRR-var",
+   "locator": "Corollary 17 p. 7; section 5.2 pp. 10-11 (Example 32, Remark 33); Theorem 36 p. 12, proof p. 14 (arXiv v1); LIPIcs p. 2:11",
+   "label": "K",
+   "bears_on": "question (c); H3; §5.6 Theorem 2 (its last sentence)"
+  },
+  {
+   "statement": "The left standard factorization is Viennot's (1978), not this paper's: Proposition 26 is quoted from Viennot, p. 14; Corollary 27 adds that the first factor of v is a prefix of u. The entry's §5.6 credits \"another tree\" to Dolce–Restivo–Reutenauer 2019; the factorization is Viennot's and what DRR add is its Cartesian description.",
+   "source_key": "DRR-var",
+   "locator": "Section 5.1, p. 9 (arXiv v1)",
+   "label": "K",
+   "bears_on": "§5.6 Theorem 2 (a citation to correct)"
+  },
+  {
+   "statement": "The tree of Hohlweg and Reutenauer is described as the one \"obtained by iterating the right standard factorization\" of w, \"equivalently the Lie bracketing associated with w\".",
+   "source_key": "DRR-var",
+   "locator": "Section 5, first paragraph, p. 9 (arXiv v1); LIPIcs p. 2:8",
+   "label": "K",
+   "bears_on": "H5 (second half)"
+  },
+  {
+   "statement": "Algorithm LeftLyndonTree builds the left Lyndon tree of a Lyndon word of length n in O(n) time in the letter-comparison model (Proposition 4). It reads y left to right, keeps Duval's period (y = x^k z b) and the table LynS (longest Lyndon suffix of each prefix), copies LynS[j] from one period back, and bundles subtrees right to left. It needs no suffix sort; it reads the text, not a BWT; it is linear, not below.",
+   "source_key": "BC",
+   "locator": "Section 2 pp. 3-4; section 3 pp. 4-6, Proposition 4 p. 6 (arXiv v1)",
+   "label": "K",
+   "bears_on": "question (b); H3"
+  },
+  {
+   "statement": "Theorem 6: the algorithm creates the internal nodes in the order of their prefixes' ranks in the infinite order ≺, and that order is the left-to-right postorder of the tree. So the prefixes of a Lyndon word are sorted by ≺ in O(n) letter comparisons (Corollary 7). In the proof: all occurrences of the period x carry Lyndon trees of the same structure. Section 5 inverts a prefix standard permutation (one-to-one on a binary alphabet, Proposition 8); section 6 gives the left Lyndon forest of any word (Proposition 11).",
+   "source_key": "BC",
+   "locator": "Theorem 5 p. 6; Theorem 6 p. 7, proof pp. 7-10 (the copies: p. 9); Corollary 7 p. 10; Proposition 8 p. 11; Proposition 11 p. 15 (arXiv v1)",
+   "label": "K",
+   "bears_on": "question (c); H3"
+  },
+  {
+   "statement": "The paper ends on two open questions: whether runs are connected to the internal nodes of the left Lyndon forest, and \"Is there a tight relation between the left Lyndon trees and the right Lyndon trees?\"",
+   "source_key": "BC",
+   "locator": "Section 7, p. 17 (arXiv v1)",
+   "label": "K",
+   "bears_on": "H3 (not answered in print by 2020/2022)"
+  },
+  {
+   "statement": "A generalized lexicographic order takes a total order of the alphabet for each position (Definition 4); w is a generalized Lyndon word if w^ω < (vu)^ω for every w = uv (Definition 12). Equivalent: u^ω < v^ω, or w^ω < v^ω, for every proper suffix v (Theorem 14). Every word factorizes uniquely into a non-increasing product of them (Theorem 16); the last factor is the shortest suffix with s^ω minimum and the longest suffix that is a generalized Lyndon word (Corollaries 17, 18). The paper defines no tree and states no Cartesian-tree theorem; the BWT does not occur in it.",
+   "source_key": "DRR-gen",
+   "locator": "Definition 4 p. 4; Definition 12, Theorem 14, Theorem 16 pp. 6-7; Corollaries 17-18 p. 7 (arXiv v1)",
+   "label": "K",
+   "bears_on": "question (d); H4"
+  },
+  {
+   "statement": "What breaks for Galois words (the alternating order). They may have borders, of odd length only (Lemma 35). The Galois conjugate of w need not be a factor of the factorization of ww (Example 41); the first factor is not the longest Galois prefix (Example 43); the non-increasing factorization is not the shortest one (Example 44). A prefix characterization with parities replaces Ufnarovskij's (Theorem 32). Duval's algorithm for generalized orders is posed as Open Problem 1.",
+   "source_key": "DRR-gen",
+   "locator": "Theorem 32 p. 10; Lemma 35 p. 11; section 7, Examples 41-44 and Open Problem 1, pp. 13-14 (arXiv v1)",
+   "label": "K",
+   "bears_on": "H4; question (d)"
+  },
+  {
+   "statement": "Introduction: the generalized Lyndon words are a Hall set, so their Lie polynomials are a basis of the free Lie algebra (credited to Reutenauer's 2005/06 paper and his book); anti-Lyndon words for an order are the classical Lyndon words for the opposite order.",
+   "source_key": "DRR-gen",
+   "locator": "Introduction, p. 2 (arXiv v1)",
+   "label": "K",
+   "bears_on": "H5; H2"
+  },
+  {
+   "statement": "Théorème 2.2: the generalized Lyndon words are a set of Hall words. The standard factorization of w is w = uv with v^∞ minimum among the proper non-trivial suffixes and v the shortest such; then u and v are generalized Lyndon words, and v is also the longest proper suffix that is one (Remarque 2.2). Iterating gives every such word a complete bracketing, and the Lie polynomials so defined are a basis of the free Lie algebra (Corollaire 2.3). So a \"generalized Lyndon tree\" is in print since 2006; it is defined by this recursion, not by a Cartesian tree of ranks.",
+   "source_key": "Reut06",
+   "locator": "Théorème 2.2 p. 5, proof pp. 6-7; Remarque 2.2 pp. 7-8; Corollaire 2.3 p. 8",
+   "label": "K",
+   "bears_on": "question (d); H4; H5"
+  },
+  {
+   "statement": "Section 3.4, \"Algorithme de Schützenberger–Melançon\" (credited to Melançon 1992, generalizing Schützenberger): take the letters of w as a circular sequence of Hall words; a rise is a circularly adjacent pair (h_i, h_{i+1}) with h_i < h_{i+1}; it is legal when h_{i+1} is at least every word of the sequence; merge a legal rise into h_i h_{i+1}; iterate. The result is the unique power of a Hall word conjugate to w; for a primitive w, the unique Hall (Lyndon, Galois) conjugate. This is, in the text, what the entry's §5.5 calls a pair-merging in which the largest suffixes lose their cut first.",
+   "source_key": "Reut06",
+   "locator": "Section 3.4, p. 10",
+   "label": "K",
+   "bears_on": "§5.5 (last bullet), §5.6 Theorem 1, §10 (what is claimed as new); H4; H5"
+  },
+  {
+   "statement": "The Galois words are not a Viennot factorization (the property: l_i < l_j implies l_i l_j is again in the set), though the usual Lyndon words are: 121 and 3 are Galois words with (121)^∞ < 3^∞, but 1213 is not one. Galois words may be bordered; a border has odd length (Proposition 3.1).",
+   "source_key": "Reut06",
+   "locator": "Section 3.8, p. 14; Proposition 3.1, p. 9",
+   "label": "K",
+   "bears_on": "H4 (why merging two adjacent Galois pieces need not give a Galois piece)"
+  },
+  {
+   "statement": "Lemma 3 (credited to Hohlweg–Reutenauer, Franek et al., Franek–Liut): next[i] = i + λ[i], the next smaller suffix ends the longest Lyndon prefix of suffix i. Lemma 4 (from Bille et al.): x[prev[i]..i) is a Lyndon word, prev[i] being the nearest smaller suffix on the left.",
+   "source_key": "Ellert22",
+   "locator": "Section 2, Definition 2, Lemma 3 and Lemma 4, p. 48:3",
+   "label": "K",
+   "bears_on": "§5.6 (\"every letter's word at every moment is a Lyndon word\")"
+  },
+  {
+   "statement": "From those two lemmas the entry's statement that every piece is a Lyndon word follows without the induction: at prefix m a piece is V[a..b) with the suffixes at a and b of rank < m and all between of rank ≥ m; if rank(a) > rank(b) then b = next[a] and Lemma 3 applies, else a = prev[b] and Lemma 4 applies.",
+   "source_key": "Ellert22",
+   "locator": "Section 2, p. 48:3, applied to the entry's §5.5",
+   "label": "Conj",
+   "bears_on": "§5.6 Theorem 2, §10 (narrows what is new)"
+  },
+  {
+   "statement": "The succinct 2n-bit Lyndon array of a string over {0..σ} is computed in O(n / log_σ n) time and words on a word RAM, from the packed text; the introduction says the Lyndon tree encodes the same information as the Lyndon array. It credits Hohlweg–Reutenauer with the left-to-right minima of suffixes and Crochemore–Russo with the Cartesian tree of the inverse suffix array. Input is the text; no BWT, no bound in r.",
+   "source_key": "BE23",
+   "locator": "Abstract p. 14:1; introduction pp. 14:1-14:3",
+   "label": "K",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "Question (a): in the eight works read (HR's opening, CR, DRR-var in both versions, DRR-gen, BC, Reut06, Ellert22 section 2, BE23's introduction) the Cartesian statement is always about the suffixes of a Lyndon word (suffix standard permutation, inverse suffix array). None states it for the ranks of the rotations of a least rotation or for a BWT's rows. The nearest circular statement is Reut06 section 3.4, an algorithm on the conjugacy class, with no ranks.",
+   "source_key": "CR",
+   "locator": "The places named in the findings above",
+   "label": "K",
+   "bears_on": "question (a); §10"
+  },
+  {
+   "statement": "H1 by program. (a) 20,000 random words (length 1 to 14, 1 to 4 letters; 16,576 with several Lyndon factors): the column is the eBWT of the Lyndon factors (rows sorted by the infinite order); the right-end induction with the drop rule closed exactly the Lyndon factorisation, in order, first factor first, on all 20,000, and each closed tree was the right Lyndon tree by the naive definition: 38,601 of 38,601. (b) 20,000 random columns (16,548 with several cycles; 38,681 closed letters): every closed word a Lyndon word with its Lyndon tree, 20,000; closing order non-increasing, 20,000; eBWT of the closed multiset equal to the column, 20,000.",
+   "source_key": "DRR-var",
+   "locator": "python3 /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/lyndon-trees/scripts/lt.py h1",
+   "label": "tested",
+   "bears_on": "H1; §2 (drop rule)"
+  },
+  {
+   "statement": "H2 by program: 18,931 random primitive words (length 2 to 16, 2 to 4 letters). The left-end induction (the table of §2 mirrored: first letters, \"just before\") ended on the greatest rotation on all 18,931, and its tree was the right Lyndon tree, for the inverse alphabet order, of that rotation on all 18,931. Control: the right end gave the Lyndon tree of the least rotation on all 18,931.",
+   "source_key": "HR",
+   "locator": "python3 …/scripts/lt.py h2",
+   "label": "tested",
+   "bears_on": "H2; §5.6 (left end 2.137 r)"
+  },
+  {
+   "statement": "Why H2 holds: reverse the rows (x → n−1−x). LF of L becomes the LF of the reversed column for the opposite alphabet order, which is the BWT of the same text under that order; left end becomes right end. So the left end is Theorem 1-2 for the opposite order, and for rotations (equal lengths) the opposite order is the reversed order of rows.",
+   "source_key": "HR",
+   "locator": "Derivation of this sweep; checked by the run above",
+   "label": "Conj",
+   "bears_on": "H2; §8 item 9"
+  },
+  {
+   "statement": "H3, small words, exhaustive: all Lyndon words, binary to length 14 (2,536), ternary to 9 (3,499), four letters to 7 (3,300). The right tree is always buildable by steps that each replace all occurrences of one digram of run letters with one of the two letters used up (the kind of step a coincidence gives): control. The LEFT Lyndon tree is buildable that way for 2,222, 3,331 and 3,213 of them only; smallest failures aaababb and aabbc. If a step may also replace all occurrences of a digram that uses up neither letter (a cell strictly inside both intervals), the left tree was buildable for every one of the 9,335. Nodes over the hinges, summed: binary left 27,401 against right 27,079 (left smaller for 122 words, equal for 2,077, larger for 337); ternary 25,090 against 24,760; four letters 18,150 against 18,002. The right tree's count equalled the induction's S on every word.",
+   "source_key": "BC",
+   "locator": "python3 …/scripts/lt.py h3",
+   "label": "tested",
+   "bears_on": "H3; §5.6 Theorem 3; §8 item 9"
+  },
+  {
+   "statement": "H3, larger inputs (not Wikidata; 17,711 to 40,000 bytes each). Nodes over the hinges, right tree (= S) against left tree: JSON-like records 8,581 (1.905 r) against 29,011 (6.44 r, 0.967 n); random words of 400 word-forms 22,570 (1.667 r) against 26,279 (0.876 n); this sweep's Python source 20,733 against 28,295 (0.965 n); two licence texts 29,808 (1.808 r) against 39,662 (0.992 n); argparse.py 26,540 (2.558 r) against 39,257 (0.981 n); Fibonacci word 20 against 20 (the two trees are the same tree there). On the five non-periodic inputs the left tree was not buildable by one-sided steps (23,568 to 34,387 pieces left) and was buildable with two-sided steps (7 to 36 of them), its height 24,556 to 38,876 against 32 to 94 for the right tree.",
+   "source_key": "BC",
+   "locator": "python3 …/scripts/lt2.py big 30000 ; python3 …/scripts/lt5.py …/dl/licenses.txt /usr/local/lib/python3.13/argparse.py",
+   "label": "tested",
+   "bears_on": "H3; §8 item 9 (\"why the right end\")"
+  },
+  {
+   "statement": "Why the left tree is tall: a proper prefix p of the least rotation V is a Lyndon word iff p is unbordered (a suffix of p that is no prefix of p is larger than p, since every rotation exceeds V), and p is bordered iff it ends with a prefix of V. Every Lyndon prefix of length ≥ 2 is a node on the left spine of the left tree, so its height is the number of unbordered prefixes: 93% to 97% of n on the inputs above. The left standard factorization therefore costs about n nodes over the hinges where the right one costs about 1.8 r.",
+   "source_key": "DRR-var",
+   "locator": "Inference from section 5.1 (the left tree's definition); the counts are in the run above (\"Lyndon prefixes of V\")",
+   "label": "Conj",
+   "bears_on": "H3; §8 item 9"
+  },
+  {
+   "statement": "Theorem 36 of DRR-var and Theorem 6 of BC reproduced on 4,874 Lyndon words (binary to length 13, ternary to 9): the decreasing Cartesian tree of the prefix ranks is the left Lyndon tree on all; a node's rank is its left-to-right postorder index on all; hence the prefix standard permutation avoids the pattern 231 on all (a postorder labelling puts every left subtree below the right one). The left tree's key therefore carries no more than the tree's shape, unlike the suffix ranks.",
+   "source_key": "BC",
+   "locator": "python3 …/scripts/lt4.py",
+   "label": "tested",
+   "bears_on": "question (c); H3"
+  },
+  {
+   "statement": "H4 by program: all Galois words, binary to length 13 (1,375) and ternary to 8 (1,315). (i) The alternating BWT's LF sends every run onto consecutive rows in reversed order: 1,375 and 1,315. (ii) The recursion \"v = longest proper Galois suffix\" always leaves a Galois prefix: 1,375 and 1,315 (as Reut06 Th. 2.2 says). (iii) The Cartesian tree of the alternating rotation ranks over the Galois conjugate, which is what a first-return induction on a prefix of the rows must give, equals that standard tree for 7 of 1,375 and 237 of 1,315 only, and its nodes are all Galois words in exactly those cases; smallest counterexample abb: ranks give a(bb), the standard tree is (ab)b, and bb is no Galois word. (iv) The Cartesian tree of the suffixes ranked by s^ω equals it for 119 and 528 only. Control with the usual order: 2,060 of 2,060 for each.",
+   "source_key": "Reut06",
+   "locator": "python3 …/scripts/lt.py h4 ; control: python3 …/scripts/lt4.py",
+   "label": "tested",
+   "bears_on": "H4; question (d)"
+  },
+  {
+   "statement": "The rewriting of Reut06 section 3.4 run on all 17,732 primitive words (binary to length 12, ternary to 8), a legal rise chosen at random each time: with the usual order it ended on the least rotation carrying its right Lyndon tree, 17,732 of 17,732; with the alternating order on the Galois conjugate carrying its standard-factorization tree, 17,732 of 17,732; never stuck. And on 3,756 random primitive words every step of the right-end induction is such a legal rise: w_A < w_B and w_B a largest current word, 26,040 of 26,040 steps.",
+   "source_key": "Reut06",
+   "locator": "python3 …/scripts/lt3.py",
+   "label": "tested",
+   "bears_on": "§5.5, §5.6 Theorem 1, §10; H4; H5"
+  },
+  {
+   "statement": "A generalized order a decoder can use: permute the order of the FIRST letter only (the F-buckets as blocks of rows, old order inside each). LF stays a translation on each run cut at the bucket seams (at most σ−1 letters more: 2 to 12 more here), and the row order is the generalized order (σ at position 1, the usual order after). On 3,832 random primitive words the right-end induction then ended on the generalized Lyndon conjugate for that order on all 3,832; its tree was the standard-factorization tree of Reut06 for 2,301 only. Steps against the usual order's: JSON-like 60,000 bytes, usual 17,126; reversed 22,028; rare letters first 20,058; common first 17,197; three random 18,661, 19,053, 17,979. Random words 60,000 bytes: usual 44,554; others 44,612 to 51,174. Python source 29,392 bytes: usual 20,778; rare first 19,627; random 19,727 and 19,678; others 20,743 to 21,334. So from 0.945 to 1.29 of the usual order's count; the usual order was best on two inputs of three.",
+   "source_key": "DRR-gen",
+   "locator": "python3 …/scripts/lt.py h5",
+   "label": "tested",
+   "bears_on": "§8 item 9; question (d)"
+  }
+ ],
+ "hypotheses": [
+  {
+   "h": "H1. The right-end induction on any column inverts the extended BWT: closed words are the Lyndon conjugates of the necklaces, closed in non-increasing order; on the bijective BWT they are the Lyndon factorization, each with its Lyndon tree.",
+   "verdict": "not addressed by these papers; the ingredients are in print; true on every case tested",
+   "evidence": "None of the papers read treats an induction or inverts a BWT; DRR-var only mentions the Gessel–Reutenauer bijection and the BWT's extensions (introduction, pp. 2-3). In print and used: for Lyndon words u < v iff u^ω < v^ω, so the factorization is non-increasing in the eBWT's order (DRR-var Theorem 20, p. 7, credited to Bonomo et al. 2014); the last factor is the shortest suffix with least s^ω (DRR-var Theorem 21; Reut06 Corollaire 2.2); the factorization is the left-to-right minima of the ranks (CR p. 9). Tested (lt.py h1): 20,000 bijective-BWT columns, closed words = the Lyndon factorization in order on all, 38,601 of 38,601 trees the Lyndon trees; 20,000 arbitrary columns, closed words all Lyndon, non-increasing, and their eBWT the column, on all. The definition of the bijective BWT (eBWT of the Lyndon factors) and the bijection for arbitrary columns belong to another cluster's papers and were not read here."
+  },
+  {
+   "h": "H2. The left-end induction gives the Lyndon tree, for the inverse alphabet order, of the greatest rotation.",
+   "verdict": "not addressed in print; follows from the Hohlweg–Reutenauer theorem applied to the opposite order; true on every case tested",
+   "evidence": "No paper read speaks of a left-end construction or of the greatest rotation. Nearest statements: anti-Lyndon words are the Lyndon words of the opposite order (DRR-gen, introduction, p. 2); runs need the Lyndon tables for both orders (CR section 5, p. 10). Reversing the rows turns LF into the LF of the same text's BWT under the opposite order and the left end into the right end (this sweep's derivation, Conj). Tested (lt.py h2): 18,931 primitive words, word = greatest rotation and tree = its Lyndon tree for the inverse order on all. Consequence: the entry's 2.137 r against 1.812 r compares two alphabet orders, not two unrelated procedures."
+  },
+  {
+   "h": "H3. The left Lyndon tree is, or is not, the tree of some order of Rauzy steps; and whether its node count over the hinges is smaller than the right tree's.",
+   "verdict": "not addressed in print (posed as open in BC, section 7, p. 17); by test it is NOT a tree of steps at coincidences, and its count over the hinges is larger, about n",
+   "evidence": "In print: the left tree is the decreasing Cartesian tree of the prefix ranks in the infinite order (DRR-var Theorem 36), and those ranks are the postorder (BC Theorem 6); nothing on interval exchanges or on the right tree. Tested (lt.py h3; lt2.py; lt5.py): with steps that use up one of the two letters, as a coincidence gives, the left tree cannot be built for 314 of 2,536 binary Lyndon words to length 14 (smallest aaababb), 168 of 3,499 ternary (aabbc), nor for any of five larger non-periodic inputs. Allowing all-occurrence digram steps that use up neither letter (split steps), it could be built in every case tried: not proved. Count over the hinges: 0.876 n to 0.992 n for the left tree against 1.67 r to 2.56 r for the right on those five inputs (1.2 to 3.4 times more); equal on the Fibonacci word; on small binary words left 27,401 against right 27,079 in total. Reason (Conj): the left tree's height is the number of unbordered prefixes of the least rotation, 93-97% of n. None of this was run on Wikidata."
+  },
+  {
+   "h": "H4. For the alternating BWT, LF is an interval exchange with flips on the runs, Rauzy induction with flips inverts it, and its grammar is the standard-factorization tree for the alternating order.",
+   "verdict": "partly: flips true by test and not stated in the papers read; the Galois tree exists in print; the last clause is contradicted by test",
+   "evidence": "The papers read only mention the alternating BWT (DRR-var p. 3). Galois words do have a standard factorization and a tree (Reut06 Théorème 2.2, Remarque 2.2, Corollaire 2.3). Tested (lt.py h4): LF of the alternating BWT reverses order on every run, 1,375 binary and 1,315 ternary Galois words. But the tree a first-return induction on row prefixes must give, the Cartesian tree of the alternating rotation ranks, is the Galois standard tree for 7 of 1,375 and 237 of 1,315 only; abb gives a(bb), and bb is not a Galois word. Reason in print: Galois words are not a Viennot factorization, u < v does not make uv Galois (Reut06 section 3.8, p. 14), and they may be bordered (DRR-gen Lemma 35). What does compute the Galois tree is the circular rewriting of Reut06 section 3.4 (tested: 17,732 of 17,732), whose rule is \"the right factor is the largest current word\", not \"the largest row\". That an induction with flips inverts the alternating BWT was neither found nor tested."
+  },
+  {
+   "h": "H5. A right-end step is a context-refined Lazard elimination of the largest letter; the grammar is the standard bracketing of the Lyndon word in the free Lie algebra.",
+   "verdict": "partly: the second half is in print once the entry's Theorem 1-2 is granted; Lazard elimination is not addressed in the papers read",
+   "evidence": "Second half: the tree of a Lyndon word is its standard (Lie) bracketing: HR's opening paragraphs; DRR-var section 5, p. 9 (\"equivalently the Lie bracketing\"); Reut06 Corollaire 2.3 for every generalized order. First half: the word Lazard does not occur in CR, DRR-var, DRR-gen, BC or Reut06; Reut06 names Hall sets (after Shirshov and Viennot) and, in section 3.8, Viennot factorizations, which the usual Lyndon words are. The nearest in-print description of a step is Reut06 section 3.4: merge a rise whose right factor is the largest current Hall word; every right-end step is one (26,040 of 26,040, lt3.py). Viennot 1978, Reutenauer's book and Melançon 1992, where the link between Lazard elimination and Hall sets would be, were not fetched."
+  }
+ ],
+ "ideas": [
+  {
+   "idea": "Record in §5.5, §5.6 and §10 that the right-end induction, read in the text, is the Schützenberger–Melançon rewriting on the circular word (Reutenauer 2006, section 3.4; Melançon, JCTA 59, 1992): merge an adjacent pair u < v whose right word v is a largest current word. Read Melançon 1992 first.",
+   "kind": "prior art that narrows a claim",
+   "why": "It is the most direct thing in print that the entry now presents as its own: Theorem 1's tree and §5.5's \"the largest suffixes lose their cut first\". In print since 1992/2006 for every Hall set: the rewriting ends on the Lyndon conjugate with its standard bracketing. What stays the entry's: that all occurrences of one such rise are one interval of rows, so a step is O(1) on run letters, and the counts. It also says which steps keep the grammar the Lyndon tree: only those whose right word is a current maximum, so the schedules of §5.6 that take free steps first build other trees and the Lyndon SLP corollary is the right end's alone.",
+   "falsifier": "A right-end step whose right word is not a largest current word, or a primitive word on which the rewriting does not end on the least rotation with its Lyndon tree. None in 26,040 steps and 17,732 words (scripts/lt3.py).",
+   "cost": "Two citations and three sentences; an hour to read Melançon 1992."
+  },
+  {
+   "idea": "Close H3 in the entry: beside \"the left standard factorisation gives another tree\", state that this tree has about n nodes over the hinges and is not a tree of coincidence steps; credit the factorization to Viennot 1978 and its Cartesian form to DRR-var Theorem 36; cite BC's open question.",
+   "kind": "prior art that narrows a claim",
+   "why": "It answers half of §8 item 9 (\"why the right end\") with a reason, not a count: every unbordered prefix of the least rotation is a Lyndon word, so the left tree is a spine of height 0.93 n to 0.97 n. It removes a direction before anyone builds it.",
+   "falsifier": "scripts/lt5.py on the least rotations of the 8 Wikidata blocks: the claim falls if the left tree's nodes over the hinges are below the right tree's S on any block. It would also fall, as stated, on blocks whose least rotation starts with a pattern that recurs almost everywhere.",
+   "cost": "Minutes of Python a block for 40,000 bytes; a whole 900 kB block needs the script's suffix sort replaced (it is a Python doubling sort)."
+  },
+  {
+   "idea": "Try the order of the first letter as a free parameter of the decoder: list the F-buckets in another order (old order inside each), cut the runs at the bucket seams, run the same right-end induction.",
+   "kind": "new idea to try",
+   "why": "It is the only \"other order of the alphabet\" a decoder can choose, since the column is given; it is §8 item 9's second question in a form that can be counted. It is exactly a generalized lexicographic order in the sense of DRR-gen (Definition 4) with only the first position changed, and the induction then ends on the generalized Lyndon conjugate (3,832 of 3,832). It costs at most σ−1 more letters.",
+   "falsifier": "On the 8 blocks, with the usual order, the reversed one, the two frequency orders and three random ones: if none gives fewer than 0.95 of the usual order's cells, close it. On three synthetic inputs the range was 0.945 to 1.29 and the usual order was best on two (scripts/lt.py h5).",
+   "cost": "About 40 lines in the example's order stage, or the Python count as it is for inputs to 60 kB. Low expected gain: the test here says a few per cent at most."
+  },
+  {
+   "idea": "State the drop rule of §2 as a theorem with its sources and use it as a test oracle: on any column the closed letters are the Lyndon words of the column's multiset of necklaces, closed in non-increasing order; on a bijective-BWT column they are the Lyndon factorization in order.",
+   "kind": "related approach to record",
+   "why": "It gives the kernel's arbitrary-column path (a corrupt stream) a property that can be asserted without bwt::walk: closed words are Lyndon, non-increasing, and their eBWT is the column. It also makes the kernel a bijective-BWT decoder at no change, which bzip2 does not need.",
+   "falsifier": "A column where a closed word is not a Lyndon word or the closing order rises. None in 20,000 random columns and 20,000 bijective-BWT columns (scripts/lt.py h1).",
+   "cost": "One assertion in `rauzy --arbitrary`; the other cluster's papers (Mantaci et al.; Gil–Scott; Bannai et al.) must supply the citation for the bijection itself."
+  },
+  {
+   "idea": "Say in §5.6 that the left end is the right end for the opposite alphabet order (reverse the rows), so the left-end row of the table (2.137 r) is the usual induction on the same text's BWT under the inverse order.",
+   "kind": "related approach to record",
+   "why": "It merges two open questions of §8 item 9 into one: the end and the alphabet order are the same choice. It also says the left end's tree is a Lyndon tree, with every piece a Lyndon word for the inverse order, so the Lyndon SLP corollary has a twin there.",
+   "falsifier": "A primitive word whose left-end tree is not the inverse-order Lyndon tree of its greatest rotation. None in 18,931 (scripts/lt.py h2).",
+   "cost": "One sentence."
+  },
+  {
+   "idea": "Replace \"every letter's word at every moment is a Lyndon word (P)\" by a citation: it follows from the next/previous smaller suffix lemmas (Ellert 2022, Lemmas 3 and 4, credited there to Hohlweg–Reutenauer, Franek et al. and Bille et al.) applied to the least rotation.",
+   "kind": "prior art that narrows a claim",
+   "why": "A piece at prefix m lies between two suffixes of rank below m with only larger ranks between; it is x[a..next[a]) or x[prev[b]..b), both known to be Lyndon. The entry's own proof stays valid; the fact is not new.",
+   "falsifier": "None needed: it is a two-line deduction; the entry's 468,657 rules already check it.",
+   "cost": "One sentence and one citation."
+  },
+  {
+   "idea": "Record the answer to \"is the Lyndon tree built anywhere from a BWT, or below linear time\": not from a BWT or a run-length BWT in these papers; below linear time only from the packed text, O(n / log_σ n) (Bannai–Ellert, ESA 2023); the left tree in O(n) letter comparisons online (Badkobeh–Crochemore).",
+   "kind": "related approach to record",
+   "why": "It supports §10's \"direction RLBWT → tree … was not found\" with three more sources, and bounds what a text-side method can do: none is sensitive to r.",
+   "falsifier": "A paper that builds the Lyndon array or tree from a run-length BWT in time depending on r. Not found by this sweep; the other clusters (bijective BWT construction) should be asked.",
+   "cost": "Two sentences in §10."
+  },
+  {
+   "idea": "Do not pursue H4. For the alternating BWT, LF is an exchange with flips, but an induction on row prefixes does not give the Galois tree; that tree comes from the circular rewriting with the Hall order.",
+   "kind": "related approach to record",
+   "why": "Nothing for inverting a bzip2 block: bzip2 has no alternating BWT. Worth one line so the conjecture is not carried forward: counterexample abb, and the reason in print (Galois words are not a Viennot factorization, Reutenauer 2006, section 3.8).",
+   "falsifier": "Already run: 7 of 1,375 binary Galois words agree (scripts/lt.py h4).",
+   "cost": "One line."
+  },
+  {
+   "idea": "Nothing to take from \"On generalized Lyndon words\" (2019) for the kernel beyond the definition used in the first-letter idea; nothing from the prefix standard permutation either.",
+   "kind": "related approach to record",
+   "why": "Said plainly: DRR-gen has no tree, no algorithm and no BWT; the prefix order of DRR-var and BC sorts prefixes of the text, which a decoder does not have, and its ranks are only the postorder of a tree that costs n nodes over the hinges.",
+   "falsifier": "Not applicable.",
+   "cost": "None."
+  }
+ ],
+ "notes": "Scope read in full: arXiv:1812.04515v1, arXiv:1712.08749v1, arXiv:1904.00954v1 and the LIPIcs version (same statement numbers), arXiv:2011.12742v1; of Reutenauer 2006 sections 1, 2, 3.1-3.4, 3.7, 3.8; of Ellert 2022 section 2; of Bannai–Ellert 2023 the abstract and introduction.\n\nNot obtained: the body of Hohlweg–Reutenauer 2003 (publisher 403, CORE challenge page, Wayback 429). Its theorem is reported from its own opening paragraphs (Semantic Scholar API) and from five papers that restate it; the theorem's number in the original is not known to me. Journal texts of the three Elsevier versions were not read (403); DBLP answered with a bot wall, so Crossref and DROPS are the sources of record. Melançon 1992, Viennot 1978, Reutenauer's book and Bonomo et al. 2014 are cited only through the papers read.\n\nThe four questions, in one line each. (a) No: every statement read is for the suffixes of a Lyndon word; none for rotation ranks or BWT rows. (b) No BWT or run-length BWT input anywhere; below linear only Bannai–Ellert 2023, O(n / log_σ n) from the packed text. (c) The left Lyndon tree is the decreasing Cartesian tree of the ranks of the proper prefixes ordered by p^ω (longer first on ties), DRR-var Theorem 36; those ranks are the left-to-right postorder, BC Theorem 6. (d) A generalized Lyndon tree exists (Reutenauer 2006, Th. 2.2: v = the proper suffix of least v^∞, the longest generalized Lyndon suffix) but no Cartesian-of-ranks theorem is stated for it, and by test it fails for the alternating order (abb) and for a permuted first letter (2,301 of 3,832 agree).\n\nPrograms (Python, counts only, no timing): /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/lyndon-trees/scripts/lt.py (h1, h2, h3, h4, h5), lt2.py (check; big 30000), lt3.py, lt4.py, lt5.py. Downloads: /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/lyndon-trees/dl/. The induction in them is written from the entry's §2 table, not from the repository's code. Nothing under /home/user/mibz2 was changed.\n\nLimits of the tests: small words exhaustively and five inputs of 17,711 to 60,000 bytes (synthetic JSON-like records, random word-forms, Python source, two licence texts, a Fibonacci word); no Wikidata block was used. `lt.py h3big` is superseded by `lt2.py big` (the first version was too slow and was stopped). `lt.py h5` reads its own source as one input, so that input's length changed between two runs (29,310 then 29,392 bytes); the figures given are the last run's. \"One-sided step\" in the H3 test is a necessary condition for a step at a coincidence (one of the two intervals contains the other), not the full geometric condition, so the negative result stands and the positive control (the right tree) is the weaker statement. That the left tree is always buildable with split steps is observed, not proved.\n\nScholar lines mapped: the two \"Some variations on Lyndon words\" lines to DRR-var; \"Linear construction of a left Lyndon tree\" and \"Left Lyndon tree construction\" to BC; the heading \"On generalized Lyndon words\" to DRR-gen. The other lines of the file belong to other clusters and are not mapped here."
+}

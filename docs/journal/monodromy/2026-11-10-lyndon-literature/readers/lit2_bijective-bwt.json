@@ -1,0 +1,460 @@
+{
+ "bibliography": [
+  {
+   "key": "BKKP-bbwt",
+   "authors": "Hideo Bannai; Juha Kärkkäinen; Dominik Köppl; Marcin Piątkowski",
+   "title": "Constructing and indexing the bijective and extended Burrows–Wheeler transform (earlier: \"Constructing the Bijective BWT\"; \"Constructing the Bijective and the Extended Burrows–Wheeler Transform in Linear Time\"; \"Indexing the Bijective BWT\")",
+   "venue": "Information and Computation 297, article 105153",
+   "year": "2024",
+   "doi": "10.1016/j.ic.2024.105153",
+   "arxiv": "1911.06985 (construction half only; v1 16 Nov 2019, v2 22 Apr 2021)",
+   "url": "https://koeppl.github.io/bin/paper/infcomp24bbwt.m.pdf",
+   "locator": "ONE work in five versions. (1) IPSJ SIG Technical Report \"Constructing the Bijective BWT\", 175th SIG-AL, vol. 175 no. 19, pp. 1-6, Nov 2019 (author's BibTeX; PDF koeppl.github.io/bin/paper/algoken19bbwt.m.pdf, header \"IPSJ SIG Technical Report\"). (2) arXiv:1911.06985 v1 \"Constructing the Bijective BWT\" (16 Nov 2019); v2 \"Constructing the Bijective and the Extended Burrows-Wheeler Transform in Linear Time\" (22 Apr 2021). (3) CPM 2021, LIPIcs 191, pp. 7:1-7:16, doi 10.4230/LIPIcs.CPM.2021.7; its front page names arXiv:1911.06985 as full version. (4) CPM 2019 \"Indexing the Bijective BWT\", LIPIcs 128, pp. 17:1-17:14, doi 10.4230/LIPIcs.CPM.2019.17. (5) Inf. Comput. 297:105153 (issued March 2024): footnote on p. 1 says parts were presented at CPM 2019 and CPM 2021; author's BibTeX: \"Journal version of\" both. New in (5): section 4.6 Inversion, Theorem 4.21 (index in O(r) words), Table 6 (runs of BBWT against BWT). No inversion section in (2), (3) or (4) (grep of the three texts).",
+   "scholar_entries": "\"[PDF] Constructing the bijective BWT\" (koeppl.github.io); \"Constructing and indexing the bijective and extended Burrows–Wheeler transform\" (Information and …, 2024 - Elsevier); \"Constructing the bijective and the extended Burrows-Wheeler transform in linear time\" (arXiv preprint, 2019)",
+   "source_of_record": "api.crossref.org/works/10.1016/j.ic.2024.105153; arxiv.org/abs/1911.06985; drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CPM.2021.7 and .../LIPIcs.CPM.2019.17; dkppl.de/bibtex.bib",
+   "one_line": "Linear-time BBWT/eBWT construction by a modified SAIS, an FM-index on the BBWT with O(|P| lg |P|) backward steps, and (journal only) inversion by walking LF cycle by cycle.",
+   "unverified": "Publisher page not reached (403): the journal text was read in the author's copy, so theorem and page numbers are that copy's. Which koeppl.github.io file the Scholar line points to was not seen; algoken19bbwt.m.pdf is the only PDF with that title found there. Author's BibTeX records an erratum: Algorithm 2 calls the Lyndon factorization ascending, it is descending."
+  },
+  {
+   "key": "BKL-survey",
+   "authors": "Hideo Bannai; Dominik Köppl; Zsuzsanna Lipták",
+   "title": "A Survey of the Bijective Burrows-Wheeler Transform",
+   "venue": "The Expanding World of Compressed Data: A Festschrift for Giovanni Manzini's 60th Birthday (eds. Ferragina, Gagie, Navarro), OASIcs 131, Schloss Dagstuhl",
+   "year": "2025",
+   "doi": "10.4230/OASIcs.Manzini.2",
+   "url": "https://drops.dagstuhl.de/storage/01oasics/oasics-vol131-manzinis-festschrift/OASIcs.Manzini.2/OASIcs.Manzini.2.pdf",
+   "locator": "pp. 2:1-2:26 (one version found; author copy koeppl.github.io/bin/paper/festschrift25bbwt.pdf)",
+   "scholar_entries": "\"A survey of the Bijective Burrows-Wheeler transform\" (The Expanding World of …, 2025 - drops.dagstuhl.de)",
+   "source_of_record": "drops.dagstuhl.de/entities/document/10.4230/OASIcs.Manzini.2 (meta tags) and the PDF, read in full",
+   "one_line": "History, construction, indexing, runs r_B against r, other bijective variants, six open problems; inversion only by LF cycles; no Lyndon tree, grammar or interval exchange.",
+   "unverified": "Scholar's other four versions not identified."
+  },
+  {
+   "key": "GilScott",
+   "authors": "Joseph Yossi Gil; David Allen Scott",
+   "title": "A Bijective String Sorting Transform",
+   "venue": "arXiv preprint",
+   "year": "2012",
+   "arxiv": "1201.3077 (v1, 15 Jan 2012)",
+   "doi": "10.48550/arXiv.1201.3077",
+   "url": "https://arxiv.org/abs/1201.3077",
+   "locator": "arXiv only; the survey (p. 2:2) says it was never published in a journal or proceedings",
+   "scholar_entries": "none (background named in the task)",
+   "source_of_record": "arxiv.org/abs/1201.3077 and the PDF, read in full",
+   "one_line": "Defines the transform on the Lyndon factorization; inverse by Match + MultiThread: follow each cycle from the smallest unvisited row, n steps.",
+   "unverified": "Section 4 prints the factor order as ω0 < ω1 < …, which contradicts its own section 5 (cycle of row 0 gives the last factor); read as a slip."
+  },
+  {
+   "key": "MRRS07",
+   "authors": "Sabrina Mantaci; Antonio Restivo; Giovanna Rosone; Marinella Sciortino",
+   "title": "An extension of the Burrows–Wheeler Transform",
+   "venue": "Theoretical Computer Science 387(3)",
+   "year": "2007",
+   "doi": "10.1016/j.tcs.2007.07.014",
+   "locator": "pp. 298-312 (Nov 2007)",
+   "scholar_entries": "none (background named in the task)",
+   "source_of_record": "api.crossref.org/works/10.1016/j.tcs.2007.07.014; abstract from iris.unipa.it/handle/10447/26745",
+   "one_line": "eBWT of a multiset of words; abstract: a bijection between words and finite multisets of conjugacy classes of primitive words.",
+   "unverified": "Full text NOT read (ScienceDirect 403, Elsevier API 401, no open copy on CORE). Theorem 20, Remark 12, Definition 4, Proposition 15, Section 3 are known here only as cited by BKKP-bbwt and Koeppl20. First names from the survey's reference list."
+  },
+  {
+   "key": "GR93",
+   "authors": "Ira M. Gessel; Christophe Reutenauer",
+   "title": "Counting permutations with given cycle structure and descent set",
+   "venue": "Journal of Combinatorial Theory, Series A 64(2)",
+   "year": "1993",
+   "doi": "10.1016/0097-3165(93)90095-P",
+   "locator": "pp. 189-215 (Nov 1993)",
+   "scholar_entries": "none (background named in the task)",
+   "source_of_record": "api.crossref.org/works/10.1016/0097-3165(93)90095-P",
+   "one_line": "Source of the bijection between words and multisets of primitive necklaces; here stated only through CDP05, Kufleitner09 and the survey.",
+   "unverified": "Full text NOT read (publisher 403/401; author's page TLS failure and 503). No theorem number of the paper itself is given in this report."
+  },
+  {
+   "key": "CDP05",
+   "authors": "Maxime Crochemore; Jacques Désarménien; Dominique Perrin",
+   "title": "A note on the Burrows-Wheeler transformation",
+   "venue": "Theoretical Computer Science 332(1-3)",
+   "year": "2005",
+   "arxiv": "cs/0502073",
+   "doi": "10.1016/J.TCS.2004.11.014",
+   "url": "https://arxiv.org/abs/cs/0502073",
+   "locator": "arXiv v1 17 Feb 2005 (read); journal pp. 567-572 as in the survey's reference [21]",
+   "scholar_entries": "none",
+   "source_of_record": "arxiv.org/abs/cs/0502073 and its PDF; journal data from the survey's reference list",
+   "one_line": "BWT as a special case of the Gessel-Reutenauer bijection; states the general case: cycles of the permutation correspond to the Lyndon factors of the word.",
+   "unverified": "Journal volume/pages not checked at the publisher."
+  },
+  {
+   "key": "Kufleitner09",
+   "authors": "Manfred Kufleitner",
+   "title": "On Bijective Variants of the Burrows-Wheeler Transform",
+   "venue": "Proceedings of the Prague Stringology Conference 2009",
+   "year": "2009",
+   "arxiv": "0908.0239",
+   "url": "https://arxiv.org/abs/0908.0239",
+   "locator": "arXiv v1 3 Aug 2009, 15 pages (read); PSC 2009 pp. 65-79 as in the survey's reference [47]",
+   "scholar_entries": "none",
+   "source_of_record": "arxiv.org/abs/0908.0239 and its PDF",
+   "one_line": "Proof that the bijective BWT is invertible: cycles of the standard permutation ordered by smallest element spell the Lyndon factors; removing a cycle leaves the BWTS of the remaining factors.",
+   "unverified": "PSC pagination from the survey only."
+  },
+  {
+   "key": "Koeppl20",
+   "authors": "Dominik Köppl; Daiki Hashimoto; Diptarama Hendrian; Ayumi Shinohara",
+   "title": "In-Place Bijective Burrows-Wheeler Transforms",
+   "venue": "31st Annual Symposium on Combinatorial Pattern Matching (CPM 2020), LIPIcs 161",
+   "year": "2020",
+   "doi": "10.4230/LIPIcs.CPM.2020.21",
+   "arxiv": "2004.12590",
+   "url": "https://drops.dagstuhl.de/storage/00lipics/lipics-vol161-cpm2020/LIPIcs.CPM.2020.21/LIPIcs.CPM.2020.21.pdf",
+   "locator": "pp. 21:1-21:15; arXiv:2004.12590 (27 Apr 2020)",
+   "scholar_entries": "none (background named in the task)",
+   "source_of_record": "drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CPM.2020.21; arxiv.org/abs/2004.12590",
+   "one_line": "BBWT built and inverted in place in quadratic time; RLBBWT <-> RLBWT in O(n lg r / lg lg r) time and O(r lg n) bits by reading one cycle at a time and deleting it from the run lengths.",
+   "unverified": "arXiv's related-DOI field reads 10.4230/LIPIcs.CPM.2020.23; DROPS and the PDF give .21."
+  },
+  {
+   "key": "BBIK-schemes",
+   "authors": "Golnaz Badkobeh; Hideo Bannai; Tomohiro I; Dominik Köppl (conference version: Badkobeh, Bannai, Köppl)",
+   "title": "Bijective BWT Based Compression Schemes",
+   "venue": "Theory of Computing Systems 70, article 42",
+   "year": "2026",
+   "doi": "10.1007/s00224-025-10235-w",
+   "arxiv": "2406.16475",
+   "url": "https://koeppl.github.io/bin/paper/tocs26bbwt.pdf",
+   "locator": "SPIRE 2024, LNCS 14899, pp. 16-25, doi 10.1007/978-3-031-72200-4_2 (3 authors); arXiv:2406.16475 (24 Jun 2024, \"slightly extended version\"); Theory Comput. Syst. 70(3):42, online 3 Jul 2026, 16 pages (4 authors; adds Theorem 4)",
+   "scholar_entries": "none (background named in the task)",
+   "source_of_record": "api.crossref.org for both DOIs; arxiv.org/abs/2406.16475; author copy of the journal PDF (read)",
+   "one_line": "r_B = O(z log^2 n); r = 2 with r_B = Ω(log n); Lyndon factorizations of all rotations in O(n) from the right and left Lyndon trees; optimal rotation in Õ(nh).",
+   "unverified": "Springer landing page not read (login redirect); journal text from the author's copy."
+  },
+  {
+   "key": "BIN25",
+   "authors": "Hideo Bannai; Tomohiro I; Yuto Nakashima",
+   "title": "On the Compressiveness of the Burrows-Wheeler Transform",
+   "venue": "36th Annual Symposium on Combinatorial Pattern Matching (CPM 2025), LIPIcs 331",
+   "year": "2025",
+   "doi": "10.4230/LIPIcs.CPM.2025.17",
+   "url": "https://drops.dagstuhl.de/storage/00lipics/lipics-vol331-cpm2025/LIPIcs.CPM.2025.17/LIPIcs.CPM.2025.17.pdf",
+   "locator": "pp. 17:1-17:15",
+   "scholar_entries": "none",
+   "source_of_record": "drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CPM.2025.17",
+   "one_line": "r = Ω(r_B log n) on a family; r_B and r within O(log^4 n) of each other; LF on Fibonacci words as a rotation of Zeckendorf digits.",
+   "unverified": ""
+  },
+  {
+   "key": "CLPRS25",
+   "authors": "Davide Cenzato; Zsuzsanna Lipták; Nadia Pisanti; Giovanna Rosone; Marinella Sciortino",
+   "title": "BWT for string collections",
+   "venue": "arXiv preprint (the survey cites it as OASIcs 131, pp. 3:1-3:29, 2025)",
+   "year": "2025",
+   "arxiv": "2506.01092",
+   "url": "https://arxiv.org/abs/2506.01092",
+   "locator": "arXiv v1 1 Jun 2025 (read: sections 2 and 3)",
+   "scholar_entries": "none",
+   "source_of_record": "arxiv.org/abs/2506.01092",
+   "one_line": "Definition of the omega-order with exponents, of the EBWT of a multiset, and of its inversion from one index per cycle.",
+   "unverified": "OASIcs pagination from the survey's reference [18] only."
+  },
+  {
+   "key": "Kempa19",
+   "authors": "Dominik Kempa",
+   "title": "Optimal Construction of Compressed Indexes for Highly Repetitive Texts",
+   "venue": "arXiv preprint; related DOI is the SODA 2019 proceedings",
+   "year": "2017",
+   "arxiv": "1712.04886",
+   "doi": "10.1137/1.9781611975482.82",
+   "url": "https://arxiv.org/abs/1712.04886",
+   "locator": "abstract only",
+   "scholar_entries": "none",
+   "source_of_record": "arxiv.org/abs/1712.04886",
+   "one_line": "Abstract: BWT, PLCP, LZ77 and also Lyndon factorization in O(n/log_σ n + r polylog n), from the text.",
+   "unverified": "Only the abstract was read; venue name not on the page fetched."
+  },
+  {
+   "key": "LouzaLefebvre25",
+   "authors": "Felipe A. Louza; Arnaud Lefebvre",
+   "title": "In-Place BWT and Lyndon Array Construction in Constant Space",
+   "venue": "arXiv preprint",
+   "year": "2025",
+   "arxiv": "2512.20869",
+   "url": "https://arxiv.org/abs/2512.20869",
+   "locator": "abstract only (v1, 24 Dec 2025)",
+   "scholar_entries": "none",
+   "source_of_record": "arxiv.org/abs/2512.20869",
+   "one_line": "Abstract: Lyndon array from suffix ranks kept during in-place BWT construction, by next-smaller-value; quadratic time; from the text.",
+   "unverified": "Only the abstract was read."
+  }
+ ],
+ "findings": [
+  {
+   "statement": "Inverse of the BBWT as the survey states it: take one Lyndon word per cycle of the standard permutation (LF) of the column and concatenate them in non-increasing order; every string is the BBWT of exactly one string, and the eBWT of a multiset of strings. Example 2 inverts bbbaababaaaaa to ab·aabab·aab·aab.",
+   "source_key": "BKL-survey",
+   "locator": "Section 2.1, p. 2:5 (Definition 1 and the paragraph after it; Example 2)",
+   "label": "K",
+   "bears_on": "H1; entry §2 'A column that is no BWT' (its drop rule computes this object; §10 does not cite it)"
+  },
+  {
+   "statement": "Inversion by Match + MultiThread: build the permutation, scan rows 0..n-1, and from each unvisited row follow its cycle, writing the text last character first. The cycle through row 0 gives the LAST Lyndon factor; the smallest row outside it gives the factor before; and so on. Linear time and space: n steps of the permutation.",
+   "source_key": "GilScott",
+   "locator": "Section 5, Algorithms 5.1 and 5.2 (pp. 13-14); 'linear time and space' in Section 6, p. 14",
+   "label": "K",
+   "bears_on": "H1 (order of cycles by smallest row is in print); question (a)"
+  },
+  {
+   "statement": "Theorem 8 with its proof: decompose the standard permutation into cycles C_1..C_t with smallest elements 1 = i_1 < … < i_t; then t is the number of Lyndon factors, cycle j spells the j-th smallest factor v_j, and w = v_s … v_1. The proof deletes the positions of C_1 and shows that what is left is the BWTS of v_s…v_2. Lemma 7: when the smallest factor occurs z times each copy is its own cycle of length |v_1|.",
+   "source_key": "Kufleitner09",
+   "locator": "Lemma 7 and Theorem 8, pp. 6-7 of arXiv:0908.0239",
+   "label": "K",
+   "bears_on": "H1; entry §2 drop rule ('drop it from both orders and go on') is this deletion step, done there by induction, here by walking; question (d) repeated necklaces"
+  },
+  {
+   "statement": "The rows of the Lyndon factors themselves lie in sorted order from T_t (first row) to T_1, because lexicographic order and the omega-order agree on Lyndon words (cited to Bonomo et al., Thm. 8); BBWT[1] = T[n] (Lemma 2). RLBBWT -> RLBWT (Theorem 3): read the cycle of the first entry by backward steps, subtract the visits from the run lengths ('still a valid BBWT'), recurse: O(n lg r / lg lg r) time, O(r lg n) bits.",
+   "source_key": "Koeppl20",
+   "locator": "Section 3.5 pp. 21:5-21:6; Lemma 2 p. 21:4; Theorem 3 and Section 4.2 pp. 21:6-21:7",
+   "label": "K",
+   "bears_on": "H1; question (a): the only run-length inversion found still takes n backward steps; entry §2"
+  },
+  {
+   "statement": "Journal-only section 'Inversion': with the bit vector B_L marking the Lyndon factors' rows, process the marked rows left to right and walk each cycle by backward steps, giving T_t, T_{t-1}, …, in time linear in the output times the wavelet tree's query time. Without B_L: mark visited rows, collect the cycles in any order, rotate each to its Lyndon conjugate, sort descending, apply multiplicities. It says it follows Mantaci et al., Proposition 15.",
+   "source_key": "BKKP-bbwt",
+   "locator": "Section 4.6 (p. 28 of the author's copy)",
+   "label": "K",
+   "bears_on": "question (a); H1"
+  },
+  {
+   "statement": "On the eBWT, rows inside one character run are mapped by LF contiguously and in the same order (attributed there to Mantaci et al., Section 3). Gil-Scott prove the same for the sorted rotations of any finite set of words (Lemma 4).",
+   "source_key": "BKKP-bbwt",
+   "locator": "Section 4, paragraph before Eq. (3), p. 19 of the author's copy; GilScott Lemma 4, p. 15",
+   "label": "K",
+   "bears_on": "entry §1 and §10: 'LF is a translation on each run' is in print for ARBITRARY columns, not only BWT images"
+  },
+  {
+   "statement": "In-place inversion: survey Theorem 9 gives O(n^{2+ε}) time with O(1) words; Koeppl20's abstract says in place in quadratic time. Neither the survey (2025) nor the journal article (2024) nor Koeppl20 contains an inversion of the BBWT/eBWT with fewer than n LF or FL steps, from the run-length form or otherwise.",
+   "source_key": "BKL-survey",
+   "locator": "Theorem 9, p. 2:11; Koeppl20 abstract p. 21:1 and Section 5.3",
+   "label": "K",
+   "bears_on": "question (a); entry §10 'Every RLBWT → text route found takes Θ(n) steps' extends to the BBWT/eBWT literature"
+  },
+  {
+   "statement": "The survey's open problems (six unnumbered bullets, numbered here in order): 1 'Can we construct the BBWT in O(n/ log_σ n) time?'; 2 pattern matching 'with O(m) rank operations?'; 3 'Reachability' by BBWT applications and rotations from the Parikh vector (Conjecture 21); 4 the rotation with 'the minimum number of runs in the BBWT in o(n^2) time?'; 5 'the smallest integer x ≥ 1 such that BBWT^(x)(T) = T in o(nx) time'; 6 'How far can GCA and SA differ'. None concerns inversion.",
+   "source_key": "BKL-survey",
+   "locator": "'Open problems', p. 2:22",
+   "label": "K",
+   "bears_on": "entry §8: nothing here matches an open item of the entry"
+  },
+  {
+   "statement": "Journal article's open problems: the order k of the BBWT as a permutation; 7.1 a BBWT on other factorizations (generalized Lyndon, Galois, inverse Lyndon, Nyldon; inverse Lyndon words need not be primitive); 7.2 theory of runs of BWT against BBWT and an entropy bound for the BBWT; 7.3 alphabet reordering (Gibney-Thankachan: minimizing or maximizing the number of Lyndon factors over alphabet orders is NP-complete); 7.4 SA◦ in place.",
+   "source_key": "BKKP-bbwt",
+   "locator": "Section 7 (7.1-7.4), pp. 32-36 of the author's copy",
+   "label": "K",
+   "bears_on": "entry §8 item 9 (alphabet order); H2, H4"
+  },
+  {
+   "statement": "r_B against r, measured: 'roughly equal' on Calgary, Canterbury, Silesia, Pizza&Chili (e.g. dickens 4,374,629 against 4,374,598; english 658,301,004 against 658,301,008); exceptions fib41 (41 against 2) and rs.13 (123 against 75). Lyndon factors are few on real files (f up to a few tens, with exceptions such as pic 36,319).",
+   "source_key": "BKKP-bbwt",
+   "locator": "Table 6 and Section 7.2, pp. 32-35 of the author's copy; Section 5 p. 28",
+   "label": "K",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "r_B against r, proved: ℓ(w) ≤ r_B(w), ℓ the number of distinct Lyndon factors (Lemma 2); r_B = O(z log^2 n) (Theorem 1); a family with r = 2 and r_B = Ω(log n), the Fibonacci words of odd order (Theorem 2); BWT(w) = BBWT(rot*(w)) (Observation 1), so the best rotation has r_B ≤ r; the Lyndon rotation is not always the best (aaabaabaaabaabb: r_B = 6, its rotation by one: 3).",
+   "source_key": "BBIK-schemes",
+   "locator": "Lemma 2, Theorem 1, Theorem 2, Observation 1, Section 4 opening (pp. 5-9 of the journal copy)",
+   "label": "K",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "The other direction and the upper bounds: a family with r = Ω(r_B log n) (w_k = b·(Lyndon rotation of F_2k): r_B = 3, r = 2k; Theorem 2, Lemma 3, Corollary 6); for conjugates w, w', r_B(w') = O(r_B(w) log^4 n) (Lemma 11); r_B = O(r log^4 n) and r = O(r_B log^4 n) (Corollary 12); ρ(BBWT(w)) ≤ 2ρ(w) (Theorem 14). The survey adds that tighter bounds for r_B are not known (p. 2:16).",
+   "source_key": "BIN25",
+   "locator": "Theorem 2, Lemma 3, Corollary 6, Lemma 11, Corollary 12, Theorem 14 (pp. 17:5-17:9)",
+   "label": "K",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "A string S is the BWT of a primitive string iff its standard permutation is one cycle; in general (Likhomanov and Shur, as the survey states it) S is the BWT of some string iff the number of cycles equals the greatest common divisor of the run lengths of S. BWT(T) = BBWT(T) iff T is a necklace (Proposition 3); the number of BWT images of length n is the number of necklaces of length n.",
+   "source_key": "BKL-survey",
+   "locator": "Section 2.1, p. 2:4 and Proposition 3, p. 2:6",
+   "label": "K",
+   "bears_on": "entry §2 (powers T = v^k; corrupt columns): a test of 'is this column a BWT image' from the run lengths and the cycle count"
+  },
+  {
+   "statement": "The gcd criterion checked by brute force against the set of all BWT images. Command: python3 -I -c '…' importing h1_h2_induction (inline, in YOUR_DIR): all binary columns of length ≤ 12 and ternary ≤ 8: 18,030 columns, 2,175 images, criterion right on all.",
+   "source_key": "BKL-survey",
+   "locator": "p. 2:4 (statement); test in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt",
+   "label": "tested",
+   "bears_on": "entry §2; idea 2"
+  },
+  {
+   "statement": "The Gessel-Reutenauer bijection as CDP05 state it (through Lothaire, Algebraic Combinatorics on Words, Theorem 11.6.1, p. 378): words of type λ correspond to pairs (π, E), π a permutation of cycle type λ and E a set of at most k-1 positions containing the descents of π; the type of a word is the partition given by the lengths of its non-increasing Lyndon factorization; the cycles of π are the Lyndon factors, each letter replaced by the rank of 'the cyclic iterates of the conjugates', that is by the order of the infinite words u^ω.",
+   "source_key": "CDP05",
+   "locator": "Section 4, p. 5 of arXiv:cs/0502073 (Theorem 1 is the one-cycle case)",
+   "label": "K",
+   "bears_on": "question (d); H1"
+  },
+  {
+   "statement": "The order, exactly: S ≺ω T if S^ω < T^ω, or S^ω = T^ω and exp(S) < exp(T) (CLPRS25 §2; the survey p. 2:3 writes the tie as |T| < |S|; BKKP-bbwt §2 attributes the tie rule to Mantaci et al., Definition 4). On words of equal length it is the lexicographic order; without the tie rule it is only a preorder (u ≤ω uu ≤ω u), and u ≤ω v ≤ω u iff u and v are powers of one root (Kufleitner09 p. 3). The transform is a bijection between strings of length n and multisets of PRIMITIVE necklaces (Lyndon words) of total length n; repeated necklaces are covered (multiset; exponents in the Lyndon factorization); a power u^k is not a separate object: it is u taken k times.",
+   "source_key": "CLPRS25",
+   "locator": "Section 2 (omega-order) and Section 3 'Extended BWT' of arXiv:2506.01092; BKL-survey p. 2:3 and p. 2:5; Kufleitner09 pp. 2-3; arXiv:1911.06985v2 footnote 4",
+   "label": "K",
+   "bears_on": "question (d); entry §2 (T = v^k closes as one letter with λ = k)"
+  },
+  {
+   "statement": "Right and left Lyndon trees of the Lyndon rotation give the Lyndon factorization of every rotation: the factorization of a proper suffix w[i..] is the sequence of right children on the path from leaf i-1 to the root of the RIGHT Lyndon tree; that of a proper prefix w[1..i] the left children on the path from leaf i+1 in the LEFT Lyndon tree; all rotations in O(n) (Theorem 3). Optimal rotation in O(nh log n) time, h the larger height (Theorem 4). Heights can be Θ(n); the right tree of a random Lyndon word has expected height Θ(log n) (cited to Mercier-Chassaing); 'We are not aware of any similar analysis of the height of the left Lyndon tree.'",
+   "source_key": "BBIK-schemes",
+   "locator": "Section 4, Theorem 3 and its proof (p. 9), Theorem 4 (pp. 10-11), last paragraph of Section 4 (p. 11)",
+   "label": "K",
+   "bears_on": "entry Theorem 3 (nodes on the hinges' leaf-to-root paths) and §5.5 (minima-so-far): root paths of the right Lyndon tree read as Lyndon factorizations of suffixes are in print; H3"
+  },
+  {
+   "statement": "Lyndon structure obtained from a BWT without writing the text: only the FACTORIZATION. Koeppl20 runs Duval's algorithm on the RLBWT with FL steps: O(n lg r / lg lg r) time, O(r lg n) bits, n forward steps. No paper of the cluster obtains a Lyndon tree, a Lyndon array or a grammar from a BBWT/eBWT column. Term counts over the 13 texts fetched: 'interval exchange' 0, 'Rauzy' 0, 'Cartesian' 0, 'Lazard' 0, 'straight-line' 0; 'Lyndon tree' only in BBIK-schemes; 'Lyndon array' only as construction from the text.",
+   "source_key": "Koeppl20",
+   "locator": "Section 4.3, p. 21:7; grep over /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt/dl/*.txt",
+   "label": "K",
+   "bears_on": "question (c); entry §10 'RLBWT → tree … was not found' stands against this cluster"
+  },
+  {
+   "statement": "BBWT(T) has two runs iff T = b^k a^l or T is a power of the Lyndon rotation of a standard word; in the second case BBWT(T) = b^k a^l and T is the m-th power, m = gcd(k, l) (survey Theorem 24, cited to Biagi et al.). Tested on the entry's induction (my implementation): column b^k a^l, 1 ≤ k, l ≤ 40 (1,600 columns): one closed letter, λ = gcd(k, l), |w| = (k+l)/gcd, and steps = the sum of the partial quotients of k/l; column a^l b^k: 0 steps, letters b (k times) then a (l times).",
+   "source_key": "BKL-survey",
+   "locator": "Theorem 24 and the lines after it, p. 2:19; inline python3 -I -c test importing h1_h2_induction",
+   "label": "tested",
+   "bears_on": "entry §2 ((ab)^k a: S = n/2) and §8 item 5 (division rule): on two letters the right end is Euclid by subtraction"
+  },
+  {
+   "statement": "LF on the Fibonacci word F_k used as a column is, on Zeckendorf digit strings of the row, a rotation by one place (letter a) or two (letter b); hence the cycles of LF are the conjugacy classes of k-bit strings.",
+   "source_key": "BIN25",
+   "locator": "Lemma 19 and Lemma 20, p. 17:11; survey p. 2:20",
+   "label": "K",
+   "bears_on": "entry §8 item 5 and the Fibonacci rows of §6.3: a closed form for a two-letter exchange"
+  },
+  {
+   "statement": "H1 tested with my own implementation of the entry's §2 table and drop rule (not the repository's): 88,133 columns (all binary of length ≤ 14: 32,766; ternary ≤ 9: 29,523; four letters ≤ 7: 21,844; 4,000 random, n 15..120), 78,555 with several cycles, 33,873 with a repeated necklace, 229,595 closed letters. On every column: the closed words with their lengths λ are the Lyndon factorization with exponents of T = their concatenation; brute-force BBWT(T) equals the column; they are LF's cycles by decreasing smallest row; every tree is the right standard factorization tree. Sanity: abacb gives 4 steps at the right end and 3 at the left, as in §5.6.",
+   "source_key": "BKL-survey",
+   "locator": "python3 -I h1_h2_induction.py in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt",
+   "label": "tested",
+   "bears_on": "H1; entry §2"
+  },
+  {
+   "statement": "H2 tested on the same 88,133 columns: at the left end every closed word is the greatest rotation of its cycle, is a Lyndon word for the inverse alphabet order, its tree is the right standard factorization tree for that order, and the closed words in order are the inverse-order Lyndon factorization of a text whose inverse-order BBWT is the column reversed with letters inverted. Separately, on 26,222 columns (binary ≤ 13, ternary ≤ 8): left end on L and right end on (L reversed, letters inverted) give the same steps and mirrored trees.",
+   "source_key": "BKL-survey",
+   "locator": "python3 -I h1_h2_induction.py; inline python3 -I -c mirror test",
+   "label": "tested",
+   "bears_on": "H2; entry §5.6 table (left end 2.137 r) and §8 item 9"
+  },
+  {
+   "statement": "H3 tested. (i) All schedules of steps at coincidences, on the letters that end there or begin there, enumerated for every Lyndon word of length 2..11 over 2 letters and 2..8 over 3 (1,725 words; 39 million states): the right Lyndon tree is always a schedule's tree; the left Lyndon tree is one for 1,512 words and is NOT for 213 (smallest: aaababb, column baabbaa, 354 schedule trees, 27 of them over that rotation, none with root (aaabab)(b)). With end-kind steps only: 1,118. (ii) Nodes over the hinges: the entry's Theorem 3 as read here (internal nodes of the right tree above a run-start hinge = S) holds on 2,060 short and 200 random Lyndon words. Left tree against right tree on 4,874 short Lyndon words: smaller 107, equal 4,288, larger 479. Random Lyndon words, 40 a class, nodes/r right then left: uniform binary n=600 1.812, 1.838; 4 letters 1.303, 1.314; 26 letters 1.036, 1.036; phrase copies with edits, 4 letters n=1500 2.623, 3.536; 26 letters 2.761, 4.527.",
+   "source_key": "BBIK-schemes",
+   "locator": "python3 -I -c 'import h3_left_tree as h; h.part_i(); h.part_ii()' in YOUR_DIR; definition of the left tree from BBIK-schemes Section 4, p. 9",
+   "label": "tested",
+   "bears_on": "H3; entry §8 items 2 and 9"
+  },
+  {
+   "statement": "H4 tested, with the alternating order as BKKP-bbwt describes it (first letter by <, second by >, …). 67,319 primitive words (binary ≤ 13, ternary ≤ 9, four letters ≤ 7): the ABWT's LF equals 'rows of one letter go to its bucket in reversed order', an order-reversing translation on each run; right-end induction with flips ends on one letter whose word is the least rotation in the alternating order and whose tree is the min-Cartesian tree of the alternating rotation ranks. 21,030 arbitrary columns (18,888 with several cycles): closed letters reproduce the cycles of the flipped LF, a flipped closed letter of length k giving k div 2 cycles ww and k mod 2 cycles w (11,482 columns have one with k > 1).",
+   "source_key": "BKKP-bbwt",
+   "locator": "Section 1.2.1, p. 3 of the author's copy (description of the alternating BWT); python3 -I -c 'import h4_flips as h; h.main()' in YOUR_DIR",
+   "label": "tested",
+   "bears_on": "H4"
+  },
+  {
+   "statement": "Observation from the H3 run: the number of internal nodes of the right Lyndon tree above a run-START hinge equals the number above a run-END hinge on all 4,874 short Lyndon words. Reason proposed: a node with no run-start hinge below has, at every position, the rotation ranked just above it carrying the same byte, so its block has a twin one rank up that is also a node and has no run-end hinge; the map is a bijection.",
+   "source_key": "BBIK-schemes",
+   "locator": "inline python3 -I -c test on h3_left_tree.hinge_counts",
+   "label": "Conj",
+   "bears_on": "entry §5.5-§5.6 (Theorem 3 and the mirror picture 'cut after every run end')"
+  }
+ ],
+ "hypotheses": [
+  {
+   "h": "H1. Right-end induction on any column inverts the extended BWT: closed words are the Lyndon conjugates of the necklaces, closing in non-increasing order; on a BBWT they are the Lyndon factorization, each with its Lyndon tree.",
+   "verdict": "partly in print",
+   "evidence": "IN PRINT (K): every column is the eBWT of a multiset of primitive necklaces and the BBWT of one string (BKL-survey §2.1 p. 2:5; CDP05 §4 p. 5; MRRS07 abstract); LF's cycles are the Lyndon factors, equal factors being separate equal cycles (Kufleitner09 Lemma 7); cycles taken by increasing smallest row give the factors last to first, so by decreasing smallest row in text order (GilScott §5 Alg. 5.2; Kufleitner09 Thm 8; Koeppl20 §3.5; BKKP-bbwt §4.6); deleting a cycle leaves a valid BBWT (Kufleitner09 proof of Thm 8; Koeppl20 §4.2). NOT IN THESE PAPERS: any induction, interval exchange or Rauzy step; any Lyndon tree, array or grammar read off the column. All inversions there walk LF or FL, n steps. TESTED: holds on 88,133 columns (78,555 with several cycles, 33,873 with a repeated necklace), including the tree of each factor and λ = exponent. The entry's §2 paragraph on columns that are no BWT restates this bijection without citing it."
+  },
+  {
+   "h": "H2. Left-end induction yields the Lyndon tree, for the inverse alphabet order, of the greatest rotation.",
+   "verdict": "not addressed (tested: holds)",
+   "evidence": "The cluster only names anti-Lyndon and inverse Lyndon words as candidates for other bijective BWTs (BKL-survey §6 p. 2:21; BKKP-bbwt §7.1); no statement about an induction or about reversing the column. Tested on 88,133 columns (anti-Lyndon words, inverse-order standard factorization trees, inverse-order BBWT of the reversed, letter-inverted column) and as an exact mirror identity of steps and trees on 26,222 columns. Reason (Conj, three lines): reflecting the rows reverses both the row order and the stable order inside each bucket, so LF of L at its left end is LF of the reversed, letter-inverted column at its right end, and that column is the transform for the inverse order."
+  },
+  {
+   "h": "H3. The left Lyndon tree is, or is not, the tree of some order of Rauzy steps; and whether its node count over the hinges is smaller than the right tree's.",
+   "verdict": "not addressed in print; tested: not a schedule's tree in general, and not smaller",
+   "evidence": "BBIK-schemes §4 defines both trees and uses the left one for prefixes (Theorem 3), and says no analysis of the left tree's height is known (p. 11); nothing on exchanges. Tested: over all schedules of end-kind and begin-kind steps at coincidences, the left Lyndon tree is a schedule's tree for 1,512 of 1,725 short Lyndon words and for none of the schedules of 213 (smallest aaababb); fusion and split steps of §5.6 were not included. Nodes over the hinges: left larger on 479, smaller on 107, equal on 4,288 of 4,874 short words; on repetitive random words 3.54 r and 4.53 r against 2.62 r and 2.76 r."
+  },
+  {
+   "h": "H4. For the alternating BWT, LF is an exchange with flips on the runs, Rauzy induction with flips inverts it, and its grammar is the standard factorization tree for the alternating order.",
+   "verdict": "not addressed (first two clauses tested: hold; third tested only as a Cartesian tree)",
+   "evidence": "BKKP-bbwt §1.2.1 and §1.2.2 describe the alternating BWT and its backward search (Giancarlo et al.) and BKL-survey §6 the Galois-factorization variant (Hendrian et al.); neither mentions flips, exchanges or a tree. Tested on 67,319 primitive words and 21,030 arbitrary columns: flips on runs; flipped induction ends on the least alternating rotation; tree = min-Cartesian tree of alternating rotation ranks; on arbitrary columns the cycles are reproduced, a flipped closed letter of length k giving squares ww. Whether that Cartesian tree is what the Galois literature calls the standard factorization tree was not decided: those papers are outside this cluster."
+  },
+  {
+   "h": "H5. A right-end step is a context-refined Lazard elimination of the largest letter, and the grammar is the standard bracketing of the Lyndon word in the free Lie algebra.",
+   "verdict": "not addressed",
+   "evidence": "No paper of this cluster mentions Lazard, Hall sets, Lie algebras or bracketing (term counts 0 over the 13 texts fetched). BBIK-schemes §4 p. 9 defines the right Lyndon tree by the right standard factorization, with no algebra. Not tested here."
+  }
+ ],
+ "ideas": [
+  {
+   "idea": "Record, in §2 and §10 of the entry, that the 'column that is no BWT' case is the inversion of the extended/bijective BWT, and state what the drop rule computes: the closed letters, in order, are the Lyndon factorization with exponents of the unique T whose BBWT is the column, each with its right Lyndon tree; the decoder's bytes are the cycle holding orig_ptr. Cite Gessel-Reutenauer 1993, Mantaci et al. 2007, Gil-Scott 2012, Kufleitner 2009 (Thm 8), Köppl et al. 2020 (§3.5, §4.2).",
+   "kind": "prior art that narrows a claim",
+   "why": "The entry lists 'the transfer to an arbitrary column' as new and proves the drop rule from scratch. The object, the order of the cycles and the 'delete a cycle, the rest is still a transform' step are in print; what is not there is the induction and the trees. It also gives `rauzy --arbitrary` an independent oracle: Duval's factorization of the concatenated closed words, instead of equality with the walk.",
+   "falsifier": "Any column where the closed words are not the composed Lyndon factorization of their concatenation. None in 88,133 columns (h1_h2_induction.py, my implementation); rerun as an assert inside `rauzy --arbitrary` on its 200,000 columns.",
+   "cost": "An hour of text; a 20-line assert in the example."
+  },
+  {
+   "idea": "Use the Likhomanov-Shur criterion (survey p. 2:4): a column is a BWT image iff the number of LF cycles equals the gcd of its run lengths. With g = gcd of the run lengths (one pass over the records): a valid block has exactly g cycles, all equal. So if g = 1, the first 'A = B with other letters left' proves the stream corrupt, and the kernel may leave for the walk or reject there.",
+   "kind": "known algorithm to implement",
+   "why": "It says exactly when the drop-rule path can run on a valid stream: only when every run length shares a divisor g > 1 and the block is a g-th power. For g = 1, the common case, the drop rule can be a cold exit instead of part of the step. It also bears on §8 item 4: the test costs r gcd steps before any cell.",
+   "falsifier": "A valid bzip2 block whose induction closes a letter early while g = 1; or a column with cycles ≠ g that is a BWT image. Checked here on 18,030 small columns; the criterion's own source (CSR 2011) was not read, only the survey's statement.",
+   "cost": "Small: one gcd loop in the order stage and a branch at the closing test."
+  },
+  {
+   "idea": "Record the mirror identity: the left-end induction on L is the right-end induction on L reversed with bytes inverted, which is the transform for the inverse byte order (steps and trees equal on 26,222 columns). Then §5.6's 'left end 2.137 r against right end 1.812 r' is the cost of the inverse alphabet order on Wikidata, and §8 item 9 splits: 'which end' is 'which of two alphabet orders'; no third order can be had from a given column.",
+   "kind": "related approach to record",
+   "why": "It answers half of §8 item 9 with data the entry already has (the inverse order costs 1.18× the cells) and removes 'another order of the alphabet' as something a decoder could choose: the column was sorted with the byte order. BKKP-bbwt §7.3 adds that choosing an alphabet order to optimize the number of Lyndon factors is NP-complete (Gibney-Thankachan), for a different objective.",
+   "falsifier": "A block where steps(left end, L) ≠ steps(right end, mirror(L)) in geo's simulator; one line to add to schedules_geo.",
+   "cost": "Minutes in the simulator; a paragraph in the entry."
+  },
+  {
+   "idea": "Read §5.5 and Theorem 3 against the right-Lyndon-tree fact printed in Badkobeh-Bannai-I-Köppl (Thm 3 proof, p. 9): the right children hanging off the path from leaf i-1 to the root are the Lyndon factorization of the suffix after i. So a stretch's forward minima count Lyndon factors, and S is a sum of Lyndon-factorization sizes of pieces of the text cut at the hinges plus the mirrored count.",
+   "kind": "prior art that narrows a claim",
+   "why": "§10 claims '§5.5's reading of the step count as records of suffix ranks' as new. The path reading is in print for suffixes; what remains the entry's is the cut at run starts and the sum. It also imports known statistics: expected height Θ(log n) for the right tree of a random Lyndon word (Mercier-Chassaing, as cited there), against the 3,861-deep chains of §5.4.",
+   "falsifier": "For one block, count the Lyndon factors of each stretch's text under the global rotation order and compare with Σ(p − 1); a mismatch kills the reading.",
+   "cost": "A short Python check beside lyndon_cartesian.py.txt."
+  },
+  {
+   "idea": "Take the two-run columns b^k a^l as the unit test of the division rule (§8 item 5): today the right end takes the sum of the partial quotients of k/l (tested, 1,600 columns); with the rule it must take the number of partial quotients, end on one letter with λ = gcd(k, l), and spell the Lyndon rotation of a standard word (survey Theorem 24). Then columns built from Bannai-I-Nakashima's Fibonacci images.",
+   "kind": "new idea to try",
+   "why": "§8 item 5 has no falsifier registered; (ab)^k a costs 11× today. The two-letter case is fully characterized in print, so the expected output is known for every k and l.",
+   "falsifier": "Any (k, l) where the accelerated kernel's rule count differs from the number of partial quotients, or its word from the reference's.",
+   "cost": "The rule itself (not built) plus a 30-line test."
+  },
+  {
+   "idea": "State the result against the BBWT literature's cost: the only run-length inversion in print is Köppl et al. 2020, Theorem 3, n backward steps on a dynamic run-length structure, O(n lg r / lg lg r) time. The induction is an RLBBWT/eBWT → text route in S steps on the same input (a run list of any column).",
+   "kind": "related approach to record",
+   "why": "It gives §10 a second, sharper comparison than RLBWT → LZ77: same input, same output, cycle by cycle, and a published bound to beat on repetitive inputs. It must carry the entry's own caveat: S is not O(r polylog n) (S = n/2 on (ab)^k a).",
+   "falsifier": "A published eBWT/BBWT inversion with o(n) steps. None in the survey (2025), the journal article (2024) or Köppl et al. (2020); a search for the words 'Rauzy' and 'interval exchange' with 'bijective BWT' returned nothing.",
+   "cost": "A paragraph."
+  },
+  {
+   "idea": "Close the left Lyndon tree as a direction: it is not the tree of any order of end or begin steps for 213 of 1,725 short Lyndon words, and where it can be compared it has more nodes over the hinges (up to 1.64× on repetitive random words).",
+   "kind": "prior art that narrows a claim",
+   "why": "§8 items 2 and 9 look for an order with fewer cells; the left standard factorization (Badkobeh-Crochemore's tree, used in Badkobeh-Bannai-I-Köppl) is the obvious named candidate and can be struck off without a kernel.",
+   "falsifier": "Done: h3_left_tree.py. It would be reopened by a schedule with fusion or split steps (§5.6 'below the floor') that yields the left tree of aaababb.",
+   "cost": "None further."
+  },
+  {
+   "idea": "RLBBWT → RLBWT without n steps: induce the Lyndon grammars of the factors from the run list (S rules), then feed them to a Lyndon-grammar → RLBWT construction (the entry's §10 cites Olbrich, ESA 2025, for that direction).",
+   "kind": "new idea to try",
+   "why": "It would improve Köppl et al.'s Theorem 3 on repetitive inputs and answer their wish for a conversion that does not go factor by factor through the text. It does nothing for bzip2's clock.",
+   "falsifier": "Olbrich's construction needing the factors' grammars in a form the induction does not give (for instance a shared, reduced Lyndon SLP rather than the unreduced one); read that paper first.",
+   "cost": "Days; a reading and a prototype."
+  },
+  {
+   "idea": "If generality is wanted: the flipped induction inverts the alternating BWT from its run list (tested on 67,319 words and 21,030 columns); a flipped closed letter of length k yields squares.",
+   "kind": "new idea to try",
+   "why": "It extends Theorem 1 to a second transform at the cost of one bit a letter and shows the proof does not use the lexicographic order. No bearing on bzip2.",
+   "falsifier": "Done for small words (h4_flips.py); the naming of the tree needs the Galois-word papers of another cluster.",
+   "cost": "None for the kernel; a remark in §9."
+  }
+ ],
+ "notes": "WHAT THE CLUSTER HAS FOR THE MISSION, PLAINLY. For inverting a BWT faster: nothing. Every inversion in these papers walks LF or FL for n steps (Gil-Scott; Kufleitner; Bannai et al. §4.6; Köppl et al. Thm 3 in run-length space). No Lyndon tree, array or grammar is taken from a column. The construction paper (arXiv:1911.06985, CPM 2021) has nothing for the mission beyond definitions. What the cluster does give: (1) prior art for the entry's arbitrary-column case, uncited there; (2) a validity criterion from run lengths; (3) printed facts about root paths of the right Lyndon tree; (4) the two-letter characterization for the division rule's test.\n\nONE WORK OR TWO. One. The koeppl.github.io PDF (an IPSJ technical report, Nov 2019), arXiv:1911.06985 v1/v2 and CPM 2021 are the construction paper; the Information and Computation article is the journal version of it and of CPM 2019 'Indexing the Bijective BWT' (its own footnote; the author's BibTeX). The arXiv number covers the construction half only. The inversion section exists only in the journal version.\n\nANSWERS TO THE PARTICULAR QUESTIONS. (a) By walking, cycle by cycle, n steps; nothing below n found. (b) Empirically equal to within tens of runs on four corpora except Fibonacci-like files; in theory each can exceed the other by Θ(log n) and neither by more than O(log^4 n); ℓ ≤ r_B. (c) Only the factorization (the cycles themselves; or Duval run on the RLBWT with FL steps). (d) Stated in the findings; repeated necklaces are covered, non-primitive necklaces are not objects of the bijection (u^k is u taken k times).\n\nNOT REACHED. Mantaci et al. 2007 and Gessel-Reutenauer 1993 full texts (publisher 403, API 401, author page TLS failure/503): their theorem numbers appear here only as cited by papers I read. Bonomo et al. 2014 (CORE 403) and Likhomanov-Shur 2011: not read; cited through the survey. DBLP: bot wall. Springer's page for the 2026 journal article needs a login redirect, which I did not follow; a retry with a cookie jar was refused by the permission system, so I used the author's open copy and Crossref.\n\nTESTS. All programs are mine, written from the entry's §2 table; none uses or touches the repository. Files: /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt/h1_h2_induction.py, /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt/h3_left_tree.py, /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt/h4_flips.py; fetched papers under /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/bijective-bwt/dl/. Three smaller checks (mirror identity, gcd criterion, two-run columns) were run inline with python3 -I -c and are not saved as files. H3(i) covers only steps at coincidences on end or begin letters. The uniform-binary figure 1.812 nodes/r in the H3 table equals Wikidata's S/r by accident: there S is about 0.9 n, on Wikidata 0.13 n.\n\nDISCREPANCIES SEEN IN SOURCES. Survey Theorem 9 gives O(n^{2+ε}) for in-place inversion where Köppl et al.'s abstract says quadratic. arXiv's related DOI for 2004.12590 ends in .23, DROPS in .21. arXiv spells the fourth author 'Picatkowski' in its metadata; DROPS has Piątkowski."
+}

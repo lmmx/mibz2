@@ -1,0 +1,416 @@
+{
+ "bibliography": [
+  {
+   "key": "GMRRS-DLT18",
+   "authors": "Raffaele Giancarlo, Giovanni Manzini, Antonio Restivo, Giovanna Rosone, Marinella Sciortino",
+   "title": "Block Sorting-Based Transformations on Words: Beyond the Magic BWT",
+   "venue": "Developments in Language Theory (DLT 2018), eds. M. Hoshi, S. Seki, Lecture Notes in Computer Science vol. 11088, Springer, Cham, pp. 1-17",
+   "year": "2018",
+   "doi": "10.1007/978-3-319-98654-8_1",
+   "arxiv": "",
+   "url": "https://link.springer.com/chapter/10.1007/978-3-319-98654-8_1 (paywalled); authors' post-print read: https://iris.unipa.it/retrieve/e3ad8925-d966-da0e-e053-3705fe0a2b96/GMRRS_DLT2018.pdf",
+   "locator": "One work, one published version: DLT 2018, LNCS 11088, pp. 1-17 (first online 5 Aug 2018 per Crossref). Open post-print at the Palermo repository (same text, its own page numbers). No arXiv version found (arXiv API title search returned nothing). The books.google hit is a copy of the same proceedings chapter.",
+   "scholar_entries": "\"Block sorting-based transformations on words: beyond the magic BWT\" (R Giancarlo, G Manzini, A Restivo, G Rosone... - ... on Developments in ..., 2018 - Springer); \"Block Sorting-Based Transformations on Words: Beyond the Magic BWT\" (G Rosone - ... in Language Theory: 22nd International Conference ..., 2018 - books.google.com). The second line's single author is a Scholar artefact: the chapter has the five authors.",
+   "source_of_record": "Springer landing page meta tags (title, authors, pages, DOI, 'vol 11088'); Crossref records for the chapter and the book (editors, ISBN 978-3-319-98653-1 / -98654-8); footnote of the post-print.",
+   "one_line": "Defines the generalized transforms BWT_K (alphabet order depending on the position mod k), shows all are invertible in O(n^3), bounds their runs by 2 rho(w), and proves BWT and ABWT are the only rank-invertible ones.",
+   "unverified": "The ordinal '22nd' and the conference city are only in the Scholar line, not checked on the publisher page. Read the post-print, not the LNCS pages: theorem numbers and page numbers quoted are the post-print's."
+  },
+  {
+   "key": "GMRRS-TCS20",
+   "authors": "Raffaele Giancarlo, Giovanni Manzini, Antonio Restivo, Giovanna Rosone, Marinella Sciortino",
+   "title": "The Alternating BWT: An algorithmic perspective",
+   "venue": "Theoretical Computer Science 812, pp. 230-243",
+   "year": "2020",
+   "doi": "10.1016/j.tcs.2019.11.002",
+   "arxiv": "1907.02308",
+   "url": "https://arxiv.org/abs/1907.02308",
+   "locator": "Journal: Theor. Comput. Sci. vol. 812, pp. 230-243, April 2020 (copyright line 2019). Preprint: arXiv:1907.02308v1 [cs.DS], 4 Jul 2019, 28 pp., headed 'Preprint submitted to Elsevier'. It is the full version of GMRRS-DLT18 (the DLT paper says details 'will be given in the full paper'; this paper calls the DLT paper 'a preliminary version'), but it is a separate publication with new sections 6-7, so it is listed as its own work.",
+   "scholar_entries": "\"[HTML] The alternating BWT: an algorithmic perspective\" (R Giancarlo, G Manzini, A Restivo, G Rosone... - Theoretical Computer ..., 2020 - Elsevier)",
+   "source_of_record": "Crossref record of the DOI (title, authors, volume, pages, date); arXiv API entry and the PDF itself.",
+   "one_line": "The ABWT's LF map reverses the order inside each letter's bucket (eq. (3)); backward search works; BWT and ABWT are the only rank-invertible BWT_K; ABWT computed in linear time via difference covers and a linear-time Galois-rotation algorithm.",
+   "unverified": "The journal text was not fetched (ScienceDirect answered 403). Read arXiv v1 in full. Numbering cross-checked only indirectly: GMRRS-IC23 cites 'Theorem 5.9' and 'Theorem 4.4' of the journal paper and DMS-VWORDS cites its 'Lemma 7.3' and 'Proposition 7.4', which match the arXiv numbering."
+  },
+  {
+   "key": "HKYS-CPM24",
+   "authors": "Diptarama Hendrian, Dominik Köppl, Ryo Yoshinaka, Ayumi Shinohara",
+   "title": "Algorithms for Galois Words: Detection, Factorization, and Rotation",
+   "venue": "35th Annual Symposium on Combinatorial Pattern Matching (CPM 2024), LIPIcs vol. 296, pp. 18:1-18:16, Schloss Dagstuhl",
+   "year": "2024",
+   "doi": "10.4230/LIPIcs.CPM.2024.18",
+   "arxiv": "2403.02636",
+   "url": "https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CPM.2024.18",
+   "locator": "One work, two versions: arXiv:2403.02636 (v1 5 Mar 2024, v2 23 Apr 2024, 16 pp., 'accepted to CPM 2024'); CPM 2024, LIPIcs 296, 18:1-18:16. No journal version found on Crossref.",
+   "scholar_entries": "\"Algorithms for Galois words: Detection, factorization, and rotation\" (D Hendrian, D Köppl, R Yoshinaka... - arXiv preprint arXiv ..., 2024 - arxiv.org)",
+   "source_of_record": "DROPS landing page meta tags (title, authors, pages, DOI, conference); arXiv API entry; the arXiv v2 PDF.",
+   "one_line": "Linear-time, constant-extra-space algorithms to test whether a word is Galois, to compute the Galois factorization online, and to find the Galois rotation; no inversion, no tree.",
+   "unverified": "The arXiv metadata gives the DOI as '10.4230/LIPIcs.CPM.2024.1'; DROPS gives 10.4230/LIPIcs.CPM.2024.18 (used here). LIPIcs volume number 296 read from the DROPS PDF path and from the reference list of DMS-VWORDS, not from a volume field. Read arXiv v2, not the LIPIcs PDF."
+  },
+  {
+   "key": "DMS-VWORDS",
+   "authors": "Jacqueline W. Daykin, Neerja Mhaskar, W. F. Smyth",
+   "title": "V-Words, Lyndon Words and Galois Words (extended version of: V-Words, Lyndon Words and Substring circ-UMFFs)",
+   "venue": "Conference version: Combinatorial Optimization and Applications (COCOA 2023), eds. W. Wu, J. Guo, LNCS vol. 14461, Springer, pp. 471-484. Extended version: arXiv preprint.",
+   "year": "2023 (conference, 15-17 Dec 2023; first online 9 Dec 2023; the LNCS volume is print-dated 2024); 2024 (arXiv)",
+   "doi": "10.1007/978-3-031-49611-0_34",
+   "arxiv": "2409.02757",
+   "url": "https://arxiv.org/abs/2409.02757 ; https://link.springer.com/chapter/10.1007/978-3-031-49611-0_34",
+   "locator": "ONE work in two versions. (1) 'V-Words, Lyndon Words and Substring circ-UMFFs', COCOA 2023, LNCS 14461, pp. 471-484. (2) 'V-Words, Lyndon Words and Galois Words', arXiv:2409.02757v1 [cs.DS], 4 Sep 2024, 30 pp.; its first-page footnote: 'A preliminary version of this paper was presented at COCOA 2023. The main new contributions in this extended version are Section 7 and Section 8.' Also an SSRN preprint with the arXiv title, DOI 10.2139/ssrn.5193979 (Crossref: posted-content, 2025). No journal article found on Crossref.",
+   "scholar_entries": "\"V-Words, Lyndon Words and Galois Words\" (JW Daykin, N Mhaskar, WF Smyth - arXiv preprint arXiv:2409.02757, 2024 - arxiv.org); \"V-Words, Lyndon Words and Substring circ-UMFFs\" (JW Daykin, N Mhaskar, WF Smyth - International Conference on ..., 2023 - Springer)",
+   "source_of_record": "Springer landing page meta tags and Crossref (chapter and book records) for the conference version; arXiv API entry and PDF for the extended version; Crossref for the SSRN record.",
+   "one_line": "UMFF / circ-UMFF theory: border-free minimal conjugates under any total order form a circ-UMFF; Galois words do not form a UMFF, the border-free ones do; a structure theorem for binary border-free Galois words.",
+   "unverified": "The COCOA chapter is paywalled: only its landing page was fetched; the extended arXiv version was read in full. The SSRN page was not opened. COCOA's Crossref record gives the city as 'Hawai, HI' (sic)."
+  },
+  {
+   "key": "GMRRS-IC23",
+   "authors": "Raffaele Giancarlo, Giovanni Manzini, Antonio Restivo, Giovanna Rosone, Marinella Sciortino",
+   "title": "A new class of string transformations for compressed text indexing",
+   "venue": "Information and Computation 294, article 105068",
+   "year": "2023",
+   "doi": "10.1016/j.ic.2023.105068",
+   "arxiv": "2205.05643",
+   "url": "https://arxiv.org/abs/2205.05643",
+   "locator": "Background, fetched to answer question (b). Journal: Inf. Comput. vol. 294, art. 105068, Oct 2023. arXiv:2205.05643v2 (v1 11 May 2022). Preliminary version: R. Giancarlo, G. Manzini, G. Rosone, M. Sciortino, 'A New Class of Searchable and Provably Highly Compressible String Transformations', CPM 2019, LIPIcs 128, 12:1-12:12, DOI 10.4230/LIPIcs.CPM.2019.12, arXiv:1902.01280 (four authors).",
+   "scholar_entries": "none (not in the pasted list; cited by HKYS-CPM24 and GMRRS-TCS20)",
+   "source_of_record": "Crossref (journal record); DROPS meta tags (CPM 2019 record); arXiv API entries and the arXiv v2 PDF.",
+   "one_line": "Context-adaptive BWTs are invertible in O(sigma n^2); those with 'local orderings' have an order-preserving LF on rows with equal first and last symbols, invert in linear time, admit an r-index, and are an ordinary BWT over pairs; a linear-time lower bound on runs over all these variants.",
+   "unverified": "Read arXiv v2 (sections 2-6), not the journal PDF."
+  },
+  {
+   "key": "Reut-SLC54",
+   "authors": "Christophe Reutenauer",
+   "title": "Mots de Lyndon généralisés",
+   "venue": "Séminaire Lotharingien de Combinatoire 54, Article B54h, 16 pp.",
+   "year": "2006 (received 6 May 2005; accepted 14 Mar 2006; final version 20 Apr 2006; volume 54 is cited elsewhere as 2005 or 2005/07)",
+   "url": "https://www.mat.univie.ac.at/~slc/wpapers/s54reut.html",
+   "locator": "Background, fetched to answer question (c). One version: SLC B54h. In French.",
+   "scholar_entries": "none (source of the notions 'generalized Lyndon word' and 'Galois word' used by all four cluster papers)",
+   "source_of_record": "The SLC article page and the PDF itself.",
+   "one_line": "Generalized Lyndon words (Galois words among them) form a Hall set: each has a standard factorization, hence a tree and a basis element of the free Lie algebra; states the Schützenberger-Melançon rewriting that finds the Hall conjugate; Galois words are not a Viennot factorization.",
+   "unverified": ""
+  },
+  {
+   "key": "DRR-TCS19",
+   "authors": "Francesco Dolce, Antonio Restivo, Christophe Reutenauer",
+   "title": "On generalized Lyndon words",
+   "venue": "Theoretical Computer Science 777, pp. 232-242",
+   "year": "2019",
+   "doi": "10.1016/j.tcs.2018.12.015",
+   "arxiv": "1812.04515",
+   "url": "https://arxiv.org/abs/1812.04515",
+   "locator": "Background. Journal: Theor. Comput. Sci. 777, pp. 232-242, July 2019. arXiv:1812.04515v1, 11 Dec 2018, 16 pp.",
+   "scholar_entries": "The bare heading line \"On generalized Lyndon words\" in the pasted file (the seed of its second list); not one of the result entries of this cluster.",
+   "source_of_record": "Crossref record of the DOI; arXiv API entry and PDF.",
+   "one_line": "Combinatorial proof of the unique non-increasing factorization into generalized Lyndon words; prefix characterizations of Galois words and of the first Galois factor; examples showing where Galois words differ from Lyndon words.",
+   "unverified": "Read the arXiv version (sections 1, 6, 7 and the theorem statements), not the journal PDF."
+  },
+  {
+   "key": "GRR-EJC12",
+   "authors": "Ira M. Gessel, Antonio Restivo, Christophe Reutenauer",
+   "title": "A bijection between words and multisets of necklaces",
+   "venue": "European Journal of Combinatorics 33(7), pp. 1537-1546",
+   "year": "2012",
+   "doi": "10.1016/j.ejc.2012.03.016",
+   "locator": "Background named in the task. One version found: Eur. J. Combin. 33(7), 1537-1546, Oct 2012. Full text NOT obtained (ScienceDirect 403; the Palermo repository copy is restricted).",
+   "scholar_entries": "none",
+   "source_of_record": "Crossref record of the DOI.",
+   "one_line": "Abstract only (seen through a search-result summary): replacing the standard permutation by the co-standard one in Gessel-Reutenauer's map gives a bijection whose inverse sorts by the alternating order and whose image is a special set of multisets of necklaces, not all primitive.",
+   "unverified": "Everything beyond the bibliographic record. What its Section 3 proves is taken from Elizalde-25, section 2.2, a secondary source."
+  },
+  {
+   "key": "Elizalde-25",
+   "authors": "Sergi Elizalde",
+   "title": "A bijection for descent sets of permutations with only even and only odd cycles",
+   "venue": "arXiv preprint [math.CO]",
+   "year": "2025",
+   "arxiv": "2503.09972",
+   "url": "https://arxiv.org/abs/2503.09972",
+   "locator": "arXiv:2503.09972v2, 7 Apr 2025. Used only as a secondary source for the statement of GRR-EJC12, Section 3.",
+   "scholar_entries": "none",
+   "source_of_record": "The arXiv PDF.",
+   "one_line": "Restates the Gessel-Reutenauer bijection and the alternating variant of Gessel-Restivo-Reutenauer, with the exact description of the image of the latter.",
+   "unverified": "Venue of any published version not looked up."
+  },
+  {
+   "key": "Melancon-92",
+   "authors": "G. Melançon",
+   "title": "Combinatorics of Hall trees and Hall words",
+   "venue": "Journal of Combinatorial Theory, Series A 59, pp. 285-308",
+   "year": "1992",
+   "locator": "Pointer only: bibliographic data copied from the reference list of Reut-SLC54 (entry [Me]). Not fetched, not read.",
+   "scholar_entries": "none",
+   "source_of_record": "Reference list of Reut-SLC54 (a page fetched in this session).",
+   "one_line": "Per Reut-SLC54 section 3.4: an algorithm computing, for any Hall set, the unique power of a Hall word conjugate to a given word (generalizing Schützenberger).",
+   "unverified": "All of its content; DOI not looked up."
+  }
+ ],
+ "findings": [
+  {
+   "statement": "Question (a). The ABWT is inverted by the same formula as the BWT, w[n-1-j] = L[LF^j(I)] (eq. (1)), with LF(i) = (sum of P_L[c] over c <= L[i]) - rank_{L[i]}(L, i-1) - 1 (eq. (3)), where rank_c(x, i) counts c in x[0..i]. It rests on Prop. 3.2 item 3b: the j-th occurrence of a letter a in F is its (|w|_a - j + 1)-th occurrence in L. So along a run of equal letters of L, LF goes DOWN by one a row: an order-reversing isometry on every run, and the runs of one byte lie in the bucket in reverse order. In the entry's terms: an interval exchange on the r runs with all r intervals flipped; top order = runs as they lie, bottom order = bytes ascending, the runs of a byte in reverse top order. The paper never uses the words 'interval exchange' or 'flip' for it.",
+   "source_key": "GMRRS-TCS20",
+   "locator": "arXiv:1907.02308v1: Prop. 3.2 (p. 5-6), Section 5 eqs. (1)-(3) (p. 9-10). Same proposition as Prop. 1 of GMRRS-DLT18 (post-print p. 6), where eq. (3) is printed as '... - rank_{L[i]}(L, i) + 1'.",
+   "label": "K",
+   "bears_on": "H4 (first clause); entry section 1 (objects)"
+  },
+  {
+   "statement": "Checked by program: on 18,879 random primitive words (2-4 letters, length 2-40) LF by eq. (3) equals LF by brute force on all; of 232,743 runs of the ABWT column, 89,502 have length >= 2 and LF is order-reversing on all 89,502, a translation on none. Control with the lexicographic order on the same words: 84,334 runs of length >= 2, all translations.",
+   "source_key": "own-test",
+   "locator": "python3 -I t1_t2_abwt.py 1 20000 alt ; python3 -I t1_t2_abwt.py 1 20000 lex",
+   "label": "tested",
+   "bears_on": "H4 (first clause)"
+  },
+  {
+   "statement": "Question (b), the class BWT_K (alphabet order pi_{i mod k} at position i): 'rank-invertible' means LF(i) is a function of the Parikh vector, L[i] and rank_{L[i]}(L, i). BWT and ABWT are the only rank-invertible BWT_K for any alphabet of size >= 2. For every other K the best inversion known there is O(n^3) time (later O(sigma n^2), O(n^2) for '+-' orderings in GMRRS-IC23, Th. 11 and Th. 16).",
+   "source_key": "GMRRS-TCS20",
+   "locator": "arXiv:1907.02308v1: Def. 5.2, Lemmas 5.3-5.8, Theorem 5.9 (p. 11-15); Theorem 4.4 (p. 8). In GMRRS-DLT18 (post-print): Def. 3, Theorem 4 (|K| = 2), Theorem 5, Theorem 1.",
+   "label": "K",
+   "bears_on": "question (b); H4"
+  },
+  {
+   "statement": "Question (b), checked by program: for K = (Id, pi) over 3 letters, 4,000 primitive words: pi = Id gives 14,573 runs of length >= 2, all translations; pi = Rev (ABWT) 15,657 runs, all reversals; for each of the four other pi, LF is neither a translation nor a reversal on 4,788 to 5,174 runs (about a third). So among BWT_K only BWT and ABWT have an LF that is an isometry on each run.",
+   "source_key": "own-test",
+   "locator": "python3 -I t4_generalized.py 1 4000",
+   "label": "tested",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "Question (b), the other family that works: 'local orderings' (the alphabet order used after a common prefix x depends only on the last k symbols of x). For k = 1 there is an order-preserving bijection between the rows starting with x1 x2 and the rows starting with x2 and ending with x1 (Lemma 17); hence inversion in O(sigma^2 + n) (Cor. 22) and an r-index, whose stated ingredient is that two consecutive rows with equal first and equal last symbols rotate to consecutive rows in the same order; Example 25 shows this fails for general context-adaptive orderings. Section 4.2: a k = 1 local-ordering BWT of s is the ordinary BWT of the string of overlapping pairs S[i] = s[i]s[i+1] over the alphabet Sigma^2. The ABWT is not a local ordering (its order depends on the parity of |x|).",
+   "source_key": "GMRRS-IC23",
+   "locator": "arXiv:2205.05643v2: Section 4, Lemma 17, Lemma 21, Cor. 22 (p. 14-15); Section 4.1 and Example 25 (p. 16-18); Section 4.2 (p. 18-19); Section 3 last paragraph (p. 9).",
+   "label": "K",
+   "bears_on": "question (b); entry section 8 item 9"
+  },
+  {
+   "statement": "Reading of Lemma 17 in the entry's terms: for a k = 1 local ordering LF is a translation on each run of the column once the runs are cut where the first column changes: at most r + sigma - 1 intervals, no flips. Checked: 4,000 words with random pi_empty and random per-symbol orders: 14,174 cut runs of length >= 2, all translations; uncut, 822 of 14,802 runs are neither a translation nor a reversal.",
+   "source_key": "own-test",
+   "locator": "python3 -I t4_generalized.py 1 4000",
+   "label": "tested",
+   "bears_on": "question (b)"
+  },
+  {
+   "statement": "Galois words in the ABWT paper: a Galois word is a primitive word least among its rotations in the alternating order; a bordered Galois word has a border of odd length only (Lemma 7.3); a primitive word is Galois iff it is smaller than all its proper suffixes in the alternating order extended to words of different lengths by 'a proper prefix x is smaller iff |x| is even' (Def. 6.1, Prop. 7.4); for a Galois word the order of its rotations equals that order of its suffixes (Prop. 7.5); the Galois rotation is found in linear time and space with a border array, at most 4n - 3 comparisons (Algorithm 2, Th. 7.6); hence the ABWT of any word in linear time (Cor. 7.7). Appending an end marker changes the ABWT and can raise its runs (Fig. 4: abwt(banana) = bnnaaa, abwt(banana$) = abnn$aa). No tree, no factorization-based inversion.",
+   "source_key": "GMRRS-TCS20",
+   "locator": "arXiv:1907.02308v1, Section 6 (Def. 6.1, Th. 6.3, text before Algorithm 1) and Section 7 (Def. 7.1 to Cor. 7.7), p. 16-23.",
+   "label": "K",
+   "bears_on": "H4; question (c)"
+  },
+  {
+   "statement": "Question (c), in print: generalized Lyndon words, for any sequence of alphabet orders by position, form a set of Hall words (Th. 2.2). The standard factorization of such a word w is w = uv with v the proper suffix whose infinite power v^omega is least, the shortest such (proof of Th. 2.2); v is also the longest proper suffix that is a generalized Lyndon word, and for ordinary Lyndon words this is Lothaire's standard factorization (Remarque 2.2). Iterating gives a complete bracketing (a tree), and the Lie polynomials so defined form a basis of the free Lie algebra (Cor. 2.3, by the theory of Hall bases). So Galois words do have a standard factorization and a tree.",
+   "source_key": "Reut-SLC54",
+   "locator": "Section 2: definition of Hall sets and Hall words (p. 4), Théorème 2.2 (p. 5), its proof (p. 6-7), Remarque 2.2 (p. 7-8), Corollaire 2.3 (p. 8). Restated in DRR-TCS19, arXiv:1812.04515v1, Introduction p. 2.",
+   "label": "K",
+   "bears_on": "question (c); H4; H5"
+  },
+  {
+   "statement": "Prior art for the entry's text-side reading of the induction: the 'Schützenberger-Melançon algorithm'. Start from the circular sequence of the letters of w; a rise is a pair of neighbours (h_i, h_{i+1}) with h_i < h_{i+1} (order of infinite powers), legal if h_{i+1} is >= every element of the sequence; replace a legal rise by the word h_i h_{i+1}; iterate. It ends on the unique power of a Hall word conjugate to w (for w primitive: the Galois word, or for the lexicographic order the Lyndon word, of its conjugacy class). Stated there for Galois words as a special case of Melançon's algorithm for any Hall set.",
+   "source_key": "Reut-SLC54",
+   "locator": "Section 3.4 (p. 10); references [Me] = Melançon, JCTA 59 (1992) 285-308, and [S1] = Schützenberger, séminaire Dubreil 1978 (neither read).",
+   "label": "K",
+   "bears_on": "entry section 5.5 (last bullet), section 5.6 Theorems 1-2, section 10 (what is claimed as new); H5"
+  },
+  {
+   "statement": "Checked by program, lexicographic order: (1) on 2,818 random primitive words every one of the 58,315 right-end steps is a legal rise in Reutenauer's sense: w_B is a maximum, in the order of infinite powers, of the words of all letters present, and w_A < w_B strictly. (2) On 4,579 primitive words the rewriting, with a legal rise drawn at random each time, ends on the least rotation with exactly the tree of the right-end induction, which is also the standard-factorization tree and the Cartesian tree of the rotation ranks (4,579 of 4,579 each). So the entry's 'pair-merging of the text's positions in decreasing order of suffix rank' is this rewriting for the Lyndon Hall set; what the induction adds is taking one legal rise at all its occurrences at once, on r run letters.",
+   "source_key": "own-test",
+   "locator": "python3 -I t12_steps_are_legal_rises.py 1 3000 ; python3 -I t6_melancon.py 1 5000",
+   "label": "tested",
+   "bears_on": "entry sections 5.5, 5.6, 10; H5"
+  },
+  {
+   "statement": "Checked by program, alternating order: the right-end induction with one flip bit a letter (rules in notes) run on the ABWT of 18,879 random primitive words ends on one letter with one row spelling the Galois rotation on all 18,879. Its tree is the min-Cartesian tree of the alternating rotation ranks over the Galois rotation on all 18,879 (by Prop. 7.5 of GMRRS-TCS20 these are also the ranks of its suffixes). It is the iterated standard factorization (Reutenauer's Hall tree) on only 739; the root split alone agrees on 15,819. Exhaustively: binary Galois words of length 2-14: 2,536, tree = Cartesian tree on all, = standard tree on 7, same root split on 2,372; ternary, length 2-9: 3,499, all, 501, 3,157. Smallest case: abb, ABWT bab: the induction gives a(bb), the standard factorization (ab)b.",
+   "source_key": "own-test",
+   "locator": "python3 -I t1_t2_abwt.py 1 20000 alt ; python3 -I t10_exhaustive_trees.py",
+   "label": "tested",
+   "bears_on": "H4 (second and third clauses); question (c); entry section 5.6 Theorem 2"
+  },
+  {
+   "statement": "Checked by program: in that induction the letters' words are not always Galois words: of 346,304 words made, 266,789 are Galois and 79,515 are not primitive; in a second sample all 42,653 non-primitive words made are squares uu of a Galois word u of odd length. Only 37,692 of 51,828 steps are legal rises (w_A < w_B); in the rest w_A and w_B have the same infinite power. The Schützenberger-Melançon rewriting in the alternating order (4,616 words) does give the standard tree on all 4,616 and the induction's tree on 79. So for the alternating order the analogue of 'Cartesian tree of suffix ranks = standard tree' (Hohlweg-Reutenauer, used in the entry's Theorem 2) is false.",
+   "source_key": "own-test",
+   "locator": "python3 -I t1_t2_abwt.py 1 20000 alt ; python3 -I t7_left_end.py 1 10000 ; python3 -I t12_steps_are_legal_rises.py 1 3000 ; python3 -I t6_melancon.py 1 5000",
+   "label": "tested",
+   "bears_on": "H4 (third clause); entry section 5.6"
+  },
+  {
+   "statement": "In print, why the alternating case differs: Galois words are not closed under ordered concatenation. Reutenauer: Galois words are not a Viennot factorization: 121 and 3 are Galois, (121)^omega < 3^omega, but 1213 is not Galois (1312 is). Hendrian et al. print the same example (aba, c, abac). Galois words can be bordered, and a pre-Galois word can have two Galois roots of different length parity (Lemma 8).",
+   "source_key": "Reut-SLC54",
+   "locator": "Reut-SLC54 Section 3.8 (p. 14), Prop. 3.1 (p. 9); HKYS-CPM24 arXiv v2, Section 3 after Lemma 4 (p. 4) and Lemma 8 (p. 5).",
+   "label": "K",
+   "bears_on": "H4; question (c)"
+  },
+  {
+   "statement": "The alternating bijection, secondary source: Gessel-Restivo-Reutenauer (their Section 3) give a bijection between words of length n and multisets of necklaces of total length n in which each necklace is primitive or of the form (uu) with u primitive of odd length, and each necklace of odd length has multiplicity at most one; its inverse sorts the periodic sequences in the alternating order.",
+   "source_key": "Elizalde-25",
+   "locator": "arXiv:2503.09972v2, Section 2.2 (p. 3-4), citing [4, Sec. 3]. GRR-EJC12 itself was not obtained.",
+   "label": "K",
+   "bears_on": "H4; H1 (alternating analogue)"
+  },
+  {
+   "statement": "Checked by program: the induction with flips run on ANY column (ABWT's LF, drop rule of entry section 2; a closed letter with flip -1 and lambda rows stands for floor(lambda/2) necklaces (ww) and, if lambda is odd, one necklace w) reproduces exactly that image: 20,000 random columns (18,480 with several cycles): necklaces = cycles of LF on all; each necklace primitive or (uu) with u primitive of odd length on all; no odd necklace twice on all; every closed word a Galois word on all; closing order non-increasing in the alternating order of infinite powers on all; 15,109 of 59,660 closed letters were flipped with lambda > 1. All 8,190 binary columns of length <= 12 give 8,190 distinct multisets; all 9,840 ternary columns of length <= 8 give 9,840.",
+   "source_key": "own-test",
+   "locator": "python3 -I t3_columns.py 1 20000 (parts c, d)",
+   "label": "tested",
+   "bears_on": "H4; H1 (alternating analogue); entry section 2 (a column that is no BWT)"
+  },
+  {
+   "statement": "Checked by program: a 'bijective ABWT'. Cut T into its Galois factorization (non-increasing Galois words), take the last letters of all rotations of all factors sorted by the alternating order of their infinite powers. On 20,000 random texts (15,111 with an odd-length factor repeated) the column is well defined and the closed words of the induction with flips, each lambda times, in closing order, are the Galois factorization of T (20,000 of 20,000). Hendrian et al. name such a transform as future work only.",
+   "source_key": "own-test",
+   "locator": "python3 -I t9_bijective_abwt.py 1 20000 ; HKYS-CPM24 arXiv v2, end of Section 2 (p. 3)",
+   "label": "tested",
+   "bears_on": "H4; H1 (alternating analogue)"
+  },
+  {
+   "statement": "H1 checked by program for the ordinary BWT (no paper of this cluster addresses it). (a) 20,000 random columns (17,566 with several cycles): the closed letters' necklaces = the cycles of LF; every closed word a Lyndon word; closing order non-increasing in the order of infinite powers; every closed tree = its Lyndon tree: 20,000 of 20,000 each. (b) Bijective BWT of 20,000 random texts (rotations of the Lyndon factors sorted by infinite power): closed words in closing order, each lambda times, = the Lyndon factorization of T on all 20,000; each tree the Lyndon tree on all.",
+   "source_key": "own-test",
+   "locator": "python3 -I t3_columns.py 1 20000 (parts a, b)",
+   "label": "tested",
+   "bears_on": "H1; entry section 2"
+  },
+  {
+   "statement": "H2 checked by program: reversing the row order turns the left end into the right end, and the reversed column is the BWT for the inverse alphabet order (9,359 of 9,359 primitive words); the induction on it ends on the greatest rotation with the Lyndon tree for the inverse order (9,359 of 9,359 each). With the entry's Theorems 1-2 this is a one-line consequence of the mirror symmetry.",
+   "source_key": "own-test",
+   "locator": "python3 -I t7_left_end.py 1 10000",
+   "label": "tested",
+   "bears_on": "H2; entry section 5.6 (left end)"
+  },
+  {
+   "statement": "Hendrian et al.: a word is Galois iff ... decided in O(n) time and O(1) extra space by maintaining the shortest odd and even periods of the pre-Galois prefix (Th. 4, Algorithm 1, Th. 5); the Galois factorization (unique non-increasing factorization into Galois words) is computed online in O(n) time, O(1) extra space (Algorithm 2, Th. 6), settling Open Problem 1 of DRR-TCS19 for Galois words; the Galois rotation is found in O(n) time, O(1) space by factorizing TTT (Lemma 23, Algorithm 3, Th. 7), since, unlike the Lyndon case, it cannot be read off the factorization of TT (DRR Example 41). Table 1 counts Galois against Lyndon factors of real files (e.g. dblp.xml 3 against 15, dna 26 against 18, proteins 29 against 30, sources 23 against 35). Nothing on inversion, on LF, or on trees.",
+   "source_key": "HKYS-CPM24",
+   "locator": "arXiv:2403.02636v2: Section 4 (Def. 1-2, Lemmas 5-10), Section 5 (Th. 4-5), Section 6 (Def. 3, Lemmas 17-21, Th. 6), Section 7 (Lemmas 22-23, Th. 7), Section 8 Table 1 (p. 14).",
+   "label": "K",
+   "bears_on": "H4; question (c); nothing for entry section 8"
+  },
+  {
+   "statement": "Daykin-Mhaskar-Smyth, question (e): a circ-UMFF contains exactly one rotation of every primitive word, all its words are border-free, and every word of length >= 2 in it is a product uv of two of its words with u before v in its concatenation order (Th. 22, quoted from Daykin-Daykin 2008): so every circ-UMFF (Lyndon words, V-words, ...) carries binary trees. For any total order on all words, the border-free least conjugates form a circ-UMFF (Th. 35(i)). The orders treated are lexorder, V-order, co-lexorder, reverse lexorder, alternating lexorder, binary B-order and lex-extension orders. An order of the rotations 'turned to begin at another row' is not among them and is not discussed.",
+   "source_key": "DMS-VWORDS",
+   "locator": "arXiv:2409.02757v1: Def. 16, Lemma 17, Def. 20, Theorem 22 (p. 8-9); Def. 28-29, Theorem 35 (p. 11-14); Example 36 (p. 14-15).",
+   "label": "K",
+   "bears_on": "question (e); entry section 5.5 (the count depends on where the rows begin), section 8 item 9"
+  },
+  {
+   "statement": "Inference for question (e): the family 'the rotation of rank p' for a fixed p >= 1 is not a circ-UMFF, because its words can be bordered (aab: the rotation of rank 1 is aba) and circ-UMFF words are border-free (Th. 22(1)). So this theory gives no generalized-Lyndon structure to the grammar read from another starting row; row 0 (and, mirrored, the last row) is the start at which the letters' words form a Hall set.",
+   "source_key": "DMS-VWORDS",
+   "locator": "Theorem 22(1) (p. 9) applied to the example aab; not a statement of the paper.",
+   "label": "Conj",
+   "bears_on": "question (e); entry section 5.5, section 8 item 9"
+  },
+  {
+   "statement": "Daykin-Mhaskar-Smyth on Galois words (the part added in the arXiv version): Galois words do not form a UMFF (ababa and ab overlap in a and would force the power ababab), hence no circ-UMFF; the border-free Galois words do form a UMFF (Lemma 48); binary border-free Galois words of length > 3 start with ab and end with bb (Lemma 50) and are exactly the Hybrid Lyndon words over their factors ab^e a^f in a modified alternating order (Th. 54); Algorithm 2 enlarges a finite binary border-free UMFF to a circ-UMFF (Th. 56, Example 57 mixes Galois and Lyndon words). Also (p. 6): in V-order the suffixes of a word are ordered by length.",
+   "source_key": "DMS-VWORDS",
+   "locator": "arXiv:2409.02757v1, Section 7 (p. 16-24), Section 8 (p. 24-27); Lemma 8 and the text after it (p. 6).",
+   "label": "K",
+   "bears_on": "question (c); H4"
+  },
+  {
+   "statement": "Caution: Theorem 46 of that paper ('for Galois u, v with uv primitive, u <alt v iff uv is Galois') is contradicted by the example printed by Reutenauer and by Hendrian et al. (u = aba, v = c: aba <alt c, abac is primitive and not Galois, acab is). Exhaustive check over 3 letters, |u|, |v| <= 5: 80 Galois words, 6,302 pairs with uv primitive, the equivalence fails on 66, always as 'u <alt v but uv not Galois', never when u and v are both border-free (0 of 2,256).",
+   "source_key": "own-test",
+   "locator": "python3 -I t8_dms_thm46.py ; DMS-VWORDS Theorem 46 (p. 19); Reut-SLC54 Section 3.8; HKYS-CPM24 p. 4",
+   "label": "tested",
+   "bears_on": "question (c); H4 (do not cite Theorem 46 for a Galois tree)"
+  },
+  {
+   "statement": "Question (d), in print: no table of run counts of the ABWT against the BWT on real data was found. What is printed: rho(bwt_K(w)) <= 2 rho(w) for every K (DLT Theorem 2 = TCS Theorem 4.5); 'for every not unary word w having length greater than 2, rho(abwt(w)) > 2' stated without proof, with bwt(abaababa) = bbbaaaaa against abwt = ababbaaa; Table 1 of the DLT paper compares compressed OUTPUT SIZES of a BWT-based and an ABWT-based booster on 8 files (chr22.dna, etext99, howto, jdk13c, sprot34.dat, rctail96, rfc, w3c2), equal within about 0.35% (jdk13c 3,945,465 against 3,931,722); the DLT conclusion lists the runs of the ABWT as future work; GMRRS-IC23 says the authors know of no experiment using the ABWT for indexing.",
+   "source_key": "GMRRS-DLT18",
+   "locator": "Post-print: Section 3 (p. 7), Theorem 2 (p. 10), Table 1 (p. 11), Section 6 (p. 18). GMRRS-IC23 arXiv v2, Section 2.1 (p. 6).",
+   "label": "K",
+   "bears_on": "question (d); entry section 8 item 9"
+  },
+  {
+   "statement": "Question (d), counted here on the repository's corpora (raw decompressed bytes, 900,000-byte chunks sorted as cyclic rotations; not bzip2's own blocks). Wikidata, 5 chunks: r_ABWT / r_BWT = 1.0003, 1.0003, 0.9995, 0.9999, 1.0008 (r_BWT 51,206 to 67,173). Prose, 3 chunks: 0.9998, 1.0009, 1.0000 (r_BWT 303,549 to 371,993). Right-end induction steps on the same chunks: BWT 1.810 to 1.934 r (Wikidata) and 1.805 to 1.859 r (prose); ABWT with flips 1.851 to 1.953 r and 1.800 to 1.858 r; S_ABWT / S_BWT = 1.055, 1.021, 1.024, 1.010, 1.015 (Wikidata) and 0.997, 0.998, 0.999 (prose). The alternating order makes neither fewer runs nor fewer steps.",
+   "source_key": "own-test",
+   "locator": "python3 -I t5_real.py /home/user/mibz2/corpora/wikidata.bz2 900000 0 50000000 100000000 150000000 200000000 ; python3 -I t5_real.py /home/user/mibz2/corpora/prose.bz2 900000 0 1000000 2000000",
+   "label": "tested",
+   "bears_on": "question (d); entry section 8 item 9 (another order)"
+  },
+  {
+   "statement": "Counted here: what a decoder can do with the idea without changing the column. Keep the BWT column, permute the first-letter buckets of the rows and reverse some buckets in place; LF is then an exchange on the runs cut at bucket boundaries (r + 13 and r + 4 pieces), flipped where exactly one of the two buckets is reversed; with the bucket order alone changed it is a local ordering with only pi_empty changed. Validity: 3,667 of 3,667 random words end on one letter, one row, a rotation of the word. Steps on two Wikidata chunks, S / r: byte order 1.811, 1.810 (the same S as uncut); reversed byte order 2.163, 2.097; rare bytes first 1.921, 1.885; common first 1.867, 1.841; two random orders 1.895, 1.897 and 2.053, 1.803; every bucket reversed in place 1.900, 1.847; both (the left end) 2.198, 2.128; random buckets reversed 1.891, 1.813. Best gain 0.4%, on one chunk, by a random order; everything else is 0.2% to 21% worse.",
+   "source_key": "own-test",
+   "locator": "python3 -I t11_conjugated.py /home/user/mibz2/corpora/wikidata.bz2 900000 0 100000000",
+   "label": "tested",
+   "bears_on": "entry section 5.6 ('orders by bucket are worse'), section 8 items 2 and 9"
+  },
+  {
+   "statement": "Run minimization: for a constant alphabet the context-adaptive BWT with the fewest runs for a given string is found in O(n) time by dynamic programming on the suffix tree (Th. 27); it is a lower bound on the runs of every BWT variant of the paper. The paper recalls that choosing the alphabet order minimizing the runs of the ordinary BWT is NP-complete and APX-hard (Bentley, Gibney, Thankachan, ESA 2020, as cited). This is an encoder-side statement: a bzip2 decoder is handed a column sorted in byte order.",
+   "source_key": "GMRRS-IC23",
+   "locator": "arXiv:2205.05643v2: Section 2.2 (p. 7), Section 5, Theorem 27 (p. 19-21).",
+   "label": "K",
+   "bears_on": "entry section 8 item 9"
+  },
+  {
+   "statement": "Absence, from a full read and a keyword count of the seven texts read (DLT post-print, arXiv 1907.02308, 2403.02636, 2409.02757, 2205.05643, 1812.04515, SLC B54h): 'Rauzy', 'flip', 'Lazard' and 'Lyndon tree' occur in none; 'interval exchange' only in the title of a cited paper (Ferenczi-Zamboni, in the ABWT paper's reference list); 'Cartesian' only in a reference title of DRR-TCS19 (Crochemore-Russo). None runs an induction on LF, builds a grammar from a column, or counts steps. Nothing in this cluster pre-empts the entry's claims of section 10 other than the text-side rewriting of Reut-SLC54 section 3.4.",
+   "source_key": "own-test",
+   "locator": "grep -c -i over the pdftotext output of each file (counts 0, except as said)",
+   "label": "tested",
+   "bears_on": "entry section 10"
+  }
+ ],
+ "hypotheses": [
+  {
+   "h": "H1. The right-end induction on ANY column inverts the extended BWT: closed words are the Lyndon conjugates of the necklaces, cycles close in non-increasing order, and on the bijective BWT of T the closed words in order are the Lyndon factorization of T, each with its Lyndon tree.",
+   "verdict": "not addressed (by any paper of this cluster); tested true here",
+   "evidence": "The four cluster papers contain no induction and no statement about the eBWT or BBWT beyond citations: the ABWT paper recalls (arXiv:1907.02308v1, Introduction p. 2) that the BWT is the inverse of Gessel-Reutenauer's bijection between words and multisets of primitive necklaces, attributing this to Crochemore-Désarménien-Perrin 2005; Hendrian et al. (arXiv v2, p. 3) mention the bijective BWT only as a direction for a Galois analogue. Elizalde-25, Section 2.1, restates the Gessel-Reutenauer inverse (sort the periodic sequences, ties broken consistently). Tested (t3_columns.py 1 20000): 20,000 random columns, 17,566 with several cycles: necklaces = cycles of LF, closed words Lyndon, closing order non-increasing, trees = Lyndon trees, 20,000 of 20,000 each; BBWT of 20,000 random texts: closed words in order = the Lyndon factorization, 20,000 of 20,000, trees likewise. Sources of the bijections themselves (Mantaci et al., Gil-Scott, Gessel-Reutenauer 1993) are outside this cluster and were not read."
+  },
+  {
+   "h": "H2. The induction at the LEFT endpoint yields the Lyndon tree, for the inverse alphabet order, of the greatest rotation.",
+   "verdict": "not addressed; tested true here, and it follows from the entry's Theorems 1-2 by a mirror",
+   "evidence": "No paper of the cluster treats an endpoint or an anti-Lyndon tree (DRR-TCS19, Introduction p. 2, only notes that anti-Lyndon words are Lyndon words for the opposite order). Argument (Conj): reversing the row order exchanges the two endpoints and conjugates LF to the LF of the BWT for the inverse alphabet order. Tested (t7_left_end.py 1 10000): on 9,359 primitive words the reversed column is that BWT, the induction ends on the greatest rotation, and its tree is the Lyndon tree for the inverse order: 9,359 of 9,359 each. Real-data count consistent with the entry: reversed bucket order with every bucket reversed gives 2.198 r and 2.128 r steps on two Wikidata chunks (t11)."
+  },
+  {
+   "h": "H3. The LEFT Lyndon tree (longest proper prefix that is Lyndon) is, or is not, the tree of some order of Rauzy steps; and whether its node count over the hinges is smaller.",
+   "verdict": "not addressed",
+   "evidence": "None of the papers read mentions the left standard factorization or any tree of a Lyndon or Galois word other than Reutenauer's right standard factorization (Reut-SLC54, Remarque 2.2: v is the longest proper SUFFIX that is a generalized Lyndon word). No test was run here. One related count (t12): at the right end every step is a legal rise of the Schützenberger-Melançon rewriting (58,315 of 58,315), whose tree is the right standard bracketing by construction; a schedule producing the left tree would have to leave that rewriting."
+  },
+  {
+   "h": "H4. For the alternating BWT, LF is an interval exchange WITH FLIPS on the runs, Rauzy induction with flips inverts it, and its grammar is the standard-factorization tree for the alternating order (a 'Galois tree').",
+   "verdict": "partly: clause 1 in print (as a formula, not under that name); clause 2 not in print, tested true; clause 3 contradicted by test",
+   "evidence": "Clause 1: K. Prop. 3.2(3b) and eq. (3) of arXiv:1907.02308v1 (= Prop. 1 and eq. (3) of the DLT paper): equal letters appear in L in the reverse of their order in F, so LF is order-reversing on every run (tested: 89,502 of 89,502 runs of length >= 2). The papers do not call it an interval exchange. Clause 2: not addressed in print. Tested: the right-end induction with a flip bit per letter ends on the Galois rotation for 18,879 of 18,879 primitive words; on arbitrary columns it realizes the Gessel-Restivo-Reutenauer alternating bijection as Elizalde restates it (20,000 of 20,000 columns; injective on all 8,190 binary columns of length <= 12 and all 9,840 ternary of length <= 8); on a 'bijective ABWT' it returns the Galois factorization (20,000 of 20,000). Clause 3: false as stated. In print, Galois words do have a standard factorization and tree (Reut-SLC54, Th. 2.2, Remarque 2.2, Cor. 2.3), but the induction's grammar is instead the min-Cartesian tree of the alternating rotation (= suffix, Prop. 7.5) ranks: equal to it on 18,879 of 18,879 random and on all 2,536 binary Galois words of length <= 14, equal to the standard tree on 739 of 18,879 and 7 of 2,536; its letters' words are Galois words or squares of odd-length Galois words (79,515 of 346,304 are such powers). Reason in print for the gap: Galois words are not closed under ordered concatenation (Reut-SLC54 Section 3.8; HKYS-CPM24 p. 4)."
+  },
+  {
+   "h": "H5. A right-end step is a context-refined Lazard elimination of the largest letter, and the grammar is the standard bracketing of the Lyndon word in the free Lie algebra.",
+   "verdict": "partly: second half in print once the entry's Theorem 2 is granted; first half not addressed",
+   "evidence": "Second half: K. Reut-SLC54, Cor. 2.3 with Th. 2.2 and Remarque 2.2: iterating the standard factorization brackets every (generalized) Lyndon word completely, the resulting Lie polynomials are a basis of the free Lie algebra (he cites Free Lie Algebras, Th. 4.9, not read), and for ordinary Lyndon words this standard factorization is Lothaire's. The entry's Theorem 2 identifies its grammar with that bracketing. First half: the word 'Lazard' occurs in none of the texts read. The nearest statement in print is the Schützenberger-Melançon rewriting for Hall sets (Reut-SLC54, Section 3.4): merge a neighbour pair whose right element is the current maximum; tested here: every right-end step is such a legal rise (58,315 of 58,315 steps on 2,818 words) and the rewriting with random choices gives the induction's tree (4,579 of 4,579). That a legal rise is one move of a Lazard elimination is my inference, not read in a source (Conj)."
+  }
+ ],
+ "ideas": [
+  {
+   "idea": "Cite the Schützenberger-Melançon rewriting (Reutenauer, SLC B54h, Section 3.4; Melançon, JCTA 59 (1992) 285-308; Schützenberger 1978) in entry sections 5.5-5.6 and 10 as the text-side form of the right-end induction, and restate the claim as: one legal rise taken at all its occurrences at once, on r run letters, through the exchange.",
+   "kind": "prior art that narrows a claim",
+   "why": "The entry presents 'pair-merging of the text's positions in decreasing order of suffix rank' ending on the least rotation with its Lyndon tree as its own reading (Theorem 1, P) and cites only Hohlweg-Reutenauer for the tree. The process itself is in print for every Hall set. It also gives section 8 item 9 its vocabulary: the right end at row 0 is the Hall rewriting for Lyndon words, which is why equal words have equal subtrees there (the 0.470 S sharing); other starts and layouts are not Hall rewritings.",
+   "falsifier": "Already run on random words (t12: 58,315 of 58,315 steps are legal rises; t6: same tree on 4,579 of 4,579). Stronger and cheap: in a simulator on a few real blocks assert at every step that w_B is a maximum of the present words in the order of infinite powers and w_A < w_B; one failing step kills the identification.",
+   "cost": "One or two hours: read Melançon 1992 and Reutenauer's Free Lie Algebras ch. 4-5 (neither was fetched here), one assert in an existing simulator, one paragraph in section 10."
+  },
+  {
+   "idea": "Record the alternating case as a closed branch: the ABWT's LF is the same exchange with all r intervals flipped; the induction with a flip bit inverts it and any column; its grammar is the Cartesian tree of alternating suffix ranks, not a Hall tree; on real bytes it has the same r (within 0.1%) and 1 to 5.5% more steps on Wikidata (0.1 to 0.3% fewer on prose).",
+   "kind": "related approach to record",
+   "why": "It answers the mission's H4 and one reading of section 8 item 9 ('another order'): the alternating order buys nothing in runs or cells, and a bzip2 column is a BWT, so a decoder could not use it anyway. It also shows that the entry's Theorem 2 (Cartesian tree = standard tree) is special to the lexicographic order: it needs the family to be closed under ordered concatenation.",
+   "falsifier": "Done: t1_t2_abwt.py, t3_columns.py, t5_real.py, t9_bijective_abwt.py, t10_exhaustive_trees.py (counts in findings). A reviewer can rerun each in under two minutes.",
+   "cost": "Five lines in the entry's section 9 or 10; no code."
+  },
+  {
+   "idea": "Decoder-side row layouts by bucket: permute the first-letter buckets and reverse chosen buckets in place before the induction (flips appear where one of the two buckets is reversed). Depth 1 was counted here and loses; the untried variant is depth 2 (permute the sigma^2 pair-buckets inside each bucket, i.e. a local ordering with the per-symbol orders changed too is NOT reachable, only pair-block permutations are).",
+   "kind": "new idea to try",
+   "why": "It is the only way the 'other order of the alphabet' of section 8 item 9 can be used by a decoder, since the column is fixed. Depth 1 on two Wikidata chunks: best 0.4% under the byte order (one random order on one chunk), all others 0.2% to 21% above; reversing buckets (flips) 2 to 5% above. The entry's line that 'orders by bucket are worse' is confirmed and extended to flips.",
+   "falsifier": "Same script with pair-buckets on 8 blocks and about 20 layouts: drop it unless the best layout is at least 3% under the byte order on the pooled count. Expectation from depth 1: it fails.",
+   "cost": "About 40 lines of Python on t11_conjugated.py; an hour. Low rank."
+  },
+  {
+   "idea": "When a later note needs 'ordered concatenation of Galois words', cite the border-free case (Daykin-Mhaskar-Smyth Lemma 48) or Reutenauer's Hall condition (u < v and the right factor of u is >= v), not Theorem 46 of arXiv:2409.02757.",
+   "kind": "prior art that narrows a claim",
+   "why": "Theorem 46 as printed fails on bordered factors: 66 of 6,302 pairs of short Galois words, the first being (aba, c), which Reutenauer (Section 3.8) and Hendrian et al. (p. 4) print as a counterexample to that very closure.",
+   "falsifier": "t8_dms_thm46.py (done).",
+   "cost": "None beyond a citation choice."
+  },
+  {
+   "idea": "Use the run-minimization bound of Giancarlo et al. (Inf. Comput. 2023, Th. 27: least runs over all context-adaptive BWTs, O(n) for a constant alphabet) as a yardstick for how far a block's r is from the least any sort order could give.",
+   "kind": "known algorithm to implement",
+   "why": "Only for a future format or an encoder study: it bounds what any change of order could buy in r. It does nothing for inverting bzip2's column. Stated for constant alphabets; with 256 symbols the dynamic program over child orders is exponential in the node degree as written.",
+   "falsifier": "If on three blocks the bound is within a few percent of r, the question 'would another order have fewer runs' is closed for good.",
+   "cost": "A suffix tree and the dynamic program: a day or more. Not recommended now."
+  },
+  {
+   "idea": "Nothing to take for the kernel from the Galois-word algorithms (Hendrian et al.) or from circ-UMFF theory (Daykin et al.).",
+   "kind": "related approach to record",
+   "why": "Said plainly: the first are text-side scans (detection, factorization, rotation of a word under the alternating order); the second classifies families of border-free words with unique maximal factorizations. Neither touches LF, runs, inversion or step counts. Their only use here is negative: circ-UMFF words are border-free (Th. 22(1)), so the grammar from another starting row (entry section 5.5, +11% cells) is not a generalized Lyndon tree in that theory.",
+   "falsifier": "None needed.",
+   "cost": "None."
+  }
+ ],
+ "notes": "WHAT WAS READ. In full: arXiv:1907.02308v1 (the ABWT paper; journal PDF not obtainable), the authors' post-print of the DLT 2018 chapter, arXiv:2403.02636v2 (Hendrian et al.), arXiv:2409.02757v1 (Daykin et al., extended version). Background, sections named in the findings: arXiv:2205.05643v2, Reutenauer SLC B54h (sections 1, 2, 3.1-3.4, 3.7-3.8, references), arXiv:1812.04515v1 (sections 1, 6, 7), arXiv:2503.09972v2 (sections 1-2). NOT obtained: Gessel-Restivo-Reutenauer 2012 (ScienceDirect 403 for curl and WebFetch; repository copy restricted): its content is quoted only through Elizalde's restatement; the TCS and COCOA publisher PDFs; Melançon 1992; Reutenauer's book. DBLP answered every request with a bot check (HTTP 202 challenge page) on dblp.org, dblp.uni-trier.de and dblp.dagstuhl.de, so no field comes from DBLP; records come from Crossref, Springer and DROPS meta tags, the arXiv API and the PDFs. CORE answered 429.\n\nANSWERS TO THE PARTICULAR QUESTIONS, in one place. (a) Order-reversing on every run: LF(i) = sum_{c <= L[i]} P_L[c] - rank_{L[i]}(L, i-1) - 1. (b) An isometry on each run: BWT (translations) and ABWT (reversals) only within BWT_K; translations on runs cut at first-column boundaries for local orderings, which are ordinary BWTs over pairs; not for general context-adaptive orderings (their Example 25). (c) Yes, a standard factorization and a tree exist (Reutenauer, Th. 2.2, Remarque 2.2, Cor. 2.3), and no, it is not the Cartesian tree of alternating ranks (7 of 2,536 binary Galois words of length <= 14 agree); no paper states either the identity or its failure. (d) Not found in print; counted here: equal within 0.1%. (e) No: turned orders are not among the orders treated and their least conjugates can be bordered, which a circ-UMFF forbids.\n\nTHE INDUCTION WITH FLIPS, as programmed (fiet.py, function induce). Each letter has a length, a word and a flip in {+1, -1}; A = last on top, B = last on the bottom, N -> w_A w_B, new flip = flip_A * flip_B. Top wins: lambda_A -= lambda_B; B takes word N and the new flip and moves on the bottom to just after A if flip_A = +1, just before A if flip_A = -1. Bottom wins: lambda_B -= lambda_A; A takes N and the new flip and moves on top to just after B if flip_B = +1, just before B if -1. Equal: A is deleted, B takes N, the new flip and A's bottom place. A = B closes the letter: with flip +1 it is lambda cycles spelling w; with flip -1 it is floor(lambda/2) cycles spelling ww and, if lambda is odd, one spelling w. For the BWT all flips start +1 and the rules are the entry's; for the ABWT all start -1 and the bottom order lists the runs of a byte in reverse.\n\nCAUTIONS. (1) Eq. (3) is printed with different index conventions: the DLT post-print has '- rank_{L[i]}(L, i) + 1' (and '+ rank(L, i)' in eq. (2)), which for rows counted from 0 gives LF + 1; the arXiv/TCS form with rank(L, i-1) is the one checked against brute force. (2) Hendrian et al. (p. 2) credit the 2023 Inf. Comput. paper with an r-index for the alternating BWT; in the arXiv v2 text I read, the r-index is shown for local orderings (Section 4.1), of which the ABWT is not one. (3) arXiv's DOI field for Hendrian et al. ends in '.1'; DROPS says '.18'. (4) The count 739 appears twice by coincidence: 739 agreements among 18,879 random words, and 739 disagreements among the 745 binary Galois words of length 2-12 (t10 gives the table by length). (5) The real-data chunks are raw bytes, not bzip2 blocks (no RLE1); S / r on them (1.81 to 1.93 on Wikidata) is in line with the entry's 1.812 pooled, which is the only check against the entry's own numbers. Only two chunks were used for the layout count (t11) and five plus three for the runs (t5): indicative. No clock was read anywhere.\n\nFILES (all scratch; the repository was only read: corpora/wikidata.bz2, corpora/prose.bz2 and the journal entry; git status is clean).\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/fiet.py (shared routines)\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t1_t2_abwt.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t3_columns.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t4_generalized.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t5_real.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t6_melancon.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t7_left_end.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t8_dms_thm46.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t9_bijective_abwt.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t10_exhaustive_trees.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t11_conjugated.py\n/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/t12_steps_are_legal_rises.py\nFetched sources (PDFs, their text, Crossref/DROPS/Springer records) are in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/alternating-galois/dl/ .\nEvery command in the findings is run as python3 -I <absolute path of the script> <arguments shown>; the counting induction of t5 and t11 was cross-checked against fiet.induce on 5,808 and 3,667 small cases."
+}
