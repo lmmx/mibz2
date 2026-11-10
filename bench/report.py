@@ -70,7 +70,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.4.0"
+BENCH = "3.5.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
@@ -872,6 +872,37 @@ def kernel_lines(k: dict) -> list[str]:
     return out
 
 
+def research_figures(runs: list[dict], mhz: float | None) -> dict:
+    """One build's rows not in its total (bench/stages.py's `others`, from bench 3.5.0: the
+    walks not used, and research rows such as design E's), by label in phases' order: each
+    one's median ns and cycles a byte and, where the row names the stage it stands against
+    (stage keys joined by "+", summed), its ratio to that stage paired by run, a run's row
+    over the same run's stage."""
+    out = {}
+    for label in dict.fromkeys(l for r in runs for l in r.get("others") or {}):
+        rows = [r for r in runs if label in (r.get("others") or {})]
+        v = [r["others"][label]["ps"] / 1000 for r in rows]
+        against = rows[0]["others"][label].get("against")
+        med = statistics.median(v)
+        f = {
+            "ns_per_byte": round(med, 4),
+            "cycles_per_byte": round(med * mhz / 1000, 3) if mhz else None,
+            "against": against,
+            "ratio": None,
+        }
+        if against:
+            keys = against.split("+")
+            f["ratio"] = ratio_ci(
+                [
+                    r["others"][label]["ps"] / sum(r["ps_per_byte"][k] for k in keys)
+                    for r in rows
+                    if all(r["ps_per_byte"].get(k) for k in keys)
+                ]
+            )
+        out[label] = f
+    return out
+
+
 def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
     """Each build's stages (bench/stages.py's runs, picoseconds a byte): the median ns and
     cycles a byte of output (at the reported clock) and each round's ns; on a pull
@@ -902,6 +933,7 @@ def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
                 "cycles_per_byte": round(med * mhz / 1000, 3) if mhz else None,
             }
             f["rounds_ns_per_byte"][key] = v
+        f["research"] = research_figures(list(ok.values()), mhz)
         arms[arm] = f
     out = {
         "corpus": "wikidata",
@@ -1394,6 +1426,28 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
             + "; ".join(f"{arm}, “{w}”" if w else f"{arm}, not named" for arm, w in named)
             + ".",
         ]
+    research = last.get("research") or {}
+    if research:
+        arm = shown[-1]
+        out += [
+            "",
+            f"**Rows not in the total** ({arm}'s `phases`: the walks it does not use, and research "
+            "rows, each timed in passes of its own as the stages are). **Against** is the stage "
+            "the row stands in for, as its line names it; **row / stage** is the row over that "
+            f"stage in the same run, the geometric mean of the {st['rounds']} runs' ratios and "
+            "its 95% interval (above 0%: the row takes longer). Diagnostic, as the table above.",
+            "",
+            f"| row | {unit} (median) | against | row / stage |",
+            "|---|--:|---|--:|",
+        ]
+        for label, f in research.items():
+            v = (
+                f["cycles_per_byte"]
+                if cycles and f["cycles_per_byte"] is not None
+                else f["ns_per_byte"]
+            )
+            against = " + ".join(f["against"].split("+")) if f["against"] else "–"
+            out.append(f"| {label} | {v:.2f} | {against} | {change(f['ratio'])} |")
     errors = {arm: a["errors"] for arm, a in arms.items() if a["errors"]}
     if errors:
         out += [

@@ -15,6 +15,11 @@ picoseconds a byte of output.
 change to phases.rs reads the same: GHZ is given as 1000, at which its "c/B" figures are
 picoseconds a byte (cycles a byte at 1000 GHz), two decimals of them; the stage that
 counts towards its total is the walk it uses, the others marked "(not in the total)".
+
+The rows not in the total (the walks not used, and research rows such as design E's) are
+kept too, from bench 3.5.0, by label (`others`): each one's picoseconds a byte and the stage
+it stands against, where its line names one (`against: walk`, `against: build+walk`), for
+bench/report.py's research table. They are never part of the stage table.
 """
 
 import argparse
@@ -61,6 +66,21 @@ def parse(text: str) -> dict[str, float]:
     return out
 
 
+AGAINST = re.compile(r"against: ([a-z+]+)")
+
+
+def others(text: str) -> dict[str, dict]:
+    """phases' rows not in the total: each one's picoseconds a byte and, where its line
+    names one, the stage it stands against (stage keys joined by "+"), by label."""
+    out = {}
+    for line in text.splitlines():
+        if (m := LINE.match(line)) and "not in the total" in m.group(3):
+            a = AGAINST.search(m.group(3))
+            against = a.group(1) if a and set(a.group(1).split("+")) <= set(STAGES) else None
+            out[m.group(1)] = {"ps": float(m.group(2)), "against": against}
+    return out
+
+
 def walk_name(text: str) -> str | None:
     """The walk the build's total counts (its line's label, e.g. "walk, room (used)"): the
     stage is the same across builds, its implementation each build's own."""
@@ -86,6 +106,7 @@ def run(a: argparse.Namespace) -> None:
                 if p.returncode or not set(STAGES) - OPTIONAL <= set(ps) <= set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]
                 rec["ps_per_byte"] = ps
+                rec["others"] = others(p.stdout)
                 f.write(json.dumps(rec) + "\n")
                 f.flush()
                 shown = " ".join(f"{k} {ps[k] / 1000:.2f}" for k in STAGES if k in ps)
