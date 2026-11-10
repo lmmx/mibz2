@@ -1482,12 +1482,15 @@
     },
     {
       "trigger_comment_id": 6757210413,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
       "registration_commit": "7c582152ca4b3f44674084b4e75362e930645f34",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "5eec64209245df4f758fa1fe1e47fe0d14fca437",
+      "report_path": "state/reports/target-gated-pilot-6757210413/report.md",
+      "disposition": "REVISE PR319 and pilot dispatch basis: pilot omits manifest integrity, admits absent/backwards timing, m48 absent at R600, batch time proxy wrong, label refusal alone does not establish smoke plumbing. Qualification A fixes and numerical power repairs accepted; revised statistical/causal principles acceptable for nonqualifying pilot."
     }
   ],
   "active_delegations": [],
