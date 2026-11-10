@@ -1,5 +1,7 @@
 # Changes since the last version
 
+- 2026-11-10, through [6773861678](https://github.com/lmmx/mibz2/pull/145#issuecomment-6773861678): 0.2.9 released #359/#353/#358/#356 at b65b2aa5 after the registered i9 team-path gain; four-core CI whole-decoder wall level, with isolated stage and text-memory caveats. #360 notes and wikidata-pq#224 open; Louis asked for 0.2.9-versus-0.2.8 scaling. The research post gained induction/Lyndon steppers and split figures.
+
 - 2026-11-10, through [6773124043](https://github.com/lmmx/mibz2/pull/145#issuecomment-6773124043): #359's ten-round i9 run met its fixed §8 rule: Wikidata base/head 1.138 at ten threads (95% interval 1.123–1.154), gains at six to twenty, byte identity throughout; #359 merged at a5197f11. Its release remains next. Pathfinder's separate inlining maintenance PR was assigned. The independent 0.2.8 release-scaling bundle still has no checked verdict here.
 
 - 2026-11-10, through [6773033172](https://github.com/lmmx/mibz2/pull/145#issuecomment-6773033172): D098 cleared the forced plain-team fuzz gap; #359's CI one-thread flag cleared on its permitted rerun and its fixed-rule C5 workstation test was queued, without a result. #351 merged as example/journal research only after twelve corrected local runs at 0.82–0.86 of inversion time; the parallel claim was narrowed to a ceiling and a one-versus-ten-copy i9 rule was set before data. The published explanation was revised after review. Recorded the #351 pre-commit status lapse at merge and the Coordinator's gate correction.
