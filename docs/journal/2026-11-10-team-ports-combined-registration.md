@@ -50,7 +50,7 @@ No outcome of this diagnostic is a pass or a fail of the ports. It is a validity
 | item | pin |
 |---|---|
 | master | `8f540ef1190689f59a279f081d8405f46669fba0` |
-| stack (candidate) | the source tree of `7323196d556e7bca6ee3ffe2cbf80df5a3575973` (#339's kernel commit, carrying #335 and #337 and master `8f540ef11`). #339's later commits up to `be23a2be0` change only `docs/`. The freeze commit's `src/`, `examples/`, `Cargo.toml` and `Cargo.lock` must equal `7323196d5`'s, checked by `git diff --quiet` before any build |
+| stack (candidate) | the source tree of `f76f0e3cdeec9260179eacd5e1a111a5a434bec5` (#339's head after the B5 reviewer's test, carrying #335, #337 and master `8f540ef11`). Its non-test sources equal those of `7323196d556e7bca6ee3ffe2cbf80df5a3575973` (#339's counted kernel): since then only `docs/` and `src/mtf/tests.rs` (`#[cfg(test)]`) changed. Before any build, the freeze commit must pass `git diff --quiet f76f0e3cd -- src examples Cargo.toml Cargo.lock` and `git diff --quiet 7323196d5 -- examples Cargo.toml Cargo.lock $(git ls-files src | grep -v '^src/mtf/tests.rs$')` |
 | toolchain | rustc 1.99.1 (`58cf8f9c3`), cargo 1.99.1 |
 | builds | `cargo build --release --example ab` (counted arms), and `cargo build --release --example ab --features walk-stats` (engagement arms), each in a fresh checkout of its pin at one fixed path per pin, `target/` removed first. Every binary's SHA-256 is recorded before any run |
 | input | `wikidata.bz2`, SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`, 431 blocks, D = 209,700,196 decoded bytes |
