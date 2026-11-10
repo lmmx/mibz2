@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782600574,
+  "last_examined_comment_id": 6782678458,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -233,13 +233,20 @@
       "disposition": "Accept only design assessment under A5/PROTOCOL7; privileged bridge implementation/enablement needs explicit D6 owner decision, plus A4 for any widening. Shared-account/header proof rejected. No readiness or HOLD change.",
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288"
-      ]
+      ],
+      "log_comment_id": 6782678458
     },
     "6782600574": {
       "status": "completed",
       "delivery_id": "d07faaf0-dd61-11f1-99dc-6cea2516bce1",
       "comment_updated_at": null,
       "disposition": "Observer account8df9bca616474cb0f8e6aec63cf573d2e39d97b4 and finished cursor05ff83886a75c3fb3a2276e7c7b4672bcbd24368 verified; no correction."
+    },
+    "6782678458": {
+      "status": "observed_self_generated_noop",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -280,7 +287,8 @@
     6782527893,
     6782551058,
     6782560706,
-    6782662288
+    6782662288,
+    6782678458
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -426,9 +434,11 @@
   },
   "checkpoint": {
     "key": "bridge-assessment-6782590919",
-    "status": "in_progress_before_log",
+    "status": "published_readback_verified",
     "event_dispositions_persisted": true,
-    "planned_action": "Grouped assessment decision, Guardian route and current gates"
+    "planned_action": "Grouped assessment decision, Guardian route and current gates",
+    "log_comment_id": 6782678458,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782678458"
   },
   "dispatch_history": [
     {
