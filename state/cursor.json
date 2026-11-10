@@ -1507,9 +1507,9 @@
       "sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
       "evidence_digest": "occupancy-job:130205457614;head:ae13742fe4c6e2726c178e2409a1d69ef8fca939;ledger:0f897b72b40202f9eac6885b0f931c0ec1031da6;witness:45e7f3de36aa89cbed023a718cf03f5ed5ae47204c208ffc501e612d1bed36b2",
       "commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
-      "status": "complete",
+      "status": "finished",
       "disposition": "Class A inherited ledger mismatch; HOLD allocation certification and dependent readiness, no demonstrated UB.",
-      "comment": null
+      "comment": 6782473662
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1607,7 +1607,8 @@
     6764503403,
     6770483223,
     6771767708,
-    6782294636
+    6782294636,
+    6782473662
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1844,7 +1845,8 @@
     "0e03badbdaf9fd77d29302bab2a39779325cb723",
     "03d430288631a50874d33cfbc8523899185ebc62",
     "03676d93b7eff00ee2865da4f2260576d2e23473",
-    "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
+    "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
+    "62ae55c706fe2c7734dfbca8ceaafc539c739e6f"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2024,9 +2026,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6782334222,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D100",
+    "incoming_comment": 6782334222,
+    "review_comment_id": 6782473662,
     "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
   },
   "duplicate_events": [
@@ -3593,11 +3597,13 @@
     {
       "comment_id": 6782334222,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D100",
-      "progress": "Completed source/accounting investigation; scoped ledger/readiness HOLD, review publication pending.",
+      "progress": "Exact body/destination readback verified; pinned verifier fails only hardcoded coordinator FROM; Guardian routing/header checks pass.",
       "receipt_commit": "03676d93b7eff00ee2865da4f2260576d2e23473",
-      "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
+      "work_commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
+      "review_comment_id": 6782473662,
+      "complete_cursor_commit": "62ae55c706fe2c7734dfbca8ceaafc539c739e6f"
     }
   ],
   "migrated_from": {
