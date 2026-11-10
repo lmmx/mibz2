@@ -444,3 +444,18 @@ No implementation, compilation, timing, safety certification, admission change o
 - Dir attributedCI LEAD preserved; both failed-fidelity target attempts and closed sequence preserved. Off immediate adoption queue; any future registration needs new diagnostic-supported information, explicit reconciliation and route coverage. No gate-renamed third attempt or additive service/dir gain.
 - Rounds require paired-log variance and dependence model; illustrative19 versus460 independent pairs is sensitivity, not a registration.
 - Raw archive not replayed; no implementation, timing, compilation, safety certification or measured credit.
+
+
+## Pool waits: inbox6757179363
+
+[Report](records/reviews/inbox-6757179363/report.md), [archive replay](records/reviews/inbox-6757179363/replay.json).
+#321 pin02cc5f89988abb9ab436eae1af4b89576c19d590; artifact13728908238 SHA-256 verified.
+
+- Independently replayed1512 timed rows and18 count rows; complete grid, consistent output/hash. Both registered screen passes retained; no target qualification.
+- Four logical CPUs are TWO physical cores; forced1×3 at requested1/2/4. “Uncrowded4t” and ordinary-default transfer not established. Counts omit timed affinity and use instrumentation.
+- pool0 preferred candidate, not default. 64's counted spins all precede parking and do not materially reduce1×3 caller parks; paired0/64 intervals do not prove general dominance.
+- 1×3 pool spin scale .02437s versus observed mean CPU saving .02814s is consistency, not causal allocation. Idle wall calibration, unpark/park call semantics and changed walk events prevent exact pricing.
+- New proposal: helper0/join2000 against both2000/both0, retaining roughly72% of baseline pool spin removal while testing exposed join latency. Charge helper wake latency too. No adaptive budget search.
+- i9 diagnostic after two-modes review: forced1×3, forced3×3, actual public10, Wikidata/text;12R decodes before removing proven redundant contexts. Qualification separately fresh: targetpublic10 and fallback9/11 on both corpora; N2/K4/M4,12R. Prospective Researcher/Guardian review and C5 apply; no timing authorised here.
+- Service first adoption; emitter higher useful-work opportunity; pool split bounded next wait experiment; activation only after ready-work/lifetime census. No bundled gains or unchanged old service evidence transfer.
+- No implementation, compilation, new timing, safety certification, acceptance change or measured target credit.

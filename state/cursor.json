@@ -835,7 +835,8 @@
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "baseline_commit": "02cc5f89988abb9ab436eae1af4b89576c19d590",
-      "progress": "Verified artifact SHA-256 and replayed all 1512 timed rows and 18 count rows; forced-plan/topology, counter semantics and calibration transfer findings committed; final ranking and target design in preparation."
+      "progress": "Archive replay, site-budget proposal, target-cell design and ranking complete; preparing publication.",
+      "report_path": "state/records/reviews/inbox-6757179363/report.md"
     }
   ],
   "migrated_from": {

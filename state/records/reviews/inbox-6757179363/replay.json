@@ -1292,5 +1292,87 @@
         }
       }
     }
+  ],
+  "exploratory_direct_contrasts": [
+    {
+      "corpus": "wikidata",
+      "threads": 1,
+      "contrast": "pool0/pool64",
+      "status": "post-screen exploratory, no registered verdict",
+      "wall": [
+        0.9692856610007031,
+        0.9412895016949788,
+        0.998114491800649
+      ],
+      "cpu": [
+        0.9696021710471032,
+        0.9415757517326346,
+        0.9984628091465659
+      ]
+    },
+    {
+      "corpus": "wikidata",
+      "threads": 2,
+      "contrast": "pool0/pool64",
+      "status": "post-screen exploratory, no registered verdict",
+      "wall": [
+        1.0059913260023887,
+        0.9862307266145774,
+        1.0261478583880552
+      ],
+      "cpu": [
+        1.0010468087610738,
+        0.9845003100117209,
+        1.0178714045491761
+      ]
+    },
+    {
+      "corpus": "wikidata",
+      "threads": 4,
+      "contrast": "pool0/pool64",
+      "status": "post-screen exploratory, no registered verdict",
+      "wall": [
+        0.9895161783197016,
+        0.9712407008029633,
+        1.008135538746401
+      ],
+      "cpu": [
+        0.9927135518247481,
+        0.9761464637305559,
+        1.009561815355331
+      ]
+    },
+    {
+      "corpus": "wikidata",
+      "threads": 9,
+      "contrast": "pool0/pool64",
+      "status": "post-screen exploratory, no registered verdict",
+      "wall": [
+        0.9822701102001249,
+        0.9491222633030066,
+        1.0165756369835952
+      ],
+      "cpu": [
+        0.9839842635922685,
+        0.9506473729106844,
+        1.0184901979297702
+      ]
+    },
+    {
+      "corpus": "text",
+      "threads": 4,
+      "contrast": "pool0/pool64",
+      "status": "post-screen exploratory, no registered verdict",
+      "wall": [
+        1.0005711069379049,
+        0.9874039492861078,
+        1.0139138503170555
+      ],
+      "cpu": [
+        1.010555279779764,
+        0.9948010919683797,
+        1.0265589591081963
+      ]
+    }
   ]
 }
