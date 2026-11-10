@@ -31,11 +31,15 @@
 //!   letter of its own whose mark rides in the words made with it, so no point is followed
 //!   and the block is written unrotated. Its clock is the entry's second (0.756).
 //!
-//! JSON fields `k_*` are the list kernel's, `c_*` the cells kernel's (ns a row; `c_whole` is
-//! order + induce + write timed as one span), `par` the turns the rounds take with 2, 4, 8
-//! and 16 workers.
+//! JSON fields (ns a row): `ns_walk` is the column's path (`bwt::build` + the room walk),
+//! `ns_rec` the records' path (`runs::fill` + the room walk backward: production's since
+//! 0.2.8 for a block `takes`), `ns_mtf` and `ns_front` their fronts; `k_*` are the list
+//! kernel's; `c_*` the cells kernel's from the same records (`c_whole` is order + induce +
+//! write timed as one span, the order stage reading the records). `par` is the turns the rounds take with 2, 4, 8 and 16
+//! workers.
 
-use mibz2::bwt::{build, walk, walk_segments_room, SegScratch, TVector};
+use mibz2::bwt::{build, walk, walk_back_room, walk_segments_room, SegScratch, TVector};
+use mibz2::runs::{fill, front, takes_runs, Runs};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, Kernels};
 use std::time::Instant;
@@ -575,10 +579,11 @@ fn prefetch<T>(p: *const T) {
     let _ = p;
 }
 
-/// 16 bytes from `src` to `dst`, whatever the word's length (both have 16 bytes there)
+/// 16 bytes from `src` to `dst`, whatever the word's length (both have 16 bytes there). The
+/// two may overlap (a word just made is a factor of the next): the 16 are read, then written
 #[inline(always)]
 unsafe fn copy16(dst: *mut u8, src: *const u8) {
-    unsafe { core::ptr::copy_nonoverlapping(src, dst, 16) }
+    unsafe { (dst as *mut [u8; 16]).write_unaligned((src as *const [u8; 16]).read_unaligned()) }
 }
 
 /// Exactly `len` <= 16 bytes from `src` to `dst`: 16 are read at each, and the bytes past
@@ -862,43 +867,23 @@ impl Kernel {
         (self.id[trk as usize], none - 1, last, v, joined)
     }
 
-    /// The runs of `l`, with row `p` cut out as a piece of its own: returns that piece. (A
-    /// front that emits run records has p from the block's header before its first record.)
-    fn runs_cut(&mut self, l: &[u8], p: u32) -> u32 {
-        let (trk, off) = self.runs(l, p);
-        let i = trk as usize;
-        let (lam, c) = (self.lam[i], self.byte[i]);
-        let mut at = i;
-        if off > 0 {
-            self.lam[at] = off;
-            at += 1;
-            self.lam.insert(at, 1);
-            self.byte.insert(at, c);
-        } else {
-            self.lam[at] = 1;
-        }
-        if lam - off > 1 {
-            self.lam.insert(at + 1, lam - off - 1);
-            self.byte.insert(at + 1, c);
-        }
-        at as u32
-    }
-
-    /// The pieces as slots, both orders, in the one buffer the induction by cells works in:
-    /// the top order as the pieces lie, the bottom order sorted stably by byte, so that the
+    /// The cells kernel's first stage, from the front's run records (`byte << 8 | length`,
+    /// a run longer than 127 rows cut into several: `runs::front`'s format): the letters as
+    /// slots, both orders, in the one buffer the induction by cells works in. The top order
+    /// is the runs as they lie, the bottom order is sorted stably by byte, so that the
     /// original letters of each order lie in memory in the order the induction reads them.
-    /// One pass; the sort is its counting.
+    /// Two passes over the records; the sort is the first one's counting.
     ///
-    /// `kz` is the piece that is the walk's row alone. Its word is marked, and the mark
-    /// rides in the length of every word made with it: such a word is kept as a rule
-    /// whatever its length, so the row's place in the cycle's word is read off the rules
-    /// afterwards, and the induction follows no point.
+    /// A record that goes on with the byte of the one before it is the same run. Row `p`,
+    /// the walk's, is cut out as a letter of its own. Its word is marked, and the mark rides
+    /// in the length of every word made with it: such a word is kept as a rule whatever its
+    /// length, so the row's place in the cycle's word is read off the rules afterwards, and
+    /// the induction follows no point.
     ///
     /// The buffer's regions are sized by `n` alone (a cell removes a row at least, so there
     /// are at most n cells), and its pages are touched only where the induction writes.
     #[inline(never)]
-    fn slots(&mut self, n: usize, kz: u32) {
-        let r = self.lam.len();
+    fn slots(&mut self, n: usize, recs: &[u16], p: u32) {
         let cap = (2 * n + 8) * SLOT;
         let lay = Layout {
             tops: PAD,
@@ -907,51 +892,113 @@ impl Kernel {
             rules: PAD + 2 * cap + ((BYTES as usize + 256 + 16 * (n + 2) + 64 + 15) & !15),
         };
         let total = lay.rules + 16 * (n + 4);
-        assert!(total < u32::MAX as usize && r >= 1 && n < MARK as usize);
+        assert!(total < u32::MAX as usize && n < MARK as usize && (p as usize) < n);
         if self.buf.len() < total {
             // zeroed pages from the allocator: none is touched here
             self.buf = vec![0u8; total];
         }
         self.lay = lay;
-        self.letters = r;
         for b in 0..256 {
             self.buf[lay.arena + BYTES as usize + b] = b as u8;
         }
+        // a byte's letters; the record that holds the walk's row, and its run's first row
         let mut cnt = [0u32; 257];
-        for &c in &self.byte {
-            cnt[c as usize + 1] += 1;
+        let (mut prev, mut row, mut start) = (256usize, 0u32, 0u32);
+        let (mut at, mut at_start) = (0usize, 0u32);
+        let mut empty = false;
+        for (i, &rec) in recs.iter().enumerate() {
+            let (c, len) = ((rec >> 8) as usize, (rec & 0xFF) as u32);
+            if c != prev {
+                cnt[c + 1] += 1;
+                start = row;
+            }
+            prev = c;
+            if p.wrapping_sub(row) < len {
+                (at, at_start) = (i, start);
+            }
+            empty |= len == 0;
+            row += len;
         }
+        // (every letter a row at least: so at most n letters and n - 1 cells, which is what
+        // the buffer's regions are sized for)
+        assert!(
+            row as usize == n && !empty,
+            "the records do not tile the block"
+        );
+        // that run: records ia..ib, `total` rows, the walk's row `off` rows in
+        let cz = (recs[at] >> 8) as usize;
+        let (mut ia, mut ib) = (at, at + 1);
+        while ia > 0 && (recs[ia - 1] >> 8) as usize == cz {
+            ia -= 1;
+        }
+        while ib < recs.len() && (recs[ib] >> 8) as usize == cz {
+            ib += 1;
+        }
+        let total: u32 = recs[ia..ib].iter().map(|&x| (x & 0xFF) as u32).sum();
+        let off = p - at_start;
+        cnt[cz + 1] += (off > 0) as u32 + (total - off > 1) as u32;
         // a byte's next bottom slot, as its offset in the buffer
         for k in 0..256 {
             cnt[k + 1] += cnt[k];
             cnt[k] = (lay.bots + cnt[k] as usize * SLOT) as u32;
         }
+        self.letters = cnt[256] as usize;
         let base = self.buf.as_mut_ptr();
         let first = lay.arena as u64 + BYTES as u64;
-        // SAFETY: slots 0..r of each order lie inside its region
+        let mut t = PAD;
+        // SAFETY: the letters number at most the records and two, and a record is a row at
+        // least: their slots lie inside each order's region
         unsafe {
-            for i in 0..r {
-                let c = *self.byte.get_unchecked(i) as usize;
-                let lam = *self.lam.get_unchecked(i) as u64;
-                let k = *cnt.get_unchecked(c) as usize;
-                *cnt.get_unchecked_mut(c) = (k + SLOT) as u32;
-                let t = PAD + i * SLOT;
-                let lw = 1 | (first + c as u64) << 32;
-                // (the slot before each order's first is set after the pass)
-                wr64(base, t, t.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
-                wr64(base, t + 8, lw);
-                wr64(base, t + 16, k as u64);
-                wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
-                wr64(base, k + 8, lw);
-                wr64(base, k + 16, t as u64);
+            macro_rules! letter {
+                ($lam:expr, $c:expr) => {{
+                    let (lam, c): (u64, usize) = ($lam as u64, $c);
+                    let k = *cnt.get_unchecked(c) as usize;
+                    *cnt.get_unchecked_mut(c) = (k + SLOT) as u32;
+                    let lw = 1 | (first + c as u64) << 32;
+                    // (the slot before each order's first is set after the pass)
+                    wr64(base, t, t.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
+                    wr64(base, t + 8, lw);
+                    wr64(base, t + 16, k as u64);
+                    wr64(base, k, k.wrapping_sub(SLOT) as u32 as u64 | lam << 32);
+                    wr64(base, k + 8, lw);
+                    wr64(base, k + 16, t as u64);
+                    t += SLOT;
+                }};
             }
-            // the first slot of an order is before itself: it is never left
+            let nrec = recs.len();
+            let mut i = 0;
+            while i < nrec {
+                if i == ia {
+                    // the walk's row's run: what is before the row, the row, what is after
+                    if off > 0 {
+                        letter!(off, cz);
+                    }
+                    let tz = t;
+                    letter!(1u32, cz);
+                    let kz = rd64(base, tz + 16) as usize;
+                    wr32(base, tz + 8, 1 | MARK);
+                    wr32(base, kz + 8, 1 | MARK);
+                    if total - off > 1 {
+                        letter!(total - off - 1, cz);
+                    }
+                    i = ib;
+                    continue;
+                }
+                let rec = *recs.get_unchecked(i);
+                let c = (rec >> 8) as usize;
+                let mut lam = (rec & 0xFF) as u32;
+                i += 1;
+                while i < nrec && (*recs.get_unchecked(i) >> 8) as usize == c {
+                    lam += (*recs.get_unchecked(i) & 0xFF) as u32;
+                    i += 1;
+                }
+                letter!(lam, c);
+            }
+            // (the slot before an order's first is never followed: one letter is marked, it
+            // is never dropped, so the induction returns before it could leave an order;
+            // these two only keep the value inside the buffer)
             wr32(base, PAD, PAD as u32);
             wr32(base, lay.bots, lay.bots as u32);
-            let t = PAD + kz as usize * SLOT;
-            let k = rd64(base, t + 16) as usize;
-            wr32(base, t + 8, 1 | MARK);
-            wr32(base, k + 8, 1 | MARK);
         }
     }
 
@@ -972,12 +1019,17 @@ impl Kernel {
     /// word kept as a rule. A rule is its two factors as their slots held them: (length,
     /// word) twice.
     ///
-    /// Returns (the cycle's word, its length with the mark, cells).
+    /// Returns (the cycle's word, its length with the mark, cells). `slots` has run on this
+    /// kernel for the block, and nothing has changed since.
     #[inline(never)]
     fn induce_cells<const COUNT: bool>(&mut self) -> (u32, u32, u64) {
         const M: u64 = 0xFFFF_FFFF;
         let rr = self.letters;
         let lay = self.lay;
+        assert!(
+            rr >= 1 && self.buf.len() >= lay.rules + 80,
+            "`slots` has not run"
+        );
         let base = self.buf.as_mut_ptr();
         // SAFETY: `slots` sized every region for n cells; a slot's offset is a letter's
         // slot or a fresh one below the region's end; a word's offset is in the arena or
@@ -1109,10 +1161,14 @@ impl Kernel {
 
     /// The block from the induction by cells' word (`word`, of marked length `len`), into
     /// `out`. The block begins `SHIFT` bytes after the walk's row's place in the word, and
-    /// is written from there on: the marked rules are walked from the word down to the row,
-    /// each factor without the mark is placed where it then lies, and the rest is `write`'s
-    /// two passes: where each rule first lies (last rule to first), then its bytes (first
-    /// to last). If the cycle is shorter than the block, the block is its copies.
+    /// is written from there on. The marked rules are walked from the word down to the row
+    /// three times: for the row's place; to write each short factor without the mark where
+    /// it then lies and note where each long one lies; and, after `write`'s two passes
+    /// (where each rule first lies, last rule to first; then its bytes, first to last), to
+    /// copy each long factor that lies again later from its first place. If the cycle is
+    /// shorter than the block, the block is its copies.
+    ///
+    /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
     #[inline(never)]
     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
         let p = (len & !MARK) as usize;
@@ -1208,6 +1264,33 @@ impl Kernel {
                         copy_long(d, dst.add(f as usize), rr);
                     }
                 }
+            }
+            // the marked rules again: a long factor that lies at a later place than its
+            // first is copied from there (the first walk only noted where each lies; a
+            // marked rule has no place of its own, so the passes above never copy for it).
+            // The first place is the least and occurrences of one word are apart, so the
+            // source is whole and does not reach the place written.
+            let (mut w, mut q) = (word as usize, 0usize);
+            while w >= ro {
+                let (a, b) = rule(w);
+                let la = (a as u32 & !MARK) as usize;
+                let (plain, at, next) = if a as u32 & MARK != 0 {
+                    (b, q + la, a)
+                } else {
+                    (a, q, b)
+                };
+                let d = (at + p - start) % p;
+                let lx = plain as u32 as usize;
+                if lx > SMALL as usize {
+                    let f = *pos.add(((plain >> 32) as usize - ro) / 16) as usize;
+                    if f != d {
+                        copy_long(dst.add(d), dst.add(f), lx);
+                    }
+                }
+                if a as u32 & MARK == 0 {
+                    q += la;
+                }
+                w = (next >> 32) as usize;
             }
         }
         // a cycle shorter than the block: the block is its copies
@@ -1436,6 +1519,28 @@ impl Kernel {
             out.extend_from_slice(&self.tmp[..cut]);
         }
         out.truncate(n);
+    }
+}
+
+/// The column's run records in `runs::front`'s format (`byte << 8 | length`, cut at 127 rows).
+/// The decoder's own records are private to `runs::Runs`, so the cells kernel is fed these:
+/// the same records, made here from the column, outside every clock.
+fn records(l: &[u8], recs: &mut Vec<u16>) {
+    recs.clear();
+    let mut i = 0;
+    while i < l.len() {
+        let c = l[i];
+        let mut j = i + 1;
+        while j < l.len() && l[j] == c {
+            j += 1;
+        }
+        let mut left = j - i;
+        while left > 0 {
+            let len = left.min(127);
+            recs.push((c as u16) << 8 | len as u16);
+            left -= len;
+        }
+        i = j;
     }
 }
 
@@ -1700,6 +1805,7 @@ fn arbitrary(cases: usize) {
         (TVector::new(), Vec::new(), Vec::new(), Vec::new());
     let (mut ind, mut g, mut kern) = (Induction::default(), Grammar::default(), Kernel::default());
     let (mut first, mut stack) = (Vec::new(), Vec::new());
+    let mut recs = Vec::new();
     let (mut dropped, mut periodic, mut many) = (0u64, 0u64, 0u64);
     for case in 0..cases {
         let n = 1 + rnd(if case % 16 == 0 { 3000 } else { 48 }) as usize;
@@ -1748,9 +1854,13 @@ fn arbitrary(cases: usize) {
                 "kernel (join {join}): case {case}, L = {l:?}, row {p}"
             );
         }
-        let kz = kern.runs_cut(&l, p);
-        kern.slots(n, kz);
+        records(&l, &mut recs);
+        kern.slots(n, &recs, p);
         let (word, len, _) = kern.induce_cells::<false>();
+        // (every byte wrong before this writer runs: `out` held the list kernel's bytes,
+        // and a byte left unwritten would pass for written)
+        out.clear();
+        out.extend(walked.iter().map(|&b| !b));
         kern.write_cells(word, len, n, &mut out);
         assert!(out == walked, "cells: case {case}, L = {l:?}, row {p}");
     }
@@ -1779,6 +1889,7 @@ fn main() {
     let (mut ind, mut g) = (Induction::default(), Grammar::default());
     let (mut first, mut stack) = (Vec::new(), Vec::new());
     let mut kern = Kernel::default();
+    let (mut rr, mut tt2, mut recs) = (Runs::default(), TVector::new(), Vec::new());
     let mut i = 0;
     while let Event::Block { symbols: b, .. } = sc.next(std::mem::take(&mut syms)).unwrap() {
         mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
@@ -1797,6 +1908,33 @@ fn main() {
                     t_walk = t_walk.min(t.elapsed().as_secs_f64());
                 }
                 assert!(fast == walked);
+                // production's kernel since 0.2.8 for a block the records' path takes
+                // (`takes`): the LF table filled from the front's records, walked backward.
+                // And the two fronts, each from the block's symbols.
+                let takes = takes_runs(&b);
+                let (mut t_front, mut t_mtf) = (f64::MAX, f64::MAX);
+                for _ in 0..rounds {
+                    let t = Instant::now();
+                    front(&b, &mut rr, k).unwrap();
+                    t_front = t_front.min(t.elapsed().as_secs_f64());
+                    let t = Instant::now();
+                    mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+                    t_mtf = t_mtf.min(t.elapsed().as_secs_f64());
+                }
+                let (mut t_rec, mut t_fill) = (f64::MAX, f64::MAX);
+                for _ in 0..rounds {
+                    let t = Instant::now();
+                    let tiled = fill(&rr, n, &mut tt2, k);
+                    let t1 = Instant::now();
+                    assert!(tiled, "the records do not tile the block");
+                    walk_back_room(&mut tt2, b.orig_ptr, &mut fast, &mut seg);
+                    t_rec = t_rec.min(t.elapsed().as_secs_f64());
+                    t_fill = t_fill.min((t1 - t).as_secs_f64());
+                }
+                assert!(
+                    fast == walked,
+                    "the records' path's bytes differ from the walk's"
+                );
                 let (mut t_runs, mut t_ind, mut t_exp) = (f64::MAX, f64::MAX, f64::MAX);
                 let mut c = Counts::default();
                 let mut ex = (0, 0, 0);
@@ -1852,12 +1990,17 @@ fn main() {
                 }
                 assert!(out == walked, "the kernel's bytes differ from the walk's");
                 // the cells' kernel: its stages, and the whole from the run list to the bytes
+                // the cells' kernel, from the front's run records: its stages, and the whole
+                // from the records to the bytes as one span
+                records(&ll, &mut recs);
+                // (every byte wrong before this writer runs: a byte left unwritten is seen)
+                out.clear();
+                out.extend(walked.iter().map(|&b| !b));
                 let (mut c_order, mut c_ind, mut c_write, mut c_whole) =
                     (f64::MAX, f64::MAX, f64::MAX, f64::MAX);
                 for _ in 0..rounds {
-                    let kz = kern.runs_cut(&ll, b.orig_ptr);
                     let t0 = Instant::now();
-                    kern.slots(n, kz);
+                    kern.slots(n, &recs, b.orig_ptr);
                     let t1 = Instant::now();
                     let (word, len, _) = kern.induce_cells::<false>();
                     let t2 = Instant::now();
@@ -1869,8 +2012,7 @@ fn main() {
                     c_whole = c_whole.min((t3 - t0).as_secs_f64());
                 }
                 // (its cells, counted apart from the clock)
-                let kz = kern.runs_cut(&ll, b.orig_ptr);
-                kern.slots(n, kz);
+                kern.slots(n, &recs, b.orig_ptr);
                 let c_cells = kern.induce_cells::<true>().2;
                 assert!(out == walked, "the cells' bytes differ from the walk's");
                 // the rounds as a schedule: with P workers a round of w steps takes ceil(w / P)
@@ -1913,10 +2055,10 @@ fn main() {
                 let cone = closed.map_or([0, 0], |x| x.1);
                 let ns = |t: f64| t * 1e9 / n as f64;
                 println!(
-                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{},\"shapes\":{:?},\"k_order\":{:.3},\"k_joined\":{},\"k_steps\":{},\"closed\":{},\"cone\":{:?},\"c_cells\":{},\"c_order\":{:.3},\"c_induce\":{:.3},\"c_write\":{:.3},\"c_whole\":{:.3},\"par\":{:?},\"half\":{}}}",
+                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{},\"shapes\":{:?},\"k_order\":{:.3},\"k_joined\":{},\"k_steps\":{},\"closed\":{},\"cone\":{:?},\"c_cells\":{},\"c_order\":{:.3},\"c_induce\":{:.3},\"c_write\":{:.3},\"c_whole\":{:.3},\"par\":{:?},\"half\":{},\"ns_rec\":{:.3},\"ns_fill\":{:.3},\"ns_front\":{:.3},\"ns_mtf\":{:.3},\"takes\":{},\"records\":{},\"c_letters\":{}}}",
                     c.runs, c.steps, c.top, c.bottom, c.equal, c.dropped, c.streaks, c.longest, c.left,
                     ex.0, ex.1, ex.2, ns(t_walk), ns(t_runs), ns(t_ind), ns(t_exp), coin, hs.join(","),
-                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps, shapes, ns(k_join), k_joined, k_steps, closed.is_some(), cone, c_cells, ns(c_order), ns(c_ind), ns(c_write), ns(c_whole), par, half
+                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps, shapes, ns(k_join), k_joined, k_steps, closed.is_some(), cone, c_cells, ns(c_order), ns(c_ind), ns(c_write), ns(c_whole), par, half, ns(t_rec), ns(t_fill), ns(t_front), ns(t_mtf), takes, recs.len(), kern.letters
                 );
             }
             i += 1;

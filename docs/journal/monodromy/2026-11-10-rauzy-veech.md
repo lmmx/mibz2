@@ -46,8 +46,10 @@ grammar and asserts its bytes against `bwt::walk`.
     A second run, pinned to an idle core: 1.604 against 2.172, **0.738×**, 204 blocks.
   - Per run of L: 184 instructions against production's 260; 2.1 simulated last-level misses
     (2 MiB) against 8.7.
-- **Where else it wins (M, cells):** Fibonacci and Thue–Morse 0.02×; period 37 0.18×; JSON of
-  300 ids (r/n 0.022) 0.38×; of 3,000 ids (0.057) 0.79×.
+- **Where else it wins (M, cells; before the writer's fix of §7 row 1, to be re-measured:
+  on the first three the writer timed left most of the block unwritten):** Fibonacci and
+  Thue–Morse 0.02×; period 37 0.18×; JSON of 300 ids (r/n 0.022) 0.38×; of 3,000 ids (0.057)
+  0.79×.
 - **Where it must not be used:** JSON of 20k records (r/n 0.151) 1.76×; prose (0.367) 3.9×;
   uniform bytes 9.8×; `(ab)^k a` 8.3× (S = n/2, §2: needs the division rule or a step budget).
 - **Status:** the count stands at its floor for this schedule (§4: at most 1.49× is left in
@@ -199,10 +201,14 @@ second construction. What §3.1 moves, this writes once.
 - **Fetch ahead.** The slot 12 before the last in an order holds, as memory has it now, the
   place its letter's cells will be written and its word: both are fetched then. This is what
   makes the scattered writes free (§6.2).
-- **No point is followed** (§2): the mark rides in |w|'s top bit, so a marked word is never
-  kept as bytes and its rules are a path from the root to Z.
-- **The write** walks that path once, places each unmarked factor where it lies from j + 1
-  on, and then is §3.2's two passes, into the output itself.
+- **No point is followed** (§2): the mark rides in |w|'s top bit, so a marked word made by a
+  cell is never kept as bytes (only Z's own byte is) and the marked rules are a path from
+  the root to Z.
+- **The write** walks that path three times: for the row's place j; to write each short
+  unmarked factor where it lies from j + 1 on and note where each long one lies; and, after
+  §3.2's two passes into the output itself, to copy each long factor that lies again later
+  from its first place (a marked rule has no place of its own, so the two passes never copy
+  for it: the first build of this writer left those bytes unwritten, §7 row 1).
 - **Not done:** the division rule (a streak of one winner is one cell a turn here too); a
   bound on the buffer other than n cells; records from the front (§8).
 
@@ -447,9 +453,17 @@ Arms. Production: `bwt::build` + `walk_segments_room` from the column. Kernel, f
 list: **order** (the runs sorted by byte, both orders laid out: this exchange's "build"),
 **induce**, **write**. The scan of the column into runs is apart: 0.484 ns a row here. #324's
 front emits the records in place of the column's MTF stage (0.173 against 0.423 ns a row,
-PF:`by-data-class` §2): a saving on the kernel's side that no figure below takes. Production
-here is master's column path; #324's records path (closed, not on master) is the nearer
-rival for a run-fed kernel and is not an arm.
+PF:`by-data-class` §2): a saving on the kernel's side that no figure below takes.
+
+**Production moved while this was measured.** §6.1 and §6.2 are against the column's path
+(`bwt::build` + the room walk), which was production at this branch's base. Since 0.2.8
+(#324 adopted, #352) the decoder inverts a block of few symbols by the records' path:
+`runs::fill` from the front's records, then the room walk backward. Every Wikidata block
+takes it. The Pathfinder measured it at 0.95 of the column's path on these 233 blocks
+(2.26 to 2.27 against 2.37 to 2.40 ns a row, its container), which puts §6.2's 0.756 at
+about 0.80 of production. The example now times that arm and feeds the cells kernel from
+the same records (its order stage reads them: 127-row cuts joined, the walk's row cut out);
+the census against it follows the writer's fix (§7 row 1) and is not in this entry yet.
 
 **The core's clock.** A chain of dependent multiplications (3 cycles each) runs at 1.100 ns:
 2.73 GHz, not the 2.10 the processor's name and its TSC give. §6.1's cycles are at 2.10 and
@@ -523,6 +537,11 @@ Same arms, same blocks, a later run (production 2.244 in it; the list kernel 2.8
 | 0.09–0.12 (19, 0.082) | 2.266 | 0.442 | 1.462 | 0.460 | 2.379 | 1.050 | 1.803 |
 | ≥ 0.12 (18, 0.077) | 2.277 | 0.609 | 2.128 | 0.602 | 3.367 | 1.479 | 2.691 |
 
+- **These two tables were measured before the writer's fix (§7 row 1).** On Wikidata the fix
+  adds 126,658 bytes of copies over the 233 blocks and 1.2% to the writer's instructions
+  (block 1): the pooled figures stand to that. The rows for period 37, Fibonacci and
+  Thue–Morse do not: there the writer timed wrote a fraction of the block (75 of 888,001
+  bytes on period 37) and they are to be re-measured.
 - 202 of 233 blocks faster, 0.867 of rows. Per block: 0.460 / 0.570 / 0.662 / 1.120 / 1.823.
 - **Chosen by r/n** (the front has r before the inversion): cells below 0.10, else the walk:
   1.597 ns a row, **0.712×**; any threshold from 0.08 to 0.12 is within 0.007 of it; the
@@ -585,7 +604,16 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
   17% of cells need no new word). Two runs each way on 20 blocks: write 0.335 → 0.32, induce
   0.91 → 0.92 to 0.96, whole 1.545 → 1.545 to 1.59. The word was not the cell's cost.
 - **Memory safety:** the kernel is `unsafe` (unchecked offsets in one buffer sized for n
-  cells). valgrind: 3,000 arbitrary columns and three real blocks, no error. Not reviewed.
+  cells). valgrind: 3,000 arbitrary columns and three real blocks, no error. Reviewed once
+  by a sub-agent with every access checked against its region (19 million small columns,
+  the 233 blocks, prose, the synthetic files): the bounds hold (at most n − 1 cells; at most
+  2n − 1 slots a side of 2n + 8; the arena's last store ends at most 16n + 304 bytes in, of
+  16n + 368; at most n rules of n + 4). It found what valgrind cannot see: `copy16` used
+  `copy_nonoverlapping` on ranges that overlap (a build with debug assertions aborts on
+  `bba`, row 0; now a 16-byte read then write, the same instructions), and the unwritten
+  bytes of §7 row 1. The buffer is allocated for n cells, 128 n + 4,912 bytes (115 MB at
+  n = 9·10⁵); on Wikidata at most a tenth of it is written, and only written pages are
+  touched.
 - **Not measured:** the i9; ten workers on a shared 20 MB last level, where production's walk
   is the known sufferer and the model above says this is not; records from the front
   instead of the scan; a decoder that calls it.
@@ -594,7 +622,7 @@ runs, so the last column is good to a few per cent; instructions from callgrind 
 
 | # | attack | outcome |
 |--:|---|---|
-| 1 | bytes ≠ walk on any block | none, for the reference and both kernels: 233 Wikidata blocks (and the corpus's 198 tiny ones in the independent check), 4 prose, 28 synthetic incl. periodic and n < 20; 200,000 arbitrary columns |
+| 1 | bytes ≠ walk on any block | none for the reference and the list kernel: 233 Wikidata blocks (and the corpus's 198 tiny ones in the independent check), 4 prose, 28 synthetic incl. periodic and n < 20; 200,000 arbitrary columns. **The cells kernel: fired, once its check could fire.** As first built its assertion could not see a byte left unwritten (`out` held the list kernel's bytes, already equal to the walk's), and the writer left some: a long factor of a marked rule lying at a later place than its first was noted and never copied. With `out` made wrong first: 178 of 233 Wikidata blocks (126,658 bytes), period 37 (887,926 of 888,001), Thue–Morse, Fibonacci, JSON of 300 ids, one prose block, `--arbitrary` at case 13,584. Found by the memory-safety review (§6.2). Fixed (§3.5: a third walk of the marked rules; `out` is made wrong before the writer in every check); none since on all of the above, the debug-assertion build included |
 | 2 | S ≫ r on natural data | no: 1.29–2.08 r |
 | 3 | S = Θ(n) on some input | **yes**: `(ab)^k a`, S = n/2, 8× slower. Fix: division rule (q equal-pair steps → one power rule), or a step budget with fallback to the walk. Wikidata: 46 such steps in 27.4 M |
 | 4 | text | **fires**: S/n 0.68, 3.9× slower (cells; 7.4× lists). Closed for r/n ≳ 0.10 at this step price |
