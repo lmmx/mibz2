@@ -567,16 +567,29 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
                     steps += 1;
                     t += w;
                 }
-                // the tall cells and their words, were all of them stored
-                let (mut tall_cells, mut tall_words) = (0usize, 0usize);
+                // the tall cells and their words, were all of them stored; and the pool: the
+                // text positions those words occupy, each cell's word taken where its head
+                // emits it. Cells along one tunnel are suffixes of one another, so the pool
+                // is far less than the words' sum.
+                let (mut tall_cells, mut tall_words, mut pool) = (0usize, 0usize, 0usize);
+                let mut in_pool = vec![false; n];
                 for q in 0..n {
                     if head[q] as usize == q && hk[q] != u32::MAX && hk[q] as usize >= 33 {
                         tall_cells += 1;
-                        tall_words += (hk[q] as usize).min(cap);
+                        let w = (hk[q] as usize).min(cap);
+                        tall_words += w;
+                        let t0 = pos[q] as usize;
+                        for j in 0..w {
+                            let p = (t0 + j) % n;
+                            if !in_pool[p] {
+                                in_pool[p] = true;
+                                pool += 1;
+                            }
+                        }
                     }
                 }
                 out += &format!(
-                    "{}[{k},{cap},{steps},{tall_steps},{tall_bytes},{tall_cells},{tall_words}]",
+                    "{}[{k},{cap},{steps},{tall_steps},{tall_bytes},{tall_cells},{tall_words},{pool}]",
                     if first { "" } else { "," }
                 );
                 first = false;

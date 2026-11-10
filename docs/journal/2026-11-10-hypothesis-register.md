@@ -41,10 +41,11 @@ bundle), **reader's** (a section reader's finding, not re-checked), **derived**,
 - **What bounds k is the words:** a table is r_k (k + c) bytes. Counted on Wikidata: r_k ÷ n is
   0.088, 0.109, 0.142, 0.196 at k = 2, 4, 8, 16. Under 1.5 MB a block that is k ≤ 8: at least
   one dependent load an eight bytes.
-- **The tall tunnels do not lower that** (corrected the same day, `2026-11-10-tunnels.md` §0):
-  copying them would cut the table steps to 0.057 a row at k = 8, but a tall cell is landed on
-  under once, so its word costs more to make than it delivers (1.24 to 1.73 bytes a byte).
-  Closed on that witness.
+- **The tall tunnels may lower that** (`2026-11-10-tunnels.md` §0, 0a, twice corrected the same
+  day): at the stride-k walk's own landings, tall steps deliver 62 to 63% of the bytes from a
+  pool of 0.083 to 0.088 distinct bytes a row; at most 0.068 table accesses a row at k = 8. A
+  word stored a tall cell is closed (1.24 to 1.73 bytes made a byte delivered); copying from
+  the output on a tunnel's later passages is open and uncounted in decode order.
 - **So the chain a row is born of the T-vector.** What is left of it under a table of 1 to
   1.5 MB is an eighth to a quarter of a load a row.
 
@@ -213,7 +214,7 @@ Each is corrected in its entry or here.
 | 2 | the law on a built table | share-nothing at level 9 with no new kernel | compact30 with 6 to 10 plain workers in the grid harness: 2,350 MB/s at seven, ±13% | the Optimiser's price of the arm; then the queue |
 | 3 | N1 at k = 4 | 3.5 to 5.3 GB/s of inversion at ten workers (model) | the counting probe now running, read in loads a row as well as instructions | 3a |
 | 4 | the team path's ports | up to 15% at ten threads | a callgrind count of the default plan at this head | 3a, then the 9-thread sweep |
-| 5 | ~~tall tunnels in a k-step lane~~ | closed: words stored ÷ bytes delivered is 1.24 to 1.73 | counted, `2026-11-10-tunnels.md` §0 | n.a. |
+| 5 | tall tunnels in a k-step lane, copied from the output | 0.125 to at most 0.068 table accesses a row at k = 8 | c on segmented LF-direction landings, in decode order: one more counter | 3a |
 | 6 | the reader's `BufRead` | the next serial stage past about 5 GB/s | none needed | the Coordinator's schedule |
 
 ## Reproduce
