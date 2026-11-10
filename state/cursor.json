@@ -1723,11 +1723,15 @@
     },
     {
       "trigger_comment_id": 6761932309,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "efe945362e728b31886691603385f56461bcce63"
+      "source_commit": "efe945362e728b31886691603385f56461bcce63",
+      "report_commit": "96516ce4c2eb1e285ac50a2320165cc82a2f133e",
+      "report_path": "state/reports/width-intervention-6761932309/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE registration: total layout interaction retained; correct additive-cost cancellation, model bands and 20-round dependence claims; conditional descriptive batch analysis and monotonic marker clocks specified."
     }
   ],
   "active_delegations": [],
