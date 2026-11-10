@@ -1749,11 +1749,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6759990077,
-    "status": "finished",
-    "decision": "D086",
-    "work_commit": "532d6342363ed4fc8f7414dcfdd5ba13f7288d4d",
-    "review_comment_id": 6760052047
+    "active_comment": 6760224735,
+    "status": "in progress",
+    "decision": "D087"
   },
   "duplicate_events": [
     {
@@ -3060,6 +3058,13 @@
       "work_commit": "532d6342363ed4fc8f7414dcfdd5ba13f7288d4d",
       "review_comment_id": 6760052047,
       "complete_cursor_commit": "1768982b0435df61c4670c9fe10f59839955a698"
+    },
+    {
+      "comment_id": 6760224735,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D087",
+      "progress": "Receipt; resolving invalidity and prospective tier scope."
     }
   ],
   "migrated_from": {
