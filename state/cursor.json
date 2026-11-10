@@ -43,7 +43,8 @@
     6733116723,
     6734039567,
     6735168430,
-    6739270804
+    6739270804,
+    6756316971
   ],
   "outgoing_comment_ids": [
     {
@@ -806,6 +807,14 @@
       "report_commit": "79f6ece99a6f132329d9f0770133cadd124d5a13",
       "reply_id": 6739420751,
       "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator, so optimizer verify-pass not claimed."
+    },
+    {
+      "comment_id": 6756316971,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Migration verified; auditing two-mode mechanisms and service/dir alternatives."
     }
   ],
   "migrated_from": {
