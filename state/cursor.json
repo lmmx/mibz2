@@ -1928,12 +1928,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D095",
-    "incoming_comment": 6764248398,
-    "review_comment_id": 6764381812,
-    "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6"
+    "active_comment": 6764400880,
+    "status": "in progress",
+    "decision": "D096"
   },
   "duplicate_events": [
     {
@@ -3411,6 +3408,13 @@
       "work_commit": "1794faef8c66ddc53abe5b165be88052f82119d6",
       "review_comment_id": 6764381812,
       "complete_cursor_commit": "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846"
+    },
+    {
+      "comment_id": 6764400880,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D096",
+      "progress": "Migration verified; recording reported policy change, retirement and safety-review scope."
     }
   ],
   "migrated_from": {
