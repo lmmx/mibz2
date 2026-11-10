@@ -1085,11 +1085,20 @@
     {
       "comment_id": 6760167271,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed report, source-boundary audit, arithmetic and ledger prepared; publication follows cursor complete commit.",
-      "report_path": "state/records/reviews/inbox-6760167271/report.md"
+      "progress": "Work complete and committed; REVIEW publication pending.",
+      "report_path": "state/records/reviews/inbox-6760167271/report.md",
+      "report_commit": "479f769fd306912daee0a575b4ebe82e1b780c18",
+      "audit_scope": {
+        "source_pin": "4ce34b6093a0f7a10885004dc20c8138602b1ae2",
+        "implementation": false,
+        "compilation": false,
+        "new_timing": false,
+        "statistical_power_established": false,
+        "source_boundaries_audited": true
+      }
     }
   ],
   "migrated_from": {
