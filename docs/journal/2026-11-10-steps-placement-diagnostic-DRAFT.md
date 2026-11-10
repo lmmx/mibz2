@@ -1,6 +1,13 @@
 # DRAFT: does `mtf::STEPS`' 4 KiB placement against `counts` cost time? A bounded CI diagnostic
 
-**Status: DRAFT only.** Nothing here is built, run or registered.
+**Status: DRAFT only, revision 2.** It takes in the Researcher's REVISE (REVIEW 6763089509
+item 1; `state/reports/integration-priorities-6762860125/01-steps.md` at 07b453d1):
+- a fixed precision target;
+- the additive contrast analysed directly, in 20 four-slot blocks;
+- the exposure counted over the whole timed file;
+- a plain statement of what a net effect can't show (§5).
+
+D082 and D086 hold unchanged. Nothing here is built, run or registered.
 
 **What it is not:**
 - not a fourth #324 run;
@@ -85,11 +92,14 @@ between arms (it can't, being one function) or can't be hoisted out of the liter
    A gdb probe as in `stackprobe324.gdb` records `mtf_avx2`'s frame base (`rsp`) per arm,
    to show the stack's distribution is the same in both (per-process randomisation, in five
    processes an arm).
-3. **The corrected pair contrast (`agg3`)** on the first block of CI's `random`, per arm,
-   under lackey:
+3. **The corrected pair contrast (`agg3`)** per arm, under lackey, over **the whole timed
+   file:** `ab child mibz2 1 corpora/random.bz2`, all of CI's `random` (9 blocks, 8,000,000
+   output bytes), not a first-block extrapolation.
+   - It gives `c_diag`, the named pairs' count in `lo` minus `hi`, divided by 8,000,000, for
+     `Δ_req` (§5).
    - **Valid only if** `mtf_avx2`'s 4 KiB D←H count for the named PC pairs (the `counts`
      store PC against `STEPS`' three row-load PCs) is at least 10× higher in `lo` than in
-     `hi`, with `lo`'s rate at least the 0.0476 a byte excess #324 had.
+     `hi`, with `c_diag` at least 0.0476 a byte, the first-block excess #324's head had.
    - Every other `agg3` class of `mtf_avx2`, `read_item`, `bwt::build` and `room_segments`
      (H←H, S←H, H←S, S←S, at 4 KiB and 1 KiB) within 2% between arms.
    - **The exception, D←S** (`STEPS` loads after stack stores): this class can move, since
@@ -124,26 +134,43 @@ follows it.
 
 ## 5. Estimand, rounds and the prospective decision rule
 
-**The estimand:** Δ, the paired difference aliased (`lo`) minus disjoint (`hi`) in
+**The estimand:** Δ, the additive difference aliased (`lo`) minus disjoint (`hi`) in
 whole-process wall time per output byte (ns/B):
-- `ab child mibz2 1 corpora/random.bz2` (8,000,000 output bytes);
-- pinned to one CPU, as the bench's 1-thread rows are;
-- reported with its ratio form, the geometric mean of the paired ratios.
+- each slot is one fresh process, `ab child mibz2 1 corpora/random.bz2` (8,000,000 output
+  bytes), pinned to one CPU as the bench's 1-thread rows are;
+- its time, from the child's own wall figure, is divided by 8,000,000.
 
-**Rounds:**
-- 40 paired rounds, the arms' order alternating ABBA by round, each a fresh process.
-- The interval is the bench's: a 95% t-interval on the per-round log ratios, converted to
-  ns/B at the rounds' median `hi` time.
-- **Precision expected:** #324's 1-thread `random` rows had half-widths of ±0.8–1.2% at 10
-  rounds. At 40 rounds, about ±0.6%: about ±0.1 ns/B at CI's ~16 ns/B. The Researcher sets
-  the precision target, and the rounds if needed, before data.
-- **One fixed sequence:** no retry, and no extension after seeing data.
+**The design: 80 slots in 20 blocks of 4.**
+- Each block is either ABBA (`lo hi hi lo`) or BAAB (`hi lo lo hi`), 10 of each.
+- The order of the 20 is a fixed random permutation from a seed recorded in the frozen
+  registration before any run (seed 20261110).
+- **The block statistic:** `d_b` = mean of the block's two `lo` slots − mean of its two `hi`
+  slots, in ns/B. Within a block, a linear drift in time cancels exactly under either
+  order.
+- **The analysis:** Δ̂ = the mean of the 20 `d_b`, with a 95% t-interval on 19 degrees of
+  freedom, computed in ns/B directly (no log ratio, no scaling).
+- **The dependence assumptions, stated:**
+  - the blocks are exchangeable and independent of each other;
+  - drift within a block is at most linear;
+  - slots within a block aren't treated as independent.
+
+  A trend across blocks inflates the interval; it doesn't bias Δ̂, since the orders are
+  balanced and randomised.
+- **The precision target, fixed now:** a half-width of at most **0.10 ns/B**.
+  - If the run's half-width is wider, the result is reported as **INCONCLUSIVE (precision
+    not met)**, whatever Δ̂ is.
+  - No extension, re-run or added blocks follow.
+  - A setup failure before any slot runs (CI-INCIDENTS class B) re-runs as the same run.
+- **The ratio form** (the geometric mean of the paired ratios) is reported beside Δ̂ for
+  reference. The decision rule uses only Δ̂ and its interval.
 
 **The required contribution, fixed now:**
 `Δ_req = 0.51 ns/B × (c_diag / 0.0476)`.
 - 0.51 is the lower of the Optimiser's two random-harm conversions.
-- `c_diag` is the named pair's per-byte contrast (`lo` − `hi`) that §3.3 measures on this
-  binary.
+- `c_diag` is the named pairs' per-byte contrast (`lo` − `hi`) that §3.3 counts over the
+  whole timed file, on this binary.
+- 0.0476 is #324's first-block excess, so the ratio scales the required contribution to the
+  exposure this diagnostic actually creates.
 - If the contrast equals #324's excess, `Δ_req` = 0.51 ns/B.
 
 **The decision rule:**
@@ -154,6 +181,19 @@ whole-process wall time per output byte (ns/B):
   (false dependence and L1 set placement together, §4). That is not attribution of #324's
   harm. A follow-up control or hardware evidence would have to separate the two.
 - **Otherwise inconclusive:** a null result can't confirm or exclude a small contribution.
+- **The precision target missed (half-width over 0.10 ns/B):** inconclusive, as above.
+
+**What no outcome can show.** A net placement effect, of any size or sign, can neither
+uniquely attribute nor rule out #324's false-dependence mechanism.
+- **The same placement change moves more than one thing.** It moves L1 set co-location and
+  `STEPS`' relation to the stack as well (§4). Those effects can add to a false-dependence
+  cost or cancel it.
+- **This diagnostic is not #324.** Its binary differs from both #324's head and master: the
+  table base is a load, there are two `STEPS` copies, and `counts` sits on a pinned page.
+  #324's head also moved `counts` against the stack, which this design deliberately holds
+  fixed.
+- **So its readings stay narrow:** a rejection of the pair's sufficiency, a measured
+  sensitivity, or nothing. None of them is a causal verdict on #324.
 - **Not readable as a result:** a failed §3, or a run that doesn't complete as planned
   (setup failures re-run as the same run, CI-INCIDENTS class B).
 
@@ -165,10 +205,10 @@ whole-process wall time per output byte (ns/B):
 |---|---|
 | build | about 3 minutes |
 | §3.1–3.2 (listing and probes) | under 1 minute |
-| §3.3 (two lackey traces of one block) | about 10 minutes |
+| §3.3 (two lackey traces of the whole 8 MB file, with `agg3`) | about 60–90 minutes (one block took 2–5 minutes a trace on the shared machine; 9 blocks an arm) |
 | §3.4 (outputs) | under 1 minute |
-| the timed 40 rounds × 2 arms | under 1 minute, at 0.08–0.15 s a decode plus process start |
-| **total** | **under 20 minutes** |
+| the timed 80 slots | under 1 minute, at 0.08–0.15 s a decode plus process start |
+| **total** | **about 1.5–2 hours, nearly all of it the untimed lackey traces, which may run as a separate job beforehand** |
 
 **Out of scope:**
 - `records` and other hosts. Only if this result is informative, as a separate
