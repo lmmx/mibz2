@@ -39,7 +39,8 @@ arm over base. The process includes the harness's read and hash.
 
 ## 2. The allocator (read: not applicable)
 
-uv and ruff took about 10% from replacing the system allocator. This decoder allocates almost
+uv took about 10% from replacing the system allocator, with the configuration ruff already
+used. This decoder allocates almost
 nothing per block: `parallel.rs` keeps decoded-block and symbol buffers on free lists, and each
 worker keeps its table and scratch for its life.
 
@@ -63,7 +64,7 @@ worker keeps its table and scratch for its life.
 
 | the trick | where it lives | what it would be here |
 |---|---|---|
-| a prefilter that measures its own hit rate and turns itself off | memchr's `memmem` | choose the MTF kernel, and a table's k, a block by what the last blocks cost, not by a census; the emitter loses 5% on incompressible input and nothing switches it off |
+| a prefilter that measures its own hit rate and turns itself off | memchr's `memmem` | choose the MTF kernel, and a table's k, a block by what the last blocks cost, not by a census; the emitter's stage is 5% slower than MTF on incompressible input and nothing switches it off |
 | output order given up unless asked for | ripgrep's parallel printer | a block iterator for consumers that take records in any order: no ordered sink, no cross-core copy |
 | read the metadata, skip the body | uv's range requests for wheel metadata | a block's decoded length without its inversion (`2026-11-10-share-nothing.md` §5), so `tar` listing and single-member extraction invert only the blocks that hold a header or the member |
 | four vectors a branch, the tail as one overlapping load | memchr's search loops | already the shape of the short-run stores (#170); the RLE1 scan could take four vectors a branch, on 3 to 7% of a decode |
