@@ -73,11 +73,12 @@
 //!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
 //!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
 //!   `both`, park and small together), each its pipeK arm's plan and window;
-//! - `mibz2-pool2000`, `-pool0`, `-pool64` (research: the pool-wait arms A, B and C,
-//!   docs/journal/2026-11-10-pool-wait-budgets.md): `mibz2-pipe3-both`'s plan, window and
-//!   levers (THREADS / 3 pipelined teams of 3 with park and small: at 9 threads the
-//!   default's own three teams of three) with its pools' own waits spinning 2,000 (the
-//!   default's budget), 0 or 64 times before they park (`Levers::pool`). A build with the
+//! - `mibz2-pool2000`, `-pool0`, `-poolh0j2000` (research: the pool-wait arms both2000,
+//!   both0 and helper0/join2000, docs/journal/2026-11-10-pool-wait-split.md):
+//!   `mibz2-pipe3-both`'s plan, window and levers (THREADS / 3 pipelined teams of 3, at
+//!   least one, with park and small: at 9 threads the default's own three teams of three)
+//!   with its pools' own two waits spinning up to 2,000 times (the default's budget) at
+//!   both, at neither, or only at the caller's join, before they park (`Levers::pool`). A build with the
 //!   feature `wait-stats` adds the run's wait counts to its record (`waits`); the timed
 //!   bench builds without it;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
@@ -670,8 +671,9 @@ fn decode(
             )
         }
         // the pool-wait arms (research, `Levers::pool`): `mibz2-pipe3-both` with its pools'
-        // waits at budget 2,000 (the default's), 0 or 64
-        "mibz2-pool2000" | "mibz2-pool0" | "mibz2-pool64" => {
+        // waits at budget 2,000 (the default's) at both, 0 at both, or 0 at the helpers' idle
+        // wait and 2,000 at the caller's join
+        "mibz2-pool2000" | "mibz2-pool0" | "mibz2-poolh0j2000" => {
             let pool = mibz2::parallel::PoolWait::parse(&arm["mibz2-".len()..])
                 .expect("a registered pool-wait arm");
             let teams = (threads / 3).max(1);

@@ -164,7 +164,7 @@ fn team(
                 &Mutex::new(rx),
                 k,
                 team_k,
-                crate::coop::SPINS,
+                crate::coop::Budgets::DEFAULT,
             )
         })
         .unwrap();

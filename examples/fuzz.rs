@@ -9,7 +9,8 @@
 //!
 //! The pipeline cases (tests/common's `pipeline_candidates`: the shipped default, three
 //! pipelined teams of three with park and small, forced through each default entry point,
-//! one such team, and the default's teams with the pool-wait arms of 0 and 64 spins):
+//! one such team, and the default's teams with the pool-wait arms both0 and
+//! helper0/join2000):
 //! multi-block inputs (`pipeline_corpus`), some edits aimed at a later
 //! block's header and tables or the stream's end, and some left valid. Each is held to the
 //! plain parallel decoder exactly (the bytes before any error, and the error's kind, block

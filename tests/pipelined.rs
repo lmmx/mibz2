@@ -9,8 +9,9 @@
 //! (`StreamDecoder::pipelined_levers`): park, the spin-budget control (spin2k), small, park
 //! and small together, and park after the short spin; and the default's levers (park and
 //! small) with each pool-wait arm that is not the default's (`Levers::pool`: the pool's own
-//! waits spinning 0 or 64 times before they park, docs/journal/2026-11-10-pool-wait-budgets.md),
-//! so each arm is held to the same bytes, errors and cancellation as the default.
+//! two waits parking at once, both0, or only the helpers' idle wait doing so,
+//! helper0/join2000; docs/journal/2026-11-10-pool-wait-split.md), so all three arms (the
+//! default's levers being both2000) are held to the same bytes, errors and cancellation.
 //!
 //! **The default at the measured plan:** `StreamDecoder::new` (so `BzReader::parallel` and
 //! `decode_parallel`) runs pipelined teams with park and small at three teams of three
@@ -55,7 +56,8 @@ fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
 
 /// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone,
 /// the spin-budget control, park and small together, and park at the short budget; then
-/// park and small with the pool-wait arms B and C (0 and 64 spins)
+/// park and small with the pool-wait arms both0 and helper0/join2000 (park and small
+/// alone being both2000)
 const LEVERS: [Levers; 8] = [
     lv(false, false, false),
     lv(true, false, false),
@@ -64,7 +66,7 @@ const LEVERS: [Levers; 8] = [
     lv(true, true, false),
     lv(true, false, true),
     pool(PoolWait::Spin0),
-    pool(PoolWait::Spin64),
+    pool(PoolWait::Helper0Join2000),
 ];
 
 const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {

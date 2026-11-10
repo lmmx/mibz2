@@ -535,7 +535,7 @@ pub enum PipeShape {
     },
     /// `StreamDecoder::pipelined_levers` at `PIPELINED_PLAN` (three teams of three, in 12
     /// slots) with the default's levers and the pool-wait arm `pool` (`Levers::pool`,
-    /// docs/journal/2026-11-10-pool-wait-budgets.md), fed and read as `Push`
+    /// docs/journal/2026-11-10-pool-wait-split.md), fed and read as `Push`
     Pool {
         pool: mibz2::parallel::PoolWait,
         chunk: usize,
@@ -702,7 +702,8 @@ pub fn kind_name(e: &Error) -> String {
 /// The pipelined candidates the fuzz loop checks (examples/fuzz.rs): the shipped default
 /// (three pipelined teams of three, park and small) through each default entry point, at
 /// large and small write and read sizes, one team of three with the same levers, and the
-/// default's three teams with each pool-wait arm that is not the default's (0 and 64 spins)
+/// default's three teams with each pool-wait arm that is not the default's (both0 and
+/// helper0/join2000)
 pub fn pipeline_candidates() -> Vec<Pipelined> {
     let shapes = [
         PipeShape::Push {
@@ -728,7 +729,7 @@ pub fn pipeline_candidates() -> Vec<Pipelined> {
             read: 4093,
         },
         PipeShape::Pool {
-            pool: mibz2::parallel::PoolWait::Spin64,
+            pool: mibz2::parallel::PoolWait::Helper0Join2000,
             chunk: 997,
             read: 1 << 16,
         },

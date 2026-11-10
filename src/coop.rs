@@ -21,9 +21,11 @@
 //! - **Waiting is a short spin, then `park`.** Helpers between runs, and the caller waiting
 //!   for them, spin briefly and then park, and are unparked by the event they wait for. An
 //!   unpark that comes before the park makes the park return at once, so no wake-up is
-//!   lost. The spin budget is the pool's, fixed when it is made: `SPINS` for every pool the
-//!   default decoder makes; a research arm's pool (`Pool::pipelined_with`, selected only by
-//!   `parallel::Levers::pool`) may spin less, 0 included, through the same park protocol.
+//!   lost. The spin budgets are the pool's, fixed when it is made, one for each of its two
+//!   waits (`Budgets`: a helper's between runs, the caller's for its helpers): `SPINS` for
+//!   both in every pool the default decoder makes; a research arm's pool
+//!   (`Pool::pipelined_with`, selected only by `parallel::Levers::pool`) may spin less at
+//!   either, 0 included, through the same park protocol.
 //!
 //! The memory ordering: the task is published under a mutex and the epoch advanced with
 //! `Release`; helpers load the epoch with `Acquire`. Each helper's writes are released by
@@ -49,10 +51,30 @@ const SHUTDOWN: usize = usize::MAX;
 /// MTF stage (about 0.4 ms) apart. Miri interprets each spin, so it parks almost at once.
 pub(crate) const SPINS: u32 = if cfg!(miri) { 4 } else { 2_000 };
 
+/// A pool's two waits' spin budgets, fixed when it is made: a wait spins while its count of
+/// checks is below its budget, then parks. `DEFAULT` (`SPINS` at both) for every pool but a
+/// research arm's (`parallel::PoolWait`)
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct Budgets {
+    /// a helper's wait between runs, for the next (`Site::HelperIdle`)
+    pub(crate) idle: u32,
+    /// the caller's wait for its helpers to end the run (`Site::CallerJoin`)
+    pub(crate) join: u32,
+}
+
+impl Budgets {
+    /// The default's: `SPINS` at both waits
+    pub(crate) const DEFAULT: Budgets = Budgets {
+        idle: SPINS,
+        join: SPINS,
+    };
+}
+
 /// The waits' accounting (feature `wait-stats`, off by default; research only): per wait
-/// site, the waits, the spins, the parks and the yields, as counts, never times, for
-/// `examples/wait_audit.rs`. Without the feature a `Tally` is empty and every call on it
-/// compiles to nothing, so the decoder is unchanged.
+/// site, the waits, the spins, the parks and the yields, as counts, for
+/// `examples/wait_audit.rs`; and, at the pool's two sites only, each wait's wake-to-work
+/// latency (`Latency`), the one set of times kept. Without the feature a `Tally` is empty,
+/// no clock is read and every call compiles to nothing, so the decoder is unchanged.
 pub mod wait_stats {
     /// A wait site in this module
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -113,6 +135,108 @@ pub mod wait_stats {
         pub wakes: u64,
     }
 
+    /// How a pool wait ended, for its latency's class (`latency`)
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Ended {
+        /// its condition held at the first check (no spin, no park)
+        Immediate = 0,
+        /// inside its spin budget, after at least one spin, never parked
+        Spun = 1,
+        /// after at least one park
+        Parked = 2,
+    }
+
+    /// The classes, in their index order
+    pub const ENDED: [Ended; 3] = [Ended::Immediate, Ended::Spun, Ended::Parked];
+
+    impl Ended {
+        pub fn name(self) -> &'static str {
+            match self {
+                Ended::Immediate => "immediate",
+                Ended::Spun => "spun",
+                Ended::Parked => "parked",
+            }
+        }
+    }
+
+    /// The latency histogram's buckets: log-linear, `SUB` to an octave of nanoseconds
+    /// (bucket 0 is [0, 1) ns; then each octave [2^o, 2^(o+1)) split in `SUB` equal parts)
+    pub const SUB: usize = 4;
+    /// The buckets: enough octaves for any latency below about 2^40 ns (18 minutes); a
+    /// longer one is counted in the last
+    pub const BUCKETS: usize = 1 + 40 * SUB;
+
+    /// The bucket of `ns`
+    pub fn bucket(ns: u64) -> usize {
+        if ns == 0 {
+            return 0;
+        }
+        let o = 63 - ns.leading_zeros() as usize;
+        let frac = if o >= 2 {
+            ((ns >> (o - 2)) & 3) as usize
+        } else {
+            ((ns << (2 - o)) & 3) as usize
+        };
+        (1 + o * SUB + frac).min(BUCKETS - 1)
+    }
+
+    /// The bucket `i`'s bounds in nanoseconds, [lo, hi)
+    pub fn bucket_bounds(i: usize) -> (f64, f64) {
+        if i == 0 {
+            return (0.0, 1.0);
+        }
+        let (o, frac) = ((i - 1) / SUB, (i - 1) % SUB);
+        let base = (1u64 << o) as f64;
+        let w = base / SUB as f64;
+        (base + frac as f64 * w, base + (frac + 1) as f64 * w)
+    }
+
+    /// One pool site's wake-to-work latencies of one class (`Ended`) since the last `reset`:
+    /// - at `HelperIdle`, from the run's publication (the caller's clock read just before it
+    ///   advances the epoch and unparks the helpers) to the helper's claim of its call (its
+    ///   read of the run's task, just before it calls it): the launch latency a helper adds;
+    /// - at `CallerJoin`, from the last helper's end (the latest clock read of the run's
+    ///   helpers, each just before it counts itself done) to the caller's wait ending.
+    ///
+    /// Counted with the feature only; the clock is `Instant`'s (monotonic, every thread's).
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct Latency {
+        /// the waits measured
+        pub count: u64,
+        /// their latencies' sum, in nanoseconds
+        pub sum_ns: u64,
+        /// their latencies by bucket (`bucket`, `bucket_bounds`)
+        pub buckets: Vec<u64>,
+    }
+
+    impl Latency {
+        /// The `q` quantile, as the upper bound of the bucket it falls in (an upper estimate
+        /// within one bucket, a quarter octave), or 0 with no waits measured
+        pub fn quantile_ns(&self, q: f64) -> f64 {
+            if self.count == 0 {
+                return 0.0;
+            }
+            let want = ((q * self.count as f64).ceil() as u64).clamp(1, self.count);
+            let mut seen = 0;
+            for (i, &n) in self.buckets.iter().enumerate() {
+                seen += n;
+                if seen >= want {
+                    return bucket_bounds(i).1;
+                }
+            }
+            bucket_bounds(BUCKETS - 1).1
+        }
+
+        /// The mean, in nanoseconds (0 with no waits)
+        pub fn mean_ns(&self) -> f64 {
+            if self.count == 0 {
+                0.0
+            } else {
+                self.sum_ns as f64 / self.count as f64
+            }
+        }
+    }
+
     /// One wait's tally, kept on the waiter's stack and added to its site's counts once,
     /// when the wait ends (`end`)
     #[cfg(feature = "wait-stats")]
@@ -125,8 +249,63 @@ pub mod wait_stats {
 
     #[cfg(feature = "wait-stats")]
     mod imp {
-        use super::{Counts, Site, Tally};
+        use super::{Counts, Ended, Latency, Site, Tally, BUCKETS};
         use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+        use std::sync::OnceLock;
+        use std::time::Instant;
+
+        /// a latency row: its count, its sum, then its buckets
+        const LROW: usize = 2 + BUCKETS;
+        #[allow(clippy::declare_interior_mutable_const)]
+        const LZ: AtomicU64 = AtomicU64::new(0);
+        #[allow(clippy::declare_interior_mutable_const)]
+        const LCLASS: [AtomicU64; LROW] = [LZ; LROW];
+        #[allow(clippy::declare_interior_mutable_const)]
+        const LSITE: [[AtomicU64; LROW]; 3] = [LCLASS; 3];
+        /// the pool's two sites (`HelperIdle`, `CallerJoin`) × the classes (`Ended`)
+        static LAT: [[[AtomicU64; LROW]; 3]; 2] = [LSITE; 2];
+
+        /// Nanoseconds since the process's first reading (never 0: 1 is added)
+        pub(crate) fn now_ns() -> u64 {
+            static BASE: OnceLock<Instant> = OnceLock::new();
+            BASE.get_or_init(Instant::now).elapsed().as_nanos() as u64 + 1
+        }
+
+        pub(crate) fn record(site: Site, ended: Ended, ns: u64) {
+            let row = &LAT[site as usize][ended as usize];
+            row[0].fetch_add(1, Relaxed);
+            row[1].fetch_add(ns, Relaxed);
+            row[2 + super::bucket(ns)].fetch_add(1, Relaxed);
+        }
+
+        pub(super) fn latency(site: Site, ended: Ended) -> Latency {
+            if site as usize > 1 {
+                return Latency {
+                    count: 0,
+                    sum_ns: 0,
+                    buckets: vec![0; BUCKETS],
+                };
+            }
+            let row = &LAT[site as usize][ended as usize];
+            Latency {
+                count: row[0].load(Relaxed),
+                sum_ns: row[1].load(Relaxed),
+                buckets: row[2..].iter().map(|a| a.load(Relaxed)).collect(),
+            }
+        }
+
+        impl Tally {
+            /// How the wait ended, by its spins and parks
+            pub(crate) fn ended(&self) -> Ended {
+                if self.parks > 0 {
+                    Ended::Parked
+                } else if self.spins > 0 {
+                    Ended::Spun
+                } else {
+                    Ended::Immediate
+                }
+            }
+        }
 
         const FIELDS: usize = 10;
         #[allow(clippy::declare_interior_mutable_const)]
@@ -202,6 +381,13 @@ pub mod wait_stats {
                     a.store(0, Relaxed);
                 }
             }
+            for site in &LAT {
+                for row in site {
+                    for a in row {
+                        a.store(0, Relaxed);
+                    }
+                }
+            }
         }
     }
 
@@ -236,6 +422,25 @@ pub mod wait_stats {
 
     /// Whether the counts are kept (the feature `wait-stats`)
     pub const ENABLED: bool = cfg!(feature = "wait-stats");
+
+    /// A pool site's wake-to-work latencies of class `ended` since the last `reset`
+    /// (`Latency`; empty without the feature, and at the walk's sites)
+    pub fn latency(site: Site, ended: Ended) -> Latency {
+        #[cfg(feature = "wait-stats")]
+        return imp::latency(site, ended);
+        #[cfg(not(feature = "wait-stats"))]
+        {
+            let _ = (site, ended);
+            Latency {
+                count: 0,
+                sum_ns: 0,
+                buckets: vec![0; BUCKETS],
+            }
+        }
+    }
+
+    #[cfg(feature = "wait-stats")]
+    pub(crate) use imp::{now_ns, record};
 
     /// A site's counts since the last `reset` (all zero without the feature)
     pub fn get(site: Site) -> Counts {
@@ -274,10 +479,19 @@ struct Shared {
     panic: Mutex<Option<Box<dyn Any + Send>>>,
     /// the thread waiting in `run`, for the last helper to unpark
     caller: Mutex<Option<Thread>>,
-    /// the spin budget of the pool's two waits (a helper's between runs, the caller's for
-    /// its helpers), fixed when the pool is made: a wait spins while its count of checks is
-    /// below it, then parks. `SPINS` for every pool but a research arm's
-    spins: u32,
+    /// the spin budgets of the pool's two waits (a helper's between runs, the caller's for
+    /// its helpers), fixed when the pool is made (`Budgets`): `Budgets::DEFAULT` for every
+    /// pool but a research arm's
+    budgets: Budgets,
+    /// the counting build only (`wait_stats::latency`): the clock read just before the
+    /// latest run's epoch was published (released by the epoch's advance)
+    #[cfg(feature = "wait-stats")]
+    published_ns: AtomicU64,
+    /// the counting build only: the latest clock read of a helper about to count itself
+    /// done (its maximum; released by `done`'s advance, so the caller's acquire of the
+    /// run's last `done` sees the run's last helper's)
+    #[cfg(feature = "wait-stats")]
+    last_done_ns: AtomicU64,
     /// testing only: a deliberately broken publication, the lost-wakeup tests' negative
     /// control (`Broken`); `Broken::No` everywhere else
     #[cfg(test)]
@@ -319,7 +533,7 @@ impl Pool {
     /// A pool of `k` threads (`k` − 1 spawned; `k` of 0 is taken as 1). A helper that
     /// can't be spawned makes this an error, with those spawned before it shut down.
     pub(crate) fn new(k: usize) -> std::io::Result<Pool> {
-        Self::named(k, HELPER, SPINS)
+        Self::named(k, HELPER, Budgets::DEFAULT)
     }
 
     /// `new`, for a pipelined team (`parallel::StreamDecoder::pipelined`): its helpers are
@@ -328,33 +542,34 @@ impl Pool {
     /// `mibz2-coop`, so whatever counts helpers by that prefix counts both.
     #[cfg(test)]
     pub(crate) fn pipelined(k: usize) -> std::io::Result<Pool> {
-        Self::pipelined_with(k, SPINS)
+        Self::pipelined_with(k, Budgets::DEFAULT)
     }
 
-    /// `pipelined`, its two waits' spin budget `spins` (`Shared::spins`): `SPINS` for the
-    /// default decoder's teams, another only for a research arm (`parallel::Levers::pool`)
-    pub(crate) fn pipelined_with(k: usize, spins: u32) -> std::io::Result<Pool> {
-        Self::named(k, PIPELINED_HELPER, spins)
+    /// `pipelined`, its two waits' spin budgets `budgets` (`Shared::budgets`):
+    /// `Budgets::DEFAULT` for the default decoder's teams, another only for a research arm
+    /// (`parallel::Levers::pool`)
+    pub(crate) fn pipelined_with(k: usize, budgets: Budgets) -> std::io::Result<Pool> {
+        Self::named(k, PIPELINED_HELPER, budgets)
     }
 
-    /// Testing: a plain pool whose waits spin `spins` (the lost-wakeup tests), its
-    /// publication broken as `broken` says
+    /// Testing: a plain pool whose waits spin as `budgets` says (the lost-wakeup tests),
+    /// its publication broken as `broken` says
     #[cfg(test)]
-    pub(crate) fn tested(k: usize, spins: u32, broken: Broken) -> std::io::Result<Pool> {
-        Self::make(k, HELPER, spins, broken)
+    pub(crate) fn tested(k: usize, budgets: Budgets, broken: Broken) -> std::io::Result<Pool> {
+        Self::make(k, HELPER, budgets, broken)
     }
 
-    fn named(k: usize, prefix: &str, spins: u32) -> std::io::Result<Pool> {
+    fn named(k: usize, prefix: &str, budgets: Budgets) -> std::io::Result<Pool> {
         #[cfg(test)]
-        return Self::make(k, prefix, spins, Broken::No);
+        return Self::make(k, prefix, budgets, Broken::No);
         #[cfg(not(test))]
-        Self::make(k, prefix, spins)
+        Self::make(k, prefix, budgets)
     }
 
     fn make(
         k: usize,
         prefix: &str,
-        spins: u32,
+        budgets: Budgets,
         #[cfg(test)] broken: Broken,
     ) -> std::io::Result<Pool> {
         let k = k.max(1);
@@ -364,7 +579,11 @@ impl Pool {
             task: Mutex::new(None),
             panic: Mutex::new(None),
             caller: Mutex::new(None),
-            spins,
+            budgets,
+            #[cfg(feature = "wait-stats")]
+            published_ns: AtomicU64::new(0),
+            #[cfg(feature = "wait-stats")]
+            last_done_ns: AtomicU64::new(0),
             #[cfg(test)]
             broken,
         });
@@ -421,6 +640,9 @@ impl Pool {
             }
             thread::sleep(std::time::Duration::from_millis(2));
         }
+        #[cfg(feature = "wait-stats")]
+        s.published_ns
+            .store(wait_stats::now_ns(), Ordering::Relaxed);
         s.epoch.fetch_add(1, Ordering::Release);
         #[cfg(test)]
         let unpark = s.broken != Broken::UnparkBeforeEpoch;
@@ -457,7 +679,7 @@ struct Wait<'a> {
 
 impl Drop for Wait<'_> {
     fn drop(&mut self) {
-        let budget = self.s.spins;
+        let budget = self.s.budgets.join;
         let mut spins = 0u32;
         let mut tally = Tally::new();
         while self.s.done.load(Ordering::Acquire) != self.helpers {
@@ -470,12 +692,20 @@ impl Drop for Wait<'_> {
                 thread::park();
             }
         }
+        #[cfg(feature = "wait-stats")]
+        {
+            // (the last helper's end to this wait's: its `last_done_ns` was released by
+            // its `done` advance, acquired by the load above)
+            let end = self.s.last_done_ns.load(Ordering::Relaxed);
+            let now = wait_stats::now_ns();
+            wait_stats::record(Site::CallerJoin, tally.ended(), now.saturating_sub(end));
+        }
         tally.end(Site::CallerJoin);
     }
 }
 
 fn helper(s: &Shared, idx: usize) {
-    let budget = s.spins;
+    let budget = s.budgets.idle;
     let mut seen = 0;
     loop {
         let mut spins = 0u32;
@@ -494,12 +724,22 @@ fn helper(s: &Shared, idx: usize) {
                 thread::park();
             }
         };
+        #[cfg(feature = "wait-stats")]
+        let ended = tally.ended();
         tally.end(Site::HelperIdle);
         if e == SHUTDOWN {
             return;
         }
         seen = e;
         let task = *lock(&s.task);
+        #[cfg(feature = "wait-stats")]
+        {
+            // (the run's publication to this helper's claim of its call: `published_ns`
+            // was released by the epoch's advance, acquired by the load that saw it)
+            let from = s.published_ns.load(Ordering::Relaxed);
+            let now = wait_stats::now_ns();
+            wait_stats::record(Site::HelperIdle, ended, now.saturating_sub(from));
+        }
         if let Some(Erased(f)) = task {
             // SAFETY: the run that published epoch `e` is waiting for this call (`Wait`)
             let r = catch_unwind(AssertUnwindSafe(|| unsafe { (*f)(idx) }));
@@ -522,6 +762,9 @@ fn helper(s: &Shared, idx: usize) {
             s.done.fetch_add(1, Ordering::AcqRel);
             continue;
         }
+        #[cfg(feature = "wait-stats")]
+        s.last_done_ns
+            .fetch_max(wait_stats::now_ns(), Ordering::Relaxed);
         // (the last helper to end wakes the caller; an earlier unpark is harmless)
         s.done.fetch_add(1, Ordering::AcqRel);
         if let Some(c) = caller {
@@ -1700,12 +1943,18 @@ mod tests {
         assert_eq!(sum.load(Ordering::Relaxed), want);
     }
 
-    /// The pool-wait arms' budgets (`parallel::PoolWait`: 2,000, the default's `SPINS`; 0;
-    /// 64), and a budget of 1, the smallest that is not 0
-    const ARM_SPINS: [u32; 4] = [SPINS, 0, 64, 1];
+    /// A pool's budgets: `idle` at the helpers' wait, `join` at the caller's
+    const fn b(idle: u32, join: u32) -> Budgets {
+        Budgets { idle, join }
+    }
 
-    /// The lost-wakeup stress: `runs` runs of a `k`-thread pool whose waits spin `spins`
-    /// times before they park, on a thread of its own, with `deadline` for all of them.
+    /// The pool-wait arms' budgets (`parallel::PoolWait`: both2000, the default's `SPINS` at
+    /// both waits; both0; helper0/join2000), the other mixed pair (helper2000/join0), and 1
+    /// at both, the smallest budget that is not 0
+    const ARM_BUDGETS: [Budgets; 5] = [b(SPINS, SPINS), b(0, 0), b(0, SPINS), b(SPINS, 0), b(1, 1)];
+
+    /// The lost-wakeup stress: `runs` runs of a `k`-thread pool whose waits spin as
+    /// `budgets` says before they park, on a thread of its own, with `deadline` for all of them.
     /// Between runs the caller sometimes goes on at once, sometimes spins, yields or sleeps
     /// for a few microseconds, and each thread's call does a varying amount of work, so that
     /// a run's epoch often lands just as a helper's spins run out and it decides to park, and
@@ -1714,7 +1963,7 @@ mod tests {
     /// thread is then left parked, its pool with it).
     fn stress(
         k: usize,
-        spins: u32,
+        budgets: Budgets,
         broken: Broken,
         runs: u64,
         deadline: std::time::Duration,
@@ -1723,8 +1972,9 @@ mod tests {
         thread::Builder::new()
             .name("coop-stress".into())
             .spawn(move || {
-                let p = Pool::tested(k, spins, broken).unwrap();
-                let mut rnd = xorshift(0x9e37_79b9 ^ (spins as u64) << 8 ^ k as u64);
+                let p = Pool::tested(k, budgets, broken).unwrap();
+                let seed = (budgets.idle as u64) << 24 ^ (budgets.join as u64) << 8;
+                let mut rnd = xorshift(0x9e37_79b9 ^ seed ^ k as u64);
                 let total = AtomicU64::new(0);
                 for i in 0..runs {
                     let r = rnd();
@@ -1765,22 +2015,23 @@ mod tests {
         }
     }
 
-    /// No wake-up is lost under any pool-wait arm: each budget, at 2, 3 and 4 threads,
+    /// No wake-up is lost under any pool-wait arm: each pair of budgets (the three arms, the
+    /// other mixed pair and 1 at both), at 2, 3 and 4 threads,
     /// thousands of runs whose work arrives just as a waiter decides to park, each set
     /// bounded by a deadline (a hang fails the test rather than hanging it)
     #[test]
     fn pool_wait_arms_lose_no_wakeup() {
-        for spins in ARM_SPINS {
+        for budgets in ARM_BUDGETS {
             for k in [2, 3, 4] {
                 assert!(
                     stress(
                         k,
-                        spins,
+                        budgets,
                         Broken::No,
                         6_000,
                         std::time::Duration::from_secs(60)
                     ),
-                    "the pool hung: {k} threads, a budget of {spins} spins"
+                    "the pool hung: {k} threads, budgets {budgets:?}"
                 );
             }
         }
@@ -1790,16 +2041,16 @@ mod tests {
     /// published must hang, under every arm, or the stress could not see a lost wake-up
     #[test]
     fn pool_wait_stress_catches_an_unpark_before_the_epoch() {
-        for spins in ARM_SPINS {
+        for budgets in ARM_BUDGETS {
             assert!(
                 !stress(
                     3,
-                    spins,
+                    budgets,
                     Broken::UnparkBeforeEpoch,
                     200,
                     std::time::Duration::from_secs(5)
                 ),
-                "an unpark before the epoch went uncaught at a budget of {spins} spins"
+                "an unpark before the epoch went uncaught at budgets {budgets:?}"
             );
         }
     }
@@ -1808,16 +2059,16 @@ mod tests {
     /// itself done must hang, under every arm
     #[test]
     fn pool_wait_stress_catches_an_unpark_before_done() {
-        for spins in ARM_SPINS {
+        for budgets in ARM_BUDGETS {
             assert!(
                 !stress(
                     2,
-                    spins,
+                    budgets,
                     Broken::UnparkBeforeDone,
                     200,
                     std::time::Duration::from_secs(5)
                 ),
-                "an unpark before done went uncaught at a budget of {spins} spins"
+                "an unpark before done went uncaught at budgets {budgets:?}"
             );
         }
     }
@@ -1830,8 +2081,8 @@ mod tests {
         struct Slots(*mut u64);
         // SAFETY: each thread writes only its own slots through it
         unsafe impl Sync for Slots {}
-        for spins in ARM_SPINS {
-            let p = Pool::tested(3, spins, Broken::No).unwrap();
+        for budgets in ARM_BUDGETS {
+            let p = Pool::tested(3, budgets, Broken::No).unwrap();
             let mut v = vec![0u64; 3 * 8];
             for round in 1..=3u64 {
                 each_index_once(&p);
@@ -1872,7 +2123,7 @@ mod tests {
     #[test]
     fn wait_stats_count_wakes() {
         use wait_stats::get;
-        let p = Pool::tested(3, 0, Broken::No).unwrap();
+        let p = Pool::tested(3, b(0, 0), Broken::No).unwrap();
         let (wakes, cwakes) = (get(Site::HelperIdle).wakes, get(Site::CallerJoin).wakes);
         for _ in 0..10 {
             each_index_once(&p);
@@ -1881,6 +2132,67 @@ mod tests {
         assert!(get(Site::HelperIdle).wakes >= wakes + 20);
         assert!(get(Site::CallerJoin).wakes >= cwakes + 20);
         drop(p);
+    }
+
+    /// The split budgets reach their own waits (feature `wait-stats`; run alone, as
+    /// test.yml runs it, since the counts are the process's): at helper0/join2000 the helpers'
+    /// wait never spins while the caller's may, at helper2000/join0 the reverse; and every
+    /// helper's claim of its call, and every caller's join, has its latency recorded once
+    #[cfg(feature = "wait-stats")]
+    #[test]
+    fn wait_stats_split_budgets_and_latency() {
+        use wait_stats::{get, latency, reset, ENDED};
+        let total = |site| ENDED.iter().map(|&e| latency(site, e).count).sum::<u64>();
+        for (budgets, idle_spins, join_spins) in
+            [(b(0, SPINS), false, true), (b(SPINS, 0), true, false)]
+        {
+            reset();
+            let p = Pool::tested(3, budgets, Broken::No).unwrap();
+            for i in 0..400u64 {
+                // (unequal work, so the caller sometimes waits for its helpers, and pauses
+                // between runs, so the helpers sometimes wait for the next)
+                p.run(&|j| {
+                    let mut x = i ^ j as u64;
+                    for _ in 0..(j as u64 * 2_000 * (i % 3)) {
+                        x = std::hint::black_box(x.wrapping_mul(6364136223846793005) + 1);
+                    }
+                });
+                if i % 8 == 0 {
+                    thread::sleep(std::time::Duration::from_micros(300));
+                }
+            }
+            drop(p);
+            let (idle, join) = (get(Site::HelperIdle), get(Site::CallerJoin));
+            assert_eq!(idle.spins > 0, idle_spins, "{budgets:?}: {idle:?}");
+            assert!(join.spins == 0 || join_spins, "{budgets:?}: {join:?}");
+            if !idle_spins {
+                assert_eq!(idle.ended_spinning, 0);
+            }
+            // (two helpers' claims a run; the caller's join once a run)
+            assert_eq!(total(Site::HelperIdle), 2 * 400);
+            assert_eq!(total(Site::CallerJoin), 400);
+            assert!(latency(Site::HelperIdle, wait_stats::Ended::Parked).count > 0);
+        }
+        // (the walk's sites keep no latencies)
+        assert_eq!(total(Site::WalkHelper), 0);
+    }
+
+    /// The latency histogram's buckets cover every value, in order, each inside its bounds
+    #[test]
+    fn latency_buckets() {
+        use wait_stats::{bucket, bucket_bounds, BUCKETS};
+        let mut last = 0;
+        for ns in (0..5_000u64).chain([1 << 20, (1 << 20) + 1, 123_456_789, 1 << 39]) {
+            let i = bucket(ns);
+            assert!(i >= last && i < BUCKETS, "{ns}: {i}");
+            let (lo, hi) = bucket_bounds(i);
+            assert!(
+                lo <= ns as f64 && (ns as f64) < hi,
+                "{ns}: {i} [{lo}, {hi})"
+            );
+            last = i;
+        }
+        assert_eq!(bucket(u64::MAX), BUCKETS - 1);
     }
 
     fn xorshift(seed: u64) -> impl FnMut() -> u64 {
