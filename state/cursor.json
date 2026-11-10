@@ -1048,7 +1048,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: migration source head and manifest SHA-256 verified. Auditing D083 team-screen draft costs, PR tier and A2 alternatives at ffb568913ce9bd6eeb807082ac935570e36c3c8d.",
+      "progress": "Source/log audit checkpoint: warm head/base builds 27.08/25.14s verified; Valgrind/cold assumptions not observed. Reproduced A1 false pass for four empty JSON records. Native coverage economically preferred; full callgrind tier requires robust attribution and complete cost.",
       "report_path": "state/records/reviews/inbox-6759587407/report.md"
     }
   ],
