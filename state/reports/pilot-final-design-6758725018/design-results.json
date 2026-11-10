@@ -1,0 +1,354 @@
+{
+  "gaussian_batch_sensitivity": [
+    {
+      "batch_rho": 0,
+      "draws": 200000,
+      "null_pass": 0.050195,
+      "null_pass_with_trend_veto": 0.05018
+    },
+    {
+      "batch_rho": 0.1,
+      "draws": 200000,
+      "null_pass": 0.06823,
+      "null_pass_with_trend_veto": 0.068195
+    },
+    {
+      "batch_rho": 0.2,
+      "draws": 200000,
+      "null_pass": 0.08876,
+      "null_pass_with_trend_veto": 0.08866
+    },
+    {
+      "batch_rho": 0.4,
+      "draws": 200000,
+      "null_pass": 0.1412,
+      "null_pass_with_trend_veto": 0.14019
+    }
+  ],
+  "harm_rule_example": {
+    "B": 24,
+    "R": 2880,
+    "assumed_true_ratio": 1.005,
+    "assumption": "iid Gaussian batches and same hypothetical true ratio; not a pilot mean or recurrence claim across CPU models",
+    "cell": "wikidata/1/wall",
+    "noncentrality": 22.0832781843327,
+    "planning_sigma": 0.012120463383590331,
+    "slower_flag_probability": 0.9999999999999983
+  },
+  "planning_sigmas": {
+    "onebyte/1/cpu": 0.05412118232617063,
+    "onebyte/1/wall": 0.05720656144999389,
+    "onebyte/2/cpu": 0.041298978325558185,
+    "onebyte/2/wall": 0.05007639526922539,
+    "onebyte/4/cpu": 0.05343230727054235,
+    "onebyte/4/wall": 0.05341515622034532,
+    "pattern/1/cpu": 0.05035606167601408,
+    "pattern/1/wall": 0.05233264645477456,
+    "pattern/2/cpu": 0.055288583153171166,
+    "pattern/2/wall": 0.20139894418068915,
+    "pattern/4/cpu": 0.09098559300352242,
+    "pattern/4/wall": 0.07064748565546698,
+    "random/1/cpu": 0.030083558162678634,
+    "random/1/wall": 0.030403501809116065,
+    "random/2/cpu": 0.0373873529900709,
+    "random/2/wall": 0.0571971659234235,
+    "random/4/cpu": 0.03882392190005423,
+    "random/4/wall": 0.05818327732101615,
+    "records/1/cpu": 0.04848713888247679,
+    "records/1/wall": 0.04834560049321178,
+    "records/2/cpu": 0.04750466300211473,
+    "records/2/wall": 0.05585226438869684,
+    "records/4/cpu": 0.06522506857601287,
+    "records/4/wall": 0.059910213962413215,
+    "runs/1/cpu": 0.03249935557593717,
+    "runs/1/wall": 0.03404685932214785,
+    "runs/2/cpu": 0.02050173315990308,
+    "runs/2/wall": 0.02696861400193875,
+    "runs/4/cpu": 0.021745155698831276,
+    "runs/4/wall": 0.02260004347988981,
+    "text/1/cpu": 0.02221818430213086,
+    "text/1/wall": 0.02248307840033256,
+    "text/2/cpu": 0.030381431989921093,
+    "text/2/wall": 0.045082718136626204,
+    "text/4/cpu": 0.0342816778308437,
+    "text/4/wall": 0.05213672621349658,
+    "wikidata/1/cpu": 0.012086288003324668,
+    "wikidata/1/wall": 0.012120463383590331,
+    "wikidata/2/cpu": 0.022458143485905673,
+    "wikidata/2/wall": 0.026472275021674607,
+    "wikidata/4/cpu": 0.027013759951713043,
+    "wikidata/4/wall": 0.03398208915306939
+  },
+  "power": [
+    {
+      "B": 20,
+      "R": 600,
+      "all_cell_lower": 0.5221306251314041,
+      "independent_product": 0.528928320357917,
+      "limiting": "pattern/2/wall",
+      "m": 30,
+      "min_power": 0.5367957514200995,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.5121306251314041
+    },
+    {
+      "B": 20,
+      "R": 600,
+      "all_cell_lower": 0.11667643460584742,
+      "independent_product": 0.2680601228861344,
+      "limiting": "pattern/2/wall",
+      "m": 30,
+      "min_power": 0.3386621831368801,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.10667643460584743
+    },
+    {
+      "B": 20,
+      "R": 960,
+      "all_cell_lower": 0.7088713483799065,
+      "independent_product": 0.7090640806156925,
+      "limiting": "pattern/2/wall",
+      "m": 48,
+      "min_power": 0.7095348744722577,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.6988713483799065
+    },
+    {
+      "B": 20,
+      "R": 960,
+      "all_cell_lower": 0.42306313653470373,
+      "independent_product": 0.44497418194314936,
+      "limiting": "pattern/2/wall",
+      "m": 48,
+      "min_power": 0.46379217539821754,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.4130631365347037
+    },
+    {
+      "B": 20,
+      "R": 1200,
+      "all_cell_lower": 0.7912363380328163,
+      "independent_product": 0.7912525465496697,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.7913140074234797,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.7812363380328163
+    },
+    {
+      "B": 20,
+      "R": 1200,
+      "all_cell_lower": 0.5221306251314042,
+      "independent_product": 0.5289283203579171,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.5367957514200996,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.5121306251314042
+    },
+    {
+      "B": 24,
+      "R": 1440,
+      "all_cell_lower": 0.8561003106077757,
+      "independent_product": 0.8561013270775446,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.8561073746929773,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.8461003106077757
+    },
+    {
+      "B": 24,
+      "R": 1440,
+      "all_cell_lower": 0.6017229468136139,
+      "independent_product": 0.6036373020080008,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.6065883772510808,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.5917229468136139
+    },
+    {
+      "B": 40,
+      "R": 2400,
+      "all_cell_lower": 0.9709756992611834,
+      "independent_product": 0.9709756992700683,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.9709756995673022,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.9609756992611834
+    },
+    {
+      "B": 40,
+      "R": 2400,
+      "all_cell_lower": 0.8047141378451149,
+      "independent_product": 0.8047237336065293,
+      "limiting": "pattern/2/wall",
+      "m": 60,
+      "min_power": 0.8047632872107784,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.7947141378451149
+    },
+    {
+      "B": 20,
+      "R": 2400,
+      "all_cell_lower": 0.9660995750895434,
+      "independent_product": 0.9660995751188296,
+      "limiting": "pattern/2/wall",
+      "m": 120,
+      "min_power": 0.9660995759534494,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.9560995750895434
+    },
+    {
+      "B": 20,
+      "R": 2400,
+      "all_cell_lower": 0.7912363380328163,
+      "independent_product": 0.7912525465496697,
+      "limiting": "pattern/2/wall",
+      "m": 120,
+      "min_power": 0.7913140074234797,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.7812363380328163
+    },
+    {
+      "B": 24,
+      "R": 2880,
+      "all_cell_lower": 0.9854840380061627,
+      "independent_product": 0.9854840380062317,
+      "limiting": "pattern/2/wall",
+      "m": 120,
+      "min_power": 0.9854840380109718,
+      "variance_multiplier": 1,
+      "with_trend_veto_lower": 0.9754840380061627
+    },
+    {
+      "B": 24,
+      "R": 2880,
+      "all_cell_lower": 0.8561003106077757,
+      "independent_product": 0.8561013270775446,
+      "limiting": "pattern/2/wall",
+      "m": 120,
+      "min_power": 0.8561073746929773,
+      "variance_multiplier": 2,
+      "with_trend_veto_lower": 0.8461003106077757
+    }
+  ],
+  "power_assumption": "iid normal batch means, pilot max LRV scaled as stated; not guaranteed",
+  "shard_budget": {
+    "onebyte": {
+      "R2880_1p4_pace_plus_15": 190.61599999999999,
+      "R2880_measure_minutes": 125.44,
+      "R2880_plus_15_setup": 140.44,
+      "measured_minutes": 26.133333333333333
+    },
+    "pattern": {
+      "R2880_1p4_pace_plus_15": 125.99199999999998,
+      "R2880_measure_minutes": 79.27999999999999,
+      "R2880_plus_15_setup": 94.27999999999999,
+      "measured_minutes": 16.516666666666666
+    },
+    "random": {
+      "R2880_1p4_pace_plus_15": 151.304,
+      "R2880_measure_minutes": 97.36,
+      "R2880_plus_15_setup": 112.36,
+      "measured_minutes": 20.283333333333335
+    },
+    "records": {
+      "R2880_1p4_pace_plus_15": 237.544,
+      "R2880_measure_minutes": 158.96,
+      "R2880_plus_15_setup": 173.96,
+      "measured_minutes": 33.11666666666667
+    },
+    "runs": {
+      "R2880_1p4_pace_plus_15": 182.552,
+      "R2880_measure_minutes": 119.67999999999999,
+      "R2880_plus_15_setup": 134.68,
+      "measured_minutes": 24.933333333333334
+    },
+    "text": {
+      "R2880_1p4_pace_plus_15": 216.37599999999995,
+      "R2880_measure_minutes": 143.83999999999997,
+      "R2880_plus_15_setup": 158.83999999999997,
+      "measured_minutes": 29.966666666666665
+    },
+    "wikidata-1": {
+      "R2880_1p4_pace_plus_15": 157.688,
+      "R2880_measure_minutes": 101.92,
+      "R2880_plus_15_setup": 116.92,
+      "measured_minutes": 21.233333333333334
+    },
+    "wikidata-2": {
+      "R2880_1p4_pace_plus_15": 136.184,
+      "R2880_measure_minutes": 86.56,
+      "R2880_plus_15_setup": 101.56,
+      "measured_minutes": 18.033333333333335
+    },
+    "wikidata-4": {
+      "R2880_1p4_pace_plus_15": 84.99999999999999,
+      "R2880_measure_minutes": 49.99999999999999,
+      "R2880_plus_15_setup": 65.0,
+      "measured_minutes": 10.416666666666666
+    }
+  },
+  "total_measure_minutes": 200.63333333333333,
+  "trend_cutoff": 4.380630866588199,
+  "trend_veto_assumption": "constant mean iid Gaussian batch means, Bonferroni family veto <=.01",
+  "waits": {
+    "onebyte": {
+      "reported_waited_s_max": 20,
+      "reported_waited_s_sum": 540,
+      "rows": 3600,
+      "rows_field_over_10": 27
+    },
+    "pattern": {
+      "reported_waited_s_max": 0,
+      "reported_waited_s_sum": 0,
+      "rows": 3600,
+      "rows_field_over_10": 0
+    },
+    "random": {
+      "reported_waited_s_max": 0,
+      "reported_waited_s_sum": 0,
+      "rows": 3600,
+      "rows_field_over_10": 0
+    },
+    "records": {
+      "reported_waited_s_max": 20,
+      "reported_waited_s_sum": 660,
+      "rows": 3600,
+      "rows_field_over_10": 33
+    },
+    "runs": {
+      "reported_waited_s_max": 20,
+      "reported_waited_s_sum": 500,
+      "rows": 3600,
+      "rows_field_over_10": 25
+    },
+    "text": {
+      "reported_waited_s_max": 20,
+      "reported_waited_s_sum": 600,
+      "rows": 3600,
+      "rows_field_over_10": 30
+    },
+    "wikidata-1": {
+      "reported_waited_s_max": 21,
+      "reported_waited_s_sum": 1240,
+      "rows": 1200,
+      "rows_field_over_10": 2
+    },
+    "wikidata-2": {
+      "reported_waited_s_max": 21,
+      "reported_waited_s_sum": 378,
+      "rows": 1200,
+      "rows_field_over_10": 18
+    },
+    "wikidata-4": {
+      "reported_waited_s_max": 0,
+      "reported_waited_s_sum": 0,
+      "rows": 1200,
+      "rows_field_over_10": 0
+    }
+  }
+}

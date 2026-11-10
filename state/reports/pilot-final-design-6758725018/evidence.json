@@ -1,0 +1,93 @@
+{
+  "inbox": 6758725018,
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "pilot_run": 42748681243,
+  "pilot_head": "30a6620d0a8733536284e82c91ff19be0185f148",
+  "base": "3e1a7ec361ee6c8ea6b540264aa69189d4823d9e",
+  "analysis_source": "9c6a6b070673c3773e7e52da2e428a904e09adfd",
+  "manifest_sha256": "1fdc0b17340afdd45e883a4a920d89b536dee3a3274147f9cb77faa1f564a1b0",
+  "regenerated_markdown_sha256": "ac11e83d6875bea9a8a672439e1dab971d974201bddc0f7ae3938223358ba9bd",
+  "archive_comment": 6758585874,
+  "artifacts": [
+    {
+      "id": 13734102900,
+      "name": "tg-ni-aggregate-a1",
+      "digest": "sha256:d857b262c080d81c4b5ad6a3a59d3feee64a32bce342e108a50adbed962a7d57",
+      "size_in_bytes": 11217
+    },
+    {
+      "id": 13733586298,
+      "name": "tg-ni-wikidata-2-a1",
+      "digest": "sha256:dd73a73923969f247401ff89119d40caa4ba2c1e7e9b76286e9e8d0af0a1e390",
+      "size_in_bytes": 48547
+    },
+    {
+      "id": 13733522166,
+      "name": "tg-ni-runs-a1",
+      "digest": "sha256:2db1c1b17a5f0c4e11c1cb886779124f5b45966696a36c97f7b0bec4bd499f30",
+      "size_in_bytes": 93455
+    },
+    {
+      "id": 13733463482,
+      "name": "tg-ni-text-a1",
+      "digest": "sha256:c1391bc9ea19fdfd61a25a2d08556eab4dc5a4bcc471e5ed10e3559998dd43ea",
+      "size_in_bytes": 127235
+    },
+    {
+      "id": 13733339093,
+      "name": "tg-ni-records-a1",
+      "digest": "sha256:26dc75dd5179d542e08554784f88f4d4b1f265b88b8af0e6a7226fbd280ff239",
+      "size_in_bytes": 134493
+    },
+    {
+      "id": 13733286806,
+      "name": "tg-ni-random-a1",
+      "digest": "sha256:36dd2364517fdcd4762884a95923b24cb94a1eef15eb16f74837d726ab701eb3",
+      "size_in_bytes": 125383
+    },
+    {
+      "id": 13733248292,
+      "name": "tg-ni-onebyte-a1",
+      "digest": "sha256:caca64b4da4279d46b8c5feef000b6fef757eacb78e8fca391e0f2ac9755b30f",
+      "size_in_bytes": 98215
+    },
+    {
+      "id": 13733162182,
+      "name": "tg-ni-pattern-a1",
+      "digest": "sha256:7e141a61cacec2757a7db4a03f567ffb0476ac3dafd43d452d13ff9bb6c15806",
+      "size_in_bytes": 107237
+    },
+    {
+      "id": 13732959976,
+      "name": "tg-ni-wikidata-1-a1",
+      "digest": "sha256:ca073785411a622f5e06ef1c343fcc092022732b9403d058a8a4a123c55c3cf8",
+      "size_in_bytes": 38376
+    },
+    {
+      "id": 13731899631,
+      "name": "tg-ni-wikidata-4-a1",
+      "digest": "sha256:0c90dfba2c2ea46927994320d47272de0117f63881e137dd64892494f76f2102",
+      "size_in_bytes": 57614
+    }
+  ],
+  "migration": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06"
+  },
+  "audit_since": 6758684929,
+  "audit_violations": [],
+  "primary_sources": [
+    "https://arxiv.org/abs/0811.1729",
+    "https://www.stat.umn.edu/geyer/3701/notes/mcmc-bayes.html"
+  ],
+  "limits": [
+    "No decoder execution, timing, workflow dispatch, implementation, merge or automation change.",
+    "Raw artifacts downloaded via connector and ZIP SHA-256 verified against live GitHub metadata; internal structural admission replay passed.",
+    "No candidate overall mean, head/base ratio, qualification bound or verdict was inspected.",
+    "The full pilot menu is reproduced; its Markdown digest matches the coordinator's abbreviated archived digest.",
+    "Gaussian sensitivity simulations are mathematical scenarios, not measured CI covariance."
+  ]
+}
