@@ -1,0 +1,57 @@
+{
+ "repeats": [
+  {
+   "file": "/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-1.jsonl",
+   "all": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2581804204283402,
+    "prod_ns_row": 1.54386655268002,
+    "ratio": 0.814954128155861
+   },
+   "takes": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2581804204283402,
+    "prod_ns_row": 1.54386655268002,
+    "ratio": 0.814954128155861
+   }
+  },
+  {
+   "file": "/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-2.jsonl",
+   "all": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2657040092321106,
+    "prod_ns_row": 1.5312227874004622,
+    "ratio": 0.8265968999722636
+   },
+   "takes": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2657040092321106,
+    "prod_ns_row": 1.5312227874004622,
+    "ratio": 0.8265968999722636
+   }
+  },
+  {
+   "file": "/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-3.jsonl",
+   "all": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2602705287720375,
+    "prod_ns_row": 1.5414674243578357,
+    "ratio": 0.8175784378298213
+   },
+   "takes": {
+    "blocks": 233,
+    "rows": 209697662,
+    "cells_ns_row": 1.2602705287720375,
+    "prod_ns_row": 1.5414674243578357,
+    "ratio": 0.8175784378298213
+   }
+  }
+ ],
+ "all_below_1": true,
+ "takes_below_1": true
+}

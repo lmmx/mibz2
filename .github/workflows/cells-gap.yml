@@ -1,0 +1,43 @@
+name: Cells gap census
+
+on:
+  pull_request:
+    paths:
+      - "bench/cells-gap/**"
+      - ".github/workflows/cells-gap.yml"
+  workflow_dispatch:
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Validate the separate diagnostic
+        run: |
+          cargo fmt --manifest-path bench/cells-gap/Cargo.toml --check
+          cargo clippy --locked --manifest-path bench/cells-gap/Cargo.toml --all-targets -- -D warnings
+          cargo test --locked --manifest-path bench/cells-gap/Cargo.toml
+          cargo build --release --locked --manifest-path bench/cells-gap/Cargo.toml
+      - name: Reconstruct the pinned corpus and count actual routes (no clocks)
+        run: |
+          mkdir -p target/cells-gap-input
+          git fetch origin bench-data
+          git archive a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a windows/wikidata-20261019 | tar -x -C target/cells-gap-input
+          python3 bench/cells-gap/corpus.py bench/wikidata.json target/cells-gap-input/windows/wikidata-20261019 target/cells-gap-input/wikidata.bz2
+          bench/cells-gap/target/release/mibz2-cells-gap census target/cells-gap-input/wikidata.bz2 > target/cells-gap-input/census.jsonl
+          python3 bench/cells-gap/oracle.py target/cells-gap-input/census.jsonl target/cells-gap-input/wikidata.bz2 | tee target/cells-gap-input/oracle.json
+          python3 bench/cells-gap/analyse.py target/cells-gap-input/census.jsonl | tee target/cells-gap-input/analysis.json
+          rustc -Vv > target/cells-gap-input/toolchain.txt
+          sha256sum target/cells-gap-input/census.jsonl bench/cells-gap/src/main.rs bench/cells-gap/Cargo.lock > target/cells-gap-input/SHA256SUMS
+      - uses: actions/upload-artifact@v6
+        with:
+          name: cells-gap-census-${{ github.sha }}
+          path: |
+            target/cells-gap-input/census.jsonl
+            target/cells-gap-input/oracle.json
+            target/cells-gap-input/analysis.json
+            target/cells-gap-input/toolchain.txt
+            target/cells-gap-input/SHA256SUMS
