@@ -475,3 +475,18 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 -1.44 historical CPU growth is not a derived allowable kernel slowdown. Share-nothing survives as a hypothesis.
 - par-scan6757860786 read as reported, raw bundle NOT replayed: level1 finder2563MB/s at10 with near-flat CPU strengthens probe value; level9 still collapses. Block-level/work/mode confounding prevents causal cache-only or production claims.
 - Service first adoption, emitter useful-work priority; bounded D4-delta count before target expenditure. No implementation, compilation, new timing, safety certification or gate relaxation.
+
+## Rescue pass: inbox6757979390
+
+[Report](records/reviews/inbox-6757979390/report.md). PR313 source0a649c696db745ce83a1629381590dc9ded061f0; pinned specs a2da4963. Proposals only.
+- Rank new bounded opportunities: owned output lending; dense pair split4+1/wide fill; chunk-parallel MTF only after post-emitter critical-path census. Service/emitter and accepted D4 counting priorities unchanged.
+- BufRead source copy is real, but17.7% divides decoded bytes by Dw accesses and is not a byte-share proof;52% reader-only cold-read attribution not reproduced from aggregate memcpy snippets. Lending preserves consumer reads of worker lines; no eliminated-coherence-transfer claim.
+- Private owned output Vec/cursor needed for parallel BzReader; cannot return a slice after unlocking StreamDecoder's Mutex. Preserve CRC/error/cancel/recycling/partial-read contracts. Read_line still copies into String; Python PyBytes still owns/copies output, though one intermediate Rust copy can disappear.
+- Dense pair source zeros5n then stores8n at stride5. Split4+1 fully initialising vector spans target5n store bytes, final5n layout; not DRAM-byte equivalence. Charge second walk load, tails/short pieces and marker fix. Full build+walk break-even and equal ordinary-fill control required.
+- MTF relabel at run consumption changes O(n) output pass into O(r) lookup plus O(256K) prefix; all moves remain. No same-core lane rescue; K4 conditional on exposed post-emitter MTF and idle helper capacity.
+- Scanner interleaving duplicates state and has no new eliminated work beyond existing paired LUT/finder. Claimed<5% is not a universal bound.
+- One-third contraction is not maximum independent-set size; obtaining a half-cycle phase and expansion are not free. Restrict useful composition to existing D4 probe.
+- Phrase current kernel unrescued:4-byte state per copied byte remains. First-only increases events8%; no demonstrated40Ir/event construction. Withdrawn recipe stays withdrawn; hardware claims remain scoped.
+- Bandwidth question survives; direct copy/column intervention preferred. Hog revision estimates isolated nine-core interference, not full-machine causal bandwidth; no new slot.
+- dir sequence stays closed; no new dir-specific mechanism. No PGO/global-v3 CI slot now; local null not universal, #201 frozen closure preserved, future source changes need a new identified opportunity.
+- No new timing, implementation, compilation, safety certification or measured credit.
