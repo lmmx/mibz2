@@ -1,0 +1,19 @@
+{
+  "pin": "0a649c696db745ce83a1629381590dc9ded061f0",
+  "inbox": 6757979390,
+  "files": {
+    "docs/journal/2026-11-10-by-data-class.md": "38c0805ae5790cc824bb44d3d30b40a623ca2df8",
+    "docs/journal/2026-11-10-borrowed-tricks.md": "6646c25d2e71d56ac308cc68314203bb4829ef0b",
+    "docs/journal/2026-11-10-bandwidth-titration.md": "4d3b9ce92715140a53f03de4c198c0077516a197"
+  },
+  "source_files": {
+    "src/read.rs": "37298d92fc678b635758416110cde32f99924458",
+    "src/parallel.rs": "a425a3cd3939f74d9091fca7906122766097e84a",
+    "src/python.rs": "0731984c0fe00ae8c9c76714f0adda32eb2e0c76",
+    "src/block.rs": "7ccc65ecadb8bbcd2f5b02c8fabfc161f5975748",
+    "src/mtf.rs": "27716447766a2514e9cd0da34fe617a7143f62a3",
+    "examples/lf_fill.rs": "7b4dd789f0a1b213b26b9310f000adaf4e57ad3f",
+    "examples/phrase_lanes.rs": "13cfdd2e8caf3eee94be6ec86c9a9c868feb6cfe"
+  },
+  "progress": "Pinned source checked. BufRead feasible only with owned parallel buffer handoff; Dw is access count, not byte count; aggregate memcpy attribution insufficient. Dense-pair source uses zeroing plus overlapping 8-byte stores at stride5; propose split5 layout. Current phrase state writes remain4B/row; contraction one-third not universal maximum."
+}
