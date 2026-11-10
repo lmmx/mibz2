@@ -793,6 +793,135 @@ macro_rules! seen {
     };
 }
 
+/// What a walk counts as it goes (`traverse`, `traverse_staged`): every method a no-op
+/// for `()`, which the decoder passes unless the `walk-stats` feature is on and a caller
+/// asks for counts, so that without them the walks' machine code is as before
+pub(crate) trait Stat {
+    /// a claim of the shared counter: a segment taken, or the queue found exhausted
+    #[inline(always)]
+    fn claimed(&self, _took: bool) {}
+    /// a segment finished, `len` bytes long (its first byte, the take's, included)
+    #[inline(always)]
+    fn seg(&self, _len: usize) {}
+    /// a byte written by the unstaged tail
+    #[inline(always)]
+    fn tail(&self) {}
+    /// a staged fragment copied, `len` bytes (empty ones included)
+    #[inline(always)]
+    fn fragment(&self, _len: usize) {}
+}
+
+impl Stat for () {}
+
+/// The walks' statistics, kept only with the `walk-stats` feature (research: the team
+/// screen's T2 probes and the native engagement diagnostic,
+/// docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md). Each record is one JSON
+/// line, pushed whole under one lock by the thread that did the work, once a call (never
+/// in a walk's loop); the harness takes them all at its end (`take`).
+#[cfg(feature = "walk-stats")]
+pub mod walk_stats {
+    use std::cell::Cell;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Mutex;
+
+    static RECORDS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+    static TEAMS: AtomicUsize = AtomicUsize::new(0);
+    thread_local! {
+        static TEAM: Cell<Option<usize>> = const { Cell::new(None) };
+    }
+
+    /// One walker call's counts (`Stat`), on the calling thread's stack
+    #[derive(Default)]
+    pub(crate) struct Counts {
+        pub(crate) takes: Cell<u64>,
+        pub(crate) exhausts: Cell<u64>,
+        pub(crate) bytes: Cell<u64>,
+        pub(crate) tail: Cell<u64>,
+        pub(crate) fragments: Cell<u64>,
+        pub(crate) copied: Cell<u64>,
+    }
+
+    impl super::Stat for Counts {
+        #[inline(always)]
+        fn claimed(&self, took: bool) {
+            let c = if took { &self.takes } else { &self.exhausts };
+            c.set(c.get() + 1);
+        }
+        #[inline(always)]
+        fn seg(&self, len: usize) {
+            self.bytes.set(self.bytes.get() + len as u64);
+        }
+        #[inline(always)]
+        fn tail(&self) {
+            self.tail.set(self.tail.get() + 1);
+        }
+        #[inline(always)]
+        fn fragment(&self, len: usize) {
+            if len > 0 {
+                self.fragments.set(self.fragments.get() + 1);
+                self.copied.set(self.copied.get() + len as u64);
+            }
+        }
+    }
+
+    /// This thread's team: a pipelined team's leader takes a new index the first time it
+    /// asks (`pipelined_worker`'s thread), and passes it to the run's helpers in `Relay`
+    pub(crate) fn team() -> usize {
+        TEAM.with(|t| {
+            t.get().unwrap_or_else(|| {
+                let id = TEAMS.fetch_add(1, Ordering::Relaxed);
+                t.set(Some(id));
+                id
+            })
+        })
+    }
+
+    /// A pool index's bit in a summary's masks (a team has at most `MAX_SHARES` + 1 = 65
+    /// threads; an index of 64 or more has no bit, and the checker finds it missing)
+    pub(crate) fn bit(who: usize) -> u64 {
+        1u64.checked_shl(who as u32).unwrap_or(0)
+    }
+
+    pub(crate) fn push(line: String) {
+        RECORDS.lock().unwrap_or_else(|e| e.into_inner()).push(line);
+    }
+
+    /// Every record so far, taken, then a terminal line with their count
+    pub fn take() -> Vec<String> {
+        let mut v = std::mem::take(&mut *RECORDS.lock().unwrap_or_else(|e| e.into_inner()));
+        v.push(format!("{{\"kind\":\"end\",\"records\":{}}}", v.len()));
+        v
+    }
+
+    /// The records of `team` so far (the tests', which share the process with others)
+    #[cfg(test)]
+    pub(crate) fn of_team(team: usize) -> Vec<String> {
+        let tag = format!("\"team\":{team},");
+        RECORDS
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|l| l.contains(&tag))
+            .cloned()
+            .collect()
+    }
+
+    /// A walker call's record
+    pub(crate) fn call(team: usize, block: u64, thread: usize, staged: bool, c: &Counts) {
+        push(format!(
+            "{{\"kind\":\"call\",\"team\":{team},\"block\":{block},\"thread\":{thread},\"role\":\"{}\",\"walker\":\"{}\",\"takes\":{},\"exhausts\":{},\"bytes\":{},\"tail\":{},\"fragments\":{},\"copied\":{}}}",
+            if thread == 0 { "leader" } else { "helper" },
+            if staged { "traverse_staged" } else { "traverse" },
+            c.takes.get(),
+            c.exhausts.get(),
+            c.bytes.get(),
+            c.tail.get(),
+            c.fragments.get(),
+            c.copied.get(),
+        ));
+    }
+}
+
 /// One lane's state in the shared walk: the row it reads next, and where its segment's
 /// bytes go (`p` up to `end`, the segment's buffer's spare capacity)
 #[derive(Clone, Copy)]
@@ -919,6 +1048,12 @@ impl<'a> RoomWalk<'a> {
 
     /// One thread's L lanes, taking segments until none is left
     pub(crate) fn share<const L: usize>(&self) {
+        self.share_with::<L, ()>(&())
+    }
+
+    /// `share`, its walk counted into `st` (`walk_stats::Counts` with the `walk-stats`
+    /// feature; `()`, counting nothing, otherwise)
+    pub(crate) fn share_with<const L: usize, S: Stat>(&self, st: &S) {
         // SAFETY: the starts are the scratch's, held and not resized until `finish`
         let starts = unsafe { std::slice::from_raw_parts(self.starts.0, self.starts.1) };
         // SAFETY: as `walk_room`'s contract: rows below n, starts flagged, each segment
@@ -929,20 +1064,22 @@ impl<'a> RoomWalk<'a> {
                     taken: &self.taken,
                     ns: starts.len(),
                 };
-                traverse_staged::<L, 0, _>(
+                traverse_staged::<L, 0, _, S>(
                     self.t.0 as *const u32,
                     starts,
                     self.segs,
                     &claim,
                     self.cap,
+                    st,
                 )
             } else {
-                traverse::<L>(
+                traverse::<L, S>(
                     self.t.0 as *const u32,
                     starts,
                     self.segs,
                     &self.taken,
                     self.cap,
+                    st,
                 )
             }
         }
@@ -963,12 +1100,13 @@ impl<'a> RoomWalk<'a> {
         };
         // SAFETY: as `share`
         unsafe {
-            traverse_staged::<L, MUT, _>(
+            traverse_staged::<L, MUT, _, ()>(
                 self.t.0 as *const u32,
                 starts,
                 self.segs,
                 &claim,
                 self.cap,
+                &(),
             )
         }
     }
@@ -980,12 +1118,13 @@ impl<'a> RoomWalk<'a> {
         let starts = unsafe { std::slice::from_raw_parts(self.starts.0, self.starts.1) };
         // SAFETY: as `share`
         unsafe {
-            traverse::<L>(
+            traverse::<L, ()>(
                 self.t.0 as *const u32,
                 starts,
                 self.segs,
                 &self.taken,
                 self.cap,
+                &(),
             )
         }
     }
@@ -1010,12 +1149,13 @@ impl<'a> RoomWalk<'a> {
 // (never inlined: with `share`'s choice of walker beside it, it would be inlined there,
 // changing the default walk's machine code; kept a function of its own, as it was)
 #[inline(never)]
-unsafe fn traverse<const L: usize>(
+unsafe fn traverse<const L: usize, S: Stat>(
     t: *const u32,
     starts: &[u32],
     segs: Segs,
     taken: &AtomicUsize,
     cap: usize,
+    st: &S,
 ) {
     let ns = starts.len();
     let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
@@ -1038,8 +1178,10 @@ unsafe fn traverse<const L: usize>(
         // SAFETY: the lane holds segment l.seg, its buffer's one user and its successor's
         // one writer; p is within the buffer, every byte below it written
         let b = unsafe { &mut *segs.bufs.add(l.seg) };
-        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
         unsafe { *segs.next.add(l.seg) = seg_of(l.row) };
+        st.seg(len);
     };
     let grow = |l: &mut Lane| {
         handoff!(GROWS);
@@ -1053,6 +1195,7 @@ unsafe fn traverse<const L: usize>(
     };
     let next_seg = || {
         let s = taken.fetch_add(1, Ordering::Relaxed);
+        st.claimed(s < ns);
         (s < ns).then_some(s)
     };
 
@@ -1157,6 +1300,7 @@ unsafe fn traverse<const L: usize>(
                 *l.p = q as u8;
                 l.p = l.p.add(1);
             }
+            st.tail();
             if l.p == l.end {
                 grow(l);
             }
@@ -1292,15 +1436,21 @@ pub(crate) mod mutation {
 /// SAFETY: as `walk_room`'s contract (`traverse`'s), and `claim` gives each segment index
 /// below `starts.len()` once, across every walker
 #[inline(never)]
-unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
+unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim, S: Stat>(
     t: *const u32,
     starts: &[u32],
     segs: Segs,
     claim: &C,
     cap: usize,
+    st: &S,
 ) {
     // a pass marks its lanes in a u64
     const { assert!(L <= 64) };
+    let next_seg = || {
+        let r = claim.claim();
+        st.claimed(r.is_some());
+        r
+    };
     let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
     let take = |seg: usize| -> Lane {
         // SAFETY: seg < ns, taken once, so this lane is its buffer's one user
@@ -1321,8 +1471,10 @@ unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
         // SAFETY: the lane holds segment l.seg, its buffer's one user and its successor's
         // one writer; p is within the buffer, every byte below it written
         let b = unsafe { &mut *segs.bufs.add(l.seg) };
-        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
         unsafe { *segs.next.add(l.seg) = seg_of(l.row) };
+        st.seg(len);
     };
     let grow = |l: &mut Lane| {
         seen!(GROWS);
@@ -1352,6 +1504,7 @@ unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
         debug_assert!(len <= unsafe { l.end.offset_from(l.p) } as usize);
         unsafe {
             std::ptr::copy_nonoverlapping(row.as_ptr().add(from), l.p, len);
+            st.fragment(len);
             l.p = l.p.add(len);
         }
     };
@@ -1364,7 +1517,7 @@ unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
     });
     let mut active = 0;
     while active < L {
-        let Some(seg) = claim.claim() else { break };
+        let Some(seg) = next_seg() else { break };
         lanes[active] = take(seg);
         active += 1;
     }
@@ -1468,7 +1621,7 @@ unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
                             flush(l, &tile[k], st[k], j);
                             finish(l);
                         }
-                        let Some(seg) = claim.claim() else {
+                        let Some(seg) = next_seg() else {
                             // No segment is left unclaimed (other walkers may still hold
                             // theirs). Every lane's staged bytes are committed: an unmarked
                             // lane stepped at j (its byte is at j), a marked lane not yet
@@ -1586,6 +1739,7 @@ unsafe fn traverse_staged<const L: usize, const MUT: u8, C: Claim>(
                 *l.p = q as u8;
                 l.p = l.p.add(1);
             }
+            st.tail();
             if l.p == l.end {
                 grow(l);
             }
@@ -1661,6 +1815,57 @@ struct Relay<'a> {
     /// a stage panicked: the output is not to be trusted
     failed: std::sync::atomic::AtomicBool,
     panic: Mutex<Option<Box<dyn Any + Send>>>,
+    /// the `walk-stats` feature's per-block counts (empty without it)
+    #[cfg_attr(not(feature = "walk-stats"), allow(dead_code))]
+    stats: RelayStats,
+}
+
+/// A pipelined run's block summary for the `walk-stats` feature, counted apart from the
+/// walker calls' records so that each can check the other: the team, the pool indices that
+/// entered the walk (each sets its bit on entering, before its share), whether the
+/// leader joined, and the helpers counted into the build
+#[derive(Default)]
+struct RelayStats {
+    #[cfg(feature = "walk-stats")]
+    team: usize,
+    #[cfg(feature = "walk-stats")]
+    entered: AtomicU64,
+    #[cfg(feature = "walk-stats")]
+    joined: AtomicBool,
+    #[cfg(feature = "walk-stats")]
+    built: AtomicU64,
+}
+
+#[cfg(feature = "walk-stats")]
+impl RelayStats {
+    fn new() -> Self {
+        RelayStats {
+            team: walk_stats::team(),
+            ..Default::default()
+        }
+    }
+
+    fn share(&self, block: u64, thread: usize) {
+        walk_stats::push(format!(
+            "{{\"kind\":\"share\",\"team\":{},\"block\":{block},\"thread\":{thread}}}",
+            self.team
+        ));
+    }
+
+    /// The block's summary, by the thread ending its walk: its starts, the segments' bytes
+    /// and rows from the scratch, and the bits above
+    fn summary(&self, block: u64, s: &SegScratch) {
+        let ns = s.starts.len();
+        let bytes: usize = s.bufs[..ns].iter().map(Vec::len).sum();
+        walk_stats::push(format!(
+            "{{\"kind\":\"summary\",\"team\":{},\"block\":{block},\"rows\":{},\"starts\":{ns},\"seg_bytes\":{bytes},\"entered\":{},\"joined\":{},\"built\":{}}}",
+            self.team,
+            s.n,
+            self.entered.load(Ordering::Relaxed),
+            self.joined.load(Ordering::Relaxed),
+            self.built.load(Ordering::Relaxed),
+        ));
+    }
 }
 // SAFETY: `stage` and `out` are touched by one thread at a time, as the protocol in
 // `invert_pipelined` says: the stage shared read-only while its shares run, and changed
@@ -1772,12 +1977,27 @@ impl Relay<'_> {
 
     /// This thread's part in the walk (it is counted in `walkers`), then its leave: the
     /// last to leave ends the walk and assembles the output
-    fn walk_and_leave<const L: usize>(&self) {
+    ///
+    /// `who` is this thread's index in the team's pool (0 the leader), for the `walk-stats`
+    /// feature's records only
+    #[cfg_attr(not(feature = "walk-stats"), allow(unused_variables))]
+    fn walk_and_leave<const L: usize>(&self, who: usize) {
+        #[cfg(feature = "walk-stats")]
+        self.stats
+            .entered
+            .fetch_or(walk_stats::bit(who), Ordering::Relaxed);
         // SAFETY: `walk_ready` was acquired, and the stage changes again only when the
         // last walker leaves, which this thread has not
         if let Stage::Walk(w) = unsafe { &*self.stage.get() } {
             tmark!(WalkStart, self.place);
+            #[cfg(not(feature = "walk-stats"))]
             self.caught(catch_unwind(AssertUnwindSafe(|| w.share::<L>())));
+            #[cfg(feature = "walk-stats")]
+            {
+                let c = walk_stats::Counts::default();
+                self.caught(catch_unwind(AssertUnwindSafe(|| w.share_with::<L, _>(&c))));
+                walk_stats::call(self.stats.team, self.place, who, w.staged, &c);
+            }
             tmark!(WalkEnd, self.place);
         }
         if self.walkers.fetch_sub(1, Ordering::AcqRel) == 1 {
@@ -1787,6 +2007,8 @@ impl Relay<'_> {
                 tmark!(AssembleStart, self.place);
                 let r = catch_unwind(AssertUnwindSafe(|| {
                     let (_, s) = w.finish();
+                    #[cfg(feature = "walk-stats")]
+                    self.stats.summary(self.place, s);
                     if !self.failed.load(Ordering::Relaxed) {
                         // SAFETY: only the thread ending the walk touches `out`
                         s.assemble(unsafe { &mut *self.out.get() });
@@ -1816,7 +2038,9 @@ impl Relay<'_> {
                 Err(now) => v = now,
             }
         }
-        self.walk_and_leave::<L>();
+        #[cfg(feature = "walk-stats")]
+        self.stats.joined.store(true, Ordering::Relaxed);
+        self.walk_and_leave::<L>(0);
     }
 }
 
@@ -1926,6 +2150,10 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
         failed: AtomicBool::new(false),
         panic: Mutex::new(None),
         place,
+        #[cfg(feature = "walk-stats")]
+        stats: RelayStats::new(),
+        #[cfg(not(feature = "walk-stats"))]
+        stats: RelayStats::default(),
     };
     let relay = &relay;
     let helper = |h: usize| {
@@ -1933,9 +2161,19 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
         // SAFETY: the stage is shared read-only until the last helper counts in below
         if let Stage::Build(Ok(b), _) = unsafe { &*relay.stage.get() } {
             tmark!(BuildStart, place);
-            relay.caught(catch_unwind(AssertUnwindSafe(|| b.share(h))));
+            let r = catch_unwind(AssertUnwindSafe(|| b.share(h)));
+            #[cfg(feature = "walk-stats")]
+            if r.is_ok() {
+                relay.stats.share(place, h + 1);
+            }
+            relay.caught(r);
             tmark!(BuildEnd, place);
         }
+        #[cfg(feature = "walk-stats")]
+        relay
+            .stats
+            .built
+            .fetch_or(walk_stats::bit(h + 1), Ordering::Relaxed);
         if relay.built.fetch_add(1, Ordering::AcqRel) + 1 == helpers {
             // SAFETY: this is the last helper to count in: every share has ended
             unsafe { relay.end_build() };
@@ -1945,7 +2183,7 @@ pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool, const SPIN
             relay.wait_walk_ready::<PARK, SPIN>(Site::WalkHelper);
             tmark!(BuildWaitEnd, place);
         }
-        relay.walk_and_leave::<L>();
+        relay.walk_and_leave::<L>(h + 1);
         tmark!(HelperEnd, place);
     };
     if pool.threads() < 2 {
@@ -2769,6 +3007,7 @@ mod tests {
                 walkers: AtomicUsize::new(0),
                 failed: AtomicBool::new(false),
                 panic: Mutex::new(None),
+                stats: RelayStats::default(),
             };
             let woke = AtomicUsize::new(0);
             thread::scope(|sc| {
@@ -3144,5 +3383,172 @@ mod tests {
             eprintln!("  {name}: {}", seen[i]);
         }
         assert!(blocks > 0);
+    }
+
+    // ---- The `walk-stats` feature's records, reconciled per block ----
+
+    /// A number field of a record line
+    #[cfg(feature = "walk-stats")]
+    fn num(line: &str, key: &str) -> Option<u64> {
+        let at = line.find(&format!("\"{key}\":"))? + key.len() + 3;
+        let rest = &line[at..];
+        let end = rest
+            .find(|c: char| !c.is_ascii_digit())
+            .unwrap_or(rest.len());
+        rest[..end].parse().ok()
+    }
+
+    #[cfg(feature = "walk-stats")]
+    fn text<'l>(line: &'l str, key: &str) -> Option<&'l str> {
+        let at = line.find(&format!("\"{key}\":\""))? + key.len() + 4;
+        let rest = &line[at..];
+        Some(&rest[..rest.find('"')?])
+    }
+
+    /// One block's records reconciled, as the native diagnostic's checker reconciles them
+    /// (docs/journal/2026-11-10-staged-engagement-diagnostic-draft.md §3): the walker calls
+    /// are exactly the summary's entered set (a lost record, even a zero-work one, is an
+    /// error), the leader's iff it joined, the helpers' shares exactly the built set; the
+    /// calls' takes are the starts and their bytes the segments' bytes, one exhausting claim
+    /// each, every call by `walker`
+    #[cfg(feature = "walk-stats")]
+    fn reconcile(recs: &[&str], walker: &str) -> Result<(), String> {
+        let summaries: Vec<&&str> = recs
+            .iter()
+            .filter(|l| text(l, "kind") == Some("summary"))
+            .collect();
+        let [sum] = summaries[..] else {
+            return Err(format!("{} summaries", summaries.len()));
+        };
+        let entered = num(sum, "entered").unwrap();
+        let built = num(sum, "built").unwrap();
+        let joined = sum.contains("\"joined\":true");
+        let (mut seen, mut shares) = (0u64, 0u64);
+        let (mut takes, mut bytes) = (0, 0);
+        for l in recs {
+            let bit = 1u64 << num(l, "thread").unwrap_or(63);
+            match text(l, "kind") {
+                Some("call") => {
+                    if seen & bit != 0 {
+                        return Err("a duplicate call".into());
+                    }
+                    seen |= bit;
+                    takes += num(l, "takes").unwrap();
+                    bytes += num(l, "bytes").unwrap();
+                    if num(l, "exhausts") != Some(1) {
+                        return Err(format!("exhausts in {l}"));
+                    }
+                    if text(l, "walker") != Some(walker) {
+                        return Err(format!("walker in {l}"));
+                    }
+                }
+                Some("share") => shares |= bit,
+                _ => {}
+            }
+        }
+        if seen != entered {
+            return Err(format!("calls {seen:b}, entered {entered:b}"));
+        }
+        if (seen & 1 != 0) != joined {
+            return Err(format!("leader call {}, joined {joined}", seen & 1));
+        }
+        if shares != built {
+            return Err(format!("shares {shares:b}, built {built:b}"));
+        }
+        if takes != num(sum, "starts").unwrap() || bytes != num(sum, "seg_bytes").unwrap() {
+            return Err(format!("takes {takes}, bytes {bytes}: {sum}"));
+        }
+        Ok(())
+    }
+
+    /// Pipelined runs with the feature on: the output is `walk`'s (as without it), and
+    /// every block's records reconcile; then the reconciliation's negative controls (its
+    /// mutants): a lost zero-work helper record, a lost leader record, a duplicate, a byte
+    /// miscounted, a share lost, must each be caught
+    #[cfg(feature = "walk-stats")]
+    #[test]
+    fn walk_stats_reconcile_per_block() {
+        let team = walk_stats::team();
+        let mut r = xorshift(37);
+        let mut place = 0u64;
+        let mut zero_work = 0;
+        for k in [2, 3, 4] {
+            let p = Pool::new(k).unwrap();
+            for n in [3_000, 20_000] {
+                let ll: Vec<u8> = (0..n).map(|_| (r() % 6) as u8).collect();
+                let counts = counts_of(&ll);
+                let cps = checkpoints_of(&ll, CP);
+                let mut want_tt = TVector::new();
+                crate::bwt::build(&ll, &counts, &mut want_tt);
+                let mut want = Vec::new();
+                crate::bwt::walk(&want_tt, 11, &mut want);
+                for staged in [false, true] {
+                    for late in [false, true] {
+                        let (mut tt, mut seg, mut out) =
+                            (TVector::new(), SegScratch::default(), Vec::new());
+                        let lead = || {
+                            if late {
+                                thread::sleep(std::time::Duration::from_millis(5));
+                            }
+                        };
+                        invert_pipelined_with::<8, false, BARRIER_SPINS>(
+                            &p, &ll, &counts, &cps, CP, 11, &mut tt, &mut seg, &mut out, &lead,
+                            place, staged,
+                        )
+                        .unwrap();
+                        assert!(out == want, "k {k}, n {n}, staged {staged}");
+                        let all = walk_stats::of_team(team);
+                        let tag = format!("\"block\":{place},");
+                        let recs: Vec<&str> = all
+                            .iter()
+                            .filter(|l| l.contains(&tag))
+                            .map(String::as_str)
+                            .collect();
+                        let walker = if staged {
+                            "traverse_staged"
+                        } else {
+                            "traverse"
+                        };
+                        reconcile(&recs, walker)
+                            .unwrap_or_else(|e| panic!("block {place}: {e}\n{recs:#?}"));
+                        // the mutants, each a record set that must not reconcile
+                        let calls: Vec<usize> = (0..recs.len())
+                            .filter(|&i| text(recs[i], "kind") == Some("call"))
+                            .collect();
+                        for &i in &calls {
+                            let mut m = recs.clone();
+                            if num(m[i], "takes") == Some(0) {
+                                zero_work += 1;
+                            }
+                            m.remove(i);
+                            assert!(reconcile(&m, walker).is_err(), "a lost call record");
+                            let mut m = recs.clone();
+                            m.push(recs[i]);
+                            assert!(reconcile(&m, walker).is_err(), "a duplicate");
+                            let bumped = recs[i].replacen("\"bytes\":", "\"bytes\":1", 1);
+                            let mut m = recs.clone();
+                            m[i] = &bumped;
+                            assert!(reconcile(&m, walker).is_err(), "a byte miscounted");
+                        }
+                        let other = if staged {
+                            "traverse"
+                        } else {
+                            "traverse_staged"
+                        };
+                        assert!(reconcile(&recs, other).is_err(), "the wrong walker");
+                        if let Some(i) = recs.iter().position(|l| text(l, "kind") == Some("share"))
+                        {
+                            let mut m = recs.clone();
+                            m.remove(i);
+                            assert!(reconcile(&m, walker).is_err(), "a lost share");
+                        }
+                        place += 1;
+                    }
+                }
+            }
+        }
+        // a zero-work call (one claim, the queue already exhausted) occurred and its loss
+        // was caught: the Researcher's counterexample (#145 6760210997)
+        assert!(zero_work > 0, "no zero-work call was seen");
     }
 }

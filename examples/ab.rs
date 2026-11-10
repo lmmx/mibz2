@@ -1024,6 +1024,21 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
 }
 
 fn child(arm: &str, threads: usize, path: &str) {
+    // (the `walk-stats` feature only: `AB_WALK_STATS=FILE` writes the walks' records there
+    // once the child is done, never during the decode)
+    #[cfg(feature = "walk-stats")]
+    struct WalkStats;
+    #[cfg(feature = "walk-stats")]
+    impl Drop for WalkStats {
+        fn drop(&mut self) {
+            if let Ok(path) = std::env::var("AB_WALK_STATS") {
+                let lines = mibz2::walk_stats::take();
+                std::fs::write(&path, lines.join("\n") + "\n").expect("AB_WALK_STATS");
+            }
+        }
+    }
+    #[cfg(feature = "walk-stats")]
+    let _walk_stats = WalkStats;
     // (research, for counting only: `AB_STAGED_TRAVERSE=1` stages the teams' walks,
     // `coop_research::set_staged_traverse`; unset, every arm runs as it always has)
     if std::env::var("AB_STAGED_TRAVERSE").is_ok_and(|v| v == "1") {
