@@ -523,3 +523,12 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 - No implementation, compilation, new timing or safety certification. Zero new measured performance credit.
 
 Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle not replayed here, rescue awaits inbox dispatch. No relaxing/reopening. Tunnel families remain open pending actual coverage per6758774853; outside this brief.
+
+
+## D4 construction rescue: inbox6759188202
+
+[Report](records/reviews/inbox-6759188202/report.md), source561665b61ea61ba8027e4e15068322d938ea0077. F2FAIL retained. Phase14.21 differs from registered14.45; scan-only removal leaves11.49 attribution/11.73 illustrative registered subtraction.30Ir/piece plus fixed terms still10.22.
+- Rank run-fed acquisition plus two-byte-word cursor composition: LF² images monotone per fixed pair. Cursor setup/storage and stop lookup replacement charged; optimistic combined budget6.29 leaves~.82–1.06 for replacements, no demonstrated pass. Direct LF4 refinement second, cross-block reuse unsupported.
+- Correct prior30Ir default: observed41.8/65.9 per piece, fixed work separate. Corpus densities and split counts matter; no global2.2 multiplier.
+- Table-only law gives2628–3578MB/s at7–10 under unmeasured equal-CPI proxy. Not forecast. Scratch up to4.40MB/worker, oversized blocks and late fallback omitted by simple model. Complete worker/decoder supply and output bound required.
+- Reported tests/counts source-audited, raw profiles not replayed. No implementation, timing, gate relaxation or production qualification. Team/service/emitter and geometry retain priority.
