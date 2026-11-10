@@ -120,8 +120,9 @@ monoid morphism h: Σ* → M, h(N) = h(left) h(right): S products, not n. CRC-32
 R(w) = w(x)·x³² mod P, X(w) = x^{8|w|} mod P, R(uv) = R(u)X(v) + R(v), X(uv) = X(u)X(v);
 crc = ¬(R + ones·X). The rotation costs one descent from the root. **C:** 0.262 multiplications a
 row; equal to `crc::crc32` of the walked bytes on all 233 blocks and every synthetic input.
-bzip2's stored CRC is over the RLE1-decoded bytes: the RLE1 transducer's state must be
-composed in (open, §8).
+bzip2's stored CRC is over the RLE1-decoded bytes: the RLE1 decoder composes over rules too
+(§8, 4), checked in Python beside this entry, not in the example. A CRC taken from the
+grammar verifies the input; it no longer checks the passes that write the bytes.
 
 ## 4. Counted (C)
 
@@ -287,10 +288,17 @@ from #324's emitter (PF:`by-data-class` §2).
    acceleration. **Conj:** with it, S = O(r log n) (K for normal curves: Stefankovič; Erickson–
    Nayyeri 2013 Thm 4.8). Falsifier: a family with a loser cycle ≥ 2 that defeats the pair
    rule. Needed before any admission; a step budget with fallback is the alternative.
-4. **Output passes on the grammar:** RLE1's transducer composed over rules (state: last byte,
-   repeat count, count-pending), then the stored CRC and the decoded length with no pass over
-   bytes. Ceiling 4% of a Wikidata decode (PF:`by-data-class` §1): low. Line offsets for
-   `wikidata-pq` by the same morphism: uncounted.
+4. **Output passes on the grammar: the algebra is done (C, Python:**
+   `2026-11-10-rauzy-veech/rle1_crc_on_grammar.py.txt`**).** RLE1's decoder is a transducer on
+   (byte, count 0..4). A nonterminal's summary: its first run's byte and exact length, and two
+   continuations (entered not expecting a count; entered expecting one), each a decoded
+   length, (R, X) and an exit state. It composes in O(1) products a rule (≤ 24 multiplications
+   mod P as counted); 75,532 (word, entry state) pairs under random bracketings and 4,878 whole
+   blocks equal the bytewise decoder and CRC. This entry's first guess, that the entry state
+   dies at the first change of byte, was false: one bit survives, flipped by a run of length
+   ≡ 4 mod 5, kept by ≡ 0, forgotten by 1, 2, 3 (`aaaabbbbb`). Not in the example. Ceiling 4% of
+   a Wikidata decode (PF:`by-data-class` §1): low. Line offsets for `wikidata-pq` by the same
+   morphism: uncounted.
 5. **Why 1.8.** S = Σ cells over segments; initial cells = 2r − |𝓣∩𝓑| = 1.22 r for 0.78 r
    segments. No bound. **Conj:** rounds = O(log r) for sources with bounded-memory statistics
    (93 at r = 5·10⁴, 101 at 3.7·10⁵, 47 on uniform bytes).
@@ -355,6 +363,9 @@ cargo build --release --example rauzy
 target/release/examples/rauzy corpora/wikidata.bz2 1 65536 5 > out.jsonl
 RAUZY_JOIN=1 target/release/examples/rauzy corpora/wikidata.bz2 1 65536 3 > join.jsonl
 ```
+Beside this entry: `2026-11-10-rauzy-veech/identities.py.txt` (§5.1 and §9 by brute force) and
+`rle1_crc_on_grammar.py.txt` (§8, 4); each runs as `python3 FILE`.
+
 One JSON line a block: `n, runs, steps, top, bottom, equal, dropped, coincide, shapes, repeats,
 divisions, depth, widest, rounds, selfish, selfish_steps, copies, copied, hist` (rule lengths:
 count and bytes by class), `crc_muls`, and ns a row: `ns_walk` (build + room walk); the kernel's

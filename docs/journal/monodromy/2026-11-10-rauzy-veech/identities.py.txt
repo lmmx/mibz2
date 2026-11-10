@@ -1,0 +1,67 @@
+# Brute force for two identities of docs/journal/monodromy/2026-11-10-rauzy-veech.md:
+#   5.1  |T n B| = 2r - r2   (top boundaries that are also image boundaries; r2 = pieces of LF^2)
+#   9    the commutator LF tau LF^-1 tau^-1 moves only image boundaries, and all but <= sigma of them
+#
+#   python3 identities.py.txt
+
+import random, itertools
+def bwt(T):
+    n=len(T); rot=sorted(range(n), key=lambda i:(T[i:]+T[:i], i))
+    L=[T[(i-1)%n] for i in rot]; return L
+def lf(L):
+    n=len(L); C={}; tot=0
+    for c in sorted(set(L)): C[c]=tot; tot+=L.count(c)
+    seen={}; out=[]
+    for x in L:
+        out.append(C[x]+seen.get(x,0)); seen[x]=seen.get(x,0)+1
+    return out
+def check(T):
+    L=bwt(T); n=len(L); pi=lf(L)
+    Tt={i for i in range(n) if i==0 or L[i]!=L[i-1]}
+    B={pi[i] for i in Tt}
+    r=len(Tt)
+    assert len(B)==r
+    # pieces of pi^2 with constant 2-byte word and translation
+    def w2(x): return (L[x], L[pi[x]], pi[pi[x]])
+    r2=1
+    for x in range(1,n):
+        a=w2(x-1); b=w2(x)
+        if not (a[0]==b[0] and a[1]==b[1] and b[2]==a[2]+1): r2+=1
+    ok1 = (len(Tt&B) == 2*r - r2)
+    # pieces by word only (no translation requirement) and by translation only
+    r2w=1+sum(1 for x in range(1,n) if (L[x],L[pi[x]])!=(L[x-1],L[pi[x-1]]))
+    # commutator support
+    inv=[0]*n
+    for i,p in enumerate(pi): inv[p]=i
+    tau=lambda x:(x+1)%n; taui=lambda x:(x-1)%n
+    supp={x for x in range(n) if pi[tau(inv[taui(x)])]!=x}
+    sigma=len(set(L))
+    ok2 = len(supp - B)==0
+    return ok1, (len(Tt&B), 2*r-r2, 2*r-r2w), ok2, (len(supp), r, sigma, len(B-supp))
+random.seed(3)
+bad1=bad2=0; tot=0; worst=0
+cases=[]
+for n in range(2,9):
+    for t in itertools.product('ab',repeat=n): cases.append(''.join(t))
+for n in range(2,7):
+    for t in itertools.product('abc',repeat=n): cases.append(''.join(t))
+for _ in range(3000):
+    k=random.choice([2,3,4,26]); n=random.randint(2,60)
+    cases.append(''.join(random.choice('abcdefghijklmnopqrstuvwxyz'[:k]) for _ in range(n)))
+for _ in range(300):
+    seed=''.join(random.choice('abcd') for _ in range(random.randint(3,12)))
+    s=list(seed*random.randint(2,8))
+    for _ in range(random.randint(0,3)): s[random.randrange(len(s))]=random.choice('abcd')
+    cases.append(''.join(s))
+ex1=ex2=None
+for T in cases:
+    # primitive only for the single-cycle statements; test all, record separately
+    ok1,d1,ok2,d2=check(T); tot+=1
+    if not ok1:
+        bad1+=1
+        if ex1 is None or len(T)<len(ex1[0]): ex1=(T,d1)
+    if not ok2:
+        bad2+=1
+        if ex2 is None or len(T)<len(ex2[0]): ex2=(T,d2)
+    worst=max(worst,d2[3]-d2[2])
+print('cases',tot,'| |T∩B| = 2r - r2 fails:',bad1,ex1,'| supp ⊆ B fails:',bad2,ex2,'| max(|B \\ supp| - sigma) =',worst)
