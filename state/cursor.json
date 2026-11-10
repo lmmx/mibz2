@@ -44,7 +44,8 @@
     6734039567,
     6735168430,
     6739270804,
-    6756316971
+    6756316971,
+    6757179363
   ],
   "outgoing_comment_ids": [
     {
@@ -826,6 +827,15 @@
       "report_commit": "25c64192ce7cc9583e11313a8d5946309d7c4113",
       "reply_id": 6756418444,
       "routing_verification": "Pinned route/check passed; exact readback verified. verify hardcodes coordinator FROM, so optimizer verify-pass not claimed."
+    },
+    {
+      "comment_id": 6757179363,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "baseline_commit": "02cc5f89988abb9ab436eae1af4b89576c19d590",
+      "progress": "Migration verified; pool-wait screen and transfer audit started."
     }
   ],
   "migrated_from": {
