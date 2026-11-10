@@ -49,7 +49,8 @@
     6757808815,
     6757979390,
     6758176258,
-    6758227354
+    6758227354,
+    6758452562
   ],
   "outgoing_comment_ids": [
     {
@@ -959,6 +960,15 @@
       },
       "reply_id": 6758406452,
       "routing_verification": "Pinned route/check passed; exact readback verified. Pinned verify hardcodes FROM coordinator; no optimizer verify-pass claimed."
+    },
+    {
+      "comment_id": 6758452562,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: migration verified. Part A #324 off-path harm rescue first, then two-state tunnel lane pricing.",
+      "report_path": "state/records/reviews/inbox-6758452562/report.md"
     }
   ],
   "migrated_from": {
