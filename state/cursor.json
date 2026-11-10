@@ -141,9 +141,10 @@
     6757065549,
     6757210413,
     6757368708,
-    6757686244
+    6757686244,
+    6757791774
   ],
-  "last_processed_comment_id": 6757686244,
+  "last_processed_comment_id": 6757791774,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1531,7 +1532,7 @@
     },
     {
       "trigger_comment_id": 6757791774,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "ba5a363e8364ced3970374479e7fa736573f8e7f",
@@ -1539,7 +1540,11 @@
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "f2595f7fdfa271a78dee5f6d64325c5ed3d8632b",
       "report_path": "state/reports/pilot-delta-6757791774/report.md",
-      "disposition": "PROCEED #319 measurement-only delta and #316 section 2.8: R2 structural smoke then one R600 nonqualifying pilot; final qualification design remains unapproved."
+      "disposition": "PROCEED #319 measurement-only delta and #316 section 2.8: R2 structural smoke then one R600 nonqualifying pilot; final qualification design remains unapproved.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6757870258,
+      "publication_verified": true,
+      "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
