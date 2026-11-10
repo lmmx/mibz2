@@ -1,0 +1,98 @@
+"""Port 3's count, as registered (2026-11-10-team-mtf-port-registration.md), from the
+archive only: python3 count.py.txt REPO JOURNAL_DIR BIN_CONTROL BIN_PORT3
+
+Every Ir from JOURNAL_DIR/cg/*.gz through team_gap_count.load (refuses raw-and-gzip pairs and
+repeated threads) and team_gap_count.stages (the frozen STAGES and LIBRARY). Binaries only for
+objdump, whose exit status is checked; an address it cannot decode is reported, never zero.
+"""
+import collections, glob, hashlib, re, subprocess, sys
+sys.path.insert(0, sys.argv[1] + "/bench")
+import team_gap_count as t
+
+J = sys.argv[2]
+BIN = {"control-team": sys.argv[3], "port3-team": sys.argv[4], "port3-one": sys.argv[4]}
+D = 209_700_196
+DEC = ["scanner", "MTF", "build", "walk", "assembly", "RLE1", "CRC", "coordination"]
+OLD, NEW, ONE = "mibz2::mtf::mtf_checkpoints_avx2", "mibz2::mtf::mtf_checkpoints_reg_avx2", "mibz2::mtf::mtf_avx2"
+
+
+def disasm(binary, lo, hi):
+    r = subprocess.run(["objdump", "-d", "--no-show-raw-insn", f"--start-address={lo:#x}",
+                        f"--stop-address={hi:#x}", binary], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f"objdump failed on {binary}: {r.stderr}")
+    return {int(m.group(1), 16): m.group(2).strip() for m in
+            (re.match(r"\s*([0-9a-f]+):\s+(.*)", l) for l in r.stdout.splitlines()) if m}
+
+
+out = {}
+for arm in ["control-team", "port3-team", "port3-one"]:
+    profs = t.load(f"{J}/cg/{arm}")
+    files = sorted(f for f in glob.glob(f"{J}/cg/{arm}.*.gz"))
+    assert [p.path for p in profs] == files
+    print(f"\n## {arm}: {len(profs)} profiles, threads {sorted(p.thread for p in profs)}")
+    print("| file | sha256 | thread | total Ir |")
+    print("|---|---|--:|--:|")
+    for p in profs:
+        print(f"| {p.path.split('/')[-1]} | {hashlib.sha256(open(p.path, 'rb').read()).hexdigest()} | {p.thread} | {p.total:,} |")
+    P = sum(p.total for p in profs)
+    st = collections.Counter()
+    for p in profs:
+        st.update(t.stages(p)[0])
+    Dd = sum(st[s] for s in DEC)
+    H = st["harness"]
+    U = P - Dd - H
+    assert U == st["other"], (U, st["other"])
+    ok_ledger = Dd + H + U == P and U >= 0
+    print(f"\nP {P:,} = Dd {Dd:,} + H {H:,} + U {U:,}: ledger {'holds' if ok_ledger else 'FAILS'}")
+    print(f"Ir/D: P {P / D:.4f}  Dd {Dd / D:.4f}  H {H / D:.4f}  U {U / D:.4f}")
+    for s in DEC + ["harness", "other"]:
+        print(f"  {s}: {st[s]:,} = {st[s] / D:.4f}")
+    # harness verification: every harness-stage function, its Ir and threads
+    hf = collections.defaultdict(lambda: [0, set()])
+    for p in profs:
+        for fn, ir in p.self_ir.items():
+            if fn and not t.is_library(fn) and t.stage_of(fn) == "harness":
+                hf[fn][0] += ir; hf[fn][1].add(p.thread)
+        for (a, b), ir in p.arcs.items():
+            if b and t.is_library(b) and a and not t.is_library(a) and t.stage_of(a) == "harness":
+                hf[f"{b} <- {a}"][0] += ir; hf[f"{b} <- {a}"][1].add(p.thread)
+    bad = [f for f in hf if " <- " not in f and not (f.startswith("ab::") or f.startswith("<ab::"))]
+    print(f"harness functions: {len(hf)}; not ab:: or <ab:: : {bad}")
+    for f, (ir, th) in sorted(hf.items(), key=lambda x: -x[1][0])[:12]:
+        print(f"  {ir:,} threads {sorted(th)} {f}")
+    # function identity (I1, I4)
+    fir = collections.Counter(); calls = collections.Counter()
+    for p in profs:
+        for fn, ir in p.self_ir.items():
+            if fn in (OLD, NEW, ONE):
+                fir[fn] += ir
+        for (a, b), c in p.calls.items():
+            if b in (OLD, NEW, ONE):
+                calls[(a, b)] += c
+    print("MTF kernels, self Ir:", dict(fir))
+    print("MTF kernels, calls by caller:", dict(calls))
+    # instruction identity (I2, I3) in the kernel this arm runs
+    kern = NEW if fir[NEW] else (OLD if fir[OLD] else ONE)
+    ex = collections.Counter()
+    for p in profs:
+        for (fn, a), ir in p.instr.items():
+            if fn == kern:
+                ex[a] += ir
+    d = disasm(BIN[arm], min(ex), max(ex) + 16)
+    miss = [hex(a) for a in ex if a not in d]
+    print(f"{kern}: {len(ex)} executed addresses, undecoded {miss}")
+    bst = [(a, d[a], ex[a]) for a in sorted(ex) if a in d
+           and re.match(r"mov\s+%[a-z0-9]+,", d[a]) and re.search(r"%(?:[a-d]l|[sd]il|[sb]pl|r\d+b),", d[a])
+           and "(" in d[a] and "%rsp" not in d[a]]
+    print("  I2 non-stack byte stores:", [(hex(a), s, n) for a, s, n in bst], "sum", sum(n for *_, n in bst))
+    ymm = [(a, d[a], ex[a]) for a in sorted(ex) if a in d and re.match(r"vmovdq[au]\s+%ymm\d+,.*\(", d[a]) and "%rsp" not in d[a]]
+    print("  I3 non-stack ymm stores:", [(hex(a), s, n) for a, s, n in ymm])
+    out[arm] = dict(P=P, Dd=Dd, H=H, U=U, st=st)
+
+c, n = out["control-team"], out["port3-team"]
+print("\n## candidate - control (Ir/D)")
+for s in DEC + ["harness", "other"]:
+    print(f"  {s}: {(n['st'][s] - c['st'][s]) / D:+.4f}")
+dD, dU = (n["Dd"] - c["Dd"]) / D, (n["U"] - c["U"]) / D
+print(f"  Dd {dD:+.4f}; U {dU:+.4f}; bounded whole-decoder change [{dD + min(0, dU):+.4f}, {dD + max(0, dU):+.4f}]; P {(n['P'] - c['P']) / D:+.4f}")

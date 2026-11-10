@@ -1,0 +1,143 @@
+
+## control-team: 12 profiles, threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+| file | sha256 | thread | total Ir |
+|---|---|--:|--:|
+| control-team.25682-01.gz | c5c57c86127d42229b8e485341f85e25a82b95e527997735284b2b14b72b064a | 1 | 308,893,143 |
+| control-team.25682-02.gz | 3d286f66443d231e4103c9de59289040d7bb518c44b5909405ee401f6236b712 | 2 | 2,174,113 |
+| control-team.25682-03.gz | 82dfc80fa00b1b54138860a4d36c09bc3eae44ec25cc85b25ae2811b0e6d6da8 | 3 | 483,350,454 |
+| control-team.25682-04.gz | 6bd059b5b53d18495b410cea70d6e3957bc04d14787045d3d248226307662403 | 4 | 536,046,742 |
+| control-team.25682-05.gz | 4a8b1b540171b2a473648b710f89a0c19ec78ff74e2fe125df6569beeb98437f | 5 | 454,672,105 |
+| control-team.25682-06.gz | 8e6d4b31550e3fe0080e730cfad130913d69a87ec5fb5f78c456ca046183ad28 | 6 | 671,795,442 |
+| control-team.25682-07.gz | e583d566fdcdf2dc3e372d9a27a1b341246a9a0703e381e7e7c8db96ee7ad854 | 7 | 996,097,290 |
+| control-team.25682-08.gz | 21d02ce0d03b41d455de9d12013ab9e82d3ccaf4c3c68000326de9bfee4c327a | 8 | 821,547,424 |
+| control-team.25682-09.gz | 2de1d11510ad85c047b7f8d55bfcd1dc9852a1f53888c97ea050de7d18b2cc74 | 9 | 848,006,364 |
+| control-team.25682-10.gz | c8797573423402e95bf4bebfab8793cd65933ab0045829ae148b0b63b900e3ad | 10 | 558,969,267 |
+| control-team.25682-11.gz | f2685710c1695164494d3eedd09fd5994f52c627601fbe3a6c021349f720108c | 11 | 725,399,676 |
+| control-team.25682-12.gz | 272dbf7a1ef9d6f191022c496f603fbe23ae162622744370a20e54fb46e4a39e | 12 | 797,908,972 |
+
+P 7,204,860,992 = Dd 6,891,487,098 + H 309,454,253 + U 3,919,641: ledger holds
+Ir/D: P 34.3579  Dd 32.8635  H 1.4757  U 0.0187
+  scanner: 671,535,138 = 3.2024
+  MTF: 988,696,041 = 4.7148
+  build: 1,167,925,659 = 5.5695
+  walk: 3,713,198,635 = 17.7072
+  assembly: 35,582,042 = 0.1697
+  RLE1: 198,303,859 = 0.9457
+  CRC: 101,664,607 = 0.4848
+  coordination: 14,581,117 = 0.0695
+  harness: 309,454,253 = 1.4757
+  other: 3,919,641 = 0.0187
+harness functions: 42; not ab:: or <ab:: : ['core::ptr::drop_glue::<ab::Threads>', '<std::thread::lifecycle::spawn_unchecked<<ab::Threads>::watch::{closure#1}::{closure#0}, (f64, core::option::Option<alloc::string::String>)>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}', 'std::sys::backtrace::__rust_begin_short_backtrace::<<ab::Threads>::watch::{closure#1}::{closure#0}, (f64, core::option::Option<alloc::string::String>)>', 'core::ptr::drop_glue::<<ab::Threads>::watch::{closure#1}::{closure#0}>']
+  209,691,130 threads [1] __memcpy_avx_unaligned_erms <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  98,326,077 threads [1] <ab::Hash>::update
+  801,471 threads [1, 2] ab::sample_tasks
+  174,439 threads [1, 2] <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- ab::sample_tasks
+  163,168 threads [1, 2] free <- ab::sample_tasks
+  112,584 threads [1] ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  62,676 threads [1] <alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Mut, u64, core::result::Result<alloc::vec::Vec<u8>, mibz2::Error>, alloc::collections::btree::node::marker::Leaf>, alloc::collections::btree::node::marker::KV>>::remove_leaf_kv::<<alloc::collections::btree::map::entry::OccupiedEntry<u64, core::result::Result<alloc::vec::Vec<u8>, mibz2::Error>>>::remove_kv::{closure#0}, alloc::alloc::Global> <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  52,925 threads [1, 2] ab::run_delay
+  15,042 threads [1, 2] malloc <- ab::sample_tasks
+  14,381 threads [1, 2] free <- ab::run_delay
+  10,324 threads [1] __memcpy_avx_unaligned_erms <- <ab::Hash>::update
+  6,792 threads [1, 2] __rustc::__rust_alloc <- ab::sample_tasks
+MTF kernels, self Ir: {'mibz2::mtf::mtf_checkpoints_avx2': 835326277}
+MTF kernels, calls by caller: {('mibz2::parallel::stage', 'mibz2::mtf::mtf_checkpoints_avx2'): 431}
+mibz2::mtf::mtf_checkpoints_avx2: 361 executed addresses, undecoded []
+  I2 non-stack byte stores: [('0xd1f32', 'mov    %al,(%rdx,%rdi,1)', 15135660), ('0xd22b8', 'mov    %al,(%rdx,%rdi,1)', 12425)] sum 15148085
+  I3 non-stack ymm stores: []
+
+## port3-team: 12 profiles, threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+| file | sha256 | thread | total Ir |
+|---|---|--:|--:|
+| port3-team.25720-01.gz | f52c03b3b41ac47ce856052c44c20d484e84bde31a2d384fdc2888609f11b260 | 1 | 308,885,801 |
+| port3-team.25720-02.gz | 7161eb59caacc4abc16ce6f1b0fb4cbd859ddff2b8bd093321d8730eaa2f3e08 | 2 | 1,965,310 |
+| port3-team.25720-03.gz | 88f0276c9c95d3986952d5d3d72c6e881b60ec4c2b468a0bed21f84fb90b31cd | 3 | 449,387,695 |
+| port3-team.25720-04.gz | a0724c5df92faecf3a4f328768439793c4cc71b486b69a55f93afa6a36e24d2c | 4 | 515,584,518 |
+| port3-team.25720-05.gz | e100094ec6fe2e46b1ab7242a35b41097067e5707fd89e1c7cb2b0ba93d1360e | 5 | 410,325,118 |
+| port3-team.25720-06.gz | 69528542218144036f05e7fbce3e0be3315ce82c402be72c406d415f7f846177 | 6 | 671,835,499 |
+| port3-team.25720-07.gz | ed02c68b8dd65cb8acad2310232508a6b6412b169766fb48af793e4fa1d44530 | 7 | 729,869,641 |
+| port3-team.25720-08.gz | fd4d49ad42f1d3f5b5e1d9e1503deaa61c59bfbc93004baccf84c48e89135b12 | 8 | 794,185,922 |
+| port3-team.25720-09.gz | 465c3c4703c494a0470a030807757833a0e602bb6e5e0447e5313e3acf31b4a7 | 9 | 778,153,312 |
+| port3-team.25720-10.gz | 7c81c6470e6968f6e1d5949fc0430e4f008549623f60d6af78ab9840eacd547c | 10 | 694,978,590 |
+| port3-team.25720-11.gz | e8b5235a240420af1703c7f6e78baef3fe3f0b2a5d2b9b99aa280d9e9fd9384e | 11 | 837,719,015 |
+| port3-team.25720-12.gz | 468f450e52be09e03aa2e475d3b06e73ec6bfc2f5104b7ebb60f34ae41626d94 | 12 | 889,896,991 |
+
+P 7,082,787,412 = Dd 6,769,630,756 + H 309,327,407 + U 3,829,249: ledger holds
+Ir/D: P 33.7758  Dd 32.2824  H 1.4751  U 0.0183
+  scanner: 671,577,587 = 3.2026
+  MTF: 866,530,343 = 4.1322
+  build: 1,167,925,687 = 5.5695
+  walk: 3,712,822,080 = 17.7054
+  assembly: 36,484,181 = 0.1740
+  RLE1: 198,305,814 = 0.9457
+  CRC: 101,664,607 = 0.4848
+  coordination: 14,320,457 = 0.0683
+  harness: 309,327,407 = 1.4751
+  other: 3,829,249 = 0.0183
+harness functions: 42; not ab:: or <ab:: : ['core::ptr::drop_glue::<ab::Threads>', 'std::sys::backtrace::__rust_begin_short_backtrace::<<ab::Threads>::watch::{closure#1}::{closure#0}, (f64, core::option::Option<alloc::string::String>)>', 'core::ptr::drop_glue::<<ab::Threads>::watch::{closure#1}::{closure#0}>', '<std::thread::lifecycle::spawn_unchecked<<ab::Threads>::watch::{closure#1}::{closure#0}, (f64, core::option::Option<alloc::string::String>)>::{closure#1} as core::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}']
+  209,690,906 threads [1] __memcpy_avx_unaligned_erms <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  98,326,077 threads [1] <ab::Hash>::update
+  718,104 threads [1, 2] ab::sample_tasks
+  159,994 threads [1, 2] <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- ab::sample_tasks
+  148,248 threads [1, 2] free <- ab::sample_tasks
+  111,515 threads [1] ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  60,942 threads [1] <alloc::collections::btree::node::Handle<alloc::collections::btree::node::NodeRef<alloc::collections::btree::node::marker::Mut, u64, core::result::Result<alloc::vec::Vec<u8>, mibz2::Error>, alloc::collections::btree::node::marker::Leaf>, alloc::collections::btree::node::marker::KV>>::remove_leaf_kv::<<alloc::collections::btree::map::entry::OccupiedEntry<u64, core::result::Result<alloc::vec::Vec<u8>, mibz2::Error>>>::remove_kv::{closure#0}, alloc::alloc::Global> <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  47,159 threads [1, 2] ab::run_delay
+  13,288 threads [1, 2] malloc <- ab::sample_tasks
+  12,938 threads [1, 2] free <- ab::run_delay
+  10,324 threads [1] __memcpy_avx_unaligned_erms <- <ab::Hash>::update
+  5,937 threads [1, 2] __rustc::__rust_alloc <- ab::sample_tasks
+MTF kernels, self Ir: {'mibz2::mtf::mtf_checkpoints_reg_avx2': 779679144}
+MTF kernels, calls by caller: {('mibz2::parallel::stage', 'mibz2::mtf::mtf_checkpoints_reg_avx2'): 431}
+mibz2::mtf::mtf_checkpoints_reg_avx2: 595 executed addresses, undecoded []
+  I2 non-stack byte stores: [('0xd21a2', 'mov    %al,(%r8,%rcx,1)', 15135660), ('0xd2775', 'mov    %al,(%r8,%rcx,1)', 12425)] sum 15148085
+  I3 non-stack ymm stores: [('0xd1da5', 'vmovdqu %ymm0,(%r8,%rdi,1)', 4025878), ('0xd1dab', 'vmovdqu %ymm0,0x20(%r8,%rdi,1)', 4025878), ('0xd23d3', 'vmovdqu %ymm0,(%rcx)', 2617), ('0xd23d7', 'vmovdqu %ymm0,0x20(%rcx)', 2617), ('0xd2495', 'vmovdqu %ymm0,(%r8,%rdi,1)', 2550), ('0xd249b', 'vmovdqu %ymm0,0x20(%r8,%rdi,1)', 2550)]
+
+## port3-one: 1 profiles, threads [1]
+| file | sha256 | thread | total Ir |
+|---|---|--:|--:|
+| port3-one.25754-01.gz | ba875168d6ee38f331c6b441c01a70dec97984e726c9b0f17202dbd1cb84f216 | 1 | 5,408,546,598 |
+
+P 5,408,546,598 = Dd 5,099,520,791 + H 308,321,725 + U 704,082: ledger holds
+Ir/D: P 25.7918  Dd 24.3181  H 1.4703  U 0.0034
+  scanner: 682,691,318 = 3.2556
+  MTF: 862,123,747 = 4.1112
+  build: 1,082,059,629 = 5.1600
+  walk: 2,136,525,935 = 10.1885
+  assembly: 37,060,864 = 0.1767
+  RLE1: 197,394,556 = 0.9413
+  CRC: 101,664,607 = 0.4848
+  coordination: 135 = 0.0000
+  harness: 308,321,725 = 1.4703
+  other: 704,082 = 0.0034
+harness functions: 19; not ab:: or <ab:: : []
+  209,716,504 threads [1] __memcpy_avx_unaligned_erms <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  98,326,077 threads [1] <ab::Hash>::update
+  263,469 threads [1] ab::drain::<mibz2::read::BzReader<std::fs::File>>
+  10,324 threads [1] __memcpy_avx_unaligned_erms <- <ab::Hash>::update
+  1,022 threads [1] malloc <- ab::main
+  766 threads [1] <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> <- ab::child
+  603 threads [1] ab::child
+  595 threads [1] free <- ab::child
+  550 threads [1] free <- ab::main
+  469 threads [1] ab::run_delay
+  409 threads [1] ab::main
+  358 threads [1] calloc <- ab::drain::<mibz2::read::BzReader<std::fs::File>>
+MTF kernels, self Ir: {'mibz2::mtf::mtf_avx2': 773179796}
+MTF kernels, calls by caller: {('ab::drain::<mibz2::read::BzReader<std::fs::File>>', 'mibz2::mtf::mtf_avx2'): 431}
+mibz2::mtf::mtf_avx2: 228 executed addresses, undecoded []
+  I2 non-stack byte stores: [('0xeaa93', 'mov    %cl,(%r9,%r12,1)', 15148085)] sum 15148085
+  I3 non-stack ymm stores: [('0xea80b', 'vmovdqu %ymm0,(%r9,%rdi,1)', 4027455), ('0xea811', 'vmovdqu %ymm0,0x20(%r9,%rdi,1)', 4027455)]
+
+## candidate - control (Ir/D)
+  scanner: +0.0002
+  MTF: -0.5826
+  build: +0.0000
+  walk: -0.0018
+  assembly: +0.0043
+  RLE1: +0.0000
+  CRC: +0.0000
+  coordination: -0.0012
+  harness: -0.0006
+  other: -0.0004
+  Dd -0.5811; U -0.0004; bounded whole-decoder change [-0.5815, -0.5811]; P -0.5821
