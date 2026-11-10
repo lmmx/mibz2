@@ -1115,6 +1115,92 @@ fn grammar_crc(g: &Grammar, cl: &Closed, n: usize) -> Option<(u32, u64)> {
     Some((!(r ^ mulmod(!0, x)), muls))
 }
 
+/// The induction's step count without the induction, and the surface's cone points.
+///
+/// **The count.** Cut LF's cycle after every run start: r stretches x, LF x, ..., each ending
+/// at a run start. The prefixes [0, m) the induction passes through are exactly m = y for the
+/// rows y >= 1 that are a minimum-so-far of a stretch read forward (a first entry below, from
+/// an image start: a bottom boundary of the induced map) or read backward (from a run start:
+/// a top boundary). Read forward but not backward: a step the top wins. Backward but not
+/// forward: the bottom wins. Both, the stretch's least row: an equal step. Row 0 is no step.
+///
+/// **The cone points.** With tau the row shift, the cycles of LF tau LF^-1 tau^-1 that are not
+/// fixed points: (points moved, cycles).
+///
+/// None if LF is not one cycle.
+fn admissible(l: &[u8]) -> Option<([u64; 3], [u64; 2])> {
+    let n = l.len();
+    let mut next = [0u32; 256];
+    {
+        let mut cnt = [0u32; 256];
+        for &c in l {
+            cnt[c as usize] += 1;
+        }
+        let mut sum = 0;
+        for c in 0..256 {
+            next[c] = sum;
+            sum += cnt[c];
+        }
+    }
+    let mut lf = vec![0u32; n];
+    let mut inv = vec![0u32; n];
+    for i in 0..n {
+        let c = l[i] as usize;
+        lf[i] = next[c];
+        inv[next[c] as usize] = i as u32;
+        next[c] += 1;
+    }
+    let start = |i: usize| i == 0 || l[i] != l[i - 1];
+    // row 0 is a run start: the stretches are (LF 0, ..., next run start], and so on round
+    let (mut top, mut bottom, mut equal) = (0u64, 0u64, 0u64);
+    let mut suffix: Vec<u32> = Vec::new();
+    let (mut x, mut low, mut prefix) = (lf[0], u32::MAX, 0u64);
+    for step in 1..=n {
+        if x < low {
+            low = x;
+            prefix += 1;
+        }
+        // (the rows left on the stack are the minima of the stretch read backward)
+        while suffix.last().is_some_and(|&y| y > x) {
+            suffix.pop();
+        }
+        suffix.push(x);
+        if start(x as usize) {
+            top += prefix - 1;
+            bottom += suffix.len() as u64 - 1;
+            equal += 1;
+            suffix.clear();
+            low = u32::MAX;
+            prefix = 0;
+        }
+        if x == 0 && step < n {
+            return None;
+        }
+        x = lf[x as usize];
+    }
+    if x != lf[0] {
+        return None;
+    }
+    // (the stretch that ends at row 0 gave an "equal" that is no step)
+    equal -= 1;
+    let comm = |x: usize| lf[(inv[(x + n - 1) % n] as usize + 1) % n] as usize;
+    let mut seen = vec![false; n];
+    let (mut moved, mut cycles) = (0u64, 0u64);
+    for x in 0..n {
+        if seen[x] || comm(x) == x {
+            continue;
+        }
+        cycles += 1;
+        let mut y = x;
+        while !seen[y] {
+            seen[y] = true;
+            moved += 1;
+            y = comm(y);
+        }
+    }
+    Some(([top, bottom, equal], [moved, cycles]))
+}
+
 /// The run boundaries of `l` that are also boundaries of the runs' images under LF (0 and n
 /// not counted): where the top and bottom partitions of [0, n) coincide. With them, the
 /// segments between two coincidences by shape: (one run, one image) = a run sent exactly onto
@@ -1266,12 +1352,21 @@ fn main() {
                 }
                 let hs: Vec<String> = hist.iter().map(|h| format!("[{},{}]", h.0, h.1)).collect();
                 let (coin, shapes) = coincidences(&ll);
+                // the count in closed form: equal to the induction's, type by type
+                let closed = admissible(&ll);
+                if let Some((steps, _)) = closed {
+                    assert!(
+                        steps == [c.top, c.bottom, c.equal],
+                        "the admissible rows {steps:?} are not the induction's steps"
+                    );
+                }
+                let cone = closed.map_or([0, 0], |x| x.1);
                 let ns = |t: f64| t * 1e9 / n as f64;
                 println!(
-                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{},\"shapes\":{:?},\"k_order\":{:.3},\"k_joined\":{},\"k_steps\":{}}}",
+                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{},\"shapes\":{:?},\"k_order\":{:.3},\"k_joined\":{},\"k_steps\":{},\"closed\":{},\"cone\":{:?}}}",
                     c.runs, c.steps, c.top, c.bottom, c.equal, c.dropped, c.streaks, c.longest, c.left,
                     ex.0, ex.1, ex.2, ns(t_walk), ns(t_runs), ns(t_ind), ns(t_exp), coin, hs.join(","),
-                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps, shapes, ns(k_join), k_joined, k_steps
+                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps, shapes, ns(k_join), k_joined, k_steps, closed.is_some(), cone
                 );
             }
             i += 1;

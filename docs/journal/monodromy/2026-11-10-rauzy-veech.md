@@ -17,6 +17,9 @@ grammar and asserts its bytes against `bwt::walk`.
   Per block S/r: 1.29 / 1.73 / 1.84 / 1.91 / 2.08 (min, p10, median, p90, max).
 - **C:** the block's CRC from the grammar alone, 0.262 multiplications mod P a row, equal to the
   bytes' CRC on all 233 blocks.
+- **P + C:** S in closed form, with no induction: cut LF's cycle after every run start; S =
+  Σ over the r stretches of (minima-so-far read forward + read backward − 1) − 1. Equal to the
+  induction's count, type by type, on every block (§5.5). The 1.8 is a record statistic.
 - **C:** the induction is not one chain. Its 15,141,369 segments order into **93 rounds** (median;
   63 to 337) of independent two-pointer merges; 63.5% of the runs are sent exactly onto one
   run.
@@ -149,7 +152,7 @@ Synthetic (blocks ≥ 10⁵ rows):
 | bytes, uniform | 899,981 | 896,440 | 899,976 | 1.000 | S/r 1.00 |
 
 - **S/r is 1.8 on both natural corpora, five-fold apart in r/n.** Not a law: 1.0 (random) to
-  3.3 (few-id JSON) to ~10 (Sturmian-like, where S is tiny anyway).
+  3.3 (few-id JSON) to ~10 (Sturmian-like, where S is tiny anyway). §5.5 says what it is.
 - **Floor (P):** S ≥ r − 1 for any schedule of these steps. So at most 1.81× is left in the count
   on Wikidata. What is undecided is the step's price.
 - Against the record: the tower 8 × 3 is 0.190 n dependent steps on Wikidata and stops at
@@ -199,6 +202,38 @@ orders them).
 - Counted a step at a time (a step needs the last step on either letter and the one before it
   in its segment): depth median 3,861; widest segment 1,562 steps (one long run absorbing its
   predecessors, itself a prefix sum).
+
+**5.5 (P; C on every block) The count without the induction.** Cut π's cycle after every run
+start: r stretches (x, πx, …, t], t ∈ 𝓣. In the text a stretch is what lies between two
+consecutive run-start suffixes, read backward, and its values are those suffixes' ranks. With
+p the minima-so-far of a stretch read forward and s read backward:
+
+**S = Σ over stretches (p + s − 1) − 1; top-wins steps = Σ (p − 1); bottom-wins = Σ (s − 1);
+equal = r − 1.**
+
+*Proof.* The top boundaries of π_m are the last points below m on the backward orbits from the
+run starts (the run start counted); the bottom boundaries the first points below m on the
+forward orbits from the image starts. A step moves m to the largest boundary below it; that
+boundary then leaves the domain and its orbit's next entry takes its place: so every
+boundary, at every m, is passed. Hence y ≥ 1 is passed iff y is a minimum-so-far of an orbit
+read backward from a run start or forward from an image start; the nearest run start gives
+the weakest condition, so only the stretch holding y matters. m' is a bottom boundary alone
+⇔ the top wins; a top boundary alone ⇔ the bottom wins; both ⇔ equal, which is a stretch's
+least row. Row 0 is no step. ∎ (The formula is the complexity sweep's; the proof is redone
+here.)
+
+- **C:** `admissible` in the example computes the three sums from L alone and asserts them
+  against the induction's three counts: equal on all 233 Wikidata blocks, 4 prose, 25
+  synthetic.
+- **A single-row stretch is a coincidence** (πt ∈ 𝓣): 0.780 r of the stretches, one equal step
+  each. The other 0.220 r stretches average 59.3 rows and 3.69 cut steps (prose: 0.459 r, 4.8
+  rows, 1.83). So S/r = 1 + 0.220 × 3.69 = 1.81: the "1.8" is the record count of suffix ranks
+  inside the longer stretches. Random order would give 2H_g − 2 ≈ 7.3 cuts at g = 59; the ranks
+  along a stretch are far from random.
+- r − 1 ≤ S ≤ n − 1 are its extreme cases: all stretches single rows; all stretches V-shaped.
+- The stretches are the phrases of the BWT's bidirectional scheme (Navarro–Ochoa–Prezza 2021,
+  Def. 5): the induction's steps are the left-to-right and right-to-left minima of ISA inside
+  each phrase.
 
 **Consequence.** The serial chain of §3.1 is an artefact of working one coincidence. The
 induction is ~10² rounds of independent merges; lanes, or threads, are available at no change
@@ -284,10 +319,13 @@ from #324's emitter (PF:`by-data-class` §2).
    dead above ~35 Ir or 0.3 mispredictions a cell. Gate: mine.
 2. **Feed from run records** (#324 / #348, `u16` records cut at 127: merge neighbours, 0.0779 →
    0.0722 a row). Removes the column and the scan. A port, after 1.
-3. **Division (Zorich) rule** for equal-pair streaks; whether a cycle of k losers needs the full
-   acceleration. **Conj:** with it, S = O(r log n) (K for normal curves: Stefankovič; Erickson–
-   Nayyeri 2013 Thm 4.8). Falsifier: a family with a loser cycle ≥ 2 that defeats the pair
-   rule. Needed before any admission; a step budget with fallback is the alternative.
+3. **Division (Zorich) rule** for equal-pair streaks, needed before any admission (or a step
+   budget with fallback). Known for the related accelerated algorithm on k pairings of
+   [1, N]: at most 5k²(2 + log₂ N) cycles (Agol–Hass–Thurston 2006, Thm 12). The complexity
+   sweep derives O(d log(n/d) · min(d, log n)) same-winner streaks for a d-letter discrete
+   exchange (**Conj** here: not re-checked). On Wikidata the full-cycle acceleration gains
+   nothing (no winner outlasts one turn of its losers); the pair rule is what periodic blocks
+   need.
 4. **Output passes on the grammar: the algebra is done (C, Python:**
    `2026-11-10-rauzy-veech/rle1_crc_on_grammar.py.txt`**).** RLE1's decoder is a transducer on
    (byte, count 0..4). A nonterminal's summary: its first run's byte and exact length, and two
@@ -299,9 +337,9 @@ from #324's emitter (PF:`by-data-class` §2).
    ≡ 4 mod 5, kept by ≡ 0, forgotten by 1, 2, 3 (`aaaabbbbb`). Not in the example. Ceiling 4% of
    a Wikidata decode (PF:`by-data-class` §1): low. Line offsets for `wikidata-pq` by the same
    morphism: uncounted.
-5. **Why 1.8.** S = Σ cells over segments; initial cells = 2r − |𝓣∩𝓑| = 1.22 r for 0.78 r
-   segments. No bound. **Conj:** rounds = O(log r) for sources with bounded-memory statistics
-   (93 at r = 5·10⁴, 101 at 3.7·10⁵, 47 on uniform bytes).
+5. **Rounds.** **Conj:** O(log r) for sources with bounded-memory statistics (93 at r = 5·10⁴,
+   101 at 3.7·10⁵, 47 on uniform bytes). And §5.5 in text space: an induction that never
+   leaves the text's phrases, or a count of S from the front's run records alone.
 6. **The i9.** Production's inversion is 110 cycles a run there (PF:`phrase-structure` §5), 63
    here; the kernel is 81 here with 0.13 dependent steps a row against 1. Whether its 81 holds
    on a 256 KiB L2 is unknown. A diagnostic for the Coordinator's queue (PROTOCOL §9, RULES
@@ -313,15 +351,21 @@ from #324's emitter (PF:`by-data-class` §2).
 - **P (elementary; checked on the same 4,897 words):** with τ(x) = x + 1 mod n, the commutator
   π τ π⁻¹ τ⁻¹ fixes x unless x ∈ 𝓑, and it moves all of 𝓑 but at most σ points (bucket seams,
   the wrap). So (τ, π) is a square-tiled surface: one horizontal cylinder (τ is an n-cycle),
-  one vertical when π is an n-cycle, its cone points among the r image boundaries. Runs ↔
-  singularities; 𝓣 ∩ 𝓑 ↔ vertical saddle connections of length one.
+  one vertical when π is an n-cycle (**K** as an object: pairs of n-cycles, Delecroix–Goujard–
+  Zograf–Zorich 2020; Jeffreys 2021).
+- **Its cone points are the commutator's cycles, not the runs** (the sweep's correction to this
+  entry's first wording). **C:** on the 233 Wikidata blocks the r image boundaries fall into
+  1 to 11 cycles (median 5; prose 4 to 11); genus = (r − cycles)/2 + 1 ≈ r/2: 26,500 at
+  r = 53,001. A block is a surface of genus r/2 with a handful of cone points of very large
+  angle. 𝓣 ∩ 𝓑 ↔ vertical saddle connections of length one.
 - **K:** SA conjugates π to the rotation p ↦ p − 1 and τ⁻¹ to φ (GNP Lemma 19; Navarro–Ochoa–
-  Prezza Lemma 6): the dual r-IET in text space is the same surface turned a quarter.
+  Prezza Lemma 6): the dual r-IET in text space is the same surface turned a quarter. §5.5 is
+  the induction read on that side.
 - Rauzy–Veech induction is the first return of the Teichmüller flow; §5 says that on BWT
   surfaces it is dominated by collapsing unit saddle connections. Nothing computational is
   claimed from this section yet.
 
-## 10. Prior art (searched 10 Nov by two sweeps; their reports are in the session record)
+## 10. Prior art (searched 10 Nov by four sweeps; their reports are in the session record)
 
 - **K:** LF as r translated intervals: GNP 2020 Lemma 18; Nishimoto–Tabei 2021. Under the name
   IET, for clustering words: Ferenczi–Zamboni 2013; multisets: Dolce–Hughes 2025.
@@ -332,6 +376,13 @@ from #324's emitter (PF:`by-data-class` §2).
   induction with division: Agol–Hass–Thurston 2006 (orbit counting); Schaefer–Sedgwick–
   Stefankovič 2002; Erickson–Nayyeri 2013 Thm 4.8; iterating an integer IET in O(k² log N):
   Bell, in Eppstein 2023 Thm 6.15. The mapping of an RLBWT onto those objects is not in print.
+- **K, the nearest machines:** surface-dynamics (Delecroix et al.), `int_iet.c`,
+  `int_iet_num_cylinders`: induction on integer exchanges over doubly linked intervals, with
+  a multiplicative step and heights added per loser; equal lengths remove a label. The same
+  machine with heights where this has words; its `iet.py` returns the tower substitution
+  a → bc with the rule used here. Dunfield–Thurston 2006 §7.3–7.4: bands labelled in π₁,
+  L(b') = L(b)·L(t) under a splitting, down to "a word representing γ"; and the homology
+  labels in time polynomial in log|w|: one rule a step, and a morphism evaluated on it.
 - **K:** RLBWT → LZ77 in O(n/log n + r log⁹ n + z log⁹ n): Kempa 2019 Thm 7.4 (the source of the
   record's uncited "O(n/log n + r polylog n)"; vacuous at n = 9·10⁵). Every implemented
   RLBWT → LZ77 or RLBWT → text route takes Θ(n) LF steps (Policriti–Prezza; Bannai–Gagie–I;
@@ -347,8 +398,10 @@ from #324's emitter (PF:`by-data-class` §2).
   (PF:`interval-exchange` §1; `chunked-link` §5a). Absent: endpoint induction, a built grammar,
   S, CRC on a structure (two readers of pr/313 and the 420-row register).
 - **What is claimed as new, and no more:** the transfer (runs of L as the letters, the block
-  as the induction's SLP, the two-pass write, the CRC by morphism) and the counts of §4–§5.
-  The step and its morphism are Rauzy's.
+  as the induction's SLP, the two-pass write, the CRC and RLE1 by morphism), the counts of
+  §4–§5, and §5.5's reading of the step count as records of suffix ranks inside the BWT's
+  phrases. The step, its morphism, the linked-interval machine and the SLP from accelerated
+  induction are others'.
 
 ## 11. Independent check
 
@@ -368,7 +421,8 @@ Beside this entry: `2026-11-10-rauzy-veech/identities.py.txt` (§5.1 and §9 by 
 
 One JSON line a block: `n, runs, steps, top, bottom, equal, dropped, coincide, shapes, repeats,
 divisions, depth, widest, rounds, selfish, selfish_steps, copies, copied, hist` (rule lengths:
-count and bytes by class), `crc_muls`, and ns a row: `ns_walk` (build + room walk); the kernel's
+count and bytes by class), `crc_muls`, `closed` (§5.5 asserted), `cone` (points the commutator
+moves, its cycles), and ns a row: `ns_walk` (build + room walk); the kernel's
 `k_runs` (the scan), `k_order`, `k_induce`, `k_write`, with `k_joined`, `k_steps`, `k_rules`; the
 reference's `ns_runs`, `ns_induce`, `ns_expand` (a rule a step, no arena). The reference asserts
 bytes and CRC; the kernel asserts bytes.
