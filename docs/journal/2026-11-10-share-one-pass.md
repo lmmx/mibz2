@@ -210,3 +210,18 @@ python3 docs/journal/2026-11-10-share-one-pass/count.py.txt . docs/journal/2026-
 ```
 
 The binaries are needed only to name instructions (objdump). Every Ir comes from `cg/*.gz`.
+
+## 9. The independent B5 reviewer's tests, adopted
+
+The independent B5 review of #337 found no material objection (posted on #337). Its
+tests-only diff (SHA-256 `903d5fb7…effd`, against `3797905e`) is applied unchanged; `cargo fmt`
+changed nothing. **These are the reviewer's tests, not the implementer's.**
+
+| test | what |
+|---|---|
+| `b5_scatter_stays_in_its_windows` | lying checkpoints under which a guard weakened to `ll.len()` (the reviewer's M7 and M8) lets a share write into another share's window. It catches those weakenings, which the implementer's suite did not. M8's weakness was reachable in port 1 too |
+| `b5_scatter_largest_block_short_runs` | the largest block `new` accepts, in short runs, through the run-by-run path |
+
+**Result:** `cargo test --release --lib coop::` passes 32 of 32. fmt and clippy
+(`-D warnings`) are clean. The kernel, the count and the dispositions are unchanged:
+condition 6 is still unmet (§5).

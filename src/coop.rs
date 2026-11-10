@@ -2485,6 +2485,133 @@ mod tests {
         }
     }
 
+    // ---- B5 review (#337): scatter's window confinement, natively ----
+
+    /// Each share run alone over a sentinel-filled buffer (spare capacity beyond n
+    /// included): every slot it changed must lie in one of its own windows, starts[c] +
+    /// at(lo)[c] .. starts[c] + at(hi)[c]. Catches an escape into another share's window
+    /// or past n without Miri and without relying on a later overwrite. Columns of short
+    /// runs over bytes 0, 1, 254, 255 (the run-by-run windows near every window end, the
+    /// top bucket's at n), honest and with lying counts and checkpoints, k 1 to 4
+    #[test]
+    fn b5_scatter_stays_in_its_windows() {
+        let mut r = xorshift(0x337b5);
+        let (mut accepted, mut refused) = (0usize, 0usize);
+        for t in 0..4000 {
+            let n0 = 16 + (r() % 300) as usize;
+            let maxlen = [2u64, 4, 8, 17][(r() % 4) as usize];
+            let mut ll = Vec::new();
+            while ll.len() < n0 {
+                let len = 1 + (r() % maxlen) as usize;
+                let b = [0u8, 1, 254, 255][(r() % 4) as usize];
+                ll.extend(std::iter::repeat(b).take(len));
+            }
+            let n = ll.len();
+            let stride = [1usize, 7, 16, 64][(r() % 4) as usize];
+            let mut counts = counts_of(&ll);
+            let mut cps = checkpoints_of(&ll, stride);
+            if t % 3 != 0 {
+                let (a, b) = (
+                    [0usize, 1, 254, 255][(r() % 4) as usize],
+                    [0usize, 1, 254, 255][(r() % 4) as usize],
+                );
+                let d = 1 + (r() % 17) as u32;
+                if a != b && counts[a] >= d {
+                    counts[a] -= d;
+                    counts[b] += d;
+                    if r() % 2 == 0 {
+                        for cp in cps.iter_mut() {
+                            let m = cp[a].min(d);
+                            cp[a] -= m;
+                            cp[b] += m;
+                        }
+                    }
+                }
+            }
+            let k = 1 + (r() % 4) as usize;
+            const SENT: u32 = 0xB5B5_0337;
+            let cap = n + 64;
+            let mut tt = TVector::new();
+            tt.0 = vec![SENT; cap];
+            let p = tt.0.as_ptr() as usize;
+            let bld = match FusedBuild::new(&ll, &counts, &cps, stride, k, &mut tt) {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
+            let mut starts = [0u32; 256];
+            let mut cum = 0u32;
+            for b in 0..256 {
+                starts[b] = cum;
+                cum += counts[b];
+            }
+            let at = |e: usize| if e == n { counts } else { cps[e / stride] };
+            let order: Vec<usize> = if t % 2 == 0 {
+                (0..k).collect()
+            } else {
+                (0..k).rev().collect()
+            };
+            for &j in &order {
+                let (lo, hi) = (edge(n, k, stride, j), edge(n, k, stride, j + 1));
+                let (before, after) = (at(lo), at(hi));
+                let mine = |s: usize| {
+                    (0..256).any(|c| {
+                        (starts[c] + before[c]) as usize <= s && s < (starts[c] + after[c]) as usize
+                    })
+                };
+                // SAFETY (test only): initialised by vec!, not moved (checked below); no
+                // share is running
+                let snap = unsafe { std::slice::from_raw_parts(p as *const u32, cap) }.to_vec();
+                bld.share(j);
+                let now = unsafe { std::slice::from_raw_parts(p as *const u32, cap) };
+                for s in 0..cap {
+                    assert!(
+                        now[s] == snap[s] || mine(s),
+                        "t {t} n {n} k {k} stride {stride} share {j}: slot {s} outside its windows written"
+                    );
+                }
+            }
+            let (res, tt) = bld.finish();
+            assert_eq!(tt.0.as_ptr() as usize, p, "reallocated");
+            if res.is_ok() {
+                let mut want = TVector::new();
+                crate::bwt::build(&ll, &counts_of(&ll), &mut want);
+                assert!(tt.0 == want.0, "t {t}: a wrong table accepted");
+                accepted += 1;
+            } else {
+                assert!(tt.0.is_empty());
+                refused += 1;
+            }
+        }
+        assert!(
+            accepted > 200 && refused > 200,
+            "{accepted} accepted, {refused} refused"
+        );
+    }
+
+    /// The run-by-run windows at the largest block (2^24 - 1 rows of runs of 1 to 5 over
+    /// bytes 254 and 255): the provisional links past row 2^24 wrap and are overwritten,
+    /// the final links exact, against `bwt::build` at k 1 to 4
+    #[test]
+    fn b5_scatter_largest_block_short_runs() {
+        let n = (1usize << 24) - 1;
+        let mut r = xorshift(0x24);
+        let mut ll = Vec::with_capacity(n);
+        let mut b = 254u8;
+        while ll.len() < n {
+            let len = 1 + (r() % 5) as usize;
+            ll.extend(std::iter::repeat(b).take(len.min(n - ll.len())));
+            b ^= 1;
+        }
+        let counts = counts_of(&ll);
+        let mut want = TVector::new();
+        crate::bwt::build(&ll, &counts, &mut want);
+        let cps = checkpoints_of(&ll, crate::mtf::CHECKPOINT);
+        for k in [1, 2, 3, 4] {
+            let got = split_build(&ll, &counts, &cps, crate::mtf::CHECKPOINT, k);
+            assert!(got.as_deref() == Some(&want.0[..]), "k {k}");
+        }
+    }
+
     /// The shared walk on `ll`'s table from `orig_ptr`, against `bwt::walk` and the
     /// segments' oracle, with `segments` a block
     fn walk_matches(
