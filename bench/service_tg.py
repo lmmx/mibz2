@@ -38,10 +38,26 @@ the sharded workflow (.github/workflows/target-gated-ni.yml, the Guardian's D077
 replaces the draft's single pull-request Benchmark run. The standing grid's 42 cells (the 4-CPU,
 2-core runner × the seven corpora × 1, 2 and 4 threads × wall and CPU time) in nine fixed
 shards (`SHARDS`: a corpus each, `wikidata` split by thread count), each shard one runner.
-Every cell is `NI_ROUNDS` paired rounds on its own shard's runner, never pooled across
-runners; its estimate the geometric mean of the paired head-over-base ratios; its standard
-error from `NI_BATCHES` consecutive batch means (robust to dependence within a batch); its
-one-sided 95% upper bound (t at 0.95, `NI_BATCHES` - 1 df) at most 1.02. All 42 must pass.
+Every cell is `NI_ROUNDS` (R = 2880) paired rounds on its own shard's runner, never pooled
+across runners; its estimate the geometric mean of the paired head-over-base ratios; its
+standard error from `NI_BATCHES` (B = 24) consecutive batch means of m = 120 rounds; its
+one-sided 95% upper bound (t at 0.95, B - 1 = 23 df) at most 1.02. All 42 must pass.
+- **The schedule:** `ab`'s arm order with two arms is head-first, base-first, base-first,
+  head-first, repeated (`ORDER_CYCLE`, from round 0). A batch of m = 120 is 30 complete cycles,
+  starting on a cycle boundary, so a constant or linearly varying order coefficient cancels in
+  every batch mean. No order covariate: it would change no batch mean, and subtracting its
+  variance from the batch LRV would remove the same term twice. The judge refuses a row order
+  that is not this schedule, and a design whose batches are not whole cycles.
+- **The trend veto** (frozen numerically, the Researcher's REVIEW 6758898817 §4): per cell and
+  metric (the 42), the 24 batch means regressed on the batch index 0 … 23 with an intercept;
+  the slope's t on 22 df. Any |t| > `TREND_T_MAX` = t(1 − 0.01/84, 22) = 4.3806308666, or a
+  missing or non-finite t, makes condition 2 INVALID. A zero residual variance gives t = 0
+  for a zero slope, |t| = infinity otherwise. The rows and every cell's estimate are kept and
+  reported; nothing is detrended, removed, replaced or retried. It certifies no independence:
+  under constant-mean iid Gaussian batch means its family probability is at most 1%.
+- **All rows are kept:** no trimming, no robust estimator. A row's `waited_s` is the settle
+  wait plus the child's own execution, rounded to whole seconds (`ab`): it is never summed as
+  pure waiting nor subtracted from wall.
 - **Admission, every shard:**
   - the run's whole history reconciled, fail-closed (`history_problems`): every job of every
     attempt (the API's, with its steps) and every artifact GitHub lists, downloaded or not. An
@@ -162,8 +178,18 @@ CI_CPUS = 4
 CI_CORES = 2
 CI_ARMS = ("mibz2", "mibz2@base/ab")
 CI_METRICS = ("wall", "cpu")
-NI_ROUNDS = 600  # R: every cell's paired rounds, fixed (registration §2.4)
-NI_BATCHES = 20  # B: consecutive batches of R / B = 30 rounds, the standard error's units (§2.3)
+NI_ROUNDS = 2880  # R: every cell's paired rounds, fixed (registration §2.9)
+NI_BATCHES = 24  # B: consecutive batches of R / B = 120 rounds, the standard error's units (§2.9)
+# `ab`'s arm order with two arms (examples/ab.rs `arm_order`): whether the head runs first in
+# round r is ORDER_CYCLE[r % 4]. Sum of signs 0 and sum of i * sign 0 over a cycle: a constant
+# or linear order coefficient cancels within each complete cycle
+ORDER_CYCLE = (True, False, False, True)
+NI_BATCH_LEN = NI_ROUNDS // NI_BATCHES
+NI_CYCLES_PER_BATCH = 30
+# the trend veto's cutoff, t(1 - 0.01 / (2 * 42), 22), frozen to ten decimals (§2.9)
+TREND_T_MAX = 4.3806308666
+assert NI_ROUNDS == NI_BATCHES * NI_BATCH_LEN, "R splits into B whole batches"
+assert NI_BATCH_LEN == NI_CYCLES_PER_BATCH * len(ORDER_CYCLE), "each batch is 30 complete order cycles"
 SHARDS = {c: (c, (1, 2, 4)) for c in CI_CORPORA if c != "wikidata"}
 SHARDS.update({f"wikidata-{t}": ("wikidata", (t,)) for t in CI_THREADS})
 # the corpora's SHA-256 (ab gen at scale 4; bench/wikidata.json's): `text` is built from the
@@ -715,10 +741,44 @@ def history_problems(sid, jobs, arts, head=None, run=None):
     return p, (None if p else a)
 
 
+def cycle_problems(rounds, batches):
+    """Why `rounds` in `batches` batches is not a design of whole order cycles (empty: it is):
+    every batch the same length, a multiple of the four-round cycle, so each starts on a cycle
+    boundary"""
+    if not (is_int(rounds) and is_int(batches) and batches > 1 and rounds > 0):
+        return [f"R {rounds!r} / B {batches!r}: not a design"]
+    if rounds % batches:
+        return [f"R {rounds} doesn't split into {batches} whole batches"]
+    if (rounds // batches) % len(ORDER_CYCLE):
+        return [f"batches of {rounds // batches} rounds are not whole {len(ORDER_CYCLE)}-round order cycles"]
+    return []
+
+
+def trend_t(means):
+    """The trend veto's statistic: the batch means regressed on their index 0 … B − 1 with an
+    intercept, the slope's t on B − 2 df. A zero residual variance gives 0 for a zero slope and
+    infinity otherwise; fewer than three means or a non-finite input give None (invalid)"""
+    k = len(means)
+    if k < 3 or not all(isinstance(y, (int, float)) and math.isfinite(y) for y in means):
+        return None
+    xm, ym = (k - 1) / 2, statistics.fmean(means)
+    sxx = sum((i - xm) ** 2 for i in range(k))
+    b = sum((i - xm) * (y - ym) for i, y in enumerate(means)) / sxx
+    ss = sum((y - ym - b * (i - xm)) ** 2 for i, y in enumerate(means))
+    if ss == 0:
+        return 0.0 if b == 0 else math.copysign(math.inf, b)
+    t = b / math.sqrt(ss / (k - 2) / sxx)
+    return t if math.isfinite(t) else None
+
+
 def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
-    """The registered estimator (§2.3): the mean of all the paired logs, its standard error from
-    the means of `batches` consecutive equal batches, t with batches - 1 df"""
+    """The registered estimator (§2.9): the mean of all the paired logs (equal to the mean of the
+    batch means), its standard error from the means of `batches` consecutive equal batches of
+    whole order cycles, t with batches - 1 df; and the trend veto's t over the batch means"""
     n = len(logs)
+    q = cycle_problems(n, batches)
+    if q:
+        raise ValueError(q[0])
     k = n // batches
     means = [statistics.fmean(logs[i * k:(i + 1) * k]) for i in range(batches)]
     m = statistics.fmean(logs)
@@ -726,7 +786,7 @@ def batch_stats(logs, batches, conf_upper=0.95, conf_two=0.95):
     df = batches - 1
     tu, tt = t_ppf(conf_upper, df), t_ppf(1 - (1 - conf_two) / 2, df)
     return {"ratio": math.exp(m), "upper": math.exp(m + tu * se), "lo95": math.exp(m - tt * se),
-            "hi95": math.exp(m + tt * se), "se": se}
+            "hi95": math.exp(m + tt * se), "se": se, "batch_means": means, "trend_t": trend_t(means)}
 
 
 def diagnostics(logs):
@@ -881,7 +941,7 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     if unreadable:
         p.append(f"{sid}: runs.jsonl lines not JSON: {unreadable[:5]}")
     p += timing_problems(sid, d, len(rows))
-    by = {}
+    by, at = {}, {}
     cores = [set(str(c).split(",")) for c in core_cpus]
     for i, r in enumerate(rows):
         key = (r.get("corpus"), r.get("threads"), r.get("arm"))
@@ -915,6 +975,7 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
         if r["round"] in cell:
             p.append(f"{sid} row {i}: round {r['round']} repeated")
         cell[r["round"]] = r
+        at[(key, r["round"])] = i
     if len({r.get("hash") for r in rows}) != 1:
         p.append(f"{sid}: {len({r.get('hash') for r in rows})} output digests, not one")
     for t in threads:
@@ -922,6 +983,21 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
             if sorted(by.get((corpus, t, arm), {})) != list(range(expect_rounds)):
                 p.append(f"{sid}: {corpus} {t}t {arm}: {len(by.get((corpus, t, arm), {}))} rounds, "
                          f"not 0..{expect_rounds - 1} once each")
+    # the schedule (§2.9): in each round and thread count, the two arms back to back, the head
+    # first exactly in the rounds ORDER_CYCLE names
+    for t in threads:
+        bad = []
+        for rnd in range(expect_rounds):
+            h, b = at.get(((corpus, t, CI_ARMS[0]), rnd)), at.get(((corpus, t, CI_ARMS[1]), rnd))
+            if h is None or b is None:
+                continue
+            if abs(h - b) != 1:
+                bad.append(f"round {rnd}: the arms not back to back (rows {h}, {b})")
+            elif (h < b) != ORDER_CYCLE[rnd % len(ORDER_CYCLE)]:
+                bad.append(f"round {rnd}: {'head' if h < b else 'base'} first")
+        if bad:
+            p.append(f"{sid}: {corpus} {t}t: {len(bad)} rounds off ab's four-round schedule (head, base, base, "
+                     f"head, the arms back to back), first {bad[0]}")
     return p[:20], by
 
 
@@ -966,8 +1042,10 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
     reg = reg or registered()
     fz = reg["frozen"]
     v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
-         "failing": [], "shards": {}, "run": man.get("run"), "head": head, "label": man.get("label")}
+         "failing": [], "vetoed": [], "condition2": "INVALID", "trend_t_max": TREND_T_MAX, "batches": batches,
+         "shards": {}, "run": man.get("run"), "head": head, "label": man.get("label")}
     p = v["problems"]
+    p += cycle_problems(rounds, batches)
     for k in ("candidate", "base", "ni_rustc", "corpus_text"):
         if k not in fz:
             p.append(f"bench/{FROZEN} names no {k}")
@@ -975,9 +1053,12 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
         p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
     q, admitted = structural(root, man, head, reg, rounds, "qualification", check_git=check_git)
     p += [x for x in q if not x.startswith("the run is labelled")]
+    whole = not cycle_problems(rounds, batches)
     for sid, (a, by) in admitted.items():
         v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
         corpus, threads = SHARDS[sid]
+        if not whole:
+            continue
         for t in threads:
             h, b = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
             cell = {"shard": sid}
@@ -996,11 +1077,18 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
             cell[metric]["pass"] = cell[metric]["upper"] <= MARGIN
             if not cell[metric]["pass"]:
                 v["failing"].append(f"{key} {metric} upper {cell[metric]['upper']:.4f}")
+            # (the trend veto, §2.9: it invalidates condition 2; the estimate stays, reported)
+            t = cell[metric]["trend_t"]
+            if t is None or abs(t) > TREND_T_MAX:
+                v["vetoed"].append(f"{key} {metric} trend t {'non-finite' if t is None else f'{t:+.4f}'}")
         if cell["wall"]["lo95"] > 1.0:
             v["flags"].append(key)
         if cell["rss_kb"]["lo95"] > RSS_MARGIN:
             v["rss_regression"].append(key)
-    v["passes"] = not v["failing"] and not v["rss_regression"]
+    # (`valid` is the admission; the veto voids condition 2 alone. Wall flags and the harm
+    # confirmation of §2.6, and peak RSS, stand as they are: condition 7 is unchanged)
+    v["passes"] = not v["failing"] and not v["rss_regression"] and not v["vetoed"]
+    v["condition2"] = "INVALID" if v["vetoed"] else "PASS" if not v["failing"] else "NOT SHOWN"
     return v
 
 
@@ -1019,6 +1107,10 @@ def structure(root, man, head, base, rounds, label, toolchain, corpus_text=None,
             "unchecked": [] if corpus_text else ["the text corpus's digest (no corpus_text before the freeze)"]}
 
 
+def fmt_t(t):
+    return "–" if t is None else f"{t:+.2f}"
+
+
 def ni_markdown(v):
     out = ["# The guarded service default under the target-gated route: CI condition 2 (sharded)", ""]
     if not v["valid"]:
@@ -1027,19 +1119,27 @@ def ni_markdown(v):
         return "\n".join(out) + "\n"
     out += [
         f"Head over base, the geometric mean of {NI_ROUNDS} paired rounds on the cell's own runner; the one-sided "
-        f"95% upper bound from {NI_BATCHES} batch means (t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every "
-        "one of the 42 cells (an intersection-union test at level 5%). Lag-1 autocorrelation is reported, not judged.",
+        f"95% upper bound from {NI_BATCHES} batch means of {NI_BATCH_LEN} rounds ({NI_CYCLES_PER_BATCH} complete "
+        f"order cycles; t at 0.95, {NI_BATCHES - 1} df), at most {MARGIN} at every one of the 42 cells (an "
+        f"intersection-union test at level 5%). The trend veto: any cell's batch-mean trend |t| > {TREND_T_MAX} "
+        "makes condition 2 INVALID, every estimate kept. Lag-1 autocorrelation is reported, not judged.",
         "",
-        "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall |",
-        "|---|---|--:|--:|--:|--:|--:|--:|",
+        "| cell | shard | wall | wall upper | CPU | CPU upper | peak RSS (95%) | lag-1 wall | trend t wall / CPU |",
+        "|---|---|--:|--:|--:|--:|--:|--:|--:|",
     ]
     for key, c in v["cells"].items():
         w, cp, r = c["wall"], c["cpu"], c["rss_kb"]
         mark = lambda x: "" if x["pass"] else " **FAIL**"  # noqa: E731
         out.append(f"| {key} | {c['shard']} | {w['ratio']:.4f} | {w['upper']:.4f}{mark(w)} | {cp['ratio']:.4f} "
                    f"| {cp['upper']:.4f}{mark(cp)} | {r['ratio']:.4f} [{r['lo95']:.4f}, {r['hi95']:.4f}] "
-                   f"| {w['diagnostics']['lag1']:+.2f} |")
-    out += ["", f"**Condition 2:** {'**met** at every cell' if not v['failing'] else '**not met** (NOT SHOWN): ' + '; '.join(v['failing'])}."]
+                   f"| {w['diagnostics']['lag1']:+.2f} | {fmt_t(w['trend_t'])} / {fmt_t(cp['trend_t'])} |")
+    if v["vetoed"]:
+        c2 = "**INVALID** (the trend veto; rows and estimates kept, nothing re-run): " + "; ".join(v["vetoed"])
+    elif v["failing"]:
+        c2 = "**not met** (NOT SHOWN): " + "; ".join(v["failing"])
+    else:
+        c2 = "**met** at every cell"
+    out += ["", f"**Condition 2:** {c2}."]
     out += [f"**Wall flags (harm signals, §2.6):** {', '.join(v['flags']) or 'none'}."]
     out += [f"**Peak RSS regression (condition 7):** {', '.join(v['rss_regression']) or 'none'}."]
     return "\n".join(out) + "\n"
@@ -1132,7 +1232,7 @@ def main(argv=None):
             man = json.load(fh)
         v = ni_judge(a.root, man, a.head)
         write(a.out, v, ni_markdown(v))
-        return 0 if v["valid"] and v["passes"] else 1 if v["valid"] else 2
+        return 0 if v["valid"] and v["passes"] else 1 if v["valid"] and not v["vetoed"] else 2
     def one(root, mpath):
         with open(mpath) as fh:
             return ni_judge(root, json.load(fh), a.head)

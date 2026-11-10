@@ -7,6 +7,13 @@ verdict, after the evidence is uploaded.
 - **qualification:** passes (exit 0) only if the judge exited 0 and its verdict is valid and
   passes condition 2. A valid NOT SHOWN (judge exit 1), invalid evidence (exit 2), a missing or
   unreadable verdict, or any disagreement between the exit and the verdict fails (exit 1).
+- **The trend veto, recomputed here** (registration §2.9, independently of the judge's own):
+  for each of the 42 (21 cells × wall, CPU), the verdict's `B` = 24 batch means regressed on
+  their index 0 … 23 with an intercept, the slope's t on 22 df. Any |t| > 4.3806308666, any
+  cell or metric missing, or not exactly 24 finite batch means: condition 2 is INVALID and the
+  job fails. A zero residual variance gives t = 0 for a zero slope, infinity otherwise. The
+  judge's `vetoed` list must name exactly the cells this finds, or the gate fails on the
+  disagreement. The rows and estimates are kept as the judge wrote them.
 - **smoke** and **pilot** (the registration's §2.8 design pilot): never evidence. The judge must have refused it as smoke: its
   verdict present, not valid, and among its problems the label's refusal. And the run must
   pass the structural admission (`service_tg.py structure`, `--structure`): every shard present,
@@ -20,7 +27,49 @@ It writes one line to `--summary` (the step summary) either way.
 
 import argparse
 import json
+import math
 import sys
+
+# the registered design (§2.9), restated here so that the veto is computed twice, apart
+CELLS = [f"{c}/{t}" for c in ("onebyte", "pattern", "random", "records", "runs", "text", "wikidata") for t in (1, 2, 4)]
+METRICS = ("wall", "cpu")
+BATCHES = 24
+TREND_T_MAX = 4.3806308666
+
+
+def slope_t(means):
+    """The slope's t of `means` on their index with an intercept (None: not computable)"""
+    k = len(means)
+    if k < 3 or not all(isinstance(y, (int, float)) and not isinstance(y, bool) and math.isfinite(y) for y in means):
+        return None
+    xs = range(k)
+    xm, ym = sum(xs) / k, sum(means) / k
+    sxx = sum((x - xm) ** 2 for x in xs)
+    b = sum((x - xm) * (y - ym) for x, y in zip(xs, means)) / sxx
+    ss = sum((y - ym - b * (x - xm)) ** 2 for x, y in zip(xs, means))
+    if ss == 0:
+        return 0.0 if b == 0 else math.copysign(math.inf, b)
+    t = b / math.sqrt(ss / (k - 2) / sxx)
+    return t if math.isfinite(t) else None
+
+
+def veto(verdict):
+    """(vetoed cells as 'cell metric', problems): the trend veto from the verdict's batch means"""
+    cells = verdict.get("cells") if isinstance(verdict.get("cells"), dict) else {}
+    hit, problems = [], []
+    for key in CELLS:
+        for metric in METRICS:
+            cell = cells.get(key)
+            st = cell.get(metric) if isinstance(cell, dict) else None
+            means = st.get("batch_means") if isinstance(st, dict) else None
+            if not isinstance(means, list) or len(means) != BATCHES:
+                problems.append(f"{key} {metric}: not {BATCHES} batch means")
+                hit.append(f"{key} {metric}")
+                continue
+            t = slope_t(means)
+            if t is None or abs(t) > TREND_T_MAX:
+                hit.append(f"{key} {metric}")
+    return hit, problems
 
 def gate(label, verdict, judge_exit, structure=None):
     """(exit status, one-line summary)"""
@@ -46,6 +95,18 @@ def gate(label, verdict, judge_exit, structure=None):
         if not isinstance(verdict, dict):
             return 1, "qualification: FAILED: no readable verdict (INVALID)"
         valid, passes = bool(verdict.get("valid")), bool(verdict.get("passes"))
+        claimed = sorted(" ".join(str(x).split()[:2]) for x in verdict.get("vetoed") or [])
+        if valid:
+            hit, problems = veto(verdict)
+            if problems:
+                return 1, "qualification: INVALID: the verdict lacks what the trend veto needs: " + "; ".join(problems[:3])
+            if sorted(hit) != claimed:
+                return 1, (f"qualification: FAILED: the gate's trend veto ({', '.join(hit) or 'none'}) disagrees "
+                           f"with the judge's ({', '.join(claimed) or 'none'})")
+            if hit:
+                if judge_exit != 2 or passes:
+                    return 1, f"qualification: FAILED: the judge's exit {judge_exit} disagrees with its trend veto"
+                return 1, "qualification: condition 2 INVALID (the trend veto; rows and estimates kept): " + "; ".join(hit)
         if judge_exit == 0 and valid and passes:
             return 0, "qualification: condition 2 met at every cell (PASS)"
         if judge_exit == 1 and valid and not passes:

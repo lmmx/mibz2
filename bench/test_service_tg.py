@@ -12,6 +12,10 @@ judge (docs/journal/2026-11-10-service-guarded-target-gated-registration.md).
   digests, completeness, termination, placement), each cell's batch-means one-sided bound,
   the all-pass rule, wall flags and the harm-confirmation rule, peak RSS.
 - Student's t quantiles against fixed values (and scipy's, where it is installed).
+- The final design (registration §2.9): R 2880 in B 24 batches of 120, each 30 complete
+  four-round order cycles, ab's own schedule; the schedule enforced on the rows; the trend
+  veto's statistic, cutoff and effect (condition 2 INVALID, every estimate kept, condition 7's
+  flags and confirmation unchanged); every row kept.
 
     python3 bench/test_service_tg.py
 """
@@ -232,7 +236,7 @@ class Workstation(unittest.TestCase):
 # CI: the sharded workflow's artifacts
 
 
-R, B = 40, 4  # (small, for speed: the judge takes them as parameters; the registered 600 and 20 are constants)
+R, B = 96, 24  # (small, for speed: one four-round cycle a batch; the registered 2880 and 24 are constants)
 RUN = 4242
 
 
@@ -244,7 +248,7 @@ def shard_rows(sid, effect={}, sd=0.003, seed=5):
     out = []
     for rnd in range(R):
         for t in threads:
-            for arm in tg.CI_ARMS:
+            for arm in (tg.CI_ARMS if tg.ORDER_CYCLE[rnd % 4] else tg.CI_ARMS[::-1]):  # (ab's schedule)
                 w, c, r = 0.05 * rng.gauss(1, sd), 0.08 * rng.gauss(1, sd), 30000 * rng.gauss(1, 0.001)
                 if arm == "mibz2":
                     w *= effect.get((t, "wall"), 1.0)
@@ -602,6 +606,208 @@ class CI(unittest.TestCase):
         # (batches of an odd length break the arms' two-round order balance: refused)
         with self.assertRaises(ValueError):
             pw.power(900, 20, 0.05, 1.0)
+        # (the final design's limiting cell, pattern/2/wall at the pilot's largest LRV over the
+        # five registered lengths, sigma 0.20139894: the Researcher's 0.98548, and 0.85610 at
+        # twice the LRV, reproduced; conditional on iid normal batch means, not a guarantee)
+        sigma = 0.20139894418068915
+        self.assertAlmostEqual(pw.power(2880, 24, sigma, 1.005), 0.9854840380109718, places=6)
+        self.assertAlmostEqual(pw.power(2880, 24, sigma * math.sqrt(2), 1.005), 0.8561073746929773, places=6)
+
+
+def ab_arm_order(rnd, n=2):
+    """examples/ab.rs `arm_order`, restated: rotated a step each round, reversed every other
+    cycle of n rounds"""
+    order = list(range(n))
+    order = order[rnd % n:] + order[:rnd % n]
+    return order[::-1] if (rnd // n) % 2 else order
+
+
+def trended(sid, threads, metric, slope, **kw):
+    """shard_rows, with the head's `metric` at `threads` drifting by exp(slope * round)"""
+    rows = shard_rows(sid, **kw)
+    for r in rows:
+        if r["threads"] == threads and r["arm"] == tg.CI_ARMS[0]:
+            r[metric] *= math.exp(slope * r["round"])
+    return rows
+
+
+class Design(unittest.TestCase):
+    def test_the_registered_design(self):
+        self.assertEqual((tg.NI_ROUNDS, tg.NI_BATCHES, tg.NI_BATCH_LEN, tg.NI_CYCLES_PER_BATCH), (2880, 24, 120, 30))
+        self.assertEqual(tg.cycle_problems(tg.NI_ROUNDS, tg.NI_BATCHES), [])
+        # (the cycle is ab's own, and both a constant and a linear order coefficient cancel in it)
+        self.assertEqual(tg.ORDER_CYCLE, tuple(ab_arm_order(r)[0] == 0 for r in range(4)))
+        for r in range(tg.NI_ROUNDS):
+            self.assertEqual(ab_arm_order(r)[0] == 0, tg.ORDER_CYCLE[r % 4])
+        sign = [1 if h else -1 for h in tg.ORDER_CYCLE]
+        self.assertEqual(sum(sign), 0)
+        self.assertEqual(sum(i * x for i, x in enumerate(sign)), 0)
+        # (every batch starts on a cycle boundary and holds 30 whole cycles: 60 rounds each order)
+        for b in range(tg.NI_BATCHES):
+            rounds = range(b * tg.NI_BATCH_LEN, (b + 1) * tg.NI_BATCH_LEN)
+            self.assertEqual(rounds[0] % 4, 0)
+            self.assertEqual(sum(tg.ORDER_CYCLE[r % 4] for r in rounds), 60)
+        # (R600/B20 (m 30), m 45, m 50, partial batches: not whole cycles, or not whole batches)
+        for r_, b_ in ((600, 20), (900, 20), (1000, 20), (2880, 25), (2880, 1)):
+            self.assertTrue(tg.cycle_problems(r_, b_), (r_, b_))
+        with self.assertRaises(ValueError):
+            tg.batch_stats([0.0] * 600, 20)
+
+    def test_the_trend_cutoff(self):
+        self.assertAlmostEqual(tg.t_ppf(1 - 0.01 / (2 * 42), 22), tg.TREND_T_MAX, places=8)
+        import tg_ni_gate as gate
+        self.assertEqual(gate.TREND_T_MAX, tg.TREND_T_MAX)
+        self.assertEqual(gate.BATCHES, tg.NI_BATCHES)
+        try:
+            from scipy import stats
+        except ImportError:
+            return
+        self.assertAlmostEqual(stats.t.ppf(1 - 0.01 / 84, 22), tg.TREND_T_MAX, places=9)
+
+    def test_the_trend_statistic(self):
+        rng = random.Random(7)
+        ys = [rng.gauss(0, 1) + 0.05 * i for i in range(24)]
+        import tg_ni_gate as gate
+        self.assertAlmostEqual(tg.trend_t(ys), gate.slope_t(ys), places=12)
+        try:
+            from scipy import stats
+            fit = stats.linregress(range(24), ys)
+            self.assertAlmostEqual(tg.trend_t(ys), fit.slope / fit.stderr, places=9)
+        except ImportError:
+            pass
+        # (invariant to a shift: the veto reads the trend, not the level)
+        self.assertAlmostEqual(tg.trend_t([y + 3 for y in ys]), tg.trend_t(ys), places=9)
+        # (zero residual variance: 0 for a zero slope, infinity otherwise; non-finite: None)
+        self.assertEqual(tg.trend_t([0.25] * 24), 0.0)
+        self.assertEqual(tg.trend_t([float(i) for i in range(24)]), math.inf)
+        self.assertEqual(tg.trend_t([-float(i) for i in range(24)]), -math.inf)
+        self.assertIsNone(tg.trend_t([0.0] * 23 + [math.nan]))
+        self.assertIsNone(tg.trend_t([0.0, 1.0]))
+        for f in (tg.trend_t, gate.slope_t):
+            self.assertEqual(f([0.25] * 24), 0.0)
+            self.assertIsNone(f([0.0] * 23 + [math.inf]))
+
+
+class Veto(unittest.TestCase):
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+
+    def ni(self, man):
+        return tg.ni_judge(self.root, man, HEAD, reg=REG, check_git=False, rounds=R, batches=B)
+
+    def test_a_null_run_is_not_vetoed(self):
+        v = self.ni(build(self.root))
+        self.assertTrue(v["valid"], v["problems"])
+        self.assertEqual(v["vetoed"], [])
+        self.assertEqual(v["condition2"], "PASS")
+        for cell in v["cells"].values():
+            for metric in tg.CI_METRICS:
+                self.assertEqual(len(cell[metric]["batch_means"]), B)
+                self.assertLessEqual(abs(cell[metric]["trend_t"]), tg.TREND_T_MAX)
+        import tg_ni_gate as gate
+        self.assertEqual(gate.veto(v), ([], []))
+
+    def test_a_trend_invalidates_condition_2_and_keeps_every_estimate(self):
+        for metric in tg.CI_METRICS:
+            with self.subTest(metric):
+                shutil.rmtree(self.root)
+                self.root = tempfile.mkdtemp()
+                v = self.ni(build(self.root, runs=[{"rows": trended("runs", 2, metric, 0.00015)}]))
+                self.assertTrue(v["valid"], v["problems"])  # (admitted: the rows stand)
+                self.assertEqual(len(v["vetoed"]), 1, v["vetoed"])
+                self.assertTrue(v["vetoed"][0].startswith(f"runs/2 {metric} trend t +"), v["vetoed"])
+                self.assertEqual(v["condition2"], "INVALID")
+                self.assertFalse(v["passes"])
+                # (the estimate is the plain mean of every round, not detrended: its upper bound
+                # is still at most 1.02, the cell not failing, and still reported)
+                self.assertEqual(v["failing"], [])
+                self.assertEqual(len(v["cells"]), 21)
+                self.assertIn("upper", v["cells"]["runs/2"][metric])
+                md = tg.ni_markdown(v)
+                self.assertIn("**INVALID** (the trend veto", md)
+                self.assertIn("| runs/2 |", md)
+
+    def test_the_veto_does_not_touch_condition_7(self):
+        # (a wall flag and its confirmation stand whether or not a veto fired: condition 7 unchanged)
+        rows = shard_rows("runs", {(2, "wall"): 1.008}, sd=0.001)
+        rows_t = [dict(r) for r in rows]
+        for r in rows_t:
+            if r["threads"] == 1 and r["arm"] == tg.CI_ARMS[0]:
+                r["cpu"] *= math.exp(0.0005 * r["round"])
+        first = self.ni(build(self.root, runs=[{"rows": rows_t}]))
+        self.assertTrue(first["vetoed"])
+        self.assertEqual(first["flags"], ["runs/2"])
+        other = tempfile.mkdtemp()
+        try:
+            again = tg.ni_judge(other, build(other, run=RUN + 1, runs=[{"rows": rows}]), HEAD, reg=REG,
+                                check_git=False, rounds=R, batches=B)
+        finally:
+            shutil.rmtree(other)
+        self.assertEqual(tg.confirm(first, again)["confirmed"], ["runs/2"])
+
+    def test_the_judges_exit(self):
+        man = build(self.root, runs=[{"rows": trended("runs", 2, "wall", 0.0005)}])
+        mpath = Path(self.root) / "manifest.json"
+        mpath.write_text(json.dumps(man))
+        out = Path(self.root) / "ni"
+        real = tg.ni_judge
+        try:
+            tg.ni_judge = lambda root, m, head: real(root, m, head, reg=REG, check_git=False, rounds=R, batches=B)
+            code = tg.main(["ni", self.root, "--manifest", str(mpath), "--head", HEAD, "--out", str(out)])
+        finally:
+            tg.ni_judge = real
+        self.assertEqual(code, 2, "a vetoed condition 2 is INVALID: exit 2")
+        import tg_ni_gate as gate
+        v = json.loads(Path(str(out) + ".json").read_text())
+        status, line = gate.gate("qualification", v, code)
+        self.assertEqual(status, 1)
+        self.assertIn("INVALID (the trend veto", line)
+
+    def test_the_schedule_is_enforced(self):
+        # (head first in every round: not ab's four-round cycle)
+        rows = shard_rows("runs")
+        fixed = []
+        for i in range(0, len(rows), 2):
+            pair = sorted(rows[i:i + 2], key=lambda r: tg.CI_ARMS.index(r["arm"]))
+            fixed += pair
+        v = self.ni(build(self.root, runs=[{"rows": fixed}]))
+        self.assertFalse(v["valid"])
+        self.assertTrue(any("off ab's four-round schedule" in p and "head first" in p for p in v["problems"]),
+                        v["problems"])
+        # (the arms not back to back: a round's base run moved away from its head run)
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+        rows = shard_rows("runs")
+        rows.append(rows.pop(1))
+        v = self.ni(build(self.root, runs=[{"rows": rows}]))
+        self.assertFalse(v["valid"])
+        self.assertTrue(any("not back to back" in p for p in v["problems"]), v["problems"])
+        # (a design of partial cycles is refused before anything is estimated)
+        shutil.rmtree(self.root)
+        self.root = tempfile.mkdtemp()
+        v = tg.ni_judge(self.root, build(self.root), HEAD, reg=REG, check_git=False, rounds=R, batches=48)
+        self.assertFalse(v["valid"])
+        self.assertIn("not whole 4-round order cycles", "; ".join(v["problems"]))
+
+    def test_the_tails_are_kept(self):
+        # (one round's long settle wait and slow child stay in: the estimate is the mean of all
+        # R paired logs, the same as the mean of the batch means)
+        rows = shard_rows("runs")
+        for r in rows:
+            if r["round"] == 5 and r["threads"] == 4:
+                r["waited_s"] = 41
+                if r["arm"] == tg.CI_ARMS[0]:
+                    r["wall"] *= 3.0
+        v = self.ni(build(self.root, runs=[{"rows": rows}]))
+        self.assertTrue(v["valid"], v["problems"])
+        by = {(x["threads"], x["arm"], x["round"]): x for x in rows}
+        logs = [math.log(by[(4, tg.CI_ARMS[0], i)]["wall"] / by[(4, tg.CI_ARMS[1], i)]["wall"]) for i in range(R)]
+        w = v["cells"]["runs/4"]["wall"]
+        self.assertAlmostEqual(math.log(w["ratio"]), sum(logs) / R, places=12)
+        self.assertAlmostEqual(math.log(w["ratio"]), sum(w["batch_means"]) / B, places=12)
 
 
 if __name__ == "__main__":

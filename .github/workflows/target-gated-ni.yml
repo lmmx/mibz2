@@ -6,7 +6,9 @@
 # each one runner: a corpus a shard, `wikidata` split by thread count. Each shard builds the head
 # and the base, reads its runner back (lscpu, `ab env --facts`, the service core's predicate and
 # dispatch through examples/svc_target.rs: it must be NOT TARGET), and runs its cells paired and
-# interleaved (`ab run`, the two arms alternating, --spread, settle 0.25 s) for ROUNDS rounds.
+# interleaved (`ab run`, the two arms in ab's four-round cycle head/base/base/head, --spread,
+# settle 0.25 s) for ROUNDS rounds: R = 2880 for a qualification (the registration's §2.9; the
+# judge's batches are 24 of 120 rounds, each 30 whole cycles).
 # Every cell is estimated from its own shard's runner alone: nothing is pooled across runners.
 # `aggregate` gathers every shard's artifact, of every attempt, into one manifest with each
 # file's SHA-256 and judges it with `bench/service_tg.py ni`.
@@ -19,7 +21,7 @@
 # pinned to a full commit SHA (the Guardian's D078); cargo builds are --locked.
 #
 # `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze),
-# `pilot` (the registration's §2.8 design pilot: all nine shards, R = 600, never evidence) or
+# `pilot` (the registration's §2.8 design pilot, run once: all nine shards, R = 600, never evidence) or
 # `smoke` (a plumbing check, never evidence). The judge refuses both of the latter. Nothing here retries a
 # shard: a shard that fails, times out or is cancelled after its measurement started is part
 # of the attempt as it is (the registration's §2.5).
@@ -35,9 +37,9 @@ on:
         description: "The base commit (40 hex): the frozen master"
         required: true
       rounds:
-        description: "Rounds a shard (the registration's R)"
+        description: "Rounds a shard (the registration's R: 2880 for a qualification)"
         required: true
-        default: "600"
+        default: "2880"
       toolchain:
         description: "The Rust toolchain, exactly (the registration's, e.g. 1.99.1)"
         required: true
@@ -77,6 +79,10 @@ jobs:
         run: |
           [[ $HEAD_SHA =~ ^[0-9a-f]{40}$ && $BASE_SHA =~ ^[0-9a-f]{40}$ ]] || { echo "::error::head and base must be 40-hex SHAs"; exit 1; }
           [[ $ROUNDS =~ ^[1-9][0-9]*$ ]] || { echo "::error::rounds must be a positive integer"; exit 1; }
+          # (the registered R, §2.9: the judge refuses any other; refused here before any runner starts)
+          if [ "$LABEL" = qualification ] && [ "$ROUNDS" != 2880 ]; then
+            echo "::error::a qualification is R = 2880 rounds (registration §2.9), not $ROUNDS"; exit 1
+          fi
           # (the workflow file run is the head's own: the dispatched ref must be the head)
           [ "$GITHUB_SHA" = "$HEAD_SHA" ] || { echo "::error::dispatched at $GITHUB_SHA, not the head $HEAD_SHA"; exit 1; }
           pick=$(python3 - <<'EOF'
@@ -103,9 +109,11 @@ jobs:
   shard:
     needs: plan
     runs-on: ubuntu-latest
-    # (the registration's §2.2: the slowest shard, `records`, is about 38.9 minutes of rounds at
-    # the slowest CI pace seen plus 15 of setup, about 54; 90 is a per-job ceiling, not a cost)
-    timeout-minutes: 90
+    # (the registration's §2.9: at R = 2880 the slowest shard, `records`, is about 159 minutes of
+    # rounds at the pilot's pace plus 15 of setup, about 174, and about 238 at 1.4x that pace;
+    # 240 is a per-job ceiling, not a cost. A shard that reaches it is a data-bearing failure:
+    # the attempt is consumed and INVALID, and the partition is never changed afterwards)
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
