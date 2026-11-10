@@ -1659,11 +1659,14 @@
     },
     {
       "trigger_comment_id": 6759800960,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+      "source_commit": "795d4d75d130891a143cb2ff377f70e1ab041d54",
+      "report_commit": "d5bb651a90df384e1cf51826831b95f8259439a7",
+      "report_path": "state/reports/two-modes-recheck-6759800960/report.md",
+      "disposition": "REVISE before freeze: gap missing-wall false association, initial treatment, gap timestamp meaning, replay configuration and truthful operational bound. Accept 0.25 s prospectively; require full revised DRY."
     }
   ],
   "active_delegations": [],
