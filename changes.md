@@ -1,5 +1,10 @@
 # Changes since the last version
 
+- 2026-11-10, through [6761671844](https://github.com/lmmx/mibz2/pull/145#issuecomment-6761671844): #337 and #339 counted further team-path instruction reductions, each FAIL-MEASUREMENT; port 2 missed its prediction and #339's interval was corrected. D089 permits a separate combined diagnostic in draft, not retrospective qualification.
+- 2026-11-10: #336 harness schema and #338 feature-gated T2 instrument merged; the walk-stats CI job is informational and its no-feature speed signal unexplained.
+- 2026-11-10: #316's §2.10 inference was refuted and redirected to independent dispatches; #318 remains REVISE after a missing-treatment admission case.
+- 2026-11-10: the claim that small table and parallel scanner must be one proposal was withdrawn; the width intervention is under review. Production counts/STEPS contracts were priced out, with a placement diagnostic drafted.
+
 - 2026-11-10, through [6760215954](https://github.com/lmmx/mibz2/pull/145#issuecomment-6760215954): #326's valid whole-decoder run and merge established a small-versus-large configuration contrast; the inversion-only load law and all derived decoder prices were withdrawn.
 - 2026-11-10: #335's count was withdrawn after a duplicate-profile parser defect, then restored by independent archive recount; its registered condition 3 remains FAIL-MEASUREMENT. A further team-build port is under construction.
 - 2026-11-10: D084 upheld #334's failed balance measurement; B5 passed, but the executed-kernel screen and native diagnostic remain REVISE after new counterexamples.
