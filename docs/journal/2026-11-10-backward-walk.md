@@ -89,3 +89,29 @@ beyond noise, so PERFORMANCE-POLICY rule 1 fails. #324 ships alone.
 - **The lesson is mine:** I shipped an estimator without measuring it against the truth on
   the primary corpus. Checking the admitted set against #324's, block by block, would have
   taken a minute and caught it before CI did.
+
+## The admission rule alone, as its own patch
+
+`2026-11-10-backward-walk/admission-only.diff.txt`: against #324's head e88c0631, to be
+re-cut against its merged head if that differs. Two files: `runs::takes_runs` (the bound and
+a sampled run-symbol share of at least one in 32) and `tests/admission.rs`. No `build_back`,
+no `unsafe`. It goes by the maintenance route on the Coordinator's three conditions: a
+neutral bench, a deterministic test, green CI.
+
+**The test** (`tests/admission.rs`, three cases, on data the test makes itself):
+- random bytes of 1,000, 20,000, 200,000 and 440,000 bytes each compress to one block that
+  the bound alone admits, and each keeps the column; so does every block of 2 MB of random
+  bytes;
+- the crate's text corpus and generated entity records (lines of JSON in a Wikidata dump's
+  shape) take the records' path in every block, and in their first 5,000, 60,000 and 300,000
+  bytes;
+- on the crate's six corpora no block past the bound goes by records, and every block within
+  it does, outside `random` and `records`.
+
+**It fails on #324's rule as it should:** with `takes_runs` put back to the bound alone, the
+first case fails ("1000 random bytes went by records"). The tests carry no Wikidata, as the
+crate's tests never do; the entity records stand in for its shape, and the real sample's 233
+full blocks were checked here by hand (run-symbol share 0.104 at the least).
+
+**Checked:** `cargo test --release` passes in every suite (exit 0); `fmt` and
+`clippy --all-targets` clean.
