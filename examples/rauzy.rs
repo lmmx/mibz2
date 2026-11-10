@@ -22,7 +22,8 @@
 //! step. The block is then written by expanding it, each rule's second and later occurrences
 //! copied from where the first was written.
 //!
-//! **Three implementations of the same steps**, each checked against `bwt::walk` on every block:
+//! **Three implementations of the induction** (the cells kernel on the letters with the walk's
+//! row cut out: a few cells more), each checked against `bwt::walk` on every block:
 //! - the reference (`letters`, `induce`, `write_block`): safe, counted, slow;
 //! - the list kernel (`Kernel::link`, `induce`, `write`): both orders as linked lists, a step
 //!   without a data-dependent branch. Its clock is the entry's first (1.276 of production);

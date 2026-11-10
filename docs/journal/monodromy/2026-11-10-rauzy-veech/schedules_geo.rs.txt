@@ -1,6 +1,14 @@
-//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (section 5.6). Written by a
-//! sub-agent; not built by the crate. To run:
-//!   cp THIS examples/geo.rs && cargo run --release --example geo -- corpora/wikidata.bz2 12 65536
+//! Beside docs/journal/monodromy/2026-11-10-rauzy-veech.md (sections 5.6 and 8, 1a). Written
+//! by a sub-agent; the policies "weak_*" (a step told free from links alone: the far end of
+//! its landing place must be a coincidence) and the counters were added after. Not built by
+//! the crate. To run (EVERY = 24: the entry's ten blocks; 1: all 233):
+//!   cp THIS examples/geo.rs
+//!   cargo run --release --example geo -- corpora/wikidata.bz2 24 65536 [POLICIES]
+//! POLICIES: comma-separated numbers (0 reducing_then_right, 1 reducing_then_largest_cell,
+//! 4 largest_cell, 6 right_end, 10 weak_then_right, 11 weak_then_largest_cell, ...); all if
+//! absent. A policy's line is [steps, steps that were not free, ends of segments tested,
+//! tests that found a free step, ends set aside to wait, steps taken where the step before
+//! left off, paid steps].
 //!
 //! Route "cartesian", schedules with geometry: one-cell right-handed Rauzy steps at any
 //! coincidence, the letters kept by fixed row coordinates (rows are never renumbered: a
@@ -54,6 +62,7 @@ struct Geo<'a> {
     left: usize,
     steps: u64,
     not_reducing: u64,
+    weak: bool,
     pw: &'a [u64],
     /// rows that became a boundary of one tiling or a coincidence in the last step
     fresh: Vec<u32>,
@@ -80,6 +89,7 @@ impl<'a> Geo<'a> {
             left: r,
             steps: 0,
             not_reducing: 0,
+            weak: false,
             pw,
             fresh: Vec::new(),
         };
@@ -110,9 +120,9 @@ impl<'a> Geo<'a> {
         let (ai, bi) = (a as usize, b as usize);
         let (la, lb) = (self.lam[ai], self.lam[bi]);
         Some(if la > lb {
-            (self.top_end.contains_key(&(self.bs[ai] + la - lb)), lb)
+            (self.top_end.contains_key(&(self.bs[ai] + la - lb)) && (!self.weak || self.top_end.contains_key(&(self.bs[ai] + la))), lb)
         } else if la < lb {
-            (self.bot_end.contains_key(&(self.ts[bi] + lb - la)), la)
+            (self.bot_end.contains_key(&(self.ts[bi] + lb - la)) && (!self.weak || self.bot_end.contains_key(&(self.ts[bi] + lb))), la)
         } else {
             (true, la)
         })
@@ -181,8 +191,14 @@ impl<'a> Geo<'a> {
     }
 }
 
-fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64) {
+fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n: usize) -> (u64, u64, u64, [u64; 5]) {
     let mut g = Geo::new(lam, byte, pw);
+    g.weak = policy >= 10;
+    let policy = policy % 10;
+    // [tests of a segment end, tests that found a free step, ends parked waiting, steps taken
+    //  where the step before left off (the same segment, its surviving boundary), paid steps]
+    let mut cnt = [0u64; 5];
+    let mut last_q = u32::MAX;
     // the coincidences
     let mut coin: BTreeSet<u32> = BTreeSet::new();
     let mut bounds: HashSet<u32> = HashSet::new();
@@ -229,17 +245,23 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
                 }
                 continue;
             }
+            cnt[0] += 1;
             match g.reducing(c) {
                 Some((true, _)) => {
+                    cnt[1] += 1;
                     pick = Some(c);
                     break;
                 }
                 Some((false, _)) => {
+                    cnt[2] += 1;
                     let p = g.landing(c).unwrap();
                     waiting.entry(p).or_default().push(c);
                 }
                 None => {}
             }
+        }
+        if pick.is_none() {
+            cnt[4] += 1;
         }
         let c = match pick {
             Some(c) => c,
@@ -260,7 +282,9 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
                 },
             },
         };
+        cnt[3] += (c == last_q) as u64;
         g.step(c);
+        last_q = g.fresh[0];
         coin.remove(&c);
         let fresh = g.fresh.clone();
         for &p in &fresh {
@@ -281,7 +305,7 @@ fn run(policy: u32, lam: &[u32], byte: &[u8], pw: &[u64], rots: &HashSet<u64>, n
     let a = *g.top_end.values().next().unwrap() as usize;
     assert!(g.top_end.len() == 1 && g.len[a] as usize == n && rots.contains(&g.hash[a]), "policy {policy}: not a rotation of the block");
     assert!(g.steps == floor + g.not_reducing);
-    (g.steps, g.not_reducing, floor)
+    (g.steps, g.not_reducing, floor, cnt)
 }
 
 fn main() {
@@ -330,15 +354,15 @@ fn main() {
                 }
                 let r = lam.len();
                 let mut out = format!("{{\"block\":{i},\"n\":{n},\"runs\":{r}");
-                for (name, p) in [("reducing_then_right", 0u32), ("reducing_then_largest_cell", 1), ("reducing_then_smallest_cell", 2), ("reducing_then_left", 3), ("largest_cell", 4), ("equal_then_largest_cell", 5), ("right_end", 6)] {
+                for (name, p) in [("reducing_then_right", 0u32), ("reducing_then_largest_cell", 1), ("reducing_then_smallest_cell", 2), ("reducing_then_left", 3), ("largest_cell", 4), ("equal_then_largest_cell", 5), ("right_end", 6), ("weak_then_right", 10), ("weak_then_largest_cell", 11)] {
                     if only.as_ref().is_some_and(|v| !v.contains(&p)) {
                         continue;
                     }
-                    let (steps, bad, floor) = run(p, &lam, &byte, &pw, &rots, n);
+                    let (steps, bad, floor, cnt) = run(p, &lam, &byte, &pw, &rots, n);
                     if !out.contains("floor") {
                         out += &format!(",\"floor\":{floor}");
                     }
-                    out += &format!(",\"{name}\":[{steps},{bad}]");
+                    out += &format!(",\"{name}\":[{steps},{bad},{},{},{},{},{}]", cnt[0], cnt[1], cnt[2], cnt[3], cnt[4]);
                 }
                 println!("{out}}}");
             }
