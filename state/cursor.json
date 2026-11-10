@@ -139,9 +139,10 @@
     6756614616,
     6756992499,
     6757065549,
-    6757210413
+    6757210413,
+    6757368708
   ],
-  "last_processed_comment_id": 6757210413,
+  "last_processed_comment_id": 6757368708,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1499,14 +1500,18 @@
     },
     {
       "trigger_comment_id": 6757368708,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "3588d35dc9b2f2f4d4709cf37c4a4bee2afa9dff",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "cf7eae3f9997dc5fc1cbc8b47ea4ac7b60c309ea",
       "report_path": "state/reports/two-modes-discriminator-6757368708/report.md",
-      "disposition": "REVISE PR318 before freeze: elapsed-time probe estimator, sleeping-sibling false H2, chunked-input false alternation, missing-clock false H1, replay admission, bounded passes, concatenation identity and accurate DRY record. Retain bounded diagnostic; compatibility rather than causal identification. Seven implementer questions answered."
+      "disposition": "REVISE PR318 before freeze: elapsed-time probe estimator, sleeping-sibling false H2, chunked-input false alternation, missing-clock false H1, replay admission, bounded passes, concatenation identity and accurate DRY record. Retain bounded diagnostic; compatibility rather than causal identification. Seven implementer questions answered.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6757560564,
+      "publication_verified": true,
+      "verification_note": "Exact body/author/#145 readback and role-aware routing pass; pinned coord.verify reports only its hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
