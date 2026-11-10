@@ -1176,7 +1176,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt. Migration head and exact manifest digest verified. Source and archived evidence review only; no implementation or timing.",
+      "progress": "Both raw archives verified; admission replay and CI ratios reproduced. Finishing complete cost accounting and one diagnostic proposal.",
       "report_path": "state/records/reviews/inbox-6782112235/report.md"
     }
   ],
