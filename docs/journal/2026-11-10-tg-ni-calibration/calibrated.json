@@ -1,0 +1,200 @@
+{
+ "white (f 0)": {
+  "size_nominal": 0.05038,
+  "crit_5pct": 1.7195816432440667,
+  "power_nominal": {
+   "lower": 0.9913,
+   "min": 0.9913,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.991475,
+   "min": 0.991475,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "ar30, max point f_hat 0.085": {
+  "size_nominal": 0.071445,
+  "crit_5pct": 1.9384700490970694,
+  "power_nominal": {
+   "lower": 0.7366,
+   "min": 0.7366,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.67135,
+   "min": 0.67135,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "ar100, max point f_hat 0.065": {
+  "size_nominal": 0.133155,
+  "crit_5pct": 2.5958066530465564,
+  "power_nominal": {
+   "lower": 0.5734999999999999,
+   "min": 0.58095,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.3138500000000001,
+   "min": 0.36035,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "ar300, max point f_hat 0.09": {
+  "size_nominal": 0.24417,
+  "crit_5pct": 4.284148879344525,
+  "power_nominal": {
+   "lower": 0.0,
+   "min": 0.496325,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.0,
+   "min": 0.1554,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "ar1000, max point f_hat 0.19": {
+  "size_nominal": 0.361165,
+  "crit_5pct": 8.731295083945227,
+  "power_nominal": {
+   "lower": 0.0,
+   "min": 0.469425,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.0,
+   "min": 0.082,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "ar3000, max point f_hat 0.39": {
+  "size_nominal": 0.42471,
+  "crit_5pct": 16.917755719947728,
+  "power_nominal": {
+   "lower": 0.0,
+   "min": 0.474775,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.0,
+   "min": 0.064075,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "fgn0.7, max point f_hat 1.0": {
+  "size_nominal": 0.20123,
+  "crit_5pct": 3.4616063259018053,
+  "power_nominal": {
+   "lower": 0.6666999999999998,
+   "min": 0.671275,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.28307499999999985,
+   "min": 0.3439,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "fgn0.9, max point f_hat 0.31": {
+  "size_nominal": 0.365325,
+  "crit_5pct": 8.480688356577042,
+  "power_nominal": {
+   "lower": 0.0,
+   "min": 0.5233,
+   "limiting": "pattern/2/wall"
+  },
+  "power_calibrated": {
+   "lower": 0.0,
+   "min": 0.107875,
+   "limiting": "pattern/2/wall"
+  }
+ },
+ "own_f_hat_power": {
+  "ar30": {
+   "nominal": {
+    "lower": 0.99055,
+    "min": 0.99055,
+    "limiting": "pattern/2/wall"
+   },
+   "calibrated": {
+    "lower": 0.98445,
+    "min": 0.98445,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "ar100": {
+   "nominal": {
+    "lower": 0.9908,
+    "min": 0.9908,
+    "limiting": "pattern/2/wall"
+   },
+   "calibrated": {
+    "lower": 0.9294749999999999,
+    "min": 0.9295,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "ar300": {
+   "nominal": {
+    "lower": 0.9863,
+    "min": 0.99135,
+    "limiting": "pattern/2/wall"
+   },
+   "calibrated": {
+    "lower": 0.315225,
+    "min": 0.4713,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "ar1000": {
+   "nominal": {
+    "lower": 0.31167500000000015,
+    "min": 0.868125,
+    "limiting": "pattern/4/cpu"
+   },
+   "calibrated": {
+    "lower": 0.0,
+    "min": 0.002125,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "ar3000": {
+   "nominal": {
+    "lower": 0.0,
+    "min": 0.693425,
+    "limiting": "pattern/4/cpu"
+   },
+   "calibrated": {
+    "lower": 0.0,
+    "min": 0.0,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "fgn0.7": {
+   "nominal": {
+    "lower": 0.991425,
+    "min": 0.991425,
+    "limiting": "pattern/2/wall"
+   },
+   "calibrated": {
+    "lower": 0.7434499999999999,
+    "min": 0.743525,
+    "limiting": "pattern/2/wall"
+   }
+  },
+  "fgn0.9": {
+   "nominal": {
+    "lower": 0.877725,
+    "min": 0.96415,
+    "limiting": "pattern/4/cpu"
+   },
+   "calibrated": {
+    "lower": 0.0,
+    "min": 0.0023,
+    "limiting": "pattern/2/wall"
+   }
+  }
+ }
+}

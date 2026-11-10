@@ -5,7 +5,10 @@
 - under D078 (tooling via #319);
 - under the Researcher's REVISE, 6756808726 (§§2.3, 2.4, 2.8, 3.1);
 - under the Researcher's REVIEW of the pilot, 6758898817 (§2.9 added: the final design; §§2.2–2.6,
-  6, 7, 9 and 10 aligned to it).
+  6, 7, 9 and 10 aligned to it);
+- under the Researcher's REVISE 6759371719 (§2.9: the chronology admitted before grouping, the
+  estimand's conditioning, the inference calibration (DRAFT), `records`' 300-minute ceiling;
+  §2.4: the nominal level qualified).
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -193,12 +196,13 @@ Nine shards, fixed now. Each is one runner and one job:
   fat LTO, no cache; the corpus; the read-back).
 - **The timeout (at R = 600, superseded by §2.9):** the slowest shard (`records`) was then about
   54 minutes at the slowest pace seen, under a 90-minute timeout. **At the final R = 2880 the
-  job timeout is 240 minutes** (§2.9).
+  job timeout is 300 minutes for `records` and 240 for the rest** (§2.9).
 - **Accounting (D078 §3), at R = 600, superseded by §2.9:** one dispatch was about **293–412
   shard runner-minutes**. **At R = 2880: about 1098** including setup, 1483 at 1.4× pace (§2.9).
   - **On top of that:** the plan and aggregate jobs' few minutes, and, if a wall cell is flagged,
     one harm-confirmation dispatch of the same size (§2.6).
-  - **The timeout** (240 minutes, §2.9) is a per-job ceiling, not the expected cost.
+  - **The timeouts** (`records` 300, the rest 240 minutes, §2.9) are per-job ceilings, not the
+    expected cost.
   - **What it uses:** standard GitHub-hosted compute only. It is free for this public
     repository. No larger runners, no paid storage, no new credentials.
   - **Artifacts:** a shard's is a few MB, the binaries excluded. Evidence is preserved durably
@@ -327,12 +331,15 @@ batch whole cycles from a cycle boundary (§2.9: m 120, 30 cycles). R900/B20 (m 
 ### 2.4 Power, size and R: what the pilot must settle
 
 - **Size:** at a cell's null boundary (true ratio 1.02), the test passes that cell with
-  probability 0.05 only if the batch means are iid normal. Under dependence it can be
-  anticonservative (§2.3). Correct uncertainty is kept apart from apparent power.
+  probability 0.05 only if the batch means are iid normal: 5% is a nominal level, conditional on
+  that model. Under dependence it can be anticonservative (§2.3; calibrated in §2.9). Correct
+  uncertainty is kept apart from apparent power.
 - **Power:** at a true ratio of 1.00, which is inside the alternative. Low power at R = 10 is
   **conditionally low power at R = 10** under every history-based variance input. It does not
   make passing impossible.
 - **The intersection-union test needs no independence across cells.** The all-pass power does.
+  Nor does it repair a constituent test's size: the family's level is at most the largest
+  constituent's, so it is nominal 5% only where each cell's test is.
   Two summaries are given:
   - the dependence-free lower bound, max(0, 1 − Σ misses);
   - the product, which assumes independent cells and is not a bound.
@@ -635,7 +642,7 @@ This section supersedes the open values of §§2.2–2.5; where they differ, it 
 | trend veto | frozen numerically (below) |
 | rows | **every row kept**: no trimming, no robust estimator (below) |
 | shards | **the same nine** (§2.2); nothing pooled across runners |
-| job timeout | **240 minutes**; a timeout consumes the attempt (below) |
+| job timeout | **`records` 300 minutes, every other shard 240**, frozen prospectively; a timeout consumes the attempt (below) |
 | condition 7 | **retained unchanged** (below) |
 
 **The tooling enforces it** (`bench/service_tg.py`, `bench/tg_ni_gate.py`, the workflow; tested in
@@ -643,10 +650,22 @@ This section supersedes the open values of §§2.2–2.5; where they differ, it 
 - `NI_ROUNDS = 2880`, `NI_BATCHES = 24`; asserted at import: 2880 = 24 × 120 and 120 = 30 × 4.
 - `cycle_problems` refuses any R and B whose batches are not whole four-round cycles (R600/B20,
   m 30, is refused); `batch_stats` raises on one; the judge reports it INVALID.
-- The structural admission (qualification, pilot and smoke alike) refuses a shard whose rows are
-  off the schedule: in each round and thread count the two arms back to back, the head first
-  exactly in rounds ≡ 0, 3 (mod 4). The tests check `ORDER_CYCLE` against `ab`'s `arm_order`,
-  restated, over all 2880 rounds.
+- **The chronology, before any grouping** (the Researcher's REVIEW 6759371719 §1): the
+  structural admission (qualification, pilot and smoke alike) compares each shard's rows, in file
+  order, with the registered traversal (`service_tg.traversal`), and refuses any difference;
+  it never sorts or repairs them. The traversal is rounds 0 … R − 1; in each round, the shard's
+  thread counts in their registered order; at each, the two arms in `ORDER_CYCLE`'s order,
+  back to back, head first exactly in rounds ≡ 0, 3 (mod 4). Batches are therefore consecutive
+  in execution, not merely in round labels, and the trend veto reads execution order.
+  - **Negative controls** (`bench/test_service_tg.py`, `Chronology`), each a complete artifact
+    with regenerated hashes, each refused as INVALID and failed by the gate: a whole-round
+    permutation, a whole-cycle permutation, reversed rounds, thread order 4, 2, 1, the head
+    first in every round, and a base run moved away from its head.
+  - **The controls that pass:** a clean R96/B24 artifact, and a clean one at the default
+    R2880/B24. The Researcher's shuffled-round witness at R2880/B24, with increasing
+    observation times, is now INVALID.
+  - **The pilot's rows** (run 42748681243, all nine shards) are exactly the traversal.
+  - The tests check `ORDER_CYCLE` against `ab`'s `arm_order`, restated, over all 2880 rounds.
 - The workflow's plan job refuses a `qualification` dispatch whose `rounds` isn't 2880, before
   any runner starts. Its default is 2880. The pilot's analysis keeps its own R 600
   (`tg_ni_pilot.PILOT_ROUNDS`), so it stays replayable.
@@ -704,7 +723,8 @@ This section supersedes the open values of §§2.2–2.5; where they differ, it 
   The estimand stays the geometric-mean head/base time, on the drawn runner, under this
   idle-gated harness. It is not request latency including the harness's waiting.
 
-**A timeout consumes the attempt.** A shard that reaches 240 minutes after its measurement
+**A timeout consumes the attempt.** A shard that reaches its ceiling (`records` 300 minutes, the
+rest 240; the Researcher's REVIEW 6759371719 §4, frozen prospectively) after its measurement
 started is a data-bearing failure (§2.5): the run is INVALID and the attempt is spent. No rescue
 by dropping or dividing cells, choosing another model, adding rounds or repartitioning. The
 partition stays the nine shards: repartitioning would alter cache, thermal and placement
@@ -732,7 +752,7 @@ histories, lose the pilot's variance transfer and redraw the CPU models.
   above in the table to five decimals, the cutoff 4.380630866588199, and pattern/1's LRV growth (below).
   `bench/test_service_tg.py` pins the limiting cell's two powers in `service_tg_power`.
 
-**The residual batch-memory assumption, and its defence.**
+**The residual batch-memory assumption, as first stated** (superseded in part by the calibration below).
 
 *The assumption, stated:* after aggregation over complete order cycles, the residual process has
 a stable mean, a finite long-run variance, and memory short enough that its 24 batch means of
@@ -776,11 +796,118 @@ Monte Carlo SE about 0.05–0.08 points. These are mathematical scenarios, not f
 correlations. More rounds, the veto or a doubled planning variance repair none of it: none is an
 inferential correction to an invalid variance model.
 
-*What follows:* the bound is offered as an approximate batch-means bound under the stated
-assumption, with its sensitivity, not as certified 95% coverage. The final review judges the
-assumption explicitly against the full menu and the mechanism; the chosen m is not its proof. If
-it can't be defended, this candidate is not freeze-ready, and the inference is revised
-prospectively, never by running and selecting the analysis that passes.
+**The estimand: what is conditioned on, what is sampled** (DRAFT, for the Researcher's judgement).
+- **Conditioned on:** the runner the shard drew (its CPU model, host, image, kernel, recorded),
+  and any state constant over the job: a job-level offset of the paired log ratio. A constant
+  offset is part of the cell's estimand, so it is not error, and centring hiding it costs nothing.
+- **Sampled:** every within-job variation of the paired log ratio around that job-level value,
+  at every time scale shorter than the job: host contention, hypervisor scheduling, neighbours,
+  thermal and cache state, which quiet intervals the idle gate selects. A repeated job on the
+  same runner would draw a different path of these, so they are error, and the bound must
+  cover them. A fresh child resets process state only, not any of these.
+- **Not chosen:** conditioning on the realised path as well (the claim "the ratio during this
+  2.5–5 hour window"). It would make slow drift part of the estimand and the batch-means bound
+  conservative, but the claim would describe one window, not the runner. It is a prospective
+  alternative for the Guardian, not this registration's estimand.
+
+**The inference calibration** (DRAFT, for the Researcher's judgement; not accepted).
+Source: `docs/journal/2026-11-10-tg-ni-calibration/` (`calibrate.py`, `calib2.py`, their
+outputs). Its only input is the pilot's mean-free `menu.json` (run 42748681243, at e4f1d8be,
+SHA-256 a74a3f9e…0ce6): per cell, LRV_m at m 10, 20, 30, 48 and 60. All five are
+order-balanced (even lengths from even starts), so the deterministic order term is not in them.
+No qualification data, and no candidate mean, ratio or bound.
+
+*For a stationary sequence of B batch means,* Var(mean) = v/B · [1 + 2 Σ_{h=1}^{B−1} (1 − h/B) ρ_h].
+sd(batch means)/√B estimates only the first term. A small ρ_1 does not bound the sum: many
+small positive correlations, or a slow component, can dominate it.
+
+*The class, fixed before it was computed:* a round-level residual X = √(1 − f) W + √f S, of unit
+variance. W is white. S is one slow, unit-variance Gaussian component of one shape:
+- AR(1) with time constant τ = 10, 30, 100, 300, 1000 or 3000 rounds (about 0.3 to 100 minutes
+  at 2 s a round). τ = 3000 exceeds the job, so it is close to a within-job random walk;
+- fractional Gaussian noise (long memory), Hurst H = 0.6, 0.7, 0.8 or 0.9.
+
+The slow share f ∈ [0, 1] is set per cell and shape from the pilot alone:
+- **The fit:** weighted least squares of log(LRV_m / LRV_10), m 20, 30, 48, 60, against the
+  estimator's exact finite-sample expectation under the model. Centring's bias, which hides
+  slow components from the menu, is modelled, not ignored.
+- **Its upper bound:** one-sided 95%, by parametric bootstrap (4000 series of 600 rounds a grid
+  point).
+- **Boundary size:** simulated at R2880/B24 from the exact covariance of the 24 batch means of
+  120 rounds, 100,000 draws (Monte Carlo SE at most 0.16 points).
+
+*What the pilot shows:*
+- **The median cell looks white.** LRV_60/LRV_10 has median 0.946 over the 42 cells, and f̂ = 0
+  in the median cell under every shape. 14–17 of 42 cells have f̂ > 0.
+- **Some cells don't.** Under white noise alone, the chance of growth at least the observed is
+  0.002 for pattern/1/wall (2.515×), 0.0048 for random/2/cpu, 0.0053 for pattern/1/cpu and
+  0.0118 for pattern/4/cpu. 4 of 42 cells fall below 0.05, against about 2.1 expected by
+  chance, the cells correlated (wall and CPU nearly duplicate). Pattern/1 is not plausibly
+  white.
+- **The pilot cannot exclude slow shares that matter.** One 600-round run has little power at
+  time scales near its own length. So even the median cell's 95% upper bound allows a size
+  near the most extreme cell's point estimate.
+
+| shape | largest f̂ (a cell's) | median / largest 95% upper f | boundary size at the largest f̂ | at the median upper f | at the largest upper f |
+|---|--:|--:|--:|--:|--:|
+| AR τ 10 | 0.340 | 0.175 / 1.0 | 5.65% | 5.58% | 5.71% |
+| AR τ 30 | 0.085 | 0.050 / 0.45 | 7.03% | 6.86% | 7.40% |
+| AR τ 100 | 0.065 | 0.050 / 0.275 | 13.48% | 13.00% | 14.23% |
+| AR τ 300 | 0.090 | 0.100 / 0.40 | 24.67% | 24.67% | 25.39% |
+| AR τ 1000 | 0.190 | 0.225 / 0.65 | 35.90% | 35.98% | 36.52% |
+| AR τ 3000 | 0.390 | 0.475 / 0.825 | 42.23% | 42.34% | 42.44% |
+| fGn H 0.6 | 1.0 | 1.0 / 1.0 | 11.73% | 11.73% | 11.73% |
+| fGn H 0.7 | 1.0 | 1.0 / 1.0 | 20.24% | 20.24% | 20.24% |
+| fGn H 0.8 | 0.66 | 0.475 / 1.0 | 28.46% | 27.85% | 28.46% |
+| fGn H 0.9 | 0.31 | 0.25 / 1.0 | 36.08% | 36.32% | 37.22% |
+
+Nominal 5% throughout; white noise gives 5.04%. The trend veto is not included here: in the
+batch AR(1) sensitivity above it lowered size by 0.002–0.1 points, and a slow component is what
+it would most often catch, so it would remove a little more here. That is an expectation, not a
+calibration of the combined procedure.
+
+*The permitted size approximation, and the power it leaves:* the largest boundary rejection the
+pilot-consistent class allows is about **42%** (AR τ 3000, at a share one cell's point estimate
+reaches; long memory H 0.9: 36%). Recalibrating the critical value to hold 5% across the class
+costs the power. Each row's class member is the shape at the largest f̂. Power is at 1.005, the
+all-cell lower bound, each cell scaled by its own LRV_10:
+
+| class member | boundary size, t(0.95, 23) = 1.714 | critical value for 5% | power: every cell at the member, nominal / 5%-calibrated | power: each cell at its own f̂, nominal / calibrated |
+|---|--:|--:|--:|--:|
+| white | 5.04% | 1.720 | 0.991 / 0.991 | — |
+| AR τ 30, f 0.085 | 7.14% | 1.938 | 0.737 / 0.671 | 0.991 / 0.984 |
+| AR τ 100, f 0.065 | 13.32% | 2.596 | 0.574 / 0.314 | 0.991 / 0.929 |
+| AR τ 300, f 0.09 | 24.42% | 4.284 | 0 / 0 | 0.986 / 0.315 |
+| AR τ 1000, f 0.19 | 36.12% | 8.731 | 0 / 0 | 0.312 / 0 |
+| AR τ 3000, f 0.39 | 42.47% | 16.92 | 0 / 0 | 0 / 0 |
+| fGn H 0.7, f 1.0 | 20.12% | 3.462 | 0.667 / 0.283 | 0.991 / 0.743 |
+| fGn H 0.9, f 0.31 | 36.53% | 8.481 | 0 / 0 | 0.878 / 0 |
+
+(The white row's 0.991 differs from §2.9's 0.98548 only by its scale: LRV_10 here, the menu's
+largest LRV there.)
+
+*The result, stated plainly:*
+- **No class consistent with the pilot keeps the boundary size within a defensible bound at
+  R2880/B24 when slow components are included.** Slow shares the pilot estimates in some cells,
+  and cannot exclude in the median cell, give 13–42% at memory of 100 rounds (about 3 minutes)
+  or more.
+- **The only class that holds size near nominal is short memory:** τ ≤ 30 rounds, about a
+  minute, 7.0–7.4%. With the critical value raised to 1.938, the power is 0.984 at each cell's
+  own f̂. But the pilot does not justify that restriction; adopting it would be an assumption,
+  not a finding.
+- **Recalibrating against the slow class** drives power at 1.005 to near 0. Neither more rounds
+  in the same job nor more batches repairs it: a slow component within one job is not
+  averaged away inside that job.
+- **This goes to the Guardian as a prospective C6 risk-policy question,** before any freeze. It
+  is a result, not a rule changed after data. Options (none taken here):
+  - an explicit approximate-inference policy naming the class it assumes (for example memory
+    ≤ 30 rounds), its permitted size (about 7.4%) and the critical value;
+  - a design that samples the slow component across independent units, such as several
+    independent dispatches a cell, judged by between-dispatch variance, which needs its own
+    power and cost;
+  - the narrower, window-conditioned estimand above.
+- Nothing here changes a threshold, R, B or the judge: `TREND_T_MAX`, t(0.95, 23) and 1.02 stand
+  as frozen candidates.
 
 **NI power is not adoption power: condition 7 retained, unchanged.**
 - The figures above are condition 2's. **Condition 7's CI criterion is retained explicitly and
@@ -815,11 +942,19 @@ it):
 | all | 200.6 | 963.0 | **1098.0** | 1483.3 |
 
 - **About 1098 runner-minutes per attempt** including the setup allowances, the plan and
-  aggregate jobs excluded; 1483 at 1.4× pace. Job ceilings total 2160 shard-minutes a dispatch.
-  A harm-confirmation dispatch roughly doubles it.
-- **`records` binds:** 174 minutes, 238 at 1.4× pace, within 240. A pace above about 1.415×
-  the pilot's on `records` (225/159) times out, and that is INVALID (above). This is a
-  transparent sensitivity, not a future-tail quantile.
+  aggregate jobs excluded; 1483 at 1.4× pace. The ceilings change no expected work.
+- **The ceilings:** `records` 300 minutes, the other eight 240: **2220 shard-minutes** a dispatch
+  at most (2160 with `records` at 240), and up to another 2220 for a harm-confirmation dispatch.
+  Within GitHub's six-hour hosted-job limit: no larger runner or new infrastructure.
+- **The pace margins** (ceiling − 15 setup, over the R2880 measurement at the pilot's pace):
+  `records` (300 − 15)/158.96 = **1.793×** (it was 1.415× at 240); `text`, the slowest of the
+  rest, (240 − 15)/143.84 = 1.564×; `onebyte` 1.794×; every other shard more. A pace beyond a
+  shard's margin times out, and that is INVALID (above). This is a transparent sensitivity,
+  not a timeout probability.
+- **Why not split `records`:** dividing its thread counts across runners changes their
+  interleaving, cache and placement history and their model draws, so the pilot's variances
+  no longer transfer; dividing a cell's rounds across runners breaks the within-runner
+  estimand. The ceiling alone changes.
 - Standard GitHub-hosted compute, free for this public repository; no new infrastructure, larger
   runners or spending.
 
@@ -1171,14 +1306,16 @@ measured.
 - **In all, about 35–40 minutes on the i9,** within 45. The settle gate's waits, if the machine
   is busy, add 20 s each.
 - **CI (§2.9):** nine parallel hosted runners at R = 2880, the slowest shard (`records`) about
-  174 minutes at the pilot's pace, 238 at 1.4×, under a 240-minute ceiling. About **1098
+  174 minutes at the pilot's pace, 238 at 1.4×, under its own 300-minute ceiling (1.793×
+  margin; the other shards 240). About **1098
   runner-minutes** an attempt, setup included (1483 at 1.4× pace); a harm confirmation roughly
   doubles it.
 
 ## 10. Open before a freeze
 
 1. **The final design (§2.9):** from the pilot (run 42748681243), R2880/m120/B24, the schedule's
-   cycles enforced, the trend veto, all rows kept, the same nine shards, a 240-minute timeout,
+   cycles and the full chronology enforced, the trend veto, all rows kept, the same nine shards,
+   ceilings of 300 minutes (`records`) and 240,
    condition 7 retained. **It needs the Researcher's review,** above all of the residual
    batch-memory assumption; qualification-freeze PROCEED is withheld until then.
    - **The tooling delta is on this branch only.** `bench/service_tg.py`, `bench/tg_ni_gate.py`,

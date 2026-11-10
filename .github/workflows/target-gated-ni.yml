@@ -88,8 +88,10 @@ jobs:
           pick=$(python3 - <<'EOF'
           import json, os, sys
           ids = ["onebyte", "pattern", "random", "records", "runs", "text"]
-          all = [{"id": c, "corpus": c, "threads": "1,2,4"} for c in ids]
-          all += [{"id": f"wikidata-{t}", "corpus": "wikidata", "threads": t} for t in ("1", "2", "4")]
+          # (each shard's job ceiling in minutes, frozen with the design, §2.9: records 300, the rest 240)
+          ceiling = {"records": 300}
+          all = [{"id": c, "corpus": c, "threads": "1,2,4", "timeout": ceiling.get(c, 240)} for c in ids]
+          all += [{"id": f"wikidata-{t}", "corpus": "wikidata", "threads": t, "timeout": 240} for t in ("1", "2", "4")]
           want = os.environ["SHARDS"]
           if want == "all":
               print(json.dumps(all))
@@ -109,11 +111,14 @@ jobs:
   shard:
     needs: plan
     runs-on: ubuntu-latest
-    # (the registration's §2.9: at R = 2880 the slowest shard, `records`, is about 159 minutes of
-    # rounds at the pilot's pace plus 15 of setup, about 174, and about 238 at 1.4x that pace;
-    # 240 is a per-job ceiling, not a cost. A shard that reaches it is a data-bearing failure:
-    # the attempt is consumed and INVALID, and the partition is never changed afterwards)
-    timeout-minutes: 240
+    # (the registration's §2.9, frozen prospectively: `records`, the slowest shard, about 159
+    # minutes of rounds at the pilot's pace plus 15 of setup, has 300 minutes, a pace margin of
+    # (300 - 15) / 158.96 = 1.793x; every other shard 240, its margin at least (240 - 15) / 143.84
+    # = 1.564x (`text`). 8 x 240 + 300 = 2220 shard-minutes of ceilings a dispatch, within GitHub's
+    # six-hour hosted-job limit. A ceiling is not a cost. A shard that reaches it is a
+    # data-bearing failure: the attempt is consumed and INVALID, no retry, no extension, and the
+    # partition is never changed afterwards)
+    timeout-minutes: ${{ matrix.shard.timeout }}
     strategy:
       fail-fast: false
       matrix:

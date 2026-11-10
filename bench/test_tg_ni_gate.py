@@ -196,9 +196,24 @@ class Workflow(unittest.TestCase):
             self.assertIn("--locked", b)
 
     def test_the_final_designs_ceiling_and_rounds(self):
-        # (registration §2.9: a 240-minute job ceiling; a qualification refused at any R but 2880)
+        # (registration §2.9: records 300 minutes, every other shard 240; a qualification refused
+        # at any R but 2880)
         shard = self.text[self.text.index("\n  shard:"):self.text.index("\n  aggregate:")]
-        self.assertEqual(re.findall(r"timeout-minutes:\s*(\d+)", shard), ["240"])
+        self.assertEqual(re.findall(r"timeout-minutes:\s*(.+)", shard), ["${{ matrix.shard.timeout }}"])
+        # (the plan's shard list, run as the plan job runs it: records 300, every other 240)
+        plan_py = re.search(r"pick=\$\(python3 - <<'EOF'\n(.*?)\n\s*EOF\n", self.text, re.S).group(1)
+        import os
+        import textwrap
+        out = subprocess.run([sys.executable, "-c", textwrap.dedent(plan_py)], capture_output=True, text=True,
+                             env=dict(os.environ, SHARDS="all", LABEL="qualification"))
+        self.assertEqual(out.returncode, 0, out.stderr)
+        shards = json.loads(out.stdout)
+        self.assertEqual({s["id"]: s["timeout"] for s in shards},
+                         {"onebyte": 240, "pattern": 240, "random": 240, "records": 300, "runs": 240, "text": 240,
+                          "wikidata-1": 240, "wikidata-2": 240, "wikidata-4": 240})
+        self.assertEqual(sum(s["timeout"] for s in shards), 2220)
+        import service_tg as tg
+        self.assertEqual(sorted(s["id"] for s in shards), sorted(tg.SHARDS))
         plan = self.text[self.text.index("\n  plan:"):self.text.index("\n  shard:")]
         self.assertIn('[ "$LABEL" = qualification ] && [ "$ROUNDS" != 2880 ]', plan)
         import service_tg as tg
