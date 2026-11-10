@@ -8,7 +8,9 @@
   6, 7, 9 and 10 aligned to it);
 - under the Researcher's REVISE 6759371719 (§2.9: the chronology admitted before grouping, the
   estimand's conditioning, the inference calibration (DRAFT), `records`' 300-minute ceiling;
-  §2.4: the nominal level qualified).
+  §2.4: the nominal level qualified);
+- under the Guardian's D085 (#145 6759863881): §2.10 added, the conditional estimand, DRAFT, a
+  proposal for review and a decision record; §2.9's calibration carried unchanged.
 **DRAFT: not frozen, not queued, not run.** Nothing in this entry is a measurement of this
 candidate. `bench/service-tg.frozen` names no commits, so
 `just bench-service-tg` refuses and `bench/service_tg.py` admits nothing. A freeze needs the
@@ -958,6 +960,137 @@ it):
 - Standard GitHub-hosted compute, free for this public repository; no new infrastructure, larger
   runners or spending.
 
+### 2.10 The conditional estimand (DRAFT: a proposal for review and a decision record, not adopted)
+
+**Why.** The calibration in §2.9 stands as it is. Under the job-level estimand (slow within-job
+variation sampled), no class consistent with the pilot keeps the boundary size defensible at
+R2880/B24: 13–42% at memory of 100 rounds or more. This section proposes the narrower,
+window-conditioned target, under the Guardian's D085 (#145 6759863881; `state/records/D085/
+decision.md` at bb43afdc).
+- **D085's theorem, restated.** Write the B = 24 batch means as Y_b = θ + g_b + ε_b, with the
+  path g fixed, E(ε | g) = 0 and conditional covariance Σ. Then
+  E[s²/B | g] − Var(Ȳ | g) = [g′Pg + tr Σ − 1′Σ1] / [B(B − 1)], where P = I − 11′/B.
+  - For iid homoskedastic Gaussian ε the excess is s_g²/B ≥ 0, and the one-sided t bound is
+    conservative for θ_w = θ + mean(g).
+  - With general Σ there is no sign: a residual common to all batches gives about 50% boundary
+    rejection.
+- **The extension used here:** for any diagonal Σ (independent, heteroskedastic), 1′Σ1 = tr Σ,
+  so the excess is g′Pg/[B(B − 1)] ≥ 0. The variance identity needs conditional independence
+  across batches, not homoskedasticity or normality. The t quantile's calibration under
+  heteroskedastic, heavy-tailed residuals is approximate; it is measured below (A3).
+
+**(1) The target, exactly.**
+- **The window:** one shard's measurement step, rounds 0 … 2879 of the frozen schedule (§2.9),
+  on the runner that shard drew.
+- **H, the conditioned path:** everything outside the measured child processes' own execution,
+  over the window:
+  - the runner and its host (CPU model, hypervisor, neighbours, contention, steal);
+  - its thermal, frequency, cache, page-cache and memory state;
+  - the harness (the settle gate's waits and the instants it selects, the stamper);
+  - the state each run leaves for the next, both arms' included.
+  H is not observed and need not be. It is a σ-field fixed by definition, not a fitted
+  function.
+- **The target:** θ_w(H) = (1/2880) Σ_i E[log(head_i / base_i) | H], equal weight per round,
+  i = 0 … 2879, under this schedule and placement. It is latent: an expectation over the
+  remaining randomness given H, not the realised sample mean, which is a descriptive quantity.
+- **Condition 2 per cell, read this way:** θ_w(H) ≤ log 1.02, on this runner, in this window,
+  under this harness.
+- **Order belongs to the target.** Head and base run at different instants, never as both
+  potential outcomes at once. The +−−+ cycle cancels constant and linear order terms within
+  each cycle (§2.9). Nonlinear path-by-order effects, carryover and the idle gate's selection
+  are part of θ_w(H) as defined under this schedule. They are not removed, and they are not
+  claimed to be absent.
+
+**(2) What remains random:** only each child process's own execution given H: its thread
+interleavings, its timer quantisation, and its microarchitectural outcomes beyond the state in H.
+- **The structural argument for independence:** every run is a fresh process (§2.2). Every
+  channel by which one run can affect another passes through state outside the process, and
+  that state is in H by definition.
+- So, given H, the runs' remaining randomness is independent across runs, and so across
+  batches: Σ is diagonal. This is an argument about the harness's construction, not a
+  statistical finding. Its weak point is a coupling that is neither process-owned nor in H.
+  None is known; the chronology admission (§2.9) and the frozen check (A2) guard the
+  harness-level forms.
+
+**(3) The assumptions the t bound needs, with the pilot's evidence.** Source: pilot run
+42748681243, all nine shards, rows read mean-free. Each cell's paired log series is centred on
+its own mean first, and no mean, ratio or bound is computed. The construction:
+- **Cycles:** complete four-round cycles averaged, which cancels order's constant and linear
+  terms.
+- **The path at batch resolution:** each block of 15 cycles (60 rounds, the pilot's longest menu
+  batch) has its own mean removed.
+
+  A path that is arbitrary at batch resolution is exactly what the conditional model allows.
+  So the cycle residuals within blocks are where residual dependence would show. Scripts and
+  outputs are in `docs/journal/2026-11-10-tg-ni-calibration/` (`residual.py`, `hetero.py`,
+  `s5.py`). p-values are simulated under iid Gaussian cycle noise around an arbitrary block
+  path, so demeaning bias is accounted for.
+
+| assumption | for (pilot) | against (pilot) | qualification check, frozen if adopted |
+|---|---|---|---|
+| **A1** E(ε \| H) = 0 | definitional: g_b = E[Y_b \| H] | none possible: it is the definition | none needed |
+| **A2** residuals independent across batches given H (no positive residual memory) | the structural argument (2). S5, the sum of lag 1–5 within-block autocorrelations of the cycle residuals: median −0.283 against the iid null's −0.286; **0 of 42 cells above the null's 95th percentile** (2.1 expected); largest random/4/cpu −0.111 (p 0.059). Lag-1 median −0.098 against the null's −0.066; 2 of 42 positive (largest +0.127). | Across-batch independence within one window cannot be tested from that window: it is absorbed into g. Ljung–Box (lags 1–5, two-sided) flags 4 of 42 at p < 0.05 (smallest 0.0039, wikidata/4/wall), all by **negative** lag 1–2 correlation (−0.26 to −0.04), which makes the bound conservative, not anticonservative. | **S5 > 0.1044 in any cell** (iid null's 1 − 0.01/42 quantile at the qualification shape, 720 cycles in 24 batches of 30; 2,000,000 draws): condition 2 INVALID, rows kept, no retry. Family false-alarm ≤ 1% under the working model. Fast environment changes inside a batch can also trigger it: a conservative false alarm. |
+| **A3** batch residual means close enough to normal and homoskedastic for t(0.95, 23) | Independence is all the variance identity needs (above). **Size measured directly:** the t bound with a flat path (the worst case: no conservatism from g), each simulated window's 24 batches resampled from the pilot's own cycle residuals, block by block, heteroskedasticity and tails as observed: **4.46–5.58%, median 5.01%** over the 42 cells (20,000 windows each, MC SE 0.15 points). | The cycle residuals are neither homoskedastic nor normal. Block variance max/min: median 7.4, largest 42.9. Bartlett p < 0.005/42 in 11 of 42 cells; excess kurtosis p < 0.005/42 in 16 of 42. | none invalidating: the permitted approximation is **size ≤ 5.6% (plus MC error) under pilot-like heteroskedasticity and tails, given A2**. Batch residual variances reported. |
+| **A4** order cancels within cycles; the rest is target | pattern/1's order term (24% / 48% of marginal variance, §2.9) is cancelled by cycle aggregation; the cycle residuals are near white (A2) | nonlinear path-by-order effects are not cancelled; they are defined into θ_w(H), not shown absent | the chronology admission (§2.9, frozen tooling), already invalidating |
+| **A5** a slow path inside the window | allowed: conditioned on, so not error; it widens s, so the bound is conservative for θ_w(H) | the window's θ_w(H) is not the runner's long-run value: this is the claim lost (4) | the trend veto (§2.9) is kept unchanged. It is no longer needed for validity; it rejects windows whose drift is extreme, conservatively. |
+
+- **Power at 1.005** is unchanged in its statistic: the same bound on the same data, with the
+  path's variation still inside s.
+- **Planning figures:** 0.98548 / 0.85610 at the pilot's / twice its largest LRV (§2.9). With the
+  trend veto (≤ 0.01) and the S5 check (≤ 0.01 under the working model): **≥ 0.96548 /
+  0.83610**.
+- **The S5 check is a proposal, not tooling.** It goes into the judge (and the gate's
+  recomputation, byte-identical on #333 and here) only if this section is adopted;
+  `s5.py` is its prototype.
+
+**(4) Why the narrower target would suffice for this route: a proposal for a decision record.**
+- **What condition 2 guards here.** Off the target the predicate is false. The public dispatch
+  builds master's plan (condition 1, read back on every shard), and the predicate's snapshot
+  and quota are read at 10 threads only (§8). The off-target code path is master's. What
+  condition 2 bounds is the residual cost of the candidate's build: layout, inlining, shared
+  code, the plan's reads.
+  - That cost is a property of the binary on the hardware. It is present in every environment
+    state the window visits, not a transient of the environment.
+  - A deterministic regression of that kind shifts θ_w(H) in any window on that hardware, so a
+    window-conditioned test is the relevant detector.
+- **What is lost, stated.** The claim no longer covers:
+  - the same runner in other host states or at other times;
+  - repeat jobs;
+  - a slowdown that appears only in environment states the window did not visit.
+
+  The nine shards' runners sample a few CPU models; nothing is claimed for unobserved ones
+  (§2.2, unchanged).
+- **What does not replace it.** Condition 7's confirmation is not replication of accepted
+  windows. It is triggered only by a wall flag (§2.6), and its data never enters condition 2.
+  Accepted cells get no second window.
+- **The residual deployment risk accepted by adoption:** a regression of the candidate's build
+  larger than 2% that is environment-state dependent and absent from every one of the 42
+  windows. The release notes would state the window-conditioned scope beside the measured
+  on-target scope (§5).
+- **Affected conditions:**
+  - **Condition 2:** its estimand, as above.
+  - **Condition 7's CI flags:** read as window-conditioned too; the rule is unchanged.
+  - **Conditions 3 and 4** use single-window t intervals on the workstation (128 rounds). The
+    same conditioning question applies to them. Either this decision covers them explicitly,
+    or they keep their present unconditional reading. Open.
+- **Authority, as D085 has it.** Prospective design and acceptance are delegated (C6). Adoption
+  needs, before any qualification data:
+  - the Researcher's review and PROCEED;
+  - the Guardian's admissibility review;
+  - a committed and logged decision record.
+
+  STEWARDSHIP condition 2 asks for "a confidence-based noninferiority conclusion on these cells,
+  not a deterministic bound on every machine or run". Whether a window-conditioned confidence
+  conclusion satisfies that text, or needs it amended, is for the Guardian. If it needs
+  amending, it is Louis's (D1/D3), not this registration's. **Nothing here is adopted.**
+- **The proposed record (draft text):** "For #316's target-gated registration, condition 2's
+  per-cell estimand is θ_w(H) of §2.10(1): the expected paired log ratio over the shard's
+  registered measurement window, conditional on the window's environment path H, under the
+  frozen schedule. The batch-means bound is read as conservative for θ_w(H) under A2. A2 is
+  checked by the frozen S5 check, which invalidates. A3's approximation (size ≤ 5.6% under
+  pilot-like heteroskedasticity and tails) is accepted. The claim lost: generalisation beyond
+  each window. Adopted before qualification data; no threshold changed."
+
 ## 3. On-target superiority (condition 3)
 
 - **The matrix:** N = 1 cell:
@@ -1318,11 +1451,11 @@ measured.
    ceilings of 300 minutes (`records`) and 240,
    condition 7 retained. **It needs the Researcher's review,** above all of the residual
    batch-memory assumption; qualification-freeze PROCEED is withheld until then.
-   - **The tooling delta is on this branch only.** `bench/service_tg.py`, `bench/tg_ni_gate.py`,
-     `bench/tg_ni_pilot.py` and `target-gated-ni.yml` now differ from master's #319 copies. The
-     run executes the head's own copies (§2.1), but master's workflow file is what GitHub
-     dispatches from, and §2.1 records the tooling as identical in both. Whether it reaches
-     master by a tooling-only PR before the freeze, as #319 did, is open.
+   - **§2.10, the conditional estimand (DRAFT):** needs the Researcher's review, the Guardian's
+     admissibility review and a decision record before qualification data; its S5 check enters
+     the tooling only if adopted. Conditions 3 and 4's reading is open there.
+   - **The tooling delta reaches master by the tooling-only PR #333,** as #319 did, its six files
+     byte-identical to this branch's. Until #333 merges, master's copies are #319's.
 2. **The Researcher's REVISE** (#145 6756808726). Addressed in this revision:
    - the admission bugs, in #319: history reconciled fail-closed, `confirm` bound to distinct
      dispatches, non-finite power rejected;
