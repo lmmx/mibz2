@@ -68,6 +68,11 @@ three-team policy came from it). Every release gets one.
    - fetch the bundle from the `evidence` branch at the commit the post names, and check its SHA-256;
    - copy its `recorded/` directory to `bench/release-scaling/<date>-<machine>-<release>/`;
    - commit that to master. The site rebuilds the History page from it.
+   - **check the live History page shows it,** after the site deploys: its hero's Release
+     scaling view must open on the new run, with the run named by its releases ("0.2.9 against
+     0.2.8"). Look in a fresh browser profile and in one that has seen the page before, since
+     the view remembers a reader's last choice. A run that is recorded but not shown first is
+     not done (10 November 2026: the hero stayed on 0.2.4 against 0.2.1 after 0.2.9's run).
 3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The release
    doesn't wait for it.
 
