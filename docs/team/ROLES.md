@@ -19,6 +19,7 @@ branches are unchanged; Lead and Architect are what the Coordinator and the Path
 | Researcher | a ChatGPT Work task, **mibz2⠶Researcher⠶…** (Astra ⠶ Extra High) | #162 | `team-state/researcher` | `FROM: researcher` |
 | Observer | a ChatGPT Work task, **mibz2⠶Observer⠶…** (Astra ⠶ High) | #222 | `team-state/oracle` (its earlier name, kept); its record is on `observatory/intention` | `FROM: observer` (earlier: `oracle`) |
 | Pathfinder | a Claude Code session of its own, opened by Louis | #314 | `team-state/pathfinder` | `FROM: pathfinder` |
+| Codex (production delegate) | Codex session, manually launched by Louis or the active Coordinator | [#363](https://github.com/lmmx/mibz2/issues/363) (issue) | `team-state/codex` | `FROM: codex` |
 
 ## Coordinator (Lead)
 
@@ -145,6 +146,12 @@ programme (OWNERSHIP.md §4a).**
 - **Register:** its own hyperdense mathematical stanza in MODE.md. That stanza applies to
   MONODROMY alone.
 
+## Codex (production implementation delegate)
+
+**Status:** owner-authorised scoped implementation role, initially for MONODROMY's cells-kernel production slice; not an alternative mathematical inventor or an acting Coordinator. See [CODEX-PILOT.md](CODEX-PILOT.md) and [CODEX-RELAY-PILOT.md](CODEX-RELAY-PILOT.md). Its issue inbox #363 is checked by `coord.py` and its cursor is `team-state/codex`; unlike ChatGPT Work role inbox PRs, it **does not** have an automatically configured webhook or Codex wake. Someone must start the Codex session.
+
+Codex may modify code on its own branch, open PRs, measure using available CI, and challenge assumptions with counterexamples. It must preserve the research record, not approve its own B5 safety review, and must not merge, release, dispatch the i9, change the default, or take over Coordinator authority by implication. It reports on #145 under `FROM: codex`, and marks completed assignments in its own cursor. The active Coordinator decides integration under existing safety/bench policies.
+
 ## How the roles relate
 
 - The Pathfinder (Architect) leads on architecture and product performance: it ranks
@@ -175,6 +182,10 @@ review rounds, hours to a merge or abandonment).
 2. Headers are labels, not authentication: every agent posts as `lmmx` (RULES A1).
 3. Each agent writes only to its own state branch, plus one REVIEW per assignment on #145.
 4. Successions are recorded here, never treated silently as the same execution.
+
+## When the primary Coordinator is unavailable
+
+The **Coordinator role**, unlike a model instance, has a documented owner-activated acting executor and return-of-control procedure in [COORDINATOR-FAILOVER.md](COORDINATOR-FAILOVER.md). The same inbox routing, decision record and acceptance gates apply; do not run parallel primary and acting Coordinators. A fallback Work task must actually be launched by Louis; committing a prompt does not create it.
 
 ## When a role's Work task is unavailable
 
