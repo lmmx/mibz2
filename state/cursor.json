@@ -1041,6 +1041,15 @@
       },
       "reply_id": 6759415547,
       "routing_verification": "route/check passed. Exact readback verified. Pinned verify rejects FROM optimizer because it hardcodes coordinator; no verify-pass claimed."
+    },
+    {
+      "comment_id": 6759587407,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: migration source head and manifest SHA-256 verified. Auditing D083 team-screen draft costs, PR tier and A2 alternatives at ffb568913ce9bd6eeb807082ac935570e36c3c8d.",
+      "report_path": "state/records/reviews/inbox-6759587407/report.md"
     }
   ],
   "migrated_from": {
