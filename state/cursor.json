@@ -1214,8 +1214,9 @@
       "pr": 321,
       "sha": "dfb33c24b509062c6b87f4537535b54832b1c449",
       "commit": "b4d7a4a755510af80d9c6a369a43d8b54364c3be",
-      "status": "complete",
-      "disposition": "HOLD measurement-only merge classification; research may continue"
+      "status": "finished",
+      "disposition": "HOLD measurement-only merge classification; research may continue",
+      "comment": 6757246555
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1293,7 +1294,8 @@
     6754250293,
     6756184275,
     6756634391,
-    6757058587
+    6757058587,
+    6757246555
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1553,7 +1555,8 @@
     6754182845,
     6756084723,
     6756570238,
-    6756994744
+    6756994744,
+    6757176848
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2830,11 +2833,13 @@
     {
       "comment_id": 6757176848,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D080",
-      "progress": "D080 committed; REVIEW pending.",
+      "progress": "Exact REVIEW readback verified; pinned verifier coordinator-only FROM limitation; independent Guardian checks pass.",
       "receipt_commit": "c0b67a5567f9fbe436f5e184414d9fcceca0aac8",
-      "work_commit": "b4d7a4a755510af80d9c6a369a43d8b54364c3be"
+      "work_commit": "b4d7a4a755510af80d9c6a369a43d8b54364c3be",
+      "review_comment_id": 6757246555,
+      "complete_cursor_commit": "815cbc98723ddc0bd4f7f4bc4d29c6aad04db996"
     }
   ],
   "migrated_from": {
