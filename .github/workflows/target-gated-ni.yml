@@ -11,6 +11,13 @@
 # `aggregate` gathers every shard's artifact, of every attempt, into one manifest with each
 # file's SHA-256 and judges it with `bench/service_tg.py ni`.
 #
+# The dispatched ref is the frozen candidate's freeze commit (the head), not master: the shards
+# build its `ab` (bench 3.5.0's, with `env --facts` and each child's termination) and its
+# `examples/svc_target.rs`, which only the candidate carries. This file is on the default branch
+# so that it can be dispatched (GitHub requires that); the run executes the head's own copy,
+# which must be identical (the plan job checks GITHUB_SHA is the head). Every external action is
+# pinned to a full commit SHA (the Guardian's D078); cargo builds are --locked.
+#
 # `label` says what a dispatch is: `qualification` (the registered run, once, after the freeze)
 # or `smoke` (a plumbing check, never evidence: the judge refuses it). Nothing here retries a
 # shard: a shard that fails, times out or is cancelled after its measurement started is part
@@ -95,8 +102,8 @@ jobs:
   shard:
     needs: plan
     runs-on: ubuntu-latest
-    # (the registration's §2.5: the slowest shard's measured rounds at 1.75x the fastest CI
-    # pace seen, plus setup, is about 47 minutes)
+    # (the registration's §2.2: the slowest shard, `records`, is about 38.9 minutes of rounds at
+    # the slowest CI pace seen plus 15 of setup, about 54; 90 is a per-job ceiling, not a cost)
     timeout-minutes: 90
     strategy:
       fail-fast: false
@@ -112,7 +119,7 @@ jobs:
       LABEL: ${{ inputs.label }}
       OUT: out/${{ matrix.shard.id }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0 (the v6 tag, resolved 2026-11-10)
         with:
           ref: ${{ inputs.head }}
           fetch-depth: 0
@@ -134,24 +141,32 @@ jobs:
           EOF
           cat "$OUT/shard.json"
 
+      # (the candidate's own tooling, which this workflow depends on: not on master)
+      - name: The head carries the tooling the shards run
+        run: |
+          test -f examples/svc_target.rs || { echo "::error::the head has no examples/svc_target.rs: dispatch the frozen candidate's ref"; exit 1; }
+          grep -q -- '--facts' examples/ab.rs || { echo "::error::the head's ab has no env --facts (bench 3.5.0)"; exit 1; }
+          grep -q '"termination"' examples/ab.rs || { echo "::error::the head's ab records no child termination (bench 3.5.0)"; exit 1; }
+
       - name: lbzip2 (examples/windows.rs's check of the Wikidata blocks)
         if: matrix.shard.corpus == 'wikidata'
         run: sudo apt-get install -y -qq lbzip2 > /dev/null
 
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master, resolved 2026-11-10 (the action has no release tags; its toolchain is the `toolchain` input)
         with:
           toolchain: ${{ inputs.toolchain }}
 
       - name: Build the head and the base
         run: |
           rustc -V | tee "$OUT/rustc.txt"
-          cargo build --release --example ab --example windows --example svc_target
+          { rustc -vV; cargo -V; cc --version | head -1; ld --version | head -1; ldd --version | head -1; uname -a; } > "$OUT/build-env.txt" 2>&1 || true
+          cargo build --locked --release --example ab --example windows --example svc_target
           mkdir -p bin base
           cp target/release/examples/ab bin/ab
           cp target/release/examples/windows bin/windows
           cp target/release/examples/svc_target bin/svc_target
           git worktree add --detach .base-src "$BASE_SHA"
-          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab)
+          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --locked --release --example ab)
           cp target/release/examples/ab base/ab
           sha256sum bin/ab bin/windows bin/svc_target base/ab | tee "$OUT/binaries.sha256"
 
@@ -204,7 +219,7 @@ jobs:
 
       - name: Upload
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 (the v4 tag, resolved 2026-11-10)
         with:
           name: tg-ni-${{ matrix.shard.id }}-a${{ github.run_attempt }}
           path: out/
@@ -215,7 +230,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0 (the v6 tag, resolved 2026-11-10)
         with:
           ref: ${{ inputs.head }}
           fetch-depth: 0
@@ -234,14 +249,19 @@ jobs:
             --run "$GITHUB_RUN_ID" --attempt "$GITHUB_RUN_ATTEMPT" --label "${{ inputs.label }}" > manifest.json
           cat manifest.json
 
+      # The judge, its exit kept for the gate (0 pass, 1 NOT SHOWN, 2 INVALID), never masked
       - name: The judge (bench/service_tg.py ni, at the head's own frozen file)
+        id: judge
         run: |
-          python3 bench/service_tg.py ni shards --manifest manifest.json --head "${{ inputs.head }}" --out ni || true
-          cat ni.md >> "$GITHUB_STEP_SUMMARY" || true
+          set +e
+          python3 bench/service_tg.py ni shards --manifest manifest.json --head "${{ inputs.head }}" --out ni
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          [ -f ni.md ] && cat ni.md >> "$GITHUB_STEP_SUMMARY"
+          exit 0
 
       - name: Upload
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 (the v4 tag, resolved 2026-11-10)
         with:
           name: tg-ni-aggregate-a${{ github.run_attempt }}
           path: |
@@ -251,3 +271,12 @@ jobs:
             ni.json
             ni.md
           if-no-files-found: warn
+
+      # Last, after the evidence is uploaded: the job's status is the verdict's. qualification
+      # fails unless condition 2 passes (NOT SHOWN or INVALID fail the job); smoke passes only
+      # as the judge's deliberate refusal, and says "smoke: not evidence" (bench/tg_ni_gate.py)
+      - name: The verdict gate
+        if: always()
+        run: |
+          python3 bench/tg_ni_gate.py --label "${{ inputs.label }}" --verdict ni.json \
+            --exit "${{ steps.judge.outputs.exit || 2 }}" --summary "$GITHUB_STEP_SUMMARY"

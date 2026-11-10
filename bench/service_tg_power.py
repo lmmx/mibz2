@@ -89,7 +89,7 @@ def main(argv=None):
         print(f"  {k[0]:9s} {k[1]}t {k[2]:4s} n={len(sds[k]):2d}  {statistics.median(sds[k]):.4f} / {quantile(sds[k], 0.9):.4f}")
     print(f"\nsize at mu = log 1.02, B = {a.batches}: per cell "
           f"{power(600, a.batches, 0.05, DELTA):.4f} (any sigma, any R)")
-    print(f"\n| R | B | sd | mu | min cell power | sum of misses | all-42 lower bound | all-42 if independent |")
+    print("\n| R | B | sd | mu | min cell power | sum of misses | all-42 lower bound | all-42 if independent |")
     print("|--:|--:|---|--:|--:|--:|--:|--:|")
     for R in a.rounds:
         for which, f in (("median", statistics.median), ("p90", lambda x: quantile(x, 0.9))):

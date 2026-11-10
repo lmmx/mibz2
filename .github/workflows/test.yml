@@ -80,16 +80,17 @@ jobs:
           tool: just@1.38.0
       - name: The recorder check's exit through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_telemetry_check.py
-      - name: The service core's target preflight record checker (its witnesses)
-        run: python3 bench/test_svc_target_check.py
+      - name: The target-gated noninferiority judge and its verdict gate (untimed; scipy for the power check where installed)
+        run: |
+          python3 bench/test_svc_target_check.py
+          python3 bench/test_service_tg.py
+          python3 bench/test_tg_ni_gate.py
       - name: The target preflight's exits through the bundle and submission (stand-ins, untimed)
         run: python3 bench/test_svc_target.py
       - name: The guarded service A/B's judge and admission (its witnesses)
         run: python3 bench/test_service_guarded.py
       - name: The guarded service A/B's recipe end to end, every exit (stand-ins, untimed)
         run: python3 bench/test_service_guarded_recipe.py
-      - name: The target-gated registration's judge, workstation and CI (its witnesses)
-        run: python3 bench/test_service_tg.py
       - name: The target-gated registration's recipe end to end, every exit (stand-ins, untimed)
         run: python3 bench/test_service_tg_recipe.py
 

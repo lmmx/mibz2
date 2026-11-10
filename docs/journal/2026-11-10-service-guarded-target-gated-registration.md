@@ -132,9 +132,31 @@ candidate) is 7 corpora × 3 thread counts × 2 metrics = **42 cells**. Every on
 | threads and placement | 1 (pinned to one CPU), 2 (`--spread`: one CPU on each core), 4 (all); settle 0.25 s, as the standing bench |
 | metric | wall time; CPU time (the child's `RUSAGE_SELF`) |
 | arms | `mibz2` (the head's `ab`) and `mibz2@base/ab` (the base's own `ab`, built from the frozen base in a worktree) |
-| toolchain | the dispatch's `toolchain` input; the freeze's `ni_rustc` is its `rustc -V`, checked on every shard |
+| toolchain | the dispatch's `toolchain` input; the freeze's `ni_rustc` is its `rustc -V`, checked on every shard; `cargo build --locked` for both builds (the committed `Cargo.lock`s enforced); `rustc -vV`, `cargo -V`, the C compiler, linker, libc and `uname -a` recorded (`build-env.txt`) |
+| actions | every external action pinned to a full commit SHA, resolved from its ref on 2026-11-10 (the Guardian's D078 G3): `actions/checkout` d23441a48e516b6c34aea4fa41551a30e30af803 (tag `v6` = `v6.1.0`), `actions/upload-artifact` ea165f8d65b6e75b540449e92b4886f43607fa02 (tag `v4` = `v4.6.2`), `dtolnay/rust-toolchain` 683b588c487a69d01f6c6ddf40f036ff682cc2c8 (branch `master`: the action has no release tags) |
 | harness and estimator | `examples/ab.rs` and `bench/service_tg.py` at the frozen candidate; the workflow file at the dispatched head, which must be the head itself |
 | head and base | the freeze commit F (the candidate C plus the frozen file alone, checked with git) and the frozen base |
+
+**The tooling and the candidate are separate.** The workflow, the judge, the verdict gate and
+the read-back's checker reach master through the tooling-only PR #319 (D078). That PR changes
+nothing the decoder builds from, and its branch is merged into this one, with the tooling
+identical in both. The workflow is dispatched at this branch's freeze commit F, never at
+master. GitHub requires the file on the default branch to dispatch it, but the run executes
+F's copy, and the plan job requires `GITHUB_SHA` = F. F carries the candidate's
+`examples/svc_target.rs` and bench 3.5.0's `ab`, and a shard checks for both. The decoder code
+itself never lands on master through #319.
+
+**What is not pinned, declared as an admitted environment assumption** (D078):
+- the hosted runner image (recorded per shard: `ImageOS`, `ImageVersion`);
+- its kernel (recorded: `uname -a`);
+- its system tools: `gh`, `python3`, coreutils, `lscpu`, the C toolchain and libc used for
+  linking (recorded);
+- `lbzip2`, installed by apt on the `wikidata` shards for `examples/windows.rs`'s check (its
+  version as apt resolves it that day);
+- the CPU model the runner draws (recorded, and it must not be the target's).
+
+These are recorded, not controlled. Both arms of a cell share them, on one runner, in one run.
+No custom runner infrastructure is used.
 
 ### 2.2 The shards, and their budget
 
@@ -164,9 +186,18 @@ Nine shards, fixed now. Each is one runner and one job:
   fat LTO, no cache; the corpus; the read-back).
 - **The timeout:** the slowest shard (`records`) is then about 54 minutes at the slowest pace
   seen. The job timeout is fixed at **90 minutes**, a 36-minute margin.
-- **Cost against the alternatives (RULES C3):** about 160–280 runner-minutes of measurement and
-  about 2 hours of setup, on hosted runners at no charge. Repeating 10-round PR runs can't
-  answer condition 2 (§2.4), and a single 60-minute job can't hold 600 rounds.
+- **Accounting (D078 §3):** one qualification dispatch is about **293–412 shard
+  runner-minutes**: 158–277 of measurement plus nine shards' 15 minutes of setup.
+  - **On top of that:** the plan and aggregate jobs' few minutes, and, if a wall cell is flagged,
+    one harm-confirmation dispatch of the same size (§2.6).
+  - **The 90-minute timeout** is a per-job ceiling, not the expected cost.
+  - **What it uses:** standard GitHub-hosted compute only. It is free for this public
+    repository. No larger runners, no paid storage, no new credentials.
+  - **Artifacts:** a shard's is a few MB, the binaries excluded. Evidence is preserved durably
+    (the evidence branch) before GitHub's retention expires, and is never deleted to meet a
+    storage budget.
+- **Cost against the alternatives (RULES C3):** repeating 10-round PR runs can't answer
+  condition 2 (§2.4), and a single 60-minute job can't hold 600 rounds.
 - **The partition is fixed now.** It can't be changed after a timeout, a wide interval or a
   failing cell.
 
@@ -330,6 +361,15 @@ published with this registration for the Researcher to reproduce.
     a shard.
 - **Every attempt is retained** with the manifest. A data-bearing failure is never called an
   infrastructure retry (D077).
+- **The verdict is enforced** (D078 §2): the aggregate job's last step, `bench/tg_ni_gate.py`,
+  runs after the evidence is uploaded (`if: always()`).
+  - **On a `qualification` dispatch,** it fails the job unless the judge's verdict is a valid
+    pass. NOT SHOWN (the judge's exit 1) and INVALID (exit 2) both fail it, and nothing masks
+    the judge's exit.
+  - **On a `smoke` dispatch,** the job succeeds only if the judge refused the run as smoke, and
+    it says "smoke: not evidence".
+  - So a green qualification run means condition 2 passed. The registered verdict is still the
+    archived `ni.json`.
 
 ### 2.6 The harm-confirmation rule, reconciled
 
@@ -359,8 +399,24 @@ None of the following is qualification data, and none can be pooled with the fre
     width, and none was flagged slower.
   - Its per-run cost is the §2.2 budget's input. Its outcome informed nothing else here.
 - **Every later standing Benchmark run on this PR before the freeze** is exploratory too.
-- **The smoke check of the new workflow** is labelled `smoke`, R = 2, a plumbing check. The
-  judge refuses `smoke` as evidence.
+- **Run 42736742147 was a push run, not the dispatch path.** It ran on commit 7e325dd0 of the
+  throwaway branch `smoke/target-gated-ni` (never merged). That branch's copy of the workflow
+  added a `push` trigger with the smoke inputs as defaults, because a dispatch-only workflow
+  can't be dispatched before it is on the default branch.
+  - It exercised the shards, the read-back, the manifest and the judge, at R = 2, labelled
+    `smoke`. It ran before the verdict gate, the action pins and `--locked` existed.
+  - It establishes neither that the dispatch path works nor that the qualification run would
+    be valid (D078). It is not evidence.
+- **A dispatch-path smoke check** becomes possible once #319 is on master. Its inputs are
+  prepared and **not dispatched**:
+  - `--ref perf/service-guarded-target-gated`;
+  - `head` = this branch's commit at the time, which must be the ref's head;
+  - `base` = the base its merge of master names (3e1a7ec361ee6c8ea6b540264aa69189d4823d9e at
+    this writing);
+  - `rounds` = 2, `toolchain` = 1.99.1, `shards` = all, `label` = smoke.
+
+  It must end green with "smoke: not evidence". It is never evidence, and it consumes no
+  qualification attempt.
 - **#302's outcomes are preserved unchanged** (§0).
 
 Only fresh observations from the qualification dispatch after the freeze count.

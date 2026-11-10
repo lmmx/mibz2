@@ -1,7 +1,9 @@
 """The guarded service default under the target-gated route (docs/STEWARDSHIP.md, "Target-gated
 changes", conditions 1-7, enacted at 3e1a7ec3): the judge of its registration,
-docs/journal/2026-11-10-service-guarded-target-gated-registration.md (DRAFT, not frozen).
-Two parts, both fixed with the freeze:
+docs/journal/2026-11-10-service-guarded-target-gated-registration.md (DRAFT, not frozen; on
+#316, the candidate's branch, with the workstation recipe `.just/service-tg.just` and the
+preflight `examples/svc_target.rs`). This file and its CI workflow are measurement tooling on
+master (the Guardian's D078); the candidate's decoder is not. Its parts, fixed with the freeze:
 
     python3 bench/service_tg.py report ATTEMPT_DIR --out ATTEMPT_DIR/service-tg
     python3 bench/service_tg.py manifest SHARDS_DIR [--artifacts A.jsonl --jobs J.jsonl --run ID --attempt N --label L]
@@ -79,7 +81,50 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import svc_target_check  # noqa: E402
-from service_guarded import FETCHED, HASH, discovery, is_int, label, plan_of, positive  # noqa: E402,F401
+
+# (helpers shared with bench/service_guarded.py's admission, carried here so this judge stands
+# alone on master: the earlier attempt's judge is #302's, not this tooling's)
+HASH = re.compile(r"[0-9a-f]{16,}")
+# the time master was fetched at the freeze (UTC), beside the base it names
+FETCHED = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ")
+
+
+def is_int(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def positive(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
+
+
+def plan_of(threads):
+    """(leaders, plain helpers, pipelined helpers, service workers) from ab's `thread_cpu`
+    ("name=seconds ...") or `observed_threads` ("name ..."): leaders or workers `mibz2-N`, a
+    plain team's helpers `mibz2-coop-N`, a pipelined team's `mibz2-coop-pN`, service workers
+    `mibz2-svc-N` (the hub's feeder, `mibz2-svc-feed`, is not counted)"""
+    names = [p.partition("=")[0] for p in threads.split()]
+    return (
+        sum(1 for n in names if re.fullmatch(r"mibz2-\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-coop-\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-coop-p\d+", n)),
+        sum(1 for n in names if re.fullmatch(r"mibz2-svc-\d+", n)),
+    )
+
+
+def label(plans):
+    out = []
+    for leaders, plain, piped, svc in plans:
+        helpers = plain + piped
+        kind = "pipelined" if piped and not plain else "plain" if plain and not piped else "mixed"
+        s = f" + {svc} service" if svc else ""
+        if helpers == 0 and not svc:
+            out.append(f"{leaders} workers")
+        elif leaders and helpers % leaders == 0:
+            out.append(f"{leaders}×{1 + helpers // leaders} {kind}{s}")
+        else:
+            out.append(f"{leaders} leaders, {plain} plain, {piped} pipelined, {svc} service")
+    return " / ".join(out) or "nothing"
+
 
 FROZEN = "service-tg.frozen"
 MARGIN = 1.02
