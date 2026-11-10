@@ -168,7 +168,7 @@
   "pending_reconciliation": "Preserve all unresolved historical queues from audit 6777025573; after #364 merge reconcile sole operator, audit, activate once.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
-  "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
+  "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
     "delivery_id": "d6e60300-dd4b-11f1-92b2-6f2340d116da",
     "comment_id": 6779454057,
@@ -209,6 +209,13 @@
     "status": "in_progress",
     "authorisation": "Louis explicitly requested resolve/merge #364, sole acting activation, independent B5, verified dispatch loop and bounded cells gap investigation in this session on 2026-11-10.",
     "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
-    "action": "merge #364 after green exact-head checks"
+    "action": "activation pending publication",
+    "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+  },
+  "activation": {
+    "status": "in_progress",
+    "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "operator_evidence": "Latest Claude Coordinator LOG 6774966162 records quota pause; subsequent Coordinator gate 6775049636, then no return/activation through fresh #145 read; Louis explicitly requests sole activation in current session.",
+    "audit": "Exact merged coord.py using fresh connector-backed snapshots: audit exit0, six resolved historical misroutes."
   }
 }
