@@ -746,7 +746,16 @@ impl SegScratch {
     /// written into `out` (which they replace) from its end, each segment reversed, so that
     /// `out` holds the block first to last. The join stops where it comes back to its first
     /// segment: the primary index's cycle is then complete (`repeat_cycle`).
+    // (out of line, for the teams' callers: the one-core walk below keeps the join inline,
+    // as it was before the teams had the records' path, so `decode_block`'s machine code and
+    // its frame on a worker's stack are what they were)
+    #[inline(never)]
     pub(crate) fn assemble_reversed(&self, out: &mut Vec<u8>) {
+        self.join_reversed(out)
+    }
+
+    #[inline(always)]
+    fn join_reversed(&self, out: &mut Vec<u8>) {
         let n = self.n;
         out.clear();
         out.reserve(n);
@@ -778,6 +787,8 @@ impl SegScratch {
 /// The plain walk of an LF table (`runs::fill`'s): from `orig_ptr`, i ← LF(i), the block's
 /// bytes last to first, written into `out` from its end; exactly `walk`'s output on the
 /// block's T-vector (`repeat_cycle`)
+// (inline in its callers, as it was in `walk_back_room` while that was its one caller)
+#[inline(always)]
 pub fn walk_back(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>) {
     let t = &tt.0;
     let n = t.len();
@@ -806,7 +817,7 @@ pub fn walk_back_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mu
         return walk_back(tt, orig_ptr, out);
     }
     room_segments::<FLAGGED_LANES, PREFETCH, true>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
-    s.assemble_reversed(out);
+    s.join_reversed(out);
 }
 
 /// `walk_back_room` in its two parts, as `walk_segments_room_parts`: the room walk of the LF
