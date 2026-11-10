@@ -1,0 +1,37 @@
+{
+  "commit": "295cfd2bb0ac77e4d368e5272a3ee1671666a857",
+  "files": [
+    {
+      "path": "docs/journal/2026-11-10-service-guarded-target-gated-registration.md",
+      "git_blob_sha": "9940888ce6f258a8f90e19559da752b03a3e6f3d"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/residual.py",
+      "git_blob_sha": "d1db14da1bdbc2ab8e8d605e928fda8f55b44f8b"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/hetero.py",
+      "git_blob_sha": "a0cc44b1af53cc6e7c01980c739100b3cded793e"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/s5.py",
+      "git_blob_sha": "398feac263c00ee257d01856f17d2275d0dddaa6"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/residual.json",
+      "git_blob_sha": "79d63c35abe664c8151b79e84a679d922d6b5795"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/hetero.json",
+      "git_blob_sha": "54bde09c4a8326b414695b1d5967f96f0222aa1f"
+    },
+    {
+      "path": "docs/journal/2026-11-10-tg-ni-calibration/s5.json",
+      "git_blob_sha": "2cae9e845d278537ba15d964ff963f08e41a9a0d"
+    },
+    {
+      "path": "examples/ab.rs",
+      "git_blob_sha": "f61a39a7cc9b9d2eeac7f8eeb437fae4736e470c"
+    }
+  ]
+}

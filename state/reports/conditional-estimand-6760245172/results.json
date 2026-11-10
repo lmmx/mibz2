@@ -1,0 +1,40 @@
+{
+  "seed": 6760245172,
+  "N": 100000,
+  "tq": 1.713871527747048,
+  "hetero_ratio_1": {
+    "flat_size": 0.05128,
+    "nonflat_size": 0.04819
+  },
+  "hetero_ratio_10": {
+    "flat_size": 0.04826,
+    "nonflat_size": 0.05921
+  },
+  "hetero_ratio_43": {
+    "flat_size": 0.03966,
+    "nonflat_size": 0.10494
+  },
+  "hetero_ratio_100": {
+    "flat_size": 0.03125,
+    "nonflat_size": 0.15911
+  },
+  "hetero_ratio_1000000": {
+    "flat_size": 0.00042,
+    "nonflat_size": 0.25656
+  },
+  "degenerate_limit_size": 0.25567003628758217,
+  "S5_fixed_ramp_false_alarm": {
+    "0": 0.00038,
+    "0.25": 0.33272,
+    "0.5": 0.99999,
+    "1": 1.0,
+    "2": 1.0
+  },
+  "S5_independent_gaussian_one_batch_variance43_false_alarm": 0.10658,
+  "common_shift": {
+    "raw_size": 0.47258,
+    "size_after_S5": 0.47242,
+    "max_S5_difference": 1.6653345369377348e-16
+  },
+  "scope": "Synthetic mathematical countermodels, not pilot replay or decoder data; trend veto not simulated."
+}
