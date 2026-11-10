@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6777379237,
+  "last_examined_comment_id": 6777424023,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -8,6 +8,19 @@
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6777379237",
       "delivery_id": "7f1db440-dd3e-11f1-8018-831275aba9fb",
       "coordination_writes": 0
+    },
+    "6777424023": {
+      "status": "observed_external_test_noop",
+      "delivery_id": "c7ab9e20-dd3e-11f1-8bb2-c4e19b8d0497",
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6777424023",
+      "coordination_writes": 0,
+      "response_comments": 0,
+      "dispatches": 0,
+      "activation": false,
+      "setup_merged": false,
+      "master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
+      "validation": "Actual supplied webhook matched freshly read GitHub comment. Test stimulus only; recorded as seen without coordination action.",
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -41,11 +54,18 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "7f1db440-dd3e-11f1-8018-831275aba9fb",
-    "comment_id": 6777379237,
+    "delivery_id": "c7ab9e20-dd3e-11f1-8bb2-c4e19b8d0497",
+    "comment_id": 6777424023,
     "event_type": "issue_comment",
-    "disposition": "self_generated_noop",
+    "disposition": "external_test_non_actionable",
     "new_actionable_external_messages": 0
   },
-  "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation."
+  "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
+  "external_event_test": {
+    "comment_id": 6777424023,
+    "delivery_observed": true,
+    "cursor_recorded": true,
+    "no_coordination_action": true,
+    "scope": "This observed test event only; no guarantee of future delivery."
+  }
 }
