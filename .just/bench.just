@@ -1319,3 +1319,35 @@ bench-team-runs:
 # threads on the i9, paired by round. Rule, written before the data: LOG on #145 (team threshold).
 bench-team-threshold:
     just bench-team-size 20 "4,5,6,8"
+
+# MONODROMY's cells kernel against production's records path on the i9 (rule: LOG on #145):
+# the rauzy census on the bench's Wikidata sample, one thread pinned to core 2, five rounds a
+# block (fastest kept), three repeats. Both clocks read the same run records; `ns_rec` is
+# production's inversion stage since 0.2.8. Indicative of the kernel stage, not the decoder.
+#   just bench-cells-vs-prod
+
+# Cells kernel vs production's records path, 1 thread, 3 repeats
+bench-cells-vs-prod:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    B=$PWD/target/cells-vs-prod
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-cells-vs-prod: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    cargo build -q --release --example rauzy --example windows
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+    ln -sf "$B/wikidata.bz2" "$W/wikidata.bz2"
+    lscpu > "$W/lscpu.txt"
+    git rev-parse HEAD > "$W/commit.txt"
+    for rep in 1 2 3; do
+      taskset -c 2 target/release/examples/rauzy "$B/wikidata.bz2" 1 65536 5 > "$W/census-$rep.jsonl"
+    done
+    python3 bench/cells_vs_prod.py "$W/summary.json" "$W"/census-*.jsonl | tee "$W/summary.txt"
+    bash bench/bundle.sh "$W"
