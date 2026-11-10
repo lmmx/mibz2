@@ -1,0 +1,3 @@
+#include <stdio.h>
+#include <stdlib.h>
+int main(void){ volatile int x; void *h = malloc(64); printf("%lu %lu\n", (unsigned long)&x & 4095, (unsigned long)h & 4095); return 0; }

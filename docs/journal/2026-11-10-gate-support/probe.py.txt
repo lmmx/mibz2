@@ -1,0 +1,15 @@
+import gdb, os
+off = int(os.environ["PROBE_OFF"], 16)
+out = open(os.environ["PROBE_OUT"], "a")
+class BP(gdb.Breakpoint):
+    def stop(self):
+        rsp = int(gdb.parse_and_eval("$rsp")); counts = int(gdb.parse_and_eval("$rcx"))
+        out.write("%d %d\n" % (counts, rsp)); out.flush()
+        return False
+gdb.execute("set disable-randomization off"); gdb.execute("set pagination off"); gdb.execute("starti")
+base = None
+for l in gdb.execute("info proc mappings", to_string=True).splitlines():
+    if l.strip().endswith("/ab"):
+        base = int(l.split()[0], 16); break
+BP("*%#x" % (base + off), internal=True)
+gdb.execute("continue")

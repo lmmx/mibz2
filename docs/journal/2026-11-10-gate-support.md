@@ -109,3 +109,128 @@ runner-minutes):
 **Recommendation:** k = 11 × R240 if 0.80 at 1.005 on both τ sets is the bar. k = 12 × R240
 (2,583, −27%; 0.934 / 0.884) if the draft's margin above 0.80 is wanted. Either is §2.11's
 design with two numbers changed: same unit, bound, admissions, schedule and claim.
+
+## 2. #324: the fallback harm's mechanisms, ranked, each with its cheapest check
+
+**The harm:** `random` at 1 thread +3.4% (2.2, 4.6) on an EPYC 7763 and +5.3% (4.5, 6.1) on an
+EPYC 9V45; `records` +1.5% (0.2, 2.9) and +2.1% (1.0, 3.3); +1.3% (−1.1, 3.8) on a Xeon 8370C.
+Instructions equal (+61 a block). It is real against the A/A record: the 19 identical-code
+links' `random`/1 means have SD 1.06%; the three runs' mean, +3.3%, is 5.4 of its standard
+errors.
+
+**Sources:** agg3's corrected counts (research/run-front-fallback at 72eb8af4, CI's builds, one
+890,000-byte block each, padding 0); #324's intervals; and four untimed checks made here on
+existing commits, built with this container's toolchain (rustc 1.97.0, not CI's: the
+mechanism-level facts transfer, a build's own class counts don't). Scripts and raw output:
+`2026-11-10-gate-support/`.
+
+### The ranking
+
+| rank | mechanism | fixed per build natively? | dose, records ÷ random (observed 0.40–0.44; run 3 allows 0.16–0.73) | price it needs | state |
+|--:|---|---|---|---|---|
+| 1 | `counts` → `STEPS`, D←H at 4 KiB | **yes** | 0.30 | 71–111% of the decode per candidate a byte: 10.7–11.8 ns a pair | **open; its price is 11–67× the bound on a frame pair's** |
+| 2 | code placement modulo 4 KiB, acting per redirect | **yes** | 0.46 by `mtf_avx2`'s simulated mispredicts; 1.13 by instructions (excluded) | 5.8–9.0% of the decode per mispredict a byte: about 0.9 ns, 3 cycles | **open; no event named** |
+| 3 | `counts` ↔ `mtf_avx2`'s frame, S←H and H←S at 4 KiB | **no: drawn per launch** | 1.10, 1.00 | — | **closed as a mean harm** |
+| 4 | `drain`'s moved spills | yes | — | — | closed at this head: no stack–stack class rose |
+| 5 | `read_item`, S←S at 1 KiB | yes | — | — | closed at this head: 17,836 → 95, the wrong sign |
+
+### 3: the frame class can't carry a mean. Measured.
+
+- **The 1-thread arm decodes on the child's main thread** (`ab.rs` `child`, `threads == 1`),
+  and the bench doesn't touch the personality.
+- **Linux draws the main stack's offset per launch.** 2,000 launches of a probe: the stack's
+  residue modulo 4 KiB took all 256 16-byte steps (χ² 262.5 on 255 df); the heap's residue was
+  one value in all 2,000.
+- **On the two builds,** a gdb probe at `mtf_avx2`'s prologue, randomisation on, 60 launches
+  each:
+  - `counts`' residue is one value a build: 0x0b0 master, 0x8f8 head, every launch;
+  - the frame is realigned to 64 bytes and is 0x1c0 long in both builds;
+  - **the frame meets `counts`' 1 KiB window in 20 of 60 launches on master, 25 of 60 on head.**
+    Geometry gives 22 of 64 for either.
+- **So the class is the same lottery in both arms.** It adds variance to each and nothing to
+  their mean difference. This is the share the layout check could not estimate from four
+  paddings (`2026-11-10-run-front-layout-check.md` §2).
+
+### 1: `counts` → `STEPS` fits the dose and is fixed per build. Its price is the problem.
+
+- **Fixed per build:** `counts`' heap residue is constant across launches (above); `STEPS` is
+  `.rodata`. In the head, `counts` lies wholly on `STEPS`' residues; in master not at all. The
+  same holds in this toolchain's builds (1,024 of 1,024 bytes against 0), so it follows from
+  the inline `Runs` and not from one link.
+- **Dose:** excess candidates 0.0476 a byte on `random`, 0.0142 on `records`: 0.30.
+- **Price needed:** 3.4% ÷ 0.0476 = 71% of the decode per candidate a byte (run 2); 111% (run
+  3). At the STEPS draft's 0.51 ns a byte: 10.7–11.8 ns a pair, 28–39 cycles.
+- **The bound on a pair's price, from the frame class.** The same store (`counts`' increment),
+  the same loop, the same 48-store horizon; only the load differs. A launch whose frame meets
+  `counts` carries about 1.0 more candidate a byte (0.99–1.27 archived). The two arms draw
+  independently, so the round ratio's variance holds at least 2p(1 − p) × (pair price × 1.0)².
+  - Run 3's round SD is 1.12%, run 2's 1.68% (from their intervals, ten rounds).
+  - **A frame pair costs at most 1.7% (run 3) and 2.5% (run 2) of the decode per candidate a
+    byte.** Conservatively (two discordant rounds of ten, which fails 2.3% of the time): 2.7%
+    and 4.0%.
+- **So a `counts` → `STEPS` pair must cost 29–67× a frame pair's bound; 11–35× at the
+  conservative bound and the harm's lower limit.** At a frame pair's price the class explains
+  0.08–0.19% of the 3.4–5.3%.
+- **What this does not show:** that a `STEPS` row load can't be that much dearer than a frame
+  load. No reason is known why it would be. The STEPS placement diagnostic measures it
+  directly, and this arithmetic predicts it null.
+
+### 2: code placement fits the dose through mispredicts, and only through them.
+
+- **All hot PCs moved modulo 4 KiB; alignment modulo 64 is kept** (`mtf_avx2` 0xca0 → 0x520,
+  `read_item` 0xcc0 → 0x680).
+- **Dose by instructions:** every kernel's share is level across the two corpora (`mtf_avx2`
+  71% and 75%), so an instruction-proportional effect predicts 1.0–1.13. Excluded by run 3.
+- **Dose by redirects:** cachegrind's simulated conditional mispredicts in `mtf_avx2`, master:
+  0.590 a byte on `random`, 0.273 on `records`: **0.46.** It fits as well as rank 1's 0.30.
+- **Price needed:** 5.8–9.0% of the decode per mispredict a byte, about 0.9 ns, 3 cycles a
+  redirect. An ordinary front-end quantity; no event is named.
+- **Against it, the record of layout re-rolls.** Six merged PRs changed only the harness (69,
+  74, 219, 290, 298, 326: decoder source identical, the binary rebuilt). Built here at each
+  merge and its parent, every one moved `mtf_avx2`, `read_item` and `build` modulo 4 KiB;
+  two (74, 290) kept all three modulo 64, as #324's head does; two (290, 298) moved `STEPS`. Their
+  `random`/1 changes on CI: −0.03, +0.32, −0.57, −0.75, +0.56, −0.06% (SD 0.50%), inside the
+  A/A spread. **Six re-rolls, none past 0.75%.** A placement draw of 3.4–5.3% would be a tail
+  event; six draws don't exclude a tail of one in ten.
+
+### The cheapest checks left, on existing builds, no kernel
+
+1. **The STEPS placement diagnostic, as drafted, with its null made decisive.** It isolates
+   rank 1 in one binary. Predicted here: under 0.2% of the decode. Freeze it so that a null
+   at that size closes rank 1.
+2. **The four existing builds as a 2 × 2** (a diagnostic, not a qualification; the Guardian's
+   call under D082 and D086, since boxed and the candidate were refused as successors):
+
+   | build | `counts` → `STEPS` | code placement |
+   |---|---|---|
+   | master 27ed84df | 1× | reference |
+   | head e88c0631 | 4.06× | moved, mod 64 kept |
+   | boxed f72b2a3c | 4.06× | a third placement |
+   | candidate e8a417c6 | 1.02× | a fourth; 0 of 6 kernels at master's mod 64 |
+
+   Rank 1 predicts boxed slower as the head is and the candidate level with master, on
+   `random` at 1 thread. Any other pattern kills it. One ordinary 10-round paired run a build
+   resolves about 1% (the A/A SD).
+3. **Rounds already archived:** within each arm, `random`/1 launches should fall in two modes,
+   about a third in the dearer, if a frame pair costs anything visible. The modes' gap is the
+   pair's price, measured instead of bounded.
+
+### A harm on the admitted path that no corpus exercises
+
+`takes_runs` admits by the block's **bound**, not its length (`2 * syms.len() <= max_len`,
+its comment says so). A high-entropy block shorter than half its bound takes the records'
+path, which costs it 18–19% more instructions by #324's own account. Whole-process
+instructions of `ab child mibz2 1` on the first bytes of CI's `random`, `bzip2 -9`:
+
+| block | master | head | change |
+|--:|--:|--:|--:|
+| 200,000 B | 32,923,892 | 36,310,524 | **+10.3%** |
+| 440,000 B | 65,166,258 | 72,573,850 | **+11.4%** |
+| 460,000 B | 67,781,158 | 67,784,508 | +0.00% |
+
+- Every CI corpus's high-entropy blocks are full, so no cell sees it. A small incompressible
+  file does: under 450 kB at `-9`, under 50 kB at `-1`.
+- Instructions only; untimed. Found while tracing: the head never entered `mtf_avx2` on a
+  200,000-byte block.
+- A successor's admission needs the block's length, or its share of run symbols, and its
+  registration a cell with a short high-entropy block.

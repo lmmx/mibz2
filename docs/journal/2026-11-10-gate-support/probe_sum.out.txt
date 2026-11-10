@@ -1,0 +1,3 @@
+master launches 60 | counts residues {'0xb0': 60} | distinct frame residues 40 all multiples of 64: True | frame meets counts' window in 20 (0.33) | STEPS at 0x580 counts bytes on STEPS' residues: 0 of 1024
+head launches 60 | counts residues {'0x8f8': 60} | distinct frame residues 42 all multiples of 64: True | frame meets counts' window in 25 (0.42) | STEPS at 0x700 counts bytes on STEPS' residues: 1024 of 1024
+expected meet fraction, uniform frame base in 64-byte steps: 0.344
