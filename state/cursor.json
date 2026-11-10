@@ -2948,7 +2948,8 @@
       "pr": 161,
       "status": "in progress",
       "decision": "D084",
-      "progress": "Receipt; migration verified; assessing registered count invalidity and prospective methods."
+      "progress": "Assessment complete; work committed before publication; original failure preserved, method diagnostic bounded.",
+      "receipt_commit": "4f161d2be9b96a4afa82043829846cc7818c694d"
     }
   ],
   "migrated_from": {
