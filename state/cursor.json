@@ -1402,7 +1402,7 @@
     },
     {
       "trigger_comment_id": 6755779354,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -1410,7 +1410,10 @@
       "report_path": "state/reports/par-scan-6755779354/report.md",
       "report_commit": "0fb3293015aa0c9676bcbd6ca8c14d37bf0d7dcc",
       "review_comment_pr": 145,
-      "disposition": "REVISE readiness: exact-bit/level chain acceptance supports rejection of embedded false magics; panic paths can strand waiters and recipe lacks deadline. Retain paired diagnostic after bounded shutdown, identity/B5 evidence and scoped outcome interpretation."
+      "disposition": "REVISE readiness: exact-bit/level chain acceptance supports rejection of embedded false magics; panic paths can strand waiters and recipe lacks deadline. Retain paired diagnostic after bounded shutdown, identity/B5 evidence and scoped outcome interpretation.",
+      "review_comment_id": 6755860961,
+      "publication_verified": true,
+      "verification_note": "Exact body/#145 readback and role-aware routing pass; pinned coord.py verify reports solely its hardcoded FROM coordinator requirement."
     }
   ],
   "active_delegations": [],
