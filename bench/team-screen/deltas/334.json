@@ -1,0 +1,9 @@
+{
+  "pr": 334,
+  "status": "DRAFT: head pinned at freeze",
+  "head": "FREEZE",
+  "base": "FREEZE",
+  "head_team_env": {"AB_STAGED_TRAVERSE": "1"},
+  "walker": {"H-team": "coop::traverse_staged", "B-team": "coop::traverse(?!_staged)"},
+  "forbid": {"H-team": ["coop::traverse(?!_staged)"], "B-team": ["coop::traverse_staged"]}
+}

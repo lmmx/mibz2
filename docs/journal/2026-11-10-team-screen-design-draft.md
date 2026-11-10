@@ -1,183 +1,287 @@
-# 2026-11-10: The forced-team screen (D083): design (DRAFT, not frozen)
+# 2026-11-10: The forced-team screen (D083): design (DRAFT, revision 2, not frozen)
 
-**Status: DRAFT for pricing (Optimiser) and PROCEED (Researcher). Not frozen. Nothing in it
-has been run.** It changes no workflow, and it adds no cell to any existing acceptance
-matrix (bench.yml's A/B, its report or its assessment). The stub `bench/team_screen.py` has
-only been syntax-checked.
+**Status: DRAFT. Not frozen, not adopted, nothing run on a screen decode.**
 
-Authority: the Guardian's D083 (#145 6758740649) and D084 (#145 6759487306, §3). This is
-**not** the forced-team registration that a pass of `2026-11-10-staged-traverse-count.md`
-would have earned. That entitlement is unearned (D084 G2.2). This is the routine coverage
-design D083 asked for.
+**Revision 2 applies two reviews of revision 1 (`ffb56891`):**
+- **The Researcher's REVISE:** #145 6759658271; report `state/reports/team-designs-6759589291`
+  at `5326b6fd`.
+- **The Optimiser's price:** #145 6759713909; report
+  `state/records/reviews/inbox-6759587407` at `976e1478`.
+- **The Coordinator's decision from the price:** two tiers. The PR tier is native coverage
+  plus semantic probes; the full tier is the counted profiles.
 
-## 1. The gap it closes (read: #330 §7, D083)
+**What it is not:**
+- **Not an acceptance cell:** it adds none to any existing acceptance matrix, and removes
+  none.
+- **Not the earned registration:** this is not the forced-team registration that a pass of
+  `2026-11-10-staged-traverse-count.md` would have earned. That entitlement is unearned
+  (D084 G2.2), and D084's FAIL-MEASUREMENT stands.
+
+**Making either tier merge-blocking is a prospective C6 admission change.** A separate
+workflow file does not itself meet C6. Before any tier reduction, the Guardian resolves
+whether D083 requires full matched counts on every affected PR (the Optimiser's §4).
+
+**The artefacts, at this head:**
+
+| file | what |
+|---|---|
+| `bench/team-screen/manifest.json` | the versioned manifest (`team-screen/0-draft`): roles, arms, fixtures, transitions, limits |
+| `bench/team-screen/deltas/334.json` | #334's pinned delta |
+| `bench/team_screen.py` | the checker stub: `outputs` for A1; `check` for the full tier's counted A2–A4 |
+| `bench/test_team_screen.py` | its 24 negative controls: synthetic records and mocked profiles, no decoder |
+| `examples/ab.rs` | the child's record now carries **structured `err_kind` and `err_block`**, from the reader's `mibz2::Error` |
+
+**The structured error fields** are new at this head. The harness now emits the block
+identity the contract claims; before this, it gave only error text. A local functional
+check on a truncated generated corpus agreed across arms: `mibz2` and `mibz2-pipe3-both`
+both reported `Truncated` at block 1, with the same prefix. That check is not a screen run.
+
+## 1. The gap (read: #330 §7, D083)
 
 **CI's A/B never runs a team:**
-- the runners have 4 vCPUs on 2 cores;
+- its runners report 4 CPUs on 2 cores;
 - `Plan::for_threads` gives `Workers` below 6 physical cores;
-- the pipelined default needs exactly 10 physical cores, exactly 20 MiB L3 and threads of 10
-  or more.
+- the pipelined default needs exactly 10 physical cores, exactly 20 MiB L3 and threads of
+  10 or more.
 
 So these never execute on any PR: `mtf_checkpoints_avx2`, `FusedBuild::share`,
-`coop::traverse` / `traverse_staged`, and the relay. A change to them reads as "no change".
-Generic teams engage on hardware from 6 cores, so a shared-kernel port reaches more than
-the i9.
+`coop::traverse` / `traverse_staged`, the relay, and the pipelined leader's solo path.
+Generic teams engage on hardware from 6 cores.
 
-## 2. The screen
+## 2. Fixtures and arms (the manifest)
 
-**The arms:** each a harness child (`ab child ARM THREADS FILE`) of a build made in the
-screen's own job.
+**The arms:** each a harness child, `ab child ARM 3 FILE`.
 
-| arm | build | command | role |
+| arm | build | env | what |
 |---|---|---|---|
-| **H-team** | head | `ab child mibz2-pipe3-both 3 FILE`, with the head's research selector set where the PR adds one (for #334: `AB_STAGED_TRAVERSE=1`) | forced head: one pipelined team of three (leader + 2 helpers), park and small |
-| **B-team** | base (merge base) | `ab child mibz2-pipe3-both 3 FILE` | forced base |
-| **H-plain** | head | `ab child mibz2 3 FILE` | the ordinary pair, retained (`Workers` on the runner) |
-| **B-plain** | base | `ab child mibz2 3 FILE` | the ordinary pair, retained |
+| H-team | head | the delta's `head_team_env` (#334: `AB_STAGED_TRAVERSE=1`) | `mibz2-pipe3-both`: one pipelined team, a leader and 2 helpers |
+| B-team | base (merge base) | none | the same |
+| H-plain | head | none | `mibz2`: the ordinary pair, retained |
+| B-plain | base | none | the same |
 
-**Why `pipe3-both@3`:**
-- it is one pipelined team: its relay, the leader's join, its solo path below `MIN_COOP`,
-  and the levers the default runs with;
-- a team of two alone does not cover the relay (D083);
-- `@9` (three teams) is in the full tier (§5).
+**The fixtures,** each frozen by digest:
+- **W:** `wikidata.bz2` (`82f65ace…`). Its counted invariants:
+  - 233 cooperative (T) blocks and 198 short (S) blocks;
+  - M = 209,697,662 walked bytes;
+  - 238,382 takes;
+  - D = 209,700,196 decoded bytes.
 
-**The inputs** (frozen by digest at registration):
-- **W:** `corpora/wikidata.bz2` (SHA-256 `82f65ace…c2c29915`). It has 431 blocks: 233 of at
-  least `MIN_COOP` rows, alternating with 198 short ones, so **every short/large transition
-  of the pipeline** occurs (the leader's solo path, lever B's run of short blocks, the team
-  resuming).
-- **C:** the bench's generated corpora at the bench's scale (`ab gen corpora 4`): text,
-  random, records, runs, pattern, onebyte.
-- **E1:** W truncated mid-block, at a fixed byte offset frozen at registration.
-- **E2:** W with one byte of a large block's stored CRC flipped, at a fixed offset frozen
-  at registration.
+  Its T/S block-class sequence is frozen from `scan`.
+- **C-\*:** the six generated corpora.
+- **Four native error fixtures,** each derived from W by one edit:
+  - truncation inside a T block (not the first), and inside an S block lying between two
+    T blocks;
+  - one stored-CRC bit flipped in a T block, and in an S block.
 
-### The assertions (each a FAIL of the screen)
+**The error fixtures' frozen terms:**
+- **Each fixture records:** its digest, its block index and the block's class, and the
+  expected `err_kind` (`Truncated` or `BlockCrc`) and `err_block`.
+- **Truncation:** at a byte offset, the block's midpoint from `scan`'s span.
+- **A CRC flip:** a bit offset and a mask, at the stored CRC's last bit, `start_bit` + 48 +
+  31. It is located structurally from the span's bit fields, which can be bit-aligned.
+- **The promised prefix:** every block before the failed one, decoded, given as a length
+  and the harness's hash.
+- **lbzip2 must reject each one** (exit nonzero). That is an independent check only; its
+  message and buffered output are not compared.
 
-**A1. Exact outputs and errors.** For each input, the four arms agree:
-- the same hash and length (`out`, `hash`), or the same error kind at the same block, with
-  the same bytes before it;
-- the outputs also equal `lbzip2 -dc`'s for W and C.
+**The oracle** for each valid fixture: `ab child lbzip2 1 FILE`, the harness's hash over
+lbzip2's output. That is 7 oracle decodes (W and the six C), whose results are frozen and
+required again on every run.
+- **The checksum's scope:** the hash is a 64-bit non-cryptographic regression checksum
+  plus a length, not byte-for-byte proof. The screen states that scope; stronger identity
+  would need a SHA-256 of the output stream (open question 1).
 
-**A2. The executed kernels.** One callgrind execution each of H-team and B-team on W:
-`valgrind --tool=callgrind --dump-instr=yes --separate-threads=yes`, one file a thread.
+**Required transitions:** S→T, T→S, S→S and T→T; the stream ending after T and after S;
+an error in a T block and in an S block; the leader joining a walk.
+- **Coverage is shown, not inferred from block counts:**
+  - in the PR tier, by the probes' ordered per-block records (§3, T2);
+  - in the full tier, by W's frozen class sequence plus the profiles' role counts.
+- **A missing transition gets a crafted fixture,** added for any required transition W's
+  sequence lacks (S→S if W strictly alternates).
 
-| arm | must execute | must not execute |
-|---|---|---|
-| H-team, for #334 | `coop::traverse_staged`, on **both** helper threads | `coop::traverse` |
-| B-team | `coop::traverse`, on both helper threads | `coop::traverse_staged` |
-| both | `mtf::mtf_checkpoints_avx2` (the leader), `FusedBuild::share` (both helpers), `Relay::walk_and_leave` | |
+## 3. The PR tier (routine, on affected PRs)
 
-- **Other ports:** the must and must-not lists are the PR's own, given in its registration.
-  The "both" row stays for every port.
-- **Shared code generation can change** (D084 §3): the plain and solo paths keep their own
-  checks in A1 even where their source is unchanged.
+### T1: uninstrumented exact results and errors (A1)
 
-**A3. Cooperative engagement** (H-team and B-team, from the same profiles):
-- each helper's walker calls = its `FusedBuild::share` calls = **233**, the cooperative
-  blocks of W;
-- each helper made at least one successful claim, so walked at least one segment;
-- the walked bytes, summed over threads (take + full phase + tail), equal W's cooperative
-  walked bytes (209,697,662);
-- the claims equal the takes plus one exhausting claim per walker call.
+**The work:** the four arms on all 11 fixtures (44 children), the 7 oracle decodes and 4
+lbzip2 rejections. All are the uninstrumented builds, so A1 is preserved as it would run
+in production code.
 
-**No balance bar here.** Callgrind runs one thread at a time, so the helpers' byte split
-is valgrind's schedule (D084 §2). The split is archived (A4), not judged. A balance
-predicate belongs to a native diagnostic (`2026-11-10-staged-engagement-diagnostic-draft.md`),
-not to this screen.
+**`team_screen.py outputs`** is an admission contract.
 
-**A4. Matched per-thread instruction counts, archived separately.** The harness has no
-counter of its own. The profiles of H-team and B-team are gzipped into the job's artifact
-`team-screen-<head>`, beside a per-thread table from `bench/team_screen.py` (§3), as
-`team_gap_count.py staged` prints it:
-- each thread's total Ir and its build, walk and coordination Ir;
-- its walker calls, claims, walked bytes by kind, and fragments;
-- the walk and inversion stages in Ir/D, for both arms.
+**What it rejects:**
+- a missing, duplicate or unexpected (arm, fixture) pair, or an empty set;
+- a wrapper or record without its full schema: arm, fixture, build, build SHA, executable
+  SHA-256, env, exit status, signal, and the record with `out`, `hash`, `err`, `err_kind`
+  and `err_block`;
+- a malformed identity;
+- a build or environment that differs from the pinned delta;
+- a process killed by a signal.
 
-**Never in the bench comment's acceptance table.** It is a screen artifact: no
-performance inference, no merge criterion.
+**What each fixture must give:**
+- **A valid fixture:** exit 0, an empty `err`, and the oracle's length and hash. Arms that
+  agree on a failure do not pass.
+- **An error fixture:** its frozen `err_kind` and `err_block`, and the promised prefix.
+- **The matched arms:** they must agree on (exit, out, hash, kind, block).
 
-### The dispositions
+The 24 negative controls include every counterexample both reviews executed: four empty
+objects, one empty record, matching failures, an error without its block, and others.
 
-- **Any of A1–A3 failing** fails the screen job; the PR's merge is blocked. The usual CI
-  incident classes apply (`docs/team/CI-INCIDENTS.md`).
-- **A4** carries no disposition.
-- **The screen qualifies nothing.** No performance claim, no target or native
-  qualification: a forced, oversubscribed arm cannot qualify target performance (D083).
+**The prefix's meaning:** it is mibz2's streamed output before the error. Its
+schedule-dependence under the parallel reader is an open item (open question 2). The
+local check above found it equal across the plain and team arms.
 
-## 3. The harness stub (`bench/team_screen.py`, in this PR, not run)
+### T2: per-thread semantic kernel and conservation probes
 
-- **`check`** reads one arm's per-thread profiles with `team_gap_count.py`'s parser.
-  - It applies A2 (`--require SYMBOL=MIN_THREADS`, `--forbid SYMBOL`) and A3
-    (`--coop-blocks`, `--walked`), and with `--table` writes A4's per-thread table.
-  - It exits nonzero on any failed assertion, naming it.
-- **`outputs`** compares the harness's child JSON records (`out`, `hash`, `err`) across
-  arms for A1.
-- **Still to write before freezing:**
-  - the workflow, below;
-  - the E1/E2 offsets;
-  - the per-PR must/must-not lists' home (proposed: a block in the PR's registration,
-    copied into the workflow's dispatch input).
+**The instrument is the `walk-stats` cargo feature,** shared with the native diagnostic
+(`2026-11-10-staged-engagement-diagnostic-draft.md`, §2). It is not yet implemented.
 
-**The workflow, proposed:** `.github/workflows/team-screen.yml`, a job of its own, never a
-step of `bench.yml`, so that no acceptance cell is added and none removed.
-- It is triggered on pull requests touching `src/coop.rs`, `src/mtf.rs`, `src/parallel.rs`,
-  `src/bwt.rs`, `examples/ab.rs` or `bench/team_screen.py`.
-- It builds head and base as bench.yml does (`cargo build --release --example ab`, the base
-  in a worktree), installs valgrind and lbzip2, and makes C with `ab gen`.
-- It runs §2 in a fixed order: B-team, H-team, B-plain, H-plain natively on W, C, E1 and
-  E2; then callgrind B-team, then H-team, on W.
+**What it records:**
+- **Per-thread entry counters** in each role's kernel: the leader's `mtf_checkpoints`, the
+  helpers' `FusedBuild::share`, each walker variant (`traverse` and `traverse_staged`
+  alike), the relay's `walk_and_leave`, and the solo path;
+- **claims and walked bytes,** counted per segment and per tile chunk, not per byte;
+- **records** keyed by (build, team, thread, block), written into per-thread storage and
+  published once, at the run's end.
 
-## 4. The price (model, from counted and logged figures; not measured on CI)
+**What the probes prove:**
+- **Execution:** a counter compiled into a kernel counts its entries. That proves the
+  kernel executed.
+- **Absence:** the forbidden walker's counter must be zero, which proves absence for that
+  build. Symbol presence (`nm`) and sampled traces can prove neither.
 
-**The sources:**
-- bench run 42758830562 (#334's, EPYC 7763 runner, warm cache): checkout 8 s; lbzip2 25 s;
-  head build 27 s, base build 25 s; corpora 7 s; Wikidata windows 10 s;
-- this machine: callgrind of `pipe3-both@9` on W took about 30 s an arm (the archived run's
-  file times), at about 8.0 G Ir;
-- `@3` executes about the same Ir (the same kernels on the same blocks; fewer threads).
+**The assertions:**
+- **the roster:** exactly one leader and two helpers, identified by role;
+- **the kernels on the same helpers:** each helper shows share = walker = relay = 233, and
+  the forbidden walker's counter is 0;
+- **liveness:** each helper made at least one successful claim over the run;
+- **the leader:** 198 solo blocks, and at least one join;
+- **conservation, per block:** walked bytes = segment lengths, and successful claims = the
+  deduplicated starts;
+- **the transitions** of §2, seen in the per-block records ordered by place.
 
-| part | seconds, warm cache | cold cache |
-|---|--:|--:|
-| setup: checkout, apt (valgrind, lbzip2), toolchain | about 45 | about 45 |
-| builds: head and base `ab` (fat LTO) | about 55 | 300–600 |
-| inputs: corpora, Wikidata windows, E1/E2 | about 20 | about 20 |
-| native arms: 4 arms × (W, C's 6, E1, E2) = 36 decodes, about 0.1–0.6 s each | about 15 | about 15 |
-| callgrind: B-team and H-team on W, about 30–60 s each | 60–120 | 60–120 |
-| checker: parsing about 6 profiles with `--dump-instr`, 2 arms | about 20–40 | about 20–40 |
-| artifact upload (about 1–2 MB gzipped) | about 5 | about 5 |
-| **job total** | **about 3.5–5 min** | **about 8–14 min** |
+**The cost and the limits:**
+- **One more fat-LTO build:** the head, with the feature. It is charged in §5.
+- **A changed binary:** the probes run on the instrumented build only, never in place of
+  T1's uninstrumented A1. A probe result claims semantic execution and conservation in
+  the instrumented execution: **neither native balance nor performance.**
+- **The base gets no probes** until the instrument is on master. Until then the base arm
+  has T1 only, and the probes run on the head alone.
+- **No balance bar:** that belongs to the native diagnostic.
 
-**Seconds a round:** the screen has no rounds. It is one execution per arm; Ir counts are
-deterministic but for the schedule. The measurement part (native, callgrind, checker) is
-about **95–175 s per screened PR**.
+**Until T2 exists,** the PR tier is T1 alone, and the kernel and engagement evidence is the
+full tier's.
 
-**Where it costs:**
-- in runner minutes: a second job of about 4 min, in parallel with bench.yml's 8 min;
-- not in the PR's wall: it adds none to the bench job and nothing to its 10-round A/B.
+## 4. The full tier, or a separate diagnostic: matched counted profiles
 
-**The tier (proposed):**
-- **PR tier, on the affected paths above:** §2 as written, one team (`@3`). The cost fits a
-  parallel job of about 4 min, and it is the bounded one-team screen D083 prefers.
-- **Full tier** (push to master, the Actions tab, or a `bench:full`-style label if one is
-  adopted):
-  - add `pipe3-both@9` (three teams: the relay's interaction across teams), counted in
-    callgrind the same way;
-  - archive the counts, about +60–120 s.
+**Callgrind,** one execution each of H-team and B-team on W, uninstrumented builds:
+`--dump-instr=yes --separate-threads=yes`. It runs on master pushes, from the Actions tab,
+or as a separately registered diagnostic, never as a routine PR gate.
 
-  The three-team counts stay out of the PR tier (D083: "broader counts and three-team
-  interaction in full tier").
+**`team_screen.py check`** gives A2 and A3 from the counts, as a cross-check of the
+probes, and A4's table.
 
-**What the price leaves out:** queueing for a runner; a cold-cache base build on its first
-run; a re-run after a red setup (class B).
+**Rules for the counts:**
+- **Each profile matched to its own binary and source:** `--binary` and `--coop-src` are
+  that arm's own and required. Thread IDs are never compared across builds.
+- **Attribution is not assumed:**
+  - Under LTO, the unmodified merge base may have no standalone `traverse` symbol. The
+    base is **never patched** to obtain attribution.
+  - An unattributable kernel is reported as UNATTRIBUTED, never as zero calls; the checker
+    fails A2 on it.
+  - Only an attributable symbol's call arcs show execution.
+  - **The base arm's A2 for the walker is therefore unresolved** until its frozen binary
+    is inspected. The probes (T2) are the means of resolving it, once the instrument is on
+    master.
+- **A4, diagnostic only:**
+  - raw Ir per thread and per stage;
+  - the whole process, and the inversion (build, walk and assembly);
+  - **Ir/D** with D = 209,700,196 decoded bytes, and the walk's **Ir/M** with M =
+    209,697,662 walked bytes;
+  - unattributed Ir, and the tool and build identities.
 
-## 5. Open questions for the Researcher
+  It carries no threshold, no badge and no acceptance row.
+- **`@9` is deferred** until an explicit team identity exists. Each team owns a subset of
+  W, so "233 per helper" does not hold, and A3 needs per-team assigned-block counts and a
+  stable team identity, not equal totals. The probes' team key would supply them, on an
+  instrumented build.
 
-1. **A3's engagement:** is "every helper walked at least one segment in total" enough under
-   serialised execution, or should A3 require at least one claim per block per helper?
-   Under callgrind a helper can legitimately find a block's queue exhausted.
-2. **The must and must-not lists:** per PR (as proposed), or a standing list per kernel?
-3. **The E1/E2 offsets:** should they be chosen inside a block the team walks, a block the
-   leader solos, or both (two more inputs)?
-4. **Should A4's table also record the old/new walker's Ir/D on W at `@3`?** As a figure
-   it is diagnostic only. Recording it risks it being read as a gate.
+## 5. Limits, triggers, contract, price
+
+**Hard limits** (the manifest's `limits_s`, in seconds):
+
+| stage | limit |
+|---|--:|
+| the whole job | 1,200 |
+| each build | 720 |
+| each native child | 60 |
+| each callgrind child | 300 |
+| the checker | 120 |
+| the artifact | 20 MB |
+
+A timeout is missing coverage: never a pass, never retried silently.
+
+**The trigger:** pull requests touching any of:
+- `src/**`, `Cargo.toml`, `Cargo.lock`;
+- `examples/ab.rs`, `tests/common/**` (the corpora's recipe);
+- `bench/team_screen.py`, `bench/team_gap_count.py`, `bench/team-screen/**`;
+- the screen's workflow file.
+
+So a change to the covered binary, its inputs, or the screen's own machinery re-runs it.
+
+**Running it:**
+- one run per head/base pair;
+- an obsolete PR attempt is cancelled, but its status and artifacts are kept.
+
+**The contract** is versioned by the manifest's `version`. Any change to a fixture, an
+oracle value, a role, a transition or a limit is a new version, reviewed as the first.
+
+### The price (models; the Optimiser's equations)
+
+**Revision 1's rows,** as the Optimiser corrected them: **220–300 s warm, 465–845 s cold.**
+
+**Before omissions, revision 1 left out:**
+- the 7 oracle decodes;
+- Valgrind's apt delta (unmeasured on CI: run 42758830562 installed lbzip2 only);
+- the cache save, compression and tails.
+
+**Its "about 4 runner-minutes"** was one optimistic cache-hit case, not an expected cost.
+
+**The two-tier price, rebuilt the same way** (in seconds; models, not CI observations):
+
+| part | PR tier, warm | PR tier, cold | full tier adds |
+|---|--:|--:|--:|
+| checkout, toolchain, apt (lbzip2) | about 45 | about 45 | the Valgrind apt delta (unmeasured) |
+| builds: head and base (27.08 and 25.14 s logged, cache hit), plus head with `walk-stats` | about 80 | 450–900 | none |
+| fixtures: corpora, windows, 4 E edits | about 25 | about 25 | none |
+| T1: 44 children, 7 oracle decodes, 4 lbzip2 rejections (0.1–0.6 s each) | 6–33 | 6–33 | none |
+| T2: the instrumented H-team on 11 fixtures | 2–7 | 2–7 | none |
+| checker, artifact, cache save | about 15 | about 15 | none |
+| callgrind, H-team and B-team on W | none | none | 60–120 |
+| parsing and disassembly | none | none | 20–40 |
+| **total** | **about 175–205** | **about 545–1,025** | **80–160, plus apt and tails** |
+
+**The cold cache:**
+- The cold range adds a third fat-LTO build: T2 costs a build.
+- With cold probability p, the expected PR-tier time is about 190 + 600p seconds before
+  omissions. No value of p has been established.
+
+**The merge delay is not zero.**
+- **The equation:** with the existing required checks finishing at B, and the screen's
+  queue Qs and duration Ts, the added merge-ready latency is **max(0, Qs + Ts − B)**.
+- **The bench's B:** about 473 s (job log 129639441404).
+- **What that gives:** a warm PR tier with no queue adds about 0; a cold one adds up to
+  about 550 s; a queue or a rerun can make even a warm screen critical.
+- **Runner-minutes always rise,** and a screen sharing a physical runner could disturb the
+  bench's isolation. A separate job definition does not prove separate resources.
+
+## 6. Open, for the Researcher and the Guardian
+
+1. **Valid outputs:** add a SHA-256 of each output stream to the record (stronger than
+   length plus a 64-bit checksum), or freeze the checksum's scope as stated?
+2. **The error prefix:** compare it exactly (length and hash) across the matched arms, as
+   proposed, or define its schedule semantics first?
+3. **S→S:** if W strictly alternates, should the crafted fixture be a low-level C-style
+   corpus, or a W-derived stream with one T block dropped?
+4. **The Guardian:** does D083 require counted profiles on every affected PR, which would
+   make the full tier a PR tier, or does the two-tier split stand?

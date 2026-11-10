@@ -516,8 +516,39 @@ fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> 
             }
             Ok(n) => h.update(&buf[..n]),
             Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-            Err(e) => return Err(e.to_string()),
+            Err(e) => {
+                record_err_id(&e);
+                return Err(e.to_string());
+            }
         }
+    }
+}
+
+/// The decoder's error, as the child's record reports it apart from its text: its kind's
+/// name and its block (`mibz2::Error`'s, where the reader's error carries one), for the
+/// team screen's exact-error contract (docs/journal/2026-11-10-team-screen-design-draft.md)
+static ERR_ID: std::sync::Mutex<Option<(String, Option<u64>)>> = std::sync::Mutex::new(None);
+
+fn record_err_id(e: &std::io::Error) {
+    if let Some(d) = e.get_ref().and_then(|x| x.downcast_ref::<mibz2::Error>()) {
+        let name = format!("{:?}", d.kind);
+        let name = name
+            .split(['(', ' ', '{'])
+            .next()
+            .unwrap_or_default()
+            .to_string();
+        *ERR_ID.lock().unwrap_or_else(|p| p.into_inner()) = Some((name, d.block));
+    }
+}
+
+/// `,"err_kind":…,"err_block":…` for the child's record (null where there is none)
+fn err_id_json() -> String {
+    match ERR_ID.lock().unwrap_or_else(|p| p.into_inner()).clone() {
+        Some((k, b)) => format!(
+            ",\"err_kind\":\"{k}\",\"err_block\":{}",
+            b.map_or("null".into(), |b| b.to_string())
+        ),
+        None => ",\"err_kind\":null,\"err_block\":null".into(),
     }
 }
 
@@ -838,10 +869,11 @@ fn child(arm: &str, threads: usize, path: &str) {
     let perf = perf.map(machine::Perf::finish).unwrap_or_default()
         + &region.map(machine::Region::json).unwrap_or_default();
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf},\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\"{perf}{},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
-        h.finish()
+        h.finish(),
+        err_id_json()
     );
 }
 
