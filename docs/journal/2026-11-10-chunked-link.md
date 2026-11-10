@@ -36,9 +36,9 @@ Row y of the T-vector links to Ψ(y). Rows are in first-column order, and the ro
   - `dir`: one bit a row, set where a stretch begins, and beside each word of 64 the set
     bits before it.
   - `rec[k]`: stretch k's upper bits and its bucket's byte.
-- **A step:** k = (the count before y's word) + popcount(its bits up to y) − 1; Ψ(y) = rec[k]'s upper
-  bits with low[y]; the byte is rec[k]'s. It is the first column's byte of y, which is the
-  T-vector's byte one step on: the same output from the origin.
+- **A step:** k = (the count before y's word) + popcount(its bits up to y) − 1; Ψ(y) is
+  rec[k]'s upper bits with low[y]; the byte is rec[k]'s. It is the first column's byte of y,
+  which is the T-vector's byte one step on: the same output from the origin.
 - **One rule.** No row has a second access of another kind, no line overflows, nothing is
   flagged. E's overflow list and its flagged skeleton have no counterpart.
 
