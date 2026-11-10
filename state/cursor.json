@@ -1691,11 +1691,15 @@
     },
     {
       "trigger_comment_id": 6760245172,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "source_commit": "295cfd2bb0ac77e4d368e5272a3ee1671666a857"
+      "source_commit": "295cfd2bb0ac77e4d368e5272a3ee1671666a857",
+      "report_commit": "b1fb3906a0adeaa5f52eadcab5862e07f3cee689",
+      "report_path": "state/reports/conditional-estimand-6760245172/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE conditional policy: conditioning on aftermath does not prove independence; nonflat heteroskedastic Gaussian counterexample gives 9.602% joint false acceptance; S5 false-alarm and power bounds unsupported."
     }
   ],
   "active_delegations": [],
