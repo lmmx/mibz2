@@ -42,6 +42,25 @@ Everything below, the class threshold and the analysis included, is fixed before
 - **The probe core:** CPU 9 and its sibling 19, the last physical core. Both are taken out of the
   decoder's mask, which is `0-8,10-18`. ab itself runs on that mask (`taskset`), so nothing of
   ours shares the probe core but the probes.
+- **First, the sustained block, with no probe** (the Pathfinder's addition, #145 6756520552).
+  - **What runs:** one process, ab's own `child mibz2-default33 10`, unpinned on all 20 CPUs,
+    decodes the corpus concatenated 50 times (593 MB in, 10.5 GB out, hashed and dropped) end
+    to end. The concatenation is kept beside the attempt's directory, never in the bundle. It
+    goes through the probe binary's `sustained` mode, which neither pins nor spins.
+  - **What it records:** the input's progress (`/proc/PID/io` `rchar`) every 10 ms, summed
+    into 100 ms windows; every CPU's `scaling_cur_freq` and the child's `AnonHugePages` every
+    100 ms; the counters before and after, and its `wait4` rusage.
+  - **Why the input:** the harness keeps no output file, and its decoder reads its input in
+    chunks (about 4 MB each) a bounded distance ahead of what it has decoded, so the input's
+    progress tracks throughput at chunk resolution. A 100 ms window holds one or two chunks on
+    the i9, so the signature is read on 500 ms blocks.
+  - **Its deadline:** 300 s (TERM, then KILL 10 s after). The block is expected to take 8 to
+    16 s. A block that times out or fails is recorded and makes the attempt INVALID; it is never
+    retried.
+  - **A fixed 60 s rest follows** before pass 1, so the probe passes don't start in the block's
+    heat.
+  - **No harness change:** the block runs the archived `ab child` unchanged; a multi-stream
+    input is what the corpus already is (twelve streams one after another).
 - **Pass 1, 60 runs:** P-idle on CPU 9, on a fixed schedule, `PPN` repeating from the first run.
   Two runs of every three are probed; the third runs with no probe, with the same mask and the
   same readings. That makes 40 probed runs and 20 unprobed, interleaved.
@@ -57,7 +76,7 @@ Everything below, the class threshold and the analysis included, is fixed before
   - CPUs 9 and 19 are one core's two siblings, and that core is the last;
   - the core and package throttle counts are readable on every CPU;
   - the probe's 0.2 s selftest pinned itself to CPU 9 and read that back.
-- **One attempt; no retry to pass.** It takes about five minutes.
+- **One attempt; no retry to pass.** It takes about seven minutes, the corpus build aside.
 
 ## 2. The readings
 
@@ -186,6 +205,25 @@ The outcome is the first line of `judgement.txt` and `outcome.txt`:
 - **The gaps:** each pass's gap from ab's exit to its next spawn, against the source bundle's
   0.256 to 0.264 s.
 
+### The sustained block's signature
+
+The block is read on 500 ms blocks from 1 s to its last input read (the first second holds the
+decoder's initial read-ahead). Each block's rate is decoded-equivalent: input bytes × 209,700,196
+÷ 11,854,933, over 0.5 s. A block is **fast** when that rate reaches the class threshold's, one
+corpus in 0.21 s (0.999 GB/s).
+
+| signature | rule | predicted by |
+|---|---|---|
+| **fast and steady** | at least 80% of blocks fast | H1 ramp, H2 placement, H4 first faults: a long process ramps, spreads and faults once |
+| **settles low** | at most 20% fast | H3 stop-clock, H5 power limit: continuous load holds the slow mode |
+| **alternates** | between, with at least 2 switches | H3, H5: throttling or the limit cycling |
+| **mixed** | between, with fewer switches | none |
+| **too short** | fewer than 4 blocks | none (the DRY check's case) |
+
+The signature is reported beside the table and never changes the table's match. The outcome
+line appends it, with whether it is what the matched column predicts: for example "sustained
+block: fast and steady (consistent with H1)", or "(not what H3 predicts)".
+
 ### What each outcome means
 
 - **H1 or H4: a property of short, fresh processes.** The i9's burst figures say nothing about
@@ -209,6 +247,10 @@ The outcome is the first line of `judgement.txt` and `outcome.txt`:
     whatever lowers either.
   - **No comparison:** none of this run's walls is comparable with another bundle's.
 - **The probe cannot be warm before a run** (§3, the H1 change).
+- **The sustained block reads progress at the input.** It reads the input's progress at about
+  4 MB resolution, a bounded read-ahead in front of the output, and nothing about the last
+  read-ahead's worth. It runs unpinned on all ten cores, unlike the passes. Its signature is a
+  consistency check on the table, not a column.
 - **The observers cost something.** The wrapper's sampler wakes every 2 ms on the decoder's
   CPUs, reading about a dozen stat files, and every 10 ms reads 20 sysfs files and the child's
   `smaps_rollup`. Each freq sweep's own duration is recorded.
@@ -232,8 +274,10 @@ The outcome is the first line of `judgement.txt` and `outcome.txt`:
 
 `just bench-two-modes 1 CORPUS` on a 4-CPU machine without SMT:
 - **The preflight:** REFUSED, as it must be there, recorded, and the check went on.
-- **The passes:** pass 1 ran three runs through the probe on the machine's last CPU; pass 2
-  was skipped, since there is no sibling.
+- **The sustained block:** three corpora, untimed; its signature is "too short" by
+  construction.
+- **The passes:** pass 1 ran three runs through the probe on the machine's last CPU, on the
+  PPN schedule; pass 2 was skipped, since there is no sibling.
 - **The judge:** labelled the attempt DRY, and refuses it as INVALID without `--dry`.
 - **The bundle** was made.
 

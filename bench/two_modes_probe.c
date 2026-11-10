@@ -18,6 +18,13 @@
  *       TWO_MODES_PASS (1 or 2), TWO_MODES_IDLE_CPU (P-idle's CPU), TWO_MODES_SIB_CPU (P-sib's
  *       CPU, or empty: no P-sib), TWO_MODES_DECODER_CPUS (the decoder's CPU list).
  *
+ *   two_modes_probe sustained FILE
+ *       The sustained block, before the probe passes: ab's own child decodes FILE (the corpus
+ *       concatenated, one process, unpinned, no probe running), its input's progress
+ *       (/proc/PID/io rchar) every 10 ms, every CPU's scaling_cur_freq and its AnonHugePages
+ *       every 100 ms, its counters and rusage around it; one JSON line appended to TWO_MODES_OUT.
+ *       Its stdout is the child's record.
+ *
  *   two_modes_probe selftest CPU MS
  *       Untimed plumbing check: one probe pinned to CPU for MS milliseconds, its pinning read
  *       back, its samples counted. One JSON line on stdout; exit 0 only if the probe was
@@ -760,6 +767,119 @@ static int run_child(int argc, char **argv) {
     return WIFEXITED(status) ? WEXITSTATUS(status) : 70;
 }
 
+/* The sustained block: one process (ab's own child, unpinned, no probe) decoding FILE, a
+ * concatenation of the corpus, end to end. Every 10 ms the bytes it has read of its input
+ * (/proc/PID/io rchar: the input's progress; the decoder reads it in chunks as it goes, and
+ * the analysis sums it into 100 ms windows); every 100 ms every CPU's scaling_cur_freq and
+ * its AnonHugePages. Around it: the counters and its rusage. */
+static long io_rchar(int pid) {
+    char path[64], buf[1024];
+    snprintf(path, sizeof path, "/proc/%d/io", pid);
+    if (read_small(path, buf, sizeof buf) <= 0)
+        return -1;
+    char *p = strstr(buf, "rchar:");
+    return p ? atol(p + strlen("rchar:")) : -1;
+}
+
+static int run_sustained(int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stderr, "usage: two_modes_probe sustained FILE\n");
+        return 64;
+    }
+    const char *ab = need("TWO_MODES_AB");
+    const char *out = need("TWO_MODES_OUT");
+    prctl(PR_SET_NAME, "tm-sustain", 0, 0, 0);
+    int ncpu = ncpus_conf();
+    Text t, io, fq;
+    text_open(&t);
+    text_open(&io);
+    text_open(&fq);
+    FILE *f = t.f;
+    fprintf(f, "{\"schema\":\"two_modes/sustained/1\",\"file\":");
+    json_str(f, argv[2]);
+    fprintf(f, ",\"t_unix_ns_start\":%llu,\"before\":", (unsigned long long)unix_ns());
+    counters_json(f, ncpu);
+    freq_open(ncpu);
+    uint64_t m0 = mono_ns();
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("two_modes_probe: fork");
+        return 70;
+    }
+    if (pid == 0) {
+        char *args[] = {(char *)ab, "child", "mibz2-default33", "10", argv[2], NULL};
+        execv(ab, args);
+        _exit(127);
+    }
+    int pfd = pidfd_open_(pid);
+    int status = 0;
+    struct rusage ru;
+    memset(&ru, 0, sizeof ru);
+    long n = 0;
+    uint64_t next = m0;
+    for (;;) {
+        uint64_t now = mono_ns();
+        if (now >= next) {
+            long r = io_rchar(pid);
+            fprintf(io.f, "%s[%ld,%ld]", n ? "," : "", (long)((now - m0) / 1000), r);
+            if (n % 10 == 0) {
+                freq_sample(fq.f, ncpu, m0, n == 0);
+                smaps_sample(pid, (long)((now - m0) / 1000));
+            }
+            n++;
+            next += 10000000ull;
+            if (next < now)
+                next = now + 10000000ull;
+        }
+        now = mono_ns();
+        int wait_ms = next > now ? (int)((next - now + 999999) / 1000000) : 0;
+        if (pfd >= 0) {
+            struct pollfd q = {.fd = pfd, .events = POLLIN};
+            poll(&q, 1, wait_ms);
+        } else {
+            struct timespec ts = {0, (long)(next > now ? next - now : 0)};
+            nanosleep(&ts, NULL);
+        }
+        pid_t w = wait4(pid, &status, WNOHANG, &ru);
+        if (w == pid || (w < 0 && errno != EINTR))
+            break;
+    }
+    uint64_t m1 = mono_ns();
+    if (pfd >= 0)
+        close(pfd);
+    fclose(io.f);
+    fclose(fq.f);
+    fprintf(f, ",\"after\":");
+    counters_json(f, ncpu);
+    fprintf(f, ",\"pid\":%d,\"span_s\":%.6f,\"io\":{\"every_ms\":10,\"samples\":[%s]}", pid,
+            (m1 - m0) / 1e9, io.buf ? io.buf : "");
+    fprintf(f, ",\"freq\":{\"every_ms\":100,\"cpus\":%d,\"samples\":[%s]}", ncpu,
+            fq.buf ? fq.buf : "");
+    fprintf(f,
+            ",\"smaps\":{\"every_ms\":100,\"reads\":%ld,\"fails\":%ld,\"anon_huge_kb_last\":%ld,"
+            "\"anon_huge_kb_max\":%ld,\"anonymous_kb_last\":%ld}",
+            smaps_reads, smaps_fails, smaps_last_kb, smaps_max_kb, smaps_anon_kb);
+    fprintf(f,
+            ",\"rusage\":{\"minflt\":%ld,\"majflt\":%ld,\"utime_s\":%.6f,\"stime_s\":%.6f,"
+            "\"maxrss_kb\":%ld}",
+            ru.ru_minflt, ru.ru_majflt, ru.ru_utime.tv_sec + ru.ru_utime.tv_usec / 1e6,
+            ru.ru_stime.tv_sec + ru.ru_stime.tv_usec / 1e6, ru.ru_maxrss);
+    if (WIFEXITED(status))
+        fprintf(f, ",\"status\":{\"exit\":%d}}\n", WEXITSTATUS(status));
+    else if (WIFSIGNALED(status))
+        fprintf(f, ",\"status\":{\"signal\":%d}}\n", WTERMSIG(status));
+    else
+        fprintf(f, ",\"status\":{\"unknown\":%d}}\n", status);
+    fclose(f);
+    int fd = open(out, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+    if (fd < 0 || write(fd, t.buf, t.len) != (ssize_t)t.len) {
+        perror("two_modes_probe: writing TWO_MODES_OUT");
+        return 70;
+    }
+    close(fd);
+    return WIFEXITED(status) ? WEXITSTATUS(status) : 70;
+}
+
 static int run_selftest(int argc, char **argv) {
     if (argc != 4) {
         fprintf(stderr, "usage: two_modes_probe selftest CPU MS\n");
@@ -801,6 +921,9 @@ int main(int argc, char **argv) {
         return run_child(argc, argv);
     if (argc >= 2 && strcmp(argv[1], "selftest") == 0)
         return run_selftest(argc, argv);
-    fprintf(stderr, "usage: two_modes_probe child ARM THREADS FILE | selftest CPU MS\n");
+    if (argc >= 2 && strcmp(argv[1], "sustained") == 0)
+        return run_sustained(argc, argv);
+    fprintf(stderr,
+            "usage: two_modes_probe child ARM THREADS FILE | sustained FILE | selftest CPU MS\n");
     return 64;
 }

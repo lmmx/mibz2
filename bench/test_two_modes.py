@@ -224,8 +224,45 @@ def pattern(n, fast_runs):
     return [k in fast for k in range(n)]
 
 
-def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None):
+def sustained(rates, chunk=4_200_000, copies=tm.SUSTAINED_COPIES):
+    """A sustained block's record: its input read in chunks, at a decoded-equivalent rate
+    (GB/s) that `rates(t)` gives at each time t"""
+    total = copies * tm.CORPUS_BYTES
+    ratio = tm.WORKLOAD["out"] / tm.CORPUS_BYTES
+    samples, read, due, t = [], 3 * chunk, 0.0, 0.0
+    while read < total:
+        due += rates(t) * 1e9 / ratio * 0.01
+        while due >= chunk and read < total:
+            read += chunk
+            due -= chunk
+        samples.append([int(t * 1e6), min(read, total)])
+        t += 0.01
+    rec = {
+        "schema": "two_modes/sustained/1",
+        "span_s": t + 1.0,
+        "io": {"every_ms": 10, "samples": samples},
+        "smaps": {"anon_huge_kb_max": 0},
+        "rusage": {"minflt": 30000, "utime_s": 60.0, "stime_s": 1.0},
+        "status": {"exit": 0},
+    }
+    child = {"out": copies * tm.WORKLOAD["out"], "err": ""}
+    return rec, child
+
+
+SUSTAINED = {
+    "steady": lambda t: 1.3,
+    "low": lambda t: 0.68 if t > 0.5 else 1.3,
+    "alternating": lambda t: 1.3 if int(t / 2) % 2 == 0 else 0.68,
+}
+
+
+def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady"):
     """Write a synthetic attempt into d under signature sig"""
+    os.makedirs(os.path.join(d, "sustained"), exist_ok=True)
+    rec, child = sustained(SUSTAINED[sus])
+    for name, obj in (("sustained.json", rec), ("child.json", child)):
+        with open(os.path.join(d, "sustained", name), "w") as f:
+            json.dump(obj, f)
     os.makedirs(os.path.join(d, "preflight"), exist_ok=True)
     with open(os.path.join(d, "preflight", "static.json"), "w") as f:
         json.dump(static(), f)
@@ -235,6 +272,7 @@ def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None):
         "rounds": n,
         "layout": {"idle": tm.IDLE_CPU, "sib": tm.SIB_CPU, "decoder": tm.DECODER_CPUS},
         "ab_sha256": tm.SOURCE["ab_sha256"],
+        "sustained_copies": tm.SUSTAINED_COPIES,
         "windows_sha256": tm.SOURCE["windows_sha256"],
     }
     with open(os.path.join(d, "identity.json"), "w") as f:
@@ -328,7 +366,12 @@ class Columns(unittest.TestCase):
             attempt(d, "H3", n=3, fast_runs=1, mutate=m)
             with open(os.path.join(d, "identity.json")) as f:
                 ident = json.load(f)
-            ident.update(dry=True, rounds=3, layout={"idle": 3, "sib": None, "decoder": "0,1,2"})
+            ident.update(
+                dry=True,
+                rounds=3,
+                sustained_copies=tm.SUSTAINED_COPIES,
+                layout={"idle": 3, "sib": None, "decoder": "0,1,2"},
+            )
             with open(os.path.join(d, "identity.json"), "w") as f:
                 json.dump(ident, f)
             self.assertEqual(tm.main(["judge", d, "--dry"]), 0)
@@ -356,6 +399,34 @@ class Columns(unittest.TestCase):
         self.assertTrue(r["fast"])
         r = tm.readings(run_record(0, 0.21, 0), probe_record(0, 0.21, "H3", False, 1, 0), SIBS)
         self.assertFalse(r["fast"])
+
+    def test_sustained_block_agrees(self):
+        rc, j = judged("H1")
+        self.assertEqual(j["sustained"]["signature"], "fast and steady")
+        self.assertIn("sustained block: fast and steady (consistent with H1)", j["result"])
+
+    def test_sustained_block_settles_low(self):
+        rc, j = judged("H3", sus="low")
+        self.assertEqual(j["sustained"]["signature"], "settles low")
+        self.assertIn("(consistent with H3)", j["result"])
+        rc, j = judged("H1", sus="low")
+        self.assertIn("settles low (not what H1 predicts)", j["result"])
+
+    def test_sustained_block_alternates(self):
+        rc, j = judged("H5", sus="alternating")
+        self.assertEqual(j["sustained"]["signature"], "alternates")
+        self.assertGreaterEqual(j["sustained"]["switches"], 2)
+
+    def test_sustained_block_missing_is_invalid(self):
+        def m(p, r, q):
+            pass
+
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3", mutate=m)
+            os.remove(os.path.join(d, "sustained", "sustained.json"))
+            self.assertEqual(tm.main(["judge", d]), 2)
+            with open(os.path.join(d, "judgement.json")) as f:
+                self.assertIn("the sustained block", json.load(f)["outcome"])
 
     def test_the_probes_own_effect_on_the_mix(self):
         rc, j = judged("H3")

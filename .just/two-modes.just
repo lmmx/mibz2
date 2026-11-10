@@ -15,7 +15,9 @@
 # on CPU 19, its sibling, in every run. ab itself runs on the decoder's mask (taskset), so
 # nothing of ours shares the probe core. The preflight (read-only, bounded) refuses the
 # attempt, archived, unless the registered host and its declared settings are established.
-# One attempt; no retry to pass. About 5 minutes. Exit: 0 VALID (whatever the table says: the
+# Before the passes, the sustained block: one process decodes the corpus 50 times end to end
+# with no probe (deadline 300 s), then a fixed 60 s rest. One attempt; no retry to pass. About
+# 7 minutes. Exit: 0 VALID (whatever the table says: the
 # outcome says), 1 INVALID, 4 REFUSED by the preflight, 2 any other refusal or a report error,
 # 3 stopped before its verdict.
 #   just submit bench-two-modes
@@ -155,13 +157,33 @@ bench-two-modes DRY="" CORPUS="":
         exit 4
       fi
     fi
+    tm() { python3 -c 'import sys; sys.path.insert(0, "bench"); import two_modes as t; print(getattr(t, sys.argv[1]))' "$1"; }
+    # the sustained block, first and with no probe: one process (ab's own child, unpinned)
+    # decodes the corpus concatenated SUSTAINED_COPIES times, its input's progress read every
+    # 10 ms; bounded (TERM at the deadline, KILL 10 s after), recorded however it ends, never
+    # retried. Then a fixed rest before pass 1
+    copies=$(tm SUSTAINED_COPIES); [ -n "$dry" ] && copies=$(tm DRY_SUSTAINED_COPIES)
+    X=$B/wikidata-x$copies.bz2
+    if [ ! -f "$X" ] || [ "$(stat -c %s "$X")" != "$(( copies * $(stat -L -c %s "$W/wikidata.bz2") ))" ]; then
+      rm -f "$X"; for _ in $(seq "$copies"); do cat "$W/wikidata.bz2"; done > "$X.tmp" && mv "$X.tmp" "$X"
+    fi
+    mkdir "$W/sustained"
+    echo "bench-two-modes: the sustained block: $copies corpora in one process, no probe"
+    set +e
+    TWO_MODES_AB=$AB TWO_MODES_OUT=$W/sustained/sustained.json \
+      timeout --kill-after=10 "$(tm SUSTAINED_DEADLINE_S)" "$PROBE" sustained "$X" > "$W/sustained/child.json"
+    sus_rc=$?
+    set -e
+    echo "sustained: exit $sus_rc" | tee -a "$W/exits.txt"
+    rest=$(tm SUSTAINED_REST_S); [ -n "$dry" ] && rest=1
+    echo "bench-two-modes: resting ${rest} s before pass 1"; sleep "$rest"
     # the two passes: ab exactly as the run-fed leader's recipe ran it, one arm, through the probe
     passes=(1)
     [ -n "$sib" ] && passes+=(2) || echo "bench-two-modes: no sibling for P-sib on this machine; pass 2 not run (DRY only: the preflight refuses this host otherwise)"
     set +e
     for pass in "${passes[@]}"; do
       mkdir "$W/pass$pass"
-      sched=$(python3 -c 'import sys; sys.path.insert(0, "bench"); import two_modes as t; print(t.SCHEDULE[int(sys.argv[1])])' "$pass")
+      sched=$(tm SCHEDULE | python3 -c 'import ast, sys; print(ast.literal_eval(sys.stdin.read())[int(sys.argv[1])])' "$pass")
       echo "bench-two-modes: pass $pass: $rounds runs, P-idle on $idle$( [ "$pass" = 2 ] && echo ", P-sib on $sib"), schedule $sched"
       TWO_MODES_AB=$AB TWO_MODES_OUT=$W/pass$pass/probe.jsonl TWO_MODES_PASS=$pass TWO_MODES_SCHEDULE=$sched \
         TWO_MODES_IDLE_CPU=$idle TWO_MODES_SIB_CPU=$( [ "$pass" = 2 ] && echo "$sib") TWO_MODES_DECODER_CPUS=$dec \
@@ -197,6 +219,7 @@ bench-two-modes DRY="" CORPUS="":
         "layout": {"idle": $idle, "sib": ${sib:-None}, "decoder": "$dec"},
         "passes": [$(IFS=,; echo "${passes[*]}")],
         "preflight_exit": $pf,
+        "sustained_copies": $copies, "sustained_exit": $sus_rc, "sustained_rest_s": $rest,
     }, open(sys.argv[1], "w"), indent=1)
     PY
     [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout changed during the run"

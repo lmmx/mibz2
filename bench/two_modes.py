@@ -89,6 +89,30 @@ SOURCE = {
     "windows_sha256": "cf5d74a6173d0cbdc91b5b366e1cdb6888755b7523f534124ba0ff6d1d884fd2",
 }
 WORKLOAD = {"out": 209700196, "hash": "a8830caee5c511a6"}
+CORPUS_BYTES = 11854933  # the corpus's compressed size (bench/wikidata.json)
+
+# The sustained block (the Pathfinder's addition, #145 6756520552), before the probe passes:
+# one process, ab's own child, unpinned and with no probe, decodes the corpus concatenated
+# SUSTAINED_COPIES times. Its input's progress (rchar) is read every 10 ms and summed into
+# 100 ms windows; the signature is read on 500 ms blocks from 1 s to its last input read, each
+# block fast when its decoded-equivalent rate reaches the class threshold's (one corpus in
+# 0.21 s).
+SUSTAINED_COPIES = 50
+DRY_SUSTAINED_COPIES = 3
+SUSTAINED_DEADLINE_S = 300  # TERM at 300 s, KILL 10 s after: recorded, never retried
+SUSTAINED_REST_S = 60  # the rest between the block and pass 1, fixed
+SUSTAINED_SKIP_S = 1.0
+SUSTAINED_BLOCK_S = 0.5
+SUSTAINED_MIN_BLOCKS = 4
+FAST_RATE = WORKLOAD["out"] / THRESHOLD_S / 1e9  # GB/s decoded
+STEADY = 0.80  # at least this share of fast blocks: fast and steady
+LOW = 0.20  # at most this share: settles low
+SUSTAINED_PREDICTS = {
+    "fast and steady": {"H1", "H2", "H4"},
+    "settles low": {"H3", "H5"},
+    "alternates": {"H3", "H5"},
+    "mixed": set(),
+}
 
 # The rows' rules. Each compares slow runs with fast runs in pass 1, by medians over runs.
 FULL = 0.95  # P-idle's rate or the decoder CPUs' clock, slow / fast: at least this is full
@@ -804,6 +828,81 @@ def outcome(table, values):
     return f"SIXTH MECHANISM: no column matches; {desc}"
 
 
+def sustained_reading(rec, copies):
+    """The sustained block's windows, its 500 ms blocks and its signature"""
+    pts = [(t / 1e6, v) for t, v in rec["io"]["samples"] if isinstance(v, int) and v >= 0]
+    if len(pts) < 2:
+        return {"signature": "unread", "why": "no input progress was read"}
+    ratio_dec = WORKLOAD["out"] / CORPUS_BYTES
+
+    def at(t):  # the bytes read by time t (the last sample at or before it)
+        v = pts[0][1]
+        for x, y in pts:
+            if x > t:
+                break
+            v = y
+        return v
+
+    last = max((x for (x, y), (_, y0) in zip(pts[1:], pts) if y - y0 > 1_000_000), default=None)
+    end = pts[-1][0]
+    windows = []
+    t = 0.0
+    while t + 0.1 <= end + 1e-9:
+        windows.append(at(t + 0.1) - at(t))
+        t += 0.1
+    blocks = []
+    t = SUSTAINED_SKIP_S
+    while last is not None and t + SUSTAINED_BLOCK_S <= last + 1e-9:
+        b = at(t + SUSTAINED_BLOCK_S) - at(t)
+        blocks.append(b * ratio_dec / SUSTAINED_BLOCK_S / 1e9)
+        t += SUSTAINED_BLOCK_S
+    fast = [r >= FAST_RATE for r in blocks]
+    switches = sum(1 for a, b in zip(fast, fast[1:]) if a != b)
+    share = sum(fast) / len(fast) if fast else None
+    if len(blocks) < SUSTAINED_MIN_BLOCKS:
+        sig = "too short"
+    elif share >= STEADY:
+        sig = "fast and steady"
+    elif share <= LOW:
+        sig = "settles low"
+    elif switches >= 2:
+        sig = "alternates"
+    else:
+        sig = "mixed"
+    ru = rec.get("rusage") or {}
+    return {
+        "signature": sig,
+        "copies": copies,
+        "span_s": rec.get("span_s"),
+        "rate_overall_gbps": copies * WORKLOAD["out"] / rec["span_s"] / 1e9
+        if num(rec.get("span_s"))
+        else None,
+        "fast_rate_gbps": FAST_RATE,
+        "blocks_gbps": blocks,
+        "fast_share": share,
+        "switches": switches,
+        "last_read_s": last,
+        "windows_100ms_bytes_in": windows,
+        "anon_huge_kb_max": (rec.get("smaps") or {}).get("anon_huge_kb_max"),
+        "minflt": ru.get("minflt"),
+        "utime_s": ru.get("utime_s"),
+        "stime_s": ru.get("stime_s"),
+    }
+
+
+def sustained_problems(rec, child, copies, dry):
+    if rec is None:
+        return ["the sustained block wrote no record"]
+    bad = []
+    if rec.get("schema") != "two_modes/sustained/1" or rec.get("status") != {"exit": 0}:
+        bad.append(f"the sustained block ended {rec.get('status')!r}")
+    if not isinstance(child, dict) or child.get("err"):
+        bad.append(f"the sustained block's decode recorded no success ({child!r:.120})")
+    elif not dry and child.get("out") != copies * WORKLOAD["out"]:
+        bad.append(f"the sustained block decoded {child.get('out')!r} bytes, not {copies} corpora")
+    return bad
+
+
 def persistence(runs):
     seq = "".join("F" if r["fast"] else "s" for r in runs)
     ff = sum(1 for a, b in zip(seq, seq[1:]) if a == "F" and b == "F")
@@ -932,6 +1031,13 @@ def markdown(j):
             f"({fmt(p['p_fast_after_fast'])}), against {fmt(p['p_fast'])} overall."
         )
         lines.append(f"Gap between runs (ab's exit to next spawn), median: {fmt(pj['gap_s'])} s.")
+    su = j.get("sustained") or {}
+    lines += ["", "## The sustained block (first, no probe)", ""]
+    lines.append(
+        f"Signature: **{su.get('signature')}**; fast share of 500 ms blocks "
+        f"{fmt(su.get('fast_share'))}, switches {su.get('switches')}, overall "
+        f"{fmt(su.get('rate_overall_gbps'))} GB/s against the threshold's {fmt(FAST_RATE)}."
+    )
     if j.get("sibling_cost"):
         c = j["sibling_cost"]
         lines += ["", "## A busy sibling's price (pass 2 over pass 1, P-idle's rate)", ""]
@@ -1044,6 +1150,26 @@ def judge(args):
             ),
         }
     result = outcome(p1["table"], p1["rows"]) if p1 else "no pass 1 table"
+    # the sustained block, read first in the run and reported beside the table: its signature,
+    # and whether it is what the matched column predicts
+    copies = SUSTAINED_COPIES if not dry else ident.get("sustained_copies")
+    srec, why = load_json(os.path.join(d, "sustained", "sustained.json"), "the sustained block")
+    child, _ = load_json(os.path.join(d, "sustained", "child.json"), "its decode")
+    if why:
+        problems.append(why)
+        srec = None
+    problems += sustained_problems(srec, child, copies, dry)
+    if not dry and ident.get("sustained_copies") != SUSTAINED_COPIES:
+        problems.append(f"the identity's sustained copies {ident.get('sustained_copies')!r}")
+    sus = sustained_reading(srec, copies) if srec else {"signature": "unread"}
+    out["sustained"] = sus
+    sig = sus["signature"]
+    m = re.match(r"MATCH (H\d)", result)
+    if m and sig in SUSTAINED_PREDICTS:
+        agree = m.group(1) in SUSTAINED_PREDICTS[sig]
+        result += f"; sustained block: {sig} ({'consistent with' if agree else 'not what'} {m.group(1)}{'' if agree else ' predicts'})"
+    else:
+        result += f"; sustained block: {sig}"
     out["result"] = result
     out["problems"] = problems
     if dry:
