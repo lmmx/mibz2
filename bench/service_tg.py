@@ -76,6 +76,7 @@ None of the outcomes is a reason to retry: one attempt (condition 6).
 """
 
 import argparse
+import datetime
 import json
 import math
 import os
@@ -177,7 +178,13 @@ CORPUS_SHA256 = {
 }
 SHARD_FILES = ("shard.json", "rustc.txt", "binaries.sha256", "lscpu.txt", "env.json", "preflight.json",
                "preflight.exit", "preflight-check.json", "corpus.sha256", "measurement-started.txt",
-               "measurement-ended.txt", "runs.jsonl")
+               "measurement-ended.txt", "runs.jsonl", "row-times.txt", "stamp.exit")
+# the row timestamps (bench/tg_ni_stamp.py): the runner's CLOCK_REALTIME (Python's time.time()),
+# written to the millisecond, each the time the poller (every 0.2 s) saw the row, not when ab
+# wrote it: an observation time, with no hard bound on scheduling latency. The measurement's
+# own markers are `date -u` to the second, so a row's time may fall up to TIME_SLACK_S outside
+# them before the timing is refused as inconsistent
+TIME_SLACK_S = 2.0
 # the target's processor name (src/parallel.rs SERVICE_NAME): a runner reporting another is
 # off the target by that fact alone
 TARGET_NAME = svc_target_check.NAME
@@ -742,6 +749,75 @@ def read_text(d, name):
         return None
 
 
+def utc(stamp):
+    """A `date -u +%Y-%m-%dT%H:%M:%SZ` marker as POSIX seconds, or None"""
+    try:
+        return datetime.datetime.strptime(stamp.strip(), "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc).timestamp()
+    except (AttributeError, ValueError):
+        return None
+
+
+def read_row_times(d):
+    """The stamper's file: (start time, {row index: time}) after its last truncation, or None
+    if it is missing or malformed. Strict: every line `# start T`, `# truncated` or `I T`"""
+    text = read_text(d, "row-times.txt")
+    if text is None:
+        return None
+    start, times = None, {}
+    for line in text.splitlines():
+        f = line.split()
+        if f[:2] == ["#", "start"] and len(f) == 3:
+            try:
+                start = float(f[2])
+            except ValueError:
+                return None
+        elif f == ["#", "truncated"]:
+            times = {}
+        elif len(f) == 2:
+            try:
+                i, t = int(f[0]), float(f[1])
+            except ValueError:
+                return None
+            if i in times:
+                return None
+            times[i] = t
+        else:
+            return None
+    return start, times
+
+
+def timing_problems(sid, d, n_rows):
+    """The timing data, required complete and coherent (the Researcher's §2): the stamper exited
+    0; its file has a start time and exactly one finite time for each of the n rows, 0 .. n - 1,
+    nondecreasing in row order (equal times are legitimate under polling); and every time lies
+    within the measurement's markers, give or take TIME_SLACK_S. Missing timing is a problem,
+    never a zero"""
+    p = []
+    if (read_text(d, "stamp.exit") or "").strip() != "0":
+        p.append(f"{sid}: the row stamper did not exit 0 ({(read_text(d, 'stamp.exit') or 'missing').strip()!r})")
+    got = read_row_times(d)
+    if got is None:
+        return p + [f"{sid}: row-times.txt missing or malformed"]
+    start, times = got
+    if start is None or not math.isfinite(start):
+        p.append(f"{sid}: row-times.txt has no start time")
+    if sorted(times) != list(range(n_rows)):
+        return p + [f"{sid}: row-times.txt covers {len(times)} rows, not 0 .. {n_rows - 1} once each"]
+    seq = [times[i] for i in range(n_rows)]
+    if not all(math.isfinite(t) for t in seq):
+        return p + [f"{sid}: a row time is not finite"]
+    if any(b < a for a, b in zip(seq, seq[1:])):
+        p.append(f"{sid}: row times go backwards")
+    lo, hi = utc(read_text(d, "measurement-started.txt") or ""), utc(read_text(d, "measurement-ended.txt") or "")
+    if lo is None or hi is None:
+        p.append(f"{sid}: the measurement markers are unreadable")
+    elif seq and (seq[0] < lo - TIME_SLACK_S or seq[-1] > hi + TIME_SLACK_S
+                  or (start is not None and (start < lo - TIME_SLACK_S or start > seq[0]))):
+        p.append(f"{sid}: row times outside the measurement's markers")
+    return p
+
+
 def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repository="lmmx/mibz2",
                    label="qualification"):
     """What keeps one shard's measured attempt from being admitted (empty: admitted), and its
@@ -766,8 +842,14 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     if not str(info.get("workflow_ref", "")).startswith(f"{repository}/.github/workflows/target-gated-ni.yml@"):
         p.append(f"{sid}: not run by target-gated-ni.yml ({info.get('workflow_ref')!r})")
     rustc = read_text(d, "rustc.txt").strip()
-    if not fz.get("ni_rustc") or rustc != fz["ni_rustc"]:
-        p.append(f"{sid}: toolchain {rustc!r}, not the frozen {fz.get('ni_rustc')!r}")
+    if fz.get("ni_rustc"):
+        if rustc != fz["ni_rustc"]:
+            p.append(f"{sid}: toolchain {rustc!r}, not the frozen {fz['ni_rustc']!r}")
+    elif fz.get("ni_toolchain"):
+        if not rustc.startswith(f"rustc {fz['ni_toolchain']} "):
+            p.append(f"{sid}: toolchain {rustc!r}, not the dispatched {fz['ni_toolchain']!r}")
+    else:
+        p.append(f"{sid}: no registered toolchain to check {rustc!r} against")
     try:
         env = json.loads(read_text(d, "env.json"))
     except json.JSONDecodeError:
@@ -791,11 +873,14 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
         p.append(f"{sid}: the predicate's read-back is {verdict}, not NOT TARGET: {why}")
     digest = read_text(d, "corpus.sha256").split()
     want_digest = fz.get("corpus_text") if corpus == "text" else CORPUS_SHA256[corpus]
+    if corpus == "text" and want_digest is None and fz.get("text_unchecked"):
+        want_digest = digest[0] if digest else None  # (a smoke check before the freeze: recorded, unchecked)
     if not digest or not want_digest or digest[0] != want_digest:
         p.append(f"{sid}: corpus digest {digest[:1]}, not the registered {want_digest!r}")
     rows, unreadable = read_jsonl(os.path.join(d, "runs.jsonl"))
     if unreadable:
         p.append(f"{sid}: runs.jsonl lines not JSON: {unreadable[:5]}")
+    p += timing_problems(sid, d, len(rows))
     by = {}
     cores = [set(str(c).split(",")) for c in core_cpus]
     for i, r in enumerate(rows):
@@ -840,10 +925,44 @@ def shard_problems(sid, d, reg, head, run_id, expect_rounds, attempt=None, repos
     return p[:20], by
 
 
+def structural(root, man, head, reg, rounds, label, check_git=True):
+    """The structural admission every use of a run shares (qualification, the pilot, the smoke
+    check): the manifest's schema; nothing downloaded that GitHub didn't list; every registered
+    shard present, its history reconciled fail-closed; every file of its measured attempt
+    rehashed against the manifest; and its files, runner, read-back, corpus, timing and rows.
+    (problems, {shard: (artifact record, rows by cell)})"""
+    fz = reg["frozen"]
+    p, out = [], {}
+    if man.get("schema") != "mibz2.tg_ni_manifest/2":
+        p.append(f"manifest schema {man.get('schema')!r}: not one that records the run's whole history")
+    if man.get("label") != label:
+        p.append(f"the run is labelled {man.get('label')!r}: not {label}")
+    for name in man.get("unlisted") or []:
+        p.append(f"{name}: downloaded but not listed by GitHub")
+    if check_git and fz.get("candidate"):
+        p += head_problems(head, fz["candidate"])
+    run_id, arts, jobs = man.get("run"), man.get("artifacts", []), man.get("jobs") or []
+    for sid in SHARDS:
+        q, a = history_problems(sid, jobs, [x for x in arts if x["shard"] == sid], head=head, run=run_id)
+        if q:
+            p += q
+            continue
+        d = os.path.join(root, a["name"], sid)
+        for f, h in a["files"].items():
+            path = os.path.join(d, f)
+            if not os.path.isfile(path) or sha256_file(path) != h:
+                p.append(f"{sid}: {f} does not match the manifest's digest")
+        q, by = shard_problems(sid, d, reg, head, run_id, rounds, attempt=a["attempt"], label=label)
+        p += q
+        if not q:
+            out[sid] = (a, by)
+    return p, out
+
+
 def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batches=NI_BATCHES):
-    """Condition 2 from the sharded workflow's artifacts (registration §2): every registered
-    shard's one measured attempt admitted, each cell estimated from its own shard's runner
-    alone by the batch-means bound, every one of the 42 at most 1.02"""
+    """Condition 2 from the sharded workflow's artifacts (registration §2): the structural
+    admission (`structural`, label qualification, the frozen values), then each cell estimated
+    from its own shard's runner alone by the batch-means bound, every one of the 42 at most 1.02"""
     reg = reg or registered()
     fz = reg["frozen"]
     v = {"valid": False, "problems": [], "cells": {}, "flags": [], "rss_regression": [], "passes": False,
@@ -854,31 +973,10 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
             p.append(f"bench/{FROZEN} names no {k}")
     if man.get("label") != "qualification":
         p.append(f"the run is labelled {man.get('label')!r}: not qualification (a smoke check or the pilot is never evidence)")
-    if check_git and "candidate" in fz:
-        p += head_problems(head, fz["candidate"])
-    run_id = man.get("run")
-    arts = man.get("artifacts", [])
-    jobs = man.get("jobs") or []
-    if man.get("schema") != "mibz2.tg_ni_manifest/2":
-        p.append(f"manifest schema {man.get('schema')!r}: not one that records the run's whole history")
-    for name in man.get("unlisted") or []:
-        p.append(f"{name}: downloaded but not listed by GitHub")
-    for sid in SHARDS:
-        mine = [a for a in arts if a["shard"] == sid]
-        q, a = history_problems(sid, jobs, mine, head=head, run=run_id)
-        if q:
-            p += q
-            continue
-        d = os.path.join(root, a["name"], sid)
-        for f, h in a["files"].items():
-            path = os.path.join(d, f)
-            if not os.path.isfile(path) or sha256_file(path) != h:
-                p.append(f"{sid}: {f} does not match the manifest's digest")
-        q, by = shard_problems(sid, d, reg, head, run_id, rounds, attempt=a["attempt"])
-        p += q
+    q, admitted = structural(root, man, head, reg, rounds, "qualification", check_git=check_git)
+    p += [x for x in q if not x.startswith("the run is labelled")]
+    for sid, (a, by) in admitted.items():
         v["shards"][sid] = {"attempt": a["attempt"], "artifact": a.get("id"), "digest": a.get("digest")}
-        if q:
-            continue
         corpus, threads = SHARDS[sid]
         for t in threads:
             h, b = by[(corpus, t, CI_ARMS[0])], by[(corpus, t, CI_ARMS[1])]
@@ -904,6 +1002,21 @@ def ni_judge(root, man, head, reg=None, check_git=True, rounds=NI_ROUNDS, batche
             v["rss_regression"].append(key)
     v["passes"] = not v["failing"] and not v["rss_regression"]
     return v
+
+
+def structure(root, man, head, base, rounds, label, toolchain, corpus_text=None, check_git=False):
+    """The structural admission alone, for a smoke check or the pilot before the freeze (the
+    Researcher's §4): what `structural` checks, against the dispatch's own base, rounds and
+    toolchain. The `text` corpus's digest is checked against `corpus_text` if given, and
+    otherwise recorded as unchecked. Green plumbing means this is valid, not merely that the
+    judge refused the label"""
+    reg = {"frozen": {"base": base, "ni_toolchain": toolchain, "corpus_text": corpus_text,
+                      "text_unchecked": corpus_text is None}, "bench": None}
+    p, admitted = structural(root, man, head, reg, rounds, label, check_git=check_git)
+    return {"schema": "mibz2.tg_ni_structure/1", "valid": not p and len(admitted) == len(SHARDS),
+            "label": label, "rounds": rounds, "run": man.get("run"), "head": head,
+            "shards": sorted(admitted), "problems": p,
+            "unchecked": [] if corpus_text else ["the text corpus's digest (no corpus_text before the freeze)"]}
 
 
 def ni_markdown(v):
@@ -977,6 +1090,16 @@ def main(argv=None):
     n.add_argument("--manifest", required=True)
     n.add_argument("--head", required=True)
     n.add_argument("--out", required=True)
+    st = sub.add_parser("structure")
+    st.add_argument("root")
+    st.add_argument("--manifest", required=True)
+    st.add_argument("--head", required=True)
+    st.add_argument("--base", required=True)
+    st.add_argument("--rounds", type=int, required=True)
+    st.add_argument("--label", required=True)
+    st.add_argument("--toolchain", required=True)
+    st.add_argument("--corpus-text")
+    st.add_argument("--out", required=True)
     f = sub.add_parser("confirm")
     f.add_argument("registered", nargs=2, metavar=("ROOT", "MANIFEST"))
     f.add_argument("--confirmation", nargs=2, metavar=("ROOT", "MANIFEST"), required=True)
@@ -994,6 +1117,16 @@ def main(argv=None):
         json.dump(manifest(a.root, arts, jobs, a.run, a.attempt, a.label), sys.stdout, indent=1, sort_keys=True)
         print()
         return 0
+    if a.cmd == "structure":
+        with open(a.manifest) as fh:
+            man = json.load(fh)
+        v = structure(a.root, man, a.head, a.base, a.rounds, a.label, a.toolchain, a.corpus_text)
+        md = (f"# Structural admission ({a.label}, R {a.rounds})\n\n"
+              + ("**Admitted:** all nine shards.\n" if v["valid"] else "**Not admitted:**\n\n"
+                 + "".join(f"- {x}\n" for x in v["problems"]))
+              + "".join(f"- unchecked: {x}\n" for x in v["unchecked"]))
+        write(a.out, v, md)
+        return 0 if v["valid"] else 2
     if a.cmd == "ni":
         with open(a.manifest) as fh:
             man = json.load(fh)

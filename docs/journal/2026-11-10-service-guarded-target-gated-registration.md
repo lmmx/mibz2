@@ -333,9 +333,14 @@ length is balanced. Batch lengths are even: R900/B20, with batches of 45 rounds,
 - **The relevant slowdown:** a true ratio of **1.005**, a quarter of the margin, in every cell.
 - **The target:** all-cell power of at least **0.80** there, by the dependence-free lower
   bound.
-- **The variance it is planned against:** the pilot's **long-run** variance per cell, from
-  its batch-means sensitivity (§2.8), taking the largest across the predeclared batch lengths.
-  It is not the marginal ten-round sd.
+- **The variance it is planned against:** the pilot's **long-run** variance per cell, not the
+  marginal ten-round sd.
+  - Normalised as LRV_m = m · var(batch means) = n_m · SE_m², over the fixed menu (§2.8).
+  - The largest across that menu is a **sensitivity choice**: conservative relative to those
+    point estimates, but not a confidence upper bound on the long-run variance.
+  - Using its square root as the power model's σ assumes Var(mean) ≈ LRV/R under the chosen
+    dependence model. One R600 pilot cannot establish that, nor guarantee 80% power. The final
+    review assesses the uncertainty and any residual low-frequency dependence explicitly.
 
 **The history is a scenario, not an envelope.** The 47-run history (bench-results
 `links.jsonl` at f99e2f35) gives ten-round marginal sds:
@@ -485,7 +490,8 @@ prospective design work.
 
 **What it is, fixed now:**
 - **One dispatch** of `.github/workflows/target-gated-ni.yml`, once the tooling is on master
-  (#319) and its admission fixes are in.
+  (#319) and its admission fixes are in, **and only after a dispatch-path R2 smoke check has
+  passed the structural admission** (below).
   - **Inputs:** `label: pilot`, `shards: all` (all nine, the plan job refuses a subset for a
     pilot), `rounds: 600`.
   - **The candidate:** this branch's head at dispatch, with the base it names.
@@ -493,20 +499,53 @@ prospective design work.
     0.25 s, `ab`'s two-round order rotation, the read-back.
 - **Every row is timestamped** as it lands (`bench/tg_ni_stamp.py`, passive, beside both arms
   alike; the same in a qualification dispatch).
-- **The analysis menu, frozen before it runs:** `bench/tg_ni_pilot.py`, on #319. It admits the
-  run as the judge does, label `pilot`. For each of the 42 cells, wall and CPU alike:
+  - **The clock:** the runner's CLOCK_REALTIME (Python's `time.time()`), written to the
+    millisecond, with a `# start` line when the stamper begins.
+  - **What a time means:** when a poller running every 0.2 s saw the row. That is an
+    observation time; 0.2 s is not a hard bound on scheduling latency.
+  - **The stamper's exit is recorded** (`stamp.exit`) and never masked: a failed stamper fails
+    the measurement step, after its record is kept.
+  - **The judge and the pilot refuse incomplete or impossible timing**
+    (`service_tg.timing_problems`):
+    - a missing file, or a stamper exit other than 0;
+    - no start time;
+    - any row without exactly one finite time;
+    - times that go backwards (equal times are allowed, under polling);
+    - times outside the measurement's `date -u` markers (to the second) by more than 2 s.
+
+    Missing timing is INVALID, never a printed zero. The same holds for a job start the API
+    didn't record: setup is unknown, not 0 s.
+- **The analysis menu, frozen before it runs:** `bench/tg_ni_pilot.py`, on #319.
+  - **Admission:** the judge's own structural admission (`service_tg.structural`): the
+    manifest's schema, no unlisted artifact, the history reconciled, every file rehashed
+    against the manifest, every shard's files, runner, read-back, corpus, rows and timing.
+    Only the label (`pilot`) and the frozen values (from the command line) differ.
+  - **For each of the 42 cells, wall and CPU alike:**
   - the raw order and timestamps;
   - the marginal sd;
   - autocorrelation at lags 1, 2, 5, 10, 30 and 60;
-  - the batch-means standard error for batch lengths 10, 20, 30, 48 and 60, against the iid
-    one (the long-run-variance sensitivity), and the batch means' lag-1 correlation;
-  - each batch length's physical duration;
+  - for each batch length in the menu below, LRV_m = m · var(batch means) = n_m · SE_m²,
+    against the marginal variance, and the batch means' lag-1 correlation;
+  - each batch partition's **actual elapsed span** (median, p95, max). It runs from the previous
+    batch's last round's end (the first batch's from the stamper's start) to its own last
+    round's end, settle and polling included. It is not m times a median round;
   - the head-first minus base-first contrast and its standard error;
   - the OLS trend over the run, with its t;
   - a CUSUM change-point screen.
 
-  Per shard: setup and measurement durations and their tails, and the runner model.
-  **It reports no cell's ratio or bound.** Every series is read centred.
+  Per shard: setup and measurement durations, the round-duration tail, and the runner model.
+  One setup observation per shard describes the jobs sampled, not a well-estimated future
+  setup tail. **It reports no cell's ratio or bound.** Every series is read centred.
+- **The batch-length menu at R = 600, chosen now, before any dispatch:**
+  - **m = 10, 20, 30 and 60 over all 600 rounds,** since each divides 600 into an even-length
+    partition.
+  - **m = 48 over the first 576 rounds only:** twelve complete 48-round batches. m = 48 is
+    the R960 candidate's batch length, and 600 = 12 × 48 + 24.
+  - **The last 24 rounds** are left out of that one diagnostic, disclosed, and kept in the
+    archive and in every other analysis. Its LRV uses its own n = 576.
+  - **This is fixed now:** no rounds are added, and the tail's treatment isn't chosen after the
+    data. The code refuses a batch length that doesn't divide its rounds, rather than silently
+    dropping it, as the earlier draft's filter did.
 - **Its rules:**
   - one dispatch, R = 600 whatever it shows;
   - no extra rounds or shards for a favourable or unfavourable estimate;
@@ -531,6 +570,22 @@ prospective design work.
 - **What it costs:** about 293–412 shard runner-minutes, as a qualification dispatch (§2.2), on
   standard hosted compute.
 
+**The smoke prerequisite, defined now.** Before the pilot, one dispatch-path smoke check, the
+same command with `-f rounds=2 -f label=smoke`.
+- **What passes:** the aggregate job's gate (`bench/tg_ni_gate.py`) passes it only if two things
+  hold:
+  - the judge refused it as smoke;
+  - it passes the **structural admission** (`service_tg.py structure`, label smoke, R = 2, the
+    dispatched toolchain): all nine shards present, their artifacts listed and downloaded, the
+    manifest valid, the history reconciled, every file rehashed, and every shard's runner,
+    read-back, corpus, rows and timing admitted.
+- **The text corpus's digest** is recorded, not checked, before the freeze.
+- **The label refusal alone** (the negative qualification-label test) with nothing behind it
+  fails.
+- **Green on that structure** is the pilot's prerequisite. The pilot's own green means only the
+  same structural admission, plus "pilot: not evidence". Its diagnostic admission is
+  `tg_ni_pilot.py`'s, offline.
+
 **The pilot's dispatch, prepared and not dispatched:**
 ```
 gh workflow run target-gated-ni.yml --repo lmmx/mibz2 --ref perf/service-guarded-target-gated \
@@ -545,8 +600,8 @@ gh workflow run target-gated-ni.yml --repo lmmx/mibz2 --ref perf/service-guarded
   python3 bench/tg_ni_pilot.py shards --manifest manifest.json --head <head> --base <base> \
     --rustc "rustc 1.99.1 (58cf8f9c3 2026-10-13)" --corpus-text <the text shard's corpus.sha256> --out pilot
   ```
-  It runs on the aggregate job's archived artifacts. The aggregate job itself ends green with
-  "pilot: not evidence".
+  It runs on the aggregate job's archived artifacts. The aggregate job itself ends green only
+  with the structural admission and "pilot: not evidence".
 
 ## 3. On-target superiority (condition 3)
 

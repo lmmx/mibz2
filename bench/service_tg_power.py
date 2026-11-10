@@ -18,9 +18,12 @@ R/B rounds; the estimate the mean of all R; its standard error from the B batch 
 upper bound exp(mean + t(0.95, B - 1) * se). Under independent, identically distributed paired
 logs with sd sigma, the batch means are normal with sd sigma / sqrt(R/B), and the bound is at
 most log 1.02 with probability P(T >= t(0.95, B - 1)), T noncentral t with B - 1 df and
-noncentrality (log 1.02 - mu) * sqrt(R) / sigma. Positive autocorrelation within a batch
-inflates the batch means' variance: this model is then optimistic, and the batch-means
-interval stays valid while the iid one would not (the reason it is the registered estimator).
+noncentrality (log 1.02 - mu) * sqrt(R) / sigma, mu the log of the true ratio. Positive
+autocorrelation inflates the batch means' variance, so this model is then optimistic about
+power. Nor does it keep the batch-means interval valid: dependence across batches can make
+it anticonservative (the registration's §2.3). The sigma that a final design plans with is a
+long-run one, LRV_m = m · var(batch means), from the pilot, and the largest over its fixed
+menu is a sensitivity choice, not a confidence bound.
 
 **What it prints.**
 - **Size under the model:** at a true ratio of 1.02 (the null boundary), each cell passes with

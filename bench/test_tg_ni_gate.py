@@ -26,6 +26,9 @@ NOT_SHOWN = {"valid": True, "passes": False, "failing": ["pattern/2 wall upper 1
 INVALID = {"valid": False, "passes": False, "problems": ["random: shard.json rounds 599, not 600"]}
 SMOKE = {"valid": False, "passes": False,
          "problems": ["the run is labelled 'smoke': not qualification (a smoke check is never evidence)"]}
+STRUCT = {"schema": "mibz2.tg_ni_structure/1", "valid": True, "label": "smoke", "rounds": 2, "problems": [],
+          "shards": ["onebyte", "pattern", "random", "records", "runs", "text", "wikidata-1", "wikidata-2", "wikidata-4"]}
+EMPTY = dict(STRUCT, valid=False, shards=[], problems=["onebyte: no job in the run's history"])
 
 
 class Gate(unittest.TestCase):
@@ -40,12 +43,17 @@ class Gate(unittest.TestCase):
         self.assertIn("INVALID", g.gate("qualification", INVALID, 2)[1])
 
     def test_smoke(self):
-        status, line = g.gate("smoke", SMOKE, 2)
+        status, line = g.gate("smoke", SMOKE, 2, STRUCT)
         self.assertEqual(status, 0)
         self.assertIn("smoke: not evidence", line)
-        for verdict, code in ((None, 2), (PASS, 0), (INVALID, 2), (SMOKE, 0), (SMOKE, 1)):
-            with self.subTest(verdict=verdict, code=code):
-                status, line = g.gate("smoke", verdict, code)
+        self.assertIn("structurally admitted: all 9 shards", line)
+        for verdict, code, structure in ((None, 2, STRUCT), (PASS, 0, STRUCT), (INVALID, 2, STRUCT),
+                                         (SMOKE, 0, STRUCT), (SMOKE, 1, STRUCT),
+                                         # (the Researcher's §4: the refusal alone, with nothing behind it)
+                                         (SMOKE, 2, None), (SMOKE, 2, EMPTY),
+                                         (SMOKE, 2, dict(STRUCT, label="pilot"))):
+            with self.subTest(verdict=verdict, code=code, structure=structure):
+                status, line = g.gate("smoke", verdict, code, structure)
                 self.assertEqual(status, 1, line)
                 self.assertIn("smoke: not evidence", line)
 
@@ -62,23 +70,34 @@ class Gate(unittest.TestCase):
             self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
             self.assertIn("NOT SHOWN", summary.read_text())
             v.write_text(json.dumps(SMOKE))
+            st = Path(d) / "structure.json"
+            st.write_text(json.dumps(STRUCT))
             r = subprocess.run([sys.executable, str(HERE / "tg_ni_gate.py"), "--label", "smoke",
-                                "--verdict", str(v), "--exit", "2", "--summary", str(summary)],
+                                "--verdict", str(v), "--exit", "2", "--structure", str(st), "--summary", str(summary)],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertIn("smoke: not evidence", summary.read_text())
+            r = subprocess.run([sys.executable, str(HERE / "tg_ni_gate.py"), "--label", "smoke",
+                                "--verdict", str(v), "--exit", "2"], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 1, "a smoke with no structural admission")
             r = subprocess.run([sys.executable, str(HERE / "tg_ni_gate.py"), "--label", "qualification",
                                 "--verdict", str(Path(d) / "missing.json"), "--exit", "0"],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 1)
 
     def test_the_judges_refusal_is_what_the_gate_expects(self):
-        # (the judge's own smoke refusal text, so a reworded judge can't silently break the gate)
+        # (the negative qualification-label test: the judge's own smoke refusal text, so a
+        # reworded judge can't silently break the gate. The refusal is recognised; alone, with
+        # an empty run behind it, it is not plumbing OK)
         import service_tg as tg
-        v = tg.ni_judge(tempfile.mkdtemp(), {"label": "smoke", "artifacts": []}, "f" * 40,
-                        reg={"frozen": {}, "bench": None}, check_git=False)
+        root = tempfile.mkdtemp()
+        man = {"schema": "mibz2.tg_ni_manifest/2", "label": "smoke", "run": 1, "artifacts": [], "jobs": []}
+        v = tg.ni_judge(root, man, "f" * 40, reg={"frozen": {}, "bench": None}, check_git=False)
         self.assertFalse(v["valid"])
-        self.assertEqual(g.gate("smoke", v, 2)[0], 0, v["problems"])
+        self.assertEqual(g.gate("smoke", v, 2, STRUCT)[0], 0, v["problems"])
+        empty = tg.structure(root, man, "f" * 40, "b" * 40, 2, "smoke", "1.99.1")
+        self.assertFalse(empty["valid"])
+        self.assertEqual(g.gate("smoke", v, 2, empty)[0], 1)
 
 
 class Workflow(unittest.TestCase):
@@ -92,6 +111,8 @@ class Workflow(unittest.TestCase):
         agg = self.aggregate()
         self.assertNotRegex(agg, r"service_tg\.py ni[^\n]*\|\| true")
         self.assertIn("bench/tg_ni_gate.py", agg)
+        self.assertIn("service_tg.py structure", agg)
+        self.assertIn("--structure structure.json", agg)
         gate_at = agg.index("bench/tg_ni_gate.py")
         upload_at = agg.index("actions/upload-artifact@")
         self.assertLess(upload_at, gate_at, "the evidence is uploaded before the gate can fail the job")
