@@ -693,8 +693,13 @@ All three are asserted against `bwt::walk`, the cells' output complemented first
 - **How far to trust it.** One container, one thread, another agent's work on one of the
   other three cores throughout. The pooled ratio of 233 blocks repeated to ±0.2% over three
   runs; a ten-block sample does not (0.81 to 0.97 over eight runs at eight stack depths, each arm
-  moving ±6%, no depth standing out: the hazard the Pathfinder met, a hot stack object
-  across a page, did not show). The instruction counts of §6.2 are for the kernel before
+  moving ±6%, no depth standing out). The hazard the Pathfinder met, a hot stack object
+  across a page, which makes a kernel 30% slower or faster from one build to the next, did
+  not show; but the depths were 520 bytes apart, set by the environment's size, coarser than
+  a narrow band, and its finer sweep (PF:`2026-11-10-team-runs-port/stacksweep.rs.txt`: 80
+  bytes a step, three passes) was not run. Against a build's artefact there is this: five
+  builds of different stack layout took a census of the 233 blocks, and the column's arm
+  was between 2.17 and 2.24 pooled in each run on a quiet machine. The instruction counts of §6.2 are for the kernel before
   the fix and the column's path; not recounted.
 
 | other inputs, ns a row (the fixed writer) | production | cells | ÷ |
@@ -713,6 +718,59 @@ All three are asserted against `bwt::walk`, the cells' output complemented first
 Production here is what the decoder chooses for the block: the records' path where
 `runs::takes_runs` admits it, else the column's. Period 37, Fibonacci and Thue–Morse replace
 §6.2's rows, which timed a writer that left most of those blocks unwritten.
+
+### 6.4 Other constructions, tried by sweeps of this mission. None is in the example.
+
+Each was built or counted by a sub-agent in its own scratch code, asserted byte for byte
+against `bwt::walk`; the first two were then attacked by another, with its own census and
+an output buffer filled with a wrong byte before each kernel. Clocks are theirs, against
+the column's path (the records' arm did not exist for them), on this shared machine.
+
+- **A forest, then a walk ("tower").** A letter is non-branching if its image lies inside
+  one top interval; then all its points go next to that letter. **C:** 0.929 r of the
+  letters on Wikidata; the rest are roots (0.071 r). **P:** the first return to the roots'
+  intervals is an exchange whose letters are the cells of the roots' images, each with the
+  word of a path up the forest. The forest needs no bottom order: the letter over the start
+  of an image is a rank in a bitmap of the top boundaries. Taken twice it leaves 0.121 n
+  rows, walked on 8 lanes. All 233 blocks, bytes equal.
+  - Clock, re-measured by the adversary: **0.78 to 0.80 of the column's path** from a run
+    list (its builder had read 0.74, against a baseline slowed by other arms in the same
+    rotation). **4 to 6% behind the cells kernel** in the same runs (four orderings of the
+    arms; 1.5% ahead in a fifth).
+  - Instructions a run: 291 against the column path's 266 and the cells' 186. Simulated
+    last-level misses a run: 2.2 / 9.5 / 2.1 at 2 MiB (tower / column path / cells);
+    8.5 / 19.3 / 5.0 at 256 KiB, the i9's L2.
+  - It has no Θ(n) case at a fixed number of levels (`(ab)^k a`: 0.75×, where the cells are
+    11×). It fails where the second level leaves much: records of one mutation each
+    (r/n 0.015): 1.4 to 1.6×, where the cells are 0.42 to 0.54×.
+  - What carries over: the forest by rank; what the first level leaves, U/n, as a test for
+    admission.
+- **The exact chains joined first, the passes rebuilt without a data-dependent branch,** in
+  front of the list kernel: 1.05 to 1.07× the column's path (the adversary's pairing; its
+  builder read parity). In front of the cells it would cost 117 instructions a run for the
+  72 it replaces. §6.1's verdict on a pre-pass stands, at under half of §6.1's price.
+- **Words as lazy tags** (Agol–Hass–Thurston's weights on ranges, carried as words): a letter
+  holds two chains of immutable nodes, and consecutive losers of one winner that held one
+  chain share the new node. **C:** 1.257 r nodes against 1.812 r cells, bytes equal on all
+  237 blocks and 205,000 random columns. No kernel; its price (72 instructions a run for
+  the induction against 116) is an estimate that rests on an unwritten 4-ary writer.
+- **Equal cells of one row, linked and not merged.** **C:** 79% of the cells are of one row
+  (1.432 r: equal 0.842, top-wins 0.363, bottom-wins 0.227) and remove 10% of the rows; the
+  other 0.380 r cells remove 90%, 33 rows each. **P:** only an equal one-row cell can be
+  left without a write. A sweep that links those and walks the 0.842 r points at the end
+  makes 0.970 r cells. Its walk alone, measured: 1.4 ns a point on 4 lanes with evenly
+  spaced starts, 5.2 ns on one. Modelled whole: 0.64 to 0.74 of the column's path against
+  the cells' 0.756 then; nothing with one lane. Not built into the kernel.
+- **Stopping the induction early and walking what is left: dead by a proof.** steps(m) + m
+  never rises along the induction, so a walk point must cost less than (S − steps(m))/m of
+  a cell: 0.23 at n/4, 0.42 at n/16. Priced, the gain is under 3% of the kernel.
+- **Long copies scheduled without the induction: dead on a count.** The stretches' copy
+  graph has one strongly connected component holding 99.3% of the copied rows.
+- **The multiplicative (Zorich) step:** 94 of Wikidata's 27,439,723 steps are in a streak it
+  would shorten. It is what `(ab)^k a` needs and nothing a real block does.
+- **Off the corpus r/n does not admit safely (C, the adversary's inputs, cells ÷ the column's
+  path):** random letters with geometric run lengths, r/n 0.083: 5.2×. The budget on the
+  cells (§8, 2a) is what protects, not the threshold.
 
 ## 7. Falsifiers run
 
@@ -735,7 +793,8 @@ Production here is what the decoder chooses for the block: the records' path whe
    the column's path, 184 instructions a run to 260 and a quarter of the modelled last-level
    misses. Production's inversion is 110 cycles a
    run there (PF:`phrase-structure` §5) against 98 here, on a 256 KiB L2 and 2 MB of last
-   level a worker. **Conj:** the gap widens there. Falsifier: one diagnostic run of this
+   level a worker. **Conj:** the gap widens there (modelled misses a run at 256 KiB, its L2: 5.0
+   against the column path's 19.3, §6.4). Falsifier: one diagnostic run of this
    example's two arms on the workstation, at 1 and at 10 copies; dead if the cells arm is
    above 0.9 at 10. Framed with the Coordinator: once this is merged, one workstation recipe
    for hardware counters a stage (no PMU here or on its machine) and for 1 against 10 pinned
@@ -776,7 +835,8 @@ Production here is what the decoder chooses for the block: the records' path whe
    agrees; the kernel would want an `unsafe fn` boundary, a bound on its buffer, and 2a.
 2a. **Admission.** r/n < 0.10 (§6.3: 0.76× of production against 0.82× unchosen), and a budget on the cells (S is known only as it is
    made; S/r is 1.3 to 2.1 on Wikidata and n/2r on `(ab)^k a`): past, say, 4 r, stop and walk.
-   The work thrown away is bounded by the budget. Not built.
+   The work thrown away is bounded by the budget. Not built. The budget is the part that
+   matters off the corpus (§6.4: 5.2× at r/n 0.083 on random letters with geometric runs).
 3. **Division (Zorich) rule** for equal-pair streaks, needed before any admission (or a step
    budget with fallback). Known for the related accelerated algorithm on k pairings of
    [1, N]: at most 5k²(2 + log₂ N) cycles, each polynomial in k log N (Agol–Hass–Thurston
@@ -801,11 +861,12 @@ Production here is what the decoder chooses for the block: the records' path whe
    cells of 24 cycles, so segments must be handed out by the thousand, by stretches of rows
    whose letters do not cross. Uncounted: how many letters cross a cut of the rows into P
    parts. Low rank while blocks outnumber workers.
-6. **The chains.** 0.635 r cells are whole runs onto whole runs (§5.2); a cell is 64
-   instructions, a link in a chain walk about 15. Ceiling ≈ 15% of the kernel, and 5% of the
-   steps besides (§5.6: equal steps first, 1.714 r). §6.1's attempt failed on its passes; in
-   the cells form a chain needs no renumbering (its head's slot and its tail's slot are the
-   letter's). Subsumed by 1a if that is built.
+6. **The equal cells of one row, linked in the sweep and walked at the end** (§6.4): 0.970 r
+   cells and 0.842 r points for 1.812 r cells. No pre-pass: the test is ra = rb = 1 where the
+   cell would be made. Ceiling about 15% of the kernel, by a model. Falsifier: built into
+   `induce_cells`, the whole must fall at least 5% on the 233 blocks in one process; dead if
+   a link, its walk point and the extra write reach a cell's price. The chains joined in a
+   pre-pass are closed twice over (§6.1, §6.4).
 7. **Why row 0, and why the right end** (§5.5, §5.6): both are counted, neither is proved.
    Whether another order of the alphabet makes fewer cells.
 8. **Smaller.** Slots of 16 bytes with |w| kept at the word: 33% off the largest region.
