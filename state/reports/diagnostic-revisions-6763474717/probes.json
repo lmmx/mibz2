@@ -1,0 +1,87 @@
+{
+  "allocation_at_min_exposure_max_halfwidth": {
+    "min_mean_if_Bge": 0.41000000000000003,
+    "min_L_if_Bge": 0.31,
+    "min_mean_if_Bplus": 0.61,
+    "Splus_redundant_when_valid_precise_Bge": true
+  },
+  "trace_duplicate_store": "mtf_avx2 loads S=0 D=1 H=0 | any4K=1 any1K=1\n  mod 4K (load<-store): D<-H=1\n  mod 1K (load<-store): D<-H=1\nPAIRS mtf_avx2 mod4K D<-H: [store 2000 load 1100 n=2]\nPAIRS mtf_avx2 mod1K D<-H: [store 2000 load 1100 n=2]\n",
+  "trace_six_pairs_top5": "mtf_avx2 loads S=0 D=6 H=0 | any4K=6 any1K=6\n  mod 4K (load<-store): D<-H=6\n  mod 1K (load<-store): D<-H=6\nPAIRS mtf_avx2 mod4K D<-H: [store 2003 load 1103 n=1] [store 2004 load 1104 n=1] [store 2005 load 1105 n=1] [store 2001 load 1101 n=1] [store 2002 load 1102 n=1]\nPAIRS mtf_avx2 mod1K D<-H: [store 2000 load 1100 n=1] [store 2002 load 1102 n=1] [store 2001 load 1101 n=1] [store 2005 load 1105 n=1] [store 2004 load 1104 n=1]\n",
+  "class_minus_named_pair_count_witness": -1,
+  "engagement": {
+    "balanced": {
+      "exit": 0,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) holds: team 0: helper bytes [1, 1], largest share 0.5\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 0 zero-work helper calls"
+        ],
+        "b": [
+          true,
+          "team 0: helper bytes [1, 1], largest share 0.5"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    },
+    "unbalanced": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 0 zero-work helper calls\n  (b) fails: team 0: helper bytes [1, 99], largest share 0.99\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 0 zero-work helper calls"
+        ],
+        "b": [
+          false,
+          "team 0: helper bytes [1, 99], largest share 0.99"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    },
+    "zero_work": {
+      "exit": 1,
+      "stdout": "VALID\n  (a) holds: every helper walked every block it built; 2 zero-work helper calls\n  (b) fails: team 0: helper bytes [0, 0], largest share n/a\n  (c) holds: 1 leader calls of traverse\n  (d) holds: 0 calls of another walker\nNOT ENGAGED\n",
+      "predicates": {
+        "a": [
+          true,
+          "every helper walked every block it built; 2 zero-work helper calls"
+        ],
+        "b": [
+          false,
+          "team 0: helper bytes [0, 0], largest share n/a"
+        ],
+        "c": [
+          true,
+          "1 leader calls of traverse"
+        ],
+        "d": [
+          true,
+          "0 calls of another walker"
+        ]
+      }
+    }
+  },
+  "source_sha256": {
+    "steps.md": "df6a0a487f92ad1346121c972b9bc8065c90815b5dd85a4ed8c88f8550d2600e",
+    "combined.md": "cdf4054f3a2f597f60e613bfcabcb28253bd9d4ebf18859111018fe0cf3fb4d0",
+    "agg3.c": "1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0",
+    "bench/walk_stats_check.py": "27eaa1043a621aecf89ffa97920add9c9c009014eb0ca2bd29a9d78cf324db0c",
+    "bench/test_walk_stats_check.py": "db8ddc8ee4b553221144b691f9745366e01564bde3a5d21031e57c5814f0213b"
+  },
+  "native_decoder_executed": false
+}
