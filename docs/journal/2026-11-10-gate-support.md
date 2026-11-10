@@ -29,8 +29,9 @@ runner-minutes):
 - **Why R falls and k doesn't:** a dispatch is 135 minutes of setup plus 0.3344 R. Setup is 46%
   of it at R480, 63% at R240. And the weakest cell's variance (pattern/4/cpu, σ_D 0.0125) is
   89% τ at R480. Rounds buy little; halving them costs 3.5 points at k = 12.
-- **The cheapest design clearing 0.80 on both τ sets:** k 11 × R240 (2,368). R200 and R160 need
-  k 12 and cost within 6% of it. On the strict set alone: k 10 × R240, 0.833 at 2,153 (−39%).
+- **Clearing 0.80 on both τ sets:** k 11 × R240 (2,368). The grid is flat there: k 12 × R160
+  also clears it, at 2,262 (4% less), but barely on the 25-link set (0.803). k 11 × R240 keeps
+  margin on both. On the strict set alone: k 10 × R240, 0.833 at 2,153 (−39%).
 - **The lower bound is close to the truth here.** The product of the cells' powers
   (independent cells) is 0.899 against 0.895 at k 11 × R240. Four cells carry 91% of the
   misses: pattern/4 CPU and wall, text/4/wall, random/2/wall.
