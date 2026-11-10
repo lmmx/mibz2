@@ -1448,8 +1448,9 @@
       "sha": "12f0e192c3d7f3768b3e21d1ca01fa8762b2f0b7",
       "evidence_digest": "checkpoint-sha256:45283a7cbd55632de6087849af353998414d2665fb8e971fa080af46858a23f0;policy:8014b49128bffbe954d9e90389c4aa7b5113e9bd",
       "commit": "1c87ddf96359885f027e010ec8f624e6864b2235",
-      "status": "complete",
-      "disposition": "Record reported policy/withdrawals; prior verdicts retained. No new concrete safety defect established by limited check; B5 not discharged and operating pin unchanged."
+      "status": "finished",
+      "disposition": "Record reported policy/withdrawals; prior verdicts retained. No new concrete safety defect established by limited check; B5 not discharged and operating pin unchanged.",
+      "comment": 6764503403
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1543,7 +1544,8 @@
     6763626030,
     6763937701,
     6764159416,
-    6764381812
+    6764381812,
+    6764503403
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1768,7 +1770,8 @@
     "1794faef8c66ddc53abe5b165be88052f82119d6",
     "f1c0f414a3eb4b3134d7cdd8521fdf1f16d8b846",
     "69db0dab9063eed31a1a36817bf905bfd0bd9275",
-    "1c87ddf96359885f027e010ec8f624e6864b2235"
+    "1c87ddf96359885f027e010ec8f624e6864b2235",
+    "b46e0b62bc656426c2785508b8824a4b5fb77339"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1944,9 +1947,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6764400880,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D096",
+    "incoming_comment": 6764400880,
+    "review_comment_id": 6764503403,
     "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
   },
   "duplicate_events": [
@@ -3437,11 +3442,13 @@
     {
       "comment_id": 6764400880,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D096",
-      "progress": "D096 complete; awaiting one REVIEW on #145.",
+      "progress": "Exact REVIEW readback verified on #145; pinned verifier fails only coordinator-specific FROM requirement; independent Guardian header/routing checks pass.",
       "receipt_commit": "69db0dab9063eed31a1a36817bf905bfd0bd9275",
-      "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235"
+      "work_commit": "1c87ddf96359885f027e010ec8f624e6864b2235",
+      "review_comment_id": 6764503403,
+      "complete_cursor_commit": "b46e0b62bc656426c2785508b8824a4b5fb77339"
     }
   ],
   "migrated_from": {
