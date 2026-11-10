@@ -505,3 +505,8 @@ Source84bf177bd0af9fa416964eca2c0f56ad278b119e. Artifact13731585881 digest verif
 - #171 four-thread evidence is independent workers, not teams. Raw historical block1 replay reproduces inclusive −1,132,562 Ir; direct flush memcpy125,321, aggregate memcpy348,489.
 - Published bandwidth snippets have no Ir; 17.6/10.1 and30.5 remain reported hypothesis pending raw same-denominator inclusive attribution. Current share-nothing summary says17.8. 10–11/team is plausible, not established; current staged source still has per-lane START tests.
 - Priority: staged-team kernel count before a new dense-pair implementation; lending attribution count independent. Service/emitter priorities and registered D4 filters unchanged. No measured credit or new timing.
+
+
+## #324 rescue and tunnel lane: inbox 6758452562
+
+[Report](records/reviews/inbox-6758452562/report.md). Part A checkpoint: #324 remains FAIL; high-priority untimed rescue under D082. Four raw historical profiles reproduce +61/block, decomposed +6 caller, +7 memset, +48 newly outlined finish; MTF/room counts unchanged. Scratch construction and Huffman outside this profile. Rank actual data/caller geometry, then changed call/code placement; mod4KiB discriminator withdrawn by #277 §6. One boxed diagnostic conditional on actual production evidence; lazy per-worker sidecar offers stronger fallback allocation isolation, no geometry guarantee. No timing/implementation. Part B pending.

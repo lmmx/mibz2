@@ -967,7 +967,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: migration verified. Part A #324 off-path harm rescue first, then two-state tunnel lane pricing.",
+      "progress": "Part A committed: raw four-profile replay and +61 decomposition; ranked causal falsifiers and boxed/sidecar comparison. Part B tunnel pricing pending.",
       "report_path": "state/records/reviews/inbox-6758452562/report.md"
     }
   ],
