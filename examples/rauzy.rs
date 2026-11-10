@@ -4,6 +4,7 @@
 //!
 //! ```text
 //! rauzy FILE.bz2 [EVERY] [MIN_ROWS] [ROUNDS]     one JSON line a block (stdout)
+//! RAUZY_JOIN=1 rauzy ...                         the kernel with its joining pre-pass
 //! ```
 //!
 //! **The object.** LF is a translation on each run of L: an interval exchange on r letters
@@ -462,10 +463,29 @@ struct Kernel {
     nodes: Vec<Node>,
     order: Vec<u32>,
     arena: Vec<u8>,
+    /// the arena's bytes in use
+    top: usize,
     rules: Vec<Rule>,
     pos: Vec<u32>,
     tmp: Vec<u8>,
+    // the letters as the block gives them, and the joining of whole runs before the induction
+    lam: Vec<u32>,
+    byte: Vec<u8>,
+    link: Vec<u32>,
+    heir: Vec<u32>,
+    flag: Vec<u8>,
+    chain: Vec<u32>,
+    hword: Vec<u32>,
+    hlen: Vec<u32>,
+    id: Vec<u32>,
 }
+
+/// `flag`: the letter is joined into its chain's head (gone from the top order)
+const JOINED: u8 = 1;
+/// `flag`: the letter's image is a joined letter's interval (its bottom place is gone)
+const IMAGE_GONE: u8 = 2;
+/// `flag`: some letter is sent exactly onto this one
+const TARGET: u8 = 4;
 
 #[inline(always)]
 fn prefetch<T>(p: *const T) {
@@ -523,13 +543,13 @@ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
 }
 
 impl Kernel {
-    /// The letters of `l`'s interval exchange, top and bottom orders linked; the letter
-    /// holding row `p` and p's offset in it
-    fn letters(&mut self, l: &[u8], p: u32) -> (u32, u32) {
+    /// The runs of `l` (a length and a byte each); the run holding row `p` and p's offset in
+    /// it. This is what a front that emits run records gives without the column.
+    fn runs(&mut self, l: &[u8], p: u32) -> (u32, u32) {
         let n = l.len();
-        self.nodes.clear();
+        self.lam.clear();
+        self.byte.clear();
         let (mut trk, mut off) = (0u32, 0u32);
-        let mut cnt = [0u32; 257];
         let mut i = 0usize;
         while i < n {
             let c = l[i];
@@ -548,41 +568,220 @@ impl Kernel {
                 j += 1;
             }
             if (i..j).contains(&(p as usize)) {
-                trk = self.nodes.len() as u32;
+                trk = self.lam.len() as u32;
                 off = p - i as u32;
             }
-            let k = self.nodes.len() as u32;
-            self.nodes.push(Node {
-                lam: (j - i) as u32,
-                len: 1,
-                word: BYTES + c as u32,
-                _pad: 0,
-                prev: [k.wrapping_sub(1), 0],
-                next: [k + 1, 0],
-            });
-            cnt[c as usize + 1] += 1;
+            self.lam.push((j - i) as u32);
+            self.byte.push(c);
             i = j;
         }
-        let r = self.nodes.len();
-        let none = r as u32;
-        self.nodes[0].prev[0] = none;
+        (trk, off)
+    }
+
+    /// The bottom order, as an array: the runs sorted stably by byte
+    fn sort(&mut self) {
+        let r = self.lam.len();
+        let mut cnt = [0u32; 257];
+        for &c in &self.byte {
+            cnt[c as usize + 1] += 1;
+        }
         for k in 0..256 {
             cnt[k + 1] += cnt[k];
         }
         self.order.clear();
         self.order.resize(r, 0);
         for i in 0..r {
-            let c = (self.nodes[i].word - BYTES) as usize;
+            let c = self.byte[i] as usize;
             self.order[cnt[c] as usize] = i as u32;
             cnt[c] += 1;
         }
+    }
+
+    /// The arena and the rules, empty
+    fn reset(&mut self) {
+        self.rules.clear();
+        self.arena.clear();
+        self.arena
+            .resize((BYTES as usize + 256 + 64).max(self.arena.capacity()), 0);
+        for b in 0..256 {
+            self.arena[BYTES as usize + b] = b as u8;
+        }
+        self.top = BYTES as usize + 256;
+    }
+
+    /// The runs as the exchange's letters, both orders linked: every step is then the
+    /// induction's. Returns the last letters on top and bottom.
+    fn link(&mut self) -> (u32, u32) {
+        self.reset();
+        let r = self.lam.len();
+        let none = r as u32;
+        self.nodes.clear();
+        for i in 0..r as u32 {
+            self.nodes.push(Node {
+                lam: self.lam[i as usize],
+                len: 1,
+                word: BYTES + self.byte[i as usize] as u32,
+                _pad: 0,
+                prev: [i.wrapping_sub(1), 0],
+                next: [i + 1, 0],
+            });
+        }
+        self.nodes[0].prev[0] = none;
         for k in 0..r {
             let i = self.order[k] as usize;
             self.nodes[i].prev[1] = if k > 0 { self.order[k - 1] } else { none };
             self.nodes[i].next[1] = if k + 1 < r { self.order[k + 1] } else { none };
         }
         self.nodes.push(Node::default());
-        (trk, off)
+        (none - 1, self.order[r - 1])
+    }
+
+    /// Before the induction: every run that LF sends exactly onto another run (its image is
+    /// that run's interval) is joined with it. Such a pair is a segment of one top and one
+    /// bottom interval, and the induction would spend an equal step on it; a chain of them
+    /// h -> x2 -> ... -> xk is one letter, h's interval sent to xk's image, its word the
+    /// chain's bytes from xk back to h. Found by one merge of the two tilings' boundaries.
+    /// The letters left are then numbered afresh, in top order, and their orders linked: the
+    /// induction's nodes are theirs alone.
+    ///
+    /// Returns (the tracked letter, the last letters on top and bottom, the tracked point's
+    /// level, the letters joined away).
+    fn contract(&mut self, mut trk: u32) -> (u32, u32, u32, u32, u64) {
+        let r = self.lam.len();
+        self.reset();
+        let mut top = self.top;
+        self.link.clear();
+        self.link.resize(r, NIL);
+        self.heir.clear();
+        self.heir.resize(r, NIL);
+        self.flag.clear();
+        self.flag.resize(r, 0);
+        self.hword.clear();
+        self.hword.resize(r, 0);
+        self.hlen.clear();
+        self.hlen.resize(r, 0);
+        // top letter i begins at pt, the image of bottom letter order[k] at pb
+        let (mut i, mut k, mut pt, mut pb) = (0usize, 0usize, 0u32, 0u32);
+        while i < r && k < r {
+            let b = self.order[k] as usize;
+            let (la, lb) = (self.lam[i], self.lam[b]);
+            if pt == pb && la == lb && i != b {
+                self.link[b] = i as u32;
+                self.flag[i] |= TARGET;
+            }
+            let (et, eb) = (pt + la, pb + lb);
+            if et <= eb {
+                pt = et;
+                i += 1;
+            }
+            if eb <= et {
+                pb = eb;
+                k += 1;
+            }
+        }
+        // the chains, each from the letter nothing is sent onto (a closed chain, a block of
+        // one repeated word, is left to the induction)
+        let (mut v, mut joined) = (0u32, 0u64);
+        for h in 0..r {
+            if self.link[h] == NIL || self.flag[h] & TARGET != 0 {
+                continue;
+            }
+            self.chain.clear();
+            let mut x = h as u32;
+            loop {
+                self.chain.push(x);
+                x = self.link[x as usize];
+                if x == NIL {
+                    break;
+                }
+            }
+            let k = self.chain.len();
+            joined += k as u64 - 1;
+            if top + k + 64 > self.arena.len() {
+                let grown = (self.arena.len() * 2).max(top + k + 64);
+                self.arena.resize(grown, 0);
+            }
+            for (j, &x) in self.chain.iter().enumerate() {
+                let xi = x as usize;
+                self.arena[top + k - 1 - j] = self.byte[xi];
+                if j > 0 {
+                    self.flag[xi] |= JOINED;
+                    if x == trk {
+                        trk = h as u32;
+                        v = j as u32;
+                    }
+                }
+                if j + 1 < k {
+                    self.flag[xi] |= IMAGE_GONE;
+                }
+            }
+            self.heir[self.chain[k - 1] as usize] = h as u32;
+            // the word: bytes if short, else 16-byte pieces under a comb of rules
+            let (mut word, mut len) = (top as u32, k.min(SMALL as usize) as u32);
+            let mut o = len as usize;
+            while o < k {
+                let piece = (k - o).min(SMALL as usize) as u32;
+                self.rules.push(Rule {
+                    left: word,
+                    right: (top + o) as u32,
+                    llen: len,
+                    len: len + piece,
+                });
+                word = self.rules.len() as u32 - 1;
+                len += piece;
+                o += piece as usize;
+            }
+            self.hword[h] = word;
+            self.hlen[h] = len;
+            top += k;
+        }
+        self.top = top;
+        // the letters left, numbered in top order; the node past the last stands for "none"
+        self.nodes.clear();
+        self.id.clear();
+        self.id.resize(r, NIL);
+        for i in 0..r {
+            if self.flag[i] & JOINED != 0 {
+                continue;
+            }
+            let k = self.nodes.len() as u32;
+            self.id[i] = k;
+            let (word, len) = if self.hlen[i] != 0 {
+                (self.hword[i], self.hlen[i])
+            } else {
+                (BYTES + self.byte[i] as u32, 1)
+            };
+            self.nodes.push(Node {
+                lam: self.lam[i],
+                len,
+                word,
+                _pad: 0,
+                prev: [k.wrapping_sub(1), 0],
+                next: [k + 1, 0],
+            });
+        }
+        let none = self.nodes.len() as u32;
+        self.nodes[0].prev[0] = none;
+        self.nodes.push(Node::default());
+        // the bottom order: a letter whose image is gone has no place; a chain's head sits
+        // where its last letter sat
+        let mut last = none;
+        for k in 0..r {
+            let x = self.order[k] as usize;
+            if self.flag[x] & IMAGE_GONE != 0 {
+                continue;
+            }
+            let y = if self.flag[x] & JOINED != 0 {
+                self.heir[x]
+            } else {
+                x as u32
+            };
+            let y = self.id[y as usize];
+            self.nodes[y as usize].prev[1] = last;
+            self.nodes[last as usize].next[1] = y;
+            last = y;
+        }
+        (self.id[trk as usize], none - 1, last, v, joined)
     }
 
     /// The induction, to the tracked point's cycle. Returns (the cycle's word, its length,
@@ -595,20 +794,18 @@ impl Kernel {
     ///   sits where B sat on top, and stays where it was on the bottom).
     ///
     /// The writes a case does not mean go to the node that stands for "none".
-    fn induce(&mut self, mut trk: u32, mut off: u32) -> (u32, u32, u32, u64) {
+    fn induce(
+        &mut self,
+        mut trk: u32,
+        mut off: u32,
+        mut tl: u32,
+        mut bl: u32,
+        mut v: u32,
+    ) -> (u32, u32, u32, u64) {
         let r = self.nodes.len() - 1;
         let none = r as u32;
-        self.rules.clear();
-        self.arena.clear();
-        self.arena
-            .resize((BYTES as usize + 256 + 64).max(self.arena.capacity()), 0);
-        for b in 0..256 {
-            self.arena[BYTES as usize + b] = b as u8;
-        }
-        let mut top = BYTES as usize + 256;
-        let order = &self.order[..];
+        let mut top = self.top;
         let nd = self.nodes.as_mut_ptr();
-        let (mut tl, mut bl) = (r as u32 - 1, order[r - 1]);
         // A letter met at the end of an order may lie anywhere (the bottom order is sorted by
         // byte, and a loser is re-seated far from where it was): two pointers run AHEAD links
         // down the orders in front of the last letters, fetching what they pass. A stale
@@ -621,11 +818,10 @@ impl Kernel {
                 ab = (*nd.add(ab as usize)).prev[1];
             }
         }
-        let mut v = 0u32;
         let mut steps = 0u64;
         // (a rule is written every step, and kept only if its word is long)
         self.rules.reserve(r + 1);
-        let mut nr = 0usize;
+        let mut nr = self.rules.len();
         loop {
             let (a, b) = (tl, bl);
             // SAFETY: a, b and every link read below are letters or `none`, all below
@@ -920,8 +1116,10 @@ fn grammar_crc(g: &Grammar, cl: &Closed, n: usize) -> Option<(u32, u64)> {
 }
 
 /// The run boundaries of `l` that are also boundaries of the runs' images under LF (0 and n
-/// not counted): where the top and bottom partitions of [0, n) coincide
-fn coincidences(l: &[u8]) -> u64 {
+/// not counted): where the top and bottom partitions of [0, n) coincide. With them, the
+/// segments between two coincidences by shape: (one run, one image) = a run sent exactly onto
+/// a run; (one run, several images); (several runs, one image); the rest.
+fn coincidences(l: &[u8]) -> (u64, [u64; 4]) {
     let n = l.len();
     let mut cnt = [0u32; 257];
     for &c in l {
@@ -939,7 +1137,27 @@ fn coincidences(l: &[u8]) -> u64 {
         }
         next[c] += 1;
     }
-    (1..n).filter(|&i| l[i] != l[i - 1] && image[i]).count() as u64
+    let (mut coin, mut shapes) = (0u64, [0u64; 4]);
+    // the top and bottom intervals begun since the last coincidence
+    let (mut tops, mut bots) = (1u32, 1u32);
+    for i in 1..=n {
+        let (t, b) = (i == n || l[i] != l[i - 1], i == n || image[i]);
+        if t && b {
+            coin += (i < n) as u64;
+            shapes[match (tops, bots) {
+                (1, 1) => 0,
+                (1, _) => 1,
+                (_, 1) => 2,
+                _ => 3,
+            }] += 1;
+            tops = 1;
+            bots = 1;
+        } else {
+            tops += t as u32;
+            bots += b as u32;
+        }
+    }
+    (coin, shapes)
 }
 
 fn main() {
@@ -948,6 +1166,8 @@ fn main() {
     let every: usize = args.get(2).map_or(1, |s| s.parse().unwrap());
     let min: usize = args.get(3).map_or(65536, |s| s.parse().unwrap());
     let rounds: usize = args.get(4).map_or(5, |s| s.parse().unwrap());
+    // RAUZY_JOIN=1: the kernel joins the runs sent exactly onto runs before it inducts
+    let join = std::env::var_os("RAUZY_JOIN").is_some();
     let k = Kernels::detect();
     let mut sc = Scanner::new(SliceSource(&data));
     let (mut ll, mut counts, mut tt) = (Vec::new(), [0u32; 256], TVector::new());
@@ -1002,17 +1222,29 @@ fn main() {
                 }
                 assert!(out == walked, "the grammar's bytes differ from the walk's");
                 let (mut k_runs, mut k_ind, mut k_exp) = (f64::MAX, f64::MAX, f64::MAX);
-                let mut k_rules = 0;
+                let mut k_join = f64::MAX;
+                let (mut k_rules, mut k_joined, mut k_steps) = (0, 0u64, 0u64);
                 for _ in 0..rounds {
                     let t = Instant::now();
-                    let (trk, off) = kern.letters(&ll, b.orig_ptr);
+                    let (trk, off) = kern.runs(&ll, b.orig_ptr);
+                    let t0b = Instant::now();
+                    kern.sort();
+                    let (trk, tl, bl, v, joined) = if join {
+                        kern.contract(trk)
+                    } else {
+                        let (tl, bl) = kern.link();
+                        (trk, tl, bl, 0, 0)
+                    };
                     let t1 = Instant::now();
-                    let (word, period, t0, _) = kern.induce(trk, off);
+                    let (word, period, t0, steps) = kern.induce(trk, off, tl, bl, v);
                     let t2 = Instant::now();
                     kern.write(word, period, t0, n, &mut out);
                     let t3 = Instant::now();
-                    k_runs = k_runs.min((t1 - t).as_secs_f64());
+                    k_runs = k_runs.min((t0b - t).as_secs_f64());
+                    k_join = k_join.min((t1 - t0b).as_secs_f64());
                     k_ind = k_ind.min((t2 - t1).as_secs_f64());
+                    k_joined = joined;
+                    k_steps = steps;
                     k_exp = k_exp.min((t3 - t2).as_secs_f64());
                     k_rules = kern.rules.len();
                 }
@@ -1033,13 +1265,13 @@ fn main() {
                     hist[k].1 += len as u64;
                 }
                 let hs: Vec<String> = hist.iter().map(|h| format!("[{},{}]", h.0, h.1)).collect();
-                let coin = coincidences(&ll);
+                let (coin, shapes) = coincidences(&ll);
                 let ns = |t: f64| t * 1e9 / n as f64;
                 println!(
-                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{}}}",
+                    "{{\"n\":{n},\"runs\":{},\"steps\":{},\"top\":{},\"bottom\":{},\"equal\":{},\"dropped\":{},\"streaks\":{},\"longest\":{},\"left\":{},\"copies\":{},\"copied\":{},\"deepest\":{},\"ns_walk\":{:.3},\"ns_runs\":{:.3},\"ns_induce\":{:.3},\"ns_expand\":{:.3},\"coincide\":{},\"hist\":[{}],\"k_rules\":{},\"k_runs\":{:.3},\"k_induce\":{:.3},\"k_write\":{:.3},\"repeats\":{},\"divisions\":{},\"crc_muls\":{},\"depth\":{},\"widest\":{},\"rounds\":{},\"selfish\":{},\"selfish_steps\":{},\"shapes\":{:?},\"k_order\":{:.3},\"k_joined\":{},\"k_steps\":{}}}",
                     c.runs, c.steps, c.top, c.bottom, c.equal, c.dropped, c.streaks, c.longest, c.left,
                     ex.0, ex.1, ex.2, ns(t_walk), ns(t_runs), ns(t_ind), ns(t_exp), coin, hs.join(","),
-                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps
+                    k_rules, ns(k_runs), ns(k_ind), ns(k_exp), c.repeats, c.divisions, crc_muls, c.depth, c.widest, c.rounds, c.selfish, c.selfish_steps, shapes, ns(k_join), k_joined, k_steps
                 );
             }
             i += 1;
