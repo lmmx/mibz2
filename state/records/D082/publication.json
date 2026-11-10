@@ -1,0 +1,19 @@
+{
+  "incoming_comment_id": 6758376066,
+  "review_comment_id": 6758456856,
+  "review_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6758456856",
+  "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+  "receipt_commit": "54ec91e9c74707f6a0c71a6350d2d5810a292e78",
+  "complete_cursor_commit": "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f",
+  "exact_readback": true,
+  "actual_issue": 145,
+  "coord_route": 145,
+  "coord_verify": {
+    "ok": false,
+    "problems": [
+      "FROM is 'guardian', not coordinator"
+    ]
+  },
+  "independent_guardian_checks": "FROM guardian; TYPE REVIEW; inbox ID; immutable decision/evidence links; exact body; issue145 all verified",
+  "automation": "No changes"
+}

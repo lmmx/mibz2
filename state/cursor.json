@@ -1242,8 +1242,9 @@
       "pr": 324,
       "sha": "e88c063155c3e734e748e99ccda025393302720f",
       "commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
-      "status": "complete",
-      "disposition": "#324 no-harm FAIL; materially changed boxed successor conditionally admissible"
+      "status": "finished",
+      "disposition": "#324 no-harm FAIL; materially changed boxed successor conditionally admissible",
+      "comment": 6758456856
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1323,7 +1324,8 @@
     6756634391,
     6757058587,
     6757246555,
-    6757750433
+    6757750433,
+    6758456856
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1506,7 +1508,8 @@
     "b4d7a4a755510af80d9c6a369a43d8b54364c3be",
     "820e507106a064d9d6706b9a205fed368a5e209f",
     "54ec91e9c74707f6a0c71a6350d2d5810a292e78",
-    "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
+    "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+    "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1588,7 +1591,8 @@
     6756570238,
     6756994744,
     6757176848,
-    6757688316
+    6757688316,
+    6758376066
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1668,9 +1672,10 @@
   },
   "current_execution": {
     "active_comment": 6758376066,
-    "status": "complete",
+    "status": "finished",
     "decision": "D082",
-    "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
+    "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+    "review_comment_id": 6758456856
   },
   "duplicate_events": [
     {
@@ -2294,6 +2299,14 @@
       "decision": "D079",
       "commit": "c7bf52ccd452f30302d9f6e4dad0a3c33db5fbed",
       "comment": 6757058587
+    },
+    {
+      "pr": 324,
+      "sha": "e88c063155c3e734e748e99ccda025393302720f",
+      "evidence_digest": "journal:703d6469a30eb59799c784f6f76b6982c1cd5992;codegen:4949b068052d35e32df8fcbb3eba877e77217d57;tables:6758044068,6758194980,6758350884;inbox:6758376066",
+      "decision": "D082",
+      "commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+      "comment": 6758456856
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -2886,11 +2899,13 @@
     {
       "comment_id": 6758376066,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D082",
-      "progress": "D082 complete: #324 FAIL retained; distinct boxed successor conditionally admissible; corrected causal claim and frozen sequence.",
+      "progress": "Exact REVIEW readback verified on #145. Pinned verifier fails only coordinator-specific FROM check; independent Guardian header/body/destination checks pass.",
       "receipt_commit": "54ec91e9c74707f6a0c71a6350d2d5810a292e78",
-      "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053"
+      "work_commit": "605d3a22013016cd1feb7a1e21d2eb6e47c8b053",
+      "review_comment_id": 6758456856,
+      "complete_cursor_commit": "07dbccbd5524d6c3f40b56440d02bf6cecab0f6f"
     }
   ],
   "migrated_from": {
