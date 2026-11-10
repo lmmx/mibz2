@@ -387,19 +387,44 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
             next = k;
         }
     }
-    // a cell [a, b) stays inside one cell for w = 1 + min K[q], q in (a, b), steps
+    // a cell [a, b) stays whole for w = min K[q], q in (a, b), steps: rows q - 1 and q are in
+    // one cell at steps 0 .. K[q] - 1, and at step K[q] row q's image is a start, so the two
+    // images lie in different cells and may emit different bytes. (Until 2026-11-10 this was
+    // 1 + min K: one byte too many. The Optimiser's witness: "aab", cell [0, 2), K[1] = 1,
+    // rows emit "aa" and "ab". Corrected; `check_word` below now asserts every word and exit.)
     let cap = 64u32;
     let word: Vec<u32> = (0..cells)
         .map(|k| {
             let (a, b) = (c.a[k] as usize, c.b[k] as usize);
-            (a + 1..b)
-                .map(|q| kk[q])
-                .min()
-                .map_or(cap, |m| (m + 1).min(cap))
+            (a + 1..b).map(|q| kk[q]).min().map_or(cap, |m| m.min(cap))
         })
         .collect();
-    // K[q] counts the steps until the pair separates: the block is whole through step min K,
-    // and the word is those steps' bytes
+    // pos[y]: the time the trajectory is at row y
+    let mut pos = vec![0u32; n];
+    for (t, &y) in c.traj.iter().enumerate() {
+        pos[y as usize] = t as u32;
+    }
+    // the certificate of one word step: from row traj[t] in cell k, the next w bytes are the
+    // bytes the cell's first row emits, and the row after them is the first row's image plus
+    // this row's offset
+    let check_word = |t: usize, k: usize, w: usize| {
+        let a = c.a[k] as usize;
+        let y = c.traj[t] as usize;
+        let ta = pos[a] as usize;
+        for j in 0..w {
+            assert!(
+                c.cell[c.traj[(ta + j) % n] as usize] == c.cell[c.traj[(t + j) % n] as usize],
+                "a word step leaves its head's cells at byte {j}"
+            );
+        }
+        if t + w < n {
+            assert_eq!(
+                c.traj[(t + w) % n] as usize - c.traj[(ta + w) % n] as usize,
+                y - a,
+                "a word step's exit is not its head's exit plus the offset"
+            );
+        }
+    };
     let (mut split_events, mut split_single, mut split_first, mut split_first_bytes) = (0, 0, 0, 0);
     let (mut split_bytes, mut split_count) = ([0usize; 9], [0usize; 9]);
     {
@@ -410,6 +435,7 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
             let single = c.b[k] - c.a[k] == 1;
             // a one-row cell has no neighbour to reuse: it steps once
             let w = if single { 1 } else { word[k] as usize }.min(n - t);
+            check_word(t, k, w);
             split_events += 1;
             split_single += single as usize;
             if !seen[k] && !single {
@@ -432,7 +458,7 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
         let raw: Vec<usize> = (0..cells)
             .map(|k| {
                 let (a, b) = (c.a[k] as usize, c.b[k] as usize);
-                (a + 1..b).map(|q| kk[q] as usize + 1).min().unwrap_or(1)
+                (a + 1..b).map(|q| kk[q] as usize).min().unwrap_or(1)
             })
             .collect();
         let rows_multi: usize = multi.iter().map(|&k| (c.b[k] - c.a[k]) as usize).sum();
@@ -453,14 +479,20 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
             let mut seen = vec![false; cells];
             let (mut events, mut used, mut used_bytes, mut single_events) = (0usize, 0, 0, 0);
             let (mut short_events, mut short_bytes) = (0usize, 0usize);
+            let (mut tall_events, mut tall_bytes) = (0usize, 0usize);
             let mut t = 0;
             while t < n {
                 let k = c.cell[c.traj[t] as usize] as usize;
                 let single = c.b[k] - c.a[k] == 1;
                 let full = if single { 1 } else { raw[k].min(cap) };
                 let w = full.min(n - t);
+                check_word(t, k, w);
                 events += 1;
                 single_events += single as usize;
+                if w > 32 {
+                    tall_events += 1;
+                    tall_bytes += w;
+                }
                 if w <= 2 {
                     short_events += 1;
                     short_bytes += w;
@@ -475,10 +507,80 @@ fn census(l: &[u8], orig_ptr: u32, walked: &[u8]) -> String {
             // every multi-row cell's word, were all of them built
             let all_bytes: usize = multi.iter().map(|&k| raw[k].min(cap).min(n)).sum();
             out += &format!(
-                "{}[{},{events},{single_events},{used},{used_bytes},{all_bytes},{short_events},{short_bytes}]",
+                "{}[{},{events},{single_events},{used},{used_bytes},{all_bytes},{short_events},{short_bytes},{tall_events},{tall_bytes}]",
                 if i == 0 { "" } else { "," },
                 if cap == usize::MAX { 0 } else { cap }
             );
+        }
+        out += "],\"hybrid\":[";
+        // the stride-k walk that copies tall cells: at a landing in a Ψ^k cell (rows with
+        // K >= k between them) whose rows stay adjacent 33 steps or more, take the whole word
+        // (to the cap); else take k bytes. Every tall step is checked against the cell's head.
+        let mut first = true;
+        for k in [4usize, 8] {
+            // head[y]: the first row of y's Ψ^k cell; hk[head]: min K over its interior
+            let mut head = vec![0u32; n];
+            let mut hk = vec![0u32; n];
+            let mut a = 0usize;
+            let mut m = u32::MAX;
+            for q in 0..n {
+                if q > 0 && (kk[q] as usize) < k {
+                    hk[a] = m;
+                    a = q;
+                    m = u32::MAX;
+                } else if q > 0 {
+                    m = m.min(kk[q]);
+                }
+                head[q] = a as u32;
+            }
+            hk[a] = m;
+            for cap in [64usize, 256] {
+                let (mut steps, mut tall_steps, mut tall_bytes) = (0usize, 0usize, 0usize);
+                let mut t = 0;
+                while t < n {
+                    let y = c.traj[t] as usize;
+                    let a = head[y] as usize;
+                    let h = hk[a];
+                    let w = if h != u32::MAX && h as usize >= 33 {
+                        let w = (h as usize).min(cap).min(n - t);
+                        // the certificate, against the Ψ^k cell's head
+                        let ta = pos[a] as usize;
+                        for j in 0..w {
+                            assert!(
+                                c.cell[c.traj[(ta + j) % n] as usize]
+                                    == c.cell[c.traj[(t + j) % n] as usize],
+                                "a tall step leaves its head's cells at byte {j}"
+                            );
+                        }
+                        if t + w < n {
+                            assert_eq!(
+                                c.traj[(t + w) % n] as usize - c.traj[(ta + w) % n] as usize,
+                                y - a
+                            );
+                        }
+                        tall_steps += 1;
+                        tall_bytes += w;
+                        w
+                    } else {
+                        k.min(n - t)
+                    };
+                    steps += 1;
+                    t += w;
+                }
+                // the tall cells and their words, were all of them stored
+                let (mut tall_cells, mut tall_words) = (0usize, 0usize);
+                for q in 0..n {
+                    if head[q] as usize == q && hk[q] != u32::MAX && hk[q] as usize >= 33 {
+                        tall_cells += 1;
+                        tall_words += (hk[q] as usize).min(cap);
+                    }
+                }
+                out += &format!(
+                    "{}[{k},{cap},{steps},{tall_steps},{tall_bytes},{tall_cells},{tall_words}]",
+                    if first { "" } else { "," }
+                );
+                first = false;
+            }
         }
         return out + "]}";
     }
