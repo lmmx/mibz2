@@ -138,9 +138,10 @@
     6756472047,
     6756614616,
     6756992499,
-    6757065549
+    6757065549,
+    6757210413
   ],
-  "last_processed_comment_id": 6757065549,
+  "last_processed_comment_id": 6757210413,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1482,7 +1483,7 @@
     },
     {
       "trigger_comment_id": 6757210413,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "repository": "lmmx/mibz2",
       "source_commit": "f5e3f0ad0660f3a38db84c6078b42b311c137d9b",
@@ -1490,7 +1491,11 @@
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "report_commit": "5eec64209245df4f758fa1fe1e47fe0d14fca437",
       "report_path": "state/reports/target-gated-pilot-6757210413/report.md",
-      "disposition": "REVISE PR319 and pilot dispatch basis: pilot omits manifest integrity, admits absent/backwards timing, m48 absent at R600, batch time proxy wrong, label refusal alone does not establish smoke plumbing. Qualification A fixes and numerical power repairs accepted; revised statistical/causal principles acceptable for nonqualifying pilot."
+      "disposition": "REVISE PR319 and pilot dispatch basis: pilot omits manifest integrity, admits absent/backwards timing, m48 absent at R600, batch time proxy wrong, label refusal alone does not establish smoke plumbing. Qualification A fixes and numerical power repairs accepted; revised statistical/causal principles acceptable for nonqualifying pilot.",
+      "review_comment_pr": 145,
+      "review_comment_id": 6757361275,
+      "publication_verified": true,
+      "verification_note": "Exact readback and role-aware routing pass; pinned verify reports only hardcoded FROM coordinator restriction."
     }
   ],
   "active_delegations": [],
@@ -1513,9 +1518,11 @@
       6757065549
     ],
     "handled": [
+      6757210413
+    ],
+    "skipped": [
       6757065549
     ],
-    "skipped": [],
     "automation_modified": false
   },
   "reported_programme_status": {
