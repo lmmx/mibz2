@@ -1,5 +1,10 @@
 # Changes since the last version
 
+- 2026-11-10, through [6763522358](https://github.com/lmmx/mibz2/pull/145#issuecomment-6763522358): #318 ran VALID and identified a strong idle-gap trigger for i9 slow mode; secondary mechanism probes were inconclusive. Earlier #316 gap balance is being checked.
+- 2026-11-10: Louis prioritised #324 rescue and #316 qualification over new exploration. STEPS placement revision 3 is under review; #316's twelve-dispatch draft judge has a conflict and neutral-tail concern.
+- 2026-11-10: #341's team-roster checker and #342's release-tag fetch repair merged. #342 explains the missing 0.2.7 scaling bundle; the older queued recipe still needs a tag refresh.
+- 2026-11-10: #334 T1 checker received Researcher PROCEED, but D091 held the combined ports diagnostic's freeze on verdict-exit semantics.
+
 - 2026-11-10, through [6761671844](https://github.com/lmmx/mibz2/pull/145#issuecomment-6761671844): #337 and #339 counted further team-path instruction reductions, each FAIL-MEASUREMENT; port 2 missed its prediction and #339's interval was corrected. D089 permits a separate combined diagnostic in draft, not retrospective qualification.
 - 2026-11-10: #336 harness schema and #338 feature-gated T2 instrument merged; the walk-stats CI job is informational and its no-feature speed signal unexplained.
 - 2026-11-10: #316's §2.10 inference was refuted and redirected to independent dispatches; #318 remains REVISE after a missing-treatment admission case.
