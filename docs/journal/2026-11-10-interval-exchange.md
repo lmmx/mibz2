@@ -190,6 +190,23 @@ row walk is at its best here). Bytes compared on every block.
 - **On the Thue–Morse word the whole inverse BWT stage runs at 0.146 ns a row,** and most of
   that is the final copy and reversal.
 
+## 5b. Overtaken, and rebased (10 November, afternoon)
+
+- **MONODROMY's Rauzy–Veech kernel (#351) is ahead of this tower.** It renormalises the same
+  exchange at its right end, a rule a step, with no row pushed through LF. Its cells kernel
+  clocks 0.756 of build and walk on Wikidata's 233 blocks, where this tower's first
+  construction clocked 1.25. It makes 0.131 n rules against this tower's 0.190 n steps.
+- **So the interleaved kernel named below is parked.** Building a second engine of the same
+  family behind a better one would be for my own account, not the decoder's. My time on this
+  line goes to MONODROMY's requests.
+- **Both clocks were against a baseline that 0.2.8 replaced.** Production's inversion for
+  these blocks is now the records' (`runs::fill` + `walk_back_room`), measured here at 0.95
+  of the column's on Wikidata: fill 0.37 + walk 1.89 = 2.27 ns a row, against build 0.55 +
+  walk 1.83 = 2.38 (`2026-11-10-team-runs-port/invarms.txt`). Rebased, this tower is about
+  1.32 times production and MONODROMY's kernel about 0.80.
+- **The walk is 1.89 of the 2.27.** Whatever removes dependent steps is still aimed at the
+  right place.
+
 ## 6. Next
 
 - **The kernel,** on the run-record representation, timed locally and then on CI. This
