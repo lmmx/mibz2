@@ -1,0 +1,247 @@
+{
+  "baseline": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "missing_G_walls": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "THE GAP GOES WITH THE SLOW MODE: 30/30 slow after a gap, 0/30 without (Fisher p 1.69e-17)",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 0,
+        "slow": 30,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": null,
+        "cpu_per_block_slow_s": 0.0025058004640371233,
+        "wall_median_s": null,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "first_G_gap_missing": {
+    "condition": "G",
+    "gap": null,
+    "problems": []
+  },
+  "negative_Z_gap": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": -1.0,
+        "gap_max_s": -1.0
+      }
+    }
+  },
+  "reverse_gap_timestamps": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "zero_rest_and_deadlines": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "zero_rest_only": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "empty_deadlines_only": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 0 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  },
+  "one_missing_G_wall": {
+    "rc": 0,
+    "label": "VALID",
+    "problems": [],
+    "gaps": "NO SLOW MODE IN THE BLOCK: 1 slow after a gap, 0 without",
+    "conditions": {
+      "G": {
+        "n": 30,
+        "fast": 29,
+        "slow": 1,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": 0.0025058004640371233,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.2512,
+        "gap_max_s": 0.2512
+      },
+      "Z": {
+        "n": 30,
+        "fast": 30,
+        "slow": 0,
+        "cpu_per_block_s": 0.0025058004640371233,
+        "cpu_per_block_fast_s": 0.0025058004640371233,
+        "cpu_per_block_slow_s": null,
+        "wall_median_s": 0.155,
+        "gap_median_s": 0.0021,
+        "gap_max_s": 0.0021
+      }
+    }
+  }
+}

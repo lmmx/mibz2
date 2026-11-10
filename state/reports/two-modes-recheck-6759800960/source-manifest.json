@@ -1,0 +1,44 @@
+[
+  {
+    "path": "bench/two_modes.py",
+    "sha": "bc8c2f65fd10e61c3ddb12b4a728bc458ac7b197",
+    "bytes": 75520,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": "bench/test_two_modes.py",
+    "sha": "6988ad4d85957aba3e2ad95a744817c76f153977",
+    "bytes": 39269,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": "bench/two_modes_probe.c",
+    "sha": "1b2d49f75e76ec015f75e87854cbd71e4219ebde",
+    "bytes": 33313,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": ".just/two-modes.just",
+    "sha": "432675a039e78078b5204e92236cf1aed672e2f4",
+    "bytes": 17794,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": "docs/journal/2026-11-10-two-modes-discriminator.md",
+    "sha": "761f84a9aaef520082b5583e755cbe91db607992",
+    "bytes": 29223,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": "bench/bounded.py",
+    "sha": "e73676a1b98d7d14c4f6e894b7e8d5f7b8258a80",
+    "bytes": 6176,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  },
+  {
+    "path": "bench/two-modes.frozen",
+    "sha": "4f6de5aa09873c70b1e31fe804d2161ce7418410",
+    "bytes": 421,
+    "commit": "795d4d75d130891a143cb2ff377f70e1ab041d54"
+  }
+]
