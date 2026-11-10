@@ -1,0 +1,249 @@
+{
+ "summary": "Read-only map of how performance decides a merge in /home/user/mibz2 (HEAD 1a871bb = origin/master; the clone is shallow, 82 commits back to 9 Nov, so older history could not be searched).\n\nThe merge is judged by one workflow: `Benchmark`, job `bench` (/home/user/mibz2/.github/workflows/bench.yml). On a PR it builds the head and its merge base with master, and runs them as two arms (`mibz2`, `mibz2@base/ab`) of examples/ab.rs: 7 corpora, threads 1, 2 and nproc (4 on the runners), 10 paired rounds. bench/report.py posts one PR comment, edited in place. A row is \"faster\" or \"slower\" only when the 95% t-interval of the geometric mean of the per-round head/base wall ratios excludes 1. Nothing in CI passes or fails on speed; the job goes red only on a parity or CPU-accounting failure. The Coordinator reads the comment against PERFORMANCE-POLICY.md §2.\n\nThree things the new PR should know before it is shaped:\n- **A feature-off PR is not benched at all.** The PR bench builds with no Cargo features and its arms are hard-coded, so a route behind an off-by-default feature reaches neither arm. No decode route has ever been landed behind a Cargo feature here; the three features that exist are instrumentation.\n- **The task's premise about #352 is wrong.** #352 (c92cf3b) is docs only. The admission change to `takes_runs` is #353 (c9329f0), and it landed after the 0.2.8 release commit. #324 was merged with its admission unchanged from the head that failed.\n- **Peak RSS is measured and has a gate.** Policy rule 4 allows +10% on any corpus, or a justification in the PR. It is resident memory (ru_maxrss), so the cells buffer's 115 MB of address space is not counted, but the pages it touches are. No address-space gate exists.\n\nThe decoder has no CLI. Benches drive the library through examples/ab.rs: `BzReader::new` at 1 thread and `BzReader::parallel(file, threads)` above. On CI's 2-core runners every thread count reaches `decode_block` with `Segmented`, so the one-thread Segmented kernel is what all 21 PR rows measure.",
+ "facts": [
+  {
+   "topic": "1. Policy: never negotiable (§1)",
+   "fact": "A change merges or becomes a default only with: correctness (\"byte-identical output on every bench corpus\"; its equivalence and differential tests pass; \"corrupt input gives the same error as before\"); memory safety (new `unsafe` meets B5: written safety argument; Miri, differential, fuzz and mutation testing; adversarial review by an agent other than the implementer); reproducible evidence (\"the figures come from CI's paired bench, or from a workstation run under C5, archived with its digest\"); \"Green CI on the exact head merged\".",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:9-19; B5 text at /home/user/mibz2/docs/team/RULES.md:58"
+  },
+  {
+   "topic": "1. Policy: corpus classes",
+   "fact": "primary = `wikidata`, `text`. secondary = `records`, `random`, `pattern`, `onebyte`, `runs`.",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:25-28"
+  },
+  {
+   "topic": "1. Policy: rule 1 (primary gain)",
+   "fact": "\"at least one primary corpus is faster in wall time beyond noise (its 95% interval excludes zero) at one or more thread counts.\" The policy asks for one primary corpus, not both; the Coordinator's assignment text says \"wikidata and text faster beyond noise\".",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:32"
+  },
+  {
+   "topic": "1. Policy: rule 2 (no primary loss)",
+   "fact": "\"no primary corpus is slower beyond noise at any thread count.\" Numerically: no `wikidata` or `text` wall row whose 95% interval lies wholly above no change.",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:33"
+  },
+  {
+   "topic": "1. Policy: rule 3 (bounded secondary losses; covers random and records)",
+   "fact": "Point estimate, wall time, at any thread count. Up to 5% slower: accepted, and listed in the PR. More than 5% up to 10%: accepted only if the PR shows the primary gain at that thread count is at least twice the loss, and says why the workload matters less. More than 10%: needs Louis's sign-off; the Coordinator may defer or abandon without asking.",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:34-37"
+  },
+  {
+   "topic": "1. Policy: rule 4 (memory)",
+   "fact": "\"peak RSS grows by no more than 10% on any corpus, or the PR justifies the growth for the target machine.\"",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:38"
+  },
+  {
+   "topic": "1. Policy: one run decides; machine-gated changes",
+   "fact": "\"One bench run decides. A regression flagged in a secondary corpus is weighed under rule 3, not re-run to settle it. Only a flagged primary regression gets one re-run; if it shows again, it stands.\" A change gated on a machine's hardware is judged on that machine (C5) and must show it stays inactive elsewhere: \"A deterministic check that the route is not taken, plus a neutral CI bench, settles that.\"",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:40-42"
+  },
+  {
+   "topic": "1. Policy: §3 tests, §4 investigations, §5 history",
+   "fact": "§3: the standing CI paired bench and sign test are pre-approved; a new test needs one Researcher review. §4: an instruction-count result is followed promptly by a wall-clock measurement, else dropped. §5: #324's registered no-harm verdict stands (`random` 1t +5.3%, `records` 1t +2.1%, run 3 of 42747668401); #324 is judged under the policy on its merged head's fresh CI bench; the 5% and 10% tiers \"were chosen with #324's figures known\". No sign test is implemented in bench/report.py (grep for 'sign test', 'sign_test', 'binom' in bench/*.py: not found).",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:44-60"
+  },
+  {
+   "topic": "1. What \"beyond noise\" is in code",
+   "fact": "`ratio_ci`: geometric mean of the per-round paired ratios (head/base) with a two-sided 95% t-interval on their logs (10 rounds: df 9, t = 2.262). `change()` marks a row **faster** when the interval's high end is below 1 and **slower** when its low end is above 1. `rss_change()` marks **more** or **less** the same way.",
+   "where": "/home/user/mibz2/bench/report.py:135-184, 402-409, 1045-1064; same statistic in /home/user/mibz2/examples/ab.rs:2497-2519"
+  },
+  {
+   "topic": "1. Stewardship: performance parts",
+   "fact": "Changes touching measured code (`src/**`, Cargo.toml, Cargo.lock, the bench's inputs) merge under PERFORMANCE-POLICY.md, with CI green on the head that will merge and the CI paired A/B bench judged by the policy. Maintenance route: a change neutral on the bench that improves the code merges on green CI and one review. A PR changing the default kernel states its mechanism, predicted end-to-end effect and falsifier; \"CI's end-to-end bench decides\". Every merge: only the head CI measured, `expectedHeadSha` set to it, \"a later commit that changes measured code needs a fresh bench\". The steward never \"merges an unbenched head\".",
+   "where": "/home/user/mibz2/docs/STEWARDSHIP.md:36-42, 51-56, 68-71, 148"
+  },
+  {
+   "topic": "2. CI bench: workflow, job, triggers",
+   "fact": "Workflow `Benchmark`, job `bench`, `runs-on: ubuntu-latest`, timeout 60 min. On `pull_request` types opened, synchronize, reopened, ready_for_review (no draft filter) when the PR touches `src/**`, Cargo.toml, Cargo.lock, examples/ab.rs, examples/windows.rs, examples/phases.rs, `tests/common/**`, `bench/**` or the workflow. A push to the PR cancels the run in progress and starts another. Also on push to master (mibz2 against the alternatives, recorded on `bench-results`) and `workflow_dispatch`.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:37-76, 93-95"
+  },
+  {
+   "topic": "2. CI bench: what is compared (baseline)",
+   "fact": "The PR's head commit itself (not GitHub's merge) against `git merge-base \"$PR_BASE\" \"$PR_HEAD\"`, the merge base with master. Both are built on the same runner. Arms are hard-coded: `arms=\"mibz2,mibz2@base/ab\"`; the base arm is the base commit's own harness binary. The reference for ratios is the `@` arm (base).",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:97-124, 169-180; /home/user/mibz2/bench/report.py:1610"
+  },
+  {
+   "topic": "2. CI bench: builds",
+   "fact": "Head: `cargo build --release --example ab --example windows --example phases`. Base: `cargo build --release --example ab [--example phases]` in a worktree `.base-src`. No `--features` on either. Release profile is fat LTO, `codegen-units = 1`.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:140-144, 169-180; /home/user/mibz2/Cargo.toml:64-67"
+  },
+  {
+   "topic": "2. CI bench: corpora, source and size",
+   "fact": "Six generated by the head's `bin/ab gen corpora 4` (SCALE 4), libbzip2 level 9, from `common::corpora(scale)`. `text`: this crate's own top-level files of src/, tests/, examples/ plus README.md, repeated with `-- copy i --` separators to at least 12,000,000 bytes (one copy is 1,426,752 bytes at this checkout, so its content changes with every source change; both arms decode the same file). `random` 8,000,000 bytes. `onebyte` 20,000,000. `pattern` 19,600,000. `runs` at least 10,000,000. `records` 9,600,000. `wikidata`: bench/wikidata.json, 12 one-MiB windows of wikidata-20261019-all.json.bz2 from the cache, the `bench-data` branch or Wikimedia; 431 blocks, 11,854,933 bytes compressed, 209,700,196 decoded, SHA-256 pinned, built and checked against libbzip2 and lbzip2 by examples/windows.rs. Block census recorded at #324: wikidata 431, text 12, runs 1, pattern 22, onebyte 1, records 11, random 9.",
+   "where": "/home/user/mibz2/tests/common/mod.rs:406-448; /home/user/mibz2/examples/ab.rs:2630-2642; /home/user/mibz2/.github/workflows/bench.yml:84, 189-210; /home/user/mibz2/bench/wikidata.json (corpus_bytes, decoded_bytes, corpus_sha256); /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:389-394"
+  },
+  {
+   "topic": "2. CI bench: thread grid, rounds, pinning",
+   "fact": "`threads=1,2,$(nproc)` when nproc > 2 (runners: 4 CPUs on 2 cores), else `1,$(nproc)`. `ab run runs.jsonl --arms \"$ARMS\" --threads \"$threads\" --spread --rounds 10 --settle 0.25 corpora/*.bz2`. Each run is one child process decoding one file. A 1-thread run is pinned with taskset to CPU 1; a 2-thread run to one CPU on each of 2 cores (`--spread`); 4 threads unpinned. Arm order rotates each round and reverses every other cycle. 7 corpora x 3 thread counts = 21 rows.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:28-30, 82-88, 216-219; /home/user/mibz2/examples/ab.rs:11-22, 2214-2345, 2485-2495"
+  },
+  {
+   "topic": "2. CI bench: the statistic",
+   "fact": "A run records `wall` (the decode, from opening the file to the last byte read), `cpu` (user + sys of every thread, getrusage), `rss_kb`, and an output hash. Per corpus and thread count: median wall base → head, and the paired head/base ratios of wall, CPU and peak RSS (geometric mean with a 95% t-interval over the 10 rounds). `same_bytes` requires one hash across every run of both arms and no error.",
+   "where": "/home/user/mibz2/examples/ab.rs:136-143, 1384-1403; /home/user/mibz2/bench/report.py:355-419"
+  },
+  {
+   "topic": "2. CI bench: where the result appears",
+   "fact": "(a) One PR comment, found by its marker `<!-- mibz2-bench -->` and edited in place (pending, final or failed), with the table `corpus | threads | wall, base → head (median) | wall change | CPU change | peak RSS, base → head | head MB/s | same bytes`. (b) The run's step summary (comment.md plus `ab summary`). (c) Artifact `bench-pr-<HEAD_SHA>`: runs.jsonl, env.json, stages.jsonl, result.json, comment.md, ab-summary.md. (d) The check `bench` goes red only if a step fails; report.py exits 1 on a parity failure or a CPU-accounting failure. There is no pass/fail on speed. (e) After merge, bench-links.yml records the PR's last bench run on `bench-results`.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:126-131, 246-282; /home/user/mibz2/bench/comment.py:1-72; /home/user/mibz2/bench/report.py:1495-1531, 1661-1671; /home/user/mibz2/.github/workflows/bench-links.yml:1-8"
+  },
+  {
+   "topic": "2. CI bench: the resource assessment in the comment",
+   "fact": "On a PR, `assessment()` gives a verdict on `wikidata` alone from four comparisons, each moved only where its 95% interval excludes no change: speed (best thread count against best), CPU cost at the most threads, contention sensitivity (CPU amplification), and memory (peak RSS at the most threads). \"peak RSS grew\" adds a broader-hardware note. It is informative; nothing gates on it.",
+   "where": "/home/user/mibz2/bench/report.py:683-761, 1644-1646"
+  },
+  {
+   "topic": "2. CI bench: the stage table cannot see a route inside decode_block",
+   "fact": "The Stages step runs each build's examples/phases.rs (bench/stages.py; 5 rounds, 2 repeats, one pinned CPU, wikidata only). phases.rs times the library's `mtf::mtf`, `bwt::build` and forward walks directly, so the #324 record states \"it can't see this change\". A cells route wired into `decode_block` or `invert_runs` would likewise not show there unless phases.rs is changed. The Kernels step (alts/kernels) runs only on master and dispatch, not on PRs.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:221-240; /home/user/mibz2/examples/phases.rs:1-37; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:180-182, 540-541"
+  },
+  {
+   "topic": "2. CI bench: which code the rows reach",
+   "fact": "Arm `mibz2` at 1 thread is `BzReader::new` (a sequential `Seq` holding `Scratch`, default kernel `bwt::Segmented`). At 2 and 4 threads it is `BzReader::parallel(file, threads)` → `StreamDecoder::new` → `Plan::for_threads`. `plan_with` returns `Plan::Workers(threads)` when fewer than `COOP_MIN_CORES` (6) physical cores serve the threads (the runners have 2), and `planned` builds `with_inverse::<Segmented>`; each worker calls `decode_block(&symbols, k, &mut scratch, &mut out)`. So all 21 PR rows run `decode_block` with `Segmented`. The #324 record says the same; MONODROMY-ORIENTATION says \"CI never runs a team path\".",
+   "where": "/home/user/mibz2/examples/ab.rs:1104-1105; /home/user/mibz2/src/read.rs:42-51, 61-87, 108-121; /home/user/mibz2/src/parallel.rs:153-172, 215-228, 592-620, 2216, 2597-2604; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:62-63; /home/user/mibz2/docs/team/MONODROMY-ORIENTATION.md:312"
+  },
+  {
+   "topic": "2. Benching code that is OFF by default: what exists",
+   "fact": "Nothing in the PR bench turns a feature or a switch on: both builds are featureless and the arms are fixed, so a route behind an off-by-default Cargo feature is compiled into neither arm. Cargo features today are `python`, `trace`, `wait-stats`, `walk-stats`: all instrumentation, none a decode route. No production code in src/ reads an environment variable (the only `std::env::var` uses are in tests: src/parallel.rs:4312, src/run_fed.rs:715-719). A precedent for a decode route landed behind an off-by-default Cargo feature and later flipped on its bench: not found.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:116, 143, 178; /home/user/mibz2/Cargo.toml:39-51"
+  },
+  {
+   "topic": "2. Benching code that is OFF by default: nearest precedents",
+   "fact": "(a) An environment switch on one arm in CI: `workflow_dispatch` with `base` (any commit; set to the head commit it A/Bs one commit against itself) and `base_sample_ms`, which replaces `base/ab` with a shell wrapper `AB_SAMPLE_MS=<n> exec base/ab-bin \"$@\"`. That variable is read by the harness (ab.rs:512), not the decoder, and applies to the base arm only. (b) A Cargo feature built on and off in CI: walk-stats.yml builds `ab` with and without `--features walk-stats` and compares outputs by SHA-256, untimed, and runs `cargo test --features walk-stats --lib \"coop::\"`. (c) Opt-in routes as runtime constructors with their own harness arms: `#[doc(hidden)]` `BzReader::parallel_pipelined`, `parallel_pipelined_levers`, `parallel_service`, driven by arms `mibz2-pipeK`, `mibz2-teamK`, `mibz2-workers`, `mibz2-scalar` on workstation recipes; the pipelined 3x3 plan landed opt-in and became the default in a later change on a two-commit workstation A/B. (d) Kernel by type parameter: `StreamDecoder::with_inverse::<I>` (\"so the whole decoder can be timed with each\") and `decode_with::<I>`, used by examples/bzcat.rs with `BZ2_INVERSE=plain`. (e) Forcing a plan in tests: thread-local `parallel::with_plan`.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:64-71, 113, 181-187; /home/user/mibz2/.github/workflows/walk-stats.yml:1-60; /home/user/mibz2/src/read.rs:129-175; /home/user/mibz2/examples/ab.rs:1116-1193; /home/user/mibz2/src/parallel.rs:232-239, 2246-2260; /home/user/mibz2/src/lib.rs:447-449; /home/user/mibz2/examples/bzcat.rs:1-22; /home/user/mibz2/docs/journal/decisions.md:74-94; /home/user/mibz2/.just/bench.just:791-946"
+  },
+  {
+   "topic": "2. What CI does and does not run for a feature-gated route",
+   "fact": "Test's clippy uses `--all-targets --all-features`, so gated code is compiled and linted. `cargo test`, the fuzz build (`cargo build --profile fuzz --example fuzz`) and Miri (`cargo miri test --lib -- miri_`) pass no features, so tests, fuzz and Miri would not reach code behind an off-by-default feature without new CI steps. Miri is path-filtered to src/bwt.rs, src/coop.rs, src/parallel.rs, src/parallel/**, src/read.rs, src/runs.rs, src/runs/** and miri.yml: a new source file elsewhere does not trigger it unless added (#324 added the two runs paths).",
+   "where": "/home/user/mibz2/.github/workflows/test.yml:24-27, 57-67; /home/user/mibz2/.github/workflows/miri.yml:14-35, 64-65"
+  },
+  {
+   "topic": "2. Harness changes carry a bench version",
+   "fact": "`BENCH = \"3.8.1\"` in bench/report.py must equal the newest entry of bench/CHANGELOG.md (checked by bench/test_report.py, which the bench job runs). A new figure or arm beside the others is a minor version; a change that alters nothing measured, shown or stored is \"No version\" and its PR says so. A PR that touches `bench/**` or examples/ab.rs also triggers the bench.",
+   "where": "/home/user/mibz2/bench/report.py:73; /home/user/mibz2/bench/CHANGELOG.md:10-22; /home/user/mibz2/bench/test_report.py:103-108; /home/user/mibz2/.github/workflows/bench.yml:242-244"
+  },
+  {
+   "topic": "2. A/B of two commits in CI (release check)",
+   "fact": "RELEASING §3: before a release, one `workflow_dispatch` of Benchmark on master with `base=<the last tag's commit SHA>` (never the tag name); \"It checks that nothing got worse. It is not a gate to re-run until the result looks good.\" Dispatch with `base` runs in PR mode (two arms); its figures are the summary and artifact, never recorded.",
+   "where": "/home/user/mibz2/docs/RELEASING.md:31-38; /home/user/mibz2/.github/workflows/bench.yml:14-16, 113"
+  },
+  {
+   "topic": "3. Precedent: #324's registered rule",
+   "fact": "Frozen when the PR opened (\"This rule is frozen\"). Benefit: on `wikidata` at 1 or 4 threads, CPU or wall change excludes zero on the faster side in at least one run and the point estimate is not slower in the others. No harm: any wall row of all seven corpora x thread counts flagged slower is a harm signal; one more run on the same head settles it; at most three runs. Run 1 is the PR-open bench, run 2 a re-run of the same workflow run, run 3 only to settle. Peak RSS \"reported, not judged\". No retries to pass: on failure the PR is closed.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:37-38, 441-486"
+  },
+  {
+   "topic": "3. Precedent: #324's runs and why no-harm failed",
+   "fact": "Run 42747668401, attempts 1 to 3, head e88c063155c3e734e748e99ccda025393302720f against merge base 5e7b99547, bench 3.4.0, 10 paired rounds, runners Xeon 8370C, EPYC 7763, EPYC 9V45. Benefit met in all three: wikidata 1t −12.8%, −14.5%, −15.8%; text 1t −23.3%, −24.5%, −26.2%. No-harm failed: `random` 1t flagged slower in run 2 (+3.4% (+2.2, +4.6)) and run 3 (+5.3% (+4.5, +6.1)); `records` 1t in run 2 (+1.5%) and run 3 (+2.1%); `records` 2t and 4t flagged once each, unresolved. Those corpora take no block by the new path (+61 instructions a block). The record's explanation is a hypothesis, \"not a finding\": `Scratch` grew by `runs::Runs` (about 2.1 KiB inline), moving `counts` against `mtf_avx2`'s stack frame modulo 4 KiB. The PR was closed unmerged; the record was committed as #328 (27ed84d).",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:3-11, 488-590; git 27ed84d"
+  },
+  {
+   "topic": "3. Precedent: how #324 was then adopted",
+   "fact": "Louis adopted it despite the frozen verdict (LOG 6764294229). PERFORMANCE-POLICY.md was set the same day and #324 was \"judged prospectively\" on a fresh CI bench of its merged head b380afe8996364b339a2ed929a04449bb51e231a (run 42808607358): wikidata −13.5%, −13.9%, −9.6% and text −21.8%, −15.7%, −10.3% wall at 1, 2, 4 threads; \"No corpus was slower beyond noise; peak RSS was at most +5.4%.\" Merged as master 47149bff. B5 was completed before merge: mutation testing (cargo-mutants 27.1.0 on 192 mutants plus a hand pass of 34 over the unsafe AVX2 code; 12 killed by five new path-or-kernel tests, 19 shown equivalent) and an independent adversarial review (a 50,000-block differential fuzz, every unchecked access bound-asserted). No entry for this adoption exists in docs/journal/decisions.md (grep for 324 and PERFORMANCE-POLICY: not found); it is recorded in the journal's status block, the policy's §5, DELIVERED.md and the 0.2.8 CHANGELOG.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:13-23, 282-374; /home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:56-60; /home/user/mibz2/docs/team/DELIVERED.md:10; /home/user/mibz2/CHANGELOG.md:10-23, 80-81"
+  },
+  {
+   "topic": "3. Precedent: the files #324 changed (47149bf)",
+   "fact": ".github/workflows/miri.yml (+4: the src/runs.rs and src/runs/** paths), docs/journal/2026-11-10-run-front-production.md (+94), src/bwt.rs (+170: `reads_runs`, `invert_runs`, `walk_back_room`, `assemble_reversed`, `repeat_cycle`), src/lib.rs (+43: the selector in `decode_block`, `Scratch.runs`), src/runs.rs (new, 688 lines), src/runs/tests.rs (new, 638 lines). It did not touch examples/ab.rs, bench/, bench.yml or examples/fuzz.rs: the route was on by default, so the existing `mibz2` arm benched it and the classic fuzz mode reached it through the sequential decoder.",
+   "where": "git show --stat 47149bf; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:266-274"
+  },
+  {
+   "topic": "3. Precedent: #352 is docs only; #353 is the admission change",
+   "fact": "#352 (c92cf3b): docs/journal/2026-11-10-run-front-production.md (+14/−1, the Adopted status) and docs/team/DELIVERED.md (+1). No code. `takes_runs` is identical at the failed head e88c063 and at the merge 47149bf: `b.max_len < 1 << 24 && 2 * b.syms.len() <= b.max_len`. The admission change is #353 (c9329f0, \"fix(runs): admission by the bound and the share of run symbols\"): src/runs.rs (+54/−7: WINDOW 64, WINDOWS 64, RUN_SHARE 32; a sample of up to 4,096 symbols must hold at least one run symbol in 32) and tests/admission.rs (new, 128 lines). #353 landed after the 0.2.8 release commit 457e098; the CHANGELOG says 0.2.8 carries the short-high-entropy-block cost and #353 \"ships in the next release\". A record of #353's own bench: not found on master.",
+   "where": "git show --stat c92cf3b; git show --stat c9329f0; /home/user/mibz2/src/runs.rs:36-84; /home/user/mibz2/tests/admission.rs:1-25; /home/user/mibz2/CHANGELOG.md:90-95; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:22-23"
+  },
+  {
+   "topic": "3. Precedent: where the selector sits today",
+   "fact": "`decode_block`: `if s.inverse.reads_runs() && runs::takes_runs(b) { let n = runs::front(b, &mut s.runs, k)?; ... let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k); if done { return finish(&s.ll, b.crc, k, out); } debug_assert!(false, ...) }`, then the column's path. `Segmented::invert_runs` is `runs::fill` then `walk_back_room`. `Scratch` holds `runs: runs::Runs` inline, with two `[u32; 256]` arrays. The rauzy record names `InverseBwt::invert_runs` as \"the seam the decoder calls after the front\" and says `runs::Runs` keeps its records private.",
+   "where": "/home/user/mibz2/src/lib.rs:278-292, 332-391; /home/user/mibz2/src/bwt.rs:75-99, 146-165; /home/user/mibz2/src/runs.rs:86-97; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:961-966"
+  },
+  {
+   "topic": "3. Precedent: the i9 runs for #324 and #359",
+   "fact": "`bench-324-i9` is a three-line wrapper: `git fetch -q origin perf/run-front-records` then `just bench-release-scaling e88c0631… 5e7b9954… 10`, queued in bench/workstation-queue.txt (755f961). Result: release-scaling/run-20261110T101103Z, \"8-10% faster at 1-4 threads, no gain on the team path\" (2cc0829). #359 (a5197f1, the team paths' port) could not be judged on CI, so it was decided by the wrapper `bench-team-runs` (`ab gen` at scale 16, then `bench-release-scaling <head> <base> 10 \"6,8,10,12,16,20\"` with text, records and random added), its rule written before the data; it also added examples/fuzz.rs MODE `teams` and a CI fuzz step. Its note docs/journal/2026-11-10-team-runs-port.md is not on master.",
+   "where": "/home/user/mibz2/.just/bench.just:1290-1315; git 755f961, 2cc0829, ceb0b30, 4035b83, a5197f1; /home/user/mibz2/.github/workflows/test.yml:65-67"
+  },
+  {
+   "topic": "4. Workstation: the recipe shape CLAUDE.md requires",
+   "fact": "One new directory per attempt (`mkdir`, not `mkdir -p`, on a timestamped path), its own console log by `exec > >(tee -a \"$DIR/console.log\") 2>&1` right after, ending with `bash bench/bundle.sh \"$DIR\"`, which packs DIR as DIR.tar.gz leaving out symlinks and files over 50 MB. Given to Louis as the git commands and `just submit <recipe>`. `bench-team-size` and `bench-release-scaling` follow it.",
+   "where": "/home/user/mibz2/CLAUDE.md (Workstation recipes); /home/user/mibz2/.just/bench.just:243-247, 293, 313-317, 351; /home/user/mibz2/bench/bundle.sh:1-14"
+  },
+  {
+   "topic": "4. Workstation: submit, the ready tag and the queue",
+   "fact": "`just submit <recipe> [args]` runs the recipe, requires exactly one new target/*/*.tar.gz, then bench/submit.sh archives it on the orphan `evidence` branch with its SHA-256 and posts identity and digest on #145. bench/await-submit.sh waits for `ready/<recipe>` on origin, checks out that exact commit, and runs `just submit \"$recipe\"` with no arguments, once per recipe and commit per machine. The queue file is one line per entry, `recipe  branch  what it measures`; bench/run-queue.sh reads it from origin/master, skipping `#` lines. It holds no entry now. An entry is added only when the registration is frozen, the recipe passed its untimed dry run, CI is green on the commit, the review is done and the ready tag is set by `.github/workflows/run-signal.yml`.",
+   "where": "/home/user/mibz2/.just/submit.just:1-30; /home/user/mibz2/bench/submit.sh:1-40; /home/user/mibz2/bench/await-submit.sh:1-28, 117-128; /home/user/mibz2/bench/run-queue.sh:52-57; /home/user/mibz2/bench/workstation-queue.txt:1-8; /home/user/mibz2/docs/team/PROTOCOL.md:208-248; /home/user/mibz2/.github/workflows/run-signal.yml:1-20"
+  },
+  {
+   "topic": "4. Workstation: standing recipe templates (RULES C5)",
+   "fact": "\"standing recipe templates: an A/B of any two commits on the release-scaling harness, the gap block, share-nothing. Filling in commits needs no review and no new freeze; only new harness code is reviewed\". Local timing is indicative only; a workstation run is evidence only when Louis runs the frozen recipe; \"adopting a change into master still needs CI's paired bench\". A non-adoption experiment needs only a 3-line pre-data post on #145 (C1a); an ordinary merge under the policy needs no registration.",
+   "where": "/home/user/mibz2/docs/team/RULES.md:66, 70-71"
+  },
+  {
+   "topic": "4. Workstation: the two-commit template in detail",
+   "fact": "`bench-release-scaling NEW=\"\" OLD=\"\" ROUNDS=\"10\" THREADS=\"\" *FILES=\"\"`: builds each of NEW and OLD (tags or commits) in `target/release-scaling/build-$v` with `cargo build -q --release --example ab --example windows` (no features), builds the Wikidata sample, then runs NEW's harness: `--arms \"mibz2,mibz2@$OLDAB,lbzip2\" --threads \"$threads\" --rounds ROUNDS --spread [--hold-cpu auto --hold-max-threads 10] wikidata.bz2 FILES`. Default threads are {1, 2, 4, 8, 12, 16, n/2, n} up to n CPUs. It writes summary.txt (`ab summary --ref mibz2`, with peak RSS), runs.jsonl, env.json, lscpu.txt and recorded/, and ends with bench/bundle.sh. A frozen registered recipe instead names its commits in a `bench/<name>.frozen` file (`frozen <40-hex>`, or `candidate` and `base`) and refuses unless HEAD's `measured` inputs match, the checkout is clean, and no CARGO_*, RUST*, AB_CENSUS_MS or AB_SAMPLE_MS override is set.",
+   "where": "/home/user/mibz2/.just/bench.just:215-293, 388-411, 838-861; /home/user/mibz2/bench/three-team-policy.frozen; /home/user/mibz2/bench/pipelined-default.frozen; /home/user/mibz2/docs/RELEASING.md:50-72"
+  },
+  {
+   "topic": "4. Workstation: what an A/B of \"cells on\" against \"off\" on one commit would need",
+   "fact": "The template compares two commits built without features, so one commit with the route behind an off-by-default Cargo feature gives two identical arms. What exists: (1) two commits, as `bench-324-i9` and `bench-team-runs` did (head against base); a second commit that turns the route on fits the template with no new harness code. (2) A new arm in examples/ab.rs calling an opt-in library entry, as `mibz2-pipe3` against `mibz2-team3` in `bench-team-pipeline`: that is new harness code, so it is reviewed and carries a bench version, and the 1-thread arm `mibz2` is `BzReader::new`, which takes `Kernels` only and has no kernel parameter. (3) An environment variable read by the decoder: none exists in src/; `ab run` passes its whole environment to every arm's child (it only sets or removes `AB_MACHINE_STATE`), so one-arm use needs a wrapper executable as an `ARM@EXE` arm, as bench.yml does for AB_SAMPLE_MS. (4) Two builds of one commit with and without a feature: no recipe does this for timing; walk-stats.yml does it untimed.",
+   "where": "/home/user/mibz2/.just/bench.just:249-252, 277, 569-570, 1296-1315; /home/user/mibz2/examples/ab.rs:8-10, 1104-1105, 2333-2356, 2731; /home/user/mibz2/src/read.rs:61-87; /home/user/mibz2/.github/workflows/bench.yml:181-187"
+  },
+  {
+   "topic": "4. Workstation: which i9 thread counts reach the Segmented kernel",
+   "fact": "On 10 physical cores `plan_with` gives `Plan::Workers(threads)` only while min(threads, phys) < 6, so 1 to 5 threads; from 6 it plans teams of 2 (`Cooperative<2>`), at 10 or more with a 20 MiB L3 three teams of three (pipelined), and at exactly 10 threads on the target the service core. `Cooperative::invert_runs` does not call `Segmented::invert_runs`; below MIN_COOP rows it runs `runs::fill` and `walk_back_room` itself. This matches bench-324-i9's result (gain at 1-4 threads, none on the team path).",
+   "where": "/home/user/mibz2/src/parallel.rs:153-172, 2216-2232, 2597-2615; /home/user/mibz2/src/bwt.rs:297-329; git 2cc0829"
+  },
+  {
+   "topic": "5. Memory: how peak RSS is measured",
+   "fact": "Each run's child reports `rss_kb` = getrusage(RUSAGE_SELF) ru_maxrss of the decoding process, a resident high-water mark; untouched pages do not count. report.py shows `peak RSS, base → head` (median MB) with the paired ratio's point estimate, marked **more** or **less** when its 95% interval excludes 1, for every corpus x thread row. The workstation template's `ab summary` prints median peak RSS per arm.",
+   "where": "/home/user/mibz2/examples/ab.rs:181-204, 1384-1388, 2573-2616; /home/user/mibz2/bench/report.py:389, 408-409, 1059-1064, 1503-1525"
+  },
+  {
+   "topic": "5. Memory: the gate and its precedents",
+   "fact": "The gate is policy rule 4 (≤ +10% peak RSS on any corpus, or the PR justifies the growth for the target machine), read by a person from the comment; nothing in CI enforces it. #324's frozen rule only reported RSS: +1.1 to +7.1% on wikidata and +3.3 to +10.4% on text across three runs, \"about 3 MB\" at 2 to 4 threads, \"reported, not judged\". At adoption under the policy it was \"at most +5.4%\". The 0.2.8 release run gave wikidata 26 → 26 MB (+1.9%) at 1 thread, 49 → 52 MB (+6.5%) at 2, 77 → 81 MB (+4.5%) at 4. Workstation judges have used absolute caps (three-team policy: head's median peak RSS at most 1.15 times the base's). The README records the pipelined default's \"8 MB more peak RSS\".",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:38; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:19, 484-486, 531-538, 610-612; /home/user/mibz2/CHANGELOG.md:40-44, 82-85; /home/user/mibz2/bench/policy_ab.py:14-16; /home/user/mibz2/README.md:111"
+  },
+  {
+   "topic": "5. Memory: the cells kernel's figures against that gate",
+   "fact": "The kernel's one buffer is `vec![0u8; total]` (\"zeroed pages from the allocator: none is touched here\"), sized by n alone, reallocated only when a longer block comes (`if self.buf.len() < total`), so it is kept block to block. The record gives 128 n + 4,912 bytes (115 MB at n = 9·10⁵), \"on Wikidata at most a tenth of it is written, and only written pages are touched\", and a live set of \"About 5.5 MB and the output at n = 9·10⁵, r = 6.5·10⁴: more than production's table\". The address-space figure meets no gate: ru_maxrss does not count untouched pages, and no rule on virtual size was found in docs/team, STEWARDSHIP.md or bench/. The touched pages count per worker under rule 4. Against the 0.2.8 baselines for wikidata, 10% is 2.6 MB at 1 thread, about 5 MB at 2 and about 8 MB at 4. docs/ledger.md keeps reserved address space and resident pages apart and lists each worker buffer; kernels report theirs through `InverseBwt::buffers` and `Scratch::buffers`, and #324 added the test `runs_buffers_listed`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:890-906; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:715-718, 734-736; /home/user/mibz2/docs/ledger.md:13-17, 30-50; /home/user/mibz2/src/lib.rs:294-314; /home/user/mibz2/src/bwt.rs:45-50, 167-186; /home/user/mibz2/CHANGELOG.md:40-44"
+  },
+  {
+   "topic": "6. Public surface the benches drive",
+   "fact": "There is no CLI binary: Cargo.toml has `[lib]` (`cdylib`, `rlib`), `[[bench]] name = \"decode\"` and examples. The CI and workstation benches call examples/ab.rs, subcommands `gen DIR [SCALE]`, `run OUT.jsonl --arms .. --threads .. --rounds .. [--spread --settle --pin --max-busy --cap --hold-cpu --hold-max-threads --machine-state --sysfs-state] FILE..`, `summary OUT.jsonl [--ref ARM]`, `child ARM THREADS FILE`, `env`. Arm to library entry: `mibz2` at 1 thread = `mibz2::BzReader::new(file)`; `mibz2` at T threads = `mibz2::BzReader::parallel(file, T)`; `mibz2-scalar` = `BzReader::with_kernels(.., Kernels::scalar())` or `parallel_with(.., T, 2*T, Kernels::scalar())`; `mibz2-workers`, `-auto`, `-coopK`, `-teamK` = `BzReader::parallel_planned(file, Plan, slots, Kernels::detect())`; `mibz2-pipeK[-lever]` = `parallel_pipelined[_levers]`; `mibz2-oneshot` = `mibz2::decode(&data)`. An unknown arm name is an error in that build of the harness.",
+   "where": "/home/user/mibz2/Cargo.toml:30-32, 60-62; /home/user/mibz2/examples/ab.rs:5-131, 1093-1250, 2214-2277, 2644-2659"
+  },
+  {
+   "topic": "6. Library entries and their thread options",
+   "fact": "`pub fn decode(data: &[u8])` (this thread, `decode_with::<bwt::Segmented>(data, Kernels::detect())`); `pub fn decode_parallel(data, threads)`; `pub fn decode_with<I: bwt::InverseBwt>(data, k)`; `pub fn decode_block<I>(b, k, s: &mut Scratch<I>, out)`; `pub fn decode_blocks`; `BzReader::new(r)`, `with_kernels(r, kernels)`, `parallel(r, threads)` (window `SLOTS_PER_THREAD` = 4 x threads), `parallel_with(r, threads, slots, kernels)`, `parallel_planned(r, plan, slots, kernels)`; `StreamDecoder::new(threads, slots, k)`, `planned`, `with_inverse::<I>(threads, slots, k)`; `parallel::Plan { Workers(usize), Teams { teams, k } }`, `Plan::for_threads(threads)`. Python: `mibz2.open(source, threads=None)`, `BZ2Reader(source, threads)`, `decompress(data, threads=None)`. examples/bzcat.rs is a stdin to stdout command (`bzcat THREADS [SLOTS]`, `BUNZIP_SIMD=off`, `BZ2_INVERSE=plain`), used for `bzcat` against `bzip2 -dc` corpus checks, not by the bench. examples/phases.rs drives `mtf`, `bwt::build` and the walks directly for the stage table.",
+   "where": "/home/user/mibz2/src/lib.rs:332-337, 409-449, 493; /home/user/mibz2/src/read.rs:59-127; /home/user/mibz2/src/parallel.rs:38, 153, 215, 232, 2208-2211, 2279; /home/user/mibz2/python/mibz2/__init__.py:51, 84-118; /home/user/mibz2/python/mibz2/_mibz2.pyi:6-22; /home/user/mibz2/examples/bzcat.rs:1-22; /home/user/mibz2/examples/phases.rs:33-37"
+  },
+  {
+   "topic": "After the merge: records the precedent produced",
+   "fact": "OWNERSHIP §1: \"Each merge that changes performance gets a line in DELIVERED.md\" (date, change, CI paired bench wall effect on wikidata and text, regressions accepted, release, effort). CLAUDE.md: check what merged since the last tag after every merge; RELEASING §1 counts \"a performance gain shown under its PR's registered rule: the CI bench\" as worth releasing; §5 asks for `just submit bench-release-scaling` on the i9 after each release. OWNERSHIP §5: a PR that is green, policy-ACCEPT and B5-complete merges within 24 hours or closes with a reason.",
+   "where": "/home/user/mibz2/docs/team/OWNERSHIP.md:17-19, 113-116; /home/user/mibz2/docs/team/DELIVERED.md:1-10; /home/user/mibz2/docs/RELEASING.md:9-23, 50-72"
+  }
+ ],
+ "precedent": "**The run-records route, in order.**\n\n1. **Registration, frozen before the PR opened.** /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md §1-§5: the change, a price from figures already on master, a prediction and falsifier written before any CI result, the B5 argument and tests, instruction counts, and the decision rule (:441-486). The rule was benefit on wikidata, plus no wall row flagged slower twice on any of the seven corpora, at most three runs, RSS reported and not judged.\n\n2. **PR #324 opened with the route on by default.** Admission was `runs::takes_runs` = `max_len < 1 << 24 && 2 * syms.len() <= max_len`, behind `InverseBwt::reads_runs` (true only for `Segmented` then). The standing PR bench measured it with no harness change. Run 42747668401, attempts 1 to 3, head e88c0631 against merge base 5e7b9954, 10 rounds each on three CPU models.\n\n3. **Verdict under the frozen rule: FAIL.** Benefit was met (wikidata 1t −12.8% to −15.8%, text 1t −23.3% to −26.2%). No-harm failed: `random` 1t was flagged slower in runs 2 and 3 (+3.4%, +5.3%), `records` 1t likewise (+1.5%, +2.1%). Those blocks run none of the new code. The record's explanation is a hypothesis only: `Scratch` grew inline by `runs::Runs`, moving `counts` against `mtf_avx2`'s frame. #324 was closed unmerged; the record was committed as #328 (27ed84d: the journal plus cg/ callgrind profiles, driver_main.rs, run.sh, table.py).\n\n4. **Adoption (10 Nov).** Louis adopted it (LOG 6764294229) and set PERFORMANCE-POLICY.md, whose 5% and 10% tiers were chosen with #324's figures known. #324 was judged prospectively on a fresh CI bench of its merged head b380afe8 (run 42808607358): wikidata −13.5%, −13.9%, −9.6% and text −21.8%, −15.7%, −10.3% at 1, 2, 4 threads, no corpus slower beyond noise, peak RSS at most +5.4%. B5 was finished first: mutation testing (journal §3.2), five new tests that see which path or kernel runs (`runs_path_taken_exactly_where_selected`, `runs_takes_runs_bounds`, `runs_front_kernel_selected`, `runs_buffers_listed`, `runs_walk_back_room_segments_from_its_bound`), and an independent adversarial review. Merged as 47149bf.\n\n5. **What the merge changed.** .github/workflows/miri.yml (+4, the runs paths), the journal (+94), src/bwt.rs (+170), src/lib.rs (+43), src/runs.rs (new, 688), src/runs/tests.rs (new, 638). Nothing in bench/, examples/ab.rs, bench.yml or examples/fuzz.rs. The admission was not changed between the failed head and the merge.\n\n6. **#352 (c92cf3b) is docs only:** the journal's Adopted status and the DELIVERED.md line. The team channel text that credits #352 with the admission does not match the repository.\n\n7. **0.2.8 (457e098)** carries #324 with the bound-only admission.\n\n8. **#353 (c9329f0), after the release,** is the admission change. `takes_runs` also requires at least one run symbol in 32 (RUN_SHARE) in a sample of up to 64 windows of 64 symbols, so a short high-entropy block keeps the column. It admits a subset of what the bound admits. Files: src/runs.rs (+54/−7), tests/admission.rs (new, 128). It was treated as a maintenance change; no bench record for it is on master.\n\n9. **The i9.** `bench-324-i9` (/home/user/mibz2/.just/bench.just:1296-1300) is a three-line wrapper over the standing two-commit template, queued in bench/workstation-queue.txt and run by Louis: 8-10% faster at 1-4 threads, nothing on the team path.\n\n10. **#359 (a5197f1)** took the records to the team kernels. It added examples/fuzz.rs MODE `teams` and a CI fuzz step that forces the plain-team route and counts blocks by the route taken. Because CI never plans teams, it was decided by the wrapper `bench-team-runs` (bench.just:1302-1315) with its rule posted before the data.\n\n**The shape to follow.**\n- A journal record with a pre-data prediction and falsifier.\n- Admission as one pure function of the block, called at one seam in `decode_block`.\n- Tests that prove which route ran, not only the bytes.\n- Miri paths extended for new files.\n- A fuzz mode that forces the route and counts reach.\n- The default-on PR's own CI bench as the deciding run.\n- A DELIVERED.md line.\n- A two-commit i9 wrapper only if a workstation question remains.\n\n**Landing a route off by default and flipping it in a second PR.** This has precedent only as a runtime opt-in with its own harness arm (the pipelined teams and the service core: `#[doc(hidden)]` constructors and `mibz2-pipeK` arms), with the flip judged by a two-commit A/B. It has none as a Cargo feature.",
+ "risks": [
+  "The assignment's gate reads \"wikidata and text faster beyond noise\", but the cells kernel's own record puts text-like data outside its domain: prose (r/n 0.367) is 4.0x slower, its falsifier row 4 says \"text: fires\", and break-even is near r/n 0.09-0.10 (/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:65, 831, 902, 967-987). An admission that refuses text keeps it on today's route, so `text` cannot show a gain. Policy rule 1 needs only one primary corpus (PERFORMANCE-POLICY.md:32), so the PR can still be accepted on wikidata alone, but that differs from the assignment's wording.",
+  "A PR that lands the kernel behind an off-by-default Cargo feature is not measured by the PR bench: both arms are built without features and the arms are fixed (bench.yml:116, 143, 178). Its bench can only be neutral. `cargo test`, the fuzz smoke and Miri also run without features (test.yml:27, 58; miri.yml:65), so the B5 evidence would not run in CI without new steps.",
+  "Layout sensitivity on the corpora that must stay on the old route. #324's two confirmed harms (`random` and `records` at 1 thread) were on blocks that ran none of the new code, attributed (hypothesis only) to `Scratch` growing inline (run-front-production.md:576-590). `Scratch` still holds `runs::Runs` inline (src/lib.rs:291) and the release profile is fat LTO with one codegen unit (Cargo.toml:64-67). New kernel state in `Scratch` or `Segmented`, or new code in `decode_block`, can move those rows without changing their work. Under rule 3 they are weighed, not re-run: over 5% needs twice the primary gain at that thread count, over 10% needs Louis.",
+  "Peak RSS rule 4 is likely to be the binding gate. The cells' live set is recorded as about 5.5 MB a worker and \"more than production's table\" (rauzy-veech.md:715-717), with up to a tenth of 115 MB written. Blocks the admission refuses still use the T-vector, so on a mixed corpus both sets of pages stay resident in each worker. Against 0.2.8's wikidata baselines (26, 52, 81 MB at 1, 2, 4 threads; CHANGELOG.md:40-44) that estimate exceeds 10% at every thread count. This is my arithmetic from the record's figures, not a measurement; the PR would have to justify the growth for the target machine.",
+  "The whole-decoder gain is unmeasured. The record's 0.82 to 0.86 is cells over production's inversion only, on one shared container, labelled indicative, and it lists \"A decoder that calls it\" under not measured (rauzy-veech.md:737-740, 765-821). Cells are slower than production on wikidata blocks with r/n ≥ 0.09, and a block the budget refuses has by then cost about nine tenths of production's time (:762-763, 992-995). The CI rows may be much smaller than the kernel ratio suggests, or within noise.",
+  "Peak memory is measured only on Linux x86-64 CI runners, yet wheels ship for Windows and macOS (CI.yml:75-130). A 115 MB zero-filled allocation per worker relies on untouched pages staying unbacked; no measurement or gate covers that on the other platforms, and the steward may not change the allocator (STEWARDSHIP.md:145).",
+  "Every push to the PR cancels and restarts the bench, and each runner is a different CPU model. \"One bench run decides\" (PERFORMANCE-POLICY.md:42) and \"merge only the head that CI measured\" (STEWARDSHIP.md:68-71) mean the deciding run is whichever ran on the final head; a late fix-up commit to src/ needs a fresh bench, with fresh layout luck on random and records.",
+  "The `text` corpus is built from the head's own src/, tests/ and examples/ files (tests/common/mod.rs:409-430). Adding the kernel's source and tests changes that corpus's content and block mix between this PR and any earlier run, so text rows are not comparable across PRs, only within one run.",
+  "The stage table and the i9 team paths cannot see a Segmented-only route. examples/phases.rs times the old stages directly, and on the i9 only 1 to 5 threads plan `Workers` with `Segmented` (src/parallel.rs:2597-2604). A workstation A/B of this PR's scope shows nothing at 6 to 20 threads, as bench-324-i9 found.",
+  "Adding an arm or option to examples/ab.rs to bench an opt-in route is harness code: it needs a bench version entry (bench/CHANGELOG.md:10-22, checked by bench/test_report.py:103-108), triggers the bench by its path, and on the workstation is the one thing C5's standing templates still send to review (RULES.md:70)."
+ ],
+ "open_questions": [
+  "Does the Coordinator's gate really require `text` faster, or policy rule 1's one primary corpus? The cells record did not measure the bench's `text` corpus (its \"prose\" row is the repository's .md files, \"not the bench's `text`\", rauzy-veech.md:264). Its r/n and S/n under the cells kernel are not in the repository.",
+  "If the first PR lands the kernel off by default, by what mechanism: a Cargo feature (no route precedent; unbenched, and untested in CI without new steps), or a runtime opt-in such as a kernel type behind `InverseBwt::invert_runs` or a `#[doc(hidden)]` constructor (the pipelined and service precedent)? And is that first PR merged on the maintenance route's \"neutral on the bench\" (STEWARDSHIP.md:41-42)?",
+  "How is the second, default-flipping PR's gain attributed if the first PR already moved layout? The PR bench compares against the merge base, which would then contain the dormant kernel.",
+  "What RSS growth is acceptable \"for the target machine\" under rule 4, and which machine is the target (CI's 2-core runner, wikidata-pq's host, the i9)? No absolute cap is written in the policy; earlier registrations used 1.15x.",
+  "Is any i9 run wanted for this PR at all? CI reaches the Segmented kernel at every thread count and adoption needs only the CI bench, but the rauzy record's own open item 1 asks for a workstation recipe at 1 against 10 pinned copies with a rule posted before data (rauzy-veech.md:912-930). If wanted, the two-commit template needs no review; a same-commit on/off arm does.",
+  "Where is #353's bench outcome recorded, and was it judged as neutral? Not found on master. The same question applies to the note that decided #359 (docs/journal/2026-11-10-team-runs-port.md), which is cited by the recipe but is not on master or in the local pr/313 ref.",
+  "PERFORMANCE-POLICY §3 calls \"the standing CI paired bench and sign test\" pre-approved, but no sign test is implemented in bench/report.py or the other judges I searched. Which test is meant?",
+  "docs/journal/decisions.md has no entry for #324's adoption or for PERFORMANCE-POLICY.md itself, though OWNERSHIP §5 and RULES E2 point to it as the decision record. Should the new PR's acceptance be recorded there, or only in DELIVERED.md and the journal as #324's was?",
+  "The clone is shallow (82 commits, back to 9 Nov), so I could not check older history for an earlier feature-flag or environment-switch route precedent; \"not found\" above is limited to that window and the current tree."
+ ]
+}
