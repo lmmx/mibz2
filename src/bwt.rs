@@ -462,7 +462,7 @@ fn run_joins(w: &[u8]) -> u32 {
 /// # Safety
 /// `src` must be readable for 16 bytes and `dst` writable for 16 entries.
 #[inline(always)]
-unsafe fn run16(src: *const u8, base: u32, dst: *mut u32) {
+pub(crate) unsafe fn run16(src: *const u8, base: u32, dst: *mut u32) {
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE2 is in x86_64's baseline; the caller guarantees both ranges
     unsafe {

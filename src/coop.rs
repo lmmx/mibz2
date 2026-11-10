@@ -656,11 +656,19 @@ impl<'a> FusedBuild<'a> {
                     ok = false;
                     break 'rows;
                 }
-                let base = (i as u32) << 8;
-                for (jj, &l) in ll[s..s + 16].iter().enumerate() {
-                    // SAFETY: s..s + 16 is inside this range's window of bucket c (as above)
-                    unsafe { *slots.0.add(s + jj) = l as u32 | (base + ((jj as u32) << 8)) };
-                }
+                // the 16 entries `ll[s + jj] | (i + jj) << 8` in one 16-wide write, as
+                // `bwt::build_one_pass` writes a window of one run. All 16 are final: no
+                // provisional entry is left above the cursor.
+                // SAFETY: s + 16 <= lim[c] (checked just above) and lim[c] <= n, since
+                // lim[c] is starts[c] plus a count of byte c before row hi, which `new`
+                // checked to be at most counts[c] (a checkpoint's `within`, or the counts
+                // themselves at n), and starts[c] + counts[c] <= n (the counts sum to n).
+                // So ll[s..s + 16] is readable, and slots s..s + 16 lie in the table's
+                // reserved capacity, inside this range's window of bucket c, which no
+                // other range's window overlaps (as the one-row step's). The links are
+                // exact: i + 15 < n < 2^24, so (i + jj) << 8 fits in u32 and is disjoint
+                // from the byte's bits, and run16's add is the OR
+                unsafe { crate::bwt::run16(ll.as_ptr().add(s), (i as u32) << 8, slots.0.add(s)) };
                 ftab[c] += 16;
             } else {
                 for ii in i..i + 16 {
@@ -1781,6 +1789,286 @@ mod tests {
             fused_matches_build(&p, 64, 80);
             refuses(&p, 64, 2);
         }
+    }
+
+    /// `FusedBuild::share` as it was before its equal window took `bwt::run16` (master
+    /// `27ed84df4`): the same ranges, the same classifier and steps, the window's 16 entries
+    /// written one at a time. Every range run in turn on this thread into a table of its own;
+    /// `None` where it refused (the checks, or a range's end check). The differential's
+    /// reference, kept apart from the code it checks
+    fn scalar_share_reference(
+        ll: &[u8],
+        counts: &[u32; 256],
+        cps: &[[u32; 256]],
+        stride: usize,
+        k: usize,
+    ) -> Option<Vec<u32>> {
+        let n = ll.len();
+        check_inputs(n, counts, cps, stride, k).ok()?;
+        let mut starts = [0u32; 256];
+        let mut cum = 0u32;
+        for b in 0..256 {
+            starts[b] = cum;
+            cum += counts[b];
+        }
+        let mut tt = vec![u32::MAX; n];
+        let at = |e: usize| if e == n { counts } else { &cps[e / stride] };
+        for j in 0..k {
+            let (lo, hi) = (edge(n, k, stride, j), edge(n, k, stride, j + 1));
+            let (before, after) = (at(lo), at(hi));
+            let mut ftab = [0u32; 256];
+            let mut lim = [0u32; 256];
+            for b in 0..256 {
+                ftab[b] = starts[b] + before[b];
+                lim[b] = starts[b] + after[b];
+            }
+            let one = |i: usize, ftab: &mut [u32; 256], tt: &mut [u32]| -> bool {
+                let c = ll[i] as usize;
+                let s = ftab[c];
+                if s >= lim[c] {
+                    return false;
+                }
+                tt[s as usize] = ll[s as usize] as u32 | (i as u32) << 8;
+                ftab[c] = s + 1;
+                true
+            };
+            let mut i = lo;
+            while i + 16 <= hi {
+                let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+                if a == b && a == a.rotate_left(8) {
+                    let c = ll[i] as usize;
+                    let s = ftab[c] as usize;
+                    if s + 16 > lim[c] as usize {
+                        return None;
+                    }
+                    let base = (i as u32) << 8;
+                    for (jj, &l) in ll[s..s + 16].iter().enumerate() {
+                        tt[s + jj] = l as u32 | (base + ((jj as u32) << 8));
+                    }
+                    ftab[c] += 16;
+                } else {
+                    for ii in i..i + 16 {
+                        if !one(ii, &mut ftab, &mut tt) {
+                            return None;
+                        }
+                    }
+                }
+                i += 16;
+            }
+            while i < hi {
+                if !one(i, &mut ftab, &mut tt) {
+                    return None;
+                }
+                i += 1;
+            }
+            if ftab != lim {
+                return None;
+            }
+        }
+        Some(tt)
+    }
+
+    /// The build cut into k shares, each on a thread of its own, `None` where refused
+    fn split_build(
+        ll: &[u8],
+        counts: &[u32; 256],
+        cps: &[[u32; 256]],
+        stride: usize,
+        k: usize,
+    ) -> Option<Vec<u32>> {
+        let mut tt = TVector::new();
+        let b = FusedBuild::new(ll, counts, cps, stride, k, &mut tt).ok()?;
+        thread::scope(|sc| {
+            for j in 0..k {
+                let b = &b;
+                sc.spawn(move || b.share(j));
+            }
+        });
+        let (r, tt) = b.finish();
+        match r {
+            Ok(()) => Some(tt.0.clone()),
+            Err(_) => {
+                assert!(tt.0.is_empty(), "a refused build left its table set");
+                None
+            }
+        }
+    }
+
+    /// Last columns made to put the equal window's every case under the split build: one
+    /// byte throughout; alternating bytes (no equal window); a run of each length near 16
+    /// and 32 starting at every offset mod 16 (so at every offset from a range's edge, the
+    /// window's classifier aligned to the edge, not to 0), followed by tails of each
+    /// length; equal runs ending the block at every remainder mod 16; two buckets' runs
+    /// side by side; and short blocks
+    fn window_columns() -> Vec<(String, Vec<u8>)> {
+        let mut v: Vec<(String, Vec<u8>)> = Vec::new();
+        for n in [1, 15, 16, 17, 31, 32, 33, 47, 48, 100, 257] {
+            v.push((format!("one byte, {n}"), vec![7; n]));
+        }
+        v.push(("alternating".into(), b"ab".repeat(100)));
+        v.push(("aab".into(), b"aab".repeat(70)));
+        for off in 0..16 {
+            for len in [15, 16, 17, 31, 32, 33, 48] {
+                for tail in [0, 1, 5, 16, 17] {
+                    let mut ll: Vec<u8> = (0..off).map(|i| b"xy"[i % 2]).collect();
+                    ll.extend(std::iter::repeat(b'a').take(len));
+                    ll.extend((0..tail).map(|i| b"bca"[i % 3]));
+                    v.push((format!("off {off}, run {len}, tail {tail}"), ll));
+                }
+            }
+        }
+        for m in 1..4 {
+            for r in 0..16 {
+                let mut ll: Vec<u8> = (0..16 * m).map(|i| b"pq"[i % 2]).collect();
+                ll.extend(std::iter::repeat(b'z').take(16 + r));
+                v.push((format!("end: {m} windows, a run of 16 + {r}"), ll));
+            }
+        }
+        let mut ll = Vec::new();
+        for i in 0..12 {
+            ll.extend(std::iter::repeat(b"abc"[i % 3]).take(16 + 16 * (i % 2)));
+        }
+        v.push(("buckets side by side".into(), ll));
+        let mut r = xorshift(0x5eed);
+        for n in 0..=40 {
+            v.push((
+                format!("short {n}"),
+                (0..n).map(|_| (r() % 3) as u8).collect(),
+            ));
+        }
+        v
+    }
+
+    /// Every block of `z` as the decoder sees it after MTF: its last column
+    fn real_columns(z: &[u8]) -> Vec<Vec<u8>> {
+        use crate::stream::{Event, Scanner, SliceSource};
+        let k = crate::Kernels::detect();
+        let mut sc = Scanner::new(SliceSource(z));
+        let mut v = Vec::new();
+        let mut syms = Vec::new();
+        while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
+            let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+            crate::mtf::mtf(&symbols, &mut ll, &mut counts, k).unwrap();
+            v.push(ll);
+            syms = symbols.syms;
+        }
+        v
+    }
+
+    /// The split build against the scalar share and `bwt::build`, on `ll`, at each share
+    /// count and stride given
+    fn run16_matches(ll: &[u8], ks: &[usize], strides: &[usize], what: &str) {
+        let counts = counts_of(ll);
+        let mut want = TVector::new();
+        crate::bwt::build(ll, &counts, &mut want);
+        for &stride in strides {
+            let cps = checkpoints_of(ll, stride);
+            for &k in ks {
+                let old = scalar_share_reference(ll, &counts, &cps, stride, k);
+                let new = split_build(ll, &counts, &cps, stride, k);
+                assert!(
+                    new == old,
+                    "{what}: k {k}, stride {stride}: the split build differs from the scalar share"
+                );
+                assert!(
+                    new.as_deref() == Some(&want.0[..]),
+                    "{what}: k {k}, stride {stride}: the split build differs from bwt::build"
+                );
+            }
+        }
+    }
+
+    /// `run16` in the equal window (#313's residual): the same table as the scalar share
+    /// it replaced, entry for entry, on crafted columns at every share count 1 to 4 and
+    /// strides that put the ranges' edges at every alignment mod 16
+    #[test]
+    fn share_run16_is_the_scalar_share() {
+        for (name, ll) in window_columns().into_iter().chain(columns(3_000)) {
+            run16_matches(&ll, &[1, 2, 3, 4], &[1, 3, 7, 16, 64], &name);
+        }
+    }
+
+    /// The same on real last columns: this crate's sources and a runs corpus, compressed
+    /// by libbzip2 at levels 1 and 9, at the decoder's stride and a short one
+    #[test]
+    fn share_run16_is_the_scalar_share_on_real_blocks() {
+        use std::io::Write;
+        let root = env!("CARGO_MANIFEST_DIR");
+        let mut text = Vec::new();
+        for f in ["src/coop.rs", "src/bwt.rs", "src/mtf.rs", "README.md"] {
+            text.extend(std::fs::read(format!("{root}/{f}")).unwrap());
+        }
+        let one = text.clone();
+        while text.len() < 1_200_000 {
+            text.extend(&one);
+        }
+        let mut r = xorshift(0xfeed);
+        let mut runs = Vec::new();
+        while runs.len() < 1_000_000 {
+            let n = 1 + (r() % 600) as usize;
+            runs.extend(std::iter::repeat(b"xyz"[(r() % 3) as usize]).take(n));
+        }
+        let mut blocks = 0;
+        for (name, data) in [("sources", &text), ("runs", &runs)] {
+            for level in [1, 9] {
+                let mut e =
+                    bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+                e.write_all(data).unwrap();
+                for (i, ll) in real_columns(&e.finish().unwrap()).iter().enumerate() {
+                    run16_matches(
+                        ll,
+                        &[2, 3],
+                        &[crate::mtf::CHECKPOINT, 1000],
+                        &format!("{name} -{level} block {i}"),
+                    );
+                    blocks += 1;
+                }
+            }
+        }
+        assert!(blocks >= 10, "{blocks} blocks");
+    }
+
+    /// The equal window's 16-wide write under Miri: its bounds (the reads of `ll` and the
+    /// writes of the table by pointer) and the shares' disjoint slots under its race
+    /// detector, on a few of the crafted columns at k = 2 and 3
+    #[test]
+    fn miri_share_run16() {
+        let cols = window_columns();
+        for (name, ll) in cols.iter().filter(|(n, _)| {
+            [
+                "one byte, 48",
+                "off 5, run 33, tail 1",
+                "off 15, run 16, tail 0",
+                "end: 1 windows, a run of 16 + 15",
+                "buckets side by side",
+                "alternating",
+            ]
+            .contains(&n.as_str())
+        }) {
+            run16_matches(ll, &[2, 3], &[16, 7], name);
+        }
+    }
+
+    /// The equal window's guard, `s + 16 > lim[c]`, at its edge: counts that give the last
+    /// bucket one slot too few (one of its count moved to a byte below it, the sums kept,
+    /// the checkpoints within the counts, so `new` accepts them), with that bucket's window
+    /// ending at n, the table's reserved end. The second window of 16 equal bytes then finds
+    /// 15 slots left: it must refuse, not write. A guard off by one writes slot n, past the
+    /// reservation, which Miri reports; natively the build is refused either way
+    #[test]
+    fn miri_share_run16_window_guard() {
+        let ll = [5u8; 32];
+        let mut counts = [0u32; 256];
+        counts[4] = 1;
+        counts[5] = 31;
+        let cps = [[0u32; 256], counts];
+        let mut tt = TVector::new();
+        let b = FusedBuild::new(&ll, &counts, &cps, 32, 1, &mut tt)
+            .map_err(|(e, _)| e)
+            .unwrap();
+        b.share(0);
+        let (r, tt) = b.finish();
+        assert!(r.is_err() && tt.0.is_empty(), "a short window accepted");
     }
 
     /// The shared walk on `ll`'s table from `orig_ptr`, against `bwt::walk` and the
