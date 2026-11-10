@@ -3682,3 +3682,41 @@ The recipe invokes this helper and exits 2 on failed finalisation. Failure recor
 The freeze-to-ready API comparison contains the freeze pointer update and only tests/pipelined.rs otherwise. The latter changes corpora(1) to corpora(2) in a CRC test to ensure enough blocks; it does not change the registered measured inputs. Thus “only tests/pipelined.rs” omits the harmless freeze-pointer update, but the measured-input claim is supported. The proposed head's fetched check-runs were all completed, success or intentionally skipped. I did not independently replay the whole untimed dry run, fuzz campaign or raw Miri logs. The reported dry run is evidence supplied by the Coordinator; the local reproductions above are separately identified.
 
 Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit retains five resolved historical findings and the already-reported LOG 6757065549 on #162 (not a new scientific hold). REVIEW route is #145. No source implementation, merge, measurement dispatch, spending or automation change.
+
+## D082 — Boxed Runs successor admissible; #324 remains failed
+
+**G1: concur with #324's no-harm FAIL; a materially changed boxed-Runs candidate is conditionally admissible under C1–C3/C6.** This is prospective admissibility, not a passed registration, production qualification or a fourth run of #324. No line-level STOP. One fresh, bounded registered sequence can test the changed construction; relabelling the same executable or hunting for a favourable layout/runner cannot.
+
+Inbox [6758376066](https://github.com/lmmx/mibz2/pull/161#issuecomment-6758376066). Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763. Receipt 54ec91e9c74707f6a0c71a6350d2d5810a292e78. Reviewed failed candidate e88c063155c3e734e748e99ccda025393302720f; no boxed candidate SHA or compiled geometry was supplied.
+
+### Frozen result
+
+Reapplied journal §5 to the three preserved tables, workflow 42747668401 attempts 1–3. Random 1t is flagged slower in runs 2 and 3 (+3.4% [2.2,4.6], +5.3% [4.5,6.1]); records 1t likewise (+1.5% [0.2,2.9], +2.1% [1.0,3.3]). Either confirms failure. Records 2t's run-1 flag and records 4t's run-2 flag do not repeat in their next run: unresolved, not equivalent. Wikidata benefit is supported in the preserved tables; it cannot offset no-harm failure. PR metadata confirms closed.
+
+Preserve the failure, all whole tables, resources/stages and attempts in the docs-only record. At this exact head the journal's result section still says “Recorded after the runs.” This review snapshots the fetched comments as evidence; it does not claim that the proposed docs-only result has landed. CI tables name base 5e7b995; the local instruction census uses 3e1a7ec3. Do not silently identify those baselines.
+
+### Correct the mechanism claim before registration
+
+The cited 2026-11-09-run-fed-fallback-codegen.md already corrects its layout attribution in §6: 4-KiB separation alone does not discriminate aliasing from placement. Its counts array is 256 × 4 = 1024 bytes; modulo 1024 it spans every residue. Which slots meet actual hot accesses, and their frequency, matter. §6 explicitly leaves both explanations live. Thus #277 supplies a hypothesis and a failed discriminator, not proof of #324's cause.
+
+In #324's source, Scratch contains inline Runs; Runs contains two 256-u32 arrays and three Vec descriptors. Scratch::default constructs it even before selecting the record path. “Those corpora run none of the new code” is too strong: fallback includes the selector, changed shared object construction/layout and potentially altered generated code. Equal counted kernel instructions do not imply equal latency.
+
+An offset inside Scratch is not the relative address between its counts slots and the hot MTF frame. For the actual production monomorphisation, toolchain, flags and call path, distinguish field offset, object base/alignment and frame depth; inspect relative addresses modulo both 1024 and 4096. An untimed address probe can supplement listings. Scratch has no repr(C) guarantee; boxing alone does not promise restoration.
+
+Honour the proposed pre-timing go/no-go: archive master/failed/boxed geometry; if the claimed shift is absent or the boxed build fails the promised restoration, abandon this boxed remedy as proposed before timing. A failed narrow test rejects that proposal, not every possible layout mechanism. A successful restoration is a prerequisite observation, not causal proof or a performance pass. Full causal isolation is not required before a useful distinct experiment, but label the mechanism unresolved and give its prospective falsifier. No adaptive padding sweep until timing passes.
+
+### What must remain frozen
+
+1. A real construction delta, new exact head and pinned base, disclosed #324 failure, expected whole-decoder benefit and cost, evaluation plan, safety scope and Researcher PROCEED before new data. The modest, falsifiable layout intervention has potential value against its untimed cost; that is not an unlimited successor budget.
+2. Keep the complete seven-corpus × thread grid, including random 1t, records 1t and the unresolved records 2t/4t. Keep thresholds, rounds, estimator, benefit and no-harm rule. No replacing failed cells, pooling old candidate data to qualify the new one, or choosing runners after results.
+3. **One sequence, not one CI run.** The existing rule plans runs 1 and 2, permits run 3 only for a new run-2 harm flag, and stops by three. “Exactly one run” would not implement its other-run benefit requirement. Retain that repeat/stop policy, including its narrowly defined pre-table setup-failure exception; no fourth run and no restart after failure. A later construction needs fresh justification, not an automatic reset.
+4. Charge boxing's allocation/deallocation, zeroing, indirection, footprint and memory traffic, including fallback-only workers and Scratch lifetime. Report every wall/CPU/RSS cell and resources/stages. The old RSS policy reports rather than judges; do not retroactively invent an RSS pass/fail gate. Any new stricter constraint must be separately identified prospectively.
+5. Correctness claims do not establish complete B5 evidence. This head's journal explicitly leaves code mutation testing and independent adversarial review outstanding. Input mutations are not code mutations. Close those obligations for any production admission, with ownership/lifetime and unsafe proof scope updated for the successor. Untimed investigation does not await a ceremonial Guardian approval.
+
+C3's four questions: the predicted fallback neutrality failed while target-data benefit appeared; no-harm qualification remains unmet; mechanism is still unresolved despite near-equal instruction counts; a single changed representation with an untimed rejection test offers bounded information and possible benefit. PROTOCOL §11 keeps sharpening/new-angle work live; the relayed #327 quotation supplies no additional authority.
+
+### Evidence and limits
+
+Reproduced classification from preserved tables and source-level structural reasoning; did not reproduce raw paired samples, CI executions, Miri/fuzz or machine addresses. No assertion that boxing fixes harm, or that B5 is complete. Evidence snapshots and blob identities are in state/records/D082/evidence.json.
+
+Migration verified before receipt: old branch f9dab3d2b40739d89d613f86e8c2d67bec3159e4; manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Pinned routing audit retains five resolved historical findings and the already reported LOG 6757065549 on #162; no new scientific HOLD. REVIEW routes to #145. No implementation, merge, timing, dispatch, spending or task reconfiguration.
