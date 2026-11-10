@@ -1332,6 +1332,19 @@
       "status": "finished",
       "disposition": "FAIL-MEASUREMENT condition 6; prospective decoder control permissible with full ledger; instruction registration lesson addressed, binary witness limits retained.",
       "comment": 6760796025
+    },
+    {
+      "id": "D089",
+      "decision": [
+        "G1"
+      ],
+      "incoming_comment": 6761414959,
+      "pr": 339,
+      "sha": "e6aee4386d3a804fa688919c099981828785cef9",
+      "evidence_digest": "registration:72896d70361fc628d25a67a72f80affd840efe41;result:9f4f6c45144c07b40b87d85818164b902a22fd65;count:21bbd7e58609be56ddae37d9e9e4a1b77851e991",
+      "commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab",
+      "status": "complete",
+      "disposition": "FAIL-MEASUREMENT V1/V2; disputed residual bound corrected; distinct combined diagnostic conditionally admissible."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1620,7 +1633,9 @@
     "4e49178fbdac0f4932203de1df1df46719503020",
     "89dc0b5fc136ecc247b5c68e67cd5e42f2340dc6",
     "ee180a6152130a05302544abbf5d191fd1cc69b2",
-    "ab36068ad34795a5aa07ae13bd8851343150074e"
+    "ab36068ad34795a5aa07ae13bd8851343150074e",
+    "e8b3312b49973069d37699e8a5c00cf05248ce35",
+    "3f2b0a4992711c7bcfa1e91dee5a97555812dfab"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1709,7 +1724,8 @@
     6759768735,
     6759990077,
     6760224735,
-    6760691372
+    6760691372,
+    6761414959
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -1789,8 +1805,9 @@
   },
   "current_execution": {
     "active_comment": 6761414959,
-    "status": "in progress",
-    "decision": "D089"
+    "status": "complete",
+    "decision": "D089",
+    "work_commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab"
   },
   "duplicate_events": [
     {
@@ -2470,6 +2487,13 @@
       "decision": "D088",
       "commit": "ee180a6152130a05302544abbf5d191fd1cc69b2",
       "comment": 6760796025
+    },
+    {
+      "pr": 339,
+      "sha": "e6aee4386d3a804fa688919c099981828785cef9",
+      "evidence_digest": "registration:72896d70361fc628d25a67a72f80affd840efe41;result:9f4f6c45144c07b40b87d85818164b902a22fd65;count:21bbd7e58609be56ddae37d9e9e4a1b77851e991",
+      "decision": "D089",
+      "commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3139,10 +3163,11 @@
     {
       "comment_id": 6761414959,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D089",
-      "progress": "D089 assessment written; preparing work publication.",
-      "receipt_commit": "e8b3312b49973069d37699e8a5c00cf05248ce35"
+      "progress": "Work committed; awaiting REVIEW.",
+      "receipt_commit": "e8b3312b49973069d37699e8a5c00cf05248ce35",
+      "work_commit": "3f2b0a4992711c7bcfa1e91dee5a97555812dfab"
     }
   ],
   "migrated_from": {
