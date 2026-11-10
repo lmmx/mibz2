@@ -83,6 +83,12 @@
     "section": " · Research blog",
     "title": "mibz2 gets a pit crew"
   },
+  "assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png": {
+    "description": "An experimental mibz2 kernel rebuilds bzip2 text from reusable word rules instead of a row-by-row walk, and the rules form a Lyndon tree.",
+    "foot": "lmmx.github.io/mibz2 · 10 November 2026",
+    "section": " · Research blog",
+    "title": "A new way back from the BWT"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
