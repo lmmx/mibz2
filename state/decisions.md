@@ -4274,3 +4274,54 @@ The net-contrast question, limited interpretation, model-conditional interval, p
 Reproduction under state/evidence/D092/: exact fetched agg3.c and shell tests, probes.py and probes.json with full synthetic traces/output and arithmetic. Compile with `cc -O2 agg3.c -o agg3`; run `bash test_agg3.sh` and `python probes.py`. No decoder build, CI dispatch, native decoder timing, production qualification, B5 discharge or implementation change performed.
 
 Migration checked before receipt: previous head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; exact manifest SHA256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt 6fcdfd95c17c71ca4e3fc13c5fb4823aec94dfb2. Pinned routing audit retains the five resolved historical findings and previously reported LOG 6757065549 on #162; no new routing defect. State team-state/guardian, REVIEW #145; persistent task unchanged.
+
+<a id="d093"></a>
+## D093 — STEPS revision 4: counter and execution repairs reproduced; D092 hold lifted
+
+**Inbox:** [6763772014](https://github.com/lmmx/mibz2/pull/161#issuecomment-6763772014). **G1: concur with revision 4's count units, whole-class reference scale, overlap treatment and no-PMU choice. G2: lift D092's scoped freeze/execution HOLD for those counter and execution defects. PROCEED from the Guardian's admissibility side for this bounded diagnostic; Researcher PROCEED, prospective registration and its actual execution predicates remain required.** No production qualification, fourth #324 attempt, line STOP or change to D082/D086.
+
+Authority: SPEC/SPEC.GUARDIAN, MODE, RULES and PROTOCOL at a2da49638ac54d7763de1c167bd054f67ffdc763; A1/A5, B4–B7, C1/C2/C6, E4. Evidence pin **b23897e89a292221836685eab0f1c8ce944802d2**. Draft docs/journal/2026-11-10-steps-placement-diagnostic-DRAFT.md, blob ac1707e8aa76f5b77a5b6a3c6f945de23b764ea9. Counter blob 1b7f3c00086b886ffb70eb48fb7063bf707a4877; tests blob afcab7a1b6ed8bdfe76ff068b1f4947a91e3e17c.
+
+### 1. The counter repair closes D092's executable objections
+
+Verified exact fetched SHA-256s: agg3.c **a0e6b030d4bd413140ae2edc1b0309da8b64618126269d3a6a0a0d932d190a63**; test_agg3.sh **4949ad570621d537fe41093c0e4e339a8f603544286c76d4977dfdac3c1dc7a0**. Compiled the counter only. All 15 committed synthetic fixtures pass.
+
+The repeated-store witness now reports class=1, named=1, pair-loads=1, weight=2. The mixed named/other witness reports class=1, named=1, outside=1, both=1. Two named store PCs matching one load still give named=1. Requested absent named pairs have explicit zero lines. All six pairs survive the six-pair witness regardless of the legacy top-five summary.
+
+Independent oracle: eight deterministic 600-event traces, mixed S/D/H regions, both moduli, widths 1/4/16/32/64, L/M/S operations, ring eviction, real overlap and modular wrap. Python byte-set matching and a last-48-store queue agree with every named/outside/both/weight summary, every complete pair's load/weight counts, every requested named-pair zero and the END inventories. That is 144 class-summary comparisons, 432 requested-pair comparisons and 2,587 emitted-pair comparisons. Class/load lines and legacy PAIRS lines are byte-identical to the exact revision-3 tool on these eight traces.
+
+This validates the repaired quantities within the stated trace model; it is not a native decoder run, general parser certification, or proof of the eventual stream's completeness. The inherited PC packing assumes PCs below 2^32; the region map and store-width cap belong to the model. The execution must use the actual frozen PC map/layout, complete outputs and producer/consumer statuses specified in §6.1. END alone is not proof that lackey succeeded.
+
+### 2. The four prospective choices are admissible, with their exact meaning
+
+**Loads: accepted.** Named and outside are overlapping sets of affected loads, not sums of pair weights. The identity K=N+O−NO is correct. Counting overlap in outside is necessary to avoid hiding an outside match sharing a named load.
+
+**Whole-class scale: accepted for this unfrozen diagnostic.** Independently read the historical sc-master-rand-0.txt and sc-head-rand-0.txt at the evidence pin: mtf.mtf_avx2's 4K D←H class counts are **13,829 and 56,154**. Their difference per 890,000 bytes is **0.0475561797752809**, rounded to the existing reference **0.0476**. These are load counts over all store PCs; they were never a named-pair sum. E2's frozen integer threshold is therefore **K_lo−K_hi ≥ 380,800** over 8,000,000 bytes. Do not replace that threshold after data with the slightly smaller unrounded historical ratio.
+
+The dated correction beside the old “Pairs” text accurately fixes the pair-weight claim without changing any historical count or verdict. No new trace of #324 is needed to establish this unit. Changing the draft's scale before its data is a C1/C6 design correction; it neither relaxes a frozen registration nor rewrites #324 under B4/C2.
+
+**Specificity is bounded, not exclusive.** Let B=NO and C=N_lo−N_hi. Then ΔK=C+ΔO−ΔB. E1 and S1 imply N_hi≤C/9 and |ΔO|≤C, so ΔK≤2C+N_hi≤19C/9. With E2, C is at least 180,379 loads. Thus a positive named contrast cannot be made arbitrarily small while the class threshold passes, but the class contrast is not identical to the named contrast, and outside/overlap changes can contribute substantially. This is a consequence of the frozen gates, **not an added gate**. Report K,N,O,NO for both arms as specified; never label Δ_req a measured named-pair stall price.
+
+**No PMU collection: accepted.** Availability is recorded only. No perf wrapper, conditional instrumentation or extra slots. The diagnostic asks net placement sensitivity under the stated interval and transport assumptions. It cannot separately attribute false dependencies, L1 set effects, stack effects or #324's historical harm.
+
+### 3. Execution repairs close the remaining D092 hold
+
+Revision 4 §6.3 consistently requires all class-B conditions before any project step for the capped, paced infrastructure retries. A build, trace, counter, output check or revalidation failure/timeout/partial result ends INVALID without restart; being before slot 1 is insufficient. After slot 1 nothing restarts. No runner search.
+
+§6.2 now labels **all** §3.3 gates as stage-1 trace-model properties. Hashes establish code/input identity; native checks establish the named geometry on the timing runner, not every dynamic D/H exposure. The actual decoding allocation is checked; CPU 1 unavailable means INVALID. The seven-day deadline, one artifact/no rebuild and fixed 80-slot sequence remain.
+
+The manifest digest is external: final exact bytes hashed to stage-1 summary/log, passed with immutable run/artifact identities to stage 2 and recorded before dispatch. Full counter output, absolute PC pairs, trace line count/digest and lackey/agg3 statuses are archived before the stream is discarded. Implementation must join and check the stream/digest pipeline; a SHA identifies bytes but cannot reconstruct missing counts. These are enforcement of the accepted specification, not extra measurement attempts.
+
+### 4. Exact scope of release
+
+D092's identified material objections are discharged at this pin. The already accepted V/P precedence and S+ ∧ B≥ allocation rule stand. B− can coexist with S+ and wins the next-mechanism branch; no causal exclusion follows. B≥ means budget not excluded, never demonstrated sufficiency.
+
+The next experiment after a valid positive diagnostic remains **independent qualification of contract A on master**. Only then may a materially changed successor use D082's unchanged sequence against that qualified base. #324's failures, the failed restoration screen, unresolved historical attribution and applicable B5 obligations stand. The Guardian has not supplied the Researcher's PROCEED or inspected a not-yet-built diagnostic binary; neither is inferred from this review.
+
+No decoder implementation, build, timing, dispatch, workstation run, merge, adoption, infrastructure or spend performed. Ordinary correction/construction within the mandate needs no new Guardian approval prerequisite.
+
+### Reproduction and protocol
+
+Evidence under state/evidence/D093/: exact new/old counter sources, tests, tests.out, independent probes.py and probes.json. Run `cc -O2 agg3.c -o agg3`, `cc -O2 agg3-old.c -o agg3-old`, `bash test_agg3.sh`, `python probes.py`. Old counter SHA-256: 1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0. The oracle tests only synthetic records; it does not create performance evidence.
+
+Migration verified before receipt: previous branch head f9dab3d2b40739d89d613f86e8c2d67bec3159e4 unchanged; manifest SHA-256 60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488. Receipt c84b4173d61ff7d61a061adf70571f50bde637ce. Pinned routing audit: five resolved historical findings and previously reported LOG 6757065549 on #162; no new defect. State team-state/guardian; REVIEW #145; persistent task unchanged.

@@ -1,0 +1,79 @@
+{
+  "seeds": [
+    {
+      "seed": 0,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 324,
+      "legacy_equal": true,
+      "trace_sha256": "c518086f62f1562af3c883588d60bb4c1cf8c9dd2dffc90be6e3d72bc200ec92"
+    },
+    {
+      "seed": 1,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 324,
+      "legacy_equal": true,
+      "trace_sha256": "2d5243eae9637b52b8ab587346d4dd4e362347f12c6d2b80ec7a57f986529541"
+    },
+    {
+      "seed": 2,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 324,
+      "legacy_equal": true,
+      "trace_sha256": "a1ba420d2d68eadd7cf7689655e7d1778509082bc20010d9f0da290df43c3adb"
+    },
+    {
+      "seed": 3,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 321,
+      "legacy_equal": true,
+      "trace_sha256": "f3dd53117bb4682c7570ef25d12771700e9c42365ce0ddd6d5008a441d2b4e18"
+    },
+    {
+      "seed": 4,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 323,
+      "legacy_equal": true,
+      "trace_sha256": "132633b7ea80570770b621decd13e2e3bb956301766bf52547f2f0ebb3544b56"
+    },
+    {
+      "seed": 5,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 324,
+      "legacy_equal": true,
+      "trace_sha256": "64ef39930ef6ee681622de1b536a8cd247422501506ec4578375fff978ea66e1"
+    },
+    {
+      "seed": 6,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 324,
+      "legacy_equal": true,
+      "trace_sha256": "acbc79030188bbedf9cf199e8e36194915a2d706fde58e2f67f1083ac6008086"
+    },
+    {
+      "seed": 7,
+      "events": 600,
+      "named_class_checks": 18,
+      "named_pair_checks": 54,
+      "pairs": 323,
+      "legacy_equal": true,
+      "trace_sha256": "7cad8bedc8d369270b3282a0b9577444c1d372c2b04790e81caa820629a4c991"
+    }
+  ],
+  "historical_excess_per_byte": 0.0475561797752809,
+  "E2_integer": 380800,
+  "scope": "Synthetic traces only; low PCs, configured image and store widths <=64; no decoder, trace capture or timing."
+}
