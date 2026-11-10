@@ -1,28 +1,37 @@
 # The two modes' discriminator (docs/journal/2026-11-10-two-modes-discriminator.md, the
-# registration; the design is §3 of docs/journal/2026-11-10-two-modes.md). DIAGNOSTIC ONLY: no
-# merge gate reads it. NOT FROZEN until bench/two-modes.frozen names its commit (the recipe
-# refuses every run but a DRY one until then).
+# registration; the design is §3 of docs/journal/2026-11-10-two-modes.md, revised after the
+# Researcher's REVISE, #145 6757560564). DIAGNOSTIC ONLY: no merge gate reads it, and its
+# outcomes are compatibility with registered signatures, never an identified mechanism. NOT
+# FROZEN until bench/two-modes.frozen names its commit (the recipe refuses every run but a DRY
+# one until then).
 #
 # The harness is the one that produced the two modes, unchanged: the run-fed leader's second
 # attempt's own `ab` and `windows`, taken from its archived bundle on the `evidence` branch and
-# checked by digest (nothing of the decoder is built here). One arm, the default plan
-# (`mibz2-default33`), 60 runs at 10 threads with --settle 0.25 and --sysfs-state, as that
-# recipe ran them, through `ARM@EXE`: ab spawns bench/two_modes_probe.c's `child`, which reads
-# the counters, starts the spin probes, sets the decoder's mask (the probe core, CPUs 9 and 19,
-# taken out), execs ab's own child, samples its threads' placement every 2 ms and every CPU's
-# clock every 10 ms, and reaps it with wait4. Pass 1: P-idle on CPU 9 alone, in two runs of
-# every three (schedule PPN: the third has no probe, the same mask). Pass 2: P-idle beside P-sib
-# on CPU 19, its sibling, in every run. ab itself runs on the decoder's mask (taskset), so
-# nothing of ours shares the probe core. The preflight (read-only, bounded) refuses the
-# attempt, archived, unless the registered host and its declared settings are established.
-# Before the passes, the sustained block: one process decodes the corpus 50 times end to end
-# with no probe (deadline 300 s), then a fixed 60 s rest. One attempt; no retry to pass. About
-# 7 minutes. Exit: 0 VALID (whatever the table says: the
-# outcome says), 1 INVALID, 4 REFUSED by the preflight, 2 any other refusal or a report error,
-# 3 stopped before its verdict.
+# checked by digest (nothing of the decoder is built here). In order:
+# - the preflight (read-only, each collector bounded), which refuses the attempt, archived,
+#   unless the registered host and its declared settings are established;
+# - the sustained block: one process (ab's own child, unpinned, no probe) decodes the corpus
+#   repeated 50 times (built and checked by content, outside the bundle), its input consumption
+#   read every 10 ms; deadline 300 s + 10 s grace; then a fixed 60 s rest;
+# - pass 1: 60 runs of `mibz2-default33` at 10 threads with --settle 0.25 and --sysfs-state,
+#   through `ARM@EXE` into bench/two_modes_probe.c's `child`, which reads the counters, starts
+#   the spin probes, sets the decoder's mask (the probe core, CPUs 9 and 19, taken out), execs
+#   ab's own child, samples its threads' placement every 2 ms and every CPU's clock every
+#   10 ms, and reaps it with wait4; P-idle on CPU 9 in 40 runs, none in 20, in the order the
+#   registered seed drew; deadline 900 s + 10 s grace, the archived ab's busy-gate waits
+#   included;
+# - pass 2: the same, P-idle beside P-sib on CPU 19 in every run; the same deadline.
+# ab itself runs on the decoder's mask (taskset), so nothing of ours shares the probe core.
+# Every stage that can wait runs under bench/bounded.py (its process group TERMed, then
+# KILLed, its descendants reaped); a timeout is recorded, never retried, and makes the
+# attempt INVALID; a group that cannot be emptied stops the attempt there. One attempt; no
+# retry to pass. About 7 minutes; at most about 50 (the stages' deadlines summed). Exit: 0
+# VALID (whatever the table says: the outcome says), 1 INVALID, 4 REFUSED by the preflight, 2
+# any other refusal or a report error, 3 stopped before its verdict.
 #   just submit bench-two-modes
-# A DRY value is the recipe's own check (three runs a pass, the machine's own last core as
-# the probe core, a failed preflight recorded and not refused), with optionally a CORPUS:
+# A DRY value is the recipe's own check (three runs a pass, three copies in the sustained
+# block, a 1 s rest, the machine's own last core as the probe core, a failed preflight
+# recorded and not refused), with optionally a CORPUS:
 #   just bench-two-modes 1 [CORPUS]
 # It still reads clocks, but its figures are not evidence: its label is DRY.
 
@@ -67,8 +76,9 @@ bench-two-modes DRY="" CORPUS="":
     fi
     # what the probe, the workload and the judgement are made from (a path that doesn't exist
     # counts too). The decoder's sources are not among them: its executable is the archived one
-    measured=(bench/two_modes_probe.c bench/two_modes.py bench/wikidata.json bench/wikidata.py
-      bench/bundle.sh Justfile .just/two-modes.just docs/journal/2026-11-10-two-modes-discriminator.md)
+    measured=(bench/two_modes_probe.c bench/two_modes.py bench/bounded.py bench/wikidata.json
+      bench/wikidata.py bench/bundle.sh Justfile .just/two-modes.just
+      docs/journal/2026-11-10-two-modes-discriminator.md)
     # no environment that changes how ab observes, or that would reach the probe
     overrides=$(env | cut -d= -f1 | grep -E '^(AB_|TWO_MODES_)' || true)
     [ -z "$overrides" ] || fail "unset these, so the harness and the probe run the registered way: $(echo $overrides)"
@@ -83,9 +93,20 @@ bench-two-modes DRY="" CORPUS="":
     head=$(git rev-parse HEAD)
     printf 'head %s\nfrozen %s\n' "$head" "${frozen:-none}" | tee "$W/commits.txt"
     reg() { python3 -c 'import sys; sys.path.insert(0, "bench"); import two_modes as t; print(t.SOURCE[sys.argv[1]])' "$1"; }
+    tm() { python3 bench/two_modes.py get "$1"; }
+    # bd STAGE COMMAND...: the command under its stage's registered deadline and grace, in a
+    # process group of its own (bench/bounded.py); 125, a group that could not be emptied,
+    # stops the attempt here
+    bd() {
+      local dl; dl=$(tm DEADLINES | python3 -c 'import json, sys; print(*json.load(sys.stdin)[sys.argv[1]])' "$1"); shift
+      local rc=0
+      python3 bench/bounded.py $dl "$@" || rc=$?
+      [ "$rc" != 125 ] || fail "a bounded stage's processes could not be stopped (bench/bounded.py exit 125)"
+      return "$rc"
+    }
     # the harness that produced the two modes: its archived bundle, by commit, path and digest
     ev=$(reg evidence_commit); src=$(reg path)
-    git cat-file -e "$ev^{commit}" 2>/dev/null || git fetch -q origin evidence || fail "the evidence branch could not be fetched"
+    git cat-file -e "$ev^{commit}" 2>/dev/null || bd fetch git fetch -q origin evidence || fail "the evidence branch could not be fetched"
     git cat-file -e "$ev:$src" || fail "the archived harness $src is not at $ev"
     S=$B/source-$(reg sha256 | cut -c1-12)
     if [ ! -f "$S/bin/ab" ]; then
@@ -108,17 +129,17 @@ bench-two-modes DRY="" CORPUS="":
     if [ -z "$corpus" ]; then
       dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
       if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
-        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        bd fetch git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
           && git archive origin/bench-data "$dir" | tar -x || true
       fi
-      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/bin/windows" "$B/wikidata.bz2"
+      bd corpus python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null || fail "the corpus's windows could not be fetched"
+      bd corpus python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/bin/windows" "$B/wikidata.bz2" || fail "the corpus could not be built"
       corpus=$B/wikidata.bz2
       want=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["corpus_sha256"])')
       [ "$(sha "$corpus")" = "$want" ] || fail "the corpus built is not bench/wikidata.json's $want"
     fi
     ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
-    ab0=$(sha "$AB"); pr0=$(sha "$PROBE"); cor0=$(sha "$W/wikidata.bz2")
+    ab0=$(sha "$AB"); win0=$(sha "$W/bin/windows"); pr0=$(sha "$PROBE"); cor0=$(sha "$W/wikidata.bz2")
     {
       sha256sum "$AB" "$W/bin/windows" "$PROBE" "$(realpath "$corpus")"
       echo "harness: $src at $ev"
@@ -157,75 +178,87 @@ bench-two-modes DRY="" CORPUS="":
         exit 4
       fi
     fi
-    tm() { python3 -c 'import sys; sys.path.insert(0, "bench"); import two_modes as t; print(getattr(t, sys.argv[1]))' "$1"; }
     # the sustained block, first and with no probe: one process (ab's own child, unpinned)
-    # decodes the corpus concatenated SUSTAINED_COPIES times, its input's progress read every
-    # 10 ms; bounded (TERM at the deadline, KILL 10 s after), recorded however it ends, never
-    # retried. Then a fixed rest before pass 1
+    # decodes the corpus repeated; its input is built or validated by content (the digest of
+    # the corpus streamed COPIES times against the file's own), recorded, and digested again
+    # after the block. Then a fixed rest before pass 1
     copies=$(tm SUSTAINED_COPIES); [ -n "$dry" ] && copies=$(tm DRY_SUSTAINED_COPIES)
     X=$B/wikidata-x$copies.bz2
-    if [ ! -f "$X" ] || [ "$(stat -c %s "$X")" != "$(( copies * $(stat -L -c %s "$W/wikidata.bz2") ))" ]; then
-      rm -f "$X"; for _ in $(seq "$copies"); do cat "$W/wikidata.bz2"; done > "$X.tmp" && mv "$X.tmp" "$X"
-    fi
     mkdir "$W/sustained"
+    bd concat python3 bench/two_modes.py concat "$W/wikidata.bz2" "$copies" "$X" --record "$W/sustained/concat.json" >/dev/null \
+      || fail "the sustained block's input is not the corpus repeated $copies times"
     echo "bench-two-modes: the sustained block: $copies corpora in one process, no probe"
     set +e
     TWO_MODES_AB=$AB TWO_MODES_OUT=$W/sustained/sustained.json \
-      timeout --kill-after=10 "$(tm SUSTAINED_DEADLINE_S)" "$PROBE" sustained "$X" > "$W/sustained/child.json"
+      bd sustained "$PROBE" sustained "$X" > "$W/sustained/child.json"
     sus_rc=$?
     set -e
     echo "sustained: exit $sus_rc" | tee -a "$W/exits.txt"
+    sus_after=$(python3 bench/two_modes.py digest "$X")
     rest=$(tm SUSTAINED_REST_S); [ -n "$dry" ] && rest=1
-    echo "bench-two-modes: resting ${rest} s before pass 1"; sleep "$rest"
-    # the two passes: ab exactly as the run-fed leader's recipe ran it, one arm, through the probe
+    echo "bench-two-modes: a fixed rest of ${rest} s before pass 1"; sleep "$rest"
+    # the two passes: ab exactly as the run-fed leader's recipe ran it, one arm, through the
+    # probe, each under its deadline; after a pass that does not complete, none follows
     passes=(1)
     [ -n "$sib" ] && passes+=(2) || echo "bench-two-modes: no sibling for P-sib on this machine; pass 2 not run (DRY only: the preflight refuses this host otherwise)"
-    set +e
+    declare -A pass_rc
+    ran=()
     for pass in "${passes[@]}"; do
       mkdir "$W/pass$pass"
-      sched=$(tm SCHEDULE | python3 -c 'import ast, sys; print(ast.literal_eval(sys.stdin.read())[int(sys.argv[1])])' "$pass")
+      sched=$(tm SCHEDULE | python3 -c 'import json, sys; print(json.load(sys.stdin)[sys.argv[1]])' "$pass")
       echo "bench-two-modes: pass $pass: $rounds runs, P-idle on $idle$( [ "$pass" = 2 ] && echo ", P-sib on $sib"), schedule $sched"
+      set +e
       TWO_MODES_AB=$AB TWO_MODES_OUT=$W/pass$pass/probe.jsonl TWO_MODES_PASS=$pass TWO_MODES_SCHEDULE=$sched \
         TWO_MODES_IDLE_CPU=$idle TWO_MODES_SIB_CPU=$( [ "$pass" = 2 ] && echo "$sib") TWO_MODES_DECODER_CPUS=$dec \
-        taskset -c "$dec" "$AB" run "$W/pass$pass/runs.jsonl" --arms "mibz2-default33@$PROBE" --threads 10 \
+        bd pass taskset -c "$dec" "$AB" run "$W/pass$pass/runs.jsonl" --arms "mibz2-default33@$PROBE" --threads 10 \
         --rounds "$rounds" --settle 0.25 --sysfs-state "$W/wikidata.bz2"
-      echo "pass $pass ab run: exit $?" | tee -a "$W/exits.txt"
+      pass_rc[$pass]=$?
+      set -e
+      ran+=("$pass")
+      echo "pass $pass ab run: exit ${pass_rc[$pass]}" | tee -a "$W/exits.txt"
+      [ "${pass_rc[$pass]}" = 0 ] || { echo "bench-two-modes: pass $pass did not complete (exit ${pass_rc[$pass]}): recorded, not retried; no further pass"; break; }
     done
+    pass_exits=$(for p in "${ran[@]}"; do printf '"%s": %s, ' "$p" "${pass_rc[$p]}"; done)
     # (diagnostics only, never judged: three sysfs samples after the passes)
+    set +e
     timeout --kill-after=5 30 "$AB" sample --count 3 --interval 1 > "$W/sample-after.jsonl"
     echo "ab sample after: exit $?" | tee -a "$W/exits.txt"
     set -e
-    at_frozen() { [ -n "$frozen" ] && git show "$frozen:$1" | sha256sum | cut -d' ' -f1 || true; }
+    clean_after=true; [ -z "$(git status --porcelain --untracked-files=no)" ] || clean_after=false
+    at_frozen() { [ -n "$frozen" ] && git cat-file -e "$frozen:$1" 2>/dev/null && git show "$frozen:$1" | sha256sum | cut -d' ' -f1 || true; }
+    srcs=$(for p in $(tm SOURCES | tr -d "[]',"); do printf '"%s": {"head": "%s", "frozen": %s}, ' "$p" "$(sha "$p")" "$(f=$(at_frozen "$p"); [ -n "$f" ] && echo "\"$f\"" || echo None)"; done)
     python3 - "$W/identity.json" <<PY
-    import hashlib, json, sys
-    src = {}
-    for p in ["bench/two_modes_probe.c", "bench/two_modes.py", ".just/two-modes.just",
-              "docs/journal/2026-11-10-two-modes-discriminator.md"]:
-        src[p] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+    import json, sys
+    sys.path.insert(0, "bench")
+    import two_modes as t
     json.dump({
-        "schema": "two_modes/identity/1",
+        "schema": t.IDENTITY_SCHEMA,
         "dry": bool("$dry"),
         "head": "$head",
         "frozen": "$frozen" or None,
         "inputs_match_frozen": "$match" == "true",
-        "sources": src,
-        "recipe_at_frozen": "$(at_frozen .just/two-modes.just)" or None,
-        "harness": {"evidence_commit": "$ev", "path": "$src"},
+        "tree_clean_before": True,
+        "tree_clean_after": "$clean_after" == "true",
+        "sources": {$srcs},
+        "harness": {"evidence_commit": "$ev", "path": "$src", "bundle_sha256": "$(reg sha256)"},
         "ab_sha256": "$ab0", "ab_sha256_after": "$(sha "$AB")",
-        "windows_sha256": "$(sha "$W/bin/windows")",
+        "windows_sha256": "$win0", "windows_sha256_after": "$(sha "$W/bin/windows")",
         "probe_sha256": "$pr0", "probe_sha256_after": "$(sha "$PROBE")",
         "corpus_sha256": "$cor0", "corpus_sha256_after": "$(sha "$W/wikidata.bz2")",
         "arm": "mibz2-default33", "threads": 10, "rounds": $rounds, "settle": 0.25, "sysfs_state": True,
         "layout": {"idle": $idle, "sib": ${sib:-None}, "decoder": "$dec"},
+        "schedule": {str(k): v for k, v in t.SCHEDULE.items()}, "schedule_seed": t.SCHEDULE_SEED,
+        "deadlines": t.DEADLINES,
         "passes": [$(IFS=,; echo "${passes[*]}")],
+        "pass_exits": {$pass_exits},
         "preflight_exit": $pf,
-        "sustained_copies": $copies, "sustained_exit": $sus_rc, "sustained_rest_s": $rest,
+        "sustained": {"copies": $copies, "exit": $sus_rc, "rest_s": $rest,
+                      "concat": json.load(open("$W/sustained/concat.json")), "sha256_after": "$sus_after"},
     }, open(sys.argv[1], "w"), indent=1)
     PY
-    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout changed during the run"
     # the table (§3), fixed before data; its first line is the outcome
     set +e
-    python3 bench/two_modes.py judge "$W" "${dryarg[@]}" > "$W/judgement.txt"
+    bd judge python3 bench/two_modes.py judge "$W" "${dryarg[@]}" > "$W/judgement.txt"
     rc=$?
     set -e
     cat "$W/judgement.txt"

@@ -1,74 +1,68 @@
 # 2026-11-10: The two modes' discriminator: registration (diagnostic only)
 
-**Status: registered, NOT FROZEN.** The recipe is `just bench-two-modes` (`.just/two-modes.just`).
-It refuses every run but a DRY one until `bench/two-modes.frozen` names a commit. Only the
-Coordinator freezes and queues it, after the Researcher's review.
+**Status: registered, NOT FROZEN, revised after the Researcher's REVISE** (#145 6757560564;
+report `state/reports/two-modes-discriminator-6757368708` at `cf7eae3f`).
+- **The recipe:** `just bench-two-modes` (`.just/two-modes.just`). It refuses every run but a DRY
+  one until `bench/two-modes.frozen` names a commit.
+- **Who freezes it:** only the Coordinator freezes and queues it, after the Researcher's review.
 
-- **What it is:** §3 of `2026-11-10-two-modes.md` (the Pathfinder's design) built as a C5
-  workstation recipe for the i9-10900K.
-- **What it is for:** at 10 threads the same decode takes about 0.15 s or about 0.30 s, and the
-  mode persists from run to run. This run is meant to name the mechanism.
-- **Diagnostic only.** No merge gate, acceptance rule or adoption decision reads its outcome. It
-  times nothing that is compared with another bundle, and it makes no verdict about the
-  favourable mode. Every record is kept. No run is excluded, replaced or retried because of its
-  mode.
+**What it is:** §3 of `2026-11-10-two-modes.md` (the Pathfinder's design), built as a C5
+workstation recipe for the i9-10900K.
 
-Everything below, the class threshold and the analysis included, is fixed before any data.
+**What it is for:** at 10 threads the same decode takes about 0.15 s or about 0.30 s, and the
+mode persists from run to run. This run collects bounded, honest observations of that.
+
+**What it does not do:** it does not identify a mechanism.
+- Its outcomes say which registered signatures the observations are **compatible with**. The
+  signatures are predictions made under assumptions, not an exhaustive causal model, so joint
+  mechanisms, measurement error or an unmodelled magnitude can break every one of them.
+- Its results choose the next controlled intervention. They prescribe no warm-up, placement or
+  power policy.
+
+**Diagnostic only.** No merge gate, acceptance rule or adoption decision reads its outcome.
+- It times nothing that is compared with another bundle.
+- It makes no verdict about the favourable mode.
+- Every record is kept. No run is excluded, replaced or retried because of its mode.
+
+Everything below is fixed before any data: the class threshold, the analysis, the schedule, the
+deadlines and the admission contract.
 
 ## 1. The run
 
-- **The harness that produced the two modes, unchanged.** The decoder and harness executables
-  are the run-fed leader's second attempt's own, not rebuilt: `ab` and `windows` from its
-  archived bundle `run-fed-leader/20261109T201013Z.tar.gz` on the `evidence` branch at
-  `65ab4b95`.
-  - The bundle is checked by its SHA-256 (`7e36a5a7…`), and the two executables by theirs
-    (`ce1eea53…`, `cf5d74a6…`): bench 3.6.0, built at `1af3888a`, frozen at `2fab12ca`.
-  - The corpus is the bench's Wikidata sample (`82f65ace…`), built by that `windows`.
-- **One arm, the default plan:** `mibz2-default33`, at 10 threads, with `--settle 0.25`
+### The harness and the probe core
+
+- **The harness is the one that produced the two modes, unchanged.**
+  - **The executables:** the decoder and harness are the run-fed leader's second attempt's own,
+    not rebuilt. They are `ab` and `windows` from its archived bundle
+    `run-fed-leader/20261109T201013Z.tar.gz`, on the `evidence` branch at `65ab4b95`.
+  - **Their digests:** the bundle is checked by its SHA-256 (`7e36a5a7…`), and the two
+    executables by theirs (`ce1eea53…`, `cf5d74a6…`). They are bench 3.6.0, built at
+    `1af3888a` and frozen at `2fab12ca`.
+  - **The corpus:** the bench's Wikidata sample (`82f65ace…`), built by that `windows`.
+- **One arm, the default plan:** `mibz2-default33`, at 10 threads, with `--settle 0.25`,
   `--sysfs-state` and the default busy gate. This is the run-fed leader recipe's configuration,
-  and its gaps between runs.
-- **Through `ARM@EXE`:** ab spawns `bench/two_modes_probe.c`'s `child`, not itself, for each run.
-  The wrapper:
+  with its gaps between runs.
+- **Through `ARM@EXE`:** for each run, ab spawns `bench/two_modes_probe.c`'s `child`, not
+  itself. The wrapper:
   1. reads the counters;
-  2. starts the probes;
-  3. forks, sets the decoder's CPU mask in the child, and execs ab's own `child mibz2-default33
-     10 FILE`;
-  4. reads the mask back (`sched_getaffinity` and `Cpus_allowed_list`);
+  2. starts the probes in a probed slot;
+  3. forks, sets the decoder's CPU mask in the child, and execs ab's own
+     `child mibz2-default33 10 FILE`;
+  4. reads the mask back, through `sched_getaffinity` and `Cpus_allowed_list`;
   5. samples until the decode exits, and reaps it with `wait4`;
   6. reads the counters again and appends one JSON line.
 
-  The decode's stdout and stderr are ab's pipe and terminal, untouched, so ab records the child's
-  own line (wall, CPU, output, hash) exactly as before.
-- **The probe core:** CPU 9 and its sibling 19, the last physical core. Both are taken out of the
-  decoder's mask, which is `0-8,10-18`. ab itself runs on that mask (`taskset`), so nothing of
-  ours shares the probe core but the probes.
-- **First, the sustained block, with no probe** (the Pathfinder's addition, #145 6756520552).
-  - **What runs:** one process, ab's own `child mibz2-default33 10`, unpinned on all 20 CPUs,
-    decodes the corpus concatenated 50 times (593 MB in, 10.5 GB out, hashed and dropped) end
-    to end. The concatenation is kept beside the attempt's directory, never in the bundle. It
-    goes through the probe binary's `sustained` mode, which neither pins nor spins.
-  - **What it records:** the input's progress (`/proc/PID/io` `rchar`) every 10 ms, summed
-    into 100 ms windows; every CPU's `scaling_cur_freq` and the child's `AnonHugePages` every
-    100 ms; the counters before and after, and its `wait4` rusage.
-  - **Why the input:** the harness keeps no output file, and its decoder reads its input in
-    chunks (about 4 MB each) a bounded distance ahead of what it has decoded, so the input's
-    progress tracks throughput at chunk resolution. A 100 ms window holds one or two chunks on
-    the i9, so the signature is read on 500 ms blocks.
-  - **Its deadline:** 300 s (TERM, then KILL 10 s after). The block is expected to take 8 to
-    16 s. A block that times out or fails is recorded and makes the attempt INVALID; it is never
-    retried.
-  - **A fixed 60 s rest follows** before pass 1, so the probe passes don't start in the block's
-    heat.
-  - **No harness change:** the block runs the archived `ab child` unchanged; a multi-stream
-    input is what the corpus already is (twelve streams one after another).
-- **Pass 1, 60 runs:** P-idle on CPU 9, on a fixed schedule, `PPN` repeating from the first run.
-  Two runs of every three are probed; the third runs with no probe, with the same mask and the
-  same readings. That makes 40 probed runs and 20 unprobed, interleaved.
-- **Pass 2, 60 runs:** P-idle on CPU 9 beside P-sib on CPU 19, in every run. This prices what a
-  busy sibling costs the first probe, the calibration H2 needs.
-- **Before anything runs, a preflight.** It is read-only, each collector bounded (TERM at 30 s,
-  KILL 5 s after), and each collector's exit status is archived in `preflight/exits.txt`. The
-  attempt is REFUSED and archived unless every point below holds:
+  The decode's stdout and stderr are ab's pipe and terminal, untouched.
+- **The probe core:** CPU 9 and its sibling 19, the last physical core.
+  - **The decoder's mask:** `0-8,10-18`. Both probe CPUs are out of it in every run, probed or
+    not. This is an explicit intervention: the decoder has nine physical cores, not ten.
+  - **ab's own placement:** ab itself runs on the decoder's mask (`taskset`).
+
+### The preflight and the sustained block
+
+- **First, the preflight.** It is read-only, each collector bounded (TERM at 30 s, KILL 5 s
+  after), and each collector's exit status is archived in `preflight/exits.txt`. The attempt is
+  REFUSED and archived unless every point below holds:
   - every collector exited 0;
   - the host is the i9-10900K with 20 CPUs and 10 cores, and an unlimited CPU quota;
   - its declared settings hold: intel_pstate, `powersave`, `balance_performance`, turbo on;
@@ -76,193 +70,304 @@ Everything below, the class threshold and the analysis included, is fixed before
   - CPUs 9 and 19 are one core's two siblings, and that core is the last;
   - the core and package throttle counts are readable on every CPU;
   - the probe's 0.2 s selftest pinned itself to CPU 9 and read that back.
-- **One attempt; no retry to pass.** It takes about seven minutes, the corpus build aside.
+- **Then the sustained block, with no probe** (the Pathfinder's addition, #145 6756520552).
+  - **What runs:** one process, ab's own `child mibz2-default33 10`, unpinned on all 20 CPUs,
+    decodes the corpus repeated 50 times end to end: 593 MB in, 10.5 GB out, hashed and dropped.
+  - **The input, by content:** `two_modes.py concat` makes the input, or validates a cached
+    one, by digest.
+    - **The check:** the SHA-256 of the corpus streamed 50 times, computed from the corpus
+      alone, must equal the file's own. A cache with any other digest is rebuilt; size is never
+      the test.
+    - **The record** (`sustained/concat.json`, and the identity): the corpus's digest and size,
+      the copy count, the method (the corpus's bytes repeated, nothing between), and the
+      expected and actual digests. The file is digested again after the block, to show it was
+      unchanged.
+    - **Where it lives:** beside the attempt's directory, never in the bundle. The record is
+      enough to rebuild it.
+  - **What it records:**
+    - the input consumption (`/proc/PID/io` `rchar`) every 10 ms;
+    - every CPU's `scaling_cur_freq` and the child's `AnonHugePages`, every 100 ms;
+    - the counters before and after, and its `wait4` rusage.
+  - **Its deadline:** 300 s, then KILL 10 s later. It is expected to take 8 to 16 s.
+  - **A fixed 60 s rest follows** before pass 1. It is a fixed rest, not a demonstrated reset
+    of the thermal or power state.
+  - **No harness change:** the archived `ab child` runs unchanged. A multi-stream input is what
+    the corpus already is: twelve streams one after another.
+
+### The passes and their bounds
+
+- **Pass 1, 60 runs:** P-idle on CPU 9 in 40 runs, and no probe in 20, with the same mask and
+  the same readings.
+  - **The order:** drawn once, before data, from the fixed seed `20261110` (`SCHEDULE_SEED`).
+    It is
+    `NPPPPPPPNPNPPPPNPPPPPPPPNPNPPPPPPNNNPPPNPNPNPNPNPPNNPNNNPPNP`, recorded in the identity.
+  - **Why randomised:** a randomised order cannot alias a periodic nuisance, as the earlier
+    fixed PPN could.
+  - **What the contrast is:** the probed against unprobed fast/slow mix is a randomised but
+    **descriptive** contrast. Persistence between runs widens its uncertainty beyond
+    independent draws, and carryover from a probed run to the next is not excluded.
+- **Pass 2, 60 runs:** P-idle on CPU 9 beside P-sib on CPU 19, in every run.
+  - **What it is:** it follows pass 1 rather than being interleaved with it, so pass 2 against
+    pass 1 is a **serial contrast**. It mixes the sibling's load with whatever changed in
+    between.
+  - **What it is not:** it is not a causal price of a busy sibling.
+- **Every stage that can wait is bounded** by `bench/bounded.py` (taken unchanged from #317).
+  The command runs in a process group of its own, which gets TERM at the deadline and KILL
+  after the grace, its descendants included. The deadlines are `DEADLINES` in `two_modes.py`:
+
+  | stage | deadline + grace |
+  |---|--:|
+  | fetches | 120 + 10 s |
+  | corpus build | 900 + 10 s |
+  | the concatenation | 600 + 10 s |
+  | the sustained block | 300 + 10 s |
+  | each pass, the archived ab's busy-gate waits included | 900 + 10 s |
+  | the judge | 300 + 10 s |
+
+  - **A timeout (124)** is recorded, never retried, and makes the attempt INVALID. No pass
+    follows a pass that did not complete.
+  - **A group that cannot be emptied (125)** stops the attempt there.
+  - **The whole attempt:** its bound is the sum, about 50 minutes. It usually takes about 7.
+- **One attempt; no retry to pass.**
 
 ## 2. The readings
 
-Each run has the following readings. All are unprivileged; none is a performance counter.
+Each probed run has the readings below. All are unprivileged; none is a performance counter.
+Each is read only where its coverage holds, and is otherwise **missing**, never imputed.
 
-- **P-idle's rate (and P-sib's in pass 2).**
-  - **The loop:** a pinned thread runs one dependent register add an iteration, and every 2²⁰
-    iterations stores `rdtsc` into a preallocated ring of 2¹⁷ samples. The ring is touched
-    before the start and never dropped.
-  - **The rate:** 2²⁰ over the ticks between samples, times the TSC's rate (calibrated against
-    `CLOCK_MONOTONIC` in each run), in Giter/s.
-  - **The run's reading:** the median over the samples inside the decode, from the exec to the
-    reaping, and the medians of its first and last thirds.
-- **Placement.** Every 2 ms, each of the decoder's tasks' state and last CPU (field 39 of
-  `/proc/PID/task/TID/stat`).
-  - **The decoder's threads:** those named `mibz2-*`.
-  - **The busy-sibling share:** the share of (sample, thread) pairs in which the thread's
-    sibling CPU also held another decoder thread. The same share among running threads only is
-    reported beside it.
-- **The clock during the run.** Every CPU's `scaling_cur_freq` every 10 ms. The reading is the
-  median over the CPUs the decoder's threads were seen on, by sample, then over the run, and over
-  its first and last thirds.
-  - **A supporting reading, not a decisive one.** On this driver the value is a ratio of
-    counters that both stop when a core halts, and it is only as fresh as its last update.
+- **P-idle's progress (and P-sib's in pass 2).**
+  - **The loop:** a pinned thread runs one dependent register add an iteration. Every 2²⁰
+    iterations it stores `rdtsc` into a preallocated ring of 2¹⁷ samples, touched before the
+    start and never dropped. It also records its own CPU time.
+  - **The reading: elapsed-time progress.** Take every sampling interval whose two ends lie
+    inside the decode (exec to reaping). The reading is their iterations over the TSC span from
+    the first such sample to the last, in Giter/s.
+  - **Coverage:** that span over the decode window must be at least 0.90, or the run has no
+    progress reading.
+    - A pause inside the decode lowers the progress.
+    - A pause across the decode's start or end lowers the coverage.
+  - **Recorded beside it:** the gaps at each boundary, the longest interval, the first and
+    last thirds' progress, and the median interval rate. The median interval rate is an
+    **active-loop summary only**: one long pause does not move it.
+  - **What the TSC cannot say:** why progress stopped (descheduled, halted or slowed). The
+    probe's CPU-time share is recorded so that descheduling can be told apart.
+- **Placement, as a running proxy.** Every 2 ms, each of the decoder's tasks' state and last CPU
+  (fields 3 and 39 of `/proc/PID/task/TID/stat`). The decoder's threads are those named
+  `mibz2-*`.
+  - **The reading:** the share of observations of a **running** (R) decoder thread in which
+    another decoder thread on its sibling CPU was also seen running in the same sample.
+  - **Why only running threads:** field 39 is the CPU last run on, so a sleeping thread's last
+    CPU is not occupancy.
+  - **Its limits:** the task files are read one after another, not as one snapshot. The share
+    is an asynchronous proxy for simultaneous occupancy, not proof of contention.
+  - **Coverage:** at least 20 running observations a run.
+  - **Reported only:** the earlier last-CPU coincidence among all tasks.
+- **The clock (supporting).** Every CPU's `scaling_cur_freq`, every 10 ms.
+  - **The reading:** at each frequency reading, the median over the CPUs where the placement
+    sample nearest it (within 2 ms) saw a running decoder thread. It is not the union of every
+    CPU the run ever visited.
+  - **Coverage:** at least 3 aligned readings a run.
+  - **Supporting, not decisive:** intel_pstate's `scaling_cur_freq` is an average over the
+    kernel's recent updates, not an instantaneous clock. It does not establish whether the
+    cores share one clock.
 - **Before and after each run:**
-  - every file under each CPU's `thermal_throttle` (the core and package throttle counts and
-    times, and the power-limit counts where the kernel has them);
-  - `thp_*`, `pgfault`, `pgmajfault` and `compact_*` from `/proc/vmstat`.
-- **The child's own figures:** its `wait4` rusage (minflt, majflt, utime, stime, maxrss and the
-  context switches), and its `AnonHugePages` from `/proc/PID/smaps_rollup` every 10 ms (the
-  last and largest values).
-- **Once (`preflight/static.json`):**
-  - the transparent huge page settings (`enabled`, `defrag` and the rest);
-  - every file of the RAPL zones under `/sys/class/powercap/intel-rapl*`, each with its error
-    where it is not readable;
+  - every file under each CPU's `thermal_throttle`: the core and package throttle counts and
+    times, and the power-limit counts where the kernel has them;
+  - `thp_*`, `pgfault`, `pgmajfault` and `compact_*` from `/proc/vmstat`. These are
+    system-wide, reported and never attributed to the child.
+- **The child's own figures:**
+  - its `wait4` rusage: minflt, majflt, utime, stime, maxrss and the context switches;
+  - its `AnonHugePages` from `/proc/PID/smaps_rollup` every 10 ms, the last and largest value.
+- **Once** (`preflight/static.json`):
+  - the THP settings;
+  - every RAPL zone file, with its error where it is not readable;
   - intel_pstate's settings;
-  - the topology, the TSC flags and the thermal_throttle files of every CPU;
+  - each CPU's topology, TSC flags and thermal_throttle files;
   - the kernel.
-- **ab's own record, as always:** its sysfs snapshots before and after each run, from
-  `--sysfs-state`.
+- **ab's own record, as always:** its sysfs snapshots before and after each run.
 
 ## 3. The analysis (`bench/two_modes.py judge`)
 
-### The admission
+### The admission contract
 
-The attempt is INVALID, with its reasons, unless all of these hold:
-- each pass has 60 runs and one probe record a run;
-- each record comes from the archived executables, at 10 threads, ended in success, with the
-  registered output (209,700,196 bytes, hash `a8830caee5c511a6`);
-- each probe record falls inside its run's spawn and exit;
-- each probe record is its slot of the fixed schedule;
-- the decoder's mask was read back as `0-8,10-18` in every run;
-- each probe was pinned and read back to its CPU, with nothing dropped;
-- each probed run has at least 10 P-idle samples inside its decode.
+**One contract, `admission_problems`, enforced by the judge on every judgement**, the recipe's
+own and any replay. The attempt is INVALID, with its reasons, unless every clause holds.
+Missing or contradictory evidence is never admitted.
+
+- **Provenance:**
+  - a frozen commit, the inputs matching it, and every source's digest at the head equal to
+    its digest at the freeze;
+  - the harness bundle's commit, path and digest;
+  - a clean tree before and after.
+- **Gated stages:** the preflight exited 0 with a PASS judgement, the sustained block exited 0,
+  and each pass's `ab run` exited 0.
+- **Identities before and after:**
+  - `ab`, `windows`, the probe and the corpus are each unchanged across the run;
+  - `ab` and `windows` are the archived executables, and the corpus is the registered one;
+  - the sustained input is the corpus repeated (expected digest = actual digest = digest
+    after);
+  - the sustained decode emitted 50 corpora's bytes.
+- **The registered configuration:** the arm, threads, settle, sysfs state, rounds, layout,
+  passes, schedule and seed.
+- **Every run:**
+  - 60 runs a pass, each from the archived executables, at 10 threads, ended in success, with
+    the registered output (209,700,196 bytes, hash `a8830caee5c511a6`);
+  - the runs ordered, each run's spawn after the run before's exit;
+  - one probe record a run, inside its run's spawn and exit, its timestamps ordered (start,
+    fork, exec, exit, end), and in its slot of the schedule;
+  - the decoder's mask read back as `0-8,10-18`;
+  - each probe pinned and read back to its CPU, with nothing dropped.
+
+In a DRY check the registered-host and freeze clauses are waived. The consistency clauses are
+not.
 
 ### The classes
 
-- **The class threshold:** a run is fast when the child's own wall is below **0.21 s**, else
-  slow. It is the threshold of the reading that found the modes, fixed before this data.
-- **The table:** each reading's median by class, over pass 1's **probed** runs.
-- **The share of runs in which a count rose:**
-  - a throttle count, core or package;
-  - a power-limit count;
-  - `thp_fault_alloc`.
-- **Fewer than 5 runs in either class:** the outcome is **ONE MODE**, the table is described,
-  and no column is matched.
+- **The class threshold:** a run is **fast** when the child's own wall is below **0.21 s**, else
+  slow. This is the descriptive separator that found the modes, fixed before this data.
+- **What is classed:** pass 1's **probed** runs.
+- **The floor:** `MIN_CLASS = 5` is a display floor, not a precision guarantee. With fewer probed
+  runs than that in either class, the outcome is **INSUFFICIENT CLASS SUPPORT**. The rows are
+  described and no signature is assessed. Four fast and 36 slow runs do not show one mode.
+- **The table:** each reading's median by class, with each row's number of observations in each
+  class.
 
 ### Each row's value
 
-Each row compares the slow class with the fast class.
+Each row compares the slow class with the fast class. The cutoffs are **unvalidated descriptive
+thresholds**, fixed before data and reported beside the raw values.
 
 | row | values (the rules) |
 |---|---|
-| P-idle's rate | **full**: slow ÷ fast ≥ 0.95; **half**: 0.40 to 0.65; **reduced**: 0.65 to 0.95; **below half**: under 0.40; **rising**: below 0.95 while the slow runs' first-third ÷ last-third median is under 0.85 |
+| P-idle's elapsed-time progress | **full**: slow ÷ fast ≥ 0.95; **half**: 0.40 to 0.65; **reduced**: 0.65 to 0.95; **below half**: under 0.40; **rising**: below 0.95 while the slow runs' first-third ÷ last-third median is under 0.85 |
 | the decoder CPUs' clock (supporting) | **full**: slow ÷ fast ≥ 0.95; else **low, then rising** if the slow runs' first-third ÷ last-third median is under 0.85; else **reduced** |
-| busy sibling | **most**: slow share ≥ 0.50 and 0.15 above fast; **same**: within 0.10; else **between** |
+| running threads with a running sibling (proxy) | **most**: slow share ≥ 0.50 and 0.15 above fast; **same**: within 0.10; else **between** |
 | throttle counts rise, power-limit counts rise | **yes**: rose in ≥ 50% of slow runs and 25 points more than in fast runs; **no**: less than 10 points more; else **between** |
-| `thp_fault_alloc` in fast runs only | **yes**: rose in 50 points more of fast runs than slow; **no**: within 25 points; else **between** |
+| the child's huge pages in fast runs only | **yes**: `AnonHugePages` > 0 in 50 points more of fast runs than slow; **no**: within 25 points; else **between** |
 | system time's share grows | **yes**: slow minus fast ≥ 0.05; **no**: under 0.02; else **between** |
 
-A row whose readings are missing (a kernel without power-limit counts, say) is **unread**. It
-admits any column, and the outcome names it.
+- **Unread:** a row with no observations.
+- **Insufficient:** a row with fewer than 5 observations in either class.
 
-### The columns
+### The signatures and their decisive rows
 
-The Pathfinder's table, with one change, explained after it:
+Decisive rows are marked **(d)**.
 
 | row | H1 ramp | H2 packing | H3 stop-clock | H4 pages | H5 power |
 |---|---|---|---|---|---|
-| P-idle's rate in slow runs | full **or rising** | full | half | full | reduced |
-| the decoder CPUs' clock (supporting) | low, then rising | full | full | full | reduced |
-| threads with a busy sibling | same | most | same | same | same |
-| throttle counts rise | no | no | yes | no | no |
-| power-limit counts rise | no | no | no | no | yes |
-| `thp_fault_alloc` in fast runs only | no | no | no | yes | no |
-| system time's share grows | no | no | no | yes | no |
+| P-idle's progress in slow runs | full or rising | full | half **(d)** | full | reduced **(d)** |
+| the decoder CPUs' clock (supporting) | low, then rising **(d)** | full | full | full | reduced **(d)** |
+| running busy sibling (proxy) | same | most **(d)** | same | same | same |
+| throttle counts rise | no | no | yes **(d)** | no | no |
+| power-limit counts rise | no | no | no | no | yes **(d)** |
+| the child's huge pages in fast runs only | no | no | no | yes **(d)** | no |
+| system time's share grows | no | no | no | yes **(d)** | no |
 
-**The change: H1 admits P-idle "rising".** The probe cannot be kept spinning between runs. ab's
-gate before each run waits while any CPU is more than half busy (`others_busy`, hard-coded), so
-a probe spinning in the gaps would stall the run. P-idle therefore starts with each run, a
-moment before the decode. If the i9's cores share one clock, as client parts of this generation
-are thought to, P-idle ramps with the decoder's cores under H1. The Pathfinder's "full"
-prediction assumed a probe that was already warm.
+- **H1 admits P-idle "full or rising".** P-idle starts cold with each run. The archived ab waits
+  before each run while any CPU is more than half busy, so a probe spinning between runs would
+  stall it. Prewarming would also be a new intervention.
+  - If the cores share one clock, P-idle ramps with the decoder's under H1. This is a
+    conditional compatibility prediction.
+  - An isolated idle core need not track a decoder core.
+
+**Each signature's status:**
+- **contradicted:** a read row's value is one it does not predict;
+- **untestable:** none of its decisive rows is read;
+- **compatible in part:** every read row is admitted, and some decisive rows are missing (named);
+- **compatible:** every read row is admitted, and every decisive row is read.
+
+**Missing evidence never makes a signature compatible.** With the clock unread, H1 is
+untestable, not matched.
 
 ### The outcome
 
 The outcome is the first line of `judgement.txt` and `outcome.txt`:
-- **MATCH Hk:** exactly one column admits every readable row. Any unread rows are named.
-- **AMBIGUOUS:** more than one column admits them.
-- **SIXTH MECHANISM:** no column admits them. **This is reported as such**, with each row's
-  observed value as the description of what the mode is. That is still more than the record
-  holds.
-- **ONE MODE:** fewer than 5 probed runs in a class.
-- **Resting on the supporting reading:** a match is marked so when its column would also admit
-  a slow mode differing from the fast in nothing but the clock row. That is H1's case: only the
-  clock row separates it from no difference at all.
+- **COMPATIBLE WITH Hk[, Hj]:** with any part-compatibility and the untestable signatures
+  named. When H1 is among them, it is said to rest on the supporting clock reading: its only
+  decisive row.
+  - **Without power-limit counts, H5 can be at most compatible in part.** Low clock with reduced
+    idle-core progress describes a low-progress state compatible with power limiting; it does
+    not identify it.
+  - Equally, a throttle count that did not rise does not by itself prove that no transient
+    event limited throughput.
+- **NO REGISTERED SIGNATURE MATCHES:** with each row's observed value. A mechanism outside the
+  five, a joint one, or measurement error would show here. None of them is inferred from it.
+- **INSUFFICIENT MEASUREMENT SUPPORT:** no signature's decisive rows were read.
+- **INSUFFICIENT CLASS SUPPORT:** fewer than 5 probed runs in a class.
+
+### The sustained block: input consumption, error-aware
+
+The block is reported as **raw input consumption**: bytes read in each 100 ms window. It is
+classified only by a rule whose error bound comes from the chunking.
+- **Input only:** no compression ratio converts it, and no burst threshold classifies it.
+- **The windows:** 1 s windows from 1 s (after the read-ahead fill) to the last input read, each
+  window's rate in input bytes/s. At least 4 windows are needed.
+- **The error bound:** `e = (2C + 2 × 0.01 s × rate) / 1 s`, where C is the largest chunk read
+  after the fill. A window's arrived bytes differ from the bytes consumed in it by less than one
+  chunk at its edges plus one chunk of refill jitter, and the 10 ms sampling adds two samples'
+  worth.
+- **A change:** a difference between consecutive windows beyond 2e.
+
+| shape | rule |
+|---|---|
+| **constant within error** | the windows' range ≤ 2e |
+| **alternating beyond error** | at least two reversals among the changes |
+| **a sustained change, down (up)** | every change in one direction, or no step change but last and first differ beyond 2e |
+| **varies beyond error** | otherwise |
+| **too short** | fewer than 4 windows (the DRY check's case) |
+
+- **Validated on synthetic trajectories** with 4 MiB chunks and four chunk phases each:
+  - constant rates from 0.68 to 1.3 GB/s decoded-equivalent all read **constant within error**,
+    including 0.98 and 1.00, which the earlier rule called alternating;
+  - a 4 s alternation reads **alternating**;
+  - a drop from 1.3 to 0.68 reads **a sustained change, down**.
+- **Kept separately:** the end-to-end decoded bytes over the block's span.
+- **The shape is reported beside the table and enters no signature.**
+- **Follow-up predictions, not conclusions:**
+  - a slow mode that holds or recurs under continuous load would challenge a purely
+    short-process account;
+  - a constant trajectory would not, by itself, validate one.
 
 ### Reported beside it, never matched
 
-- **The probe's own effect:** pass 1's fast count in probed runs (out of 40) and in unprobed
-  runs (out of 20), with the unprobed runs' own table.
-- **A busy sibling's price:** P-idle's rate in pass 2 over pass 1, in all runs and by class,
-  and P-sib's rate over P-idle's in pass 2.
-- **Pass 2's own table and rows.**
-- **Persistence:** the run order as F and s, fast-after-fast against the fast share.
-- **The gaps:** each pass's gap from ab's exit to its next spawn, against the source bundle's
-  0.256 to 0.264 s.
+- **The probe's effect, descriptively:** pass 1's fast count in probed runs (out of 40) and in
+  unprobed runs (out of 20), with the unprobed runs' own table.
+- **The serial contrast:** P-idle's progress in pass 2 over pass 1, in all runs and by class,
+  and P-sib's over P-idle's in pass 2.
+- **Pass 2's own table, rows and signatures.**
+- **System-wide `thp_fault_alloc` and `thp_fault_fallback`.**
+- **The last-CPU sibling coincidence.**
+- **Persistence:** the run order, and how often a fast run follows a fast one against the fast
+  share.
+- **The gaps:** each pass's gap from ab's exit to its next spawn.
 
-### The sustained block's signature
+### What an outcome would suggest: follow-up predictions, not remedies
 
-The block is read on 500 ms blocks from 1 s to its last input read (the first second holds the
-decoder's initial read-ahead). Each block's rate is decoded-equivalent: input bytes × 209,700,196
-÷ 11,854,933, over 0.5 s. A block is **fast** when that rate reaches the class threshold's, one
-corpus in 0.21 s (0.999 GB/s).
-
-| signature | rule | predicted by |
-|---|---|---|
-| **fast and steady** | at least 80% of blocks fast | H1 ramp, H2 placement, H4 first faults: a long process ramps, spreads and faults once |
-| **settles low** | at most 20% fast | H3 stop-clock, H5 power limit: continuous load holds the slow mode |
-| **alternates** | between, with at least 2 switches | H3, H5: throttling or the limit cycling |
-| **mixed** | between, with fewer switches | none |
-| **too short** | fewer than 4 blocks | none (the DRY check's case) |
-
-The signature is reported beside the table and never changes the table's match. The outcome
-line appends it, with whether it is what the matched column predicts: for example "sustained
-block: fast and steady (consistent with H1)", or "(not what H3 predicts)".
-
-### What each outcome means
-
-- **H1 or H4: a property of short, fresh processes.** The i9's burst figures say nothing about
-  long decodes. Timed registrations on this harness need back-to-back decodes in one process,
-  or a warm-up.
-- **H3 or H5: the machine under load.** Long decodes live in the slow mode, and work per byte
-  under a power budget is what sets throughput.
-- **H2: placement.** Owning it (one decoder thread a physical core) is the remedy, the design
-  property in §5 of the design.
-- **A sixth mechanism, AMBIGUOUS or ONE MODE:** stated as observed. ONE MODE would itself
-  say the probe's presence, or the day, changed the mix. The unprobed block reads the first.
+- **Compatible with H1 or H4:** a test of back-to-back decodes in one process, against fresh
+  processes. H4-compatible observations do not make the effect only a short-process one:
+  long-running processes can allocate and fault again, and huge pages' TLB benefit endures
+  beyond the first faults.
+- **Compatible with H3 or H5:** a test of throughput under sustained load, with the
+  sustained block's trajectory as one prediction it must meet.
+- **Compatible with H2:** a controlled placement intervention. The proxy cannot prove contention.
+- **No registered signature, or insufficient support:** reported as observed. The raw records
+  choose what to measure next.
 
 ## 4. Limits
 
 - **The probe changes the machine it measures.**
-  - **Capacity:** the decoder has 9 physical cores here, not 10. The busy-sibling row compares
-    classes within this run, never with other bundles.
-  - **Power:** a spinning core adds package power. Under H5 the probe itself may shift the mix,
-    and the unprobed block is there to show it.
-  - **Progress, not frequency:** P-idle measures a core's progress, its clock times its duty,
-    whatever lowers either.
+  - **Capacity:** the decoder has 9 physical cores here, not 10.
+  - **Power:** a spinning core adds package power.
+  - **Progress, not frequency:** P-idle measures a core's progress.
   - **No comparison:** none of this run's walls is comparable with another bundle's.
-- **The probe cannot be warm before a run** (§3, the H1 change).
-- **The sustained block reads progress at the input.** It reads the input's progress at about
-  4 MB resolution, a bounded read-ahead in front of the output, and nothing about the last
-  read-ahead's worth. It runs unpinned on all ten cores, unlike the passes. Its signature is a
-  consistency check on the table, not a column.
-- **The observers cost something.** The wrapper's sampler wakes every 2 ms on the decoder's
-  CPUs, reading about a dozen stat files, and every 10 ms reads 20 sysfs files and the child's
-  `smaps_rollup`. Each freq sweep's own duration is recorded.
-- **ab's view of the child changes.** Its census now watches the wrapper, not the decoder, so
-  `observed_threads` names the wrapper's threads. The decoder's own `ran_threads`, and the 2 ms
-  placement, are what to read.
-- **What the inputs can't decide:**
-  - `scaling_cur_freq` is supporting only;
-  - the throttle and power-limit counts are whatever the kernel exposes, and an unread row is
-    named;
-  - `/proc/vmstat` is system-wide;
-  - a probe on an idle core cannot see a mechanism that acts per core.
+- **The observers cost something.**
+  - **What they read:** the wrapper's sampler wakes every 2 ms on the decoder's CPUs and reads
+    about a dozen stat files. Every 10 ms it also reads 20 sysfs files and the child's
+    `smaps_rollup`. Each frequency sweep's own duration is recorded.
+  - **ab's census:** it now names the wrapper's threads. The 2 ms placement and the decoder's
+    `ran_threads` replace it.
+- **The sustained block reads input consumption** at about 4 MB resolution, behind a bounded
+  read-ahead, unpinned on all ten cores, unlike the passes.
 - **One machine, one day.**
 - **Narrowed claims from the design's §1** (the Optimiser's REVIEW 6756418444):
   - equal end-of-run clocks do not exclude events inside a run;
@@ -270,23 +375,29 @@ block: fast and steady (consistent with H1)", or "(not what H3 predicts)".
 
   This run assumes neither.
 
-## 5. The local check (DRY, untimed, never evidence)
+## 5. The local checks (DRY, untimed, never evidence)
 
-`just bench-two-modes 1 CORPUS` on a 4-CPU machine without SMT:
-- **The preflight:** REFUSED, as it must be there, recorded, and the check went on.
-- **The sustained block:** three corpora, untimed; its signature is "too short" by
-  construction.
-- **The passes:** pass 1 ran three runs through the probe on the machine's last CPU, on the
-  PPN schedule; pass 2 was skipped, since there is no sibling.
-- **The judge:** labelled the attempt DRY, and refuses it as INVALID without `--dry`.
-- **The bundle** was made.
+### Before the revision (head `3588d35d`)
 
-The record is the pull request's.
+`just bench-two-modes 1 CORPUS` ran on a busy 4-CPU machine without SMT. **Pass 1 did not run
+inside the recipe.**
+- The preflight was REFUSED there, recorded, and the check went on.
+- The sustained block ran three corpora.
+- The archived ab's gate then waited about 45 minutes for another agent's job to free a CPU,
+  and the pass was stopped by hand.
+- Three direct invocations of the wrapper, outside the recipe, exercised the pass's plumbing.
+
+That gap is why every pass now has a deadline.
+
+### After the revision
+
+The full in-recipe DRY check, pass 1 included, is recorded in the pull request. Like any DRY
+check, it proves plumbing only, never discrimination on the target.
 
 ## Reproduce
 
 ```text
 just bench-two-modes 1 [CORPUS]      # the recipe's own check, anywhere: DRY
-python3 bench/test_two_modes.py      # the analysis on synthetic attempts, each column's signature
+python3 bench/test_two_modes.py      # the analysis on synthetic attempts and the counterexamples
 cc -O2 -Wall -Wextra -pthread -o /tmp/p bench/two_modes_probe.c && /tmp/p selftest 0 200
 ```

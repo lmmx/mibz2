@@ -16,7 +16,8 @@
  *       TWO_MODES_OUT. It exits as the decode did (its code, or its signal re-raised).
  *       Environment: TWO_MODES_AB (the harness's executable), TWO_MODES_OUT (the JSONL file),
  *       TWO_MODES_PASS (1 or 2), TWO_MODES_IDLE_CPU (P-idle's CPU), TWO_MODES_SIB_CPU (P-sib's
- *       CPU, or empty: no P-sib), TWO_MODES_DECODER_CPUS (the decoder's CPU list).
+ *       CPU, or empty: no P-sib), TWO_MODES_DECODER_CPUS (the decoder's CPU list),
+ *       TWO_MODES_SCHEDULE (each run's slot, P probed or N not, by its index in the pass).
  *
  *   two_modes_probe sustained FILE
  *       The sustained block, before the probe passes: ab's own child decodes FILE (the corpus
@@ -58,7 +59,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define SCHEMA "two_modes/probe/1"
+#define SCHEMA "two_modes/probe/2"
 #define ITERS_LOG2 20
 #define RING (1u << 17) /* 2^17 samples: about 26 s at 0.2 ms a sample */
 #define PLACE_MS 2
@@ -196,6 +197,7 @@ typedef struct {
     char readback[256];
     int err;
     int started; /* the thread was created (and must be joined) */
+    long long cpu_ns; /* the thread's own CPU time from its first sample to its last */
 } Probe;
 
 static void *probe_main(void *arg) {
@@ -225,6 +227,8 @@ static void *probe_main(void *arg) {
     atomic_store(&p->ready, 1);
     uint64_t seq = 0;
     uint64_t x = 0;
+    struct timespec c0, c1;
+    int have_c0 = 0;
     while (!atomic_load_explicit(&p->stop, memory_order_relaxed)) {
         uint64_t n = 1ull << ITERS_LOG2;
         /* one dependent add an iteration, a counted loop: registers only */
@@ -236,9 +240,17 @@ static void *probe_main(void *arg) {
                          :
                          : "cc");
         p->ring[seq & (RING - 1)] = rdtsc();
+        if (!have_c0)
+            have_c0 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &c0) == 0;
         seq++;
         atomic_store_explicit(&p->seq, seq, memory_order_release);
     }
+    /* (its CPU time over its sampled span: whether it was descheduled, apart from how fast it
+     * ran while scheduled; the TSC alone cannot say why progress stopped) */
+    if (have_c0 && clock_gettime(CLOCK_THREAD_CPUTIME_ID, &c1) == 0)
+        p->cpu_ns = (long long)(c1.tv_sec - c0.tv_sec) * 1000000000LL + (c1.tv_nsec - c0.tv_nsec);
+    else
+        p->cpu_ns = -1;
     return NULL;
 }
 
@@ -284,6 +296,12 @@ static void probe_json(FILE *f, Probe *p) {
     fprintf(f, ",\"pinned\":%s,\"err\":%d,\"iters_per_sample\":%llu,\"n\":%llu,\"dropped\":%llu",
             atomic_load(&p->ready) > 0 ? "true" : "false", p->err, 1ull << ITERS_LOG2,
             (unsigned long long)n, (unsigned long long)first);
+    if (p->cpu_ns >= 0)
+        fprintf(f, ",\"cpu_ns\":%lld", p->cpu_ns);
+    else
+        fprintf(f, ",\"cpu_ns\":null");
+    if (kept)
+        fprintf(f, ",\"last_tsc\":%llu", (unsigned long long)p->ring[(n - 1) & (RING - 1)]);
     if (kept) {
         uint64_t prev = p->ring[first & (RING - 1)];
         fprintf(f, ",\"first_tsc\":%llu,\"dtsc\":[", (unsigned long long)prev);

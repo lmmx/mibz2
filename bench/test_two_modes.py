@@ -1,12 +1,20 @@
-"""bench/two_modes.py on synthetic i9-shaped attempts: each mechanism's signature (§2 of
-docs/journal/2026-11-10-two-modes.md) is matched to its column and no other, a signature none
-predicts is reported as a sixth mechanism, one mode alone matches nothing, a broken attempt is
-INVALID, and the preflight refuses each defect in its collectors' exit statuses.
+"""bench/two_modes.py on synthetic i9-shaped attempts.
+
+- Each registered signature's synthetic data is called compatible with it and no other.
+- Data no signature predicts is reported as no registered signature matching.
+- Too few runs in a class, or missing decisive evidence, never yields a compatible signature.
+- A broken or contradictory attempt is INVALID.
+- The preflight refuses each defect in its collectors' exit statuses.
+
+The Researcher's five counterexamples (REVISE, #145 6757560564) are tests here, each failing
+on the source it reviewed (3588d35d) and passing now: the progress estimator, sleeping
+siblings, quantised constant input, missing evidence, contradictory identities.
 
     python3 bench/test_two_modes.py
 """
 
-import copy
+import contextlib
+import io
 import json
 import os
 import subprocess
@@ -22,12 +30,13 @@ import two_modes as tm  # noqa: E402
 HZ = 3.7e9  # the TSC's rate
 ITERS = 1 << 20
 SIBS = {c: {c % 10, c % 10 + 10} for c in range(20)}
-DEC = tm.cpu_list(tm.DECODER_CPUS)
 NAMES = (
     ["mibz2-0", "mibz2-1", "mibz2-2", "mibz2-scan", "mibz2-read"]
     + [f"mibz2-coop-p{1 + i % 2}" for i in range(6)]
     + ["sampler", "ab"]
 )
+H = "0123456789abcdef" * 4  # a 64-hex digest
+H40 = "0123456789" * 4
 
 
 def static():
@@ -71,6 +80,18 @@ def counters(core=0, pkg=0, pl=0, thp=0, power=True):
     return {"thermal_throttle": tt, "vmstat": {"thp_fault_alloc": thp, "thp_fault_fallback": 0}}
 
 
+def ring(first, until, rate_of, lo, hi):
+    """Sample times from `first` until past `until`, each interval's rate (Giter/s) given by
+    rate_of(fraction of [lo, hi])"""
+    t, dt = first, []
+    while t < until:
+        frac = min(max((t - lo) / (hi - lo), 0), 1)
+        d = int(ITERS * HZ / (rate_of(frac) * 1e9))
+        dt.append(d)
+        t += d
+    return dt
+
+
 def probe_record(i, wall, sig, fast, pass_no, t_spawn):
     """One probe.jsonl line for a run of `wall` seconds under signature `sig`"""
     power = not sig.endswith("+nopower")
@@ -82,26 +103,13 @@ def probe_record(i, wall, sig, fast, pass_no, t_spawn):
 
     def p_rate(frac):  # Giter/s at a fraction of the decode
         base = 4.8
-        if slow and sig == "H3":
+        if slow and sig in ("H3", "sixth"):
             return base * 0.5
         if slow and sig == "H5":
             return base * 0.8
         if slow and sig == "H1shared":
             return base * (0.3 + 0.7 * frac)
-        if slow and sig == "sixth":
-            return base * 0.5
         return base
-
-    def ring(rate_of):
-        t = exec_tsc - 2_000_000
-        first = t
-        dt = []
-        while t < exit_tsc + 2_000_000:
-            frac = min(max((t - exec_tsc) / (exit_tsc - exec_tsc), 0), 1)
-            d = int(ITERS * HZ / (rate_of(frac) * 1e9))
-            dt.append(d)
-            t += d
-        return first, dt
 
     sched = tm.SCHEDULE[pass_no]
     probed = sched[i % len(sched)] == "P"
@@ -109,7 +117,14 @@ def probe_record(i, wall, sig, fast, pass_no, t_spawn):
     want = [("P-idle", tm.IDLE_CPU)] + ([("P-sib", tm.SIB_CPU)] if pass_no == 2 else [])
     for name, cpu in want if probed else []:
         rate = p_rate if name == "P-idle" else (lambda f: 4.0)
-        first, dt = ring(rate if pass_no == 1 else (lambda f, r=rate: r(f) * 0.9))
+        first = exec_tsc - 2_000_000
+        dt = ring(
+            first,
+            exit_tsc + 2_000_000,
+            rate if pass_no == 1 else (lambda f, r=rate: r(f) * 0.9),
+            exec_tsc,
+            exit_tsc,
+        )
         probes.append(
             {
                 "name": name,
@@ -120,15 +135,17 @@ def probe_record(i, wall, sig, fast, pass_no, t_spawn):
                 "iters_per_sample": ITERS,
                 "n": len(dt) + 1,
                 "dropped": 0,
+                "cpu_ns": int(sum(dt) / HZ * 1e9),
+                "last_tsc": first + sum(dt),
                 "first_tsc": first,
                 "dtsc": dt,
             }
         )
-    # placement: 13 tasks; spread over distinct cores, or packed onto siblings under H2's
-    # slow runs
+    # placement: 13 tasks, running; spread over distinct cores (four pairs share a core on
+    # the nine), or packed onto siblings under H2's slow runs
     comm = {str(1000 + k): n for k, n in enumerate(NAMES)}
     packed = slow and sig == "H2"
-    spread = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]  # 9 cores: a few pairs share
+    spread = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]
     pack = [0, 10, 1, 11, 2, 12, 3, 13, 4, 14, 5, 15, 6]
     places = pack if packed else spread
     samples = []
@@ -139,15 +156,12 @@ def probe_record(i, wall, sig, fast, pass_no, t_spawn):
     for t in range(0, us, 10000):
         frac = t / us
         ghz = 4.9
-        if slow and sig == "H1":
-            ghz = 1.2 + 3.7 * frac
-        if slow and sig == "H1shared":
+        if slow and sig in ("H1", "H1shared"):
             ghz = 1.2 + 3.7 * frac
         if slow and sig == "H5":
             ghz = 3.9
         freq.append([t, 300, [int(ghz * 1e6)] * 20])
     rise = {"core": 1 if slow and sig == "H3" else 0, "pl": 1 if slow and sig == "H5" else 0}
-    thp = 40 if fast and sig == "H4" else 0
     stime = 0.30 if slow and sig == "H4" else 0.05
     return {
         "schema": tm.PROBE_SCHEMA,
@@ -159,7 +173,7 @@ def probe_record(i, wall, sig, fast, pass_no, t_spawn):
         "threads": 10,
         "t_unix_ns_start": t_spawn + 1_000_000,
         "before": counters(5, 5, 2, 100, power),
-        "after": counters(5 + rise["core"], 5, 2 + rise["pl"], 100 + thp, power),
+        "after": counters(5 + rise["core"], 5, 2 + rise["pl"], 100, power),
         "pid": 4242 + i,
         "exec_errno": 0,
         "decoder_cpus": tm.DECODER_CPUS,
@@ -224,21 +238,24 @@ def pattern(n, fast_runs):
     return [k in fast for k in range(n)]
 
 
-def sustained(rates, chunk=4_200_000, copies=tm.SUSTAINED_COPIES):
-    """A sustained block's record: its input read in chunks, at a decoded-equivalent rate
-    (GB/s) that `rates(t)` gives at each time t"""
+RATIO = tm.WORKLOAD["out"] / tm.CORPUS_BYTES
+
+
+def sustained(rates, chunk=4 * 1024 * 1024, copies=tm.SUSTAINED_COPIES, phase=0.0):
+    """A sustained block's record: its input read in chunks (three ahead), consumed at a
+    decoded-equivalent rate (GB/s) that `rates(t)` gives at each time t, the first refill
+    `phase` of a chunk along"""
     total = copies * tm.CORPUS_BYTES
-    ratio = tm.WORKLOAD["out"] / tm.CORPUS_BYTES
-    samples, read, due, t = [], 3 * chunk, 0.0, 0.0
+    samples, read, due, t = [], 3 * chunk, phase * chunk, 0.0
     while read < total:
-        due += rates(t) * 1e9 / ratio * 0.01
+        due += rates(t) * 1e9 / RATIO * 0.01
         while due >= chunk and read < total:
             read += chunk
             due -= chunk
         samples.append([int(t * 1e6), min(read, total)])
         t += 0.01
     rec = {
-        "schema": "two_modes/sustained/1",
+        "schema": tm.SUSTAINED_SCHEMA,
         "span_s": t + 1.0,
         "io": {"every_ms": 10, "samples": samples},
         "smaps": {"anon_huge_kb_max": 0},
@@ -251,9 +268,55 @@ def sustained(rates, chunk=4_200_000, copies=tm.SUSTAINED_COPIES):
 
 SUSTAINED = {
     "steady": lambda t: 1.3,
-    "low": lambda t: 0.68 if t > 0.5 else 1.3,
+    "low": lambda t: 0.68 if t > 4 else 1.3,
     "alternating": lambda t: 1.3 if int(t / 2) % 2 == 0 else 0.68,
 }
+
+
+def identity(n=tm.RUNS, dry=False):
+    cat = {
+        "schema": tm.CONCAT_SCHEMA,
+        "copies": tm.SUSTAINED_COPIES if not dry else tm.DRY_SUSTAINED_COPIES,
+        "corpus_sha256": tm.CORPUS_SHA256,
+        "expected_sha256": H,
+        "sha256": H,
+        "ok": True,
+    }
+    return {
+        "schema": tm.IDENTITY_SCHEMA,
+        "dry": dry,
+        "head": H40,
+        "frozen": H40,
+        "inputs_match_frozen": True,
+        "tree_clean_before": True,
+        "tree_clean_after": True,
+        "sources": {p: {"head": H, "frozen": H} for p in tm.SOURCES},
+        "harness": {
+            "evidence_commit": tm.SOURCE["evidence_commit"],
+            "path": tm.SOURCE["path"],
+            "bundle_sha256": tm.SOURCE["sha256"],
+        },
+        "ab_sha256": tm.SOURCE["ab_sha256"],
+        "ab_sha256_after": tm.SOURCE["ab_sha256"],
+        "windows_sha256": tm.SOURCE["windows_sha256"],
+        "windows_sha256_after": tm.SOURCE["windows_sha256"],
+        "probe_sha256": H,
+        "probe_sha256_after": H,
+        "corpus_sha256": tm.CORPUS_SHA256,
+        "corpus_sha256_after": tm.CORPUS_SHA256,
+        "arm": tm.ARM,
+        "threads": 10,
+        "rounds": n,
+        "settle": 0.25,
+        "sysfs_state": True,
+        "layout": {"idle": tm.IDLE_CPU, "sib": tm.SIB_CPU, "decoder": tm.DECODER_CPUS},
+        "schedule": {str(k): v for k, v in tm.SCHEDULE.items()},
+        "schedule_seed": tm.SCHEDULE_SEED,
+        "preflight_exit": 0,
+        "passes": [1, 2],
+        "pass_exits": {"1": 0, "2": 0},
+        "sustained": {"copies": cat["copies"], "exit": 0, "concat": cat, "sha256_after": H},
+    }
 
 
 def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady"):
@@ -266,17 +329,10 @@ def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady"):
     os.makedirs(os.path.join(d, "preflight"), exist_ok=True)
     with open(os.path.join(d, "preflight", "static.json"), "w") as f:
         json.dump(static(), f)
-    ident = {
-        "schema": "two_modes/identity/1",
-        "dry": False,
-        "rounds": n,
-        "layout": {"idle": tm.IDLE_CPU, "sib": tm.SIB_CPU, "decoder": tm.DECODER_CPUS},
-        "ab_sha256": tm.SOURCE["ab_sha256"],
-        "sustained_copies": tm.SUSTAINED_COPIES,
-        "windows_sha256": tm.SOURCE["windows_sha256"],
-    }
+    with open(os.path.join(d, "preflight.json"), "w") as f:
+        json.dump({"verdict": "PASS"}, f)
     with open(os.path.join(d, "identity.json"), "w") as f:
-        json.dump(ident, f)
+        json.dump(identity(n), f)
     fast = pattern(n, fast_runs)
     for pass_no in (1, 2):
         os.makedirs(os.path.join(d, f"pass{pass_no}"), exist_ok=True)
@@ -295,30 +351,49 @@ def attempt(d, sig, fast_runs=18, n=tm.RUNS, mutate=None, sus="steady"):
             f.writelines(json.dumps(p) + "\n" for p in probes)
 
 
-def judged(sig, **kw):
+def dump(obj, path):
+    with open(path, "w") as f:
+        json.dump(obj, f)
+
+
+def load(path):
+    with open(path) as f:
+        return json.load(f)
+
+
+def quiet(f, *a):
+    with contextlib.redirect_stdout(io.StringIO()):
+        return f(*a)
+
+
+def judged(sig, edit=None, **kw):
     with tempfile.TemporaryDirectory() as d:
         attempt(d, sig, **kw)
-        rc = tm.main(["judge", d])
+        if edit:
+            p = os.path.join(d, "identity.json")
+            ident = load(p)
+            edit(ident)
+            dump(ident, p)
+        rc = quiet(tm.main, ["judge", d])
         with open(os.path.join(d, "judgement.json")) as f:
             j = json.load(f)
         assert os.path.exists(os.path.join(d, "judgement.md"))
     return rc, j
 
 
-class Columns(unittest.TestCase):
-    def check(self, sig, want):
-        rc, j = judged(sig)
+class Signatures(unittest.TestCase):
+    def check(self, sig, want, **kw):
+        rc, j = judged(sig, **kw)
         self.assertEqual(rc, 0, j["outcome"])
         self.assertEqual(j["label"], "VALID")
-        self.assertTrue(j["result"].startswith(f"MATCH {want} "), j["result"])
+        self.assertTrue(j["result"].startswith(f"COMPATIBLE WITH {want}"), j["result"])
+        self.assertFalse(j["result"].startswith(f"COMPATIBLE WITH {want},"), j["result"])
         return j
 
     def test_h1_ramp(self):
         j = self.check("H1", "H1")
-        # (H1 differs from the others by the clock row: the outcome says it rests on it)
-        self.assertIn("resting on the supporting reading", j["result"])
         self.assertEqual(j["pass1"]["rows"]["clock"], "low, then rising")
-        self.assertEqual(j["pass1"]["rows"]["p_idle"], "full")
+        self.assertIn("H1 rests on the supporting clock reading", j["result"])
 
     def test_h1_ramp_on_a_shared_clock(self):
         j = self.check("H1shared", "H1")
@@ -332,127 +407,216 @@ class Columns(unittest.TestCase):
         j = self.check("H3", "H3")
         self.assertEqual(j["pass1"]["rows"]["p_idle"], "half")
         self.assertEqual(j["pass1"]["rows"]["throttle"], "yes")
-        self.assertNotIn("resting on", j["result"])
+        self.assertNotIn("rests on", j["result"])
 
     def test_h4_pages(self):
         j = self.check("H4", "H4")
         self.assertEqual(j["pass1"]["rows"]["thp"], "yes")
-        self.assertEqual(j["pass1"]["rows"]["sys_share"], "yes")
 
     def test_h5_power(self):
         j = self.check("H5", "H5")
-        self.assertEqual(j["pass1"]["rows"]["power_limit"], "yes")
+        self.assertEqual(j["pass1"]["signatures"]["H5"]["status"], "compatible")
 
-    def test_power_limit_unread_is_said(self):
-        # (an unread row admits any column, and the outcome names it)
-        j = self.check("H3+nopower", "H3")
-        self.assertEqual(j["pass1"]["rows"]["power_limit"], tm.UNREAD)
-        self.assertIn("(power-limit counts rise unread)", j["result"])
+    def test_h5_without_power_counts_is_only_in_part(self):
+        j = self.check("H5+nopower", "H5")
+        self.assertEqual(j["pass1"]["signatures"]["H5"]["status"], "compatible in part")
+        self.assertIn("H5 in part: power-limit counts rise missing", j["result"])
 
     def test_no_difference_matches_nothing(self):
         rc, j = judged("none")
-        self.assertTrue(j["result"].startswith("SIXTH MECHANISM"), j["result"])
+        self.assertTrue(j["result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"])
 
-    def test_dry_without_a_sibling(self):
-        def m(p, r, q):
-            for x in q:
-                x["probes"] = x["probes"][:1]
-                x["decoder_cpus"] = x["decoder_cpus_readback"] = x["decoder_cpus_status"] = "0,1,2"
-                for y in x["probes"]:
-                    y["cpu"] = 3
-                    y["readback"] = "3"
+    def test_a_signature_none_predicts(self):
+        rc, j = judged("sixth")  # P-idle half with no throttle count rising
+        self.assertTrue(j["result"].startswith("NO REGISTERED SIGNATURE MATCHES"), j["result"])
+        self.assertIn("P-idle's elapsed-time progress in slow runs: half", j["result"])
+        self.assertNotIn("SIXTH", j["result"])
 
-        with tempfile.TemporaryDirectory() as d:
-            attempt(d, "H3", n=3, fast_runs=1, mutate=m)
-            with open(os.path.join(d, "identity.json")) as f:
-                ident = json.load(f)
-            ident.update(
-                dry=True,
-                rounds=3,
-                sustained_copies=tm.SUSTAINED_COPIES,
-                layout={"idle": 3, "sib": None, "decoder": "0,1,2"},
-            )
-            with open(os.path.join(d, "identity.json"), "w") as f:
-                json.dump(ident, f)
-            self.assertEqual(tm.main(["judge", d, "--dry"]), 0)
-            with open(os.path.join(d, "judgement.json")) as f:
-                j = json.load(f)
-            self.assertEqual(j["label"], "DRY")
-            self.assertTrue(j["outcome"].startswith("DRY (not evidence): ONE MODE"), j["outcome"])
-            self.assertIsNone(j["pass2"])
-            # and without --dry the same attempt is INVALID, never VALID
-            self.assertEqual(tm.main(["judge", d]), 2)
-
-    def test_sixth_mechanism(self):
-        rc, j = judged("sixth")  # P-idle half with no throttle count rising: no column
-        self.assertEqual(rc, 0)
-        self.assertTrue(j["result"].startswith("SIXTH MECHANISM"), j["result"])
-        self.assertIn("P-idle's rate in slow runs: half", j["result"])
-
-    def test_one_mode(self):
+    def test_insufficient_class_support(self):
         rc, j = judged("H3", fast_runs=0)
-        self.assertTrue(j["result"].startswith("ONE MODE: 0 fast and 40 slow"), j["result"])
+        self.assertTrue(j["result"].startswith("INSUFFICIENT CLASS SUPPORT: 0 fast"), j["result"])
+        self.assertNotIn("ONE MODE", j["result"])
+
+    def test_four_fast_runs_are_not_one_mode(self):
+        rc, j = judged("H3", fast_runs=6)  # (four of them probed, at most)
+        self.assertLess(j["pass1"]["table"]["fast"]["n"], 5)
+        self.assertTrue(j["result"].startswith("INSUFFICIENT CLASS SUPPORT"), j["result"])
 
     def test_threshold_is_fixed(self):
         self.assertEqual(tm.THRESHOLD_S, 0.21)
-        r = tm.readings(run_record(0, 0.2099, 0), probe_record(0, 0.2099, "H3", True, 1, 0), SIBS)
+        r = tm.readings(run_record(0, 0.2099, 0), probe_record(0, 0.2099, "H3", True, 2, 0), SIBS)
         self.assertTrue(r["fast"])
-        r = tm.readings(run_record(0, 0.21, 0), probe_record(0, 0.21, "H3", False, 1, 0), SIBS)
+        r = tm.readings(run_record(0, 0.21, 0), probe_record(0, 0.21, "H3", False, 2, 0), SIBS)
         self.assertFalse(r["fast"])
 
-    def test_sustained_block_agrees(self):
-        rc, j = judged("H1")
-        self.assertEqual(j["sustained"]["signature"], "fast and steady")
-        self.assertIn("sustained block: fast and steady (consistent with H1)", j["result"])
-
-    def test_sustained_block_settles_low(self):
-        rc, j = judged("H3", sus="low")
-        self.assertEqual(j["sustained"]["signature"], "settles low")
-        self.assertIn("(consistent with H3)", j["result"])
-        rc, j = judged("H1", sus="low")
-        self.assertIn("settles low (not what H1 predicts)", j["result"])
-
-    def test_sustained_block_alternates(self):
-        rc, j = judged("H5", sus="alternating")
-        self.assertEqual(j["sustained"]["signature"], "alternates")
-        self.assertGreaterEqual(j["sustained"]["switches"], 2)
-
-    def test_sustained_block_missing_is_invalid(self):
-        def m(p, r, q):
-            pass
-
-        with tempfile.TemporaryDirectory() as d:
-            attempt(d, "H3", mutate=m)
-            os.remove(os.path.join(d, "sustained", "sustained.json"))
-            self.assertEqual(tm.main(["judge", d]), 2)
-            with open(os.path.join(d, "judgement.json")) as f:
-                self.assertIn("the sustained block", json.load(f)["outcome"])
-
-    def test_the_probes_own_effect_on_the_mix(self):
+    def test_serial_contrast_reported(self):
         rc, j = judged("H3")
-        self.assertEqual(j["pass1"]["mix"], {"probed": [12, 40], "unprobed": [6, 20]})
-        self.assertEqual(j["pass2"]["mix"]["unprobed"], [0, 0])
-        self.assertEqual(j["pass1"]["unprobed_table"]["fast"]["n"], 6)
-        self.assertIsNone(j["pass1"]["unprobed_table"]["fast"]["p_idle"])
-
-    def test_schedule_is_checked(self):
-        def m(p, r, q):
-            if p == 1:
-                q[2]["probed"] = True
-
-        rc, j = judged("H3", mutate=m)
-        self.assertEqual(rc, 2)
-        self.assertIn("not slot 2 of 'PPN'", j["outcome"])
-
-    def test_sibling_cost_reported(self):
-        rc, j = judged("H3")
-        self.assertAlmostEqual(j["sibling_cost"]["fast runs"], 0.9, places=2)
+        self.assertAlmostEqual(j["serial_contrast"]["fast runs"], 0.9, places=2)
 
     def test_persistence(self):
         rc, j = judged("H3")
         p = j["pass1"]["persistence"]
         self.assertEqual(p["sequence"][:9], "FFFssssss")
         self.assertEqual(p["fast_after_fast"], 12)
+
+    def test_the_probes_own_effect_on_the_mix(self):
+        rc, j = judged("H3")
+        m = j["pass1"]["mix"]
+        self.assertEqual((m["probed"][1], m["unprobed"][1]), (40, 20))
+        self.assertEqual(m["probed"][0] + m["unprobed"][0], 18)
+        self.assertIsNone(j["pass1"]["unprobed_table"]["fast"]["p_idle"])
+
+    def test_the_schedule_is_randomised_and_fixed(self):
+        s = tm.SCHEDULE[1]
+        self.assertEqual((len(s), s.count("P")), (60, 40))
+        self.assertEqual(s, tm._schedule(tm.SCHEDULE_SEED))
+        # a period-three nuisance (fast, fast, slow) no longer aligns with the slots
+        fast = [i % 3 != 2 for i in range(60)]
+        p = sum(f for f, c in zip(fast, s) if c == "P")
+        n = sum(f for f, c in zip(fast, s) if c == "N")
+        self.assertNotEqual((p, n), (40, 0))
+
+    def test_schedule_is_checked(self):
+        def m(p, r, q):
+            if p == 1:
+                q[2]["probed"] = not q[2]["probed"]
+
+        rc, j = judged("H3", mutate=m)
+        self.assertEqual(rc, 2)
+        self.assertIn("not slot 2 of the registered schedule", j["outcome"])
+
+
+class Counterexamples(unittest.TestCase):
+    """The Researcher's five, each failing on 3588d35d and passing now"""
+
+    def test_1_a_pause_halves_the_progress(self):
+        k, n, base = ITERS, 700, 808277
+        normal = [base] * n
+        stalled = normal.copy()
+        stalled[n // 2] += n * base
+        for ds, want in ((normal, 4.8), (stalled, 2.4)):
+            p = {"first_tsc": 0, "iters_per_sample": k, "dtsc": ds}
+            r = tm.progress(p, 0, sum(ds), HZ)
+            self.assertAlmostEqual(r["progress"], want, places=2)
+            self.assertAlmostEqual(r["active_median"], 4.8, places=2)
+        self.assertAlmostEqual(tm.progress(p, 0, sum(stalled), HZ)["longest_ms"], 153.1, places=0)
+
+    def test_1_a_pause_across_a_boundary_lowers_coverage(self):
+        k, base = ITERS, 808277
+        ds = [base] * 700
+        ds[0] += 300 * base  # a pause straddling the window's start
+        p = {"first_tsc": 0, "iters_per_sample": k, "dtsc": ds}
+        r = tm.progress(p, 100 * base, sum(ds), HZ)
+        self.assertLess(r["coverage"], tm.MIN_COVERAGE)
+        self.assertGreater(r["gap_start_ms"], 40)
+
+    def test_1_a_pause_inside_a_run_lowers_its_progress(self):
+        probe = probe_record(0, 0.305, "H3", False, 2, 0)
+        p = probe["probes"][0]
+        p["dtsc"][len(p["dtsc"]) // 3] += int(0.05 * HZ)  # (a 50 ms pause inside)
+        r = tm.readings(run_record(0, 0.305, 0), probe, SIBS)
+        self.assertGreaterEqual(r["p_idle_coverage"], tm.MIN_COVERAGE)
+        self.assertLess(r["p_idle"], 0.9 * r["p_idle_active"])
+        self.assertGreater(r["p_idle_longest_ms"], 49)
+
+    def test_1_an_uncovered_run_has_no_progress_reading(self):
+        probe = probe_record(0, 0.305, "H3", False, 2, 0)
+        p = probe["probes"][0]
+        p["dtsc"][len(p["dtsc"]) // 3] += int(0.25 * HZ)  # (a pause past the run's end)
+        r = tm.readings(run_record(0, 0.305, 0), probe, SIBS)
+        self.assertLess(r["p_idle_coverage"], tm.MIN_COVERAGE)
+        self.assertIsNone(r["p_idle"])
+
+    def test_2_sleeping_siblings_are_not_busy(self):
+        def sleeping(p, recs, probes):
+            for x in probes:
+                for _, tasks in x["placement"]["samples"]:
+                    for task in tasks:
+                        if task[1] >= 10:
+                            task[2] = "S"
+
+        rc, j = judged("H2", mutate=sleeping)
+        self.assertFalse(j["result"].startswith("COMPATIBLE WITH H2"), j["result"])
+        self.assertEqual(j["pass1"]["table"]["slow"]["sibling_running"], 0)
+        self.assertGreater(j["pass1"]["table"]["slow"]["sibling_last_cpu"], 0.9)
+        self.assertEqual(j["pass1"]["signatures"]["H2"]["status"], "contradicted")
+
+    def test_3_constant_input_is_constant_within_error(self):
+        for rate in (0.68, 0.98, 1.00, 1.01, 1.02, 1.05, 1.10, 1.3):
+            for phase in (0.0, 0.25, 0.5, 0.75):
+                rec, _ = sustained(lambda t, r=rate: r, phase=phase)
+                s = tm.sustained_reading(rec)
+                self.assertEqual(s["shape"], "constant within error", (rate, phase, s))
+
+    def test_3_alternating_and_settling_are_seen(self):
+        for phase in (0.0, 0.5):
+            rec, _ = sustained(SUSTAINED["alternating"], phase=phase)
+            self.assertEqual(tm.sustained_reading(rec)["shape"], "alternating beyond error")
+            rec, _ = sustained(SUSTAINED["low"], phase=phase)
+            self.assertEqual(tm.sustained_reading(rec)["shape"], "a sustained change, down")
+
+    def test_3_no_burst_threshold_or_ratio_classifies(self):
+        self.assertFalse(hasattr(tm, "FAST_RATE"))
+        rec, _ = sustained(lambda t: 1.0)
+        s = tm.sustained_reading(rec)
+        self.assertIn("windows_100ms_bytes", s)
+        self.assertNotIn("blocks_gbps", s)
+
+    def test_4_missing_decisive_evidence_is_not_a_match(self):
+        v = dict(tm.BASELINE)
+        v["clock"] = tm.UNREAD
+        o = tm.outcome({"fast": {"n": 20}, "slow": {"n": 20}}, v)
+        self.assertTrue(o.startswith("NO REGISTERED SIGNATURE MATCHES"), o)
+        self.assertIn("untestable: H1", o)
+        self.assertEqual(tm.signatures(v)["H1"]["status"], "untestable")
+
+    def test_4_every_decisive_row_missing(self):
+        v = {r: tm.UNREAD for r in tm.ROWS}
+        o = tm.outcome({"fast": {"n": 20}, "slow": {"n": 20}}, v)
+        self.assertTrue(o.startswith("INSUFFICIENT MEASUREMENT SUPPORT"), o)
+
+    def test_4_a_row_with_too_few_observations_is_insufficient(self):
+        def few(p, recs, probes):
+            for x in probes[5:]:
+                x["freq"]["samples"] = []
+
+        rc, j = judged("H1", mutate=few)
+        self.assertEqual(j["pass1"]["rows"]["clock"], tm.INSUFFICIENT)
+        self.assertEqual(j["pass1"]["signatures"]["H1"]["status"], "untestable")
+
+    def test_5_each_contradiction_alone_is_invalid(self):
+        edits = {
+            "frozen": lambda i: i.update(frozen=None),
+            "inputs": lambda i: i.update(inputs_match_frozen=False),
+            "preflight": lambda i: i.update(preflight_exit=1),
+            "sustained": lambda i: i["sustained"].update(exit=124),
+            "ab after": lambda i: i.update(ab_sha256_after="0" * 64),
+            "probe after": lambda i: i.update(probe_sha256_after="b" * 64),
+            "corpus after": lambda i: i.update(corpus_sha256_after="d" * 64),
+            "corpus": lambda i: i.update(corpus_sha256="c" * 64, corpus_sha256_after="c" * 64),
+            "source": lambda i: i["sources"]["bench/two_modes.py"].update(frozen="e" * 64),
+            "tree": lambda i: i.update(tree_clean_after=False),
+            "harness": lambda i: i["harness"].update(bundle_sha256="f" * 64),
+            "pass timeout": lambda i: i["pass_exits"].update({"2": 124}),
+            "concat": lambda i: i["sustained"]["concat"].update(sha256="9" * 64),
+            "concat after": lambda i: i["sustained"].update(sha256_after="8" * 64),
+            "seed": lambda i: i.update(schedule_seed=1),
+            "layout": lambda i: i.update(layout={"idle": 8, "sib": 18, "decoder": "0-7"}),
+        }
+        for what, edit in edits.items():
+            rc, j = judged("H3", edit=edit)
+            self.assertEqual((rc, j["label"]), (2, "INVALID"), what)
+            self.assertTrue(j["problems"], what)
+
+    def test_5_the_preflight_judgement_must_be_pass(self):
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3")
+            dump({"verdict": "REFUSED"}, os.path.join(d, "preflight.json"))
+            self.assertEqual(quiet(tm.main, ["judge", d]), 2)
+
+    def test_5_the_clean_attempt_is_valid(self):
+        rc, j = judged("H3")
+        self.assertEqual((rc, j["label"], j["problems"]), (0, "VALID", []))
 
 
 class Invalid(unittest.TestCase):
@@ -465,9 +629,12 @@ class Invalid(unittest.TestCase):
     def test_missing_probe_record(self):
         self.broken(lambda p, r, q: q.pop(), "probe records for 60 runs")
 
+    def first_probed(self, q):
+        return next(x for x in q if x["probes"])
+
     def test_probe_not_pinned(self):
         def m(p, r, q):
-            q[3]["probes"][0]["readback"] = "0-19"
+            self.first_probed(q)["probes"][0]["readback"] = "0-19"
 
         self.broken(m, "not pinned to CPU 9")
 
@@ -491,7 +658,7 @@ class Invalid(unittest.TestCase):
 
     def test_ring_dropped(self):
         def m(p, r, q):
-            q[1]["probes"][0]["dropped"] = 4
+            self.first_probed(q)["probes"][0]["dropped"] = 4
 
         self.broken(m, "dropped")
 
@@ -500,6 +667,21 @@ class Invalid(unittest.TestCase):
             q[2]["t_unix_ns_start"] = r[3]["t_spawn_unix_ns"] + 5
 
         self.broken(m, "does not fall inside the run")
+
+    def test_runs_out_of_order(self):
+        def m(p, r, q):
+            r[4]["t_spawn_unix_ns"], r[5]["t_spawn_unix_ns"] = (
+                r[5]["t_spawn_unix_ns"],
+                r[4]["t_spawn_unix_ns"],
+            )
+
+        self.broken(m, "are not ordered after the run before")
+
+    def test_probe_timestamps_out_of_order(self):
+        def m(p, r, q):
+            q[6]["tsc"]["exit"] = q[6]["tsc"]["exec"] - 1
+
+        self.broken(m, "its timestamps are not ordered")
 
     def test_no_pass2_psib(self):
         def m(p, r, q):
@@ -515,6 +697,57 @@ class Invalid(unittest.TestCase):
             del q[-1]
 
         self.broken(m, "59 runs recorded, not 60")
+
+    def test_sustained_block_missing(self):
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3")
+            os.remove(os.path.join(d, "sustained", "sustained.json"))
+            self.assertEqual(quiet(tm.main, ["judge", d]), 2)
+            with open(os.path.join(d, "judgement.json")) as f:
+                self.assertIn("the sustained block", json.load(f)["outcome"])
+
+    def test_dry_without_a_sibling(self):
+        def m(p, r, q):
+            for x in q:
+                x["probes"] = x["probes"][:1]
+                x["decoder_cpus"] = x["decoder_cpus_readback"] = x["decoder_cpus_status"] = "0,1,2"
+                for y in x["probes"]:
+                    y["cpu"] = 3
+                    y["readback"] = "3"
+
+        with tempfile.TemporaryDirectory() as d:
+            attempt(d, "H3", n=3, fast_runs=1, mutate=m)
+            rec, child = sustained(SUSTAINED["steady"], copies=tm.DRY_SUSTAINED_COPIES)
+            dump(rec, os.path.join(d, "sustained", "sustained.json"))
+            dump(child, os.path.join(d, "sustained", "child.json"))
+            ident = identity(3, dry=True)
+            ident.update(layout={"idle": 3, "sib": None, "decoder": "0,1,2"}, passes=[1])
+            ident["pass_exits"] = {"1": 0}
+            dump(ident, os.path.join(d, "identity.json"))
+            self.assertEqual(quiet(tm.main, ["judge", d, "--dry"]), 0)
+            j = load(os.path.join(d, "judgement.json"))
+            self.assertEqual(j["label"], "DRY")
+            self.assertTrue(
+                j["outcome"].startswith("DRY (not evidence): INSUFFICIENT"), j["outcome"]
+            )
+            self.assertIsNone(j["pass2"])
+            # and without --dry the same attempt is INVALID, never VALID
+            self.assertEqual(quiet(tm.main, ["judge", d]), 2)
+
+
+class Concat(unittest.TestCase):
+    def test_built_by_content_and_a_wrong_cache_rebuilt(self):
+        with tempfile.TemporaryDirectory() as d:
+            c, o = os.path.join(d, "c.bz2"), os.path.join(d, "x.bz2")
+            Path(c).write_bytes(b"abc" * 1000)
+            r = tm.concat(c, 3, o)
+            self.assertTrue(r["ok"] and not r["cached"])
+            self.assertEqual(Path(o).read_bytes(), b"abc" * 3000)
+            self.assertTrue(tm.concat(c, 3, o)["cached"])
+            Path(o).write_bytes(b"abd" * 3000)  # same size, wrong content
+            r = tm.concat(c, 3, o)
+            self.assertTrue(r["ok"] and not r["cached"])
+            self.assertEqual(Path(o).read_bytes(), b"abc" * 3000)
 
 
 GOOD_EXITS = "".join(f"{n}: exit 0\n" for n in tm.PREFLIGHT_COLLECTORS)
