@@ -1887,11 +1887,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6763772014,
-    "status": "finished",
-    "decision": "D093",
-    "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa",
-    "review_comment_id": 6763937701
+    "active_comment": 6763960879,
+    "status": "in progress",
+    "decision": "D094"
   },
   "duplicate_events": [
     {
@@ -3331,6 +3329,13 @@
       "work_commit": "71661b1ab04fb408624ac793e29a4970b4485caa",
       "review_comment_id": 6763937701,
       "complete_cursor_commit": "e773a92d02f2934fc56acd2f4669f47c230b3c40"
+    },
+    {
+      "comment_id": 6763960879,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D094",
+      "progress": "Migration verified; reviewing #316 replicated programme/condition 7 and combined diagnostic revision 3."
     }
   ],
   "migrated_from": {
