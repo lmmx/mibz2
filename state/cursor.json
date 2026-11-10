@@ -1108,7 +1108,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Source and archived variance audit complete: addressing equivalence limited to hot recurrence; side-effect subtraction and universal kill bands unsupported. Drafting priced revisions.",
+      "progress": "Full source/economic review and scoped decision-rule revisions complete; ledger and publication pending.",
       "report_path": "state/records/reviews/inbox-6760363087/report.md"
     }
   ],
