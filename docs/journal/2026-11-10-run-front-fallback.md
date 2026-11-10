@@ -216,6 +216,17 @@ Its "fixed" classes were therefore not independent of stack placement.
   The old "hh" merged D and H.
 - **Pairs:** for each (function, load region, store region, modulus), the top (store PC,
   load PC) pairs are kept, each counted once per load.
+
+  > **Correction (2026-11-10, Researcher REVIEW 6763607539, Guardian D092), recorded beside
+  > the original text, which stands as written.** "Each counted once per load" was false for
+  > the pair counts. The class counts in the tables below are in **loads** (a load counts once
+  > in a class however many stores match it), as described. The `PAIRS` figures (`n=`) are in
+  > **matching stored accesses**: one per matching store in the 48-store ring, so two stores
+  > at one PC matching one load give `n=2`. The line also shows only the five heaviest pairs
+  > of a class. No count or verdict below changes: the tables use the class counts only. The
+  > tool has since gained complete pair listings and directly counted named and outside-named
+  > populations, with the class lines unchanged (`agg3/agg3.c`, its header states the units;
+  > the STEPS diagnostic draft's revision 4 pins it).
 - **The tests** (`agg3/test_agg3.sh`, all passing, output in `test_agg3.out`):
   - D086's witness in both placements, and with the ring reordered: H←H = 1 every time;
   - a static-image store;

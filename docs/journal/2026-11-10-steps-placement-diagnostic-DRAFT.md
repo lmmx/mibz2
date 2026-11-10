@@ -1,15 +1,16 @@
 # DRAFT: does `mtf::STEPS`' 4 KiB placement against `counts` cost time? A bounded CI diagnostic
 
-**Status: DRAFT only, revision 3.** It takes in two REVISE reviews of revision 2 (41be4c27):
-- the Guardian's **D090** (REVIEW on #145, comment 6763239132; text at `state/decisions.md`
-  D090 and `state/evidence/D090-probes.json`, commit 1e7d39f3 on `team-state/guardian`);
-- the Researcher's **REVIEW 6763280324** (#145; report
-  `state/reports/steps-placement-delta-6763141779/report.md` and `probes.json`, commit
-  e5409a3f on `team-state/researcher`).
+**Status: DRAFT only, revision 4.** It takes in two REVISE reviews of revision 3 (20cfd070):
+- the Researcher's **REVIEW 6763607539** (#145; report
+  `state/reports/diagnostic-revisions-6763474717/report.md` with `probes.py` and
+  `probes.json`, commit ee1b1f80);
+- the Guardian's **D092** (REVIEW on #145, comment 6763626030; text at `state/decisions.md`
+  D092 and `state/evidence/D092/`, commit efa98787).
 
-The revision log (§8) maps each of their points to its change. Revision 2 took in the
-Researcher's REVIEW 6763089509, item 1 (`state/reports/integration-priorities-6762860125/01-steps.md`
-at 07b453d1).
+Revision 3 took in the Guardian's **D090** (comment 6763239132; commit 1e7d39f3) and the
+Researcher's **REVIEW 6763280324** (report at e5409a3f). The revision log (§8) maps each
+review's points to its change. Revision 2 took in the Researcher's REVIEW 6763089509, item 1
+(`state/reports/integration-priorities-6762860125/01-steps.md` at 07b453d1).
 
 D082 and D086 hold unchanged. Nothing here is built, run or registered.
 
@@ -19,7 +20,7 @@ D082 and D086 hold unchanged. Nothing here is built, run or registered.
   (D086, §5.5);
 - not an authorisation to build or time.
 
-It needs the Researcher's PROCEED and the Guardian's admission (D082, D086, D090) before
+It needs the Researcher's PROCEED and the Guardian's admission (D082, D086, D090, D092) before
 any of it is built or run. It follows the Optimiser's REVIEW 6761484547 (report
 `state/records/reviews/inbox-6761295924/report.md` at d7492ec3, §3).
 
@@ -36,7 +37,9 @@ harm (§5.4).
 
 **The pair in question.** #324's head raised `mtf_avx2`'s 4 KiB D←H candidates (`STEPS` row
 loads after `counts` stores) from 13,829 to 56,154 per 890,000-byte random block: an excess
-of 0.0476 a byte (`2026-11-10-run-front-fallback.md`, §"Corrected counts").
+of 0.0476 a byte (`2026-11-10-run-front-fallback.md`, §"Corrected counts"). Those two figures
+are `agg3`'s class counts, in **loads** (§3.3 states the unit and how this draft reproduces
+it).
 
 **The reference budget's source** (the Optimiser's arithmetic): explaining all of `random`'s
 1-thread harm would need about 0.51–0.56 ns a byte, which is 28–39 nominal cycles per excess
@@ -136,44 +139,84 @@ stage 2 revalidates on its own runner before timing.
    confound (§4).
 3. **The corrected pair contrast (`agg3`)** per arm, under lackey, over **the whole timed
    file:** `ab child mibz2 1 corpora/random.bz2`, all of CI's `random` (9 blocks, 8,000,000
-   output bytes), one lackey process an arm.
+   output bytes), one lackey process an arm, streamed into `agg3`.
    - **The tool:** `docs/journal/2026-11-10-run-front-fallback/agg3/agg3.c`, SHA-256
-     `1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0`, with its tests
-     `agg3/test_agg3.sh` (SHA-256 `bb2aa4aacdfcc74d5d0bcdd81b9bb627fa69a6a58ebfa492f39dc39ba034971f`)
+     `a0e6b030d4bd413140ae2edc1b0309da8b64618126269d3a6a0a0d932d190a63`, with its tests
+     `agg3/test_agg3.sh` (SHA-256 `4949ad570621d537fe41093c0e4e339a8f603544286c76d4977dfdac3c1dc7a0`)
      passing on the stage-1 runner before any trace is classified. Regions: S (stack,
      ≥ 0x1000000000), D (the static image, where `STEPS_BANK` lies), H (everything else,
-     where `counts`' page lies). Moduli 4096 and 1024.
-   - **The named counts:** `N_lo`, `N_hi` = in that arm, the sum over the named
-     (store PC, load PC) pairs of `agg3`'s pair count for (`mtf_avx2`, load region D, store
-     region H, modulus 4096). This is the definition #324's corrected counts used.
-     `c_diag = (N_lo − N_hi) / 8,000,000`, in candidates per output byte.
+     where `counts`' page lies). Moduli 4096 and 1024. The named pairs are passed as
+     `--named=SPC:LPC,...`: every (named store PC, named load PC) combination from §3.1, as
+     absolute addresses under lackey (symbol load address plus frozen offset).
+   - **The count units, frozen** (and stated in the tool's header and its `UNITS` line):
+     - **class counts are in loads.** A load by `mtf_avx2` counts once in a (load region,
+       store region, modulus) class if **any** of the last 48 stores of that store region
+       matches it modulo m at a different address, however many do;
+     - **named, outside and both are in loads, counted directly per load,** never by
+       subtraction. For a class: `named` = its loads matched by at least one store whose
+       (store PC, load PC) is a named pair; `outside` = its loads matched by at least one store
+       whose pair is not named; `both` = loads in both. The tool checks
+       `class = named + outside − both` and fails (exit 3, no `END` line) otherwise;
+     - **pair loads and pair weight** (per (store PC, load PC) pair) are reported, never used
+       by a gate here: pair loads = loads in which that pair matched; pair weight = matching
+       stored accesses (two stores at one PC matching one load give weight 2). The legacy
+       `PAIRS` line (the five heaviest pairs, by weight) is a summary only, never a count
+       source.
+   - **Output completeness.** `agg3` prints every pair of every class (`PAIR` lines), every
+     requested named pair in every class of `mtf_avx2` with explicit zeros (`NAMEDPAIR`), the
+     named/outside/both summary of every class (`NAMED`), and a final
+     `END agg3 complete lines=… pairs=… named=…` line. An output without that line, or a
+     nonzero exit, or a lackey exit other than 0, is an incomplete trace: stage 1 ends INVALID
+     (§6.3), with no re-trace.
+   - **The historical reference's unit.** 13,829 and 56,154 (§1) are the `mtf.mtf_avx2`
+     `mod 4K` `D<-H` class counts in `agg3/sc-master-rand-0.txt` and `agg3/sc-head-rand-0.txt`
+     (one 890,000-byte block): **loads**, over all store PCs. (56,154 − 13,829) / 890,000 =
+     0.047556 ≈ 0.0476. They are not sums of pair counts: the head's top two `PAIRS` weights
+     alone (30,666 + 30,587) exceed its class count. The revised tool's class lines are
+     unchanged from the pinned original (the nine original tests, and equal class and `PAIRS`
+     output on synthetic traces), so the reference is in this draft's class unit with no
+     conversion. Revision 3's statement that the named pair sum "is the definition #324's
+     corrected counts used" was wrong and is withdrawn.
+   - **The quantities,** per arm, all in loads, for (`mtf_avx2`, load region D, store region
+     H, modulus 4096):
+     - `K_lo`, `K_hi`: the class count (the reference's quantity);
+     - `N_lo`, `N_hi`: `named`; `O_lo`, `O_hi`: `outside`; `NO_lo`, `NO_hi`: `both`.
+
+     `c_diag = (K_lo − K_hi) / 8,000,000`, in affected loads per output byte: the same
+     quantity, unit and scope as the 0.0476 reference, on the whole file. `C = N_lo − N_hi`
+     is the named contrast.
    - **Exposure predicates** (integers; no rounding):
-     - **E1:** `N_lo ≥ 10 · N_hi`. With `N_hi = 0` it reduces to `N_lo ≥ 0`, so E2 carries
-       the nonzero requirement.
-     - **E2:** `c_diag ≥ 0.0476`, the first-block excess #324's head had. Then
+     - **E1:** `N_lo ≥ 10 · N_hi`. With `N_hi = 0` it reduces to `N_lo ≥ 0`, so E2 and S1
+       carry the nonzero requirement.
+     - **E2:** `K_lo − K_hi ≥ 380,800` (= 0.0476 × 8,000,000; equivalently
+       `c_diag ≥ 0.0476`), the first-block excess #324's head had. Then
        `Δ_req ≥ 0.51 ns/B` (§5.3).
    - **The held classes, 2% each.** For each function F in {`mtf_avx2`, `read_item`,
      `bwt::build`, `room_segments`}, each modulus m in {4096, 1024}, each load region l and
      store region s in {S, D, H} (9 classes), and F's load count per load region:
-     with x, y the two arms' counts, **pass iff |x − y| ≤ 0.02 · max(x, y)**. Both zero
-     passes; exactly one zero fails. **Exempt:** `mtf_avx2`'s D←H at 4096 (the intervention,
-     gated by E1–E2 and S1) and `mtf_avx2`'s D←S at 4096 and at 1024 (gated by S1). Every
-     other class is held, including `mtf_avx2`'s D←H at 1024 (`STEPS`' residues modulo 1024
-     do not move). That is 4 × 2 × 9 = 72 classes less 3 exempt, 69 class comparisons, plus
-     12 load-count comparisons; every one is reported.
-   - **S1, specificity, at named moduli.** With `C = N_lo − N_hi` (the named contrast at
-     4096), each of the following absolute count differences, on the same whole file,
-     compared **separately, not summed**, must be ≤ C:
+     with x, y the two arms' counts, **pass iff 50 · |x − y| ≤ max(x, y)** (exact integer form
+     of |x − y| ≤ 0.02 · max(x, y)). Both zero passes; exactly one zero fails. **Exempt:**
+     `mtf_avx2`'s D←H at 4096 (the intervention, gated by E1, E2 and S1) and `mtf_avx2`'s D←S
+     at 4096 and at 1024 (gated by S1). Every other class is held, including `mtf_avx2`'s D←H
+     at 1024 (`STEPS`' residues modulo 1024 do not move). That is 4 × 2 × 9 = 72 classes less
+     3 exempt, 69 class comparisons, plus 12 load-count comparisons; every one is reported.
+   - **S1, specificity, at named moduli.** Each of the following absolute count differences
+     (loads), on the same whole file, compared **separately, not summed**, must be ≤ C, and
+     C must be > 0:
      - `mtf_avx2` D←S at 4096: |`DS4_lo` − `DS4_hi`|;
      - `mtf_avx2` D←S at 1024: |`DS1_lo` − `DS1_hi`|;
-     - `mtf_avx2` D←H at 4096 outside the named pairs: |(D←H4_lo − N_lo) − (D←H4_hi − N_hi)|.
+     - `mtf_avx2` D←H at 4096 outside the named pairs: |`O_lo` − `O_hi`|, `outside` counted
+       directly. A load matched by both a named and an outside pair counts in `outside` (and
+       in `both`), so an outside pair that shares a load with a named one is not hidden.
 
-     Otherwise the intervention is not specific, and the run is invalid. Passing S1 bounds
-     counts, not latency: a smaller count change can carry a larger per-event cost, and
-     these gates do not bound opposing timing effects (§4, §5.4).
-   - **Stack classes do not transfer.** Lackey's stack is one environment's (valgrind's
-     deterministic layout), not the native per-process randomisation of either stage. The
-     S-region counts are a check on this trace, not a certificate for any native process.
+     `NO_lo`, `NO_hi` are reported. Otherwise the intervention is not specific, and the run is
+     invalid. Passing S1 bounds counts, not latency: a smaller count change can carry a
+     larger per-event cost, and these gates do not bound opposing timing effects (§4, §5.4).
+   - **What these counts are.** Every §3.3 count is a property of **the stage-1 lackey trace**
+     (its binary, input, valgrind's deterministic layout and its 48-store window), the
+     **stage-1 trace model**. They are not shown to equal the exposure of any native process
+     on either stage's runner (§6.2). The S-region counts in particular are one environment's
+     stack, not the native per-process randomisation.
    - **No search:** the offsets (0x100; `lo` against `hi`) are fixed here, before any data.
      If they fail, the design is revised and re-reviewed. Others are not tried until one
      passes.
@@ -194,8 +237,9 @@ follows it.
     (`rows` on the stack, the `ll` and symbol streams) share sets too.
   - **A positive result means net sensitivity to this placement, false dependences and set
     placement together**, with no quantitative bound on either's share or sign.
-  - CI's runners have exposed no PMU, so L1 misses can't be read. If a PMU is available
-    on the timing runner, its counts are recorded; none are assumed.
+  - CI's runners have exposed no PMU, so L1 misses can't be read. **No PMU counts are
+    collected in this experiment,** whatever the runner offers (fixed now: no `perf` wrapper
+    on any slot, no extra slots). Stage 2 records only whether a PMU is available.
 - **`STEPS` against the stack.** That relation (D←S) changes too. Its counts are measured
   (§3.3) and disclosed; their cost is not.
 - **The pointer load.** Shared code in both arms; its interaction with placement is not
@@ -287,14 +331,17 @@ If h > 0.10, the result is INCONCLUSIVE (precision not met), whatever Δ̂ is.
 `Δ_req = 0.51 ns/B × (c_diag / 0.0476)`, computed from stage 1's counts and written into the
 manifest before stage 2 is dispatched.
 - 0.51 is the lower of the Optimiser's two random-harm conversions.
-- `c_diag` is the named pairs' whole-file per-byte contrast on this binary (§3.3).
-- 0.0476 is #324's first-block excess on #324's head.
+- `c_diag` is the whole-file per-byte contrast of `mtf_avx2`'s D←H class count at 4096 on
+  this binary (§3.3), in loads per byte.
+- 0.0476 is #324's first-block excess on #324's head, in the same unit (loads per byte, class
+  count over all store PCs; §3.3 shows where it comes from).
 - E2 gives `Δ_req ≥ 0.51`.
 
 **The transport assumption, stated beside every comparison with Δ_req:** Δ_req is a
 **reference scaled under an assumed common linear marginal cost per counted candidate**,
-carried from #324's head (and its first block's count) to this binary and host. It is not
-a measured stall price. Whole-file exposure fixes this diagnostic's own denominator; it does
+carried from #324's head (and its first block's count) to this binary and host, and indexed
+to the stage-1 trace model (§3.3): `c_diag` is a lackey-trace count, not a native exposure.
+It is not a measured stall price. Whole-file exposure fixes this diagnostic's own denominator; it does
 not justify the transport. Candidates are not outstanding stores or stalls.
 
 ### 5.4 The frozen predicates and what they mean
@@ -310,7 +357,8 @@ Let L, U, h be as in §5.2 and Δ_req as in §5.3. Comparisons are on the unroun
 | **B≥** | U ≥ Δ_req | the reference budget is not excluded |
 | **B+** | L ≥ Δ_req | the interval lies at or above the reference budget |
 
-S+ and B− are independent and **both can hold** (D090: L = 0.20, U = 0.40, Δ_req = 0.51; the
+S+ and B− are separately reported logical predicates (not statistically independent: both
+are functions of one interval), and **both can hold** (D090: L = 0.20, U = 0.40, Δ_req = 0.51; the
 Researcher: a precise interval [0.04, 0.06]). Each is reported as true or false whenever V
 and P hold.
 
@@ -378,14 +426,26 @@ Build the diagnostic binary once; publish it as a workflow artifact with its SHA
   arm;
 - `agg3.c`'s and `test_agg3.sh`'s SHA-256 and the test output; valgrind's version; the gdb
   probe's SHA-256;
-- the named PCs (symbol, offset, width), the full lackey trace inventory (file names, line
-  counts, SHA-256), every `agg3` class count per arm, E1, E2, the 69 + 12 held comparisons,
-  S1, `c_diag` and Δ_req;
+- the named PCs (symbol, offset, width) and the absolute named pairs passed to `agg3`;
+- for each arm, `agg3`'s **complete output** (every class count, every `PAIR`, `NAMED` and
+  `NAMEDPAIR` line, the `UNITS` line and the `END` line), with lackey's and `agg3`'s exit
+  statuses and the trace stream's line count and SHA-256 (computed by `tee` into
+  `sha256sum` as the stream passes, so the raw trace need not be stored); E1, E2, the 69 + 12
+  held comparisons, S1 with `NO_lo` and `NO_hi`, `c_diag` and Δ_req;
 - the §3.2 address logs and the stack smoke samples; stage 1's CPU model, kernel and runner
   image;
 - every predicate's pass or fail, and the frozen block order (§5.2).
 
-Raw lackey traces are not kept (too large); their inventory and digests are.
+Raw lackey traces are not kept (too large). Everything the gates read is archived while the
+stream is available: `agg3`'s complete counters above, which are sufficient for every §3.3
+predicate. A digest identifies a trace; it cannot reconstruct a missing count, so no gate
+may read anything that is not in that archived output.
+
+**The manifest's digest is pinned outside the manifest.** Stage 1's last step computes the
+SHA-256 of the manifest file's exact bytes and writes it to the job summary and log; the
+manifest does not contain its own digest. Stage 2 is dispatched with three inputs: stage 1's
+run id, the manifest artifact's id, and that SHA-256, which the coordinator also records in
+the dispatch's LOG on #145 before dispatching.
 
 If any §3 predicate fails, the experiment ends INVALID at stage 1. Stage 2 is not dispatched.
 
@@ -393,21 +453,30 @@ If any §3 predicate fails, the experiment ends INVALID at stage 1. Stage 2 is n
 
 Dispatched only after stage 1 completes with every predicate passing, never concurrently
 with stage 1 or any other heavy job of ours (E4). Within one job, in this fixed order:
-1. Download the stage-1 binary artifact and manifest. **No rebuild.** Verify the binary's,
-   the corpora's and the manifest's SHA-256 against the manifest.
-2. Record this runner's CPU model, kernel, runner image and PMU availability. The two stages'
-   runners need not be the same machine; both are recorded.
+1. Download the stage-1 binary artifact and manifest, by the dispatched run and artifact
+   ids. **No rebuild.** Verify the manifest's bytes against the SHA-256 given as the dispatch
+   input (pinned outside the manifest, §6.1), then the binary's and the corpora's SHA-256
+   against the verified manifest.
+2. Record this runner's CPU model, kernel, runner image and PMU availability, and its
+   allowed CPU set. If CPU 1 is not in it, stop: the experiment ends INVALID (no other CPU is
+   chosen). The two stages' runners need not be the same machine; both are recorded.
 3. **Revalidate on this runner** the conditions that do not transfer by hash alone:
-   - §3.2's in-process address predicates, one process per arm;
+   - §3.2's in-process address predicates, one process per arm, on the `Scratch::counts`
+     the decode actually uses (logged from the decoding path's own allocation, not a
+     representative test allocation), with `taskset`'s affinity confirmed in the log;
    - §3.4's outputs: both arms, every CI corpus, byte count and SHA-256 equal to the manifest,
      in a fixed order (corpora alphabetically, `lo` then `hi` for each);
    - the stack smoke samples (recorded, not gating).
 
-   What transfers by the binary's and input's hashes: the listing and named PCs (§3.1), and
-   the D/H-region trace predicates (E1, E2, the held D/H classes, S1's D←H term), which are
-   fixed by the binary, the input path and the byte residues that the revalidation re-checks
-   natively. What does not transfer: anything stack-dependent. S-region classes and D←S were
-   measured under lackey's own stack and certify no native process on either runner (§3.3).
+   **What transfers, and what does not.** The binary's and the input's hashes transfer
+   code and input identity: the listing and the named PCs (§3.1), and the outputs. The
+   native address checks transfer **the named geometry**: `STEPS_BANK`'s, the selected
+   table's and `counts`' residues. Nothing transfers the §3.3 trace counts to a native
+   process. They depend on the whole recent-store history: other heap objects' residues,
+   runtime and library paths, and CPU-dependent dispatch, none of which those checks fix.
+   So **every §3.3 gate (E1, E2, the held classes, S1, D/H and S alike) is a property of the
+   stage-1 trace model, a proxy for native exposure, labelled as such**, not verified native
+   exposure on either runner. `c_diag` and Δ_req are indexed to that model (§5.3).
 
    **A failed revalidation ends the experiment INVALID.** No re-dispatch to another runner;
    no host search.
@@ -417,19 +486,31 @@ with stage 1 or any other heavy job of ours (E4). Within one job, in this fixed 
 
 ### 6.3 Failures, deadlines and budget
 
-- **Before any timed slot starts** (stage 1 at any point, or stage 2 before slot 1), an
-  infrastructure failure before the project ran (CI-INCIDENTS class B) may re-run that stage
-  with the same commit, the same artifacts and the same order, paced under CI-INCIDENTS: at
-  most **2 re-runs per stage**. A re-run takes whatever runner it is given and must pass its
-  own revalidation there. A re-run is never used to select a geometry or a host. A check
-  that fails (class A) is not re-run: the experiment ends INVALID.
+- **Retry only for a proven pre-project infrastructure failure.** A stage may be re-run only
+  when its failed job meets all three of CI-INCIDENTS' class-B conditions: the failed step
+  comes **before any project step, and no project step in that job ran**; the error names
+  an external acquisition or setup action (runner loss before the job's first project step,
+  checkout, toolchain or valgrind install, artifact download); and the step reads none of the
+  experiment's files. Such a re-run uses the same commit, the same artifacts and the same
+  order, paced under CI-INCIDENTS, at most **2 re-runs per stage**. It takes whatever runner
+  it is given and must pass its own revalidation there. A re-run is never used to select a
+  geometry or a host.
+- **Everything else before slot 1 ends the experiment, with no restart.** A failed check
+  (class A), and any failure, timeout or partial output of a project step: the build, the
+  listing, the address and stack probes, the lackey traces, `agg3` and its tests, the output
+  checks, or stage 2's revalidation. These are retained as **incomplete, INVALID**
+  (outcome 1). That a timed slot has not begun does not make them infrastructure failures.
+  CI-INCIDENTS' class-C retry does not apply here: this experiment's no-retry rule is
+  narrower.
 - **Once slot 1 has started,** nothing restarts. Any failure, partial run, invalid slot or
   missed precision is retained as is and ends the sequence (outcome 1 or 2).
 - **Deadline:** stage 2 is dispatched within 7 days of stage 1's manifest. Otherwise the
   experiment ends incomplete, retained, with no timing.
 - **Job limits** (the workflows' `timeout-minutes`): stage 1, 180 minutes; stage 2,
-  30 minutes. A timeout before slot 1 counts as a class-B failure under the rule above; a
-  timeout after slot 1 ends the sequence.
+  30 minutes. A job that hits its limit after any project step has run (a build, trace,
+  `agg3`, output-check or revalidation timeout) is incomplete, INVALID, with no restart; one
+  that hits it before any project step ran is eligible only if it meets the three class-B
+  conditions above. A timeout after slot 1 ends the sequence.
 
 **Estimated cost:**
 
@@ -459,7 +540,53 @@ path.
 
 ## 8. Revision log
 
-**Revision 3** (this), against revision 2 (41be4c27). Guardian D090 (REVIEW 6763239132) and
+**Revision 4** (this), against revision 3 (20cfd070). The Researcher's REVIEW 6763607539
+(report at ee1b1f80) and the Guardian's D092 (comment 6763626030, at efa98787). Both say
+REVISE; neither asks for more timing. No decoder was built and nothing was timed for this
+revision: only `agg3.c`, a small trace parser, was compiled and run on synthetic traces.
+
+**Accepted, unchanged: the next-step rule keyed on B≥** (§5.5), by both reviews (REVIEW
+6763607539 §1; D092 G1, §1). The Researcher's argument, recorded: with V and P, and with
+Δ_req ≥ 0.51 and h ≤ 0.10, U ≥ Δ_req implies Δ̂ = U − h ≥ 0.41 and L = U − 2h ≥ 0.31 ns/B,
+so **S+ follows automatically** from V, P and B≥, and keeping S+ in the rule is harmless.
+B+ (L ≥ Δ_req) would instead need Δ̂ ≥ Δ_req + h (0.61 at the boundary): positive evidence
+of at least the reference size, stronger than needed to decide to investigate a separately
+qualified contract. Under an exact continuous central 95% interval at true Δ = Δ_req,
+U ≥ Δ_req has probability 0.975 and L ≥ Δ_req 0.025, before precision conditioning: the rule
+avoids dropping a budget-sized candidate for missing the stronger test. It asserts no 0.975
+probability of sufficiency after the data. Any production change still goes through D086's
+independent master-side qualification.
+
+| review point | change |
+|---|---|
+| Researcher §1 "new executable blocker" / D092 §2 (1): pair counts are per matching stored access, class counts once per load, so `D←H4 − N` can be negative (two stores at one PC, one load: class 1, pair 2) | §3.3: count units frozen. Class, `named`, `outside` and `both` are in **loads**; pair weight (matching stored accesses) and pair loads are reported but no gate reads them. `outside` is counted directly per load; nothing is obtained by subtraction. The tool checks `class = named + outside − both`. |
+| D092 §2 (2): one named and one other store matching one load give class 1, named 1, other 1; class − named = 0 hides the outside pair | `agg3` counts `named`, `outside` and their overlap `both` directly per load. S1's outside term is `|O_lo − O_hi|` with a load in both populations counted in `outside`; `NO_lo`, `NO_hi` reported. Fixture `named-and-other`. |
+| Researcher §1 / D092 §2 (3): only five pairs printed per class; a named pair need not be among them | `agg3` prints every pair of every class (`PAIR`), every named pair in every class with explicit zeros (`NAMEDPAIR`), and a completion line (`END agg3 complete …`); a missing `END` or a nonzero exit is an incomplete trace, INVALID. The legacy top-five line stays as a summary, never a count source. Fixtures `six-pairs`, `six-one-named`. |
+| Researcher repair 1–2 / D092 §2: specify the unit; compute named and outside sets in it; don't put a new unit into 0.0476 | Unit: **loads** (unique affected loads), the unit of the historical class counts. Named and outside sets in that unit, directly (above). |
+| Researcher repair 4 / D092 §2: show which unit produced the historical reference; record any correction beside the historical counts, don't rewrite them | §3.3: 13,829 and 56,154 are `agg3`'s `mtf.mtf_avx2` `mod 4K` `D<-H` class counts (loads, all store PCs) in `agg3/sc-master-rand-0.txt` and `sc-head-rand-0.txt`; the revised tool's class lines are unchanged, so no conversion. `c_diag` is therefore redefined on the same quantity, the D←H 4096 class contrast `K_lo − K_hi` (revision 3 had the named pair sum, in pair weight, and wrongly said that was #324's definition: withdrawn). E1 now uses `named`; S1's contrast C is `N_lo − N_hi`, required > 0. A dated correction note sits beside the original "Pairs" text in `2026-11-10-run-front-fallback.md`; no count or verdict there changes. |
+| Researcher repair 3 / D092 §2: archive complete counters and the PC map before discarding traces; pin the corrected tool and tests; negative controls for duplicate stores at one PC, overlapping named PCs, a named pair outside the top five | §6.1: `agg3`'s complete output per arm, exit statuses, and the stream's line count and SHA-256 archived while the stream runs; the absolute named pairs recorded. §3.3: new SHA-256s, `agg3.c` `a0e6b030…0a63` (was `1ac18c5c…9ca0`), `test_agg3.sh` `4949ad57…c7a0` (was `bb2aa4aa…971f`). Fixtures `two-store` (the Researcher's), `six-pairs` (the Researcher's), `six-one-named`, `named-and-other` (D092's), `overlapping-named` (two named store PCs on one load, and an absent named pair with explicit zeros), `complete`. All 15 tests pass on the new tool (`agg3/test_agg3.out`); on the original tool the 9 original tests pass and all 6 new ones fail (`agg3/test_agg3.old-tool.out`). |
+| D092 §2: the false comment "counted once per load" | `agg3.c`'s header now states the units, and says the old comment was false. |
+| D092 §1: exact integer evaluation | §3.3: the 2% rule as `50 · |x − y| ≤ max(x, y)`; E2 as `K_lo − K_hi ≥ 380,800`. |
+| D092 §1: "independent" predicates | §5.4: S+ and B− are separately reported logical predicates, not statistically independent. |
+| Researcher "execution terms" / D092 §3: a project step's timeout before slot 1 is not class B | §6.3: a re-run only when the failed job meets all three CI-INCIDENTS class-B conditions (before any project step, with none run; an external acquisition or setup error: runner loss, checkout, toolchain or valgrind install, artifact download; reads none of the experiment's files). A build, listing, probe, trace, `agg3`, output-check or revalidation failure, timeout or partial output is incomplete, INVALID, with no restart, whether or not slot 1 has begun. The job-limit bullet says the same; CI-INCIDENTS' class-C retry does not apply. |
+| Researcher "hash transfer is overclaimed" / D092 §3: hashes and residues don't fix all dynamic D/H counts | §6.2: hashes transfer code and input identity; the native residue checks transfer the named geometry. Every §3.3 gate, D/H and S alike, is a property of the stage-1 trace model, labelled a proxy for native exposure, not verified native exposure. §3.3 and §5.3 say `c_diag` and Δ_req are indexed to that model. |
+| Researcher / D092 §3: the manifest's digest is circular | §6.1: stage 1 writes the manifest's SHA-256 to its job summary and log, not into the manifest; stage 2 is dispatched with stage 1's run id, the artifact id and that SHA-256 as inputs, also recorded in the dispatch LOG on #145. §6.2 step 1 checks the manifest against that input, then the binary and corpora against the manifest. |
+| Researcher: CPU 1 if available, else stop | §6.2 step 2: the allowed CPU set recorded; without CPU 1, INVALID, no other CPU chosen; affinity confirmed in the revalidation log. |
+| D092 §3: revalidation must use the decode's own `counts` allocation | §6.2 step 3: the address predicates are logged from the decoding path's own `Scratch::counts`, not a test allocation. |
+| D092 §3: a fixed PMU collection mode, no extra slots | §4: no PMU counts are collected; stage 2 records only availability. |
+
+**Choices made in revision 4 that the reviews left to the team,** for the Researcher and the
+Guardian to confirm or correct before freeze:
+- the unit: loads (the reviews offered pair weight or unique affected loads); chosen because
+  the historical reference is already in loads, so it needs no conversion and no re-trace;
+- `c_diag` and E2 on the whole D←H 4096 class contrast (the reference's exact quantity and
+  scope), with the named pairs entering through E1 and S1 (C = `N_lo − N_hi` > 0, and
+  `|O_lo − O_hi| ≤ C`), rather than on the named population alone, which has no historical
+  reference value without a new trace of #324's head;
+- a load matched by both populations counts in `outside` for S1;
+- no PMU collection at all (§4).
+
+**Revision 3** (20cfd070), against revision 2 (41be4c27). Guardian D090 (REVIEW 6763239132) and
 Researcher REVIEW 6763280324 (report at e5409a3f).
 
 | review point | change |
@@ -482,8 +609,8 @@ Researcher REVIEW 6763280324 (report at e5409a3f).
 | Researcher 3: the timing boundary | §5.1: named as `ab-child/2`'s `wall`, from `t0` before `decode(...)` to `t0.elapsed()` after it, in `child()`'s 1-thread branch; "before the boundary" used consistently (§2, §3.2); "whole-process wall time" dropped, as it was not what `wall` measures. Its 4-decimal resolution disclosed. |
 | Researcher 3: estimates are not deadlines | §6.3: frozen job limits, deadline and retry budget. |
 
-**Choices made in this revision that the reviews left to the team,** for the Researcher and
-the Guardian to confirm or correct before freeze:
+**Choices made in revision 3 that the reviews left to the team** (all confirmed by
+REVIEW 6763607539 and D092, see revision 4):
 - the allocation rule uses B≥, not B+ (§5.5);
 - the 2% rule's form (the Researcher's example form);
 - S1 as "≤ C" for each term separately;

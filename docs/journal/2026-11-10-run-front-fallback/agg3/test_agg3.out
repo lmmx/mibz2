@@ -7,3 +7,9 @@ ok   wrap-evicted:   mod 4K (load<-store):
 ok   wrap-kept:   mod 4K (load<-store): H<-H=1
 ok   true-dep:   mod 4K (load<-store):
 ok   partial-overlap-real:   mod 4K (load<-store):
+ok   two-store
+ok   six-pairs
+ok   six-one-named
+ok   named-and-other
+ok   overlapping-named
+ok   complete

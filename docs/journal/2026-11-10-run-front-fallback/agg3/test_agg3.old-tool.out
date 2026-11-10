@@ -1,0 +1,33 @@
+# test_agg3.sh (revision-4 version) run against the ORIGINAL agg3.c, SHA-256
+# 1ac18c5cc33def89ebb890cc993ae5cada81e833f3f4e9bffd64ea98521f9ca0: the nine original tests pass,
+# every count-unit/completeness witness fails (the original tool has no --named option, no
+# NAMED/NAMEDPAIR/PAIR/END lines, and treats --named=... as a function argument). Exit 1.
+ok   witness-a:   mod 4K (load<-store): H<-S=1 H<-H=1
+ok   witness-b:   mod 4K (load<-store): H<-H=1
+ok   witness-reordered:   mod 4K (load<-store): H<-S=1 H<-H=1
+ok   static-image:   mod 4K (load<-store): H<-S=1 H<-D=1 H<-H=1
+ok   only-1K:   mod 4K (load<-store):
+ok   wrap-evicted:   mod 4K (load<-store):
+ok   wrap-kept:   mod 4K (load<-store): H<-H=1
+ok   true-dep:   mod 4K (load<-store):
+ok   partial-overlap-real:   mod 4K (load<-store):
+FAIL two-store: missing '  mod 4K (load<-store): D<-H=1'
+FAIL two-store: missing 'NAMED mtf_avx2 mod4K D<-H: class=1 named=1 outside=0 both=0 | weight named=2 outside=0'
+FAIL two-store: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=2'
+FAIL two-store: missing 'PAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=2 named=1'
+FAIL six-pairs: missing '  mod 4K (load<-store): D<-H=6'
+FAIL six-pairs: missing 'NAMED mtf_avx2 mod4K D<-H: class=6 named=6 outside=0 both=0 | weight named=6 outside=0'
+FAIL six-pairs: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=1'
+FAIL six-pairs: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2005 load 1105 loads=1 weight=1'
+FAIL six-pairs: missing 'PAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=1 named=1'
+FAIL six-pairs: missing 'PAIR mtf_avx2 mod4K D<-H: store 2005 load 1105 loads=1 weight=1 named=1'
+FAIL six-one-named: missing 'NAMED mtf_avx2 mod4K D<-H: class=6 named=1 outside=5 both=0 | weight named=1 outside=5'
+FAIL six-one-named: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=1'
+FAIL named-and-other: missing '  mod 4K (load<-store): D<-H=1'
+FAIL named-and-other: missing 'NAMED mtf_avx2 mod4K D<-H: class=1 named=1 outside=1 both=1 | weight named=1 outside=1'
+FAIL named-and-other: missing 'PAIR mtf_avx2 mod4K D<-H: store 2004 load 1100 loads=1 weight=1 named=0'
+FAIL overlapping-named: missing 'NAMED mtf_avx2 mod4K D<-H: class=1 named=1 outside=0 both=0 | weight named=2 outside=0'
+FAIL overlapping-named: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2000 load 1100 loads=1 weight=1'
+FAIL overlapping-named: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2004 load 1100 loads=1 weight=1'
+FAIL overlapping-named: missing 'NAMEDPAIR mtf_avx2 mod4K D<-H: store 2fff load 1100 loads=0 weight=0'
+FAIL complete: missing 'END agg3 complete lines=6 pairs=2 named=1'
