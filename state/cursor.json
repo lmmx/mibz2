@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6779251105,
+  "last_examined_comment_id": 6779268842,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -100,6 +100,17 @@
       "coordination_writes": 0,
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6779268842": {
+      "status": "triaged_no_additional_coordination_action",
+      "delivery_id": "9e1b8c80-dd4a-11f1-8c40-7a893fec011c",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6779268842",
+      "head_sha": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+      "verified": "Exact PR head unchanged. Legacy pre-commit success. walk-stats success; Benchmark, Test, Miri, Documentation running; CI queued.",
+      "disposition": "Source-frozen final primary-loss follow-up remains pending. Independent B5 request retained; no assignment while #364 unmerged. Existing checkpoint 6779251105 covers head/gates; no repetitive LOG.",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -136,10 +147,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "edaa984c4f57614f25bb897e808ab12c59c48d8f",
   "last_event": {
-    "delivery_id": "80727860-dd4a-11f1-861a-4962793266b4",
-    "comment_id": 6779251105,
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "delivery_id": "9e1b8c80-dd4a-11f1-8c40-7a893fec011c",
+    "comment_id": 6779268842,
+    "disposition": "legacy_success_followup_pending"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -152,7 +162,7 @@
   "pending_independent_review": {
     "pr": 365,
     "requested_by_comment": 6778679718,
-    "reiterated_by_comment": 6779208153,
+    "reiterated_by_comment": 6779268842,
     "status": "pending_authorised_dispatch",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "note": "Re-pin to corrected exact head before assignment; reconcile reviewer queue and independence. No request delivered to reviewer."
