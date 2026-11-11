@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6793387232,
+  "last_examined_comment_id": 6793485259,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -519,14 +519,14 @@
       "queue_reason": "366 unchanged at ae13742fe4c6e2726c178e2409a1d69ef8fca939 with Occupancy failure; assigned preparation and readiness gates outstanding."
     },
     "6793485259": {
-      "status": "in_progress",
-      "delivery_id": "417efc20-ddbb-11f1-8b7c-740cfabbc4fe",
-      "comment_updated_at": null,
-      "action": "Pinned artifact integrity verified; route bounded independent reproduction and next-falsifier assessment to free Researcher",
-      "pin": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
-      "payloads_verified": 9,
-      "manifest_available": true,
-      "zip_bytes_verified": false
+      "status": "completed_routed",
+      "disposition": "Artifact availability gap closed by nine verified manifest payloads plus manifest. Bounded independent reproduction and next-falsifier assessment routed162/6793526035; no recipient execution yet observed. Production/measurement authority unchanged.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6793526035"
+      ],
+      "log": {
+        "status": "in_progress_before_post"
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -585,15 +585,16 @@
     6791014104,
     6791031630,
     6791527208,
-    6793304677
+    6793304677,
+    6793526035
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6793387232,
-    "delivery_id": "8d3607e0-ddba-11f1-8538-f6e80f291b1c"
+    "comment_id": 6793485259,
+    "delivery_id": "417efc20-ddbb-11f1-8b7c-740cfabbc4fe"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -668,10 +669,14 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "in_progress_before_post",
-      "source_comment_id": 6793485259,
-      "scope": "Independent bounded first-return prototype reproduction and cost/falsifier assessment",
-      "head": "af3327d8aee9fffe26d2d6de76818b6ac69cc145"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6793526035,
+      "scope": "Independent targeted F01 recheck",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6793526035",
+      "review_comment_id": 6790022921,
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0"
     },
     "optimizer": {
       "status": "completed",
@@ -887,17 +892,6 @@
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction.",
       "completion_reconciled_by": 6790889882
-    },
-    {
-      "status": "completed",
-      "comment_id": 6789867476,
-      "scope": "Independent targeted F01 recheck",
-      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476",
-      "review_comment_id": 6790022921,
-      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
-      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0",
-      "archived_before_source": 6793485259
     }
   ],
   "codex_correction": {
@@ -1059,5 +1053,13 @@
       "independent_execution": false,
       "disposition": "Reference retained; no new action or qualification"
     }
-  ]
+  ],
+  "research_artifact_delivery": {
+    "pin": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
+    "path": "research/chatgpt-first-return-20261111",
+    "manifest_payloads_verified": 9,
+    "original_zip_verified": false,
+    "independent_execution": false,
+    "assignment": 6793526035
+  }
 }
