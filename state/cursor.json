@@ -478,7 +478,8 @@
     "6791527208": {
       "status": "completed_own_log",
       "comment_updated_at": null,
-      "disposition": "Own research-reference triage; no external assignment"
+      "disposition": "Self-generated substantive research triage LOG; no new external message, no duplicate comment or dispatch.",
+      "delivery_id": "8cc04e90-ddad-11f1-9e51-bb9308e3fb57"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -543,8 +544,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6791476494,
-    "delivery_id": "2b749f60-ddad-11f1-842e-7259747a61e2"
+    "comment_id": 6791527208,
+    "delivery_id": "8cc04e90-ddad-11f1-9e51-bb9308e3fb57"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
