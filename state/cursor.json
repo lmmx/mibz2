@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6808483473,
+  "last_examined_comment_id": 6808568270,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -954,6 +954,14 @@
       "ready_job_reason": "366 preparation incomplete; required validation/master integration/readiness not complete",
       "log_comment_id": 6808568270,
       "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270"
+    },
+    "6808568270": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "02c196f0-de1f-11f1-8e13-e3fea4c33f8a",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1035,8 +1043,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6808483473,
-    "delivery_id": "5f758b00-de1e-11f1-83e8-06d3a7b11b8f"
+    "comment_id": 6808568270,
+    "delivery_id": "02c196f0-de1f-11f1-8e13-e3fea4c33f8a"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
