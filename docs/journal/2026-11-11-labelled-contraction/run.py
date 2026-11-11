@@ -83,7 +83,13 @@ def check_origins(result, events, deadline):
         for origin in range(len(column)):
             for delimiter in alphabet:
                 assert time.monotonic() < deadline, "candidate execution budget exceeded"
-                CONTEXT.update(stage="origin", family=name, column=column.hex(), origin=origin, delimiter=delimiter)
+                CONTEXT.update(
+                    stage="origin",
+                    family=name,
+                    column=column.hex(),
+                    origin=origin,
+                    delimiter=delimiter,
+                )
                 expected = phrase.induce_on_byte(column, origin, delimiter)
                 search, sc, sd = construct(column, origin, delimiter, "search")
                 mark, mc, md = construct(column, origin, delimiter, "mark")
@@ -93,7 +99,8 @@ def check_origins(result, events, deadline):
                 if expected is not None:
                     assert sd[0] == expected
                     assert {k: v for k, v in md[0].items() if k != "origin_prefix_steps"} == {
-                        k: v for k, v in expected.items() if k != "origin_prefix_steps"}
+                        k: v for k, v in expected.items() if k != "origin_prefix_steps"
+                    }
                     assert sd[1] == md[1] and sd[0]["token_lf"] and md[0]["token_lf"]
                     anchor_rows = [x for x, byte in enumerate(column) if byte == delimiter]
                     root, phase = md[2]
@@ -115,12 +122,24 @@ def check_origins(result, events, deadline):
                     totals["accepted"] += 1
                 else:
                     totals["declined"] += 1
-                    totals["declined_extra_constructor_steps"] += mc["constructor_steps"] - sc["constructor_steps"]
+                    totals["declined_extra_constructor_steps"] += (
+                        mc["constructor_steps"] - sc["constructor_steps"]
+                    )
                 group = result.setdefault(name, dict(search={}, marked={}))
                 accumulate(group["search"], sc)
                 accumulate(group["marked"], mc)
-                events.append(dict(kind="origin", family=name, column=column.hex(), origin=origin,
-                                   delimiter=delimiter, accepted=mark is not None, search=dict(sc), marked=dict(mc)))
+                events.append(
+                    dict(
+                        kind="origin",
+                        family=name,
+                        column=column.hex(),
+                        origin=origin,
+                        delimiter=delimiter,
+                        accepted=mark is not None,
+                        search=dict(sc),
+                        marked=dict(mc),
+                    )
+                )
     return dict(totals)
 
 
@@ -130,7 +149,11 @@ def check_contractions(result, events, deadline):
     totals = Counter()
     for case_id, fixture in enumerate(cases):
         assert time.monotonic() < deadline, "candidate execution budget exceeded"
-        col, origin, special = bytes.fromhex(fixture["column"]), fixture["origin"], fixture["special"]
+        col, origin, special = (
+            bytes.fromhex(fixture["column"]),
+            fixture["origin"],
+            fixture["special"],
+        )
         CONTEXT.clear()
         CONTEXT.update(stage="contraction", case=case_id, fixture=fixture)
         pc, sc = Counter(), Counter()
@@ -178,8 +201,17 @@ def check_contractions(result, events, deadline):
         group = result.setdefault(family, dict(packed={}, stable={}))
         accumulate(group["packed"], pc)
         accumulate(group["stable"], sc)
-        events.append(dict(kind="contraction", case=case_id, family=family,
-                           column=col.hex(), origin=origin, packed=dict(pc), stable=dict(sc)))
+        events.append(
+            dict(
+                kind="contraction",
+                case=case_id,
+                family=family,
+                column=col.hex(),
+                origin=origin,
+                packed=dict(pc),
+                stable=dict(sc),
+            )
+        )
     return dict(totals)
 
 
@@ -194,15 +226,24 @@ def main():
     try:
         result["origin_checks"] = check_origins(result["origin"], events, deadline)
         result["contraction_checks"] = check_contractions(result["contraction"], events, deadline)
-        result["source_sha256"] = {p.relative_to(ROOT).as_posix(): digest(p)
-                                    for p in sorted(ROOT.rglob("*.py"))}
+        result["source_sha256"] = {
+            p.relative_to(ROOT).as_posix(): digest(p) for p in sorted(ROOT.rglob("*.py"))
+        }
         result["schedules_sha256"] = digest(ROOT / "schedules.json")
         (dest / "results.json").write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
-        payload = "".join(json.dumps(e, separators=(",", ":"), sort_keys=True) + "\n" for e in events)
+        payload = "".join(
+            json.dumps(e, separators=(",", ":"), sort_keys=True) + "\n" for e in events
+        )
         (dest / "case-costs.jsonl.gz").write_bytes(gzip.compress(payload.encode(), mtime=0))
-        print(json.dumps(dict(origin=result["origin_checks"], contraction=result["contraction_checks"])))
+        print(
+            json.dumps(
+                dict(origin=result["origin_checks"], contraction=result["contraction_checks"])
+            )
+        )
     except BaseException:
-        (dest / "failure.json").write_text(json.dumps(dict(context=CONTEXT, traceback=traceback.format_exc()), indent=2) + "\n")
+        (dest / "failure.json").write_text(
+            json.dumps(dict(context=CONTEXT, traceback=traceback.format_exc()), indent=2) + "\n"
+        )
         raise
 
 

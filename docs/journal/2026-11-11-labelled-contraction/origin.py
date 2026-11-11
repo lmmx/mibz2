@@ -90,8 +90,11 @@ def construct(column, origin, delimiter, mode):
     merged = []
     for a in ordered(completed, lambda a: a.s, c):
         c["coalescing_checks"] += 1
-        if merged and (merged[-1].s + merged[-1].n == a.s and
-                       merged[-1].t + merged[-1].n == a.t and merged[-1].w == a.w):
+        if merged and (
+            merged[-1].s + merged[-1].n == a.s
+            and merged[-1].t + merged[-1].n == a.t
+            and merged[-1].w == a.w
+        ):
             b = merged.pop()
             a = Piece(b.s, b.t, b.n + a.n, b.w)
             c["merged_records_created"] += 1
@@ -128,17 +131,23 @@ def construct(column, origin, delimiter, mode):
     reverse = reverse[shift:] + reverse[:shift]
     c["cycle_rotation_bytes"] += len(reverse)
     repeat = (len(column) + len(reverse) - 1) // len(reverse)
-    got = (reverse * repeat)[:len(column)]
+    got = (reverse * repeat)[: len(column)]
     c["repeated_bytes"] += repeat * len(reverse)
     c["output_bytes"] += len(got)
     assert got == decode_oracle(column, origin)
-    original_stats = dict(steps=c["constructor_steps"], weighted_rows=c["weighted_rows"],
-                          anchor_rows=acc[-1], anchor_intervals=len(anchors),
-                          return_pieces=len(merged), dictionary_words=len(words),
-                          dictionary_bytes=sum(map(len, words.values())),
-                          grammar_nodes=len(grammar.nodes) - 256,
-                          peak_frontier=c["peak_queue_records"], token_lf=bool(token_lf),
-                          origin_prefix_steps=shift)
+    original_stats = dict(
+        steps=c["constructor_steps"],
+        weighted_rows=c["weighted_rows"],
+        anchor_rows=acc[-1],
+        anchor_intervals=len(anchors),
+        return_pieces=len(merged),
+        dictionary_words=len(words),
+        dictionary_bytes=sum(map(len, words.values())),
+        grammar_nodes=len(grammar.nodes) - 256,
+        peak_frontier=c["peak_queue_records"],
+        token_lf=bool(token_lf),
+        origin_prefix_steps=shift,
+    )
     # Routing identities and words are compared across modes, not just final bytes.
     expanded_map = [(a.s, a.t, a.n, original.Grammar.expand(grammar, a.w).hex()) for a in merged]
     return got, c, (original_stats, expanded_map, marker)

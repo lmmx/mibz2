@@ -1,0 +1,4 @@
+# Preserve exact upstream/relay evidence bytes; lint and format all new code.
+extend = "../../../pyproject.toml"
+extend-exclude = ["vendor", "supplied"]
+force-exclude = true

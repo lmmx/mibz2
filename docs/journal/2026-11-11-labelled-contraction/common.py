@@ -28,6 +28,7 @@ def bisect_right(a, x, c, category="search"):
 
 def ordered(values, key, c):
     """Count key records and TimSort comparisons."""
+
     class Key:
         def __init__(self, value):
             self.value = value
@@ -97,9 +98,11 @@ def inputs():
             for letters in product(alphabet, repeat=n):
                 yield "exhaustive_" + alphabet.decode(), bytes(letters), alphabet
     for size in (1, 2, 4, 8, 16, 32, 64):
-        for name, col in (("aligned", b"b" * size + b"a" * size),
-                          ("excursion", b"b" + b"a" * size),
-                          ("alternating", b"ab" * size)):
+        for name, col in (
+            ("aligned", b"b" * size + b"a" * size),
+            ("excursion", b"b" + b"a" * size),
+            ("alternating", b"ab" * size),
+        ):
             yield name, col, b"ab"
         for base in (b"ab", b"aba", b"abc", b"aab"):
             col, _ = original.bwt(base * size)
@@ -145,8 +148,11 @@ def initial(column, special=False, c=None):
             word = grammar.cat(word, column[y])
             y = f[y]
         a = Piece(rank[x], rank[y], 1, word)
-        if pieces and (pieces[-1].s + pieces[-1].n == a.s and
-                       pieces[-1].t + pieces[-1].n == a.t and pieces[-1].w == a.w):
+        if pieces and (
+            pieces[-1].s + pieces[-1].n == a.s
+            and pieces[-1].t + pieces[-1].n == a.t
+            and pieces[-1].w == a.w
+        ):
             b = pieces.pop()
             a = Piece(b.s, b.t, b.n + 1, b.w)
         pieces.append(a)

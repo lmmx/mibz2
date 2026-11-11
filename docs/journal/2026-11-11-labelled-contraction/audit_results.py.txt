@@ -1,0 +1,52 @@
+"""Independent audit of saved verdicts/aggregation, without rerunning candidates."""
+import gzip
+import hashlib
+import json
+from collections import Counter
+from pathlib import Path
+
+root = Path(__file__).parent
+result = json.loads((root / 'evidence/results.json').read_text())
+events = [json.loads(line) for line in gzip.decompress(
+    (root / 'evidence/case-costs.jsonl.gz').read_bytes()).splitlines()]
+for name, digest in result['source_sha256'].items():
+    assert hashlib.sha256((root / name).read_bytes()).hexdigest() == digest, name
+assert hashlib.sha256((root / 'schedules.json').read_bytes()).hexdigest() == result['schedules_sha256']
+for record in json.loads((root / 'supplied-manifest.json').read_text()):
+    data = (root / 'supplied' / Path(record['path']).name).read_bytes()
+    assert len(data) == record['size'] and hashlib.sha256(data).hexdigest() == record['sha256']
+
+groups = {}
+origins = 0
+for event in events:
+    if event['kind'] == 'origin':
+        # This deliberately does not import either constructor's LF run builder.
+        col = bytes.fromhex(event['column'])
+        inverse = sorted(range(len(col)), key=lambda x: col[x])
+        forward = [None] * len(col)
+        for y, x in enumerate(inverse):
+            forward[x] = y
+        x, found = event['origin'], False
+        while True:
+            found |= col[x] == event['delimiter']
+            x = forward[x]
+            if x == event['origin']:
+                break
+        assert found == event['accepted'], event
+        origins += 1
+        modes = ('search', 'marked')
+    else:
+        modes = ('packed', 'stable')
+    for mode in modes:
+        key = (event['kind'], event['family'], mode)
+        group = groups.setdefault(key, {'sums': Counter(), 'maxima': {}})
+        for name, value in event[mode].items():
+            if name.startswith('peak_'):
+                group['maxima'][name] = max(group['maxima'].get(name, 0), value)
+            else:
+                group['sums'][name] += value
+for (kind, family, mode), counts in groups.items():
+    assert counts == result[kind][family][mode]
+assert origins == 7021
+assert len(events) == 7021 + 3108
+print('PASS: all 7021 anchor/no-anchor verdicts, all aggregates and source/input digests')

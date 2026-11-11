@@ -46,7 +46,9 @@ def packed(pieces, grammar, marker, seed, c):
     images = ordered(pieces, lambda a: a.t, c)
     edges, removed = select([(a.s, a) for a in pieces], [(a.t, a) for a in images], marker, seed, c)
     c["selection_input_visits"] += 2 * len(pieces)
-    c["peak_transient_entries"] = max(c["peak_transient_entries"], len(images) + len(edges) + len(removed))
+    c["peak_transient_entries"] = max(
+        c["peak_transient_entries"], len(images) + len(edges) + len(removed)
+    )
     if not removed:
         return pieces, marker, removed
     starts, ends, prefix = [a for a, _ in removed], [b for _, b in removed], [0]
@@ -89,16 +91,29 @@ def packed(pieces, grammar, marker, seed, c):
     out = []
     for a in ordered(raw, lambda a: a.s, c):
         c["coalescing_checks"] += 1
-        if out and (out[-1].s + out[-1].n == a.s and
-                    out[-1].t + out[-1].n == a.t and out[-1].w == a.w):
+        if out and (
+            out[-1].s + out[-1].n == a.s and out[-1].t + out[-1].n == a.t and out[-1].w == a.w
+        ):
             b = out.pop()
             a = Piece(b.s, b.t, b.n + a.n, b.w)
             c["merges"] += 1
             c["persistent_piece_records_created"] += 1
             c["coordinate_fields_written"] += 2
         out.append(a)
-    c["peak_live_piece_records"] = max(c["peak_live_piece_records"], len(pieces) + len(raw) + len(out))
-    c["peak_transient_entries"] = max(c["peak_transient_entries"], len(images) + len(edges) + len(removed) + len(starts) + len(ends) + len(prefix) + len(raw) + len(out))
+    c["peak_live_piece_records"] = max(
+        c["peak_live_piece_records"], len(pieces) + len(raw) + len(out)
+    )
+    c["peak_transient_entries"] = max(
+        c["peak_transient_entries"],
+        len(images)
+        + len(edges)
+        + len(removed)
+        + len(starts)
+        + len(ends)
+        + len(prefix)
+        + len(raw)
+        + len(out),
+    )
     return out, rank(marker), removed
 
 
@@ -132,7 +147,11 @@ class Order:
     def pull(self, node):
         """Repair one subtree's weighted size."""
         self.c["tree_size_writes"] += 1
-        node.total = node.edge.n + (node.left.total if node.left else 0) + (node.right.total if node.right else 0)
+        node.total = (
+            node.edge.n
+            + (node.left.total if node.left else 0)
+            + (node.right.total if node.right else 0)
+        )
 
     def repair(self, node):
         """Repair ancestors after a local change."""
@@ -162,7 +181,9 @@ class Order:
         else:
             grand.right = child
         # Count the actual optional child-parent link separately.
-        self.c["tree_pointer_writes"] += 5 + int((parent.left if child.right is parent else parent.right) is not None)
+        self.c["tree_pointer_writes"] += 5 + int(
+            (parent.left if child.right is parent else parent.right) is not None
+        )
         self.c["tree_rotations"] += 1
         self.pull(parent)
         self.pull(child)
@@ -252,7 +273,7 @@ class Order:
         child = node.right if right else node.left
         if child:
             node = child
-            while (node.left if right else node.right):
+            while node.left if right else node.right:
                 self.c["tree_neighbor_hops"] += 1
                 node = node.left if right else node.right
             return node
@@ -379,7 +400,10 @@ class Stable:
             if take:
                 words[(a.w, b.w)] = self.grammar.cat(a.w, b.w)
                 self.c["prepared_word_assignments"] += 1
-        self.c["peak_transient_entries"] = max(self.c["peak_transient_entries"], len(top) + len(bottom) + len(edges) + len(removed) + len(words))
+        self.c["peak_transient_entries"] = max(
+            self.c["peak_transient_entries"],
+            len(top) + len(bottom) + len(edges) + len(removed) + len(words),
+        )
         for lo, hi in reversed(removed):
             remaining = hi - lo
             while remaining:
@@ -418,11 +442,13 @@ class Stable:
 
     def export(self):
         """Validation-only packed view; never used by selection or contraction."""
+
         def visit(node):
             if node:
                 yield from visit(node.left)
                 yield node.edge
                 yield from visit(node.right)
+
         images, total = {}, 0
         for a in visit(self.bottom.root):
             images[a.id] = total
