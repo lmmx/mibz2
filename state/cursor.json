@@ -534,7 +534,8 @@
     "6793538633": {
       "status": "completed_own_log",
       "comment_updated_at": null,
-      "disposition": "Own artifact verification and research dispatch LOG; no external assignment"
+      "disposition": "Own attributed LOG already verified; fresh channel has no later external message. Silent no-op, no duplicate dispatch or comment.",
+      "delivery_id": "a26077d0-ddbb-11f1-8ee5-8ddbfd73a6d8"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -602,8 +603,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6793485259,
-    "delivery_id": "417efc20-ddbb-11f1-8b7c-740cfabbc4fe"
+    "comment_id": 6793538633,
+    "delivery_id": "a26077d0-ddbb-11f1-8ee5-8ddbfd73a6d8"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
