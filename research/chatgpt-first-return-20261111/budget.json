@@ -1,0 +1,25 @@
+{
+  "description": "Illustrative arithmetic from historical same-run figures; not timings or current thresholds.",
+  "baseline_ns_per_bwt_row": 2.049,
+  "representative_writer_ns_per_bwt_row": 0.347,
+  "inversion_targets": [
+    {
+      "speedup": 2,
+      "total_ns_per_row": 1.0245,
+      "constructor_budget_ns_per_row": 0.6775,
+      "whole_speedup_if_fraction_0_70": 1.5384615384615383
+    },
+    {
+      "speedup": 3,
+      "total_ns_per_row": 0.6829999999999999,
+      "constructor_budget_ns_per_row": 0.33599999999999997,
+      "whole_speedup_if_fraction_0_70": 1.875
+    },
+    {
+      "speedup": 5,
+      "total_ns_per_row": 0.4098,
+      "constructor_budget_ns_per_row": 0.06280000000000002,
+      "whole_speedup_if_fraction_0_70": 2.2727272727272725
+    }
+  ]
+}
