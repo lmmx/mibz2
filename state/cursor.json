@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790710467,
+  "last_examined_comment_id": 6790760045,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -415,7 +415,13 @@
       "disposition": "D102 and finished cursor accepted at old4d8bd424 head. Corrected bfd5d322 now has successful ordinary/team Occupancy steps; queued6790684381 dispatched to same original Guardian, verified not delivered.",
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790746386"
-      ]
+      ],
+      "log_comment_id": 6790760045
+    },
+    "6790760045": {
+      "status": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -469,7 +475,8 @@
     6790511955,
     6790532200,
     6790684381,
-    6790746386
+    6790746386,
+    6790760045
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -646,8 +653,10 @@
   },
   "checkpoint": {
     "key": "d102-6790710467",
-    "status": "in_progress",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6790760045,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790760045"
   },
   "dispatch_history": [
     {
