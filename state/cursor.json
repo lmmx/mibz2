@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6784483743,
+  "last_examined_comment_id": 6784526782,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -280,7 +280,13 @@
       "status": "completed_operational_path_selected",
       "delivery_id": "0559a500-dd71-11f1-8d0b-997dadadc91a",
       "planned_action": "Close security-review expansion, choose existing Run signal direct path, record verified dispatch and execution capability blockers plus actual D100 status. No further review assignment.",
-      "disposition": "No further security-review round. Prefer already authorised existing Run signal via authenticated operator session; no new bridge required as default. Fresh capability check: no exposed dispatch method; gh exists but auth status1 and no GH_TOKEN/GITHUB_TOKEN; no Codex automation or launch tool; F01 recipient cursor unchanged. D100 remains queued, not started. No ready eligible job identified among prepared361/365/366/367 work."
+      "disposition": "No further security-review round. Prefer already authorised existing Run signal via authenticated operator session; no new bridge required as default. Fresh capability check: no exposed dispatch method; gh exists but auth status1 and no GH_TOKEN/GITHUB_TOKEN; no Codex automation or launch tool; F01 recipient cursor unchanged. D100 remains queued, not started. No ready eligible job identified among prepared361/365/366/367 work.",
+      "log_comment_id": 6784526782
+    },
+    "6784526782": {
+      "status": "observed_self_generated_noop",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -324,7 +330,8 @@
     6782662288,
     6782678458,
     6782796787,
-    6782811875
+    6782811875,
+    6784526782
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -473,8 +480,10 @@
   },
   "checkpoint": {
     "key": "operational-priority-6784483743",
-    "status": "in_progress_before_log",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6784526782,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6784526782"
   },
   "dispatch_history": [
     {
