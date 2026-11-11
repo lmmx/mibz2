@@ -187,22 +187,32 @@ pub enum OutputRoute {
 pub struct AllocationSample {
     pub route: OutputRoute,
     pub cooperative: bool,
+    /// Selected kernel configuration. A run's one-core AVX2 fill requests n+8
+    /// slots; a cooperative fill can fall back to it, so its upper bound includes it.
+    pub avx2: bool,
     pub rows: usize,
     pub block_bound: usize,
     pub buffers: Vec<Buffer>,
 }
 
-/// Independent high-water allocation requests reconstructed from route history.
+/// Independent high-water allocation request bounds reconstructed from route history.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct WorkerNeeds {
     pub rows: usize,
     pub ll: usize,
     pub rle: usize,
+    pub tt: usize,
 }
 
 impl WorkerNeeds {
     fn observe(&mut self, s: &AllocationSample) {
         self.rows = self.rows.max(s.rows);
+        let slack = if s.route == OutputRoute::Runs && s.avx2 {
+            8
+        } else {
+            0
+        };
+        self.tt = self.tt.max(s.rows + slack);
         self.ll = self.ll.max(if s.route == OutputRoute::Runs {
             s.rows
         } else {
@@ -679,6 +689,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
     let window_max = crate::parallel::COMPACT + LOOKAHEAD + s.chunk;
     let needs = s.worker.unwrap_or(WorkerNeeds {
         rows,
+        tt: rows,
         ll: max_rows,
         rle: if s.in_place { 0 } else { rows },
     });
@@ -701,11 +712,11 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             count: t,
             per: "threads",
             alloc: TT_ROW * rows,
-            alloc_max: Some(if rows == 0 { 0 } else { TT_ROW * 4.max((2 * rows).saturating_sub(1)) }),
+            alloc_max: Some(if needs.tt == 0 { 0 } else { TT_ROW * 4.max((2 * needs.tt).saturating_sub(1)) }),
             live: TT_ROW * rows,
             hot: TT_ROW * rows,
             life: "once",
-            note: "the T-vector: live from its build to the walk's end; doubles when a block is longer than any before it on that worker",
+            note: "the T-vector: live rows exclude AVX2 run fill's eight slack slots; growth bounds include that request and retained history",
         },
         if needs.rle == 0 {
             Entry {
@@ -1092,6 +1103,7 @@ mod tests {
         name: &str,
         sequence: &[(bool, usize, u32)],
         cooperative: bool,
+        kernels: Kernels,
     ) {
         let mut scratch = Scratch::<I>::default();
         let mut out = Vec::new();
@@ -1108,7 +1120,7 @@ mod tests {
             };
             assert_eq!(crate::runs::takes_runs(&symbols), run, "{name}");
             out.clear();
-            decode_block(&symbols, Kernels::scalar(), &mut scratch, &mut out).unwrap();
+            decode_block(&symbols, kernels, &mut scratch, &mut out).unwrap();
             assert!(
                 out == bytes,
                 "byte/CRC parity: {name}, got {} bytes, expected {}",
@@ -1127,6 +1139,7 @@ mod tests {
             };
             assert_eq!(sample.route, route, "{name}");
             assert_eq!(sample.cooperative, cooperative);
+            assert_eq!(sample.avx2, cfg!(target_arch = "x86_64") && kernels.avx2);
             // These inputs have no run longer than 255; four or more equal bytes
             // become five RLE1 bytes before BWT (random letters need not have n rows).
             let rows: usize = bytes
@@ -1160,17 +1173,27 @@ mod tests {
         assert_eq!(scratch.allocation_history().len(), sequence.len());
         if sequence.iter().all(|s| s.0) {
             assert_eq!(get(&scratch.buffers(), "rle").cap, 0, "run-only ownership");
-            assert!(
-                get(&scratch.buffers(), "ll").cap > 900_000,
-                "native D100 growth witness"
-            );
+            if sequence.iter().any(|s| s.1 == 800_000) {
+                assert!(
+                    get(&scratch.buffers(), "ll").cap > 900_000,
+                    "native D100 growth witness"
+                );
+            }
+            if name.contains("simd-slack") && kernels.avx2 {
+                assert_eq!(
+                    get(&scratch.buffers(), "tt").cap,
+                    800_000,
+                    "n+8 reservation doubles at 99,992 -> 100,000 rows"
+                );
+            }
         }
     }
 
     #[test]
     fn ledger_actual_routes_and_retained_history() {
         type Blocks = &'static [(bool, usize, u32)];
-        let cases: [(&str, Blocks); 4] = [
+        let cases: [(&str, Blocks); 5] = [
+            ("simd-slack", &[(true, 99_992, 9), (true, 100_000, 9)]),
             (
                 "runs",
                 &[(true, 600_000, 9), (true, 800_000, 9), (true, 90_000, 1)],
@@ -1186,12 +1209,23 @@ mod tests {
             ),
         ];
         for (name, sequence) in cases {
-            route_history::<crate::bwt::Segmented>(&format!("Segmented/{name}"), sequence, false);
-            route_history::<crate::bwt::Cooperative<2>>(
-                &format!("Cooperative2/{name}"),
-                sequence,
-                true,
-            );
+            for (kernel_name, kernels) in [
+                ("scalar", Kernels::scalar()),
+                ("detected", Kernels::detect()),
+            ] {
+                route_history::<crate::bwt::Segmented>(
+                    &format!("Segmented/{name}/{kernel_name}"),
+                    sequence,
+                    false,
+                    kernels,
+                );
+                route_history::<crate::bwt::Cooperative<2>>(
+                    &format!("Cooperative2/{name}/{kernel_name}"),
+                    sequence,
+                    true,
+                    kernels,
+                );
+            }
         }
     }
 

@@ -1,0 +1,63 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-occupancy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 9.56s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-33be155e41cfb646)
+
+running 4 tests
+test trace::tests::ledger_at_level_9 ... ok
+test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+test trace::tests::ledger_matches_a_workers_buffers ... ok
+Segmented/simd-slack/scalar Runs n=99992 bound=900000 ll=99992 rle=0
+Segmented/simd-slack/scalar Runs n=100000 bound=900000 ll=199984 rle=0
+Cooperative2/simd-slack/scalar Runs n=99992 bound=900000 ll=99992 rle=0
+Cooperative2/simd-slack/scalar Runs n=100000 bound=900000 ll=199984 rle=0
+Segmented/simd-slack/detected Runs n=99992 bound=900000 ll=99992 rle=0
+Segmented/simd-slack/detected Runs n=100000 bound=900000 ll=199984 rle=0
+Cooperative2/simd-slack/detected Runs n=99992 bound=900000 ll=99992 rle=0
+Cooperative2/simd-slack/detected Runs n=100000 bound=900000 ll=199984 rle=0
+Segmented/runs/scalar Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/runs/scalar Runs n=800000 bound=900000 ll=1200000 rle=0
+Segmented/runs/scalar Runs n=90000 bound=100000 ll=1200000 rle=0
+Cooperative2/runs/scalar Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/runs/scalar Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/runs/scalar Runs n=90000 bound=100000 ll=1200000 rle=0
+Segmented/runs/detected Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/runs/detected Runs n=800000 bound=900000 ll=1200000 rle=0
+Segmented/runs/detected Runs n=90000 bound=100000 ll=1200000 rle=0
+Cooperative2/runs/detected Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/runs/detected Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/runs/detected Runs n=90000 bound=100000 ll=1200000 rle=0
+Segmented/columns/scalar ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/columns/scalar ColumnInPlace n=99000 bound=100000 ll=100000 rle=0
+Segmented/columns/scalar ColumnInPlace n=700000 bound=900000 ll=900000 rle=0
+Cooperative2/columns/scalar ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/columns/scalar ColumnSeparate n=99000 bound=100000 ll=100000 rle=140004
+Cooperative2/columns/scalar ColumnSeparate n=700000 bound=900000 ll=900000 rle=700025
+Segmented/columns/detected ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/columns/detected ColumnInPlace n=99000 bound=100000 ll=100000 rle=0
+Segmented/columns/detected ColumnInPlace n=700000 bound=900000 ll=900000 rle=0
+Cooperative2/columns/detected ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/columns/detected ColumnSeparate n=99000 bound=100000 ll=100000 rle=140004
+Cooperative2/columns/detected ColumnSeparate n=700000 bound=900000 ll=900000 rle=700025
+Segmented/run-column/scalar Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/run-column/scalar ColumnInPlace n=700000 bound=900000 ll=1200000 rle=0
+Cooperative2/run-column/scalar Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/run-column/scalar ColumnSeparate n=700000 bound=900000 ll=1200000 rle=700025
+Segmented/run-column/detected Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/run-column/detected ColumnInPlace n=700000 bound=900000 ll=1200000 rle=0
+Cooperative2/run-column/detected Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/run-column/detected ColumnSeparate n=700000 bound=900000 ll=1200000 rle=700025
+Segmented/column-run/scalar ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/column-run/scalar Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/column-run/scalar Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/column-run/scalar ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/column-run/scalar Runs n=600000 bound=900000 ll=600000 rle=70002
+Cooperative2/column-run/scalar Runs n=800000 bound=900000 ll=1200000 rle=70002
+Segmented/column-run/detected ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/column-run/detected Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/column-run/detected Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/column-run/detected ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/column-run/detected Runs n=600000 bound=900000 ll=600000 rle=70002
+Cooperative2/column-run/detected Runs n=800000 bound=900000 ll=1200000 rle=70002
+test trace::tests::ledger_actual_routes_and_retained_history ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 2.95s

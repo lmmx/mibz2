@@ -1048,8 +1048,8 @@ fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
                     .collect::<Vec<_>>()
                     .join(",");
                 format!(
-                    "{:?}:{}:{}:{}:{bufs}",
-                    s.route, s.cooperative, s.rows, s.block_bound
+                    "{:?}:{}:{}:{}:{}:{bufs}",
+                    s.route, s.cooperative, s.avx2, s.rows, s.block_bound
                 )
             })
             .collect::<Vec<_>>()
@@ -1562,7 +1562,7 @@ fn parent(args: &[String]) {
     let report = J::O(vec![
         ("tool".into(), J::S("examples/occupancy.rs (#39)".into())),
         ("format".into(), J::N(1.0)),
-        ("worker_ledger".into(), J::S("route-history-v1; per-worker integer validation before aggregation".into())),
+        ("worker_ledger".into(), J::S("route-history-v2; per-worker integer validation before aggregation".into())),
         ("meta".into(), J::O(meta.into_iter().map(|(k, v)| (k, J::S(v))).collect())),
         ("machine".into(), m.json()),
         (
@@ -2534,6 +2534,7 @@ mod tests {
             t.allocations.push(AllocationSample {
                 route: OutputRoute::Runs,
                 cooperative: false,
+                avx2: false,
                 rows,
                 block_bound: 900_000,
                 buffers,
