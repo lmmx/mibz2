@@ -115,9 +115,13 @@ between run records and a full column. Its buffers retain their capacities:
 | column, separate output (Cooperative) | this block's stream bound M | n |
 
 For each worker, keep the maximum request q separately for `ll` and `rle` and the
-maximum n for `tt`. Before averaging, check every snapshot and the final buffers.
+maximum n and maximum possible request u for `tt`. Before averaging, check every snapshot and the final buffers.
 Zero requests require zero capacity. Otherwise `ll` and `rle` capacity must be in
-[q, max(8, 2q−1)], and `tt` in [4n, 4 max(4, 2n−1)]. These finite bounds follow from
+[q, max(8, 2q−1)], and `tt` in [4n, 4 max(4, 2u−1)]. For a scalar run or a column, the T-vector request is n. The one-core AVX2 run fill
+reserves n+8 slots for its final vector store. A cooperative run can fall back to that
+fill, so its upper request bound also includes those eight slots when AVX2 is selected;
+its lower capacity bound stays 4n. u is the maximum of these possible requests over
+that worker's history. These finite bounds follow from
 the current Rust Vec growth rule, max(request, twice the previous capacity, minimum
 allocation); they are a toolchain/source model, not a Rust API guarantee. Capacities
 must cover lengths, never decrease, and agree with the last recorded snapshot.
@@ -138,9 +142,9 @@ but not certified by these bounds**. RSS, allocator overhead and tracing metadat
 also outside this check. Pipelined/service paths do not export this route history;
 they cannot obtain a passing route-history ledger verdict from this instrument.
 
-The raw JSON carries `worker_ledger=route-history-v1`. Each traced run's raw `line`
+The raw JSON carries `worker_ledger=route-history-v2`. Each traced run's raw `line`
 contains `alloc.workerN.name`, `.errors` and `.history`; each history record is
-`Route:cooperative:rows:block_bound:buffer:len:capacity,...`, separated by `|`.
+`Route:cooperative:avx2:rows:block_bound:buffer:len:capacity,...`, separated by `|`.
 All lengths and capacities there are integer bytes. Worker numbers are local to a
 trace, not identities across runs. Means remain descriptive. Every raw traced round
 must be complete and have zero `t.f.w.ledger_violations`; medians cannot erase a

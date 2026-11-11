@@ -25,7 +25,7 @@ so two metadata vectors use actual logical-length history with bounded growth.
 See [the ledger](../../ledger.md#route-aware-worker-validation) for the bound derivation.
 
 The occupancy instrument retains raw histories and errors (`worker_ledger` schema
-`route-history-v1`). Any traced round with missing/incomplete history or a worker
+`route-history-v2`). Any traced round with missing/incomplete history or a worker
 violation fails validation. A bad worker cannot hide in a mean, nor a bad round in a
 median. Output is written before exit; workflow `pipefail` and `always()` artifact
 upload preserve the failure and its evidence. Non-worker accounting assertions and
@@ -38,8 +38,8 @@ are in [evidence](evidence); SHA256SUMS covers both evidence and changed sources
 No performance inference is made from test durations.
 
 - `cargo test --features trace --lib trace::tests -- --nocapture`: 4/4, including
-  eight asserted-route sequences (Segmented and Cooperative<2>, runs, columns,
-  run→column, column→run). Every block has byte parity, successful CRC, independent
+  twenty scalar/detected asserted-route sequences (Segmented and Cooperative<2>, runs, columns,
+  run→column, column→run and the SIMD slack boundary). Every block has byte parity, successful CRC, independent
   RLE1 row count, actual route and stream-bound assertions, bounded capacities, and
   negative tests injecting impossible final `ll`, `rle` and `tt` capacities.
 - D100 witness: 600,000 then 800,000 run rows gives `ll=1,200,000`, `rle=0` for both
@@ -71,6 +71,38 @@ library run passed 98, failed the existing `parallel::plan_tests::the_policy_her
 assertion (`5 cores of 4 CPUs`), and ignored one census. No policy/test assertion was
 weakened; the follow-up constrains affinity to four allowed CPUs to match the container
 quota. All failures are archived, not replaced by the passing logs.
+
+## First CI failure and targeted correction
+
+At head `4d8bd424681de0b798106ab7d7dc5cc4ca3240b8`, Occupancy run
+42983415379/job130398892135 passed native instrument tests (99 library + 5 example)
+then failed the ordinary Occupancy step: 1t passed; 2t and 4t had per-worker violations.
+This is **Class A**, a model omission in this change. Forced teams did not run.
+The failure propagated as exit 1 and artifact upload succeeded, preserving JSON and
+text in artifact13838851302 (ZIP SHA256
+`62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417`).
+The exact downloaded ZIP (gzip-wrapped), job log, analysis and subsequent native
+validation are archived here. Parity passed; no failure was suppressed or rerun unchanged.
+
+All 3,973 recorded errors were T-vector bounds. `runs::fill_avx2` reserves n+8 slots;
+the scalar fill and cooperative build reserve n, but a cooperative run may fall back
+to the AVX2 fill. Raw worker history showed 899,992→900,000 rows giving capacities
+3,600,000→7,200,000, beyond the inherited n-only upper bound 7,199,996. The correction
+records selected AVX2 configuration and bounds the maximum possible request by n+8
+for AVX2 runs (n otherwise). The lower bound stays 4×maximum rows because a team can
+use the non-slack build. No observed capacity sets its own bound; no decoder code is
+changed. Schema v2 includes AVX2 configuration. Arithmetic replay of all 15,516 archived
+snapshots reports 3,949 old-bound snapshot failures and zero with the corrected bound;
+this is supplemental arithmetic evidence, not another timed run or full certification.
+
+Native matrix now runs scalar and detected kernels for both decoder types. The new
+99,992→100,000-row witness stays below the cooperative threshold and independently
+asserts the detected AVX2 T-vector capacity is 800,000 bytes. Restoring only the old
+upper-bound expression compiles and makes that witness fail (exit101; cap800000 vs
+bound799996), while the corrected matrix passes4/4. Occupancy tests pass5/5 and Clippy
+passes again. The failed initial head remains immutable; fresh automatic CI belongs
+to the new source correction, not to a retry of that head. Guardian's verdict must
+use the corrected exact head and its CI, while retaining this failure.
 
 ## Scope and review boundary
 

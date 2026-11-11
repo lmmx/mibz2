@@ -300,13 +300,20 @@ impl<I: bwt::InverseBwt> Scratch<I> {
     }
 
     #[cfg(any(test, feature = "trace"))]
-    fn record_allocation(&mut self, route: trace::OutputRoute, rows: usize, block_bound: usize) {
+    fn record_allocation(
+        &mut self,
+        route: trace::OutputRoute,
+        rows: usize,
+        block_bound: usize,
+        k: Kernels,
+    ) {
         if !cfg!(test) && trace::level() == 0 {
             return;
         }
         self.allocation_history.push(trace::AllocationSample {
             route,
             cooperative: self.inverse.wants_checkpoints(),
+            avx2: cfg!(target_arch = "x86_64") && k.avx2,
             rows,
             block_bound,
             buffers: self.buffers(),
@@ -377,7 +384,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {
             #[cfg(any(test, feature = "trace"))]
-            s.record_allocation(trace::OutputRoute::Runs, n, b.max_len);
+            s.record_allocation(trace::OutputRoute::Runs, n, b.max_len, k);
             return finish(&s.ll, b.crc, k, out);
         }
         // a broken tiling is a bug in `runs::front` (a debug build stops here): the column's
@@ -419,6 +426,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
         },
         n,
         b.max_len,
+        k,
     );
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
     finish(inverted, b.crc, k, out)
