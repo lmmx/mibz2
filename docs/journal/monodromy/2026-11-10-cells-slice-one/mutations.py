@@ -29,6 +29,8 @@ mutants = [
     ("wrong-backlink", "wr32(base, fb, rd32(base, bs));", "wr32(base, fb, fb as u32);", "cells_exhaustive_arbitrary_columns"),
     ("wrong-rotation", "const SHIFT: usize = 1;", "const SHIFT: usize = 0;", "cells_exhaustive_arbitrary_columns"),
     ("region-overrun", "let cap = (recs.len() + 2 + budget) * SLOT;", "let cap = (recs.len() + 1) * SLOT;", "miri_cells_exact_fit_and_reuse"),
+    # Leave reach counters intact: output parity, not instrumentation, must kill it.
+    ("missing-spine-recopy", "copy_long(dst.add(d), dst.add(f), lx);", "/* mutation: omit final marked-spine recopy */", "miri_cells_long_writer"),
 ]
 env = dict(os.environ, CARGO_TARGET_DIR=str(OUT / "target"), CARGO_BUILD_JOBS="4")
 results = {"source_sha256": hashlib.sha256(source.encode()).hexdigest(), "mutants": []}

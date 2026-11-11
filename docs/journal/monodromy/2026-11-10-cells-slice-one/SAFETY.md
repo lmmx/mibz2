@@ -35,6 +35,11 @@ letters may be dropped without producing a cell. Such a refusal is harmless beca
 uses the unchanged fallback. It is not claimed as a lower bound on the work needed to
 recover just one cycle of every malformed column.
 
+This implemented floor is the **marked-split letter count minus one**, not the stronger
+union-of-cuts `r2 - 1` filter in the research design (Researcher F02). For `1^51 0^50`
+at primary 0 it is 2, while the union-of-cuts floor is 3. The hard cell budget still
+bounds construction before any output write; this correction does not change admission.
+
 Refusals leave output contents, length and capacity untouched. Their work bounds, before
 running the unchanged fallback, are O(1), O(r) order construction, and O(r + B) with at most
 B cells respectively. A newly enlarged order buffer also incurs allocation/initialization.
@@ -79,7 +84,7 @@ performance admission only; it retains tiling, primary-row and allocation checks
 | Speculative prefetch field reads | Every slot offset is at least PAD=4096; FAR*SLOT=288. The two u32 reads before a slot remain inside initialized buffer storage, even if they read padding or stale data. The resulting pointer uses `wrapping_add` and is only a non-faulting hint. | Intrinsic only on x86_64 and outside Miri; no dereference of the hinted address. |
 | `copy16` in induction | Every factor has 16 readable initialized bytes in arena/rules. Single-byte alphabet has trailing slack. Read into a value precedes write, permitting overlap. Two speculative writes reach at most top+32. Arena advances by at most 16/cell and reserves 32 trailing bytes. | Both short/long candidate words are written; only the selected representation advances. |
 | Rule stores and word lengths | At most one 16-byte rule per cell, plus one speculative 16-byte store at the end. Factors are older words. The marker occurs in at most one factor; stripping it leaves a length <=n. The mark therefore cannot carry into packed word offsets. | Acyclic grammar, bounded return times of disjoint interval pieces. |
-| Position array reads/stores | Only long words name rules; their aligned offsets index an earlier rule in `[0,nr)`, nr<=B. Positions start at NIL. The marked spine seeds unmarked factors; descending rules propagate first positions before ascending rules read them. Marked rules are not expanded by the unmarked pass. | Whole initialized array, separate allocation; covered by Miri. |
+| Position array reads/stores | Only long words name rules; their aligned offsets index an earlier rule in `[0,nr)`, nr<=B. Positions start at NIL. The marked spine seeds unmarked factors; descending rules propagate first positions before ascending rules read them. Marked rules are not expanded by the unmarked pass. | Whole initialized array, separate allocation. Original Miri fixtures did not reach long rules (F01); the added `miri_cells_long_writer*` tests assert actual seeding, propagation, expansion, long copies and marked-spine recopy. Completed-run evidence, not selection alone, establishes Miri coverage. |
 | Output pointer writes and `copy_small/long` | Output is resized/initialized to n+32 before taking its pointer. Rotation cuts immediately after the marked unit row, so no unmarked factor straddles that cut. Its destination and length fit the period <=n. Short factors copy exact lengths from the distinct arena allocation. Long factors copy from an already expanded first occurrence; `ptr::copy` also permits overlap. | All output pointers remain in the same stable allocation through the writer. No raw reference survives resizing. |
 | Period repetition | A successful marked word has period in 1..=n, checked before writing. The writer covers the cycle, then safe doubling `copy_within` repeats/truncates it to n. | Includes disconnected and short-cycle malformed columns, checked against the shipped walk and decoder. |
 
@@ -107,6 +112,15 @@ bit and partial output; libbzip2 is an independent complete-output/error oracle.
 use cargo-mutants 27.1.0. `mutations.py` supplies the separate hand-selected unsafe-kernel
 mutations and requires each mutant to compile and fail its named test; timeouts and build
 failures do not count as kills.
+
+F01's targeted correction adds test-only per-call counters inside the actual writer
+branches. Complemented output makes missed writes observable; smaller-block reuse
+retains the arena, positions and output allocations. The n=550/R=8/B=88 witness calls
+ordinary `Cells::invert_runs`, asserts admission without any refusal, 57 cells and period
+55. The writer-specific mutant removes only the final recopy, leaving counters intact;
+byte parity must catch it. Original 37-test Miri and five-mutant outcomes remain valid
+for their original limited reach. See [F01 evidence](../2026-11-11-cells-f01/HANDOFF.md)
+for the corrected source digest, full Miri completion and independent recheck status.
 
 Independent adversarial B5 review is still required. The implementer wrote this proof and
 the tests; there is no claim of independent review or merge readiness.

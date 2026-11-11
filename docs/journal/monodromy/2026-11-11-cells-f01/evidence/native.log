@@ -1,0 +1,23 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.77s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-1352189059084a74)
+
+running 7 tests
+
+thread 'cells::tests::miri_cells_admission_and_invalid_records' (2278) panicked at src/cells.rs:264:17:
+cells canary
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+long writer n=31 p=16: WriterReach { period: 31, seeds: 1, descending: 7, propagated: 6, expanded: 7, long_copies: 0, spine_recopies: 0, repetitions: 0 }
+production long writer n=550 p=0: WriterReach { period: 55, seeds: 2, descending: 2, propagated: 1, expanded: 2, long_copies: 0, spine_recopies: 1, repetitions: 4 }
+long writer n=55 p=0: WriterReach { period: 55, seeds: 2, descending: 2, propagated: 1, expanded: 2, long_copies: 0test cells::tests::miri_cells_long_writer_production_admission ... , okspine_recopies
+: 1, repetitions: 0 }
+long writer n=55 p=3: WriterReach { period: 55, seeds: 2, descending: 6, propagated: 5, expanded: 6, long_copies: 1, spine_recopies: 0, repetitions: 0 }
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.02s
+

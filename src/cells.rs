@@ -40,6 +40,22 @@ struct Kernel {
     rule_end: usize,
     letters: usize,
     pos: Vec<u32>,
+    #[cfg(test)]
+    writer_reach: WriterReach,
+}
+/// Per-call reach, compiled out of production. Counts the actual writer branches,
+/// not column lengths or inferred grammar properties.
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, Default)]
+struct WriterReach {
+    period: usize,
+    seeds: usize,
+    descending: usize,
+    propagated: usize,
+    expanded: usize,
+    long_copies: usize,
+    spine_recopies: usize,
+    repetitions: usize,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Refusal {
@@ -621,7 +637,15 @@ impl Kernel {
     /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
     #[inline(never)]
     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
+        #[cfg(test)]
+        {
+            self.writer_reach = WriterReach::default();
+        }
         let p = (len & !MARK) as usize;
+        #[cfg(test)]
+        {
+            self.writer_reach.period = p;
+        }
         // (kept at its length from block to block: only the slack is written here)
         out.resize(n + 32, 0);
         let dst = out.as_mut_ptr();
@@ -670,6 +694,10 @@ impl Kernel {
                 } else {
                     let x = pos.add(((plain >> 32) as usize - ro) / 16);
                     *x = (*x).min(d as u32);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.seeds += 1;
+                    }
                 }
                 if a as u32 & MARK == 0 {
                     q += la;
@@ -684,13 +712,25 @@ impl Kernel {
                     continue;
                 }
                 let (a, b) = rule(ro + 16 * j);
+                #[cfg(test)]
+                {
+                    self.writer_reach.descending += 1;
+                }
                 if a as u32 > SMALL {
                     let x = pos.add(((a >> 32) as usize - ro) / 16);
                     *x = (*x).min(q);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.propagated += 1;
+                    }
                 }
                 if b as u32 > SMALL {
                     let x = pos.add(((b >> 32) as usize - ro) / 16);
                     *x = (*x).min(q + a as u32);
+                    #[cfg(test)]
+                    {
+                        self.writer_reach.propagated += 1;
+                    }
                 }
             }
             // its bytes: each factor's from the arena, or from where the factor first lies
@@ -701,6 +741,10 @@ impl Kernel {
                 }
                 let (a, b) = rule(ro + 16 * j);
                 let (ll, rr) = (a as u32 as usize, b as u32 as usize);
+                #[cfg(test)]
+                {
+                    self.writer_reach.expanded += 1;
+                }
                 let d = dst.add(q as usize);
                 if ll <= SMALL as usize {
                     copy_small(d, base.add((a >> 32) as usize), ll);
@@ -708,6 +752,10 @@ impl Kernel {
                     let f = *pos.add(((a >> 32) as usize - ro) / 16);
                     if f != q {
                         copy_long(d, dst.add(f as usize), ll);
+                        #[cfg(test)]
+                        {
+                            self.writer_reach.long_copies += 1;
+                        }
                     }
                 }
                 let d = d.add(ll);
@@ -717,6 +765,10 @@ impl Kernel {
                     let f = *pos.add(((b >> 32) as usize - ro) / 16);
                     if f != q + ll as u32 {
                         copy_long(d, dst.add(f as usize), rr);
+                        #[cfg(test)]
+                        {
+                            self.writer_reach.long_copies += 1;
+                        }
                     }
                 }
             }
@@ -740,6 +792,10 @@ impl Kernel {
                     let f = *pos.add(((plain >> 32) as usize - ro) / 16) as usize;
                     if f != d {
                         copy_long(dst.add(d), dst.add(f), lx);
+                        #[cfg(test)]
+                        {
+                            self.writer_reach.spine_recopies += 1;
+                        }
                     }
                 }
                 if a as u32 & MARK == 0 {
@@ -753,6 +809,10 @@ impl Kernel {
         while have < n {
             let more = have.min(n - have);
             out.copy_within(..more, have);
+            #[cfg(test)]
+            {
+                self.writer_reach.repetitions += 1;
+            }
             have += more;
         }
         out.truncate(n);
@@ -875,6 +935,135 @@ mod tests {
             kernel.buf[kernel.lay.ends[0]] ^= 1;
             assert!(std::panic::catch_unwind(|| kernel.check_canaries()).is_err());
         }
+    }
+
+    // Researcher F01 witness: BWT of (a^9 b^9)^3 c. Sorting rotations here
+    // independently constructs the column; primary 0/3 deliberately select
+    // different rotations rather than the source word's primary.
+    fn long_writer_column() -> Vec<u8> {
+        let mut word = [vec![b'a'; 9], vec![b'b'; 9]].concat().repeat(3);
+        word.push(b'c');
+        let n = word.len();
+        let mut starts: Vec<_> = (0..n).collect();
+        starts.sort_by_key(|&s| (0..n).map(|i| word[(s + i) % n]).collect::<Vec<_>>());
+        starts.iter().map(|&s| word[(s + n - 1) % n]).collect()
+    }
+
+    fn assert_long_passes(reach: WriterReach) {
+        assert!(reach.seeds > 0, "{reach:?}");
+        assert!(reach.descending > 0, "{reach:?}");
+        assert!(reach.propagated > 0, "{reach:?}");
+        assert!(reach.expanded > 0, "{reach:?}");
+    }
+
+    #[test]
+    fn miri_cells_long_writer() {
+        let column = long_writer_column();
+        let mut kernel = Kernel::default();
+        let mut out = Vec::new();
+        for (ll, p, expected_cells, expected_period) in [
+            ([vec![1; 16], vec![0; 15]].concat(), 16, 17, 31),
+            (column.clone(), 0, 37, 55),
+            (column, 3, 38, 55),
+        ] {
+            let want = oracle(&ll, p);
+            out.clear();
+            out.extend(want.iter().map(|b| !b));
+            let r = Runs::of_column(&ll);
+            let got = kernel.try_invert(r.records(), ll.len(), p, ll.len(), true, &mut out);
+            assert_eq!(got, Ok((expected_cells, expected_period)));
+            // This assertion must precede reach checks: removing a copy must be
+            // caught by output parity, not merely by removing a counter increment.
+            assert_eq!(out, want);
+            let reach = kernel.writer_reach;
+            eprintln!("long writer n={} p={p}: {reach:?}", ll.len());
+            assert_long_passes(reach);
+            if ll.len() == 55 && p == 0 {
+                assert!(reach.spine_recopies > 0, "{reach:?}");
+            }
+            if p == 3 {
+                assert!(reach.long_copies > 0, "{reach:?}");
+            }
+        }
+        // Retain the same arena, positions and output allocation, then shrink.
+        let cap = (kernel.buf.capacity(), kernel.pos.capacity(), out.capacity());
+        let ll = b"bbaaa";
+        let want = oracle(ll, 2);
+        out.clear();
+        out.extend(want.iter().map(|b| !b));
+        assert!(kernel
+            .try_invert(
+                Runs::of_column(ll).records(),
+                ll.len(),
+                2,
+                ll.len(),
+                true,
+                &mut out
+            )
+            .is_ok());
+        assert_eq!(out, want);
+        assert_eq!(
+            (kernel.buf.capacity(), kernel.pos.capacity(), out.capacity()),
+            cap
+        );
+        assert_eq!(kernel.writer_reach.expanded, 0, "reach resets per call");
+    }
+
+    #[test]
+    fn miri_cells_long_writer_production_admission() {
+        let ll: Vec<_> = long_writer_column()
+            .into_iter()
+            .flat_map(|b| [b; 10])
+            .collect();
+        let r = Runs::of_column(&ll);
+        assert_eq!(
+            (ll.len(), r.records().len(), ll.len() * 4 / 25),
+            (550, 8, 88)
+        );
+        let mut cells = Cells::default();
+        let want = oracle(&ll, 0);
+        let mut out: Vec<_> = want.iter().map(|b| !b).collect();
+        assert!(cells.invert_runs(&r, ll.len(), 0, &mut out, crate::Kernels::scalar()));
+        assert_eq!(out, want);
+        let counts = cells.counts();
+        assert_eq!(
+            (counts.admitted, counts.cells, counts.short_cycles),
+            (1, 57, 1)
+        );
+        assert_eq!(
+            (counts.density, counts.floor, counts.budget, counts.invalid),
+            (0, 0, 0, 0)
+        );
+        assert_eq!(cells.state.kernel.letters, 7);
+        let reach = cells.state.kernel.writer_reach;
+        assert_eq!(reach.period, 55);
+        eprintln!("production long writer n=550 p=0: {reach:?}");
+        assert_long_passes(reach);
+        assert!(
+            reach.spine_recopies > 0 && reach.repetitions > 0,
+            "{reach:?}"
+        );
+        // Successful smaller admitted block reuses all three allocations.
+        let cap = (
+            cells.state.kernel.buf.capacity(),
+            cells.state.kernel.pos.capacity(),
+            out.capacity(),
+        );
+        let small = vec![b'x'; 40];
+        let r = Runs::of_column(&small);
+        out.fill(!b'x');
+        assert!(cells.invert_runs(&r, small.len(), 0, &mut out, crate::Kernels::scalar()));
+        assert_eq!(out, small);
+        assert_eq!(cells.counts().admitted, 2);
+        assert_eq!(
+            (
+                cells.state.kernel.buf.capacity(),
+                cells.state.kernel.pos.capacity(),
+                out.capacity()
+            ),
+            cap
+        );
+        assert_eq!(cells.state.kernel.writer_reach.expanded, 0);
     }
 
     #[test]

@@ -16,6 +16,31 @@ fn cells_real_decoder_admission_reach() {
 }
 
 #[test]
+fn cells_long_writer_decoder_parity() {
+    // The F01 long-writer witnesses also pass through front, RLE1 and CRC,
+    // with the existing independent libbzip2 and shipped-decoder oracles.
+    let mut word = [vec![b'a'; 9], vec![b'b'; 9]].concat().repeat(3);
+    word.push(b'c');
+    let n = word.len();
+    let mut rotations: Vec<_> = (0..n).collect();
+    rotations.sort_by_key(|&s| (0..n).map(|i| word[(s + i) % n]).collect::<Vec<_>>());
+    let column: Vec<_> = rotations.iter().map(|&s| word[(s + n - 1) % n]).collect();
+    for k in [Kernels::scalar(), Kernels::detect()] {
+        for p in [0, 3] {
+            let z = craft(9, &[Spec::of(column.clone(), p)], None);
+            common::oracle(&z).unwrap();
+            cells::check(&z, k);
+        }
+        let large: Vec<_> = column.iter().flat_map(|&b| [b; 10]).collect();
+        let z = craft(9, &[Spec::of(large, 0)], None);
+        common::oracle(&z).unwrap();
+        let (prod, forced) = cells::check(&z, k);
+        assert_eq!((prod.admitted, prod.cells, prod.short_cycles), (1, 57, 1));
+        assert_eq!(forced.admitted, 1);
+    }
+}
+
+#[test]
 fn cells_corpora_and_structured_words() {
     let mut data: Vec<_> = common::corpora(1)
         .into_iter()

@@ -1,0 +1,163 @@
+Preparing a sysroot for Miri (target: x86_64-unknown-linux-gnu)... done
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.10s
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/c365e741c3e008ce/out/mibz2-c365e741c3e008ce)
+warning: constant `ALL` is never used
+  --> src/parallel/service_unwind_tests.rs:44:7
+   |
+44 | const ALL: [OuterAt; 9] = [
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `wrote` and `pooled` are never read
+   --> src/parallel/service_unwind_tests.rs:106:5
+    |
+103 | struct Ran {
+    |        --- fields in this struct
+...
+106 |     wrote: Result<(), Stopped>,
+    |     ^^^^^
+...
+114 |     pooled: u64,
+    |     ^^^^^^
+
+warning: function `every_point` is never used
+   --> src/parallel/service_unwind_tests.rs:259:4
+    |
+259 | fn every_point(input: (Vec<u8>, Vec<u8>)) -> u64 {
+    |    ^^^^^^^^^^^
+
+warning: function `parked` is never used
+   --> src/parallel/service_unwind_tests.rs:296:4
+    |
+296 | fn parked(z: &[u8], want: &[u8], last: u64) {
+    |    ^^^^^^
+
+warning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.
+
+
+running 39 tests
+test bwt::tests::miri_build_one_pass ... ok
+test bwt::tests::miri_inputs_reach_every_window_path ... ok
+test bwt::tests::miri_room_walk_handoffs ... ok
+test cells::tests::miri_cells_admission_and_invalid_records ...
+thread 'cells::tests::miri_cells_admission_and_invalid_records' (1004) panicked at src/cells.rs:264:17:
+cells canary
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+note: in Miri, you may have to set `MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE` for the environment variable to have an effect
+ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_long_writer ... long writer n=31 p=16: WriterReach { period: 31, seeds: 1, descending: 7, propagated: 6, expanded: 7, long_copies: 0, spine_recopies: 0, repetitions: 0 }
+long writer n=55 p=0: WriterReach { period: 55, seeds: 2, descending: 2, propagated: 1, expanded: 2, long_copies: 0, spine_recopies: 1, repetitions: 0 }
+long writer n=55 p=3: WriterReach { period: 55, seeds: 2, descending: 6, propagated: 5, expanded: 6, long_copies: 1, spine_recopies: 0, repetitions: 0 }
+ok
+test cells::tests::miri_cells_long_writer_production_admission ... production long writer n=550 p=0: WriterReach { period: 55, seeds: 2, descending: 2, propagated: 1, expanded: 2, long_copies: 0, spine_recopies: 1, repetitions: 4 }
+ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_build_runs_and_walk_back ... ok
+test coop::tests::miri_build_runs_refuses_wrong_cuts ... ok
+test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ...
+thread 'coop::tests::miri_pool_caller_panic_waits_for_the_helpers' (1039) panicked at src/coop.rs:2140:21:
+caller
+ok
+test coop::tests::miri_pool_caller_panic_wins ...
+thread 'coop::tests::miri_pool_caller_panic_wins' (1042) panicked at src/coop.rs:2164:24:
+caller
+
+thread 'mibz2-coop-1' (1043) panicked at src/coop.rs:2164:24:
+helper
+ok
+test coop::tests::miri_pool_dropped_while_parked ... ok
+test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ...
+thread 'mibz2-coop-2' (1052) panicked at src/coop.rs:2117:25:
+helper 2
+
+thread 'mibz2-coop-2' (1052) panicked at src/coop.rs:2117:25:
+helper 2
+ok
+test coop::tests::miri_pool_runs_every_index_once ... ok
+test coop::tests::miri_pool_writes_visible_after_run ... ok
+test coop::tests::miri_split_build_and_walk ... ok
+test coop::tests::miri_team_run_and_its_panic ...
+thread 'coop::tests::miri_team_run_and_its_panic' (1100) panicked at src/coop.rs:2001:13:
+an injected panic in team thread 0's walk
+
+thread 'mibz2-coop-1' (1101) panicked at src/coop.rs:2001:13:
+an injected panic in team thread 1's walk
+
+thread 'mibz2-coop-2' (1103) panicked at src/coop.rs:2001:13:
+an injected panic in team thread 2's walk
+ok
+test coop::tests::miri_walk_room_handoffs ... ok
+test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+test parallel::service_tests::miri_every_retirement_returns_its_buffers ...
+thread 'parallel::service_tests::miri_every_retirement_returns_its_buffers' (1113) panicked at src/parallel.rs:1962:13:
+an injected panic in block 3's preparing
+
+thread 'parallel::service_tests::miri_every_retirement_returns_its_buffers' (1113) panicked at src/parallel.rs:2157:21:
+an injected panic in block 4's one-core inversion
+
+thread 'parallel::service_tests::miri_every_retirement_returns_its_buffers' (1113) panicked at src/parallel.rs:2029:13:
+an injected panic in block 5's finishing
+ok
+test parallel::service_tests::miri_service_core_hub ...
+thread 'mibz2-svc-0' (1126) panicked at src/parallel.rs:1962:13:
+an injected panic in block 1's preparing
+
+thread 'mibz2-svc-0' (1130) panicked at src/parallel.rs:2029:13:
+an injected panic in block 2's finishing
+
+thread 'mibz2-0' (1135) panicked at src/parallel.rs:2157:21:
+an injected panic in block 1's one-core inversion
+
+thread 'mibz2-svc-1' (1157) panicked at src/parallel.rs:1962:13:
+an injected panic in block 1's preparing
+
+thread 'mibz2-svc-0' (1162) panicked at src/parallel.rs:2029:13:
+an injected panic in block 2's finishing
+
+thread 'mibz2-1' (1171) panicked at src/parallel.rs:2157:21:
+an injected panic in block 1's one-core inversion
+ok
+test parallel::service_unwind_tests::miri_outer_after_job ...
+thread 'mibz2-svc-0' (1182) panicked at src/parallel.rs:1591:5:
+an injected outer panic at AfterJob, block Some(1)
+ok
+test parallel::service_unwind_tests::miri_outer_after_publish ...
+thread 'mibz2-svc-0' (1189) panicked at src/parallel.rs:1591:5:
+an injected outer panic at AfterPublish, block Some(1)
+ok
+test parallel::service_unwind_tests::miri_outer_parked ...
+thread 'mibz2-svc-0' (1196) panicked at src/parallel.rs:1591:5:
+an injected outer panic at AfterJob, block Some(3)
+ok
+test parallel::unwind_tests::miri_run_panic_current ...
+thread 'mibz2-0' (1202) panicked at src/parallel.rs:960:9:
+injected at block 3, LeadEnd
+ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ...
+thread 'mibz2-0' (1208) panicked at src/parallel.rs:960:9:
+injected at block 2, LeadStart
+ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ...
+thread 'mibz2-0' (1215) panicked at src/parallel.rs:960:9:
+injected at block 1, LeadEnd
+ok
+test runs::tests::miri_runs_broken_tilings_refused ... ok
+test runs::tests::miri_runs_cuts_of_short_blocks ... ok
+test runs::tests::miri_runs_cuts_that_dont_tile_refused ... ok
+test runs::tests::miri_runs_decode_block_equals_the_column ... ok
+test runs::tests::miri_runs_fill_share_stores_end_inside_its_rows ... ok
+test runs::tests::miri_runs_front_edges ... ok
+test runs::tests::miri_runs_of_column_is_the_scan ... ok
+test runs::tests::miri_runs_synthetic_blocks ... Seen { ok: 19, too_long: 6, run_too_long: 2, rows: 50678, records: 560, cut: 397, deep: 32, tables: 19, walks: 19 }
+ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 58 filtered out; finished in 1155.64s
+
+warning: 5 warnings emitted
+
