@@ -536,6 +536,13 @@
       "comment_updated_at": null,
       "disposition": "Own attributed LOG already verified; fresh channel has no later external message. Silent no-op, no duplicate dispatch or comment.",
       "delivery_id": "a26077d0-ddbb-11f1-8ee5-8ddbfd73a6d8"
+    },
+    "6793646018": {
+      "status": "in_progress",
+      "delivery_id": "69a16110-ddbc-11f1-8cb8-637e60565fdc",
+      "comment_updated_at": null,
+      "action": "Reconcile completed independent reproduction; stage one real-block diagnostic behind busy Codex6791014104",
+      "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -679,14 +686,14 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "comment_id": 6793526035,
       "scope": "Independent targeted F01 recheck",
       "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
       "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6793526035",
-      "review_comment_id": 6790022921,
-      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
-      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0"
+      "review_comment_id": 6793646018,
+      "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
+      "recipient_cursor_sha": "4c3f2110f0026060bd76a523b2302668162ecab4"
     },
     "optimizer": {
       "status": "completed",
@@ -1071,5 +1078,11 @@
     "original_zip_verified": false,
     "independent_execution": false,
     "assignment": 6793526035
+  },
+  "pending_first_return": {
+    "status": "in_progress_before_queue_post",
+    "blocked_by": 6791014104,
+    "source_review": 6793646018,
+    "scope": "One untimed real-seam quote-delimiter diagnostic, with frozen adapter/export identities before candidate execution"
   }
 }
