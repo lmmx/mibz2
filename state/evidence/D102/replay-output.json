@@ -1,0 +1,39 @@
+{
+  "artifact_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417",
+  "traced_rounds": 36,
+  "histories": 84,
+  "samples": 15516,
+  "original_errors": {
+    "tt": 3973
+  },
+  "replayed_tt_errors": 3973,
+  "slack_envelope_errors": 0,
+  "bad_rounds": {
+    "(2, 'timeline')": 6,
+    "(2, 'full')": 6,
+    "(4, 'timeline')": 6,
+    "(4, 'full')": 6
+  },
+  "first": {
+    "round": 0,
+    "threads": 2,
+    "mode": "timeline",
+    "key": "alloc.worker1.errors",
+    "error": "sample_1:_tt_len_3600000_cap_7200000_outside_3600000.._7199996_(previous_3600000)"
+  },
+  "witness": [
+    {
+      "rows": 899992,
+      "request": 900000,
+      "capacity_words": 900000,
+      "capacity_bytes": 3600000
+    },
+    {
+      "rows": 900000,
+      "request": 900008,
+      "capacity_words": 1800000,
+      "capacity_bytes": 7200000
+    }
+  ],
+  "interpretation": "Original tt upper bound omits AVX2 n+8 reserve. Finite conservative request envelope explains raw errors; no native repair or resumption certified."
+}

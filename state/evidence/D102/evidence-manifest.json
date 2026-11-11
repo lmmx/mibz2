@@ -1,0 +1,38 @@
+{
+  "verified_paths": [
+    "src/lib.rs",
+    "src/trace.rs",
+    "examples/occupancy.rs",
+    ".github/workflows/occupancy.yml",
+    "docs/ledger.md",
+    "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/routes-initial.log.gz",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log"
+  ],
+  "source_hashes": {
+    "src/trace.rs": "0e4ddc0a9bef54c4fbb040b586a5005f0000fdcae1a4e9524f71974f294f83d7",
+    "examples/occupancy.rs": "d64851167d60037a2885626c23d19c6fff8ad0af0fcf0d6fd8bb74098555469c",
+    "src/lib.rs": "057736fa547389aade603b6e847e2d6c82c6ee34536f4033ef94ab8ede9a3e48",
+    "docs/journal/2026-11-11-occupancy-ledger/SHA256SUMS": "b01e86a4bd7d3256000738c68d063d4b080f1c547201f68484013960708508f6",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log": "c63c09caf6dc81904b103c679abbf86bd1dc583224714260df0594437723e07f",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log": "7bbae128a2043019e76fb4deb22802b822c1c65a78f2e16bafb26077303fbf25",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log": "bad8dae584e71ffba2f1aa90330a0718ea7a38488fa48f55241b495eb9e8f307",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log": "7f8a93f8779efec6e58ea1477c9b361a176fde2f7640a9ad5d9fb0231ed70105",
+    "src/coop.rs": "f7844ca9dda64b571a41c5b6b63b86632963dd882c3b052367268e02f06664f5",
+    "src/bwt.rs": "480397e3ada9326292bc78be6d5bf941126387c61ab484bc28a8f33bc0933b32",
+    "src/runs.rs": "f6cf74ce06a3afd33cbe9dfd0cc29398329f8242099809f265cafe03c401c91e",
+    "docs/ledger.md": "27b898b71bcd4b4ea1093184a882796460e66b2f9b8676db03549b8d94559809",
+    ".github/workflows/occupancy.yml": "6c8b2d14d221c9df5907ae7ad0868a3484e3aead1e4da119a6aa4bb36e09523c",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log": "4f234b2c7e0eeb240e1d9a7f812403a693236d6d124b643e94d96e297c2fc0a7",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log": "2f49ffeca22dfcd5d0f4c379082f02ce19e977d56aea9d639aec4a40fd6dfbdc",
+    "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log": "16a3e02c29251721affa6714c600f46fd65e00609716bc8917ffdd490d08bb3f",
+    "HANDOFF.md": "806e082e43af5802d5b88cc4b63aa5bf1b64599c425392476051de1ce4808b2a"
+  },
+  "artifact_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417"
+}

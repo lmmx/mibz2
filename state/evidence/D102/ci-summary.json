@@ -1,0 +1,86 @@
+{
+  "error_counts": {
+    "tt": 3973
+  },
+  "bad_rounds": "Counter({(2, 'timeline'): 6, (2, 'full'): 6, (4, 'timeline'): 6, (4, 'full'): 6})",
+  "traced_rounds": "Counter({(1, 'timeline'): 6, (1, 'full'): 6, (2, 'timeline'): 6, (2, 'full'): 6, (4, 'timeline'): 6, (4, 'full'): 6})",
+  "first": {
+    "round": 0,
+    "threads": 2,
+    "mode": "timeline",
+    "key": "alloc.worker1.errors",
+    "error": "sample_1:_tt_len_3600000_cap_7200000_outside_3600000.._7199996_(previous_3600000)",
+    "samples": [
+      "Runs:false:899992:900000:ll:899992:899992,counts:1024:1024,rle:0:0,runs.runs:116272:205226,runs.lit:11960:11960,runs.one:11960:11960,tt:3599968:3600000,seg.bufs:899992:2168874,seg.bufs.outer:12288:12288,seg.starts:2048:4088,seg.next:4096:4096",
+      "Runs:false:900000:900000:ll:900000:1799984,counts:1024:1024,rle:0:0,runs.runs:118956:410452,runs.lit:12760:23920,runs.one:12760:23920,tt:3600000:7200000,seg.bufs:904510:3829530,seg.bufs.outer:12288:12288,seg.starts:2044:4088,seg.next:4088:4096",
+      "Runs:false:30:900000:ll:30:1799984,counts:1024:1024,rle:0:0,runs.runs:54:410452,runs.lit:24:23920,runs.one:24:23920,tt:120:7200000,seg.bufs:904510:3829530,seg.bufs.outer:12288:12288,seg.starts:2044:4088,seg.next:4088:4096",
+      "Runs:false:900000:900000:ll:900000:1799984,counts:1024:1024,rle:0:0,runs.runs:114638:410452,runs.lit:11904:23920,runs.one:11904:23920,tt:3600000:7200000,seg.bufs:904510:3901110,seg.bufs.outer:12288:12288,seg.starts:2044:4088,seg.next:4088:4096"
+    ]
+  },
+  "parity": true,
+  "overhead": [
+    {
+      "threads": 1,
+      "perturbation": {
+        "timeline": {
+          "throughput_ratio": {
+            "ratio": 0.987186,
+            "lo": 0.964969,
+            "hi": 1.009914
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "throughput_ratio": {
+            "ratio": 0.994081,
+            "lo": 0.985878,
+            "hi": 1.002352
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      }
+    },
+    {
+      "threads": 2,
+      "perturbation": {
+        "timeline": {
+          "throughput_ratio": {
+            "ratio": 1.042699,
+            "lo": 0.976114,
+            "hi": 1.113827
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "throughput_ratio": {
+            "ratio": 1.03999,
+            "lo": 0.971583,
+            "hi": 1.113213
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      }
+    },
+    {
+      "threads": 4,
+      "perturbation": {
+        "timeline": {
+          "throughput_ratio": {
+            "ratio": 0.994265,
+            "lo": 0.985941,
+            "hi": 1.00266
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        },
+        "full": {
+          "throughput_ratio": {
+            "ratio": 1.001507,
+            "lo": 0.98967,
+            "hi": 1.013486
+          },
+          "verdict": "no perturbation shown (interval includes no change)"
+        }
+      }
+    }
+  ]
+}
