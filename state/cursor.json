@@ -880,13 +880,18 @@
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/145#issuecomment-6807501300"
       ],
-      "log_publication": "in_progress"
+      "log_publication": "published_readback_verified",
+      "log_comment_id": 6807528542
     },
     "6807501300": {
       "status": "observed_self_generated_noop",
       "delivery_id": "36100670-de17-11f1-9db8-ddacc827cdfd",
       "comment_updated_at": null,
       "queue_verified": true
+    },
+    "6807528542": {
+      "status": "own_log_recorded",
+      "source_comment_id": 6807455587
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -956,7 +961,8 @@
     6799739845,
     6799784143,
     6800580772,
-    6807501300
+    6807501300,
+    6807528542
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1148,10 +1154,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "labelled-research-disposition-6800510748",
+    "key": "performance-opportunities-6807455587",
     "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6800580772
+    "log_comment_id": 6807528542,
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
