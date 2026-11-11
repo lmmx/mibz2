@@ -2046,12 +2046,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D101",
-    "incoming_comment": 6782662288,
-    "review_comment_id": 6782751494,
-    "work_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
+    "active_comment": 6790511955,
+    "status": "in progress",
+    "decision": "D102",
+    "incoming_comment": 6790511955
   },
   "duplicate_events": [
     {
@@ -3643,6 +3641,13 @@
       "work_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1",
       "review_comment_id": 6782751494,
       "complete_cursor_commit": "951909b65cadb4615abf47844803d66dbc2cd672"
+    },
+    {
+      "comment_id": 6790511955,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D102",
+      "progress": "Migration verified; targeted D100 resumption review of PR368 exact head4d8bd424. Source and native/CI evidence assessment in progress."
     }
   ],
   "migrated_from": {
