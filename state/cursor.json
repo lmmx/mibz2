@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6795316926,
+  "last_examined_comment_id": 6798260004,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -612,7 +612,7 @@
       "dispatches": 0
     },
     "6798202916": {
-      "status": "in_progress",
+      "status": "completed_queued_verified",
       "delivery_id": "6d25aa30-ddda-11f1-8344-5d6c74475454",
       "comment_updated_at": null,
       "action": "Stage bounded labelled origin/stable-identity contraction research after existing Codex production assignment and real-block probe; acknowledge relay",
@@ -643,7 +643,22 @@
           "sha256": "2a9b43644528b9be5cacc8bff137babd600cd97e14164a5c877cc7b98025b197"
         }
       ],
-      "executed": false
+      "executed": false,
+      "disposition": "Full relay and all five payloads read; each exact byte count and SHA256 verified. One bounded labelled-origin/stable-identity local-contraction followup queued after current production6791014104 and earlier real-block6793754589, preserving frozen probe. Scripts not rerun; queued not dispatched/delivered/executed.",
+      "queue_comment_id": 6798260004,
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6798260004"
+      ],
+      "log_publication": "pending",
+      "ready_job_queued": false,
+      "ready_job_reason": "366 preparation/final checks, deliberate master incorporation and exact ready signaling outstanding"
+    },
+    "6798260004": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "c2f71de0-ddda-11f1-9c61-1fa51ae5f908",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -707,7 +722,8 @@
     6793538633,
     6793754589,
     6793788598,
-    6795316926
+    6795316926,
+    6798260004
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -896,10 +912,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "reduced-lf-6795264336",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6795316926
+    "key": "labelled-contraction-relay-6798202916",
+    "status": "in_progress_before_grouped_log",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -1229,5 +1244,18 @@
     "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793754589",
     "verification": "Current coord.py audit exit0; busy route145 QUEUED; readback exact; verify ok. Existing6791014104 remains sole in-flight implementation.",
     "recipient_execution_observed": false
+  },
+  "pending_labelled_contraction": {
+    "status": "queued_verified_not_dispatched",
+    "queue_comment_id": 6798260004,
+    "priority": 2,
+    "after": [
+      6791014104,
+      6793754589
+    ],
+    "source_comment_id": 6798202916,
+    "scope": "Verify supplied checks, origin annotation, one boundary-local stable-identity contraction prototype; at most one conditional sub-exchange summary",
+    "limits": "one pass; two hours implementation/analysis; thirty minutes aggregate candidate execution; freeze finite input/schedules/rule before data",
+    "execution_observed": false
   }
 }
