@@ -2066,12 +2066,10 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D102",
-    "incoming_comment": 6790511955,
-    "review_comment_id": 6790710467,
-    "work_commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
+    "active_comment": 6790746386,
+    "status": "in progress",
+    "decision": "D103",
+    "incoming_comment": 6790746386
   },
   "duplicate_events": [
     {
@@ -3682,6 +3680,13 @@
       "work_commit": "b371d2b060d467906e2b8bc250423341b8c2908e",
       "review_comment_id": 6790710467,
       "complete_cursor_commit": "f7c4438a789d436db0a6985bd6d4647c5d1e0038"
+    },
+    {
+      "comment_id": 6790746386,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D103",
+      "progress": "Migration verified. Targeted D102 delta/resumption review of corrected PR368 head bfd5d322; prior accepted ll/rle/metadata findings retained."
     }
   ],
   "migrated_from": {
