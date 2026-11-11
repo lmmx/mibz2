@@ -21,12 +21,14 @@
       "clippy": "pass",
       "format": "pass",
       "negative_mutation": "old n-only bound compiles and fails new boundary test",
-      "occupancy_ci": "42984639389/job130402788066 success; ordinary1/2/4t and forced2x2; all overhead intervals include zero"
+      "occupancy_ci": "42984639389/job130402788066 success; ordinary1/2/4t and forced2x2; all overhead intervals include zero",
+      "benchmark": "42984639455 workflow passed; records2t wall +3.8% [0.2,7.5]; other walls include zero; hashes agree; largest RSS increase +2.8%"
     },
     "handoff": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
     "remaining": [
       "Guardian targeted D100 resumption",
-      "remaining exact-head Benchmark/Miri CI"
+      "Miri42984639399 completion",
+      "Coordinator performance disposition: records2t +3.8% [0.2,7.5], primaries neutral"
     ],
     "next_action": "Coordinator complete queued Guardian follow-up6790684381 on corrected exact head; no workstation readiness claimed",
     "automatic_github_wakeup_assumed": false,

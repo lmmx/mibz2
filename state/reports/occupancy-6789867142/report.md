@@ -23,3 +23,15 @@ Guardian clearance. D100 and #366 readiness still require the targeted dispositi
 The initial failed run42983415379 remains archived in the PR's immutable handoff.
 Its Class A SIMD slack omission was corrected in source, not suppressed or rerun at
 the unchanged head. Benchmark/Miri completion is separate from this Occupancy result.
+
+## Default benchmark, same source head
+
+Run42984639455/job130402789216 completed. Downloaded artifact13839780487,
+ZIP SHA256 `b71cfc446af451204fd703fa4041c58e1d3bdf6d6287abbb6987a08c4284736d`,
+is archived along with its readable report. Wikidata/text wall intervals include zero;
+Wikidata resource assessment detects no change. All hashes agree. However, records2t
+wall is +3.8% [0.2,7.5], flagged slower; other wall intervals include zero. Largest
+reported RSS increase is text2t +2.8%. Workflow success is not an all-corpus-neutral
+performance verdict. No rerun, code-layout perturbation or acceptance-rule change.
+Coordinator must disposition this evidence under the applicable policy separately
+from Guardian's D100 accounting resumption. Miri is still pending at this checkpoint.
