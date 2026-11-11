@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790532200,
+  "last_examined_comment_id": 6790570318,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -376,6 +376,17 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6790570318": {
+      "status": "observed_targeted_correction_active",
+      "delivery_id": "9d3ce780-dda6-11f1-8cd0-0137d5f1afea",
+      "comment_updated_at": null,
+      "disposition": "Codex reports continuing same D100 assignment to correct AVX2 n+8 tt request-bound omission. Original368 head remains failed and is not eligible for resumption. Guardian already has one targeted assignment in progress; no duplicate review/implementation or receipt-only LOG. Await corrected exact-head evidence and independent disposition.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790570318"
+      ],
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -434,9 +445,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790532200,
-    "delivery_id": "4f8b87d0-dda6-11f1-9ea5-7b2cc334a1b3",
-    "disposition": "self_generated_noop"
+    "comment_id": 6790570318,
+    "delivery_id": "9d3ce780-dda6-11f1-8cd0-0137d5f1afea",
+    "disposition": "targeted_correction_observed_no_duplicate_dispatch"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -531,17 +542,18 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "completed",
+      "status": "delivered_active_targeted_ci_correction",
       "comment_id": 6789867142,
       "queue_comment_id": 6782527893,
       "scope": "D100 separate instrument repair",
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
-      "recipient_report": 6790288240,
+      "recipient_report": 6790570318,
       "recipient_evidence": "Existing live Codex session reports implementation and native matrix execution for exact assignment6789867142; finished cursor/evidence pending.",
       "recipient_cursor_sha": "74f895134ea677c215005a42d5ac27a18a5f2ecd",
       "review_comment_id": 6790465896,
       "pr": 368,
-      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8"
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction."
     },
     "guardian": {
       "status": "posted_verified_not_delivered",
@@ -549,7 +561,13 @@
       "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
       "source_comment_id": 6790465896,
       "comment_id": 6790511955,
-      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790511955"
+      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790511955",
+      "recipient_state_observation": {
+        "cursor_sha": "00fb6e86570fa9e586a85c5cfb28de266e772f44",
+        "status": "in_progress",
+        "decision": "D102",
+        "completion": false
+      }
     },
     "observer": {
       "status": "completed",
@@ -701,13 +719,13 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Guardian6790511955 targeted D100 resumption; await actual REVIEW plus cursor, not posting alone.",
-    "PR368 exact-head pending CI including Occupancy and existing tracing overhead rule; no automatic merge.",
-    "PR365 F01 resolved; integration deferred on frozen performance gate, no rerun.",
-    "No ready workstation job until366 eligibility; existing direct Run signal path when authenticated dispatch available."
+    "Codex same6789867142 targeted AVX2 request-bound correction underway via6790570318; await new exact head and evidence, no duplicate assignment.",
+    "Guardian6790511955 targeted D100 review already in progress; failed4d8bd424 head cannot receive resumption clearance. Reconcile corrected evidence before any lift.",
+    "No ready workstation job: D100/#366 readiness restriction remains.",
+    "PR365 F01 resolved; integration deferred on frozen performance gate, unchanged."
   ],
   "pending_ledger_repair": {
-    "status": "implementation_delivered_targeted_resumption_pending",
+    "status": "targeted_ci_correction_active_resumption_blocked",
     "priority": 2,
     "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions",
@@ -725,13 +743,18 @@
       "run": 42983415379,
       "job": 130398892135,
       "status": "failure",
-      "classification": "project ledger validation failure; cause not yet independently classified",
+      "classification": "Class A instrument bound omission reported by author; independent Guardian assessment pending",
       "evidence": "Instrument tests pass; ordinary Occupancy exits1 with per-worker ledger violations221 at2t and131 at4t;1t ledger passes. Teams step skipped, not passed. Parity/events reconcile. Failure artifact upload succeeds.",
       "artifact_id": 13838851302,
       "server_reported_zip_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417",
       "archive_bytes_verified": false,
-      "action": "Retain D100 and existing Guardian6790511955 targeted review; no retry, duplicate assignment or readiness."
-    }
+      "action": "Keep D100/#366 restriction; current4d8bd424 head ineligible for resumption. Same Codex session preparing bounded kernel-aware correction and scalar/detected boundary regressions; Guardian6790511955 assessment already in progress.",
+      "reported_cause": "AVX2 runs::fill reserves n+8 T-vector slots;899992→900000 rows may grow tt3600000→7200000 bytes, exceeding inherited n-only bound7199996. Scalar native tests missed SIMD slack.",
+      "archive_digest_verified_by_recipient": true,
+      "root_archive_bytes_verified": false
+    },
+    "correction_report": 6790570318,
+    "correction_head_pending": true
   },
   "diagnostic_pr367": {
     "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
@@ -775,6 +798,6 @@
       "Authenticated workflow_dispatch access available to existing authorised Coordinator runtime",
       "Supported continuation of existing Codex executor; current issue comments do not start it"
     ],
-    "d100_progress": "Codex completed6789867142 via6790465896 plus cursor; exact368 repair routed to original Guardian161/6790511955. D100 not lifted."
+    "d100_progress": "Same Codex assignment continues bounded correction after genuine CI failure; original native delivery is not readiness. Guardian targeted review already in progress."
   }
 }
