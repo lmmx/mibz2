@@ -1,0 +1,19 @@
+import sys,collections
+sys.path.insert(0,sys.argv[1]); from cgparse import parse
+D=float(sys.argv[2]); pat=sys.argv[3]; src=sys.argv[4]
+agg=parse(sys.argv[5:])
+lines=collections.Counter(); tot=0
+for (fn,f,l),v in agg.items():
+    if fn and pat in fn: lines[(f,l)]+=v; tot+=v
+print(pat,'self Ir/D %.3f'%(tot/D))
+srcs={}
+def text(f,l):
+    import os
+    p=os.path.join(src,f)
+    if p not in srcs:
+        try: srcs[p]=open(p).read().split('\n')
+        except Exception: srcs[p]=None
+    t=srcs[p]
+    return t[l-1].strip()[:90] if t and 0<l<=len(t) else ''
+for (f,l),v in sorted(lines.items(), key=lambda kv:(kv[0][0],kv[0][1])):
+    if v/D>=0.004: print('%7.3f %-12s %5d  %s'%(v/D,f,l,text(f,l)))

@@ -1,0 +1,21 @@
+import sys, collections
+S = sys.argv[1]
+steps = {"master": 0x16580 % 4096, "head": 0x16700 % 4096}
+for n in ("master", "head"):
+    rows = [tuple(map(int, l.split())) for l in open(f"{S}/probe-{n}.txt")]
+    cres = collections.Counter(c % 4096 for c, _ in rows)
+    fres = collections.Counter(r % 4096 for _, r in rows)
+    meet = 0
+    for c, r in rows:
+        # frame [rsp, rsp+0x1c0) against counts [c, c+0x400), residues mod 4096
+        fr = {(r + i) % 4096 for i in range(0, 0x1c0, 4)}
+        cw = {(c + i) % 4096 for i in range(0, 0x400, 4)}
+        meet += bool(fr & cw)
+    c0 = next(iter(cres))
+    sw = {(steps[n] + i) % 4096 for i in range(0x800)}
+    ov = len({(c0 + i) % 4096 for i in range(0x400)} & sw)
+    print(n, "launches", len(rows), "| counts residues", {hex(k): v for k, v in cres.items()},
+          "| distinct frame residues", len(fres), "all multiples of 64:", all(k % 64 == 0 for k in fres),
+          "| frame meets counts' window in", meet, f"({meet/len(rows):.2f})",
+          "| STEPS at", hex(steps[n]), "counts bytes on STEPS' residues:", ov, "of 1024")
+print("expected meet fraction, uniform frame base in 64-byte steps:", round(sum(1 for b in range(0,4096,64) if any((b+i)%4096 < 0x400 for i in range(0,0x1c0,4)))/64, 3))

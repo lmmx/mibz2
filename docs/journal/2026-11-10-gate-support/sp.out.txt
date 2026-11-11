@@ -1,0 +1,4 @@
+stack and heap residues modulo 4096 over 2,000 launches of sp.c (stack heap), summary:
+launches 2000 distinct stack residues 256 min/max count 2 18
+heap residues {672: 2000}
+chi2 over 256 cells 262.5 df 255
