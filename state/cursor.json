@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6794938121,
+  "last_examined_comment_id": 6795264336,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -592,11 +592,16 @@
       "ready_job_reason": "366 incorporation/final checks, deliberate master integration and existing-workflow exact ready signaling remain outstanding."
     },
     "6795264336": {
-      "status": "in_progress",
+      "status": "completed_research_context_retained",
       "delivery_id": "c2f320e0-ddc7-11f1-895e-bb297f1982ab",
       "comment_updated_at": null,
       "action": "Decide retain restricted exact-cache research context; revise naive lifting hypothesis without additional experiment or production dispatch",
-      "head": "85735b38ebfa804acd31a6291bb7c08b6bf57760"
+      "head": "85735b38ebfa804acd31a6291bb7c08b6bf57760",
+      "disposition": "Retain restricted exact-cache formulation as research context; revise naive positional/deletion lifting claim. PR369 report,plan,validation,raw witness evidence read; results SHA256 matches fd1fbad437455bd036f32fbec116ca14d8e666b472008b54beedb39d3fc279f9. No independent full reproduction or mathematical certification. Existing6791014104 remains incomplete and6793754589 queued; no new experiment or reviewer.",
+      "dispatches": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "366 preparation/final checks, deliberate master integration and ready signaling outstanding",
+      "log_publication": "pending"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -848,12 +853,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "first-return-reproduction-thesis-6793646018-6793678261",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "queue_comment_id": 6793754589,
-    "log_comment_id": 6793788598,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793788598"
+    "key": "reduced-lf-6795264336",
+    "status": "in_progress_before_grouped_log",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -1151,6 +1153,16 @@
       "branch_reported": "research/codex-reduced-lf",
       "execution_verified": false,
       "relationship": "Distinct from assigned366 preparation6791014104 and queued real-block6793754589; neither completed nor dispatched by this notice"
+    },
+    {
+      "comment_id": 6795264336,
+      "pr": 369,
+      "head": "85735b38ebfa804acd31a6291bb7c08b6bf57760",
+      "decision": "retain restricted exact-cache research context; revise naive lifting; no new experiment",
+      "results_sha256": "fd1fbad437455bd036f32fbec116ca14d8e666b472008b54beedb39d3fc279f9",
+      "results_digest_verified": true,
+      "independent_execution": false,
+      "production_assignment_completed": false
     }
   ],
   "research_artifact_delivery": {
