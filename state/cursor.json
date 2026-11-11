@@ -250,10 +250,14 @@
       "delivery_id": "79e0dfb0-dd62-11f1-9e88-085a73e432fa"
     },
     "6782751494": {
-      "status": "in_progress",
+      "status": "completed_operation_deferred",
       "delivery_id": "158a9320-dd63-11f1-9f70-4f2a298c1e00",
       "comment_updated_at": null,
-      "planned_action": "Accept completed D101 design assessment; defer privileged bridge, retain scoped consumer finding; route one batched Observer update and log owner boundary."
+      "planned_action": "Accept completed D101 design assessment; defer privileged bridge, retain scoped consumer finding; route one batched Observer update and log owner boundary.",
+      "disposition": "Accepted actual D101 design delivery; independent trust root and safe consumer semantics unverified. Bridge deferred under D6/A4; source finding retained. No scientific HOLD resolved. Observer assignment6782796787 routed/verified, no recipient execution yet.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6782796787"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -295,7 +299,8 @@
     6782551058,
     6782560706,
     6782662288,
-    6782678458
+    6782678458,
+    6782796787
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -396,8 +401,9 @@
       "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     },
     "observer": {
-      "status": "in_progress_before_post",
-      "scope": "D101 authority boundary and verified consumer source defect; no new scientific gate"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6782796787,
+      "scope": "D101 design-only boundary and consumer source finding"
     }
   },
   "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
@@ -440,12 +446,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "bridge-assessment-6782590919",
-    "status": "published_readback_verified",
+    "key": "d101-decision-6782751494",
+    "status": "in_progress_before_log",
     "event_dispositions_persisted": true,
-    "planned_action": "Grouped assessment decision, Guardian route and current gates",
-    "log_comment_id": 6782678458,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782678458"
+    "planned_action": "One grouped decision and owner intervention boundary"
   },
   "dispatch_history": [
     {
