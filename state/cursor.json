@@ -936,6 +936,12 @@
       "ready_job_reason": "#366 deferred implementation incomplete; this isolated research authorises no workstation job",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6808483473": {
+      "status": "in_progress",
+      "delivery_id": "5f758b00-de1e-11f1-83e8-06d3a7b11b8f",
+      "comment_updated_at": null,
+      "action": "Preserve REVISE metadata under frozen rule; reconcile actual completion and dispatch next queued6807501300, no second real-block attempt"
     }
   },
   "automatic_github_wakeup_assumed": false,
