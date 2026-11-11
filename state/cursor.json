@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790465896,
+  "last_examined_comment_id": 6790532200,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -367,7 +367,15 @@
       "disposition": "PR368 exact head and handoff plus Codex completed cursor verified. Accept bounded implementation delivery; D100 remains pending original Guardian targeted review and CI. Next assignment routed and readback/route verified, recipient execution not yet observed.",
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790511955"
-      ]
+      ],
+      "log_comment_id": 6790532200
+    },
+    "6790532200": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "4f8b87d0-dda6-11f1-9ea5-7b2cc334a1b3",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -418,16 +426,17 @@
     6789886982,
     6790143614,
     6790163736,
-    6790511955
+    6790511955,
+    6790532200
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790465896,
-    "delivery_id": "d7320d40-dda5-11f1-8ea2-629c4873a7f1",
-    "disposition": "completed_delivery_next_review_dispatched"
+    "comment_id": 6790532200,
+    "delivery_id": "4f8b87d0-dda6-11f1-9ea5-7b2cc334a1b3",
+    "disposition": "self_generated_noop"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -594,8 +603,10 @@
   },
   "checkpoint": {
     "key": "d100-completion-6790465896",
-    "status": "in_progress",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6790532200,
+    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790532200"
   },
   "dispatch_history": [
     {
