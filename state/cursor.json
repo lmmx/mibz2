@@ -164,9 +164,10 @@
     6767025138,
     6769305752,
     6771319195,
-    6782111848
+    6782111848,
+    6789867476
   ],
-  "last_processed_comment_id": 6782111848,
+  "last_processed_comment_id": 6789867476,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1904,13 +1905,19 @@
     },
     {
       "trigger_comment_id": 6789867476,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
       "report_path": "state/reports/cells-f01-6789867476/report.md",
       "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
-      "disposition": "F01 resolved at d4f0e8fb: actual writer coverage, exact-source completed Miri and byte-parity recopy mutation verified. F02 prose correction accepted. CI, adoption and D100 separate."
+      "disposition": "F01 resolved at d4f0e8fb: actual writer coverage, exact-source completed Miri and byte-parity recopy mutation verified. F02 prose correction accepted. CI, adoption and D100 separate.",
+      "review_comment_id": 6790022921,
+      "publication_verification": {
+        "body_author_issue": "matched",
+        "routing": "pass",
+        "pinned_verify_exception": "Helper requires FROM coordinator; actual FROM researcher preserved."
+      }
     }
   ],
   "active_delegations": [],
