@@ -1921,11 +1921,13 @@
     },
     {
       "trigger_comment_id": 6793526035,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
-      "report_path": "state/reports/first-return-6793526035/report.md"
+      "report_path": "state/reports/first-return-6793526035/report.md",
+      "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
+      "disposition": "All supplied structural results reproduce exactly; recommend one bounded untimed real-block delimiter falsifier, not production certification."
     }
   ],
   "active_delegations": [],
