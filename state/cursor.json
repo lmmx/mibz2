@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790684381,
+  "last_examined_comment_id": 6790710467,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -407,11 +407,15 @@
       "dispatches": 0
     },
     "6790710467": {
-      "status": "in_progress",
+      "status": "completed_HOLD_retained_corrected_recheck_dispatched",
       "delivery_id": "a4056550-dda7-11f1-830f-a87617f1780a",
       "comment_updated_at": null,
       "planned_action": "Accept D102 old-head diagnosis and retained scoped HOLD; dispatch queued6790684381 to now-free original Guardian on corrected bfd5d322 head with successful ordinary/team Occupancy.",
-      "report_commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
+      "report_commit": "b371d2b060d467906e2b8bc250423341b8c2908e",
+      "disposition": "D102 and finished cursor accepted at old4d8bd424 head. Corrected bfd5d322 now has successful ordinary/team Occupancy steps; queued6790684381 dispatched to same original Guardian, verified not delivered.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790746386"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -464,16 +468,17 @@
     6790163736,
     6790511955,
     6790532200,
-    6790684381
+    6790684381,
+    6790746386
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790684381,
-    "delivery_id": "72ff7fe0-dda7-11f1-9349-40efff93f3c8",
-    "disposition": "self_generated_noop"
+    "comment_id": 6790710467,
+    "delivery_id": "a4056550-dda7-11f1-830f-a87617f1780a",
+    "disposition": "D102_accepted_corrected_recheck_dispatched"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -582,10 +587,12 @@
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction."
     },
     "guardian": {
-      "status": "in_progress",
+      "status": "posted_verified_not_delivered",
       "scope": "Queued6790684381 targeted corrected-head D100 resumption",
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
-      "queue_comment_id": 6790684381
+      "queue_comment_id": 6790684381,
+      "comment_id": 6790746386,
+      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790746386"
     },
     "observer": {
       "status": "completed",
@@ -638,11 +645,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "d100-completion-6790465896",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6790532200,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790532200"
+    "key": "d102-6790710467",
+    "status": "in_progress",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -753,11 +758,9 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Guardian6790511955 already in progress; reconcile exact reviewed head and finished cursor.",
-    "Conditional queued6790684381 targets corrected368 bfd5d322; dispatch only after current Guardian completion unless already covered.",
-    "Corrected368 CI pending at last read; no clearance transferred from old head.",
-    "No ready workstation job: D100/#366 restriction remains.",
-    "PR365 F01 resolved; frozen performance deferral unchanged."
+    "Guardian6790746386 targeted corrected-head resumption; await actual REVIEW plus finished cursor.",
+    "Corrected368 Benchmark and Miri pending at read; no automatic merge or transfer of old-head verdict.",
+    "No ready workstation job: D100/#366 restriction retained pending independent resumption and readiness."
   ],
   "pending_ledger_repair": {
     "status": "corrected_delivery_independent_resumption_pending",
@@ -792,10 +795,26 @@
     "correction_head_pending": false,
     "corrected_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "corrected_head_followup": {
-      "status": "queued_readback_verified",
+      "status": "dispatched_verified_recipient_pending",
       "blocked_by": 6790511955,
       "dedup_rule": "If current Guardian review incorporates exact corrected head and finishes, mark covered; otherwise dispatch targeted followup only after REVIEW plus finished cursor.",
-      "queue_comment_id": 6790684381
+      "queue_comment_id": 6790684381,
+      "assignment_comment_id": 6790746386,
+      "prior_review": 6790710467
+    },
+    "corrected_ci": {
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "occupancy_run": 42984639389,
+      "job": 130402788066,
+      "ordinary": "success",
+      "teams": "success",
+      "artifact_upload": "success",
+      "legacy": "success",
+      "remaining_at_read": [
+        "Benchmark42984639455",
+        "Miri42984639399"
+      ],
+      "independent_clearance": false
     }
   },
   "diagnostic_pr367": {
