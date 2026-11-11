@@ -908,9 +908,14 @@
         "https://github.com/lmmx/mibz2/issues/363#issuecomment-6808027528"
       ],
       "handoff_cursor_blob": "f0cb4244a2f80883f282a9d2047d59b58fbf515c",
-      "log_publication": "in_progress",
+      "log_publication": "published_readback_verified",
       "ready_job_queued": false,
-      "ready_job_reason": "366 implementation explicitly incomplete; final validation and deliberate master integration outstanding"
+      "ready_job_reason": "366 implementation explicitly incomplete; final validation and deliberate master integration outstanding",
+      "log_comment_id": 6808041276
+    },
+    "6808041276": {
+      "status": "own_log_recorded",
+      "source_comment_id": 6807992359
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -982,7 +987,8 @@
     6800580772,
     6807501300,
     6807528542,
-    6808027528
+    6808027528,
+    6808041276
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1166,9 +1172,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "performance-opportunities-6807455587",
+    "key": "handoff-real-block-6807992359",
     "status": "published_readback_verified",
-    "log_comment_id": 6807528542,
+    "log_comment_id": 6808041276,
     "event_dispositions_persisted": true
   },
   "dispatch_history": [
