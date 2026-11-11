@@ -695,8 +695,12 @@
       "log_comment_id": 6799784143
     },
     "6799784143": {
-      "status": "own_publication_readback_verified",
-      "comment_updated_at": null
+      "status": "observed_self_generated_noop",
+      "comment_updated_at": null,
+      "delivery_id": "c45add80-dde3-11f1-913a-ce793bf6c554",
+      "response_comments": 0,
+      "dispatches": 0,
+      "disposition": "Own priority reconciliation LOG; no newer external message or recipient completion cursor. Keep sole resume pending; no duplicate research dispatch. No ready workstation job because366 is paused unfinished and readiness checks remain."
     }
   },
   "automatic_github_wakeup_assumed": false,
