@@ -405,6 +405,13 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6790710467": {
+      "status": "in_progress",
+      "delivery_id": "a4056550-dda7-11f1-830f-a87617f1780a",
+      "comment_updated_at": null,
+      "planned_action": "Accept D102 old-head diagnosis and retained scoped HOLD; dispatch queued6790684381 to now-free original Guardian on corrected bfd5d322 head with successful ordinary/team Occupancy.",
+      "report_commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -575,18 +582,10 @@
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction."
     },
     "guardian": {
-      "status": "posted_verified_not_delivered",
-      "scope": "Targeted D100 resumption review of368",
-      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
-      "source_comment_id": 6790465896,
-      "comment_id": 6790511955,
-      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790511955",
-      "recipient_state_observation": {
-        "cursor_sha": "00fb6e86570fa9e586a85c5cfb28de266e772f44",
-        "status": "in_progress",
-        "decision": "D102",
-        "completion": false
-      }
+      "status": "in_progress",
+      "scope": "Queued6790684381 targeted corrected-head D100 resumption",
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "queue_comment_id": 6790684381
     },
     "observer": {
       "status": "completed",
@@ -725,6 +724,22 @@
       "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288",
       "review_comment_id": 6782751494,
       "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
+    },
+    {
+      "status": "completed",
+      "scope": "Targeted D100 resumption review of368",
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "source_comment_id": 6790465896,
+      "comment_id": 6790511955,
+      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790511955",
+      "recipient_state_observation": {
+        "cursor_sha": "00fb6e86570fa9e586a85c5cfb28de266e772f44",
+        "status": "in_progress",
+        "decision": "D102",
+        "completion": false
+      },
+      "review_comment_id": 6790710467,
+      "report_commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
     }
   ],
   "codex_correction": {
