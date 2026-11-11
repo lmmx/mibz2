@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6799750846,
+  "last_examined_comment_id": 6799784143,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -684,13 +684,19 @@
         "https://github.com/lmmx/mibz2/pull/145#issuecomment-6798260004",
         "https://github.com/lmmx/mibz2/issues/363#issuecomment-6799739845"
       ],
-      "log_publication": "pending"
+      "log_publication": "published_readback_verified",
+      "log_comment_id": 6799784143
     },
     "6799750846": {
       "status": "observed_direct_manual_research_started_formal_reconciliation_pending",
       "delivery_id": "9045e350-dde3-11f1-8580-7f5d8bec4bca",
       "comment_updated_at": null,
-      "disposition": "Actual recipient reports isolated research start15:21UTC under direct owner instruction; not a formal routed ID or completion. Existing production work paused pending deferred handoff; no duplicate assignment or restart."
+      "disposition": "Actual recipient reports isolated research start15:21UTC under direct owner instruction; not a formal routed ID or completion. Existing production work paused pending deferred handoff; no duplicate assignment or restart.",
+      "log_comment_id": 6799784143
+    },
+    "6799784143": {
+      "status": "own_publication_readback_verified",
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -757,7 +763,8 @@
     6795316926,
     6798260004,
     6798286997,
-    6799739845
+    6799739845,
+    6799784143
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -950,8 +957,9 @@
   },
   "checkpoint": {
     "key": "research-priority-6799687151",
-    "status": "in_progress_before_grouped_log",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6799784143
   },
   "dispatch_history": [
     {
