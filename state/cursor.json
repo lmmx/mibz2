@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6793538633,
+  "last_examined_comment_id": 6793754589,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -538,17 +538,32 @@
       "delivery_id": "a26077d0-ddbb-11f1-8ee5-8ddbfd73a6d8"
     },
     "6793646018": {
-      "status": "in_progress",
+      "status": "completed_reproduction_accepted_next_probe_queued",
       "delivery_id": "69a16110-ddbc-11f1-8cb8-637e60565fdc",
       "comment_updated_at": null,
       "action": "Reconcile completed independent reproduction; stage one real-block diagnostic behind busy Codex6791014104",
-      "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02"
+      "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
+      "disposition": "Actual REVIEW plus finished Researcher cursor verified. Three suites reproduce original result JSON hashes; no demonstrated correctness defect in the tested scope, no real-data or timing qualification. Queue one bounded untimed real-block falsifier behind unfinished Codex6791014104; no duplicate review.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793754589"
+      ],
+      "log_publication": "pending"
     },
     "6793678261": {
-      "status": "in_progress",
+      "status": "completed_reference_retained",
       "delivery_id": "a539ba10-ddbc-11f1-8b54-d4ee3a9e4a4d",
       "comment_updated_at": null,
-      "action": "Retain relayed thesis assessment as MONODROMY research reference; acknowledge together with completed reproduction and queued diagnostic, without duplicate assignment or priority change"
+      "action": "Retain relayed thesis assessment as MONODROMY research reference; acknowledge together with completed reproduction and queued diagnostic, without duplicate assignment or priority change",
+      "disposition": "Read entire thesis relay. Retain reduced/boosted dynamics and labelled lifting as hypotheses for MONODROMY; Coordinator did not independently read thesis or certify claims. No priority shift or overlapping assignment; acknowledge in grouped LOG.",
+      "log_publication": "pending"
+    },
+    "6793754589": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "2d46ad00-ddbd-11f1-946a-9df7219facde",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793754589",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -609,7 +624,8 @@
     6791527208,
     6793304677,
     6793526035,
-    6793538633
+    6793538633,
+    6793754589
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -694,8 +710,8 @@
     "researcher": {
       "status": "completed",
       "comment_id": 6793526035,
-      "scope": "Independent targeted F01 recheck",
-      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "scope": "Bounded independent first-return prototype reproduction and cost assessment",
+      "head": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
       "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6793526035",
       "review_comment_id": 6793646018,
       "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
@@ -798,11 +814,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "d102-6790710467",
-    "status": "published_readback_verified",
+    "key": "first-return-reproduction-thesis-6793646018-6793678261",
+    "status": "in_progress_before_grouped_log",
     "event_dispositions_persisted": true,
-    "log_comment_id": 6790760045,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790760045"
+    "queue_comment_id": 6793754589
   },
   "dispatch_history": [
     {
@@ -915,6 +930,15 @@
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction.",
       "completion_reconciled_by": 6790889882
+    },
+    {
+      "status": "completed",
+      "comment_id": 6789867476,
+      "scope": "Independent targeted F01 recheck",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "review_comment_id": 6790022921,
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+      "note": "Preserved prior assignment metadata when correcting inherited current Researcher intent fields."
     }
   ],
   "codex_correction": {
@@ -930,7 +954,8 @@
   "next_actions": [
     "Codex: bounded366 recipe-branch incorporation and untimed preparation; await actual REVIEW+cursor",
     "Separate deliberate authorised Coordinator run: integration of368 at exact checked head; no event merge",
-    "Admit workstation job only after final recipe exact-head checks,master incorporation and Run signal ready tag; no job queued"
+    "Admit workstation job only after final recipe exact-head checks,master incorporation and Run signal ready tag; no job queued",
+    "After genuine Codex6791014104 completion REVIEW plus cursor: route queued6793754589, one untimed first-return real-block falsifier; no overlapping implementation"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -1089,13 +1114,20 @@
     "path": "research/chatgpt-first-return-20261111",
     "manifest_payloads_verified": 9,
     "original_zip_verified": false,
-    "independent_execution": false,
-    "assignment": 6793526035
+    "independent_execution": true,
+    "assignment": 6793526035,
+    "independent_review": 6793646018,
+    "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
+    "execution_scope": "Researcher reproduced three supplied Python suites; all archived result JSON byte hashes match; no real-data or timing run"
   },
   "pending_first_return": {
-    "status": "in_progress_before_queue_post",
+    "status": "queued_verified_not_dispatched",
     "blocked_by": 6791014104,
     "source_review": 6793646018,
-    "scope": "One untimed real-seam quote-delimiter diagnostic, with frozen adapter/export identities before candidate execution"
+    "scope": "One untimed real-seam quote-delimiter diagnostic, with frozen adapter/export identities before candidate execution",
+    "queue_comment_id": 6793754589,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793754589",
+    "verification": "Current coord.py audit exit0; busy route145 QUEUED; readback exact; verify ok. Existing6791014104 remains sole in-flight implementation.",
+    "recipient_execution_observed": false
   }
 }
