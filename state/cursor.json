@@ -433,6 +433,15 @@
       "report_commit": "75ec0c6fc50f258d174bdecfd915ec85d08571e5",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6790889882": {
+      "status": "in_progress",
+      "delivery_id": "08dfc410-dda9-11f1-93b2-efe3111d77cd",
+      "comment_updated_at": null,
+      "action": "Reconcile D103, decide instrument repair integration, route bounded366 preparation to free Codex lane, then grouped LOG",
+      "guardian_review": 6790889882,
+      "guardian_cursor_blob": "c0b688d57e688385daded01b4a5514e80241648d",
+      "report_commit": "b7af95428922d3c81d8007d548ce22002db57eaf"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -591,32 +600,27 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "completed_corrected_delivery",
-      "comment_id": 6789867142,
-      "queue_comment_id": 6782527893,
-      "scope": "D100 separate instrument repair",
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
-      "recipient_report": 6790570318,
-      "recipient_evidence": "Existing live Codex session reports implementation and native matrix execution for exact assignment6789867142; finished cursor/evidence pending.",
-      "recipient_cursor_sha": "6979dd196e6fe571c5a14edc48af8ca81035bb2a",
-      "review_comment_id": 6790645377,
-      "pr": 368,
-      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
-      "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction."
+      "status": "in_progress_before_post",
+      "scope": "Prepare existing366 with exact reviewed368 accounting repair; preserve frozen diagnostic; no master merge,queue,tag or execution",
+      "source_comment_id": 6790889882,
+      "existing_recipe_head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2"
     },
     "guardian": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "scope": "Queued6790684381 targeted corrected-head D100 resumption",
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "queue_comment_id": 6790684381,
       "comment_id": 6790746386,
       "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6790746386",
       "recipient_state_observation": {
-        "cursor_sha": "408e692c9b865e2c4e0856bc42c32d9aff4c072f",
-        "status": "in_progress",
-        "decision": "D103",
-        "completion": false
-      }
+        "status": "finished",
+        "review_comment_id": 6790889882,
+        "completion": true
+      },
+      "review_comment_id": 6790889882,
+      "report_commit": "b7af95428922d3c81d8007d548ce22002db57eaf",
+      "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
       "status": "completed",
@@ -632,7 +636,7 @@
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
   "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor.",
   "workstation_preparation": {
-    "status": "deferred_ci_failure",
+    "status": "repair_cleared_recipe_incorporation_pending",
     "recipe": "bench-onecore-inline-i9",
     "decision": "Existing #361 i9 1t A/B highest-value ready-to-prepare; cells requires coverage diagnosis first",
     "candidate": "d33787e138426cb441db6975f54b2eccca02e89a",
@@ -655,7 +659,12 @@
       "class": "A inherited accounting defect; scoped B6 HOLD",
       "failure": "teams ledger ll1799923 exceeds900000; rle38 below900000; assertion ledger check fails under teams",
       "action": "no retry; Guardian bounded invariant classification",
-      "decision": "No ledger-validity claim or #366 ready admission until corrected source and native evidence. D1001bfe226e98e9589b60a626e30a67ea1b31bf8c38. No demonstrated storage breach; no blanket decoder stop."
+      "decision": "No ledger-validity claim or #366 ready admission until corrected source and native evidence. D1001bfe226e98e9589b60a626e30a67ea1b31bf8c38. No demonstrated storage breach; no blanket decoder stop.",
+      "resumption": {
+        "review": 6790889882,
+        "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+        "scope": "repaired accounting paths only; old366 head retains its failed evidence"
+      }
     }
   },
   "ci_incident_365": {
@@ -771,6 +780,21 @@
       },
       "review_comment_id": 6790710467,
       "report_commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
+    },
+    {
+      "status": "completed_corrected_delivery",
+      "comment_id": 6789867142,
+      "queue_comment_id": 6782527893,
+      "scope": "D100 separate instrument repair",
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
+      "recipient_report": 6790570318,
+      "recipient_evidence": "Existing live Codex session reports implementation and native matrix execution for exact assignment6789867142; finished cursor/evidence pending.",
+      "recipient_cursor_sha": "6979dd196e6fe571c5a14edc48af8ca81035bb2a",
+      "review_comment_id": 6790645377,
+      "pr": 368,
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction.",
+      "completion_reconciled_by": 6790889882
     }
   ],
   "codex_correction": {
@@ -784,13 +808,12 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Guardian6790746386 D103 corrected-head resumption in progress; await substantive REVIEW and finished cursor, no duplicate.",
-    "Miri42984639399 remains pending; all other368 workflows and legacy succeed.",
-    "At independent resumption reconcile368 records2t +3.8% secondary flag as instrument-repair integration tradeoff, not an all-corpus-neutral or primary-speedup claim; no rerun.",
-    "No ready workstation job: D100/#366 restriction remains until independent disposition and readiness gates."
+    "Codex: bounded366 recipe-branch incorporation and untimed preparation; await actual REVIEW+cursor",
+    "Separate deliberate authorised Coordinator run: integration of368 at exact checked head; no event merge",
+    "Admit workstation job only after final recipe exact-head checks,master incorporation and Run signal ready tag; no job queued"
   ],
   "pending_ledger_repair": {
-    "status": "corrected_delivery_independent_resumption_pending",
+    "status": "accounting_resolved_integration_recommended",
     "priority": 2,
     "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions",
@@ -822,12 +845,13 @@
     "correction_head_pending": false,
     "corrected_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "corrected_head_followup": {
-      "status": "dispatched_verified_recipient_pending",
+      "status": "completed",
       "blocked_by": 6790511955,
       "dedup_rule": "If current Guardian review incorporates exact corrected head and finishes, mark covered; otherwise dispatch targeted followup only after REVIEW plus finished cursor.",
       "queue_comment_id": 6790684381,
       "assignment_comment_id": 6790746386,
-      "prior_review": 6790710467
+      "prior_review": 6790710467,
+      "review_comment_id": 6790889882
     },
     "corrected_ci": {
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
@@ -837,17 +861,18 @@
       "teams": "success",
       "artifact_upload": "success",
       "legacy": "success",
-      "remaining_at_read": [
-        "Miri42984639399"
-      ],
-      "independent_clearance": false,
+      "remaining_at_read": [],
+      "independent_clearance": true,
       "benchmark_run": 42984639455,
       "report_commit": "75ec0c6fc50f258d174bdecfd915ec85d08571e5",
       "occupancy_artifact": 13838404688,
       "occupancy_zip_sha256": "f2e7c1d0d421a858e8efde116aa9bf3d2e06650552746a036022589d251af2e7",
       "artifact_bytes_verified_by_author": true,
       "artifact_bytes_verified_by_coordinator": false,
-      "reported_raw_evidence": "36 complete ordinary runs15516 snapshots;4 teams2x2 runs1724 snapshots;zero per-worker violations,parity/events reconcile;overhead intervals include zero, two-round team estimates broad."
+      "reported_raw_evidence": "36 complete ordinary runs15516 snapshots;4 teams2x2 runs1724 snapshots;zero per-worker violations,parity/events reconcile;overhead intervals include zero, two-round team estimates broad.",
+      "guardian_review": 6790889882,
+      "miri": "success",
+      "all_seven_workflows": "success"
     },
     "performance_evidence": {
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
@@ -859,7 +884,7 @@
       "secondary_loss": "records2t +3.8% [0.2,7.5]",
       "rss_max_increase_percent": 2.8,
       "parity": true,
-      "decision": "No further benchmark warranted for this secondary flag. Keep measured loss explicit; do not label all-corpus neutral or performance-policy speedup acceptance. Final instrument-repair integration tradeoff remains Coordinator decision after independent D100 and Miri; no transfer of365 gate or verdict.",
+      "decision": "Recommend integration as tracing/accounting correctness repair under OWNERSHIP engineering judgment. No new default-build tracing operations or decoder kernel/allocation changes; no claimed primary speedup and not PERFORMANCE-POLICY §2 optimization ACCEPT. Accept recorded secondary records2t +3.8% [0.2,7.5], primaries neutral and RSS max+2.8%; no rerun. Exact-head seven Actions including Miri plus legacy success. Any merge separate deliberate authorised Coordinator run with fresh expected-head checks.",
       "rerun": false
     }
   },
