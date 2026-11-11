@@ -1,0 +1,8 @@
+{
+  "freeze_sha256": "7c2d9953362b71bb71033729385a7f8bfeae223cc53a19d3837b759babaa64b3",
+  "block": 1,
+  "delimiter": 34,
+  "max_seconds": 600,
+  "address_space_bytes": 268435456,
+  "attempts": 1
+}
