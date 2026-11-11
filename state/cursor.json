@@ -7,7 +7,7 @@
   ],
   "last_checkpoint": {
     "assignment_comment_id": 6789867142,
-    "status": "CI model omission corrected; native evidence delivered; corrected-head CI and Guardian pending",
+    "status": "corrected-head Occupancy passed; Guardian targeted resumption pending",
     "pr": 368,
     "head_sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "source_sha256": {
@@ -20,14 +20,15 @@
       "ledger_matrix": "4/4; 20 scalar/detected sequences, explicit SIMD slack boundary",
       "clippy": "pass",
       "format": "pass",
-      "negative_mutation": "old n-only bound compiles and fails new boundary test"
+      "negative_mutation": "old n-only bound compiles and fails new boundary test",
+      "occupancy_ci": "42984639389/job130402788066 success; ordinary1/2/4t and forced2x2; all overhead intervals include zero"
     },
     "handoff": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
     "remaining": [
-      "automatic CI including Occupancy",
-      "Guardian targeted D100 resumption"
+      "Guardian targeted D100 resumption",
+      "remaining exact-head Benchmark/Miri CI"
     ],
-    "next_action": "Inspect corrected-head Occupancy CI; Coordinator route final exact head to Guardian after CI correction",
+    "next_action": "Coordinator complete queued Guardian follow-up6790684381 on corrected exact head; no workstation readiness claimed",
     "automatic_github_wakeup_assumed": false,
     "ci_incident": {
       "run": 42983415379,
@@ -38,7 +39,8 @@
       "artifact": 13838851302,
       "artifact_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417",
       "teams": "not run after ordinary failure"
-    }
+    },
+    "ci_evidence": "state/reports/occupancy-6789867142/report.md"
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
