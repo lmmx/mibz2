@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790570318,
+  "last_examined_comment_id": 6790684381,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -389,11 +389,22 @@
       "response_comments": 0
     },
     "6790645377": {
-      "status": "in_progress",
+      "status": "completed_corrected_delivery_followup_queued",
       "delivery_id": "2af40c70-dda7-11f1-9a9a-2a3aaa1c0dbb",
       "comment_updated_at": null,
       "planned_action": "Reconcile corrected368 head and native evidence; queue targeted exact-head follow-up while original Guardian busy, deduplicate if current REVIEW incorporates correction.",
-      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2"
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "disposition": "Corrected368 head bfd5d322651974f9803f4c03942cf3ba3b5161d2 and updated Codex completion cursor verified. Accept corrected implementation/native delivery, not independent clearance. Guardian6790511955 busy; conditional followup queued6790684381, deduplicate if current review incorporates this exact head.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790684381"
+      ]
+    },
+    "6790684381": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "72ff7fe0-dda7-11f1-9349-40efff93f3c8",
+      "comment_updated_at": null,
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -445,16 +456,17 @@
     6790143614,
     6790163736,
     6790511955,
-    6790532200
+    6790532200,
+    6790684381
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790570318,
-    "delivery_id": "9d3ce780-dda6-11f1-8cd0-0137d5f1afea",
-    "disposition": "targeted_correction_observed_no_duplicate_dispatch"
+    "comment_id": 6790684381,
+    "delivery_id": "72ff7fe0-dda7-11f1-9349-40efff93f3c8",
+    "disposition": "self_generated_noop"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -549,17 +561,17 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "delivered_active_targeted_ci_correction",
+      "status": "completed_corrected_delivery",
       "comment_id": 6789867142,
       "queue_comment_id": 6782527893,
       "scope": "D100 separate instrument repair",
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
       "recipient_report": 6790570318,
       "recipient_evidence": "Existing live Codex session reports implementation and native matrix execution for exact assignment6789867142; finished cursor/evidence pending.",
-      "recipient_cursor_sha": "74f895134ea677c215005a42d5ac27a18a5f2ecd",
-      "review_comment_id": 6790465896,
+      "recipient_cursor_sha": "6979dd196e6fe571c5a14edc48af8ca81035bb2a",
+      "review_comment_id": 6790645377,
       "pr": 368,
-      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction."
     },
     "guardian": {
@@ -726,13 +738,14 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex same6789867142 targeted AVX2 request-bound correction underway via6790570318; await new exact head and evidence, no duplicate assignment.",
-    "Guardian6790511955 targeted D100 review already in progress; failed4d8bd424 head cannot receive resumption clearance. Reconcile corrected evidence before any lift.",
-    "No ready workstation job: D100/#366 readiness restriction remains.",
-    "PR365 F01 resolved; integration deferred on frozen performance gate, unchanged."
+    "Guardian6790511955 already in progress; reconcile exact reviewed head and finished cursor.",
+    "Conditional queued6790684381 targets corrected368 bfd5d322; dispatch only after current Guardian completion unless already covered.",
+    "Corrected368 CI pending at last read; no clearance transferred from old head.",
+    "No ready workstation job: D100/#366 restriction remains.",
+    "PR365 F01 resolved; frozen performance deferral unchanged."
   ],
   "pending_ledger_repair": {
-    "status": "targeted_ci_correction_active_resumption_blocked",
+    "status": "corrected_delivery_independent_resumption_pending",
     "priority": 2,
     "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions",
@@ -743,7 +756,7 @@
     "validation_claims": "Committed handoff inspected: native99 passed plus5 occupancy, preserved failures; root has not rerun tests or verified archive bytes. CI and walk-stats success, legacy success, other5 Actions including Occupancy in progress at dispatch.",
     "review_comment_id": 6790465896,
     "pr": 368,
-    "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+    "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "guardian_assignment": 6790511955,
     "ci_incident": {
       "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
@@ -761,12 +774,13 @@
       "root_archive_bytes_verified": false
     },
     "correction_report": 6790570318,
-    "correction_head_pending": true,
+    "correction_head_pending": false,
     "corrected_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "corrected_head_followup": {
-      "status": "in_progress_queue_publication",
+      "status": "queued_readback_verified",
       "blocked_by": 6790511955,
-      "dedup_rule": "If current Guardian review incorporates exact corrected head and finishes, mark covered; otherwise dispatch targeted followup only after REVIEW plus finished cursor."
+      "dedup_rule": "If current Guardian review incorporates exact corrected head and finishes, mark covered; otherwise dispatch targeted followup only after REVIEW plus finished cursor.",
+      "queue_comment_id": 6790684381
     }
   },
   "diagnostic_pr367": {
