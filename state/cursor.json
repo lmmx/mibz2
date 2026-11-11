@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6784526782,
+  "last_examined_comment_id": 6789457478,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -288,6 +288,17 @@
       "response_comments": 0,
       "dispatches": 0,
       "delivery_id": "69b37e90-dd71-11f1-8a53-9843aae32dde"
+    },
+    "6789457478": {
+      "status": "observed_recipient_active_not_completed",
+      "delivery_id": "702c51c0-dd9e-11f1-9508-6108168d1f41",
+      "comment_updated_at": null,
+      "disposition": "Actual Codex milestone explicitly cites6782519694 and test implementation after manual owner resume. Assignment delivered/active, not completed. Cursor still only completes6782141557. No next dispatch until completed REVIEW plus cursor. Coordinator snapshot audit passed; recipient direct audit403 recorded, no fabricated pass.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6789457478"
+      ],
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -339,10 +350,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6784526782,
-    "delivery_id": "69b37e90-dd71-11f1-8a53-9843aae32dde",
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "comment_id": 6789457478,
+    "delivery_id": "702c51c0-dd9e-11f1-9508-6108168d1f41",
+    "disposition": "active_recipient_milestone_no_new_assignment"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -418,11 +428,13 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_active_not_completed",
       "comment_id": 6782519694,
       "queue_comment_id": 6782394725,
       "scope": "B5 F01 targeted correction to frozen #365",
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694"
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694",
+      "recipient_evidence": "Actual implementation milestone6789457478 after manual owner resume; no completion cursor yet",
+      "recipient_report": 6789457478
     },
     "guardian": {
       "status": "completed",
@@ -441,7 +453,7 @@
       "report_commit": "97dc7b6d8c5951728d3e670ea2e4c9e86415ef67"
     }
   },
-  "codex_wake_limitation": "No Codex automation exists in task inventory and no launch/resume connector exposed. Discovered GitHub webhook schema excludes non-PR issues, so #363 cannot be watched by that trigger. Current Codex session manually launched by Louis, observed via6782113588. No automatic restart verified.",
+  "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
   "workstation_authorisation": "Louis 2026-11-10 explicitly authorises preparing checked, frozen, ready-tagged recipes under PROTOCOL9 and says he starts just workstation-queue --wait 12. No direct workstation execution by this monitor.",
   "workstation_preparation": {
     "status": "deferred_ci_failure",
@@ -535,7 +547,7 @@
     }
   ],
   "codex_correction": {
-    "status": "dispatched_verified_recipient_pending",
+    "status": "recipient_active_not_completed",
     "priority": 1,
     "scope": "F01 long writer Miri reach and targeted compiling mutation; no default/performance changes",
     "blocked_by_assignment": null,
@@ -599,6 +611,6 @@
       "Authenticated workflow_dispatch access available to existing authorised Coordinator runtime",
       "Supported continuation of existing Codex executor; current issue comments do not start it"
     ],
-    "d100_progress": "Source diagnosis complete; bounded correction queued6782527893, implementation not started; F01 assignment6782519694 pending receipt"
+    "d100_progress": "D100 correction remains queued6782527893. F01 current assignment6782519694 now actually active after owner manual resume, completion pending."
   }
 }
