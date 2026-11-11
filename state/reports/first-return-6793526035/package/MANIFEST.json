@@ -1,0 +1,38 @@
+{
+  "RESEARCH.md": {
+    "bytes": 22112,
+    "sha256": "e5158fc81f92363d1b6ceb9b52f90932ef5d0d5d89f2fa5c7cce0294940e4fdd"
+  },
+  "batch_induction.py": {
+    "bytes": 10492,
+    "sha256": "f2453be328aa3bb254c25f5d477d1333300bfa66bfb3a0e4fd1d8f073b83b9e6"
+  },
+  "batch_results.json": {
+    "bytes": 26831,
+    "sha256": "45d8e70e0908e79dc079d02501ab9f951014c637bd83015c2b503bd8b3432747"
+  },
+  "phrase_induction.py": {
+    "bytes": 4741,
+    "sha256": "7d5a39b52a230c8c7f23a66f3cea6f1a22485adec4e5d16239787a2490080ccc"
+  },
+  "phrase_results.json": {
+    "bytes": 12590,
+    "sha256": "05e9fc86bbc60d84f314eabd40fee136e9a4f687279c165297096de96ba60880"
+  },
+  "copy_dependency_example.py": {
+    "bytes": 1782,
+    "sha256": "7095db345e6a4bdf5191acf31ac0ef8de771720c9fe448b6a9cdef829b4a8cbc"
+  },
+  "copy_dependency_results.json": {
+    "bytes": 287,
+    "sha256": "0908681d90006ace83495b0a3f5924e2b0b51d1b2ed0b9ed1f45dbde895a0a9b"
+  },
+  "budget.json": {
+    "bytes": 773,
+    "sha256": "3819e783c4811c0f9bebf37aba52797c2e9f9a5c327d1f895f8f6a7136fc62fa"
+  },
+  "fixtures/GPL-3.txt": {
+    "bytes": 35149,
+    "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+  }
+}

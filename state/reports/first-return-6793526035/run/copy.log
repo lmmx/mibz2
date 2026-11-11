@@ -1,0 +1,1 @@
+{"description": "Logical counterexample; no timing or real-corpus claim.", "correctness_cases": 7696, "example_n": 32768, "bulk_copies": 15, "bytes_copied_after_seed": 32767, "whole_phrase_graph_has_self_edge": true, "byte_dependency_edges": "i -> i-1, terminating at 0"}

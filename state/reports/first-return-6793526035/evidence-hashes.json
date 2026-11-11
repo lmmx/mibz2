@@ -1,0 +1,11 @@
+{
+  "report.md": "e7d37e89845cb2a3d7f98403847e6ab180ea27e5378470fbeeec701bd51b6ac0",
+  "reproduction.json": "da53ad616d6f39494a0fa990dc177dddbebb02526283ab6c5e305471cab8a566",
+  "package/MANIFEST.json": "72120d042c6927697ae3de1b5db97509f1b8eb1c9e5993eaca1761a58931cfd8",
+  "run/phrase.log": "a660e8b43c9ddabfbc9ec69486e780e7984d7c93878f11d384f55a008d3cf639",
+  "run/copy.log": "0b9c1e05fdee5bcfd12a85cfd5ce8cb3080854d1bb6a9f3dabca58b461d93731",
+  "run/batch.log": "873220cc2f7105accabf2c7885c42c5b23b63be00e68f2c0530ff0dd198a497b",
+  "run/batch_results.json": "45d8e70e0908e79dc079d02501ab9f951014c637bd83015c2b503bd8b3432747",
+  "run/copy_dependency_results.json": "0908681d90006ace83495b0a3f5924e2b0b51d1b2ed0b9ed1f45dbde895a0a9b",
+  "run/phrase_results.json": "05e9fc86bbc60d84f314eabd40fee136e9a4f687279c165297096de96ba60880"
+}

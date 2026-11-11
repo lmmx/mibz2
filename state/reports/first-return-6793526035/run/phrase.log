@@ -1,0 +1,7 @@
+phrase tests 6168 fallback 1004
+thue_morse d 'A' steps 55 tokens 16384 pieces 28 dict bytes 6 S 211
+fibonacci_prefix d 'B' steps 27 tokens 12516 pieces 14 dict bytes 5 S 126
+synthetic_json d ':' steps 5776 tokens 2535 pieces 880 dict bytes 7334 S 5918
+uniform_4 d 'A' steps 30318 tokens 8053 pieces 7462 dict bytes 15946 S 32070
+uniform_bytes d '\n' steps 32767 tokens 112 pieces 112 dict bytes 32768 S 32767
+gpl3_prose d ' ' steps 25071 tokens 5414 pieces 4537 dict bytes 15545 S 24573

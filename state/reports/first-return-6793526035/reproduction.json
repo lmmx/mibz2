@@ -1,0 +1,26 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "commands": [
+    "timeout 1700s python -u ../run/phrase_induction.py >phrase.log 2>&1",
+    "timeout 1600s python -u batch_induction.py --out batch_results.json >batch.log 2>&1",
+    "python copy_dependency_example.py >copy.log 2>&1"
+  ],
+  "comparisons": {
+    "phrase_results.json": {
+      "structurally_equal": true,
+      "archived_sha256": "05e9fc86bbc60d84f314eabd40fee136e9a4f687279c165297096de96ba60880",
+      "reproduced_sha256": "05e9fc86bbc60d84f314eabd40fee136e9a4f687279c165297096de96ba60880"
+    },
+    "batch_results.json": {
+      "structurally_equal": true,
+      "archived_sha256": "45d8e70e0908e79dc079d02501ab9f951014c637bd83015c2b503bd8b3432747",
+      "reproduced_sha256": "45d8e70e0908e79dc079d02501ab9f951014c637bd83015c2b503bd8b3432747"
+    },
+    "copy_dependency_results.json": {
+      "structurally_equal": true,
+      "archived_sha256": "0908681d90006ace83495b0a3f5924e2b0b51d1b2ed0b9ed1f45dbde895a0a9b",
+      "reproduced_sha256": "0908681d90006ace83495b0a3f5924e2b0b51d1b2ed0b9ed1f45dbde895a0a9b"
+    }
+  }
+}
