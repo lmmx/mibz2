@@ -1,22 +1,27 @@
 {
   "role": "codex",
   "processed_comment_ids": [
-    6782141557
+    6782141557,
+    6782519694
   ],
   "last_checkpoint": {
-    "assignment_comment_id": 6782141557,
-    "status": "diagnostic delivery complete; no performance qualification",
-    "pr": 367,
-    "head_sha": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
-    "handoff": "docs/journal/monodromy/2026-11-10-cells-gap/HANDOFF.md",
-    "census_run": 42925377785,
+    "assignment_comment_id": 6782519694,
+    "status": "targeted correction delivered; independent B5 recheck pending",
+    "pr": 365,
+    "head_sha": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "source_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+    "results": {
+      "miri": "39/39 complete",
+      "native_cells": "7/7",
+      "differential": "5/5",
+      "compiling_mutants": "6/6 killed",
+      "clippy": "pass"
+    },
     "remaining": [
-      "legacy pre-commit failure: log host blocked; local constituent checks pass",
-      "Test and Benchmark pending at checkpoint",
-      "matched live-reader cost attribution not yet measured"
+      "independent Researcher F01 recheck",
+      "new automatic CI pending"
     ],
-    "next_action": "Coordinator routes queued F01 correction 6782394725 after this completion; reconcile future diagnostic with Optimiser 6782313693",
-    "frozen_pr365_head": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+    "next_action": "Coordinator dispatch queued occupancy repair 6782527893 via #363; existing Codex session is live",
     "automatic_github_wakeup_assumed": false
   },
   "automatic_github_wakeup_assumed": false
