@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790163736,
+  "last_examined_comment_id": 6790246510,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -335,6 +335,17 @@
       "dispatches": 0,
       "delivery_id": "8aae9120-dda3-11f1-8f3f-7808187647c8",
       "comment_updated_at": null
+    },
+    "6790246510": {
+      "status": "completed_no_additional_action",
+      "delivery_id": "1d4433a0-dda4-11f1-8c55-31df8742d4ca",
+      "comment_updated_at": null,
+      "disposition": "Observer REVIEW and finished cursor verified; immutable account6b3f2ddd01d24300c996427feedc6589be090f59 accurately records F01 resolution, corrected-head performance deferral and D100 dispatch awaiting recipient action. No correction or next Observer assignment warranted. No ready job: #366 D100 restriction and Occupancy failure unchanged.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/blob/6b3f2ddd01d24300c996427feedc6589be090f59/current/account.md"
+      ],
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -391,10 +402,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790163736,
-    "delivery_id": "8aae9120-dda3-11f1-8f3f-7808187647c8",
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "comment_id": 6790246510,
+    "delivery_id": "1d4433a0-dda4-11f1-8c55-31df8742d4ca",
+    "disposition": "observer_completion_verified_no_additional_action"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -505,11 +515,14 @@
       "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     },
     "observer": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "scope": "F01 resolved, exact-head performance deferral and D100 dispatch",
       "source_comment_id": 6790022921,
       "comment_id": 6790143614,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6790143614"
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6790143614",
+      "review_comment_id": 6790246510,
+      "report_commit": "6b3f2ddd01d24300c996427feedc6589be090f59",
+      "recipient_cursor_sha": "a69df7663efc2c767591ce274bf397a2c37b4b46"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -644,7 +657,6 @@
   "next_actions": [
     "Codex6789867142 separate D100 ledger repair; actual recipient action still pending, no duplicate dispatch.",
     "Guardian targeted accounting resumption only after corrected evidence returns.",
-    "Observer6790143614 one batched record update; REVIEW plus cursor pending.",
     "PR365 F01 resolved; integration deferred on current exact-head frozen performance gate, no rerun.",
     "No ready workstation job until366 exact-head eligibility; existing direct Run signal path when authenticated dispatch available."
   ],
