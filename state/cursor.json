@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6799784143,
+  "last_examined_comment_id": 6799878946,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -703,10 +703,142 @@
       "disposition": "Own priority reconciliation LOG; no newer external message or recipient completion cursor. Keep sole resume pending; no duplicate research dispatch. No ready workstation job because366 is paused unfinished and readiness checks remain."
     },
     "6799878946": {
-      "status": "in_progress",
+      "status": "completed_progress_evidence_recorded",
       "delivery_id": "56d3a930-dde4-11f1-8ee7-b29be4d84648",
       "comment_updated_at": null,
-      "action": "Record observed pre-data plan and reported supplied-check reproduction only; no duplicate assignment, launch, or public receipt-only log."
+      "action": "Record observed pre-data plan and reported supplied-check reproduction only; no duplicate assignment, launch, or public receipt-only log.",
+      "comment_body_sha256": "949b16f4581fed92f609cc3bbba93c91c695efa4b25f173ad52801eba01e297b",
+      "disposition": "Read committed pre-data plan and supplied evidence at8d4e7eb1a95342b160a9e010b6afb7b40c9d1be1. Scope and componentwise decision rule match existing bounded research; supplied-check reproduction is recipient-reported, not independently rerun by Coordinator and not new candidate results. Not a deferred handoff REVIEW or completion cursor. No duplicate research dispatch or resume, no receipt-only or repeated blocked-status LOG.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6799878946",
+        "https://github.com/lmmx/mibz2/blob/8d4e7eb1a95342b160a9e010b6afb7b40c9d1be1/docs/journal/2026-11-11-labelled-contraction/PLAN.md"
+      ],
+      "dispatches": 0,
+      "response_comments": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "#366 paused unfinished atae13742fe4c6e2726c178e2409a1d69ef8fca939 with Occupancy42923929886 failing; final recipe checks, separate deliberate master integration and exact ready signal remain.",
+      "ci_observed": [
+        {
+          "pr": 366,
+          "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+          "merged": false,
+          "actions": [
+            {
+              "id": 42923929861,
+              "name": "Benchmark",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42923929775,
+              "name": "CI",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42923929886,
+              "name": "Occupancy",
+              "status": "completed",
+              "conclusion": "failure"
+            },
+            {
+              "id": 42923929932,
+              "name": "Test",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "legacy": [
+            {
+              "context": "pre-commit.ci - pr",
+              "state": "success",
+              "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794353430.wBDknxkIRNmO4wzdvN4FRQ"
+            }
+          ]
+        },
+        {
+          "pr": 368,
+          "head_sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+          "merged": false,
+          "actions": [
+            {
+              "id": 42984639546,
+              "name": "walk-stats",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639505,
+              "name": "CI",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639402,
+              "name": "Documentation site",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639511,
+              "name": "Test",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639389,
+              "name": "Occupancy",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639455,
+              "name": "Benchmark",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 42984639399,
+              "name": "Miri",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "legacy": [
+            {
+              "context": "pre-commit.ci - pr",
+              "state": "success",
+              "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794384487.qx9PY9SPSJii0WeGa8RbhA"
+            }
+          ]
+        },
+        {
+          "pr": 369,
+          "head_sha": "85735b38ebfa804acd31a6291bb7c08b6bf57760",
+          "merged": false,
+          "actions": [
+            {
+              "id": 43016751850,
+              "name": "CI",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "id": 43016751823,
+              "name": "Test",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "legacy": [
+            {
+              "context": "pre-commit.ci - pr",
+              "state": "success",
+              "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794398482.y9Cp77_1T9iP_9RPOxfBsA"
+            }
+          ]
+        }
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -781,8 +913,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6793538633,
-    "delivery_id": "a26077d0-ddbb-11f1-8ee5-8ddbfd73a6d8"
+    "comment_id": 6799878946,
+    "delivery_id": "56d3a930-dde4-11f1-8ee7-b29be4d84648"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1313,7 +1445,23 @@
     "reported_start": "2026-11-11T15:21:00Z",
     "formal_dispatch_blocker": "Actual deferred handoff REVIEW plus own cursor for6791014104 and resume6799739845",
     "scheduling_relay": 6799687151,
-    "prior_queue_body": "FROM: coordinator\nTO: codex\nRE: labelled origin transport and stable-identity local contraction; relay6798202916; after QUEUED6793754589\nTYPE: QUEUED\nPRIORITY: 2\n\nACTOR: ChatGPT Work (acting monitor)\n2026-11-11. Master/policy2635f04e9155dd31388b24fd3f7248f87b3ddcda. Source request: [Louis relay6798202916](https://github.com/lmmx/mibz2/pull/145#issuecomment-6798202916).\n\n**Staged, not dispatched.** Production assignment363/6791014104 stays in flight. Earlier priority2 QUEUED6793754589 keeps precedence by age and its frozen delimiter/input/limits/rule unchanged. Do not start from this channel comment; the Coordinator will dispatch through #363 when eligible, after actual completion reconciliation. No automatic restart is claimed.\n\n**Bounded research follow-up.** Build on #369 at85735b38ebfa804acd31a6291bb7c08b6bf57760 and phrase/batch sources ataf3327d8aee9fffe26d2d6de76818b6ac69cc145. Preserve MONODROMY mathematical ownership and Pathfinder architecture. This is an isolated prototype/counterexample task, not a general invention programme or production change.\n\n1. Read the full relay and extract its five fenced UTF-8 files with final LF. Coordinator verified every stated byte count and SHA256; ZIP container not supplied/verified and scripts not rerun here. Independently inspect then reproduce both small checks, comparing saved JSON/digests; preserve failures. State finite-test limits and short arguments for first-return splice, nested composition and marked-occurrence transport. Distinguish elementary identities, directly read sources, relay-only thesis interpretations and new hypotheses.\n2. Adapt occurrence-level (source anchor rank, emitted-prefix length) marking during delimiter construction. Do not add origin to delimiter set. Preserve inverse-output orientation, repeat/truncate, multiple cycles/no-anchor fallback and distinct occurrence routes for shared words. Count every marker check, retained metadata and old origin-search step; correctness without savings is a valid outcome.\n3. Main target: one stable-identity, boundary-local implementation of the exact non-adjacent deletion splice, compared with existing packed construction on identical inputs and deletion schedules. Preserve necessary splits and coalescing across deleted gaps. Charge predecessor/rank queries, sorting, splits, shared/content versus occurrence labels, word copies, all deferred work, live/cumulative metadata and output. Do not count fewer final fragments as a construction win.\n4. Only if those results support proceeding, analyse at most one restricted few-attachment sub-exchange summary. Specify entry-to-exit offset/destination, word and marked-occurrence contract, length inequalities and equalities, and recognition+build+application costs. A counterexample/restriction suffices. If evidence does not support it, mark this part deferred; do not manufacture another experiment.\n\n**Bounds / pre-data freeze.** One research pass, at most two hours of implementation/analysis and thirty minutes aggregate candidate execution; stop with resumable evidence if either limit is hit. Reproduce the supplied fixed checks once, with one exact reproducibility pass. Before new candidate results, post C1a question, comparison rule, source/input identities and finite scope on #145, and commit the plan. Use binary columns through length6 and ternary through length4 for new comparisons, all origins/relevant delimiters; fixed periodic/long-excursion sizes1,2,4,8,16,32,64. Freeze identical eligible deletion schedules before comparison. Preserve #369's ba/baa witnesses, gray-only/nondividing cycles, long-excursion copy case, and its102 costly cached updates as existing regression/adversarial evidence—not new discoveries. Reuse that evidence and select/freeze any needed additional adversarial subset before candidate data; do not repeat #369's entire baseline study merely to enlarge counts.\n\nComparison rule: any output/itinerary/destination/origin mismatch rejects that candidate pending one targeted correction with original failure retained. No retry to seek a favourable cost result. Report componentwise costs and trade-offs, not an arbitrary sum of unlike operations. Pursue only a named restricted case with observed reduction in the targeted maintenance/search work and explicit accounting of induced costs; otherwise revise or stop that candidate, without claiming the whole LF line impossible. These are research recommendations, not speed/adoption gates.\n\n**Deliverable:** isolated reproducible source, immutable full commit, inputs/results/digests and commands; concise proof/assumption note; separate pursue/revise/stop outcomes for origin marking and local contraction, plus conditional summary disposition and cheapest next falsifier. Compare with original constructors, not a row oracle alone. No new real-block run, timing, i9/workstation/queue/tag operation, unsafe production code, merge/release/default/team/cap/policy change, independent self-review or other-role state edit. Report through REVIEW and your own completion cursor for the eventual dispatched inbox ID only after actual completion."
+    "prior_queue_body": "FROM: coordinator\nTO: codex\nRE: labelled origin transport and stable-identity local contraction; relay6798202916; after QUEUED6793754589\nTYPE: QUEUED\nPRIORITY: 2\n\nACTOR: ChatGPT Work (acting monitor)\n2026-11-11. Master/policy2635f04e9155dd31388b24fd3f7248f87b3ddcda. Source request: [Louis relay6798202916](https://github.com/lmmx/mibz2/pull/145#issuecomment-6798202916).\n\n**Staged, not dispatched.** Production assignment363/6791014104 stays in flight. Earlier priority2 QUEUED6793754589 keeps precedence by age and its frozen delimiter/input/limits/rule unchanged. Do not start from this channel comment; the Coordinator will dispatch through #363 when eligible, after actual completion reconciliation. No automatic restart is claimed.\n\n**Bounded research follow-up.** Build on #369 at85735b38ebfa804acd31a6291bb7c08b6bf57760 and phrase/batch sources ataf3327d8aee9fffe26d2d6de76818b6ac69cc145. Preserve MONODROMY mathematical ownership and Pathfinder architecture. This is an isolated prototype/counterexample task, not a general invention programme or production change.\n\n1. Read the full relay and extract its five fenced UTF-8 files with final LF. Coordinator verified every stated byte count and SHA256; ZIP container not supplied/verified and scripts not rerun here. Independently inspect then reproduce both small checks, comparing saved JSON/digests; preserve failures. State finite-test limits and short arguments for first-return splice, nested composition and marked-occurrence transport. Distinguish elementary identities, directly read sources, relay-only thesis interpretations and new hypotheses.\n2. Adapt occurrence-level (source anchor rank, emitted-prefix length) marking during delimiter construction. Do not add origin to delimiter set. Preserve inverse-output orientation, repeat/truncate, multiple cycles/no-anchor fallback and distinct occurrence routes for shared words. Count every marker check, retained metadata and old origin-search step; correctness without savings is a valid outcome.\n3. Main target: one stable-identity, boundary-local implementation of the exact non-adjacent deletion splice, compared with existing packed construction on identical inputs and deletion schedules. Preserve necessary splits and coalescing across deleted gaps. Charge predecessor/rank queries, sorting, splits, shared/content versus occurrence labels, word copies, all deferred work, live/cumulative metadata and output. Do not count fewer final fragments as a construction win.\n4. Only if those results support proceeding, analyse at most one restricted few-attachment sub-exchange summary. Specify entry-to-exit offset/destination, word and marked-occurrence contract, length inequalities and equalities, and recognition+build+application costs. A counterexample/restriction suffices. If evidence does not support it, mark this part deferred; do not manufacture another experiment.\n\n**Bounds / pre-data freeze.** One research pass, at most two hours of implementation/analysis and thirty minutes aggregate candidate execution; stop with resumable evidence if either limit is hit. Reproduce the supplied fixed checks once, with one exact reproducibility pass. Before new candidate results, post C1a question, comparison rule, source/input identities and finite scope on #145, and commit the plan. Use binary columns through length6 and ternary through length4 for new comparisons, all origins/relevant delimiters; fixed periodic/long-excursion sizes1,2,4,8,16,32,64. Freeze identical eligible deletion schedules before comparison. Preserve #369's ba/baa witnesses, gray-only/nondividing cycles, long-excursion copy case, and its102 costly cached updates as existing regression/adversarial evidence—not new discoveries. Reuse that evidence and select/freeze any needed additional adversarial subset before candidate data; do not repeat #369's entire baseline study merely to enlarge counts.\n\nComparison rule: any output/itinerary/destination/origin mismatch rejects that candidate pending one targeted correction with original failure retained. No retry to seek a favourable cost result. Report componentwise costs and trade-offs, not an arbitrary sum of unlike operations. Pursue only a named restricted case with observed reduction in the targeted maintenance/search work and explicit accounting of induced costs; otherwise revise or stop that candidate, without claiming the whole LF line impossible. These are research recommendations, not speed/adoption gates.\n\n**Deliverable:** isolated reproducible source, immutable full commit, inputs/results/digests and commands; concise proof/assumption note; separate pursue/revise/stop outcomes for origin marking and local contraction, plus conditional summary disposition and cheapest next falsifier. Compare with original constructors, not a row oracle alone. No new real-block run, timing, i9/workstation/queue/tag operation, unsafe production code, merge/release/default/team/cap/policy change, independent self-review or other-role state edit. Report through REVIEW and your own completion cursor for the eventual dispatched inbox ID only after actual completion.",
+    "pre_data_freeze": {
+      "comment_id": 6799878946,
+      "commit_sha": "8d4e7eb1a95342b160a9e010b6afb7b40c9d1be1",
+      "plan_path": "docs/journal/2026-11-11-labelled-contraction/PLAN.md",
+      "status": "read_scope_consistent_no_candidate_results",
+      "supplied_checks": "Recipient reports one execution and one exact reproduction, no mismatches; Coordinator did not rerun",
+      "stop_by": "2026-11-11T17:21:00Z",
+      "candidate_execution_limit_minutes": 30
+    },
+    "last_reconciliation": {
+      "codex_cursor_blob": "adc2d17d6280d37833e352be383c309b90590239",
+      "deferred_handoff_received": false,
+      "formal_dispatch_performed": false,
+      "audit": "exit0; six resolved historical misroutes",
+      "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+    }
   },
   "pending_recipe_preparation": {
     "status": "paused_unfinished",
