@@ -275,6 +275,11 @@
       "action_links": [
         "https://github.com/lmmx/mibz2/blob/97dc7b6d8c5951728d3e670ea2e4c9e86415ef67/current/account.md"
       ]
+    },
+    "6784483743": {
+      "status": "in_progress",
+      "delivery_id": "0559a500-dd71-11f1-8d0b-997dadadc91a",
+      "planned_action": "Close security-review expansion, choose existing Run signal direct path, record verified dispatch and execution capability blockers plus actual D100 status. No further review assignment."
     }
   },
   "automatic_github_wakeup_assumed": false,
