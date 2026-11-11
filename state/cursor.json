@@ -7,27 +7,38 @@
   ],
   "last_checkpoint": {
     "assignment_comment_id": 6789867142,
-    "status": "implementation and native evidence delivered; independent Guardian resumption and CI pending",
+    "status": "CI model omission corrected; native evidence delivered; corrected-head CI and Guardian pending",
     "pr": 368,
-    "head_sha": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+    "head_sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
     "source_sha256": {
-      "trace": "0e4ddc0a9bef54c4fbb040b586a5005f0000fdcae1a4e9524f71974f294f83d7",
-      "occupancy": "d64851167d60037a2885626c23d19c6fff8ad0af0fcf0d6fd8bb74098555469c"
+      "trace": "4a7228090164c24dad5f5b24064b847476d327fd3e120633433ddbe01ac87ff3",
+      "occupancy": "c98921bbeb958cd2bb9144d22002031af6690b3699333dd7935a72cc8af3e5c8"
     },
     "results": {
-      "native_lib": "99 passed, one existing census ignored; four-CPU affinity; original host-topology failure preserved",
+      "native_lib": "99+5 passed locally at prior head with constrained affinity and in first CI; targeted correction 4+5 pass",
       "occupancy_tests": "5/5",
-      "ledger_matrix": "4/4 trace tests, eight sequences",
+      "ledger_matrix": "4/4; 20 scalar/detected sequences, explicit SIMD slack boundary",
       "clippy": "pass",
-      "format": "pass"
+      "format": "pass",
+      "negative_mutation": "old n-only bound compiles and fails new boundary test"
     },
     "handoff": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
     "remaining": [
       "automatic CI including Occupancy",
       "Guardian targeted D100 resumption"
     ],
-    "next_action": "Coordinator route exact repair head and evidence to Guardian; no workstation readiness claimed",
-    "automatic_github_wakeup_assumed": false
+    "next_action": "Inspect corrected-head Occupancy CI; Coordinator route final exact head to Guardian after CI correction",
+    "automatic_github_wakeup_assumed": false,
+    "ci_incident": {
+      "run": 42983415379,
+      "job": 130398892135,
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "classification": "A",
+      "cause": "AVX2 run fill's n+8 T-vector reservation omitted from inherited bound",
+      "artifact": 13838851302,
+      "artifact_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417",
+      "teams": "not run after ordinary failure"
+    }
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
