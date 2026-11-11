@@ -41,6 +41,11 @@ Python3.12.14/Linux, standard library only, assertions enabled.
 8. `git diff --check`, artifact SHA checks, and explicit rejection of
    `python3 -O run.py ...` pass. Reproduction destination must be new, so failed
    runs cannot silently overwrite an earlier attempt.
+9. A separate repository-wide `ruff check .` failed with264 violations in46
+   files outside the research directory. Every finding file was compared
+   byte-for-byte with master2635f04 and is unchanged. New-file lint still passes.
+   Counts, rules and source digests are saved in evidence/repository-lint.json;
+   this failure is retained and no production cleanup was added.
 
 The two candidate runs finished by15:41:30UTC, less than six elapsed minutes
 after the first implementation commit at15:35:47UTC. Thus their combined

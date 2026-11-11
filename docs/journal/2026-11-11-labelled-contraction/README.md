@@ -26,8 +26,8 @@ The unchanged [vendor](vendor/) files are `phrase_induction.py` and
 The five [supplied](supplied/) files match every relay byte count and SHA-256
 in [supplied-manifest.json](supplied-manifest.json). The ZIP container was not
 supplied or verified. Both supplied scripts reproduced their saved JSON
-byte-for-byte, twice: splice873 permutations/10,463 eligible deletion sets/
-27,005 nested cases; origin7,172 cases/6,168 annotations/1,004 declines.
+byte-for-byte, twice: splice: 873 permutations/10,463 eligible deletion sets/
+27,005 nested cases; origin: 7,172 cases/6,168 annotations/1,004 declines.
 
 The implementation uses only Python's standard library:
 
@@ -66,6 +66,10 @@ The final evidence names the final formatted source. See [VALIDATION.md](VALIDAT
 Exact compressed-byte reproduction was checked on Python3.12.14/Linux; across
 Python/zlib versions compare decompressed JSON as well, since gzip headers or
 compression can differ without changing the measurements.
+Ruff passes for the new research files. A separate repository-wide lint check
+fails with264 existing violations in46 files; every affected file byte-matches
+master. The [baseline lint record](evidence/repository-lint.json) preserves that
+limitation. No unrelated lint cleanup was made.
 
 ## What is proved, and what is only suggested by the thesis
 
