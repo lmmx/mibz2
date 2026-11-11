@@ -2,27 +2,39 @@
   "role": "codex",
   "processed_comment_ids": [
     6782141557,
-    6782519694
+    6782519694,
+    6789867142
   ],
   "last_checkpoint": {
-    "assignment_comment_id": 6782519694,
-    "status": "targeted correction delivered; independent B5 recheck pending",
-    "pr": 365,
-    "head_sha": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-    "source_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
-    "results": {
-      "miri": "39/39 complete",
-      "native_cells": "7/7",
-      "differential": "5/5",
-      "compiling_mutants": "6/6 killed",
-      "clippy": "pass"
+    "assignment_comment_id": 6789867142,
+    "status": "implementation and native evidence delivered; independent Guardian resumption and CI pending",
+    "pr": 368,
+    "head_sha": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+    "source_sha256": {
+      "trace": "0e4ddc0a9bef54c4fbb040b586a5005f0000fdcae1a4e9524f71974f294f83d7",
+      "occupancy": "d64851167d60037a2885626c23d19c6fff8ad0af0fcf0d6fd8bb74098555469c"
     },
+    "results": {
+      "native_lib": "99 passed, one existing census ignored; four-CPU affinity; original host-topology failure preserved",
+      "occupancy_tests": "5/5",
+      "ledger_matrix": "4/4 trace tests, eight sequences",
+      "clippy": "pass",
+      "format": "pass"
+    },
+    "handoff": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
     "remaining": [
-      "independent Researcher F01 recheck",
-      "new automatic CI pending"
+      "automatic CI including Occupancy",
+      "Guardian targeted D100 resumption"
     ],
-    "next_action": "Coordinator dispatch queued occupancy repair 6782527893 via #363; existing Codex session is live",
+    "next_action": "Coordinator route exact repair head and evidence to Guardian; no workstation readiness claimed",
     "automatic_github_wakeup_assumed": false
   },
-  "automatic_github_wakeup_assumed": false
+  "automatic_github_wakeup_assumed": false,
+  "prior_f01": {
+    "assignment_comment_id": 6782519694,
+    "head_sha": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "researcher_acceptance": 6790022921,
+    "coordinator_decision": 6790163736,
+    "status": "F01 independently resolved; integration deferred for corrected-head benchmark losses"
+  }
 }
