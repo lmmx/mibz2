@@ -1,0 +1,4 @@
+# Byte-preserved source of the frozen prototype.
+extend = "../../../pyproject.toml"
+extend-exclude = ["vendor"]
+force-exclude = true

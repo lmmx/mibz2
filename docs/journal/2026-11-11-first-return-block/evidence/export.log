@@ -1,0 +1,27 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling find-msvc-tools v0.1.15
+   Compiling libm v0.2.16
+   Compiling shlex v2.0.1
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling cc v1.10.0
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-first-return/work/frozen-baseline)
+    Finished `release` profile [optimized + debuginfo] target(s) in 43.54s
+     Running unittests src/lib.rs (work/frozen-baseline/target/release/deps/mibz2-2c15061d8bfc22e3)
+
+running 1 test
+test first_return_export::export_first_qualifying_block ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 104 filtered out; finished in 0.03s
+

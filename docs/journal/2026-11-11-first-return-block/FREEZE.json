@@ -1,0 +1,20 @@
+{
+  "address_space_bytes": 268435456,
+  "assignment": 6808027528,
+  "attempts": 1,
+  "candidate_executions_before_freeze": 0,
+  "delimiter": 34,
+  "identities_sha256": "fcb8271f624df9e92b7aaaf0c0edbb9f45b9757ad46647b5f2453eade9dfb2e1",
+  "seconds": 600,
+  "source_sha256": {
+    "PLAN.md": "01311d3a40fd15b3dba031224ce598e4368eb4551a6e6aa161233cd2712708a1",
+    "export.rs": "e8a8d6ccbc1cfe82fb16f90cd9b499a978beca55a14c67035ea8b44d81af6cb4",
+    "oracle.py": "69f62f8bda797017e7271844f2dcd42f4d53208bad100106840593cdad87abab",
+    "prepare.py": "f80ee6191cd7e4144c8b20427879a1fdc7fe1d32fd0846ae75ad1c9b4dd85b2e",
+    "probe.py": "4a2e24ac1614604810d8a0c6abca8682ad85e642f654669c8ac8e3bbe91416c3",
+    "ruff.toml": "46f72062badc820ed46bf16891076a8fa22eeb647452727738c4a1dc573b46c6",
+    "run_once.py": "8fd5e5967b881fffaa3d4c60d782228459f2e68677d45ffed94684314943ff0a",
+    "vendor/batch_induction.py": "f2453be328aa3bb254c25f5d477d1333300bfa66bfb3a0e4fd1d8f073b83b9e6",
+    "vendor/phrase_induction.py": "7d5a39b52a230c8c7f23a66f3cea6f1a22485adec4e5d16239787a2490080ccc"
+  }
+}

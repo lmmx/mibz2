@@ -1,0 +1,1 @@
+{"block":1,"bit":336,"n":899931,"primary":264045,"records":56386,"output_bytes":900000,"preceding_output_bytes":13,"crc":3567409756,"native_takes_runs":true,"cells_comparator_admitted":1,"avx2":true,"clmul":true,"column_capacity_bytes":900000,"rle1_capacity_bytes":899931,"output_capacity_bytes":1799990}

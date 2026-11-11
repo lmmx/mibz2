@@ -1,0 +1,9 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "rust": "1.99.1",
+  "cargo_home": "/workspace/.mibz2-tools/cargo",
+  "rustup_home": "/workspace/.mibz2-tools/rustup",
+  "rustc": "/workspace/.mibz2-tools/rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+  "corpus": "/workspace/mibz2-cells-gap/work/cells-gap/corpus/wikidata.bz2"
+}
