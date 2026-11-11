@@ -357,6 +357,13 @@
       ],
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6790465896": {
+      "status": "in_progress",
+      "delivery_id": "d7320d40-dda5-11f1-8ea2-629c4873a7f1",
+      "comment_updated_at": null,
+      "planned_action": "Accept completed bounded D100 implementation delivery; route targeted resumption to original Guardian at exact368 head, retaining HOLD and CI/readiness gates.",
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -520,13 +527,10 @@
       "recipient_cursor_sha": "12480fdb99f3f278b26525e31ccec5b8bd9a0533"
     },
     "guardian": {
-      "status": "completed",
-      "scope": "Design-only Run signal bridge security/authority assessment",
-      "source_comment_id": 6782590919,
-      "comment_id": 6782662288,
-      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288",
-      "review_comment_id": 6782751494,
-      "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
+      "status": "in_progress",
+      "scope": "Targeted D100 resumption review of368",
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "source_comment_id": 6790465896
     },
     "observer": {
       "status": "completed",
@@ -656,6 +660,15 @@
       "scope": "D101 design-only boundary and consumer source finding",
       "review_comment_id": 6782844140,
       "report_commit": "97dc7b6d8c5951728d3e670ea2e4c9e86415ef67"
+    },
+    {
+      "status": "completed",
+      "scope": "Design-only Run signal bridge security/authority assessment",
+      "source_comment_id": 6782590919,
+      "comment_id": 6782662288,
+      "url": "https://github.com/lmmx/mibz2/pull/161#issuecomment-6782662288",
+      "review_comment_id": 6782751494,
+      "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     }
   ],
   "codex_correction": {
