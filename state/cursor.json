@@ -719,7 +719,19 @@
     "review_comment_id": 6790465896,
     "pr": 368,
     "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
-    "guardian_assignment": 6790511955
+    "guardian_assignment": 6790511955,
+    "ci_incident": {
+      "head": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "run": 42983415379,
+      "job": 130398892135,
+      "status": "failure",
+      "classification": "project ledger validation failure; cause not yet independently classified",
+      "evidence": "Instrument tests pass; ordinary Occupancy exits1 with per-worker ledger violations221 at2t and131 at4t;1t ledger passes. Teams step skipped, not passed. Parity/events reconcile. Failure artifact upload succeeds.",
+      "artifact_id": 13838851302,
+      "server_reported_zip_sha256": "62d397b01c7f6f8c60db7c61f4694097a0b36a83ce765e1d41edf2733f2d5417",
+      "archive_bytes_verified": false,
+      "action": "Retain D100 and existing Guardian6790511955 targeted review; no retry, duplicate assignment or readiness."
+    }
   },
   "diagnostic_pr367": {
     "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
