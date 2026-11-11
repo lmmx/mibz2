@@ -1510,6 +1510,21 @@
       "status": "finished",
       "disposition": "Class A inherited ledger mismatch; HOLD allocation certification and dependent readiness, no demonstrated UB.",
       "comment": 6782473662
+    },
+    {
+      "id": "D101",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "incoming_comment": 6782662288,
+      "pr": 161,
+      "sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "evidence_digest": "proposal:6782590919;signal:b3fce483e5ccf362bad2fadaabbc55c325636814;source:2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1",
+      "status": "complete",
+      "disposition": "PROCEED design only; REVISE trust root and revocation design; no operational clearance.",
+      "comment": null
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1846,7 +1861,9 @@
     "03d430288631a50874d33cfbc8523899185ebc62",
     "03676d93b7eff00ee2865da4f2260576d2e23473",
     "1bfe226e98e9589b60a626e30a67ea1b31bf8c38",
-    "62ae55c706fe2c7734dfbca8ceaafc539c739e6f"
+    "62ae55c706fe2c7734dfbca8ceaafc539c739e6f",
+    "18515f88b4a54d6e6378a559279237e7f98b5f97",
+    "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1947,7 +1964,8 @@
     6770180620,
     6771542584,
     6782224690,
-    6782334222
+    6782334222,
+    6782662288
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2027,8 +2045,9 @@
   },
   "current_execution": {
     "active_comment": 6782662288,
-    "status": "in progress",
-    "decision": "D101"
+    "status": "complete",
+    "decision": "D101",
+    "work_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
   },
   "duplicate_events": [
     {
@@ -2804,6 +2823,14 @@
       "incoming_comment": 6782334222,
       "decision": "D100",
       "commit": "1bfe226e98e9589b60a626e30a67ea1b31bf8c38"
+    },
+    {
+      "pr": 161,
+      "sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "evidence_digest": "proposal:6782590919;signal:b3fce483e5ccf362bad2fadaabbc55c325636814;source:2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "incoming_comment": 6782662288,
+      "decision": "D101",
+      "commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3605,9 +3632,11 @@
     {
       "comment_id": 6782662288,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D101",
-      "progress": "Migration verified; design-only trust-boundary assessment."
+      "progress": "Design and threat assessment committed; review pending.",
+      "receipt_commit": "18515f88b4a54d6e6378a559279237e7f98b5f97",
+      "work_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     }
   ],
   "migrated_from": {
