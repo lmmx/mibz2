@@ -316,6 +316,13 @@
       "dispatches": 0,
       "response_comments": 0,
       "delivery_id": "bd709060-dda1-11f1-8300-bf683e259fa4"
+    },
+    "6790022921": {
+      "status": "in_progress",
+      "delivery_id": "b5c9fcb0-dda2-11f1-9008-3b6799c36804",
+      "comment_updated_at": null,
+      "planned_action": "Accept original independent reviewer F01 resolution at exact corrected head; defer integration under frozen no-loss gate; dispatch one batched Observer checkpoint.",
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -464,11 +471,9 @@
       "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     },
     "observer": {
-      "status": "completed",
-      "comment_id": 6782796787,
-      "scope": "D101 design-only boundary and consumer source finding",
-      "review_comment_id": 6782844140,
-      "report_commit": "97dc7b6d8c5951728d3e670ea2e4c9e86415ef67"
+      "status": "in_progress",
+      "scope": "F01 resolved, exact-head performance deferral and D100 dispatch",
+      "source_comment_id": 6790022921
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -581,6 +586,13 @@
       "recipient_evidence": "team-state/researcher:state/cursor.json explicitly records assignment 6782111848 in_progress",
       "observed": "2026-11-10T23:30Z",
       "review_comment_id": 6782367271
+    },
+    {
+      "status": "completed",
+      "comment_id": 6782796787,
+      "scope": "D101 design-only boundary and consumer source finding",
+      "review_comment_id": 6782844140,
+      "report_commit": "97dc7b6d8c5951728d3e670ea2e4c9e86415ef67"
     }
   ],
   "codex_correction": {
