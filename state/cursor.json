@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6791527208,
+  "last_examined_comment_id": 6793265673,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -482,7 +482,7 @@
       "delivery_id": "8cc04e90-ddad-11f1-9e51-bb9308e3fb57"
     },
     "6793265673": {
-      "status": "in_progress",
+      "status": "completed_reference_triage",
       "delivery_id": "b2410590-ddb9-11f1-9506-9aece419b948",
       "comment_updated_at": null,
       "scope": "Research relay consideration only; no implementation or measurement assignment",
@@ -490,7 +490,12 @@
         "bytes": 22112,
         "sha256": "e5158fc81f92363d1b6ceb9b52f90932ef5d0d5d89f2fa5c7cce0294940e4fdd",
         "verification": "Matches fenced report with one final LF; executable ZIP explicitly absent"
-      }
+      },
+      "disposition": "Verified report text digest; retain phrase-level construction, boundary-local contraction and partial-range dependencies as research reference. Synthetic correctness/census results remain author-reported and unreproduced because ZIP absent. Offline parse expansion cannot qualify BWT construction or decoder gain. No dispatch, gate change, code upload, experiment or queue admission.",
+      "log": {
+        "status": "in_progress_before_post"
+      },
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -555,8 +560,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6791527208,
-    "delivery_id": "8cc04e90-ddad-11f1-9e51-bb9308e3fb57"
+    "comment_id": 6793265673,
+    "delivery_id": "b2410590-ddb9-11f1-9506-9aece419b948"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -998,5 +1003,16 @@
     "source_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "journal_blob": "cc8af4590d7e88f52b05c8008d3a3df226c4d644",
     "disposition": "Reference only. MONODROMY mathematical programme and Pathfinder architecture preserved; no claimed new experiments or qualified whole-decoder gain."
-  }
+  },
+  "research_references": [
+    {
+      "comment_id": 6793265673,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793265673",
+      "report_sha256": "e5158fc81f92363d1b6ceb9b52f90932ef5d0d5d89f2fa5c7cce0294940e4fdd",
+      "bytes": 22112,
+      "zip_available": false,
+      "zip_reported_sha256": "177a23c2334320c31b4ee868a7438fe92854ddff3ec9e9cb17f2df42f0534c14",
+      "verification_scope": "Text integrity only, not executable validation or mathematical certification"
+    }
+  ]
 }
