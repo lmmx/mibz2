@@ -1,0 +1,9 @@
+{
+  "permutations_for_splice": 873,
+  "valid_deletion_sets": 10463,
+  "nonempty_valid_deletion_sets": 9590,
+  "checked_splice_transitions": 45769,
+  "nested_subset_cases": 27005,
+  "mismatches": 0,
+  "scope": "All permutations n=1..6 for local splice/compaction; all nonempty nested subsets for permutations n=1..5. Finite-state correctness only; no BWT run representation, decoder integration, memory accounting or performance measured."
+}
