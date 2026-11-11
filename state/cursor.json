@@ -503,7 +503,8 @@
     "6793304677": {
       "status": "completed_own_log",
       "comment_updated_at": null,
-      "disposition": "Own phrase-induction reference triage; no external assignment"
+      "disposition": "Self-generated attributed LOG, already recorded. Fresh channel contains no later external message. Silent no-op; no dispatch, repeat LOG or queue admission.",
+      "delivery_id": "f8cd5310-ddb9-11f1-9e30-83067d1d790f"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -569,8 +570,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6793265673,
-    "delivery_id": "b2410590-ddb9-11f1-9506-9aece419b948"
+    "comment_id": 6793304677,
+    "delivery_id": "f8cd5310-ddb9-11f1-9e30-83067d1d790f"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
