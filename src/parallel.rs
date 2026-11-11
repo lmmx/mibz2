@@ -603,6 +603,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {
                 crate::trace::buffers(&scratch.buffers());
+                crate::trace::allocations(std::mem::take(&mut scratch.allocation_history));
             }
             return;
         };

@@ -18,8 +18,9 @@
 //! still to be read) and `cap` (bytes reserved): the symbols a block's read wrote
 //! (`Issued`), its decoded bytes (`DecodeEnd`), the scanner's window (`Window`); and
 //! `InvertStart` carries the block's length in rows. A worker also records its buffers'
-//! sizes once, as it ends (`buffers`). Reading a `Vec`'s length and capacity is two loads;
-//! nothing here allocates on the decoder's path beyond the marks' own buffer.
+//! sizes after each successful inversion, with the actual route and stream bound, then
+//! once at worker shutdown. These snapshots allocate tracing metadata per block; they
+//! are absent from the default build and disabled at trace level zero.
 //!
 //! **The footprint ledger** (`ledger`, below) is the arithmetic of what the parallel
 //! decoder allocates, by category, from the stream's level, the threads, the window and
@@ -170,6 +171,174 @@ pub struct ThreadTrace {
     pub name: String,
     pub marks: Vec<Mark>,
     pub buffers: Vec<Buffer>,
+    pub allocations: Vec<AllocationSample>,
+}
+
+/// The actual successful inversion route, not a property inferred from the team plan.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OutputRoute {
+    Runs,
+    ColumnInPlace,
+    ColumnSeparate,
+}
+
+/// One successful inversion on one reused Scratch, before cross-worker averaging.
+#[derive(Clone, Debug)]
+pub struct AllocationSample {
+    pub route: OutputRoute,
+    pub cooperative: bool,
+    pub rows: usize,
+    pub block_bound: usize,
+    pub buffers: Vec<Buffer>,
+}
+
+/// Independent high-water allocation requests reconstructed from route history.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct WorkerNeeds {
+    pub rows: usize,
+    pub ll: usize,
+    pub rle: usize,
+}
+
+impl WorkerNeeds {
+    fn observe(&mut self, s: &AllocationSample) {
+        self.rows = self.rows.max(s.rows);
+        self.ll = self.ll.max(if s.route == OutputRoute::Runs {
+            s.rows
+        } else {
+            s.block_bound
+        });
+        if s.route == OutputRoute::ColumnSeparate {
+            self.rle = self.rle.max(s.rows);
+        }
+    }
+}
+
+/// Vec<u8> growth used by these writers: a new request either fits or grows to
+/// max(request, 2*old_capacity, 8). For a history with maximum request q, this
+/// bounds retained capacity by max(8, 2*q-1). Zero requests allocate nothing.
+fn byte_capacity_bound(q: usize) -> usize {
+    if q == 0 {
+        0
+    } else {
+        8.max(q.saturating_mul(2).saturating_sub(1))
+    }
+}
+
+/// Validate each worker's history and final buffers before aggregation. This model
+/// covers ll/rle/tt/counts and the existing one-core segment metadata, not runs.*,
+/// checkpoints, cooperative cuts/segments or allocator/RSS overhead.
+pub fn validate_worker(
+    history: &[AllocationSample],
+    final_buffers: &[Buffer],
+    check_segments: bool,
+) -> Vec<String> {
+    let mut errors = Vec::new();
+    for (i, sample) in history.iter().enumerate() {
+        if sample.rows == 0
+            || sample.rows > sample.block_bound
+            || !(100_000..=900_000).contains(&sample.block_bound)
+            || sample.block_bound % 100_000 != 0
+        {
+            errors.push(format!("sample {i}: invalid rows/bound"));
+        }
+    }
+    if !errors.is_empty() {
+        return errors;
+    }
+    let mut needs = WorkerNeeds::default();
+    let mut previous = [0; 3];
+    let mut segment_live = [0; 2];
+    let mut check = |sample: usize, buffers: &[Buffer], needs: WorkerNeeds| {
+        let settings = Settings {
+            rows: needs.rows,
+            worker: Some(needs),
+            ..Settings::new(1, 1, 1)
+        };
+        let entries = ledger(&settings);
+        for (i, name) in ["ll", "rle", "tt"].into_iter().enumerate() {
+            let Some(b) = buffers.iter().find(|b| b.name == name) else {
+                errors.push(format!("sample {sample}: missing {name}"));
+                continue;
+            };
+            let e = entries.iter().find(|e| e.name == name).unwrap();
+            if b.len > b.cap
+                || b.cap < previous[i]
+                || b.cap < e.alloc
+                || b.cap > e.alloc_max.unwrap()
+            {
+                errors.push(format!(
+                    "sample {sample}: {name} len={} cap={} outside {}..={} (previous {})",
+                    b.len,
+                    b.cap,
+                    e.alloc,
+                    e.alloc_max.unwrap(),
+                    previous[i]
+                ));
+            }
+            previous[i] = b.cap;
+        }
+        if !buffers.iter().any(|b| b.name == "counts") {
+            errors.push(format!("sample {sample}: missing counts"));
+        }
+        for b in buffers
+            .iter()
+            .filter(|b| b.name == "counts" || (check_segments && b.name == "seg.starts"))
+        {
+            if let Some(e) = entries.iter().find(|e| e.name == b.name) {
+                if b.len > b.cap || b.cap < e.alloc || e.alloc_max.is_some_and(|m| b.cap > m) {
+                    errors.push(format!(
+                        "sample {sample}: {} capacity {} outside {}..={:?}",
+                        b.name, b.cap, e.alloc, e.alloc_max
+                    ));
+                }
+            }
+        }
+        // Deduplication can yield fewer than FLAGGED_SEGMENTS. These two Vecs
+        // resize to that actual count, unlike starts' pre-dedup allocation.
+        if check_segments {
+            for (i, (name, size)) in [
+                ("seg.next", std::mem::size_of::<usize>()),
+                ("seg.bufs.outer", std::mem::size_of::<Vec<u8>>()),
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                if let Some(b) = buffers.iter().find(|b| b.name == name) {
+                    if b.len % size != 0 || b.len > size * crate::bwt::FLAGGED_SEGMENTS {
+                        errors.push(format!(
+                            "sample {sample}: {name} invalid logical length {}",
+                            b.len
+                        ));
+                        continue;
+                    }
+                    segment_live[i] = segment_live[i].max(b.len);
+                    let upper = size * 4.max((2 * (segment_live[i] / size)).saturating_sub(1));
+                    if b.len > b.cap || b.cap < segment_live[i] || b.cap > upper {
+                        errors.push(format!(
+                            "sample {sample}: {name} len={} cap={} outside retained {}..={upper}",
+                            b.len, b.cap, segment_live[i]
+                        ));
+                    }
+                }
+            }
+        }
+    };
+    for (i, sample) in history.iter().enumerate() {
+        needs.observe(sample);
+        check(i, &sample.buffers, needs);
+    }
+    check(history.len(), final_buffers, needs);
+    if let Some(last) = history.last() {
+        for name in ["ll", "rle", "tt"] {
+            if last.buffers.iter().find(|b| b.name == name)
+                != final_buffers.iter().find(|b| b.name == name)
+            {
+                errors.push(format!("final {name} differs from last recorded block"));
+            }
+        }
+    }
+    errors
 }
 
 /// A buffer's size: bytes in use (`len`) and reserved (`cap`)
@@ -236,6 +405,7 @@ struct Buf {
     name: String,
     marks: Vec<Mark>,
     buffers: Vec<Buffer>,
+    allocations: Vec<AllocationSample>,
     start: Instant,
     level: u8,
     #[cfg(target_os = "linux")]
@@ -248,6 +418,7 @@ impl Buf {
             name: std::thread::current().name().unwrap_or("?").to_string(),
             marks: Vec::with_capacity(4096),
             buffers: Vec::new(),
+            allocations: Vec::new(),
             start: *epoch().lock().unwrap_or_else(|e| e.into_inner()),
             level,
             #[cfg(target_os = "linux")]
@@ -293,6 +464,7 @@ impl Drop for Buf {
             name: std::mem::take(&mut self.name),
             marks: std::mem::take(&mut self.marks),
             buffers: std::mem::take(&mut self.buffers),
+            allocations: std::mem::take(&mut self.allocations),
         };
         DONE.lock().unwrap_or_else(|e| e.into_inner()).push(t);
     }
@@ -337,6 +509,20 @@ pub fn buffers(list: &[Buffer]) {
             .get_or_insert_with(|| Buf::new(level))
             .buffers
             .extend_from_slice(list)
+    });
+}
+
+/// Transfer one worker's retained route/allocation history when it ends.
+pub fn allocations(samples: Vec<AllocationSample>) {
+    let level = LEVEL.load(Ordering::Relaxed);
+    if level == 0 {
+        return;
+    }
+    let _ = BUF.try_with(|b| {
+        b.borrow_mut()
+            .get_or_insert_with(|| Buf::new(level))
+            .allocations
+            .extend(samples);
     });
 }
 
@@ -413,11 +599,12 @@ pub struct Settings {
     /// the largest decoded block, in bytes (`rows` by default: text with few RLE1 runs; at
     /// most `max_decoded(rows)`, a block of runs only)
     pub decoded: usize,
-    /// whether the workers' kernel inverts in place (`InverseBwt::invert_in_place`): its
-    /// output goes over `ll` and `rle` is never allocated. True for `Segmented`, the
-    /// default and the kernel this ledger describes; false for one that inverts into `rle`
-    /// (`Plain`)
+    /// Column-route ownership only. Successful run inversion writes ll even for teams.
+    /// Without worker history the ledger describes a column-only sizing scenario;
+    /// it must not certify measured mixed-route allocations.
     pub in_place: bool,
+    /// Actual per-worker request history, required for measured worker validation.
+    pub worker: Option<WorkerNeeds>,
 }
 
 impl Settings {
@@ -434,6 +621,7 @@ impl Settings {
             rows,
             decoded: rows,
             in_place: true,
+            worker: None,
         }
     }
 }
@@ -489,22 +677,23 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
     let seg_cap = 2 * rows / ns + 64;
     let out_req = (rows + 64).max(s.decoded);
     let window_max = crate::parallel::COMPACT + LOOKAHEAD + s.chunk;
+    let needs = s.worker.unwrap_or(WorkerNeeds {
+        rows,
+        ll: max_rows,
+        rle: if s.in_place { 0 } else { rows },
+    });
     let mut v = vec![
         Entry {
             owner: "worker",
             name: "ll",
             count: t,
             per: "threads",
-            alloc: max_rows,
-            alloc_max: Some(max_rows),
+            alloc: needs.ll,
+            alloc_max: Some(byte_capacity_bound(needs.ll)),
             live: rows,
             hot: 0,
             life: "once",
-            note: if s.in_place {
-                "the BWT's last column, then the walk's output (RLE1-coded) over it: reserved at the level's bound; written by MTF, read in order by the T-vector's build, overwritten by the walk, read in order by RLE1"
-            } else {
-                "the BWT's last column: reserved at the level's bound; written by MTF, read in order by the T-vector's build, dead from the walk on"
-            },
+            note: "column route reserves that block's stream bound; successful run route grows ll for n output rows; retained across mixed routes and levels",
         },
         Entry {
             owner: "worker",
@@ -512,13 +701,13 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             count: t,
             per: "threads",
             alloc: TT_ROW * rows,
-            alloc_max: Some(TT_ROW * (2 * rows).saturating_sub(1)),
+            alloc_max: Some(if rows == 0 { 0 } else { TT_ROW * 4.max((2 * rows).saturating_sub(1)) }),
             live: TT_ROW * rows,
             hot: TT_ROW * rows,
             life: "once",
             note: "the T-vector: live from its build to the walk's end; doubles when a block is longer than any before it on that worker",
         },
-        if s.in_place {
+        if needs.rle == 0 {
             Entry {
                 owner: "worker",
                 name: "rle",
@@ -529,7 +718,7 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
                 live: 0,
                 hot: 0,
                 life: "once",
-                note: "never allocated: the kernel inverts in place, its output over ll",
+                note: "no separate-output column block in this history; run output belongs to ll",
             }
         } else {
             Entry {
@@ -537,12 +726,12 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
                 name: "rle",
                 count: t,
                 per: "threads",
-                alloc: rows,
-                alloc_max: Some((2 * rows).saturating_sub(1)),
-                live: rows,
+                alloc: needs.rle,
+                alloc_max: Some(byte_capacity_bound(needs.rle)),
+                live: needs.rle,
                 hot: 0,
                 life: "once",
-                note: "the walk's output (RLE1-coded): written by the join, read in order by RLE1; doubles as tt does",
+                note: "separate column-route output only; retained while subsequent run blocks write ll",
             }
         },
         Entry {
@@ -896,6 +1085,113 @@ mod tests {
         within("rle", get(&b, "rle").cap);
         for x in &b {
             entry(&l, x.name);
+        }
+    }
+
+    fn route_history<I: crate::bwt::InverseBwt + Default>(
+        name: &str,
+        sequence: &[(bool, usize, u32)],
+        cooperative: bool,
+    ) {
+        let mut scratch = Scratch::<I>::default();
+        let mut out = Vec::new();
+        for &(run, n, level) in sequence {
+            let bytes = if run {
+                b"ab".repeat(n / 2)
+            } else {
+                letters(n, 71)
+            };
+            let compressed = compress(&bytes, level);
+            let mut scanner = Scanner::new(SliceSource(&compressed));
+            let Event::Block { symbols, .. } = scanner.next(Vec::new()).unwrap() else {
+                panic!("no block")
+            };
+            assert_eq!(crate::runs::takes_runs(&symbols), run, "{name}");
+            out.clear();
+            decode_block(&symbols, Kernels::scalar(), &mut scratch, &mut out).unwrap();
+            assert!(
+                out == bytes,
+                "byte/CRC parity: {name}, got {} bytes, expected {}",
+                out.len(),
+                bytes.len()
+            );
+            assert!(matches!(scanner.next(symbols.syms).unwrap(), Event::Done));
+            let samples = scratch.allocation_history();
+            let sample = samples.last().unwrap();
+            let route = if run {
+                OutputRoute::Runs
+            } else if cooperative {
+                OutputRoute::ColumnSeparate
+            } else {
+                OutputRoute::ColumnInPlace
+            };
+            assert_eq!(sample.route, route, "{name}");
+            assert_eq!(sample.cooperative, cooperative);
+            // These inputs have no run longer than 255; four or more equal bytes
+            // become five RLE1 bytes before BWT (random letters need not have n rows).
+            let rows: usize = bytes
+                .chunk_by(|a, b| a == b)
+                .map(|r| {
+                    assert!(r.len() <= 255);
+                    if r.len() < 4 {
+                        r.len()
+                    } else {
+                        5
+                    }
+                })
+                .sum();
+            assert_eq!((sample.rows, sample.block_bound), (rows, block_rows(level)));
+            let errors = validate_worker(samples, &scratch.buffers(), !cooperative);
+            assert!(errors.is_empty(), "{name}: {errors:?}");
+            let ll = get(&sample.buffers, "ll");
+            let rle = get(&sample.buffers, "rle");
+            eprintln!(
+                "{name} {route:?} n={n} bound={} ll={} rle={}",
+                sample.block_bound, ll.cap, rle.cap
+            );
+            // A fabricated capacity cannot be legitimised by averaging or by making
+            // it the high-water mark. The request history is independent of caps.
+            for buffer in ["ll", "rle", "tt"] {
+                let mut bad = scratch.buffers();
+                bad.iter_mut().find(|b| b.name == buffer).unwrap().cap = usize::MAX;
+                assert!(!validate_worker(samples, &bad, !cooperative).is_empty());
+            }
+        }
+        assert_eq!(scratch.allocation_history().len(), sequence.len());
+        if sequence.iter().all(|s| s.0) {
+            assert_eq!(get(&scratch.buffers(), "rle").cap, 0, "run-only ownership");
+            assert!(
+                get(&scratch.buffers(), "ll").cap > 900_000,
+                "native D100 growth witness"
+            );
+        }
+    }
+
+    #[test]
+    fn ledger_actual_routes_and_retained_history() {
+        type Blocks = &'static [(bool, usize, u32)];
+        let cases: [(&str, Blocks); 4] = [
+            (
+                "runs",
+                &[(true, 600_000, 9), (true, 800_000, 9), (true, 90_000, 1)],
+            ),
+            (
+                "columns",
+                &[(false, 70_000, 1), (false, 99_000, 1), (false, 700_000, 9)],
+            ),
+            ("run-column", &[(true, 600_000, 9), (false, 700_000, 9)]),
+            (
+                "column-run",
+                &[(false, 70_000, 1), (true, 600_000, 9), (true, 800_000, 9)],
+            ),
+        ];
+        for (name, sequence) in cases {
+            route_history::<crate::bwt::Segmented>(&format!("Segmented/{name}"), sequence, false);
+            route_history::<crate::bwt::Cooperative<2>>(
+                &format!("Cooperative2/{name}"),
+                sequence,
+                true,
+            );
         }
     }
 
