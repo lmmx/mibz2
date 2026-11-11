@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6807992359,
+  "last_examined_comment_id": 6808041276,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -914,8 +914,13 @@
       "log_comment_id": 6808041276
     },
     "6808041276": {
-      "status": "own_log_recorded",
-      "source_comment_id": 6807992359
+      "status": "observed_self_generated_noop",
+      "source_comment_id": 6807992359,
+      "delivery_id": "1dd0ea30-de1b-11f1-9adc-e0bb7f021e35",
+      "comment_updated_at": null,
+      "disposition": "Own verified real-block dispatch LOG. No newer external message; no duplicate assignment or post. No ready workstation job because366 remains deferred incomplete.",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -995,8 +1000,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6807992359,
-    "delivery_id": "c1739710-de1a-11f1-8c8c-3b700e296efe"
+    "comment_id": 6808041276,
+    "delivery_id": "1dd0ea30-de1b-11f1-9adc-e0bb7f021e35"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
