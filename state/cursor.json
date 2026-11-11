@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6795264336,
+  "last_examined_comment_id": 6795316926,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -601,7 +601,12 @@
       "dispatches": 0,
       "ready_job_queued": false,
       "ready_job_reason": "366 preparation/final checks, deliberate master integration and ready signaling outstanding",
-      "log_publication": "pending"
+      "log_publication": "published_readback_verified",
+      "log_comment_id": 6795316926
+    },
+    "6795316926": {
+      "status": "own_publication_readback_verified",
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -664,7 +669,8 @@
     6793526035,
     6793538633,
     6793754589,
-    6793788598
+    6793788598,
+    6795316926
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -854,8 +860,9 @@
   },
   "checkpoint": {
     "key": "reduced-lf-6795264336",
-    "status": "in_progress_before_grouped_log",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6795316926
   },
   "dispatch_history": [
     {
