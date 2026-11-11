@@ -165,9 +165,10 @@
     6769305752,
     6771319195,
     6782111848,
-    6789867476
+    6789867476,
+    6793526035
   ],
-  "last_processed_comment_id": 6789867476,
+  "last_processed_comment_id": 6793526035,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1921,13 +1922,15 @@
     },
     {
       "trigger_comment_id": 6793526035,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
       "report_path": "state/reports/first-return-6793526035/report.md",
       "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02",
-      "disposition": "All supplied structural results reproduce exactly; recommend one bounded untimed real-block delimiter falsifier, not production certification."
+      "disposition": "All supplied structural results reproduce exactly; recommend one bounded untimed real-block delimiter falsifier, not production certification.",
+      "review_comment_id": 6793646018,
+      "publication_verification": "Exact body/author/issue and role-aware routing passed; pinned verify retains coordinator-only FROM exception."
     }
   ],
   "active_delegations": [],
