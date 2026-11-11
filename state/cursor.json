@@ -1540,6 +1540,20 @@
       "status": "finished",
       "disposition": "ll/rle repair supported; tt bound omits AVX2 n+8 reserve. D100 scoped accounting/readiness HOLD retained; no B6 resumption.",
       "comment": 6790710467
+    },
+    {
+      "id": "D103",
+      "decision": [
+        "G1",
+        "B6 resumption"
+      ],
+      "incoming_comment": 6790746386,
+      "pr": 161,
+      "sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "evidence_digest": "head:bfd5d322651974f9803f4c03942cf3ba3b5161d2;occupancy-job:130402788066;artifact-sha256:f2e7c1d0d421a858e8efde116aa9bf3d2e06650552746a036022589d251af2e7",
+      "commit": "b7af95428922d3c81d8007d548ce22002db57eaf",
+      "status": "complete",
+      "disposition": "D100/D102 accounting defect resolved at corrected PR368 head; scoped ordinary-worker/team accounting restriction lifted. Old failures preserved; no #366 readiness or all-green certification."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1884,7 +1898,9 @@
     "951909b65cadb4615abf47844803d66dbc2cd672",
     "c2e4b6eef99bc4c0bf5de731f3eace3a4ee8d1ff",
     "b371d2b060d467906e2b8bc250423341b8c2908e",
-    "f7c4438a789d436db0a6985bd6d4647c5d1e0038"
+    "f7c4438a789d436db0a6985bd6d4647c5d1e0038",
+    "b534f2b88b93358c792d2dfb8fa135a11f692cab",
+    "b7af95428922d3c81d8007d548ce22002db57eaf"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -1987,7 +2003,8 @@
     6782224690,
     6782334222,
     6782662288,
-    6790511955
+    6790511955,
+    6790746386
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2067,7 +2084,7 @@
   },
   "current_execution": {
     "active_comment": 6790746386,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D103",
     "incoming_comment": 6790746386
   },
@@ -2861,6 +2878,14 @@
       "incoming_comment": 6790511955,
       "decision": "D102",
       "commit": "b371d2b060d467906e2b8bc250423341b8c2908e"
+    },
+    {
+      "pr": 161,
+      "sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "evidence_digest": "head:bfd5d322651974f9803f4c03942cf3ba3b5161d2;occupancy-job:130402788066;artifact-sha256:f2e7c1d0d421a858e8efde116aa9bf3d2e06650552746a036022589d251af2e7",
+      "incoming_comment": 6790746386,
+      "decision": "D103",
+      "commit": "b7af95428922d3c81d8007d548ce22002db57eaf"
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3684,9 +3709,11 @@
     {
       "comment_id": 6790746386,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D103",
-      "progress": "Migration verified. Targeted D102 delta/resumption review of corrected PR368 head bfd5d322; prior accepted ll/rle/metadata findings retained."
+      "progress": "D103 work published. Corrected AVX2 tt accounting and raw artifacts verified; scoped B6 resumption recorded. Awaiting REVIEW publication/readback.",
+      "receipt_commit": "b534f2b88b93358c792d2dfb8fa135a11f692cab",
+      "work_commit": "b7af95428922d3c81d8007d548ce22002db57eaf"
     }
   ],
   "migrated_from": {
