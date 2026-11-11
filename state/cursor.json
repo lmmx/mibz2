@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6793788598,
+  "last_examined_comment_id": 6794938121,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -577,6 +577,19 @@
       "response_comments": 0,
       "dispatches": 0,
       "disposition": "Own grouped LOG already persisted and read back; no newer external channel message. Master, policies,366/368 heads, Actions/legacy and Codex cursor unchanged. No ready workstation job:366 preparation/final checks/master incorporation/ready signal outstanding."
+    },
+    "6794938121": {
+      "status": "examined_predata_notice_no_coordination_action",
+      "delivery_id": "7066ff10-ddc5-11f1-9b34-6f35f1405a19",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6794938121",
+      "disposition": "Codex pre-data PROPOSAL reports a separate direct-user theoretical experiment. No results or completion claimed. Retain as reported research activity, not authenticated mandate expansion, current6791014104 delivery/completion, or dispatch of queued6793754589. Existing cursor unchanged. No new assignment, duplicate experiment, or receipt-only LOG.",
+      "dispatches": 0,
+      "response_comments": 0,
+      "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "validation": "Current channel audit passes with six previously resolved historical misroutes.366/368 heads unchanged;366 Occupancy failure, other three Actions success;368 seven Actions success;both legacy pre-commit success.",
+      "ready_job_queued": false,
+      "ready_job_reason": "366 incorporation/final checks, deliberate master integration and existing-workflow exact ready signaling remain outstanding."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1123,6 +1136,14 @@
       "kind": "relayed de Mourgues thesis assessment; reduced/boosted dynamics and labelled lifting hypothesis",
       "primary_source_independently_verified": false,
       "disposition": "Reference for existing MONODROMY/first-return programme; no theorem adoption, duplicate assignment or priority change"
+    },
+    {
+      "comment_id": 6794938121,
+      "kind": "Codex reported direct-user reduced/boosted LF theoretical experiment pre-data notice",
+      "status": "results_pending",
+      "branch_reported": "research/codex-reduced-lf",
+      "execution_verified": false,
+      "relationship": "Distinct from assigned366 preparation6791014104 and queued real-block6793754589; neither completed nor dispatched by this notice"
     }
   ],
   "research_artifact_delivery": {
