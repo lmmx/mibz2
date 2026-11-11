@@ -1,0 +1,104 @@
+{
+  "artifact_sha256": "f2e7c1d0d421a858e8efde116aa9bf3d2e06650552746a036022589d251af2e7",
+  "files": {
+    "occupancy.json": {
+      "traced_rounds": 36,
+      "worker_histories": 84,
+      "samples": 15516,
+      "old_tt_upper_failures_on_new_samples": 3761,
+      "corrected_ll_rle_tt_errors": 0,
+      "plans": [
+        "workers1",
+        "workers2",
+        "workers4"
+      ],
+      "output": [
+        "209700196",
+        "a8830caee5c511a6"
+      ],
+      "routes": {
+        "('Runs', 'false', 'true')": 13788,
+        "('ColumnInPlace', 'false', 'true')": 1728
+      },
+      "overhead": [
+        {
+          "threads": 1,
+          "mode": "timeline",
+          "ratio": 1.003682,
+          "lo": 0.943984,
+          "hi": 1.067157
+        },
+        {
+          "threads": 1,
+          "mode": "full",
+          "ratio": 0.998708,
+          "lo": 0.939964,
+          "hi": 1.061123
+        },
+        {
+          "threads": 2,
+          "mode": "timeline",
+          "ratio": 1.056552,
+          "lo": 0.987592,
+          "hi": 1.130328
+        },
+        {
+          "threads": 2,
+          "mode": "full",
+          "ratio": 1.010327,
+          "lo": 0.96135,
+          "hi": 1.061798
+        },
+        {
+          "threads": 4,
+          "mode": "timeline",
+          "ratio": 1.00551,
+          "lo": 0.990334,
+          "hi": 1.020917
+        },
+        {
+          "threads": 4,
+          "mode": "full",
+          "ratio": 0.999145,
+          "lo": 0.978927,
+          "hi": 1.019781
+        }
+      ]
+    },
+    "occupancy-teams.json": {
+      "traced_rounds": 4,
+      "worker_histories": 8,
+      "samples": 1724,
+      "old_tt_upper_failures_on_new_samples": 0,
+      "corrected_ll_rle_tt_errors": 0,
+      "plans": [
+        "teams2x2"
+      ],
+      "output": [
+        "209700196",
+        "a8830caee5c511a6"
+      ],
+      "routes": {
+        "('Runs', 'true', 'true')": 1532,
+        "('ColumnSeparate', 'true', 'true')": 192
+      },
+      "overhead": [
+        {
+          "threads": 4,
+          "mode": "timeline",
+          "ratio": 1.005225,
+          "lo": 0.817027,
+          "hi": 1.236774
+        },
+        {
+          "threads": 4,
+          "mode": "full",
+          "ratio": 0.962415,
+          "lo": 0.571351,
+          "hi": 1.621146
+        }
+      ]
+    }
+  },
+  "boundary": "AVX2 cap800000 > old799996, <= corrected800060; scalar remains bounded"
+}

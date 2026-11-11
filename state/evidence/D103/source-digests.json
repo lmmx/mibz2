@@ -1,0 +1,11 @@
+{
+  "src/lib.rs": "fd68628f58fa634188e9982a66e35304a2c661da93db34bec0b4dcf87437d4de",
+  "src/trace.rs": "4a7228090164c24dad5f5b24064b847476d327fd3e120633433ddbe01ac87ff3",
+  "examples/occupancy.rs": "c98921bbeb958cd2bb9144d22002031af6690b3699333dd7935a72cc8af3e5c8",
+  "docs/ledger.md": "16aa447d52bcd184ede267e08c176295c6c1ea00541b86a980fe070a78bedd53",
+  "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md": "e6e4468779daa04c516ccc7aee225b563c1b3faa1fad90008b005bc7f228d97d",
+  "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-clippy.log": "a65d090caab743e5f5baf29aed6ef81b6f45a154fb1859d0423e047990b99901",
+  "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-instrument-tests.log": "7538e7a7bf9bf6746d6cec36ac929589a7c64a6aac578e124a223b3f0c02fa2a",
+  "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-ledger-tests.log": "c8d3867d4fc5c045e3636213ae4d5d093e4b8c8ba4ae62888b07f0a2a4d3689c",
+  "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-old-bound-mutant.log": "a8f54361ce91abc44e7271966266548a79c7db671f6accd6190c3841c47abe55"
+}
