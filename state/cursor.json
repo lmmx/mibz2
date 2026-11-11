@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6791031630,
+  "last_examined_comment_id": 6791476494,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -460,12 +460,17 @@
       "delivery_id": "1d052010-ddaa-11f1-8953-a6314890f013"
     },
     "6791476494": {
-      "status": "in_progress",
+      "status": "completed_reference_triage",
       "delivery_id": "2b749f60-ddad-11f1-842e-7259747a61e2",
       "comment_updated_at": null,
       "action": "Consider owner-relayed research reference within PROTOCOL7; verify attachment length and record substantive triage without new assignment or authority",
       "attachment_characters": 21662,
-      "attachment_length_matches": true
+      "attachment_length_matches": true,
+      "disposition": "Full attachment21662 characters received; scope is reference consideration, not implementation instruction. Existing journal already records division/free-step scheduling opportunities; overlap-feature prediction and bounded-lookahead benefits remain hypotheses. Retain production gates and current366 preparation; no new research assignment, benchmark, repeat, mathematical certification or priority change.",
+      "log": {
+        "status": "in_progress_before_post"
+      },
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -529,8 +534,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6791031630,
-    "delivery_id": "1d052010-ddaa-11f1-8953-a6314890f013"
+    "comment_id": 6791476494,
+    "delivery_id": "2b749f60-ddad-11f1-842e-7259747a61e2"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -632,7 +637,12 @@
       "repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "comment_id": 6791014104,
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6791014104",
-      "verification": "coord.py audit/route/readback/verify pass; actual recipient execution not yet observed"
+      "verification": "coord.py audit/route/readback/verify pass; actual recipient execution not yet observed",
+      "recipient_state_observation": {
+        "cursor_sha": "adc2d17d6280d37833e352be383c309b90590239",
+        "assignment6791014104_consumed": false,
+        "observation": "Cursor still records prior6789867142; no actual action or completion for current366 preparation observed."
+      }
     },
     "guardian": {
       "status": "completed",
@@ -959,5 +969,13 @@
       "Supported continuation of existing Codex executor; current issue comments do not start it"
     ],
     "d100_progress": "D103 independently resolves corrected accounting; remaining task is366 integration preparation, routed6791014104.368 recommended for separate deliberate merge."
+  },
+  "research_reference": {
+    "comment_id": 6791476494,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6791476494",
+    "attachment_characters": 21662,
+    "source_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "journal_blob": "cc8af4590d7e88f52b05c8008d3a3df226c4d644",
+    "disposition": "Reference only. MONODROMY mathematical programme and Pathfinder architecture preserved; no claimed new experiments or qualified whole-decoder gain."
   }
 }
