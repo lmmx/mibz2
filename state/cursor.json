@@ -543,6 +543,12 @@
       "comment_updated_at": null,
       "action": "Reconcile completed independent reproduction; stage one real-block diagnostic behind busy Codex6791014104",
       "report_commit": "abe1cbe5f0823cbff484070d25c0e202dad77e02"
+    },
+    "6793678261": {
+      "status": "in_progress",
+      "delivery_id": "a539ba10-ddbc-11f1-8b54-d4ee3a9e4a4d",
+      "comment_updated_at": null,
+      "action": "Retain relayed thesis assessment as MONODROMY research reference; acknowledge together with completed reproduction and queued diagnostic, without duplicate assignment or priority change"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1069,6 +1075,13 @@
       "kind": "text-only review of relay6793265673",
       "independent_execution": false,
       "disposition": "Reference retained; no new action or qualification"
+    },
+    {
+      "comment_id": 6793678261,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793678261",
+      "kind": "relayed de Mourgues thesis assessment; reduced/boosted dynamics and labelled lifting hypothesis",
+      "primary_source_independently_verified": false,
+      "disposition": "Reference for existing MONODROMY/first-return programme; no theorem adoption, duplicate assignment or priority change"
     }
   ],
   "research_artifact_delivery": {
