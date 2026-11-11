@@ -948,10 +948,12 @@
       ],
       "head_sha": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
       "recipient_cursor_sha": "3d9bcd835fac6e7938cf378ef5b08750bc7304c0",
-      "log_publication": "pending",
+      "log_publication": "published",
       "log_dedup_key": "first-return-result-6808483473",
       "ready_job_queued": false,
-      "ready_job_reason": "366 preparation incomplete; required validation/master integration/readiness not complete"
+      "ready_job_reason": "366 preparation incomplete; required validation/master integration/readiness not complete",
+      "log_comment_id": 6808568270,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1025,7 +1027,8 @@
     6807528542,
     6808027528,
     6808041276,
-    6808549538
+    6808549538,
+    6808568270
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1212,7 +1215,10 @@
     "key": "handoff-real-block-6807992359",
     "status": "published_readback_verified",
     "log_comment_id": 6808041276,
-    "event_dispositions_persisted": true
+    "event_dispositions_persisted": true,
+    "comment_id": 6808568270,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270",
+    "scope": "Real-block REVISE METADATA; bounded pricing dispatched; no ready workstation job"
   },
   "dispatch_history": [
     {
