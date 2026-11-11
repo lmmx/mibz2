@@ -299,6 +299,12 @@
       ],
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6789822911": {
+      "status": "in_progress",
+      "delivery_id": "4af02000-dda1-11f1-90e7-61e04579fc38",
+      "planned_action": "Accept actual F01 implementation/evidence delivery; keep B5 open; dispatch queued D100 repair to freed Codex and targeted independent recheck to original Researcher.",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -409,13 +415,9 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "completed",
-      "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition",
-      "comment_id": 6782111848,
-      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848",
-      "recipient_evidence": "team-state/researcher:state/cursor.json explicitly records assignment 6782111848 in_progress",
-      "observed": "2026-11-10T23:30Z",
-      "review_comment_id": 6782367271
+      "status": "in_progress_before_post",
+      "scope": "Independent F01 targeted recheck",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
     },
     "optimizer": {
       "status": "completed",
@@ -428,13 +430,9 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "delivered_active_not_completed",
-      "comment_id": 6782519694,
-      "queue_comment_id": 6782394725,
-      "scope": "B5 F01 targeted correction to frozen #365",
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694",
-      "recipient_evidence": "Actual implementation milestone6789457478 after manual owner resume; no completion cursor yet",
-      "recipient_report": 6789457478
+      "status": "in_progress_before_post",
+      "queue_comment_id": 6782527893,
+      "scope": "D100 separate instrument repair"
     },
     "guardian": {
       "status": "completed",
@@ -544,6 +542,25 @@
       "comment_id": 6782551058,
       "scope": "D100 accounting diagnosis and completed Codex census/F01 handoff",
       "review_comment_id": 6782600574
+    },
+    {
+      "status": "completed",
+      "comment_id": 6782519694,
+      "queue_comment_id": 6782394725,
+      "scope": "B5 F01 targeted correction to frozen #365",
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6782519694",
+      "recipient_evidence": "Actual implementation milestone6789457478 after manual owner resume; no completion cursor yet",
+      "recipient_report": 6789457478,
+      "review_comment_id": 6789822911
+    },
+    {
+      "status": "completed",
+      "scope": "Reconcile oldest two supplemental items then independent B5 #365 in one checkpoint; preserve original queued work and disposition",
+      "comment_id": 6782111848,
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6782111848",
+      "recipient_evidence": "team-state/researcher:state/cursor.json explicitly records assignment 6782111848 in_progress",
+      "observed": "2026-11-10T23:30Z",
+      "review_comment_id": 6782367271
     }
   ],
   "codex_correction": {
