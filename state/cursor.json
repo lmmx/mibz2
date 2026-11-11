@@ -605,8 +605,11 @@
       "log_comment_id": 6795316926
     },
     "6795316926": {
-      "status": "own_publication_readback_verified",
-      "comment_updated_at": null
+      "status": "observed_self_generated_noop",
+      "comment_updated_at": null,
+      "delivery_id": "209ca310-ddc8-11f1-9bf8-287e833b6347",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
