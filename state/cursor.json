@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6798286997,
+  "last_examined_comment_id": 6799750846,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -675,10 +675,22 @@
       "disposition": "Actual Codex intake/integrity receipt for labelled relay; scripts unexecuted, no production completion or research dispatch."
     },
     "6799687151": {
-      "status": "in_progress",
+      "status": "completed_priority_changed_handoff_requested",
       "delivery_id": "2e9d9530-dde3-11f1-951e-0e4afddf8a19",
       "comment_updated_at": null,
-      "action": "Prioritise existing labelled queue, pause366 work preserving pending, send one permitted resume for truthful deferred handoff; dispatch research only after actual recipient reconciliation"
+      "action": "Prioritise existing labelled queue, pause366 work preserving pending, send one permitted resume for truthful deferred handoff; dispatch research only after actual recipient reconciliation",
+      "disposition": "Existing labelled queue promoted to priority1.366 preparation paused with unfinished work retained; permitted resume6799739845 requests actual deferred handoff, then formal research dispatch. No false production completion. Subsequent Codex6799750846 reports direct-owner research start; reconcile same work, no duplicate launch.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6798260004",
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6799739845"
+      ],
+      "log_publication": "pending"
+    },
+    "6799750846": {
+      "status": "observed_direct_manual_research_started_formal_reconciliation_pending",
+      "delivery_id": "9045e350-dde3-11f1-8580-7f5d8bec4bca",
+      "comment_updated_at": null,
+      "disposition": "Actual recipient reports isolated research start15:21UTC under direct owner instruction; not a formal routed ID or completion. Existing production work paused pending deferred handoff; no duplicate assignment or restart."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -744,7 +756,8 @@
     6793788598,
     6795316926,
     6798260004,
-    6798286997
+    6798286997,
+    6799739845
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -847,7 +860,7 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_not_delivered",
+      "status": "paused_awaiting_recipient_deferred_handoff",
       "scope": "Prepare existing366 with exact reviewed368 accounting repair; preserve frozen diagnostic; no master merge,queue,tag or execution",
       "source_comment_id": 6790889882,
       "existing_recipe_head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
@@ -859,7 +872,10 @@
         "cursor_sha": "adc2d17d6280d37833e352be383c309b90590239",
         "assignment6791014104_consumed": false,
         "observation": "Cursor still records prior6789867142; no actual action or completion for current366 preparation observed."
-      }
+      },
+      "implementation_complete": false,
+      "resume_comment_id": 6799739845,
+      "resume_verified": true
     },
     "guardian": {
       "status": "completed",
@@ -933,10 +949,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "labelled-contraction-relay-6798202916",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6798286997
+    "key": "research-priority-6799687151",
+    "status": "in_progress_before_grouped_log",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -1071,10 +1086,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex: bounded366 recipe-branch incorporation and untimed preparation; await actual REVIEW+cursor",
-    "Separate deliberate authorised Coordinator run: integration of368 at exact checked head; no event merge",
-    "Admit workstation job only after final recipe exact-head checks,master incorporation and Run signal ready tag; no job queued",
-    "After genuine Codex6791014104 completion REVIEW plus cursor: route queued6793754589, one untimed first-return real-block falsifier; no overlapping implementation"
+    "Codex: finish actual pause handoff6791014104/resume6799739845 preserving366 unfinished; do not fabricate implementation completion",
+    "Coordinator: after truthful REVIEW plus cursor, formally route priority1 labelled6798260004 to reconcile already manually started research, no second launch",
+    "Real-block6793754589 remains pending with all frozen inputs/rules unchanged",
+    "366 preparation remains unfinished; workstation readiness requires final checks, deliberate integration and ready signaling"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -1268,16 +1283,26 @@
     "recipient_execution_observed": false
   },
   "pending_labelled_contraction": {
-    "status": "queued_verified_not_dispatched",
+    "status": "direct_manual_start_reported_formal_dispatch_pending",
     "queue_comment_id": 6798260004,
-    "priority": 2,
-    "after": [
-      6791014104,
-      6793754589
-    ],
+    "priority": 1,
+    "after": [],
     "source_comment_id": 6798202916,
     "scope": "Verify supplied checks, origin annotation, one boundary-local stable-identity contraction prototype; at most one conditional sub-exchange summary",
     "limits": "one pass; two hours implementation/analysis; thirty minutes aggregate candidate execution; freeze finite input/schedules/rule before data",
-    "execution_observed": false
+    "execution_observed": true,
+    "execution_evidence_comment_id": 6799750846,
+    "reported_start": "2026-11-11T15:21:00Z",
+    "formal_dispatch_blocker": "Actual deferred handoff REVIEW plus own cursor for6791014104 and resume6799739845",
+    "scheduling_relay": 6799687151,
+    "prior_queue_body": "FROM: coordinator\nTO: codex\nRE: labelled origin transport and stable-identity local contraction; relay6798202916; after QUEUED6793754589\nTYPE: QUEUED\nPRIORITY: 2\n\nACTOR: ChatGPT Work (acting monitor)\n2026-11-11. Master/policy2635f04e9155dd31388b24fd3f7248f87b3ddcda. Source request: [Louis relay6798202916](https://github.com/lmmx/mibz2/pull/145#issuecomment-6798202916).\n\n**Staged, not dispatched.** Production assignment363/6791014104 stays in flight. Earlier priority2 QUEUED6793754589 keeps precedence by age and its frozen delimiter/input/limits/rule unchanged. Do not start from this channel comment; the Coordinator will dispatch through #363 when eligible, after actual completion reconciliation. No automatic restart is claimed.\n\n**Bounded research follow-up.** Build on #369 at85735b38ebfa804acd31a6291bb7c08b6bf57760 and phrase/batch sources ataf3327d8aee9fffe26d2d6de76818b6ac69cc145. Preserve MONODROMY mathematical ownership and Pathfinder architecture. This is an isolated prototype/counterexample task, not a general invention programme or production change.\n\n1. Read the full relay and extract its five fenced UTF-8 files with final LF. Coordinator verified every stated byte count and SHA256; ZIP container not supplied/verified and scripts not rerun here. Independently inspect then reproduce both small checks, comparing saved JSON/digests; preserve failures. State finite-test limits and short arguments for first-return splice, nested composition and marked-occurrence transport. Distinguish elementary identities, directly read sources, relay-only thesis interpretations and new hypotheses.\n2. Adapt occurrence-level (source anchor rank, emitted-prefix length) marking during delimiter construction. Do not add origin to delimiter set. Preserve inverse-output orientation, repeat/truncate, multiple cycles/no-anchor fallback and distinct occurrence routes for shared words. Count every marker check, retained metadata and old origin-search step; correctness without savings is a valid outcome.\n3. Main target: one stable-identity, boundary-local implementation of the exact non-adjacent deletion splice, compared with existing packed construction on identical inputs and deletion schedules. Preserve necessary splits and coalescing across deleted gaps. Charge predecessor/rank queries, sorting, splits, shared/content versus occurrence labels, word copies, all deferred work, live/cumulative metadata and output. Do not count fewer final fragments as a construction win.\n4. Only if those results support proceeding, analyse at most one restricted few-attachment sub-exchange summary. Specify entry-to-exit offset/destination, word and marked-occurrence contract, length inequalities and equalities, and recognition+build+application costs. A counterexample/restriction suffices. If evidence does not support it, mark this part deferred; do not manufacture another experiment.\n\n**Bounds / pre-data freeze.** One research pass, at most two hours of implementation/analysis and thirty minutes aggregate candidate execution; stop with resumable evidence if either limit is hit. Reproduce the supplied fixed checks once, with one exact reproducibility pass. Before new candidate results, post C1a question, comparison rule, source/input identities and finite scope on #145, and commit the plan. Use binary columns through length6 and ternary through length4 for new comparisons, all origins/relevant delimiters; fixed periodic/long-excursion sizes1,2,4,8,16,32,64. Freeze identical eligible deletion schedules before comparison. Preserve #369's ba/baa witnesses, gray-only/nondividing cycles, long-excursion copy case, and its102 costly cached updates as existing regression/adversarial evidence—not new discoveries. Reuse that evidence and select/freeze any needed additional adversarial subset before candidate data; do not repeat #369's entire baseline study merely to enlarge counts.\n\nComparison rule: any output/itinerary/destination/origin mismatch rejects that candidate pending one targeted correction with original failure retained. No retry to seek a favourable cost result. Report componentwise costs and trade-offs, not an arbitrary sum of unlike operations. Pursue only a named restricted case with observed reduction in the targeted maintenance/search work and explicit accounting of induced costs; otherwise revise or stop that candidate, without claiming the whole LF line impossible. These are research recommendations, not speed/adoption gates.\n\n**Deliverable:** isolated reproducible source, immutable full commit, inputs/results/digests and commands; concise proof/assumption note; separate pursue/revise/stop outcomes for origin marking and local contraction, plus conditional summary disposition and cheapest next falsifier. Compare with original constructors, not a row oracle alone. No new real-block run, timing, i9/workstation/queue/tag operation, unsafe production code, merge/release/default/team/cap/policy change, independent self-review or other-role state edit. Report through REVIEW and your own completion cursor for the eventual dispatched inbox ID only after actual completion."
+  },
+  "pending_recipe_preparation": {
+    "status": "paused_unfinished",
+    "assignment_comment_id": 6791014104,
+    "pr": 366,
+    "head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "preserve_scope": true,
+    "resume_condition": "After prioritised labelled-contraction research; explicit eligible routing, no false completed state"
   }
 }
