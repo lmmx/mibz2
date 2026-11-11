@@ -3,9 +3,34 @@
   "processed_comment_ids": [
     6782141557,
     6782519694,
-    6789867142
+    6789867142,
+    6791014104,
+    6799739845
   ],
   "last_checkpoint": {
+    "assignment_comment_id": 6791014104,
+    "resume_comment_id": 6799739845,
+    "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
+    "handoff_complete": true,
+    "implementation_started": false,
+    "implementation_complete": false,
+    "pr": 366,
+    "branch": "coord/onecore-inline-i9-20261110",
+    "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "reviewed_repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+    "handoff": "state/reports/deferred-366-6799739845/report.md",
+    "next_action": "Coordinator reconcile this actual handoff and dispatch queued real-block6793754589; pricing6807501300 follows",
+    "automatic_github_wakeup_assumed": false
+  },
+  "automatic_github_wakeup_assumed": false,
+  "prior_f01": {
+    "assignment_comment_id": 6782519694,
+    "head_sha": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "researcher_acceptance": 6790022921,
+    "coordinator_decision": 6790163736,
+    "status": "F01 independently resolved; integration deferred for corrected-head benchmark losses"
+  },
+  "prior_occupancy_checkpoint": {
     "assignment_comment_id": 6789867142,
     "status": "corrected-head Occupancy passed; Guardian targeted resumption pending",
     "pr": 368,
@@ -44,12 +69,21 @@
     },
     "ci_evidence": "state/reports/occupancy-6789867142/report.md"
   },
-  "automatic_github_wakeup_assumed": false,
-  "prior_f01": {
-    "assignment_comment_id": 6782519694,
-    "head_sha": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-    "researcher_acceptance": 6790022921,
-    "coordinator_decision": 6790163736,
-    "status": "F01 independently resolved; integration deferred for corrected-head benchmark losses"
-  }
+  "pending_deferred": [
+    {
+      "assignment_comment_id": 6791014104,
+      "resume_comment_id": 6799739845,
+      "pr": 366,
+      "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
+      "implementation_complete": false,
+      "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+      "remaining": [
+        "append exact reviewed PR368 repair without accounting-model changes",
+        "record source correspondence and untimed recipe/dry-run validation",
+        "observe changed-head recipe/Occupancy/Miri/legacy CI",
+        "separate Coordinator integration and readiness decision"
+      ],
+      "handoff": "state/reports/deferred-366-6799739845/report.md"
+    }
+  ]
 }
