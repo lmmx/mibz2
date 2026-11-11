@@ -1552,8 +1552,9 @@
       "sha": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "evidence_digest": "head:bfd5d322651974f9803f4c03942cf3ba3b5161d2;occupancy-job:130402788066;artifact-sha256:f2e7c1d0d421a858e8efde116aa9bf3d2e06650552746a036022589d251af2e7",
       "commit": "b7af95428922d3c81d8007d548ce22002db57eaf",
-      "status": "complete",
-      "disposition": "D100/D102 accounting defect resolved at corrected PR368 head; scoped ordinary-worker/team accounting restriction lifted. Old failures preserved; no #366 readiness or all-green certification."
+      "status": "finished",
+      "disposition": "D100/D102 accounting defect resolved at corrected PR368 head; scoped ordinary-worker/team accounting restriction lifted. Old failures preserved; no #366 readiness or all-green certification.",
+      "comment": 6790889882
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1654,7 +1655,8 @@
     6782294636,
     6782473662,
     6782751494,
-    6790710467
+    6790710467,
+    6790889882
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1900,7 +1902,8 @@
     "b371d2b060d467906e2b8bc250423341b8c2908e",
     "f7c4438a789d436db0a6985bd6d4647c5d1e0038",
     "b534f2b88b93358c792d2dfb8fa135a11f692cab",
-    "b7af95428922d3c81d8007d548ce22002db57eaf"
+    "b7af95428922d3c81d8007d548ce22002db57eaf",
+    "ca976259ba93460964bf066a53a9c2d3f443ee40"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2083,10 +2086,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6790746386,
-    "status": "complete",
+    "active_comment": null,
+    "status": "finished",
     "decision": "D103",
-    "incoming_comment": 6790746386
+    "incoming_comment": 6790746386,
+    "review_comment_id": 6790889882
   },
   "duplicate_events": [
     {
@@ -3709,11 +3713,13 @@
     {
       "comment_id": 6790746386,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D103",
-      "progress": "D103 work published. Corrected AVX2 tt accounting and raw artifacts verified; scoped B6 resumption recorded. Awaiting REVIEW publication/readback.",
+      "progress": "Exact REVIEW body/destination verified on #145; pinned verifier fails only hardcoded coordinator FROM; independent Guardian headers/routing pass.",
       "receipt_commit": "b534f2b88b93358c792d2dfb8fa135a11f692cab",
-      "work_commit": "b7af95428922d3c81d8007d548ce22002db57eaf"
+      "work_commit": "b7af95428922d3c81d8007d548ce22002db57eaf",
+      "review_comment_id": 6790889882,
+      "complete_cursor_commit": "ca976259ba93460964bf066a53a9c2d3f443ee40"
     }
   ],
   "migrated_from": {
