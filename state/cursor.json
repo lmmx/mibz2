@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6782844140,
+  "last_examined_comment_id": 6784483743,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -277,9 +277,10 @@
       ]
     },
     "6784483743": {
-      "status": "in_progress",
+      "status": "completed_operational_path_selected",
       "delivery_id": "0559a500-dd71-11f1-8d0b-997dadadc91a",
-      "planned_action": "Close security-review expansion, choose existing Run signal direct path, record verified dispatch and execution capability blockers plus actual D100 status. No further review assignment."
+      "planned_action": "Close security-review expansion, choose existing Run signal direct path, record verified dispatch and execution capability blockers plus actual D100 status. No further review assignment.",
+      "disposition": "No further security-review round. Prefer already authorised existing Run signal via authenticated operator session; no new bridge required as default. Fresh capability check: no exposed dispatch method; gh exists but auth status1 and no GH_TOKEN/GITHUB_TOKEN; no Codex automation or launch tool; F01 recipient cursor unchanged. D100 remains queued, not started. No ready eligible job identified among prepared361/365/366/367 work."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -330,10 +331,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6782844140,
-    "delivery_id": "d196fc70-dd63-11f1-876d-b815633cc0f1",
-    "disposition": "routine_completion_no_coordination_action",
-    "new_actionable_external_messages": 0
+    "comment_id": 6784483743,
+    "delivery_id": "0559a500-dd71-11f1-8d0b-997dadadc91a",
+    "disposition": "operational_priority_reconciled"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -472,12 +472,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "d101-decision-6782751494",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "planned_action": "One grouped decision and owner intervention boundary",
-    "log_comment_id": 6782811875,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782811875"
+    "key": "operational-priority-6784483743",
+    "status": "in_progress_before_log",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -582,5 +579,15 @@
     "scope": "await-submit final query failure proceeds; current ready target not compared to selected SHA",
     "disposition": "No end-to-end fail-closed readiness claim; repair/refusal checks and explicit start/revocation semantics prerequisite to proposed bridge operation. No blanket decoder stop.",
     "implementation": "not_dispatched; authority/design prerequisite unresolved"
+  },
+  "operational_priority": {
+    "source": 6784483743,
+    "security_review": "closed; no new assignment",
+    "preferred_path": "Existing Run signal workflow through authenticated acting-session dispatch; do not require new bridge merely to use existing workflow",
+    "technical_requirements": [
+      "Authenticated workflow_dispatch access available to existing authorised Coordinator runtime",
+      "Supported continuation of existing Codex executor; current issue comments do not start it"
+    ],
+    "d100_progress": "Source diagnosis complete; bounded correction queued6782527893, implementation not started; F01 assignment6782519694 pending receipt"
   }
 }
