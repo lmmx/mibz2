@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6790246510,
+  "last_examined_comment_id": 6790288240,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -346,6 +346,17 @@
       ],
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6790288240": {
+      "status": "observed_recipient_active_not_completed",
+      "delivery_id": "69f70f10-dda4-11f1-806b-202f233ea074",
+      "comment_updated_at": null,
+      "disposition": "Actual Codex execution receipt explicitly cites363/6789867142 and reports separate fix/occupancy-route-ledger implementation/native tests. Accepted as delivery and active work, not completion or accounting clearance. Cursor still completes only previous assignments. Reported test results await reviewable source/evidence; no new assignment, no duplicate restart, no receipt-only LOG.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6790288240"
+      ],
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -402,9 +413,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790246510,
-    "delivery_id": "1d4433a0-dda4-11f1-8c55-31df8742d4ca",
-    "disposition": "observer_completion_verified_no_additional_action"
+    "comment_id": 6790288240,
+    "delivery_id": "69f70f10-dda4-11f1-806b-202f233ea074",
+    "disposition": "actual_recipient_execution_observed_not_completed"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -467,7 +478,7 @@
     "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
     "action": "sole activation complete; bounded role work actually running",
     "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
-    "next": "D100 separate repair dispatched; await actual evidence, then original Guardian targeted resumption. PR365 F01 resolved, performance integration deferred."
+    "next": "D100 repair now actually active; await completed evidence and cursor, then original Guardian targeted resumption. PR365 F01 resolved; current-head performance integration remains deferred."
   },
   "activation": {
     "status": "active",
@@ -499,11 +510,14 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_not_delivered",
+      "status": "delivered_active",
       "comment_id": 6789867142,
       "queue_comment_id": 6782527893,
       "scope": "D100 separate instrument repair",
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142"
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
+      "recipient_report": 6790288240,
+      "recipient_evidence": "Existing live Codex session reports implementation and native matrix execution for exact assignment6789867142; finished cursor/evidence pending.",
+      "recipient_cursor_sha": "12480fdb99f3f278b26525e31ccec5b8bd9a0533"
     },
     "guardian": {
       "status": "completed",
@@ -655,18 +669,21 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex6789867142 separate D100 ledger repair; actual recipient action still pending, no duplicate dispatch.",
+    "Codex6789867142 D100 separate repair actually active via6790288240; await completion REVIEW plus cursor before next implementation dispatch.",
     "Guardian targeted accounting resumption only after corrected evidence returns.",
     "PR365 F01 resolved; integration deferred on current exact-head frozen performance gate, no rerun.",
     "No ready workstation job until366 exact-head eligibility; existing direct Run signal path when authenticated dispatch available."
   ],
   "pending_ledger_repair": {
-    "status": "dispatched_verified_recipient_pending",
+    "status": "delivered_active",
     "priority": 2,
     "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions",
     "queue_comment_id": 6782527893,
-    "assignment_comment_id": 6789867142
+    "assignment_comment_id": 6789867142,
+    "recipient_report": 6790288240,
+    "branch_reported": "fix/occupancy-route-ledger",
+    "validation_claims": "Native route/reuse matrix, parity/CRC, impossible-capacity rejection reported; trace transport and failure-propagation still underway. Initial fixture failures retained. No source/evidence independently inspected at this milestone."
   },
   "diagnostic_pr367": {
     "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
@@ -710,6 +727,6 @@
       "Authenticated workflow_dispatch access available to existing authorised Coordinator runtime",
       "Supported continuation of existing Codex executor; current issue comments do not start it"
     ],
-    "d100_progress": "Dispatched363/6789867142 after actual F01 completion6789822911; route verified, new recipient action still pending."
+    "d100_progress": "Actual implementation underway in existing live Codex session, receipt6790288240 for6789867142. Await completion REVIEW plus cursor and evidence, then Guardian targeted resumption."
   }
 }
