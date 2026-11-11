@@ -5,21 +5,34 @@
     6782519694,
     6789867142,
     6791014104,
-    6799739845
+    6799739845,
+    6808027528
   ],
   "last_checkpoint": {
-    "assignment_comment_id": 6791014104,
-    "resume_comment_id": 6799739845,
-    "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
-    "handoff_complete": true,
-    "implementation_started": false,
-    "implementation_complete": false,
-    "pr": 366,
-    "branch": "coord/onecore-inline-i9-20261110",
-    "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
-    "reviewed_repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
-    "handoff": "state/reports/deferred-366-6799739845/report.md",
-    "next_action": "Coordinator reconcile this actual handoff and dispatch queued real-block6793754589; pricing6807501300 follows",
+    "assignment_comment_id": 6808027528,
+    "status": "COMPLETE: sole frozen first-return probe; REVISE metadata",
+    "pr": 371,
+    "head_sha": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
+    "freeze_sha": "54622528abc7226e080a0c3d9e1b483c7407c512",
+    "pre_data_comment_id": 6808415800,
+    "attempts": 1,
+    "retries": 0,
+    "results": {
+      "exact_bytes_origin_cycle_crc": true,
+      "token_lf": true,
+      "traversal_sum": 259796,
+      "n": 899931,
+      "metadata_live_lower_bound_bytes": 23511653,
+      "metadata_threshold_bytes": 3599724,
+      "metadata_exact_peak": false,
+      "outcome": "revise_metadata",
+      "native_test": "1 passed",
+      "scoped_lint_format_syntax": "pass",
+      "artifact_verifier": "pass",
+      "ci": "pending; not qualification"
+    },
+    "handoff": "state/reports/first-return-6808027528/report.md",
+    "next_action": "Coordinator assess REVISE and dispatch already-queued performance pricing6807501300 through363; no second probe",
     "automatic_github_wakeup_assumed": false
   },
   "automatic_github_wakeup_assumed": false,
@@ -85,5 +98,20 @@
       ],
       "handoff": "state/reports/deferred-366-6799739845/report.md"
     }
-  ]
+  ],
+  "prior_deferred_handoff": {
+    "assignment_comment_id": 6791014104,
+    "resume_comment_id": 6799739845,
+    "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
+    "handoff_complete": true,
+    "implementation_started": false,
+    "implementation_complete": false,
+    "pr": 366,
+    "branch": "coord/onecore-inline-i9-20261110",
+    "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "reviewed_repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+    "handoff": "state/reports/deferred-366-6799739845/report.md",
+    "next_action": "Coordinator reconcile this actual handoff and dispatch queued real-block6793754589; pricing6807501300 follows",
+    "automatic_github_wakeup_assumed": false
+  }
 }
