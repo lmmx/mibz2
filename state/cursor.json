@@ -668,6 +668,17 @@
       "response_comments": 0,
       "dispatches": 0,
       "disposition": "Own checkpoint; no newer external channel message. Policies, heads, Actions/legacy and Codex completion cursor unchanged. Existing queue preserved. No ready workstation job:366 preparation/final checks/master integration/ready signal outstanding."
+    },
+    "6799526049": {
+      "status": "completed_intake_observed_not_assignment_completion",
+      "comment_updated_at": null,
+      "disposition": "Actual Codex intake/integrity receipt for labelled relay; scripts unexecuted, no production completion or research dispatch."
+    },
+    "6799687151": {
+      "status": "in_progress",
+      "delivery_id": "2e9d9530-dde3-11f1-951e-0e4afddf8a19",
+      "comment_updated_at": null,
+      "action": "Prioritise existing labelled queue, pause366 work preserving pending, send one permitted resume for truthful deferred handoff; dispatch research only after actual recipient reconciliation"
     }
   },
   "automatic_github_wakeup_assumed": false,
