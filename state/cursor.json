@@ -332,7 +332,9 @@
     "6790163736": {
       "status": "observed_self_generated_noop",
       "response_comments": 0,
-      "dispatches": 0
+      "dispatches": 0,
+      "delivery_id": "8aae9120-dda3-11f1-8f3f-7808187647c8",
+      "comment_updated_at": null
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -389,10 +391,10 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6790022921,
-    "delivery_id": "b5c9fcb0-dda2-11f1-9008-3b6799c36804",
-    "disposition": "F01_resolved_integration_deferred",
-    "new_actionable_external_messages": 1
+    "comment_id": 6790163736,
+    "delivery_id": "8aae9120-dda3-11f1-8f3f-7808187647c8",
+    "disposition": "self_generated_noop",
+    "new_actionable_external_messages": 0
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
