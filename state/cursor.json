@@ -387,6 +387,13 @@
       ],
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6790645377": {
+      "status": "in_progress",
+      "delivery_id": "2af40c70-dda7-11f1-9a9a-2a3aaa1c0dbb",
+      "comment_updated_at": null,
+      "planned_action": "Reconcile corrected368 head and native evidence; queue targeted exact-head follow-up while original Guardian busy, deduplicate if current REVIEW incorporates correction.",
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -754,7 +761,13 @@
       "root_archive_bytes_verified": false
     },
     "correction_report": 6790570318,
-    "correction_head_pending": true
+    "correction_head_pending": true,
+    "corrected_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+    "corrected_head_followup": {
+      "status": "in_progress_queue_publication",
+      "blocked_by": 6790511955,
+      "dedup_rule": "If current Guardian review incorporates exact corrected head and finishes, mark covered; otherwise dispatch targeted followup only after REVIEW plus finished cursor."
+    }
   },
   "diagnostic_pr367": {
     "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
