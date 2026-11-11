@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6808041276,
+  "last_examined_comment_id": 6808415800,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -923,10 +923,19 @@
       "response_comments": 0
     },
     "6808415800": {
-      "status": "in_progress",
+      "status": "completed_progress_evidence_recorded",
       "delivery_id": "de361460-de1d-11f1-929d-1db824c61fd2",
       "comment_updated_at": null,
-      "action": "Record real recipient preparation and immutable pre-data freeze; retain in-flight assignment, no next dispatch or receipt-only LOG"
+      "action": "Record real recipient preparation and immutable pre-data freeze; retain in-flight assignment, no next dispatch or receipt-only LOG",
+      "disposition": "Actual recipient action on6808027528 observed: immutable native-export/preparation freeze, not completed experiment. Read PLAN/FREEZE/identities at54622528abc7226e080a0c3d9e1b483c7407c512; identities SHA verified. Original one-block/delimiter/attempt/time/memory/count rule retained. Metadata samples are peak lower bounds: below4n never proves pass. No candidate result or completed cursor; keep sole assignment in flight, pricing6807501300 pending.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808415800",
+        "https://github.com/lmmx/mibz2/blob/54622528abc7226e080a0c3d9e1b483c7407c512/docs/journal/2026-11-11-first-return-block/FREEZE.json"
+      ],
+      "ready_job_queued": false,
+      "ready_job_reason": "#366 deferred implementation incomplete; this isolated research authorises no workstation job",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1006,8 +1015,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6808041276,
-    "delivery_id": "1dd0ea30-de1b-11f1-9adc-e0bb7f021e35"
+    "comment_id": 6808415800,
+    "delivery_id": "de361460-de1d-11f1-929d-1db824c61fd2"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1102,14 +1111,17 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "dispatched_verified_awaiting_recipient_action",
+      "status": "recipient_action_observed_in_flight",
       "comment_id": 6808027528,
       "queue_comment_id": 6793754589,
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6808027528",
       "scope": "Unchanged single bounded first-return real-block falsifier",
       "verification": "fresh audit/route/readback/verify pass",
-      "recipient_execution_observed": false,
-      "live_session_report": 6807992359
+      "recipient_execution_observed": true,
+      "live_session_report": 6807992359,
+      "recipient_action_evidence_comment_id": 6808415800,
+      "recipient_action_kind": "preparation and pre-data freeze",
+      "candidate_execution_observed": false
     },
     "guardian": {
       "status": "completed",
@@ -1527,15 +1539,34 @@
     "execution_scope": "Researcher reproduced three supplied Python suites; all archived result JSON byte hashes match; no real-data or timing run"
   },
   "pending_first_return": {
-    "status": "dispatched_verified_awaiting_recipient_action",
+    "status": "recipient_preparation_and_freeze_observed_in_flight",
     "blocked_by": null,
     "source_review": 6793646018,
     "scope": "One untimed real-seam quote-delimiter diagnostic, with frozen adapter/export identities before candidate execution",
     "queue_comment_id": 6793754589,
     "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6793754589",
     "verification": "audit/route/exact readback/verify passed",
-    "recipient_execution_observed": false,
-    "assignment_comment_id": 6808027528
+    "recipient_execution_observed": true,
+    "assignment_comment_id": 6808027528,
+    "recipient_action_kind": "preparation/export/freeze; candidate execution not yet observed",
+    "freeze": {
+      "commit_sha": "54622528abc7226e080a0c3d9e1b483c7407c512",
+      "comment_id": 6808415800,
+      "identities_sha256_verified": "fcb8271f624df9e92b7aaaf0c0edbb9f45b9757ad46647b5f2453eade9dfb2e1",
+      "block": 1,
+      "bit": 336,
+      "n": 899931,
+      "primary": 264045,
+      "delimiter": 34,
+      "metadata_limit_bytes": 3599724,
+      "limit_seconds": 600,
+      "process_limit_bytes": 268435456,
+      "attempts": 1,
+      "candidate_execution_observed": false,
+      "metadata_caveat": "Live samples lower-bound peak; under-threshold samples cannot establish retention gate",
+      "actions": [],
+      "legacy": []
+    }
   },
   "pending_labelled_contraction": {
     "status": "direct_research_delivered_queue_retired",
