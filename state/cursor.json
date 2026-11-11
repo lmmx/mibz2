@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6789886982,
+  "last_examined_comment_id": 6790022921,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -318,11 +318,15 @@
       "delivery_id": "bd709060-dda1-11f1-8300-bf683e259fa4"
     },
     "6790022921": {
-      "status": "in_progress",
+      "status": "completed_F01_resolved_integration_deferred",
       "delivery_id": "b5c9fcb0-dda2-11f1-9008-3b6799c36804",
       "comment_updated_at": null,
       "planned_action": "Accept original independent reviewer F01 resolution at exact corrected head; defer integration under frozen no-loss gate; dispatch one batched Observer checkpoint.",
-      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2"
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+      "disposition": "Original Researcher REVIEW and finished cursor verified. F01 resolved at d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2; all Actions and legacy success, but fresh secondary losses fail specific frozen slice-one default no-loss gate. No rerun or policy relaxation. D100 Codex assignment remains pending actual recipient receipt.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6790143614"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -370,17 +374,18 @@
     6784526782,
     6789867142,
     6789867476,
-    6789886982
+    6789886982,
+    6790143614
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6789886982,
-    "delivery_id": "bd709060-dda1-11f1-8300-bf683e259fa4",
-    "disposition": "self_generated_noop",
-    "new_actionable_external_messages": 0
+    "comment_id": 6790022921,
+    "delivery_id": "b5c9fcb0-dda2-11f1-9008-3b6799c36804",
+    "disposition": "F01_resolved_integration_deferred",
+    "new_actionable_external_messages": 1
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -394,11 +399,15 @@
     "pr": 365,
     "requested_by_comment": 6778679718,
     "reiterated_by_comment": 6779413601,
-    "status": "targeted_recheck_dispatched_HOLD_remains",
+    "status": "F01_resolved_by_original_independent_reviewer",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
-    "note": "Independent completed review6782367271 and researcher cursor66f933b704d0ecfdc03d6f56115107684640055d. Long-word writer lacks Miri reach; no demonstrated UB. Targeted correction then independent recheck.",
+    "note": "Targeted recheck finished; archived Rust/Miri evidence inspected and independent model executed. F01 objection withdrawn; no performance/adoption clearance.",
     "assignment_id": 6782111848,
-    "recheck_assignment_id": 6789867476
+    "recheck_assignment_id": 6789867476,
+    "resolution_comment_id": 6790022921,
+    "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+    "resolved_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "kernel_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2"
   },
   "performance_followup": {
     "pr": 365,
@@ -412,12 +421,25 @@
     "artifact_id": 13802703606,
     "server_reported_digest": "c36061ac6a7e8ac2991acbd82e2935fd20f9a3d075e102bd42c67b46cb575141",
     "archive_bytes_verified": false,
-    "decision": "At frozen57f51bbc final predeclared run supports fixed6775049636 default no-loss condition; experimental arm reported only. No additional timing rerun. Independent B5 F01 HOLD and exact-head CI still block integration.",
+    "decision": "Prior frozen57f51bbc default no-loss verdict preserved. Corrected d4f0 head has F01 independently resolved but fresh default-arm secondary losses fail specific gate6775049636. Defer integration; no secondary rerun.",
     "independent_archive_replay": {
       "actor": "optimizer",
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4",
       "archive_digest_verified_by_recipient": true,
       "root_archive_bytes_verified": false
+    },
+    "corrected_head_decision": {
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "run": 42979432776,
+      "status": "integration_deferred_frozen_gate_not_satisfied",
+      "gate_comment_id": 6775049636,
+      "losses": "onebyte4t +2.2% [0.5,4.0]; records2t +2.6% [0.8,4.4]; pattern1t flagged +0.7% [0.0,1.4] rounded",
+      "primary": "neutral",
+      "rss_max_percent": 1.5,
+      "parity": true,
+      "ci": "six Actions and legacy pre-commit success",
+      "rerun_authorised": false,
+      "prior_verdict": "57f51bbc accepted result preserved at that head; not transferred"
     }
   },
   "owner_continuation": {
@@ -426,7 +448,7 @@
     "expected_setup_head": "c848dd0ab06d779c5bf2640a7d702422df15301b",
     "action": "sole activation complete; bounded role work actually running",
     "setup_merged": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
-    "next": "Researcher B5 and Optimiser price actual runs in progress; Codex direct session running and formal receipt pending; Guardian recipe review dispatched; #366 CI pending. On actual completion, decide then dispatch next bounded item."
+    "next": "D100 separate repair dispatched; await actual evidence, then original Guardian targeted resumption. PR365 F01 resolved, performance integration deferred."
   },
   "activation": {
     "status": "active",
@@ -438,11 +460,14 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "posted_verified_not_delivered",
+      "status": "completed",
       "comment_id": 6789867476,
       "scope": "Independent targeted F01 recheck",
       "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476"
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476",
+      "review_comment_id": 6790022921,
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0"
     },
     "optimizer": {
       "status": "completed",
@@ -471,9 +496,11 @@
       "report_commit": "11790f8e0817b109caebb6deec31e6bfe4a6a6f1"
     },
     "observer": {
-      "status": "in_progress",
+      "status": "posted_verified_not_delivered",
       "scope": "F01 resolved, exact-head performance deferral and D100 dispatch",
-      "source_comment_id": 6790022921
+      "source_comment_id": 6790022921,
+      "comment_id": 6790143614,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6790143614"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -516,11 +543,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "f01-completion-6789822911",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6789886982,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6789886982"
+    "key": "f01-resolution-6790022921",
+    "status": "in_progress",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -596,7 +621,7 @@
     }
   ],
   "codex_correction": {
-    "status": "delivered_complete_independent_recheck_pending",
+    "status": "delivered_complete_F01_independently_resolved",
     "priority": 1,
     "scope": "F01 long writer Miri reach and targeted compiling mutation; no default/performance changes",
     "blocked_by_assignment": null,
@@ -606,10 +631,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Researcher6789867476 independent targeted F01 recheck; HOLD remains.",
-    "Codex6789867142 implement separate D100 ledger repair; actual recipient action pending.",
-    "Guardian targeted ledger resumption once corrected evidence returns; no new broad review.",
-    "No ready job until366 eligibility; use existing Run signal when authenticated dispatch available."
+    "Codex6789867142 separate D100 ledger repair; actual recipient action still pending, no duplicate dispatch.",
+    "Guardian targeted accounting resumption only after corrected evidence returns.",
+    "Observer6790143614 one batched record update; REVIEW plus cursor pending.",
+    "PR365 F01 resolved; integration deferred on current exact-head frozen performance gate, no rerun.",
+    "No ready workstation job until366 exact-head eligibility; existing direct Run signal path when authenticated dispatch available."
   ],
   "pending_ledger_repair": {
     "status": "dispatched_verified_recipient_pending",
@@ -661,6 +687,6 @@
       "Authenticated workflow_dispatch access available to existing authorised Coordinator runtime",
       "Supported continuation of existing Codex executor; current issue comments do not start it"
     ],
-    "d100_progress": "D100 correction remains queued6782527893. F01 current assignment6782519694 now actually active after owner manual resume, completion pending."
+    "d100_progress": "Dispatched363/6789867142 after actual F01 completion6789822911; route verified, new recipient action still pending."
   }
 }
