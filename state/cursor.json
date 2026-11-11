@@ -480,6 +480,17 @@
       "comment_updated_at": null,
       "disposition": "Self-generated substantive research triage LOG; no new external message, no duplicate comment or dispatch.",
       "delivery_id": "8cc04e90-ddad-11f1-9e51-bb9308e3fb57"
+    },
+    "6793265673": {
+      "status": "in_progress",
+      "delivery_id": "b2410590-ddb9-11f1-9506-9aece419b948",
+      "comment_updated_at": null,
+      "scope": "Research relay consideration only; no implementation or measurement assignment",
+      "attachment": {
+        "bytes": 22112,
+        "sha256": "e5158fc81f92363d1b6ceb9b52f90932ef5d0d5d89f2fa5c7cce0294940e4fdd",
+        "verification": "Matches fenced report with one final LF; executable ZIP explicitly absent"
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
