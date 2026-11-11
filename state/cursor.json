@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6789457478,
+  "last_examined_comment_id": 6789822911,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -301,10 +301,14 @@
       "dispatches": 0
     },
     "6789822911": {
-      "status": "in_progress",
+      "status": "completed_delivery_accepted_not_safety_clearance",
       "delivery_id": "4af02000-dda1-11f1-90e7-61e04579fc38",
       "planned_action": "Accept actual F01 implementation/evidence delivery; keep B5 open; dispatch queued D100 repair to freed Codex and targeted independent recheck to original Researcher.",
-      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142",
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -349,16 +353,18 @@
     6782678458,
     6782796787,
     6782811875,
-    6784526782
+    6784526782,
+    6789867142,
+    6789867476
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6789457478,
-    "delivery_id": "702c51c0-dd9e-11f1-9508-6108168d1f41",
-    "disposition": "active_recipient_milestone_no_new_assignment"
+    "comment_id": 6789822911,
+    "delivery_id": "4af02000-dda1-11f1-90e7-61e04579fc38",
+    "disposition": "delivery_accepted_next_work_dispatched"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -372,10 +378,11 @@
     "pr": 365,
     "requested_by_comment": 6778679718,
     "reiterated_by_comment": 6779413601,
-    "status": "completed_B5_HOLD_F01",
+    "status": "targeted_recheck_dispatched_HOLD_remains",
     "head_at_request": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
     "note": "Independent completed review6782367271 and researcher cursor66f933b704d0ecfdc03d6f56115107684640055d. Long-word writer lacks Miri reach; no demonstrated UB. Targeted correction then independent recheck.",
-    "assignment_id": 6782111848
+    "assignment_id": 6782111848,
+    "recheck_assignment_id": 6789867476
   },
   "performance_followup": {
     "pr": 365,
@@ -415,9 +422,11 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "in_progress_before_post",
-      "scope": "Independent F01 targeted recheck",
-      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6789867476,
+      "scope": "Independent targeted F01 recheck",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476"
     },
     "optimizer": {
       "status": "completed",
@@ -430,9 +439,11 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "in_progress_before_post",
+      "status": "posted_verified_not_delivered",
+      "comment_id": 6789867142,
       "queue_comment_id": 6782527893,
-      "scope": "D100 separate instrument repair"
+      "scope": "D100 separate instrument repair",
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6789867142"
     },
     "guardian": {
       "status": "completed",
@@ -491,11 +502,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "operational-priority-6784483743",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6784526782,
-    "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6784526782"
+    "key": "f01-completion-6789822911",
+    "status": "in_progress_before_log",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -564,27 +573,28 @@
     }
   ],
   "codex_correction": {
-    "status": "recipient_active_not_completed",
+    "status": "delivered_complete_independent_recheck_pending",
     "priority": 1,
     "scope": "F01 long writer Miri reach and targeted compiling mutation; no default/performance changes",
     "blocked_by_assignment": null,
     "queue_comment_id": 6782394725,
     "link": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6782394725",
-    "assignment_comment_id": 6782519694
+    "assignment_comment_id": 6782519694,
+    "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex6782519694: actual F01 correction then independent Researcher recheck; no restart assumed.",
-    "Next queued Codex6782527893: separate native-tested occupancy accounting repair; Guardian targeted resumption check.",
-    "Reconcile one later cells diagnostic with367 actual census and Optimiser proposal; no competing measurement recipe.",
-    "#366 no ready job: accounting HOLD and failed Occupancy, authenticated signal capability still absent.",
-    "All production merges remain deliberate exact-head gated actions, not automatic events."
+    "Researcher6789867476 independent targeted F01 recheck; HOLD remains.",
+    "Codex6789867142 implement separate D100 ledger repair; actual recipient action pending.",
+    "Guardian targeted ledger resumption once corrected evidence returns; no new broad review.",
+    "No ready job until366 eligibility; use existing Run signal when authenticated dispatch available."
   ],
   "pending_ledger_repair": {
-    "status": "queued_verified",
+    "status": "dispatched_verified_recipient_pending",
     "priority": 2,
     "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "scope": "trace/settings, per-worker mixed-route/reuse ledger validation, native tests, failure artifact retention; preserve assertions",
-    "queue_comment_id": 6782527893
+    "queue_comment_id": 6782527893,
+    "assignment_comment_id": 6789867142
   },
   "diagnostic_pr367": {
     "head": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
