@@ -517,6 +517,16 @@
       "response_comments": 0,
       "ready_job_queued": false,
       "queue_reason": "366 unchanged at ae13742fe4c6e2726c178e2409a1d69ef8fca939 with Occupancy failure; assigned preparation and readiness gates outstanding."
+    },
+    "6793485259": {
+      "status": "in_progress",
+      "delivery_id": "417efc20-ddbb-11f1-8b7c-740cfabbc4fe",
+      "comment_updated_at": null,
+      "action": "Pinned artifact integrity verified; route bounded independent reproduction and next-falsifier assessment to free Researcher",
+      "pin": "af3327d8aee9fffe26d2d6de76818b6ac69cc145",
+      "payloads_verified": 9,
+      "manifest_available": true,
+      "zip_bytes_verified": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -658,14 +668,10 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "completed",
-      "comment_id": 6789867476,
-      "scope": "Independent targeted F01 recheck",
-      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476",
-      "review_comment_id": 6790022921,
-      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
-      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6793485259,
+      "scope": "Independent bounded first-return prototype reproduction and cost/falsifier assessment",
+      "head": "af3327d8aee9fffe26d2d6de76818b6ac69cc145"
     },
     "optimizer": {
       "status": "completed",
@@ -881,6 +887,17 @@
       "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
       "completion_scope": "Original implementation delivery6790465896 preserved; post-CI correction now active despite prior processed cursor. Do not treat prior cursor as completion of this correction.",
       "completion_reconciled_by": 6790889882
+    },
+    {
+      "status": "completed",
+      "comment_id": 6789867476,
+      "scope": "Independent targeted F01 recheck",
+      "head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6789867476",
+      "review_comment_id": 6790022921,
+      "report_commit": "4cbf43d95241d48de81242ed35ded9852db556a2",
+      "recipient_cursor_sha": "f50dd05a313c7a323800248c9ae29eb26dff2bd0",
+      "archived_before_source": 6793485259
     }
   ],
   "codex_correction": {
