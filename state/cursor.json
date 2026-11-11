@@ -854,10 +854,15 @@
         "https://github.com/lmmx/mibz2/pull/370"
       ],
       "queue_readback_verified": true,
-      "log_publication": "in_progress",
+      "log_publication": "published_readback_verified",
       "ready_job_queued": false,
       "ready_job_reason": "#366 paused unfinished; Occupancy failure; final checks, deliberate master integration and exact ready signal outstanding",
-      "audit": "exit0; six resolved historical misroutes"
+      "audit": "exit0; six resolved historical misroutes",
+      "log_comment_id": 6800580772
+    },
+    "6800580772": {
+      "status": "own_log_recorded",
+      "source_comment_id": 6800510748
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -925,7 +930,8 @@
     6798260004,
     6798286997,
     6799739845,
-    6799784143
+    6799784143,
+    6800580772
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1117,10 +1123,10 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "research-priority-6799687151",
+    "key": "labelled-research-disposition-6800510748",
     "status": "published_readback_verified",
     "event_dispositions_persisted": true,
-    "log_comment_id": 6799784143
+    "log_comment_id": 6800580772
   },
   "dispatch_history": [
     {
