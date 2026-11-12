@@ -1306,6 +1306,14 @@
     "6830074647": {
       "status": "completed_own_log_ignore",
       "source_comment_id": 6829978946
+    },
+    "6830133744": {
+      "status": "in_progress",
+      "delivery_id": "ec3ea300-deb9-11f1-856e-b720683e8f0f",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6830133744",
+      "scope": "Reconcile Observer completion and374 green exacthead; no new assignment",
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
     }
   },
   "automatic_github_wakeup_assumed": false,
