@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6836633023,
+  "last_examined_comment_id": 6836680787,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1558,7 +1558,13 @@
       "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
       "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e",
       "reason": "375 Test and packaging now success plus legacy success at853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117; refer separate deliberate integration, no new implementation/review.373ClassD/finalworkstationreadiness remain.",
-      "log_intent": "in_progress"
+      "log_intent": "completed",
+      "log_comment_id": 6836680787
+    },
+    "6836680787": {
+      "status": "own_monitor_log_recorded",
+      "comment_updated_at": null,
+      "source_comment_id": 6836633023
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1667,7 +1673,8 @@
     6835673832,
     6835700905,
     6836483279,
-    6836501333
+    6836501333,
+    6836680787
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1873,12 +1880,12 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "mtf-complete-6836435433",
+    "key": "375-green-6836633023",
     "status": "published_readback_verified",
-    "log_comment_id": 6836501333,
+    "log_comment_id": 6836680787,
     "event_dispositions_persisted": true,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6836501333",
-    "scope": "375 MTF correction accepted; remainingCI/separateintegration;373ClassD/readiness unresolved"
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6836680787",
+    "scope": "375 exact-head green; separate deliberate integration referral; no auto merge"
   },
   "dispatch_history": [
     {
