@@ -39,7 +39,11 @@
     "measurements_run": false,
     "merged": false,
     "automatic_github_wakeup_assumed": false,
-    "implementation_stop_utc": "2026-11-12T21:27:44.564232+00:00"
+    "implementation_stop_utc": "2026-11-12T21:27:44.564232+00:00",
+    "completion_review_comment_id": 6836435433,
+    "pr_evidence_comment_id": 6836433619,
+    "evidence_commit": "feec83892087019889a906954f3c6342cd55377f",
+    "receipt_readback_verified": true
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
