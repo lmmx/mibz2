@@ -78,7 +78,10 @@ using the existing writable XDG cache produced the actual passes. Initial full
 Clippy hit unchanged parallel.rs `let_and_return`; new-crate `--no-deps` scope
 then found unchanged helper `manual_repeat_n`. The latter is allowed only on the
 imported frozen helper module. New code passes `-D warnings`; no production source
-was reformatted to silence inherited findings. Initial new TOML ordering was fixed.
+was reformatted to silence inherited findings. Initial new TOML ordering was fixed. A clean-build metadata pass found that this
+Python embeds `_bz2` as a built-in with no file path; the recorder now records
+module origin and interpreter SHA, with a separate extension SHA only when present.
+The failed metadata log is retained; it was not a decoder failure.
 Historical367 legacy pre-commit failure remains historical, not relabelled; its PR
 also records default onebyte4t+1.0%[+0.0,+1.9] in run42925377667. Its three old Python
 files still fail current Ruff formatting; they are unchanged and never replayed here.

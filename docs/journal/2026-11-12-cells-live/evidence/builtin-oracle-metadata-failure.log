@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/mibz2-live/bench/cells-gap/live/build.py", line 106, in <module>
+    build(Path(sys.argv[1]))
+  File "/workspace/mibz2-live/bench/cells-gap/live/build.py", line 78, in build
+    bz2_extension_sha256=digest(_bz2.__file__),
+                                ^^^^^^^^^^^^^
+AttributeError: module '_bz2' has no attribute '__file__'. Did you mean: '__name__'?

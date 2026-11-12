@@ -2,6 +2,7 @@
   "build-test-initial.log": "27f638012359427540aedfbb723f93ebf1006bd5fa9f0b9335589db1ce6d9682",
   "builds-delivery.log": "bd88a5bded2fd75d414a7220f4f60bf1b93ff0ae89a6a0c6a1a6598ff67cf0c4",
   "builds-final.log": "bd88a5bded2fd75d414a7220f4f60bf1b93ff0ae89a6a0c6a1a6598ff67cf0c4",
+  "builtin-oracle-metadata-failure.log": "d34afedda3f7a09745611e06402635a64aba7a8b7bd7cd886f7dedcb3bfd46b1",
   "clippy-final.log": "ca37eb536da40716e282b4ecb249d5e4c628adf1b3dd25403874f5069a5abc93",
   "clippy-own.log": "d1252a19bde77c80c12ddbe0321b03802a37e435da7ea1bfeb7f4ebb6cab6344",
   "clippy.log": "243b13429788c4b70b905bcd6d977f47fa2ad6be134861b1a8793f364473b60b",
