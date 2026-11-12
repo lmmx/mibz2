@@ -534,9 +534,9 @@
     "6836483279": {
       "comment_id": 6836483279,
       "status": "complete",
-      "progress": "Record rebuilt through channel 6836501333; awaiting one REVIEW on #145.",
-      "work_commit": "fa3cb3333bbd23b72e2c4393be139825cbd32f26"
+      "progress": "Record rebuilt and opening refined through channel 6836501333; awaiting one REVIEW on #145.",
+      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5"
     }
   },
-  "last_record_commit": "fa3cb3333bbd23b72e2c4393be139825cbd32f26"
+  "last_record_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5"
 }
