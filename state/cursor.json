@@ -373,6 +373,12 @@
     "pr": 374,
     "next_action": "Coordinator exact-head CI/preview and separate publication procedure",
     "screenshots": 132,
-    "changed_pr_files": 6
+    "changed_pr_files": 6,
+    "completion_review_comment_id": 6832194051,
+    "pr_comment_id": 6832186245,
+    "evidence_commit": "ab731859add831fb3f37fd52f3a87535ca9554f4",
+    "receipt_readback_verified": true,
+    "legacy_pre_commit": "success",
+    "actions": "site/Test in progress; packaging queued at recorded snapshot"
   }
 }
