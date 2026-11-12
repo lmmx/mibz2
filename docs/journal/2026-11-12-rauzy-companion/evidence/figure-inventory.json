@@ -1,0 +1,30 @@
+{
+  "exchange": {
+    "id": "rv-exchange",
+    "interactive": false
+  },
+  "right-end": {
+    "id": "rv-right-end",
+    "interactive": false
+  },
+  "grammar": {
+    "id": "rv-grammar",
+    "interactive": false
+  },
+  "pipeline": {
+    "id": "rv-pipeline",
+    "interactive": false
+  },
+  "slots": {
+    "id": "rv-slots",
+    "interactive": false
+  },
+  "cache": {
+    "id": "rv-cache",
+    "interactive": false
+  },
+  "delimiter": {
+    "id": "rv-delimiter",
+    "interactive": false
+  }
+}
