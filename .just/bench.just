@@ -91,6 +91,87 @@ bench-coop-decoder *args:
     cargo build --release --example ab
     python3 bench/coop_decoder.py "$@"
 
+# The libsais rematch (docs/journal/2026-10-29-libsais-rematch.md): the research harness's
+# grid (examples/coop.rs, bench/coop.sh) that measured libsais's s3x3 at 2,356 MB/s (coop
+# journal §7.1), on v0.2.0, with the library's own cooperative inverse BWT added as l arms.
+# Pass 1 is that run's boundary, the T-vector phase only (build + walk, the MTF outside the
+# timing): the historical arms (p4, 4x2, 3x3, s3x3) first reproduced, beside the fused
+# research kernel (x) and the library (l). Pass 2 adds the MTF stage to every arm's timing
+# (the decoder's boundary: libsais given production's MTF). Every thread pinned, one CPU a
+# physical core; about 15 minutes. Upload both coop-*.md files and both .jsonl.
+#   just bench-libsais-rematch
+bench-libsais-rematch rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms p4,4x2,3x3,x4x2,x3x3,l4x2,l3x3,s4x1,s4x2,s3x3
+    COOP_WITH_MTF=1 bash bench/coop.sh --rounds {{rounds}} --arms p4,y4x2,y3x3,l4x2,l3x3,s4x1,s4x2,s3x3
+
+# The rematch's follow-up (docs/journal/2026-10-29-libsais-rematch.md, "Follow-up"): why the
+# library's l3x3 beats the research kernel's x3x3 (g arms: x placed as the library places
+# its threads), then the counters on the shipped kernel (bench/coop_counters.py: perf stat,
+# 3 repeats, the memory controller machine-wide; perf record of l3x3, g3x3 and s3x3 by
+# symbol). About 25 minutes; needs sudo for perf. Upload the coop-*.md, coop-counters-*.md
+# and both .jsonl.
+#   just bench-libsais-why
+bench-libsais-why rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms x3x3,g3x3,l3x3,x4x2,g4x2,l4x2,s3x3
+    python3 bench/coop_counters.py --arms p4,x3x3,g3x3,l3x3,l4x2,s3x3 --record-arms l3x3,g3x3,s3x3
+
+# The knee, matched (docs/journal/2026-10-29-libsais-knee.md, pre-registered): concurrent
+# blocks swept from 1 to 10 on one core each, mibz2's one-core inversion (pN) against
+# libsais's (sNx1), then teams of 2 (lNx2 against sNx2), at the rematch's boundary (build +
+# walk), every thread pinned, one CPU a physical core, 20 rounds. About 10 minutes. Upload
+# the coop-*.md and its .jsonl.
+#   just bench-libsais-knee
+bench-libsais-knee rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1,l1x2,l2x2,l3x2,l4x2,l5x2,s1x2,s2x2,s3x2,s4x2,s5x2
+
+# The knee's cause (docs/journal/2026-10-29-libsais-knee.md, "Footprint and bandwidth"):
+# the same content at full 900k blocks (lbzip2 -9, 3.6 MB tables) beside the native blocks
+# (about 1.95 MB), the one-core-a-block sweep on it, then the counters (memory controller
+# machine-wide, reads past L2, LLC, fill buffers) for mibz2 and libsais at 2-10 blocks on
+# both corpora. Needs lbzip2 and sudo for perf; about 35 minutes. Upload every coop-*.md,
+# coop-counters-*.md and their .jsonl.
+#   just bench-libsais-knee-cause
+bench-libsais-knee-cause rounds="20":
+    bash bench/corpus.sh
+    test -s corpora/wikidata-l9.bz2 || (lbzip2 -dc corpora/wikidata.bz2 | lbzip2 -9 > corpora/wikidata-l9.bz2)
+    bash bench/coop.sh --grid-only --file corpora/wikidata-l9.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    python3 bench/coop_counters.py --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
+    python3 bench/coop_counters.py --file corpora/wikidata-l9.bz2 --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
+
+# The knee against a genuinely different footprint (docs/journal/2026-10-29-libsais-knee.md,
+# "Footprint, measured"): the content recompressed by the reference bzip2 at -9 (blocks of
+# 900 K rows, 3.6 MB tables) and -3 (300 K, 1.2 MB), every corpus's block sizes and
+# concurrent footprints reported first (coop sizes), the one-core-a-block sweep on both new
+# corpora, the counters on them, then the machine's own memory ceiling (bench/dram.py: a
+# walk-shaped random probe and a sequential copy, perf counting only the probe). Needs bzip2
+# and sudo; about 40 minutes. Upload every coop-*.md, coop-counters-*.md, dram-*.md, their
+# .jsonl, and the console (the sizes are printed there).
+#   just bench-libsais-knee-footprint
+bench-libsais-knee-footprint rounds="10":
+    bash bench/corpus.sh
+    bash bench/coop.sh --build-only > /dev/null
+    CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+    test -s corpora/wikidata-bz9.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -9 > corpora/wikidata-bz9.bz2)
+    test -s corpora/wikidata-bz3.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -3 > corpora/wikidata-bz3.bz2)
+    for f in corpora/wikidata.bz2 corpora/wikidata-l9.bz2 corpora/wikidata-bz9.bz2 corpora/wikidata-bz3.bz2; do test -s $f && echo "== $f" && target/coop/release/examples/coop sizes $f; done
+    bash bench/coop.sh --grid-only --file corpora/wikidata-bz9.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    bash bench/coop.sh --grid-only --file corpora/wikidata-bz3.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    python3 bench/coop_counters.py --file corpora/wikidata-bz9.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+    python3 bench/coop_counters.py --file corpora/wikidata-bz3.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+    python3 bench/dram.py
+
+# The memory ceiling alone: the last stage of bench-libsais-knee-footprint, rerun without the
+# sweeps and counters before it (bench/dram.py; a walk-shaped random probe and a sequential
+# copy at 1-10 threads, perf counting only the probe). Needs sudo; about 5 minutes. Upload
+# dram-*.md, dram-*.jsonl and the console.
+#   sudo -v && just bench-dram 2>&1 | tee dram-console.log
+bench-dram:
+    CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+    python3 bench/dram.py
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
