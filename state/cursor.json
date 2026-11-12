@@ -463,6 +463,10 @@
     "queue_run_signal": false,
     "workstation_ready": false,
     "manual_codex_launch_required": true,
-    "pr373_recovery_comment_id": 6838120361
+    "pr373_recovery_comment_id": 6838120361,
+    "completion_review_comment_id": 6838153034,
+    "pr_comment_id": 6838155318,
+    "evidence_commit": "417e0e3c0ed17c360a4ca4759fd43477fb1023bf",
+    "receipt_readback_verified": true
   }
 }
