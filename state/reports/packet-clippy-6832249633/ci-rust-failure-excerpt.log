@@ -1,0 +1,15 @@
+2026-11-12T20:46:04.4186645Z HEAD is now at fab64a1 Merge ec1b84eb60c8f011da4fa41d6d7d4a839f91bf24 into 1f2738c5448fc123a71fd201921e4101e664b0c6
+2026-11-12T20:46:04.4236174Z [command]/usr/bin/git log -1 --format=%H
+2026-11-12T20:46:14.1780968Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.100.0 (0ef1bc386 2026-11-09) (from rustc 1.99.1 (58cf8f9c3 2026-10-13))
+2026-11-12T20:46:14.2417135Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.100.0 (0ef1bc386 2026-11-09)
+2026-11-12T20:46:14.4356785Z rustc 1.100.0 (0ef1bc386 2026-11-09)
+2026-11-12T20:46:15.7264322Z ##[group]Run cargo clippy --all-targets --all-features -- -D warnings
+2026-11-12T20:46:15.7264958Z cargo clippy --all-targets --all-features -- -D warnings
+2026-11-12T20:46:26.2302122Z error: the loop variable `k` is used to index `m.bases`
+2026-11-12T20:46:26.2321490Z    --> examples/mtf_two_level.rs:273:22
+2026-11-12T20:46:26.2440171Z    --> examples/mtf_two_level.rs:274:17
+2026-11-12T20:46:26.2455648Z     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.100.0/index.html#needless_range_loop
+2026-11-12T20:46:26.2462551Z     = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+2026-11-12T20:46:26.2464179Z     = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+2026-11-12T20:46:26.2484207Z error: could not compile `mibz2` (example "mtf_two_level") due to 1 previous error
+2026-11-12T20:46:26.3920162Z ##[error]Process completed with exit code 101.

@@ -28,7 +28,8 @@
       "packet_clippy": "pass",
       "full_clippy": "fail: unchanged mtf_two_level.rs:273 needless_range_loop",
       "packet_validator": "pass; byte-identical archived JSONL",
-      "packets_checked": 182754446
+      "packets_checked": 182754446,
+      "ci": "rust job131480699603 fails Clippy at unchanged mtf_two_level.rs:273; downstream Rust tests/harness skipped; legacy success"
     },
     "next_action": "Coordinator reconcile maintenance result and separate lint scope; prioritise #373 hosted pre-commit evidence/integration dependencies before next research dispatch",
     "measurements_run": false,

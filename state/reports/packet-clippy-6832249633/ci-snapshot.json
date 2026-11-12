@@ -11,5 +11,15 @@
   "legacy": {
     "state": "success",
     "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794516356.Z_ZyKLOeQCWJBC_Q7vLdGQ"
+  },
+  "rust_job": {
+    "id": 131480699603,
+    "conclusion": "failure",
+    "class": "A",
+    "step": "Clippy",
+    "cause": "mtf_two_level.rs:273 needless_range_loop",
+    "format": "success",
+    "downstream": "Rust tests/harness/guarded service/scan fault tests/alternatives lock skipped",
+    "log": "ci-rust-failure-excerpt.log"
   }
 }

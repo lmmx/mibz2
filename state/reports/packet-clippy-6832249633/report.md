@@ -45,3 +45,5 @@ Hand control back to the sole Coordinator: integrate/route this maintenance resu
 Current-master coord.py audit was attempted and blocked by proxy403. No audit-pass claim. Route for a Codex REVIEW is145; verify's hardcoded Coordinator sender limitation persists. Use exact connector read-back plus unchanged header/misroute checks; do not claim verify passed.
 
 Exact-head CI observation: Test43303537738 and packaging CI43303537632 in progress; hosted pre-commit success. No all-green claim or rerun.
+
+Later CI observation: Test43303537738 rust job131480699603 completed failure. Actual downloaded log confirms Rust1.100.0 and the same mtf_two_level.rs:273 needless_range_loop (exit101); source head ec1b84e merged synthetically onto1f2738c. ClassA project lint, not setup. Format passed; downstream Tests, Harness tests, guarded service producer/judge, scan fault/finder tests and alternatives-lock check were skipped. Python3.10–3.15 and typing jobs passed at inspection; other jobs still active. Decisive log excerpt retained; no unchanged rerun.
