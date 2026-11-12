@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6838153034,
+  "last_examined_comment_id": 6838210087,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1582,7 +1582,13 @@
       ],
       "ready_job_queued": false,
       "reason": "375 merged expected head; postmergeTestjobs/docsdeployment success.373 requires operator-access decisive failure evidence; no coding task or readyjob justified.",
-      "log_intent": "in_progress"
+      "log_intent": "completed",
+      "log_comment_id": 6838210087
+    },
+    "6838210087": {
+      "status": "own_monitor_log_recorded",
+      "comment_updated_at": null,
+      "source_comment_id": 6838153034
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1693,7 +1699,8 @@
     6836483279,
     6836501333,
     6836680787,
-    6838191142
+    6838191142,
+    6838210087
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1896,12 +1903,12 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "375-green-6836633023",
+    "key": "375-merged-6838153034",
     "status": "published_readback_verified",
-    "log_comment_id": 6836680787,
+    "log_comment_id": 6838210087,
     "event_dispositions_persisted": true,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6836680787",
-    "scope": "375 exact-head green; separate deliberate integration referral; no auto merge"
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6838210087",
+    "scope": "375 merge/postmerge observed;373 operator evidence handoff"
   },
   "dispatch_history": [
     {
