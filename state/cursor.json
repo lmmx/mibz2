@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6831186282,
+  "last_examined_comment_id": 6831281358,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1436,11 +1436,20 @@
       "reason": "No new external message.373 same head; four workflows pass, packaging queued, legacy fails. Existing readiness blockers recorded; no duplicate log or dispatch."
     },
     "6831281358": {
-      "status": "in_progress",
+      "status": "completed_observer_handoff_reconciled_no_dispatch",
       "delivery_id": "6aa32580-dec0-11f1-8bde-78c47bc36f17",
       "comment_updated_at": null,
       "scope": "Reconcile Observer completed record6831172283",
-      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
+      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "assignment_comment_id": 6831172283,
+      "work_commit": "12de4a24049dea8810489523838eac43cd2bcabd",
+      "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/blob/12de4a24049dea8810489523838eac43cd2bcabd/current/account.md",
+        "https://github.com/lmmx/mibz2/actions/runs/43269375621/job/131361540210"
+      ],
+      "ready_job_queued": false,
+      "reason": "Record completion confirmed.373 exact head unchanged: four workflows pass; packaging failed after x86 macOS cancellation without steps, log404 BlobNotFound; legacy stillfails. ClassD remains; no speculative recovery/duplicate task/repeatedblockedLOG. Final readiness unmet."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1550,8 +1559,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6831186282,
-    "delivery_id": "dadf40a0-debf-11f1-8e71-acd53c7826a3",
+    "comment_id": 6831281358,
+    "delivery_id": "6aa32580-dec0-11f1-8bde-78c47bc36f17",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1685,13 +1694,17 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "routed_verified_awaiting_recipient",
+      "status": "completed",
       "source_comment_id": 6831115741,
       "scope": "Update record for366 merged368 incorporated373 mechanical completion/Occupancy pass; ClassD legacy and readiness pending",
       "comment_id": 6831172283,
       "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6831172283",
       "verification": "audit/route/readback/verify exit0",
-      "completion_observed": false
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "review_comment_id": 6831281358,
+      "work_commit": "12de4a24049dea8810489523838eac43cd2bcabd",
+      "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2830,9 +2843,14 @@
     "master_miri": "success43268797919",
     "master_benchmark": "in_progress43268798106",
     "macos_arm": "success131361540182",
-    "macos_x86": "queued131361540210",
+    "macos_x86": "cancelled131361540210; steps null, decodedlogs404 BlobNotFound; ClassD unexplained; not validated",
     "legacy": "ClassD failure; actual hosted output inaccessible using web reader; no guessed cause/rerun",
-    "cpu_corpus_binding": "PENDING separately authorised actual-i9 preflight; do not infer or request prematurely"
+    "cpu_corpus_binding": "PENDING separately authorised actual-i9 preflight; do not infer or request prematurely",
+    "observer_completion": {
+      "review_comment_id": 6831281358,
+      "work_commit": "12de4a24049dea8810489523838eac43cd2bcabd",
+      "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
+    }
   },
   "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
 }
