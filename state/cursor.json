@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6821745901,
+  "last_examined_comment_id": 6822169425,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1174,7 +1174,7 @@
       "ready_job_reason": "R1 correction not delivered;373 current-head Occupancy/packaging/legacy red, separate integration/final recipe/readiness outstanding;366 separate integration pending"
     },
     "6822169425": {
-      "status": "in_progress",
+      "status": "completed_correction_accepted_integration_deferred",
       "delivery_id": "fa4958c0-de8a-11f1-9ba8-6bbc20b1afa8",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822169425",
@@ -1187,7 +1187,19 @@
       ],
       "ready_job_queued": false,
       "ready_job_reason": "legacy failed; other Actions pending; separate integration/final recipe/PROTOCOL9 decisions outstanding",
-      "audit": "exit0; six historical misroutes resolved"
+      "audit": "exit0; six historical misroutes resolved",
+      "disposition": "R1 accepted after source diff and three exact-source focused mocked tests; no second fullreview or new implementation. Integration deferred to separate deliberate run after exacthead green and readiness.",
+      "local_validation": {
+        "tests": 3,
+        "result": "pass",
+        "driver_sha256": "3972761a4a02eadb1ff0de00891358b8ecd89a996bf23b8239897708fd3df14c",
+        "tests_sha256": "09d14fdcbf0dd0b27fd7320046ca9f268323c3983bb4036107e26fee3885e166",
+        "scope": "mocked child failures/spawnabsence/failed-row exclusion; no Rust/Miri or decoder execution"
+      },
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030"
+      ],
+      "log_status": "in_progress_before_post"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1279,15 +1291,16 @@
     6821427805,
     6821674655,
     6821688224,
-    6821703634
+    6821703634,
+    6822218030
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6821745901,
-    "delivery_id": "1f80f6a0-de88-11f1-9a4b-79c16f556337",
+    "comment_id": 6822169425,
+    "delivery_id": "fa4958c0-de8a-11f1-9ba8-6bbc20b1afa8",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1420,11 +1433,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_recipient",
       "source_comment_id": 6822169425,
       "scope": "R1 correction accepted, integration deferred pending CI/readiness",
       "completion_observed": false,
-      "recipient_execution_observed": false
+      "recipient_execution_observed": false,
+      "comment_id": 6822218030,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030",
+      "verification": "audit/route/readback/verify exit0"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
