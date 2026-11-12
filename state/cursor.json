@@ -1608,6 +1608,15 @@
         "https://github.com/lmmx/mibz2/blob/5c6054160d41f85a0b68d6550d73cce8aecce649/current/account.md"
       ],
       "reason": "Record accurately reflects375 integration and373 operator evidence dependency.373 exacthead and checks unchanged; no new actionable finding, duplicate assignment or repeatedblockedLOG. No readyjob: CI/evidence/integration and finalPROTOCOL9 readiness unmet."
+    },
+    "6839448187": {
+      "status": "in_progress",
+      "delivery_id": "56104790-def4-11f1-8fe3-ce383878080f",
+      "comment_updated_at": null,
+      "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+      "scope": "Reconcile operator-transcribed373 failures and route bounded formatting correction",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1830,18 +1839,11 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "completed",
-      "source_comment_id": 6835550527,
-      "scope": "Bounded MTF initializer Rust1.100 compatibility followup on375; read-only373 failure evidence first",
-      "recipient_execution_observed": true,
-      "completion_observed": true,
-      "comment_id": 6835658086,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6835658086",
-      "verification": "audit/route/exact readback/verify exit0",
-      "review_comment_id": 6836435433,
-      "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
-      "recipient_cursor_sha": "92e7210285929a896ad8d164983def39fa23cea8",
-      "evidence_commit": "feec83892087019889a906954f3c6342cd55377f"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6839448187,
+      "scope": "373 two-TOML formatting correction with semantic/frozen-evidence checks; no retries or merge",
+      "recipient_execution_observed": false,
+      "completion_observed": false
     },
     "guardian": {
       "status": "completed",
@@ -2258,6 +2260,20 @@
       "review_comment_id": 6836633023,
       "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
       "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6835550527,
+      "scope": "Bounded MTF initializer Rust1.100 compatibility followup on375; read-only373 failure evidence first",
+      "recipient_execution_observed": true,
+      "completion_observed": true,
+      "comment_id": 6835658086,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6835658086",
+      "verification": "audit/route/exact readback/verify exit0",
+      "review_comment_id": 6836435433,
+      "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
+      "recipient_cursor_sha": "92e7210285929a896ad8d164983def39fa23cea8",
+      "evidence_commit": "feec83892087019889a906954f3c6342cd55377f"
     }
   ],
   "codex_correction": {
@@ -3225,6 +3241,11 @@
     "observer_completion": {
       "review_comment_id": 6838270870,
       "work_commit": "5c6054160d41f85a0b68d6550d73cce8aecce649"
+    },
+    "handoff": {
+      "comment_id": 6839448187,
+      "provenance": "Louis-displayed/user-transcribed provider output; not independently retrieved",
+      "verbatim": "FROM: louis via chatgpt\nTO: coordinator\nRE: PR #373 hosted-check operator evidence @ ed6f424f238851ff8296e7a48c2b96dfb8332e7e\nTYPE: CHECKPOINT\n\n**Operator evidence handoff** responding to [Coordinator 6838210087](https://github.com/lmmx/mibz2/pull/145#issuecomment-6838210087) and [PR #373 recovery 6838120361](https://github.com/lmmx/mibz2/pull/373#issuecomment-6838120361). Louis opened the hosted pages and supplied the following displayed output to ChatGPT. This is user-transcribed/displayed provider evidence, not a connector/API retrieval or independent reproduction. Preserve quoted messages and distinguish the two checks.\n\n### A. Legacy pre-commit.ci: decisive failure identified\n\n[Hosted result](https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA), associated with PR #373 @ ed6f424f238851ff8296e7a48c2b96dfb8332e7e.\n\nDisplayed timing: queued at 2026-11-12 17:25:58.461387; total time to completion 16.6s.\n\n```text\npre-commit.ci\n\nlmmx / mibz2 · #373\n\nqueued at: 2026-11-12 17:25:58.461387\n\ntotal time to completion: 16.6s\n\nqueue (63ms)\n\nmergeable check (2.4s)\nclone (1s)\n\nci config (634μs)\n\npull image (306μs)\n\nbuild (9.2s)\ndownload (1.8s)\nrun (2.1s)\njust (lints).............................................................Failed\n- hook id: run-just-rust\n- exit code: 1\n\nRunning in CI environment, searching under /pc/clone\nFound just at: /pc/clone/7MHywRzVTBeT7VOH3ZDeaQ/bin/just\nUsing bin directory: /pc/clone/7MHywRzVTBeT7VOH3ZDeaQ/bin\njust pc-ci\n# just ty-ci\ntaplo lint\n INFO taplo:load_config: found configuration file path=\"/code/taplo.toml\"\n INFO taplo:lint_files:collect_files: found files total=14 excluded=5 files=[\"/code/.cargo/aarch64-qemu.toml\", \"/code/Cargo.toml\", \"/code/bench/alternatives/Cargo.toml\", \"/code/bench/cells-gap/Cargo.toml\", \"/code/bench/cells-gap/live/Cargo.toml\", \"/code/pyproject.toml\", \"/code/release-plz.toml\", \"/code/taplo.toml\", \"/code/zensical.toml\"] cwd=\"/code\"\ntaplo format --check\n INFO taplo:format_files:load_config: found configuration file path=\"/code/taplo.toml\"\n INFO taplo:format_files:collect_files: found files total=14 excluded=5 files=[\"/code/.cargo/aarch64-qemu.toml\", \"/code/Cargo.toml\", \"/code/bench/alternatives/Cargo.toml\", \"/code/bench/cells-gap/Cargo.toml\", \"/code/bench/cells-gap/live/Cargo.toml\", \"/code/pyproject.toml\", \"/code/release-plz.toml\", \"/code/taplo.toml\", \"/code/zensical.toml\"] cwd=\"/code\"\nERROR taplo:format_files: the file is not properly formatted path=\"/code/bench/cells-gap/Cargo.toml\"\nERROR taplo:format_files: the file is not properly formatted path=\"/code/bench/cells-gap/live/Cargo.toml\"\nERROR operation failed error=some files were not properly formatted\nerror: Recipe `code-quality` failed on line 25 with exit code 1\nerror: Recipe `precommit` failed on line 19 with exit code 1\n\nty......................................................................Skipped\ndebug statements (python)................................................Passed\npython tests naming......................................................Passed\n```\n\n**Classification suggestion:** This provides a concrete **Class A repository-formatting failure** in two specified TOML files; the earlier Class D / unknown-cause attribution for the legacy check can now be updated. The failing hook is `run-just-rust`, command `just pc-ci`, `taplo format --check`, with hook exit 1. This is NOT a Clippy error and does not imply Rust runtime/decoder failure. Coordinator to authorise any minimal formatting fix, checking frozen source/digest/PLAN constraints and current-master correspondence; no speculative extra changes or silent rebaseline.\n\n### B. macOS x86_64 packaging job: operator-visible messages\n\n[Cancelled job 131361540210](https://github.com/lmmx/mibz2/actions/runs/43269375621/job/131361540210) on PR #373. Louis supplied the following displayed lines:\n\n```text\nThe job was not acquired by Runner of type hosted even after multiple attempts\nInternal server error. Correlation ID: a612f7bc-7191-407c-9513-cbe60dd27773\nDue to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.\nDue to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.\nDue to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.\n```\n\nThese are all the operator-supplied lines; the provider UI reportedly has four check annotations but the copy includes five message lines, so the exact annotation mapping/count is not independently established here. **Important discrepancy:** the cancelled job is labelled macOS **x86_64**, whereas three repeated capacity notices refer to macOS **arm64** runners. Do not silently identify the two, invent a root cause, or count repeats as independent incidents. The first two lines explicitly report acquisition failure and internal server error with a correlation ID; treat as provider-side scheduling/availability *evidence* with final CI-INCIDENTS classification/recovery for the Coordinator. No build steps ran.\n\n**Requested next action:** Reconcile these user-supplied hosted outputs against #373's exact head and CI-INCIDENTS procedure, choose the smallest justified correction for the two TOMLs and an appropriately scoped recovery for the cancelled hosted job, and route a single bounded Codex assignment if needed. Avoid unapproved reruns, gate waivers, default/performance/recipe changes or measurements. Preserve R1 acceptance, frozen120+9 programme, unadmitted warm20+20, pending authorised i9 CPU/corpus preflight and existing review gates. This handoff conveys evidence, not permission to merge #373 or run anything.\n"
     }
   }
 }
