@@ -1197,9 +1197,11 @@
         "scope": "mocked child failures/spawnabsence/failed-row exclusion; no Rust/Miri or decoder execution"
       },
       "action_links": [
-        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030"
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822234208"
       ],
-      "log_status": "in_progress_before_post"
+      "log_status": "published_readback_verified",
+      "log_comment_id": 6822234208
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1292,7 +1294,8 @@
     6821674655,
     6821688224,
     6821703634,
-    6822218030
+    6822218030,
+    6822234208
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1488,13 +1491,13 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "cells-harness-r1-6821626797",
+    "key": "r1-accepted-6822169425",
     "status": "published_readback_verified",
-    "log_comment_id": 6821703634,
+    "log_comment_id": 6822234208,
     "event_dispositions_persisted": true,
-    "comment_id": 6821703634,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6821703634",
-    "scope": "373 independent review delivered; one targeted R1 correction routed; not workstation ready"
+    "comment_id": 6822234208,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822234208",
+    "scope": "R1 accepted; integration deferred pending current CI and separate readiness"
   },
   "dispatch_history": [
     {
