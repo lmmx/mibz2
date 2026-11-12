@@ -1,0 +1,15 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-occupancy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.46s
+     Running unittests examples/occupancy.rs (target/debug/examples/occupancy-d7cab1215f4c80bd)
+
+running 5 tests
+test tests::cross_overlaps_count_a_team_alone ... ok
+test tests::unbalanced_inverse_is_incomplete ... ok
+test tests::queue_definitions ... ok
+test tests::worker_violations_survive_averaging_and_rounds ... ok
+native trace transport Workers(1): 3 route samples, CRC/bytes and worker ledger pass
+native trace transport Workers(2): 3 route samples, CRC/bytes and worker ledger pass
+native trace transport Teams { teams: 1, k: 2 }: 3 route samples, CRC/bytes and worker ledger pass
+test tests::actual_workers_export_route_history ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s

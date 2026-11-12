@@ -1,0 +1,6 @@
+Source: artifact13838851302 from Occupancy42983415379, head4d8bd424681de0b798106ab7d7dc5cc4ca3240b8; replay is arithmetic, not a new timed run.
+Parity: True
+CPU: INTEL(R) XEON(R) PLATINUM 8573C
+All recorded error categories (includes final-buffer recheck): {'tt': 3973}
+Snapshot T-vector arithmetic with AVX2 run reserve n+8: 15516 snapshots; 3949 old-bound failures; 0 corrected-bound failures
+No inference that other accounting or independent Guardian review is complete.

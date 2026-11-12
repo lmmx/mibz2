@@ -1,0 +1,103 @@
+{
+  "commands": [
+    {
+      "command": [
+        "uvx",
+        "--from",
+        "rust-just==1.38.0",
+        "just",
+        "--version"
+      ],
+      "log_sha256": "2e4700b2384c3d84385e792c400f2faa48b07cb8708037b191753a3367ee3d2e",
+      "name": "just-version",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "uvx",
+        "--from",
+        "rust-just==1.38.0",
+        "python3",
+        "bench/test_onecore_recipe.py",
+        "-v"
+      ],
+      "log_sha256": "2947d9d971a5176dad2f8bd6075d164e1ece94303388882c97fa2d12e4bdfae7",
+      "name": "recipe-tests",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "uvx",
+        "--from",
+        "rust-just==1.38.0",
+        "just",
+        "--justfile",
+        ".just/bench.just",
+        "--dry-run",
+        "bench-onecore-inline-i9"
+      ],
+      "log_sha256": "96b6645059ecc97bf1ff687c4b54d4cb4db76f0e3fde98a72889fb089945bf34",
+      "name": "dry-run",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "uvx",
+        "--from",
+        "rust-just==1.38.0",
+        "just",
+        "--dry-run",
+        "bench-onecore-inline-i9"
+      ],
+      "log_sha256": "96b6645059ecc97bf1ff687c4b54d4cb4db76f0e3fde98a72889fb089945bf34",
+      "name": "root-dry-run",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--check"
+      ],
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "fmt",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "py_compile",
+        "bench/test_onecore_recipe.py"
+      ],
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "python-syntax",
+      "returncode": 0
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+        "HEAD"
+      ],
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "name": "diff-check",
+      "returncode": 0
+    }
+  ],
+  "decoder_benchmark_run": false,
+  "environment": {
+    "CARGO_HOME": "/workspace/.mibz2-tools/cargo",
+    "ONECORE_REQUIRE_JUST": "1",
+    "RUSTUP_HOME": "/workspace/.mibz2-tools/rustup",
+    "UV_CACHE_DIR": "/tmp/mibz2-onecore-uv",
+    "UV_TOOL_DIR": "/tmp/mibz2-onecore-tools"
+  },
+  "just_version": "1.38.0",
+  "measurement_run": false,
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "rustfmt_version": "1.90.0"
+}

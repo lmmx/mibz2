@@ -29,6 +29,7 @@
 //! (a pipelined team has no `DecodeStart`/`DecodeEnd` span); the rest of the summary (the
 //! workers' states, the ledger) reads the leader as a team's caller and the plan as teams
 //! of K, so its figures are a team plan's approximation, not the pipeline's own account.
+//! It lacks route-history snapshots and cannot pass the worker-ledger validation.
 //! `--levers park|spin2k|small|both` (with `--pipe`) runs the pipelined teams with those levers
 //! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
 //! `mibz2-pipeK-LEVER` arms do.
@@ -1008,11 +1009,52 @@ impl Queues {
 fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
     let mut by: BTreeMap<&str, f64> = BTreeMap::new();
     let (mut n, mut max) = (0f64, 0f64);
+    let mut violations = 0;
     for (t, r) in traces.iter().zip(roles) {
-        if *r != Some(Role::Worker) || t.buffers.is_empty() {
+        if *r != Some(Role::Worker) {
+            continue;
+        }
+        if t.buffers.is_empty() {
+            violations += 1;
             continue;
         }
         n += 1.0;
+        // Validate integer capacities and each worker's actual route history BEFORE
+        // taking worker means or round medians. A rare bad worker must not disappear.
+        let mut errors = trace::validate_worker(
+            &t.allocations,
+            &t.buffers,
+            t.allocations.iter().all(|s| !s.cooperative),
+        );
+        let blocks = t.marks.iter().filter(|m| m.kind == Kind::DecodeEnd).count();
+        if blocks != t.allocations.len() {
+            errors.push(format!(
+                "{blocks} decoded blocks but {} allocation samples",
+                t.allocations.len()
+            ));
+        }
+        violations += errors.len();
+        let id = n as usize - 1;
+        kv.s(&format!("alloc.worker{id}.name"), &t.name);
+        kv.s(&format!("alloc.worker{id}.errors"), &errors.join(";"));
+        let history = t
+            .allocations
+            .iter()
+            .map(|s| {
+                let bufs = s
+                    .buffers
+                    .iter()
+                    .map(|b| format!("{}:{}:{}", b.name, b.len, b.cap))
+                    .collect::<Vec<_>>()
+                    .join(",");
+                format!(
+                    "{:?}:{}:{}:{}:{}:{bufs}",
+                    s.route, s.cooperative, s.avx2, s.rows, s.block_bound
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("|");
+        kv.s(&format!("alloc.worker{id}.history"), &history);
         let mut total = 0f64;
         for b in &t.buffers {
             *by.entry(b.name).or_default() += b.cap as f64;
@@ -1021,6 +1063,7 @@ fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
         max = max.max(total);
     }
     kv.f("t.f.w.recorded", n);
+    kv.f("t.f.w.ledger_violations", violations as f64);
     if n == 0.0 {
         return;
     }
@@ -1330,7 +1373,12 @@ fn parent(args: &[String]) {
             let mut o = vec![("complete_rounds".to_string(), J::N(rs.len() as f64))];
             for k in keys {
                 let mut v: Vec<f64> = rs.iter().filter_map(|kv| num(kv, k)).collect();
-                o.push((k[2..].to_string(), J::N(median(&mut v))));
+                let value = if k.as_str() == "t.f.w.ledger_violations" {
+                    v.iter().copied().reduce(f64::max).unwrap_or(f64::NAN)
+                } else {
+                    median(&mut v)
+                };
+                o.push((k[2..].to_string(), J::N(value)));
             }
             o
         };
@@ -1398,7 +1446,7 @@ fn parent(args: &[String]) {
             k,
         });
         let mut ls = trace::Settings::new(level, t, s);
-        // a team plan inverts cooperatively, into `rle`; only workers' kernels invert in place
+        // A column-only sizing scenario, not the measured per-worker route history.
         ls.in_place = matches!(plan, Plan::Workers(_));
         if rows.is_finite() && rows > 0.0 {
             (ls.rows, ls.decoded) = (rows as usize, decoded as usize);
@@ -1514,6 +1562,7 @@ fn parent(args: &[String]) {
     let report = J::O(vec![
         ("tool".into(), J::S("examples/occupancy.rs (#39)".into())),
         ("format".into(), J::N(1.0)),
+        ("worker_ledger".into(), J::S("route-history-v2; per-worker integer validation before aggregation".into())),
         ("meta".into(), J::O(meta.into_iter().map(|(k, v)| (k, J::S(v))).collect())),
         ("machine".into(), m.json()),
         (
@@ -1570,9 +1619,32 @@ fn parent(args: &[String]) {
     println!("\nQueues and live structures (timeline medians; docs/ledger.md has the exact definitions):");
     print!("{summary}");
     println!("Written: {out}");
-    if !parity {
+    if !parity
+        || !worker_ledgers_valid(
+            &runs
+                .iter()
+                .filter(|(key, _)| key.2 != "off")
+                .flat_map(|(_, rs)| rs)
+                .collect::<Vec<_>>(),
+        )
+        || summary.contains("ledger check: VIOLATED")
+        || summary.contains("events reconciled: NO")
+    {
         std::process::exit(1);
     }
+}
+
+/// Every traced raw round must validate; never use a median of violation counts.
+fn worker_ledgers_valid(runs: &[&BTreeMap<String, String>]) -> bool {
+    runs.iter().all(|r| match r.get("t.complete") {
+        None => false,
+        Some(c) => {
+            c == "yes"
+                && r.get("t.f.w.ledger_violations")
+                    .and_then(|n| n.parse::<f64>().ok())
+                    == Some(0.0)
+        }
+    })
 }
 
 /// The file's highest stream level, and its blocks (their symbols read, not decoded)
@@ -1616,7 +1688,7 @@ fn ledger_table(ls: &[trace::Settings], rss: &[Option<f64>], blocks: usize) -> S
     };
     let _ = writeln!(
         o,
-        "Footprint ledger (src/trace.rs, docs/ledger.md): level {} ({} blocks; at most {} rows a block), longest block {} rows, largest decoded {} MB, input chunks of {} MiB. Each buffer:",
+        "Footprint ledger (column-only sizing scenario, not mixed-worker acceptance; src/trace.rs, docs/ledger.md): level {} ({} blocks; at most {} rows a block), longest block {} rows, largest decoded {} MB, input chunks of {} MiB. Each buffer:",
         first.level,
         blocks,
         trace::block_rows(first.level),
@@ -1798,7 +1870,8 @@ fn queue_summary(
         .take(4)
         .map(|(n, x)| format!("{n} {x:.2}"))
         .collect();
-    // the ledger's bounds against the measurements (medians over the rounds)
+    // Worker capacities were checked on raw per-worker histories. Medians below
+    // remain descriptive; they cannot certify a worker against the global longest block.
     let mut bad = Vec::new();
     let e = |n: &str| l.iter().find(|e| e.name == n);
     let mut check = |what: &str, x: f64, lo: f64, hi: Option<f64>| {
@@ -1807,26 +1880,12 @@ fn queue_summary(
         }
     };
     let teams = matches!(plan, Plan::Teams { .. });
-    for n in [
-        "ll",
-        "tt",
-        "rle",
-        "seg.starts",
-        "seg.next",
-        "seg.bufs.outer",
-    ] {
-        if teams && n.starts_with("seg.") {
-            continue;
-        }
-        if let Some(e) = e(n) {
-            check(
-                n,
-                g(&format!("f.w.{n}.cap_mb")) * 1e6,
-                e.alloc as f64,
-                e.alloc_max.map(|m| m as f64),
-            );
-        }
-    }
+    check(
+        "per-worker ledger violations",
+        g("f.w.ledger_violations"),
+        0.0,
+        Some(0.0),
+    );
     if let Some(e) = e("symbols") {
         check(
             "symbols",
@@ -1883,8 +1942,8 @@ fn queue_summary(
         f("f.w.cap_mb", 2),
         parts.join(" + "),
         match (bad.is_empty(), teams) {
-            (true, false) => "ok".into(),
-            (true, true) => "ok (the segment buffers not checked under teams)".into(),
+            (true, false) => "ok (per-worker route history; runs scratch and segment bytes measured only)".into(),
+            (true, true) => "ok (per-worker route history; runs scratch, checkpoints, cuts and segments measured only)".into(),
             (false, _) => format!("VIOLATED: {}", bad.join("; ")),
         },
         if rec.is_empty() { "ok (Σ decoded = bytes read, end state empty, every worker recorded)".into() } else { format!("NO: {}", rec.join("; ")) },
@@ -2373,7 +2432,137 @@ mod tests {
                 .map(|&(ms, k, p, l, c)| mk(ms * 1_000_000, k, p, mb(l), mb(c)))
                 .collect(),
             buffers: vec![],
+            allocations: vec![],
         }
+    }
+
+    #[test]
+    fn actual_workers_export_route_history() {
+        use std::io::{Cursor, Write};
+        let mut input = Vec::new();
+        let mut expected = Vec::new();
+        for (run, n, level) in [(true, 600_000, 9), (false, 70_000, 1), (true, 800_000, 9)] {
+            let mut x = 71u64;
+            let bytes: Vec<u8> = (0..n)
+                .map(|i| {
+                    if run {
+                        b'a' + (i % 2) as u8
+                    } else {
+                        x ^= x << 13;
+                        x ^= x >> 7;
+                        x ^= x << 17;
+                        b'a' + (x % 26) as u8
+                    }
+                })
+                .collect();
+            let mut encoder =
+                bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+            encoder.write_all(&bytes).unwrap();
+            input.extend(encoder.finish().unwrap());
+            expected.extend(bytes);
+        }
+        for plan in [
+            Plan::Workers(1),
+            Plan::Workers(2),
+            Plan::Teams { teams: 1, k: 2 },
+        ] {
+            trace::set_level(1);
+            let mut reader =
+                BzReader::parallel_planned(Cursor::new(input.clone()), plan, 4, Kernels::detect());
+            let mut decoded = Vec::new();
+            reader.read_to_end(&mut decoded).unwrap();
+            drop(reader);
+            assert!(decoded == expected, "full decoder bytes and CRC");
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while trace::finished() < plan.workers() + 1 && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(1));
+            }
+            assert_eq!(trace::finished(), plan.workers() + 1);
+            let traces = trace::take();
+            trace::set_level(0);
+            let samples: Vec<_> = traces.iter().flat_map(|t| &t.allocations).collect();
+            assert_eq!(samples.len(), 3);
+            assert_eq!(
+                samples
+                    .iter()
+                    .filter(|s| s.route == trace::OutputRoute::Runs)
+                    .count(),
+                2
+            );
+            let column = if matches!(plan, Plan::Workers(_)) {
+                trace::OutputRoute::ColumnInPlace
+            } else {
+                trace::OutputRoute::ColumnSeparate
+            };
+            assert_eq!(samples.iter().filter(|s| s.route == column).count(), 1);
+            let mut kv = Kv::default();
+            summarise(&traces, plan.workers(), 1, None, &mut kv);
+            let values: BTreeMap<_, _> = kv.0.into_iter().collect();
+            assert!(worker_ledgers_valid(&[&values]), "{values:?}");
+            eprintln!("native trace transport {plan:?}: 3 route samples, CRC/bytes and worker ledger pass");
+        }
+    }
+
+    #[test]
+    fn worker_violations_survive_averaging_and_rounds() {
+        use trace::{AllocationSample, Buffer, OutputRoute};
+        let worker = |name: &str, rows, ll_cap| {
+            let buffers = vec![
+                Buffer {
+                    name: "ll",
+                    len: rows,
+                    cap: ll_cap,
+                },
+                Buffer {
+                    name: "rle",
+                    len: 0,
+                    cap: 0,
+                },
+                Buffer {
+                    name: "tt",
+                    len: 4 * rows,
+                    cap: 4 * rows,
+                },
+                Buffer {
+                    name: "counts",
+                    len: 1024,
+                    cap: 1024,
+                },
+            ];
+            let mut t = thread(name, &[(1, Kind::DecodeEnd, 0, 0, 0)]);
+            t.buffers = buffers.clone();
+            t.allocations.push(AllocationSample {
+                route: OutputRoute::Runs,
+                cooperative: false,
+                avx2: false,
+                rows,
+                block_bound: 900_000,
+                buffers,
+            });
+            t
+        };
+        // Mean ll capacity is exactly the old global 900k bound, but the tiny
+        // worker's 1.2MB capacity cannot follow from its ten-row history.
+        let traces = [
+            worker("large", 600_000, 600_000),
+            worker("tiny", 10, 1_200_000),
+        ];
+        let mut kv = Kv::default();
+        footprint(&traces, &[Some(Role::Worker); 2], &mut kv);
+        let bad: BTreeMap<_, _> =
+            kv.0.into_iter()
+                .chain([("t.complete".into(), "yes".into())])
+                .collect();
+        assert_eq!(bad["t.f.w.ll.cap_mb"], "0.900000");
+        assert_ne!(bad["t.f.w.ledger_violations"], "0.000000");
+        assert!(bad["alloc.worker1.history"].contains("ll:10:1200000"));
+        let good = BTreeMap::from([
+            ("t.complete".into(), "yes".into()),
+            ("t.f.w.ledger_violations".into(), "0.000000".into()),
+        ]);
+        assert!(worker_ledgers_valid(&[&good]));
+        assert!(!worker_ledgers_valid(&[&good, &bad, &good]));
+        assert!(!worker_ledgers_valid(&[&BTreeMap::new()]));
     }
 
     /// The queue summary's definitions on a hand-built trace: 2 workers, a window of 2,

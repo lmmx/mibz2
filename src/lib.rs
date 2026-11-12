@@ -289,9 +289,36 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// a block's run records and their F order, for a kernel that reads runs
     /// (`InverseBwt::reads_runs`) on a block of few symbols (`runs::takes_runs`)
     runs: runs::Runs,
+    #[cfg(any(test, feature = "trace"))]
+    allocation_history: Vec<trace::AllocationSample>,
 }
 
 impl<I: bwt::InverseBwt> Scratch<I> {
+    #[cfg(any(test, feature = "trace"))]
+    pub fn allocation_history(&self) -> &[trace::AllocationSample] {
+        &self.allocation_history
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn record_allocation(
+        &mut self,
+        route: trace::OutputRoute,
+        rows: usize,
+        block_bound: usize,
+        k: Kernels,
+    ) {
+        if !cfg!(test) && trace::level() == 0 {
+            return;
+        }
+        self.allocation_history.push(trace::AllocationSample {
+            route,
+            cooperative: self.inverse.wants_checkpoints(),
+            avx2: cfg!(target_arch = "x86_64") && k.avx2,
+            rows,
+            block_bound,
+            buffers: self.buffers(),
+        });
+    }
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
     /// feature only
     #[cfg(any(test, feature = "trace"))]
@@ -323,6 +350,8 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             inverse: I::default(),
             rle: Vec::new(),
             runs: runs::Runs::default(),
+            #[cfg(any(test, feature = "trace"))]
+            allocation_history: Vec::new(),
         }
     }
 }
@@ -354,6 +383,8 @@ pub fn decode_block<I: bwt::InverseBwt>(
         #[cfg(feature = "trace")]
         trace::mark(trace::Kind::InvertEnd, trace::NONE);
         if done {
+            #[cfg(any(test, feature = "trace"))]
+            s.record_allocation(trace::OutputRoute::Runs, n, b.max_len, k);
             return finish(&s.ll, b.crc, k, out);
         }
         // a broken tiling is a bug in `runs::front` (a debug build stops here): the column's
@@ -386,6 +417,17 @@ pub fn decode_block<I: bwt::InverseBwt>(
     }
     #[cfg(feature = "trace")]
     trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    #[cfg(any(test, feature = "trace"))]
+    s.record_allocation(
+        if in_place {
+            trace::OutputRoute::ColumnInPlace
+        } else {
+            trace::OutputRoute::ColumnSeparate
+        },
+        n,
+        b.max_len,
+        k,
+    );
     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
     finish(inverted, b.crc, k, out)
 }
