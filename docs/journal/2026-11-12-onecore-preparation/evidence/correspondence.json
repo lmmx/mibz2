@@ -1,0 +1,302 @@
+{
+  "accounting_model_changed": false,
+  "baseline": "b65b2aa54488f072cf005b8fe62461c32e6ef083",
+  "candidate": "d33787e138426cb441db6975f54b2eccca02e89a",
+  "driver_sha256": "6167171b7889706226340adc0beba89bfbf5e933af944d7f68e49d97bc7bfa07",
+  "frozen_files": [
+    {
+      "path": ".just/bench.just",
+      "sha256": "2078d8c6c5560e2a4fad1b38bb3c92bfdcdc654d67e76d8aa16d6a29c0946d5b"
+    },
+    {
+      "path": "bench/test_onecore_recipe.py",
+      "sha256": "747a9aa0f13e3564fc3cca8f8294ea534f5839974e82d5907be74d34514b1639"
+    },
+    {
+      "path": "docs/journal/2026-11-10-onecore-inline-i9.md",
+      "sha256": "e7266a0fa9b891086ffb7c2cca1fa6d33630734b569c2b82641de24e8ef2932f"
+    },
+    {
+      "path": ".github/workflows/test.yml",
+      "sha256": "8334ab08a41a35e5396a9ea6dd46b0884c1ebd796b932ef2bb57dfdf23408ee9"
+    },
+    {
+      "path": "bench/workstation-queue.txt",
+      "sha256": "b4e670f41884b826b348560fde73daf0217d894ad7b44a2344c13e59f49b846c"
+    },
+    {
+      "path": ".github/workflows/bench.yml",
+      "sha256": "8d80fb217af112c0d609d3b4168ad8fc8771acd27e0422457b81890c1dc912e6"
+    },
+    {
+      "path": ".github/workflows/miri.yml",
+      "sha256": "c443774347b6421536078b2b073490caf5064ed6459fb33e211127068ec6cd3b"
+    }
+  ],
+  "implementation_head": "4e671215051d5f5f9720c7bfa1944912b83643a2",
+  "original_recipe_head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+  "pairs": [
+    {
+      "appended_commit": "3b4350bb88944d50fe0dd2f9f99d466952b1ad10",
+      "reviewed_commit": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "stable_patch_id": "76789171c91e0308f3b788afde98b2f6fd317251"
+    },
+    {
+      "appended_commit": "4e671215051d5f5f9720c7bfa1944912b83643a2",
+      "reviewed_commit": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "stable_patch_id": "e75fefdc8bab49e20173cfd93c09259667cf5a79"
+    }
+  ],
+  "ratio": "baseline / candidate; original 95% interval rule",
+  "reviewed_files": [
+    {
+      "bytes": 4771,
+      "git_blob": "e6bc02cbcf3f5d281643118ffeaa829bbd5d6dc4",
+      "path": ".github/workflows/occupancy.yml",
+      "sha256": "6c8b2d14d221c9df5907ae7ad0868a3484e3aead1e4da119a6aa4bb36e09523c"
+    },
+    {
+      "bytes": 9567,
+      "git_blob": "0e680ea6c70c41f1633d2079faccb6e38323ca85",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
+      "sha256": "e6e4468779daa04c516ccc7aee225b563c1b3faa1fad90008b005bc7f228d97d"
+    },
+    {
+      "bytes": 5125,
+      "git_blob": "34c4facab42fc7093259768cd7cc9fd746949304",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/SHA256SUMS",
+      "sha256": "1c72b8175cdbd157d48cbccdf1fd6656dcd2fbd70416326d8c168d7182647077"
+    },
+    {
+      "bytes": 345013,
+      "git_blob": "2a493fafbbf70c734b897c7df4756b2457bc97b9",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-42983415379-artifact.zip.gz",
+      "sha256": "2a069af2a0328c7ef849aeeacad7a1d4d5a450d3a239ea206878ab08b64ddd86"
+    },
+    {
+      "bytes": 27540,
+      "git_blob": "17b6477aa1c1ffcc21af620df69eadaa9a68acd7",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-42983415379.log.gz",
+      "sha256": "8611e0d0d5f71891bef29d99604d122641f4d0a2245afce1bcbee8b68adf1fc9"
+    },
+    {
+      "bytes": 474,
+      "git_blob": "1f67b6c24fca9dd759ede876ad93d4dc177e7506",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-analysis.log",
+      "sha256": "072c459943adc1a136fd12ad31f8eca7a410199f7742a385b29c4e7894f0fbac"
+    },
+    {
+      "bytes": 365,
+      "git_blob": "02865d20aa4a7dc9d70c8aae655d7e9cb9666e55",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-analysis.log.gz",
+      "sha256": "22068164046a68b6b919219c09cc476304993800861956970a3fcee79e898ce3"
+    },
+    {
+      "bytes": 1177,
+      "git_blob": "27b9bbc348b2051082dfdd9e99d75ddbb85fbc04",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log",
+      "sha256": "16a3e02c29251721affa6714c600f46fd65e00609716bc8917ffdd490d08bb3f"
+    },
+    {
+      "bytes": 584,
+      "git_blob": "28abf934fd08d14a5555452fb8ebdc208e00df74",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log.gz",
+      "sha256": "bb6811c2d757648aeb679315852eead017e6568055ffdb0290b2c714304d4764"
+    },
+    {
+      "bytes": 127,
+      "git_blob": "b8f68f386710eba3e6877a55494f59af69bc6c76",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy.log",
+      "sha256": "5a02a035f43fa856eec9af4d60796e49c2a190aa915bc3a864cd1fa34600eec7"
+    },
+    {
+      "bytes": 133,
+      "git_blob": "60d6ef94bb0ab926bcd806f7525daac10c47be1e",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy.log.gz",
+      "sha256": "c5b13f4097d42a4e5ef9832af2004630658e14bacad94344ef2964d2ae147c35"
+    },
+    {
+      "bytes": 1456,
+      "git_blob": "4ecb64f6c12823ad7496e6a59ad3cc96e0010681",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log",
+      "sha256": "4f234b2c7e0eeb240e1d9a7f812403a693236d6d124b643e94d96e297c2fc0a7"
+    },
+    {
+      "bytes": 611,
+      "git_blob": "7b329508e756ebd9162c76cf90ec58e612c66540",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log.gz",
+      "sha256": "a524acf77fe052aa09de538b45d1d63cd1531301a0c9a352da7cdc71cbbe90cc"
+    },
+    {
+      "bytes": 52,
+      "git_blob": "50a5f01684faebe8c49db81c73c27d7e09c962f4",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/fmt.log",
+      "sha256": "582ba6a6f07301087de539b391a35c0ccc05889e87732d71793a12c81a53b4a0"
+    },
+    {
+      "bytes": 20,
+      "git_blob": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/fmt.log.gz",
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "bytes": 866,
+      "git_blob": "0f6288d0e32dab5faed9ca1a0b1d0d8f81694ed1",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log",
+      "sha256": "7bbae128a2043019e76fb4deb22802b822c1c65a78f2e16bafb26077303fbf25"
+    },
+    {
+      "bytes": 446,
+      "git_blob": "aa14e70bcb25bcbd675d878692e15e8431d1a320",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log.gz",
+      "sha256": "838ab612f0531155877239c0926cabceab583d80ee61059b556e07ec4d3ba9d5"
+    },
+    {
+      "bytes": 2075,
+      "git_blob": "2d44563a23ec13f9033b6e57ba02ab96b0c07b04",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log",
+      "sha256": "c63c09caf6dc81904b103c679abbf86bd1dc583224714260df0594437723e07f"
+    },
+    {
+      "bytes": 523,
+      "git_blob": "2affa495938644280d439e8d7084c5fc9bfc139f",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log.gz",
+      "sha256": "9070dd88288187707bfde0ef83c1dc0a888d1390852cdd1077c47e856ded8bb9"
+    },
+    {
+      "bytes": 7004,
+      "git_blob": "9bf8cc9bb113033f6914e40beba182da55e2fad7",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log",
+      "sha256": "bad8dae584e71ffba2f1aa90330a0718ea7a38488fa48f55241b495eb9e8f307"
+    },
+    {
+      "bytes": 1896,
+      "git_blob": "2315d8ad672d7c0b447dc4b4e0977b308df1ebae",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log.gz",
+      "sha256": "6cb8d8119f4fd42f1f75ba3ffd1de95edacfe13ebc803cd2f5379c5b1c2846a7"
+    },
+    {
+      "bytes": 6658,
+      "git_blob": "27b151fd088f19cb4a893ca8d2ebfe6e02bfbb10",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log",
+      "sha256": "7f8a93f8779efec6e58ea1477c9b361a176fde2f7640a9ad5d9fb0231ed70105"
+    },
+    {
+      "bytes": 1771,
+      "git_blob": "354c8537a0d1e745b93df6f7bcbe2723788772ed",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log.gz",
+      "sha256": "d138bf1e78fa4bd97ebf413b3345875adf1f7799c56be62633a06d17bdebdc89"
+    },
+    {
+      "bytes": 1869,
+      "git_blob": "1b9e4254958e82ab668099ce4a3ef140e2dd7c0c",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/routes-initial.log.gz",
+      "sha256": "cb3c420d02a0af47111a5bf4a6b7701f0f78731d3196e78d5b0ead48ba4dcffd"
+    },
+    {
+      "bytes": 1525,
+      "git_blob": "9e19082b2312fd510123db7d3c7e18f9f79159d2",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log",
+      "sha256": "2f49ffeca22dfcd5d0f4c379082f02ce19e977d56aea9d639aec4a40fd6dfbdc"
+    },
+    {
+      "bytes": 638,
+      "git_blob": "1cc2309e84598881398a6b0ca477c4d252a4f749",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log.gz",
+      "sha256": "81cb8e25b7595e0c0bc13cfd7df549c3e8b002d67ade95cfb74079b7eb7e7780"
+    },
+    {
+      "bytes": 127,
+      "git_blob": "92cb866ae7a60336917e47f23a21e20a612f5230",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-clippy.log",
+      "sha256": "a65d090caab743e5f5baf29aed6ef81b6f45a154fb1859d0423e047990b99901"
+    },
+    {
+      "bytes": 132,
+      "git_blob": "afe6693ed9acc935479c0f71db0d0651c845d6b4",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-clippy.log.gz",
+      "sha256": "97382bf3d088c47583110dd6c7696817e1a6de4d1375790e47abe7aa74b62154"
+    },
+    {
+      "bytes": 866,
+      "git_blob": "0e1f401c50c2de7f2dd0e65bcc50ebbeb251caa6",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-instrument-tests.log",
+      "sha256": "7538e7a7bf9bf6746d6cec36ac929589a7c64a6aac578e124a223b3f0c02fa2a"
+    },
+    {
+      "bytes": 445,
+      "git_blob": "e26922eb9424f874034a2cf31e7445ff32d6d2ba",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-instrument-tests.log.gz",
+      "sha256": "6c493a38c5ba68b7f74bc8ad6eb5ce8d23e0371bae3fa2e9a8d2b37848c53052"
+    },
+    {
+      "bytes": 4520,
+      "git_blob": "89c954fe5beae695c515af28f41b59abedf52a30",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-ledger-tests.log",
+      "sha256": "c8d3867d4fc5c045e3636213ae4d5d093e4b8c8ba4ae62888b07f0a2a4d3689c"
+    },
+    {
+      "bytes": 684,
+      "git_blob": "867ebe3143f93c27bf50f5c7cd66a31a262263e8",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-ledger-tests.log.gz",
+      "sha256": "9d7ec94f577b3101aa2dde93fd2aa5a2e7228d8056c9efd12f050d4726be2e8b"
+    },
+    {
+      "bytes": 1251,
+      "git_blob": "806e678c3fa7690573ad18733925ee6145bc2fc0",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-old-bound-mutant.log",
+      "sha256": "a8f54361ce91abc44e7271966266548a79c7db671f6accd6190c3841c47abe55"
+    },
+    {
+      "bytes": 574,
+      "git_blob": "3f49d7d30cb074fbc9aeca11e962ff9f1e288e2e",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-old-bound-mutant.log.gz",
+      "sha256": "bac4d8112302d53f8340e98cf0638e134ebfeae73d11ef4125c92cb1391534a4"
+    },
+    {
+      "bytes": 61,
+      "git_blob": "8bbe0d665a21b80003f14ea8e32e391d4bd42aa4",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/whitespace.log",
+      "sha256": "8552b22bae6b51f634f0fac6f499e3af909280d440fc0af92a44d9dcc138bc14"
+    },
+    {
+      "bytes": 72,
+      "git_blob": "7495e0781da983b2e2a2582de0fe240e5b0b6d73",
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/whitespace.log.gz",
+      "sha256": "04081137bc16e53e5449d9740fb21fc6abe0098cfd7d603670a2fe0e3d715bf5"
+    },
+    {
+      "bytes": 15634,
+      "git_blob": "eaf8f26ca77ba6706c148d02e32db91b7b9c67d1",
+      "path": "docs/ledger.md",
+      "sha256": "16aa447d52bcd184ede267e08c176295c6c1ea00541b86a980fe070a78bedd53"
+    },
+    {
+      "bytes": 109466,
+      "git_blob": "09337978414e26aa52c0e86761307bc0ab0be375",
+      "path": "examples/occupancy.rs",
+      "sha256": "c98921bbeb958cd2bb9144d22002031af6690b3699333dd7935a72cc8af3e5c8"
+    },
+    {
+      "bytes": 22431,
+      "git_blob": "14380c4fe4c64dc9b450097977d5956a35030715",
+      "path": "src/lib.rs",
+      "sha256": "fd68628f58fa634188e9982a66e35304a2c661da93db34bec0b4dcf87437d4de"
+    },
+    {
+      "bytes": 173590,
+      "git_blob": "e7a65fcb9a566af0550e74990e908b9fea351758",
+      "path": "src/parallel.rs",
+      "sha256": "91aa4ea0a31663451b136c882b418c3395af4e64faf09af08d87d15f3e0686bb"
+    },
+    {
+      "bytes": 49183,
+      "git_blob": "4bae6306ac3a78bee82236abaf578921ea73a2d2",
+      "path": "src/trace.rs",
+      "sha256": "4a7228090164c24dad5f5b24064b847476d327fd3e120633433ddbe01ac87ff3"
+    }
+  ],
+  "reviewed_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+  "rounds": 10,
+  "threads": 1
+}

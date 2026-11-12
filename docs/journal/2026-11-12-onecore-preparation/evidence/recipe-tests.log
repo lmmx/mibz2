@@ -1,0 +1,9 @@
+test_driver_is_frozen (__main__.OnecoreRecipe.test_driver_is_frozen) ... ok
+test_exact_contrast_and_grid (__main__.OnecoreRecipe.test_exact_contrast_and_grid) ... ok
+test_failed_fetch_never_starts_measurement (__main__.OnecoreRecipe.test_failed_fetch_never_starts_measurement) ... ok
+test_real_just_dry_run (__main__.OnecoreRecipe.test_real_just_dry_run) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.084s
+
+OK

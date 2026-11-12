@@ -1,0 +1,12 @@
+{
+  "HANDOFF.md": "0ebbf21fea690e0f91aafd2139f3731baf5bd2f1e91b3d3c2a06a0af993ea6c2",
+  "evidence/checks.json": "9c98d8ef764f75ea92976d828dfd3f76f26bd1508b7d4780fdc4bac53bbd9257",
+  "evidence/correspondence.json": "34eea4ea19f8d70e6df37bff23fdb569e62e5a7c1ae8b106546dc2b8eda43a68",
+  "evidence/diff-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "evidence/dry-run.log": "96b6645059ecc97bf1ff687c4b54d4cb4db76f0e3fde98a72889fb089945bf34",
+  "evidence/fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "evidence/just-version.log": "2e4700b2384c3d84385e792c400f2faa48b07cb8708037b191753a3367ee3d2e",
+  "evidence/python-syntax.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "evidence/recipe-tests.log": "2947d9d971a5176dad2f8bd6075d164e1ece94303388882c97fa2d12e4bdfae7",
+  "evidence/root-dry-run.log": "96b6645059ecc97bf1ff687c4b54d4cb4db76f0e3fde98a72889fb089945bf34"
+}
