@@ -1474,6 +1474,15 @@
       "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
       "ready_job_queued": false,
       "reason": "No new external message; exact PR heads/checks unchanged. Existing Clippy repair routed, no duplicate dispatch. Workstation readiness outstanding."
+    },
+    "6835550527": {
+      "status": "in_progress",
+      "delivery_id": "764e8450-deda-11f1-961f-c664b1d2080e",
+      "comment_updated_at": null,
+      "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+      "scope": "Reconcile scoped375 completion; bounded MTF compatibility followup and grouped Observer record",
+      "action_links": [],
+      "ready_job_queued": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1688,14 +1697,11 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "routed_verified_awaiting_manual_launch",
-      "source_comment_id": 6832194051,
-      "scope": "Minimal Rust1.100 needless_range_loop repair; separate maintenance PR; no gate weakening",
-      "comment_id": 6832249633,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6832249633",
+      "status": "in_progress_before_post",
+      "source_comment_id": 6835550527,
+      "scope": "Bounded MTF initializer Rust1.100 compatibility followup on375; read-only373 failure evidence first",
       "recipient_execution_observed": false,
-      "completion_observed": false,
-      "verification": "audit/route/readback/verify exit0"
+      "completion_observed": false
     },
     "guardian": {
       "status": "completed",
@@ -1714,17 +1720,11 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "completed",
-      "source_comment_id": 6831115741,
-      "scope": "Update record for366 merged368 incorporated373 mechanical completion/Occupancy pass; ClassD legacy and readiness pending",
-      "comment_id": 6831172283,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6831172283",
-      "verification": "audit/route/readback/verify exit0",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "review_comment_id": 6831281358,
-      "work_commit": "12de4a24049dea8810489523838eac43cd2bcabd",
-      "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6835550527,
+      "scope": "Record375 scoped completion/next correction and374 observed merge;373 readiness remains blocked",
+      "recipient_execution_observed": false,
+      "completion_observed": false
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2054,6 +2054,32 @@
       "head_sha": "5d8f11c7d4b85c3fd6d81e442195723abace1017",
       "pr": 374,
       "evidence_commit": "12dbc542d0fb2f5679082a5454f6a8646b3fe453"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6832194051,
+      "scope": "Minimal Rust1.100 needless_range_loop repair; separate maintenance PR; no gate weakening",
+      "comment_id": 6832249633,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6832249633",
+      "recipient_execution_observed": true,
+      "completion_observed": true,
+      "verification": "audit/route/readback/verify exit0",
+      "review_comment_id": 6835550527,
+      "recipient_cursor_sha": "fec45fc4cfcb333b06bc2dc5d3ec1ebcce38c526",
+      "head_sha": "ec1b84eb60c8f011da4fa41d6d7d4a839f91bf24"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6831115741,
+      "scope": "Update record for366 merged368 incorporated373 mechanical completion/Occupancy pass; ClassD legacy and readiness pending",
+      "comment_id": 6831172283,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6831172283",
+      "verification": "audit/route/readback/verify exit0",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "review_comment_id": 6831281358,
+      "work_commit": "12de4a24049dea8810489523838eac43cd2bcabd",
+      "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   ],
   "codex_correction": {
@@ -2899,5 +2925,5 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
+  "last_observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6"
 }
