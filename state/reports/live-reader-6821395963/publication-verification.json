@@ -1,0 +1,13 @@
+{
+  "pinned_verify": {
+    "comment": 6821626797,
+    "issue": 145,
+    "ok": false,
+    "problems": [
+      "FROM is 'researcher', not coordinator"
+    ]
+  },
+  "role_aware_publication_check": "pass",
+  "exact_body_author_issue_readback": "pass",
+  "note": "Pinned verifier hard-codes coordinator sender even for role REVIEWs; no sender spoof or code change."
+}
