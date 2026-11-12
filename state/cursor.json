@@ -54,7 +54,9 @@
     6790143614,
     6821410188
   ],
-  "in_progress": [],
+  "in_progress": [
+    6821688224
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -465,6 +467,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer route/header/citation verified.",
       "work_commit": "d0ee2433196e72f47abe1c6e787e0e374b883c34",
       "review_id": 6821491077
+    },
+    "6821688224": {
+      "comment_id": 6821688224,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling channel and record."
     }
   },
   "last_record_commit": "d0ee2433196e72f47abe1c6e787e0e374b883c34"
