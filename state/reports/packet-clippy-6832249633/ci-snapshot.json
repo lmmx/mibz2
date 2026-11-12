@@ -1,0 +1,15 @@
+{
+  "head": "ec1b84eb60c8f011da4fa41d6d7d4a839f91bf24",
+  "Test": {
+    "run_id": 43303537738,
+    "status": "in_progress"
+  },
+  "CI": {
+    "run_id": 43303537632,
+    "status": "in_progress"
+  },
+  "legacy": {
+    "state": "success",
+    "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794516356.Z_ZyKLOeQCWJBC_Q7vLdGQ"
+  }
+}

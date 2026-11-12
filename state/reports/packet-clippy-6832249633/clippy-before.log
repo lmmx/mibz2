@@ -1,0 +1,50 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling target-lexicon v0.13.5
+   Compiling libc v0.2.191
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.10.0
+   Compiling pyo3-build-config v0.29.3
+   Compiling syn v2.0.119
+   Compiling pyo3-ffi v0.29.3
+   Compiling syn v3.0.9
+   Compiling heck v0.5.0
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling pyo3 v0.29.3
+    Checking fearless_simd v1.2.0
+    Checking once_cell v1.21.4
+    Checking bytemuck v1.25.2
+    Checking bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pyo3-macros-backend v0.29.3
+   Compiling pyo3-macros v0.29.3
+    Checking mibz2 v0.2.9 (/workspace/mibz2-clippy)
+    Checking pbz2-core v0.2.0
+    Checking pbz2 v0.2.0
+error: the loop variable `j` is only used to index `pk.path`
+   --> examples/packet_census.rs:583:38
+    |
+583 | ...                   for j in 0..pk.k {
+    |                                ^^^^^^^
+    |
+note: for this index operation
+   --> examples/packet_census.rs:584:56
+    |
+584 | ...                   if c.id[y as usize] != pk.path[j] {
+    |                                              ^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.100.0/index.html#needless_range_loop
+    = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator
+    |
+583 -                             for j in 0..pk.k {
+583 +                             for <item> in pk.path.iter().take(pk.k) {
+    |
+
+error: could not compile `mibz2` (example "packet_census") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

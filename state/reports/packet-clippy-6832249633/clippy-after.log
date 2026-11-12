@@ -1,0 +1,23 @@
+    Checking mibz2 v0.2.9 (/workspace/mibz2-clippy)
+error: the loop variable `k` is used to index `m.bases`
+   --> examples/mtf_two_level.rs:273:22
+    |
+273 |             for k in 0..K {
+    |                      ^^^^
+    |
+note: for this index operation
+   --> examples/mtf_two_level.rs:274:17
+    |
+274 |                 m.bases[k] = N - 16 * K + 16 * k;
+    |                 ^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.100.0/index.html#needless_range_loop
+    = note: `-D clippy::needless-range-loop` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator and `.enumerate()`
+    |
+273 -             for k in 0..K {
+273 +             for (k, <item>) in m.bases.iter_mut().enumerate().take(K) {
+    |
+
+error: could not compile `mibz2` (example "mtf_two_level") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

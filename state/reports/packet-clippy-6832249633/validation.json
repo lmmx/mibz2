@@ -1,0 +1,40 @@
+{
+  "base": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+  "head": "ec1b84eb60c8f011da4fa41d6d7d4a839f91bf24",
+  "pr": 375,
+  "changed_files": [
+    "examples/packet_census.rs"
+  ],
+  "files": {
+    "examples/packet_census.rs": {
+      "base_blob": "ef43308fc7475e94bebacf7726a92c20247c446f",
+      "head_blob": "8d13fdece959745c60c2f232eed3651a6609e7f6"
+    },
+    "examples/mtf_two_level.rs": {
+      "base_blob": "12cc473b146b58249e254e209b375925c33a867f",
+      "head_blob": "12cc473b146b58249e254e209b375925c33a867f"
+    }
+  },
+  "counts": {
+    "ternary_columns": 29523,
+    "columns": 29643,
+    "walk_checks": 254907,
+    "states": 11652415,
+    "packets_checked": 182754446,
+    "composed_k2plus": 89711145,
+    "repeated": 18402243,
+    "cell_rows": 509814
+  },
+  "validation_sha256": "050734632c8d800033c4b81781a49497020515fd10fec2f7ced7ae0562f3f334",
+  "commands": {
+    "clippy-packet": 0,
+    "packet-build": 0,
+    "clippy-after": 101,
+    "fmt": 0,
+    "validate-comparison": 0,
+    "validate": 0,
+    "clippy-before": 101
+  },
+  "no_workstation_measurements": true,
+  "no_manual_ci_reruns": true
+}

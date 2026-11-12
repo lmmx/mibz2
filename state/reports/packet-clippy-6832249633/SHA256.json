@@ -1,0 +1,23 @@
+{
+  "ci-snapshot.json": "703fa4134c08d4f87b45b75d287fbbddb0f9635e92e82ecde67fe456b56f386d",
+  "clippy-after.exit": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c",
+  "clippy-after.log": "2acb778bac40ca51bf1298ed49a774c848202bfbcd3e3276f8f676b893e76818",
+  "clippy-before.exit": "39b8dc3fc8b44765c8e6f1adee04c5b465e555ab791cc42d0d9e810d5b64297c",
+  "clippy-before.log": "bb8f46af9b92b918131684dd9ad32b01d0e0f40763a284300c98fa4a807629e7",
+  "clippy-packet.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "clippy-packet.log": "621ead1dd79924aad6beeaabb44c7f7c52f9cec7829bd3a7e60fbb85fc9f22d4",
+  "coord-audit.log": "c979d6701073aac5723da2c49961e78f2b3d4504286d1c88ad532f2123fa13db",
+  "fmt.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "packet-build.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "packet-build.log": "127f81d09e41d9cea9de293940e91f3379f4216dc718441b5f9896635f7db279",
+  "patch.diff": "cb986a3a391d825ce3111b26b4256c06aa59ffdde72a9ccd464ca723b8d72eba",
+  "report.md": "5635d126284dc21d54b0a4ae87635aa69359a1ed78ad2ad52a402e5cebd90c95",
+  "toolchain-install.log": "d5f322d5ebf4db6b93b811a9e533041fc1c8550c5fe7022a7c73d9f949bf23b2",
+  "toolchain.txt": "be69adad9137eaa0bdac1dd07e2fe286b1831fc8bad193ea27806ca0c7c8e7c6",
+  "validate-comparison.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "validate.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "validate.jsonl": "050734632c8d800033c4b81781a49497020515fd10fec2f7ced7ae0562f3f334",
+  "validate.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "validation.json": "7d751d86b169d4c7b5f0c715d3f749c59507847e37991189c7f5352247897f4d"
+}
