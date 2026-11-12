@@ -1,0 +1,120 @@
+{
+  "data": {
+    "367-analysis": {
+      "bytes": 2099,
+      "commit": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
+      "path": "docs/journal/monodromy/2026-11-10-cells-gap/evidence/analysis.json",
+      "sha256": "81680ed02dcfa2f3e6f583498d8beaa5cc1df4ff49e3c5e9d83d00c611a66ae6",
+      "snapshot": "inputs/367-analysis.gz",
+      "snapshot_is_original_gzip": false,
+      "snapshot_sha256": "72dd4c5eb6a2dc7486295294dd3c3bdd2090783db153c852c6fffd4e8c6f6893"
+    },
+    "367-census": {
+      "bytes": 107181,
+      "commit": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
+      "path": "docs/journal/monodromy/2026-11-10-cells-gap/evidence/production-census.jsonl",
+      "sha256": "f67aeb21a14252ffe419c2ab5ac77abe1f1075b604e0022cad12db47647d07b2",
+      "snapshot": "inputs/367-census.gz",
+      "snapshot_is_original_gzip": false,
+      "snapshot_sha256": "f1e061c7314ffd9bb5cddf2ef6a9d81ba53b8b33cbf9c7790e0091ace1246f32"
+    },
+    "370-cases": {
+      "bytes": 268938,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/evidence/case-costs.jsonl.gz",
+      "sha256": "15562edf13d17c757bb6e4b1ac304fe586e24beda7b557958b4be7c07ef7b013",
+      "snapshot": "inputs/370-cases.gz",
+      "snapshot_is_original_gzip": true,
+      "snapshot_sha256": "15562edf13d17c757bb6e4b1ac304fe586e24beda7b557958b4be7c07ef7b013"
+    },
+    "370-results": {
+      "bytes": 64935,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/evidence/results.json",
+      "sha256": "1ba3a243ad2a04568bb0bd18ded8d72c39683a797cc066d91f8f1378a6579f76",
+      "snapshot": "inputs/370-results.gz",
+      "snapshot_is_original_gzip": false,
+      "snapshot_sha256": "f51777df9945dc6fc0521bda099ab4713baec92ab51f40a3de57da24fb5390a8"
+    },
+    "370-schedules": {
+      "bytes": 1870343,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/schedules.json",
+      "sha256": "00ad44509c9c10519dc83d6e218153752bcf3acd7f26135171cfe17eb35f398f",
+      "snapshot": "inputs/370-schedules.gz",
+      "snapshot_is_original_gzip": false,
+      "snapshot_sha256": "63c26c377ddf32a70444c6af4f2890a1bd12570a48023512dccd3b13ef56449e"
+    },
+    "371-result": {
+      "bytes": 6760,
+      "commit": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
+      "path": "docs/journal/2026-11-11-first-return-block/evidence/attempt-1/result.json",
+      "sha256": "514d897bfe2f73f4a763b6f4f455c2396472b90c5bd62345a9d6d513d322c9c4",
+      "snapshot": "inputs/371-result.gz",
+      "snapshot_is_original_gzip": false,
+      "snapshot_sha256": "5bf636d781065d63f3de5a365794d20a9d2c5100158b534c75d284558874f8ab"
+    }
+  },
+  "source": [
+    {
+      "bytes": 18519,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/contraction.py",
+      "sha256": "e01a3fad5a2b50d91854003006b8c86a598330beec95847913241017a80be0d5"
+    },
+    {
+      "bytes": 5791,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/origin.py",
+      "sha256": "59e1cf53db18ccd6f7fb2a64e69dd306549d2a2ffe7d9665733d9044cb2b58d4"
+    },
+    {
+      "bytes": 4994,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/common.py",
+      "sha256": "35cf9a92a13bfa462fd1a9076b7b52acc50666c414f7e925a0011cf3fa83efea"
+    },
+    {
+      "bytes": 10394,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/run.py",
+      "sha256": "a33abdac913298663e1476a6c96f6001a5ac8a0c6bf5e4445a4e0a3c0b61c08a"
+    },
+    {
+      "bytes": 16167,
+      "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+      "path": "docs/journal/2026-11-11-labelled-contraction/README.md",
+      "sha256": "af96b1767005813308213a8857ade932bd2176e1e0b9f61922661391fc920be1"
+    },
+    {
+      "bytes": 11894,
+      "commit": "85735b38ebfa804acd31a6291bb7c08b6bf57760",
+      "path": "docs/journal/2026-11-11-reduced-lf/README.md",
+      "sha256": "63ddcf88468a217b08a389957c518e659f9972fffe4ac91b6653c0e1b738a799"
+    },
+    {
+      "bytes": 44985,
+      "commit": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+      "path": "src/cells.rs",
+      "sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2"
+    },
+    {
+      "bytes": 18017,
+      "commit": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
+      "path": "docs/journal/2026-11-11-first-return-block/probe.py",
+      "sha256": "4a2e24ac1614604810d8a0c6abca8682ad85e642f654669c8ac8e3bbe91416c3"
+    },
+    {
+      "bytes": 21138,
+      "commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "path": "src/lib.rs",
+      "sha256": "5493e2205cf38763d5e999bde442d7a66a6c55456aa034d7dbdb216ffe5dc135"
+    },
+    {
+      "bytes": 100229,
+      "commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "path": "docs/journal/monodromy/2026-11-10-rauzy-veech.md",
+      "sha256": "b4c33b4c06c7ba54d49dc9ea8b349eaa0ac8a1b531510f1a8a0ac1d7a59c5632"
+    }
+  ]
+}
