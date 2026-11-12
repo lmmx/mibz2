@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6821491077,
+  "last_examined_comment_id": 6821626797,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1123,7 +1123,7 @@
       "ready_job_reason": "373 independent review unfinished, Occupancy/legacy failed and macOS ARM cancellation unclassified;366 separate integration/readiness pending"
     },
     "6821626797": {
-      "status": "in_progress",
+      "status": "completed_review_reconciled_targeted_correction_routed",
       "delivery_id": "4c2413a0-de87-11f1-839c-ae5322838388",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6821626797",
@@ -1138,8 +1138,11 @@
       "ready_job_queued": false,
       "ready_job_reason": "R1 correction plus red exact-head CI, separate integration and final PROTOCOL9 readiness",
       "action_links": [
-        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655"
-      ]
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6821688224"
+      ],
+      "disposition": "Accept independent scoped review; require one R1 correction, no new measurement or full-review restart. Preserve interpretation limits and exact-head blockers.",
+      "log_status": "in_progress_before_post"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1229,15 +1232,16 @@
     6821395963,
     6821410188,
     6821427805,
-    6821674655
+    6821674655,
+    6821688224
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6821491077,
-    "delivery_id": "5a9898d0-de86-11f1-89b4-e269105b0343",
+    "comment_id": 6821626797,
+    "delivery_id": "4c2413a0-de87-11f1-839c-ae5322838388",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1367,11 +1371,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_recipient",
       "source_comment_id": 6821626797,
       "scope": "Record373 independent review R1 and targeted correction",
       "recipient_execution_observed": false,
-      "completion_observed": false
+      "completion_observed": false,
+      "comment_id": 6821688224,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6821688224",
+      "verification": "audit/route/exact readback/verify exit0"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
