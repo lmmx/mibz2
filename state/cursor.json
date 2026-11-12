@@ -1569,6 +1569,15 @@
       "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
       "ready_job_queued": false,
       "reason": "Exact own LOG verified; no new external message.375 green referral already persisted; no duplicate dispatch.373/finalworkstationreadiness unresolved."
+    },
+    "6838153034": {
+      "status": "in_progress",
+      "delivery_id": "c231cb00-deeb-11f1-8432-fd9c91e91a70",
+      "comment_updated_at": null,
+      "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+      "scope": "Reconcile separate375 integration and373 operator evidence handoff",
+      "action_links": [],
+      "ready_job_queued": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1819,17 +1828,11 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "completed",
-      "source_comment_id": 6836435433,
-      "scope": "Record completed375 MTF correction, pending final Rust CI and separate integration;373 ClassD retained",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "comment_id": 6836483279,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6836483279",
-      "verification": "audit/route/exact readback/verify exit0",
-      "review_comment_id": 6836633023,
-      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
-      "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6838153034,
+      "scope": "375 merged and postmerge checks complete;373 operator evidence handoff",
+      "completion_observed": false,
+      "recipient_execution_observed": false
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2204,6 +2207,19 @@
       "review_comment_id": 6835761118,
       "work_commit": "82b31e2488aa78017381bd56011773fd6ca7b55b",
       "recipient_cursor_sha": "c647e854013af637a967480cffa801504d07759f"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6836435433,
+      "scope": "Record completed375 MTF correction, pending final Rust CI and separate integration;373 ClassD retained",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "comment_id": 6836483279,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6836483279",
+      "verification": "audit/route/exact readback/verify exit0",
+      "review_comment_id": 6836633023,
+      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
+      "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e"
     }
   ],
   "codex_correction": {
