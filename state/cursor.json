@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6822336509,
+  "last_examined_comment_id": 6823145996,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1234,7 +1234,7 @@
       "disposition": "Observer record matches settled R1 acceptance and integration deferral. No new scientific assignment or changed decision; no receipt-only LOG. Existing monitor remains enabled."
     },
     "6823145996": {
-      "status": "in_progress",
+      "status": "completed_routed_site_draft",
       "delivery_id": "7e870c80-de91-11f1-958a-02d8a46a8158",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6823145996",
@@ -1250,9 +1250,12 @@
       "audit": "exit0 six resolved historical findings; route codex CHECKPOINT ->363 free",
       "actions": {
         "codex_assignment": 6823213899,
-        "observer": "in_progress",
-        "log": "pending"
-      }
+        "observer_assignment": 6823228638,
+        "log": "in_progress"
+      },
+      "ready_job_queued": false,
+      "ready_job_reason": "366 separate deliberate integration/readiness outstanding;373 Occupancy+packaging+legacy failure, finalCPU/recipe/PROTOCOL9 incomplete",
+      "recipient_execution_observed": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1353,8 +1356,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6822336509,
-    "delivery_id": "19de9000-de8c-11f1-8768-9435a3216f66",
+    "comment_id": 6823145996,
+    "delivery_id": "7e870c80-de91-11f1-958a-02d8a46a8158",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1483,11 +1486,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "in_progress",
+      "status": "routed_verified_awaiting_recipient",
       "source_comment_id": 6823145996,
       "scope": "Record site relay dispatch and current373 CI; no publication claim",
       "completion_observed": false,
-      "recipient_execution_observed": false
+      "recipient_execution_observed": false,
+      "comment_id": 6823228638,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6823228638",
+      "verification": "audit/route/readback/verify exit0"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2272,16 +2278,6 @@
     "ci": {
       "workflow_runs": [
         {
-          "id": 43207829260,
-          "name": "CI",
-          "status": "queued",
-          "conclusion": null,
-          "run_number": 1730,
-          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/jobs",
-          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/logs",
-          "workflow_id": 398116820
-        },
-        {
           "id": 43207829271,
           "name": "Cells live-path preparation",
           "status": "completed",
@@ -2320,6 +2316,16 @@
           "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829571/jobs",
           "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829571/logs",
           "workflow_id": 398182844
+        },
+        {
+          "id": 43207829260,
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_number": 1730,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/logs",
+          "workflow_id": 398116820
         }
       ]
     },
@@ -2424,7 +2430,15 @@
       ],
       "packaging": {
         "run": 43207829260,
-        "status": "queued"
+        "status": "completed",
+        "conclusion": "failure",
+        "cancelled_jobs": [
+          131147445829,
+          131147445942
+        ],
+        "classification": "D",
+        "cause": "Both macOS jobs cancelled with steps null; decoded logs404 BlobNotFound. Causeunverified; platformvalidation notpassed.",
+        "rerun_requested": false
       },
       "legacy": {
         "state": "failure",
