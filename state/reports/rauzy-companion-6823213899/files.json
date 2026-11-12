@@ -11,6 +11,10 @@
     "bytes": 69,
     "sha256": "c979d6701073aac5723da2c49961e78f2b3d4504286d1c88ad532f2123fa13db"
   },
+  "coord-verify.log": {
+    "bytes": 69,
+    "sha256": "c979d6701073aac5723da2c49961e78f2b3d4504286d1c88ad532f2123fa13db"
+  },
   "docs-build.log": {
     "bytes": 631,
     "sha256": "cd6603c41517d2962b82f3ece79bef4140aac34f10da6a6f88f06f11fba836b5"
@@ -72,8 +76,8 @@
     "sha256": "f751c31a68aa90d8fd10d383109d941db443a05637b869b6f1b2e1656e764332"
   },
   "report.md": {
-    "bytes": 8366,
-    "sha256": "78fc22f5331d14a193a6bb331847f19509de011e7425ec1c2481c181dc72e045"
+    "bytes": 8814,
+    "sha256": "93aaee2205d83cb01ee3ea8c658a819f7229b4f3c427fc1e9434ae861fd9ed94"
   },
   "screenshots.tar.gz": {
     "bytes": 15948700,

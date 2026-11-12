@@ -47,7 +47,10 @@
     "handoff": "state/reports/rauzy-companion-6823213899/report.md",
     "next_action": "Coordinator reconcile exact-head CI and preview, then arrange separately authorised publication without waiting for later Researcher rounds; manual Codex launch needed for any further assignment",
     "automatic_github_wakeup_assumed": false,
-    "preparation_stop_utc": "2026-11-12T16:49:10.721305+00:00"
+    "preparation_stop_utc": "2026-11-12T16:49:10.721305+00:00",
+    "completion_review_comment_id": 6829978946,
+    "receipt_readback_verified": true,
+    "direct_coord_verify": "blocked by proxy 403"
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {

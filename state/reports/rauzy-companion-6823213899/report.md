@@ -125,3 +125,9 @@ CI/preview/publication decisions are operational dependencies, not silently omit
 
 Preparation checkpoint recorded at 2026-11-12T16:49:10.721305+00:00. Packaging workflow
 43261706491 is now successful; site and Test remain in progress.
+
+Receipt: [REVIEW 6829978946](https://github.com/lmmx/mibz2/pull/145#issuecomment-6829978946)
+was posted after the completed cursor and read back through the GitHub connector with
+an exact body match. Direct `coord.py verify` remains blocked by proxy 403; its raw result
+is retained in coord-verify.log. Site preview job 131336486023 subsequently passed;
+local direct access remains blocked, and site look/Rust tests were still pending at receipt.
