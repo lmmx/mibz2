@@ -1232,6 +1232,22 @@
       "ready_job_queued": false,
       "ready_job_reason": "Separate deliberate integration of reviewed accounting/recipe work remains required; #373 exact-head Occupancy and legacy pre-commit fail, packaging queued, final CPU/recipe/PROTOCOL9 readiness incomplete.",
       "disposition": "Observer record matches settled R1 acceptance and integration deferral. No new scientific assignment or changed decision; no receipt-only LOG. Existing monitor remains enabled."
+    },
+    "6823145996": {
+      "status": "in_progress",
+      "delivery_id": "7e870c80-de91-11f1-958a-02d8a46a8158",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6823145996",
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "scope": "Bounded Codex documentation/site draft routing under PROTOCOL7; no publication",
+      "source_validation": {
+        "main_bytes": 46590,
+        "main_sha256": "4a69f05174e03abae00f7f73c7ac4726fa9d8650e32031bcea0c9c71962d5d26",
+        "annotations_bytes": 7894,
+        "annotations_sha256": "feaf85b15ca73d1d05cd3cbeaa1c292a188d2f68b3a25564cfa780ba7a294064",
+        "byte_convention": "Fence contents excluding terminal newline; both exact size matches"
+      },
+      "audit": "exit0 six resolved historical findings; route codex CHECKPOINT ->363 free"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2423,5 +2439,25 @@
       },
       "benchmark_workflow_success_is_performance_acceptance": false
     }
+  },
+  "pending_site_article": {
+    "status": "dispatch_in_progress",
+    "source_comment_id": 6823145996,
+    "previous_codex_assignment": {
+      "status": "completed",
+      "source_comment_id": 6821626797,
+      "scope": "One targeted373 R1 failed-child resource retention correction; no measurements",
+      "recipient_execution_observed": true,
+      "completion_observed": true,
+      "head_sha": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+      "comment_id": 6821674655,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655",
+      "verification": "audit/route/exact readback/verify exit0",
+      "review_comment_id": 6822169425,
+      "recipient_cursor_sha": "2805a215ece4ae939f163f9994650a1eb49909a5",
+      "recipient_action_kind": "targeted R1 correction delivered"
+    },
+    "scope": "High-fidelity technical companion; main source preserved, annotations internal, formal figures; one reviewable PR",
+    "bound": "One drafting pass up to3h active work; stop with partial PR/report if incomplete; no measurements/merge/publication"
   }
 }
