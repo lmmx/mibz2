@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6820313763,
+  "last_examined_comment_id": 6820358956,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1043,6 +1043,14 @@
       "log_publication": "published",
       "log_comment_id": 6820358956,
       "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6820358956"
+    },
+    "6820358956": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "b4c5e630-de7e-11f1-9d56-fcef3e0d4f7f",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6820358956",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1129,8 +1137,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6820313763,
-    "delivery_id": "660f4b80-de7e-11f1-8d33-e5d1ac682351"
+    "comment_id": 6820358956,
+    "delivery_id": "b4c5e630-de7e-11f1-9d56-fcef3e0d4f7f"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
