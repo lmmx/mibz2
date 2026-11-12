@@ -1481,7 +1481,9 @@
       "comment_updated_at": null,
       "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
       "scope": "Reconcile scoped375 completion; bounded MTF compatibility followup and grouped Observer record",
-      "action_links": [],
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6835658086"
+      ],
       "ready_job_queued": false
     }
   },
@@ -1697,11 +1699,14 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_manual_launch",
       "source_comment_id": 6835550527,
       "scope": "Bounded MTF initializer Rust1.100 compatibility followup on375; read-only373 failure evidence first",
       "recipient_execution_observed": false,
-      "completion_observed": false
+      "completion_observed": false,
+      "comment_id": 6835658086,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6835658086",
+      "verification": "audit/route/exact readback/verify exit0"
     },
     "guardian": {
       "status": "completed",
