@@ -1,12 +1,12 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-374/blog/index.md>)
 
-# Rauzy–Veech induction and the inverse BWT
+# Reconstructing text from compact programs
 
-Induction turns BWT runs into exact word programs, offering a new route to text reconstruction whose full decoding costs remain unresolved.
+This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.
 
 12 November 2026 · 32 min read · [Research in progress](<#10-where-the-live-diagnostic-fits>)
 
-[A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-374/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) introduced Cells: an experimental inverse transform built from interval induction and word rules. This detailed companion preserves the 12 November technical report, including the distinct delimiter-based first-return research and the full construction and memory costs. The [8 November mathematical article](<https://lmmx.github.io/mibz2/pr-preview/pr-374/blog/2026-11-08-inverse-bwt-navigation/index.md>) established the underlying run translations.
+[A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-374/blog/2026-11-10-rauzy-veech-reconstruction/index.md>) already introduced the interval-exchange structure and Rauzy–Veech machinery behind Cells, an experimental inverse transform. This technical companion develops the reconstruction programme in full: how compact word rules can recover the original text, what building and expanding those rules costs, and what the evidence means for a complete decoder. It preserves the 12 November report’s worked constructions, memory analysis and qualifications, keeping endpoint Cells separate from delimiter-based first-return research. The [8 November mathematical article](<https://lmmx.github.io/mibz2/pr-preview/pr-374/blog/2026-11-08-inverse-bwt-navigation/index.md>) established the underlying run translations.
 
 The Burrows–Wheeler transform (BWT) reorders a block into the last column of its sorted cyclic rotations and records the original row. A run is a maximal stretch of equal bytes in that column. LF, the last-to-first map, is a translation on each run; induction composes those translations into return maps and records their exact emitted words. MONODROMY is the project’s mathematical research programme, whose [journal](<https://github.com/lmmx/mibz2/blob/2635f04e9155dd31388b24fd3f7248f87b3ddcda/docs/journal/monodromy/2026-11-10-rauzy-veech.md>) supplies the formal construction. Here the mathematical detail is retained alongside the distinction between a counted reduction and a measured decoding gain.
 
