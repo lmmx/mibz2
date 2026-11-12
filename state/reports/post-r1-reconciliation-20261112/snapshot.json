@@ -1,0 +1,680 @@
+{
+  "observed_utc": "2026-11-12T17:04:37.567790+00:00",
+  "master": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "cursor_head": "6161de241c5ff7557d0dbf77f31c57520963be55",
+  "inbox_comment_ids": [
+    6782141557,
+    6782519694,
+    6789867142,
+    6791014104,
+    6799739845,
+    6808027528,
+    6808549538,
+    6810684246,
+    6819644553,
+    6821674655,
+    6823213899
+  ],
+  "latest_coordinator": 6830074647,
+  "prs": {
+    "366": {
+      "head": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+      "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "state": "open",
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "runs": {
+        "workflow_runs": [
+          {
+            "id": 43189196228,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1727,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196228/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196228/logs",
+            "workflow_id": 398116820
+          },
+          {
+            "id": 43189196253,
+            "name": "Benchmark",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 683,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196253/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196253/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 43189195880,
+            "name": "walk-stats",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 25,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195880/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195880/logs",
+            "workflow_id": 412959508
+          },
+          {
+            "id": 43189195905,
+            "name": "Occupancy",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 287,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195905/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195905/logs",
+            "workflow_id": 398776390
+          },
+          {
+            "id": 43189196071,
+            "name": "Documentation site",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1185,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196071/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196071/logs",
+            "workflow_id": 398199459
+          },
+          {
+            "id": 43189196010,
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1710,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196010/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196010/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 43189196211,
+            "name": "Miri",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 202,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196211/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196211/logs",
+            "workflow_id": 398596485
+          }
+        ]
+      },
+      "status": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794474659.H5ZYgLLXTeSOJON7Ng725A"
+          }
+        ]
+      }
+    },
+    "368": {
+      "head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "state": "open",
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "clean",
+      "runs": {
+        "workflow_runs": [
+          {
+            "id": 42984639546,
+            "name": "walk-stats",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 24,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639546/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639546/logs",
+            "workflow_id": 412959508
+          },
+          {
+            "id": 42984639505,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1722,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639505/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639505/logs",
+            "workflow_id": 398116820
+          },
+          {
+            "id": 42984639402,
+            "name": "Documentation site",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1184,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639402/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639402/logs",
+            "workflow_id": 398199459
+          },
+          {
+            "id": 42984639511,
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1705,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639511/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639511/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 42984639389,
+            "name": "Occupancy",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 286,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639389/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639389/logs",
+            "workflow_id": 398776390
+          },
+          {
+            "id": 42984639455,
+            "name": "Benchmark",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 682,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639455/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639455/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 42984639399,
+            "name": "Miri",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 201,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639399/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/42984639399/logs",
+            "workflow_id": 398596485
+          }
+        ]
+      },
+      "status": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794384487.qx9PY9SPSJii0WeGa8RbhA"
+          }
+        ]
+      }
+    },
+    "373": {
+      "head": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+      "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "state": "open",
+      "merged": false,
+      "mergeable": true,
+      "mergeable_state": "unstable",
+      "runs": {
+        "workflow_runs": [
+          {
+            "id": 43207829271,
+            "name": "Cells live-path preparation",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 4,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829271/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829271/logs",
+            "workflow_id": 413971946
+          },
+          {
+            "id": 43207829676,
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1713,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829676/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829676/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 43207829422,
+            "name": "Occupancy",
+            "status": "completed",
+            "conclusion": "failure",
+            "run_number": 290,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829422/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829422/logs",
+            "workflow_id": 398776390
+          },
+          {
+            "id": 43207829571,
+            "name": "Benchmark",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 686,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829571/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829571/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 43207829260,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "failure",
+            "run_number": 1730,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43207829260/logs",
+            "workflow_id": 398116820
+          }
+        ]
+      },
+      "status": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "failure",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794482231.FWhSnWB4TjeLnaE7eIXJmg"
+          }
+        ]
+      }
+    }
+  },
+  "jobs373": {
+    "packaging": {
+      "jobs": [
+        {
+          "id": 131147393279,
+          "name": "check-commit",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Confirm commit message matched",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            }
+          ]
+        },
+        {
+          "id": 131147445728,
+          "name": "sdist",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Build sdist",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Upload sdist",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            }
+          ]
+        },
+        {
+          "id": 131147445763,
+          "name": "linux (ubuntu-22.04, x86_64, auto)",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            }
+          ]
+        },
+        {
+          "id": 131147445769,
+          "name": "windows (windows-latest, x64)",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            }
+          ]
+        },
+        {
+          "id": 131147445829,
+          "name": "macos (macos-15, x86_64)",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 131147445897,
+          "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 10
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 11
+            }
+          ]
+        },
+        {
+          "id": 131147445942,
+          "name": "macos (macos-15, aarch64)",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 131147448162,
+          "name": "Publish crate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": null
+        },
+        {
+          "id": 131154898587,
+          "name": "Release",
+          "status": "completed",
+          "conclusion": "skipped",
+          "run_id": 43207829260,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    },
+    "occupancy": {
+      "jobs": [
+        {
+          "id": 131147393835,
+          "name": "occupancy",
+          "status": "completed",
+          "conclusion": "failure",
+          "run_id": 43207829422,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "lbzip2",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Run dtolnay/rust-toolchain@stable",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Run Swatinem/rust-cache@v2",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 5
+            },
+            {
+              "name": "Install just",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 6
+            },
+            {
+              "name": "Wikidata windows (cache)",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 7
+            },
+            {
+              "name": "Instrument tests",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Occupancy",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            },
+            {
+              "name": "Occupancy, teams of 2 (the trace's completeness)",
+              "status": "completed",
+              "conclusion": "failure",
+              "number": 10
+            },
+            {
+              "name": "Run actions/upload-artifact@v4",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 11
+            },
+            {
+              "name": "Post Wikidata windows (cache)",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 20
+            },
+            {
+              "name": "Post Run Swatinem/rust-cache@v2",
+              "status": "completed",
+              "conclusion": "skipped",
+              "number": 21
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 22
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 23
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "mac_logs": [
+    {
+      "job": 131147445829,
+      "error": "GitHub API error 404: \ufeff<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.\nRequestId:633c7eab-d01e-00f1-48c7-721b27000000\nTime:2026-11-12T17:00:32.4386597Z</Message></Error>"
+    },
+    {
+      "job": 131147445942,
+      "error": "GitHub API error 404: \ufeff<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.\nRequestId:c138a88c-901e-00bd-7bc7-728b17000000\nTime:2026-11-12T17:00:32.6633109Z</Message></Error>"
+    }
+  ],
+  "annotation_access": "GitHub connector rejects /check-runs/{id}/annotations as unsupported (HTTP400); no annotations inspected.",
+  "legacy_access": "results.pre-commit.ci direct HTTPS CONNECT proxy403; web fallback inaccessible. Failure remains Class D."
+}

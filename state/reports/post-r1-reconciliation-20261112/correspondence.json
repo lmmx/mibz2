@@ -1,0 +1,239 @@
+{
+  "kind": "read-only source comparison; no tests or performance run",
+  "base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "repair": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+  "recipe": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+  "live": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+  "files": [
+    {
+      "path": ".github/workflows/occupancy.yml",
+      "sha256": "6c8b2d14d221c9df5907ae7ad0868a3484e3aead1e4da119a6aa4bb36e09523c",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/HANDOFF.md",
+      "sha256": "e6e4468779daa04c516ccc7aee225b563c1b3faa1fad90008b005bc7f228d97d",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/SHA256SUMS",
+      "sha256": "1c72b8175cdbd157d48cbccdf1fd6656dcd2fbd70416326d8c168d7182647077",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-42983415379-artifact.zip.gz",
+      "sha256": "2a069af2a0328c7ef849aeeacad7a1d4d5a450d3a239ea206878ab08b64ddd86",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-42983415379.log.gz",
+      "sha256": "8611e0d0d5f71891bef29d99604d122641f4d0a2245afce1bcbee8b68adf1fc9",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-analysis.log",
+      "sha256": "072c459943adc1a136fd12ad31f8eca7a410199f7742a385b29c4e7894f0fbac",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ci-analysis.log.gz",
+      "sha256": "22068164046a68b6b919219c09cc476304993800861956970a3fcee79e898ce3",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log",
+      "sha256": "16a3e02c29251721affa6714c600f46fd65e00609716bc8917ffdd490d08bb3f",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy-initial.log.gz",
+      "sha256": "bb6811c2d757648aeb679315852eead017e6568055ffdb0290b2c714304d4764",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy.log",
+      "sha256": "5a02a035f43fa856eec9af4d60796e49c2a190aa915bc3a864cd1fa34600eec7",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/clippy.log.gz",
+      "sha256": "c5b13f4097d42a4e5ef9832af2004630658e14bacad94344ef2964d2ae147c35",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log",
+      "sha256": "4f234b2c7e0eeb240e1d9a7f812403a693236d6d124b643e94d96e297c2fc0a7",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/column-route-failed.log.gz",
+      "sha256": "a524acf77fe052aa09de538b45d1d63cd1531301a0c9a352da7cdc71cbbe90cc",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/fmt.log",
+      "sha256": "582ba6a6f07301087de539b391a35c0ccc05889e87732d71793a12c81a53b4a0",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/fmt.log.gz",
+      "sha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log",
+      "sha256": "7bbae128a2043019e76fb4deb22802b822c1c65a78f2e16bafb26077303fbf25",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/instrument-tests.log.gz",
+      "sha256": "838ab612f0531155877239c0926cabceab583d80ee61059b556e07ec4d3ba9d5",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log",
+      "sha256": "c63c09caf6dc81904b103c679abbf86bd1dc583224714260df0594437723e07f",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/ledger-tests.log.gz",
+      "sha256": "9070dd88288187707bfde0ef83c1dc0a888d1390852cdd1077c47e856ded8bb9",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log",
+      "sha256": "bad8dae584e71ffba2f1aa90330a0718ea7a38488fa48f55241b495eb9e8f307",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native-affinity.log.gz",
+      "sha256": "6cb8d8119f4fd42f1f75ba3ffd1de95edacfe13ebc803cd2f5379c5b1c2846a7",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log",
+      "sha256": "7f8a93f8779efec6e58ea1477c9b361a176fde2f7640a9ad5d9fb0231ed70105",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/native.log.gz",
+      "sha256": "d138bf1e78fa4bd97ebf413b3345875adf1f7799c56be62633a06d17bdebdc89",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/routes-initial.log.gz",
+      "sha256": "cb3c420d02a0af47111a5bf4a6b7701f0f78731d3196e78d5b0ead48ba4dcffd",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log",
+      "sha256": "2f49ffeca22dfcd5d0f4c379082f02ce19e977d56aea9d639aec4a40fd6dfbdc",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/segment-floor-failed.log.gz",
+      "sha256": "81cb8e25b7595e0c0bc13cfd7df549c3e8b002d67ade95cfb74079b7eb7e7780",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-clippy.log",
+      "sha256": "a65d090caab743e5f5baf29aed6ef81b6f45a154fb1859d0423e047990b99901",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-clippy.log.gz",
+      "sha256": "97382bf3d088c47583110dd6c7696817e1a6de4d1375790e47abe7aa74b62154",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-instrument-tests.log",
+      "sha256": "7538e7a7bf9bf6746d6cec36ac929589a7c64a6aac578e124a223b3f0c02fa2a",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-instrument-tests.log.gz",
+      "sha256": "6c493a38c5ba68b7f74bc8ad6eb5ce8d23e0371bae3fa2e9a8d2b37848c53052",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-ledger-tests.log",
+      "sha256": "c8d3867d4fc5c045e3636213ae4d5d093e4b8c8ba4ae62888b07f0a2a4d3689c",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-ledger-tests.log.gz",
+      "sha256": "9d7ec94f577b3101aa2dde93fd2aa5a2e7228d8056c9efd12f050d4726be2e8b",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-old-bound-mutant.log",
+      "sha256": "a8f54361ce91abc44e7271966266548a79c7db671f6accd6190c3841c47abe55",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/simd-old-bound-mutant.log.gz",
+      "sha256": "bac4d8112302d53f8340e98cf0638e134ebfeae73d11ef4125c92cb1391534a4",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/whitespace.log",
+      "sha256": "8552b22bae6b51f634f0fac6f499e3af909280d440fc0af92a44d9dcc138bc14",
+      "identical": true
+    },
+    {
+      "path": "docs/journal/2026-11-11-occupancy-ledger/evidence/whitespace.log.gz",
+      "sha256": "04081137bc16e53e5449d9740fb21fc6abe0098cfd7d603670a2fe0e3d715bf5",
+      "identical": true
+    },
+    {
+      "path": "docs/ledger.md",
+      "sha256": "16aa447d52bcd184ede267e08c176295c6c1ea00541b86a980fe070a78bedd53",
+      "identical": true
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "sha256": "c98921bbeb958cd2bb9144d22002031af6690b3699333dd7935a72cc8af3e5c8",
+      "identical": true
+    },
+    {
+      "path": "src/lib.rs",
+      "sha256": "fd68628f58fa634188e9982a66e35304a2c661da93db34bec0b4dcf87437d4de",
+      "identical": true
+    },
+    {
+      "path": "src/parallel.rs",
+      "sha256": "91aa4ea0a31663451b136c882b418c3395af4e64faf09af08d87d15f3e0686bb",
+      "identical": true
+    },
+    {
+      "path": "src/trace.rs",
+      "sha256": "4a7228090164c24dad5f5b24064b847476d327fd3e120633433ddbe01ac87ff3",
+      "identical": true
+    }
+  ],
+  "patches": [
+    {
+      "original": "4d8bd424681de0b798106ab7d7dc5cc4ca3240b8",
+      "appended": "3b4350bb88944d50fe0dd2f9f99d466952b1ad10",
+      "patch_id": "76789171c91e0308f3b788afde98b2f6fd317251"
+    },
+    {
+      "original": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+      "appended": "4e671215051d5f5f9720c7bfa1944912b83643a2",
+      "patch_id": "e75fefdc8bab49e20173cfd93c09259667cf5a79"
+    }
+  ],
+  "inherited": [
+    "src/trace.rs",
+    "src/lib.rs",
+    "src/parallel.rs",
+    ".github/workflows/occupancy.yml"
+  ],
+  "368-plus-366": {
+    "conflict_markers": 0
+  },
+  "366-plus-373": {
+    "conflict_markers": 1,
+    "conflict_excerpt": "changed in both\n  base   100644 221d01a071b989d3495f1a7b4b4d4768d2850592 .just/bench.just\n  our    100644 06e34e55284ae4dae469c5da9167a1d8b4aac125 .just/bench.just\n  their  100644 de14f2f4bcf7ba887d8e3dedf39beb60a089a3dd .just/bench.just\n@@ -1352,6 +1352,7 @@\n     python3 bench/cells_vs_prod.py \"$W/summary.json\" \"$W\"/census-*.jsonl | tee \"$W/summary.txt\"\n     bash bench/bundle.sh \"$W\"\n \n+<<<<<<< .our\n # #361: i9 one-core inlining diagnostic, frozen before data.\n # Exact contrast and decision rule: docs/journal/2026-11-10-onecore-inline-i9.md.\n # Existing release-scaling harness, 10 paired rounds, Wikidata, one thread.\n@@ -1359,3 +1360,10 @@\n     git fetch -q origin perf/onecore-walk-inline\n     just bench-release-scaling d33787e138426cb441db6975f54b2eccca02e89a b65b2aa54488f072cf005b8fe62461c32e6ef083 10 \"1\"\n \n+=======\n+# Prepared cells live-path diagnostic; separate Coordinator admission still required.\n+# Ten balanced paired rounds, three corpora, original readers \u00d7 trace off/on.\n+[positional-arguments]\n+bench-cells-live-path cpu corpora:\n+    bash bench/cells-gap/live/run.sh \"$1\" \"$2\"\n+>>>>>>> .their"
+  }
+}

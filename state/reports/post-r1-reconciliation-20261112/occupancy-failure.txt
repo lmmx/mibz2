@@ -1,0 +1,8 @@
+2026-11-12T11:21:55.9586822Z   worker buffers (each at its end, mean MB): 17.63 total = seg.bufs 7.74 + tt 7.20 + ll 1.80 + runs.runs 0.77 · ledger check: VIOLATED: ll 1799862 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-12T11:21:55.9603491Z   worker buffers (each at its end, mean MB): 16.95 total = tt 7.20 + seg.bufs 7.06 + ll 1.80 + runs.runs 0.80 · ledger check: VIOLATED: ll 1799923 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-12T11:21:55.9614709Z   worker buffers (each at its end, mean MB): 13.50 total = seg.bufs 6.12 + tt 5.40 + ll 1.35 + runs.runs 0.52 · ledger check: VIOLATED: ll 1349962 outside 900000..=Some(900000.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-12T11:21:55.9686266Z [36;1massert "ledger check: VIOLATED" not in text, "the ledger check fails under teams"[0m
+2026-11-12T11:21:58.4955788Z   worker buffers (each at its end, mean MB): 17.00 total = tt 7.20 + seg.bufs 7.05 + ll 1.80 + runs.runs 0.80 · ledger check: VIOLATED: ll 1799923 outside 900000..=Some(900000.0); rle 36 outside 900000..=Some(1799999.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+2026-11-12T11:21:58.5919195Z AssertionError: the ledger check fails under teams
+2026-11-12T11:21:58.6072612Z ##[error]Process completed with exit code 1.
+
