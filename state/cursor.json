@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6835550527,
+  "last_examined_comment_id": 6835700905,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1490,7 +1490,13 @@
       "codex_cursor_sha": "fec45fc4cfcb333b06bc2dc5d3ec1ebcce38c526",
       "evidence_commit": "d2ba8d734ea0ef66a09ef98ec4d4586b43492617",
       "reason": "375 scoped correction complete; full Clippy ClassA MTF initializer followup routed.373 legacy/macOS ClassD unresolved; final readiness unmet.",
-      "log_intent": "in_progress"
+      "log_intent": "completed",
+      "log_comment_id": 6835700905
+    },
+    "6835700905": {
+      "status": "own_monitor_log_recorded",
+      "comment_updated_at": null,
+      "source_comment_id": 6835550527
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1596,7 +1602,8 @@
     6831186282,
     6832264564,
     6835658086,
-    6835673832
+    6835673832,
+    6835700905
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1795,13 +1802,12 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "r1-accepted-6822169425",
+    "key": "packet-complete-mtf-followup-6835550527",
     "status": "published_readback_verified",
-    "log_comment_id": 6822234208,
+    "log_comment_id": 6835700905,
     "event_dispositions_persisted": true,
-    "comment_id": 6822234208,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822234208",
-    "scope": "R1 accepted; integration deferred pending current CI and separate readiness"
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6835700905",
+    "scope": "375 scoped completion; bounded MTF followup;374 merge observed;373/queue readiness unresolved"
   },
   "dispatch_history": [
     {
