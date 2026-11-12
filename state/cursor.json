@@ -1542,6 +1542,15 @@
       "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
       "ready_job_queued": false,
       "reason": "Exact own LOG read back; no new external message. Scoped MTF completion already reconciled; separate integration waits remaining CI. No duplicate dispatch or repeated status post; final workstation readiness outstanding."
+    },
+    "6836633023": {
+      "status": "in_progress",
+      "delivery_id": "59efc650-dee1-11f1-8ccc-1f1fe5ec6e08",
+      "comment_updated_at": null,
+      "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+      "scope": "Observer completion reconciled;375 exact-head all-green integration referral",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
