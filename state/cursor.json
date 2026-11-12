@@ -1661,17 +1661,9 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "completed",
-      "source_comment_id": 6830378631,
-      "comment_id": 6830431636,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830431636",
-      "scope": "PostR1 integration and concretequeuebinding",
-      "verification": "audit/route/readback/verify exit0",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "review_comment_id": 6830513211,
-      "work_commit": "f8fa5245e9384c5aeecbf80d99b1e40a9e3632cf",
-      "recipient_cursor_sha": "9b82b7ed277957828552a243d3f224f9c083e24f"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6831115741,
+      "scope": "Update record for366 merged368 incorporated373 mechanical completion/Occupancy pass; ClassD legacy and readiness pending"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -1973,6 +1965,19 @@
       "report_commit": "69f3c167e47c5bb5d1101e24b8880f134672aacb",
       "recipient_cursor_sha": "75e3c7283404ab5986618e791cedd852b7051b68",
       "assessment": "Pinned account read; R1/correction and limits recorded, no material discrepancy requiring correction"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6830378631,
+      "comment_id": 6830431636,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830431636",
+      "scope": "PostR1 integration and concretequeuebinding",
+      "verification": "audit/route/readback/verify exit0",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "review_comment_id": 6830513211,
+      "work_commit": "f8fa5245e9384c5aeecbf80d99b1e40a9e3632cf",
+      "recipient_cursor_sha": "9b82b7ed277957828552a243d3f224f9c083e24f"
     }
   ],
   "codex_correction": {
@@ -2765,7 +2770,7 @@
   },
   "external_deliberate_integration": {
     "source_comment_id": 6830778689,
-    "status": "merge366_observed_368_incorporated_373_in_progress",
+    "status": "completed_mechanical_integration_373_merge_deferred",
     "operator": "Codex separate session reports direct owner instruction; monitor scope unchanged",
     "pr366_head": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
     "pr366_merged": true,
@@ -2773,9 +2778,9 @@
     "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
     "source_head_actions": "8 runs success across 7 workflows, including new docs43268803795",
     "source_head_legacy": "success",
-    "codex_cursor_sha": "f0e06904702464609b90b171a016ec0bf38a26bc",
-    "completion_receipt_observed": false,
-    "next_actor": "Existing deliberate integrator: postmerge correspondence,368 disposition,373 base append and validation. No parallel monitor dispatch.",
+    "codex_cursor_sha": "c176829ee63df85c96fe9a96344ae97bfca64804",
+    "completion_receipt_observed": true,
+    "next_actor": "Obtain actual hosted legacy failure output, classify before correction/recovery; observe platform/master checks on future event",
     "ready_job_queued": false,
     "log_comment_id": 6830851089,
     "postmerge_review_comment_id": 6830847624,
@@ -2789,7 +2794,17 @@
       "legacy": "failure",
       "legacy_url": "https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA",
       "completion_receipt_observed": false
-    }
+    },
+    "completion_review_comment_id": 6831115741,
+    "evidence_commit": "5cb9e4d321581c96902ab63653016f84b0227584",
+    "head373": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+    "occupancy": "success43269375729 ordinary/team/upload",
+    "master_miri": "success43268797919",
+    "master_benchmark": "in_progress43268798106",
+    "macos_arm": "success131361540182",
+    "macos_x86": "queued131361540210",
+    "legacy": "ClassD failure; actual hosted output inaccessible using web reader; no guessed cause/rerun",
+    "cpu_corpus_binding": "PENDING separately authorised actual-i9 preflight; do not infer or request prematurely"
   },
   "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
 }
