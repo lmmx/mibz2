@@ -1424,7 +1424,8 @@
       ],
       "ready_job_queued": false,
       "reason": "373 legacy ClassD and queued x86 packaging; master Benchmark pending; final binding andPROTOCOL9 outstanding. Hosted failure output remains missing, no speculative fix/duplicate Codex.",
-      "log_intent": "in_progress"
+      "log_intent": "completed",
+      "log_comment_id": 6831186282
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1526,7 +1527,8 @@
     6830074647,
     6830431636,
     6830454082,
-    6830851089
+    6830851089,
+    6831186282
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2793,7 +2795,7 @@
     "completion_receipt_observed": true,
     "next_actor": "Obtain actual hosted legacy failure output, classify before correction/recovery; observe platform/master checks on future event",
     "ready_job_queued": false,
-    "log_comment_id": 6830851089,
+    "log_comment_id": 6831186282,
     "postmerge_review_comment_id": 6830847624,
     "pr368_state": "closed_unmerged_as_incorporated",
     "pr368_disposition_comment_id": 6830813882,
