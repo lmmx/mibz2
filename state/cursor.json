@@ -1562,9 +1562,13 @@
       "log_comment_id": 6836680787
     },
     "6836680787": {
-      "status": "own_monitor_log_recorded",
+      "status": "ignored_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6836633023
+      "source_comment_id": 6836633023,
+      "delivery_id": "ab744e10-dee1-11f1-91b6-567ef33007ff",
+      "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+      "ready_job_queued": false,
+      "reason": "Exact own LOG verified; no new external message.375 green referral already persisted; no duplicate dispatch.373/finalworkstationreadiness unresolved."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1681,8 +1685,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6836633023,
-    "delivery_id": "59efc650-dee1-11f1-8ccc-1f1fe5ec6e08",
+    "comment_id": 6836680787,
+    "delivery_id": "ab744e10-dee1-11f1-91b6-567ef33007ff",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
