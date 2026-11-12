@@ -187,15 +187,16 @@
       "completed_assignment_comment_id": 6810684246,
       "original_assignment_comment_id": 6791014104,
       "head_sha": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
-      "status": "Preparation delivered; Coordinator6820358956 reports all seven Actions and legacy success; separate deliberate integration/readiness pending",
+      "status": "INTEGRATED through direct owner-authorised deliberate procedure; postmerge checks partly pending",
       "implementation_complete": true,
       "workstation_ready": false,
       "remaining": [
-        "separate deliberate master integration/correspondence/performance assessment and fresh premerge checks",
-        "Coordinator PROTOCOL9 diagnostic reconciliation, queue/tag/readiness"
+        "normal master push Miri/Benchmark completion at latest snapshot",
+        "separate PROTOCOL9 readiness; no queue or signal authorised here"
       ],
       "handoff": "state/reports/onecore-preparation-6810684246/report.md",
-      "coordinator_decision_comment_id": 6820358956
+      "coordinator_decision_comment_id": 6820358956,
+      "merge_commit": "d50489823f3c719afe8ea001b7d966275467a6c6"
     }
   ],
   "prior_onecore_preparation_checkpoint": {
@@ -233,20 +234,23 @@
   "pending_review": [
     {
       "pr": 373,
-      "head_sha": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+      "head_sha": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
       "assignment_comment_id": 6821674655,
-      "scope": "R1 accepted by Coordinator6822234208; remaining integration/CI/readiness requirements, no new safety review requested",
+      "scope": "R1 accepted; dependency merge delivered; exact-head CI and deferred workstation bindings remain",
       "workstation_ready": false,
       "remaining": [
-        "current exact-head Actions and legacy",
-        "reviewed368/366 separate integration dependency",
-        "prior macOS ARM cancellation/Class D reconciled against current platform validation",
-        "final CPU/recipe/PROTOCOL9 decisions"
+        "legacy new-head failure, actual log inaccessible: Class D",
+        "new-head macOS packaging completion",
+        "CPU/topology and absolute corpus directory PENDING until authorised i9 preflight",
+        "final recipe binding and separate PROTOCOL9 procedure"
       ],
       "independent_review_comment_id": 6821626797,
       "completion_review_comment_id": 6822169425,
       "coordinator_acceptance_comment_id": 6822234208,
-      "latest_coordinator_status_comment_id": 6823246963
+      "latest_coordinator_status_comment_id": 6823246963,
+      "accepted_r1_head": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+      "integrated_base": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "cleared": "reviewed accounting integration and new-head Occupancy ordinary/team success43269375729; Test/Benchmark/preparation also pass"
     }
   ],
   "prior_live_preparation_checkpoint": {
@@ -337,5 +341,21 @@
     "report_commit": "72fd1f70e2445c89143025d560680e87534434b8",
     "receipt_readback_verified": true,
     "direct_coord_audit_verify": "blocked by proxy403; not claimed passed"
+  },
+  "direct_owner_integration": {
+    "date": "2026-11-12",
+    "source_decision": 6830454082,
+    "merge366": "d50489823f3c719afe8ea001b7d966275467a6c6",
+    "incorporated368": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+    "pr368_state": "closed as incorporated, not separately merged",
+    "head373": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+    "pr373_merged": false,
+    "local_validation": "complete, untimed",
+    "readiness": false,
+    "measurements_run": false,
+    "cpu_binding": "PENDING owner-confirmed, actual i9 preflight required",
+    "corpus_binding": "PENDING owner-confirmed, actual i9 preflight required",
+    "report": "state/reports/deliberate-integration-20261112/report.md",
+    "next_action": "obtain actual legacy pre-commit failure output at ed6f424; classify before correction/recovery"
   }
 }

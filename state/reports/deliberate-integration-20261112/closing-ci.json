@@ -1,0 +1,210 @@
+{
+  "observed_at": "2026-11-12T17:33:07Z",
+  "runs373": {
+    "workflow_runs": [
+      {
+        "id": 43269375801,
+        "name": "Cells live-path preparation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 5,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375801/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375801/logs",
+        "workflow_id": 413971946
+      },
+      {
+        "id": 43269375621,
+        "name": "CI",
+        "status": "queued",
+        "conclusion": null,
+        "run_number": 1733,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375621/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375621/logs",
+        "workflow_id": 398116820
+      },
+      {
+        "id": 43269375729,
+        "name": "Occupancy",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 291,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375729/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375729/logs",
+        "workflow_id": 398776390
+      },
+      {
+        "id": 43269375554,
+        "name": "Test",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1716,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375554/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375554/logs",
+        "workflow_id": 398116819
+      },
+      {
+        "id": 43269375558,
+        "name": "Benchmark",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 688,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375558/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43269375558/logs",
+        "workflow_id": 398182844
+      }
+    ]
+  },
+  "occupancy": {
+    "jobs": [
+      {
+        "id": 131361477973,
+        "name": "occupancy",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43269375729,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "lbzip2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Run Swatinem/rust-cache@v2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Install just",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Wikidata windows (cache)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Instrument tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Occupancy",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Occupancy, teams of 2 (the trace's completeness)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Post Wikidata windows (cache)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20
+          },
+          {
+            "name": "Post Run Swatinem/rust-cache@v2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21
+          },
+          {
+            "name": "Post Run actions/checkout@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23
+          }
+        ]
+      }
+    ]
+  },
+  "master": [
+    {
+      "id": 43268797919,
+      "name": "Miri",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43268798106,
+      "name": "Benchmark",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43268798109,
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 43268798087,
+      "name": "Benchmark links",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43268798204,
+      "name": "Test",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43268798171,
+      "name": "Documentation site",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43268798031,
+      "name": "Fingerprint",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "legacy": {
+    "state": "failure",
+    "url": "https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA",
+    "cause": "unverified"
+  }
+}

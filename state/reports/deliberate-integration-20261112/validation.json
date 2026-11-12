@@ -1,0 +1,32 @@
+{
+  "observed_at": "2026-11-12T17:29:41.955187+00:00",
+  "exact_head": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+  "fresh_checkout": "/workspace/mibz2-live-integration-check",
+  "source_prepare": {
+    "pin": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "files": 53
+  },
+  "onecore_tests": {
+    "passed": 4,
+    "skipped": 0,
+    "just": "1.38.0"
+  },
+  "live_python_tests": {
+    "passed": 13,
+    "skipped": 0,
+    "just": "1.38.0"
+  },
+  "native_live_tests": 5,
+  "native_cells_tests": 7,
+  "release_builds": 4,
+  "valid_fixture_children": 16,
+  "expected_failure_children": 12,
+  "clocks_read": 0,
+  "performance_measurements": 0,
+  "both_real_just_dry_runs": "passed; dummy CPU0/path only, not workstation binding",
+  "clean_pc_ci": "passed; Taplo0.9.3 and Rust1.99.1, not proof of hosted job cause",
+  "debug_statements": "passed on tracked Python files",
+  "miri": "not rerun locally; accepted independent review/previous evidence unchanged",
+  "source_133_files": "byte-identical to accepted373 head",
+  "reviewed_repair_41_files": "byte-identical to integrated master"
+}
