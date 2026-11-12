@@ -7,30 +7,39 @@
     6791014104,
     6799739845,
     6808027528,
-    6808549538
+    6808549538,
+    6810684246
   ],
   "last_checkpoint": {
-    "assignment_comment_id": 6808549538,
-    "status": "COMPLETE: bounded saved-evidence performance pricing; backend screen not cleared",
-    "pr": 372,
-    "head_sha": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
-    "plan_sha": "3b9cc40e76200123a3ef4dc696f337c1217e554a",
-    "plan_comment_id": 6810330001,
-    "new_falsifier_executions": 0,
-    "prior_census_or_real_block_reruns": 0,
+    "assignment_comment_id": 6810684246,
+    "status": "COMPLETE: PR366 repair incorporated and untimed preparation delivered; exact-head CI/integration/readiness pending",
+    "pr": 366,
+    "branch": "coord/onecore-inline-i9-20261110",
+    "head_sha": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+    "reviewed_repair_head": "bfd5d322651974f9803f4c03942cf3ba3b5161d2",
+    "appended_repair_commits": [
+      "3b4350bb88944d50fe0dd2f9f99d466952b1ad10",
+      "4e671215051d5f5f9720c7bfa1944912b83643a2"
+    ],
+    "implementation_complete": true,
+    "local_preparation_complete": true,
+    "workstation_ready": false,
     "results": {
-      "saved_cases": 3108,
-      "saved_rounds": 12429,
-      "empty_rounds": 9659,
-      "compact_hash_growth_conditional_lower_bound": 3776216,
-      "metadata_gate": 3599724,
-      "potential_dictionary_dag_visits_saved": 103233,
-      "whole_decoder_time_attribution": null,
-      "validation": "pinned source/data hashes, original aggregates, arithmetic, scoped Ruff/format/syntax pass",
-      "ci": "pending; not qualification"
+      "reviewed_files_byte_identical": 41,
+      "stable_patch_ids_match": true,
+      "frozen_files_unchanged": 7,
+      "recipe_tests": "4 passed, zero skips; actual Just1.38.0",
+      "root_and_direct_dry_run": "pass",
+      "format_syntax_whitespace": "pass",
+      "ci_recipe_step": "Test43189196010/job131083905500 step7 success",
+      "legacy": "pre-commit.ci success",
+      "ci_observed_at": "2026-11-12 09:13:09 UTC",
+      "ci": "normal changed-head runs inspected; remaining statuses pending, no failures observed",
+      "measurement_run": false,
+      "manual_ci_dispatch_or_rerun": false
     },
-    "handoff": "state/reports/performance-pricing-6808549538/report.md",
-    "next_action": "Coordinator assess rankings and route existing matched port/context diagnostic if warranted; no new backend or workstation readiness claimed",
+    "handoff": "state/reports/onecore-preparation-6810684246/report.md",
+    "next_action": "Coordinator reconcile completed incorporation and exact-head CI; separate deliberate integration/PROTOCOL9 readiness; arrange separate matched production/research inversion and whole-decoder context assignment after reconciliation",
     "automatic_github_wakeup_assumed": false
   },
   "automatic_github_wakeup_assumed": false,
@@ -80,23 +89,7 @@
     },
     "ci_evidence": "state/reports/occupancy-6789867142/report.md"
   },
-  "pending_deferred": [
-    {
-      "assignment_comment_id": 6791014104,
-      "resume_comment_id": 6799739845,
-      "pr": 366,
-      "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
-      "implementation_complete": false,
-      "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
-      "remaining": [
-        "append exact reviewed PR368 repair without accounting-model changes",
-        "record source correspondence and untimed recipe/dry-run validation",
-        "observe changed-head recipe/Occupancy/Miri/legacy CI",
-        "separate Coordinator integration and readiness decision"
-      ],
-      "handoff": "state/reports/deferred-366-6799739845/report.md"
-    }
-  ],
+  "pending_deferred": [],
   "prior_deferred_handoff": {
     "assignment_comment_id": 6791014104,
     "resume_comment_id": 6799739845,
@@ -138,5 +131,61 @@
     "handoff": "state/reports/first-return-6808027528/report.md",
     "next_action": "Coordinator assess REVISE and dispatch already-queued performance pricing6807501300 through363; no second probe",
     "automatic_github_wakeup_assumed": false
-  }
+  },
+  "prior_performance_pricing_checkpoint": {
+    "assignment_comment_id": 6808549538,
+    "status": "COMPLETE: bounded saved-evidence performance pricing; backend screen not cleared",
+    "pr": 372,
+    "head_sha": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
+    "plan_sha": "3b9cc40e76200123a3ef4dc696f337c1217e554a",
+    "plan_comment_id": 6810330001,
+    "new_falsifier_executions": 0,
+    "prior_census_or_real_block_reruns": 0,
+    "results": {
+      "saved_cases": 3108,
+      "saved_rounds": 12429,
+      "empty_rounds": 9659,
+      "compact_hash_growth_conditional_lower_bound": 3776216,
+      "metadata_gate": 3599724,
+      "potential_dictionary_dag_visits_saved": 103233,
+      "whole_decoder_time_attribution": null,
+      "validation": "pinned source/data hashes, original aggregates, arithmetic, scoped Ruff/format/syntax pass",
+      "ci": "pending; not qualification"
+    },
+    "handoff": "state/reports/performance-pricing-6808549538/report.md",
+    "next_action": "Coordinator assess rankings and route existing matched port/context diagnostic if warranted; no new backend or workstation readiness claimed",
+    "automatic_github_wakeup_assumed": false
+  },
+  "prior_deferred_366_record": {
+    "assignment_comment_id": 6791014104,
+    "resume_comment_id": 6799739845,
+    "pr": 366,
+    "status": "DEFERRED BY COORDINATOR; IMPLEMENTATION INCOMPLETE",
+    "implementation_complete": false,
+    "head_sha": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "remaining": [
+      "append exact reviewed PR368 repair without accounting-model changes",
+      "record source correspondence and untimed recipe/dry-run validation",
+      "observe changed-head recipe/Occupancy/Miri/legacy CI",
+      "separate Coordinator integration and readiness decision"
+    ],
+    "handoff": "state/reports/deferred-366-6799739845/report.md"
+  },
+  "pending_integration": [
+    {
+      "pr": 366,
+      "completed_assignment_comment_id": 6810684246,
+      "original_assignment_comment_id": 6791014104,
+      "head_sha": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+      "status": "Preparation implemented; CI/integration/readiness pending",
+      "implementation_complete": true,
+      "workstation_ready": false,
+      "remaining": [
+        "applicable final exact-head Actions/legacy completion and Coordinator disposition",
+        "separate deliberate master integration",
+        "Coordinator PROTOCOL9 diagnostic reconciliation, queue/tag/readiness"
+      ],
+      "handoff": "state/reports/onecore-preparation-6810684246/report.md"
+    }
+  ]
 }
