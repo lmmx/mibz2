@@ -1,0 +1,11 @@
+docs/site/blog/2026-11-12-rauzy-technical-companion.md
+  body: sentences 383, mean 14.2 words, flagged 37 (10%; target at most 15%), reading ease 29
+  dek: FAIL (21 words, 2 break(s), 0 figure(s), reading ease 28; 2 breaks, more than 1; reading ease 28, not 35-70)
+  [27 words, load 9] Research records: original technical report and internal reading notes; mathematical construction and historical timings; reduced/boosted counterexamples; de Mourgues’s thesis, §§4.1.4–4.1.5 and Chapt…
+  [23 words, load 7] The real-block phrase constructor had 70,559 live grammar nodes, but only 2,716 distinct expanded dictionary words across 6,133 completed pieces.
+  [26 words, load 6] The instrumented build records exclusive costs for stages such as scanning, run-front construction, ordering, induction, writing, fallback and finishing, together with the reader and complete-decode s…
+  [24 words, load 6] At a 75% hash-table load threshold, doubling from 65,536 to 131,072 slots while both tables are live creates a temporary allocation peak.
+  [20 words, load 6] Most decisively, the Python implementation's live metadata was at least 23.5 MB, against the experiment's X, or 3.6 MB, limit.
+  [18 words, load 6] It also reduced sorting comparisons from 406,949 to 99,440 and eliminated 105,708 persistent coordinate writes.
+  [27 words, load 5] It persists frozen corpora or their hashes, exported run streams, immutable schedules, source identities, operation counters, validation logs and experiment reports to GitHub branches or retained arti…
+  [26 words, load 5] During ordinary decoding, the compressed bzip2 file is the persistent input; the interval exchange, permutation table, grammar and output scratch are in-memory structures, not disk-backed databases.

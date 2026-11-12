@@ -1,0 +1,42 @@
+{
+  "source_hashes_verified": {
+    "rauzy-technical-report-source.md": [
+      46590,
+      "4a69f05174e03abae00f7f73c7ac4726fa9d8650e32031bcea0c9c71962d5d26"
+    ],
+    "reading-annotations-editorial-source.md": [
+      7894,
+      "feaf85b15ca73d1d05cd3cbeaa1c292a188d2f68b3a25564cfa780ba7a294064"
+    ]
+  },
+  "preserved_paragraphs": 337,
+  "display_equations": 22,
+  "table_rows": 51,
+  "source_sections": [
+    "Executive summary",
+    "1. What the conventional decoder actually computes",
+    "2. The mathematical transformation",
+    "3. The reconstruction program produced by induction",
+    "4. How the Cells algorithm implements that mathematics",
+    "5. What physically happens in memory and the cache hierarchy",
+    "6. The second algorithm: delimiter-based first returns",
+    "7. Why we investigated labelling and combinatorial surgery",
+    "8. The next promising representation problem: grammar allocation and output",
+    "9. What actually happened from 10–12 November",
+    "10. Where the live diagnostic fits",
+    "11. Where I think your interventions would be most useful",
+    "My overall assessment"
+  ],
+  "explicit_edits": 48,
+  "formal_static_figures": [
+    "rv-exchange",
+    "rv-right-end",
+    "rv-grammar",
+    "rv-pipeline",
+    "rv-slots",
+    "rv-cache",
+    "rv-delimiter"
+  ],
+  "toy_maps": "all integer points checked",
+  "article_sha256": "7660494a1e4fe96184cc399e4c567943152f97ad70ab72b6358a20433832e2ac"
+}

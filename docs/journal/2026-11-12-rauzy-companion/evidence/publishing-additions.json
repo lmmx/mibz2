@@ -1,0 +1,18 @@
+{
+  "table_ids": [
+    "#rv-levels td:first-child",
+    "#rv-storage td:first-child",
+    "#rv-history td:first-child",
+    "#rv-arms td:first-child"
+  ],
+  "reason": "The existing site deliberately keeps first cells on one line. Four prose tables need page-local wrapping at390px; no shared stylesheet change.",
+  "other_additions": [
+    "house hero/front matter/dek",
+    "opening and prior-post links",
+    "pinned citations near claims",
+    "source record footer"
+  ],
+  "table_implementation": "Page-local id wrappers and inline CSS overriding the existing first-column nowrap rule; no shared stylesheet changes.",
+  "pseudocode": "Page-local pre-wrap; every original code byte retained.",
+  "mobile_history_table": "At widths <=600px use .6em .65em cell padding and overflow-wrap:anywhere to expose all three columns without horizontal scrolling."
+}

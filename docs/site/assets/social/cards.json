@@ -89,6 +89,12 @@
     "section": " · Research blog",
     "title": "A new way back from the BWT"
   },
+  "assets/social/blog-2026-11-12-rauzy-technical-companion.png": {
+    "description": "Induction turns BWT runs into exact word programs, offering a new route to text reconstruction whose full decoding costs remain unresolved.",
+    "foot": "lmmx.github.io/mibz2 · 12 November 2026",
+    "section": " · Research blog",
+    "title": "Rauzy–Veech induction and the inverse BWT"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
