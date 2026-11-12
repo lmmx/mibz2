@@ -462,6 +462,7 @@
     "measurements_run": false,
     "queue_run_signal": false,
     "workstation_ready": false,
-    "manual_codex_launch_required": true
+    "manual_codex_launch_required": true,
+    "pr373_recovery_comment_id": 6838120361
   }
 }
