@@ -1284,6 +1284,14 @@
       "dispatch": false,
       "github_comment_posted": false,
       "disposition": "Observer account matches site draft routing and373 CI; no major correction. Codex6823213899 remains pending with no execution/PR/completion observed; no duplicate dispatch. Monitor settings unchanged."
+    },
+    "6829978946": {
+      "status": "in_progress",
+      "delivery_id": "17fb0980-deb9-11f1-8a7e-4bbecb658644",
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6829978946",
+      "comment_updated_at": null,
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "scope": "Reconcile delivered374 technical companion; preserve source, route Observer, refer separate publication"
     }
   },
   "automatic_github_wakeup_assumed": false,
