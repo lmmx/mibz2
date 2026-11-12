@@ -1494,9 +1494,13 @@
       "log_comment_id": 6835700905
     },
     "6835700905": {
-      "status": "own_monitor_log_recorded",
+      "status": "ignored_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6835550527
+      "source_comment_id": 6835550527,
+      "delivery_id": "68f225e0-dedb-11f1-96d0-a2421fff9cc0",
+      "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+      "ready_job_queued": false,
+      "reason": "Own exact-body LOG; no new external message. Bounded MTF correction already routed; no duplicate dispatch. Final workstation readiness outstanding."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1610,8 +1614,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6835550527,
-    "delivery_id": "764e8450-deda-11f1-961f-c664b1d2080e",
+    "comment_id": 6835700905,
+    "delivery_id": "68f225e0-dedb-11f1-96d0-a2421fff9cc0",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
