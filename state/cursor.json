@@ -991,10 +991,12 @@
       "action_links": [
         "https://github.com/lmmx/mibz2/issues/363#issuecomment-6810684246"
       ],
-      "log_publication": "pending",
+      "log_publication": "published",
       "ready_job_queued": false,
       "ready_job_reason": "366 implementation/checks/master integration/readiness remain incomplete",
-      "validation": "Immutable full report read; derived model and author checks not independently executed; full PR head plus Actions and legacy read"
+      "validation": "Immutable full report read; derived model and author checks not independently executed; full PR head plus Actions and legacy read",
+      "log_comment_id": 6810699098,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6810699098"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1070,7 +1072,8 @@
     6808041276,
     6808549538,
     6808568270,
-    6810684246
+    6810684246,
+    6810699098
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1256,9 +1259,9 @@
     "status": "published_readback_verified",
     "log_comment_id": 6808041276,
     "event_dispositions_persisted": true,
-    "comment_id": 6808568270,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270",
-    "scope": "Real-block REVISE METADATA; bounded pricing dispatched; no ready workstation job"
+    "comment_id": 6810699098,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6810699098",
+    "scope": "Pricing delivered; deferred366 preparation restored; no ready job"
   },
   "dispatch_history": [
     {
