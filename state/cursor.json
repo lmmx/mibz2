@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6808568270,
+  "last_examined_comment_id": 6810330001,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -962,6 +962,24 @@
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6808568270",
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6810330001": {
+      "status": "completed_progress_observed_no_dispatch",
+      "delivery_id": "09fc99c0-de2d-11f1-8a95-4d40b10c916b",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6810330001",
+      "assignment_comment_id": 6808549538,
+      "plan_commit": "3b9cc40e76200123a3ef4dc696f337c1217e554a",
+      "plan_blob": "c6bd0d08a64bd8d045bf3b7edfc7f75ff7ab5bc5",
+      "disposition": "Actual manual resume and committed saved-evidence pricing plan observed; full plan consistent with existing scope and bounds. Progress REVIEW is not completion; own Codex cursor still ends at6808027528, so keep sole6808549538 in flight. No duplicate assignment or receipt-only LOG.",
+      "reported_start": "2026-11-12T00:03:00Z",
+      "reported_stop_by": "2026-11-12T02:03:00Z",
+      "dispatches": 0,
+      "response_comments": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "366 preparation remains deferred and implementation incomplete; no completed dry-run/checks/master integration/readiness",
+      "audit": "exit0; six resolved historical misroutes",
+      "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1043,8 +1061,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6808568270,
-    "delivery_id": "02c196f0-de1f-11f1-8e13-e3fea4c33f8a"
+    "comment_id": 6810330001,
+    "delivery_id": "09fc99c0-de2d-11f1-8a95-4d40b10c916b"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1139,14 +1157,18 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_awaiting_recipient_action",
+      "status": "recipient_action_observed_in_flight",
       "comment_id": 6808549538,
       "queue_comment_id": 6807501300,
       "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6808549538",
       "scope": "Unchanged bounded whole-decoder performance pricing; saved traces then at most one prospectively screened falsifier",
       "verification": "audit/route/exact readback/verify exit0",
-      "recipient_execution_observed": false,
-      "live_session_report": 6808483473
+      "recipient_execution_observed": true,
+      "live_session_report": 6808483473,
+      "recipient_action_evidence_comment_id": 6810330001,
+      "recipient_action_kind": "manual resume and committed pricing plan; saved-evidence arithmetic work reported ongoing",
+      "completion_observed": false,
+      "recipient_cursor_sha": "3d9bcd835fac6e7938cf378ef5b08750bc7304c0"
     },
     "guardian": {
       "status": "completed",
@@ -1631,7 +1653,17 @@
       "compiled_cost_qualification": false,
       "whole_decoder_gain_established": false
     },
-    "validation": "Coordinator read immutable README/result and checked arithmetic; native tests/artifact verification author-reported, not independently rerun"
+    "validation": "Coordinator read immutable README/result and checked arithmetic; native tests/artifact verification author-reported, not independently rerun",
+    "ci_followup": {
+      "head": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
+      "test_run": 43111081711,
+      "test": "success",
+      "ci_run": 43111081750,
+      "ci": "success",
+      "legacy": "success",
+      "observed_during_event": 6810330001,
+      "qualification_changed": false
+    }
   },
   "pending_labelled_contraction": {
     "status": "direct_research_delivered_queue_retired",
@@ -1688,7 +1720,7 @@
     "source_comment_id": 6807455587,
     "queue_comment_id": 6807501300,
     "priority": 2,
-    "status": "dispatched_awaiting_recipient_action",
+    "status": "recipient_action_observed_in_flight",
     "after": [
       6793754589
     ],
@@ -1698,7 +1730,13 @@
     "assignment_comment_id": 6808549538,
     "assignment_url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6808549538",
     "prior_real_block_review": 6808483473,
-    "prior_real_block_outcome": "revise_metadata"
+    "prior_real_block_outcome": "revise_metadata",
+    "progress_comment_id": 6810330001,
+    "plan_commit": "3b9cc40e76200123a3ef4dc696f337c1217e554a",
+    "reported_start": "2026-11-12T00:03:00Z",
+    "reported_stop_by": "2026-11-12T02:03:00Z",
+    "candidate_falsifier_execution_observed": false,
+    "completion_observed": false
   },
   "ci_incident_370": {
     "head_sha": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
