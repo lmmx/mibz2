@@ -1247,7 +1247,12 @@
         "annotations_sha256": "feaf85b15ca73d1d05cd3cbeaa1c292a188d2f68b3a25564cfa780ba7a294064",
         "byte_convention": "Fence contents excluding terminal newline; both exact size matches"
       },
-      "audit": "exit0 six resolved historical findings; route codex CHECKPOINT ->363 free"
+      "audit": "exit0 six resolved historical findings; route codex CHECKPOINT ->363 free",
+      "actions": {
+        "codex_assignment": 6823213899,
+        "observer": "in_progress",
+        "log": "pending"
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1452,18 +1457,14 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "completed",
-      "source_comment_id": 6821626797,
-      "scope": "One targeted373 R1 failed-child resource retention correction; no measurements",
-      "recipient_execution_observed": true,
-      "completion_observed": true,
-      "head_sha": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
-      "comment_id": 6821674655,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655",
-      "verification": "audit/route/exact readback/verify exit0",
-      "review_comment_id": 6822169425,
-      "recipient_cursor_sha": "2805a215ece4ae939f163f9994650a1eb49909a5",
-      "recipient_action_kind": "targeted R1 correction delivered"
+      "status": "routed_verified_awaiting_recipient",
+      "source_comment_id": 6823145996,
+      "comment_id": 6823213899,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6823213899",
+      "scope": "High-fidelity technical companion; main source preserved, annotations internal, formal figures; one reviewable PR",
+      "completion_observed": false,
+      "recipient_execution_observed": false,
+      "verification": "audit/route/exactreadback/verify exit0"
     },
     "guardian": {
       "status": "completed",
@@ -1482,18 +1483,11 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "completed",
-      "source_comment_id": 6822169425,
-      "scope": "R1 correction accepted, integration deferred pending CI/readiness",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "comment_id": 6822218030,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030",
-      "verification": "audit/route/readback/verify exit0",
-      "review_comment_id": 6822336509,
-      "work_commit": "21456b3588f520e28fa6569d5b2e59411e31c35d",
-      "recipient_cursor_sha": "9555c1b522a6cbfb4789f888e8f6ba9f09f9d197",
-      "completion_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822336509"
+      "status": "in_progress",
+      "source_comment_id": 6823145996,
+      "scope": "Record site relay dispatch and current373 CI; no publication claim",
+      "completion_observed": false,
+      "recipient_execution_observed": false
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2441,7 +2435,7 @@
     }
   },
   "pending_site_article": {
-    "status": "dispatch_in_progress",
+    "status": "routed_verified_awaiting_actual_execution",
     "source_comment_id": 6823145996,
     "previous_codex_assignment": {
       "status": "completed",
@@ -2458,6 +2452,22 @@
       "recipient_action_kind": "targeted R1 correction delivered"
     },
     "scope": "High-fidelity technical companion; main source preserved, annotations internal, formal figures; one reviewable PR",
-    "bound": "One drafting pass up to3h active work; stop with partial PR/report if incomplete; no measurements/merge/publication"
+    "bound": "One drafting pass up to3h active work; stop with partial PR/report if incomplete; no measurements/merge/publication",
+    "assignment_comment_id": 6823213899,
+    "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6823213899",
+    "previous_observer_assignment": {
+      "status": "completed",
+      "source_comment_id": 6822169425,
+      "scope": "R1 correction accepted, integration deferred pending CI/readiness",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "comment_id": 6822218030,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6822218030",
+      "verification": "audit/route/readback/verify exit0",
+      "review_comment_id": 6822336509,
+      "work_commit": "21456b3588f520e28fa6569d5b2e59411e31c35d",
+      "recipient_cursor_sha": "9555c1b522a6cbfb4789f888e8f6ba9f09f9d197",
+      "completion_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822336509"
+    }
   }
 }
