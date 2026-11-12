@@ -1,0 +1,16 @@
+8138e01 Merge pull request #375 from lmmx/maintenance/packet-census-clippy-1100
+1f2738c Merge pull request #374 from lmmx/docs/blog-rauzy-technical-companion
+d504898 Merge pull request #366: reviewed accounting and frozen one-core diagnostic
+2635f04 Merge pull request #364 from lmmx/docs/codex-delegate-manual-pilot
+edaa984 docs(journal): hand-off: the cells production PR's gate
+57975de bench: bench-cells-vs-prod done (PASS: cells 0.82 of production on the i9); queue entry removed; hand-off updated
+b86c939 docs(journal): hand-off: WIP worktrees and stashes archived
+13ac211 bench: bench-team-threshold done (keep 6); its queue entry removed; hand-off updated
+6d18379 docs(journal): hand-off: #361's CI result, the other agents' hand-offs
+0f7cd42 docs(journal): coordinator hand-off before a quota pause
+c79ff7d bench: bench-cells-vs-prod (MONODROMY's cells kernel against production's records path on the i9) and its queue entry
+dfe0405 bench: bench-team-threshold (the plan against forced teams at 4-8 threads on 0.2.9) and its queue entry
+6782c0f History: the Release scaling view opens on the newest run and names each run by its releases; RELEASING checks the live page after each run
+9116c6c Release scaling: 0.2.9 against 0.2.8 on the i9 (release-scaling/run-20261110T170952Z, sha256 33469444): wikidata 10-15% faster at 8-20 threads, 0.9% slower at 1; CHANGELOG figures
+85c0e29 docs(changelog): 0.2.9's notes from #359's workstation run and the paired run against 0.2.8 (#360)
+0c20ce6 Blog: the Rauzy–Veech post's Lyndon tree in one sentence, why the cut goes before the smallest suffix, fixed ranks, and the recursion told apart from the induction's visits

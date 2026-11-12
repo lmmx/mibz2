@@ -43,7 +43,8 @@
     "completion_review_comment_id": 6836435433,
     "pr_evidence_comment_id": 6836433619,
     "evidence_commit": "feec83892087019889a906954f3c6342cd55377f",
-    "receipt_readback_verified": true
+    "receipt_readback_verified": true,
+    "integration_record": "integration375"
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
@@ -438,5 +439,29 @@
     "pr_evidence_comment_id": 6835548670,
     "evidence_commit": "d2ba8d734ea0ef66a09ef98ec4d4586b43492617",
     "receipt_readback_verified": true
+  },
+  "integration375": {
+    "direct_owner_authorisation": true,
+    "coordinator_decision_comment_id": 6836680787,
+    "status": "MERGED; source correspondence verified; postmerge Test pending",
+    "expected_head": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
+    "base": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+    "merge_commit": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+    "head_checks": "Test43310214911 packaging43310214895 and legacy success",
+    "postmerge": "Documentation43323058116 success; Test43323058105 running; packaging43323058112 skipped by workflow condition",
+    "tree_matches_reviewed_head": true,
+    "head_guard_before_after": true,
+    "native_coord_transport": "proxy403; unchanged head_sha function evaluated on fresh connector responses",
+    "report": "state/reports/integration375-20261112/report.md",
+    "pr373_head": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+    "pr373_blockers": [
+      "legacy failure Class D; hosted output inaccessible",
+      "macOS x86_64 job131361540210 cancelled; log404; four inaccessible annotations; Class D"
+    ],
+    "next_action": "Coordinator obtain operator-access hosted hook output and four macOS cancellation annotations; classify before scoped recovery",
+    "measurements_run": false,
+    "queue_run_signal": false,
+    "workstation_ready": false,
+    "manual_codex_launch_required": true
   }
 }

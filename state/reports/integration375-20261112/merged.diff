@@ -1,0 +1,30 @@
+diff --git a/examples/mtf_two_level.rs b/examples/mtf_two_level.rs
+index 12cc473..7606a85 100644
+--- a/examples/mtf_two_level.rs
++++ b/examples/mtf_two_level.rs
+@@ -270,8 +270,8 @@ mod arms {
+             for (i, &c) in bytes.iter().enumerate() {
+                 m.a[N - 16 * K + i] = c;
+             }
+-            for k in 0..K {
+-                m.bases[k] = N - 16 * K + 16 * k;
++            for (k, base) in m.bases.iter_mut().enumerate() {
++                *base = N - 16 * K + 16 * k;
+             }
+             m
+         }
+diff --git a/examples/packet_census.rs b/examples/packet_census.rs
+index ef43308..8d13fde 100644
+--- a/examples/packet_census.rs
++++ b/examples/packet_census.rs
+@@ -580,8 +580,8 @@ fn validate_column(l: &[u8], v: &mut Counts) {
+                         let mut y = x[t];
+                         let mut whole = 0usize;
+                         'reps: while whole * per < rem[t] {
+-                            for j in 0..pk.k {
+-                                if c.id[y as usize] != pk.path[j] {
++                            for &id in &pk.path[..pk.k] {
++                                if c.id[y as usize] != id {
+                                     break 'reps;
+                                 }
+                                 for _ in 0..c.sb {

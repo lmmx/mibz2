@@ -1,0 +1,36 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "workflow_runs": [
+        {
+          "id": 43310214911,
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1720,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/logs",
+          "workflow_id": 398116819
+        },
+        {
+          "id": 43310214895,
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1737,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/logs",
+          "workflow_id": 398116820
+        }
+      ]
+    },
+    "isError": false
+  }
+}

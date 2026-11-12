@@ -1,0 +1,21 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "statuses": [
+        {
+          "context": "pre-commit.ci - pr",
+          "state": "failure",
+          "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA"
+        }
+      ]
+    },
+    "isError": false
+  }
+}
