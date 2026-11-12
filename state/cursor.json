@@ -1450,6 +1450,13 @@
       ],
       "ready_job_queued": false,
       "reason": "Record completion confirmed.373 exact head unchanged: four workflows pass; packaging failed after x86 macOS cancellation without steps, log404 BlobNotFound; legacy stillfails. ClassD remains; no speculative recovery/duplicate task/repeatedblockedLOG. Final readiness unmet."
+    },
+    "6832194051": {
+      "status": "in_progress",
+      "delivery_id": "fb3f28a0-dec5-11f1-8015-2eeefaf64986",
+      "comment_updated_at": null,
+      "scope": "Reconcile bounded article completion and route evidenced Clippy compatibility fix",
+      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1663,19 +1670,9 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "completed",
-      "source_comment_id": 6823145996,
-      "comment_id": 6823213899,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6823213899",
-      "scope": "High-fidelity technical companion; main source preserved, annotations internal, formal figures; one reviewable PR",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "verification": "audit/route/exactreadback/verify exit0",
-      "review_comment_id": 6829978946,
-      "recipient_cursor_sha": "4e3cf8854c6b3416ff967968733adb2da3ece094",
-      "head_sha": "5d8f11c7d4b85c3fd6d81e442195723abace1017",
-      "pr": 374,
-      "evidence_commit": "12dbc542d0fb2f5679082a5454f6a8646b3fe453"
+      "status": "in_progress_before_post",
+      "source_comment_id": 6832194051,
+      "scope": "Minimal Rust1.100 needless_range_loop repair; separate maintenance PR; no gate weakening"
     },
     "guardian": {
       "status": "completed",
@@ -2019,6 +2016,21 @@
       "review_comment_id": 6830513211,
       "work_commit": "f8fa5245e9384c5aeecbf80d99b1e40a9e3632cf",
       "recipient_cursor_sha": "9b82b7ed277957828552a243d3f224f9c083e24f"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6823145996,
+      "comment_id": 6823213899,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6823213899",
+      "scope": "High-fidelity technical companion; main source preserved, annotations internal, formal figures; one reviewable PR",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "verification": "audit/route/exactreadback/verify exit0",
+      "review_comment_id": 6829978946,
+      "recipient_cursor_sha": "4e3cf8854c6b3416ff967968733adb2da3ece094",
+      "head_sha": "5d8f11c7d4b85c3fd6d81e442195723abace1017",
+      "pr": 374,
+      "evidence_commit": "12dbc542d0fb2f5679082a5454f6a8646b3fe453"
     }
   ],
   "codex_correction": {
