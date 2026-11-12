@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6821626797,
+  "last_examined_comment_id": 6821703634,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1145,6 +1145,16 @@
       "disposition": "Accept independent scoped review; require one R1 correction, no new measurement or full-review restart. Preserve interpretation limits and exact-head blockers.",
       "log_status": "published_readback_verified",
       "log_comment_id": 6821703634
+    },
+    "6821703634": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "d3ef90c0-de87-11f1-94de-81edc4bb935e",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6821703634",
+      "reason": "Own ACTOR/ID and exact published LOG readback; no new external message",
+      "dispatches": 0,
+      "response_comments": 0,
+      "audit": "exit0; six resolved historical misroutes"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1243,8 +1253,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6821626797,
-    "delivery_id": "4c2413a0-de87-11f1-839c-ae5322838388",
+    "comment_id": 6821703634,
+    "delivery_id": "d3ef90c0-de87-11f1-94de-81edc4bb935e",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
