@@ -1411,6 +1411,13 @@
       "ready_job_queued": false,
       "reason": "Existing integrator still executing373; no duplicate dispatch. No complete integration cursor. Master push checks not verified; final queue recipe/PROTOCOL9 required. No repeated GitHub log.",
       "audit": "exit0 six resolved historical findings"
+    },
+    "6831115741": {
+      "status": "in_progress",
+      "delivery_id": "71517680-debf-11f1-9481-03bc14c2c625",
+      "comment_updated_at": null,
+      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "scope": "Reconcile direct-owner integration completion and remaining ClassD hosted failure; record changed occupancy/platform state"
     }
   },
   "automatic_github_wakeup_assumed": false,
