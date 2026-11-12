@@ -1384,7 +1384,19 @@
       ],
       "ready_job_queued": false,
       "reason": "Separate integrator still executing; no completion REVIEW+cursor for entire integration. No duplicate dispatch. Final recipe binding/PROTOCOL9 and373 integrated-head validation outstanding.",
-      "log_intent": "in_progress; grouped observed merge and non-overlap checkpoint"
+      "log_intent": "completed",
+      "log_comment_id": 6830851089
+    },
+    "6830851089": {
+      "status": "ignored_own_monitor_log",
+      "comment_updated_at": null
+    },
+    "6830847624": {
+      "status": "in_progress",
+      "delivery_id": "f48f6720-debd-11f1-94e2-ebf8b41b3f9e",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6830847624",
+      "scope": "Reconcile reported postmerge check and observed368 closure;373 still in progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1485,7 +1497,8 @@
     6830048522,
     6830074647,
     6830431636,
-    6830454082
+    6830454082,
+    6830851089
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2742,7 +2755,8 @@
     "codex_cursor_sha": "f0e06904702464609b90b171a016ec0bf38a26bc",
     "completion_receipt_observed": false,
     "next_actor": "Existing deliberate integrator: postmerge correspondence,368 disposition,373 base append and validation. No parallel monitor dispatch.",
-    "ready_job_queued": false
+    "ready_job_queued": false,
+    "log_comment_id": 6830851089
   },
   "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
 }
