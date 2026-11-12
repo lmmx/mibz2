@@ -1,0 +1,12 @@
+{
+  "original_files": 53,
+  "original_hashes_match": true,
+  "prepared_manifest_exact": true,
+  "source_manifest_fields_match": true,
+  "patch_exact": true,
+  "tools": {
+    "rustc": null,
+    "cargo": null,
+    "just": null
+  }
+}
