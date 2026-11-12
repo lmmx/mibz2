@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6823145996,
+  "last_examined_comment_id": 6823246963,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1251,11 +1251,20 @@
       "actions": {
         "codex_assignment": 6823213899,
         "observer_assignment": 6823228638,
-        "log": "in_progress"
+        "log": 6823246963
       },
       "ready_job_queued": false,
       "ready_job_reason": "366 separate deliberate integration/readiness outstanding;373 Occupancy+packaging+legacy failure, finalCPU/recipe/PROTOCOL9 incomplete",
-      "recipient_execution_observed": false
+      "recipient_execution_observed": false,
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6823213899",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6823228638",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6823246963"
+      ]
+    },
+    "6823246963": {
+      "status": "completed_own_log_ignore",
+      "source_comment_id": 6823145996
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1349,7 +1358,10 @@
     6821688224,
     6821703634,
     6822218030,
-    6822234208
+    6822234208,
+    6823213899,
+    6823228638,
+    6823246963
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2482,6 +2494,7 @@
       "work_commit": "21456b3588f520e28fa6569d5b2e59411e31c35d",
       "recipient_cursor_sha": "9555c1b522a6cbfb4789f888e8f6ba9f09f9d197",
       "completion_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822336509"
-    }
+    },
+    "log_comment_id": 6823246963
   }
 }
