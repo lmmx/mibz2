@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6810653848,
+  "last_examined_comment_id": 6810699098,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -997,6 +997,14 @@
       "validation": "Immutable full report read; derived model and author checks not independently executed; full PR head plus Actions and legacy read",
       "log_comment_id": 6810699098,
       "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6810699098"
+    },
+    "6810699098": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "1842e630-de30-11f1-8671-1f886b36de5d",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6810699098",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1080,8 +1088,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6810653848,
-    "delivery_id": "b63609e0-de2f-11f1-9993-289915a680f3"
+    "comment_id": 6810699098,
+    "delivery_id": "1842e630-de30-11f1-8671-1f886b36de5d"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
