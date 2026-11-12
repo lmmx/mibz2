@@ -980,6 +980,13 @@
       "ready_job_reason": "366 preparation remains deferred and implementation incomplete; no completed dry-run/checks/master integration/readiness",
       "audit": "exit0; six resolved historical misroutes",
       "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+    },
+    "6810653848": {
+      "status": "in_progress",
+      "delivery_id": "b63609e0-de2f-11f1-9993-289915a680f3",
+      "comment_updated_at": null,
+      "planned_action": "Accept bounded pricing delivery, preserve backend stop/reopening conditions, dispatch deferred366 preparation as sole next task; retain matched-port diagnostic as separate followup",
+      "head_sha": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4"
     }
   },
   "automatic_github_wakeup_assumed": false,
