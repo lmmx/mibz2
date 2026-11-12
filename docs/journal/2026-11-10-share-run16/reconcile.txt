@@ -1,0 +1,99 @@
+
+## old-team: 12 files
+| file | sha256 | thread | cmd | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|---|--:|--:|--:|--:|--:|
+| old-team.31328-01.gz | daf1b6985ae75217… | 1 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 308,883,385 | 0 | 0 | 0 | 0 |
+| old-team.31328-02.gz | e87a2d177683d3d6… | 2 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 2,814,275 | 0 | 0 | 0 | 0 |
+| old-team.31328-03.gz | b139aaa5e3b1f6fe… | 3 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 702,851,200 | 0 | 0 | 0 | 295,751,952 |
+| old-team.31328-04.gz | 59c930c4df799569… | 4 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 552,359,868 | 0 | 0 | 0 | 252,340,079 |
+| old-team.31328-05.gz | c50a0e24f9d677fc… | 5 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 561,055,127 | 0 | 0 | 0 | 287,234,246 |
+| old-team.31328-06.gz | fdec28fa4359abdc… | 6 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 671,854,911 | 0 | 0 | 0 | 0 |
+| old-team.31328-07.gz | a2966fb28888ef82… | 7 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 921,033,682 | 79 | 362,056,765 | 25,122 | 0 |
+| old-team.31328-08.gz | 4c2a75fcb7163aaa… | 8 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 832,585,649 | 82 | 373,573,904 | 26,076 | 0 |
+| old-team.31328-09.gz | 5c924699bbb42331… | 9 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 919,420,264 | 82 | 285,450,528 | 26,076 | 0 |
+| old-team.31328-10.gz | 1f763d10c96f444b… | 10 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 861,575,480 | 72 | 327,573,101 | 22,896 | 0 |
+| old-team.31328-11.gz | c73eb94f603d775a… | 11 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 731,125,379 | 72 | 250,663,306 | 22,896 | 0 |
+| old-team.31328-12.gz | fbc6ac3c66dd426e… | 12 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 885,482,262 | 79 | 274,696,971 | 25,122 | 0 |
+
+threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], each once; D = 209,700,196
+whole process 7,951,041,482 Ir = 37.9162 Ir/D
+  scanner: 671,587,673 = 3.2026
+  MTF: 988,697,875 = 4.7148
+  build: 1,909,039,713 = 9.1037
+  walk: 3,715,567,559 = 17.7185
+  assembly: 36,482,694 = 0.1740
+  RLE1: 198,303,139 = 0.9457
+  CRC: 101,664,607 = 0.4848
+  coordination: 15,687,669 = 0.0748
+  harness: 309,823,773 = 1.4775
+  other: 4,186,780 = 0.0200
+share: self 1,874,014,575 + arcs out 148,188 = 1,874,162,763 = 8.9373 Ir/D inclusive; calls 466
+  run16's lines in share: 0 Ir = 0.0000 Ir/D
+  coop.rs:653: 32,220,249 Ir = 0.1536 Ir/D
+  coop.rs:654: 21,480,166 Ir = 0.1024 Ir/D
+  coop.rs:655: 42,960,332 Ir = 0.2049 Ir/D
+  coop.rs:660: 171,841,328 Ir = 0.8195 Ir/D
+  coop.rs:662: 537,004,150 Ir = 2.5608 Ir/D
+  coop.rs:664: 21,480,166 Ir = 0.1024 Ir/D
+  index.rs:408: 21,480,166 Ir = 0.1024 Ir/D
+
+## new-team: 12 files
+| file | sha256 | thread | cmd | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|---|--:|--:|--:|--:|--:|
+| new-team.31411-01.gz | 5ccc13394c8e1425… | 1 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 308,885,718 | 0 | 0 | 0 | 0 |
+| new-team.31411-02.gz | 15479612009f3417… | 2 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 5,041,849 | 0 | 0 | 0 | 0 |
+| new-team.31411-03.gz | 460c8e89ef983958… | 3 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 699,272,454 | 0 | 0 | 0 | 268,512,421 |
+| new-team.31411-04.gz | f16142c7c7b2f65d… | 4 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 700,188,723 | 0 | 0 | 0 | 253,061,566 |
+| new-team.31411-05.gz | 72d92020b1855789… | 5 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 836,217,610 | 0 | 0 | 0 | 313,752,290 |
+| new-team.31411-06.gz | c50e07891b9a329c… | 6 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 671,845,061 | 0 | 0 | 0 | 0 |
+| new-team.31411-07.gz | 5e603797615e46fe… | 7 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 659,127,543 | 76 | 281,445,232 | 24,168 | 0 |
+| new-team.31411-08.gz | 19b0b6ff262a3a2a… | 8 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 762,795,146 | 76 | 180,222,637 | 24,168 | 0 |
+| new-team.31411-09.gz | e71891a692fd6c9c… | 9 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 672,003,801 | 71 | 263,479,949 | 22,578 | 0 |
+| new-team.31411-10.gz | 3023ed60b421c110… | 10 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 820,192,704 | 86 | 322,250,504 | 27,348 | 0 |
+| new-team.31411-11.gz | c3fd467e0b780b1e… | 11 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 613,848,455 | 71 | 170,045,661 | 22,578 | 0 |
+| new-team.31411-12.gz | 06db0dfb15edd3c4… | 12 | oth 9 ../wt-compact/corpora/wikidata.bz2 | 757,952,389 | 86 | 205,489,588 | 27,348 | 0 |
+
+threads [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], each once; D = 209,700,196
+whole process 7,507,371,453 Ir = 35.8005 Ir/D
+  scanner: 671,557,075 = 3.2025
+  MTF: 988,695,490 = 4.7148
+  build: 1,458,357,039 = 6.9545
+  walk: 3,721,459,996 = 17.7466
+  assembly: 36,483,445 = 0.1740
+  RLE1: 197,405,597 = 0.9414
+  CRC: 101,664,607 = 0.4848
+  coordination: 15,501,704 = 0.0739
+  harness: 311,047,727 = 1.4833
+  other: 5,198,773 = 0.0248
+share: self 1,422,933,571 + arcs out 148,188 = 1,423,081,759 = 6.7863 Ir/D inclusive; calls 466
+  0xd6988 ('mod.rs', 1963): 10,740,083 executions
+  0xd698e ('mod.rs', 1963): 10,740,083 executions
+  0xd6994 ('mod.rs', 1963): 10,740,083 executions
+  0xd699b ('mod.rs', 1963): 10,740,083 executions
+  0xd6927 ('mod.rs', 573): 10,740,083 executions
+  run16's lines in share: 268,502,075 Ir = 1.2804 Ir/D
+  coop.rs:653: 32,220,249 Ir = 0.1536 Ir/D
+  coop.rs:654: 21,480,166 Ir = 0.1024 Ir/D
+  coop.rs:655: 42,960,332 Ir = 0.2049 Ir/D
+  coop.rs:671: 10,740,083 Ir = 0.0512 Ir/D
+  coop.rs:672: 21,480,166 Ir = 0.1024 Ir/D
+
+## new-one: 1 files
+| file | sha256 | thread | cmd | total Ir | share calls | share self | share arcs out | MTF self |
+|---|---|--:|---|--:|--:|--:|--:|--:|
+| new-one.31473-01.gz | 3655566bc1960a44… | 1 | bz2 1 ../wt-compact/corpora/wikidata.bz2 | 5,408,531,285 | 0 | 0 | 0 | 773,179,796 |
+
+threads [1], each once; D = 209,700,196
+whole process 5,408,531,285 Ir = 25.7917 Ir/D
+  scanner: 682,691,258 = 3.2556
+  MTF: 862,123,747 = 4.1112
+  build: 1,082,059,629 = 5.1600
+  walk: 2,136,525,935 = 10.1885
+  assembly: 37,060,864 = 0.1767
+  RLE1: 197,394,556 = 0.9413
+  CRC: 101,664,607 = 0.4848
+  coordination: 135 = 0.0000
+  harness: 308,305,801 = 1.4702
+  other: 704,753 = 0.0034
+share: self 0 + arcs out 0 = 0 = 0.0000 Ir/D inclusive; calls 0
+  run16's lines in share: 0 Ir = 0.0000 Ir/D
