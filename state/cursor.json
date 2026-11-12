@@ -40,7 +40,7 @@
       "render_pages": 42,
       "public_asset_delivery": "pending normal CI; local pinned-font fixture documented",
       "legacy": "success",
-      "actions": "Packaging CI success; Documentation site and Test still in progress",
+      "actions": "Test and packaging CI success; site build/preview success; site look131336484972 still in progress",
       "performance_measurements": 0,
       "preview_access": "blocked: direct GitHub Pages request receives proxy 403"
     },

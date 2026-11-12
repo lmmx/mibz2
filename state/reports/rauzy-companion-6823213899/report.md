@@ -131,3 +131,6 @@ was posted after the completed cursor and read back through the GitHub connector
 an exact body match. Direct `coord.py verify` remains blocked by proxy 403; its raw result
 is retained in coord-verify.log. Site preview job 131336486023 subsequently passed;
 local direct access remains blocked, and site look/Rust tests were still pending at receipt.
+
+After receipt, Test43261705972 completed successfully. Only the site look job
+131336484972 remains in progress; ci-after-receipt.json records the observation.

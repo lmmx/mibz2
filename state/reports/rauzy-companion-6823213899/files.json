@@ -3,6 +3,10 @@
     "bytes": 66,
     "sha256": "d4fe8119d6b71cee8e9d31cce8b4f39c4d4cd00352e79e41dfc8cff4b4a81382"
   },
+  "ci-after-receipt.json": {
+    "bytes": 9145,
+    "sha256": "a80a074a3b35cf9473e79e21f02aad1be3c016e0fc448dfd9563c7a27df9acd0"
+  },
   "ci.json": {
     "bytes": 46649,
     "sha256": "70594ae56e8c7f60b4390f2f7609cb61802f3d932436cab80d4440cb5cbd65af"
@@ -76,8 +80,8 @@
     "sha256": "f751c31a68aa90d8fd10d383109d941db443a05637b869b6f1b2e1656e764332"
   },
   "report.md": {
-    "bytes": 8814,
-    "sha256": "93aaee2205d83cb01ee3ea8c658a819f7229b4f3c427fc1e9434ae861fd9ed94"
+    "bytes": 8974,
+    "sha256": "cfc72994330ccfc5333d8c9afa2daa684a3ac095ecf667519d3d7e52c4ebdb3a"
   },
   "screenshots.tar.gz": {
     "bytes": 15948700,

@@ -1,0 +1,322 @@
+{
+  "head": "5d8f11c7d4b85c3fd6d81e442195723abace1017",
+  "observed_at": "2026-11-12 16:51:31 UTC",
+  "actions": {
+    "workflow_runs": [
+      {
+        "id": 43261706491,
+        "name": "CI",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1731,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261706491/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261706491/logs",
+        "workflow_id": 398116820
+      },
+      {
+        "id": 43261706088,
+        "name": "Documentation site",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_number": 1186,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261706088/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261706088/logs",
+        "workflow_id": 398199459
+      },
+      {
+        "id": 43261705972,
+        "name": "Test",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1714,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261705972/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43261705972/logs",
+        "workflow_id": 398116819
+      }
+    ]
+  },
+  "site_jobs": {
+    "jobs": [
+      {
+        "id": 131334446005,
+        "name": "pages",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43261706088,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run build_type=$(gh api \"repos/${GITHUB_REPOSITORY}/pages\" --jq .build_type 2>/dev/null || true)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          }
+        ]
+      },
+      {
+        "id": 131334446566,
+        "name": "build",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43261706088,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Benchmark history",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v8.1.0",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Version the site's own assets",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Point the site at its preview path",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6
+          },
+          {
+            "name": "Build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7
+          },
+          {
+            "name": "Check the nav, internal links, llms.txt and API coverage",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8
+          },
+          {
+            "name": "Check for Markdown that rendered as something else",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@stable",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Run Swatinem/rust-cache@v2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          },
+          {
+            "name": "Run the examples in the pages",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13
+          },
+          {
+            "name": "Post Run Swatinem/rust-cache@v2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v8.1.0",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25
+          },
+          {
+            "name": "Post Run actions/checkout@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27
+          }
+        ]
+      },
+      {
+        "id": 131336484972,
+        "name": "look",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_id": 43261706088,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Run actions/download-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v8.1.0",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Look at the changed pages",
+            "status": "in_progress",
+            "conclusion": null,
+            "number": 5
+          },
+          {
+            "name": "Check the changed posts' deks and sentence complexity",
+            "status": "pending",
+            "conclusion": null,
+            "number": 6
+          },
+          {
+            "name": "Run test -f site-shots/report.md && cat site-shots/report.md >> \"$GITHUB_STEP_SUMMARY\" || true",
+            "status": "pending",
+            "conclusion": null,
+            "number": 7
+          },
+          {
+            "name": "Run actions/upload-artifact@v4",
+            "status": "pending",
+            "conclusion": null,
+            "number": 8
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v8.1.0",
+            "status": "pending",
+            "conclusion": null,
+            "number": 15
+          },
+          {
+            "name": "Post Run actions/checkout@v5",
+            "status": "pending",
+            "conclusion": null,
+            "number": 16
+          }
+        ]
+      },
+      {
+        "id": 131336486023,
+        "name": "preview",
+        "status": "completed",
+        "conclusion": "success",
+        "run_id": 43261706088,
+        "logs_url": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1
+          },
+          {
+            "name": "Run actions/checkout@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2
+          },
+          {
+            "name": "Run actions/download-artifact@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3
+          },
+          {
+            "name": "Run rossjrw/pr-preview-action@v1.8.1",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4
+          },
+          {
+            "name": "Wait until the preview serves this build",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5
+          },
+          {
+            "name": "Post Run actions/checkout@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11
+          }
+        ]
+      },
+      {
+        "id": 131336487687,
+        "name": "deploy-branch",
+        "status": "completed",
+        "conclusion": "skipped",
+        "run_id": 43261706088,
+        "logs_url": null,
+        "steps": null
+      }
+    ]
+  },
+  "legacy": {
+    "statuses": [
+      {
+        "context": "pre-commit.ci - pr",
+        "state": "success",
+        "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794501787.7ZH2bdpfQJy7-h8J7YGB-Q"
+      }
+    ]
+  }
+}
