@@ -1040,7 +1040,9 @@
       "dispatches": 0,
       "ready_job_queued": false,
       "ready_job_reason": "366 unmerged; separate deliberate integration and final exact master recipe/PROTOCOL9 readiness required; cells harness incomplete",
-      "log_publication": "pending"
+      "log_publication": "published",
+      "log_comment_id": 6820358956,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6820358956"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1119,7 +1121,8 @@
     6810684246,
     6810699098,
     6819644553,
-    6819665109
+    6819665109,
+    6820358956
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1308,9 +1311,9 @@
     "status": "published_readback_verified",
     "log_comment_id": 6808041276,
     "event_dispositions_persisted": true,
-    "comment_id": 6819665109,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6819665109",
-    "scope": "366 preparation delivered; CI/integration readiness pending; cells diagnostic preparation routed"
+    "comment_id": 6820358956,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6820358956",
+    "scope": "366 green exact head referred for separate integration; cells preparation ongoing"
   },
   "dispatch_history": [
     {
