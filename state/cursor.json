@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6836501333,
+  "last_examined_comment_id": 6836633023,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1544,13 +1544,21 @@
       "reason": "Exact own LOG read back; no new external message. Scoped MTF completion already reconciled; separate integration waits remaining CI. No duplicate dispatch or repeated status post; final workstation readiness outstanding."
     },
     "6836633023": {
-      "status": "in_progress",
+      "status": "completed_observer_reconciled_375_green_referred",
       "delivery_id": "59efc650-dee1-11f1-8ccc-1f1fe5ec6e08",
       "comment_updated_at": null,
       "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
       "scope": "Observer completion reconciled;375 exact-head all-green integration referral",
       "ready_job_queued": false,
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/actions/runs/43310214911",
+        "https://github.com/lmmx/mibz2/actions/runs/43310214895"
+      ],
+      "assignment_comment_id": 6836483279,
+      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
+      "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e",
+      "reason": "375 Test and packaging now success plus legacy success at853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117; refer separate deliberate integration, no new implementation/review.373ClassD/finalworkstationreadiness remain.",
+      "log_intent": "in_progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1666,8 +1674,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6836501333,
-    "delivery_id": "7e965ce0-dee0-11f1-846b-7f53c9ce6b91",
+    "comment_id": 6836633023,
+    "delivery_id": "59efc650-dee1-11f1-8ccc-1f1fe5ec6e08",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1800,14 +1808,17 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "routed_verified_awaiting_receipt",
+      "status": "completed",
       "source_comment_id": 6836435433,
       "scope": "Record completed375 MTF correction, pending final Rust CI and separate integration;373 ClassD retained",
-      "completion_observed": false,
-      "recipient_execution_observed": false,
+      "completion_observed": true,
+      "recipient_execution_observed": true,
       "comment_id": 6836483279,
       "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6836483279",
-      "verification": "audit/route/exact readback/verify exit0"
+      "verification": "audit/route/exact readback/verify exit0",
+      "review_comment_id": 6836633023,
+      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
+      "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -3042,7 +3053,7 @@
   },
   "last_observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
   "pending_compatibility_375": {
-    "status": "both_scoped_corrections_complete_integration_deferred_remaining_CI",
+    "status": "scoped_corrections_complete_exact_head_green_referred_for_deliberate_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
     "review_comment_id": 6836435433,
     "prior_assignment": 6832249633,
@@ -3053,16 +3064,6 @@
     "ci": {
       "workflow_runs": [
         {
-          "id": 43310214911,
-          "name": "Test",
-          "status": "in_progress",
-          "conclusion": null,
-          "run_number": 1720,
-          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/jobs",
-          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/logs",
-          "workflow_id": 398116819
-        },
-        {
           "id": 43310214895,
           "name": "CI",
           "status": "completed",
@@ -3071,6 +3072,16 @@
           "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/jobs",
           "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/logs",
           "workflow_id": 398116820
+        },
+        {
+          "id": 43310214911,
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1720,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/logs",
+          "workflow_id": 398116819
         }
       ]
     },
@@ -3099,9 +3110,9 @@
       "rerun": false
     },
     "observer_completion": {
-      "review_comment_id": 6835761118,
-      "work_commit": "82b31e2488aa78017381bd56011773fd6ca7b55b",
-      "recipient_cursor_sha": "c647e854013af637a967480cffa801504d07759f"
+      "review_comment_id": 6836633023,
+      "work_commit": "2bf4823cae3c6cec69e55c9acc2a3c98280025c5",
+      "recipient_cursor_sha": "6f914eb7d4370629aad0963d3e88cd70efd0013e"
     },
     "mtf_correction": {
       "accepted": true,
@@ -3109,7 +3120,10 @@
       "remaining_job": 131504017256,
       "next_actor": "Separate deliberate authorised integration after remaining exact-head CI success"
     },
-    "legacy373_retrieval": "Codex bounded21s attempt CONNECT403/inaccessible; no decisive hosted cause; ClassD unchanged"
+    "legacy373_retrieval": "Codex bounded21s attempt CONNECT403/inaccessible; no decisive hosted cause; ClassD unchanged",
+    "exact_head_checks_green": true,
+    "checks_observed_on_event": 6836633023,
+    "next_actor": "Louis or separate deliberate authorised Coordinator: assess and expected-head merge375 with postmerge verification; no automated merge"
   },
   "monitor_policy_verification": {
     "observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
