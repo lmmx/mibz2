@@ -1,0 +1,18 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.46s
+     Running unittests src/lib.rs (bench/cells-gap/live/target/debug/deps/mibz2-1b79af9418419032)
+
+running 7 tests
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test cells::tests::miri_cells_long_writer_production_admission ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.33s
+

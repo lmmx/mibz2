@@ -1,0 +1,12 @@
+{
+  "ruff": "pass",
+  "owned_rustfmt": "pass; Rust1.90.0 skip_children",
+  "toml": "pass",
+  "python_syntax": "pass",
+  "shell_syntax": "pass",
+  "diff_whitespace": "pass",
+  "source_hashes": 53,
+  "protected_production_paths": "unchanged",
+  "performance_measurements": 0,
+  "full_corpus_replays": 0
+}

@@ -1,0 +1,18 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.154
+   Compiling itoa v1.0.19
+   Compiling memchr v2.8.3
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+   Compiling cells-live v0.0.0 (/workspace/mibz2-live/bench/cells-gap/live)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.95s
+     Running unittests src/main.rs (bench/cells-gap/live/target/miri/x86_64-unknown-linux-gnu/debug/build/cells-live/13c77c58df28fc61/out/cells_live-13c77c58df28fc61)
+
+running 1 test
+test trace_contract::tests::untimed_stack_and_error_cleanup ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.18s
+

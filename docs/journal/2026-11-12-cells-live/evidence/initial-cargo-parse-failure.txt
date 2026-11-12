@@ -1,0 +1,1 @@
+Initial materialization omitted declared examples/benches. Cargo parse failed before compilation: cannot find occupancy, wait_audit examples or decode bench. Generator corrected to retain all frozen examples/benches; final53-source manifest and subsequent successful builds retained.

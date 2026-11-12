@@ -1,0 +1,315 @@
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -37,6 +37,7 @@
+ pyo3 = { features = ["abi3-py310"], optional = true, version = "0.29" }
+ 
+ [features]
++live-diagnostic = []
+ default = []
+ python = ["dep:pyo3"]
+ # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -330,12 +330,20 @@
+ 
+ /// Phases 2-5 of a block whose symbols are read: its bytes appended to `out`, its CRC
+ /// checked. Returns the CRC.
++#[cfg(feature = "live-diagnostic")]
++pub mod live_diagnostic;
++
+ pub fn decode_block<I: bwt::InverseBwt>(
+     b: &block::Symbols,
+     k: Kernels,
+     s: &mut Scratch<I>,
+     out: &mut Vec<u8>,
+ ) -> Result<u32, ErrorKind> {
++
++#[cfg(feature = "live-diagnostic")]
++let _block = live_diagnostic::block(b.orig_ptr, b.crc);
++#[cfg(feature = "live-diagnostic")]
++let front = live_diagnostic::phase("front");
+     let cooperative = s.inverse.wants_checkpoints();
+     // a block of few symbols, for a kernel that can: its table from its run records, with no
+     // last column (src/runs.rs). Its output goes to `ll`, as an in-place kernel's would
+@@ -351,9 +359,23 @@
+             n as u64,
+             trace::UNREAD,
+         );
++
++#[cfg(feature = "live-diagnostic")]
++front.stop();
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("rows", n);
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("records", s.runs.records().len());
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("outer_runs", 1);
++#[cfg(feature = "live-diagnostic")]
++let inv = live_diagnostic::phase("inversion");
+         let done = s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k);
+         #[cfg(feature = "trace")]
+         trace::mark(trace::Kind::InvertEnd, trace::NONE);
++
++#[cfg(feature = "live-diagnostic")]
++drop(inv);
+         if done {
+             return finish(&s.ll, b.crc, k, out);
+         }
+@@ -377,6 +399,13 @@
+         trace::UNREAD,
+     );
+     // in place where the kernel can (its output over `ll`), else into `rle`
++
++#[cfg(feature = "live-diagnostic")]
++front.stop();
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("rows", n);
++#[cfg(feature = "live-diagnostic")]
++let inv = live_diagnostic::phase("inversion");
+     let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, b.orig_ptr);
+     if cooperative {
+         let cps = &s.checkpoints;
+@@ -387,6 +416,9 @@
+     }
+     #[cfg(feature = "trace")]
+     trace::mark(trace::Kind::InvertEnd, trace::NONE);
++
++#[cfg(feature = "live-diagnostic")]
++drop(inv);
+     let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+     finish(inverted, b.crc, k, out)
+ }
+@@ -394,6 +426,9 @@
+ /// RLE1 undone into `out` and the block's CRC checked against `stored` (`decode_block`'s
+ /// last steps): the CRC, or the error with `out` as it was
+ fn finish(inverted: &[u8], stored: u32, k: Kernels, out: &mut Vec<u8>) -> Result<u32, ErrorKind> {
++
++#[cfg(feature = "live-diagnostic")]
++let _finish = live_diagnostic::phase("finish_crc");
+     let start = out.len();
+     if let Err(kind) = rle::unrle(inverted, out, k) {
+         out.truncate(start);
+@@ -404,6 +439,13 @@
+         out.truncate(start);
+         return Err(ErrorKind::BlockCrc { stored, computed });
+     }
++
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("decoded_bytes", out.len() - start);
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::set("computed_crc", computed as usize);
++#[cfg(feature = "live-diagnostic")]
++live_diagnostic::capacity("decoded", out.capacity());
+     Ok(computed)
+ }
+ 
+--- a/src/stream.rs
++++ b/src/stream.rs
+@@ -76,6 +76,11 @@
+ 
+     /// The next block (its symbols read into `syms`, reused), or the input's end
+     pub fn next(&mut self, mut syms: Vec<u16>) -> Result<Event, Error> {
++#[cfg(feature = "live-diagnostic")]
++let _scan = crate::live_diagnostic::phase("scanner");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::scan_bit(self.bit);
++
+         loop {
+             match self.state {
+                 State::Done => return Ok(Event::Done),
+@@ -165,6 +170,9 @@
+                             };
+                             self.blocks += 1;
+                             let (end, stream) = (self.bit, self.streams);
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::scan_bit(at);
+                             return Ok(Event::Block {
+                                 index,
+                                 bit: at,
+--- a/src/cells.rs
++++ b/src/cells.rs
+@@ -70,8 +70,25 @@
+         self.state.counts
+     }
+     fn attempt(&mut self, recs: &[u16], n: usize, p: u32, out: &mut Vec<u8>) -> bool {
++
++#[cfg(feature = "live-diagnostic")]
++let _attempt = crate::live_diagnostic::phase("attempt");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::set("records", recs.len());
+         let budget = if F { n } else { n / 25 * 4 + n % 25 * 4 / 25 };
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::set("budget", budget);
+         let result = self.state.kernel.try_invert(recs, n, p, budget, F, out);
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::outcome(&format!("{result:?}"));
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::capacity("cells_buf", self.state.kernel.buf.capacity());
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::capacity("cells_pos", self.state.kernel.pos.capacity() * 4);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::capacity("inverted", out.capacity());
+         let counts = &mut self.state.counts;
+         match result {
+             Ok((cells, period)) => {
+@@ -110,6 +127,11 @@
+                 return;
+             }
+         }
++
++#[cfg(feature = "live-diagnostic")]
++let _fallback = crate::live_diagnostic::phase("fallback");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("fallback_calls", 1);
+         self.state.fallback.invert(ll, counts, p, out);
+     }
+     fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], p: u32) -> bool {
+@@ -117,6 +139,11 @@
+         if F {
+             return false;
+         }
++
++#[cfg(feature = "live-diagnostic")]
++let _fallback = crate::live_diagnostic::phase("fallback");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("fallback_calls", 1);
+         self.state.fallback.invert_in_place(ll, counts, p)
+     }
+     fn reads_runs(&self) -> bool {
+@@ -135,6 +162,11 @@
+         }
+         // Exactly the shipped body, including its tiling failure. Admission refusal itself
+         // never escapes as false to decode_block's front-invariant assertion.
++
++#[cfg(feature = "live-diagnostic")]
++let _fallback = crate::live_diagnostic::phase("fallback");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("fallback_calls", 1);
+         self.state.fallback.invert_runs(r, n, p, out, k)
+     }
+     #[cfg(any(test, feature = "trace"))]
+@@ -241,6 +273,9 @@
+ 
+ #[inline(always)]
+ unsafe fn copy_small(dst: *mut u8, src: *const u8, len: usize) {
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("writer_small_copy_bytes", len);
++
+     // SAFETY: caller provides len initialized bytes in distinct allocations (arena/output).
+     unsafe {
+         core::ptr::copy_nonoverlapping(src, dst, len);
+@@ -249,6 +284,9 @@
+ 
+ #[inline(always)]
+ unsafe fn copy_long(dst: *mut u8, src: *const u8, len: usize) {
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("writer_long_copy_bytes", len);
++
+     // SAFETY: caller provides len initialized bytes of output on each side. copy permits
+     // overlap; the grammar's first-occurrence order ensures the source is complete.
+     unsafe {
+@@ -320,6 +358,9 @@
+         budget: usize,
+         forced: bool,
+     ) -> Result<(), Refusal> {
++
++#[cfg(feature = "live-diagnostic")]
++let _order = crate::live_diagnostic::phase("order");
+         if n == 0 || n >= 1 << 24 || p as usize >= n {
+             return Err(Refusal::Invalid);
+         }
+@@ -361,6 +402,9 @@
+         let off = p - at_start;
+         cnt[cz + 1] += (off > 0) as u32 + (total - off > 1) as u32;
+         let letters = cnt.iter().map(|&v| v as usize).sum::<usize>();
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::set("letters", letters);
+         // Layout uses records + two splits, even when adjoining records coalesce.
+         let cap = (recs.len() + 2 + budget) * SLOT;
+         let tops = PAD;
+@@ -381,6 +425,11 @@
+         // Reuse the high-water allocation, but never geometrically over-allocate. Release
+         // the old buffer before growing so both large allocations are not live at once.
+         if self.buf.len() < allocation {
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("cells_buf_growths", 1);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("cells_buf_requested_zero_bytes", allocation);
++
+             self.buf = Vec::new();
+             self.buf = vec![0; allocation];
+         }
+@@ -482,6 +531,9 @@
+     /// kernel for the block, and nothing has changed since.
+     #[inline(never)]
+     fn induce_cells(&mut self, budget: usize) -> Result<(u32, u32, usize), Refusal> {
++
++#[cfg(feature = "live-diagnostic")]
++let _induce = crate::live_diagnostic::phase("induction");
+         const M: u64 = 0xFFFF_FFFF;
+         let rr = self.letters;
+         let lay = self.lay;
+@@ -543,6 +595,11 @@
+                             debug_assert!(false, "cells region exhausted");
+                             return Err(Refusal::Invalid);
+                         }
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("attempted_cells", cells);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("induction_copy_bytes", 32 * cells);
+                         self.rule_end = rp;
+                         return Ok(((aw >> 32) as u32, aw as u32, cells));
+                     }
+@@ -552,6 +609,11 @@
+                 }
+                 loop {
+                     if cells == budget {
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("attempted_cells", cells);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("induction_copy_bytes", 32 * cells);
+                         return Err(Refusal::Budget);
+                     }
+                     cells += 1;
+@@ -637,6 +699,13 @@
+     /// `word` and `len` are what `induce_cells` returned for the block `slots` was given.
+     #[inline(never)]
+     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
++#[cfg(feature = "live-diagnostic")]
++let _writer = crate::live_diagnostic::phase("writer");
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::set("period", (len & !MARK) as usize);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::growth("inverted", out.capacity(), n + 32);
++
+         #[cfg(test)]
+         {
+             self.writer_reach = WriterReach::default();
+@@ -657,6 +726,11 @@
+         unsafe {
+             let rule = |w: usize| (rd64(base, w), rd64(base, w + 8));
+             let nr = (self.rule_end - ro) / 16;
++
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("pos_initialized_bytes", nr * 4);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::growth("cells_pos", self.pos.capacity() * 4, nr * 4);
+             if self.pos.capacity() < nr {
+                 self.pos = Vec::new();
+                 self.pos = vec![NIL; nr];
+@@ -809,6 +883,9 @@
+         while have < n {
+             let more = have.min(n - have);
+             out.copy_within(..more, have);
++#[cfg(feature = "live-diagnostic")]
++crate::live_diagnostic::add("writer_repeat_copy_bytes", more);
++
+             #[cfg(test)]
+             {
+                 self.writer_reach.repetitions += 1;

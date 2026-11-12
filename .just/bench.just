@@ -1351,3 +1351,9 @@ bench-cells-vs-prod:
     done
     python3 bench/cells_vs_prod.py "$W/summary.json" "$W"/census-*.jsonl | tee "$W/summary.txt"
     bash bench/bundle.sh "$W"
+
+# Prepared cells live-path diagnostic; separate Coordinator admission still required.
+# Ten balanced paired rounds, three corpora, original readers × trace off/on.
+[positional-arguments]
+bench-cells-live-path cpu corpora:
+    bash bench/cells-gap/live/run.sh "$1" "$2"

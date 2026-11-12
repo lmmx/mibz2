@@ -1,0 +1,37 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling zmij v1.0.23
+   Compiling cc v1.11.1
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.154
+   Compiling libc v0.2.191
+    Checking memchr v2.8.3
+    Checking itoa v1.0.19
+    Checking mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+   Compiling bzip2-sys v0.1.13+1.0.8
+    Checking bzip2 v0.4.4
+error: returning the result of a `let` binding from a block
+    --> .source/src/parallel.rs:1036:9
+     |
+1034 |         let r = finish_block(&sc.buf, s.symbols.crc, k, &mut out);
+     |         ---------------------------------------------------------- unnecessary `let` binding
+1035 |         mark!(RleEnd, s.place, out.len(), out.capacity());
+1036 |         r
+     |         ^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#let_and_return
+     = note: `-D clippy::let-and-return` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::let_and_return)]`
+help: return the expression directly
+     |
+1034 ~         
+1035 |         mark!(RleEnd, s.place, out.len(), out.capacity());
+1036 ~         finish_block(&sc.buf, s.symbols.crc, k, &mut out)
+     |
+
+error: could not compile `mibz2` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

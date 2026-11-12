@@ -1,0 +1,16 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+   Compiling cells-live v0.0.0 (/workspace/mibz2-live/bench/cells-gap/live)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.93s
+     Running unittests src/main.rs (bench/cells-gap/live/target/debug/deps/cells_live-4cc14078853c2c96)
+
+running 5 tests
+test live_tests::long_factor_trace_keeps_overlap_recopy_and_period ... ok
+test trace_contract::tests::untimed_stack_and_error_cleanup ... ok
+test live_tests::untimed_errors_unwind_all_phases ... ok
+test live_tests::untimed_actual_readers_routes_and_crc ... ok
+test ab_cells::tests::cells_arm_matches_reader_bytes_and_errors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+

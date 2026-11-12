@@ -1,0 +1,135 @@
+# Matched cells live-path diagnostic: preparation handoff
+
+Assignment [363/6819644553](https://github.com/lmmx/mibz2/issues/363#issuecomment-6819644553).
+Started2026-11-12 09:43UTC, bounded to11:43UTC. Implementation and untimed local
+preparation delivered; **no execution/readiness or production qualification**.
+[Plan](PLAN.md) frozen before observations at
+`3b43af956d553905ea744f6cb6e1c785a0f8297a`, published in
+[145/6820313763](https://github.com/lmmx/mibz2/pull/145#issuecomment-6820313763).
+No candidate timing, workstation/i9 job, corpus census or real-block probe ran.
+
+## What changed
+
+One isolated branch, `diagnostic/cells-live-path`, descending from the unchanged
+#367 head `a08277e1c36e276cfea7b3116d99ea5fd93f0e84`. The new child crate
+[bench/cells-gap/live](../../../bench/cells-gap/live/README.md) preserves367's old
+crate, corpus reconstruction/oracle tools and recorded evidence. Its workflow now
+runs only the new untimed preparation; it does not automatically replay the old
+all-corpus census. The only Just addition is a separate recipe. Production root
+src/examples/tests/Cargo files, existing benchmark/Miri workflows and workstation
+queue remain byte-identical to367. No365/366/368 branch or other role state changed.
+
+Generated diagnostic source is pinned to corrected365
+`d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2`, not367's historical57f51b dependency.
+All53 original source files are hashed; original cells.rs SHA256 is
+`42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2`.
+The [source correspondence](evidence/source-correspondence.json) and
+[additive instrumentation patch](evidence/instrumentation.patch) expose every hook.
+The frozen reader adapter and ab output hash are reused exactly. Four separate
+release builds select baseline/Cells and compile hooks out/in; no runtime route
+selection or parallel/team experiment was added.
+
+The exact design remains Wikidata/pattern/onebyte, one thread/allowed pinned CPU,
+ten balanced paired rounds,0.25s settle,120 measured decodes plus9 untimed/oracle
+checks in a later authorised run. Untimed fixtures do not consume or masquerade as
+that future corpus budget. Prospective CPU must be chosen explicitly in the
+Coordinator-approved recipe and recorded before results; source/compiler/input/
+executable identities are checked. No three-round alternative is reachable.
+
+The driver reconciles exclusive phases against inclusive reader and process wall,
+keeps inclusive inversion separate, clusters ratios by complete decode and rejects
+quantitative attribution when the off/on conclusion changes or phases fail. Real
+bytes/CRC/oracle checks and all refused/abandoned induction work remain charged.
+See the README for measured fields and explicitly missing counters. Memory counts
+are capacities/requests/addressed copies, not physical traffic or a complete heap
+inventory. No numerical performance gap is claimed closed.
+
+## Actual validation
+
+- Five native harness tests: original reader parity/error cases, actual admitted/
+  density/floor/budget reach, CRCs, explicit57-cell long-factor/short-cycle witness,
+  and logger scope/error cleanup. All untimed clock counts are zero.
+- Seven corrected kernel tests pass, including exhaustive small columns, exact-fit
+  reuse, admission/invalid inputs, bounds/fallback and both F01 writer tests.
+- Ten Python harness tests pass with **real Just1.38.0, no skips**. Fixed129-job
+  wiring is simulated with fake values:126 decoder children+3 oracles,120 settles,
+  zero real candidate decodes/clocks. Failure, incomplete/duplicate records,
+  malformed JSON, CRC/phase errors, changed off/on conclusion and exit propagation
+  are checked. A `wait4` test uses fake clock/resource values, not measurements.
+- Four Rust1.99.1 release builds. Real CLI dry run:16 tiny valid fixture decodes,
+  full byte/SHA parity, plus12 expected failure children (CRC, truncation, missing
+  input); identical errors, zero clocks, zero performance measurements.
+- **Miri:2/2 unchanged F01 long-writer tests pass** with diagnostic source hooks;
+  **1/1 active untimed logger contract passes**. These are scoped checks, not a
+  rerun of365's full39-test review, fuzz/mutation programme or independent B5.
+- Scoped Clippy for new crate, Ruff check/format, owned Rust formatting, TOML,
+  Python syntax, shell syntax, actual Just dry-run and diff whitespace pass.
+- All53 original-source hashes, additive-only patch, corrected kernel identity,
+  protected production paths and final binary/harness identities checked.
+
+Logs and source/binary/compiler digests are in [evidence](evidence/). SHA256.json
+covers archived evidence. CI is reported separately at the exact PR head in the
+completion REVIEW/state snapshot; pending jobs are never treated as green.
+
+Failures retained: initial generated manifest omitted declared examples/bench
+files and failed Cargo parsing; generation now copies all frozen examples/benches.
+Initial Miri setup could not create a sysroot under the read-only default cache;
+using the existing writable XDG cache produced the actual passes. Initial full
+Clippy hit unchanged parallel.rs `let_and_return`; new-crate `--no-deps` scope
+then found unchanged helper `manual_repeat_n`. The latter is allowed only on the
+imported frozen helper module. New code passes `-D warnings`; no production source
+was reformatted to silence inherited findings. Initial new TOML ordering was fixed.
+Historical367 legacy pre-commit failure remains historical, not relabelled; its PR
+also records default onebyte4t+1.0%[+0.0,+1.9] in run42925377667. Its three old Python
+files still fail current Ruff formatting; they are unchanged and never replayed here.
+
+## Safety argument and independent review boundary
+
+The patch contains **only insertions** plus a separately compiled safe module;
+its generator asserts no original line is deleted. No unsafe operation, pointer
+arithmetic, allocation bound, admission predicate, copy length, fallback call or
+F01 test is replaced. Hooks copy scalar values and query Vec length/capacity; they
+do not expose references/pointers into kernel buffers. Independent allocations for
+TLS records cannot move a live Rust Vec allocation. No record is held borrowed
+across a decoder call. RefCell borrows are released inside each hook; guards hold
+only stack depth and an active flag. Error unwinding closes scopes in LIFO order,
+and an explicit front stop is idempotent. Logging may add cost or allocation failure,
+which is part of diagnostic overhead, but does not change a successful decoder's
+memory-access obligations. Off hooks are removed by feature cfg.
+
+Existing short-copy disjointness, long-copy overlap semantics, marked-spine recopy,
+position initialisation, repetition/slack, canaries and budget/fallback invariants
+are unchanged. The original long-factor reach/regression tests and independent
+Researcher F01 acceptance remain pinned to365. Miri checks here are author evidence;
+Codex does not certify independent B5 or close any reviewer finding. Independent
+review must inspect the generated patch, phase nesting, original reader/hash
+correspondence, scheduling, refusal accounting, missing-counter limits, off/on
+interpretation and failure preservation before Coordinator admission.
+
+## Reconciliation and remaining decisions
+
+The current live programme can locate bounded costs and common-work dilution. It
+cannot settle production-versus-research warm transport directly. PLAN explicitly
+proposes, but does not implement/admit, one extraction plus20 measured inversion
+file-passes and20 untimed warm passes with matched records, host/compiler/affinity/
+reuse and no minima. Research source remains
+`c79ff7d384072e5e95eda7e513227f2aa06ff3d5`; layouts/admission still differ. Coordinator
+must approve that separate finite budget/adapter before execution. Warm port loses
+-> price writer/port; warm wins but live inversion does not -> conditioning;
+live inversion wins but total does not -> remaining stages/reader. Unmeasured
+branches stay open; no additional programme is silently included.
+
+**Next required action:** Coordinator reconcile this preparation with Optimiser
+6782313693,367 and372; arrange one independent harness review and decide separate
+integration/readiness. PROTOCOL9 checklist remains open: frozen exact final recipe
+check, exact-head green Actions+legacy, deliberate integration disposition, ready
+tag/Run signal and master queue entry. No queue/tag/signal was created. Input
+identities are frozen, but full three-corpus oracle/prechecks run only during the
+future authorised programme, not to enlarge preparation evidence.
+
+Preserve365 DEFER,371 REVISE METADATA, stopped treap/deferred summaries and372's
+no-backend-screen-clearance. #366's separate diagnostic/integration is untouched.
+Direct coord.py audit/verify remains blocked by proxy tunnel403; route145 works,
+connector readback confirms publication. Cursor completion records delivery of
+this preparation only. GitHub comments cannot restart this Codex session; a manual
+launch remains required, and no event-triggered execution is assumed.

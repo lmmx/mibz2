@@ -1,4 +1,4 @@
-name: Cells gap census
+name: Cells live-path preparation
 
 on:
   pull_request:
@@ -8,36 +8,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  census:
+  untimed:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: taiki-e/install-action@v2
         with:
-          components: clippy, rustfmt
-      - name: Validate the separate diagnostic
+          tool: just@1.38.0
+      - name: Prepare exact corrected source (no corpus replay)
         run: |
-          cargo fmt --manifest-path bench/cells-gap/Cargo.toml --check
-          cargo clippy --locked --manifest-path bench/cells-gap/Cargo.toml --all-targets -- -D warnings
-          cargo test --locked --manifest-path bench/cells-gap/Cargo.toml
-          cargo build --release --locked --manifest-path bench/cells-gap/Cargo.toml
-      - name: Reconstruct the pinned corpus and count actual routes (no clocks)
+          git fetch origin d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2
+          python3 bench/cells-gap/live/prepare.py
+      - name: Untimed tests and fixed schedule
         run: |
-          mkdir -p target/cells-gap-input
-          git fetch origin bench-data
-          git archive a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a windows/wikidata-20261019 | tar -x -C target/cells-gap-input
-          python3 bench/cells-gap/corpus.py bench/wikidata.json target/cells-gap-input/windows/wikidata-20261019 target/cells-gap-input/wikidata.bz2
-          bench/cells-gap/target/release/mibz2-cells-gap census target/cells-gap-input/wikidata.bz2 > target/cells-gap-input/census.jsonl
-          python3 bench/cells-gap/oracle.py target/cells-gap-input/census.jsonl target/cells-gap-input/wikidata.bz2 | tee target/cells-gap-input/oracle.json
-          python3 bench/cells-gap/analyse.py target/cells-gap-input/census.jsonl | tee target/cells-gap-input/analysis.json
-          rustc -Vv > target/cells-gap-input/toolchain.txt
-          sha256sum target/cells-gap-input/census.jsonl bench/cells-gap/src/main.rs bench/cells-gap/Cargo.lock > target/cells-gap-input/SHA256SUMS
+          CELLS_LIVE_REQUIRE_JUST=1 python3 bench/cells-gap/live/test_driver.py
+          python3 bench/cells-gap/live/driver.py plan > plan.json
+          cargo test --locked --manifest-path bench/cells-gap/live/Cargo.toml --features live-trace,cells-reader
+          cargo test --locked --manifest-path bench/cells-gap/live/Cargo.toml -p mibz2 --lib --features live-diagnostic miri_cells_long_writer
+      - name: Four builds and real untimed fixture dry run
+        run: |
+          python3 bench/cells-gap/live/build.py target/live-binaries
+          python3 bench/cells-gap/live/check.py target/live-binaries target/live-fixtures
       - uses: actions/upload-artifact@v6
+        if: always()
         with:
-          name: cells-gap-census-${{ github.sha }}
+          name: cells-live-preparation-${{ github.sha }}
           path: |
-            target/cells-gap-input/census.jsonl
-            target/cells-gap-input/oracle.json
-            target/cells-gap-input/analysis.json
-            target/cells-gap-input/toolchain.txt
-            target/cells-gap-input/SHA256SUMS
+            plan.json
+            target/live-binaries/*.json
+            target/live-binaries/*.log
+            target/live-fixtures/*.json
+            target/live-fixtures/*.stderr
+            bench/cells-gap/live/.generated/source.json
