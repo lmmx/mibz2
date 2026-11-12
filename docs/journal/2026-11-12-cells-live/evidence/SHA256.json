@@ -1,4 +1,6 @@
 {
+  "archive-check.json": "f9579fb0340430d21c59febf6bff220cfaf7bc804ac89ff40b333602597e7fd0",
+  "binary-symbol-check.json": "74cda01dffb39765eff399698e3f44e9978e860844ef2e7a95dcd16d3ca93300",
   "build-test-initial.log": "27f638012359427540aedfbb723f93ebf1006bd5fa9f0b9335589db1ce6d9682",
   "builds-delivery.log": "bd88a5bded2fd75d414a7220f4f60bf1b93ff0ae89a6a0c6a1a6598ff67cf0c4",
   "builds-final.log": "bd88a5bded2fd75d414a7220f4f60bf1b93ff0ae89a6a0c6a1a6598ff67cf0c4",
@@ -84,5 +86,12 @@
   "prepared-source.json": "6a3dabb3e1a0f7f0790223acb917deecdc019d73a45dc8d367e4859fdaed3f78",
   "source-correspondence.json": "9cfaf73721c945a429d5b884ceefb798c9f0900890c1489ea1eb17add6210b22",
   "static-checks.json": "acb0ae6151a087736d885d9c1886544f3e25732a9d302603235a8c8743e6d215",
-  "toml-initial.log": "06b20668a8d8880ca1262ee77fbedf0f668572ce2206a9381338589d32d8ae9f"
+  "toml-initial.log": "06b20668a8d8880ca1262ee77fbedf0f668572ce2206a9381338589d32d8ae9f",
+  "verified-baseline-off.build.log": "2ed53a2fa46b93f5bf590b2a340660c279525dedbd4bd7419374bc0433f3990b",
+  "verified-baseline-on.build.log": "7d01d70bdc58ccdebba52a98aaf85981dd438b079ff2aacf69cb531c0428e145",
+  "verified-build.json": "0fff1ddc9dd3d8af15cd0a1d972945ef88b0a39f12a1a6fc6692b0848510d861",
+  "verified-build.log": "bd88a5bded2fd75d414a7220f4f60bf1b93ff0ae89a6a0c6a1a6598ff67cf0c4",
+  "verified-cells-off.build.log": "b975ec1cacf7c3e09f39252ce4784187314965e0d64c3df5093704ff420dd60a",
+  "verified-cells-on.build.log": "1a4302261cf5469ed268a504ca1eb93b401392c7971e39958dd121353463bc03",
+  "verified-fixtures.log": "061e313784fce2daf25939e4de60aed00cf06b4437d99e7e14e667a19af5ebdc"
 }
