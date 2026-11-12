@@ -1352,6 +1352,14 @@ bench-cells-vs-prod:
     python3 bench/cells_vs_prod.py "$W/summary.json" "$W"/census-*.jsonl | tee "$W/summary.txt"
     bash bench/bundle.sh "$W"
 
+# #361: i9 one-core inlining diagnostic, frozen before data.
+# Exact contrast and decision rule: docs/journal/2026-11-10-onecore-inline-i9.md.
+# Existing release-scaling harness, 10 paired rounds, Wikidata, one thread.
+bench-onecore-inline-i9:
+    git fetch -q origin perf/onecore-walk-inline
+    just bench-release-scaling d33787e138426cb441db6975f54b2eccca02e89a b65b2aa54488f072cf005b8fe62461c32e6ef083 10 "1"
+
+
 # Prepared cells live-path diagnostic; separate Coordinator admission still required.
 # Ten balanced paired rounds, three corpora, original readers × trace off/on.
 [positional-arguments]

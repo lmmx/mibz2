@@ -24,6 +24,8 @@ on:
   pull_request:
     paths:
       - src/trace.rs
+      - src/lib.rs
+      - src/parallel.rs
       - docs/ledger.md
       - examples/occupancy.rs
       - bench/occupancy.sh
@@ -76,6 +78,7 @@ jobs:
           THREADS: ${{ inputs.threads || '' }}
           ARGS: ${{ inputs.args || '' }}
         run: |
+          set -o pipefail
           # (ARGS is split into words: e.g. --placements packed/spread)
           # shellcheck disable=SC2086
           just bench-occupancy --rounds "$ROUNDS" ${THREADS:+--threads "$THREADS"} $ARGS --out occupancy.json \
@@ -88,6 +91,7 @@ jobs:
       # have run the plan forced, and the summary's reconciliation and ledger checks must pass
       - name: Occupancy, teams of 2 (the trace's completeness)
         run: |
+          set -o pipefail
           just bench-occupancy --threads 4 --teams 2 --rounds 2 --out occupancy-teams.json | tee occupancy-teams.txt
           python3 - <<'PY'
           import json
@@ -106,6 +110,7 @@ jobs:
           PY
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: occupancy-${{ github.sha }}
           path: |

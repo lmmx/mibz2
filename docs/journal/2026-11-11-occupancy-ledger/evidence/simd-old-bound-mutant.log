@@ -1,0 +1,24 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-occupancy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2.40s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-33be155e41cfb646)
+
+running 1 test
+Segmented/simd-slack/scalar Runs n=99992 bound=900000 ll=99992 rle=0
+Segmented/simd-slack/scalar Runs n=100000 bound=900000 ll=199984 rle=0
+Cooperative2/simd-slack/scalar Runs n=99992 bound=900000 ll=99992 rle=0
+Cooperative2/simd-slack/scalar Runs n=100000 bound=900000 ll=199984 rle=0
+Segmented/simd-slack/detected Runs n=99992 bound=900000 ll=99992 rle=0
+
+thread 'trace::tests::ledger_actual_routes_and_retained_history' (19291) panicked at src/trace.rs:1158:13:
+Segmented/simd-slack/detected: ["sample 1: tt len=400000 cap=800000 outside 400000..=799996 (previous 400000)", "sample 2: tt len=400000 cap=800000 outside 400000..=799996 (previous 800000)"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test trace::tests::ledger_actual_routes_and_retained_history ... FAILED
+
+failures:
+
+failures:
+    trace::tests::ledger_actual_routes_and_retained_history
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,32 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-occupancy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.35s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-33be155e41cfb646)
+
+running 4 tests
+test trace::tests::ledger_at_level_9 ... ok
+test trace::tests::ledger_matches_a_workers_buffers ... ok
+test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+Segmented/runs Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/runs Runs n=800000 bound=900000 ll=1200000 rle=0
+Segmented/runs Runs n=90000 bound=100000 ll=1200000 rle=0
+Cooperative2/runs Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/runs Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/runs Runs n=90000 bound=100000 ll=1200000 rle=0
+Segmented/columns ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/columns ColumnInPlace n=99000 bound=100000 ll=100000 rle=0
+
+thread 'trace::tests::ledger_actual_routes_and_retained_history' (6371) panicked at src/trace.rs:1099:13:
+assertion `left == right` failed: Segmented/columns
+  left: true
+ right: false
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test trace::tests::ledger_actual_routes_and_retained_history ... FAILED
+
+failures:
+
+failures:
+    trace::tests::ledger_actual_routes_and_retained_history
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.43s
+
+error: test failed, to rerun pass `--lib`

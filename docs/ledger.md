@@ -8,7 +8,7 @@ or the reader is waiting. It has two halves (#39, #65):
   printed by `just bench-ledger` (no run) and by `just bench-occupancy`;
 - **the measurements:** high-water marks and queue states, swept from the decoder's own
   timeline (feature `trace`) by examples/occupancy.rs. They are printed as six lines a
-  thread count, with the ledger's bounds checked against them.
+  thread count, with each worker's route history checked before worker means or round medians.
 
 ## Three quantities, kept apart
 
@@ -28,14 +28,15 @@ what is in a cache.
 ## The ledger
 
 M = 100,000 × level is the most rows a block can hold (from the stream header). n is the
-longest block's rows, and D its largest decoded size. t is the threads, s the window
+longest block's rows, and D its largest decoded size. The table is a column-only
+sizing scenario; it is not an acceptance bound for a mixed-route worker. t is the threads, s the window
 (`slots`, at least t) and c the writer's chunk (4 MiB from `BzReader::parallel`).
 "Once" means allocated once and reused, so its capacity is a high-water mark: these
 buffers never shrink.
 
 | owner | buffer | how many | reserved each | at most | live each | hot |
 |---|---|--:|--:|--:|--:|--:|
-| worker | `ll`, the last column, then the walk's output over it | t | M | M | n, until RLE1 has read it | – |
+| worker | `ll`, the last column, then the walk's output over it | t | M | max(8, 2M − 1) | n, until RLE1 has read it | – |
 | worker | `tt`, the T-vector | t | 4n | 4(2n − 1) | 4n, in the T-vector phase | 4n |
 | worker | `rle`, the walk's output for a kernel that doesn't invert in place | t | 0 (n) | 0 (2n − 1) | 0 (n) | – |
 | worker | `seg.bufs`, the walk's segments | t | 512 (2n/512 + 64) | ratchets | n | – |
@@ -75,17 +76,17 @@ Where the counts and bounds come from:
 
 | threads | reserved at least | at most, before the segments' ratchet | hot (model) |
 |--:|--:|--:|--:|
-| 1 | 39.1 MB | 62.1 MB | 3.6 MB |
-| 2 | 56.2 MB | 84.7 MB | 7.2 MB |
-| 4 | 90.5 MB | 129.8 MB | 14.4 MB |
-| 10 | 193.5 MB | 265.0 MB | 36.0 MB |
+| 1 | 39.1 MB | 63.0 MB | 3.6 MB |
+| 2 | 56.2 MB | 86.5 MB | 7.2 MB |
+| 4 | 90.5 MB | 133.4 MB | 14.4 MB |
+| 10 | 193.5 MB | 274.0 MB | 36.0 MB |
 
 Each slot reserves 2.7 MB: its symbols at the format's bound, and its output buffer. The
 window was 2t before #180, so the wider one adds 2.7 MB × 2t, 21.6 MB at 4 threads. A
 corpus block writes about 0.2 MB of its slot's symbols, so RSS grows by less than the
 reservation.
 
-These are for the segmented kernel, the default, which inverts in place
+These are column-route scenarios for the segmented kernel, the default, which inverts in place
 (`InverseBwt::invert_in_place`): its walk writes over `ll`, so `rle` is never allocated.
 For a kernel that inverts into `rle` (`Plain`; `Settings::in_place` false), the parenthesised
 `rle` figures apply. That adds n reserved and 2n − 1 at most per worker: at -9, 0.9 MB and
@@ -101,6 +102,61 @@ capacities against the ledger: exactly where it is exact (`ll`, `seg.starts`, `s
 and `tt` and `out` by the growth rule; `rle` unallocated in place, and by the growth rule for the
 separate-buffer kernel, `Plain`, in a test of its own), within its bounds elsewhere. They also
 check that every buffer a worker has is in the ledger.
+
+## Route-aware worker validation
+
+A worker can decode concatenated streams with different block bounds and alternate
+between run records and a full column. Its buffers retain their capacities:
+
+| Successful inversion | `ll` request | `rle` request |
+|---|---:|---:|
+| run records (Segmented or Cooperative) | actual output rows n | none |
+| column, in place (Segmented) | this block's stream bound M | none |
+| column, separate output (Cooperative) | this block's stream bound M | n |
+
+For each worker, keep the maximum request q separately for `ll` and `rle` and the
+maximum n and maximum possible request u for `tt`. Before averaging, check every snapshot and the final buffers.
+Zero requests require zero capacity. Otherwise `ll` and `rle` capacity must be in
+[q, max(8, 2q−1)], and `tt` in [4n, 4 max(4, 2u−1)]. For a scalar run or a column, the T-vector request is n. The one-core AVX2 run fill
+reserves n+8 slots for its final vector store. A cooperative run can fall back to that
+fill, so its upper request bound also includes those eight slots when AVX2 is selected;
+its lower capacity bound stays 4n. u is the maximum of these possible requests over
+that worker's history. These finite bounds follow from
+the current Rust Vec growth rule, max(request, twice the previous capacity, minimum
+allocation); they are a toolchain/source model, not a Rust API guarantee. Capacities
+must cover lengths, never decrease, and agree with the last recorded snapshot.
+The requests are independent of measured capacities: a bad capacity cannot enlarge
+its own permitted bound. A worker with no block has zero requests.
+
+For example, run blocks of 600,000 then 800,000 rows grow `ll` from 600,000 to
+1,200,000 bytes while `rle` stays zero. A later column can reserve a larger stream
+bound; a later run retains any previously allocated column `rle`. Neither global
+maximum rows nor a plan-wide `in_place` flag captures that history.
+
+The same check retains the inline counts bound and one-core segment metadata checks.
+Deduplication can produce fewer than 512 segments: `seg.next` and `seg.bufs.outer`
+use their maximum logical element count (at most 512), with finite Vec growth bounds;
+`seg.starts` retains its pre-dedup reservation rule. Segment byte buffers, run-record
+scratch, checkpoints, cooperative cuts and cooperative segment metadata are **measured
+but not certified by these bounds**. RSS, allocator overhead and tracing metadata are
+also outside this check. Pipelined/service paths do not export this route history;
+they cannot obtain a passing route-history ledger verdict from this instrument.
+
+The raw JSON carries `worker_ledger=route-history-v2`. Each traced run's raw `line`
+contains `alloc.workerN.name`, `.errors` and `.history`; each history record is
+`Route:cooperative:avx2:rows:block_bound:buffer:len:capacity,...`, separated by `|`.
+All lengths and capacities there are integer bytes. Worker numbers are local to a
+trace, not identities across runs. Means remain descriptive. Every raw traced round
+must be complete and have zero `t.f.w.ledger_violations`; medians cannot erase a
+single violation. Ordinary workers and forced teams both fail the process on invalid
+accounting, after JSON/report output is written. The workflow preserves the exit
+status through `tee` and uploads available artifacts even after failure.
+
+Native tests assert actual routes, byte/CRC parity, growth and retained reuse for
+Segmented and Cooperative<2>, including both mixed orders and mixed stream levels.
+Separate tests check transport through real parallel workers and reject impossible
+capacities, including a bad worker hidden by a plausible cross-worker mean and a
+bad round hidden by two good rounds. No timing claim follows from these tests.
 
 ## The measurements (the occupancy instrument's summary)
 
@@ -151,8 +207,8 @@ reader can take a block before its `Ready` mark. Such a block counts as held for
   dead bytes. Those are the bytes from MTF's end (`InvertStart`) on, held but never read
   again. It also gives output buffers' capacity against their bytes over all blocks, and
   the window's live bytes and capacity (`Window`).
-- **Worker buffers:** each worker's capacities as it recorded them at its end, its
-  high-water marks. They are checked against the ledger's bounds.
+- **Worker buffers:** descriptive means of final capacities. Each worker's integer
+  route history and final capacities are checked before aggregation as above.
 
 ## What these figures cannot tell you
 
@@ -177,12 +233,15 @@ reader can take a block before its `Ready` mark. Such a block counts as held for
 
 - **The default build: none.** Everything new is behind the `trace` feature or `cfg(test)`:
   the marks, the sizes they carry, the buffers' accessors and the ledger. The default
-  build's only change is `pub(crate)` on four constants that the ledger reads. The CI
-  bench's paired A/B is the check that the default build is unchanged.
+  build contains no allocation-history state or recording. The CI bench's paired A/B
+  remains the check for default performance.
 - **`trace` compiled in, level 0:** each mark is one relaxed atomic load. A block has two
-  more (`InvertStart`, `InvertEnd`), and each input chunk one (`Window`).
+  more (`InvertStart`, `InvertEnd`), each input chunk one (`Window`), and the allocation
+  recorder one level check per successful inversion; it records nothing at level 0.
 - **Levels 1 and 2:** each mark also costs a timestamp and a push to the thread's own
   buffer, now with two sizes (16 more bytes a mark). Reading a `Vec`'s length and
-  capacity is two loads. The instrument checks every traced mode against `off` by its
+  capacity is two loads. Each successful inversion now also allocates a buffer-size
+  snapshot and appends it to that worker's route history. This additional tracing
+  overhead is not free. The instrument checks every traced mode against `off` by its
   paired throughput ratio. A mode whose interval excludes no change is reported as
   perturbing, and its trace is not to be interpreted.

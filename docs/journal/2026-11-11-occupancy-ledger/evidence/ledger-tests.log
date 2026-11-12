@@ -1,0 +1,33 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-occupancy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 7.50s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-33be155e41cfb646)
+
+running 4 tests
+test trace::tests::ledger_at_level_9 ... ok
+test trace::tests::ledger_matches_a_workers_buffers ... ok
+test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+Segmented/runs Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/runs Runs n=800000 bound=900000 ll=1200000 rle=0
+Segmented/runs Runs n=90000 bound=100000 ll=1200000 rle=0
+Cooperative2/runs Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/runs Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/runs Runs n=90000 bound=100000 ll=1200000 rle=0
+Segmented/columns ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/columns ColumnInPlace n=99000 bound=100000 ll=100000 rle=0
+Segmented/columns ColumnInPlace n=700000 bound=900000 ll=900000 rle=0
+Cooperative2/columns ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/columns ColumnSeparate n=99000 bound=100000 ll=100000 rle=140004
+Cooperative2/columns ColumnSeparate n=700000 bound=900000 ll=900000 rle=700025
+Segmented/run-column Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/run-column ColumnInPlace n=700000 bound=900000 ll=1200000 rle=0
+Cooperative2/run-column Runs n=600000 bound=900000 ll=600000 rle=0
+Cooperative2/run-column ColumnSeparate n=700000 bound=900000 ll=1200000 rle=700025
+Segmented/column-run ColumnInPlace n=70000 bound=100000 ll=100000 rle=0
+Segmented/column-run Runs n=600000 bound=900000 ll=600000 rle=0
+Segmented/column-run Runs n=800000 bound=900000 ll=1200000 rle=0
+Cooperative2/column-run ColumnSeparate n=70000 bound=100000 ll=100000 rle=70002
+Cooperative2/column-run Runs n=600000 bound=900000 ll=600000 rle=70002
+Cooperative2/column-run Runs n=800000 bound=900000 ll=1200000 rle=70002
+test trace::tests::ledger_actual_routes_and_retained_history ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 1.29s
