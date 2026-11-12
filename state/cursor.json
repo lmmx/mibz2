@@ -1085,7 +1085,10 @@
         "state_commit": "9f60ca4c0321de3b965b55b303adb03d230afa27"
       },
       "ready_job_queued": false,
-      "ready_job_reason": "373 independent harness review, red Occupancy/legacy and pending CI, deliberate integration and final PROTOCOL9 readiness;366 still separate integration pending"
+      "ready_job_reason": "373 independent harness review, red Occupancy/legacy and pending CI, deliberate integration and final PROTOCOL9 readiness;366 still separate integration pending",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6821395963"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1165,7 +1168,8 @@
     6810699098,
     6819644553,
     6819665109,
-    6820358956
+    6820358956,
+    6821395963
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1248,12 +1252,16 @@
   },
   "dispatch_intents": {
     "researcher": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_recipient",
       "source_comment_id": 6821288869,
       "head": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
       "scope": "One independent live-reader diagnostic harness review; safety/source correspondence and paired inference; no timing",
       "recipient_execution_observed": false,
-      "task_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "task_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "comment_id": 6821395963,
+      "url": "https://github.com/lmmx/mibz2/pull/162#issuecomment-6821395963",
+      "verification": "audit/route/exact readback/verify exit0",
+      "completion_observed": false
     },
     "optimizer": {
       "status": "completed",
@@ -2017,7 +2025,7 @@
     "next": "Separate deliberate CI recovery/investigation; monitor scope read/triage/routing"
   },
   "pending_matched_port_diagnostic": {
-    "status": "preparation_delivered_independent_review_dispatching",
+    "status": "preparation_delivered_independent_review_pending",
     "source_review": 6810653848,
     "source_head": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
     "prior_handoff": 6782495828,
@@ -2103,7 +2111,8 @@
       ]
     },
     "review_comment_id": 6821288869,
-    "recipient_cursor_sha": "af8156e1f94c77390ca7e760c19888f5901a42f9"
+    "recipient_cursor_sha": "af8156e1f94c77390ca7e760c19888f5901a42f9",
+    "reviewer_assignment": 6821395963
   },
   "ci_incident_373": {
     "source_event": 6821109765,
