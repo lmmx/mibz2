@@ -12,9 +12,22 @@ from pathlib import Path
 from unittest import mock
 
 import driver
+import build as builder
 
 
 class DriverTests(unittest.TestCase):
+    def test_missing_build_parent_and_no_overwrite(self):
+        with (
+            tempfile.TemporaryDirectory() as d,
+            mock.patch.dict(os.environ, {"RUSTFLAGS": "non-frozen"}),
+        ):
+            target = Path(d) / "missing-parent" / "binaries"
+            with self.assertRaisesRegex(ValueError, "non-frozen"):
+                builder.build(target)
+            self.assertTrue(target.is_dir())
+            with self.assertRaises(FileExistsError):
+                builder.build(target)
+
     def test_fixed_balanced_budget(self):
         jobs = driver.schedule()
         self.assertEqual(len(jobs), 129)

@@ -14,7 +14,7 @@ RUSTC = "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
 
 
 def build(destination):
-    destination.mkdir()
+    destination.mkdir(parents=True)
     env = os.environ.copy()
     if any(
         value

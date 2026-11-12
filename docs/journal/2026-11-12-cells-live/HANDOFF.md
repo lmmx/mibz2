@@ -136,3 +136,21 @@ Direct coord.py audit/verify remains blocked by proxy tunnel403; route145 works,
 connector readback confirms publication. Cursor completion records delivery of
 this preparation only. GitHub comments cannot restart this Codex session; a manual
 launch remains required, and no event-triggered execution is assumed.
+
+## CI correction after initial publication
+
+At d2db35fca04b17ed766b29fc1e7932d49f7f70cc, untimed run43199851877 /
+job131120099184 passed source preparation, all10 Python/Just tests, five native
+harness tests and two native F01 tests. Step7 failed before any release build:
+`FileNotFoundError: target/live-binaries` because a fresh checkout had no root
+`target/`. **Class A, harness setup bug.** `build.py` now creates missing parent
+directories, still refusing an existing destination. A regression checks both
+properties; the Python suite is now11/11 with real Just and no skips. The experiment,
+Rust source/binaries, admission/copies, corpus budget and performance rules did not
+change. Exact failed excerpt and correction test log are retained. New-head CI
+must confirm the real fresh-checkout path; no manual rerun was requested.
+
+Legacy pre-commit at the initial head is also failure. Its external results page
+is blocked by the local proxy (403) and unavailable through the web connector;
+its cause is not asserted from the badge. Remaining check dispositions are in the
+completion REVIEW/state snapshot. This cannot support an all-green/readiness claim.
