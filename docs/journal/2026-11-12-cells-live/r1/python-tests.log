@@ -1,0 +1,18 @@
+test_attribution_stops_if_instrumentation_changes_conclusion (__main__.DriverTests.test_attribution_stops_if_instrumentation_changes_conclusion) ... ok
+test_child_failure_preserved (__main__.DriverTests.test_child_failure_preserved) ... ok
+test_dry_run_has_no_child_clock_or_sleep (__main__.DriverTests.test_dry_run_has_no_child_clock_or_sleep) ... ok
+test_exact_run_wiring_without_decodes_or_clocks (__main__.DriverTests.test_exact_run_wiring_without_decodes_or_clocks) ... ok
+test_failed_measured_child_never_enters_successful_rows (__main__.DriverTests.test_failed_measured_child_never_enters_successful_rows) ... ok
+test_fixed_balanced_budget (__main__.DriverTests.test_fixed_balanced_budget) ... ok
+test_invalid_affinity_leaves_failed_attempt (__main__.DriverTests.test_invalid_affinity_leaves_failed_attempt) ... ok
+test_malformed_and_decoder_error (__main__.DriverTests.test_malformed_and_decoder_error) ... ok
+test_missing_build_parent_and_no_overwrite (__main__.DriverTests.test_missing_build_parent_and_no_overwrite) ... ok
+test_real_just_wiring_and_failure (__main__.DriverTests.test_real_just_wiring_and_failure) ... ok
+test_reconciliation_rejects_clock_and_crc (__main__.DriverTests.test_reconciliation_rejects_clock_and_crc) ... ok
+test_spawn_failure_has_no_child_resources (__main__.DriverTests.test_spawn_failure_has_no_child_resources) ... ok
+test_wait4_resources_and_failure_with_fake_clock (__main__.DriverTests.test_wait4_resources_and_failure_with_fake_clock) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.128s
+
+OK

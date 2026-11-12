@@ -139,7 +139,7 @@ class DriverTests(unittest.TestCase):
             def identity(path):
                 return driver.DIGESTS[path.stem] if path.suffix == ".bz2" else "binary"
 
-            def child(command, output, error, env, measured=False):
+            def child(command, output, error, env, measured=False, job=None):
                 corpus = Path(command[5]).stem
                 key = Path(command[3]).name
                 trace = key.endswith("-on")
@@ -191,15 +191,36 @@ class DriverTests(unittest.TestCase):
             self.assertEqual(len((root / "attempt/runs.jsonl").read_text().splitlines()), 120)
 
     def test_wait4_resources_and_failure_with_fake_clock(self):
-        for status in (0, 7 << 8):
-            with tempfile.TemporaryDirectory() as d:
+        cases = [
+            (0, '{"error":null}', "accepted", None),
+            (7 << 8, '{"error":"CRC"}', "nonzero_exit", subprocess.CalledProcessError),
+            (0, "not JSON", "malformed_json", ValueError),
+            (0, '{"error":"CRC"}', "decoder_error", ValueError),
+        ]
+        resources = dict(wall_ns=150, cpu_s=0.1 + 0.2, user_s=0.1, system_s=0.2, rss_kib=321)
+        job = dict(index=9, **driver.schedule()[9])
+        for status, body, validation, exception in cases:
+            with self.subTest(validation=validation), tempfile.TemporaryDirectory() as d:
                 root = Path(d)
                 child = mock.MagicMock(pid=123)
                 child.__enter__.return_value = child
 
-                def launch(command, stdout, **kwargs):
-                    stdout.write('{"error":null}')
+                def exited(*args):
+                    # Already durable at Popen context exit, before JSON parsing
+                    # or the outer exception handler can rescue the record.
+                    saved = json.loads((root / "out.resources").read_text())
+                    self.assertEqual(saved["resources"], resources)
+                    self.assertEqual(saved["wait_status"], status)
+                    self.assertEqual(saved["validation"], "pending")
+                    return False
+
+                child.__exit__.side_effect = exited
+
+                def launch(command, stdout, stderr, **kwargs):
+                    stdout.write(body)
                     stdout.flush()
+                    stderr.write("failure retained")
+                    stderr.flush()
                     return child
 
                 usage = SimpleNamespace(ru_utime=0.1, ru_stime=0.2, ru_maxrss=321)
@@ -208,18 +229,55 @@ class DriverTests(unittest.TestCase):
                     mock.patch.object(driver.os, "wait4", return_value=(123, status, usage)),
                     mock.patch.object(driver.time, "perf_counter_ns", side_effect=[100, 250]),
                 ):
-                    if status:
-                        with self.assertRaises(subprocess.CalledProcessError):
+                    if exception:
+                        with self.assertRaises(exception):
                             driver.checked_child(
-                                ["fixture"], root / "out", root / "err", measured=True
+                                ["fixture"], root / "out.json", root / "err", measured=True, job=job
                             )
                     else:
-                        _, resources = driver.checked_child(
-                            ["fixture"], root / "out", root / "err", measured=True
+                        row, returned = driver.checked_child(
+                            ["fixture"], root / "out.json", root / "err", measured=True, job=job
                         )
-                        self.assertEqual(resources["wall_ns"], 150)
-                        self.assertEqual(resources["rss_kib"], 321)
-                        self.assertAlmostEqual(resources["cpu_s"], 0.3)
+                        self.assertEqual(row, {"error": None})
+                        self.assertEqual(returned, resources)
+                record = json.loads((root / "out.resources").read_text())
+                self.assertEqual(record["resources"], resources)
+                self.assertEqual(record["command"], ["fixture"])
+                self.assertEqual(record["job"], job)
+                self.assertEqual(record["pid"], 123)
+                self.assertEqual(record["status"], "exited")
+                self.assertEqual(record["wait_status"], status)
+                self.assertEqual(record["returncode"], os.waitstatus_to_exitcode(status))
+                self.assertEqual(record["validation"], validation)
+                self.assertEqual("error" in record, exception is not None)
+                self.assertEqual((root / "out.json").read_text(), body)
+                self.assertEqual((root / "err").read_text(), "failure retained")
+
+    def test_spawn_failure_has_no_child_resources(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            job = dict(index=9, **driver.schedule()[9])
+            with (
+                mock.patch.object(
+                    driver.subprocess, "Popen", side_effect=FileNotFoundError("fixture")
+                ),
+                mock.patch.object(driver.os, "wait4", side_effect=AssertionError("no child")),
+                mock.patch.object(driver.time, "perf_counter_ns", side_effect=[100]),
+                self.assertRaises(FileNotFoundError),
+            ):
+                driver.checked_child(
+                    ["fixture"], root / "out.json", root / "err", measured=True, job=job
+                )
+            record = json.loads((root / "out.resources").read_text())
+            self.assertEqual(record["command"], ["fixture"])
+            self.assertEqual(record["job"], job)
+            self.assertEqual(record["status"], "spawn_failed")
+            self.assertEqual(record["validation"], "pending")
+            for field in ("pid", "wait_status", "returncode", "resources"):
+                self.assertIsNone(record[field])
+            self.assertIn("FileNotFoundError", record["error"])
+            self.assertEqual((root / "out.json").read_text(), "")
+            self.assertEqual((root / "err").read_text(), "")
 
     def test_real_just_wiring_and_failure(self):
         just = shutil.which("just")
@@ -260,6 +318,108 @@ class DriverTests(unittest.TestCase):
                     capture.read_text().splitlines(),
                     ["bench/cells-gap/live/run.sh", "7", "/frozen corpus"],
                 )
+
+    def test_failed_measured_child_never_enters_successful_rows(self):
+        original_child = driver.checked_child
+        for case in ("nonzero", "malformed", "decoder_error", "spawn", "reconcile"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                (root / "build.json").write_text(
+                    json.dumps(
+                        dict(
+                            pin=driver.PIN,
+                            diagnostic_head="a" * 40,
+                            tracked_dirty=False,
+                            rustc="rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+                            binaries={
+                                a + "-" + t: "binary"
+                                for a in ("baseline", "cells")
+                                for t in ("off", "on")
+                            },
+                            harness={},
+                        )
+                    )
+                )
+                jobs = [driver.schedule()[0], driver.schedule()[11]]
+                good = dict(
+                    arm="baseline",
+                    trace=True,
+                    timed=False,
+                    bytes=1,
+                    hash="ok",
+                    clock_calls=0,
+                    blocks=[],
+                    phases={},
+                )
+                measured_row = dict(
+                    good,
+                    timed=True,
+                    clock_calls=2,
+                    phases={"whole_reader_drain": dict(calls=1, inclusive_ns=100, exclusive_ns=99)},
+                )
+                body = {"malformed": "not JSON", "decoder_error": '{"error":"CRC"}'}.get(
+                    case, json.dumps(measured_row)
+                )
+                child = mock.MagicMock(pid=123)
+                child.__enter__.return_value = child
+
+                def launch(command, stdout, stderr, **kwargs):
+                    if case == "spawn":
+                        raise FileNotFoundError("fixture")
+                    stdout.write(body)
+                    stdout.flush()
+                    stderr.write("retained")
+                    stderr.flush()
+                    return child
+
+                def checked(command, output, error, env, measured=False, job=None):
+                    if not measured:
+                        return good.copy()
+                    return original_child(command, output, error, env, measured=True, job=job)
+
+                with (
+                    mock.patch.object(
+                        driver,
+                        "digest",
+                        side_effect=lambda p: (
+                            driver.DIGESTS[p.stem] if p.suffix == ".bz2" else "binary"
+                        ),
+                    ),
+                    mock.patch.object(driver, "schedule", return_value=jobs),
+                    mock.patch.object(driver.os, "sched_getaffinity", return_value={7}),
+                    mock.patch.object(driver.subprocess, "check_output", return_value="fixture"),
+                    mock.patch.object(driver, "checked_child", side_effect=checked),
+                    mock.patch.object(driver.subprocess, "Popen", side_effect=launch),
+                    mock.patch.object(
+                        driver.os,
+                        "wait4",
+                        return_value=(
+                            123,
+                            7 << 8 if case == "nonzero" else 0,
+                            SimpleNamespace(ru_utime=0.1, ru_stime=0.2, ru_maxrss=321),
+                        ),
+                    ),
+                    mock.patch.object(driver.time, "perf_counter_ns", side_effect=[100, 250]),
+                    mock.patch.object(driver.time, "sleep"),
+                    self.assertRaises(
+                        (ValueError, subprocess.CalledProcessError, FileNotFoundError)
+                    ),
+                ):
+                    driver.run(root, root, root / "attempt", 7)
+                attempt = root / "attempt"
+                self.assertEqual(
+                    json.loads((attempt / "FAILED.json").read_text())["completed_measured"], 0
+                )
+                for name in ("runs.jsonl", "analysis.json", "COMPLETE"):
+                    self.assertFalse((attempt / name).exists())
+                record = json.loads((attempt / "001-wikidata-baseline.resources").read_text())
+                self.assertEqual(record["job"], dict(index=1, **jobs[1]))
+                self.assertEqual(
+                    record["resources"]["wall_ns"] if case != "spawn" else record["resources"],
+                    150 if case != "spawn" else None,
+                )
+                self.assertTrue((attempt / "001-wikidata-baseline.json").exists())
+                self.assertTrue((attempt / "001-wikidata-baseline.stderr").exists())
 
     def test_invalid_affinity_leaves_failed_attempt(self):
         with tempfile.TemporaryDirectory() as d:

@@ -1,0 +1,14 @@
+{
+  "README.md": "53ce9b55c8c68c76ce49122f0fb841b863759270272a44e8fd45b4c98717251f",
+  "check_protection.py": "b0e048e1b5eb2b8157bf81c223d83b7abb85d89f0cecdbb0921e10a61ad51f16",
+  "plan.json": "ad8d829af4f5f22fc1a438a3c303e2e63df63465927de5391350f05d1b4c36e1",
+  "prepared-source.json": "b2249d96c5a6aaa52f5cc45f40ac29433bd4bf23be626781f5b2e582df6e2116",
+  "protection-final.json": "134ace0ee1fddb65faba2119bc5d253c67d26b7a72bd2dd36ef16aa273a6ef36",
+  "protection.json": "e5d51e1e13c565d42190baac613ce7c8ef33f276c4ae4e76b4554e35b3f6de74",
+  "python-tests-final.log": "6d4629e2b661c136b81953f2a7a3a6d6590134e5aa7de1b448cd6a623b62614b",
+  "python-tests.log": "5c26c3164c856a807dae82df434f38d0b0754650e4e68a23e7ec50b8c38a9d5b",
+  "static-final.log": "c6486b51f483249343d4a4bdb91c41be31f0bdc28887b2f4cd4800e174f8bd6b",
+  "static.log": "5fcd0e33c9070b72ff0f6459cae5d09688947bef550a58cfb642ca99a93fa448",
+  "validation-end.txt": "2bee65fb1d4fa66c183b59c67d6db38deecb7e854a07f16e17175e643d2eb875",
+  "validation-start.txt": "c0d1705391cb5249b282aad74cd8fa28193a4c465e531df4d3397582aab08566"
+}

@@ -95,8 +95,10 @@ F01 test is replaced. Hooks copy scalar values and query Vec length/capacity; th
 do not expose references/pointers into kernel buffers. Independent allocations for
 TLS records cannot move a live Rust Vec allocation. No record is held borrowed
 across a decoder call. RefCell borrows are released inside each hook; guards hold
-only stack depth and an active flag. Error unwinding closes scopes in LIFO order,
-and an explicit front stop is idempotent. Logging may add cost or allocation failure,
+only stack depth and an active flag. Ordinary Result::Err returns close scopes in
+LIFO order, and an explicit front stop is idempotent. Existing tests exercise
+Result::Err and scope destruction, not an injected Rust panic; panic-unwind
+recovery remains untested. No new panic coverage or B5 certification is claimed. Logging may add cost or allocation failure,
 which is part of diagnostic overhead, but does not change a successful decoder's
 memory-access obligations. Off hooks are removed by feature cfg.
 
@@ -154,3 +156,36 @@ Legacy pre-commit at the initial head is also failure. Its external results page
 is blocked by the local proxy (403) and unavailable through the web connector;
 its cause is not asserted from the badge. Remaining check dispositions are in the
 completion REVIEW/state snapshot. This cannot support an all-green/readiness claim.
+
+
+## Targeted R1 correction after independent review
+
+Dispatch [363/6821674655](https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655),
+answering [Researcher6821626797](https://github.com/lmmx/mibz2/pull/145#issuecomment-6821626797)
+at reviewed head7b53ded9eb139fdd69b4c29565e7373ac95e90d4. One bounded correction;
+Coordinator assesses the result without a second full review round.
+
+`checked_child` now flushes command/job/status and already-collected process
+wall/user/system/total CPU/RSS to its reserved `.resources` sidecar before exit,
+JSON or decoder-error rejection. Spawn failure records explicit null child/resource
+fields. Raw stdout/stderr and FAILED survive. Resource collection is unchanged;
+sidecar I/O occurs after the second clock read. Successful return tuples and the
+paired estimator are unchanged. Phase reconciliation now precedes successful-row
+append; failure rows cannot enter paired estimates. Sidecar validation describes
+child output validation only; later checks may still fail the attempt.
+
+Evidence limits corrected: the existing Rust error tests are Result::Err tests,
+not injected panic recovery. `pos_initialized_bytes` is logical initialized extent,
+not repeated resize/fill stores or physical traffic. Bundles omit files>=50MiB,
+including full Wikidata precheck byte files; length/SHA and logs remain bundled.
+Matching off/on conclusion categories do not establish effect-size equivalence
+or causal off-build savings (off0.9/on0.45 can both be faster). Instrumented-path
+interpretation, source/input identities, prospective PLAN,120+9 budget and the
+unadmitted warm20+20 proposal are unchanged. No hooks or Rust source changed.
+
+Focused regression and source-protection evidence is appended under [r1](r1/);
+all97 prior archived digests and historical367 files remain immutable. Exact
+changed-head Actions and legacy dispositions travel in the completion REVIEW and
+own state report. Inherited Occupancy accounting, prior legacy Class D and macOS
+ARM cancellation/Class D remain unwaived until reconciled on the changed head.
+No workstation execution, readiness signal or production qualification follows.

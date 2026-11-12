@@ -63,24 +63,68 @@ def binary_key(job):
     return job["arm"] + ("-on" if job["trace"] else "-off")
 
 
-def checked_child(command, output, error, env=None, measured=False):
+def checked_child(command, output, error, env=None, measured=False, job=None):
     with Path(output).open("x") as out, Path(error).open("x") as err:
         resources = None
         if measured:
-            start = time.perf_counter_ns()
-            with subprocess.Popen(command, stdout=out, stderr=err, env=env) as child:
-                _, status, usage = os.wait4(child.pid, 0)
-                wall = time.perf_counter_ns() - start
-                child.returncode = os.waitstatus_to_exitcode(status)
-                if child.returncode:
-                    raise subprocess.CalledProcessError(child.returncode, command)
-            resources = dict(
-                wall_ns=wall,
-                cpu_s=usage.ru_utime + usage.ru_stime,
-                user_s=usage.ru_utime,
-                system_s=usage.ru_stime,
-                rss_kib=usage.ru_maxrss,
+            record = dict(
+                command=command,
+                job=job,
+                pid=None,
+                status="not_started",
+                wait_status=None,
+                returncode=None,
+                resources=None,
+                validation="pending",
             )
+            # Reserve before launching; never overwrite a prior attempt. Flush the
+            # collected tuple before any exit/JSON/decoder rejection can discard it.
+            with Path(output).with_suffix(".resources").open("x") as sidecar:
+
+                def persist():
+                    sidecar.seek(0)
+                    sidecar.write(json.dumps(record) + "\n")
+                    sidecar.truncate()
+                    sidecar.flush()
+
+                persist()
+                try:
+                    start = time.perf_counter_ns()
+                    record["status"] = "spawn_failed"
+                    with subprocess.Popen(command, stdout=out, stderr=err, env=env) as child:
+                        record.update(pid=child.pid, status="wait_failed")
+                        _, status, usage = os.wait4(child.pid, 0)
+                        wall = time.perf_counter_ns() - start
+                        child.returncode = os.waitstatus_to_exitcode(status)
+                        resources = dict(
+                            wall_ns=wall,
+                            cpu_s=usage.ru_utime + usage.ru_stime,
+                            user_s=usage.ru_utime,
+                            system_s=usage.ru_stime,
+                            rss_kib=usage.ru_maxrss,
+                        )
+                        record.update(
+                            status="exited",
+                            wait_status=status,
+                            returncode=child.returncode,
+                            resources=resources,
+                        )
+                        persist()
+                        if child.returncode:
+                            record["validation"] = "nonzero_exit"
+                            raise subprocess.CalledProcessError(child.returncode, command)
+                    record["validation"] = "malformed_json"
+                    row = json.loads(Path(output).read_text())
+                    record["validation"] = "decoder_error"
+                    if row.get("error"):
+                        raise ValueError(f"decoder error: {row['error']}")
+                    record["validation"] = "accepted"
+                    persist()
+                except BaseException as failure:
+                    record["error"] = repr(failure)
+                    persist()
+                    raise
+            return row, resources
         else:
             subprocess.run(command, stdout=out, stderr=err, env=env, check=True)
     row = json.loads(Path(output).read_text())
@@ -335,19 +379,23 @@ def run(binaries, corpora, directory, cpu):
                 # No in-process timer or rusage contamination from previous children.
                 time.sleep(job["settle_s"])
                 row, resources = checked_child(
-                    command, str(stem) + ".json", str(stem) + ".stderr", child_env, measured=True
+                    command,
+                    str(stem) + ".json",
+                    str(stem) + ".stderr",
+                    child_env,
+                    measured=True,
+                    job=dict(index=i, **job),
                 )
-                Path(str(stem) + ".resources").write_text(json.dumps(resources) + "\n")
                 expected = checks[corpus, job["arm"]][0]
                 if (row["bytes"], row["hash"]) != (expected["bytes"], expected["hash"]):
                     raise ValueError("measured output mismatch")
                 if (row["arm"], row["trace"], row["timed"]) != (job["arm"], job["trace"], True):
                     raise ValueError("wrong executable/build/mode")
                 row.update(job, **resources)
+                reconcile(row)
                 rows.append(row)
                 with (directory / "runs.jsonl").open("a") as f:
                     f.write(json.dumps(row) + "\n")
-                reconcile(row)
         (directory / "analysis.json").write_text(json.dumps(analyse(rows), indent=2) + "\n")
         (directory / "COMPLETE").write_text(
             "120 measured decodes +9 checks; no production qualification\n"

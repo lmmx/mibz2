@@ -69,7 +69,8 @@ period, requested cells scratch/growth, capacities, position initialisation, and
 copy bytes. Attempted induction counts are retained on budget refusal, not only
 success. Induction copy bytes are exactly two16-byte helper calls per completed
 cell, including discarded representations; these are addressed bytes, not DRAM
-traffic. Writer counts are actual small/long/repetition copy-call lengths.
+traffic. `pos_initialized_bytes` counts the logical initialized extent (4 × run
+count), not repeated resize/fill stores or physical traffic. Writer counts are actual small/long/repetition copy-call lengths.
 Absent event counters mean no such event only for these documented additive
 counters; missing observational fields (e.g. letters before density refusal) stay
 absent. Invalid invariant exits are not credited with an invented attempt count.
@@ -87,14 +88,25 @@ charges startup, taskset, serialization, logging and exit together, not just log
 `driver.py analyse RECORDS` replays complete-decode paired ratios and their frozen
 95% log-t intervals, off/on inflation and nonoverlapping cost reconciliation.
 Incomplete/duplicate data, wrong binaries/digests, output or CRC errors fail.
-A failed phase reconciliation stops the run; raw records and FAILED.json survive.
+A failed phase reconciliation stops the run before appending a successful row.
+Raw stdout/stderr and FAILED.json survive. Each measured child has a `.resources`
+sidecar with command/job identity, PID, raw wait status, exit code and the collected
+wall/CPU/RSS tuple, flushed immediately after wait4 and before output rejection.
+Spawn failures retain null PID/status/resources explicitly. Sidecar `validation`
+describes only exit/JSON/decoder-error checks; later identity/CRC/phase failures
+remain in FAILED.json and are never appended to successful paired rows.
 If instrumentation changes the off-build category, quantitative cost attribution
 is discarded and raw counts retained. No automatic rerun, gate waiver or backend
 selection follows. Attribution that passes remains specific to the instrumented
-path; it does not prove a causal decomposition of the off build.
+path; it does not prove a causal decomposition of the off build. Matching categories
+are not effect-size equivalence: off ratio0.9 and on ratio0.45 both count as faster
+despite unequal instrumentation inflation. No phase savings may be transported
+causally to the off build from that agreement.
 
 The prepared Just recipe wraps `run.sh`; it creates one attempt directory, records
 console/build/identity/results and bundles both success and failure using the
-repository's existing bundler. It has not been executed or queued. Coordinator
+repository's existing bundler. Files at least50MiB are excluded: full Wikidata
+precheck byte files remain local; their length/SHA records and logs travel.
+It has not been executed or queued. Coordinator
 reconciliation, independent harness review, integration and PROTOCOL9 decisions
 must precede any workstation execution. No execution command is issued here.
