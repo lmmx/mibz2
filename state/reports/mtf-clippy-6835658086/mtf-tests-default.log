@@ -1,0 +1,21 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-clippy)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.61s
+     Running tests/mtf_checkpoints.rs (/tmp/mibz2-clippy-1100-target/debug/build/mibz2/20ea92242aa59b10/out/mtf_checkpoints-20ea92242aa59b10)
+
+running 3 tests
+test runs_on_checkpoints ... ok
+test edge_cases_at_every_limit ... ok
+test every_shape ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.74s
+
+     Running tests/mtf_kernels.rs (/tmp/mibz2-clippy-1100-target/debug/build/mibz2/5e9787fa789b6778/out/mtf_kernels-5e9787fa789b6778)
+
+running 4 tests
+test corrupt_runs_and_limits ... ok
+test random_streams ... ok
+test every_index_and_row_edge ... ok
+test real_blocks ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.42s
+

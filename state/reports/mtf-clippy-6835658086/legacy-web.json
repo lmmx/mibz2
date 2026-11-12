@@ -1,0 +1,12 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Internal Error ()\n【turn685964view0】 [wordlim: 200] Source: open({\"ref_id\":\"https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA\",\"lineno\":null}); \nURL https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA is not accessible via this tool."
+      }
+    ],
+    "isError": false
+  }
+}

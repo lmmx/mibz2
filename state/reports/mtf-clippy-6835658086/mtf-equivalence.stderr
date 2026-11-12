@@ -1,0 +1,3 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-clippy)
+    Finished `fuzz` profile [optimized + debuginfo] target(s) in 4.53s
+     Running `/tmp/mibz2-clippy-1100-target/fuzz/examples/mtf_two_level synth 0`

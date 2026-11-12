@@ -1,0 +1,61 @@
+{
+  "observed_at": "2026-11-12T21:26:47Z",
+  "head": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
+  "runs": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "workflow_runs": [
+          {
+            "id": 43310214895,
+            "name": "CI",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1737,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214895/logs",
+            "workflow_id": 398116820
+          },
+          {
+            "id": 43310214911,
+            "name": "Test",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1720,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43310214911/logs",
+            "workflow_id": 398116819
+          }
+        ]
+      },
+      "isError": false
+    }
+  },
+  "legacy": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794518771.1rJN_h_iRSeFdtWzLgcGWQ"
+          }
+        ]
+      },
+      "isError": false
+    }
+  }
+}

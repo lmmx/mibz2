@@ -1,0 +1,15 @@
+diff --git a/examples/mtf_two_level.rs b/examples/mtf_two_level.rs
+index 12cc473..7606a85 100644
+--- a/examples/mtf_two_level.rs
++++ b/examples/mtf_two_level.rs
+@@ -270,8 +270,8 @@ mod arms {
+             for (i, &c) in bytes.iter().enumerate() {
+                 m.a[N - 16 * K + i] = c;
+             }
+-            for k in 0..K {
+-                m.bases[k] = N - 16 * K + 16 * k;
++            for (k, base) in m.bases.iter_mut().enumerate() {
++                *base = N - 16 * K + 16 * k;
+             }
+             m
+         }

@@ -1,0 +1,19 @@
+{
+  "parent": "ec1b84eb60c8f011da4fa41d6d7d4a839f91bf24",
+  "changed_files": [
+    "examples/mtf_two_level.rs"
+  ],
+  "exact_two_line_replacement": true,
+  "packet_blob_unchanged": true,
+  "old_mtf_sha256": "ecef85e6653cad308239c847f3cbc656d88a021a368a0d11c9caa8f567e3c2f9",
+  "new_mtf_sha256": "cadcfd9b85c9d7ee299206ec3f861cb407ffe673bebbb46e15d2c656f145579f",
+  "synthetic_cases": 17,
+  "checked_arms": 8,
+  "moving_arms": [
+    "regs+bases (N=1024,K=14)",
+    "libbzip2 (N=4096,K=16)"
+  ],
+  "equivalence_comparisons": 136,
+  "moving_comparisons": 34,
+  "timing_repetitions": 0
+}
