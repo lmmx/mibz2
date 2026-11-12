@@ -34,7 +34,11 @@
     "next_action": "Coordinator reconcile maintenance result and separate lint scope; prioritise #373 hosted pre-commit evidence/integration dependencies before next research dispatch",
     "measurements_run": false,
     "merged": false,
-    "automatic_github_wakeup_assumed": false
+    "automatic_github_wakeup_assumed": false,
+    "completion_review_comment_id": 6835550527,
+    "pr_evidence_comment_id": 6835548670,
+    "evidence_commit": "d2ba8d734ea0ef66a09ef98ec4d4586b43492617",
+    "receipt_readback_verified": true
   },
   "automatic_github_wakeup_assumed": false,
   "prior_f01": {
