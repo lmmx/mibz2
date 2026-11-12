@@ -1931,6 +1931,13 @@
       "disposition": "All supplied structural results reproduce exactly; recommend one bounded untimed real-block delimiter falsifier, not production certification.",
       "review_comment_id": 6793646018,
       "publication_verification": "Exact body/author/issue and role-aware routing passed; pinned verify retains coordinator-only FROM exception."
+    },
+    {
+      "trigger_comment_id": 6821395963,
+      "status": "in progress",
+      "pr": 162,
+      "source_commit": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+      "report_path": "state/reports/live-reader-6821395963/report.md"
     }
   ],
   "active_delegations": [],
