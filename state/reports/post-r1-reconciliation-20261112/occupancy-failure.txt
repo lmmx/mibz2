@@ -5,4 +5,3 @@
 2026-11-12T11:21:58.4955788Z   worker buffers (each at its end, mean MB): 17.00 total = tt 7.20 + seg.bufs 7.05 + ll 1.80 + runs.runs 0.80 · ledger check: VIOLATED: ll 1799923 outside 900000..=Some(900000.0); rle 36 outside 900000..=Some(1799999.0) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
 2026-11-12T11:21:58.5919195Z AssertionError: the ledger check fails under teams
 2026-11-12T11:21:58.6072612Z ##[error]Process completed with exit code 1.
-
