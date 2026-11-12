@@ -1389,7 +1389,12 @@
     },
     "6830851089": {
       "status": "ignored_own_monitor_log",
-      "comment_updated_at": null
+      "comment_updated_at": null,
+      "delivery_id": "f9c8d5f0-debd-11f1-93af-43fdc17c5de0",
+      "external_messages_after_checkpoint": 0,
+      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "ready_job_queued": false,
+      "reason": "Own event; no new external message. Existing integrator progressing373; no duplicate dispatch or log. New head checks incomplete and legacy failure, final queue readiness unmet."
     },
     "6830847624": {
       "status": "completed_triage_merge366_368_closure_observed_373_pending",
@@ -1514,8 +1519,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6830847624,
-    "delivery_id": "f48f6720-debd-11f1-94e2-ebf8b41b3f9e",
+    "comment_id": 6830851089,
+    "delivery_id": "f9c8d5f0-debd-11f1-93af-43fdc17c5de0",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -2770,7 +2775,14 @@
     "pr368_state": "closed_unmerged_as_incorporated",
     "pr368_disposition_comment_id": 6830813882,
     "postmerge_verification": "Codex reports expected-head merge, head_sha --merged, parents/tree identity and41file correspondence; merge/closure independently observed; tool does not expose tree/parents",
-    "master_push_checks": "Reported in progress; connector workflow endpoint filters pull_request and cannot establish push checks"
+    "master_push_checks": "Reported in progress; connector workflow endpoint filters pull_request and cannot establish push checks",
+    "observed_pr373_progress": {
+      "head_sha": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+      "actions": "4 in progress,1 queued",
+      "legacy": "failure",
+      "legacy_url": "https://results.pre-commit.ci/run/github/1435546475/1794504358.Y40p1JvNSESWR89bgRGktA",
+      "completion_receipt_observed": false
+    }
   },
   "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
 }
