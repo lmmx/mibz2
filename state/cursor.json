@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6821109765,
+  "last_examined_comment_id": 6821288869,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1066,7 +1066,7 @@
       "audit": "exit0; six resolved historical misroutes"
     },
     "6821288869": {
-      "status": "in_progress",
+      "status": "completed_preparation_reconciled_independent_review_routed",
       "delivery_id": "f60ccf40-de84-11f1-863e-dc992f7802dd",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6821288869",
@@ -1087,8 +1087,11 @@
       "ready_job_queued": false,
       "ready_job_reason": "373 independent harness review, red Occupancy/legacy and pending CI, deliberate integration and final PROTOCOL9 readiness;366 still separate integration pending",
       "action_links": [
-        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6821395963"
-      ]
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6821395963",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6821410188"
+      ],
+      "disposition": "Accept actual preparation delivery only; independent Researcher harness review routed and verified; Observer batched record routed. No measurement readiness or integration approval.",
+      "log_status": "in_progress_before_post"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1169,15 +1172,18 @@
     6819644553,
     6819665109,
     6820358956,
-    6821395963
+    6821395963,
+    6821410188
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6821109765,
-    "delivery_id": "bd7ca2a0-de83-11f1-9171-6208402cbee4"
+    "comment_id": 6821288869,
+    "delivery_id": "f60ccf40-de84-11f1-863e-dc992f7802dd",
+    "repository": "lmmx/mibz2",
+    "pull_request_number": 145
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1304,10 +1310,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_recipient",
       "source_comment_id": 6821288869,
       "scope": "One batched record of366 preparation/integration and373 delivery/review/readiness",
-      "recipient_execution_observed": false
+      "recipient_execution_observed": false,
+      "comment_id": 6821410188,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6821410188",
+      "verification": "audit/route/exact readback/verify exit0",
+      "completion_observed": false
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
