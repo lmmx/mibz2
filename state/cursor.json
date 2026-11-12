@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6836680787,
+  "last_examined_comment_id": 6838153034,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1571,13 +1571,18 @@
       "reason": "Exact own LOG verified; no new external message.375 green referral already persisted; no duplicate dispatch.373/finalworkstationreadiness unresolved."
     },
     "6838153034": {
-      "status": "in_progress",
+      "status": "completed_external_integration_reconciled_operator_handoff",
       "delivery_id": "c231cb00-deeb-11f1-8432-fd9c91e91a70",
       "comment_updated_at": null,
       "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
       "scope": "Reconcile separate375 integration and373 operator evidence handoff",
-      "action_links": [],
-      "ready_job_queued": false
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6838191142",
+        "https://github.com/lmmx/mibz2/pull/373#issuecomment-6838120361"
+      ],
+      "ready_job_queued": false,
+      "reason": "375 merged expected head; postmergeTestjobs/docsdeployment success.373 requires operator-access decisive failure evidence; no coding task or readyjob justified.",
+      "log_intent": "in_progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1687,15 +1692,16 @@
     6835700905,
     6836483279,
     6836501333,
-    6836680787
+    6836680787,
+    6838191142
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6836680787,
-    "delivery_id": "ab744e10-dee1-11f1-91b6-567ef33007ff",
+    "comment_id": 6838153034,
+    "delivery_id": "c231cb00-deeb-11f1-8432-fd9c91e91a70",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1828,11 +1834,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_receipt",
       "source_comment_id": 6838153034,
       "scope": "375 merged and postmerge checks complete;373 operator evidence handoff",
       "completion_observed": false,
-      "recipient_execution_observed": false
+      "recipient_execution_observed": false,
+      "comment_id": 6838191142,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6838191142",
+      "verification": "audit/route/exact readback/verify exit0"
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -3078,9 +3087,9 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+  "last_observed_master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
   "pending_compatibility_375": {
-    "status": "scoped_corrections_complete_exact_head_green_referred_for_deliberate_integration",
+    "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
     "review_comment_id": 6836435433,
     "prior_assignment": 6832249633,
@@ -3150,7 +3159,15 @@
     "legacy373_retrieval": "Codex bounded21s attempt CONNECT403/inaccessible; no decisive hosted cause; ClassD unchanged",
     "exact_head_checks_green": true,
     "checks_observed_on_event": 6836633023,
-    "next_actor": "Louis or separate deliberate authorised Coordinator: assess and expected-head merge375 with postmerge verification; no automated merge"
+    "next_actor": "373 operator evidence handoff; no further375 implementation",
+    "merged": true,
+    "merge_commit_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+    "integration_review": 6838153034,
+    "integration_evidence": "417e0e3c0ed17c360a4ca4759fd43477fb1023bf",
+    "integration_cursor_sha": "fbb1e78f14d34cdd216ddfefa1492ced63b93bef",
+    "postmerge_test": "All returned jobs success43323058105 including Rust131548422804",
+    "postmerge_docs": "pages/build/deploybranch success43323058116;look/preview skipped",
+    "postmerge_packaging": "skipped43323058112 existing condition; source-head packaging pass"
   },
   "monitor_policy_verification": {
     "observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
@@ -3160,5 +3177,21 @@
     "audit": "exit0; six resolved historical misroutes",
     "activation_reused": 6782075529,
     "return_of_control_observed": false
+  },
+  "operator_evidence_373": {
+    "status": "awaiting_operator_access_evidence",
+    "source_event": 6838153034,
+    "head_sha": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+    "recovery_comment_id": 6838120361,
+    "required": [
+      "full hosted failing hook/command/exit/output with result/head/attempt",
+      "four reported macOS annotations and cancellation explanation for131361540210"
+    ],
+    "classifications": {
+      "legacy": "D",
+      "macos_x86": "D"
+    },
+    "connector_annotation_reader_available": false,
+    "no_rerun": true
   }
 }
