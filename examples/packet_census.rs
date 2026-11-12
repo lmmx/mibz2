@@ -580,8 +580,8 @@ fn validate_column(l: &[u8], v: &mut Counts) {
                         let mut y = x[t];
                         let mut whole = 0usize;
                         'reps: while whole * per < rem[t] {
-                            for j in 0..pk.k {
-                                if c.id[y as usize] != pk.path[j] {
+                            for &id in &pk.path[..pk.k] {
+                                if c.id[y as usize] != id {
                                     break 'reps;
                                 }
                                 for _ in 0..c.sb {
