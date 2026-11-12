@@ -1,0 +1,66 @@
+# The ψ census (corpora/wikidata.bz2)
+
+431 blocks: 233 full (≥ 899000 rows), 198 short; 209.7 M rows; σ of the full blocks 79–102
+
+## 1. Rows by record class, at each group size (16 bits a row; exceptions at 16 + 32)
+
+| blocks | G | RUN | FOR-(16−64/G) | EF-(14−64/G) | crossing | too wide | exceptions | bits a row |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| full | 16 | 81.95% | 15.74% | 1.39% | 0.14% | 0.78% | 0.92% | 16.29 |
+| full | 32 | 77.39% | 20.73% | 1.40% | 0.28% | 0.21% | 0.49% | 16.16 |
+| full | 64 | 72.18% | 25.50% | 1.73% | 0.55% | 0.04% | 0.59% | 16.19 |
+| short | 16 | 0.70% | 10.34% | 0.00% | 88.96% | 0.00% | 88.96% | 44.47 |
+| short | 32 | 0.08% | 4.70% | 0.00% | 95.22% | 0.00% | 95.22% | 46.47 |
+| short | 64 | 0.01% | 1.46% | 0.00% | 98.53% | 0.00% | 98.53% | 47.53 |
+
+## 2. Per full block at G = 32: min / p10 / median / p90 / max
+
+| measure | across the 233 full blocks |
+|---|--:|
+| RUN rows | 63.7% / 72.2% / 78.0% / 80.9% / 88.0% |
+| RUN or FOR-14 rows | 97.8% / 98.0% / 98.1% / 98.2% / 98.5% |
+| exception rows | 0.4% / 0.5% / 0.5% / 0.5% / 0.6% |
+| fixed-line bits a row (exact) | 16.14 / 16.14 / 16.15 / 16.17 / 16.19 |
+| two-tier bits a row (exact) | 3.98 / 5.13 / 5.59 / 6.53 / 7.89 |
+| two-tier steps taking a second dependent load (rows not in a RUN group) | 12.0% / 19.1% / 22.0% / 27.8% / 36.3% |
+
+## 2a. The designs' exact sizes, the full blocks at G = 32
+
+| design | bytes, all full blocks | bits a row | a full block's table |
+|---|--:|--:|--:|
+| today's T-vector (32 bits) | 838.8 MB | 32.00 | 3.600 MB |
+| 24-bit links | 629.1 MB | 24.00 | 2.700 MB |
+| fixed-line records | 423.5 MB | 16.16 | 1.818 MB |
+| two-tier (descriptors + payloads) | 149.3 MB | 5.70 | 0.641 MB |
+
+The two-tier design's parts, a full block: descriptors 225 KB, payloads 398 KB, exception entries 18 KB; groups: 5071189 RUN, 1449915 FOR or EF, 31967 exceptions
+
+## 3. L's runs (= ψ's translation runs): 15148086 runs over 209.7 M rows, n/r = 13.84
+
+| run length | rows | cumulative |
+|---|--:|--:|
+| [2^0, 2^1) | 5.18% | 5.18% |
+| [2^1, 2^2) | 2.23% | 7.41% |
+| [2^2, 2^3) | 1.89% | 9.29% |
+| [2^3, 2^4) | 3.08% | 12.38% |
+| [2^4, 2^5) | 3.57% | 15.95% |
+| [2^5, 2^6) | 3.78% | 19.73% |
+| [2^6, 2^7) | 4.08% | 23.81% |
+| [2^7, 2^8) | 4.84% | 28.65% |
+| [2^8, 2^9) | 6.66% | 35.31% |
+| [2^9, 2^10) | 13.74% | 49.05% |
+| [2^10, 2^11) | 12.91% | 61.96% |
+| [2^11, 2^12) | 18.94% | 80.90% |
+| [2^12, 2^13) | 8.12% | 89.02% |
+| [2^13, 2^14) | 8.02% | 97.04% |
+| [2^14, 2^15) | 2.96% | 100.00% |
+
+## 4. F windows of 2^k rows holding a bucket boundary (all blocks)
+
+| k | windows | mixed | rows in mixed windows | rows stepped | mixed with 1 / 2 / 3 / 4+ boundaries |
+|--:|--:|--:|--:|--:|--:|
+| 4 | 13106771 | 0.14% | 0.14% | 0.07% | 17766 / 548 / 129 / 419 |
+| 5 | 6553457 | 0.29% | 0.29% | 0.15% | 17530 / 762 / 169 / 352 |
+| 6 | 3276910 | 0.56% | 0.56% | 0.29% | 16755 / 961 / 283 / 346 |
+| 7 | 1638651 | 1.08% | 1.07% | 0.56% | 15776 / 1065 / 411 / 436 |
+| 8 | 819430 | 2.06% | 2.04% | 1.06% | 14661 / 1040 / 528 / 615 |
