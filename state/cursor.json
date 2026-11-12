@@ -1326,6 +1326,14 @@
       "ready_job_reason": "366 separate integration;373 failedchecks;finalCPU/recipe/PROTOCOL9 outstanding.",
       "dispatch": false,
       "github_comment_posted": false
+    },
+    "6830378631": {
+      "status": "in_progress",
+      "delivery_id": "5017be60-debb-11f1-91af-144081c76da2",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6830378631",
+      "scope": "Reconcile postR1 report and concrete queue binding prerequisite; no premature Codex dispatch",
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
     }
   },
   "automatic_github_wakeup_assumed": false,
