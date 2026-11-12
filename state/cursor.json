@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6830513211,
+  "last_examined_comment_id": 6830778689,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1370,12 +1370,21 @@
       "monitor_settings_changed": false
     },
     "6830778689": {
-      "status": "in_progress",
+      "status": "completed_triage_external_integration_in_progress",
       "delivery_id": "8ebc3400-debd-11f1-854c-698159fe48f8",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6830778689",
       "scope": "Reconcile reported separate deliberate integration; prevent overlapping dispatch; flag newly queued exact-head workflow",
-      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/366",
+        "https://github.com/lmmx/mibz2/commit/d50489823f3c719afe8ea001b7d966275467a6c6",
+        "https://github.com/lmmx/mibz2/actions/runs/43268803795"
+      ],
+      "ready_job_queued": false,
+      "reason": "Separate integrator still executing; no completion REVIEW+cursor for entire integration. No duplicate dispatch. Final recipe binding/PROTOCOL9 and373 integrated-head validation outstanding.",
+      "log_intent": "in_progress; grouped observed merge and non-overlap checkpoint"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1483,8 +1492,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6830513211,
-    "delivery_id": "13c56ec0-debc-11f1-811f-59127daa7e91",
+    "comment_id": 6830778689,
+    "delivery_id": "8ebc3400-debd-11f1-854c-698159fe48f8",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -2719,5 +2728,21 @@
       "work_commit": "f8fa5245e9384c5aeecbf80d99b1e40a9e3632cf",
       "recipient_cursor_sha": "9b82b7ed277957828552a243d3f224f9c083e24f"
     }
-  }
+  },
+  "external_deliberate_integration": {
+    "source_comment_id": 6830778689,
+    "status": "reported_in_progress_merge366_observed_completion_not_yet_receipted",
+    "operator": "Codex separate session reports direct owner instruction; monitor scope unchanged",
+    "pr366_head": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+    "pr366_merged": true,
+    "merge_commit_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+    "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+    "source_head_actions": "8 runs success across 7 workflows, including new docs43268803795",
+    "source_head_legacy": "success",
+    "codex_cursor_sha": "f0e06904702464609b90b171a016ec0bf38a26bc",
+    "completion_receipt_observed": false,
+    "next_actor": "Existing deliberate integrator: postmerge correspondence,368 disposition,373 base append and validation. No parallel monitor dispatch.",
+    "ready_job_queued": false
+  },
+  "last_observed_master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
 }
