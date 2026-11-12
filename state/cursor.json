@@ -356,6 +356,11 @@
     "cpu_binding": "PENDING owner-confirmed, actual i9 preflight required",
     "corpus_binding": "PENDING owner-confirmed, actual i9 preflight required",
     "report": "state/reports/deliberate-integration-20261112/report.md",
-    "next_action": "obtain actual legacy pre-commit failure output at ed6f424; classify before correction/recovery"
+    "next_action": "obtain actual legacy pre-commit failure output at ed6f424; classify before correction/recovery",
+    "completion_review_comment_id": 6831115741,
+    "evidence_commit": "5cb9e4d321581c96902ab63653016f84b0227584",
+    "completion_readback_verified": true,
+    "completion_verify": "verify subcommand rejects FROM codex because it hardcodes coordinator; connector exact-body readback and unchanged misrouted/header checks pass, no verify-pass claim",
+    "implementation_complete": true
   }
 }
