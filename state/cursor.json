@@ -332,6 +332,10 @@
     "next_actor": "Coordinator deliberate integration/CI classification; optional bounded 373 dependency merge only after exact-base dispatch",
     "workstation_ready": false,
     "code_or_pr_changed": false,
-    "manual_codex_launch_required": true
+    "manual_codex_launch_required": true,
+    "review_comment_id": 6830378631,
+    "report_commit": "72fd1f70e2445c89143025d560680e87534434b8",
+    "receipt_readback_verified": true,
+    "direct_coord_audit_verify": "blocked by proxy403; not claimed passed"
   }
 }
