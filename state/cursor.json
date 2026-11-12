@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6822169425,
+  "last_examined_comment_id": 6822234208,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1202,6 +1202,16 @@
       ],
       "log_status": "published_readback_verified",
       "log_comment_id": 6822234208
+    },
+    "6822234208": {
+      "status": "observed_self_generated_noop",
+      "delivery_id": "6a6a2e40-de8b-11f1-8d82-48e7a5b82c42",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6822234208",
+      "reason": "Exact own LOG readback and ACTOR/ID; no new external message",
+      "dispatches": 0,
+      "response_comments": 0,
+      "audit": "exit0; six resolved historical misroutes"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1302,8 +1312,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6822169425,
-    "delivery_id": "fa4958c0-de8a-11f1-9ba8-6bbc20b1afa8",
+    "comment_id": 6822234208,
+    "delivery_id": "6a6a2e40-de8b-11f1-8d82-48e7a5b82c42",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
