@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6836435433,
+  "last_examined_comment_id": 6836501333,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1531,7 +1531,13 @@
       "work_commit": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
       "evidence_commit": "feec83892087019889a906954f3c6342cd55377f",
       "reason": "Scoped correction accepted; remaining Rust CI in progress. Separate deliberate integration next; no further repair finding.373 hosted failure cause inaccessible, prior ClassD remains. Final workstation readiness unmet.",
-      "log_intent": "in_progress"
+      "log_intent": "completed",
+      "log_comment_id": 6836501333
+    },
+    "6836501333": {
+      "status": "own_monitor_log_recorded",
+      "comment_updated_at": null,
+      "source_comment_id": 6836435433
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1639,7 +1645,8 @@
     6835658086,
     6835673832,
     6835700905,
-    6836483279
+    6836483279,
+    6836501333
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1842,12 +1849,12 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "packet-complete-mtf-followup-6835550527",
+    "key": "mtf-complete-6836435433",
     "status": "published_readback_verified",
-    "log_comment_id": 6835700905,
+    "log_comment_id": 6836501333,
     "event_dispositions_persisted": true,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6835700905",
-    "scope": "375 scoped completion; bounded MTF followup;374 merge observed;373/queue readiness unresolved"
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6836501333",
+    "scope": "375 MTF correction accepted; remainingCI/separateintegration;373ClassD/readiness unresolved"
   },
   "dispatch_history": [
     {
