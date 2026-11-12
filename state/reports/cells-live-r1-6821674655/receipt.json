@@ -1,0 +1,10 @@
+{
+  "review_comment_id": 6822169425,
+  "review_readback_matches": true,
+  "route": "REVIEW ->145",
+  "direct_audit": "proxy tunnel403",
+  "direct_verify": "proxy tunnel403; not a pass",
+  "processed_assignment": 6821674655,
+  "head_sha": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+  "automatic_github_wakeup_assumed": false
+}
