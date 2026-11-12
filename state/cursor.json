@@ -1535,9 +1535,13 @@
       "log_comment_id": 6836501333
     },
     "6836501333": {
-      "status": "own_monitor_log_recorded",
+      "status": "ignored_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6836435433
+      "source_comment_id": 6836435433,
+      "delivery_id": "7e965ce0-dee0-11f1-846b-7f53c9ce6b91",
+      "master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+      "ready_job_queued": false,
+      "reason": "Exact own LOG read back; no new external message. Scoped MTF completion already reconciled; separate integration waits remaining CI. No duplicate dispatch or repeated status post; final workstation readiness outstanding."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1653,8 +1657,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6836435433,
-    "delivery_id": "0fbb26c0-dee0-11f1-8d7e-d8c7297b2874",
+    "comment_id": 6836501333,
+    "delivery_id": "7e965ce0-dee0-11f1-846b-7f53c9ce6b91",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
