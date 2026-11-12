@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6839448187,
+  "last_examined_comment_id": 6839541837,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1617,12 +1617,18 @@
       "scope": "Reconcile operator-transcribed373 failures and route bounded formatting correction",
       "ready_job_queued": false,
       "action_links": [
-        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6839520708"
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6839520708",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6839541837"
       ],
       "assignment_comment_id": 6839520708,
       "recipient_execution_observed": false,
       "completion_observed": false,
       "reason": "New decisive legacy formatting evidence permits bounded correction. macOS mixed annotations retained; normal fixed-head CI selected. No ready job:373 correction/exact-head checks and separate integration/preflight/admission remain; no new onecore admission established."
+    },
+    "6839541837": {
+      "status": "completed_own_monitor_log",
+      "comment_updated_at": null,
+      "source_comment_id": 6839448187
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1735,7 +1741,8 @@
     6836680787,
     6838191142,
     6838210087,
-    6839520708
+    6839520708,
+    6839541837
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1938,9 +1945,11 @@
   },
   "checkpoint": {
     "key": "373-operator-evidence-6839448187",
-    "status": "in_progress_before_post",
+    "status": "published_readback_verified",
     "event_dispositions_persisted": true,
-    "scope": "ClassA two-TOML format correction routed; mixed macOS evidence preserved; no readyjob"
+    "scope": "ClassA two-TOML format correction routed; mixed macOS evidence preserved; no readyjob",
+    "log_comment_id": 6839541837,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6839541837"
   },
   "dispatch_history": [
     {
