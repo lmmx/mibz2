@@ -1,0 +1,23 @@
+{
+  "browser-report.md": "14fa175a4f1b46e25bd6ec7bfa4a2d34184def6af6003a64aefbb6a9c94e372b",
+  "browser.log": "00a430402307cc801dbb1c585d739a7e7180f6ca5a6a7a6cb7601973a9c4274f",
+  "build.log": "752fed36c92e553b76d26b64456039b5e98538eec79eb327b8ad5b6c67855d3a",
+  "ci-snapshot.json": "5e1b09e29e2805002798e5d9b978d0c88dc599d67b07ebd09d5dcb9651e9ae5e",
+  "coord-audit.log": "c979d6701073aac5723da2c49961e78f2b3d4504286d1c88ad532f2123fa13db",
+  "preservation.json": "c5a9d432693e14bc7c1c8339cd436f7c1c22613fa511af6d9c41b7854fb50eae",
+  "prose.log": "c30d8af8a855bbe5e5e3207b17a673b8ac8745e167e71e1da6a46df77a8d3468",
+  "render.log": "f751c31a68aa90d8fd10d383109d941db443a05637b869b6f1b2e1656e764332",
+  "report.md": "dc38b5722341f5e6a6fd290bf78f2d52f20c3bb0ad34ee04eac77069e28caf03",
+  "screenshots/desktop-dark-exchange.png": "fda690ea96be71d162825de5459bf6f6eb82a0a852c82a32189d7bafe592177f",
+  "screenshots/desktop-dark-opening.png": "71abd2f1e7d00c2e1c62409cd4443e15c2c6cd7205fd7fc01fa50d84c8388e80",
+  "screenshots/desktop-light-exchange.png": "5a364370a199bb6e23d43cf1d9d7b03af9e06813c5a5c6b01c1af5fc4bc84f9a",
+  "screenshots/desktop-light-opening.png": "a94b1b04498bd53aa5fe970fd56a9cb21f4f47e0bdec4823b15920dbda6e0ffe",
+  "screenshots/phone-dark-exchange.png": "b45c05eed55362674aa34333aaf494b51a84d311e4c1b64440f9bab82a13fad5",
+  "screenshots/phone-dark-opening.png": "44d1f0b32c7c78c47d552cf96b33946d634e5fdfdea3782b15b9d10e4ceba9a3",
+  "screenshots/phone-light-exchange.png": "de389a033934b9aaf419ae06e930a701aa598127712c14ff57402b5d04bcaa04",
+  "screenshots/phone-light-opening.png": "a4789a25dce38faf0dddcc3e9992616feb8367a835d55bcb4c923a69f220cf9c",
+  "screenshots/social-card.png": "584a0b41056f8e2038d5162bf27e25bc22fc10a063b4d7ba562136ef797191ff",
+  "screenshots-sha256.json": "3fd0330ff471139763d7ebb57da0a70e26132e44e8f47b9da38df1ada0199553",
+  "site.log": "c805588a9df9a2947e74af8c20779018f35de656b86946733a18b464fea0f6a1",
+  "social.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -362,5 +362,17 @@
     "completion_readback_verified": true,
     "completion_verify": "verify subcommand rejects FROM codex because it hardcodes coordinator; connector exact-body readback and unchanged misrouted/header checks pass, no verify-pass claim",
     "implementation_complete": true
+  },
+  "blog_bounded_followup": {
+    "direct_owner_request": true,
+    "original_assignment_comment_id": 6823213899,
+    "status": "COMPLETE: bounded revision pushed; local docs/render/visual checks passed",
+    "head_sha": "8a01fc7922f27e41894ba02c37830e1277a155f7",
+    "report": "state/reports/blog-bounded-revision-20261112/report.md",
+    "publication_performed": false,
+    "pr": 374,
+    "next_action": "Coordinator exact-head CI/preview and separate publication procedure",
+    "screenshots": 132,
+    "changed_pr_files": 6
   }
 }
