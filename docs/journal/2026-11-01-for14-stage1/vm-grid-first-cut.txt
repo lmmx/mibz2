@@ -1,0 +1,40 @@
+checked p4: every block's output the room walk's
+round 0 o1: 323 MB/s
+round 0 h1: 240 MB/s
+round 0 p1: 330 MB/s
+round 0 o4: 1127 MB/s
+round 0 h4: 939 MB/s
+round 0 p4: 1214 MB/s
+round 1 h1: 207 MB/s
+round 1 p1: 362 MB/s
+round 1 o4: 1075 MB/s
+round 1 h4: 869 MB/s
+round 1 p4: 1354 MB/s
+round 1 o1: 348 MB/s
+round 2 p1: 360 MB/s
+round 2 o4: 1243 MB/s
+round 2 h4: 841 MB/s
+round 2 p4: 1225 MB/s
+round 2 o1: 329 MB/s
+round 2 h1: 243 MB/s
+round 3 o4: 1122 MB/s
+round 3 h4: 836 MB/s
+round 3 p4: 1364 MB/s
+round 3 o1: 369 MB/s
+round 3 h1: 239 MB/s
+round 3 p1: 238 MB/s
+round 4 h4: 879 MB/s
+round 4 p4: 1369 MB/s
+round 4 o1: 341 MB/s
+round 4 h1: 246 MB/s
+round 4 p1: 286 MB/s
+round 4 o4: 968 MB/s
+434 blocks, 207.0 MB, 5 timed rounds; the T-vector phase only (build + walk), not the decoder; threads not pinned
+| arm | blocks live | cores | MB/s, median | vs o1, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs o1, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| o1 | 1 | 1 | 341 | 1.000 ±0.000 (1.000-1.000) | 1170 | 486 | 1.000 |  |  | 0 |
+| h1 | 1 | 1 | 240 | 0.689 ±0.081 (0.595-0.743) | 4678 | 253 | 0.514 |  |  | 0 |
+| p1 | 1 | 1 | 330 | 0.928 ±0.230 (0.645-1.095) | 1467 | 427 | 0.846 |  |  | 0 |
+| o4 | 4 | 4 | 1122 | 3.248 ±0.475 (2.835-3.782) | 3971 | 1582 | 3.249 |  |  | 0 |
+| h4 | 4 | 4 | 869 | 2.561 ±0.287 (2.266-2.910) | 18084 | 923 | 1.917 |  |  | 0 |
+| p4 | 4 | 4 | 1354 | 3.817 ±0.161 (3.698-4.009) | 5689 | 1752 | 3.561 |  |  | 0 |
