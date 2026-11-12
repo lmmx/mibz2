@@ -17,6 +17,9 @@ taking longer (or more memory) than mibz2: there, mibz2 is faster. These are
 decoder-level results; end-to-end pipeline results are in
 [wikidata-pq's tracker](https://lmmx.github.io/wikidata-pq/guide/bench-history/).
 
+The same record as one chart, against the common decoders:
+[mibz2 vs lbzip2, libbzip2 and libbz2-rs](vs-common.html).
+
 | decoder | what runs | threads |
 |---|---|---|
 | pbz2 | Soof Golan's Rust decoder: `DecoderReader`, or `ParallelDecoder::with_threads` | block-parallel |
