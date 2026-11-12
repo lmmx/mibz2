@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6820358956,
+  "last_examined_comment_id": 6821109765,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1051,6 +1051,19 @@
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6820358956",
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6821109765": {
+      "status": "completed_progress_ci_triaged_no_dispatch",
+      "delivery_id": "bd7ca2a0-de83-11f1-9171-6208402cbee4",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6821109765",
+      "head_sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+      "disposition": "Existing recipient actively correcting harness setup; no completion cursor/REVIEW yet. Confirmed original Class A failure from decoded job log; changed-head checks pending, current legacy failure unexplained. No duplicate assignment, retry or receipt-only LOG.",
+      "dispatches": 0,
+      "response_comments": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "373 preparation/CI/independent harness review incomplete;366 separate integration/readiness still pending",
+      "audit": "exit0; six resolved historical misroutes"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1137,8 +1150,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6820358956,
-    "delivery_id": "b4c5e630-de7e-11f1-9d56-fcef3e0d4f7f"
+    "comment_id": 6821109765,
+    "delivery_id": "bd7ca2a0-de83-11f1-9171-6208402cbee4"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1239,8 +1252,8 @@
       "scope": "One reconciled cells-live-path-gap diagnostic preparation; no measurements",
       "recipient_execution_observed": true,
       "verification": "audit/route/exact readback/verify pass",
-      "recipient_action_evidence_comment_id": 6820313763,
-      "recipient_action_kind": "manual preparation start and committed prospective plan",
+      "recipient_action_evidence_comment_id": 6821109765,
+      "recipient_action_kind": "PR373 preparation and scoped CI correction in progress; completion not observed",
       "completion_observed": false
     },
     "guardian": {
@@ -1965,7 +1978,7 @@
     "next": "Separate deliberate CI recovery/investigation; monitor scope read/triage/routing"
   },
   "pending_matched_port_diagnostic": {
-    "status": "recipient_preparation_in_flight",
+    "status": "preparation_ci_correction_in_flight",
     "source_review": 6810653848,
     "source_head": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
     "prior_handoff": 6782495828,
@@ -1982,6 +1995,96 @@
       "status": "proposal_not_admitted_not_implemented",
       "budget": "20 measured inversion-file passes +20 untimed warm passes +one extraction",
       "decision": "Retain for disposition after actual harness delivery/correctness/conditioning review; no execution permission"
+    },
+    "pr": 373,
+    "head_sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+    "progress_comment_id": 6821109765,
+    "completion_observed": false,
+    "ci": {
+      "workflow_runs": [
+        {
+          "id": 43200585531,
+          "name": "Cells live-path preparation",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 3,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585531/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585531/logs",
+          "workflow_id": 413971946
+        },
+        {
+          "id": 43200585622,
+          "name": "CI",
+          "status": "queued",
+          "conclusion": null,
+          "run_number": 1729,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585622/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585622/logs",
+          "workflow_id": 398116820
+        },
+        {
+          "id": 43200585466,
+          "name": "Occupancy",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 289,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585466/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585466/logs",
+          "workflow_id": 398776390
+        },
+        {
+          "id": 43200585566,
+          "name": "Benchmark",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 685,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585566/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585566/logs",
+          "workflow_id": 398182844
+        },
+        {
+          "id": 43200585511,
+          "name": "Test",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 1712,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585511/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585511/logs",
+          "workflow_id": 398116819
+        }
+      ]
+    },
+    "legacy": {
+      "statuses": [
+        {
+          "context": "pre-commit.ci - pr",
+          "state": "failure",
+          "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794479267.pbBmw4XyRgyaR3XO6TKC0A"
+        }
+      ]
     }
+  },
+  "ci_incident_373": {
+    "source_event": 6821109765,
+    "initial_head": "d2db35fca04b17ed766b29fc1e7932d49f7f70cc",
+    "run": 43199851877,
+    "job": 131120099184,
+    "class": "A",
+    "cause": "build.py destination.mkdir fails FileNotFoundError target/live-binaries on fresh checkout missing target parent",
+    "log_independently_read": true,
+    "passed": "Source prep;10 Python/real-Just tests;5 native harness tests;2 F01 native tests",
+    "not_run": "Step7 release build and following CLI fixtures",
+    "correction_head": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+    "correction": "Author adds parents creation while refusing existing destination, regression11/11; no independent test rerun",
+    "changed_head_run": 43200585531,
+    "changed_head_status": "in_progress",
+    "legacy": {
+      "status": "failure",
+      "classification": "D/unexplained until log available",
+      "url": "https://results.pre-commit.ci/run/github/1435546475/1794479267.pbBmw4XyRgyaR3XO6TKC0A",
+      "read_attempt": "External page inaccessible through web reader; not inferred infrastructure"
+    },
+    "manual_rerun": false,
+    "scope": "373 green-head/readiness blocked; existing implementation continues; no366 change"
   }
 }
