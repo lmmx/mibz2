@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6831281358,
+  "last_examined_comment_id": 6832194051,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1452,11 +1452,19 @@
       "reason": "Record completion confirmed.373 exact head unchanged: four workflows pass; packaging failed after x86 macOS cancellation without steps, log404 BlobNotFound; legacy stillfails. ClassD remains; no speculative recovery/duplicate task/repeatedblockedLOG. Final readiness unmet."
     },
     "6832194051": {
-      "status": "in_progress",
+      "status": "completed_bounded_article_revision_reconciled_ci_repair_routed",
       "delivery_id": "fb3f28a0-dec5-11f1-8015-2eeefaf64986",
       "comment_updated_at": null,
       "scope": "Reconcile bounded article completion and route evidenced Clippy compatibility fix",
-      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6"
+      "master_sha": "d50489823f3c719afe8ea001b7d966275467a6c6",
+      "codex_cursor_sha": "865e09229960a80c9f13f3297798f2843a320b05",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6832249633",
+        "https://github.com/lmmx/mibz2/actions/runs/43278736806/job/131394040737"
+      ],
+      "ready_job_queued": false,
+      "reason": "373 hosted legacy/platform unresolved; final recipe/PROTOCOL9 unmet. Article independently awaits new-headCI/preview; minimal evidenced Clippy repair routed.",
+      "log_intent": "in_progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1566,8 +1574,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6831281358,
-    "delivery_id": "6aa32580-dec0-11f1-8bde-78c47bc36f17",
+    "comment_id": 6832194051,
+    "delivery_id": "fb3f28a0-dec5-11f1-8015-2eeefaf64986",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1670,9 +1678,14 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_manual_launch",
       "source_comment_id": 6832194051,
-      "scope": "Minimal Rust1.100 needless_range_loop repair; separate maintenance PR; no gate weakening"
+      "scope": "Minimal Rust1.100 needless_range_loop repair; separate maintenance PR; no gate weakening",
+      "comment_id": 6832249633,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6832249633",
+      "recipient_execution_observed": false,
+      "completion_observed": false,
+      "verification": "audit/route/readback/verify exit0"
     },
     "guardian": {
       "status": "completed",
@@ -2685,7 +2698,7 @@
     }
   },
   "pending_site_article": {
-    "status": "preparation_delivered_publication_deferred",
+    "status": "bounded_revision_delivered_publication_deferred",
     "source_comment_id": 6823145996,
     "previous_codex_assignment": {
       "status": "completed",
@@ -2721,7 +2734,7 @@
     },
     "log_comment_id": 6823246963,
     "pr": 374,
-    "head_sha": "5d8f11c7d4b85c3fd6d81e442195723abace1017",
+    "head_sha": "8a01fc7922f27e41894ba02c37830e1277a155f7",
     "review_comment_id": 6829978946,
     "ci": {
       "workflow_runs": [
@@ -2787,8 +2800,20 @@
       "completion_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6823304634"
     },
     "disposition_log": 6830074647,
-    "exact_head_checks_green": true,
-    "checks_observed_on_event": 6830133744
+    "exact_head_checks_green": false,
+    "checks_observed_on_event": 6830133744,
+    "bounded_followup_review": 6832194051,
+    "bounded_followup_evidence": "ab731859add831fb3f37fd52f3a87535ca9554f4",
+    "new_ci_blocker": {
+      "classification": "A",
+      "run": 43278736806,
+      "job": 131394040737,
+      "step": "Clippy",
+      "error": "examples/packet_census.rs:583 needless_range_loop under rustc1.100.0; exit101",
+      "tested_merge": "d31c2a13784b0741f578736e2feece4442bfa3a9",
+      "tests": "Rust tests and harness downstream skipped"
+    },
+    "next_actor": "Codex bounded compatibility fix6832249633 needs manual launch; separate deliberate publication after exactheadCI/preview"
   },
   "post_r1_integration_reconciliation": {
     "source_comment_id": 6830378631,
