@@ -1,0 +1,9 @@
+2026-11-12T10:27:56.5000912Z HEAD is now at aa87515 Merge 7b53ded9eb139fdd69b4c29565e7373ac95e90d4 into 2635f04e9155dd31388b24fd3f7248f87b3ddcda
+2026-11-12T10:28:08.5730979Z Ran 11 tests in 0.105s
+2026-11-12T10:28:20.6999853Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s
+2026-11-12T10:28:33.1506231Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s
+2026-11-12T10:29:31.0948694Z {"built": {"baseline-off": "54e63dec5571a3561b18099fbbda6946ab63d001849a21f5336a9f1097fb0137", "baseline-on": "e0055a03472f2d0f943f550fde08c13fbb36703bebc7491e566461b642a72e12", "cells-off": "6fa19b5626d72512c2a926ceba9d51946d562fab2730cef48afac132de877750", "cells-on": "67f67d8e84639a18c3750f7addc2fac87903f92c798fd509d1d63ee58956df0f"}, "measurement": false}
+2026-11-12T10:29:31.2318948Z {"valid_child_checks": 16, "failure_child_checks": 12, "clocks_read": 0, "full_byte_parity": true, "error_parity": true, "performance_measurements": 0}
+2026-11-12T10:29:32.1444867Z SHA256 digest of uploaded artifact zip is 1c4cd9c6ce6320d3fe7d0c0b5c02a013026281876a2da51f0c3dbc5c02bebcf5
+2026-11-12T10:29:32.7005689Z Artifact cells-live-preparation-aa875158e62eb13c351ce98255418997d260a1c6.zip successfully finalized. Artifact ID 13935790413
+2026-11-12T10:29:32.7007059Z Artifact cells-live-preparation-aa875158e62eb13c351ce98255418997d260a1c6 has been successfully uploaded! Final size is 30348 bytes. Artifact ID is 13935790413

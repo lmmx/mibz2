@@ -1,0 +1,260 @@
+{
+  "head": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+  "observed_at": "2026-11-12 10:32:49 UTC",
+  "runs": {
+    "workflow_runs": [
+      {
+        "id": 43200585622,
+        "name": "CI",
+        "status": "queued",
+        "conclusion": null,
+        "run_number": 1729,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585622/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585622/logs",
+        "workflow_id": 398116820
+      },
+      {
+        "id": 43200585566,
+        "name": "Benchmark",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_number": 685,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585566/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585566/logs",
+        "workflow_id": 398182844
+      },
+      {
+        "id": 43200585511,
+        "name": "Test",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_number": 1712,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585511/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585511/logs",
+        "workflow_id": 398116819
+      },
+      {
+        "id": 43200585531,
+        "name": "Cells live-path preparation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 3,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585531/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585531/logs",
+        "workflow_id": 413971946
+      },
+      {
+        "id": 43200585466,
+        "name": "Occupancy",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_number": 289,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585466/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585466/logs",
+        "workflow_id": 398776390
+      }
+    ]
+  },
+  "legacy": {
+    "state": "failure",
+    "statuses": [
+      {
+        "url": "https://api.github.com/repos/lmmx/mibz2/statuses/7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+        "avatar_url": "https://avatars.githubusercontent.com/in/68672?v=4",
+        "id": 58718886630,
+        "node_id": "SC_kwDOVZCza88AAAANq-sa5g",
+        "state": "failure",
+        "description": "checks completed with failures",
+        "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794479267.pbBmw4XyRgyaR3XO6TKC0A",
+        "context": "pre-commit.ci - pr",
+        "created_at": "2026-11-12T10:27:53Z",
+        "updated_at": "2026-11-12T10:27:53Z"
+      }
+    ],
+    "sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+    "total_count": 1,
+    "repository": {
+      "id": 1435546475,
+      "node_id": "R_kgDOVZCzaw",
+      "name": "mibz2",
+      "full_name": "lmmx/mibz2",
+      "private": false,
+      "owner": {
+        "login": "lmmx",
+        "id": 2979452,
+        "node_id": "MDQ6VXNlcjI5Nzk0NTI=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2979452?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/lmmx",
+        "html_url": "https://github.com/lmmx",
+        "followers_url": "https://api.github.com/users/lmmx/followers",
+        "following_url": "https://api.github.com/users/lmmx/following{/other_user}",
+        "gists_url": "https://api.github.com/users/lmmx/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/lmmx/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/lmmx/subscriptions",
+        "organizations_url": "https://api.github.com/users/lmmx/orgs",
+        "repos_url": "https://api.github.com/users/lmmx/repos",
+        "events_url": "https://api.github.com/users/lmmx/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/lmmx/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/lmmx/mibz2",
+      "description": null,
+      "fork": false,
+      "url": "https://api.github.com/repos/lmmx/mibz2",
+      "forks_url": "https://api.github.com/repos/lmmx/mibz2/forks",
+      "keys_url": "https://api.github.com/repos/lmmx/mibz2/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/lmmx/mibz2/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/lmmx/mibz2/teams",
+      "hooks_url": "https://api.github.com/repos/lmmx/mibz2/hooks",
+      "issue_events_url": "https://api.github.com/repos/lmmx/mibz2/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/lmmx/mibz2/events",
+      "assignees_url": "https://api.github.com/repos/lmmx/mibz2/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/lmmx/mibz2/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/lmmx/mibz2/tags",
+      "blobs_url": "https://api.github.com/repos/lmmx/mibz2/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/lmmx/mibz2/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/lmmx/mibz2/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/lmmx/mibz2/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/lmmx/mibz2/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/lmmx/mibz2/languages",
+      "stargazers_url": "https://api.github.com/repos/lmmx/mibz2/stargazers",
+      "contributors_url": "https://api.github.com/repos/lmmx/mibz2/contributors",
+      "subscribers_url": "https://api.github.com/repos/lmmx/mibz2/subscribers",
+      "subscription_url": "https://api.github.com/repos/lmmx/mibz2/subscription",
+      "commits_url": "https://api.github.com/repos/lmmx/mibz2/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/lmmx/mibz2/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/lmmx/mibz2/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/lmmx/mibz2/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/lmmx/mibz2/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/lmmx/mibz2/merges",
+      "archive_url": "https://api.github.com/repos/lmmx/mibz2/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/lmmx/mibz2/downloads",
+      "issues_url": "https://api.github.com/repos/lmmx/mibz2/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/lmmx/mibz2/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/lmmx/mibz2/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/lmmx/mibz2/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/lmmx/mibz2/labels{/name}",
+      "releases_url": "https://api.github.com/repos/lmmx/mibz2/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/lmmx/mibz2/deployments"
+    },
+    "commit_url": "https://api.github.com/repos/lmmx/mibz2/commits/7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+    "url": "https://api.github.com/repos/lmmx/mibz2/commits/7b53ded9eb139fdd69b4c29565e7373ac95e90d4/status"
+  },
+  "untimed_jobs": {
+    "total_count": 1,
+    "jobs": [
+      {
+        "id": 131122646375,
+        "run_id": 43200585531,
+        "workflow_name": "Cells live-path preparation",
+        "head_branch": "diagnostic/cells-live-path",
+        "run_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43200585531",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOVZCza88AAAAeh4TNZw",
+        "head_sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+        "url": "https://api.github.com/repos/lmmx/mibz2/actions/jobs/131122646375",
+        "html_url": "https://github.com/lmmx/mibz2/actions/runs/43200585531/job/131122646375",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-12T10:27:50Z",
+        "started_at": "2026-11-12T10:27:52Z",
+        "completed_at": "2026-11-12T10:29:35Z",
+        "name": "untimed",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-12T10:27:53Z",
+            "completed_at": "2026-11-12T10:27:54Z"
+          },
+          {
+            "name": "Run actions/checkout@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-12T10:27:54Z",
+            "completed_at": "2026-11-12T10:27:56Z"
+          },
+          {
+            "name": "Run dtolnay/rust-toolchain@1.99.1",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-12T10:27:56Z",
+            "completed_at": "2026-11-12T10:28:06Z"
+          },
+          {
+            "name": "Run taiki-e/install-action@v2",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-11-12T10:28:06Z",
+            "completed_at": "2026-11-12T10:28:06Z"
+          },
+          {
+            "name": "Prepare exact corrected source (no corpus replay)",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-12T10:28:06Z",
+            "completed_at": "2026-11-12T10:28:08Z"
+          },
+          {
+            "name": "Untimed tests and fixed schedule",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-12T10:28:08Z",
+            "completed_at": "2026-11-12T10:28:33Z"
+          },
+          {
+            "name": "Four builds and real untimed fixture dry run",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-11-12T10:28:33Z",
+            "completed_at": "2026-11-12T10:29:31Z"
+          },
+          {
+            "name": "Run actions/upload-artifact@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-12T10:29:31Z",
+            "completed_at": "2026-11-12T10:29:32Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v6",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-12T10:29:32Z",
+            "completed_at": "2026-11-12T10:29:32Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-12T10:29:32Z",
+            "completed_at": "2026-11-12T10:29:33Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/lmmx/mibz2/check-runs/131122646375",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000084112,
+        "runner_name": "GitHub Actions 1000084112",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  }
+}

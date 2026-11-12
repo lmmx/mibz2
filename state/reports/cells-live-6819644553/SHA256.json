@@ -1,0 +1,9 @@
+{
+  "ci-snapshot.json": "cbe306273ac6564fa11aada0fdb644a0a176662992690941dc59b38b4089d221",
+  "ci-untimed-excerpt.log": "a6b0c759c719bda2369f181dff3767e029cdd0c44caab234d93a89481f343c55",
+  "local-clean-rustfmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "local-clean-whitespace.log": "8c0b2fc004fc3c5e25b86ea75849a75a8f5fe43927738a87905eee20e6c5c4d1",
+  "occupancy-excerpt.log": "69163bc0773897cdaaefb695d329b296d41bb31996e472be5e79fa42776b57fc",
+  "occupancy-failure.json": "30e00aa17d29a1ae36cddd8b578e81dac4136575d05ca705b62b43ef3f405fd3",
+  "report.md": "2bdbb414bac48582d41fb67d745a3d5e4c92d8060113aa2ec6b4ab06a8d107d9"
+}
