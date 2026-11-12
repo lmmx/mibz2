@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6810699098,
+  "last_examined_comment_id": 6819595082,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1007,11 +1007,19 @@
       "dispatches": 0
     },
     "6819595082": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "80084230-de79-11f1-9ced-5182acc9c561",
       "comment_updated_at": null,
       "head_sha": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
-      "planned_action": "Accept366 implementation/local preparation delivery, hold readiness for pending exact-head checks and separate integration; dispatch one reconciled cells diagnostic preparation"
+      "planned_action": "Accept366 implementation/local preparation delivery, hold readiness for pending exact-head checks and separate integration; dispatch one reconciled cells diagnostic preparation",
+      "disposition": "Accept366 implementation/local preparation, not readiness; Benchmark/Miri pending. Next distinct cells diagnostic preparation dispatched6819644553.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6819644553"
+      ],
+      "log_publication": "pending",
+      "ready_job_queued": false,
+      "ready_job_reason": "Benchmark and Miri pending; separate deliberate integration and PROTOCOL9 readiness required",
+      "validation": "Exact PR head and immutable handoff/correspondence read; tests and41-file equality author-reported; no independent rerun"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1088,15 +1096,16 @@
     6808549538,
     6808568270,
     6810684246,
-    6810699098
+    6810699098,
+    6819644553
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6810699098,
-    "delivery_id": "1842e630-de30-11f1-8671-1f886b36de5d"
+    "comment_id": 6819595082,
+    "delivery_id": "80084230-de79-11f1-9ced-5182acc9c561"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -1192,11 +1201,11 @@
     },
     "codex": {
       "status": "posted_verified_awaiting_recipient_action",
-      "comment_id": 6810684246,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6810684246",
-      "scope": "Restore deferred366 preparation scope6791014104; exact reviewed368 repair and untimed validation only",
-      "verification": "audit/route/exact readback/verify pass",
-      "recipient_execution_observed": false
+      "comment_id": 6819644553,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6819644553",
+      "scope": "One reconciled cells-live-path-gap diagnostic preparation; no measurements",
+      "recipient_execution_observed": false,
+      "verification": "audit/route/exact readback/verify pass"
     },
     "guardian": {
       "status": "completed",
@@ -1451,6 +1460,17 @@
       "recipient_cursor_sha": "a5ae66f3375157f02876a9e8b56d7eaab3e75331",
       "review_comment_id": 6810653848,
       "head_sha": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4"
+    },
+    {
+      "status": "completed",
+      "comment_id": 6810684246,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6810684246",
+      "scope": "Restore deferred366 preparation scope6791014104; exact reviewed368 repair and untimed validation only",
+      "verification": "audit/route/exact readback/verify pass",
+      "recipient_execution_observed": false,
+      "review_comment_id": 6819595082,
+      "head_sha": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
+      "recipient_cursor_sha": "574058ca0f1c78812c3f58446941455c96009fdf"
     }
   ],
   "codex_correction": {
@@ -1464,9 +1484,9 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex: complete sole restored366 preparation6810684246; actual REVIEW plus cursor",
-    "Assess exact changed-head validation and separate deliberate integration/readiness; no automatic merge",
-    "Then reconcile/prepare one matched-port/context diagnostic from367/Optimiser; retain existing recipe distinction and no duplicate runs"
+    "Codex sole6819644553: bounded cells diagnostic preparation, no timing",
+    "Reconcile366 final exact-head Benchmark/Miri on events; separate deliberate integration/readiness",
+    "Review new diagnostic harness once and admit only after full PROTOCOL9 prerequisites"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -1749,17 +1769,106 @@
     "recipient_cursor_completion_claimed": false
   },
   "pending_recipe_preparation": {
-    "status": "restored_preparation_dispatched_implementation_incomplete",
+    "status": "implementation_local_preparation_complete_ci_integration_readiness_pending",
     "assignment_comment_id": 6791014104,
     "pr": 366,
-    "head": "ae13742fe4c6e2726c178e2409a1d69ef8fca939",
+    "head": "d61e0976b6faa8e8b1dfdcb0e10bffdc28235108",
     "preserve_scope": true,
     "resume_condition": "After prioritised labelled-contraction research; explicit eligible routing, no false completed state",
     "handoff_review": 6807992359,
     "handoff_state_commit": "dd8e4b8b272763d438c1294c4568a72aef434a1f",
-    "implementation_started": false,
-    "implementation_complete": false,
-    "restored_assignment_comment_id": 6810684246
+    "implementation_started": true,
+    "implementation_complete": true,
+    "restored_assignment_comment_id": 6810684246,
+    "local_preparation_complete": true,
+    "workstation_ready": false,
+    "review_comment_id": 6819595082,
+    "recipient_cursor_sha": "574058ca0f1c78812c3f58446941455c96009fdf",
+    "correspondence": "Read committed41-file byte-identity and stable-patch manifest; author validation, not independently recomputed",
+    "checks": "Author4/4 real Just1.38.0 tests/no skips plus root/directdryrun; final-head source/patch/artifact checks reported",
+    "ci": {
+      "workflow_runs": [
+        {
+          "id": 43189196253,
+          "name": "Benchmark",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 683,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196253/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196253/logs",
+          "workflow_id": 398182844
+        },
+        {
+          "id": 43189196211,
+          "name": "Miri",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_number": 202,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196211/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196211/logs",
+          "workflow_id": 398596485
+        },
+        {
+          "id": 43189196228,
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1727,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196228/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196228/logs",
+          "workflow_id": 398116820
+        },
+        {
+          "id": 43189195880,
+          "name": "walk-stats",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 25,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195880/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195880/logs",
+          "workflow_id": 412959508
+        },
+        {
+          "id": 43189195905,
+          "name": "Occupancy",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 287,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195905/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189195905/logs",
+          "workflow_id": 398776390
+        },
+        {
+          "id": 43189196071,
+          "name": "Documentation site",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1185,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196071/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196071/logs",
+          "workflow_id": 398199459
+        },
+        {
+          "id": 43189196010,
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1710,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196010/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43189196010/logs",
+          "workflow_id": 398116819
+        }
+      ]
+    },
+    "legacy": {
+      "statuses": [
+        {
+          "context": "pre-commit.ci - pr",
+          "state": "success",
+          "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794474659.H5ZYgLLXTeSOJON7Ng725A"
+        }
+      ]
+    }
   },
   "pending_performance_opportunities": {
     "source_comment_id": 6807455587,
@@ -1809,12 +1918,13 @@
     "next": "Separate deliberate CI recovery/investigation; monitor scope read/triage/routing"
   },
   "pending_matched_port_diagnostic": {
-    "status": "retained_separate_followup_not_dispatched",
+    "status": "preparation_dispatched_awaiting_recipient_action",
     "source_review": 6810653848,
     "source_head": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
     "prior_handoff": 6782495828,
-    "scope": "Reconcile existing367 matched production/research warm-inversion and Optimiser ten-pair live-reader off/on recipe before preparing one diagnostic; no duplicate three-round proposal or execution",
-    "priority_reason": "Strongest next scientific falsifier; finish existing366 bounded readiness preparation first; distinct from361 onecore question",
-    "execution_authorised_by_this_event": false
+    "scope": "Two-hour bounded preparation of single reconciled Optimiser10-pair live-reader diagnostic; explicitly price/separate warm comparison before admission; no timing",
+    "priority_reason": "366 local preparation now complete; production-port/context is highest-value scientific followup from372",
+    "execution_authorised_by_this_event": false,
+    "assignment_comment_id": 6819644553
   }
 }
