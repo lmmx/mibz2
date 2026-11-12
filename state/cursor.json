@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6830133744,
+  "last_examined_comment_id": 6830378631,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1328,12 +1328,23 @@
       "github_comment_posted": false
     },
     "6830378631": {
-      "status": "in_progress",
+      "status": "completed_reconciled_conditional_followup_not_dispatched",
       "delivery_id": "5017be60-debb-11f1-91af-144081c76da2",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6830378631",
       "scope": "Reconcile postR1 report and concrete queue binding prerequisite; no premature Codex dispatch",
-      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda"
+      "master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+      "ready_job_queued": false,
+      "ready_job_reason": "Integratedbase+373greenhead+frozenCPU/corpusargumentbinding andPROTOCOL9 outstanding",
+      "actions": {
+        "observer_assignment": 6830431636,
+        "log": "in_progress"
+      },
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830431636",
+        "https://github.com/lmmx/mibz2/tree/72fd1f70e2445c89143025d560680e87534434b8/state/reports/post-r1-reconciliation-20261112"
+      ],
+      "audit": "exit0 six resolved historicalfindings"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1439,8 +1450,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6830133744,
-    "delivery_id": "ec3ea300-deb9-11f1-856e-b720683e8f0f",
+    "comment_id": 6830378631,
+    "delivery_id": "5017be60-debb-11f1-91af-144081c76da2",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1574,17 +1585,14 @@
       "recipient_cursor_sha": "c0b688d57e688385daded01b4a5514e80241648d"
     },
     "observer": {
-      "status": "completed",
-      "source_comment_id": 6829978946,
-      "comment_id": 6830048522,
-      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830048522",
-      "scope": "374 delivered/publication separate; workstation readiness unchanged",
+      "status": "routed_verified_awaiting_recipient",
+      "source_comment_id": 6830378631,
+      "comment_id": 6830431636,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830431636",
+      "scope": "PostR1 integration and concretequeuebinding",
       "verification": "audit/route/readback/verify exit0",
-      "completion_observed": true,
-      "recipient_execution_observed": true,
-      "review_comment_id": 6830133744,
-      "work_commit": "06f3b3e581e3f38bf046a50fd979a4906e2836ad",
-      "recipient_cursor_sha": "d501f84a8deea4e95bf8e08f9bd20d323c11ba85"
+      "completion_observed": false,
+      "recipient_execution_observed": false
     }
   },
   "codex_wake_limitation": "Manual owner resume observed via6789457478 for F01 assignment6782519694; no automatic restart or persistent Codex trigger verified.",
@@ -2644,5 +2652,29 @@
     "disposition_log": 6830074647,
     "exact_head_checks_green": true,
     "checks_observed_on_event": 6830133744
+  },
+  "post_r1_integration_reconciliation": {
+    "source_comment_id": 6830378631,
+    "evidence_commit": "72fd1f70e2445c89143025d560680e87534434b8",
+    "codex_cursor_sha": "f0e06904702464609b90b171a016ec0bf38a26bc",
+    "status": "reconciled_deliberate_integration_required",
+    "recommendation": "Assess366 containing368 once; separately reconcile368 disposition without duplicate repair; no automated merge",
+    "correspondence": "Codex manifest reports41files/twopatchIDs; not independently replayed here",
+    "conditional_codex_followup": "Only after exact integratedmaster selected: append to373, retain both unchangedJuststanzas; no dispatch if integrator handles",
+    "queue_binding": "Independently read373Just requiresCPU+corpora, masterawaitsubmit onlyrecipe. Freeze exact allowedCPU/topology/corpusbinding and argument-freequeueentry with untimedwiring check beforePROTOCOL9",
+    "ready_job_queued": false,
+    "previous_observer": {
+      "status": "completed",
+      "source_comment_id": 6829978946,
+      "comment_id": 6830048522,
+      "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6830048522",
+      "scope": "374 delivered/publication separate; workstation readiness unchanged",
+      "verification": "audit/route/readback/verify exit0",
+      "completion_observed": true,
+      "recipient_execution_observed": true,
+      "review_comment_id": 6830133744,
+      "work_commit": "06f3b3e581e3f38bf046a50fd979a4906e2836ad",
+      "recipient_cursor_sha": "d501f84a8deea4e95bf8e08f9bd20d323c11ba85"
+    }
   }
 }
