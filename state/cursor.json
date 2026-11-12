@@ -1136,7 +1136,10 @@
       "review_report": "e105b1a19575d33c8530cb4927c69bc1deee096f",
       "audit": "fresh exact-master snapshots; audit/route exit0",
       "ready_job_queued": false,
-      "ready_job_reason": "R1 correction plus red exact-head CI, separate integration and final PROTOCOL9 readiness"
+      "ready_job_reason": "R1 correction plus red exact-head CI, separate integration and final PROTOCOL9 readiness",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1225,7 +1228,8 @@
     6820358956,
     6821395963,
     6821410188,
-    6821427805
+    6821427805,
+    6821674655
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1336,12 +1340,15 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "in_progress_before_post",
+      "status": "routed_verified_awaiting_manual_launch",
       "source_comment_id": 6821626797,
       "scope": "One targeted373 R1 failed-child resource retention correction; no measurements",
       "recipient_execution_observed": false,
       "completion_observed": false,
-      "head_sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4"
+      "head_sha": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+      "comment_id": 6821674655,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6821674655",
+      "verification": "audit/route/exact readback/verify exit0"
     },
     "guardian": {
       "status": "completed",
@@ -2110,7 +2117,7 @@
     "next": "Separate deliberate CI recovery/investigation; monitor scope read/triage/routing"
   },
   "pending_matched_port_diagnostic": {
-    "status": "independent_review_complete_targeted_correction_dispatching",
+    "status": "targeted_correction_routed_awaiting_recipient",
     "source_review": 6810653848,
     "source_head": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
     "prior_handoff": 6782495828,
@@ -2205,7 +2212,8 @@
       "new_b5_blocker": false,
       "interpretation": "instrumented path only; matching conclusion categories does not establish off-build equivalence",
       "correction_round": 1
-    }
+    },
+    "correction_assignment": 6821674655
   },
   "ci_incident_373": {
     "source_event": 6821109765,
