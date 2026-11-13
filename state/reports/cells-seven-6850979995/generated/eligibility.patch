@@ -1,0 +1,68 @@
+--- 
++++ 
+@@ -700,6 +700,9 @@
+     #[inline(never)]
+     fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>) {
+ #[cfg(feature = "live-diagnostic")]
++self.screen_eligibility(word);
++
++#[cfg(feature = "live-diagnostic")]
+ let _writer = crate::live_diagnostic::phase("writer");
+ #[cfg(feature = "live-diagnostic")]
+ crate::live_diagnostic::set("period", (len & !MARK) as usize);
+@@ -1206,3 +1209,55 @@
+         );
+     }
+ }
++
++// Diagnostic only: checked reads of the immutable grammar before the old writer.
++// This traverses all rules once and the marked spine once. No decoder state changes.
++#[cfg(feature = "live-diagnostic")]
++impl Kernel {
++    fn screen_eligibility(&self, word: u32) {
++        use crate::live_diagnostic::set;
++        let ro = self.lay.rules;
++        let nr = (self.rule_end - ro) / 16;
++        let read = |at: usize| u64::from_ne_bytes(self.buf[at..at + 8].try_into().unwrap());
++        let mut depths: Vec<usize> = Vec::with_capacity(nr);
++        let depth = |factor: u64, before: usize, depths: &[usize]| {
++            let at = (factor >> 32) as usize;
++            if at < ro {
++                0
++            } else {
++                assert_eq!((at - ro) % 16, 0);
++                let index = (at - ro) / 16;
++                assert!(index < before, "grammar child must precede parent");
++                depths[index]
++            }
++        };
++        for i in 0..nr {
++            let at = ro + 16 * i;
++            depths.push(1 + depth(read(at), i, &depths).max(depth(read(at + 8), i, &depths)));
++        }
++        let mut at = word as usize;
++        let (mut small, mut long, mut largest, mut expansion) = (0, 0, 0, 0);
++        let root_depth = if at < ro { 0 } else { depths[(at - ro) / 16] };
++        while at >= ro {
++            let (a, b) = (read(at), read(at + 8));
++            assert_ne!(a as u32 & MARK != 0, b as u32 & MARK != 0);
++            let (marked, plain) = if a as u32 & MARK != 0 { (a, b) } else { (b, a) };
++            let length = plain as u32 as usize;
++            largest = largest.max(length);
++            if length <= SMALL as usize { small += 1; } else { long += 1; }
++            expansion = expansion.max(depth(plain, (at - ro) / 16, &depths));
++            let next = (marked >> 32) as usize;
++            assert!(next < at, "marked chain must descend");
++            at = next;
++        }
++        set("small_seeds", small);
++        set("long_seeds", long);
++        set("max_unmarked_factor", largest);
++        set("reachable_expansion_depth", expansion);
++        set("root_depth", root_depth);
++        set("grammar_rules", nr);
++        set("eligibility_rule_visits", nr);
++        set("eligibility_spine_visits", small + long);
++        set("eligibility_scratch_bytes", depths.capacity() * std::mem::size_of::<usize>());
++    }
++}

@@ -1,0 +1,12 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-seven/bench/cells-seven/target/reader/.source/Cargo.toml
+workspace: /workspace/mibz2-seven/bench/cells-seven/target/reader/Cargo.toml
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-seven/bench/cells-seven/target/reader/.source)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.68s
+     Running tests/cells.rs (bench/cells-seven/target/reader/target/debug/deps/cells-9bcc6ef7bfbaf333)
+
+running 1 test
+test cells_arbitrary_columns_and_corruption ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.02s
+

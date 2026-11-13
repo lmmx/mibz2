@@ -1,0 +1,11 @@
+{
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "head": "a49e307ec559227240855422f00fe1c617e630db",
+  "dirty": true,
+  "binaries": {
+    "cells": "662ecb436d48716306e006489b18a66f63deb3152250f238158d69121d8152fb",
+    "baseline": "7a558ac29fc20fa52b30e58d678648516e94c0571dad63bc9cb4f6fd35fcc39f",
+    "oracle": "1bd12cb7d6d836bed5013e9c6f749b67a328891e71abb4a48bf79ceb68776ba3",
+    "launcher": "7fca50ad86371c95745bb3703c58680dcf7c7579e47164b60cfce7a597b54578"
+  }
+}

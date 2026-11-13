@@ -1,0 +1,589 @@
+{
+  "kind": "untimed",
+  "corpora": {
+    "wikidata": {
+      "baseline": {
+        "sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+        "bytes": 209700196,
+        "memory": {
+          "wait4": {
+            "pid": 17425,
+            "waited_pid": 17425,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 24448
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 24448,
+              "pid": 17425,
+              "rss_kib": 9940
+            },
+            "startup": {
+              "hwm_kib": 1220,
+              "pid": 17425,
+              "rss_kib": 1220
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+        "bytes": 209700196,
+        "memory": {
+          "wait4": {
+            "pid": 17427,
+            "waited_pid": 17427,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 33164
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 33164,
+              "pid": 17427,
+              "rss_kib": 11792
+            },
+            "startup": {
+              "hwm_kib": 1208,
+              "pid": 17427,
+              "rss_kib": 1208
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+        "bytes": 209700196,
+        "memory": {
+          "wait4": {
+            "pid": 17429,
+            "waited_pid": 17429,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 5656
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 5656,
+              "pid": 17429,
+              "rss_kib": 4796
+            },
+            "startup": {
+              "hwm_kib": 1136,
+              "pid": 17429,
+              "rss_kib": 1136
+            }
+          }
+        }
+      }
+    },
+    "onebyte": {
+      "baseline": {
+        "sha256": "aded0ea9b4d06589b13d00bab483faf479d61ed5de21f1760aa7018a28e330e5",
+        "bytes": 20000000,
+        "memory": {
+          "wait4": {
+            "pid": 17445,
+            "waited_pid": 17445,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 31948
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 31948,
+              "pid": 17445,
+              "rss_kib": 2372
+            },
+            "startup": {
+              "hwm_kib": 1224,
+              "pid": 17445,
+              "rss_kib": 1224
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "aded0ea9b4d06589b13d00bab483faf479d61ed5de21f1760aa7018a28e330e5",
+        "bytes": 20000000,
+        "memory": {
+          "wait4": {
+            "pid": 17447,
+            "waited_pid": 17447,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 34412
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 34412,
+              "pid": 17447,
+              "rss_kib": 2332
+            },
+            "startup": {
+              "hwm_kib": 1116,
+              "pid": 17447,
+              "rss_kib": 1116
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "aded0ea9b4d06589b13d00bab483faf479d61ed5de21f1760aa7018a28e330e5",
+        "bytes": 20000000,
+        "memory": {
+          "wait4": {
+            "pid": 17449,
+            "waited_pid": 17449,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 6768
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 6768,
+              "pid": 17449,
+              "rss_kib": 1180
+            },
+            "startup": {
+              "hwm_kib": 1136,
+              "pid": 17449,
+              "rss_kib": 1136
+            }
+          }
+        }
+      }
+    },
+    "pattern": {
+      "baseline": {
+        "sha256": "b23397674d9cede1cca8b4654870946900a1a364b9f1779d6f64df4a88d61946",
+        "bytes": 19600000,
+        "memory": {
+          "wait4": {
+            "pid": 17451,
+            "waited_pid": 17451,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 14268
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 14268,
+              "pid": 17451,
+              "rss_kib": 4132
+            },
+            "startup": {
+              "hwm_kib": 1208,
+              "pid": 17451,
+              "rss_kib": 1208
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "b23397674d9cede1cca8b4654870946900a1a364b9f1779d6f64df4a88d61946",
+        "bytes": 19600000,
+        "memory": {
+          "wait4": {
+            "pid": 17453,
+            "waited_pid": 17453,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 18500
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 18500,
+              "pid": 17453,
+              "rss_kib": 5560
+            },
+            "startup": {
+              "hwm_kib": 1116,
+              "pid": 17453,
+              "rss_kib": 1116
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "b23397674d9cede1cca8b4654870946900a1a364b9f1779d6f64df4a88d61946",
+        "bytes": 19600000,
+        "memory": {
+          "wait4": {
+            "pid": 17455,
+            "waited_pid": 17455,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 8624
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 8624,
+              "pid": 17455,
+              "rss_kib": 1112
+            },
+            "startup": {
+              "hwm_kib": 1068,
+              "pid": 17455,
+              "rss_kib": 1068
+            }
+          }
+        }
+      }
+    },
+    "random": {
+      "baseline": {
+        "sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+        "bytes": 8000000,
+        "memory": {
+          "wait4": {
+            "pid": 17457,
+            "waited_pid": 17457,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21176
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21176,
+              "pid": 17457,
+              "rss_kib": 5156
+            },
+            "startup": {
+              "hwm_kib": 1204,
+              "pid": 17457,
+              "rss_kib": 1204
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+        "bytes": 8000000,
+        "memory": {
+          "wait4": {
+            "pid": 17459,
+            "waited_pid": 17459,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21040
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21040,
+              "pid": 17459,
+              "rss_kib": 5108
+            },
+            "startup": {
+              "hwm_kib": 1192,
+              "pid": 17459,
+              "rss_kib": 1192
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+        "bytes": 8000000,
+        "memory": {
+          "wait4": {
+            "pid": 17461,
+            "waited_pid": 17461,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 5424
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 5424,
+              "pid": 17461,
+              "rss_kib": 1152
+            },
+            "startup": {
+              "hwm_kib": 1068,
+              "pid": 17461,
+              "rss_kib": 1068
+            }
+          }
+        }
+      }
+    },
+    "records": {
+      "baseline": {
+        "sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+        "bytes": 9600000,
+        "memory": {
+          "wait4": {
+            "pid": 17463,
+            "waited_pid": 17463,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21296
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21296,
+              "pid": 17463,
+              "rss_kib": 5364
+            },
+            "startup": {
+              "hwm_kib": 1196,
+              "pid": 17463,
+              "rss_kib": 1196
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+        "bytes": 9600000,
+        "memory": {
+          "wait4": {
+            "pid": 17465,
+            "waited_pid": 17465,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21356
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21356,
+              "pid": 17465,
+              "rss_kib": 5364
+            },
+            "startup": {
+              "hwm_kib": 1128,
+              "pid": 17465,
+              "rss_kib": 1128
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+        "bytes": 9600000,
+        "memory": {
+          "wait4": {
+            "pid": 17467,
+            "waited_pid": 17467,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 5424
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 5424,
+              "pid": 17467,
+              "rss_kib": 1156
+            },
+            "startup": {
+              "hwm_kib": 1072,
+              "pid": 17467,
+              "rss_kib": 1072
+            }
+          }
+        }
+      }
+    },
+    "runs": {
+      "baseline": {
+        "sha256": "6969ab7dedc57f7965fc4745e7ae0ec062f02b2eeb35510fa52ae75226fad6a2",
+        "bytes": 10000235,
+        "memory": {
+          "wait4": {
+            "pid": 17469,
+            "waited_pid": 17469,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21316
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21316,
+              "pid": 17469,
+              "rss_kib": 2024
+            },
+            "startup": {
+              "hwm_kib": 1216,
+              "pid": 17469,
+              "rss_kib": 1216
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "6969ab7dedc57f7965fc4745e7ae0ec062f02b2eeb35510fa52ae75226fad6a2",
+        "bytes": 10000235,
+        "memory": {
+          "wait4": {
+            "pid": 17471,
+            "waited_pid": 17471,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 21364
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 21364,
+              "pid": 17471,
+              "rss_kib": 1996
+            },
+            "startup": {
+              "hwm_kib": 1124,
+              "pid": 17471,
+              "rss_kib": 1124
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "6969ab7dedc57f7965fc4745e7ae0ec062f02b2eeb35510fa52ae75226fad6a2",
+        "bytes": 10000235,
+        "memory": {
+          "wait4": {
+            "pid": 17473,
+            "waited_pid": 17473,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 6240
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 6240,
+              "pid": 17473,
+              "rss_kib": 1192
+            },
+            "startup": {
+              "hwm_kib": 1116,
+              "pid": 17473,
+              "rss_kib": 1116
+            }
+          }
+        }
+      }
+    },
+    "text": {
+      "baseline": {
+        "sha256": "572cf12c6c50ac57317d6f164b4425bca1c5c85c8fff9a70cf82febcb5f1ab05",
+        "bytes": 13238014,
+        "memory": {
+          "wait4": {
+            "pid": 17475,
+            "waited_pid": 17475,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 17340
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 17340,
+              "pid": 17475,
+              "rss_kib": 5608
+            },
+            "startup": {
+              "hwm_kib": 1204,
+              "pid": 17475,
+              "rss_kib": 1204
+            }
+          }
+        }
+      },
+      "cells": {
+        "sha256": "572cf12c6c50ac57317d6f164b4425bca1c5c85c8fff9a70cf82febcb5f1ab05",
+        "bytes": 13238014,
+        "memory": {
+          "wait4": {
+            "pid": 17477,
+            "waited_pid": 17477,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 17328
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 17328,
+              "pid": 17477,
+              "rss_kib": 5540
+            },
+            "startup": {
+              "hwm_kib": 1196,
+              "pid": 17477,
+              "rss_kib": 1196
+            }
+          }
+        }
+      },
+      "oracle": {
+        "sha256": "572cf12c6c50ac57317d6f164b4425bca1c5c85c8fff9a70cf82febcb5f1ab05",
+        "bytes": 13238014,
+        "memory": {
+          "wait4": {
+            "pid": 17479,
+            "waited_pid": 17479,
+            "exit": 0,
+            "timeout": false,
+            "wait4_hwm_kib": 5552
+          },
+          "native": {
+            "end": {
+              "hwm_kib": 5552,
+              "pid": 17479,
+              "rss_kib": 1148
+            },
+            "startup": {
+              "hwm_kib": 1072,
+              "pid": 17479,
+              "rss_kib": 1072
+            }
+          }
+        }
+      }
+    }
+  },
+  "controls": {
+    "1": {
+      "wait4": {
+        "pid": 17421,
+        "waited_pid": 17421,
+        "exit": 0,
+        "timeout": false,
+        "wait4_hwm_kib": 2224
+      },
+      "native": {
+        "end": {
+          "hwm_kib": 2232,
+          "pid": 17421,
+          "rss_kib": 2232
+        },
+        "startup": {
+          "hwm_kib": 1196,
+          "pid": 17421,
+          "rss_kib": 1196
+        }
+      }
+    },
+    "64": {
+      "wait4": {
+        "pid": 17423,
+        "waited_pid": 17423,
+        "exit": 0,
+        "timeout": false,
+        "wait4_hwm_kib": 66764
+      },
+      "native": {
+        "end": {
+          "hwm_kib": 66772,
+          "pid": 17423,
+          "rss_kib": 66772
+        },
+        "startup": {
+          "hwm_kib": 1224,
+          "pid": 17423,
+          "rss_kib": 1224
+        }
+      }
+    }
+  },
+  "executions": 23
+}

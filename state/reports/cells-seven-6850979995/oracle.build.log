@@ -1,0 +1,6 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-seven/bench/cells-seven/target/reader/.source/Cargo.toml
+workspace: /workspace/mibz2-seven/bench/cells-seven/target/reader/Cargo.toml
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-seven/bench/cells-seven/target/reader/.source)
+   Compiling cells-live v0.0.0 (/workspace/mibz2-seven/bench/cells-seven/target/reader)
+    Finished `release` profile [optimized + debuginfo] target(s) in 11.44s

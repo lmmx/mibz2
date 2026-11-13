@@ -1,0 +1,29 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-seven/bench/cells-seven/target/reader/.source/Cargo.toml
+workspace: /workspace/mibz2-seven/bench/cells-seven/target/reader/Cargo.toml
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling zmij v1.0.23
+   Compiling cc v1.11.1
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.191
+   Compiling serde_json v1.0.154
+   Compiling itoa v1.0.19
+   Compiling memchr v2.8.3
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-seven/bench/cells-seven/target/reader/.source)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+   Compiling cells-live v0.0.0 (/workspace/mibz2-seven/bench/cells-seven/target/reader)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.71s
+     Running unittests src/main.rs (bench/cells-seven/target/reader/target/debug/deps/cells_live-4cc14078853c2c96)
+
+running 5 tests
+test live_tests::long_factor_trace_keeps_overlap_recopy_and_period ... ok
+test trace_contract::tests::untimed_stack_and_error_cleanup ... ok
+test live_tests::untimed_errors_unwind_all_phases ... ok
+test live_tests::untimed_actual_readers_routes_and_crc ... ok
+test ab_cells::tests::cells_arm_matches_reader_bytes_and_errors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+

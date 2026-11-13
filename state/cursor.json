@@ -568,7 +568,7 @@
     "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a"
   },
   "cells_queue_admission": {
-    "status": "ACTIVE:377 binding implemented and exact-head CI green; awaiting Coordinator frozen-recipe check and capable Run-signal dispatch",
+    "status": "COMPLETE: owner executed120+9; queue consumed on master3e7e294",
     "owner_authorised": [
       "master_into376",
       "guarded376_merge",
@@ -587,7 +587,7 @@
     "measurements": 0,
     "in_progress_review_comment_id": 6849208142,
     "report": "state/reports/cells-auto-binding-20261113/checkpoint.md",
-    "next_action": "Coordinator check frozen recipe and dispatch existing ready signal at cb73bf9 through capable connection; then verify tag and append queue entry to master. No new permission or desktop facts needed.",
+    "next_action": "Closed; no replay. Seven-family screen is separate.",
     "review_comment_id": 6849382358,
     "pr_receipt_comment_id": 6849372228,
     "receipt_readback_verified": true,
@@ -606,6 +606,19 @@
     "dispatch_transport": "no connector workflow-dispatch tool; shell GitHub API Forbidden; no browser tool",
     "green_head_review_comment_id": 6849826280,
     "review_readback_verified": true,
-    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9"
+    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9",
+    "completed_run_submission": 6850176549,
+    "coordinator_judgement": 6850347828
+  },
+  "cells_seven_screen": {
+    "queue_comment_id": 6850979995,
+    "status": "IN_PROGRESS: 23 local checks complete; PR378 exact-head CI and handoff pending",
+    "pr": 378,
+    "head": "de1e5a8b4850cf0d33028682986ae4a641e67d6c",
+    "plan_commit": "a49e307",
+    "executions": 23,
+    "measurements": 0,
+    "report": "state/reports/cells-seven-6850979995",
+    "next_action": "Reconcile exact-head CI; Coordinator route supported guarded-writer candidate with MONODROMY. No new timing admission."
   }
 }

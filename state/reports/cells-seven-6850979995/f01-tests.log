@@ -1,0 +1,24 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-seven/bench/cells-seven/target/reader/.source/Cargo.toml
+workspace: /workspace/mibz2-seven/bench/cells-seven/target/reader/Cargo.toml
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.21
+   Compiling bytemuck v1.25.2
+   Compiling syn v3.0.10
+   Compiling fearless_simd v1.2.0
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-seven/bench/cells-seven/target/reader/.source)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.51s
+     Running unittests src/lib.rs (bench/cells-seven/target/reader/target/debug/deps/mibz2-1b79af9418419032)
+
+running 2 tests
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_long_writer_production_admission ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 105 filtered out; finished in 0.00s
+
