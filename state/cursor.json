@@ -1985,14 +1985,17 @@
     },
     {
       "trigger_comment_id": 6853304419,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/dynamics-assessment-6853304419/report.md",
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "3e7e294cc10f29495e9828181345d74233c549d4",
       "report_commit": "fa79d39ffec5cbe0de081ad04ac3fdffa24a0f47",
-      "disposition": "No-build/PARK; two bounded cost hypotheses retained. Primary self-dual scope corrected; finite coverage, order and topology witnesses pass. Reconcile existing MONODROMY equal-cell ledger, no parallel programme."
+      "disposition": "No-build/PARK; two bounded cost hypotheses retained. Primary self-dual scope corrected; finite coverage, order and topology witnesses pass. Reconcile existing MONODROMY equal-cell ledger, no parallel programme.",
+      "review_comment_id": 6853599744,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned verify retains only its hardcoded coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
