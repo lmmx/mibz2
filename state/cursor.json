@@ -706,7 +706,7 @@
   },
   "cells_selective": {
     "queue_comment_id": 6856176834,
-    "status": "IN_PROGRESS: implementation/oracle/codegen/local safety passed; independent B5 and matched CI running",
+    "status": "IN_PROGRESS: beneficial matched CI result; default gate fails; independent B5 H1 recheck and full Miri pending",
     "branch": "perf/cells-selective",
     "base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
@@ -718,6 +718,11 @@
     "pr": 380,
     "b5_request_review": 6857000172,
     "b5_checkpoint": 6857053711,
-    "benchmark_run": 43451114427
+    "benchmark_run": 43451114427,
+    "performance": "Wikidata new/original0.9763[0.9734,0.9792]; pattern0.7746[0.7727,0.7765]; no integration qualification",
+    "benchmark_artifact": 14053580305,
+    "b5_h1_review": 6857261340,
+    "b5_h1_response": 6857315083,
+    "b5_h1_recheck": 6857336623
   }
 }

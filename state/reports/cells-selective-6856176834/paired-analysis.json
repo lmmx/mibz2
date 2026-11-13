@@ -1,0 +1,763 @@
+{
+  "samples": 210,
+  "paired_method_sha256": "ef17aa12e3ae777eb1894e646e502d590fcf1a03d06e1cff5123ea58af339492",
+  "affinity": "1",
+  "table": {
+    "wikidata": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.4315,
+            "min": 0.4291,
+            "max": 0.4352
+          },
+          "cpu": {
+            "median": 0.43320000000000003,
+            "min": 0.4308,
+            "max": 0.4369
+          },
+          "rss_kb": {
+            "median": 26716.0,
+            "min": 26604,
+            "max": 26840
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.4322,
+            "min": 0.432,
+            "max": 0.4354
+          },
+          "cpu": {
+            "median": 0.43385,
+            "min": 0.4336,
+            "max": 0.437
+          },
+          "rss_kb": {
+            "median": 35054.0,
+            "min": 34928,
+            "max": 35168
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.42205,
+            "min": 0.4212,
+            "max": 0.4254
+          },
+          "cpu": {
+            "median": 0.42369999999999997,
+            "min": 0.4228,
+            "max": 0.4271
+          },
+          "rss_kb": {
+            "median": 35076.0,
+            "min": 35020,
+            "max": 35164
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            0.9763,
+            0.9734,
+            0.9792
+          ],
+          "cpu": [
+            0.9764,
+            0.9735,
+            0.9794
+          ],
+          "rss_kb": [
+            1.0007,
+            0.9997,
+            1.0016
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            1.0025,
+            0.9985,
+            1.0065
+          ],
+          "cpu": [
+            1.0024,
+            0.9984,
+            1.0064
+          ],
+          "rss_kb": [
+            1.312,
+            1.3089,
+            1.315
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            0.9787,
+            0.9749,
+            0.9826
+          ],
+          "cpu": [
+            0.9788,
+            0.9749,
+            0.9826
+          ],
+          "rss_kb": [
+            1.3128,
+            1.3103,
+            1.3154
+          ]
+        }
+      }
+    },
+    "onebyte": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.01745,
+            "min": 0.0174,
+            "max": 0.0176
+          },
+          "cpu": {
+            "median": 0.01915,
+            "min": 0.019,
+            "max": 0.0193
+          },
+          "rss_kb": {
+            "median": 34284.0,
+            "min": 34212,
+            "max": 34308
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.0194,
+            "min": 0.0191,
+            "max": 0.0196
+          },
+          "cpu": {
+            "median": 0.0211,
+            "min": 0.0208,
+            "max": 0.0212
+          },
+          "rss_kb": {
+            "median": 36858.0,
+            "min": 36684,
+            "max": 36908
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.0188,
+            "min": 0.0185,
+            "max": 0.0192
+          },
+          "cpu": {
+            "median": 0.0205,
+            "min": 0.0202,
+            "max": 0.0209
+          },
+          "rss_kb": {
+            "median": 36838.0,
+            "min": 36760,
+            "max": 36964
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            0.9726,
+            0.9626,
+            0.9827
+          ],
+          "cpu": [
+            0.9762,
+            0.968,
+            0.9845
+          ],
+          "rss_kb": [
+            1.0002,
+            0.9986,
+            1.0019
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            1.107,
+            1.1001,
+            1.1139
+          ],
+          "cpu": [
+            1.0987,
+            1.0937,
+            1.1037
+          ],
+          "rss_kb": [
+            1.0748,
+            1.0732,
+            1.0764
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            1.0766,
+            1.0676,
+            1.0857
+          ],
+          "cpu": [
+            1.0726,
+            1.0643,
+            1.0809
+          ],
+          "rss_kb": [
+            1.075,
+            1.0736,
+            1.0765
+          ]
+        }
+      }
+    },
+    "pattern": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.026,
+            "min": 0.0257,
+            "max": 0.0282
+          },
+          "cpu": {
+            "median": 0.0277,
+            "min": 0.0275,
+            "max": 0.0303
+          },
+          "rss_kb": {
+            "median": 16586.0,
+            "min": 16456,
+            "max": 16692
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.0595,
+            "min": 0.0593,
+            "max": 0.0596
+          },
+          "cpu": {
+            "median": 0.061149999999999996,
+            "min": 0.061,
+            "max": 0.0613
+          },
+          "rss_kb": {
+            "median": 19022.0,
+            "min": 18912,
+            "max": 19080
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.04605,
+            "min": 0.0459,
+            "max": 0.0462
+          },
+          "cpu": {
+            "median": 0.04775,
+            "min": 0.0476,
+            "max": 0.0479
+          },
+          "rss_kb": {
+            "median": 19022.0,
+            "min": 18968,
+            "max": 19124
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            0.7746,
+            0.7727,
+            0.7765
+          ],
+          "cpu": [
+            0.7806,
+            0.7787,
+            0.7825
+          ],
+          "rss_kb": [
+            1.0013,
+            0.9992,
+            1.0034
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            2.2707,
+            2.2273,
+            2.3149
+          ],
+          "cpu": [
+            2.1886,
+            2.1434,
+            2.2347
+          ],
+          "rss_kb": [
+            1.1467,
+            1.142,
+            1.1514
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            1.7589,
+            1.7264,
+            1.7919
+          ],
+          "cpu": [
+            1.7084,
+            1.6743,
+            1.7433
+          ],
+          "rss_kb": [
+            1.1482,
+            1.1443,
+            1.1521
+          ]
+        }
+      }
+    },
+    "random": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.10885,
+            "min": 0.1086,
+            "max": 0.1131
+          },
+          "cpu": {
+            "median": 0.1105,
+            "min": 0.1103,
+            "max": 0.1148
+          },
+          "rss_kb": {
+            "median": 23350.0,
+            "min": 23140,
+            "max": 23460
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.10865,
+            "min": 0.1085,
+            "max": 0.1107
+          },
+          "cpu": {
+            "median": 0.11035,
+            "min": 0.1101,
+            "max": 0.1124
+          },
+          "rss_kb": {
+            "median": 23512.0,
+            "min": 23432,
+            "max": 23564
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.10855000000000001,
+            "min": 0.1083,
+            "max": 0.1092
+          },
+          "cpu": {
+            "median": 0.11025,
+            "min": 0.11,
+            "max": 0.1109
+          },
+          "rss_kb": {
+            "median": 23494.0,
+            "min": 23444,
+            "max": 23620
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            0.9971,
+            0.9924,
+            1.0017
+          ],
+          "cpu": [
+            0.9973,
+            0.9927,
+            1.0019
+          ],
+          "rss_kb": [
+            1.0005,
+            0.9983,
+            1.0027
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            0.9959,
+            0.9863,
+            1.0056
+          ],
+          "cpu": [
+            0.9961,
+            0.9866,
+            1.0056
+          ],
+          "rss_kb": [
+            1.0074,
+            1.0047,
+            1.0102
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            0.993,
+            0.9858,
+            1.0003
+          ],
+          "cpu": [
+            0.9934,
+            0.9862,
+            1.0007
+          ],
+          "rss_kb": [
+            1.0079,
+            1.0048,
+            1.0111
+          ]
+        }
+      }
+    },
+    "records": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.11754999999999999,
+            "min": 0.1172,
+            "max": 0.1214
+          },
+          "cpu": {
+            "median": 0.11925,
+            "min": 0.1189,
+            "max": 0.1232
+          },
+          "rss_kb": {
+            "median": 23586.0,
+            "min": 23332,
+            "max": 23696
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.11685000000000001,
+            "min": 0.1166,
+            "max": 0.1178
+          },
+          "cpu": {
+            "median": 0.1185,
+            "min": 0.1183,
+            "max": 0.1195
+          },
+          "rss_kb": {
+            "median": 23758.0,
+            "min": 23472,
+            "max": 23864
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.11715,
+            "min": 0.1168,
+            "max": 0.1204
+          },
+          "cpu": {
+            "median": 0.11885,
+            "min": 0.1185,
+            "max": 0.1222
+          },
+          "rss_kb": {
+            "median": 23746.0,
+            "min": 23492,
+            "max": 23796
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            1.0064,
+            0.9964,
+            1.0164
+          ],
+          "cpu": [
+            1.0062,
+            0.9962,
+            1.0162
+          ],
+          "rss_kb": [
+            0.9988,
+            0.9955,
+            1.0021
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            0.9926,
+            0.9842,
+            1.0011
+          ],
+          "cpu": [
+            0.9928,
+            0.9843,
+            1.0013
+          ],
+          "rss_kb": [
+            1.0073,
+            1.0026,
+            1.012
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            0.9989,
+            0.9919,
+            1.0059
+          ],
+          "cpu": [
+            0.9989,
+            0.9918,
+            1.0061
+          ],
+          "rss_kb": [
+            1.0061,
+            1.0015,
+            1.0107
+          ]
+        }
+      }
+    },
+    "runs": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.0115,
+            "min": 0.0113,
+            "max": 0.012
+          },
+          "cpu": {
+            "median": 0.01315,
+            "min": 0.0129,
+            "max": 0.0137
+          },
+          "rss_kb": {
+            "median": 23666.0,
+            "min": 23552,
+            "max": 23732
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.0115,
+            "min": 0.0113,
+            "max": 0.0117
+          },
+          "cpu": {
+            "median": 0.0132,
+            "min": 0.013,
+            "max": 0.0134
+          },
+          "rss_kb": {
+            "median": 23790.0,
+            "min": 23488,
+            "max": 23852
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.0115,
+            "min": 0.0114,
+            "max": 0.0118
+          },
+          "cpu": {
+            "median": 0.01315,
+            "min": 0.013,
+            "max": 0.0135
+          },
+          "rss_kb": {
+            "median": 23782.0,
+            "min": 23544,
+            "max": 23864
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            1.0052,
+            0.9942,
+            1.0163
+          ],
+          "cpu": [
+            1.0038,
+            0.9932,
+            1.0144
+          ],
+          "rss_kb": [
+            1.0002,
+            0.9962,
+            1.0041
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            0.9975,
+            0.9834,
+            1.0118
+          ],
+          "cpu": [
+            0.9986,
+            0.9846,
+            1.0128
+          ],
+          "rss_kb": [
+            1.0043,
+            1.0002,
+            1.0085
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            1.0027,
+            0.9846,
+            1.021
+          ],
+          "cpu": [
+            1.0023,
+            0.9866,
+            1.0183
+          ],
+          "rss_kb": [
+            1.0045,
+            1.0014,
+            1.0076
+          ]
+        }
+      }
+    },
+    "text": {
+      "arms": {
+        "mibz2@bin/ab": {
+          "wall": {
+            "median": 0.0574,
+            "min": 0.0571,
+            "max": 0.0585
+          },
+          "cpu": {
+            "median": 0.0591,
+            "min": 0.0589,
+            "max": 0.0603
+          },
+          "rss_kb": {
+            "median": 19652.0,
+            "min": 19408,
+            "max": 19760
+          }
+        },
+        "mibz2-cells@bin/original-cells-ab": {
+          "wall": {
+            "median": 0.0575,
+            "min": 0.0572,
+            "max": 0.0583
+          },
+          "cpu": {
+            "median": 0.0592,
+            "min": 0.0589,
+            "max": 0.06
+          },
+          "rss_kb": {
+            "median": 19822.0,
+            "min": 19760,
+            "max": 19900
+          }
+        },
+        "mibz2-cells": {
+          "wall": {
+            "median": 0.0576,
+            "min": 0.0573,
+            "max": 0.0579
+          },
+          "cpu": {
+            "median": 0.05935,
+            "min": 0.0589,
+            "max": 0.0596
+          },
+          "rss_kb": {
+            "median": 19788.0,
+            "min": 19524,
+            "max": 19896
+          }
+        }
+      },
+      "pairs": {
+        "mibz2-cells / mibz2-cells@bin/original-cells-ab": {
+          "wall": [
+            1.0004,
+            0.9968,
+            1.0039
+          ],
+          "cpu": [
+            1.0003,
+            0.9966,
+            1.0041
+          ],
+          "rss_kb": [
+            0.9977,
+            0.9947,
+            1.0007
+          ]
+        },
+        "mibz2-cells@bin/original-cells-ab / mibz2@bin/ab": {
+          "wall": [
+            1.0019,
+            0.9959,
+            1.0079
+          ],
+          "cpu": [
+            1.0017,
+            0.996,
+            1.0074
+          ],
+          "rss_kb": [
+            1.0106,
+            1.0069,
+            1.0144
+          ]
+        },
+        "mibz2-cells / mibz2@bin/ab": {
+          "wall": [
+            1.0023,
+            0.9975,
+            1.007
+          ],
+          "cpu": [
+            1.002,
+            0.9969,
+            1.0072
+          ],
+          "rss_kb": [
+            1.0083,
+            1.0032,
+            1.0134
+          ]
+        }
+      }
+    }
+  }
+}
