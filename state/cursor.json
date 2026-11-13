@@ -1752,6 +1752,15 @@
       "reason": "Own attributed LOG and durable own-ID checkpoint; exact readback has no new external message. Master/policies and merged376 head/checks unchanged; no duplicate dispatch/LOG.",
       "ready_job_queued": false,
       "ready_job_reason": "Actual desktop preflight facts and final bound recipe/admission still absent; preserve existing active executor."
+    },
+    "6849678574": {
+      "status": "in_progress",
+      "delivery_id": "5117f540-df48-11f1-9c90-f651d4a09ef4",
+      "comment_updated_at": null,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849678574",
+      "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+      "planned_action": "Coordinator frozen diagnostic recipe review; reconcile automatic input/CPU binding and active recipient. No duplicate implementation, merge, ready signal or queue before gates.",
+      "log_dedup_key": "cells-auto-binding-377-6849678574"
     }
   },
   "automatic_github_wakeup_assumed": false,
