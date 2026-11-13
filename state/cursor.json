@@ -1729,6 +1729,15 @@
       "reason": "Own attributed LOG, exact readback and own-ID receipt match; no new actionable external message. Policy/master unchanged; no duplicate dispatch/LOG.",
       "ready_job_queued": false,
       "ready_job_reason": "Active live integration/admission work; actual i9 facts and final bound recipe/admission remain absent."
+    },
+    "6849382358": {
+      "status": "in_progress",
+      "delivery_id": "ea660cd0-df45-11f1-8a5d-0ea822aea271",
+      "comment_updated_at": null,
+      "master_sha": "e674070e1351460d27d745390b1db80ef5112b60",
+      "scope": "Reconcile376 guarded integration; preserve active authorised queue binding pending actual facts",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
