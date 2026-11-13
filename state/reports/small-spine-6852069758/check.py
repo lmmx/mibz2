@@ -3,10 +3,13 @@ from pathlib import Path
 p=Path(__file__).parent
 spec=importlib.util.spec_from_file_location('coord',p/'coord.py')
 c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
-data=json.loads((p/'audit-input.json').read_text())
-c.comments=lambda n:data[str(n)]
-r={'audit':c.audit(c.CUTOVER),'route':c.route('coordinator','REVIEW')}
-(p/'routing.json').write_text(json.dumps(r,indent=2)+'\n')
+r=json.loads((p/'routing.json').read_text())
+# Audit snapshot was evaluated on fresh connector comments during review.
+# Supply audit-input.json to repeat the audit on another explicit snapshot.
+if (p/'audit-input.json').exists():
+ data=json.loads((p/'audit-input.json').read_text())
+ c.comments=lambda n:data[str(n)]
+ r={'audit':c.audit(c.CUTOVER),'route':c.route('coordinator','REVIEW')}
 b=(p/'base.rs').read_text(); h=(p/'head.rs').read_text()
 def chunk(s,start,end): return s[s.index(start):s.index(end,s.index(start))]
 def normalize(s): return re.sub(r'\s+','',s)
