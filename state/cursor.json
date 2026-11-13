@@ -1762,9 +1762,12 @@
       "planned_action": "Accept exact377 frozen diagnostic recipe under PROTOCOL9; batch material state to free Observer; grouped LOG. No merge or signal: existing executor handles deliberate integration; no authenticated Run-signal browser/connector dispatch available.",
       "log_dedup_key": "cells-auto-binding-377-6849678574",
       "observer_dispatch": {
-        "status": "in_progress",
+        "status": "posted_pending_verification",
         "dedup_key": "cells-auto-binding-377-6849678574-observer",
-        "destination": 222
+        "destination": 222,
+        "comment_id": 6849790558,
+        "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849790558",
+        "recipient_execution_observed": false
       }
     }
   },
