@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6852143543,
+  "last_examined_comment_id": 6852351744,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2196,7 +2196,7 @@
       "dispatches": 0
     },
     "6852248226": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "ed1efb30-df59-11f1-99d6-1078a0c18e15",
       "comment_updated_at": "2026-11-13T12:01:13Z",
       "planned_action": "Preserve first negative candidate/Segmented performance verdict; route one bounded saved-evidence Optimiser next-step delta, no implementation or timing. Record exact service-only successor and pending CI.",
@@ -2206,10 +2206,23 @@
       "next_assignment": {
         "id": 6852341904,
         "status": "posted_and_verified_pending_recipient"
+      },
+      "disposition": "First successful experimental candidate/Segmented result rejects guard alone as global/default-enablement strategy: no primary gain; Wikidata wall1.099[1.041,1.160], pattern1.782[1.599,1.986]; RSS26->34MB/16->18MB. Matched old-Cells arm absent; i9 original result preserved, no causal guard-loss claim. One bounded Optimiser saved-evidence next-choice assignment6852341904 posted/readback/verify passed; recipient completion pending.",
+      "performance": {
+        "head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+        "run": 43420282511,
+        "job": 131868260723,
+        "source": "GitHub completed job log inspected; artifact download/hash only author-reported",
+        "artifact_id": 14032899741,
+        "author_reported_sha256": "94cde4d012bf878857c8edd696401e562bb025213804ba7cb51868b2664fae65"
+      },
+      "grouped_log": {
+        "status": "in_progress",
+        "dedup_key": "379-first-result-evidence-6852248226"
       }
     },
     "6852258044": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "fc3b8ac0-df59-11f1-8726-317bdc7c1d40",
       "comment_updated_at": "2026-11-13T12:01:38Z",
       "planned_action": "Accept completed independent source-review delivery but not B5 closure; route only requested evidence closure using newly archived records and test-only successor. No repeated broad safety review.",
@@ -2219,13 +2232,36 @@
       "closure_assignment": {
         "id": 6852337017,
         "status": "posted_and_verified_pending_recipient"
+      },
+      "report_commit": "dc4337ad2368982f61df176d925e3155b8ded54c",
+      "reviewer_cursor": "caffb6279d6e99f0e638dbd16c333469ceac5cce",
+      "disposition": "Actual finished source review accepted at conditional omission-proof scope; no B5 closure. Evidence newly available at90395635d82c3e039122e97003c544fe61c98984; one targeted same-reviewer evidence correction6852337017 posted/readback/verify passed. No new broad review or self-certification.",
+      "grouped_log": {
+        "status": "in_progress",
+        "dedup_key": "379-first-result-evidence-6852248226"
       }
     },
     "6852351744": {
-      "status": "in_progress",
+      "status": "completed_no_duplicate_dispatch",
       "delivery_id": "87d6fba0-df5a-11f1-9672-fd265e1cda18",
       "comment_updated_at": "2026-11-13T12:05:32Z",
-      "planned_action": "Reconcile already forwarded exact evidence with same Researcher correction6852337017; record new benchmark generator project failure and same Codex investigation, no duplicate request."
+      "planned_action": "Reconcile already forwarded exact evidence with same Researcher correction6852337017; record new benchmark generator project failure and same Codex investigation, no duplicate request.",
+      "disposition": "Exact evidence90395635d82c3e039122e97003c544fe61c98984 already forwarded in6852337017 before this relay. New-head Rust now success; benchmark fails project generator after default measurements, Miri incomplete. Same Codex is investigating; no duplicate implementation or unchanged-head retry.",
+      "incident": {
+        "class": "A",
+        "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+        "run": 43421337109,
+        "job": 131871812772,
+        "step": "python3 bench/cells-small-spine/pin_inputs.py",
+        "decisive_line": "FileExistsError: [Errno17] target/cells-pinned-generator at work.mkdir(), pin_inputs.py:21",
+        "ran": "Default paired measurement rows through round9 ran; partial artifact14033793879 uploaded; Rust131871813421 success; legacy pre-commit success.",
+        "not_run": "Pinned experimental parity and experimental timing, subsequent stages/report steps did not complete after generator failure. New Miri131871926397 still running.",
+        "reason": "Project code failed after project measurements; not external setup/classB. Same executor investigating genuine repair. No unchanged-head retry or failure erasure."
+      },
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6852337017",
+        "https://github.com/lmmx/mibz2/actions/runs/43421337109/job/131871812772"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2363,7 +2399,9 @@
     6851728088,
     6851749759,
     6852069758,
-    6852082878
+    6852082878,
+    6852337017,
+    6852341904
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2962,10 +3000,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Await Researcher actual REVIEW+cursor6852069758 for exact379 head835984e changed safety argument; do not equate posted/verify with completion.",
-    "Same Codex executor continues full validation and ordinaryCI; no duplicate implementation. Compare actual pinned default/experimental rows and credible hooks-off RSS before qualification; retain failures.",
-    "MONODROMY existing6850491677 still pending; preserve mathematics/Pathfinder architecture, originalF01 resolution and365DEFER integration gate.",
-    "No ready workstation job: candidate review/performance pending; no automatic merge/default/release/i9/custom programme."
+    "Same Codex6851728088 finishes existing validation/archives exact failures; no new dispatcher or timing assignment until actual final receipt.",
+    "Researcher162/6852337017 checks requested raw Miri/mutation evidence and test-only successor; source proof accepted, B5 closure pending.",
+    "Optimizer160/6852341904 returns one bounded next integration choice from saved evidence; no experiment or implementation admitted.",
+    "MONODROMY existing6850491677 remains pending; no duplicate mathematics task.",
+    "No ready workstation job queued: candidate did not qualify, safety closure and current exact-head CI pending; no new C5 recipe admitted. Preserve first negative result and original i9 evidence."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -4152,7 +4191,7 @@
     },
     "guarded_writer": {
       "queue": 6851728088,
-      "status": "validation_fixture_repair_and_independent_review_in_progress",
+      "status": "negative_default_strategy_verdict; targeted_evidence_closure_and_final_validation_pending",
       "implementation_owner": "same Codex executor",
       "independent_B5_required": true,
       "mathematical_queue": 6850491677,
@@ -4162,11 +4201,19 @@
       "cursor_blob": "622f239ddacf713c1832ed349ea9f0c02eb21792",
       "implementation_complete": false,
       "pr": 379,
-      "head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+      "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
       "independent_review_assignment": 6852069758,
       "latest_validation_comment": 6852143543,
       "ci_incident_job": 131868260462,
-      "independent_review_state": "in progress per recipient cursor; no completed REVIEW"
+      "independent_review_state": "in progress per recipient cursor; no completed REVIEW",
+      "writer_head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+      "performance_verdict_comment": 6852248226,
+      "independent_source_review": 6852258044,
+      "independent_evidence_correction": 6852337017,
+      "optimizer_next_choice": 6852341904,
+      "source_review_complete": true,
+      "B5_evidence_closed": false,
+      "evidence_commit": "90395635d82c3e039122e97003c544fe61c98984"
     }
   },
   "submission_repair_376": {
