@@ -4687,3 +4687,10 @@ Checkpoint6790511955; PR368 head4d8bd424681de0b798106ab7d7dc5cc4ca3240b8, base26
 ## D103 — corrected occupancy accounting resumes at bfd5d322
 
 Checkpoint6790746386; PR368 headbfd5d322651974f9803f4c03942cf3ba3b5161d2, base2635f04e9155dd31388b24fd3f7248f87b3ddcda; authoritya2da49638ac54d7763de1c167bd054f67ffdc763. **G1 PROCEED; record scoped B6 resumption: D100/D102 accounting cause resolved at this repaired pin.** Selected-AVX2 run requests include n+8 in the finite retained tt upper; lower remains actual rows, covering cooperative fallback conservatively. Scalar/detected native boundary and compiling old-bound mutant establish reach. Exact-head Occupancy42984639389 succeeds ordinary/team; independently hashed artifact and replayed40complete traced rounds/17,240snapshots with zero ll/rle/tt violations. Prior failure archive preserved byte-for-byte. Overhead intervals all include1; wide two-round team intervals are no perturbation shown, not equivalence. Miri remains pending at snapshot; no blanket safety/merge/readiness clearance. #366's old failed head is not retroactively cleared and needs its applicable readiness reconciliation. [Full targeted disposition](reports/D103-occupancy-resumption.md).
+
+
+## D104 — bounded i9 machine/activity qualification
+
+Checkpoint 6867883717; recipe cf1a36ed429f361839fab6748383187104d8ab27; archive SHA256330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7.
+
+G1 PROCEED on the machine/activity question: pre-start total and individual idle requirements supported; post-start others_busy1.65 is not a registered exclusion threshold. Keep all observations and uncertainty. Scoped qualification hold resolved; no production/B5 certification, no #380 DEFER/default-gate reversal or rerun. See [full independent findings](reports/D104-i9-machine-qualification.md).
