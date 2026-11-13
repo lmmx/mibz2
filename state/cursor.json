@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6852460604,
+  "last_examined_comment_id": 6852495550,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2315,10 +2315,16 @@
       "ready_job_queued": false,
       "ready_job_reason": "First candidate performance result negative; final-head checks and existing Optimiser/Codex dispositions pending; no new admitted workstation recipe.",
       "grouped_log": {
-        "status": "in_progress",
-        "key": "targeted-B5-closure-6852460604"
+        "status": "completed_verified",
+        "comment_id": 6852495550,
+        "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852495550"
       },
       "dispatches": 0
+    },
+    "6852495550": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T12:11:31Z",
+      "disposition": "Own scoped B5 closure checkpoint verified; ignore self wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2459,7 +2465,8 @@
     6852082878,
     6852337017,
     6852341904,
-    6852388781
+    6852388781,
+    6852495550
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
