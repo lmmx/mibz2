@@ -1944,6 +1944,13 @@
       "disposition": "REVISE failed-child resource retention before eventual execution; source correspondence and estimator arithmetic pass; no new B5 blocker found.",
       "review_comment_id": 6821626797,
       "publication_verification": "Exact body/author/issue and role-aware routing passed; pinned verify retains coordinator-only FROM exception."
+    },
+    {
+      "trigger_comment_id": 6850324757,
+      "status": "in progress",
+      "pr": 162,
+      "report_path": "state/reports/cells-adjacent-6850324757/report.md",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
     }
   ],
   "active_delegations": [],
