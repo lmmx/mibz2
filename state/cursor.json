@@ -523,6 +523,14 @@
     "performance_measurements": 0,
     "optimisation_implemented": false,
     "report": "state/reports/cells-measurement-resume-20261113/checkpoint.md",
-    "manual_codex_launch_required": true
+    "manual_codex_launch_required": true,
+    "repair_ci": {
+      "packaging": "success",
+      "preparation": "success",
+      "benchmark": "success",
+      "legacy": "success",
+      "Test": "failure: actual Rust job131787940907 shows inherited mtf_two_level lint, fixed by375 on master but absent from stacked373 base"
+    },
+    "next_action": "Explicit authorised integration of green373; retarget376 to integrated master, normal checks; obtain actual i9 read-only preflight before CPU/corpus binding and restricted-run approval."
   }
 }

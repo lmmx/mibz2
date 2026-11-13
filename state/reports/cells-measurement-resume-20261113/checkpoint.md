@@ -23,7 +23,9 @@ Isolated PR376, base373/8329f0c, head **5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a
 
 All14 existing+new Python tests pass/no skips with actual Just; source shell syntax and scoped lint pass.1572 other tracked files identical: no PLAN, driver, schedule, estimator, build, hooks, production, unsafe, lock or source-pin change. Before-failure and after-pass logs retained. Actual run remains120 measured+9untimed/oracle; no warm20+20.
 
-PR376 hosted legacy passes; normal Actions pending at snapshot. No manually dispatched benchmark/retry or workstation execution. This small follow-up requires ordinary targeted review/integration; it does not reopen the harness's full independent review.
+PR376 hosted legacy, packaging43396306222, preparation43396306200 and Benchmark43396306235 pass. Test43396306206 fails in Rust job131787940907: the actual log checks out merge6fb3be5 of376 into the old373 branch and reports examples/mtf_two_level.rs:273 needless_range_loop. That branch lacks the already-integrated375 correction; master8138e014 contains the corrected iterator. This is a demonstrated inherited stacked-base dependency, not a new lint task or an inferred infrastructure failure. Other Test jobs pass. Preserve this failure; after authorised373 integration, retarget376 to master and inspect its normal changed-base checks. Do not reimplement375 or retry the same failed check. Full actual job log and final Actions snapshot retained here.
+
+No manually dispatched benchmark/retry or workstation execution. This small follow-up requires ordinary targeted review/integration; it does not reopen the harness's full independent review.
 
 ## Exact next execution prerequisites
 
