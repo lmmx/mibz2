@@ -1,0 +1,215 @@
+{
+  "generator": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+  "scale": 4,
+  "inputs": {
+    "wikidata": [
+      11854933,
+      209700196,
+      "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+    ],
+    "onebyte": [
+      51,
+      20000000,
+      "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e"
+    ],
+    "pattern": [
+      1116,
+      19600000,
+      "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407"
+    ],
+    "random": [
+      7097921,
+      8000000,
+      "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18"
+    ],
+    "records": [
+      9587840,
+      9600000,
+      "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c"
+    ],
+    "runs": [
+      37995,
+      10000235,
+      "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8"
+    ],
+    "text": [
+      2625903,
+      13238014,
+      "f0031809969382478252695d4b219eee69da60f8ef45e845c247362bb4710d75"
+    ]
+  },
+  "text_files": [
+    {
+      "path": "src/bits.rs",
+      "sha256": "fbd2a622c3eb34415610f278d57ae6b7ede7ba769140245b49a06f3ef4ab971f"
+    },
+    {
+      "path": "src/block.rs",
+      "sha256": "c0e0257373c71a8526612e77561f286a73dd912ec637b09618e610dd90b61407"
+    },
+    {
+      "path": "src/bwt.rs",
+      "sha256": "10e791a93a8800707b6d11ab299454ed1068f2517537cf4324671c7b00092607"
+    },
+    {
+      "path": "src/cells.rs",
+      "sha256": "c11be9107e462737ceab4a8ab4291a91ba0f2bd389010fa6295c3c545a9350be"
+    },
+    {
+      "path": "src/coop.rs",
+      "sha256": "f7844ca9dda64b571a41c5b6b63b86632963dd882c3b052367268e02f06664f5"
+    },
+    {
+      "path": "src/crc.rs",
+      "sha256": "c99ce53c160f63bce5ab52089dd25c83297c9167cdefb7b3f1438e3720eea0ba"
+    },
+    {
+      "path": "src/lib.rs",
+      "sha256": "12632248604a41aba157c16b11f0695ff68cc4c16689a4a85e6700e5d91fa68c"
+    },
+    {
+      "path": "src/mtf.rs",
+      "sha256": "253ab5f9d9978c419214b44b3976b8e977d114760457163066dcba1653ab6105"
+    },
+    {
+      "path": "src/parallel.rs",
+      "sha256": "34c42b31c86319dfdb83e25ee61d2e0bc28a88000d6fb691370b36a1c0a003f5"
+    },
+    {
+      "path": "src/python.rs",
+      "sha256": "d349557946295eefaadbef8a1f4ac0dad355abaa7c7bc88c228953eacbba4b85"
+    },
+    {
+      "path": "src/read.rs",
+      "sha256": "9eeecf96850277aede70d5df3933dab00d5e5713731f95a90a42dbdfa782c6a4"
+    },
+    {
+      "path": "src/rle.rs",
+      "sha256": "3c326bf34a2b3518e1cf3c73a0fa47e747938ba29c67a39de987417cca35bfb8"
+    },
+    {
+      "path": "src/run_fed.rs",
+      "sha256": "3ce14f38b6b860a11099a8e1b2df896f50a744c493f8020dc2032fa2d9a0fe74"
+    },
+    {
+      "path": "src/runs.rs",
+      "sha256": "6a257b8996026fae0ab49c9b26b20f417b7f270a7d9502dfc922645885d48cc9"
+    },
+    {
+      "path": "src/stream.rs",
+      "sha256": "ee9c5d3115e451ae929a53fb64a0c116f98095efefe7a1feed8eb601b4218aea"
+    },
+    {
+      "path": "src/trace.rs",
+      "sha256": "d015bd83ee1d7de76b047f31a721694eae07b284ec97526268274c6d096567ab"
+    },
+    {
+      "path": "tests/admission.rs",
+      "sha256": "d74de11adfe1d013822e184187c3134c1a98c9a157aafc0def978fd218deab97"
+    },
+    {
+      "path": "tests/cells.rs",
+      "sha256": "f4866cb4ce1177ec597deb208aef96b40412638785fe21cae9a29cc90801cade"
+    },
+    {
+      "path": "tests/cooperative.rs",
+      "sha256": "4f780461ee1f8f7ca38b6453a35e4433b86e915e4bd8342e5065e8ceb27a2a5c"
+    },
+    {
+      "path": "tests/corpus.rs",
+      "sha256": "9ab3239ebb42382d52d5435f35970fd9c2254804b51b9433415b9863fa8f34f2"
+    },
+    {
+      "path": "tests/decode.rs",
+      "sha256": "cbc8bcd52cb71d58c5a21763b1aeb6ccc5499b5197ebd5751a6a16cd5b6c7a27"
+    },
+    {
+      "path": "tests/in_place.rs",
+      "sha256": "4825beeb547c1a827d61f8b73b93d3eae06487db14a7e3d1b7d234c8186b4e9a"
+    },
+    {
+      "path": "tests/mtf_checkpoints.rs",
+      "sha256": "6ad12effccab7cba5149c65f39daf4747d6e81ceb08ff06f1a28042ee7329c8a"
+    },
+    {
+      "path": "tests/mtf_kernels.rs",
+      "sha256": "4c3dd84045cf1129f7404975971d5706fc2de0d92b3def711883b6d04cf59cfc"
+    },
+    {
+      "path": "tests/pipelined.rs",
+      "sha256": "52aaa77b2cdb49ec5474bd5551a64ad9c356c96f886fc03b047417662e12a899"
+    },
+    {
+      "path": "tests/reader_panic.rs",
+      "sha256": "6c760c523fa7ddc5cd09ba92fa914cedacf8a84fccb9ca341dacd36e5e635df1"
+    },
+    {
+      "path": "tests/service.rs",
+      "sha256": "f8f56d44457855712836378c66d4b5c77bcaa9b115757f82c7f1556fb451dd83"
+    },
+    {
+      "path": "tests/service_default.rs",
+      "sha256": "943a83dc12b5382c0bb51a875a8bfa5a0d768645307887b8d275eb03cd78437d"
+    },
+    {
+      "path": "examples/ab.rs",
+      "sha256": "31b5efb7e6e71e30e5b8cffe27760e1e720bb2e97165d0781c00adbcd16d93b2"
+    },
+    {
+      "path": "examples/bzcat.rs",
+      "sha256": "a50234b187e9b23a9f1fbb2b63c9218da3bd576d30c5b8b2a0bbea99bf0aeada"
+    },
+    {
+      "path": "examples/fuzz.rs",
+      "sha256": "3efac55c053d4cc6aa58e63ec8e6704bc239cda2f120642a6a4e4118345f2928"
+    },
+    {
+      "path": "examples/mtf_two_level.rs",
+      "sha256": "ecef85e6653cad308239c847f3cbc656d88a021a368a0d11c9caa8f567e3c2f9"
+    },
+    {
+      "path": "examples/occupancy.rs",
+      "sha256": "882e3a86d16bda375d228689dcec00cea4e28e92b1ba896685e8e2ab1703cf95"
+    },
+    {
+      "path": "examples/packet_census.rs",
+      "sha256": "a2cded2b707e647f39970613270c7d332941da5d18773122e98b651b9d2f286e"
+    },
+    {
+      "path": "examples/par_scan.rs",
+      "sha256": "5cac55d1c509360afa6ab22ff1a2010cdc1621f40c5e76367798a867c8f285b2"
+    },
+    {
+      "path": "examples/phases.rs",
+      "sha256": "281fac98070e865ab10132adffead193f38f6ec36088ffd4166b7f533b024671"
+    },
+    {
+      "path": "examples/rauzy.rs",
+      "sha256": "eff14da07eef398780c7d95fe1b0cb0612715b0136b77dc98c8ed3f12fdf8545"
+    },
+    {
+      "path": "examples/stress.rs",
+      "sha256": "1967fe1dbb7ccfde55a745af8c1410fd86eec237e218b2f694971b39193073bd"
+    },
+    {
+      "path": "examples/svc_target.rs",
+      "sha256": "bcffc67a36f22a763f7545d27f808f889c629ab55fdd7d74ad6d07746e8fca2f"
+    },
+    {
+      "path": "examples/sweep.rs",
+      "sha256": "aa4aa7f40a2c32a508dda84d03dcfde0741632b82dfadff0d3358823ec131e28"
+    },
+    {
+      "path": "examples/wait_audit.rs",
+      "sha256": "eefc62648b29bb726ed2525c868e8938f2c6d12ee3d5ea6925a739b5fc2fbfca"
+    },
+    {
+      "path": "examples/windows.rs",
+      "sha256": "3d56dab9d96d565dc162a08b5d58db4c6168a4a076672726d9c7901d16ab6dc8"
+    },
+    {
+      "path": "README.md",
+      "sha256": "5df4d75e7426e3e45c7af5a309e47e3ee3d3db0002773db2e9f10ac243a6f894"
+    }
+  ]
+}

@@ -1,0 +1,2003 @@
+﻿2026-11-13T11:58:52.7829412Z Current runner version: '2.338.2'
+2026-11-13T11:58:52.7853479Z ##[group]Runner Image Provisioner
+2026-11-13T11:58:52.7854486Z Hosted Compute Agent
+2026-11-13T11:58:52.7855098Z Version: 20261103.629
+2026-11-13T11:58:52.7855735Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+2026-11-13T11:58:52.7856530Z Build Date: 2026-11-03T17:26:59Z
+2026-11-13T11:58:52.7857246Z Worker ID: {24cd30e2-2965-470e-b1d9-57866421fbe6}
+2026-11-13T11:58:52.7857950Z Region: westcentralus
+2026-11-13T11:58:52.7858585Z Cloud: Azure
+2026-11-13T11:58:52.7859116Z ##[endgroup]
+2026-11-13T11:58:52.7860657Z ##[group]Operating System
+2026-11-13T11:58:52.7861780Z Ubuntu
+2026-11-13T11:58:52.7862304Z 26.04.1
+2026-11-13T11:58:52.7862896Z LTS
+2026-11-13T11:58:52.7863403Z ##[endgroup]
+2026-11-13T11:58:52.7863988Z ##[group]Runner Image
+2026-11-13T11:58:52.7864710Z Image: ubuntu-26.04
+2026-11-13T11:58:52.7865270Z Version: 20261111.196.1
+2026-11-13T11:58:52.7866591Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261111.196/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-13T11:58:52.7868203Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261111.196
+2026-11-13T11:58:52.7869243Z ##[endgroup]
+2026-11-13T11:58:52.7870509Z ##[group]GITHUB_TOKEN Permissions
+2026-11-13T11:58:52.7872646Z Contents: write
+2026-11-13T11:58:52.7873251Z Metadata: read
+2026-11-13T11:58:52.7873922Z PullRequests: write
+2026-11-13T11:58:52.7874568Z ##[endgroup]
+2026-11-13T11:58:52.7876662Z Secret source: Actions
+2026-11-13T11:58:52.7877602Z Cache mode: write
+2026-11-13T11:58:52.7878745Z Prepare workflow directory
+2026-11-13T11:58:52.8522531Z Prepare all required actions
+2026-11-13T11:58:52.8598039Z Getting action download info
+2026-11-13T11:58:53.1591307Z Download action repository 'actions/checkout@v6' (SHA:d23441a48e516b6c34aea4fa41551a30e30af803)
+2026-11-13T11:58:53.3152063Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:b725eda525362e7cf34af9a7243cac1e3f01a7ec)
+2026-11-13T11:58:53.5213227Z Download action repository 'Swatinem/rust-cache@v2' (SHA:d1527c8f67ef9af357290475d4af4b0fab8f12e0)
+2026-11-13T11:58:54.0158050Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-11-13T11:58:54.0809731Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-13T11:58:54.3007329Z Complete job name: bench
+2026-11-13T11:58:54.4041329Z ##[group]Run actions/checkout@v6
+2026-11-13T11:58:54.4042315Z with:
+2026-11-13T11:58:54.4042842Z   ref: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:58:54.4043487Z   fetch-depth: 0
+2026-11-13T11:58:54.4043960Z   repository: lmmx/mibz2
+2026-11-13T11:58:54.4048100Z   token: ***
+2026-11-13T11:58:54.4048577Z   ssh-strict: true
+2026-11-13T11:58:54.4049053Z   ssh-user: git
+2026-11-13T11:58:54.4049535Z   persist-credentials: true
+2026-11-13T11:58:54.4050073Z   clean: true
+2026-11-13T11:58:54.4050559Z   sparse-checkout-cone-mode: true
+2026-11-13T11:58:54.4051268Z   fetch-tags: false
+2026-11-13T11:58:54.4051797Z   show-progress: true
+2026-11-13T11:58:54.4052278Z   lfs: false
+2026-11-13T11:58:54.4052721Z   submodules: false
+2026-11-13T11:58:54.4053199Z   set-safe-directory: true
+2026-11-13T11:58:54.4053738Z   allow-unsafe-pr-checkout: false
+2026-11-13T11:58:54.4054551Z env:
+2026-11-13T11:58:54.4055002Z   ROUNDS: 10
+2026-11-13T11:58:54.4055441Z   SCALE: 4
+2026-11-13T11:58:54.4055905Z   SETTLE: 0.25
+2026-11-13T11:58:54.4056365Z   STAGE_ROUNDS: 5
+2026-11-13T11:58:54.4056834Z   STAGE_REPEATS: 2
+2026-11-13T11:58:54.4057298Z   KERNEL_PASSES: 10
+2026-11-13T11:58:54.4057923Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:58:54.4058656Z   CARGO_TERM_COLOR: never
+2026-11-13T11:58:54.4059172Z ##[endgroup]
+2026-11-13T11:58:54.6696149Z Syncing repository: lmmx/mibz2
+2026-11-13T11:58:54.6699391Z ##[group]Getting Git version info
+2026-11-13T11:58:54.6700886Z Working directory is '/home/runner/work/mibz2/mibz2'
+2026-11-13T11:58:54.6703280Z [command]/usr/bin/git version
+2026-11-13T11:58:54.6708234Z git version 2.56.1
+2026-11-13T11:58:54.6744463Z ##[endgroup]
+2026-11-13T11:58:54.6753170Z Temporarily overriding HOME='/home/runner/work/_temp/eb00fce5-dd97-4aa6-b731-131d9c156470' before making global git config changes
+2026-11-13T11:58:54.6755678Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-13T11:58:54.6758577Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mibz2/mibz2
+2026-11-13T11:58:54.6827727Z Deleting the contents of '/home/runner/work/mibz2/mibz2'
+2026-11-13T11:58:54.6830841Z ##[group]Determining repository object format
+2026-11-13T11:58:54.6833599Z ##[endgroup]
+2026-11-13T11:58:54.6838964Z ##[group]Initializing the repository
+2026-11-13T11:58:54.6839899Z [command]/usr/bin/git init /home/runner/work/mibz2/mibz2
+2026-11-13T11:58:54.6952753Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-13T11:58:54.6954536Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-13T11:58:54.6956131Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-13T11:58:54.6957363Z hint: call:
+2026-11-13T11:58:54.6958250Z hint:
+2026-11-13T11:58:54.6959329Z hint: 	git config --global init.defaultBranch <name>
+2026-11-13T11:58:54.6960439Z hint:
+2026-11-13T11:58:54.6961833Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-13T11:58:54.6963010Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-13T11:58:54.6963913Z hint:
+2026-11-13T11:58:54.6964452Z hint: 	git branch -m <name>
+2026-11-13T11:58:54.6965051Z hint:
+2026-11-13T11:58:54.6965950Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-13T11:58:54.6977984Z Initialized empty Git repository in /home/runner/work/mibz2/mibz2/.git/
+2026-11-13T11:58:54.6991866Z [command]/usr/bin/git remote add origin https://github.com/lmmx/mibz2
+2026-11-13T11:58:54.7046998Z ##[endgroup]
+2026-11-13T11:58:54.7048306Z ##[group]Disabling automatic garbage collection
+2026-11-13T11:58:54.7050632Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-13T11:58:54.7088907Z ##[endgroup]
+2026-11-13T11:58:54.7090187Z ##[group]Setting up auth
+2026-11-13T11:58:54.7091181Z Removing SSH command configuration
+2026-11-13T11:58:54.7097798Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-13T11:58:54.7138024Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-13T11:58:54.7604055Z Removing HTTP extra header
+2026-11-13T11:58:54.7609089Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-13T11:58:54.7649696Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-13T11:58:54.7921641Z Removing includeIf entries pointing to credentials config files
+2026-11-13T11:58:54.7928309Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-13T11:58:54.7963691Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-13T11:58:54.8248281Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-13T11:58:54.8296138Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/mibz2/mibz2/.git.path /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T11:58:54.8343082Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/mibz2/mibz2/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T11:58:54.8380390Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T11:58:54.8414103Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T11:58:54.8443882Z ##[endgroup]
+2026-11-13T11:58:54.8445645Z ##[group]Fetching the repository
+2026-11-13T11:58:54.8453530Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-11-13T11:59:04.5755713Z From https://github.com/lmmx/mibz2
+2026-11-13T11:59:04.5757982Z  * [new branch]          archive/coord-2026-11-10/bench/pair-matrix -> origin/archive/coord-2026-11-10/bench/pair-matrix
+2026-11-13T11:59:04.5760738Z  * [new branch]          archive/coord-2026-11-10/par-scan-ready-on-313 -> origin/archive/coord-2026-11-10/par-scan-ready-on-313
+2026-11-13T11:59:04.5763585Z  * [new branch]          archive/coord-2026-11-10/perf/walk-two-phase -> origin/archive/coord-2026-11-10/perf/walk-two-phase
+2026-11-13T11:59:04.5765398Z  * [new branch]          archive/coord-2026-11-10/research/mtf-census -> origin/archive/coord-2026-11-10/research/mtf-census
+2026-11-13T11:59:04.5766698Z  * [new branch]          archive/coord-2026-11-10/research/mtf-front-reg -> origin/archive/coord-2026-11-10/research/mtf-front-reg
+2026-11-13T11:59:04.5767829Z  * [new branch]          archive/coord-2026-11-10/research/mtf-run-batch -> origin/archive/coord-2026-11-10/research/mtf-run-batch
+2026-11-13T11:59:04.5768976Z  * [new branch]          archive/coord-2026-11-10/research/pgo-probe -> origin/archive/coord-2026-11-10/research/pgo-probe
+2026-11-13T11:59:04.5770116Z  * [new branch]          archive/coord-2026-11-10/research/walk-prefetch-l2 -> origin/archive/coord-2026-11-10/research/walk-prefetch-l2
+2026-11-13T11:59:04.5771909Z  * [new branch]          archive/coord-2026-11-10/research/walk-prefetch-late -> origin/archive/coord-2026-11-10/research/walk-prefetch-late
+2026-11-13T11:59:04.5774077Z  * [new branch]          archive/coord-2026-11-10/research/walk-prefetch-nta -> origin/archive/coord-2026-11-10/research/walk-prefetch-nta
+2026-11-13T11:59:04.5783571Z  * [new branch]          archive/coord-2026-11-10/research/walk-prefetch-off -> origin/archive/coord-2026-11-10/research/walk-prefetch-off
+2026-11-13T11:59:04.5785959Z  * [new branch]          archive/coord-2026-11-10/research/window-gather -> origin/archive/coord-2026-11-10/research/window-gather
+2026-11-13T11:59:04.5788012Z  * [new branch]          archive/coord-2026-11-10/research/window-onestore -> origin/archive/coord-2026-11-10/research/window-onestore
+2026-11-13T11:59:04.5789913Z  * [new branch]          archive/coord-2026-11-10/skep/flush -> origin/archive/coord-2026-11-10/skep/flush
+2026-11-13T11:59:04.5791609Z  * [new branch]          archive/coord-2026-11-10/stash-0 -> origin/archive/coord-2026-11-10/stash-0
+2026-11-13T11:59:04.5792798Z  * [new branch]          archive/coord-2026-11-10/stash-1 -> origin/archive/coord-2026-11-10/stash-1
+2026-11-13T11:59:04.5793720Z  * [new branch]          archive/coord-2026-11-10/walk/flush -> origin/archive/coord-2026-11-10/walk/flush
+2026-11-13T11:59:04.5794542Z  * [new branch]          archive/coord-2026-11-10/walk/flush-arms -> origin/archive/coord-2026-11-10/walk/flush-arms
+2026-11-13T11:59:04.5795924Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f0 -> origin/archive/coord-2026-11-10/walk/flush-f0
+2026-11-13T11:59:04.5797213Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f1 -> origin/archive/coord-2026-11-10/walk/flush-f1
+2026-11-13T11:59:04.5798396Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f2 -> origin/archive/coord-2026-11-10/walk/flush-f2
+2026-11-13T11:59:04.5799494Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f3 -> origin/archive/coord-2026-11-10/walk/flush-f3
+2026-11-13T11:59:04.5801237Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f4 -> origin/archive/coord-2026-11-10/walk/flush-f4
+2026-11-13T11:59:04.5802553Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f5 -> origin/archive/coord-2026-11-10/walk/flush-f5
+2026-11-13T11:59:04.5803946Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f6 -> origin/archive/coord-2026-11-10/walk/flush-f6
+2026-11-13T11:59:04.5805356Z  * [new branch]          archive/coord-2026-11-10/walk/flush-f7 -> origin/archive/coord-2026-11-10/walk/flush-f7
+2026-11-13T11:59:04.5806706Z  * [new branch]          archive/coord-2026-11-10/walk/flush-r0 -> origin/archive/coord-2026-11-10/walk/flush-r0
+2026-11-13T11:59:04.5808064Z  * [new branch]          archive/coord-2026-11-10/walk/flush-r3 -> origin/archive/coord-2026-11-10/walk/flush-r3
+2026-11-13T11:59:04.5809436Z  * [new branch]          archive/coord-2026-11-10/walk/flush-r7 -> origin/archive/coord-2026-11-10/walk/flush-r7
+2026-11-13T11:59:04.5810724Z  * [new branch]          archive/coord-2026-11-10/walk/lanes -> origin/archive/coord-2026-11-10/walk/lanes
+2026-11-13T11:59:04.5812413Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-16 -> origin/archive/coord-2026-11-10/walk/lanes-16
+2026-11-13T11:59:04.5813743Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-24 -> origin/archive/coord-2026-11-10/walk/lanes-24
+2026-11-13T11:59:04.5815065Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-48 -> origin/archive/coord-2026-11-10/walk/lanes-48
+2026-11-13T11:59:04.5816368Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-64 -> origin/archive/coord-2026-11-10/walk/lanes-64
+2026-11-13T11:59:04.5817766Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-64-s1024 -> origin/archive/coord-2026-11-10/walk/lanes-64-s1024
+2026-11-13T11:59:04.5819284Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-64-t128 -> origin/archive/coord-2026-11-10/walk/lanes-64-t128
+2026-11-13T11:59:04.5820762Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-tail -> origin/archive/coord-2026-11-10/walk/lanes-tail
+2026-11-13T11:59:04.5822607Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-tail-48 -> origin/archive/coord-2026-11-10/walk/lanes-tail-48
+2026-11-13T11:59:04.5824249Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-tail-64 -> origin/archive/coord-2026-11-10/walk/lanes-tail-64
+2026-11-13T11:59:04.5825248Z  * [new branch]          archive/coord-2026-11-10/walk/lanes-tail-64-s1024 -> origin/archive/coord-2026-11-10/walk/lanes-tail-64-s1024
+2026-11-13T11:59:04.5826164Z  * [new branch]          archive/coord-2026-11-10/walk/tile-size -> origin/archive/coord-2026-11-10/walk/tile-size
+2026-11-13T11:59:04.5827555Z  * [new branch]          archive/coord-2026-11-10/walk/tile-size-1024 -> origin/archive/coord-2026-11-10/walk/tile-size-1024
+2026-11-13T11:59:04.5828492Z  * [new branch]          archive/coord-2026-11-10/walk/tile-size-128 -> origin/archive/coord-2026-11-10/walk/tile-size-128
+2026-11-13T11:59:04.5829405Z  * [new branch]          archive/coord-2026-11-10/walk/tile-size-256 -> origin/archive/coord-2026-11-10/walk/tile-size-256
+2026-11-13T11:59:04.5830282Z  * [new branch]          archive/coord-2026-11-10/walk/tile-size-512 -> origin/archive/coord-2026-11-10/walk/tile-size-512
+2026-11-13T11:59:04.5831389Z  * [new branch]          archive/coord-2026-11-10/wip/b5-337 -> origin/archive/coord-2026-11-10/wip/b5-337
+2026-11-13T11:59:04.5832556Z  * [new branch]          archive/coord-2026-11-10/wip/b5-339 -> origin/archive/coord-2026-11-10/wip/b5-339
+2026-11-13T11:59:04.5833555Z  * [new branch]          archive/coord-2026-11-10/wip/build-huffms-wt -> origin/archive/coord-2026-11-10/wip/build-huffms-wt
+2026-11-13T11:59:04.5834674Z  * [new branch]          archive/coord-2026-11-10/wip/build-pgo-wt -> origin/archive/coord-2026-11-10/wip/build-pgo-wt
+2026-11-13T11:59:04.5835923Z  * [new branch]          archive/coord-2026-11-10/wip/corun-token-wt -> origin/archive/coord-2026-11-10/wip/corun-token-wt
+2026-11-13T11:59:04.5837159Z  * [new branch]          archive/coord-2026-11-10/wip/skep-mrb-arm -> origin/archive/coord-2026-11-10/wip/skep-mrb-arm
+2026-11-13T11:59:04.5838217Z  * [new branch]          archive/coord-2026-11-10/wip/skep2l-arm -> origin/archive/coord-2026-11-10/wip/skep2l-arm
+2026-11-13T11:59:04.5839259Z  * [new branch]          archive/coord-2026-11-10/wip/tail-regseg-wt -> origin/archive/coord-2026-11-10/wip/tail-regseg-wt
+2026-11-13T11:59:04.5840232Z  * [new branch]          archive/coord-2026-11-10/wip/wt-bstage -> origin/archive/coord-2026-11-10/wip/wt-bstage
+2026-11-13T11:59:04.5841364Z  * [new branch]          archive/coord-2026-11-10/wip/wt-pair -> origin/archive/coord-2026-11-10/wip/wt-pair
+2026-11-13T11:59:04.5842998Z  * [new branch]          archive/coord-2026-11-10/wip/wt-runfed-ws-r2 -> origin/archive/coord-2026-11-10/wip/wt-runfed-ws-r2
+2026-11-13T11:59:04.5844521Z  * [new branch]          archive/coord-2026-11-10/wip/wt-sharedfb -> origin/archive/coord-2026-11-10/wip/wt-sharedfb
+2026-11-13T11:59:04.5845600Z  * [new branch]          archive/coord-2026-11-10/wip/wt-tg -> origin/archive/coord-2026-11-10/wip/wt-tg
+2026-11-13T11:59:04.5846395Z  * [new branch]          b5-par-scan-review         -> origin/b5-par-scan-review
+2026-11-13T11:59:04.5846968Z  * [new branch]          bench-blocks               -> origin/bench-blocks
+2026-11-13T11:59:04.5847668Z  * [new branch]          bench-coverage             -> origin/bench-coverage
+2026-11-13T11:59:04.5848341Z  * [new branch]          bench-data                 -> origin/bench-data
+2026-11-13T11:59:04.5849054Z  * [new branch]          bench-gap                  -> origin/bench-gap
+2026-11-13T11:59:04.5849612Z  * [new branch]          bench-hour                 -> origin/bench-hour
+2026-11-13T11:59:04.5850265Z  * [new branch]          bench-imc                  -> origin/bench-imc
+2026-11-13T11:59:04.5851397Z  * [new branch]          bench-imc-calibrate        -> origin/bench-imc-calibrate
+2026-11-13T11:59:04.5852273Z  * [new branch]          bench-results              -> origin/bench-results
+2026-11-13T11:59:04.5853039Z  * [new branch]          bench-thermal              -> origin/bench-thermal
+2026-11-13T11:59:04.5853840Z  * [new branch]          bench-variants             -> origin/bench-variants
+2026-11-13T11:59:04.5854439Z  * [new branch]          bench/ab-child-2           -> origin/bench/ab-child-2
+2026-11-13T11:59:04.5855543Z  * [new branch]          bench/ab-summary-top-level-fields -> origin/bench/ab-summary-top-level-fields
+2026-11-13T11:59:04.5856428Z  * [new branch]          bench/alternatives         -> origin/bench/alternatives
+2026-11-13T11:59:04.5857107Z  * [new branch]          bench/bisect-pre204        -> origin/bench/bisect-pre204
+2026-11-13T11:59:04.5857822Z  * [new branch]          bench/cells-live-workstation -> origin/bench/cells-live-workstation
+2026-11-13T11:59:04.5858567Z  * [new branch]          bench/ci                   -> origin/bench/ci
+2026-11-13T11:59:04.5859297Z  * [new branch]          bench/cold-start           -> origin/bench/cold-start
+2026-11-13T11:59:04.5860075Z  * [new branch]          bench/held-spinner         -> origin/bench/held-spinner
+2026-11-13T11:59:04.5860769Z  * [new branch]          bench/history-links        -> origin/bench/history-links
+2026-11-13T11:59:04.5861615Z  * [new branch]          bench/libsais-kernel       -> origin/bench/libsais-kernel
+2026-11-13T11:59:04.5862358Z  * [new branch]          bench/machine-state        -> origin/bench/machine-state
+2026-11-13T11:59:04.5863090Z  * [new branch]          bench/publish-evidence     -> origin/bench/publish-evidence
+2026-11-13T11:59:04.5863828Z  * [new branch]          bench/release-scaling      -> origin/bench/release-scaling
+2026-11-13T11:59:04.5864581Z  * [new branch]          bench/release-scaling-0.2.8 -> origin/bench/release-scaling-0.2.8
+2026-11-13T11:59:04.5865349Z  * [new branch]          bench/release-scaling-fetch -> origin/bench/release-scaling-fetch
+2026-11-13T11:59:04.5866046Z  * [new branch]          bench/release-scaling-i9   -> origin/bench/release-scaling-i9
+2026-11-13T11:59:04.5867070Z  * [new branch]          bench/release-scaling-latest -> origin/bench/release-scaling-latest
+2026-11-13T11:59:04.5867863Z  * [new branch]          bench/release-scaling-names -> origin/bench/release-scaling-names
+2026-11-13T11:59:04.5868622Z  * [new branch]          bench/share-nothing-pricing -> origin/bench/share-nothing-pricing
+2026-11-13T11:59:04.5869289Z  * [new branch]          bench/stage-figures        -> origin/bench/stage-figures
+2026-11-13T11:59:04.5870016Z  * [new branch]          bench/target-gated-ni      -> origin/bench/target-gated-ni
+2026-11-13T11:59:04.5871222Z  * [new branch]          bench/target-gated-ni-final-design -> origin/bench/target-gated-ni-final-design
+2026-11-13T11:59:04.5872014Z  * [new branch]          bench/team-size            -> origin/bench/team-size
+2026-11-13T11:59:04.5872641Z  * [new branch]          bench/telemetry-validity   -> origin/bench/telemetry-validity
+2026-11-13T11:59:04.5873377Z  * [new branch]          bench/three-tables         -> origin/bench/three-tables
+2026-11-13T11:59:04.5874244Z  * [new branch]          bench/two-modes-discriminator -> origin/bench/two-modes-discriminator
+2026-11-13T11:59:04.5875010Z  * [new branch]          bench/walk-stats           -> origin/bench/walk-stats
+2026-11-13T11:59:04.5875730Z  * [new branch]          bench/walk-stats-roster    -> origin/bench/walk-stats-roster
+2026-11-13T11:59:04.5876552Z  * [new branch]          blog-pitcrew-corrections   -> origin/blog-pitcrew-corrections
+2026-11-13T11:59:04.5877318Z  * [new branch]          blog-pitcrew-restructure   -> origin/blog-pitcrew-restructure
+2026-11-13T11:59:04.5878145Z  * [new branch]          blog-pitcrew-round2-facts  -> origin/blog-pitcrew-round2-facts
+2026-11-13T11:59:04.5878944Z  * [new branch]          blog/inverse-bwt-figures-v3 -> origin/blog/inverse-bwt-figures-v3
+2026-11-13T11:59:04.5879714Z  * [new branch]          blog/inverse-bwt-navigation -> origin/blog/inverse-bwt-navigation
+2026-11-13T11:59:04.5880488Z  * [new branch]          blog/inverse-bwt-restructure -> origin/blog/inverse-bwt-restructure
+2026-11-13T11:59:04.5881714Z  * [new branch]          blog/inverse-bwt-visuals   -> origin/blog/inverse-bwt-visuals
+2026-11-13T11:59:04.5882646Z  * [new branch]          blog/mtf-runs-move-structure -> origin/blog/mtf-runs-move-structure
+2026-11-13T11:59:04.5883588Z  * [new branch]          blog/mtf-runs-pedagogy     -> origin/blog/mtf-runs-pedagogy
+2026-11-13T11:59:04.5884361Z  * [new branch]          blog/mtf-runs-review       -> origin/blog/mtf-runs-review
+2026-11-13T11:59:04.5885185Z  * [new branch]          blog/mtf-runs-upfront      -> origin/blog/mtf-runs-upfront
+2026-11-13T11:59:04.5886028Z  * [new branch]          changelog-0.2.7            -> origin/changelog-0.2.7
+2026-11-13T11:59:04.5886723Z  * [new branch]          ci/audit-every-wake        -> origin/ci/audit-every-wake
+2026-11-13T11:59:04.5887425Z  * [new branch]          ci/channel-routing-guard   -> origin/ci/channel-routing-guard
+2026-11-13T11:59:04.5888190Z  * [new branch]          ci/macos-15                -> origin/ci/macos-15
+2026-11-13T11:59:04.5889022Z  * [new branch]          ci/merge-readback          -> origin/ci/merge-readback
+2026-11-13T11:59:04.5889610Z  * [new branch]          ci/pmu-probe               -> origin/ci/pmu-probe
+2026-11-13T11:59:04.5890195Z  * [new branch]          ci/preview-idempotent      -> origin/ci/preview-idempotent
+2026-11-13T11:59:04.5890764Z  * [new branch]          ci/tag-release             -> origin/ci/tag-release
+2026-11-13T11:59:04.5891606Z  * [new branch]          ci/tripwire-check-run      -> origin/ci/tripwire-check-run
+2026-11-13T11:59:04.5892328Z  * [new branch]          ci/tripwire-record         -> origin/ci/tripwire-record
+2026-11-13T11:59:04.5893019Z  * [new branch]          ci/tripwire-wake           -> origin/ci/tripwire-wake
+2026-11-13T11:59:04.5893916Z  * [new branch]          claude/agent-swarm-fable-breakthrough-0u7j4d -> origin/claude/agent-swarm-fable-breakthrough-0u7j4d
+2026-11-13T11:59:04.5895086Z  * [new branch]          claude/sharp-meitner-cx0v78 -> origin/claude/sharp-meitner-cx0v78
+2026-11-13T11:59:04.5896284Z  * [new branch]          coord/onecore-inline-i9-20261110 -> origin/coord/onecore-inline-i9-20261110
+2026-11-13T11:59:04.5897078Z  * [new branch]          coord/resolve-6757065549   -> origin/coord/resolve-6757065549
+2026-11-13T11:59:04.5897727Z  * [new branch]          diag/par-scan-ready        -> origin/diag/par-scan-ready
+2026-11-13T11:59:04.5898716Z  * [new branch]          diagnostic/cells-live-path -> origin/diagnostic/cells-live-path
+2026-11-13T11:59:04.5899742Z  * [new branch]          docs/adopt-324             -> origin/docs/adopt-324
+2026-11-13T11:59:04.5900451Z  * [new branch]          docs/agent-oracle          -> origin/docs/agent-oracle
+2026-11-13T11:59:04.5901228Z  * [new branch]          docs/agent-team            -> origin/docs/agent-team
+2026-11-13T11:59:04.5901831Z  * [new branch]          docs/alternatives-path     -> origin/docs/alternatives-path
+2026-11-13T11:59:04.5902450Z  * [new branch]          docs/architecture-plan     -> origin/docs/architecture-plan
+2026-11-13T11:59:04.5903046Z  * [new branch]          docs/bench-changelog       -> origin/docs/bench-changelog
+2026-11-13T11:59:04.5903614Z  * [new branch]          docs/bench-hero            -> origin/docs/bench-hero
+2026-11-13T11:59:04.5904184Z  * [new branch]          docs/bench-hero-axes       -> origin/docs/bench-hero-axes
+2026-11-13T11:59:04.5904764Z  * [new branch]          docs/bench-precision       -> origin/docs/bench-precision
+2026-11-13T11:59:04.5905340Z  * [new branch]          docs/binding-census        -> origin/docs/binding-census
+2026-11-13T11:59:04.5906002Z  * [new branch]          docs/blog                  -> origin/docs/blog
+2026-11-13T11:59:04.5906651Z  * [new branch]          docs/blog-agent-inboxes    -> origin/docs/blog-agent-inboxes
+2026-11-13T11:59:04.5907239Z  * [new branch]          docs/blog-agent-team       -> origin/docs/blog-agent-team
+2026-11-13T11:59:04.5907857Z  * [new branch]          docs/blog-agent-team-lessons -> origin/docs/blog-agent-team-lessons
+2026-11-13T11:59:04.5908487Z  * [new branch]          docs/blog-compact30        -> origin/docs/blog-compact30
+2026-11-13T11:59:04.5909134Z  * [new branch]          docs/blog-compact30-constructor -> origin/docs/blog-compact30-constructor
+2026-11-13T11:59:04.5909967Z  * [new branch]          docs/blog-description      -> origin/docs/blog-description
+2026-11-13T11:59:04.5910561Z  * [new branch]          docs/blog-dispatch         -> origin/docs/blog-dispatch
+2026-11-13T11:59:04.5911468Z  * [new branch]          docs/blog-huffman-buffer-first -> origin/docs/blog-huffman-buffer-first
+2026-11-13T11:59:04.5912155Z  * [new branch]          docs/blog-huffman-pacing   -> origin/docs/blog-huffman-pacing
+2026-11-13T11:59:04.5912802Z  * [new branch]          docs/blog-huffman-register -> origin/docs/blog-huffman-register
+2026-11-13T11:59:04.5913417Z  * [new branch]          docs/blog-huffman-sec2     -> origin/docs/blog-huffman-sec2
+2026-11-13T11:59:04.5913991Z  * [new branch]          docs/blog-knee             -> origin/docs/blog-knee
+2026-11-13T11:59:04.5914542Z  * [new branch]          docs/blog-mlp-edits        -> origin/docs/blog-mlp-edits
+2026-11-13T11:59:04.5915513Z  * [new branch]          docs/blog-mlp-ilp          -> origin/docs/blog-mlp-ilp
+2026-11-13T11:59:04.5916546Z  * [new branch]          docs/blog-mlp-thesis       -> origin/docs/blog-mlp-thesis
+2026-11-13T11:59:04.5917508Z  * [new branch]          docs/blog-news-first       -> origin/docs/blog-news-first
+2026-11-13T11:59:04.5918077Z  * [new branch]          docs/blog-p87              -> origin/docs/blog-p87
+2026-11-13T11:59:04.5918640Z  * [new branch]          docs/blog-p87-access       -> origin/docs/blog-p87-access
+2026-11-13T11:59:04.5919221Z  * [new branch]          docs/blog-p87-rewrite      -> origin/docs/blog-p87-rewrite
+2026-11-13T11:59:04.5919800Z  * [new branch]          docs/blog-p87-title        -> origin/docs/blog-p87-title
+2026-11-13T11:59:04.5920401Z  * [new branch]          docs/blog-pipelined-teams  -> origin/docs/blog-pipelined-teams
+2026-11-13T11:59:04.5921618Z  * [new branch]          docs/blog-rauzy-technical-companion -> origin/docs/blog-rauzy-technical-companion
+2026-11-13T11:59:04.5922324Z  * [new branch]          docs/blog-rauzy-veech      -> origin/docs/blog-rauzy-veech
+2026-11-13T11:59:04.5922972Z  * [new branch]          docs/blog-room-walk-overlap -> origin/docs/blog-room-walk-overlap
+2026-11-13T11:59:04.5923610Z  * [new branch]          docs/blog-service-cores    -> origin/docs/blog-service-cores
+2026-11-13T11:59:04.5924255Z  * [new branch]          docs/blog-service-threads-joy -> origin/docs/blog-service-threads-joy
+2026-11-13T11:59:04.5925026Z  * [new branch]          docs/blog-social-card      -> origin/docs/blog-social-card
+2026-11-13T11:59:04.5925797Z  * [new branch]          docs/blog-space-time       -> origin/docs/blog-space-time
+2026-11-13T11:59:04.5926408Z  * [new branch]          docs/blog-trust-but-verify -> origin/docs/blog-trust-but-verify
+2026-11-13T11:59:04.5927049Z  * [new branch]          docs/blog-whole-decoder    -> origin/docs/blog-whole-decoder
+2026-11-13T11:59:04.5927875Z  * [new branch]          docs/bwt-memory-proposal   -> origin/docs/bwt-memory-proposal
+2026-11-13T11:59:04.5928469Z  * [new branch]          docs/c29-r5-result         -> origin/docs/c29-r5-result
+2026-11-13T11:59:04.5929043Z  * [new branch]          docs/changelog-0.1.6       -> origin/docs/changelog-0.1.6
+2026-11-13T11:59:04.5929825Z  * [new branch]          docs/changelog-0.2.0       -> origin/docs/changelog-0.2.0
+2026-11-13T11:59:04.5930836Z  * [new branch]          docs/changelog-0.2.2       -> origin/docs/changelog-0.2.2
+2026-11-13T11:59:04.5931708Z  * [new branch]          docs/changelog-0.2.4-notes -> origin/docs/changelog-0.2.4-notes
+2026-11-13T11:59:04.5932313Z  * [new branch]          docs/changelog-0.2.5       -> origin/docs/changelog-0.2.5
+2026-11-13T11:59:04.5932885Z  * [new branch]          docs/changelog-0.2.8       -> origin/docs/changelog-0.2.8
+2026-11-13T11:59:04.5933462Z  * [new branch]          docs/changelog-0.2.9       -> origin/docs/changelog-0.2.9
+2026-11-13T11:59:04.5934045Z  * [new branch]          docs/changelog-releases    -> origin/docs/changelog-releases
+2026-11-13T11:59:04.5935015Z  * [new branch]          docs/chatgpt-relay         -> origin/docs/chatgpt-relay
+2026-11-13T11:59:04.5936265Z  * [new branch]          docs/chatgpt-relay-entry   -> origin/docs/chatgpt-relay-entry
+2026-11-13T11:59:04.5937440Z  * [new branch]          docs/codex-delegate-manual-pilot -> origin/docs/codex-delegate-manual-pilot
+2026-11-13T11:59:04.5938447Z  * [new branch]          docs/comment-links         -> origin/docs/comment-links
+2026-11-13T11:59:04.5939074Z  * [new branch]          docs/compact30-staged-result -> origin/docs/compact30-staged-result
+2026-11-13T11:59:04.5939698Z  * [new branch]          docs/competitors-hero      -> origin/docs/competitors-hero
+2026-11-13T11:59:04.5940271Z  * [new branch]          docs/coop-preamble         -> origin/docs/coop-preamble
+2026-11-13T11:59:04.5941354Z  * [new branch]          docs/coordinator-not-blocked -> origin/docs/coordinator-not-blocked
+2026-11-13T11:59:04.5942059Z  * [new branch]          docs/corun-placement       -> origin/docs/corun-placement
+2026-11-13T11:59:04.5942630Z  * [new branch]          docs/couriers-guide        -> origin/docs/couriers-guide
+2026-11-13T11:59:04.5943234Z  * [new branch]          docs/d064-causal-wording   -> origin/docs/d064-causal-wording
+2026-11-13T11:59:04.5943823Z  * [new branch]          docs/d4-delta-result       -> origin/docs/d4-delta-result
+2026-11-13T11:59:04.5944468Z  * [new branch]          docs/decoder-attribution-records -> origin/docs/decoder-attribution-records
+2026-11-13T11:59:04.5945198Z  * [new branch]          docs/dispatch-causality-records -> origin/docs/dispatch-causality-records
+2026-11-13T11:59:04.5945828Z  * [new branch]          docs/e1-e2-results         -> origin/docs/e1-e2-results
+2026-11-13T11:59:04.5946367Z  * [new branch]          docs/early-warning         -> origin/docs/early-warning
+2026-11-13T11:59:04.5947152Z  * [new branch]          docs/expert-review-3       -> origin/docs/expert-review-3
+2026-11-13T11:59:04.5947771Z  * [new branch]          docs/expert-review-followup -> origin/docs/expert-review-followup
+2026-11-13T11:59:04.5948404Z  * [new branch]          docs/external-reports-74   -> origin/docs/external-reports-74
+2026-11-13T11:59:04.5949010Z  * [new branch]          docs/frontier-charts       -> origin/docs/frontier-charts
+2026-11-13T11:59:04.5949612Z  * [new branch]          docs/frontier-native-blocks -> origin/docs/frontier-native-blocks
+2026-11-13T11:59:04.5950282Z  * [new branch]          docs/fused-coresident-results -> origin/docs/fused-coresident-results
+2026-11-13T11:59:04.5950903Z  * [new branch]          docs/gen2-results          -> origin/docs/gen2-results
+2026-11-13T11:59:04.5951759Z  * [new branch]          docs/header-logo           -> origin/docs/header-logo
+2026-11-13T11:59:04.5952327Z  * [new branch]          docs/hero-illustration     -> origin/docs/hero-illustration
+2026-11-13T11:59:04.5952908Z  * [new branch]          docs/history-chain         -> origin/docs/history-chain
+2026-11-13T11:59:04.5953457Z  * [new branch]          docs/isa-probe             -> origin/docs/isa-probe
+2026-11-13T11:59:04.5954022Z  * [new branch]          docs/journal-blocks        -> origin/docs/journal-blocks
+2026-11-13T11:59:04.5954691Z  * [new branch]          docs/journal-four-thread-ceiling -> origin/docs/journal-four-thread-ceiling
+2026-11-13T11:59:04.5955305Z  * [new branch]          docs/katex                 -> origin/docs/katex
+2026-11-13T11:59:04.5955852Z  * [new branch]          docs/levels-1-2-note       -> origin/docs/levels-1-2-note
+2026-11-13T11:59:04.5956433Z  * [new branch]          docs/literature-reading    -> origin/docs/literature-reading
+2026-11-13T11:59:04.5957028Z  * [new branch]          docs/literature-triage     -> origin/docs/literature-triage
+2026-11-13T11:59:04.5957578Z  * [new branch]          docs/monodromy             -> origin/docs/monodromy
+2026-11-13T11:59:04.5958154Z  * [new branch]          docs/monodromy-orientation -> origin/docs/monodromy-orientation
+2026-11-13T11:59:04.5958772Z  * [new branch]          docs/move-structure-walk   -> origin/docs/move-structure-walk
+2026-11-13T11:59:04.5959391Z  * [new branch]          docs/mtf-two-level-result  -> origin/docs/mtf-two-level-result
+2026-11-13T11:59:04.5960134Z  * [new branch]          docs/oracle-account        -> origin/docs/oracle-account
+2026-11-13T11:59:04.5960723Z  * [new branch]          docs/oracle-now-first      -> origin/docs/oracle-now-first
+2026-11-13T11:59:04.5961559Z  * [new branch]          docs/oracle-page           -> origin/docs/oracle-page
+2026-11-13T11:59:04.5962149Z  * [new branch]          docs/oracle-precis         -> origin/docs/oracle-precis
+2026-11-13T11:59:04.5962822Z  * [new branch]          docs/ownership             -> origin/docs/ownership
+2026-11-13T11:59:04.5963509Z  * [new branch]          docs/p74c-decoder-validation-records -> origin/docs/p74c-decoder-validation-records
+2026-11-13T11:59:04.5964251Z  * [new branch]          docs/p87-results-and-specs -> origin/docs/p87-results-and-specs
+2026-11-13T11:59:04.5964981Z  * [new branch]          docs/partitioned-walk      -> origin/docs/partitioned-walk
+2026-11-13T11:59:04.5965589Z  * [new branch]          docs/performance-policy    -> origin/docs/performance-policy
+2026-11-13T11:59:04.5966186Z  * [new branch]          docs/publish-check         -> origin/docs/publish-check
+2026-11-13T11:59:04.5966854Z  * [new branch]          docs/readme-badges         -> origin/docs/readme-badges
+2026-11-13T11:59:04.5967414Z  * [new branch]          docs/relay-idempotent      -> origin/docs/relay-idempotent
+2026-11-13T11:59:04.5967972Z  * [new branch]          docs/relay-return          -> origin/docs/relay-return
+2026-11-13T11:59:04.5968544Z  * [new branch]          docs/release-notes-0.1.5   -> origin/docs/release-notes-0.1.5
+2026-11-13T11:59:04.5969249Z  * [new branch]          docs/release-protocol      -> origin/docs/release-protocol
+2026-11-13T11:59:04.5970060Z  * [new branch]          docs/repin-known           -> origin/docs/repin-known
+2026-11-13T11:59:04.5970665Z  * [new branch]          docs/research-mlp-scheduling -> origin/docs/research-mlp-scheduling
+2026-11-13T11:59:04.5971633Z  * [new branch]          docs/research-portfolio    -> origin/docs/research-portfolio
+2026-11-13T11:59:04.5972259Z  * [new branch]          docs/research-sources      -> origin/docs/research-sources
+2026-11-13T11:59:04.5972824Z  * [new branch]          docs/revert-110            -> origin/docs/revert-110
+2026-11-13T11:59:04.5973470Z  * [new branch]          docs/review-6660203300-corrections -> origin/docs/review-6660203300-corrections
+2026-11-13T11:59:04.5974232Z  * [new branch]          docs/run-fed-second-attempt-result -> origin/docs/run-fed-second-attempt-result
+2026-11-13T11:59:04.5974992Z  * [new branch]          docs/run-front-production-result -> origin/docs/run-front-production-result
+2026-11-13T11:59:04.5975663Z  * [new branch]          docs/service-threads-dek   -> origin/docs/service-threads-dek
+2026-11-13T11:59:04.5976260Z  * [new branch]          docs/split-condvars        -> origin/docs/split-condvars
+2026-11-13T11:59:04.5976818Z  * [new branch]          docs/status-page           -> origin/docs/status-page
+2026-11-13T11:59:04.5977361Z  * [new branch]          docs/stewardship           -> origin/docs/stewardship
+2026-11-13T11:59:04.5978023Z  * [new branch]          docs/stewardship-whole-decoder -> origin/docs/stewardship-whole-decoder
+2026-11-13T11:59:04.5978641Z  * [new branch]          docs/team-neutral          -> origin/docs/team-neutral
+2026-11-13T11:59:04.5979245Z  * [new branch]          docs/three-team-confirmation -> origin/docs/three-team-confirmation
+2026-11-13T11:59:04.5979885Z  * [new branch]          docs/walk-round-results    -> origin/docs/walk-round-results
+2026-11-13T11:59:04.5980555Z  * [new branch]          docs/walk-unroll-decoder-records -> origin/docs/walk-unroll-decoder-records
+2026-11-13T11:59:04.5981462Z  * [new branch]          docs/webhook-warmup        -> origin/docs/webhook-warmup
+2026-11-13T11:59:04.5982061Z  * [new branch]          docs/window-tile-results   -> origin/docs/window-tile-results
+2026-11-13T11:59:04.5982653Z  * [new branch]          docs/work-task-model       -> origin/docs/work-task-model
+2026-11-13T11:59:04.5983347Z  * [new branch]          evidence                   -> origin/evidence
+2026-11-13T11:59:04.5983886Z  * [new branch]          feat/fingerprint           -> origin/feat/fingerprint
+2026-11-13T11:59:04.5984417Z  * [new branch]          feat/ledger                -> origin/feat/ledger
+2026-11-13T11:59:04.5985023Z  * [new branch]          feat/monodromy-cells-slice-one -> origin/feat/monodromy-cells-slice-one
+2026-11-13T11:59:04.5985692Z  * [new branch]          feat/occupancy-placements  -> origin/feat/occupancy-placements
+2026-11-13T11:59:04.5986301Z  * [new branch]          feat/occupancy-trace       -> origin/feat/occupancy-trace
+2026-11-13T11:59:04.5986860Z  * [new branch]          feat/resources             -> origin/feat/resources
+2026-11-13T11:59:04.5987431Z  * [new branch]          fix/alternatives-lock      -> origin/fix/alternatives-lock
+2026-11-13T11:59:04.5988056Z  * [new branch]          fix/cells-live-submit-bundle -> origin/fix/cells-live-submit-bundle
+2026-11-13T11:59:04.5988711Z  * [new branch]          fix/coord-queued-dispatch  -> origin/fix/coord-queued-dispatch
+2026-11-13T11:59:04.5989305Z  * [new branch]          fix/obs-one-version        -> origin/fix/obs-one-version
+2026-11-13T11:59:04.6018096Z  * [new branch]          fix/occupancy-route-ledger -> origin/fix/occupancy-route-ledger
+2026-11-13T11:59:04.6018794Z  * [new branch]          fix/occupancy-teams        -> origin/fix/occupancy-teams
+2026-11-13T11:59:04.6019426Z  * [new branch]          fix/phases-decode-order    -> origin/fix/phases-decode-order
+2026-11-13T11:59:04.6020046Z  * [new branch]          fix/precommit-gz           -> origin/fix/precommit-gz
+2026-11-13T11:59:04.6020643Z  * [new branch]          fix/sweep-decode-order     -> origin/fix/sweep-decode-order
+2026-11-13T11:59:04.6021765Z  * [new branch]          fix/sweep-min-segmented    -> origin/fix/sweep-min-segmented
+2026-11-13T11:59:04.6022369Z  * [new branch]          fix/walk-signatures        -> origin/fix/walk-signatures
+2026-11-13T11:59:04.6022940Z  * [new branch]          gh-pages                   -> origin/gh-pages
+2026-11-13T11:59:04.6023477Z  * [new branch]          guardian/inbox             -> origin/guardian/inbox
+2026-11-13T11:59:04.6024033Z  * [new branch]          guardian/inbox-base        -> origin/guardian/inbox-base
+2026-11-13T11:59:04.6024587Z  * [new branch]          import/history             -> origin/import/history
+2026-11-13T11:59:04.6025137Z  * [new branch]          infra/coord-resume         -> origin/infra/coord-resume
+2026-11-13T11:59:04.6025685Z  * [new branch]          infra/queue-wait           -> origin/infra/queue-wait
+2026-11-13T11:59:04.6026355Z  * [new branch]          investigate/cells-end-to-end-gap -> origin/investigate/cells-end-to-end-gap
+2026-11-13T11:59:04.6027007Z  * [new branch]          journal-session            -> origin/journal-session
+2026-11-13T11:59:04.6027576Z  * [new branch]          journal-variants           -> origin/journal-variants
+2026-11-13T11:59:04.6028152Z  * [new branch]          journal-workstation        -> origin/journal-workstation
+2026-11-13T11:59:04.6028904Z  * [new branch]          journal/fallback-attribution-correction -> origin/journal/fallback-attribution-correction
+2026-11-13T11:59:04.6029733Z  * [new branch]          journal/service-lookahead-labels -> origin/journal/service-lookahead-labels
+2026-11-13T11:59:04.6030489Z  * [new branch]          journal/service-lookahead-result -> origin/journal/service-lookahead-result
+2026-11-13T11:59:04.6031474Z  * [new branch]          journal/team-kernel-gap-count -> origin/journal/team-kernel-gap-count
+2026-11-13T11:59:04.6032303Z  * [new branch]          maintenance/packet-census-clippy-1100 -> origin/maintenance/packet-census-clippy-1100
+2026-11-13T11:59:04.6032969Z  * [new branch]          master                     -> origin/master
+2026-11-13T11:59:04.6033519Z  * [new branch]          observatory/intention      -> origin/observatory/intention
+2026-11-13T11:59:04.6034084Z  * [new branch]          optimizer/inbox            -> origin/optimizer/inbox
+2026-11-13T11:59:04.6034803Z  * [new branch]          optimizer/inbox-base       -> origin/optimizer/inbox-base
+2026-11-13T11:59:04.6035389Z  * [new branch]          pathfinder/inbox           -> origin/pathfinder/inbox
+2026-11-13T11:59:04.6035961Z  * [new branch]          pathfinder/inbox-base      -> origin/pathfinder/inbox-base
+2026-11-13T11:59:04.6036565Z  * [new branch]          perf/admission-run-share   -> origin/perf/admission-run-share
+2026-11-13T11:59:04.6037166Z  * [new branch]          perf/assembly-row          -> origin/perf/assembly-row
+2026-11-13T11:59:04.6037743Z  * [new branch]          perf/build-4lane           -> origin/perf/build-4lane
+2026-11-13T11:59:04.6038323Z  * [new branch]          perf/build-one-pass        -> origin/perf/build-one-pass
+2026-11-13T11:59:04.6038900Z  * [new branch]          perf/build-runs            -> origin/perf/build-runs
+2026-11-13T11:59:04.6039476Z  * [new branch]          perf/build-window-runs     -> origin/perf/build-window-runs
+2026-11-13T11:59:04.6040099Z  * [new branch]          perf/build-window-runs-v2  -> origin/perf/build-window-runs-v2
+2026-11-13T11:59:04.6040693Z  * [new branch]          perf/c29-collector         -> origin/perf/c29-collector
+2026-11-13T11:59:04.6041548Z  * [new branch]          perf/c29-layout-placebo    -> origin/perf/c29-layout-placebo
+2026-11-13T11:59:04.6042225Z  * [new branch]          perf/c29-register-checkpoints -> origin/perf/c29-register-checkpoints
+2026-11-13T11:59:04.6042842Z  * [new branch]          perf/c30-staged            -> origin/perf/c30-staged
+2026-11-13T11:59:04.6043422Z  * [new branch]          perf/cells-seven-screen    -> origin/perf/cells-seven-screen
+2026-11-13T11:59:04.6044179Z  * [new branch]          perf/cells-small-spine     -> origin/perf/cells-small-spine
+2026-11-13T11:59:04.6044775Z  * [new branch]          perf/compact30-default     -> origin/perf/compact30-default
+2026-11-13T11:59:04.6045340Z  * [new branch]          perf/coop-build            -> origin/perf/coop-build
+2026-11-13T11:59:04.6045895Z  * [new branch]          perf/coop-default          -> origin/perf/coop-default
+2026-11-13T11:59:04.6046444Z  * [new branch]          perf/coop-policy           -> origin/perf/coop-policy
+2026-11-13T11:59:04.6046977Z  * [new branch]          perf/coop-pool             -> origin/perf/coop-pool
+2026-11-13T11:59:04.6047514Z  * [new branch]          perf/huffman-2sym          -> origin/perf/huffman-2sym
+2026-11-13T11:59:04.6048079Z  * [new branch]          perf/huffman-register      -> origin/perf/huffman-register
+2026-11-13T11:59:04.6048642Z  * [new branch]          perf/job-handoff           -> origin/perf/job-handoff
+2026-11-13T11:59:04.6049176Z  * [new branch]          perf/lane-sweep            -> origin/perf/lane-sweep
+2026-11-13T11:59:04.6049743Z  * [new branch]          perf/level-aware-plan      -> origin/perf/level-aware-plan
+2026-11-13T11:59:04.6050288Z  * [new branch]          perf/lf2                   -> origin/perf/lf2
+2026-11-13T11:59:04.6050833Z  * [new branch]          perf/mtf-checkpoints       -> origin/perf/mtf-checkpoints
+2026-11-13T11:59:04.6051682Z  * [new branch]          perf/mtf-list-one-page     -> origin/perf/mtf-list-one-page
+2026-11-13T11:59:04.6052264Z  * [new branch]          perf/mtf-register          -> origin/perf/mtf-register
+2026-11-13T11:59:04.6052816Z  * [new branch]          perf/mtf-two-level         -> origin/perf/mtf-two-level
+2026-11-13T11:59:04.6053395Z  * [new branch]          perf/one-pass-build        -> origin/perf/one-pass-build
+2026-11-13T11:59:04.6053993Z  * [new branch]          perf/onecore-walk-inline   -> origin/perf/onecore-walk-inline
+2026-11-13T11:59:04.6054584Z  * [new branch]          perf/p87-in-place          -> origin/perf/p87-in-place
+2026-11-13T11:59:04.6055138Z  * [new branch]          perf/pair-walk             -> origin/perf/pair-walk
+2026-11-13T11:59:04.6055705Z  * [new branch]          perf/pipelined-default     -> origin/perf/pipelined-default
+2026-11-13T11:59:04.6056307Z  * [new branch]          perf/pool-wait-budgets     -> origin/perf/pool-wait-budgets
+2026-11-13T11:59:04.6057033Z  * [new branch]          perf/pool-wait-split       -> origin/perf/pool-wait-split
+2026-11-13T11:59:04.6057590Z  * [new branch]          perf/precopy               -> origin/perf/precopy
+2026-11-13T11:59:04.6058132Z  * [new branch]          perf/precopy-chains        -> origin/perf/precopy-chains
+2026-11-13T11:59:04.6058706Z  * [new branch]          perf/run-front-records     -> origin/perf/run-front-records
+2026-11-13T11:59:04.6059340Z  * [new branch]          perf/run-front-records-result -> origin/perf/run-front-records-result
+2026-11-13T11:59:04.6059982Z  * [new branch]          perf/service-guarded       -> origin/perf/service-guarded
+2026-11-13T11:59:04.6060657Z  * [new branch]          perf/service-guarded-target-gated -> origin/perf/service-guarded-target-gated
+2026-11-13T11:59:04.6061574Z  * [new branch]          perf/spin-audit            -> origin/perf/spin-audit
+2026-11-13T11:59:04.6062158Z  * [new branch]          perf/staging-only          -> origin/perf/staging-only
+2026-11-13T11:59:04.6062704Z  * [new branch]          perf/team-runs             -> origin/perf/team-runs
+2026-11-13T11:59:04.6063267Z  * [new branch]          perf/three-team-policy     -> origin/perf/three-team-policy
+2026-11-13T11:59:04.6063830Z  * [new branch]          perf/tile-1024             -> origin/perf/tile-1024
+2026-11-13T11:59:04.6064340Z  * [new branch]          perf/tile-512              -> origin/perf/tile-512
+2026-11-13T11:59:04.6064944Z  * [new branch]          perf/universal-backward-walk -> origin/perf/universal-backward-walk
+2026-11-13T11:59:04.6065555Z  * [new branch]          perf/walk-choice           -> origin/perf/walk-choice
+2026-11-13T11:59:04.6066287Z  * [new branch]          perf/walk-flagged-starts   -> origin/perf/walk-flagged-starts
+2026-11-13T11:59:04.6066857Z  * [new branch]          perf/walk-lanes            -> origin/perf/walk-lanes
+2026-11-13T11:59:04.6067382Z  * [new branch]          perf/walk-room             -> origin/perf/walk-room
+2026-11-13T11:59:04.6067926Z  * [new branch]          perf/walk-two-phase        -> origin/perf/walk-two-phase
+2026-11-13T11:59:04.6068470Z  * [new branch]          perf/window-4t             -> origin/perf/window-4t
+2026-11-13T11:59:04.6069015Z  * [new branch]          policy/target-gated        -> origin/policy/target-gated
+2026-11-13T11:59:04.6069622Z  * [new branch]          pre-commit-ci-update-config -> origin/pre-commit-ci-update-config
+2026-11-13T11:59:04.6070202Z  * [new branch]          queue-repass               -> origin/queue-repass
+2026-11-13T11:59:04.6070804Z  * [new branch]          queue/run-fed-leader-lookahead -> origin/queue/run-fed-leader-lookahead
+2026-11-13T11:59:04.6071717Z  * [new branch]          queue/svc-target           -> origin/queue/svc-target
+2026-11-13T11:59:04.6072348Z  * [new branch]          relay/monodromy-blog-material -> origin/relay/monodromy-blog-material
+2026-11-13T11:59:04.6073043Z  * [new branch]          research/astra-room-walk-pack -> origin/research/astra-room-walk-pack
+2026-11-13T11:59:04.6073672Z  * [new branch]          research/build-run16       -> origin/research/build-run16
+2026-11-13T11:59:04.6074261Z  * [new branch]          research/bz2ngrs-compare   -> origin/research/bz2ngrs-compare
+2026-11-13T11:59:04.6075105Z  * [new branch]          research/chatgpt-first-return-prototypes-20261111 -> origin/research/chatgpt-first-return-prototypes-20261111
+2026-11-13T11:59:04.6075991Z  * [new branch]          research/codex-first-return-block -> origin/research/codex-first-return-block
+2026-11-13T11:59:04.6076759Z  * [new branch]          research/codex-labelled-contraction -> origin/research/codex-labelled-contraction
+2026-11-13T11:59:04.6077541Z  * [new branch]          research/codex-performance-pricing -> origin/research/codex-performance-pricing
+2026-11-13T11:59:04.6078238Z  * [new branch]          research/codex-reduced-lf  -> origin/research/codex-reduced-lf
+2026-11-13T11:59:04.6078846Z  * [new branch]          research/compact-psi       -> origin/research/compact-psi
+2026-11-13T11:59:04.6079573Z  * [new branch]          research/compact-tvector   -> origin/research/compact-tvector
+2026-11-13T11:59:04.6080192Z  * [new branch]          research/compact30-census  -> origin/research/compact30-census
+2026-11-13T11:59:04.6080809Z  * [new branch]          research/compact30-channel -> origin/research/compact30-channel
+2026-11-13T11:59:04.6081717Z  * [new branch]          research/compact30-combined -> origin/research/compact30-combined
+2026-11-13T11:59:04.6082394Z  * [new branch]          research/compact30-constructor -> origin/research/compact30-constructor
+2026-11-13T11:59:04.6083073Z  * [new branch]          research/compact30-ctor2-miri -> origin/research/compact30-ctor2-miri
+2026-11-13T11:59:04.6083772Z  * [new branch]          research/compact30-descriptors -> origin/research/compact30-descriptors
+2026-11-13T11:59:04.6084418Z  * [new branch]          research/compact30-scanner -> origin/research/compact30-scanner
+2026-11-13T11:59:04.6085165Z  * [new branch]          research/compact30-ultra-audit-evidence -> origin/research/compact30-ultra-audit-evidence
+2026-11-13T11:59:04.6085888Z  * [new branch]          research/compact30-walker  -> origin/research/compact30-walker
+2026-11-13T11:59:04.6086496Z  * [new branch]          research/coop-checkpoint   -> origin/research/coop-checkpoint
+2026-11-13T11:59:04.6087096Z  * [new branch]          research/coop-counters     -> origin/research/coop-counters
+2026-11-13T11:59:04.6087671Z  * [new branch]          research/coop-fused        -> origin/research/coop-fused
+2026-11-13T11:59:04.6088227Z  * [new branch]          research/coop-given        -> origin/research/coop-given
+2026-11-13T11:59:04.6088802Z  * [new branch]          research/coop-profile      -> origin/research/coop-profile
+2026-11-13T11:59:04.6089527Z  * [new branch]          research/coop-room         -> origin/research/coop-room
+2026-11-13T11:59:04.6090088Z  * [new branch]          research/coop-spill        -> origin/research/coop-spill
+2026-11-13T11:59:04.6090652Z  * [new branch]          research/coop-unbwt        -> origin/research/coop-unbwt
+2026-11-13T11:59:04.6091541Z  * [new branch]          research/coresident-walk   -> origin/research/coresident-walk
+2026-11-13T11:59:04.6092148Z  * [new branch]          research/d4-delta-count    -> origin/research/d4-delta-count
+2026-11-13T11:59:04.6092774Z  * [new branch]          research/decoder-attribution -> origin/research/decoder-attribution
+2026-11-13T11:59:04.6093483Z  * [new branch]          research/design-e-backward-table -> origin/research/design-e-backward-table
+2026-11-13T11:59:04.6094173Z  * [new branch]          research/dispatch-causality -> origin/research/dispatch-causality
+2026-11-13T11:59:04.6094809Z  * [new branch]          research/fallback-codegen  -> origin/research/fallback-codegen
+2026-11-13T11:59:04.6095404Z  * [new branch]          research/for14-records     -> origin/research/for14-records
+2026-11-13T11:59:04.6095986Z  * [new branch]          research/fused-postwalk    -> origin/research/fused-postwalk
+2026-11-13T11:59:04.6096648Z  * [new branch]          research/fused-postwalk-refactor -> origin/research/fused-postwalk-refactor
+2026-11-13T11:59:04.6097295Z  * [new branch]          research/gather-walk       -> origin/research/gather-walk
+2026-11-13T11:59:04.6097876Z  * [new branch]          research/general-plan      -> origin/research/general-plan
+2026-11-13T11:59:04.6098484Z  * [new branch]          research/general-plan-impl -> origin/research/general-plan-impl
+2026-11-13T11:59:04.6099091Z  * [new branch]          research/isa-v3-probe      -> origin/research/isa-v3-probe
+2026-11-13T11:59:04.6099667Z  * [new branch]          research/level-policy      -> origin/research/level-policy
+2026-11-13T11:59:04.6100267Z  * [new branch]          research/libsais-rematch   -> origin/research/libsais-rematch
+2026-11-13T11:59:04.6100867Z  * [new branch]          research/mtf-short-runs    -> origin/research/mtf-short-runs
+2026-11-13T11:59:04.6101693Z  * [new branch]          research/mtf-unseq-list    -> origin/research/mtf-unseq-list
+2026-11-13T11:59:04.6102481Z  * [new branch]          research/p74-c-implementation -> origin/research/p74-c-implementation
+2026-11-13T11:59:04.6103107Z  * [new branch]          research/p74-gate1         -> origin/research/p74-gate1
+2026-11-13T11:59:04.6103679Z  * [new branch]          research/p74c-ci-trigger   -> origin/research/p74c-ci-trigger
+2026-11-13T11:59:04.6104257Z  * [new branch]          research/p74c-decoder      -> origin/research/p74c-decoder
+2026-11-13T11:59:04.6104913Z  * [new branch]          research/p74c-decoder-ci-trigger -> origin/research/p74c-decoder-ci-trigger
+2026-11-13T11:59:04.6105572Z  * [new branch]          research/p87-buffer-reuse  -> origin/research/p87-buffer-reuse
+2026-11-13T11:59:04.6106178Z  * [new branch]          research/p87-production    -> origin/research/p87-production
+2026-11-13T11:59:04.6106766Z  * [new branch]          research/packet-census     -> origin/research/packet-census
+2026-11-13T11:59:04.6107359Z  * [new branch]          research/pair-from-runs    -> origin/research/pair-from-runs
+2026-11-13T11:59:04.6107942Z  * [new branch]          research/psi-census        -> origin/research/psi-census
+2026-11-13T11:59:04.6108520Z  * [new branch]          research/run-fed-direct    -> origin/research/run-fed-direct
+2026-11-13T11:59:04.6109103Z  * [new branch]          research/run-fed-leader    -> origin/research/run-fed-leader
+2026-11-13T11:59:04.6109714Z  * [new branch]          research/run-fed-leader-ws2 -> origin/research/run-fed-leader-ws2
+2026-11-13T11:59:04.6110321Z  * [new branch]          research/run-fed-stage     -> origin/research/run-fed-stage
+2026-11-13T11:59:04.6110903Z  * [new branch]          research/run-fed-tvector   -> origin/research/run-fed-tvector
+2026-11-13T11:59:04.6111963Z  * [new branch]          research/run-front-boxed   -> origin/research/run-front-boxed
+2026-11-13T11:59:04.6112607Z  * [new branch]          research/run-front-fallback -> origin/research/run-front-fallback
+2026-11-13T11:59:04.6113232Z  * [new branch]          research/service-core      -> origin/research/service-core
+2026-11-13T11:59:04.6113833Z  * [new branch]          research/service-core-2x3  -> origin/research/service-core-2x3
+2026-11-13T11:59:04.6114457Z  * [new branch]          research/service-lookahead -> origin/research/service-lookahead
+2026-11-13T11:59:04.6115144Z  * [new branch]          research/service-starvation-diag -> origin/research/service-starvation-diag
+2026-11-13T11:59:04.6115813Z  * [new branch]          research/share-one-pass    -> origin/research/share-one-pass
+2026-11-13T11:59:04.6116406Z  * [new branch]          research/share-run16       -> origin/research/share-run16
+2026-11-13T11:59:04.6117057Z  * [new branch]          research/staged-coop-traverse -> origin/research/staged-coop-traverse
+2026-11-13T11:59:04.6117699Z  * [new branch]          research/staging-only      -> origin/research/staging-only
+2026-11-13T11:59:04.6118412Z  * [new branch]          research/svc2-registration-r2 -> origin/research/svc2-registration-r2
+2026-11-13T11:59:04.6119044Z  * [new branch]          research/tail-passes       -> origin/research/tail-passes
+2026-11-13T11:59:04.6119632Z  * [new branch]          research/team-mtf-port     -> origin/research/team-mtf-port
+2026-11-13T11:59:04.6120225Z  * [new branch]          research/team-pipeline     -> origin/research/team-pipeline
+2026-11-13T11:59:04.6120855Z  * [new branch]          research/team-pipeline-levers -> origin/research/team-pipeline-levers
+2026-11-13T11:59:04.6121767Z  * [new branch]          research/team-ports-combined -> origin/research/team-ports-combined
+2026-11-13T11:59:04.6122383Z  * [new branch]          research/tile-staging      -> origin/research/tile-staging
+2026-11-13T11:59:04.6122951Z  * [new branch]          research/tiled-b           -> origin/research/tiled-b
+2026-11-13T11:59:04.6123518Z  * [new branch]          research/walk-arm-prep     -> origin/research/walk-arm-prep
+2026-11-13T11:59:04.6124101Z  * [new branch]          research/walk-stats        -> origin/research/walk-stats
+2026-11-13T11:59:04.6124810Z  * [new branch]          research/walk-unroll       -> origin/research/walk-unroll
+2026-11-13T11:59:04.6125465Z  * [new branch]          research/walk-unroll-ci-trigger -> origin/research/walk-unroll-ci-trigger
+2026-11-13T11:59:04.6126154Z  * [new branch]          research/walk-unroll-decoder -> origin/research/walk-unroll-decoder
+2026-11-13T11:59:04.6126922Z  * [new branch]          research/walk-unroll-decoder-ci-trigger -> origin/research/walk-unroll-decoder-ci-trigger
+2026-11-13T11:59:04.6127644Z  * [new branch]          research/walker-ladder     -> origin/research/walker-ladder
+2026-11-13T11:59:04.6128210Z  * [new branch]          researcher/inbox           -> origin/researcher/inbox
+2026-11-13T11:59:04.6128775Z  * [new branch]          researcher/inbox-base      -> origin/researcher/inbox-base
+2026-11-13T11:59:04.6129507Z  * [new branch]          review/compact30-adversarial-scanner-146 -> origin/review/compact30-adversarial-scanner-146
+2026-11-13T11:59:04.6130313Z  * [new branch]          review/compact30-guardian-setup -> origin/review/compact30-guardian-setup
+2026-11-13T11:59:04.6131280Z  * [new branch]          review/compact30-guardian-shadow -> origin/review/compact30-guardian-shadow
+2026-11-13T11:59:04.6132058Z  * [new branch]          review/compact30-instruction-ledger -> origin/review/compact30-instruction-ledger
+2026-11-13T11:59:04.6132741Z  * [new branch]          review/compact30-s62       -> origin/review/compact30-s62
+2026-11-13T11:59:04.6133323Z  * [new branch]          review/oracle-intention    -> origin/review/oracle-intention
+2026-11-13T11:59:04.6134089Z  * [new branch]          rules/delegate-design-acceptance-adoption -> origin/rules/delegate-design-acceptance-adoption
+2026-11-13T11:59:04.6135084Z  * [new branch]          safety/bzreader-feeder-panic -> origin/safety/bzreader-feeder-panic
+2026-11-13T11:59:04.6135717Z  * [new branch]          safety/pipeline-fuzz       -> origin/safety/pipeline-fuzz
+2026-11-13T11:59:04.6136297Z  * [new branch]          safety/pipeline-m12        -> origin/safety/pipeline-m12
+2026-11-13T11:59:04.6136860Z  * [new branch]          safety/run-fed-b5          -> origin/safety/run-fed-b5
+2026-11-13T11:59:04.6137439Z  * [new branch]          safety/service-core-b5     -> origin/safety/service-core-b5
+2026-11-13T11:59:04.6138022Z  * [new branch]          scratch/move-structure     -> origin/scratch/move-structure
+2026-11-13T11:59:04.6138574Z  * [new branch]          site/benchmarks            -> origin/site/benchmarks
+2026-11-13T11:59:04.6139177Z  * [new branch]          site/footer-behind-the-scenes -> origin/site/footer-behind-the-scenes
+2026-11-13T11:59:04.6139843Z  * [new branch]          skills/coordinate-blog-post -> origin/skills/coordinate-blog-post
+2026-11-13T11:59:04.6140475Z  * [new branch]          skills/review-in-flight    -> origin/skills/review-in-flight
+2026-11-13T11:59:04.6141186Z  * [new branch]          smoke/target-gated-ni      -> origin/smoke/target-gated-ni
+2026-11-13T11:59:04.6141783Z  * [new branch]          style/cargo-toml-taplo     -> origin/style/cargo-toml-taplo
+2026-11-13T11:59:04.6142346Z  * [new branch]          team-state/codex           -> origin/team-state/codex
+2026-11-13T11:59:04.6142959Z  * [new branch]          team-state/coordinator-acting -> origin/team-state/coordinator-acting
+2026-11-13T11:59:04.6143577Z  * [new branch]          team-state/guardian        -> origin/team-state/guardian
+2026-11-13T11:59:04.6144144Z  * [new branch]          team-state/monodromy       -> origin/team-state/monodromy
+2026-11-13T11:59:04.6144706Z  * [new branch]          team-state/optimizer       -> origin/team-state/optimizer
+2026-11-13T11:59:04.6145259Z  * [new branch]          team-state/oracle          -> origin/team-state/oracle
+2026-11-13T11:59:04.6145829Z  * [new branch]          team-state/pathfinder      -> origin/team-state/pathfinder
+2026-11-13T11:59:04.6146428Z  * [new branch]          team-state/researcher      -> origin/team-state/researcher
+2026-11-13T11:59:04.6146998Z  * [new branch]          team/observer-rename       -> origin/team/observer-rename
+2026-11-13T11:59:04.6147729Z  * [new branch]          team/pathfinder-mode       -> origin/team/pathfinder-mode
+2026-11-13T11:59:04.6148369Z  * [new branch]          team/pathfinder-pricing-gate -> origin/team/pathfinder-pricing-gate
+2026-11-13T11:59:04.6149007Z  * [new branch]          team/pathfinder-role       -> origin/team/pathfinder-role
+2026-11-13T11:59:04.6149590Z  * [new branch]          test/staged-chunk-edges    -> origin/test/staged-chunk-edges
+2026-11-13T11:59:04.6150223Z  * [new branch]          test/walk-handover-witnesses -> origin/test/walk-handover-witnesses
+2026-11-13T11:59:04.6150779Z  * [new tag]             py-0.1.0                   -> py-0.1.0
+2026-11-13T11:59:04.6151477Z  * [new tag]             py-0.1.1                   -> py-0.1.1
+2026-11-13T11:59:04.6151904Z  * [new tag]             py-0.1.2                   -> py-0.1.2
+2026-11-13T11:59:04.6152321Z  * [new tag]             py-0.1.3                   -> py-0.1.3
+2026-11-13T11:59:04.6152749Z  * [new tag]             py-0.1.4                   -> py-0.1.4
+2026-11-13T11:59:04.6153160Z  * [new tag]             py-0.1.5                   -> py-0.1.5
+2026-11-13T11:59:04.6153571Z  * [new tag]             py-0.1.6                   -> py-0.1.6
+2026-11-13T11:59:04.6153989Z  * [new tag]             py-0.2.0                   -> py-0.2.0
+2026-11-13T11:59:04.6154403Z  * [new tag]             py-0.2.1                   -> py-0.2.1
+2026-11-13T11:59:04.6154818Z  * [new tag]             py-0.2.2                   -> py-0.2.2
+2026-11-13T11:59:04.6155228Z  * [new tag]             py-0.2.3                   -> py-0.2.3
+2026-11-13T11:59:04.6155646Z  * [new tag]             py-0.2.4                   -> py-0.2.4
+2026-11-13T11:59:04.6156212Z  * [new tag]             py-0.2.5                   -> py-0.2.5
+2026-11-13T11:59:04.6156625Z  * [new tag]             py-0.2.6                   -> py-0.2.6
+2026-11-13T11:59:04.6157036Z  * [new tag]             py-0.2.7                   -> py-0.2.7
+2026-11-13T11:59:04.6157453Z  * [new tag]             py-0.2.8                   -> py-0.2.8
+2026-11-13T11:59:04.6157863Z  * [new tag]             py-0.2.9                   -> py-0.2.9
+2026-11-13T11:59:04.6158390Z  * [new tag]             ready/bench-cells-live-path-i9 -> ready/bench-cells-live-path-i9
+2026-11-13T11:59:04.6158988Z  * [new tag]             ready/bench-cells-vs-prod  -> ready/bench-cells-vs-prod
+2026-11-13T11:59:04.6159520Z  * [new tag]             ready/bench-team-runs      -> ready/bench-team-runs
+2026-11-13T11:59:04.6160055Z  * [new tag]             ready/bench-team-threshold -> ready/bench-team-threshold
+2026-11-13T11:59:04.6160550Z  * [new tag]             v0.1.0                     -> v0.1.0
+2026-11-13T11:59:04.6161192Z  * [new tag]             v0.1.1                     -> v0.1.1
+2026-11-13T11:59:04.6161648Z  * [new tag]             v0.1.2                     -> v0.1.2
+2026-11-13T11:59:04.6162093Z  * [new tag]             v0.1.3                     -> v0.1.3
+2026-11-13T11:59:04.6162495Z  * [new tag]             v0.1.4                     -> v0.1.4
+2026-11-13T11:59:04.6162907Z  * [new tag]             v0.1.5                     -> v0.1.5
+2026-11-13T11:59:04.6163309Z  * [new tag]             v0.1.6                     -> v0.1.6
+2026-11-13T11:59:04.6163707Z  * [new tag]             v0.2.0                     -> v0.2.0
+2026-11-13T11:59:04.6164113Z  * [new tag]             v0.2.1                     -> v0.2.1
+2026-11-13T11:59:04.6164508Z  * [new tag]             v0.2.2                     -> v0.2.2
+2026-11-13T11:59:04.6164907Z  * [new tag]             v0.2.3                     -> v0.2.3
+2026-11-13T11:59:04.6165306Z  * [new tag]             v0.2.4                     -> v0.2.4
+2026-11-13T11:59:04.6165714Z  * [new tag]             v0.2.5                     -> v0.2.5
+2026-11-13T11:59:04.6166119Z  * [new tag]             v0.2.6                     -> v0.2.6
+2026-11-13T11:59:04.6166520Z  * [new tag]             v0.2.7                     -> v0.2.7
+2026-11-13T11:59:04.6166926Z  * [new tag]             v0.2.8                     -> v0.2.8
+2026-11-13T11:59:04.6167492Z  * [new tag]             v0.2.9                     -> v0.2.9
+2026-11-13T11:59:04.6168903Z [command]/usr/bin/git rev-parse --verify --quiet 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359^{object}
+2026-11-13T11:59:04.6169478Z 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:04.6170376Z ##[endgroup]
+2026-11-13T11:59:04.6170844Z ##[group]Determining the checkout info
+2026-11-13T11:59:04.6171507Z ##[endgroup]
+2026-11-13T11:59:04.6171817Z [command]/usr/bin/git sparse-checkout disable
+2026-11-13T11:59:04.6172661Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-13T11:59:04.6173686Z ##[group]Checking out the ref
+2026-11-13T11:59:04.6174199Z [command]/usr/bin/git checkout --progress --force 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:04.7676220Z Note: switching to '4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359'.
+2026-11-13T11:59:04.7676800Z 
+2026-11-13T11:59:04.7677081Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-13T11:59:04.7677719Z changes and commit them, and you can discard any commits you make in this
+2026-11-13T11:59:04.7678284Z state without impacting any branches by switching back to a branch.
+2026-11-13T11:59:04.7678605Z 
+2026-11-13T11:59:04.7678855Z If you want to create a new branch to retain commits you create, you may
+2026-11-13T11:59:04.7679411Z do so (now or later) by using -c with the switch command. Example:
+2026-11-13T11:59:04.7679721Z 
+2026-11-13T11:59:04.7679870Z   git switch -c <new-branch-name>
+2026-11-13T11:59:04.7680088Z 
+2026-11-13T11:59:04.7680232Z Or undo this operation with:
+2026-11-13T11:59:04.7680437Z 
+2026-11-13T11:59:04.7680560Z   git switch -
+2026-11-13T11:59:04.7681290Z 
+2026-11-13T11:59:04.7681595Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-13T11:59:04.7681948Z 
+2026-11-13T11:59:04.7682253Z HEAD is now at 4f6e6ff10 test: retain four-block service fixtures as source corpus grows
+2026-11-13T11:59:04.7700538Z ##[endgroup]
+2026-11-13T11:59:04.7750342Z [command]/usr/bin/git log -1 --format=%H
+2026-11-13T11:59:04.7780714Z 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:04.8019263Z ##[group]Run head=$(git rev-parse HEAD)
+2026-11-13T11:59:04.8019734Z [36;1mhead=$(git rev-parse HEAD)[0m
+2026-11-13T11:59:04.8020081Z [36;1mcase "$GITHUB_EVENT_NAME" in[0m
+2026-11-13T11:59:04.8020539Z [36;1m  pull_request) mode=pr; base=$(git merge-base "$PR_BASE" "$PR_HEAD") ;;[0m
+2026-11-13T11:59:04.8021288Z [36;1m  push) mode=master; base= ;;[0m
+2026-11-13T11:59:04.8021909Z [36;1m  *) if [ -n "$INPUT_BASE" ]; then mode=pr; base=$(git rev-parse "$INPUT_BASE^{commit}"); else mode=dispatch; base=; fi ;;[0m
+2026-11-13T11:59:04.8022494Z [36;1mesac[0m
+2026-11-13T11:59:04.8022751Z [36;1mif [ "$mode" = pr ]; then[0m
+2026-11-13T11:59:04.8023067Z [36;1m  arms="mibz2,mibz2@base/ab"[0m
+2026-11-13T11:59:04.8023366Z [36;1melse[0m
+2026-11-13T11:59:04.8023915Z [36;1m  arms="mibz2,pbz2,lbzip2,indexed_bzip2,fbz@alts/ab,lbzip2-rs@alts/ab,libbzip2,libbz2-rs@alts/ab,bz2ngrs@alts/ab,bz2ng"[0m
+2026-11-13T11:59:04.8024520Z [36;1mfi[0m
+2026-11-13T11:59:04.8024756Z [36;1m{[0m
+2026-11-13T11:59:04.8025182Z [36;1m  echo "MODE=$mode"; echo "HEAD_SHA=$head"; echo "BASE_SHA=$base"; echo "ARMS=$arms"[0m
+2026-11-13T11:59:04.8025703Z [36;1m  echo "HEAD_DATE=$(git show -s --format=%cI "$head")"[0m
+2026-11-13T11:59:04.8026081Z [36;1m} >> "$GITHUB_ENV"[0m
+2026-11-13T11:59:04.8026449Z [36;1mecho "mode $mode, head $head, base ${base:-none}, arms $arms"[0m
+2026-11-13T11:59:04.8082661Z shell: /usr/bin/bash -e {0}
+2026-11-13T11:59:04.8082992Z env:
+2026-11-13T11:59:04.8083232Z   ROUNDS: 10
+2026-11-13T11:59:04.8083474Z   SCALE: 4
+2026-11-13T11:59:04.8083721Z   SETTLE: 0.25
+2026-11-13T11:59:04.8083961Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:04.8084210Z   STAGE_REPEATS: 2
+2026-11-13T11:59:04.8084471Z   KERNEL_PASSES: 10
+2026-11-13T11:59:04.8084835Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:04.8085245Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:04.8085568Z   PR_HEAD: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:04.8085965Z   PR_BASE: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:04.8086302Z   INPUT_BASE: 
+2026-11-13T11:59:04.8086544Z ##[endgroup]
+2026-11-13T11:59:04.8242806Z mode pr, head 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359, base 3e7e294cc10f29495e9828181345d74233c549d4, arms mibz2,mibz2@base/ab
+2026-11-13T11:59:04.8310173Z ##[group]Run python3 bench/comment.py pending 379 "$HEAD_SHA"
+2026-11-13T11:59:04.8310692Z [36;1mpython3 bench/comment.py pending 379 "$HEAD_SHA"[0m
+2026-11-13T11:59:04.8361334Z shell: /usr/bin/bash -e {0}
+2026-11-13T11:59:04.8361640Z env:
+2026-11-13T11:59:04.8361896Z   ROUNDS: 10
+2026-11-13T11:59:04.8362141Z   SCALE: 4
+2026-11-13T11:59:04.8362371Z   SETTLE: 0.25
+2026-11-13T11:59:04.8362613Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:04.8362865Z   STAGE_REPEATS: 2
+2026-11-13T11:59:04.8363114Z   KERNEL_PASSES: 10
+2026-11-13T11:59:04.8363482Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:04.8363910Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:04.8364178Z   MODE: pr
+2026-11-13T11:59:04.8364466Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:04.8364865Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:04.8365209Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:04.8365495Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:04.8368540Z   GH_TOKEN: ***
+2026-11-13T11:59:04.8368807Z ##[endgroup]
+2026-11-13T11:59:06.5391642Z ##[group]Run sudo apt-get install -y -qq lbzip2 > /dev/null && lbzip2 --version | head -1
+2026-11-13T11:59:06.5392326Z [36;1msudo apt-get install -y -qq lbzip2 > /dev/null && lbzip2 --version | head -1[0m
+2026-11-13T11:59:06.5439649Z shell: /usr/bin/bash -e {0}
+2026-11-13T11:59:06.5439916Z env:
+2026-11-13T11:59:06.5440103Z   ROUNDS: 10
+2026-11-13T11:59:06.5440294Z   SCALE: 4
+2026-11-13T11:59:06.5440484Z   SETTLE: 0.25
+2026-11-13T11:59:06.5440685Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:06.5440884Z   STAGE_REPEATS: 2
+2026-11-13T11:59:06.5441390Z   KERNEL_PASSES: 10
+2026-11-13T11:59:06.5441706Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:06.5442068Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:06.5442293Z   MODE: pr
+2026-11-13T11:59:06.5442528Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:06.5442871Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:06.5443168Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:06.5443436Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:06.5443677Z ##[endgroup]
+2026-11-13T11:59:11.9280003Z 
+2026-11-13T11:59:11.9282734Z Running kernel seems to be up-to-date.
+2026-11-13T11:59:11.9283084Z 
+2026-11-13T11:59:11.9283209Z Restarting services...
+2026-11-13T11:59:11.9374848Z 
+2026-11-13T11:59:11.9375430Z Service restarts being deferred:
+2026-11-13T11:59:11.9378396Z  systemctl restart hosted-compute-agent.service
+2026-11-13T11:59:11.9378948Z 
+2026-11-13T11:59:11.9379451Z No containers need to be restarted.
+2026-11-13T11:59:11.9379774Z 
+2026-11-13T11:59:11.9380107Z No user sessions are running outdated binaries.
+2026-11-13T11:59:11.9380516Z 
+2026-11-13T11:59:11.9381136Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-11-13T11:59:12.9191245Z lbzip2 version 2.5
+2026-11-13T11:59:12.9387045Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-11-13T11:59:12.9387352Z with:
+2026-11-13T11:59:12.9387551Z   toolchain: stable
+2026-11-13T11:59:12.9387762Z env:
+2026-11-13T11:59:12.9387936Z   ROUNDS: 10
+2026-11-13T11:59:12.9388120Z   SCALE: 4
+2026-11-13T11:59:12.9388294Z   SETTLE: 0.25
+2026-11-13T11:59:12.9388481Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:12.9388680Z   STAGE_REPEATS: 2
+2026-11-13T11:59:12.9388892Z   KERNEL_PASSES: 10
+2026-11-13T11:59:12.9389193Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:12.9389557Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:12.9389776Z   MODE: pr
+2026-11-13T11:59:12.9390011Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:12.9390341Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:12.9390628Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:12.9390859Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:12.9391269Z ##[endgroup]
+2026-11-13T11:59:12.9451666Z ##[start-action display=Parse toolchain version;id=__dtolnay_rust-toolchain.parse]
+2026-11-13T11:59:12.9477671Z ##[group]Run if [[ -z $toolchain ]]; then
+2026-11-13T11:59:12.9478009Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-11-13T11:59:12.9478532Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-11-13T11:59:12.9479090Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-11-13T11:59:12.9479403Z [36;1m  exit 1[0m
+2026-11-13T11:59:12.9479733Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-11-13T11:59:12.9480163Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-11-13T11:59:12.9480698Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:12.9481481Z [36;1m  else[0m
+2026-11-13T11:59:12.9481888Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:12.9482357Z [36;1m  fi[0m
+2026-11-13T11:59:12.9482669Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-11-13T11:59:12.9483228Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:12.9483700Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-11-13T11:59:12.9484413Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:12.9484916Z [36;1melse[0m
+2026-11-13T11:59:12.9485112Z [36;1m  delimiter=EOF[0m
+2026-11-13T11:59:12.9485419Z [36;1m  while [[ $toolchain == *$delimiter* ]]; do delimiter+=_; done[0m
+2026-11-13T11:59:12.9485928Z [36;1m  printf 'toolchain<<%s\n%s\n%s\n' "$delimiter" "$toolchain" "$delimiter" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:12.9486353Z [36;1mfi[0m
+2026-11-13T11:59:12.9534487Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:12.9534837Z env:
+2026-11-13T11:59:12.9535018Z   ROUNDS: 10
+2026-11-13T11:59:12.9535201Z   SCALE: 4
+2026-11-13T11:59:12.9535376Z   SETTLE: 0.25
+2026-11-13T11:59:12.9535573Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:12.9535774Z   STAGE_REPEATS: 2
+2026-11-13T11:59:12.9535970Z   KERNEL_PASSES: 10
+2026-11-13T11:59:12.9536268Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:12.9536645Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:12.9536868Z   MODE: pr
+2026-11-13T11:59:12.9537100Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:12.9537438Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:12.9537732Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:12.9537968Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:12.9538206Z   toolchain: stable
+2026-11-13T11:59:12.9538401Z ##[endgroup]
+2026-11-13T11:59:12.9633891Z ##[end-action id=__dtolnay_rust-toolchain.parse;outcome=success;conclusion=success;duration_ms=18]
+2026-11-13T11:59:12.9638515Z ##[start-action display=Set $CARGO_HOME;id=__dtolnay_rust-toolchain.__run]
+2026-11-13T11:59:12.9657041Z ##[group]Run echo CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV
+2026-11-13T11:59:12.9657553Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-11-13T11:59:12.9700184Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:12.9700546Z env:
+2026-11-13T11:59:12.9700732Z   ROUNDS: 10
+2026-11-13T11:59:12.9700918Z   SCALE: 4
+2026-11-13T11:59:12.9701344Z   SETTLE: 0.25
+2026-11-13T11:59:12.9701553Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:12.9701754Z   STAGE_REPEATS: 2
+2026-11-13T11:59:12.9701960Z   KERNEL_PASSES: 10
+2026-11-13T11:59:12.9702253Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:12.9702616Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:12.9702840Z   MODE: pr
+2026-11-13T11:59:12.9703074Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:12.9703419Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:12.9703711Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:12.9703947Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:12.9704187Z ##[endgroup]
+2026-11-13T11:59:12.9772146Z ##[end-action id=__dtolnay_rust-toolchain.__run;outcome=success;conclusion=success;duration_ms=13]
+2026-11-13T11:59:12.9774217Z ##[start-action display=Install rustup if needed;id=__dtolnay_rust-toolchain.__run_2]
+2026-11-13T11:59:12.9796063Z ##[group]Run if ! command -v rustup &>/dev/null; then
+2026-11-13T11:59:12.9796443Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-11-13T11:59:12.9797227Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-11-13T11:59:12.9797981Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-11-13T11:59:12.9798270Z [36;1mfi[0m
+2026-11-13T11:59:12.9840527Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:12.9840882Z env:
+2026-11-13T11:59:12.9841379Z   ROUNDS: 10
+2026-11-13T11:59:12.9841601Z   SCALE: 4
+2026-11-13T11:59:12.9841787Z   SETTLE: 0.25
+2026-11-13T11:59:12.9841982Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:12.9842179Z   STAGE_REPEATS: 2
+2026-11-13T11:59:12.9842380Z   KERNEL_PASSES: 10
+2026-11-13T11:59:12.9842686Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:12.9843216Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:12.9843437Z   MODE: pr
+2026-11-13T11:59:12.9843677Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:12.9844010Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:12.9844307Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:12.9844542Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:12.9844797Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:12.9845037Z ##[endgroup]
+2026-11-13T11:59:12.9912463Z ##[end-action id=__dtolnay_rust-toolchain.__run_2;outcome=success;conclusion=success;duration_ms=13]
+2026-11-13T11:59:12.9914566Z ##[start-action display=Install rustup if needed on windows;id=__dtolnay_rust-toolchain.__run_3]
+2026-11-13T11:59:12.9919272Z ##[end-action id=__dtolnay_rust-toolchain.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-11-13T11:59:12.9931364Z ##[start-action display=rustup toolchain install stable;id=__dtolnay_rust-toolchain.__run_4]
+2026-11-13T11:59:12.9948877Z ##[group]Run set -f  # split targets and components on commas and whitespace, without glob expansion
+2026-11-13T11:59:12.9949577Z [36;1mset -f  # split targets and components on commas and whitespace, without glob expansion[0m
+2026-11-13T11:59:12.9950019Z [36;1mflags=()[0m
+2026-11-13T11:59:12.9950297Z [36;1mfor t in ${targets//,/ }; do flags+=(--target "$t"); done[0m
+2026-11-13T11:59:12.9950715Z [36;1mfor c in ${components//,/ }; do flags+=(--component "$c"); done[0m
+2026-11-13T11:59:12.9951599Z [36;1mif [[ $toolchain == nightly && -n $components ]]; then flags+=(--allow-downgrade); fi[0m
+2026-11-13T11:59:12.9952194Z [36;1mlog=$(mktemp)[0m
+2026-11-13T11:59:12.9952438Z [36;1mtrap 'rm -f "$log"' EXIT[0m
+2026-11-13T11:59:12.9952704Z [36;1mfor attempt in 1 2 3 4 5; do[0m
+2026-11-13T11:59:12.9953293Z [36;1m  if rustup toolchain install "$toolchain" "${flags[@]}" --profile minimal --no-self-update --force-non-host 2>&1 | tee "$log"; then[0m
+2026-11-13T11:59:12.9953877Z [36;1m    break[0m
+2026-11-13T11:59:12.9954081Z [36;1m  else[0m
+2026-11-13T11:59:12.9954284Z [36;1m    status=$?[0m
+2026-11-13T11:59:12.9954499Z [36;1m  fi[0m
+2026-11-13T11:59:12.9954805Z [36;1m  if [[ $attempt == 5 ]] || ! grep -Fq 'checksum failed for ' "$log" \[0m
+2026-11-13T11:59:12.9955369Z [36;1m      || ! grep -Fq 'this is likely due to an ongoing update of the official release server' "$log"; then[0m
+2026-11-13T11:59:12.9955845Z [36;1m    exit "$status"[0m
+2026-11-13T11:59:12.9956069Z [36;1m  fi[0m
+2026-11-13T11:59:12.9956425Z [36;1m  echo "Retrying rustup toolchain install in 30 seconds (retry $attempt of 4)" >&2[0m
+2026-11-13T11:59:12.9956853Z [36;1m  sleep 30[0m
+2026-11-13T11:59:12.9957056Z [36;1mdone[0m
+2026-11-13T11:59:12.9999490Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:12.9999829Z env:
+2026-11-13T11:59:13.0000013Z   ROUNDS: 10
+2026-11-13T11:59:13.0000196Z   SCALE: 4
+2026-11-13T11:59:13.0000380Z   SETTLE: 0.25
+2026-11-13T11:59:13.0000569Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:13.0000763Z   STAGE_REPEATS: 2
+2026-11-13T11:59:13.0001188Z   KERNEL_PASSES: 10
+2026-11-13T11:59:13.0001495Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:13.0001856Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:13.0002079Z   MODE: pr
+2026-11-13T11:59:13.0002312Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:13.0002656Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:13.0002942Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:13.0003176Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:13.0003424Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:13.0003665Z   toolchain: stable
+2026-11-13T11:59:13.0003860Z   targets: 
+2026-11-13T11:59:13.0004041Z   components: 
+2026-11-13T11:59:13.0004253Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-11-13T11:59:13.0004492Z ##[endgroup]
+2026-11-13T11:59:13.8527532Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+2026-11-13T11:59:14.1031722Z info: latest update on 2026-11-12 for version 1.100.0 (0ef1bc386 2026-11-09)
+2026-11-13T11:59:14.1226172Z info: removing previous version of component rustfmt
+2026-11-13T11:59:14.1281093Z info: removing previous version of component clippy
+2026-11-13T11:59:14.1293513Z info: removing previous version of component cargo
+2026-11-13T11:59:14.1388427Z info: removing previous version of component rust-std
+2026-11-13T11:59:14.1480236Z info: removing previous version of component rustc
+2026-11-13T11:59:14.1531994Z info: downloading 5 components
+2026-11-13T11:59:22.6864964Z 
+2026-11-13T11:59:22.6930323Z   stable-x86_64-unknown-linux-gnu updated - rustc 1.100.0 (0ef1bc386 2026-11-09) (from rustc 1.99.1 (58cf8f9c3 2026-10-13))
+2026-11-13T11:59:22.6930912Z 
+2026-11-13T11:59:22.7172441Z ##[end-action id=__dtolnay_rust-toolchain.__run_4;outcome=success;conclusion=success;duration_ms=9724]
+2026-11-13T11:59:22.7178069Z ##[start-action display=rustup default stable;id=__dtolnay_rust-toolchain.__run_5]
+2026-11-13T11:59:22.7196114Z ##[group]Run rustup default "$toolchain" --force-non-host
+2026-11-13T11:59:22.7196546Z [36;1mrustup default "$toolchain" --force-non-host[0m
+2026-11-13T11:59:22.7245812Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.7246158Z env:
+2026-11-13T11:59:22.7246346Z   ROUNDS: 10
+2026-11-13T11:59:22.7246534Z   SCALE: 4
+2026-11-13T11:59:22.7246716Z   SETTLE: 0.25
+2026-11-13T11:59:22.7246903Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.7247099Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.7247296Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.7247597Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.7248119Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.7248347Z   MODE: pr
+2026-11-13T11:59:22.7248578Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.7248933Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.7249223Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.7249461Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.7249710Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.7249960Z   toolchain: stable
+2026-11-13T11:59:22.7250159Z ##[endgroup]
+2026-11-13T11:59:22.7358244Z info: using existing install for stable-x86_64-unknown-linux-gnu
+2026-11-13T11:59:22.7364297Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+2026-11-13T11:59:22.7364634Z 
+2026-11-13T11:59:22.7427986Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.100.0 (0ef1bc386 2026-11-09)
+2026-11-13T11:59:22.7428725Z 
+2026-11-13T11:59:22.7463617Z ##[end-action id=__dtolnay_rust-toolchain.__run_5;outcome=success;conclusion=success;duration_ms=28]
+2026-11-13T11:59:22.7469584Z ##[start-action display=Create cachekey;id=__dtolnay_rust-toolchain.rustc-version]
+2026-11-13T11:59:22.7495045Z ##[group]Run DATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')
+2026-11-13T11:59:22.7495921Z [36;1mDATE=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-11-13T11:59:22.7496611Z [36;1mHASH=$(rustc +"$toolchain" --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-11-13T11:59:22.7497134Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-11-13T11:59:22.7544258Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.7544598Z env:
+2026-11-13T11:59:22.7544785Z   ROUNDS: 10
+2026-11-13T11:59:22.7544978Z   SCALE: 4
+2026-11-13T11:59:22.7545159Z   SETTLE: 0.25
+2026-11-13T11:59:22.7545356Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.7545553Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.7545751Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.7546060Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.7546417Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.7546638Z   MODE: pr
+2026-11-13T11:59:22.7546874Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.7547212Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.7547502Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.7547917Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.7548172Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.7548410Z   toolchain: stable
+2026-11-13T11:59:22.7548612Z ##[endgroup]
+2026-11-13T11:59:22.7885236Z ##[end-action id=__dtolnay_rust-toolchain.rustc-version;outcome=success;conclusion=success;duration_ms=41]
+2026-11-13T11:59:22.7887626Z ##[start-action display=Disable incremental compilation;id=__dtolnay_rust-toolchain.__run_6]
+2026-11-13T11:59:22.7906181Z ##[group]Run if [ -z "${CARGO_INCREMENTAL+set}" ]; then
+2026-11-13T11:59:22.7906575Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-11-13T11:59:22.7906919Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-11-13T11:59:22.7907202Z [36;1mfi[0m
+2026-11-13T11:59:22.7955517Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.7955863Z env:
+2026-11-13T11:59:22.7956048Z   ROUNDS: 10
+2026-11-13T11:59:22.7956241Z   SCALE: 4
+2026-11-13T11:59:22.7956424Z   SETTLE: 0.25
+2026-11-13T11:59:22.7956635Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.7956836Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.7957039Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.7957339Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.7957700Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.7957927Z   MODE: pr
+2026-11-13T11:59:22.7958169Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.7958512Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.7958802Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.7959037Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.7959452Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.7959699Z ##[endgroup]
+2026-11-13T11:59:22.8029292Z ##[end-action id=__dtolnay_rust-toolchain.__run_6;outcome=success;conclusion=success;duration_ms=14]
+2026-11-13T11:59:22.8031634Z ##[start-action display=Enable colors in Cargo output;id=__dtolnay_rust-toolchain.__run_7]
+2026-11-13T11:59:22.8048881Z ##[group]Run if [ -z "${CARGO_TERM_COLOR+set}" ]; then
+2026-11-13T11:59:22.8049264Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-11-13T11:59:22.8049608Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-11-13T11:59:22.8049900Z [36;1mfi[0m
+2026-11-13T11:59:22.8092803Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.8093148Z env:
+2026-11-13T11:59:22.8093334Z   ROUNDS: 10
+2026-11-13T11:59:22.8093525Z   SCALE: 4
+2026-11-13T11:59:22.8093704Z   SETTLE: 0.25
+2026-11-13T11:59:22.8093898Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.8094104Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.8094321Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.8094629Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.8094995Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.8095218Z   MODE: pr
+2026-11-13T11:59:22.8095467Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.8095808Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.8096094Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.8096334Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.8096583Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.8096825Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:22.8097033Z ##[endgroup]
+2026-11-13T11:59:22.8165349Z ##[end-action id=__dtolnay_rust-toolchain.__run_7;outcome=success;conclusion=success;duration_ms=13]
+2026-11-13T11:59:22.8168270Z ##[start-action display=Enable Cargo sparse registry;id=__dtolnay_rust-toolchain.__run_8]
+2026-11-13T11:59:22.8185863Z ##[group]Run # implemented in 1.66, stabilized in 1.68, made default in 1.70
+2026-11-13T11:59:22.8186403Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-11-13T11:59:22.8187144Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-11-13T11:59:22.8187923Z [36;1m  if rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-11-13T11:59:22.8188697Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-11-13T11:59:22.8189259Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-11-13T11:59:22.8189788Z [36;1m  elif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-11-13T11:59:22.8190387Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-11-13T11:59:22.8191095Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-11-13T11:59:22.8191645Z [36;1m  fi[0m
+2026-11-13T11:59:22.8191840Z [36;1mfi[0m
+2026-11-13T11:59:22.8233898Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.8234242Z env:
+2026-11-13T11:59:22.8234424Z   ROUNDS: 10
+2026-11-13T11:59:22.8234620Z   SCALE: 4
+2026-11-13T11:59:22.8234796Z   SETTLE: 0.25
+2026-11-13T11:59:22.8234989Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.8235189Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.8235399Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.8235708Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.8236085Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.8236309Z   MODE: pr
+2026-11-13T11:59:22.8236544Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.8236882Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.8237168Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.8237402Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.8237650Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.8238043Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:22.8238266Z   toolchain: stable
+2026-11-13T11:59:22.8238462Z ##[endgroup]
+2026-11-13T11:59:22.8532230Z ##[end-action id=__dtolnay_rust-toolchain.__run_8;outcome=success;conclusion=success;duration_ms=36]
+2026-11-13T11:59:22.8535525Z ##[start-action display=Work around spurious network errors in curl 8.0;id=__dtolnay_rust-toolchain.__run_9]
+2026-11-13T11:59:22.8553478Z ##[group]Run # https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation
+2026-11-13T11:59:22.8554266Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-11-13T11:59:22.8554920Z [36;1mif rustc +"$toolchain" --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-11-13T11:59:22.8555414Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-11-13T11:59:22.8555730Z [36;1mfi[0m
+2026-11-13T11:59:22.8602712Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.8603063Z env:
+2026-11-13T11:59:22.8603260Z   ROUNDS: 10
+2026-11-13T11:59:22.8603446Z   SCALE: 4
+2026-11-13T11:59:22.8603619Z   SETTLE: 0.25
+2026-11-13T11:59:22.8603806Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.8604000Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.8604199Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.8604505Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.8604853Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.8605080Z   MODE: pr
+2026-11-13T11:59:22.8605309Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.8605639Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.8605927Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.8606158Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.8606405Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.8606642Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:22.8606851Z   toolchain: stable
+2026-11-13T11:59:22.8607050Z ##[endgroup]
+2026-11-13T11:59:22.8788877Z ##[end-action id=__dtolnay_rust-toolchain.__run_9;outcome=success;conclusion=success;duration_ms=25]
+2026-11-13T11:59:22.8793003Z ##[start-action display=rustc +stable --version --verbose;id=__dtolnay_rust-toolchain.__run_10]
+2026-11-13T11:59:22.8810291Z ##[group]Run rustc +"$toolchain" --version --verbose
+2026-11-13T11:59:22.8810672Z [36;1mrustc +"$toolchain" --version --verbose[0m
+2026-11-13T11:59:22.8855773Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-13T11:59:22.8856299Z env:
+2026-11-13T11:59:22.8856485Z   ROUNDS: 10
+2026-11-13T11:59:22.8856674Z   SCALE: 4
+2026-11-13T11:59:22.8856850Z   SETTLE: 0.25
+2026-11-13T11:59:22.8857040Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.8857242Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.8857439Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.8857738Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.8858095Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.8858312Z   MODE: pr
+2026-11-13T11:59:22.8858542Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.8858883Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.8859172Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.8859407Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.8859662Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.8859908Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:22.8860119Z   toolchain: stable
+2026-11-13T11:59:22.8860313Z ##[endgroup]
+2026-11-13T11:59:22.9020599Z rustc 1.100.0 (0ef1bc386 2026-11-09)
+2026-11-13T11:59:22.9021325Z binary: rustc
+2026-11-13T11:59:22.9021805Z commit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a
+2026-11-13T11:59:22.9022187Z commit-date: 2026-11-09
+2026-11-13T11:59:22.9022438Z host: x86_64-unknown-linux-gnu
+2026-11-13T11:59:22.9022750Z release: 1.100.0
+2026-11-13T11:59:22.9023046Z LLVM version: 23.1.5
+2026-11-13T11:59:22.9038196Z ##[end-action id=__dtolnay_rust-toolchain.__run_10;outcome=success;conclusion=success;duration_ms=24]
+2026-11-13T11:59:22.9147724Z ##[group]Run Swatinem/rust-cache@v2
+2026-11-13T11:59:22.9148027Z with:
+2026-11-13T11:59:22.9148231Z   prefix-key: v0-rust
+2026-11-13T11:59:22.9148460Z   add-job-id-key: true
+2026-11-13T11:59:22.9148719Z   add-rust-environment-hash-key: true
+2026-11-13T11:59:22.9149000Z   cache-targets: true
+2026-11-13T11:59:22.9149220Z   cache-all-crates: false
+2026-11-13T11:59:22.9179838Z   cache-workspace-crates: false
+2026-11-13T11:59:22.9180254Z   save-if: true
+2026-11-13T11:59:22.9180596Z   cache-provider: github
+2026-11-13T11:59:22.9181227Z   cache-bin: true
+2026-11-13T11:59:22.9181665Z   lookup-only: false
+2026-11-13T11:59:22.9182045Z   cmd-format: {0}
+2026-11-13T11:59:22.9182432Z env:
+2026-11-13T11:59:22.9182641Z   ROUNDS: 10
+2026-11-13T11:59:22.9182817Z   SCALE: 4
+2026-11-13T11:59:22.9182987Z   SETTLE: 0.25
+2026-11-13T11:59:22.9183165Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:22.9183351Z   STAGE_REPEATS: 2
+2026-11-13T11:59:22.9183539Z   KERNEL_PASSES: 10
+2026-11-13T11:59:22.9183861Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:22.9184209Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:22.9184417Z   MODE: pr
+2026-11-13T11:59:22.9184645Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:22.9184972Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:22.9185259Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:22.9185497Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:22.9185747Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:22.9185995Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:22.9186208Z ##[endgroup]
+2026-11-13T11:59:23.3934577Z ##[group]Cache Configuration
+2026-11-13T11:59:23.3935103Z Cache Provider:
+2026-11-13T11:59:23.3935433Z     github
+2026-11-13T11:59:23.3935736Z Workspaces:
+2026-11-13T11:59:23.3936070Z     /home/runner/work/mibz2/mibz2
+2026-11-13T11:59:23.3936479Z Cache Paths:
+2026-11-13T11:59:23.3936809Z     /home/runner/.cargo/bin
+2026-11-13T11:59:23.3937206Z     /home/runner/.cargo/.crates.toml
+2026-11-13T11:59:23.3937618Z     /home/runner/.cargo/.crates2.json
+2026-11-13T11:59:23.3937917Z     /home/runner/.cargo/registry
+2026-11-13T11:59:23.3938186Z     /home/runner/.cargo/git
+2026-11-13T11:59:23.3938440Z     /home/runner/work/mibz2/mibz2/target
+2026-11-13T11:59:23.3938902Z Restore Key:
+2026-11-13T11:59:23.3939249Z     v0-rust-bench-Linux-x64-211b0558
+2026-11-13T11:59:23.3939656Z Cache Key:
+2026-11-13T11:59:23.3939878Z     v0-rust-bench-Linux-x64-211b0558-9915cc55
+2026-11-13T11:59:23.3940162Z .. Prefix:
+2026-11-13T11:59:23.3940702Z   - v0-rust-bench-Linux-x64
+2026-11-13T11:59:23.3941196Z .. Environment considered:
+2026-11-13T11:59:23.3941446Z   - Rust Versions:
+2026-11-13T11:59:23.3941836Z     - 1.100.0 x86_64-unknown-linux-gnu 0ef1bc386059596dada8fb65b50425aab2ea637a
+2026-11-13T11:59:23.3942481Z   - CARGO_HOME
+2026-11-13T11:59:23.3942806Z   - CARGO_INCREMENTAL
+2026-11-13T11:59:23.3943109Z   - CARGO_TERM_COLOR
+2026-11-13T11:59:23.3943321Z .. Lockfiles considered:
+2026-11-13T11:59:23.3943572Z   - /home/runner/work/mibz2/mibz2/Cargo.lock
+2026-11-13T11:59:23.3943865Z   - /home/runner/work/mibz2/mibz2/Cargo.toml
+2026-11-13T11:59:23.3944307Z ##[endgroup]
+2026-11-13T11:59:23.3944419Z 
+2026-11-13T11:59:23.3944503Z ... Restoring cache ...
+2026-11-13T11:59:23.5708933Z Cache hit for: v0-rust-bench-Linux-x64-211b0558-9915cc55
+2026-11-13T11:59:24.7772899Z Received 71303168 of 124157564 (57.4%), 67.8 MBs/sec
+2026-11-13T11:59:25.0279421Z Received 124157564 of 124157564 (100.0%), 94.5 MBs/sec
+2026-11-13T11:59:25.0280471Z Cache Size: ~118 MB (124157564 B)
+2026-11-13T11:59:25.0386092Z [command]/usr/bin/tar -xf /home/runner/work/_temp/dc16114c-b693-4f1a-af1a-6fe7d4d587df/cache.tzst -P -C /home/runner/work/mibz2/mibz2 --use-compress-program unzstd
+2026-11-13T11:59:25.7862070Z Cache restored successfully
+2026-11-13T11:59:25.7914385Z Restored from cache key "v0-rust-bench-Linux-x64-211b0558-9915cc55" full match: true.
+2026-11-13T11:59:25.8056891Z ##[group]Run cargo build --release --example ab --example windows --example phases
+2026-11-13T11:59:25.8057539Z [36;1mcargo build --release --example ab --example windows --example phases[0m
+2026-11-13T11:59:25.8058222Z [36;1mmkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases[0m
+2026-11-13T11:59:25.8106612Z shell: /usr/bin/bash -e {0}
+2026-11-13T11:59:25.8106870Z env:
+2026-11-13T11:59:25.8107063Z   ROUNDS: 10
+2026-11-13T11:59:25.8107259Z   SCALE: 4
+2026-11-13T11:59:25.8107448Z   SETTLE: 0.25
+2026-11-13T11:59:25.8107649Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:25.8107871Z   STAGE_REPEATS: 2
+2026-11-13T11:59:25.8108084Z   KERNEL_PASSES: 10
+2026-11-13T11:59:25.8108414Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:25.8108787Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:25.8109017Z   MODE: pr
+2026-11-13T11:59:25.8109267Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:25.8109700Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:25.8109999Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:25.8110238Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:25.8110494Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:25.8110752Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:25.8111150Z   CACHE_ON_FAILURE: false
+2026-11-13T11:59:25.8111381Z ##[endgroup]
+2026-11-13T11:59:25.8469443Z     Updating crates.io index
+2026-11-13T11:59:26.0389003Z    Compiling mibz2 v0.2.9 (/home/runner/work/mibz2/mibz2)
+2026-11-13T11:59:56.5606591Z     Finished `release` profile [optimized + debuginfo] target(s) in 30.73s
+2026-11-13T11:59:56.5785925Z ##[group]Run cargo rustc --release --example ab -- --cfg mibz2_cells_bench
+2026-11-13T11:59:56.5786545Z [36;1mcargo rustc --release --example ab -- --cfg mibz2_cells_bench[0m
+2026-11-13T11:59:56.5787021Z [36;1mcp target/release/examples/ab bin/cells-ab[0m
+2026-11-13T11:59:56.5836014Z shell: /usr/bin/bash -e {0}
+2026-11-13T11:59:56.5836282Z env:
+2026-11-13T11:59:56.5836475Z   ROUNDS: 10
+2026-11-13T11:59:56.5836686Z   SCALE: 4
+2026-11-13T11:59:56.5836874Z   SETTLE: 0.25
+2026-11-13T11:59:56.5837076Z   STAGE_ROUNDS: 5
+2026-11-13T11:59:56.5837283Z   STAGE_REPEATS: 2
+2026-11-13T11:59:56.5837500Z   KERNEL_PASSES: 10
+2026-11-13T11:59:56.5837834Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T11:59:56.5838233Z   CARGO_TERM_COLOR: never
+2026-11-13T11:59:56.5838494Z   MODE: pr
+2026-11-13T11:59:56.5838779Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T11:59:56.5839157Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T11:59:56.5839515Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T11:59:56.5839954Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T11:59:56.5840263Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T11:59:56.5840524Z   CARGO_INCREMENTAL: 0
+2026-11-13T11:59:56.5840752Z   CACHE_ON_FAILURE: false
+2026-11-13T11:59:56.5841190Z ##[endgroup]
+2026-11-13T11:59:56.6151810Z    Compiling mibz2 v0.2.9 (/home/runner/work/mibz2/mibz2)
+2026-11-13T12:00:16.9450850Z     Finished `release` profile [optimized + debuginfo] target(s) in 20.34s
+2026-11-13T12:00:16.9578905Z ##[group]Run git worktree add --detach .base-src "$BASE_SHA"
+2026-11-13T12:00:16.9579404Z [36;1mgit worktree add --detach .base-src "$BASE_SHA"[0m
+2026-11-13T12:00:16.9579976Z [36;1mtest -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }[0m
+2026-11-13T12:00:16.9580611Z [36;1m# (and its examples/phases.rs, for the stage table, where it has one)[0m
+2026-11-13T12:00:16.9581508Z [36;1mphases=$(test -f .base-src/examples/phases.rs && echo "--example phases" || true)[0m
+2026-11-13T12:00:16.9582202Z [36;1m(cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab $phases)[0m
+2026-11-13T12:00:16.9582787Z [36;1mmkdir -p base && cp target/release/examples/ab base/ab[0m
+2026-11-13T12:00:16.9583259Z [36;1mif [ -n "$phases" ]; then cp target/release/examples/phases base/phases; fi[0m
+2026-11-13T12:00:16.9583832Z [36;1m# (the Actions tab only: the base arm with its own sampler interval, AB_SAMPLE_MS)[0m
+2026-11-13T12:00:16.9584271Z [36;1mif [ -n "$BASE_SAMPLE_MS" ]; then[0m
+2026-11-13T12:00:16.9584558Z [36;1m  mv base/ab base/ab-bin[0m
+2026-11-13T12:00:16.9585015Z [36;1m  printf '#!/bin/sh\nAB_SAMPLE_MS=%s exec "%s" "$@"\n' "$BASE_SAMPLE_MS" "$PWD/base/ab-bin" > base/ab[0m
+2026-11-13T12:00:16.9585473Z [36;1m  chmod +x base/ab[0m
+2026-11-13T12:00:16.9585760Z [36;1m  echo "base arm: AB_SAMPLE_MS=$BASE_SAMPLE_MS"[0m
+2026-11-13T12:00:16.9586060Z [36;1mfi[0m
+2026-11-13T12:00:16.9633686Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:00:16.9633964Z env:
+2026-11-13T12:00:16.9634148Z   ROUNDS: 10
+2026-11-13T12:00:16.9634340Z   SCALE: 4
+2026-11-13T12:00:16.9634522Z   SETTLE: 0.25
+2026-11-13T12:00:16.9634724Z   STAGE_ROUNDS: 5
+2026-11-13T12:00:16.9634930Z   STAGE_REPEATS: 2
+2026-11-13T12:00:16.9635142Z   KERNEL_PASSES: 10
+2026-11-13T12:00:16.9635467Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:00:16.9635831Z   CARGO_TERM_COLOR: never
+2026-11-13T12:00:16.9636076Z   MODE: pr
+2026-11-13T12:00:16.9636321Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:00:16.9636665Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:00:16.9636962Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:00:16.9637208Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:00:16.9637466Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:00:16.9637712Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:00:16.9637940Z   CACHE_ON_FAILURE: false
+2026-11-13T12:00:16.9638166Z   BASE_SAMPLE_MS: 
+2026-11-13T12:00:16.9638384Z ##[endgroup]
+2026-11-13T12:00:16.9732732Z Preparing worktree (detached HEAD 3e7e294cc)
+2026-11-13T12:00:17.1425150Z HEAD is now at 3e7e294cc bench: close consumed Cells live-path queue entry after bundle review
+2026-11-13T12:00:17.1711635Z    Compiling mibz2 v0.2.9 (/home/runner/work/mibz2/mibz2/.base-src)
+2026-11-13T12:00:46.0076095Z     Finished `release` profile [optimized + debuginfo] target(s) in 28.85s
+2026-11-13T12:00:46.0238508Z ##[group]Run mkdir -p .codegen
+2026-11-13T12:00:46.0238937Z [36;1mmkdir -p .codegen[0m
+2026-11-13T12:00:46.0239313Z [36;1mobjcopy --dump-section .text=.codegen/head.text bin/ab /dev/null[0m
+2026-11-13T12:00:46.0239833Z [36;1mobjcopy --dump-section .text=.codegen/base.text base/ab /dev/null[0m
+2026-11-13T12:00:46.0240357Z [36;1mobjcopy --dump-section .text=.codegen/cells.text bin/cells-ab /dev/null[0m
+2026-11-13T12:00:46.0240799Z [36;1msha256sum .codegen/*.text > codegen.txt[0m
+2026-11-13T12:00:46.0241437Z [36;1mif cmp -s .codegen/head.text .codegen/base.text; then[0m
+2026-11-13T12:00:46.0242046Z [36;1m  echo 'Default head/base .text: identical' >> codegen.txt[0m
+2026-11-13T12:00:46.0242398Z [36;1melse[0m
+2026-11-13T12:00:46.0242751Z [36;1m  echo 'Default head/base .text: different (diagnostic, not a gate)' >> codegen.txt[0m
+2026-11-13T12:00:46.0243169Z [36;1mfi[0m
+2026-11-13T12:00:46.0243367Z [36;1mcat codegen.txt[0m
+2026-11-13T12:00:46.0289493Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:00:46.0289750Z env:
+2026-11-13T12:00:46.0289937Z   ROUNDS: 10
+2026-11-13T12:00:46.0290134Z   SCALE: 4
+2026-11-13T12:00:46.0290323Z   SETTLE: 0.25
+2026-11-13T12:00:46.0290521Z   STAGE_ROUNDS: 5
+2026-11-13T12:00:46.0290726Z   STAGE_REPEATS: 2
+2026-11-13T12:00:46.0291052Z   KERNEL_PASSES: 10
+2026-11-13T12:00:46.0291378Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:00:46.0291748Z   CARGO_TERM_COLOR: never
+2026-11-13T12:00:46.0291978Z   MODE: pr
+2026-11-13T12:00:46.0292228Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:00:46.0292586Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:00:46.0292883Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:00:46.0293123Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:00:46.0293379Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:00:46.0293635Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:00:46.0293860Z   CACHE_ON_FAILURE: false
+2026-11-13T12:00:46.0294086Z ##[endgroup]
+2026-11-13T12:00:46.2020139Z e5c3d5f4b84ce114bc189153af910db0aec82e7068f90da052b5f78244cfc8f1  .codegen/base.text
+2026-11-13T12:00:46.2021607Z afac498033ea3fd2d478eb699058378a6db76a8abe4499e8962dae0c93fa8bae  .codegen/cells.text
+2026-11-13T12:00:46.2022719Z aa6e4686aa056ad90a3be20d5b280a4284721b884967ea7b41b23ed1d856712c  .codegen/head.text
+2026-11-13T12:00:46.2023283Z Default head/base .text: different (diagnostic, not a gate)
+2026-11-13T12:00:46.2069938Z ##[group]Run bin/ab gen corpora "$SCALE"
+2026-11-13T12:00:46.2070298Z [36;1mbin/ab gen corpora "$SCALE"[0m
+2026-11-13T12:00:46.2117879Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:00:46.2118153Z env:
+2026-11-13T12:00:46.2118342Z   ROUNDS: 10
+2026-11-13T12:00:46.2118537Z   SCALE: 4
+2026-11-13T12:00:46.2118726Z   SETTLE: 0.25
+2026-11-13T12:00:46.2118926Z   STAGE_ROUNDS: 5
+2026-11-13T12:00:46.2119132Z   STAGE_REPEATS: 2
+2026-11-13T12:00:46.2119339Z   KERNEL_PASSES: 10
+2026-11-13T12:00:46.2119655Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:00:46.2120029Z   CARGO_TERM_COLOR: never
+2026-11-13T12:00:46.2120261Z   MODE: pr
+2026-11-13T12:00:46.2120508Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:00:46.2120852Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:00:46.2121392Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:00:46.2121637Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:00:46.2121930Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:00:46.2122187Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:00:46.2122416Z   CACHE_ON_FAILURE: false
+2026-11-13T12:00:46.2122646Z ##[endgroup]
+2026-11-13T12:00:47.0032185Z corpora/text.bz2: 12031602 -> 2391178 bytes
+2026-11-13T12:00:47.7757780Z corpora/random.bz2: 8000000 -> 7097921 bytes
+2026-11-13T12:00:47.9247385Z corpora/onebyte.bz2: 20000000 -> 51 bytes
+2026-11-13T12:00:51.2721940Z corpora/pattern.bz2: 19600000 -> 1116 bytes
+2026-11-13T12:00:51.3232828Z corpora/runs.bz2: 10000235 -> 37995 bytes
+2026-11-13T12:00:52.5746387Z corpora/records.bz2: 9600000 -> 9587840 bytes
+2026-11-13T12:00:52.6425015Z ##[group]Run actions/cache@v4
+2026-11-13T12:00:52.6425322Z with:
+2026-11-13T12:00:52.6425523Z   path: windows
+2026-11-13T12:00:52.6425942Z   key: bench-wikidata-1a999aff7329e8b486265cffd9cf0f3a10c0e8445e52c99b80c31d3947ceea74
+2026-11-13T12:00:52.6426429Z   enableCrossOsArchive: false
+2026-11-13T12:00:52.6426689Z   fail-on-cache-miss: false
+2026-11-13T12:00:52.6426930Z   lookup-only: false
+2026-11-13T12:00:52.6427144Z   save-always: false
+2026-11-13T12:00:52.6427348Z env:
+2026-11-13T12:00:52.6427532Z   ROUNDS: 10
+2026-11-13T12:00:52.6427718Z   SCALE: 4
+2026-11-13T12:00:52.6427899Z   SETTLE: 0.25
+2026-11-13T12:00:52.6428294Z   STAGE_ROUNDS: 5
+2026-11-13T12:00:52.6428500Z   STAGE_REPEATS: 2
+2026-11-13T12:00:52.6428701Z   KERNEL_PASSES: 10
+2026-11-13T12:00:52.6429009Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:00:52.6429383Z   CARGO_TERM_COLOR: never
+2026-11-13T12:00:52.6429613Z   MODE: pr
+2026-11-13T12:00:52.6429885Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:00:52.6430230Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:00:52.6430528Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:00:52.6430777Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:00:52.6431320Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:00:52.6431573Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:00:52.6431798Z   CACHE_ON_FAILURE: false
+2026-11-13T12:00:52.6432019Z ##[endgroup]
+2026-11-13T12:00:52.7509767Z (node:2983) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-13T12:00:52.7510578Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-13T12:00:52.9363065Z Cache hit for: bench-wikidata-1a999aff7329e8b486265cffd9cf0f3a10c0e8445e52c99b80c31d3947ceea74
+2026-11-13T12:00:52.9476801Z (node:2983) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-13T12:00:53.9335506Z Received 12590388 of 12590388 (100.0%), 15.3 MBs/sec
+2026-11-13T12:00:53.9336235Z Cache Size: ~12 MB (12590388 B)
+2026-11-13T12:00:53.9361489Z [command]/usr/bin/tar -xf /home/runner/work/_temp/5f21ace3-4e45-4a64-927f-ce615c78ba13/cache.tzst -P -C /home/runner/work/mibz2/mibz2 --use-compress-program unzstd
+2026-11-13T12:00:53.9609552Z Cache restored successfully
+2026-11-13T12:00:53.9694447Z Cache restored from key: bench-wikidata-1a999aff7329e8b486265cffd9cf0f3a10c0e8445e52c99b80c31d3947ceea74
+2026-11-13T12:00:53.9823097Z ##[group]Run dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+2026-11-13T12:00:53.9823900Z [36;1mdir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')[0m
+2026-11-13T12:00:53.9824678Z [36;1mif [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then[0m
+2026-11-13T12:00:53.9825322Z [36;1m  git archive origin/bench-data "$dir" | tar -x || true[0m
+2026-11-13T12:00:53.9825665Z [36;1mfi[0m
+2026-11-13T12:00:53.9826013Z [36;1msource=$(python3 bench/wikidata.py fetch bench/wikidata.json "$dir")[0m
+2026-11-13T12:00:53.9826472Z [36;1mecho "WINDOWS_SOURCE=$source" >> "$GITHUB_ENV"[0m
+2026-11-13T12:00:53.9826829Z [36;1mecho "WINDOWS_DIR=$dir" >> "$GITHUB_ENV"[0m
+2026-11-13T12:00:53.9827404Z [36;1mpython3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2[0m
+2026-11-13T12:00:53.9827995Z [36;1mls -l corpora[0m
+2026-11-13T12:00:53.9875739Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:00:53.9876012Z env:
+2026-11-13T12:00:53.9876210Z   ROUNDS: 10
+2026-11-13T12:00:53.9876412Z   SCALE: 4
+2026-11-13T12:00:53.9876609Z   SETTLE: 0.25
+2026-11-13T12:00:53.9876810Z   STAGE_ROUNDS: 5
+2026-11-13T12:00:53.9877016Z   STAGE_REPEATS: 2
+2026-11-13T12:00:53.9877227Z   KERNEL_PASSES: 10
+2026-11-13T12:00:53.9877582Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:00:53.9877949Z   CARGO_TERM_COLOR: never
+2026-11-13T12:00:53.9878204Z   MODE: pr
+2026-11-13T12:00:53.9878449Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:00:53.9878807Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:00:53.9879103Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:00:53.9879355Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:00:53.9879617Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:00:53.9879869Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:00:53.9880106Z   CACHE_ON_FAILURE: false
+2026-11-13T12:00:53.9880500Z ##[endgroup]
+2026-11-13T12:00:54.9651546Z w00: 37 whole blocks (bits 332560..8076600), 0 streams ended, 19800013 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:55.5982008Z w01: 26 whole blocks (bits 240072..8299136), 0 streams ended, 13500017 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:56.4213318Z w02: 42 whole blocks (bits 265400..8381128), 0 streams ended, 18900000 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:57.2773432Z w03: 47 whole blocks (bits 23504..8326712), 0 streams ended, 21600009 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:57.8179375Z w04: 23 whole blocks (bits 407808..7919608), 0 streams ended, 12600036 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:58.6535030Z w05: 45 whole blocks (bits 213280..8160856), 0 streams ended, 19800010 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:00:59.4920168Z w06: 45 whole blocks (bits 228536..8232832), 0 streams ended, 21600008 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:00.0009848Z w07: 19 whole blocks (bits 560064..8221584), 0 streams ended, 10800021 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:00.8395160Z w08: 47 whole blocks (bits 11000..8113744), 0 streams ended, 20700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:01.6539003Z w09: 43 whole blocks (bits 269560..8077440), 0 streams ended, 20700020 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:02.2106342Z w10: 16 whole blocks (bits 298696..7955712), 0 streams ended, 11700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:02.9728243Z w11: 41 whole blocks (bits 330936..8254184), 0 streams ended, 18000014 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+2026-11-13T12:01:02.9805555Z 431 blocks, 209700196 bytes, 0 windows failed
+2026-11-13T12:01:03.0115606Z corpora/wikidata.bz2: 11854933 bytes, SHA-256 checked
+2026-11-13T12:01:03.0239950Z total 30260
+2026-11-13T12:01:03.0240486Z -rw-r--r-- 1 runner runner       51 Nov 13 12:00 onebyte.bz2
+2026-11-13T12:01:03.0241228Z -rw-r--r-- 1 runner runner     1116 Nov 13 12:00 pattern.bz2
+2026-11-13T12:01:03.0241654Z -rw-r--r-- 1 runner runner  7097921 Nov 13 12:00 random.bz2
+2026-11-13T12:01:03.0242059Z -rw-r--r-- 1 runner runner  9587840 Nov 13 12:00 records.bz2
+2026-11-13T12:01:03.0242453Z -rw-r--r-- 1 runner runner    37995 Nov 13 12:00 runs.bz2
+2026-11-13T12:01:03.0243042Z -rw-r--r-- 1 runner runner  2391178 Nov 13 12:00 text.bz2
+2026-11-13T12:01:03.0243666Z -rw-r--r-- 1 runner runner 11854933 Nov 13 12:01 wikidata.bz2
+2026-11-13T12:01:03.0275810Z ##[group]Run bin/ab env | tee env.json
+2026-11-13T12:01:03.0276163Z [36;1mbin/ab env | tee env.json[0m
+2026-11-13T12:01:03.0323192Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:01:03.0323465Z env:
+2026-11-13T12:01:03.0323660Z   ROUNDS: 10
+2026-11-13T12:01:03.0323863Z   SCALE: 4
+2026-11-13T12:01:03.0324056Z   SETTLE: 0.25
+2026-11-13T12:01:03.0324262Z   STAGE_ROUNDS: 5
+2026-11-13T12:01:03.0324471Z   STAGE_REPEATS: 2
+2026-11-13T12:01:03.0324875Z   KERNEL_PASSES: 10
+2026-11-13T12:01:03.0325206Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:01:03.0325582Z   CARGO_TERM_COLOR: never
+2026-11-13T12:01:03.0325819Z   MODE: pr
+2026-11-13T12:01:03.0326061Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:01:03.0326407Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:01:03.0326703Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:01:03.0326955Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:01:03.0327243Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:01:03.0327493Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:01:03.0327719Z   CACHE_ON_FAILURE: false
+2026-11-13T12:01:03.0327956Z   WINDOWS_SOURCE: kept
+2026-11-13T12:01:03.0328200Z   WINDOWS_DIR: windows/wikidata-20261019
+2026-11-13T12:01:03.0328485Z ##[endgroup]
+2026-11-13T12:01:03.3477760Z {"cpus":4,"cores":2,"core_cpus":["0,1","2,3"],"cpu_quota":null,"throttling":true,"psi_cpu":true,"runq":{"counts":true,"spin_threads":8,"off_cpu_s":1.192,"wait_s":1.197},"machine":{"cpufreq_driver":null,"cpufreq_driver_why":"no cpufreq policy's scaling_driver","governor":null,"governor_why":"no cpufreq policies (sys/devices/system/cpu/cpufreq/policy*)","epp":null,"epp_why":"no cpufreq policies (sys/devices/system/cpu/cpufreq/policy*)","turbo":null,"turbo_why":"neither intel_pstate/no_turbo nor cpufreq/boost","perf_event_paranoid":4,"perf":{"cycles":false,"why":"perf_event_open not permitted (perf_event_paranoid=4)"}}}
+2026-11-13T12:01:03.3513643Z ##[group]Run threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")
+2026-11-13T12:01:03.3514247Z [36;1mthreads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")[0m
+2026-11-13T12:01:03.3514923Z [36;1mbin/ab run runs.jsonl --arms "$ARMS" --threads "$threads" --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2[0m
+2026-11-13T12:01:03.3562521Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:01:03.3562795Z env:
+2026-11-13T12:01:03.3562988Z   ROUNDS: 10
+2026-11-13T12:01:03.3563189Z   SCALE: 4
+2026-11-13T12:01:03.3563395Z   SETTLE: 0.25
+2026-11-13T12:01:03.3563596Z   STAGE_ROUNDS: 5
+2026-11-13T12:01:03.3563804Z   STAGE_REPEATS: 2
+2026-11-13T12:01:03.3564030Z   KERNEL_PASSES: 10
+2026-11-13T12:01:03.3564354Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:01:03.3564723Z   CARGO_TERM_COLOR: never
+2026-11-13T12:01:03.3564957Z   MODE: pr
+2026-11-13T12:01:03.3565229Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:01:03.3565581Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:01:03.3565889Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:01:03.3566132Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:01:03.3566403Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:01:03.3566661Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:01:03.3566888Z   CACHE_ON_FAILURE: false
+2026-11-13T12:01:03.3567118Z   WINDOWS_SOURCE: kept
+2026-11-13T12:01:03.3567366Z   WINDOWS_DIR: windows/wikidata-20261019
+2026-11-13T12:01:03.3567639Z ##[endgroup]
+2026-11-13T12:01:03.6822031Z r0 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.13 steal 0.0% 
+2026-11-13T12:01:03.9588309Z r0 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:04.2456160Z r0 onebyte      t=2 mibz2            wall   0.022 cpu   0.024 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:04.5324952Z r0 onebyte      t=2 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.18 steal 0.0% 
+2026-11-13T12:01:04.8193444Z r0 onebyte      t=4 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.21 steal 0.0% 
+2026-11-13T12:01:05.1060534Z r0 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.20 steal 0.0% 
+2026-11-13T12:01:05.3928711Z r0 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:01:05.6798441Z r0 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:01:05.9669300Z r0 pattern      t=2 mibz2            wall   0.022 cpu   0.044 rss    22MB others 0.17 steal 0.0% 
+2026-11-13T12:01:06.2537387Z r0 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.044 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:01:06.5413692Z r0 pattern      t=4 mibz2            wall   0.029 cpu   0.081 rss    44MB others 0.26 steal 0.0% 
+2026-11-13T12:01:06.8298494Z r0 pattern      t=4 mibz2@base/ab    wall   0.027 cpu   0.080 rss    45MB others 0.00 steal 0.0% 
+2026-11-13T12:01:07.2184082Z r0 random       t=1 mibz2            wall   0.135 cpu   0.137 rss    23MB others 0.10 steal 0.0% 
+2026-11-13T12:01:07.6068916Z r0 random       t=1 mibz2@base/ab    wall   0.134 cpu   0.136 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:01:07.9453066Z r0 random       t=2 mibz2            wall   0.079 cpu   0.150 rss    38MB others 0.00 steal 0.0% 
+2026-11-13T12:01:08.2941218Z r0 random       t=2 mibz2@base/ab    wall   0.082 cpu   0.153 rss    35MB others 0.18 steal 0.0% 
+2026-11-13T12:01:08.6265832Z r0 random       t=4 mibz2            wall   0.068 cpu   0.205 rss    49MB others 0.06 steal 0.0% 
+2026-11-13T12:01:08.9610355Z r0 random       t=4 mibz2@base/ab    wall   0.072 cpu   0.209 rss    49MB others 0.25 steal 0.0% 
+2026-11-13T12:01:09.3647642Z r0 records      t=1 mibz2            wall   0.148 cpu   0.150 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:01:09.7688600Z r0 records      t=1 mibz2@base/ab    wall   0.147 cpu   0.150 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:01:10.1276984Z r0 records      t=2 mibz2            wall   0.094 cpu   0.173 rss    44MB others 0.07 steal 0.0% 
+2026-11-13T12:01:10.4764430Z r0 records      t=2 mibz2@base/ab    wall   0.090 cpu   0.169 rss    42MB others 0.01 steal 0.0% 
+2026-11-13T12:01:10.8210054Z r0 records      t=4 mibz2            wall   0.075 cpu   0.240 rss    53MB others 0.11 steal 0.0% 
+2026-11-13T12:01:11.1666229Z r0 records      t=4 mibz2@base/ab    wall   0.079 cpu   0.257 rss    56MB others 0.03 steal 0.0% 
+2026-11-13T12:01:11.4330717Z r0 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.30 steal 0.0% 
+2026-11-13T12:01:11.6995142Z r0 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.29 steal 0.0% 
+2026-11-13T12:01:11.9761763Z r0 runs         t=2 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:01:12.2528155Z r0 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.15 steal 0.0% 
+2026-11-13T12:01:12.5293790Z r0 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:01:12.8059821Z r0 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.15 steal 0.0% 
+2026-11-13T12:01:13.1285197Z r0 text         t=1 mibz2            wall   0.066 cpu   0.068 rss    19MB others 0.03 steal 0.0% 
+2026-11-13T12:01:13.4509396Z r0 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:01:13.7586208Z r0 text         t=2 mibz2            wall   0.048 cpu   0.085 rss    37MB others 0.00 steal 0.0% 
+2026-11-13T12:01:14.0664039Z r0 text         t=2 mibz2@base/ab    wall   0.045 cpu   0.083 rss    35MB others 0.30 steal 0.0% 
+2026-11-13T12:01:14.3684284Z r0 text         t=4 mibz2            wall   0.039 cpu   0.127 rss    54MB others 0.05 steal 0.0% 
+2026-11-13T12:01:14.6674523Z r0 text         t=4 mibz2@base/ab    wall   0.040 cpu   0.128 rss    58MB others 0.26 steal 0.0% 
+2026-11-13T12:01:15.4438491Z r0 wikidata     t=1 mibz2            wall   0.522 cpu   0.524 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:01:16.2152840Z r0 wikidata     t=1 mibz2@base/ab    wall   0.515 cpu   0.517 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:01:16.7809443Z r0 wikidata     t=2 mibz2            wall   0.299 cpu   0.578 rss    52MB others 0.10 steal 0.0% 
+2026-11-13T12:01:17.3365651Z r0 wikidata     t=2 mibz2@base/ab    wall   0.296 cpu   0.571 rss    51MB others 0.03 steal 0.0% 
+2026-11-13T12:01:17.8586996Z r0 wikidata     t=4 mibz2            wall   0.257 cpu   0.936 rss    81MB others 0.05 steal 0.0% 
+2026-11-13T12:01:18.3825156Z r0 wikidata     t=4 mibz2@base/ab    wall   0.257 cpu   0.953 rss    80MB others 0.03 steal 0.0% 
+2026-11-13T12:01:18.6590119Z r1 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.30 steal 0.0% 
+2026-11-13T12:01:18.9356694Z r1 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:19.2226178Z r1 onebyte      t=2 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.19 steal 0.0% 
+2026-11-13T12:01:19.5094947Z r1 onebyte      t=2 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.19 steal 0.0% 
+2026-11-13T12:01:19.7962683Z r1 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:20.0831315Z r1 onebyte      t=4 mibz2            wall   0.022 cpu   0.024 rss    33MB others 0.17 steal 0.0% 
+2026-11-13T12:01:20.3700774Z r1 pattern      t=1 mibz2@base/ab    wall   0.034 cpu   0.035 rss    16MB others 0.12 steal 0.0% 
+2026-11-13T12:01:20.6571379Z r1 pattern      t=1 mibz2            wall   0.034 cpu   0.035 rss    16MB others 0.00 steal 0.0% 
+2026-11-13T12:01:20.9442111Z r1 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.044 rss    22MB others 0.45 steal 0.0% 
+2026-11-13T12:01:21.2313680Z r1 pattern      t=2 mibz2            wall   0.022 cpu   0.044 rss    22MB others 0.15 steal 0.0% 
+2026-11-13T12:01:21.5191759Z r1 pattern      t=4 mibz2@base/ab    wall   0.024 cpu   0.083 rss    40MB others 0.18 steal 0.0% 
+2026-11-13T12:01:21.8084075Z r1 pattern      t=4 mibz2            wall   0.025 cpu   0.089 rss    39MB others 0.27 steal 0.0% 
+2026-11-13T12:01:22.1979510Z r1 random       t=1 mibz2@base/ab    wall   0.136 cpu   0.138 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:01:22.5864574Z r1 random       t=1 mibz2            wall   0.135 cpu   0.137 rss    23MB others 0.09 steal 0.0% 
+2026-11-13T12:01:22.9350485Z r1 random       t=2 mibz2@base/ab    wall   0.084 cpu   0.154 rss    38MB others 0.06 steal 0.0% 
+2026-11-13T12:01:23.2733981Z r1 random       t=2 mibz2            wall   0.079 cpu   0.152 rss    39MB others 0.00 steal 0.0% 
+2026-11-13T12:01:23.6079508Z r1 random       t=4 mibz2@base/ab    wall   0.070 cpu   0.211 rss    51MB others 0.10 steal 0.0% 
+2026-11-13T12:01:23.9385127Z r1 random       t=4 mibz2            wall   0.070 cpu   0.212 rss    52MB others 0.10 steal 0.0% 
+2026-11-13T12:01:24.3424164Z r1 records      t=1 mibz2@base/ab    wall   0.147 cpu   0.149 rss    23MB others 0.07 steal 0.0% 
+2026-11-13T12:01:24.7410608Z r1 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:01:25.0897546Z r1 records      t=2 mibz2@base/ab    wall   0.090 cpu   0.172 rss    43MB others 0.08 steal 0.0% 
+2026-11-13T12:01:25.4384007Z r1 records      t=2 mibz2            wall   0.087 cpu   0.168 rss    44MB others 0.02 steal 0.0% 
+2026-11-13T12:01:25.7819890Z r1 records      t=4 mibz2@base/ab    wall   0.076 cpu   0.241 rss    55MB others 0.10 steal 0.0% 
+2026-11-13T12:01:26.1265952Z r1 records      t=4 mibz2            wall   0.077 cpu   0.228 rss    53MB others 0.02 steal 0.0% 
+2026-11-13T12:01:26.3930429Z r1 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.31 steal 0.0% 
+2026-11-13T12:01:26.6594983Z r1 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.30 steal 0.0% 
+2026-11-13T12:01:26.9362717Z r1 runs         t=2 mibz2@base/ab    wall   0.015 cpu   0.017 rss    24MB others 0.00 steal 0.0% 
+2026-11-13T12:01:27.2129418Z r1 runs         t=2 mibz2            wall   0.014 cpu   0.017 rss    23MB others 0.12 steal 0.0% 
+2026-11-13T12:01:27.4895038Z r1 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.16 steal 0.0% 
+2026-11-13T12:01:27.7662159Z r1 runs         t=4 mibz2            wall   0.015 cpu   0.017 rss    23MB others 0.13 steal 0.0% 
+2026-11-13T12:01:28.0885876Z r1 text         t=1 mibz2@base/ab    wall   0.066 cpu   0.068 rss    19MB others 0.03 steal 0.0% 
+2026-11-13T12:01:28.4111121Z r1 text         t=1 mibz2            wall   0.065 cpu   0.067 rss    19MB others 0.18 steal 0.0% 
+2026-11-13T12:01:28.7187952Z r1 text         t=2 mibz2@base/ab    wall   0.044 cpu   0.082 rss    37MB others 0.13 steal 0.0% 
+2026-11-13T12:01:29.0265143Z r1 text         t=2 mibz2            wall   0.048 cpu   0.086 rss    35MB others 0.00 steal 0.0% 
+2026-11-13T12:01:29.3295918Z r1 text         t=4 mibz2@base/ab    wall   0.039 cpu   0.126 rss    53MB others 0.26 steal 0.0% 
+2026-11-13T12:01:29.6283221Z r1 text         t=4 mibz2            wall   0.041 cpu   0.126 rss    54MB others 0.29 steal 0.0% 
+2026-11-13T12:01:30.4034685Z r1 wikidata     t=1 mibz2@base/ab    wall   0.520 cpu   0.522 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:01:31.1787246Z r1 wikidata     t=1 mibz2            wall   0.517 cpu   0.519 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:01:31.7338985Z r1 wikidata     t=2 mibz2@base/ab    wall   0.290 cpu   0.571 rss    52MB others 0.06 steal 0.0% 
+2026-11-13T12:01:32.2889258Z r1 wikidata     t=2 mibz2            wall   0.293 cpu   0.569 rss    51MB others 0.04 steal 0.0% 
+2026-11-13T12:01:32.8149781Z r1 wikidata     t=4 mibz2@base/ab    wall   0.260 cpu   0.954 rss    79MB others 0.02 steal 0.0% 
+2026-11-13T12:01:33.3382006Z r1 wikidata     t=4 mibz2            wall   0.263 cpu   0.957 rss    79MB others 0.01 steal 0.0% 
+2026-11-13T12:01:33.6148127Z r2 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.30 steal 0.0% 
+2026-11-13T12:01:33.8915396Z r2 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:34.1785191Z r2 onebyte      t=2 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.18 steal 0.0% 
+2026-11-13T12:01:34.4654327Z r2 onebyte      t=2 mibz2            wall   0.022 cpu   0.024 rss    33MB others 0.16 steal 0.0% 
+2026-11-13T12:01:34.7156716Z   waiting: others keep 0.56 cores busy, one CPU 0.52 (load 0.77)
+2026-11-13T12:01:55.0023959Z r2 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.024 rss    33MB others 0.18 steal 0.0% 
+2026-11-13T12:01:55.2893394Z r2 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:01:55.5760799Z r2 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:01:55.8629664Z r2 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:01:56.1500558Z r2 pattern      t=2 mibz2@base/ab    wall   0.023 cpu   0.043 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:01:56.4373405Z r2 pattern      t=2 mibz2            wall   0.025 cpu   0.041 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:01:56.7245245Z r2 pattern      t=4 mibz2@base/ab    wall   0.026 cpu   0.087 rss    41MB others 0.07 steal 0.0% 
+2026-11-13T12:01:57.0124089Z r2 pattern      t=4 mibz2            wall   0.024 cpu   0.086 rss    38MB others 0.09 steal 0.0% 
+2026-11-13T12:01:57.4012146Z r2 random       t=1 mibz2@base/ab    wall   0.133 cpu   0.136 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:01:57.7901345Z r2 random       t=1 mibz2            wall   0.134 cpu   0.135 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:01:58.1387299Z r2 random       t=2 mibz2@base/ab    wall   0.082 cpu   0.152 rss    40MB others 0.00 steal 0.0% 
+2026-11-13T12:01:58.4874526Z r2 random       t=2 mibz2            wall   0.083 cpu   0.152 rss    37MB others 0.08 steal 0.0% 
+2026-11-13T12:01:58.8219660Z r2 random       t=4 mibz2@base/ab    wall   0.070 cpu   0.213 rss    48MB others 0.00 steal 0.0% 
+2026-11-13T12:01:59.1583486Z r2 random       t=4 mibz2            wall   0.071 cpu   0.205 rss    50MB others 0.05 steal 0.0% 
+2026-11-13T12:01:59.5572712Z r2 records      t=1 mibz2@base/ab    wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:01:59.9569223Z r2 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:02:00.3056547Z r2 records      t=2 mibz2@base/ab    wall   0.087 cpu   0.165 rss    39MB others 0.05 steal 0.0% 
+2026-11-13T12:02:00.6543850Z r2 records      t=2 mibz2            wall   0.087 cpu   0.164 rss    41MB others 0.06 steal 0.0% 
+2026-11-13T12:02:00.9979619Z r2 records      t=4 mibz2@base/ab    wall   0.075 cpu   0.233 rss    54MB others 0.08 steal 0.0% 
+2026-11-13T12:02:01.3392289Z r2 records      t=4 mibz2            wall   0.079 cpu   0.247 rss    56MB others 0.03 steal 0.0% 
+2026-11-13T12:02:01.6056334Z r2 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.30 steal 0.0% 
+2026-11-13T12:02:01.8720903Z r2 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:02.1487689Z r2 runs         t=2 mibz2@base/ab    wall   0.015 cpu   0.017 rss    23MB others 0.12 steal 0.0% 
+2026-11-13T12:02:02.4253496Z r2 runs         t=2 mibz2            wall   0.014 cpu   0.017 rss    23MB others 0.51 steal 0.0% 
+2026-11-13T12:02:02.7019311Z r2 runs         t=4 mibz2@base/ab    wall   0.015 cpu   0.017 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:02.9785929Z r2 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.54 steal 0.0% 
+2026-11-13T12:02:03.3012249Z r2 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.00 steal 0.0% 
+2026-11-13T12:02:03.6241808Z r2 text         t=1 mibz2            wall   0.065 cpu   0.067 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:02:03.9317314Z r2 text         t=2 mibz2@base/ab    wall   0.044 cpu   0.083 rss    37MB others 0.13 steal 0.0% 
+2026-11-13T12:02:04.2393367Z r2 text         t=2 mibz2            wall   0.043 cpu   0.082 rss    35MB others 0.31 steal 0.0% 
+2026-11-13T12:02:04.5418884Z r2 text         t=4 mibz2@base/ab    wall   0.040 cpu   0.127 rss    54MB others 0.00 steal 0.0% 
+2026-11-13T12:02:04.8445075Z r2 text         t=4 mibz2            wall   0.040 cpu   0.127 rss    54MB others 0.25 steal 0.0% 
+2026-11-13T12:02:05.6202661Z r2 wikidata     t=1 mibz2@base/ab    wall   0.519 cpu   0.521 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:02:06.4017650Z r2 wikidata     t=1 mibz2            wall   0.524 cpu   0.526 rss    26MB others 0.03 steal 0.0% 
+2026-11-13T12:02:06.9674317Z r2 wikidata     t=2 mibz2@base/ab    wall   0.305 cpu   0.564 rss    52MB others 0.08 steal 0.0% 
+2026-11-13T12:02:07.5221413Z r2 wikidata     t=2 mibz2            wall   0.297 cpu   0.566 rss    51MB others 0.05 steal 0.0% 
+2026-11-13T12:02:08.0499237Z r2 wikidata     t=4 mibz2@base/ab    wall   0.257 cpu   0.934 rss    80MB others 0.02 steal 0.0% 
+2026-11-13T12:02:08.5767967Z r2 wikidata     t=4 mibz2            wall   0.256 cpu   0.960 rss    81MB others 0.07 steal 0.0% 
+2026-11-13T12:02:08.8534050Z r3 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    34MB others 0.00 steal 0.0% 
+2026-11-13T12:02:09.1301508Z r3 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.31 steal 0.0% 
+2026-11-13T12:02:09.4170685Z r3 onebyte      t=2 mibz2            wall   0.020 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:09.6938574Z r3 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.29 steal 0.0% 
+2026-11-13T12:02:09.9807219Z r3 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.20 steal 0.0% 
+2026-11-13T12:02:10.2674858Z r3 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:10.5543080Z r3 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:02:10.8410281Z r3 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:02:11.1283034Z r3 pattern      t=2 mibz2            wall   0.021 cpu   0.043 rss    22MB others 0.20 steal 0.0% 
+2026-11-13T12:02:11.4153549Z r3 pattern      t=2 mibz2@base/ab    wall   0.021 cpu   0.043 rss    22MB others 0.19 steal 0.0% 
+2026-11-13T12:02:11.7025004Z r3 pattern      t=4 mibz2            wall   0.025 cpu   0.082 rss    39MB others 0.23 steal 0.0% 
+2026-11-13T12:02:11.9895804Z r3 pattern      t=4 mibz2@base/ab    wall   0.025 cpu   0.083 rss    41MB others 0.00 steal 0.0% 
+2026-11-13T12:02:12.3781100Z r3 random       t=1 mibz2            wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:12.7668899Z r3 random       t=1 mibz2@base/ab    wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:13.1052112Z r3 random       t=2 mibz2            wall   0.081 cpu   0.151 rss    37MB others 0.11 steal 0.0% 
+2026-11-13T12:02:13.4435356Z r3 random       t=2 mibz2@base/ab    wall   0.081 cpu   0.156 rss    40MB others 0.05 steal 0.0% 
+2026-11-13T12:02:13.7784553Z r3 random       t=4 mibz2            wall   0.072 cpu   0.204 rss    51MB others 0.18 steal 0.0% 
+2026-11-13T12:02:14.1132557Z r3 random       t=4 mibz2@base/ab    wall   0.072 cpu   0.209 rss    51MB others 0.01 steal 0.0% 
+2026-11-13T12:02:14.5123952Z r3 records      t=1 mibz2            wall   0.146 cpu   0.148 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:02:14.9111406Z r3 records      t=1 mibz2@base/ab    wall   0.146 cpu   0.147 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:15.2597590Z r3 records      t=2 mibz2            wall   0.088 cpu   0.166 rss    39MB others 0.04 steal 0.0% 
+2026-11-13T12:02:15.6084308Z r3 records      t=2 mibz2@base/ab    wall   0.087 cpu   0.165 rss    41MB others 0.15 steal 0.0% 
+2026-11-13T12:02:15.9539673Z r3 records      t=4 mibz2            wall   0.079 cpu   0.244 rss    55MB others 0.06 steal 0.0% 
+2026-11-13T12:02:16.2944815Z r3 records      t=4 mibz2@base/ab    wall   0.074 cpu   0.245 rss    57MB others 0.05 steal 0.0% 
+2026-11-13T12:02:16.5609602Z r3 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:16.8271710Z r3 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:17.1038304Z r3 runs         t=2 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:17.3805532Z r3 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.14 steal 0.0% 
+2026-11-13T12:02:17.6570734Z r3 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:17.9336566Z r3 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:18.2563571Z r3 text         t=1 mibz2            wall   0.065 cpu   0.067 rss    19MB others 0.04 steal 0.0% 
+2026-11-13T12:02:18.5787776Z r3 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.00 steal 0.0% 
+2026-11-13T12:02:18.8863659Z r3 text         t=2 mibz2            wall   0.045 cpu   0.085 rss    38MB others 0.09 steal 0.0% 
+2026-11-13T12:02:19.1940785Z r3 text         t=2 mibz2@base/ab    wall   0.046 cpu   0.083 rss    37MB others 0.00 steal 0.0% 
+2026-11-13T12:02:19.4935130Z r3 text         t=4 mibz2            wall   0.040 cpu   0.127 rss    56MB others 0.26 steal 0.0% 
+2026-11-13T12:02:19.7915192Z r3 text         t=4 mibz2@base/ab    wall   0.040 cpu   0.128 rss    56MB others 0.25 steal 0.0% 
+2026-11-13T12:02:20.5663656Z r3 wikidata     t=1 mibz2            wall   0.519 cpu   0.522 rss    26MB others 0.00 steal 0.0% 
+2026-11-13T12:02:21.3361989Z r3 wikidata     t=1 mibz2@base/ab    wall   0.512 cpu   0.514 rss    26MB others 0.00 steal 0.0% 
+2026-11-13T12:02:21.9017967Z r3 wikidata     t=2 mibz2            wall   0.302 cpu   0.569 rss    52MB others 0.07 steal 0.0% 
+2026-11-13T12:02:22.4569344Z r3 wikidata     t=2 mibz2@base/ab    wall   0.291 cpu   0.571 rss    52MB others 0.06 steal 0.0% 
+2026-11-13T12:02:22.9750468Z r3 wikidata     t=4 mibz2            wall   0.257 cpu   0.941 rss    79MB others 0.07 steal 0.0% 
+2026-11-13T12:02:23.4948021Z r3 wikidata     t=4 mibz2@base/ab    wall   0.257 cpu   0.932 rss    82MB others 0.07 steal 0.0% 
+2026-11-13T12:02:23.7713417Z r4 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:24.0479956Z r4 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:24.3349627Z r4 onebyte      t=2 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.19 steal 0.0% 
+2026-11-13T12:02:24.6116733Z r4 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:24.8984305Z r4 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.20 steal 0.0% 
+2026-11-13T12:02:25.1853104Z r4 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:25.4721994Z r4 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:02:25.7589306Z r4 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.00 steal 0.0% 
+2026-11-13T12:02:26.0459790Z r4 pattern      t=2 mibz2            wall   0.022 cpu   0.045 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:02:26.3331190Z r4 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.044 rss    22MB others 0.16 steal 0.0% 
+2026-11-13T12:02:26.6204254Z r4 pattern      t=4 mibz2            wall   0.024 cpu   0.088 rss    39MB others 0.33 steal 0.0% 
+2026-11-13T12:02:26.9125934Z r4 pattern      t=4 mibz2@base/ab    wall   0.023 cpu   0.083 rss    39MB others 0.16 steal 0.0% 
+2026-11-13T12:02:27.3014309Z r4 random       t=1 mibz2            wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:27.6908494Z r4 random       t=1 mibz2@base/ab    wall   0.132 cpu   0.134 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:28.0292460Z r4 random       t=2 mibz2            wall   0.079 cpu   0.152 rss    39MB others 0.32 steal 0.0% 
+2026-11-13T12:02:28.3676065Z r4 random       t=2 mibz2@base/ab    wall   0.080 cpu   0.152 rss    41MB others 0.09 steal 0.0% 
+2026-11-13T12:02:28.7020875Z r4 random       t=4 mibz2            wall   0.070 cpu   0.206 rss    50MB others 0.00 steal 0.0% 
+2026-11-13T12:02:29.0362937Z r4 random       t=4 mibz2@base/ab    wall   0.072 cpu   0.205 rss    50MB others 0.00 steal 0.0% 
+2026-11-13T12:02:29.4400767Z r4 records      t=1 mibz2            wall   0.146 cpu   0.148 rss    23MB others 0.08 steal 0.0% 
+2026-11-13T12:02:29.8390221Z r4 records      t=1 mibz2@base/ab    wall   0.144 cpu   0.146 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:30.1877794Z r4 records      t=2 mibz2            wall   0.089 cpu   0.169 rss    43MB others 0.22 steal 0.0% 
+2026-11-13T12:02:30.5364050Z r4 records      t=2 mibz2@base/ab    wall   0.089 cpu   0.167 rss    42MB others 0.00 steal 0.0% 
+2026-11-13T12:02:30.8803458Z r4 records      t=4 mibz2            wall   0.079 cpu   0.249 rss    56MB others 0.23 steal 0.0% 
+2026-11-13T12:02:31.2273062Z r4 records      t=4 mibz2@base/ab    wall   0.078 cpu   0.240 rss    56MB others 0.00 steal 0.0% 
+2026-11-13T12:02:31.4938699Z r4 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:31.7603693Z r4 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.31 steal 0.0% 
+2026-11-13T12:02:32.0370574Z r4 runs         t=2 mibz2            wall   0.014 cpu   0.017 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:32.3138537Z r4 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.017 rss    23MB others 0.51 steal 0.0% 
+2026-11-13T12:02:32.5904022Z r4 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.16 steal 0.0% 
+2026-11-13T12:02:32.8670344Z r4 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.54 steal 0.0% 
+2026-11-13T12:02:33.1895437Z r4 text         t=1 mibz2            wall   0.065 cpu   0.067 rss    19MB others 0.04 steal 0.0% 
+2026-11-13T12:02:33.5121118Z r4 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.04 steal 0.0% 
+2026-11-13T12:02:33.8198368Z r4 text         t=2 mibz2            wall   0.047 cpu   0.089 rss    36MB others 0.02 steal 0.0% 
+2026-11-13T12:02:34.1275409Z r4 text         t=2 mibz2@base/ab    wall   0.043 cpu   0.083 rss    35MB others 0.30 steal 0.0% 
+2026-11-13T12:02:34.4306094Z r4 text         t=4 mibz2            wall   0.039 cpu   0.126 rss    55MB others 0.07 steal 0.0% 
+2026-11-13T12:02:34.7459678Z r4 text         t=4 mibz2@base/ab    wall   0.048 cpu   0.129 rss    54MB others 0.79 steal 0.0% 
+2026-11-13T12:02:35.5317166Z r4 wikidata     t=1 mibz2            wall   0.530 cpu   0.532 rss    26MB others 0.78 steal 0.0% 
+2026-11-13T12:02:36.3120341Z r4 wikidata     t=1 mibz2@base/ab    wall   0.522 cpu   0.524 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:02:36.8881377Z r4 wikidata     t=2 mibz2            wall   0.311 cpu   0.605 rss    52MB others 0.01 steal 0.0% 
+2026-11-13T12:02:37.4438896Z r4 wikidata     t=2 mibz2@base/ab    wall   0.296 cpu   0.583 rss    52MB others 0.19 steal 0.0% 
+2026-11-13T12:02:37.9737940Z r4 wikidata     t=4 mibz2            wall   0.265 cpu   0.952 rss    81MB others 0.03 steal 0.0% 
+2026-11-13T12:02:38.5005105Z r4 wikidata     t=4 mibz2@base/ab    wall   0.261 cpu   0.953 rss    80MB others 0.02 steal 0.0% 
+2026-11-13T12:02:38.7769679Z r5 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:39.0535438Z r5 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.31 steal 0.0% 
+2026-11-13T12:02:39.3404312Z r5 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.023 rss    33MB others 0.20 steal 0.0% 
+2026-11-13T12:02:39.6273532Z r5 onebyte      t=2 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.19 steal 0.0% 
+2026-11-13T12:02:39.9142118Z r5 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:40.2009978Z r5 onebyte      t=4 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:40.4876846Z r5 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:02:40.7745732Z r5 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:02:41.0719202Z r5 pattern      t=2 mibz2@base/ab    wall   0.032 cpu   0.046 rss    25MB others 0.00 steal 0.0% 
+2026-11-13T12:02:41.3588677Z r5 pattern      t=2 mibz2            wall   0.025 cpu   0.044 rss    22MB others 0.16 steal 0.0% 
+2026-11-13T12:02:41.6488003Z r5 pattern      t=4 mibz2@base/ab    wall   0.027 cpu   0.078 rss    44MB others 0.30 steal 0.0% 
+2026-11-13T12:02:41.9359338Z r5 pattern      t=4 mibz2            wall   0.025 cpu   0.081 rss    42MB others 0.00 steal 0.0% 
+2026-11-13T12:02:42.3242805Z r5 random       t=1 mibz2@base/ab    wall   0.134 cpu   0.136 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:42.7135199Z r5 random       t=1 mibz2            wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:43.0518130Z r5 random       t=2 mibz2@base/ab    wall   0.082 cpu   0.152 rss    38MB others 0.00 steal 0.0% 
+2026-11-13T12:02:43.4005070Z r5 random       t=2 mibz2            wall   0.086 cpu   0.158 rss    40MB others 0.23 steal 0.0% 
+2026-11-13T12:02:43.7349606Z r5 random       t=4 mibz2@base/ab    wall   0.070 cpu   0.214 rss    51MB others 0.00 steal 0.0% 
+2026-11-13T12:02:44.0689928Z r5 random       t=4 mibz2            wall   0.070 cpu   0.213 rss    48MB others 0.08 steal 0.0% 
+2026-11-13T12:02:44.4729921Z r5 records      t=1 mibz2@base/ab    wall   0.147 cpu   0.149 rss    23MB others 0.07 steal 0.0% 
+2026-11-13T12:02:44.8717512Z r5 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:02:45.2205489Z r5 records      t=2 mibz2@base/ab    wall   0.089 cpu   0.170 rss    41MB others 0.10 steal 0.0% 
+2026-11-13T12:02:45.5794481Z r5 records      t=2 mibz2            wall   0.102 cpu   0.198 rss    40MB others 0.02 steal 0.0% 
+2026-11-13T12:02:45.9140497Z r5 records      t=4 mibz2@base/ab    wall   0.075 cpu   0.234 rss    53MB others 0.19 steal 0.0% 
+2026-11-13T12:02:46.2574222Z r5 records      t=4 mibz2            wall   0.081 cpu   0.235 rss    54MB others 0.00 steal 0.0% 
+2026-11-13T12:02:46.5237299Z r5 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.30 steal 0.0% 
+2026-11-13T12:02:46.7902591Z r5 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:47.0669630Z r5 runs         t=2 mibz2@base/ab    wall   0.015 cpu   0.017 rss    24MB others 0.50 steal 0.0% 
+2026-11-13T12:02:47.3435870Z r5 runs         t=2 mibz2            wall   0.014 cpu   0.016 rss    24MB others 0.15 steal 0.0% 
+2026-11-13T12:02:47.6201419Z r5 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.16 steal 0.0% 
+2026-11-13T12:02:47.8966848Z r5 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.15 steal 0.0% 
+2026-11-13T12:02:48.2192011Z r5 text         t=1 mibz2@base/ab    wall   0.066 cpu   0.068 rss    19MB others 0.03 steal 0.0% 
+2026-11-13T12:02:48.5413752Z r5 text         t=1 mibz2            wall   0.064 cpu   0.066 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:02:48.8491914Z r5 text         t=2 mibz2@base/ab    wall   0.044 cpu   0.082 rss    37MB others 0.13 steal 0.0% 
+2026-11-13T12:02:49.1567359Z r5 text         t=2 mibz2            wall   0.046 cpu   0.085 rss    36MB others 0.09 steal 0.0% 
+2026-11-13T12:02:49.4647637Z r5 text         t=4 mibz2@base/ab    wall   0.043 cpu   0.126 rss    54MB others 0.07 steal 0.0% 
+2026-11-13T12:02:49.7635031Z r5 text         t=4 mibz2            wall   0.041 cpu   0.131 rss    54MB others 0.19 steal 0.0% 
+2026-11-13T12:02:50.5398974Z r5 wikidata     t=1 mibz2@base/ab    wall   0.522 cpu   0.524 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:02:51.3149381Z r5 wikidata     t=1 mibz2            wall   0.521 cpu   0.523 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:02:51.8904274Z r5 wikidata     t=2 mibz2@base/ab    wall   0.312 cpu   0.600 rss    52MB others 0.06 steal 0.0% 
+2026-11-13T12:02:52.4452983Z r5 wikidata     t=2 mibz2            wall   0.291 cpu   0.569 rss    52MB others 0.04 steal 0.0% 
+2026-11-13T12:02:52.9685493Z r5 wikidata     t=4 mibz2@base/ab    wall   0.257 cpu   0.939 rss    81MB others 0.04 steal 0.0% 
+2026-11-13T12:02:53.4865674Z r5 wikidata     t=4 mibz2            wall   0.257 cpu   0.957 rss    80MB others 0.05 steal 0.0% 
+2026-11-13T12:02:53.7632072Z r6 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:54.0398155Z r6 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:54.3265959Z r6 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:54.6133312Z r6 onebyte      t=2 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.21 steal 0.0% 
+2026-11-13T12:02:54.9001785Z r6 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.023 rss    33MB others 0.20 steal 0.0% 
+2026-11-13T12:02:55.1869242Z r6 onebyte      t=4 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:02:55.4736374Z r6 pattern      t=1 mibz2@base/ab    wall   0.034 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:02:55.7606497Z r6 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.13 steal 0.0% 
+2026-11-13T12:02:56.0475597Z r6 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.043 rss    22MB others 0.19 steal 0.0% 
+2026-11-13T12:02:56.3347395Z r6 pattern      t=2 mibz2            wall   0.024 cpu   0.043 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:02:56.6223804Z r6 pattern      t=4 mibz2@base/ab    wall   0.025 cpu   0.089 rss    39MB others 0.30 steal 0.0% 
+2026-11-13T12:02:56.9103772Z r6 pattern      t=4 mibz2            wall   0.025 cpu   0.089 rss    38MB others 0.02 steal 0.0% 
+2026-11-13T12:02:57.2989851Z r6 random       t=1 mibz2@base/ab    wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:02:57.6882678Z r6 random       t=1 mibz2            wall   0.134 cpu   0.136 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:02:58.0370231Z r6 random       t=2 mibz2@base/ab    wall   0.083 cpu   0.155 rss    39MB others 0.25 steal 0.0% 
+2026-11-13T12:02:58.3856040Z r6 random       t=2 mibz2            wall   0.085 cpu   0.156 rss    41MB others 0.04 steal 0.0% 
+2026-11-13T12:02:58.7193345Z r6 random       t=4 mibz2@base/ab    wall   0.071 cpu   0.211 rss    48MB others 0.11 steal 0.0% 
+2026-11-13T12:02:59.0489720Z r6 random       t=4 mibz2            wall   0.067 cpu   0.208 rss    48MB others 0.03 steal 0.0% 
+2026-11-13T12:02:59.4528621Z r6 records      t=1 mibz2@base/ab    wall   0.146 cpu   0.148 rss    23MB others 0.08 steal 0.0% 
+2026-11-13T12:02:59.8524393Z r6 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:03:00.2060751Z r6 records      t=2 mibz2@base/ab    wall   0.089 cpu   0.170 rss    44MB others 0.10 steal 0.0% 
+2026-11-13T12:03:00.5546739Z r6 records      t=2 mibz2            wall   0.085 cpu   0.164 rss    39MB others 0.06 steal 0.0% 
+2026-11-13T12:03:00.8996099Z r6 records      t=4 mibz2@base/ab    wall   0.078 cpu   0.241 rss    55MB others 0.09 steal 0.0% 
+2026-11-13T12:03:01.2414863Z r6 records      t=4 mibz2            wall   0.077 cpu   0.238 rss    54MB others 0.13 steal 0.0% 
+2026-11-13T12:03:01.5079011Z r6 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.28 steal 0.0% 
+2026-11-13T12:03:01.7744992Z r6 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:02.0509861Z r6 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.017 rss    24MB others 0.52 steal 0.0% 
+2026-11-13T12:03:02.3277565Z r6 runs         t=2 mibz2            wall   0.014 cpu   0.017 rss    23MB others 0.51 steal 0.0% 
+2026-11-13T12:03:02.6042275Z r6 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.53 steal 0.0% 
+2026-11-13T12:03:02.8808865Z r6 runs         t=4 mibz2            wall   0.015 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:03.2033148Z r6 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:03:03.5258478Z r6 text         t=1 mibz2            wall   0.065 cpu   0.066 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:03:03.8335397Z r6 text         t=2 mibz2@base/ab    wall   0.047 cpu   0.084 rss    35MB others 0.28 steal 0.0% 
+2026-11-13T12:03:04.1412896Z r6 text         t=2 mibz2            wall   0.045 cpu   0.084 rss    36MB others 0.00 steal 0.0% 
+2026-11-13T12:03:04.4404637Z r6 text         t=4 mibz2@base/ab    wall   0.039 cpu   0.127 rss    54MB others 0.06 steal 0.0% 
+2026-11-13T12:03:04.7437434Z r6 text         t=4 mibz2            wall   0.041 cpu   0.125 rss    56MB others 0.09 steal 0.0% 
+2026-11-13T12:03:05.5761416Z r6 wikidata     t=1 mibz2@base/ab    wall   0.577 cpu   0.579 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:03:06.3564633Z r6 wikidata     t=1 mibz2            wall   0.522 cpu   0.524 rss    26MB others 0.03 steal 0.0% 
+2026-11-13T12:03:06.9014112Z r6 wikidata     t=2 mibz2@base/ab    wall   0.285 cpu   0.559 rss    52MB others 0.04 steal 0.0% 
+2026-11-13T12:03:07.4567422Z r6 wikidata     t=2 mibz2            wall   0.288 cpu   0.566 rss    51MB others 0.05 steal 0.0% 
+2026-11-13T12:03:07.9797273Z r6 wikidata     t=4 mibz2@base/ab    wall   0.257 cpu   0.950 rss    83MB others 0.04 steal 0.0% 
+2026-11-13T12:03:08.5062129Z r6 wikidata     t=4 mibz2            wall   0.257 cpu   0.931 rss    80MB others 0.03 steal 0.0% 
+2026-11-13T12:03:08.7828864Z r7 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:09.0594948Z r7 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:09.3363281Z r7 onebyte      t=2 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.29 steal 0.0% 
+2026-11-13T12:03:09.6130325Z r7 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.023 rss    33MB others 0.28 steal 0.0% 
+2026-11-13T12:03:09.8999401Z r7 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:10.1867939Z r7 onebyte      t=4 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.21 steal 0.0% 
+2026-11-13T12:03:10.4736664Z r7 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.12 steal 0.0% 
+2026-11-13T12:03:10.7607353Z r7 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.00 steal 0.0% 
+2026-11-13T12:03:11.0476449Z r7 pattern      t=2 mibz2            wall   0.022 cpu   0.045 rss    24MB others 0.14 steal 0.0% 
+2026-11-13T12:03:11.3348047Z r7 pattern      t=2 mibz2@base/ab    wall   0.025 cpu   0.045 rss    23MB others 0.42 steal 0.0% 
+2026-11-13T12:03:11.6228227Z r7 pattern      t=4 mibz2            wall   0.026 cpu   0.086 rss    41MB others 0.38 steal 0.0% 
+2026-11-13T12:03:11.9104403Z r7 pattern      t=4 mibz2@base/ab    wall   0.025 cpu   0.090 rss    40MB others 0.01 steal 0.0% 
+2026-11-13T12:03:12.2990915Z r7 random       t=1 mibz2            wall   0.134 cpu   0.136 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:03:12.6875980Z r7 random       t=1 mibz2@base/ab    wall   0.132 cpu   0.134 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:13.0260429Z r7 random       t=2 mibz2            wall   0.081 cpu   0.152 rss    39MB others 0.10 steal 0.0% 
+2026-11-13T12:03:13.3746035Z r7 random       t=2 mibz2@base/ab    wall   0.085 cpu   0.155 rss    40MB others 0.05 steal 0.0% 
+2026-11-13T12:03:13.7052857Z r7 random       t=4 mibz2            wall   0.071 cpu   0.201 rss    51MB others 0.11 steal 0.0% 
+2026-11-13T12:03:14.0362530Z r7 random       t=4 mibz2@base/ab    wall   0.072 cpu   0.212 rss    50MB others 0.22 steal 0.0% 
+2026-11-13T12:03:14.4401427Z r7 records      t=1 mibz2            wall   0.148 cpu   0.150 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:14.8447816Z r7 records      t=1 mibz2@base/ab    wall   0.148 cpu   0.150 rss    23MB others 0.06 steal 0.0% 
+2026-11-13T12:03:15.1934144Z r7 records      t=2 mibz2            wall   0.087 cpu   0.165 rss    39MB others 0.05 steal 0.0% 
+2026-11-13T12:03:15.5421974Z r7 records      t=2 mibz2@base/ab    wall   0.087 cpu   0.169 rss    44MB others 0.11 steal 0.0% 
+2026-11-13T12:03:15.8881424Z r7 records      t=4 mibz2            wall   0.080 cpu   0.248 rss    55MB others 0.02 steal 0.0% 
+2026-11-13T12:03:16.2300524Z r7 records      t=4 mibz2@base/ab    wall   0.082 cpu   0.254 rss    53MB others 0.18 steal 0.0% 
+2026-11-13T12:03:16.5016608Z r7 runs         t=1 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.19 steal 0.0% 
+2026-11-13T12:03:16.7732892Z r7 runs         t=1 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.19 steal 0.0% 
+2026-11-13T12:03:17.0499914Z r7 runs         t=2 mibz2            wall   0.015 cpu   0.017 rss    23MB others 0.10 steal 0.0% 
+2026-11-13T12:03:17.3266964Z r7 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.017 rss    23MB others 0.13 steal 0.0% 
+2026-11-13T12:03:17.6033609Z r7 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.15 steal 0.0% 
+2026-11-13T12:03:17.8799903Z r7 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:18.2024449Z r7 text         t=1 mibz2            wall   0.067 cpu   0.069 rss    19MB others 0.00 steal 0.0% 
+2026-11-13T12:03:18.5250586Z r7 text         t=1 mibz2@base/ab    wall   0.067 cpu   0.069 rss    19MB others 0.02 steal 0.0% 
+2026-11-13T12:03:18.8328512Z r7 text         t=2 mibz2            wall   0.044 cpu   0.083 rss    37MB others 0.00 steal 0.0% 
+2026-11-13T12:03:19.1404959Z r7 text         t=2 mibz2@base/ab    wall   0.045 cpu   0.084 rss    38MB others 0.10 steal 0.0% 
+2026-11-13T12:03:19.4399081Z r7 text         t=4 mibz2            wall   0.041 cpu   0.126 rss    57MB others 0.00 steal 0.0% 
+2026-11-13T12:03:19.7477399Z r7 text         t=4 mibz2@base/ab    wall   0.041 cpu   0.128 rss    56MB others 0.21 steal 0.0% 
+2026-11-13T12:03:20.5281562Z r7 wikidata     t=1 mibz2            wall   0.522 cpu   0.524 rss    26MB others 0.05 steal 0.0% 
+2026-11-13T12:03:21.3155981Z r7 wikidata     t=1 mibz2@base/ab    wall   0.531 cpu   0.533 rss    26MB others 0.01 steal 0.0% 
+2026-11-13T12:03:21.8819327Z r7 wikidata     t=2 mibz2            wall   0.302 cpu   0.579 rss    51MB others 0.03 steal 0.0% 
+2026-11-13T12:03:22.4587956Z r7 wikidata     t=2 mibz2@base/ab    wall   0.310 cpu   0.617 rss    52MB others 0.10 steal 0.0% 
+2026-11-13T12:03:22.9857862Z r7 wikidata     t=4 mibz2            wall   0.266 cpu   0.984 rss    81MB others 0.06 steal 0.0% 
+2026-11-13T12:03:23.5151578Z r7 wikidata     t=4 mibz2@base/ab    wall   0.262 cpu   0.958 rss    81MB others 0.04 steal 0.0% 
+2026-11-13T12:03:23.7919261Z r8 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:24.0685313Z r8 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.29 steal 0.0% 
+2026-11-13T12:03:24.3452535Z r8 onebyte      t=2 mibz2            wall   0.020 cpu   0.023 rss    33MB others 0.28 steal 0.0% 
+2026-11-13T12:03:24.6219130Z r8 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.023 rss    33MB others 0.28 steal 0.0% 
+2026-11-13T12:03:24.9087281Z r8 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:25.1955437Z r8 onebyte      t=4 mibz2@base/ab    wall   0.021 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:25.4822192Z r8 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:03:25.7689668Z r8 pattern      t=1 mibz2@base/ab    wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:03:26.0560482Z r8 pattern      t=2 mibz2            wall   0.025 cpu   0.045 rss    22MB others 0.15 steal 0.0% 
+2026-11-13T12:03:26.3430026Z r8 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.044 rss    23MB others 0.17 steal 0.0% 
+2026-11-13T12:03:26.6301907Z r8 pattern      t=4 mibz2            wall   0.024 cpu   0.084 rss    39MB others 0.00 steal 0.0% 
+2026-11-13T12:03:26.9181855Z r8 pattern      t=4 mibz2@base/ab    wall   0.025 cpu   0.082 rss    40MB others 0.22 steal 0.0% 
+2026-11-13T12:03:27.3069318Z r8 random       t=1 mibz2            wall   0.134 cpu   0.136 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:03:27.6953746Z r8 random       t=1 mibz2@base/ab    wall   0.133 cpu   0.135 rss    23MB others 0.04 steal 0.0% 
+2026-11-13T12:03:28.0337986Z r8 random       t=2 mibz2            wall   0.080 cpu   0.154 rss    38MB others 0.07 steal 0.0% 
+2026-11-13T12:03:28.3721924Z r8 random       t=2 mibz2@base/ab    wall   0.081 cpu   0.150 rss    38MB others 0.11 steal 0.0% 
+2026-11-13T12:03:28.7060313Z r8 random       t=4 mibz2            wall   0.069 cpu   0.205 rss    50MB others 0.05 steal 0.0% 
+2026-11-13T12:03:29.0368724Z r8 random       t=4 mibz2@base/ab    wall   0.068 cpu   0.202 rss    50MB others 0.00 steal 0.0% 
+2026-11-13T12:03:29.4355377Z r8 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.02 steal 0.0% 
+2026-11-13T12:03:29.8344638Z r8 records      t=1 mibz2@base/ab    wall   0.143 cpu   0.145 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:03:30.1829670Z r8 records      t=2 mibz2            wall   0.090 cpu   0.172 rss    44MB others 0.08 steal 0.0% 
+2026-11-13T12:03:30.5316238Z r8 records      t=2 mibz2@base/ab    wall   0.086 cpu   0.165 rss    41MB others 0.15 steal 0.0% 
+2026-11-13T12:03:30.8729992Z r8 records      t=4 mibz2            wall   0.077 cpu   0.235 rss    56MB others 0.00 steal 0.0% 
+2026-11-13T12:03:31.2144137Z r8 records      t=4 mibz2@base/ab    wall   0.074 cpu   0.238 rss    55MB others 0.24 steal 0.0% 
+2026-11-13T12:03:31.4809465Z r8 runs         t=1 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:31.7475110Z r8 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.29 steal 0.0% 
+2026-11-13T12:03:32.0243973Z r8 runs         t=2 mibz2            wall   0.015 cpu   0.017 rss    24MB others 0.00 steal 0.0% 
+2026-11-13T12:03:32.3011202Z r8 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.017 rss    24MB others 0.00 steal 0.0% 
+2026-11-13T12:03:32.5777217Z r8 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.15 steal 0.0% 
+2026-11-13T12:03:32.8543567Z r8 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:33.1768630Z r8 text         t=1 mibz2            wall   0.065 cpu   0.067 rss    19MB others 0.00 steal 0.0% 
+2026-11-13T12:03:33.4991571Z r8 text         t=1 mibz2@base/ab    wall   0.064 cpu   0.066 rss    19MB others 0.00 steal 0.0% 
+2026-11-13T12:03:33.8068065Z r8 text         t=2 mibz2            wall   0.048 cpu   0.087 rss    36MB others 0.05 steal 0.0% 
+2026-11-13T12:03:34.1145249Z r8 text         t=2 mibz2@base/ab    wall   0.044 cpu   0.083 rss    37MB others 0.12 steal 0.0% 
+2026-11-13T12:03:34.4176089Z r8 text         t=4 mibz2            wall   0.040 cpu   0.130 rss    54MB others 0.18 steal 0.0% 
+2026-11-13T12:03:34.7323205Z r8 text         t=4 mibz2@base/ab    wall   0.047 cpu   0.125 rss    51MB others 0.86 steal 0.0% 
+2026-11-13T12:03:35.5237896Z r8 wikidata     t=1 mibz2            wall   0.537 cpu   0.539 rss    26MB others 0.93 steal 0.0% 
+2026-11-13T12:03:36.3052600Z r8 wikidata     t=1 mibz2@base/ab    wall   0.527 cpu   0.529 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:03:36.8606975Z r8 wikidata     t=2 mibz2            wall   0.288 cpu   0.568 rss    52MB others 0.04 steal 0.0% 
+2026-11-13T12:03:37.4053704Z r8 wikidata     t=2 mibz2@base/ab    wall   0.284 cpu   0.564 rss    52MB others 0.05 steal 0.0% 
+2026-11-13T12:03:37.9343686Z r8 wikidata     t=4 mibz2            wall   0.259 cpu   0.943 rss    82MB others 0.06 steal 0.0% 
+2026-11-13T12:03:38.4529190Z r8 wikidata     t=4 mibz2@base/ab    wall   0.255 cpu   0.928 rss    81MB others 0.01 steal 0.0% 
+2026-11-13T12:03:38.7295554Z r9 onebyte      t=1 mibz2@base/ab    wall   0.020 cpu   0.022 rss    34MB others 0.00 steal 0.0% 
+2026-11-13T12:03:39.0062772Z r9 onebyte      t=1 mibz2            wall   0.020 cpu   0.022 rss    34MB others 0.00 steal 0.0% 
+2026-11-13T12:03:39.2932237Z r9 onebyte      t=2 mibz2@base/ab    wall   0.020 cpu   0.023 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:39.5799653Z r9 onebyte      t=2 mibz2            wall   0.021 cpu   0.024 rss    33MB others 0.18 steal 0.0% 
+2026-11-13T12:03:39.8667274Z r9 onebyte      t=4 mibz2@base/ab    wall   0.020 cpu   0.022 rss    33MB others 0.00 steal 0.0% 
+2026-11-13T12:03:40.1536103Z r9 onebyte      t=4 mibz2            wall   0.021 cpu   0.023 rss    33MB others 0.47 steal 0.0% 
+2026-11-13T12:03:40.4405564Z r9 pattern      t=1 mibz2@base/ab    wall   0.034 cpu   0.036 rss    16MB others 0.00 steal 0.0% 
+2026-11-13T12:03:40.7273275Z r9 pattern      t=1 mibz2            wall   0.033 cpu   0.035 rss    16MB others 0.14 steal 0.0% 
+2026-11-13T12:03:41.0141933Z r9 pattern      t=2 mibz2@base/ab    wall   0.022 cpu   0.044 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:41.3013052Z r9 pattern      t=2 mibz2            wall   0.021 cpu   0.043 rss    22MB others 0.00 steal 0.0% 
+2026-11-13T12:03:41.5889108Z r9 pattern      t=4 mibz2@base/ab    wall   0.025 cpu   0.088 rss    40MB others 0.06 steal 0.0% 
+2026-11-13T12:03:41.8767938Z r9 pattern      t=4 mibz2            wall   0.026 cpu   0.079 rss    44MB others 0.03 steal 0.0% 
+2026-11-13T12:03:42.2653946Z r9 random       t=1 mibz2@base/ab    wall   0.133 cpu   0.135 rss    23MB others 0.03 steal 0.0% 
+2026-11-13T12:03:42.6538366Z r9 random       t=1 mibz2            wall   0.132 cpu   0.133 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:42.9923786Z r9 random       t=2 mibz2@base/ab    wall   0.081 cpu   0.151 rss    41MB others 0.10 steal 0.0% 
+2026-11-13T12:03:43.3306729Z r9 random       t=2 mibz2            wall   0.081 cpu   0.151 rss    40MB others 0.00 steal 0.0% 
+2026-11-13T12:03:43.6628333Z r9 random       t=4 mibz2@base/ab    wall   0.071 cpu   0.207 rss    52MB others 0.03 steal 0.0% 
+2026-11-13T12:03:43.9972905Z r9 random       t=4 mibz2            wall   0.070 cpu   0.212 rss    48MB others 0.10 steal 0.0% 
+2026-11-13T12:03:44.3961620Z r9 records      t=1 mibz2@base/ab    wall   0.145 cpu   0.147 rss    23MB others 0.08 steal 0.0% 
+2026-11-13T12:03:44.7950089Z r9 records      t=1 mibz2            wall   0.145 cpu   0.147 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:45.1488927Z r9 records      t=2 mibz2@base/ab    wall   0.091 cpu   0.171 rss    43MB others 0.18 steal 0.0% 
+2026-11-13T12:03:45.4975390Z r9 records      t=2 mibz2            wall   0.089 cpu   0.169 rss    42MB others 0.12 steal 0.0% 
+2026-11-13T12:03:45.8423022Z r9 records      t=4 mibz2@base/ab    wall   0.077 cpu   0.233 rss    53MB others 0.00 steal 0.0% 
+2026-11-13T12:03:46.1855995Z r9 records      t=4 mibz2            wall   0.076 cpu   0.232 rss    53MB others 0.09 steal 0.0% 
+2026-11-13T12:03:46.4520413Z r9 runs         t=1 mibz2@base/ab    wall   0.013 cpu   0.015 rss    23MB others 0.29 steal 0.0% 
+2026-11-13T12:03:46.7184889Z r9 runs         t=1 mibz2            wall   0.013 cpu   0.015 rss    23MB others 0.29 steal 0.0% 
+2026-11-13T12:03:46.9951836Z r9 runs         t=2 mibz2@base/ab    wall   0.014 cpu   0.017 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:47.2718883Z r9 runs         t=2 mibz2            wall   0.014 cpu   0.017 rss    24MB others 0.12 steal 0.0% 
+2026-11-13T12:03:47.5485214Z r9 runs         t=4 mibz2@base/ab    wall   0.014 cpu   0.016 rss    23MB others 0.00 steal 0.0% 
+2026-11-13T12:03:47.8251401Z r9 runs         t=4 mibz2            wall   0.014 cpu   0.016 rss    23MB others 0.54 steal 0.0% 
+2026-11-13T12:03:48.1476710Z r9 text         t=1 mibz2@base/ab    wall   0.065 cpu   0.067 rss    19MB others 0.04 steal 0.0% 
+2026-11-13T12:03:48.4701277Z r9 text         t=1 mibz2            wall   0.064 cpu   0.066 rss    19MB others 0.05 steal 0.0% 
+2026-11-13T12:03:48.7777704Z r9 text         t=2 mibz2@base/ab    wall   0.044 cpu   0.083 rss    34MB others 0.30 steal 0.0% 
+2026-11-13T12:03:49.0855112Z r9 text         t=2 mibz2            wall   0.044 cpu   0.083 rss    35MB others 0.30 steal 0.0% 
+2026-11-13T12:03:49.3883825Z r9 text         t=4 mibz2@base/ab    wall   0.039 cpu   0.129 rss    55MB others 0.03 steal 0.0% 
+2026-11-13T12:03:49.6975913Z r9 text         t=4 mibz2            wall   0.042 cpu   0.131 rss    57MB others 0.16 steal 0.0% 
+2026-11-13T12:03:50.4732524Z r9 wikidata     t=1 mibz2@base/ab    wall   0.518 cpu   0.520 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:03:51.2433435Z r9 wikidata     t=1 mibz2            wall   0.515 cpu   0.518 rss    26MB others 0.02 steal 0.0% 
+2026-11-13T12:03:51.7882746Z r9 wikidata     t=2 mibz2@base/ab    wall   0.282 cpu   0.559 rss    52MB others 0.04 steal 0.0% 
+2026-11-13T12:03:52.3437783Z r9 wikidata     t=2 mibz2            wall   0.291 cpu   0.573 rss    52MB others 0.12 steal 0.0% 
+2026-11-13T12:03:52.8727235Z r9 wikidata     t=4 mibz2@base/ab    wall   0.258 cpu   0.940 rss    81MB others 0.11 steal 0.0% 
+2026-11-13T12:03:53.4032474Z r9 wikidata     t=4 mibz2            wall   0.261 cpu   0.950 rss    81MB others 0.04 steal 0.0% 
+2026-11-13T12:03:53.4070630Z ##[group]Run python3 bench/cells-small-spine/pin_inputs.py
+2026-11-13T12:03:53.4071470Z [36;1mpython3 bench/cells-small-spine/pin_inputs.py[0m
+2026-11-13T12:03:53.4072256Z [36;1mCELLS_PINNED_INPUTS="$PWD/cells-corpora" RUSTFLAGS="--cfg mibz2_cells_bench" timeout 300 cargo test --example ab cells_pinned_readers_byte_parity -- --ignored[0m
+2026-11-13T12:03:53.4119564Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:03:53.4119826Z env:
+2026-11-13T12:03:53.4120021Z   ROUNDS: 10
+2026-11-13T12:03:53.4120217Z   SCALE: 4
+2026-11-13T12:03:53.4120410Z   SETTLE: 0.25
+2026-11-13T12:03:53.4120612Z   STAGE_ROUNDS: 5
+2026-11-13T12:03:53.4120835Z   STAGE_REPEATS: 2
+2026-11-13T12:03:53.4121219Z   KERNEL_PASSES: 10
+2026-11-13T12:03:53.4121570Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:03:53.4121951Z   CARGO_TERM_COLOR: never
+2026-11-13T12:03:53.4122375Z   MODE: pr
+2026-11-13T12:03:53.4122622Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:03:53.4122996Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:03:53.4123304Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:03:53.4123554Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:03:53.4123824Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:03:53.4124076Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:03:53.4124303Z   CACHE_ON_FAILURE: false
+2026-11-13T12:03:53.4124539Z   WINDOWS_SOURCE: kept
+2026-11-13T12:03:53.4124780Z   WINDOWS_DIR: windows/wikidata-20261019
+2026-11-13T12:03:53.4125059Z ##[endgroup]
+2026-11-13T12:03:53.5108110Z Traceback (most recent call last):
+2026-11-13T12:03:53.5111269Z   File "/home/runner/work/mibz2/mibz2/bench/cells-small-spine/pin_inputs.py", line 70, in <module>
+2026-11-13T12:03:53.5112048Z     main()
+2026-11-13T12:03:53.5112461Z     ~~~~^^
+2026-11-13T12:03:53.5113310Z   File "/home/runner/work/mibz2/mibz2/bench/cells-small-spine/pin_inputs.py", line 21, in main
+2026-11-13T12:03:53.5114326Z     work.mkdir()
+2026-11-13T12:03:53.5114657Z     ~~~~~~~~~~^^
+2026-11-13T12:03:53.5115109Z   File "/usr/lib/python3.14/pathlib/__init__.py", line 1012, in mkdir
+2026-11-13T12:03:53.5115588Z     os.mkdir(self, mode)
+2026-11-13T12:03:53.5115882Z     ~~~~~~~~^^^^^^^^^^^^
+2026-11-13T12:03:53.5116438Z FileExistsError: [Errno 17] File exists: '/home/runner/work/mibz2/mibz2/target/cells-pinned-generator'
+2026-11-13T12:03:53.5265270Z ##[error]Process completed with exit code 1.
+2026-11-13T12:03:53.5335456Z ##[group]Run if [ -f comment.md ]; then
+2026-11-13T12:03:53.5335826Z [36;1mif [ -f comment.md ]; then[0m
+2026-11-13T12:03:53.5336181Z [36;1m  python3 bench/comment.py final 379 comment.md[0m
+2026-11-13T12:03:53.5336507Z [36;1melse[0m
+2026-11-13T12:03:53.5336788Z [36;1m  python3 bench/comment.py failed 379 "$HEAD_SHA"[0m
+2026-11-13T12:03:53.5337108Z [36;1mfi[0m
+2026-11-13T12:03:53.5383942Z shell: /usr/bin/bash -e {0}
+2026-11-13T12:03:53.5384229Z env:
+2026-11-13T12:03:53.5384423Z   ROUNDS: 10
+2026-11-13T12:03:53.5384620Z   SCALE: 4
+2026-11-13T12:03:53.5384816Z   SETTLE: 0.25
+2026-11-13T12:03:53.5385016Z   STAGE_ROUNDS: 5
+2026-11-13T12:03:53.5385223Z   STAGE_REPEATS: 2
+2026-11-13T12:03:53.5385437Z   KERNEL_PASSES: 10
+2026-11-13T12:03:53.5385753Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:03:53.5386129Z   CARGO_TERM_COLOR: never
+2026-11-13T12:03:53.5386364Z   MODE: pr
+2026-11-13T12:03:53.5386635Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:03:53.5386987Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:03:53.5387297Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:03:53.5387544Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:03:53.5387813Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:03:53.5388072Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:03:53.5388306Z   CACHE_ON_FAILURE: false
+2026-11-13T12:03:53.5388542Z   WINDOWS_SOURCE: kept
+2026-11-13T12:03:53.5388795Z   WINDOWS_DIR: windows/wikidata-20261019
+2026-11-13T12:03:53.5391939Z   GH_TOKEN: ***
+2026-11-13T12:03:53.5392165Z ##[endgroup]
+2026-11-13T12:03:55.2976063Z ##[group]Run actions/upload-artifact@v4
+2026-11-13T12:03:55.2976395Z with:
+2026-11-13T12:03:55.2976685Z   name: bench-pr-4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:03:55.2977424Z   path: runs.jsonl
+env.json
+stages.jsonl
+kernels.jsonl
+result.json
+comment.md
+ab-summary.md
+cells.jsonl
+cells-summary.md
+cells-inputs.json
+codegen.txt
+
+2026-11-13T12:03:55.2978109Z   if-no-files-found: ignore
+2026-11-13T12:03:55.2978357Z   compression-level: 6
+2026-11-13T12:03:55.2978589Z   overwrite: false
+2026-11-13T12:03:55.2978813Z   include-hidden-files: false
+2026-11-13T12:03:55.2979057Z env:
+2026-11-13T12:03:55.2979242Z   ROUNDS: 10
+2026-11-13T12:03:55.2979435Z   SCALE: 4
+2026-11-13T12:03:55.2979618Z   SETTLE: 0.25
+2026-11-13T12:03:55.2979824Z   STAGE_ROUNDS: 5
+2026-11-13T12:03:55.2980027Z   STAGE_REPEATS: 2
+2026-11-13T12:03:55.2980233Z   KERNEL_PASSES: 10
+2026-11-13T12:03:55.2980734Z   RUN_URL: https://github.com/lmmx/mibz2/actions/runs/43421337109
+2026-11-13T12:03:55.2981351Z   CARGO_TERM_COLOR: never
+2026-11-13T12:03:55.2981585Z   MODE: pr
+2026-11-13T12:03:55.2981836Z   HEAD_SHA: 4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359
+2026-11-13T12:03:55.2982178Z   BASE_SHA: 3e7e294cc10f29495e9828181345d74233c549d4
+2026-11-13T12:03:55.2982480Z   ARMS: mibz2,mibz2@base/ab
+2026-11-13T12:03:55.2982733Z   HEAD_DATE: 2026-11-13T11:57:37Z
+2026-11-13T12:03:55.2982997Z   CARGO_HOME: /home/runner/.cargo
+2026-11-13T12:03:55.2983255Z   CARGO_INCREMENTAL: 0
+2026-11-13T12:03:55.2983491Z   CACHE_ON_FAILURE: false
+2026-11-13T12:03:55.2983725Z   WINDOWS_SOURCE: kept
+2026-11-13T12:03:55.2983970Z   WINDOWS_DIR: windows/wikidata-20261019
+2026-11-13T12:03:55.2984247Z ##[endgroup]
+2026-11-13T12:03:55.4715522Z (node:5776) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-13T12:03:55.4716288Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-13T12:03:55.4807799Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-13T12:03:55.4814175Z The least common ancestor is /home/runner/work/mibz2/mibz2. This will be the root directory of the artifact
+2026-11-13T12:03:55.4815415Z With the provided path, there will be 3 files uploaded
+2026-11-13T12:03:55.4817344Z Artifact name is valid!
+2026-11-13T12:03:55.4818617Z Root directory input is valid!
+2026-11-13T12:03:55.7785624Z Beginning upload of artifact content to blob storage
+2026-11-13T12:03:55.8083698Z (node:5776) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-13T12:03:56.0515727Z Uploaded bytes 15403
+2026-11-13T12:03:56.1120152Z Finished uploading artifact content to blob storage!
+2026-11-13T12:03:56.1121424Z SHA256 digest of uploaded artifact zip is f1eeea5ecbb11d77110b2f4630aa7dc351fd063469d3e872869114fb087cfc42
+2026-11-13T12:03:56.1122857Z Finalizing artifact upload
+2026-11-13T12:03:56.5028774Z Artifact bench-pr-4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359.zip successfully finalized. Artifact ID 14033793879
+2026-11-13T12:03:56.5029861Z Artifact bench-pr-4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359 has been successfully uploaded! Final size is 15403 bytes. Artifact ID is 14033793879
+2026-11-13T12:03:56.5035751Z Artifact download URL: https://github.com/lmmx/mibz2/actions/runs/43421337109/artifacts/14033793879
+2026-11-13T12:03:56.5254531Z Post job cleanup.
+2026-11-13T12:03:56.6118547Z [command]/usr/bin/git version
+2026-11-13T12:03:56.6166381Z git version 2.56.1
+2026-11-13T12:03:56.6212906Z Temporarily overriding HOME='/home/runner/work/_temp/04212ac9-42c3-47ff-b5f6-ff5adb44f9a4' before making global git config changes
+2026-11-13T12:03:56.6214351Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-13T12:03:56.6218139Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mibz2/mibz2
+2026-11-13T12:03:56.6254082Z Removing SSH command configuration
+2026-11-13T12:03:56.6261985Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-13T12:03:56.6302835Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-13T12:03:56.6606987Z Removing HTTP extra header
+2026-11-13T12:03:56.6614557Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-13T12:03:56.6660654Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-13T12:03:56.6971770Z Removing includeIf entries pointing to credentials config files
+2026-11-13T12:03:56.6981109Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-13T12:03:56.7008822Z includeif.gitdir:/home/runner/work/mibz2/mibz2/.git.path
+2026-11-13T12:03:56.7009710Z includeif.gitdir:/home/runner/work/mibz2/mibz2/.git/worktrees/*.path
+2026-11-13T12:03:56.7010197Z includeif.gitdir:/github/workspace/.git.path
+2026-11-13T12:03:56.7010629Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-13T12:03:56.7020771Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/mibz2/mibz2/.git.path
+2026-11-13T12:03:56.7045661Z /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7057061Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/mibz2/mibz2/.git.path /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7096059Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/mibz2/mibz2/.git/worktrees/*.path
+2026-11-13T12:03:56.7120045Z /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7131407Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/mibz2/mibz2/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7165792Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-11-13T12:03:56.7190015Z /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7201965Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7239874Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-11-13T12:03:56.7269730Z /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7280246Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config
+2026-11-13T12:03:56.7317845Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-13T12:03:56.7587523Z Removing credentials config '/home/runner/work/_temp/git-credentials-aedbeb75-fcda-4a36-95ee-0549fb3e454a.config'
+2026-11-13T12:03:56.7741367Z Cleaning up orphan processes
+2026-11-13T12:03:56.8104038Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+

@@ -1,5 +1,5 @@
 {
-  "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+  "head": "93781bd9578eae95c599583e387180d673659180",
   "writer_commit": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
   "source_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
   "base_merge": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
@@ -8,5 +8,6 @@
   "service_fixture_only_since_writer": [
     "tests/service.rs"
   ],
-  "team_paths_unchanged_from_master": true
+  "team_paths_unchanged_from_master": true,
+  "unchanged_writer_hash_at_final_head": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d"
 }

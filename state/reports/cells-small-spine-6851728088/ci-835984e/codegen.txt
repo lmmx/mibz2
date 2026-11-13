@@ -1,0 +1,4 @@
+e5c3d5f4b84ce114bc189153af910db0aec82e7068f90da052b5f78244cfc8f1  .codegen/base.text
+afac498033ea3fd2d478eb699058378a6db76a8abe4499e8962dae0c93fa8bae  .codegen/cells.text
+aa6e4686aa056ad90a3be20d5b280a4284721b884967ea7b41b23ed1d856712c  .codegen/head.text
+Default head/base .text: different (diagnostic, not a gate)
