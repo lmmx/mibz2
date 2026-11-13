@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6848513930,
+  "last_examined_comment_id": 6848610020,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1667,11 +1667,17 @@
       "scope": "Defer unexecuted onecore dossier; reconcile376 submission prerequisite and inherited CI failure",
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/376",
-        "https://github.com/lmmx/mibz2/tree/e653ba727be197f11cde1430c0b8e6cde72c9bc0/state/reports/cells-measurement-resume-20261113"
+        "https://github.com/lmmx/mibz2/tree/e653ba727be197f11cde1430c0b8e6cde72c9bc0/state/reports/cells-measurement-resume-20261113",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848610020"
       ],
       "ready_job_queued": false,
       "reason": "Onecore6848164049 deferred unexecuted; recipientcursor still incomplete, no new dispatch.373 green unmerged;376 submissionfix has inherited ClassA lint. Next actions require separate integration and actual preflight; no queue ready.",
       "recipient_cursor_sha": "d4f0aae8fc4265917cecf5e51b9cdd0c1ba65766"
+    },
+    "6848610020": {
+      "status": "completed_own_monitor_log",
+      "comment_updated_at": null,
+      "source_comment_id": 6848513930
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1787,7 +1793,8 @@
     6839520708,
     6839541837,
     6848164049,
-    6848184897
+    6848184897,
+    6848610020
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -1993,8 +2000,10 @@
   },
   "checkpoint": {
     "key": "cells-priority-6848513930",
-    "status": "in_progress_before_post",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6848610020,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848610020"
   },
   "dispatch_history": [
     {
