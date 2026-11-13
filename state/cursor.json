@@ -2324,7 +2324,14 @@
     "6852495550": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T12:11:31Z",
-      "disposition": "Own scoped B5 closure checkpoint verified; ignore self wake."
+      "disposition": "Own scoped B5 closure checkpoint verified; ignore self wake.",
+      "delivery_id": "5ce5fb70-df5b-11f1-93d9-8bf7612c744f"
+    },
+    "6852468714": {
+      "status": "in_progress",
+      "delivery_id": "35433150-df5b-11f1-9e01-c065d69aeff1",
+      "comment_updated_at": "2026-11-13T12:10:24Z",
+      "planned_action": "Reconcile actual completed Optimiser REVIEW plus cursor; decide to park integration/new dispatcher with explicit reopening evidence while existing Codex final evidence/CI and MONODROMY queue continue. No source-app message permitted in this batch."
     }
   },
   "automatic_github_wakeup_assumed": false,
