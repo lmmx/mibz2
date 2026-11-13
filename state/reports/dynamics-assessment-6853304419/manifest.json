@@ -1,0 +1,11 @@
+{
+  "assignment": 6853304419,
+  "master_pin": "3e7e294cc10f29495e9828181345d74233c549d4",
+  "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+  "files": {
+    "report.md": "dd6ae6fa918fdb4f2be90e64ce96f772f61f6ffaeafd3a1f24dffc61425d4767",
+    "finite_checks.py": "62a8b166980d78fab4f23cef780b23aab60f5f4e701710fb5e2f6a3fae57db5d",
+    "finite-results.json": "26842fe72c8f985f4cd8fd5dbb075083650b7e10c17a546bc39cd4dde567ce01",
+    "routing.json": "deb13ca3afb69d4e0b30f98ebd51e1600f9e0d9637be1f4e655f993838295d65"
+  }
+}

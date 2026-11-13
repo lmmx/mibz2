@@ -1,0 +1,33 @@
+{
+  "binary_columns_n1_through_n6": 126,
+  "nonempty_sections": 5334,
+  "checks": "PASS",
+  "missed_orbit": {
+    "L": "ab",
+    "LF": [
+      0,
+      1
+    ],
+    "K": [
+      0
+    ],
+    "origptr": 1
+  },
+  "identical_commutator_distinct_LF": {
+    "baaaa": [
+      4,
+      0,
+      1,
+      2,
+      3
+    ],
+    "bbbba": [
+      1,
+      2,
+      3,
+      4,
+      0
+    ]
+  },
+  "scope": "finite mathematical witnesses; no performance evidence"
+}
