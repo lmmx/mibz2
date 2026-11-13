@@ -139,7 +139,7 @@
     "6857344645": 6857451993,
     "6857529647": 6857619789
   },
-  "last_rebuilt_from": 6857539994,
+  "last_rebuilt_from": 6857735998,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -605,9 +605,10 @@
     },
     "6857749401": {
       "comment_id": 6857749401,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling selective completion and queued attribution."
+      "status": "complete",
+      "progress": "Record committed through channel 6857735998; REVIEW pending.",
+      "work_commit": "e44a581dd050f8bf3414ee154a5f5780be55d8c7"
     }
   },
-  "last_record_commit": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f"
+  "last_record_commit": "e44a581dd050f8bf3414ee154a5f5780be55d8c7"
 }
