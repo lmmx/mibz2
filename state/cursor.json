@@ -2751,7 +2751,11 @@
     "6857567712": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T15:35:13Z",
-      "disposition": "Own grouped native H1 closure and measured selective gain LOG; ignore self wake."
+      "disposition": "Own grouped native H1 closure and measured selective gain LOG; ignore self wake.",
+      "delivery_id": "d1f71810-df77-11f1-85a1-712ccfa0124c",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2919,8 +2923,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6857539994,
-    "delivery_id": "a6fb37e0-df77-11f1-89fe-8a8ecf4e84ae"
+    "comment_id": 6857567712,
+    "delivery_id": "d1f71810-df77-11f1-85a1-712ccfa0124c",
+    "master_sha": "3e7e294cc10f29495e9828181345d74233c549d4"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
