@@ -638,7 +638,7 @@
     "branch": "perf/cells-small-spine",
     "base_master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "cells_source": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-    "next_action": "Coordinator reconcile final receipt and Optimizer PARK6852468714; route target-qualified continuation through existing MONODROMY/Pathfinder ownership. No new Codex assignment inferred.",
+    "next_action": "Coordinator PARK in force; existing MONODROMY6850491677 remaining-cost work or exact target-qualified candidate evidence must justify reopening. Final completion REVIEW6852838891 delivered; no successor assignment.",
     "pr": 379,
     "head": "93781bd9578eae95c599583e387180d673659180",
     "review_source_head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
@@ -661,6 +661,7 @@
     "completion_review_comment_id": 6852838891,
     "pr_evidence_comment_id": 6852841999,
     "evidence_commit": "1cd32df964395b1ff9dfeef62a4a5df35c19557e",
-    "receipt_readback_verified": true
+    "receipt_readback_verified": true,
+    "coordinator_disposition": 6852794334
   }
 }
