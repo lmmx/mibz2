@@ -1,0 +1,69 @@
+# mibz2
+
+> A bzip2 decoder built for memory-level parallelism.
+
+mibz2 is a bzip2 decoder, block-parallel, its inverse BWT walked as interleaved chains
+within each block, with byte-for-byte libbzip2 output and every block and stream CRC
+checked, from Python (`mibz2.decompress`, `mibz2.open`) or Rust (`mibz2::decode`,
+`mibz2::BzReader`). Install with `pip install mibz2` or `cargo add mibz2`. Each link below
+is the Markdown version of a page of https://lmmx.github.io/mibz2/.
+
+## Benchmarks
+
+- [Benchmarks](<https://lmmx.github.io/mibz2/pr-preview/pr-380/benchmarks/index.md>): How mibz2's CI benchmark measures the decoder: the corpora, the rounds, the paired ratios and the modelled full-dump figure.
+- [History](<https://lmmx.github.io/mibz2/pr-preview/pr-380/benchmarks/history/index.md>): mibz2's decoding speed, CPU time and peak memory, merge by merge: each merged pull request's own paired benchmark, chained, and master's absolute figures on one runner at a time.
+- [Alternatives](<https://lmmx.github.io/mibz2/pr-preview/pr-380/benchmarks/alternatives/index.md>): mibz2 beside other bzip2 decoders on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count.
+- [Throughput–memory frontier](<https://lmmx.github.io/mibz2/pr-preview/pr-380/benchmarks/frontier/index.md>): Whether mibz2 can decode faster with less memory when blocks share the cache: the question, the method, and what has been measured so far.
+
+## Concepts
+
+- [Concepts](<https://lmmx.github.io/mibz2/pr-preview/pr-380/concepts/index.md>): What mibz2 decodes, what it checks, and how it decodes in parallel.
+- [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/pr-preview/pr-380/concepts/couriers/index.md>): mibz2's premise, memory-level parallelism in the inverse BWT, explained through couriers and a dispatcher: independent lanes, prefetching, the per-step cost that binds next, and the measurements.
+- [What is checked, and when](<https://lmmx.github.io/mibz2/pr-preview/pr-380/concepts/checks/index.md>): Which CRCs mibz2 checks and when, what its errors report, and the inputs it refuses.
+- [How it works](<https://lmmx.github.io/mibz2/pr-preview/pr-380/concepts/how-it-works/index.md>): mibz2's scanner thread, its workers, and the inverse BWT walked as interleaved chains.
+- [Prior work](<https://lmmx.github.io/mibz2/pr-preview/pr-380/concepts/prior-work/index.md>): The work mibz2 builds on: libbzip2's format and checks, Kärkkäinen, Kempa and Puglisi's interleaved BWT inversion, and lbzip2's and pbzip2's block parallelism.
+
+## Get started
+
+- [Installation](<https://lmmx.github.io/mibz2/pr-preview/pr-380/getting-started/installation/index.md>): Install mibz2 from PyPI or crates.io.
+- [Quickstart](<https://lmmx.github.io/mibz2/pr-preview/pr-380/getting-started/quickstart/index.md>): Decode a .bz2 file with mibz2 from Python and from Rust.
+
+## Optional
+
+- [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Reconstructing text from compact programs](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-12-rauzy-technical-companion/index.md>): This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.
+- [A new way back from the BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-10-rauzy-veech-reconstruction/index.md>): An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.
+- [mibz2 gets a pit crew](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-09-pit-crew-service-threads/index.md>): Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.
+- [Reading the BWT's runs off the MTF codes](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-08-bwt-runs-from-mtf-codes/index.md>): bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built.
+- [One shift per run](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-08-inverse-bwt-navigation/index.md>): The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.
+- [Technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-08-inverse-bwt-navigation-notes/index.md>): Technical appendix to the post on inverse-BWT navigation: the select reduction, consecutive entries and sparse corrections, entropy and run-count space bounds, compact30's records, several steps at once, cycles and necklaces, the permutree thesis, and correctness oracles.
+- [Pipelined teams in mibz2 0.2.6](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-07-pipelined-teams/index.md>): While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.
+- [Why mibz2 stops scaling at eight threads](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-07-why-mibz2-stops-scaling/index.md>): Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.
+- [Huffman decoding: the bit buffer in a register](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-05-huffman-bit-buffer/index.md>): The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.
+- [An autonomous agent team](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-04-autonomous-agent-team/index.md>): Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
+- [From 49 instructions to 12](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-04-compact30-constructor/index.md>): Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
+- [Technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-04-compact30-constructor-notes/index.md>): Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.
+- [BWT space–time tradeoff](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>): A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.
+- [Instructions, overlap and evidence](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-02-memory-level-parallelism/index.md>): Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
+- [Technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-02-memory-level-parallelism-notes/index.md>): Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.
+- [Inverse-BWT memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-01-inverse-bwt-memory-interference/index.md>): Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.
+- [Block dispatch in mibz2](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-01-block-dispatch/index.md>): How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.
+- [32 lanes, 8.6 chains](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-10-31-room-walk-overlap/index.md>): The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte.
+- [Compact navigation tables for the inverse BWT](<https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-10-29-compact-navigation-tables/index.md>): Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.
+- [History](<https://lmmx.github.io/mibz2/pr-preview/pr-380/background/history/index.md>): Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own.
+- [Status](<https://lmmx.github.io/mibz2/pr-preview/pr-380/background/status/index.md>): Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next.
+- [Behind the scenes](<https://lmmx.github.io/mibz2/pr-preview/pr-380/background/behind-the-scenes/index.md>): What mibz2's agent team is doing, and why, as the team's observer last wrote it down, with the record it rests on and every earlier version.
+- [Journals](<https://lmmx.github.io/mibz2/pr-preview/pr-380/background/journals/index.md>): mibz2's development journals: where they are and what each one records.
+- [Development](<https://lmmx.github.io/mibz2/pr-preview/pr-380/maintainers/development/index.md>): The repository's layout, how to build, test and benchmark mibz2, and the commit conventions.
+- [Documentation](<https://lmmx.github.io/mibz2/pr-preview/pr-380/maintainers/documentation/index.md>): How the documentation site and its benchmark pages are built, checked, tested and published to GitHub Pages.
+- [Releasing](<https://lmmx.github.io/mibz2/pr-preview/pr-380/maintainers/releasing/index.md>): How mibz2 is released to crates.io and PyPI at one version: Deploy Release, Tag Release and Release Notes.
+
+## Reference
+
+- [Reference](<https://lmmx.github.io/mibz2/pr-preview/pr-380/reference/index.md>): mibz2's API in Python and in Rust.
+- [mibz2 (Python)](<https://lmmx.github.io/mibz2/pr-preview/pr-380/reference/api/mibz2/index.md>): The mibz2 Python package: decompress, open, BZ2Reader and DecodeError.
+- [mibz2 (Rust)](<https://lmmx.github.io/mibz2/pr-preview/pr-380/reference/rust/index.md>): The mibz2 Rust crate: decode, decode_parallel, BzReader, StreamDecoder, scan, decode_blocks and Error.
+
+## Start here
+
+- [Home](<https://lmmx.github.io/mibz2/pr-preview/pr-380/index.md>): A bzip2 decoder built for memory-level parallelism.

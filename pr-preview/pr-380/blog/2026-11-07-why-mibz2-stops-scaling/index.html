@@ -1,0 +1,2892 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-07-why-mibz2-stops-scaling/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../2026-11-07-pipelined-teams/">
+      
+      
+        <link rel="next" href="../2026-11-05-huffman-bit-buffer/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>Why mibz2 stops scaling at eight threads, and why three teams help - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8affa55d4795">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    <meta name="format-detection" content="telephone=no">
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="Why mibz2 stops scaling at eight threads, and why three teams help">
+  <meta property="og:description" content="Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-380/blog/2026-11-07-why-mibz2-stops-scaling/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-380/assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Why mibz2 stops scaling at eight threads, and why three teams help">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Why mibz2 stops scaling at eight threads, and why three teams help">
+  <meta name="twitter:description" content="Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-380/assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png">
+  <meta name="twitter:image:alt" content="Why mibz2 stops scaling at eight threads, and why three teams help">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Why mibz2 stops scaling at eight threads, and why three teams help
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/behind-the-scenes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Behind the scenes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-12-rauzy-technical-companion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reconstructing text from compact programs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-10-rauzy-veech-reconstruction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A new way back from the BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-09-pit-crew-service-threads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 gets a pit crew
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-bwt-runs-from-mtf-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reading the BWT's runs off the MTF codes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_6" id="__nav_7_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Inverse-BWT navigation: the mathematics
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  One shift per run
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-08-inverse-bwt-navigation-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-07-pipelined-teams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Pipelined teams in mibz2 0.2.6
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why mibz2 stops scaling at eight threads
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-how-does-mibz2-decode-with-several-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. How does mibz2 decode with several threads?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-happens-when-we-change-the-number-of-blocks-and-the-threads-on-each" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What happens when we change the number of blocks, and the threads on each?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-would-more-blocks-at-once-slow-each-block-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why would more blocks at once slow each block down?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-why-dont-more-threads-on-one-block-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Why don't more threads on one block help?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-did-three-teams-of-three-gain" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What did three teams of three gain?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-did-the-review-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What did the review change?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-will-we-try-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. What will we try next?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-where-do-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. Where do things stand?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-05-huffman-bit-buffer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Huffman decoding: the bit buffer in a register
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-autonomous-agent-team/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  An autonomous agent team
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_11" id="__nav_7_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Building a smaller bzip2 decoding table
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_11_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_11">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Building a smaller bzip2 decoding table
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  From 49 instructions to 12
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-04-compact30-constructor-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_13">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Instructions, overlap and evidence
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-memory-level-parallelism-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Technical appendix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-inverse-bwt-memory-interference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT memory interference
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-01-block-dispatch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Block dispatch in mibz2
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-31-room-walk-overlap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  32 lanes, 8.6 chains
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-10-29-compact-navigation-tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-how-does-mibz2-decode-with-several-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. How does mibz2 decode with several threads?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-happens-when-we-change-the-number-of-blocks-and-the-threads-on-each" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. What happens when we change the number of blocks, and the threads on each?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-why-would-more-blocks-at-once-slow-each-block-down" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Why would more blocks at once slow each block down?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-why-dont-more-threads-on-one-block-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. Why don't more threads on one block help?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-what-did-three-teams-of-three-gain" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. What did three teams of three gain?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-did-the-review-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. What did the review change?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-will-we-try-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. What will we try next?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-where-do-things-stand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. Where do things stand?
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-07-why-mibz2-stops-scaling.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="why-mibz2-stops-scaling-at-eight-threads-and-why-three-teams-help">Why mibz2 stops scaling at eight threads, and why three teams help<a class="headerlink" href="#why-mibz2-stops-scaling-at-eight-threads-and-why-three-teams-help" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Each block decoded at once slows the others, and more threads per block barely help, so three
+teams of three beat four of two by 9%. Why blocks interfere is open.</p>
+<p class="post-meta">7 November 2026 · 15 min read · <a href="#8-where-do-things-stand">Research in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>On a ten-core desktop processor, mibz2, our bzip2 decoder written in Rust, got faster as we gave it
+more threads, from one to eight. Past eight it stopped. Twelve, sixteen or twenty threads
+decoded no faster than eight. A decoder that can't use the cores it is given leaves time on
+the table for anyone decompressing large files, and the reason it stops says where the next
+gain has to come from.</p>
+<p>The reason is not the number of threads. It is how many pieces of the file the decoder works
+on at the same time. A bzip2 file is a series of blocks that can be decoded independently, and
+mibz2 decodes several at once, each with a small group of threads. We measured two things.
+Every extra block in progress slows down every other block. And extra threads on the same
+block barely speed it up. Together they mean that fewer blocks, each with more threads, beat
+more blocks with fewer threads. Our latest release, 0.2.5, decodes three blocks at once with
+three threads each, where 0.2.4 decoded four with two each. In two runs at ten threads, it was
+8.8% and 8.9% faster, used 11–12% less processor time and 18–19% less peak memory.</p>
+<p>What we have not measured is <em>why</em> the blocks slow each other down. The leading explanation is
+that each block needs a large table, and the tables compete for the processor's shared cache.
+The evidence for that comes from a simpler test program, not from the decoder itself, and a
+careful review of an earlier draft of this analysis made us withdraw part of it. So this post
+keeps three things apart: what was measured, what is inferred, and what we will test next.</p>
+<p><a href="#1-how-does-mibz2-decode-with-several-threads">Section 1</a> explains how mibz2 splits a file
+among its threads. <a href="#2-what-happens-when-we-change-the-number-of-blocks-and-the-threads-on-each">Section 2</a>
+gives the measurements behind the two findings, and sections
+<a href="#3-why-would-more-blocks-at-once-slow-each-block-down">3</a> and
+<a href="#4-why-dont-more-threads-on-one-block-help">4</a> look at each one in turn.
+<a href="#5-what-did-three-teams-of-three-gain">Section 5</a> is the release's own measurement,
+<a href="#6-what-did-the-review-change">section 6</a> what the review changed, and
+<a href="#7-what-will-we-try-next">section 7</a> the next experiments.</p>
+<h2 id="1-how-does-mibz2-decode-with-several-threads">1. How does mibz2 decode with several threads?<a class="headerlink" href="#1-how-does-mibz2-decode-with-several-threads" title="Permanent link">&para;</a></h2>
+<p>bzip2 compresses a file in blocks of up to 900 kB each (at its default level, 9). Each block is
+compressed on its own, with no reference to the others, so each can be decoded on its own too.
+That is what makes a parallel decoder possible: different threads can work on different blocks
+at the same time, and the decoder puts their outputs back in order at the end.</p>
+<p>Decoding one block undoes bzip2's steps in reverse. One thread, which mibz2 calls the scanner,
+reads the compressed file and undoes its outermost layer, the Huffman coding, for every block
+(<a href="../2026-11-05-huffman-bit-buffer/">an earlier post</a> covers that stage). The rest of a block's
+work happens on the threads that decode it, in three parts:</p>
+<ol>
+<li><strong>MTF:</strong> undoing the move-to-front coding, which turns the scanner's symbols back into the
+   block's bytes, though not yet in their original order.</li>
+<li><strong>The inverse BWT:</strong> undoing the Burrows–Wheeler transform, which bzip2 used to reorder the
+   bytes so that similar ones sit together. This puts them back in their original order.</li>
+<li><strong>RLE1 and the CRC:</strong> expanding the runs of repeated bytes that bzip2 shortened first of all,
+   and checking the result against the block's checksum.</li>
+</ol>
+<p>The inverse BWT is the most expensive of the three. It works in two phases. The <strong>build</strong> makes
+a table with one 4-byte entry for each byte of the block, saying where the next byte of the
+original text is to be found. For a full block that table, which mibz2 calls the T-vector, is
+3.6 MB. The <strong>walk</strong> then follows the table from entry to entry, writing out a byte at each
+step. Each step's address comes from the entry just read, so the steps form a chain through the
+table, jumping to an unpredictable place each time. A jump that finds its entry in a nearby cache
+is quick. One that has to go to main memory waits hundreds of cycles.
+<a href="../2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/">Revisiting the space–time tradeoff in BWT inversion</a>
+shows the transform and its table worked through on a small example.</p>
+<p>A chain of dependent jumps can't be split between threads directly, since each step needs the
+one before. mibz2 gets around this by starting many chains at known points through the block,
+so several threads can share one block's build and walk. We call the threads that share a
+block a <strong>team</strong>. One of them, the <strong>leader</strong>, also does the block's MTF, RLE1 and CRC alone,
+and puts the walk's pieces together at the end (the <strong>assembly</strong>). The others are its
+<strong>helpers</strong>: they join in only for the build and the walk. A team decodes one block at a time,
+with one table, and then takes the next.</p>
+<p>So a thread count is really two numbers: how many teams, which is the number of blocks and
+tables in progress at once, and how many threads each team has. We write a plan as teams ×
+threads per team: 4 × 2 is four teams of two.</p>
+<p>The machine these measurements come from is an Intel Core i9-10900K. It has 10 cores, each able
+to run two threads at once (20 in all), and a 20 MiB last-level cache, the L3, which all ten
+cores share. Until 0.2.5, mibz2's rule was teams of two, and as many teams as keep their tables
+within about 0.7 of the L3. On the test machine that is four teams. Asked for 8, 10, 12, 16 or
+20 threads, the decoder ran the same four teams of two, plus the scanner. That is why it
+stopped at eight: past eight it declined the extra threads. Under that rule, 0.2.4 levelled off
+at about 1.27–1.31 GB/s of output from 8 threads up.</p>
+<figure class="bf-fig">
+<p class="bf-title">The two plans on the test machine's ten cores</p>
+<svg viewBox="0 0 720 236" role="img" aria-label="Two layouts on a 10-core processor. Left, before: four teams of two threads, each team a leader L and a helper H, with four 3.6 MB tables, 14.4 MB, in the 20 MiB shared L3. Right, now: three teams of three, a leader and two helpers each, with three tables, 10.8 MB."><text x="0.0" y="18.0" class="bf-ts">Before (0.2.4): four teams of two</text><text x="0.0" y="36.0" class="bf-tm">8 decoding threads, 4 blocks at once</text><rect x="0" y="51" width="63" height="33" rx="6" class="bf-card-hi"/><rect x="3" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="16.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="33" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="46.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="69" y="51" width="63" height="33" rx="6" class="bf-card-hi"/><rect x="72" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="85.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="102" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="115.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="138" y="51" width="63" height="33" rx="6" class="bf-card-hi"/><rect x="141" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="154.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="171" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="184.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="207" y="51" width="63" height="33" rx="6" class="bf-card-hi"/><rect x="210" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="223.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="240" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="253.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="279" y="54" width="27" height="27" rx="4" class="bf-track"/><rect x="309" y="54" width="27" height="27" rx="4" class="bf-track"/><text x="0.0" y="106.0" class="bf-tm">10 cores: a team in each green outline; grey cores unused</text><text x="0.0" y="142.0" class="bf-tm">The shared L3 cache, 20 MiB</text><rect x="0" y="150" width="330" height="34" rx="4" class="bf-track"/><rect x="1.0" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="28.3" y="172.0" class="bf-tm" text-anchor="middle">table 1</text><rect x="57.7" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="85.0" y="172.0" class="bf-tm" text-anchor="middle">table 2</text><rect x="114.3" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="141.6" y="172.0" class="bf-tm" text-anchor="middle">table 3</text><rect x="171.0" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="198.3" y="172.0" class="bf-tm" text-anchor="middle">table 4</text><text x="0.0" y="204.0" class="bf-t-strong">4 tables × 3.6 MB = 14.4 MB</text><text x="0.0" y="222.0" class="bf-tm">plus each team's other buffers</text><text x="380.0" y="18.0" class="bf-ts">Now (0.2.5): three teams of three</text><text x="380.0" y="36.0" class="bf-tm">9 decoding threads, 3 blocks at once</text><rect x="380" y="51" width="93" height="33" rx="6" class="bf-card-hi"/><rect x="383" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="396.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="413" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="426.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="443" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="456.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="479" y="51" width="93" height="33" rx="6" class="bf-card-hi"/><rect x="482" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="495.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="512" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="525.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="542" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="555.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="578" y="51" width="93" height="33" rx="6" class="bf-card-hi"/><rect x="581" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="594.5" y="73.0" class="bf-t-strong" text-anchor="middle">L</text><rect x="611" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="624.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="641" y="54" width="27" height="27" rx="4" class="bf-pill"/><text x="654.5" y="73.0" class="bf-t-strong" text-anchor="middle">H</text><rect x="680" y="54" width="27" height="27" rx="4" class="bf-track"/><text x="380.0" y="106.0" class="bf-tm">10 cores: a team in each green outline; grey cores unused</text><text x="380.0" y="142.0" class="bf-tm">The shared L3 cache, 20 MiB</text><rect x="380" y="150" width="330" height="34" rx="4" class="bf-track"/><rect x="381.0" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="408.3" y="172.0" class="bf-tm" text-anchor="middle">table 1</text><rect x="437.7" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="465.0" y="172.0" class="bf-tm" text-anchor="middle">table 2</text><rect x="494.3" y="153" width="54.7" height="28" rx="3" class="bf-slot"/><text x="521.6" y="172.0" class="bf-tm" text-anchor="middle">table 3</text><text x="380.0" y="204.0" class="bf-t-strong">3 tables × 3.6 MB = 10.8 MB</text><text x="380.0" y="222.0" class="bf-tm">plus each team's other buffers</text></svg>
+<figcaption>A sketch of the plans, not a measurement of what is in the cache. L is a team's leader, H a helper. Each team's table is 3.6 MB for a full block; each team also has other buffers, not drawn.</figcaption>
+</figure>
+
+<h2 id="2-what-happens-when-we-change-the-number-of-blocks-and-the-threads-on-each">2. What happens when we change the number of blocks, and the threads on each?<a class="headerlink" href="#2-what-happens-when-we-change-the-number-of-blocks-and-the-threads-on-each" title="Permanent link">&para;</a></h2>
+<p>To see what four teams of two were missing, we ran a grid of plans that varied the two numbers
+separately: 2 to 8 teams, of 2, 3 or 4 threads each. Each plan decoded the same sample of the
+Wikidata dump, 11.85 MB of bzip2 that decodes to 209.7 MB, 20 times, in rotating order, with
+threads placed by the operating system as users run it. The figure below groups the plans by
+their number of teams. That is the most tables the plan can have in progress at once, not a
+measured count of how many were in progress at each moment.</p>
+<figure class="bf-fig">
+<p class="bf-title">Throughput by the number of teams, all thread counts per team together</p>
+<svg viewBox="0 0 720 252" role="img" aria-label="Two charts against the number of teams, 2 to 8. Left: each team's rate falls from 558 to 583 MB/s at 2 teams to 461 to 466 at 3, about 320 at 4 and 110 at 8. Right: all teams together peak at 3 teams, 1,382 to 1,399 MB/s, against 1,276 to 1,300 at 4 and 882 at 8."><text x="0.0" y="16.0" class="bf-ts">Each team's rate, MB/s</text><path d="M40 210.0H300" class="bf-grid"/><text x="34.0" y="214.0" class="bf-tm" text-anchor="end">0</text><path d="M40 161.4H300" class="bf-grid"/><text x="34.0" y="165.4" class="bf-tm" text-anchor="end">200</text><path d="M40 112.9H300" class="bf-grid"/><text x="34.0" y="116.9" class="bf-tm" text-anchor="end">400</text><path d="M40 64.3H300" class="bf-grid"/><text x="34.0" y="68.3" class="bf-tm" text-anchor="end">600</text><path d="M40 210H300" class="bf-axis"/><text x="40.0" y="228.0" class="bf-tm" text-anchor="middle">2</text><text x="81.7" y="228.0" class="bf-tm" text-anchor="middle">3</text><text x="123.3" y="228.0" class="bf-tm" text-anchor="middle">4</text><text x="165.0" y="228.0" class="bf-tm" text-anchor="middle">5</text><text x="206.7" y="228.0" class="bf-tm" text-anchor="middle">6</text><text x="290.0" y="228.0" class="bf-tm" text-anchor="middle">8</text><text x="170.0" y="246.0" class="bf-tm" text-anchor="middle">teams (blocks decoded at once)</text><path d="M40.0 71.5 L81.7 97.4 L123.3 131.8 L165.0 154.3 L206.7 167.5 L290.0 183.3" class="bf-arrow"/><path d="M40.0 74.5V68.4" class="bf-cut"/><circle cx="40.0" cy="71.5" r="4.5" class="bf-dot-hi"/><path d="M81.7 98.0V96.8" class="bf-cut"/><circle cx="81.7" cy="97.4" r="4.5" class="bf-dot-hi"/><path d="M123.3 132.5V131.1" class="bf-cut"/><circle cx="123.3" cy="131.8" r="4.5" class="bf-dot-hi"/><path d="M165.0 154.4V154.1" class="bf-cut"/><circle cx="165.0" cy="154.3" r="4.5" class="bf-dot-hi"/><circle cx="206.7" cy="167.5" r="4.5" class="bf-dot-hi"/><circle cx="290.0" cy="183.3" r="4.5" class="bf-dot-hi"/><text x="50.0" y="65.6" class="bf-tm">558–583</text><text x="89.7" y="89.6" class="bf-tm">461–466</text><text x="131.3" y="123.8" class="bf-tm">319–325</text><text x="290.0" y="173.3" class="bf-tm" text-anchor="middle">110</text><text x="390.0" y="16.0" class="bf-ts">All teams together, MB/s</text><path d="M430 210.0H690" class="bf-grid"/><text x="424.0" y="214.0" class="bf-tm" text-anchor="end">0</text><path d="M430 167.5H690" class="bf-grid"/><text x="424.0" y="171.5" class="bf-tm" text-anchor="end">400</text><path d="M430 125.0H690" class="bf-grid"/><text x="424.0" y="129.0" class="bf-tm" text-anchor="end">800</text><path d="M430 82.5H690" class="bf-grid"/><text x="424.0" y="86.5" class="bf-tm" text-anchor="end">1,200</text><path d="M430 40.0H690" class="bf-grid"/><text x="424.0" y="44.0" class="bf-tm" text-anchor="end">1,600</text><path d="M430 210H690" class="bf-axis"/><text x="430.0" y="228.0" class="bf-tm" text-anchor="middle">2</text><text x="471.7" y="228.0" class="bf-tm" text-anchor="middle">3</text><text x="513.3" y="228.0" class="bf-tm" text-anchor="middle">4</text><text x="555.0" y="228.0" class="bf-tm" text-anchor="middle">5</text><text x="596.7" y="228.0" class="bf-tm" text-anchor="middle">6</text><text x="680.0" y="228.0" class="bf-tm" text-anchor="middle">8</text><text x="560.0" y="246.0" class="bf-tm" text-anchor="middle">teams (blocks decoded at once)</text><path d="M430.0 88.8 L471.7 62.3 L513.3 73.2 L555.0 87.9 L596.7 98.3 L680.0 116.3" class="bf-arrow"/><path d="M430.0 91.4V86.1" class="bf-cut"/><circle cx="430.0" cy="88.8" r="4.5" class="bf-dot-hi"/><path d="M471.7 63.2V61.4" class="bf-cut"/><circle cx="471.7" cy="62.3" r="7" class="bf-dot-hi"/><path d="M513.3 74.4V71.9" class="bf-cut"/><circle cx="513.3" cy="73.2" r="4.5" class="bf-dot-hi"/><path d="M555.0 88.1V87.6" class="bf-cut"/><circle cx="555.0" cy="87.9" r="4.5" class="bf-dot-hi"/><circle cx="596.7" cy="98.3" r="4.5" class="bf-dot-hi"/><circle cx="680.0" cy="116.3" r="4.5" class="bf-dot-hi"/><text x="471.7" y="50.3" class="bf-t-strong" text-anchor="middle">1,382–1,399</text><text x="513.3" y="99.2" class="bf-tm" text-anchor="middle">1,276–1,300</text><text x="680.0" y="106.3" class="bf-tm" text-anchor="middle">882</text></svg>
+<figcaption>Measured, the test machine, 20 rounds a plan (the <a href="https://github.com/lmmx/mibz2/blob/d95ca1ea/docs/journal/2026-11-06-team-size.md">team-size grid</a>). A vertical bar spans the plans with that many teams but different threads per team. The rate is megabytes of decoded output a second.</figcaption>
+</figure>
+
+<p>Two things stand out. <strong>Each team gets slower as teams are added</strong>, and steeply: from
+558–583 MB/s each with two teams, to 461–466 with three, about 320 with four and 110 with
+eight. Adding a fourth team adds a fourth block in progress, but makes every block slow enough
+that all four together are slower than three. Total throughput peaks at three teams,
+1,382–1,399 MB/s.</p>
+<p>And <strong>at a fixed number of teams, the threads per team hardly matter.</strong> With four teams, each
+team decoded 319, 325 and 320 MB/s with two, three and four threads. The extra threads cost
+processor time without buying speed. The table below gives the four-team plans against the
+old default, with the best three-team plans for comparison. "Against 4 × 2" is the ratio of
+throughputs, paired round by round, with its 95% interval across the 20 rounds; "CPU" is
+total processor time over 4 × 2's.</p>
+<table>
+<thead>
+<tr>
+<th>plan</th>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">MB/s</th>
+<th style="text-align: right;">against 4 × 2</th>
+<th style="text-align: right;">CPU</th>
+<th style="text-align: right;">peak memory, MB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 × 2 (the old default)</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1,276</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">82</td>
+</tr>
+<tr>
+<td>4 × 3</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">1,300</td>
+<td style="text-align: right;">1.017 (1.008–1.026)</td>
+<td style="text-align: right;">1.26</td>
+<td style="text-align: right;">82</td>
+</tr>
+<tr>
+<td>4 × 4</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">1,279</td>
+<td style="text-align: right;">1.003 (0.993–1.014)</td>
+<td style="text-align: right;">1.52</td>
+<td style="text-align: right;">82</td>
+</tr>
+<tr>
+<td>3 × 3</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1,382</td>
+<td style="text-align: right;">1.075 (1.058–1.093)</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">67</td>
+</tr>
+<tr>
+<td>3 × 4</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">1,399</td>
+<td style="text-align: right;">1.097 (1.083–1.111)</td>
+<td style="text-align: right;">1.04</td>
+<td style="text-align: right;">68</td>
+</tr>
+</tbody>
+</table>
+<p>The four-team rows were the experiment's registered tests: their pass rule, a gain of at
+least 3%, was fixed before any run. Neither passed. The
+three-team rows were exploratory: picked out after the fact, so they proved nothing on their
+own. They were then confirmed in runs registered for them, and the release's plan in two more
+(<a href="#5-what-did-three-teams-of-three-gain">section 5</a>). Peak memory, meanwhile, rose by about
+15 MB with each team: 52 MB at two teams, 67 at three, 82 at four and 138 at eight.</p>
+<p>That leaves two questions. Why does each extra block slow the others? And why doesn't a block
+go faster with more threads?</p>
+<h2 id="3-why-would-more-blocks-at-once-slow-each-block-down">3. Why would more blocks at once slow each block down?<a class="headerlink" href="#3-why-would-more-blocks-at-once-slow-each-block-down" title="Permanent link">&para;</a></h2>
+<p><strong>This part is inferred, not measured in the decoder.</strong> The leading explanation is about the
+shared cache. Each team's walk jumps unpredictably through its own 3.6 MB table, and is fast
+only while the entries it needs are in the L3. All teams share that one cache, so each extra
+table takes room the others were using. As an intuition: several people each searching their
+own large reference book, all spread out on one desk. With two books, most pages stay open.
+With eight, pages keep being put away to make room, and fetching them back is slow.</p>
+<p>The evidence comes from a test program that runs only the inverse BWT, the build and the walk,
+with each block's thread fixed to a core of its own, and no teams. In October we ran it on the test machine with
+hardware counters, which count events inside the processor. One of them is the <strong>L3 hit
+share</strong>: of the memory requests that miss the cores' own small caches, the share the L3
+answers rather than main memory. Plotted against the table bytes in use at once, it stays near
+1 while the tables are small, then falls once they approach the cache's size.</p>
+<figure class="bf-fig">
+<p class="bf-title">L3 hit share against the table bytes in use at once (inversion only)</p>
+<svg viewBox="0 0 720 280" role="img" aria-label="L3 hit share against table bytes in use at once, measured in an inversion-only harness. It stays near 0.94 to 0.99 up to 14.4 MB, then falls to 0.794 at 21.6 MB, 0.640 at 28.8 MB and 0.539 at 36 MB. The L3 is 20 MiB. Level-3 points, with smaller tables, lie on the same curve."><path d="M60 230.0H680" class="bf-grid"/><text x="52.0" y="234.0" class="bf-tm" text-anchor="end">0.4</text><path d="M60 163.3H680" class="bf-grid"/><text x="52.0" y="167.3" class="bf-tm" text-anchor="end">0.6</text><path d="M60 96.7H680" class="bf-grid"/><text x="52.0" y="100.7" class="bf-tm" text-anchor="end">0.8</text><path d="M60 30.0H680" class="bf-grid"/><text x="52.0" y="34.0" class="bf-tm" text-anchor="end">1.0</text><path d="M60 230H680" class="bf-axis"/><text x="60.0" y="248.0" class="bf-tm" text-anchor="middle">0</text><text x="215.0" y="248.0" class="bf-tm" text-anchor="middle">10</text><text x="370.0" y="248.0" class="bf-tm" text-anchor="middle">20</text><text x="525.0" y="248.0" class="bf-tm" text-anchor="middle">30</text><text x="680.0" y="248.0" class="bf-tm" text-anchor="middle">40</text><text x="370.0" y="268.0" class="bf-tm" text-anchor="middle">table bytes in use at once, MB</text><text x="10.0" y="14.0" class="bf-tm">share of requests answered by the L3</text><path d="M385.0 30V230" class="bf-rule"/><text x="391.0" y="44.0" class="bf-tm">L3 size, 20 MiB</text><path d="M171.6 37.0 L283.2 53.7 L394.8 98.7 L506.4 150.0 L618.0 183.7" class="bf-cut"/><circle cx="171.6" cy="37.0" r="5" class="bf-dot-hi"/><circle cx="283.2" cy="53.7" r="5" class="bf-dot-hi"/><circle cx="394.8" cy="98.7" r="5" class="bf-dot-hi"/><circle cx="506.4" cy="150.0" r="5" class="bf-dot-hi"/><circle cx="618.0" cy="183.7" r="5" class="bf-dot-hi"/><rect x="92.7" y="29.8" width="9" height="9" class="bf-steel"/><rect x="129.9" y="31.2" width="9" height="9" class="bf-steel"/><rect x="167.1" y="33.8" width="9" height="9" class="bf-steel"/><rect x="204.3" y="38.5" width="9" height="9" class="bf-steel"/><rect x="241.5" y="45.5" width="9" height="9" class="bf-steel"/><text x="293.2" y="57.7" class="bf-tm">4 tables: 0.929</text><text x="404.8" y="102.7" class="bf-tm">6 tables: 0.794</text><text x="516.4" y="154.0" class="bf-tm">8 tables: 0.640</text><text x="608.0" y="201.7" class="bf-tm" text-anchor="end">10 tables: 0.539</text><circle cx="80" cy="178" r="5" class="bf-dot-hi"/><text x="92.0" y="182.0" class="bf-tm">blocks of a level-9 file, 3.6 MB a table</text><rect x="75.5" y="193.5" width="9" height="9" class="bf-steel"/><text x="92.0" y="202.0" class="bf-tm">blocks of a level-3 file, 1.2 MB a table</text></svg>
+<figcaption>Measured, the test machine, in a program that runs only the build and walk, one block a core (<a href="https://github.com/lmmx/mibz2/blob/42794eba51a651238ce9dd3165fe546970a020a8/docs/journal/2026-10-29-libsais-knee.md">footprint journal</a>). bzip2's compression level sets its block size: at level 3 blocks are 300 kB, so their tables are a third the size of level 9's. Not a measurement of the decoder.</figcaption>
+</figure>
+
+<p>Four other observations from that program point the same way:</p>
+<ul>
+<li><strong>Requests wait longer.</strong> A request that misses the cores' own caches waited on average 67
+  cycles with four tables, 137 with six and 361 with eight.</li>
+<li><strong>Main memory saturates.</strong> From six tables on, traffic to main memory levels off at 28–29 GB/s.</li>
+<li><strong>A control isolates the table's size.</strong> A variant that changes the walk's code but keeps a
+  4-byte table got the same hit share as the standard one at six tables (0.814 against 0.793).</li>
+<li><strong>A smaller table moves the drop.</strong> A 3-byte table (2.7 MB a block) moved the program's best
+  number of blocks from four to six, where it ran 1.100 (1.093–1.108) times as fast as the
+  standard table's best.</li>
+</ul>
+<p>That is good evidence that the size of the tables matters, <em>in that program</em>. It doesn't settle
+the question for the decoder, for three reasons.</p>
+<p>First, the program isn't the decoder. It has no teams, no MTF, RLE1 or CRC, no scanner, and
+none of the decoder's other buffers. Second, table bytes don't explain everything even there.
+With the smaller level-3 blocks, ten tables kept a hit share of 0.940 and yet ran slower than eight, mostly
+in the build, with requests waiting longer at nearly the same hit share. So a limit on how many
+requests the cores can have outstanding, or on the number of cores loading the cache at once,
+is not ruled out. Third, the decoder's own counters were never read: the operating system's
+settings on the test machine didn't allow it during the team-size run.</p>
+<p>There is also a simpler puzzle. Four full tables are 14.4 MB, below the cache's 20 MiB. Each team
+has other buffers besides its table, such as space for the walk's pieces and for the block's
+output: several megabytes of reserved capacity each. But capacity is not what is being read at
+any moment, and how much of those buffers sits in the cache at once is not measured. An earlier
+draft of this analysis added those capacities up to a 20 MiB "hot set" that filled the cache. The
+review showed that a sum of capacities and peaks can't establish that, and the claim was
+withdrawn (<a href="#6-what-did-the-review-change">section 6</a>).</p>
+<p>Two other explanations also fit the measurements. The teams' waits for each other could be
+what makes blocks slow, rather than memory. And three teams of three use nine threads on ten
+cores, so one core is free, which changes how the operating system schedules everything else.
+No measurement of the decoder yet tells these apart.</p>
+<h2 id="4-why-dont-more-threads-on-one-block-help">4. Why don't more threads on one block help?<a class="headerlink" href="#4-why-dont-more-threads-on-one-block-help" title="Permanent link">&para;</a></h2>
+<p><strong>Measured:</strong> with four teams, a third thread per team bought 1.7% (0.8–2.6%) for 26% more
+processor time, and a fourth bought nothing detectable, 0.3% (−0.7% to 1.4%), for 52% more. A
+trace of each block's decode, which records when each block starts and finishes, shows the
+same thing from inside: with four teams, a block took on average 1.394, 1.380 and 1.403 ms with
+two, three and four threads.</p>
+<p>Part of the reason is plain arithmetic: not all of a block's work is shared. Only the build and
+the walk are, and only inside the call that does the inverse BWT. The leader does the MTF before
+that call, and RLE1 and the CRC after it, alone.</p>
+<figure class="bf-fig">
+<p class="bf-title">One block's work in a team</p>
+<svg viewBox="0 0 720 346" role="img" aria-label="A block's six stages in a team, top to bottom. MTF, by the leader alone, outside the inversion call. Inside the call: setup by the leader, the build and the walk by the whole team, and assembly by the leader. Then RLE1 and the CRC check by the leader alone, outside the call. The call takes about 67 to 71 percent of a block's decode, the rest 29 to 33 percent."><rect x="0" y="54" width="720" height="202" rx="10" class="bf-band"/><rect x="16" y="10" width="330" height="40" rx="6" class="bf-pill"/><text x="32.0" y="36.0" class="bf-ts">MTF</text><text x="362.0" y="36.0" class="bf-t">the leader alone</text><rect x="16" y="60" width="330" height="40" rx="6" class="bf-pill"/><text x="32.0" y="86.0" class="bf-ts">Setup</text><text x="362.0" y="86.0" class="bf-t">the leader alone</text><rect x="16" y="110" width="330" height="40" rx="6" class="bf-card-hi"/><text x="32.0" y="136.0" class="bf-ts">Build the table</text><text x="362.0" y="136.0" class="bf-t">the whole team</text><rect x="16" y="160" width="330" height="40" rx="6" class="bf-card-hi"/><text x="32.0" y="186.0" class="bf-ts">Walk the table</text><text x="362.0" y="186.0" class="bf-t">the whole team</text><rect x="16" y="210" width="330" height="40" rx="6" class="bf-pill"/><text x="32.0" y="236.0" class="bf-ts">Assemble the pieces</text><text x="362.0" y="236.0" class="bf-t">the leader alone</text><rect x="16" y="260" width="330" height="40" rx="6" class="bf-pill"/><text x="32.0" y="286.0" class="bf-ts">RLE1 and the CRC</text><text x="362.0" y="286.0" class="bf-t">the leader alone</text><text x="704.0" y="36.0" class="bf-t" text-anchor="end">outside the call</text><text x="704.0" y="286.0" class="bf-t" text-anchor="end">outside the call</text><text x="704.0" y="140.0" class="bf-t-strong" text-anchor="end">inside the</text><text x="704.0" y="158.0" class="bf-t-strong" text-anchor="end">inversion call:</text><text x="704.0" y="176.0" class="bf-t-strong" text-anchor="end">67–71% of a block</text><text x="16.0" y="332.0" class="bf-t">Outside the call: 29–33% of a block's decode, in traces of four teams.</text></svg>
+<figcaption>The stages and who runs them, from the decoder's code. The shares are measured, in traces of four teams on the test machine: medians of six runs each at two, three and four threads a team. Inside the call the team also waits for its slowest member; those waits are not timed separately.</figcaption>
+</figure>
+
+<p>The traces give the time inside and outside the inversion call for each block:</p>
+<table>
+<thead>
+<tr>
+<th>plan</th>
+<th style="text-align: right;">a block's decode, ms</th>
+<th style="text-align: right;">inside the inversion call, ms</th>
+<th style="text-align: right;">outside it, ms</th>
+<th style="text-align: right;">outside share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 × 2</td>
+<td style="text-align: right;">1.394</td>
+<td style="text-align: right;">0.993</td>
+<td style="text-align: right;">0.400</td>
+<td style="text-align: right;">28.75%</td>
+</tr>
+<tr>
+<td>4 × 3</td>
+<td style="text-align: right;">1.380</td>
+<td style="text-align: right;">0.935</td>
+<td style="text-align: right;">0.441</td>
+<td style="text-align: right;">32.14%</td>
+</tr>
+<tr>
+<td>4 × 4</td>
+<td style="text-align: right;">1.404</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.462</td>
+<td style="text-align: right;">32.64%</td>
+</tr>
+</tbody>
+</table>
+<p>These are averages over the sample's 431 blocks, some of them small, so they are not the time
+for one full 900 kB block. On one of the cloud machines that benchmark every change to mibz2 (CI), with one thread, the
+stages cost, per output
+byte: 0.41 ns for MTF, 0.04 for assembly, 0.05 for RLE1 and 0.07 for the CRC, which the leader
+does alone, against 0.48 for the build and 1.09 for the walk, which a team shares.</p>
+<p>So about 29–33% of a block's time is outside the shared part, and more threads can't shorten
+it. But that share is not the whole of the work that can't be shared. The inversion call also
+includes work the leader does alone (setting up, and assembling the pieces), and time the team
+spends waiting for its slowest member. The time outside the call also includes scheduling and the
+tracing itself. The traces can't separate these, so the true unshared share isn't known.</p>
+<p><strong>What the measurements don't separate</strong> is why the shared part itself doesn't speed up with a
+third or fourth thread. The candidates, each visible in the code, are:</p>
+<ul>
+<li>the cost of waking helpers and of waiting for the last one to finish;</li>
+<li>the setup and assembly the leader does alone, inside the call;</li>
+<li>the build's checks that each thread writes only its own part of the table;</li>
+<li>the number of pieces a block is split into, which grows with the threads per team;</li>
+<li>two threads sharing one core, once there are more threads than cores;</li>
+<li>memory, as in section 3.</li>
+</ul>
+<p>Waiting isn't free either: a helper with nothing to do checks for work up to 2,000 times before
+it sleeps, which costs processor time.</p>
+<p>One more measurement bears on core sharing. With four teams pinned to particular processors,
+giving the threads one core each ("spread") against pairing them on cores ("packed") made the
+biggest difference at two threads a team: packed was 23% slower (1,055 against 1,369 MB/s
+in the median round). With three threads a team it was 8% slower, and with four, 1%. But the
+packed arm also had fewer cores to use (4 against 8 for eight threads), so this compares how
+many cores were available, not which threads shared them.</p>
+<h2 id="5-what-did-three-teams-of-three-gain">5. What did three teams of three gain?<a class="headerlink" href="#5-what-did-three-teams-of-three-gain" title="Permanent link">&para;</a></h2>
+<p>The grid's three-team plans were chosen after the fact, so before changing the decoder we
+registered a test of the change itself, with its pass rule fixed before any run: 0.2.5's plan
+against 0.2.4's, at 8 to 20 threads, 20 rounds each, and a second run to confirm it. Both runs
+passed. At ten threads:</p>
+<table>
+<thead>
+<tr>
+<th>run</th>
+<th style="text-align: right;">speed against 0.2.4</th>
+<th style="text-align: right;">processor time</th>
+<th style="text-align: right;">peak memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>first</td>
+<td style="text-align: right;">1.089 (1.075–1.103)</td>
+<td style="text-align: right;">0.88</td>
+<td style="text-align: right;">0.82</td>
+</tr>
+<tr>
+<td>confirmation</td>
+<td style="text-align: right;">1.088 (1.076–1.101)</td>
+<td style="text-align: right;">0.89</td>
+<td style="text-align: right;">0.81</td>
+</tr>
+</tbody>
+</table>
+<p>The intervals are 95% intervals across the 20 paired rounds of one run. Neither run detected
+harm at 11, 12, 16 or 20 threads, the registered check there. A separate comparison of the two
+releases found 0.2.4 taking 11.9% longer than 0.2.5 at ten threads, and 8.1–8.7% longer at 12
+to 20.</p>
+<p>At ten threads or more on a machine of this shape (ten cores, a 20 MiB L3), 0.2.5 runs three
+teams of three. A request for twenty threads still decodes on nine. The result covers this
+processor and this workload. It shows that three teams are faster. It doesn't show why, which
+is section 3's open question.</p>
+<h2 id="6-what-did-the-review-change">6. What did the review change?<a class="headerlink" href="#6-what-did-the-review-change" title="Permanent link">&para;</a></h2>
+<p>The first version of this analysis was reviewed adversarially by another member of the project,
+who recomputed its numbers from the archived traces. All seven objections were accepted, and
+the version this post is based on takes them in. Four changes matter for the argument.</p>
+<p>The first draft claimed that the decoder's buffers formed a 20 MiB working set that filled the
+cache. That was a sum of reserved capacities and peaks, not a measurement of what is read at
+the same time, and it was withdrawn. The first draft also read the flat block times in
+section 4 as memory saturation. The review pointed out that they can't separate memory from
+waiting, unshared work or core sharing, and that claim was withdrawn too. The outside share in
+section 4 was also recomputed: the first draft divided by the wrong total, and called the whole
+inversion call "build and walk", when it includes setup, assembly and waits. And the first
+draft's 1.10–1.30× estimate for the next experiment was replaced by the model in section 7,
+which shows that no such floor follows from the measurements.</p>
+<h2 id="7-what-will-we-try-next">7. What will we try next?<a class="headerlink" href="#7-what-will-we-try-next" title="Permanent link">&para;</a></h2>
+<p><strong>First: let the leader work on other blocks while its helpers build and walk.</strong> Today a
+team's helpers wait while the leader runs MTF before a block and RLE1 and the CRC after it. In
+the proposed pipeline, the leader runs the next block's MTF and the previous block's RLE1 and
+CRC while the other threads build and walk the current one. It needs one more buffer for the
+next block's bytes, about 1 MB a team. A prototype is being built.</p>
+<figure class="bf-fig">
+<p class="bf-title">A team's timeline, today and as proposed</p>
+<svg viewBox="0 0 720 260" role="img" aria-label="Two timelines. Today, the leader runs MTF, then joins the helpers for the build and walk, then finishes the block alone, while the helpers wait. Proposed, the helpers build and walk one block while the leader finishes the previous block and runs MTF for the next. Conceptual timing."><text x="0.0" y="18.0" class="bf-ts">Today: the helpers wait while the leader works alone</text><text x="0.0" y="52.0" class="bf-t">leader</text><text x="0.0" y="90.0" class="bf-t">helpers</text><rect x="80" y="30" width="70" height="30" rx="4" class="bf-pill"/><text x="115.0" y="50.0" class="bf-t" text-anchor="middle">MTF A</text><rect x="152" y="30" width="150" height="30" rx="4" class="bf-card-hi"/><text x="227.0" y="50.0" class="bf-t" text-anchor="middle">build, walk A</text><rect x="152" y="68" width="150" height="30" rx="4" class="bf-card-hi"/><text x="227.0" y="88.0" class="bf-t" text-anchor="middle">build, walk A</text><rect x="304" y="30" width="92" height="30" rx="4" class="bf-pill"/><text x="350.0" y="50.0" class="bf-t" text-anchor="middle">finish A</text><rect x="80" y="68" width="70" height="30" rx="4" class="bf-track"/><rect x="304" y="68" width="92" height="30" rx="4" class="bf-track"/><rect x="400" y="30" width="70" height="30" rx="4" class="bf-pill"/><text x="435.0" y="50.0" class="bf-t" text-anchor="middle">MTF B</text><rect x="472" y="30" width="150" height="30" rx="4" class="bf-card-hi"/><text x="547.0" y="50.0" class="bf-t" text-anchor="middle">build, walk B</text><rect x="472" y="68" width="150" height="30" rx="4" class="bf-card-hi"/><text x="547.0" y="88.0" class="bf-t" text-anchor="middle">build, walk B</text><rect x="624" y="30" width="92" height="30" rx="4" class="bf-pill"/><text x="670.0" y="50.0" class="bf-t" text-anchor="middle">finish B</text><rect x="400" y="68" width="70" height="30" rx="4" class="bf-track"/><rect x="624" y="68" width="92" height="30" rx="4" class="bf-track"/><text x="0.0" y="140.0" class="bf-ts">Proposed: the leader finishes one block and starts the next</text><text x="0.0" y="174.0" class="bf-t">leader</text><text x="0.0" y="212.0" class="bf-t">helpers</text><rect x="110" y="152" width="70" height="30" rx="4" class="bf-pill"/><text x="145.0" y="172.0" class="bf-t" text-anchor="middle">MTF B</text><rect x="80" y="190" width="200" height="30" rx="4" class="bf-card-hi"/><text x="180.0" y="210.0" class="bf-t" text-anchor="middle">build, walk A</text><rect x="286" y="152" width="104" height="30" rx="4" class="bf-pill"/><text x="338.0" y="172.0" class="bf-t" text-anchor="middle">finish A</text><rect x="392" y="152" width="70" height="30" rx="4" class="bf-pill"/><text x="427.0" y="172.0" class="bf-t" text-anchor="middle">MTF C</text><rect x="286" y="190" width="200" height="30" rx="4" class="bf-card-hi"/><text x="386.0" y="210.0" class="bf-t" text-anchor="middle">build, walk B</text><rect x="492" y="152" width="104" height="30" rx="4" class="bf-pill"/><text x="544.0" y="172.0" class="bf-t" text-anchor="middle">finish B</text><rect x="598" y="152" width="70" height="30" rx="4" class="bf-pill"/><text x="633.0" y="172.0" class="bf-t" text-anchor="middle">MTF D</text><rect x="492" y="190" width="200" height="30" rx="4" class="bf-card-hi"/><text x="592.0" y="210.0" class="bf-t" text-anchor="middle">build, walk C</text><text x="80.0" y="246.0" class="bf-t">“finish” is the assembly, RLE1 and the CRC. Proposed, the helpers are one thread fewer.</text></svg>
+<figcaption>The proposal, not a measurement: bar lengths are illustrative. Whether it pays depends on how much slower the build and walk run with one thread fewer, and on what the hand-offs cost.</figcaption>
+</figure>
+
+<p>Whether it pays is not obvious, because the shared part loses a thread: in a team of three,
+the build and walk would run on two. A simple model, from the review, puts numbers on that.
+Let <span class="arithmatex">\(S\)</span> be the leader's work outside the shared part, <span class="arithmatex">\(P_0\)</span> the shared part today, <span class="arithmatex">\(\alpha\)</span> how
+much slower the shared part runs with a thread fewer and more blocks in progress, and <span class="arithmatex">\(H\)</span> the
+cost of hand-offs that can't overlap. Then the time a team spends per block, today and
+pipelined, and the speed-up, are</p>
+<div class="arithmatex">\[C_0 = S + P_0, \qquad C_1 = \max(S,\ \alpha P_0) + H,\]</div>
+<div class="arithmatex">\[\text{speed-up} = C_0 / C_1.\]</div>
+<p>For three teams of three, the grid's throughput gives <span class="arithmatex">\(C_0\)</span> = 1.056 ms a block per team: three
+teams, 209.7 MB in 431 blocks, at 1,382 MB/s. That figure includes start-up and the end of the
+run, so it is an approximation, not a measured service time. Taking <span class="arithmatex">\(S\)</span> = 0.40 ms, the time
+outside the inversion call in section 4, leaves <span class="arithmatex">\(P_0\)</span> = 0.656 ms. The model's speed-up then
+depends almost entirely on <span class="arithmatex">\(\alpha\)</span>:</p>
+<figure class="bf-fig">
+<p class="bf-title">Modelled speed-up of the pipeline, against α</p>
+<svg viewBox="0 0 720 262" role="img" aria-label="Modelled speed of the pipelined team against today's, as alpha rises from 1.0 to 1.8. With no hand-off cost: 1.61 times at alpha 1.0, 1.34 at 1.2, 1.15 at 1.4, and break-even at alpha 1.61. With 0.05 ms of hand-off a block: 1.50, 1.26, 1.09, break-even at 1.53."><path d="M60 214.0H660" class="bf-grid"/><text x="52.0" y="218.0" class="bf-tm" text-anchor="end">0.8×</text><path d="M60 171.8H660" class="bf-rule"/><text x="52.0" y="175.8" class="bf-tm" text-anchor="end">1.0×</text><path d="M60 129.6H660" class="bf-grid"/><text x="52.0" y="133.6" class="bf-tm" text-anchor="end">1.2×</text><path d="M60 87.3H660" class="bf-grid"/><text x="52.0" y="91.3" class="bf-tm" text-anchor="end">1.4×</text><path d="M60 45.1H660" class="bf-grid"/><text x="52.0" y="49.1" class="bf-tm" text-anchor="end">1.6×</text><path d="M60 214H660" class="bf-axis"/><text x="60.0" y="232.0" class="bf-tm" text-anchor="middle">1.0</text><text x="210.0" y="232.0" class="bf-tm" text-anchor="middle">1.2</text><text x="360.0" y="232.0" class="bf-tm" text-anchor="middle">1.4</text><text x="510.0" y="232.0" class="bf-tm" text-anchor="middle">1.6</text><text x="660.0" y="232.0" class="bf-tm" text-anchor="middle">1.8</text><text x="360.0" y="252.0" class="bf-tm" text-anchor="middle">α: how much slower the build and walk run, pipelined</text><path d="M60.0 43.1 L75.0 49.8 L90.0 56.2 L105.0 62.3 L120.0 68.3 L135.0 74.0 L150.0 79.5 L165.0 84.8 L180.0 90.0 L195.0 94.9 L210.0 99.7 L225.0 104.4 L240.0 108.9 L255.0 113.2 L270.0 117.4 L285.0 121.5 L300.0 125.5 L315.0 129.3 L330.0 133.0 L345.0 136.7 L360.0 140.2 L375.0 143.6 L390.0 146.9 L405.0 150.2 L420.0 153.3 L435.0 156.4 L450.0 159.3 L465.0 162.2 L480.0 165.1 L495.0 167.8 L510.0 170.5 L525.0 173.1 L540.0 175.7 L555.0 178.2 L570.0 180.6 L585.0 183.0 L600.0 185.3 L615.0 187.6 L630.0 189.8 L645.0 192.0 L660.0 194.1" class="bf-cut"/><circle cx="60.0" cy="43.1" r="4" class="bf-dot-hi"/><circle cx="210.0" cy="99.7" r="4" class="bf-dot-hi"/><circle cx="360.0" cy="140.2" r="4" class="bf-dot-hi"/><circle cx="510.0" cy="170.5" r="4" class="bf-dot-hi"/><path d="M60.0 67.1 L75.0 72.9 L90.0 78.5 L105.0 83.8 L120.0 89.0 L135.0 94.0 L150.0 98.8 L165.0 103.5 L180.0 108.0 L195.0 112.4 L210.0 116.6 L225.0 120.7 L240.0 124.7 L255.0 128.6 L270.0 132.3 L285.0 136.0 L300.0 139.5 L315.0 143.0 L330.0 146.3 L345.0 149.5 L360.0 152.7 L375.0 155.8 L390.0 158.8 L405.0 161.7 L420.0 164.5 L435.0 167.3 L450.0 170.0 L465.0 172.6 L480.0 175.2 L495.0 177.7 L510.0 180.2 L525.0 182.6 L540.0 184.9 L555.0 187.2 L570.0 189.4 L585.0 191.6 L600.0 193.7 L615.0 195.8 L630.0 197.8 L645.0 199.8 L660.0 201.8" class="bf-arrow"/><circle cx="60.0" cy="67.1" r="4" class="bf-dot"/><circle cx="210.0" cy="116.6" r="4" class="bf-dot"/><circle cx="360.0" cy="152.7" r="4" class="bf-dot"/><circle cx="510.0" cy="180.2" r="4" class="bf-dot"/><circle cx="517.2" cy="171.8" r="4" class="bf-dot-ready"/><text x="523.2" y="161.8" class="bf-tm">break-even at 1.61</text><circle cx="460.0" cy="171.8" r="4" class="bf-dot-ready"/><text x="454.0" y="193.8" class="bf-tm" text-anchor="end">break-even at 1.53</text><text x="68.0" y="47.1" class="bf-tm">1.61×</text><text x="68.0" y="81.1" class="bf-tm">1.50×</text><text x="360.0" y="130.2" class="bf-tm" text-anchor="middle">1.15×</text><text x="360.0" y="170.7" class="bf-tm" text-anchor="middle">1.09×</text><path d="M435.0 38h24" class="bf-cut"/><text x="465.0" y="42.0" class="bf-tm">no hand-off cost</text><path d="M435.0 56h24" class="bf-arrow"/><text x="465.0" y="60.0" class="bf-tm">0.05 ms a block</text></svg>
+<figcaption>Modelled, not measured. The break-even points are where the curves cross 1, at α of about 1.61 and 1.53. The measurements don't bound α.</figcaption>
+</figure>
+
+<p>If the shared part ran no slower, the pipeline would be 1.61× as fast, or 1.50× with 0.05 ms
+of hand-off cost per block. If it ran 40% slower, 1.15× or 1.09×. At 1.6× slower the gain is
+gone. If the shared part slowed to what it takes under four teams of two, 0.94–0.99 ms, the
+gain would be 1.07–1.12×, or 1.02–1.07× with the hand-off cost. Nothing measured so far says
+which <span class="arithmatex">\(\alpha\)</span> to expect, so no gain and a loss are both possible outcomes, and will be
+registered as such.</p>
+<p>The test will compare like with like. To isolate the pipeline, pipelined against not
+pipelined at the same plan and thread count: three teams of four against three teams of four,
+and three of three against three of three. Separately, pipelined three of four against today's
+default at ten threads, which is the comparison a user would care about. Each will report
+processor time and peak memory alongside the elapsed time. The prototype must also record when each
+thread starts and finishes each stage of each block, so that the trace shows blocks really
+overlapping. Without that, a result says nothing about the mechanism.</p>
+<p><strong>Second: placement, as a control.</strong> Pinned against unpinned threads, recording which thread
+ran on which processor, for today's plan and for three teams of four. It makes no prediction
+of its own. It is needed to read the pipeline's result, since that plan uses more threads than
+there are cores.</p>
+<p><strong>Third: a smaller table under teams.</strong> The inversion-only program's 3-byte table moved the
+fall in hit share to more blocks, so the table's size is a real factor. But that table's 1.10× gain was against the same
+program's standard table, not against the decoder: against the decoder's own team code (four
+teams of two), in the same tests, it ran at 0.687 (0.680–0.695) of the speed, on six cores
+against eight. A different compact table, which packs
+30 entries into each 64-byte record, ran 4.8% and 7.7% slower than the standard one at four
+threads on CI. And no smaller table has been measured under teams. So it comes after the first
+two.</p>
+<p><strong>Last: shrinking the other buffers.</strong> There is no measurement of how much cache they take, so
+nothing yet says this would help.</p>
+<h2 id="8-where-do-things-stand">8. Where do things stand?<a class="headerlink" href="#8-where-do-things-stand" title="Permanent link">&para;</a></h2>
+<p>The chain of the argument runs like this. A thread count is really two numbers, blocks in
+progress and threads per block. Each extra block slows every other block, enough that three
+blocks beat four. Extra threads on one block barely help, partly because about a third of a
+block's time is work its leader does alone. So three teams of three beat four teams of two, as
+two registered runs confirmed. Why extra blocks hurt is not settled: competition for the
+shared cache is the leading explanation, with good evidence from a simpler program and none
+yet from the decoder.</p>
+<p>The pipeline prototype, its registration and the placement control are in progress. Nothing in
+this post changes the decoder.</p>
+<p>The general lesson: more threads help only if the work they add runs alongside the slowest
+step. Here the slowest step has two parts, the blocks competing with each other, and each
+block's work that one thread does alone.</p>
+<hr />
+<p><strong>Research records:</strong></p>
+<ul>
+<li><a href="https://github.com/lmmx/mibz2/blob/d95ca1ea/docs/journal/2026-11-07-knee-mechanism.md">The analysis of the scaling limit, revised after review</a>,
+  and <a href="https://github.com/lmmx/mibz2/blob/570a89ee/state/reports/knee-mechanism-6699480548/report.md">the review with its recomputation</a></li>
+<li><a href="https://github.com/lmmx/mibz2/blob/d95ca1ea/docs/journal/2026-11-06-team-size.md">The team-size grid and traces</a></li>
+<li><a href="https://github.com/lmmx/mibz2/blob/d95ca1ea/docs/journal/2026-11-06-three-team-policy.md">The three-team policy: registration and both runs</a></li>
+<li><a href="https://github.com/lmmx/mibz2/tree/d95ca1ea/bench/release-scaling/2026-11-06-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.5">The release comparison, 0.2.4 against 0.2.5</a></li>
+<li><a href="https://github.com/lmmx/mibz2/blob/42794eba51a651238ce9dd3165fe546970a020a8/docs/journal/2026-10-29-compact-psi.md">The smaller-table test with counters</a>
+  and <a href="https://github.com/lmmx/mibz2/blob/42794eba51a651238ce9dd3165fe546970a020a8/docs/journal/2026-10-29-libsais-knee.md">the footprint journal</a></li>
+<li><a href="https://github.com/lmmx/mibz2/blob/d95ca1ea/docs/journal/2026-11-05-compact30-staged.md">The compact table under the staged walk</a></li>
+<li><a href="https://github.com/lmmx/mibz2/actions/runs/42310037840">The CI run with the stage costs</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../2026-11-07-pipelined-teams/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Pipelined teams in mibz2 0.2.6">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Pipelined teams in mibz2 0.2.6
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../2026-11-05-huffman-bit-buffer/" class="md-footer__link md-footer__link--next" aria-label="Next: Huffman decoding: the bit buffer in a register">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Huffman decoding: the bit buffer in a register
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    
+    <a href="https://lmmx.github.io/mibz2/background/behind-the-scenes/" target="_blank" rel="noopener" title="Behind the scenes" class="md-social__link">
+    
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-telescope" viewBox="0 0 24 24"><path d="m10.065 12.493-6.18 1.318a.934.934 0 0 1-1.108-.702l-.537-2.15a1.07 1.07 0 0 1 .691-1.265l13.504-4.44M13.56 11.747l4.332-.924M16 21l-3.105-6.21"/><path d="M16.485 5.94a2 2 0 0 1 1.455-2.425l1.09-.272a1 1 0 0 1 1.212.727l1.515 6.06a1 1 0 0 1-.727 1.213l-1.09.272a2 2 0 0 1-2.425-1.455zM6.158 8.633l1.114 4.456M8 21l3.105-6.21"/><circle cx="12" cy="13" r="2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=8affa55d4795"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=8affa55d4795"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=8affa55d4795"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=8affa55d4795"></script>
+      
+        <script src="../../assets/javascripts/observatory.js?v=8affa55d4795"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=8affa55d4795"></script>
+      
+    
+  </body>
+</html>
