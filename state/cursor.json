@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6856176834,
+  "last_examined_comment_id": 6856205921,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2590,12 +2590,18 @@
         "https://github.com/lmmx/mibz2/pull/145#issuecomment-6856176834",
         "https://github.com/lmmx/mibz2/pull/145#issuecomment-6850491677"
       ],
-      "log_publication": "pending"
+      "log_publication": "published_readback_verified",
+      "log_comment_id": 6856205921
     },
     "6856176834": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T14:41:15Z",
       "disposition": "Own queued selective materialisation assignment; ignore self wake, not recipient receipt."
+    },
+    "6856205921": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T14:42:20Z",
+      "disposition": "Own selective materialisation LOG; ignore self wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2748,7 +2754,8 @@
     6855132749,
     6855158914,
     6855542914,
-    6856176834
+    6856176834,
+    6856205921
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
