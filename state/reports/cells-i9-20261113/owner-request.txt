@@ -1,0 +1,165 @@
+Codex — Qualify selective Rauzy–Veech Cells on the i9-10900K
+
+Repository: "lmmx/mibz2"
+
+Mission
+
+Prepare and qualify one matched, three-arm complete-decoder benchmark on Louis's i9-10900K workstation, comparing Segmented, original Cells and selective-materialisation Cells.
+
+Our objective is to establish whether the 11.8% Wikidata improvement previously measured on this workstation can be improved further by the selective-materialisation optimisation in PR #380.
+
+Do not merely propose a benchmark. Prepare the complete executable recipe, validate it, obtain the required reviews, and bring it to the workstation's ready queue. The owner will execute the queued run through the existing workstation protocol.
+
+Evidence and source pins
+
+Read the existing evidence before doing work:
+
+- Original corrected Cells: PR #365, commit "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2".
+- Selective Cells: PR #380, commit "a8a23c11607864cb431f87fff38169e10c41685f".
+- Common integrated base: "be25366f46458e2f1dbb0bdac1f5fbc3366d0648".
+- Original master baseline: "3e7e294cc10f29495e9828181345d74233c549d4".
+- Original i9 Cells result: PR #145 comment "6850347828".
+- Selective Cells matched AMD results: "state/reports/cells-selective-6856176834/PERFORMANCE.md" at "634133df131d6d99b336f8e0d0feff6c77baba0c".
+- Coordinator's queued default-path attribution: PR #145 comment "6857735998".
+
+The original i9 result measured Cells/Segmented Wikidata wall ratio approximately 0.8816. The new AMD experiment measured selective/original Cells at 0.9763.
+
+These are different environments. They must not be multiplied and presented as a measured combined gain.
+
+1. Build a valid three-way comparison
+
+Prepare three arms:
+
+A — Segmented
+
+The existing production Segmented decoder, with Cells disabled.
+
+B — Original Cells
+
+The corrected Cells implementation from #365.
+
+C — Selective Cells
+
+The exact successful selective-materialisation implementation from #380.
+
+The critical requirement is that these comparisons use equivalent surrounding decoder code, compiler flags, harness and input data. Construct a common-tree comparison wherever possible, changing only the intended inversion implementation.
+
+Make the source relationship explicit. Do not accidentally compare an older production decoder against a newer entire decoder and attribute the difference to Cells.
+
+Use identical optimised Rust release settings for all three arms. Archive commit identities, binary digests, compiler version, build flags and verified input hashes.
+
+Do not modify the actual Cells implementation or combine this with PR #379.
+
+2. Freeze the experiment before measurement
+
+The primary experiment should use:
+
+- The i9-10900K workstation.
+- One pinned physical core, avoiding simultaneous use of its SMT sibling.
+- Uninstrumented complete-reader decoding.
+- The existing pinned Wikidata dataset.
+- Balanced, alternating three-arm runs.
+- A predeclared finite number of paired rounds.
+- The repository's existing confidence-interval estimator.
+- Complete output parity against the reference decoder.
+
+Preserve the existing settling and machine-conditioning requirements. Record CPU topology, affinity, clock-related information and the relevant workstation environment.
+
+Cover all seven existing corpus families to expose regressions.
+
+If a multi-threaded comparison is supported and would answer a distinct production question, include it as a separately identified, prospectively registered part of the programme. Do not assume the one-core Cells results apply to the cooperative/team decoder.
+
+Use the smallest credible measurement programme. No unbounded repetitions, favourable-result selection or rerun-to-pass.
+
+3. State the performance decisions in advance
+
+Report at least these matched ratios:
+
+1. Original Cells / Segmented.
+2. Selective Cells / original Cells.
+3. Selective Cells / Segmented.
+
+The main questions are:
+
+- Does original Cells reproduce a material Wikidata advantage over Segmented on this i9 under the new matched build?
+- Does selective materialisation produce a further improvement on the i9?
+- What is the resulting total Wikidata advantage?
+- Are the benefits preserved across the relevant corpus families?
+- What are the actual memory costs?
+
+Report wall time, CPU time, native peak RSS, confidence intervals and absolute measurements.
+
+Success requires a statistically credible complete-reader improvement, not merely fewer writes or faster isolated induction steps.
+
+A combined improvement approaching 14% over Segmented would be encouraging, but is a hypothesis, not a required target.
+
+Keep the previously observed pattern and onebyte regressions visible. A successful Wikidata result does not automatically justify enabling Cells for every input.
+
+4. Reconcile the integration blocker
+
+PR #380 currently fails the existing frozen default-arm performance gate on CI, despite passing its safety and correctness checks.
+
+The Coordinator has already queued a bounded source/build attribution task under comment "6857735998".
+
+Reconcile that task rather than creating a competing investigation.
+
+Identify whether the default-arm differences are associated with actual reachable production-code changes, compiler/linker effects, build comparability or another concrete mechanism.
+
+Do not require a complete causal explanation before preparing the i9 experiment, but do preserve every existing acceptance gate. Keep default-path qualification separate from the three-arm experimental performance result.
+
+The target-machine evidence should inform an actual integration decision: whether Cells can become a safely isolated opt-in implementation, whether any target-specific enablement is justified, or whether additional changes remain necessary.
+
+5. Prepare the workstation queue
+
+Follow "docs/team/PROTOCOL.md" §9 and the applicable C1/C5 performance rules.
+
+Prepare:
+
+- A frozen experiment plan and exact source/input manifest.
+- An executable, argument-free workstation recipe.
+- An untimed dry run that exercises the complete build, input validation, output collection and submission path.
+- A bounded schedule and unchanged estimator.
+- Correctness/oracle checks and resource observations.
+- Failure-safe collection of logs and artifacts.
+- An exact-head CI validation and appropriate Coordinator review.
+
+Then have the Coordinator admit the experiment to "bench/workstation-queue.txt" through the normal ready-tag workflow once all prerequisites are met.
+
+Do not launch workstation timing yourself, bypass the ready-tag process, or treat this prompt as permission for an unregistered local run.
+
+The intended final owner action should be:
+
+"just workstation-queue"
+
+Don't require Louis to manually assemble branches, supply source paths, choose CPU affinity, construct datasets or type benchmark parameters. Resolve those preparations in the recipe.
+
+If there is a concrete readiness blocker, report the exact blocker and next finite step. Do not mark the run ready prematurely.
+
+6. After the result
+
+Once the workstation run has been executed and its archive submitted, reconcile the complete evidence with the Coordinator.
+
+Present a concise three-arm table with exact measurements and confidence intervals.
+
+Give a concrete decision:
+
+- Selective Cells shows further benefit and is worth pursuing towards integration.
+- Original Cells wins but selective Cells adds no credible i9 improvement.
+- Neither reproduces the earlier advantage under these conditions.
+- The experiment is invalid or inconclusive for a specifically documented reason.
+
+Do not silently merge, release, enable Cells globally or waive existing safety/performance rules.
+
+If the benchmark confirms an advantage, recommend the shortest permitted route to ship the useful implementation, including opt-in integration if that is the defensible first step.
+
+Important instruction
+
+This is a performance qualification and integration-enablement assignment, not a request for another speculative mathematical optimisation.
+
+The implementation already exists, the independent native safety review has passed, and the AMD experiment has demonstrated an incremental improvement.
+
+The missing evidence is how the three alternatives perform together on the actual target machine.
+
+Prepare that experiment fully, get it ready for Louis's one-command workstation execution, and make its eventual result actionable for integration.
+
+Preserve the existing successful PR #380, all historical adverse evidence, and the repo's safety and performance policies.

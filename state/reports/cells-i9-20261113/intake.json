@@ -1,0 +1,9 @@
+{
+  "owner_request_sha256": "aa762b100e58bbb2270b0b6c742e143ef79b887ac3790e3e0e891acb7fbb3c63",
+  "master": "3e7e294cc10f29495e9828181345d74233c549d4",
+  "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
+  "branch": "bench/cells-selective-i9",
+  "queued_attribution": 6857735998,
+  "procedure": "existing PROTOCOL9 queue and Run Signal; no agent execution or direct desktop commands",
+  "state": "IN_PROGRESS: preparing one owner-requested queued three-arm diagnostic; Coordinator reconciliation requested"
+}

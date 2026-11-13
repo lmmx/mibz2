@@ -740,5 +740,14 @@
     "completion_review_comment_id": 6857643047,
     "completion_evidence_commit": "634133df131d6d99b336f8e0d0feff6c77baba0c",
     "receipt_readback_verified": true
+  },
+  "cells_i9": {
+    "status": "IN_PROGRESS: owner-activated three-arm queue preparation; reconcile queued6857735998 without competing implementation",
+    "branch": "bench/cells-selective-i9",
+    "master": "3e7e294cc10f29495e9828181345d74233c549d4",
+    "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
+    "report": "state/reports/cells-i9-20261113",
+    "workstation_executed": false,
+    "ready": false
   }
 }
