@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6852838891,
+  "last_examined_comment_id": 6852932827,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2402,9 +2402,15 @@
       "ready_job_queued": false,
       "ready_job_reason": "No target-qualified changed-build proposal or selected frozen recipe. Do not repeat submitted runs.",
       "grouped_log": {
-        "status": "in_progress",
-        "purpose": "Record final CI completion, formal DEFER, existing queue status and no new run."
+        "status": "completed_verified",
+        "comment_id": 6852932827,
+        "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852932827"
       }
+    },
+    "6852932827": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T12:29:52Z",
+      "disposition": "Own final completion/DEFER checkpoint; ignore self wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2548,7 +2554,8 @@
     6852388781,
     6852495550,
     6852794334,
-    6852910884
+    6852910884,
+    6852932827
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -4404,7 +4411,8 @@
       "final_hosted_miri": "131875524408 success;40 passed,0 failed,59 filtered; six Cells witnesses included",
       "completion_review": 6852838891,
       "ci_complete": true,
-      "completion_accepted": true
+      "completion_accepted": true,
+      "integration_decision_log": 6852932827
     }
   },
   "submission_repair_376": {
