@@ -2015,7 +2015,7 @@
     },
     {
       "trigger_comment_id": 6857336623,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/selective-h1-6857336623/report.md",
       "repository": "lmmx/mibz2",
@@ -2023,7 +2023,10 @@
       "source_commit": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
       "corresponding_successor": "a8a23c11607864cb431f87fff38169e10c41685f",
       "report_commit": "e1500ba4539924e0e8407f11a90f3d93c4217318",
-      "disposition": "PROCEED scoped native path; H1 resolved by exact-source baseline/three compiled assertion kills and one-comment reconstruction of initial source. Six inputs unchanged at successor; no harness/performance/integration clearance."
+      "disposition": "PROCEED scoped native path; H1 resolved by exact-source baseline/three compiled assertion kills and one-comment reconstruction of initial source. Six inputs unchanged at successor; no harness/performance/integration clearance.",
+      "review_comment_id": 6857443323,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned verify retains only its hardcoded coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
