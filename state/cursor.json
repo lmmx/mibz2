@@ -65,7 +65,9 @@
     6849790558,
     6849911875
   ],
-  "in_progress": [],
+  "in_progress": [
+    6850176303
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -564,6 +566,11 @@
       "progress": "Corrected record published; REVIEW read back with Observer route/header/citation verified.",
       "work_commit": "59470d1b2f35a02ac44dc023815c12b441c9fdd4",
       "review_id": 6849982678
+    },
+    "6850176303": {
+      "comment_id": 6850176303,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling queue admission and later channel evidence."
     }
   },
   "last_record_commit": "59470d1b2f35a02ac44dc023815c12b441c9fdd4"
