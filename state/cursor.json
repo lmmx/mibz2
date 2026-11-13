@@ -2756,6 +2756,20 @@
       "wake_disposition": "observed_self_generated_noop",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6857619789": {
+      "status": "in_progress",
+      "delivery_id": "228d9650-df78-11f1-9776-eab8126c4f0a",
+      "comment_updated_at": "2026-11-13T15:37:28Z",
+      "action": "Reconcile finished Observer/Codex receipts, exact-head all-green checks; retain selective candidate and defer integration; stage one bounded default-path attribution per router, update Observer once and grouped LOG.",
+      "action_links": []
+    },
+    "6857643047": {
+      "status": "in_progress",
+      "delivery_id": "483d6a10-df78-11f1-875a-8162716e6970",
+      "comment_updated_at": "2026-11-13T15:38:31Z",
+      "action": "Reconcile finished Observer/Codex receipts, exact-head all-green checks; retain selective candidate and defer integration; stage one bounded default-path attribution per router, update Observer once and grouped LOG.",
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -5457,18 +5471,18 @@
       "whole_successor_certified": false
     },
     "ready_job_queued": false,
-    "ready_job_reason": "Default-primary neutrality not met and hosted Miri incomplete; no eligible workstation-ready recipe.",
+    "ready_job_reason": "No eligible frozen/dry-run-checked workstation recipe; failed default gate first needs bounded source/build attribution. No workstation run is needed for this step.",
     "next_actor": "Codex existing6856176834 exact-head evidence/completion; Observer6857529647 records closure and measured gain. Separate deliberate integration decision required.",
     "onecore6848164049": "deferred, not completed",
     "math_owner": "MONODROMY",
     "architecture_owner": "Pathfinder",
     "pickup_review": 6856423064,
-    "recipient_cursor": "42ec0f653b90c009d7d6f229b671f092bb0ebfe1",
+    "recipient_cursor": "a62c3db06dc933ff58bc6baf4ecef7df275d9287",
     "common_base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
     "baseline_cells_blob": "6e08c72b83e8940bf3cae98b9639397ab7482943",
     "plan_pin": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
     "plan_comment": 6856485171,
-    "completion_observed": false,
+    "completion_observed": true,
     "implementation_head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
     "implementation_checkpoint": 6857000172,
     "evidence_commit": "51cf6b72857fc511e95b38094c6caea16369d8a4",
@@ -5506,10 +5520,25 @@
         "text_4t": "+3.9% [0.7,7.2]"
       },
       "integration": "DEFER",
-      "hosted_miri": "in_progress",
+      "hosted_miri": "success",
       "legacy": "success",
       "performance_rerun_dispatched": false
     },
-    "performance_report": "3dd3e33f32c32bb3eb266a1f90032cacb30d79bf"
+    "performance_report": "3dd3e33f32c32bb3eb266a1f90032cacb30d79bf",
+    "completion_review": 6857643047,
+    "completion_report": "634133df131d6d99b336f8e0d0feff6c77baba0c",
+    "ci": {
+      "checks": 29,
+      "all_completed_success_or_skipped": true,
+      "legacy": "success",
+      "head": "a8a23c11607864cb431f87fff38169e10c41685f"
+    },
+    "default_path_attribution": {
+      "status": "intent_to_queue",
+      "route": "145 QUEUED",
+      "blocking_inbox": 6848164049,
+      "scope": "one source/build attribution report, no production edits or timings",
+      "execution_observed": false
+    }
   }
 }
