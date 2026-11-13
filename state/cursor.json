@@ -1211,13 +1211,15 @@
     {
       "comment_id": 6850660172,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "parent_comment_id": 6850318070,
       "queue_comment_id": 6850583026,
-      "progress": "Seven-family identities and historical CI coverage inventoried. Current live routes only for three families. Saved 64r<n screen separates pattern/onebyte from admitted Wikidata, but has no per-block speed labels or four-family validation; no dispatcher selected.",
-      "report_path": "state/records/reviews/inbox-6850660172/report.md"
+      "progress": "Bounded delta complete: seven-family exact input/evidence matrix; no robust early dispatcher selected; one CI-first untimed preparation and unadmitted 163-execution two-arm diagnostic specified. Awaiting one REVIEW publication.",
+      "report_path": "state/records/reviews/inbox-6850660172/report.md",
+      "report_commit": "98b553c382e91bb763d4336e42ad6e9c2651b91c",
+      "coverage_path": "state/records/reviews/inbox-6850660172/coverage.json"
     }
   ],
   "migrated_from": {
