@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9
