@@ -531,6 +531,10 @@
       "legacy": "success",
       "Test": "failure: actual Rust job131787940907 shows inherited mtf_two_level lint, fixed by375 on master but absent from stacked373 base"
     },
-    "next_action": "Explicit authorised integration of green373; retarget376 to integrated master, normal checks; obtain actual i9 read-only preflight before CPU/corpus binding and restricted-run approval."
+    "next_action": "Explicit authorised integration of green373; retarget376 to integrated master, normal checks; obtain actual i9 read-only preflight before CPU/corpus binding and restricted-run approval.",
+    "review_comment_id": 6848513930,
+    "receipt_readback_verified": true,
+    "receipt_routing_check": "misrouted false; connector exact-body readback; no automatic session wakeup",
+    "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0"
   }
 }
