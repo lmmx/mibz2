@@ -2086,11 +2086,9 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": null,
-    "status": "finished",
-    "decision": "D103",
-    "incoming_comment": 6790746386,
-    "review_comment_id": 6790889882
+    "active_comment": 6867883717,
+    "status": "in progress",
+    "decision": "D104"
   },
   "duplicate_events": [
     {
@@ -3720,6 +3718,13 @@
       "work_commit": "b7af95428922d3c81d8007d548ce22002db57eaf",
       "review_comment_id": 6790889882,
       "complete_cursor_commit": "ca976259ba93460964bf066a53a9c2d3f443ee40"
+    },
+    {
+      "comment_id": 6867883717,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D104",
+      "progress": "Migration verified. Bounded frozen PLAN machine/activity qualification check."
     }
   ],
   "migrated_from": {
