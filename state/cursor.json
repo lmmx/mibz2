@@ -1930,6 +1930,12 @@
       "status": "completed",
       "comment_updated_at": "2026-11-13T10:39:33Z",
       "disposition": "Own substantive LOG verified; ignore self-trigger."
+    },
+    "6850545905": {
+      "status": "in_progress",
+      "delivery_id": "c05a9100-df4e-11f1-8322-1916e8616533",
+      "comment_updated_at": null,
+      "planned_action": "Reconcile owner interpretation against archived data; queue a narrow amendment to existing busy Optimizer assignment6850318070, no duplicate broad assignment. Preserve mathematical proposal6850491677 and frozen programme. Persist bounded disposition before LOG."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3743,7 +3749,14 @@
     "onecore_status": "deferred_not_executed",
     "codex_cursor_sha": "d4f0aae8fc4265917cecf5e51b9cdd0c1ba65766",
     "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0",
-    "onecore_deferral_confirmed": true
+    "onecore_deferral_confirmed": true,
+    "selective_dispatch": {
+      "source_comment": 6850545905,
+      "scope": "Compare cheap pre-induction switching against writer improvements within existing pricing; no corpus labels, scans, late oracle gate or free-overhead assumption.",
+      "screen": "Saved-data untimed structural separability only; no per-block counterfactual timing labels.",
+      "future_experiment": "Prospective finite matched Segmented/current Cells/cheap-dispatch three-arm test, only after selection, registration and gates.",
+      "no_new_admission": true
+    }
   },
   "submission_repair_376": {
     "head_sha": "660a1b750daf880c69e440ed6ec5d4cb942e8970",
