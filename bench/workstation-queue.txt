@@ -6,3 +6,4 @@
 # - an entry is removed once its bundle has been read.
 #
 # recipe                       branch                    what it measures
+bench-cells-selective-i9 bench/cells-selective-i9 Matched Segmented/original/selective Cells;12x7x3
