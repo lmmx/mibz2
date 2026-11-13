@@ -1968,6 +1968,14 @@
       "disposition": "Source omission proof accepted at835984e; B5 evidence closure pending Miri/mutation records. CI Cells native/differential/fuzz corroborated; service fixture failures and skipped harness steps retained.",
       "review_comment_id": 6852258044,
       "publication_verification": "Exact body, author lmmx, PR145 and role-aware routing verified; pinned verify rejects researcher FROM under its coordinator-only assumption, with no other problem."
+    },
+    {
+      "trigger_comment_id": 6852337017,
+      "status": "in progress",
+      "pr": 162,
+      "source_commit": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+      "successor_commit": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+      "report_path": "state/reports/small-spine-closure-6852337017/report.md"
     }
   ],
   "active_delegations": [],
