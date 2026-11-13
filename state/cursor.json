@@ -3004,7 +3004,8 @@
     "6867998245": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T23:57:15Z",
-      "disposition": "Own D104 decision LOG; ignore self wake."
+      "disposition": "Own D104 decision LOG read back/verified; self event ignored without replay.",
+      "delivery_id": "f4c01cc0-dfbd-11f1-8230-fb47fb6b706c"
     }
   },
   "automatic_github_wakeup_assumed": false,
