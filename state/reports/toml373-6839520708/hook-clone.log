@@ -1,0 +1,19 @@
+Cloning into '/tmp/mibz2-toml-hook'...
+warning: refs/tags/v0.6.6 166a872f95e213ea1dd354d199b961afc12ccb8c is not a commit!
+Note: switching to '3c1ff3e062dbdc776210dfc182dfa1db1611e2da'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+

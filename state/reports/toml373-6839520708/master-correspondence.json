@@ -1,0 +1,19 @@
+{
+  "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+  "parent": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+  "current_master": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+  "hypothetical_merge_tree": "05e2a56c3381600ef975cbd351b19d973cb0f123",
+  "clean_merge": true,
+  "master_375_example_blobs_preserved": [
+    "examples/packet_census.rs",
+    "examples/mtf_two_level.rs"
+  ],
+  "actual_merge_performed": false,
+  "github_synthetic_merge": "078f37a5ef27240ee9161cfc70c134a95110939a",
+  "github_synthetic_parents": [
+    "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+    "8329f0c702a1c5598e39e7f2413db55a12ce8884"
+  ],
+  "github_synthetic_tree": "05e2a56c3381600ef975cbd351b19d973cb0f123",
+  "synthetic_matches_current_master_merge": true
+}

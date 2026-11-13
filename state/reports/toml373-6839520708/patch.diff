@@ -1,0 +1,26 @@
+diff --git a/bench/cells-gap/Cargo.toml b/bench/cells-gap/Cargo.toml
+index 7848577..494d25e 100644
+--- a/bench/cells-gap/Cargo.toml
++++ b/bench/cells-gap/Cargo.toml
+@@ -8,7 +8,7 @@ version = "0.0.0"
+ 
+ [dependencies]
+ mibz2 = { git = "https://github.com/lmmx/mibz2", rev = "57f51bbc0ca62ac3ee1cc148a1010842eea6222a" }
+-serde = { version = "1", features = ["derive"] }
++serde = { features = ["derive"], version = "1" }
+ serde_json = "1"
+ sha2 = "0.10"
+ 
+diff --git a/bench/cells-gap/live/Cargo.toml b/bench/cells-gap/live/Cargo.toml
+index 9db4561..d4a42f4 100644
+--- a/bench/cells-gap/live/Cargo.toml
++++ b/bench/cells-gap/live/Cargo.toml
+@@ -11,7 +11,7 @@ mibz2 = { path = ".source" }
+ serde_json = "1"
+ 
+ [dev-dependencies]
+-bzip2 = { version = "0.4", features = ["static"] }
++bzip2 = { features = ["static"], version = "0.4" }
+ 
+ [features]
+ cells-reader = []

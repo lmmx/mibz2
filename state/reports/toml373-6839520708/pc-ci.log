@@ -1,0 +1,11 @@
+# just ty-ci
+taplo lint
+taplo format --check
+just fix-eof-ws check
+Processing 1358 file(s)...
+All done! ✨ 🍰 ✨
+1358 files don't need to be formatted.cargo machete
+Analyzing dependencies of crates in this directory...
+cargo-machete didn't find any unused dependencies in this directory. Good job!
+Done!
+cargo fmt --check --all

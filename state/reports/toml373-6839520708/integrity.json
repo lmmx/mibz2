@@ -1,0 +1,28 @@
+{
+  "base": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+  "changed": {
+    "bench/cells-gap/Cargo.toml": {
+      "old_sha256": "cb54232a25e3cc5d4c71dfe7b5ed1d9defbbf09af7c286912a0967a92a108381",
+      "new_sha256": "214b617d5528cad6a47dfa87181fd84b49eda516a37c8c49e7b812e494205dd9",
+      "parsed_toml_identical": true
+    },
+    "bench/cells-gap/live/Cargo.toml": {
+      "old_sha256": "9538427f5e1b642c6b5c5d1ad90320ea0df8437aa5c46f759a4cbc27f42d6417",
+      "new_sha256": "80e90ecff4ca78952069ac89420e9578c998fcc63ce79292fae754987afbc3f9",
+      "parsed_toml_identical": true
+    }
+  },
+  "other_tracked_files_identical": 1572,
+  "archives_verified": {
+    "evidence": 97,
+    "r1": 12
+  },
+  "source_pin": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "original_hashes": 53,
+  "historical_source_hashes_verified_at_original_commit": 7,
+  "historical_live_manifest_hash_explicitly_superseded_only_for_formatting": true,
+  "plan_frozen_bytes_unchanged": true,
+  "prepared_overlay_unchanged": true,
+  "R1_driver_tests_schedule_and_estimator_unchanged": true,
+  "measurements": 0
+}

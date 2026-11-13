@@ -1,0 +1,447 @@
+{
+  "observed_at": "2026-11-13T08:29:25.058Z",
+  "head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+  "actions": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "workflow_runs": [
+          {
+            "id": 43393349525,
+            "name": "Occupancy",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 292,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/logs",
+            "workflow_id": 398776390
+          },
+          {
+            "id": 43393348451,
+            "name": "Test",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1722,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 43393348575,
+            "name": "Cells live-path preparation",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 6,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/logs",
+            "workflow_id": 413971946
+          },
+          {
+            "id": 43393348524,
+            "name": "Benchmark",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 689,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 43393348433,
+            "name": "CI",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1739,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/logs",
+            "workflow_id": 398116820
+          }
+        ]
+      },
+      "isError": false
+    }
+  },
+  "legacy": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794558438.dZzzsTpVR12DA6C9_jbU1g"
+          }
+        ]
+      },
+      "isError": false
+    }
+  },
+  "packaging": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "jobs": [
+        {
+          "id": 131778289578,
+          "name": "check-commit",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Confirm commit message matched",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            }
+          ]
+        },
+        {
+          "id": 131778321268,
+          "name": "sdist",
+          "status": "completed",
+          "conclusion": "success",
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Build sdist",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Upload sdist",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 4
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 8
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 9
+            }
+          ]
+        },
+        {
+          "id": 131778321271,
+          "name": "windows (windows-latest, x64)",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "pending",
+              "conclusion": null,
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 10
+            }
+          ]
+        },
+        {
+          "id": 131778321286,
+          "name": "macos (macos-15, x86_64)",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "pending",
+              "conclusion": null,
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 10
+            }
+          ]
+        },
+        {
+          "id": 131778321330,
+          "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "pending",
+              "conclusion": null,
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 10
+            }
+          ]
+        },
+        {
+          "id": 131778321357,
+          "name": "linux (ubuntu-22.04, x86_64, auto)",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "pending",
+              "conclusion": null,
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 10
+            }
+          ]
+        },
+        {
+          "id": 131778321437,
+          "name": "macos (macos-15, aarch64)",
+          "status": "in_progress",
+          "conclusion": null,
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 1
+            },
+            {
+              "name": "Run actions/checkout@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 2
+            },
+            {
+              "name": "Run actions/setup-python@v6",
+              "status": "completed",
+              "conclusion": "success",
+              "number": 3
+            },
+            {
+              "name": "Build wheels",
+              "status": "in_progress",
+              "conclusion": null,
+              "number": 4
+            },
+            {
+              "name": "Upload wheels",
+              "status": "pending",
+              "conclusion": null,
+              "number": 5
+            },
+            {
+              "name": "Post Run actions/setup-python@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 9
+            },
+            {
+              "name": "Post Run actions/checkout@v6",
+              "status": "pending",
+              "conclusion": null,
+              "number": 10
+            }
+          ]
+        },
+        {
+          "id": 131778323689,
+          "name": "Publish crate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "run_id": 43393348433,
+          "logs_url": null,
+          "steps": null
+        }
+      ]
+    },
+    "isError": false
+  }
+}

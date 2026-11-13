@@ -1,0 +1,47 @@
+diff a//workspace/mibz2-live/bench/cells-gap/Cargo.toml b//workspace/mibz2-live/bench/cells-gap/Cargo.toml
+--- a//workspace/mibz2-live/bench/cells-gap/Cargo.toml
++++ b//workspace/mibz2-live/bench/cells-gap/Cargo.toml
+@@ -0,7 +0,7 @@
+publish = false
+version = "0.0.0"
+
+[workspace]
+
+[dependencies]
+mibz2 = { git = "https://github.com/lmmx/mibz2", rev = "57f51bbc0ca62ac3ee1cc148a1010842eea6222a" }
+@@ -7,1 +7,1 @@
+[31m-serde = { version = "1", features = ["derive"] }[0m
+[32m+serde = { features = ["derive"], version = "1" }[0m
+@@ -8,7 +8,7 @@
+serde_json = "1"
+sha2 = "0.10"
+
+[dev-dependencies]
+bzip2 = "0.4"
+
+[profile.release]
+ERROR the file is not properly formatted path="/workspace/mibz2-live/bench/cells-gap/Cargo.toml"
+diff a//workspace/mibz2-live/bench/cells-gap/live/Cargo.toml b//workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+--- a//workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
++++ b//workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+@@ -0,7 +0,7 @@
+[workspace]
+
+[dependencies]
+mibz2 = { path = ".source" }
+serde_json = "1"
+
+[dev-dependencies]
+@@ -7,1 +7,1 @@
+[31m-bzip2 = { version = "0.4", features = ["static"] }[0m
+[32m+bzip2 = { features = ["static"], version = "0.4" }[0m
+@@ -8,7 +8,7 @@
+
+[features]
+cells-reader = []
+default = []
+live-trace = ["mibz2/live-diagnostic"]
+
+[profile.release]
+ERROR the file is not properly formatted path="/workspace/mibz2-live/bench/cells-gap/live/Cargo.toml"
+ERROR operation failed error=some files were not properly formatted
