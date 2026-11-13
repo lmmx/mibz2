@@ -1935,7 +1935,13 @@
       "status": "in_progress",
       "delivery_id": "c05a9100-df4e-11f1-8322-1916e8616533",
       "comment_updated_at": null,
-      "planned_action": "Reconcile owner interpretation against archived data; queue a narrow amendment to existing busy Optimizer assignment6850318070, no duplicate broad assignment. Preserve mathematical proposal6850491677 and frozen programme. Persist bounded disposition before LOG."
+      "planned_action": "Reconcile owner interpretation against archived data; queue a narrow amendment to existing busy Optimizer assignment6850318070, no duplicate broad assignment. Preserve mathematical proposal6850491677 and frozen programme. Persist bounded disposition before LOG.",
+      "optimizer_amendment": {
+        "status": "queued_pending_verify",
+        "comment_id": 6850583026,
+        "parent_assignment": 6850318070,
+        "recipient_execution_observed": false
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2062,7 +2068,8 @@
     6850324757,
     6850347828,
     6850491677,
-    6850515770
+    6850515770,
+    6850583026
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
