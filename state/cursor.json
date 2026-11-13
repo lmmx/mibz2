@@ -70,7 +70,9 @@
     6857529647,
     6857749401
   ],
-  "in_progress": [],
+  "in_progress": [
+    6862205856
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -609,6 +611,11 @@
       "progress": "Record committed; REVIEW 6857807617 published and read back.",
       "work_commit": "e44a581dd050f8bf3414ee154a5f5780be55d8c7",
       "review_id": 6857807617
+    },
+    "6862205856": {
+      "comment_id": 6862205856,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling i9 recipe pickup."
     }
   },
   "last_record_commit": "e44a581dd050f8bf3414ee154a5f5780be55d8c7"
