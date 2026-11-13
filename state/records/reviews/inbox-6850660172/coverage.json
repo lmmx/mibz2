@@ -1,0 +1,464 @@
+{
+  "scope": "delta inventory; reuses parent verified archives, no repeated archive/decoder replay",
+  "historical_ci_source": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+  "current_source": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "families": {
+    "wikidata": {
+      "historical_input": {
+        "file": "wikidata.bz2",
+        "bytes": 11854933,
+        "out": 209700196,
+        "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+        "source": "wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json)"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "a8830caee5c511a6"
+        ],
+        "decoded_lengths": [
+          209700196
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          1.0000931467095062,
+          0.9895602558245752,
+          1.010738149807656
+        ],
+        "cpu_ratio": [
+          0.9999804103229754,
+          0.9894661513612086,
+          1.0106063958368459
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 26724,
+            "max": 26852,
+            "median": 26764.0
+          },
+          "mibz2-cells": {
+            "min": 34776,
+            "max": 35148,
+            "median": 35080.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": [
+        "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf"
+      ],
+      "current_live_routes": {
+        "Err(Density)": 185,
+        "admitted": 196,
+        "column": 48,
+        "Err(Budget)": 2
+      },
+      "current_live_off": {
+        "pairs": 10,
+        "wall_ratio": [
+          0.8816430115438753,
+          0.8569818721114875,
+          0.9070138180274518
+        ],
+        "cpu_ratio": [
+          0.8815074783477087,
+          0.856732291450957,
+          0.9069991199548688
+        ],
+        "rss_kib_values": [
+          41168
+        ],
+        "memory_parity_established": false
+      }
+    },
+    "onebyte": {
+      "historical_input": {
+        "file": "onebyte.bz2",
+        "bytes": 51,
+        "out": 20000000,
+        "sha256": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "263ce790704607c5"
+        ],
+        "decoded_lengths": [
+          20000000
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          1.1090009875525657,
+          1.0951130116952636,
+          1.1230650875827641
+        ],
+        "cpu_ratio": [
+          1.0969758594750112,
+          1.0816396730199933,
+          1.112529492294886
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 34052,
+            "max": 34316,
+            "median": 34226.0
+          },
+          "mibz2-cells": {
+            "min": 36520,
+            "max": 36916,
+            "median": 36818.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": [
+        "aded0ea9b4d06589b13d00bab483faf479d61ed5de21f1760aa7018a28e330e5"
+      ],
+      "current_live_routes": {
+        "Err(Budget)": 1
+      },
+      "current_live_off": {
+        "pairs": 10,
+        "wall_ratio": [
+          0.5355079705278043,
+          0.3318562732272236,
+          0.8641354997151304
+        ],
+        "cpu_ratio": [
+          0.5272622371248368,
+          0.32340343580328595,
+          0.8596243450764939
+        ],
+        "rss_kib_values": [
+          41168
+        ],
+        "memory_parity_established": false
+      }
+    },
+    "pattern": {
+      "historical_input": {
+        "file": "pattern.bz2",
+        "bytes": 1116,
+        "out": 19600000,
+        "sha256": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "f83ded83d55cc011"
+        ],
+        "decoded_lengths": [
+          19600000
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          2.2316632680186768,
+          2.21665969441147,
+          2.2467683940750733
+        ],
+        "cpu_ratio": [
+          2.1516484256661763,
+          2.1384929435915487,
+          2.16488483702754
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 16552,
+            "max": 16672,
+            "median": 16590.0
+          },
+          "mibz2-cells": {
+            "min": 18920,
+            "max": 19132,
+            "median": 19034.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": [
+        "b23397674d9cede1cca8b4654870946900a1a364b9f1779d6f64df4a88d61946"
+      ],
+      "current_live_routes": {
+        "admitted": 22
+      },
+      "current_live_off": {
+        "pairs": 10,
+        "wall_ratio": [
+          1.5303376629912668,
+          1.154569883241954,
+          2.0284033013173546
+        ],
+        "cpu_ratio": [
+          1.5361828227845784,
+          1.1564594164950996,
+          2.040588395371845
+        ],
+        "rss_kib_values": [
+          41168
+        ],
+        "memory_parity_established": false
+      }
+    },
+    "random": {
+      "historical_input": {
+        "file": "random.bz2",
+        "bytes": 7097921,
+        "out": 8000000,
+        "sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "1babb3d0a3067133"
+        ],
+        "decoded_lengths": [
+          8000000
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          1.0064979389210047,
+          0.9990851448468028,
+          1.0139657328280738
+        ],
+        "cpu_ratio": [
+          1.0063953240968329,
+          0.9991362063901883,
+          1.0137071821501307
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 23196,
+            "max": 23460,
+            "median": 23404.0
+          },
+          "mibz2-cells": {
+            "min": 23212,
+            "max": 23592,
+            "median": 23496.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": "NOT RECORDED in inspected archived CI artifact",
+      "current_live_routes": "NOT MEASURED",
+      "current_live_off": "NOT MEASURED"
+    },
+    "records": {
+      "historical_input": {
+        "file": "records.bz2",
+        "bytes": 9587840,
+        "out": 9600000,
+        "sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "4599c7f300345f3f"
+        ],
+        "decoded_lengths": [
+          9600000
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          0.9969517883599235,
+          0.9862731529121013,
+          1.0077460441657478
+        ],
+        "cpu_ratio": [
+          0.9964222832541564,
+          0.9863290659270989,
+          1.0066187856201834
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 23624,
+            "max": 23732,
+            "median": 23658.0
+          },
+          "mibz2-cells": {
+            "min": 23448,
+            "max": 23844,
+            "median": 23772.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": "NOT RECORDED in inspected archived CI artifact",
+      "current_live_routes": "NOT MEASURED",
+      "current_live_off": "NOT MEASURED"
+    },
+    "runs": {
+      "historical_input": {
+        "file": "runs.bz2",
+        "bytes": 37995,
+        "out": 10000235,
+        "sha256": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "be4a032f8c306f41"
+        ],
+        "decoded_lengths": [
+          10000235
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          1.0042551169986822,
+          0.9833619553493039,
+          1.025592188646136
+        ],
+        "cpu_ratio": [
+          1.0052382903746877,
+          0.9840409806110392,
+          1.0268922131758715
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 23612,
+            "max": 23744,
+            "median": 23662.0
+          },
+          "mibz2-cells": {
+            "min": 23704,
+            "max": 23812,
+            "median": 23784.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": "NOT RECORDED in inspected archived CI artifact",
+      "current_live_routes": "NOT MEASURED",
+      "current_live_off": "NOT MEASURED"
+    },
+    "text": {
+      "historical_input": {
+        "file": "text.bz2",
+        "bytes": 2625903,
+        "out": 13238014,
+        "sha256": "f0031809969382478252695d4b219eee69da60f8ef45e845c247362bb4710d75",
+        "source": "ab gen (tests/common/mod.rs corpora), libbzip2 -9"
+      },
+      "historical_ci": {
+        "pairs": 10,
+        "decoded_ab_hashes": [
+          "4fb84650bf8c4551"
+        ],
+        "decoded_lengths": [
+          13238014
+        ],
+        "errors": [
+          ""
+        ],
+        "wall_ratio": [
+          1.0121327441021242,
+          0.9795134879594934,
+          1.0458382699943582
+        ],
+        "cpu_ratio": [
+          1.0118035287613703,
+          0.9800445806915412,
+          1.0445916450980042
+        ],
+        "rss_kib": {
+          "mibz2@bin/ab": {
+            "min": 19472,
+            "max": 19776,
+            "median": 19672.0
+          },
+          "mibz2-cells": {
+            "min": 19500,
+            "max": 19876,
+            "median": 19806.0
+          }
+        },
+        "route_census": "NOT MEASURED"
+      },
+      "decoded_sha256": "NOT RECORDED in inspected archived CI artifact",
+      "current_live_routes": "NOT MEASURED",
+      "current_live_off": "NOT MEASURED"
+    }
+  },
+  "structural_screen": {
+    "wikidata": {
+      "Err(Density)": {
+        "blocks": 185,
+        "rows": 31507152,
+        "descriptor_blocks": 185,
+        "r_over_n_range": [
+          0.10022868902737156,
+          1.0
+        ],
+        "bypass_64r_lt_n": 0
+      },
+      "admitted": {
+        "blocks": 196,
+        "rows": 176398965,
+        "descriptor_blocks": 196,
+        "r_over_n_range": [
+          0.05903870428645083,
+          0.09407234966969837
+        ],
+        "bypass_64r_lt_n": 0
+      },
+      "column": {
+        "blocks": 48,
+        "rows": 465,
+        "descriptor_blocks": 0,
+        "r_over_n_range": null,
+        "bypass_64r_lt_n": 0
+      },
+      "Err(Budget)": {
+        "blocks": 2,
+        "rows": 1799975,
+        "descriptor_blocks": 2,
+        "r_over_n_range": [
+          0.09679491096974915,
+          0.09847333333333333
+        ],
+        "bypass_64r_lt_n": 0
+      }
+    },
+    "onebyte": {
+      "Err(Budget)": {
+        "blocks": 1,
+        "rows": 392160,
+        "descriptor_blocks": 1,
+        "r_over_n_range": [
+          0.007881986944104448,
+          0.007881986944104448
+        ],
+        "bypass_64r_lt_n": 1
+      }
+    },
+    "pattern": {
+      "admitted": {
+        "blocks": 22,
+        "rows": 19600000,
+        "descriptor_blocks": 22,
+        "r_over_n_range": [
+          0.007875510958753511,
+          0.00788016635906758
+        ],
+        "bypass_64r_lt_n": 22
+      }
+    }
+  }
+}
