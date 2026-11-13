@@ -2199,7 +2199,14 @@
       "status": "in_progress",
       "delivery_id": "ed1efb30-df59-11f1-99d6-1078a0c18e15",
       "comment_updated_at": "2026-11-13T12:01:13Z",
-      "planned_action": "Preserve first negative candidate/Segmented performance verdict; route one bounded saved-evidence Optimiser next-step delta, no implementation or timing. Record exact service-only successor and pending CI."
+      "planned_action": "Preserve first negative candidate/Segmented performance verdict; route one bounded saved-evidence Optimiser next-step delta, no implementation or timing. Record exact service-only successor and pending CI.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/160#issuecomment-6852341904"
+      ],
+      "next_assignment": {
+        "id": 6852341904,
+        "status": "posted_and_verified_pending_recipient"
+      }
     },
     "6852258044": {
       "status": "in_progress",
@@ -2211,8 +2218,14 @@
       ],
       "closure_assignment": {
         "id": 6852337017,
-        "status": "posted_pending_verification"
+        "status": "posted_and_verified_pending_recipient"
       }
+    },
+    "6852351744": {
+      "status": "in_progress",
+      "delivery_id": "87d6fba0-df5a-11f1-9672-fd265e1cda18",
+      "comment_updated_at": "2026-11-13T12:05:32Z",
+      "planned_action": "Reconcile already forwarded exact evidence with same Researcher correction6852337017; record new benchmark generator project failure and same Codex investigation, no duplicate request."
     }
   },
   "automatic_github_wakeup_assumed": false,
