@@ -2194,6 +2194,18 @@
       "ready_job_reason": "Existing candidate correction, independent B5 and ordinary paired CI pending; no new workstation programme admitted.",
       "response_comments": 0,
       "dispatches": 0
+    },
+    "6852248226": {
+      "status": "in_progress",
+      "delivery_id": "ed1efb30-df59-11f1-99d6-1078a0c18e15",
+      "comment_updated_at": "2026-11-13T12:01:13Z",
+      "planned_action": "Preserve first negative candidate/Segmented performance verdict; route one bounded saved-evidence Optimiser next-step delta, no implementation or timing. Record exact service-only successor and pending CI."
+    },
+    "6852258044": {
+      "status": "in_progress",
+      "delivery_id": "fc3b8ac0-df59-11f1-8726-317bdc7c1d40",
+      "comment_updated_at": "2026-11-13T12:01:38Z",
+      "planned_action": "Accept completed independent source-review delivery but not B5 closure; route only requested evidence closure using newly archived records and test-only successor. No repeated broad safety review."
     }
   },
   "automatic_github_wakeup_assumed": false,
