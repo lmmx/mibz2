@@ -2983,7 +2983,8 @@
     "6867899861": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T23:50:59Z",
-      "disposition": "Own bundle reconciliation LOG; ignore self wake."
+      "disposition": "Own bundle reconciliation LOG read back/route verified; self event examined, no duplicate action.",
+      "delivery_id": "1416d650-dfbd-11f1-870d-16b16e1a670a"
     }
   },
   "automatic_github_wakeup_assumed": false,
