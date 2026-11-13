@@ -38,15 +38,38 @@ One scalar all-small predicate is folded into the existing marked-origin walk. O
 
 1. Initial boundary test assumed a two-run column had maximum factor16; actual factor27 disproved the fixture assumption. Its failed assertion is retained. A bounded native search found exact n17/n18 witnesses; no byte mismatch occurred.
 2. Local default affinity exposes5 cores but available_parallelism returns4 quota CPUs; unchanged the_policy_here assertion fails. No production scheduling change was made. The test passes with four allowed CPUs.
-3. Service fixture >=4-block assumptions fail after combining current master with #365: source-copy size1,500,435 already exceeds the1.5MiB-scale repeat boundary, so corpora(1) yields only two source copies and RLE1 leaves three blocks. Two fixtures now request scale2 and retain their reach assertions; all10 service tests pass. Failed logs are retained.
+3. Service fixture >=4-block assumptions fail after combining current master with #365: source-copy size1,500,435 already exceeds the1,500,000-byte repeat boundary, so corpora(1) yields only two source copies and RLE1 leaves three blocks. Two fixtures now request scale2 and retain their reach assertions; all10 service tests pass. Failed logs are retained.
 4. Changed-head CI43421337109 fails with FileExistsError at target/cells-pinned-generator restored by rust-cache. Default rows completed; experimental rows were not run. Head93781bd extracts a fresh exact pinned tree outside cached target/. Source/input/measurement identities and gates are unchanged. Partial artifact and log retained.
 
 ## Review, integration and next action
 
-Researcher6852258044 accepts the conditional omitted-operation source proof, with B5 evidence closure pending. Coordinator routed targeted recheck6852337017 to that same reviewer. Raw native/Miri/fuzz/mutation evidence was supplied at9039563; current writer bytes are unchanged. This is not implementer self-certification or a claimed MONODROMY disposition.
+Researcher6852460604 closes the missing local Miri/mutation objection at immutable report356fd3a71252e5987b5bfa669d9e6360294778fc. Its conditional omission proof covers writer835984e and fixture-only4f6e6ff, under the stated constructor assumptions. Coordinator6852495550 accepts this scoped closure and separately inspects preparation-only93781bd. No implementer self-certification or claimed whole-induction theorem. The original F01 withdrawal stands.
 
-Exact-head final CI is pending at this report. The original #365 DEFER and frozen slice-one gate remain separate dependencies. First-run default assessment reports no resolved change; that does not merge the opt-in API or qualify this experimental route. No merge, default adoption, release, i9 execution or new queue admission has occurred.
+At12:19UTC, final93781bd Rust/Test, packaging, Occupancy, Benchmark, docs, walk-stats and hosted legacy succeed. Hosted Miri43422422200/job131875524408 is still running; six completed local Cells Miri witnesses do not substitute for that full CI job. The updated four-CPU full native log now contains all174 completed passes, replacing the earlier explicitly partial snapshot; failures remain archived.
 
-Coordinator6852388781 rejected guard-alone default adoption and dispatched the single saved-evidence Optimizer next-choice delta6852341904. The next technical decision is a target-qualified early route or another existing construction that addresses BOTH pattern cost and the observed host/build difference. An unconditional n/r cutoff does not solve the AMD Wikidata loss. Do not invent an Intel/AMD classifier or silently launch another candidate. Existing MONODROMY/Pathfinder ownership and independent review remain. The original useful i9 gain is a reason to pursue that bounded next choice, not to waive the failed qualification.
+Coordinator6852388781 rejects guard-alone default adoption. Optimizer6852468714 selects PARK integration/new dispatcher, keeping Segmented everywhere, pending Coordinator reconciliation. A64r<n exclusion spares observed pattern but retains every admitted Wikidata block and does not address the first AMD loss. No CPU whitelist can be inferred from differing hardware/build/harness runs. Existing MONODROMY6850491677 and Pathfinder ownership remain; do not create a second implementation.
 
-Full first-run artifact: ci-835984e.zip, SHA25694cde4d012bf878857c8edd696401e562bb025213804ba7cb51868b2664fae65; extracted raw rows/manifests and recomputed ratios are retained. Failed successor partial artifact: ci-4f6e6ff-partial.zip. GitHub comments do not automatically launch Codex; this session consumes updates while active.
+The next decision belongs to Coordinator: reconcile this completed candidate's failed qualification and Optimizer PARK recommendation, then choose the smallest target-qualified continuation under existing ownership. Reopening deployment requires exact-final-build net whole-reader benefit after routing costs, protected seven-family results, credible native RSS and safety evidence. This is a concrete missing performance qualification, not a request for another lint/cleanup programme. Original #365 DEFER/frozen slice-one gate remains separate. No merge, default change, release, i9 execution or new queue admission occurred. GitHub comments do not automatically launch Codex; this session consumes updates while active.
+
+## Final-head automatic CI result (retained separately)
+
+The genuine service/preparation corrections triggered normal changed-head CI. No manual performance retry occurred. Run43422422187/job131875412092 at93781bd runs on a DIFFERENT host model, AMD EPYC9V74, Ubuntu26 image20261111.196.1, Rust1.100.0. Source writer bytes and all seven experimental compressed hashes are unchanged. Default comparison text remains its existing moving-source corpus; experimental text remains pinned57f51 (f0031809...,13,238,014 decoded bytes). Do not confuse result.json's default corpus inventory with cells-inputs.json.
+
+All140 experimental rows succeed and match output count/fingerprint; the21-decode byte oracle check precedes timing. Default head/base assessment at1/2/4threads finds no resolved change. This does not retroactively waive #365's frozen gate. Final-head candidate results below do not replace the first negative result or pool different hosts.
+
+| Corpus | Median wall ms S / C | Wall C/S [95% CI] | CPU C/S [95% CI] | Native peak KiB S / C |
+|---|---:|---:|---:|---:|
+| wikidata | 431.00 / 434.10 | 1.0046 [0.9949, 1.0144] | 1.0046 [0.9948, 1.0145] | 26716 / 35068 |
+| onebyte | 17.75 / 19.60 | 1.0948 [1.0810, 1.1087] | 1.0855 [1.0718, 1.0993] | 34254 / 36836 |
+| pattern | 25.95 / 44.60 | 1.7171 [1.7117, 1.7226] | 1.6738 [1.6687, 1.6788] | 16560 / 18538 |
+| random | 108.85 / 108.65 | 0.9888 [0.9630, 1.0153] | 0.9888 [0.9633, 1.0148] | 23346 / 23490 |
+| records | 117.65 / 117.05 | 0.9922 [0.9850, 0.9995] | 0.9922 [0.9849, 0.9995] | 23652 / 23744 |
+| runs | 11.65 / 11.70 | 0.9984 [0.9853, 1.0117] | 0.9986 [0.9838, 1.0135] | 23628 / 23764 |
+| text | 57.50 / 57.95 | 1.0345 [0.9727, 1.1002] | 1.0330 [0.9727, 1.0971] | 19640 / 19816 |
+
+Pattern still loses71.7%; Wikidata has no resolved gain and31.2% RSS growth. Onebyte loses9.5% with no primary gain to offset it. Records has a small resolved gain0.8% on this host, while its first interval included parity; random/runs/text remain unresolved. Thus final-head performance also does not qualify. The native getrusage measurement limitations stated above apply unchanged.
+
+Artifacts downloaded and SHA256-verified:
+- First: ci-835984e.zip,14032899741,94cde4d012bf878857c8edd696401e562bb025213804ba7cb51868b2664fae65.
+- Failed middle: ci-4f6e6ff-partial.zip,14033793879,f1eeea5ecbb11d77110b2f4630aa7dc351fd063469d3e872869114fb087cfc42. No experimental rows.
+- Final: ci-93781bd.zip,14035605553,f18c835dd9830e577b4caeaef7ccb36cc8257522ef8dd0a7fa2fb140eb2d8fbf. Extracted raw rows, source manifest and recomputed paired intervals retained.

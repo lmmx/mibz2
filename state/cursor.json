@@ -613,14 +613,14 @@
   },
   "cells_seven_screen": {
     "queue_comment_id": 6850979995,
-    "status": "COMPLETE implementation and23-check screen; exact-head screen/packaging/legacy pass; general Test/Benchmark running",
+    "status": "COMPLETE; all exact-head Actions and legacy pass; Coordinator accepted6851749759",
     "pr": 378,
     "head": "de1e5a8b4850cf0d33028682986ae4a641e67d6c",
     "plan_commit": "a49e307",
     "executions": 23,
     "measurements": 0,
     "report": "state/reports/cells-seven-6850979995",
-    "next_action": "Reconcile exact-head CI; Coordinator route supported guarded-writer candidate with MONODROMY. No new timing admission.",
+    "next_action": "Closed; followed by guarded writer6851728088.",
     "miri": "2 F01 tests pass",
     "screen_ci_run": 43417618214,
     "packaging_ci_run": 43417618208,
@@ -633,16 +633,20 @@
   },
   "cells_small_spine": {
     "queue_comment_id": 6851728088,
-    "status": "IN_PROGRESS: candidate implemented; all focused, pinned byte, fuzz, Miri and mutation checks pass; service fixture repair committed locally; CI qualification pending",
+    "status": "IMPLEMENTATION COMPLETE; performance NO-GO, final hosted Miri pending; completion receipt in preparation",
     "branch": "perf/cells-small-spine",
     "base_master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "cells_source": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-    "next_action": "Finish candidate validation and one ordinary paired CI; obtain independent review, preserve performance failures. No dispatcher or default change.",
+    "next_action": "Finish hosted Miri observation/evidence; Coordinator reconcile failed qualification and Optimizer PARK6852468714. No second implementation dispatched.",
     "pr": 379,
-    "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+    "head": "93781bd9578eae95c599583e387180d673659180",
     "review_source_head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
     "independent_review_assignment": 6852069758,
     "evidence": "state/reports/cells-small-spine-6851728088",
-    "performance_measurements_local": 0
+    "performance_measurements_local": 0,
+    "independent_review_closure": 6852460604,
+    "coordinator_scoped_closure": 6852495550,
+    "first_performance": "Wikidata1.0987;pattern1.7819; no primary gain; no default qualification",
+    "final_performance": "Wikidata1.0046;pattern1.7171; no primary gain; no default qualification"
   }
 }
