@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849255206,
+  "last_examined_comment_id": 6849382358,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1731,13 +1731,17 @@
       "ready_job_reason": "Active live integration/admission work; actual i9 facts and final bound recipe/admission remain absent."
     },
     "6849382358": {
-      "status": "in_progress",
+      "status": "completed_integration_reconciled_admission_still_active",
       "delivery_id": "ea660cd0-df45-11f1-8a5d-0ea822aea271",
       "comment_updated_at": null,
       "master_sha": "e674070e1351460d27d745390b1db80ef5112b60",
       "scope": "Reconcile376 guarded integration; preserve active authorised queue binding pending actual facts",
       "ready_job_queued": false,
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6849372228"
+      ],
+      "reason": "376 merge/head/master verified; all headActions+legacy pass, postmergeTest/docs pass Benchmarkrunning. No readyjob: actual desktop facts and final bound recipe/admission absent; preserve authority and existing executor.",
+      "recipient_cursor_sha": "eaf80e130c72424ccbe3bc5719823b5fda61862e"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1863,8 +1867,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849255206,
-    "delivery_id": "fefc16e0-df44-11f1-9248-d5e5d7ee6395",
+    "comment_id": 6849382358,
+    "delivery_id": "ea660cd0-df45-11f1-8a5d-0ea822aea271",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -2063,11 +2067,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "active-cells-admission-6849208142",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6849255206,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849255206"
+    "key": "376-merged-6849382358",
+    "status": "in_progress_before_post",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2436,10 +2438,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Allow existing live Codex integration/admission effort to finish; no duplicate branch changes, reviewer or ready signals",
-    "Reconcile actual376 completion plus cursor and fresh exacthead Actions/legacy; automatic merges remain out of monitor scope",
-    "When actual i9 facts and exact final recipe pin arrive, check frozen120+9/decision rule, argument-free wiring, dry-run, source hashes, CI and duplicate-run/queue/ready state before coordinated PROTOCOL9 admission",
-    "Read373 postmerge Benchmark43398652640 on events; currently running; onecore remains deferred"
+    "Receive actual desktop preflight JSON via existing live actor; verify allowed CPU/topology, absolute corpus path and frozen hashes, no invented bindings",
+    "Existing executor binds argument-free recipe with source d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2 and Rust1.99.1; Coordinator validates exact frozen recipe/dryrun/CI and duplicate state before single standard admission, already authorised",
+    "Read postmerge Benchmark43402546418 on next event; tests/docs now pass; no polling",
+    "Onecore deferred; no duplicate cleanup/research/implementation dispatch; measure120+9 only after owner starts queue"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3362,7 +3364,7 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+  "last_observed_master_sha": "e674070e1351460d27d745390b1db80ef5112b60",
   "pending_compatibility_375": {
     "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
@@ -3445,7 +3447,7 @@
     "postmerge_packaging": "skipped43323058112 existing condition; source-head packaging pass"
   },
   "monitor_policy_verification": {
-    "observed_master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "observed_master_sha": "e674070e1351460d27d745390b1db80ef5112b60",
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
@@ -3519,7 +3521,7 @@
   "submission_repair_376": {
     "head_sha": "660a1b750daf880c69e440ed6ec5d4cb942e8970",
     "base_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
-    "status": "active owner-session integration/admission checkpoint; changed-head CI running",
+    "status": "merged by separate owner-authorised execution",
     "changed_files": [
       "bench/cells-gap/live/run.sh",
       "bench/cells-gap/live/test_driver.py"
@@ -3528,26 +3530,6 @@
     "monitor_patch_read": true,
     "source_preservation": "Author reports1572 other tracked files unchanged",
     "actions": [
-      {
-        "id": 43401424822,
-        "name": "Test",
-        "status": "in_progress",
-        "conclusion": null,
-        "run_number": 1725,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/logs",
-        "workflow_id": 398116819
-      },
-      {
-        "id": 43401424749,
-        "name": "Benchmark",
-        "status": "in_progress",
-        "conclusion": null,
-        "run_number": 692,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/logs",
-        "workflow_id": 398182844
-      },
       {
         "id": 43401424820,
         "name": "CI",
@@ -3567,6 +3549,26 @@
         "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401425077/jobs",
         "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401425077/logs",
         "workflow_id": 413971946
+      },
+      {
+        "id": 43401424822,
+        "name": "Test",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1725,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/logs",
+        "workflow_id": 398116819
+      },
+      {
+        "id": 43401424749,
+        "name": "Benchmark",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 692,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/logs",
+        "workflow_id": 398182844
       }
     ],
     "legacy": [
@@ -3585,7 +3587,7 @@
       "error": "mtf_two_level.rs:273 needless_range_loop; exit101",
       "resolution": "Separate deliberate373 integration, retarget376 to integratedmaster, normal checks and targeted integration decision; no duplicate375 lint implementation or unchanged rerun"
     },
-    "merged": false,
+    "merged": true,
     "base": "master",
     "retarget_observed": true,
     "changed_base_ci": true,
@@ -3596,7 +3598,122 @@
         "head_sha": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
         "status": "retargeted only; no new-base hosted checks observed; separate branch dependency integration decision required"
       }
-    ]
+    ],
+    "merge_sha": "e674070e1351460d27d745390b1db80ef5112b60",
+    "evidence_commit": "cd3214c852055aed969da1bc7ef37d37ad5cdefe",
+    "recipient_cursor_sha": "eaf80e130c72424ccbe3bc5719823b5fda61862e",
+    "postmerge_jobs": {
+      "43402546299": [
+        {
+          "id": 131808724924,
+          "name": "get-python-versions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808725246,
+          "name": "rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808725280,
+          "name": "submit",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808725448,
+          "name": "typing",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808725910,
+          "name": "fuzz-smoke",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808827780,
+          "name": "python (3.13)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808827825,
+          "name": "python (3.15)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808827872,
+          "name": "python (3.11)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808827884,
+          "name": "python (3.14)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808827888,
+          "name": "python (3.10)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131808828274,
+          "name": "python (3.12)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "43402546418": [
+        {
+          "id": 131808724426,
+          "name": "bench",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ],
+      "43402546198": [
+        {
+          "id": 131809158384,
+          "name": "build",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131809158767,
+          "name": "pages",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131810024411,
+          "name": "deploy-branch",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131810026296,
+          "name": "look",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131810026480,
+          "name": "preview",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    "monitor_performed_merge": false,
+    "guard_and_tree": "Reported expected-head guard and treeafd43a466f4d9ee7f5dbc7acb41c310285b00bfe identity; monitor read merge/head/currentmaster"
   },
   "integration373": {
     "source_review": 6848858947,
@@ -3774,17 +3891,21 @@
     "performance_adoption": false
   },
   "cells_admission_active": {
-    "source_comment_id": 6849208142,
+    "source_comment_id": 6849382358,
     "actor": "codex in separate live owner-authorised session (reported)",
     "completion_observed": false,
-    "cursor_at_read": "12dda800f73e5e4500b159d1d9c1fcf44b498353",
+    "cursor_at_read": "eaf80e130c72424ccbe3bc5719823b5fda61862e",
     "cursor_completion_available": false,
     "scope_reported": "376 master incorporation, guarded integration after gates, actual verified argument-free binding and standard PROTOCOL9 admission",
     "monitor_authority": "Existing queue-preparation/admission authorisation remains; no automatic merge or workstation execution",
     "duplicate_actions_prohibited": true,
     "hardware_facts_received": false,
     "final_recipe_pin": null,
-    "queue_observed_empty_at": "4df9651b84d0a01143b601a05dd7748720008fdd",
-    "historical_evidence_check": "Author reports evidence d85b2074099f027d048aa7a057da10d25f2b70bb has old cells-vs-prod only; must refresh before admission"
+    "queue_observed_empty_at": "e674070e1351460d27d745390b1db80ef5112b60",
+    "historical_evidence_check": "Author reports evidence d85b2074099f027d048aa7a057da10d25f2b70bb has old cells-vs-prod only; must refresh before admission",
+    "status": "active awaiting actual desktop preflight JSON",
+    "integration_complete": true,
+    "authority_persists": "Existing owner authorised binding and standard ready-tag/queue; no renewed permission needed for those. No agent workstation execution or automatic merge.",
+    "next_actor": "Owner provides already-requested preflight output to existing live Codex executor; Coordinator checks final frozen recipe before coordinated admission"
   }
 }
