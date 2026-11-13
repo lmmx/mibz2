@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6862685593,
+  "last_examined_comment_id": 6867627975,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2952,9 +2952,18 @@
       "disposition": "Owner-authorised admission complete: successful existing Run Signal independently verified; exact ready tag and absent HOLD read back; CAS queue appended once and verified on master. No new signal dispatch or workstation execution.",
       "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
       "queue_blob": "d565ab78600f50e230c35284ac6409d4e197eab3",
-      "log_status": "in_progress",
+      "log_status": "published_readback_verified",
       "log_dedup_key": "admission-6862613562-run43497427596",
-      "source_comments_before_log": 0
+      "source_comments_before_log": 0,
+      "log_comment_id": 6867627975,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6867627975"
+    },
+    "6867627975": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T23:34:16Z",
+      "disposition": "Own admission LOG; ignore self-triggered wake.",
+      "response_comments": 0,
+      "dispatches": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3125,7 +3134,8 @@
     6862425749,
     6862613562,
     6862622329,
-    6862638701
+    6862638701,
+    6867627975
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -5817,7 +5827,8 @@
       "workflow_run": 43497427596,
       "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
       "ready_sha": "cf1a36ed429f361839fab6748383187104d8ab27",
-      "hold_absent": true
+      "hold_absent": true,
+      "admission_log": 6867627975
     },
     "preparation_complete": true,
     "completed": false,
@@ -5831,6 +5842,7 @@
     "ready": true,
     "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
     "queue_blob": "d565ab78600f50e230c35284ac6409d4e197eab3",
-    "workstation_executed": false
+    "workstation_executed": false,
+    "admission_log": 6867627975
   }
 }
