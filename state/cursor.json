@@ -697,6 +697,11 @@
     "executed_cases": 9621,
     "budget_checks": 3,
     "source_ledger_verified": true,
-    "coordinator_reconciliation": 6855132749
+    "coordinator_reconciliation": 6855132749,
+    "completion_review_comment_id": 6855353031,
+    "evidence_commit": "0f7e4ac7f411b57f99f6a4c3cabaf5e1d402da1c",
+    "receipt_readback_verified": true,
+    "receipt_routing": "misrouted false; verify has known coordinator-only FROM assumption, not claimed passed",
+    "automatic_github_wakeup_assumed": false
   }
 }
