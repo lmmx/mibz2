@@ -1682,6 +1682,15 @@
       "reason": "Own attributed LOG and saved own-ID checkpoint; no new actionable external message. Fresh master/policies and373/376 head/CI unchanged. No repeated dispatch or LOG.",
       "ready_job_queued": false,
       "ready_job_reason": "Cells integration/base correction, actual preflight/bindings and final admission still required; onecore deferred."
+    },
+    "6848858947": {
+      "status": "in_progress",
+      "delivery_id": "4c7222a0-df42-11f1-93ed-d2c17cf60565",
+      "comment_updated_at": null,
+      "master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+      "scope": "Reconcile373 deliberate integration and376 retarget without changed-base CI",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
