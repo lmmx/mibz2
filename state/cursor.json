@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6848920917,
+  "last_examined_comment_id": 6849208142,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1707,13 +1707,18 @@
       "ready_job_reason": "376 changed-base validation/integration and actual i9 bindings/final admission remain."
     },
     "6849208142": {
-      "status": "in_progress",
+      "status": "completed_active_checkpoint_reconciled_not_task_completion",
       "delivery_id": "a7bae690-df44-11f1-8262-350235e783ee",
       "comment_updated_at": null,
       "master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
       "scope": "Reconcile active376 synchronization and reported owner-authorised admission work without duplicate operator actions",
       "ready_job_queued": false,
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/376"
+      ],
+      "reason": "New376 head observed with genuine changedhead checks. Existing live actor owns active integration/admission; no duplicate dispatch. No ready job: Test/Benchmark, actual machine facts and final frozen recipe/admission outstanding.",
+      "new_head": "660a1b750daf880c69e440ed6ec5d4cb942e8970",
+      "recipient_completion_observed": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1838,8 +1843,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6848920917,
-    "delivery_id": "acce68c0-df42-11f1-9316-89a9526a978c",
+    "comment_id": 6849208142,
+    "delivery_id": "a7bae690-df44-11f1-8262-350235e783ee",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -2038,11 +2043,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "373-merged-6848858947",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6848920917,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848920917"
+    "key": "active-cells-admission-6849208142",
+    "status": "in_progress_before_post",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2411,10 +2414,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Separate deliberate authorised run decide ordinary master4df9651 integration into376, preserve patch/history, inspect normal synchronize CI/legacy then decide376 merge at exacthead; no emptycommit or duplicated375 fix",
-    "Read373 postmerge automatic Benchmark43398652640 on next event; no polling/retry",
-    "Obtain actual authorised i9 preflight facts before CPU/corpus argument-free binding and finalPROTOCOL9 admission; no workstation execution by monitor",
-    "Onecore6848164049 remains deferred/notexecuted; no false completed-dossier receipt"
+    "Allow existing live Codex integration/admission effort to finish; no duplicate branch changes, reviewer or ready signals",
+    "Reconcile actual376 completion plus cursor and fresh exacthead Actions/legacy; automatic merges remain out of monitor scope",
+    "When actual i9 facts and exact final recipe pin arrive, check frozen120+9/decision rule, argument-free wiring, dry-run, source hashes, CI and duplicate-run/queue/ready state before coordinated PROTOCOL9 admission",
+    "Read373 postmerge Benchmark43398652640 on events; currently running; onecore remains deferred"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3492,9 +3495,9 @@
     "onecore_deferral_confirmed": true
   },
   "submission_repair_376": {
-    "head_sha": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+    "head_sha": "660a1b750daf880c69e440ed6ec5d4cb942e8970",
     "base_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
-    "status": "retargeted only; no new-base hosted checks observed; separate branch dependency integration decision required",
+    "status": "active owner-session integration/admission checkpoint; changed-head CI running",
     "changed_files": [
       "bench/cells-gap/live/run.sh",
       "bench/cells-gap/live/test_driver.py"
@@ -3504,51 +3507,51 @@
     "source_preservation": "Author reports1572 other tracked files unchanged",
     "actions": [
       {
-        "id": 43396306200,
-        "name": "Cells live-path preparation",
-        "status": "completed",
-        "conclusion": "success",
-        "run_number": 7,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306200/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306200/logs",
-        "workflow_id": 413971946
-      },
-      {
-        "id": 43396306222,
-        "name": "CI",
-        "status": "completed",
-        "conclusion": "success",
-        "run_number": 1740,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306222/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306222/logs",
-        "workflow_id": 398116820
-      },
-      {
-        "id": 43396306206,
+        "id": 43401424822,
         "name": "Test",
-        "status": "completed",
-        "conclusion": "failure",
-        "run_number": 1723,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306206/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306206/logs",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_number": 1725,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424822/logs",
         "workflow_id": 398116819
       },
       {
-        "id": 43396306235,
+        "id": 43401424749,
         "name": "Benchmark",
+        "status": "in_progress",
+        "conclusion": null,
+        "run_number": 692,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424749/logs",
+        "workflow_id": 398182844
+      },
+      {
+        "id": 43401424820,
+        "name": "CI",
         "status": "completed",
         "conclusion": "success",
-        "run_number": 690,
-        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306235/jobs",
-        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306235/logs",
-        "workflow_id": 398182844
+        "run_number": 1742,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424820/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401424820/logs",
+        "workflow_id": 398116820
+      },
+      {
+        "id": 43401425077,
+        "name": "Cells live-path preparation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 8,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401425077/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43401425077/logs",
+        "workflow_id": 413971946
       }
     ],
     "legacy": [
       {
         "context": "pre-commit.ci - pr",
         "state": "success",
-        "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794559794.A2hwDSzTQjKiD7cCuM3i4A"
+        "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794562022.qlhJn5S-RTidX4XRzFvtcw"
       }
     ],
     "ci_incident": {
@@ -3563,9 +3566,15 @@
     "merged": false,
     "base": "master",
     "retarget_observed": true,
-    "changed_base_ci": false,
+    "changed_base_ci": true,
     "local_combined_tree_tests": "Author evidence14 pass/no skips at treeafd43a466f4d9ee7f5dbc7acb41c310285b00bfe",
-    "next_proposal": "Separate deliberate authorisation to append master4df9651 into376, preserving patch/history; normal synchronized checks; then separate376 merge decision"
+    "next_proposal": "Separate deliberate authorisation to append master4df9651 into376, preserving patch/history; normal synchronized checks; then separate376 merge decision",
+    "history": [
+      {
+        "head_sha": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+        "status": "retargeted only; no new-base hosted checks observed; separate branch dependency integration decision required"
+      }
+    ]
   },
   "integration373": {
     "source_review": 6848858947,
@@ -3741,5 +3750,19 @@
     "benchmark_pending": true,
     "monitor_performed_merge": false,
     "performance_adoption": false
+  },
+  "cells_admission_active": {
+    "source_comment_id": 6849208142,
+    "actor": "codex in separate live owner-authorised session (reported)",
+    "completion_observed": false,
+    "cursor_at_read": "12dda800f73e5e4500b159d1d9c1fcf44b498353",
+    "cursor_completion_available": false,
+    "scope_reported": "376 master incorporation, guarded integration after gates, actual verified argument-free binding and standard PROTOCOL9 admission",
+    "monitor_authority": "Existing queue-preparation/admission authorisation remains; no automatic merge or workstation execution",
+    "duplicate_actions_prohibited": true,
+    "hardware_facts_received": false,
+    "final_recipe_pin": null,
+    "queue_observed_empty_at": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "historical_evidence_check": "Author reports evidence d85b2074099f027d048aa7a057da10d25f2b70bb has old cells-vs-prod only; must refresh before admission"
   }
 }
