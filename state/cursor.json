@@ -591,7 +591,7 @@
     "review_comment_id": 6849382358,
     "pr_receipt_comment_id": 6849372228,
     "receipt_readback_verified": true,
-    "evidence_commit": "cd3214c852055aed969da1bc7ef37d37ad5cdefe",
+    "evidence_commit": "34775cdbf605b5135566b7089c2753feda3a4e10",
     "pr377_head": "cb73bf909397e2fff8c90f0a00437061ad06478e",
     "pr377": 377,
     "desktop_preflight_reply_required": false,
@@ -603,6 +603,9 @@
     "source_tree": "7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae",
     "recipe": "bench-cells-live-path-i9",
     "frozen_review_request": 6849678574,
-    "dispatch_transport": "no connector workflow-dispatch tool; shell GitHub API Forbidden; no browser tool"
+    "dispatch_transport": "no connector workflow-dispatch tool; shell GitHub API Forbidden; no browser tool",
+    "green_head_review_comment_id": 6849826280,
+    "review_readback_verified": true,
+    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9"
   }
 }
