@@ -1653,7 +1653,11 @@
     "6848184897": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6848026007
+      "source_comment_id": 6848026007,
+      "delivery_id": "cb029820-df3d-11f1-98cc-550541479f22",
+      "reason": "Own ACTOR-attributed LOG and saved own ID/checkpoint; no new external actionable message. Fresh master/policies/373 head/Actions/legacy and recipient cursors unchanged; audit exit0. No duplicate dispatch or LOG.",
+      "ready_job_queued": false,
+      "ready_job_reason": "Existing6848164049 readiness dossier has no completion receipt; final queue admission and373 integration/machine bindings remain."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1776,8 +1780,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6848026007,
-    "delivery_id": "8e4081a0-df3c-11f1-859d-e1a9794352f5",
+    "comment_id": 6848184897,
+    "delivery_id": "cb029820-df3d-11f1-98cc-550541479f22",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
