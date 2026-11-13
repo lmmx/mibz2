@@ -2055,7 +2055,8 @@
     "6851095241": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T11:09:37Z",
-      "disposition": "Own shipping-readiness LOG verified; ignore self wake."
+      "disposition": "Own shipping-readiness LOG verified; self wake deduplicated against fresh channel with no newer external message. No new ready job: existing preparation pending.",
+      "delivery_id": "b7047130-df52-11f1-8707-28d90047581a"
     }
   },
   "automatic_github_wakeup_assumed": false,
