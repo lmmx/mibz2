@@ -1773,7 +1773,9 @@
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849790558"
       ],
-      "log_publication": "in_progress"
+      "log_publication": "published",
+      "log_comment_id": 6849815173,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1893,7 +1895,8 @@
     6848610020,
     6848920917,
     6849255206,
-    6849425640
+    6849425640,
+    6849815173
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2099,8 +2102,10 @@
   },
   "checkpoint": {
     "key": "cells-auto-binding-377-6849678574",
-    "status": "publication_in_progress",
-    "event_dispositions_persisted": true
+    "status": "published_pending_readback",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6849815173,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
   },
   "dispatch_history": [
     {
