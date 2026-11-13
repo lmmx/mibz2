@@ -2328,10 +2328,27 @@
       "delivery_id": "5ce5fb70-df5b-11f1-93d9-8bf7612c744f"
     },
     "6852468714": {
-      "status": "in_progress",
+      "status": "completed_integration_parked",
       "delivery_id": "35433150-df5b-11f1-9e01-c065d69aeff1",
       "comment_updated_at": "2026-11-13T12:10:24Z",
-      "planned_action": "Reconcile actual completed Optimiser REVIEW plus cursor; decide to park integration/new dispatcher with explicit reopening evidence while existing Codex final evidence/CI and MONODROMY queue continue. No source-app message permitted in this batch."
+      "planned_action": "Reconcile actual completed Optimiser REVIEW plus cursor; decide to park integration/new dispatcher with explicit reopening evidence while existing Codex final evidence/CI and MONODROMY queue continue. No source-app message permitted in this batch.",
+      "report_commit": "903c844a9c39a49c5af22c7e3e800e22b2e076fa",
+      "recipient_cursor": "c77c6c38c0c7646db1acc08740b56e25e8c334b5",
+      "disposition": "Accept bounded PARK of Cells integration/new dispatcher, not the research line. Actual Optimiser report/REVIEW/finished cursor verified. Preserve exact Segmented production routing; no target currently has qualified changed-build benefit, workload-only64r<n leaves AMD Wikidata losses, vendor whitelist unsupported. Existing Codex6851728088 finishes final evidence/CI; MONODROMY6850491677 remains queued; no second implementation/literature programme/recipe. Independent B5 evidence closure6852460604 stands at exact scope.",
+      "reopening_conditions": [
+        "Exact proposed implementation/target with matched whole-reader gain after complete routing costs; old i9 binary result cannot qualify changed writer.",
+        "All seven frozen families, byte/CRC/error/fallback and unsupported-target contracts, credible native RSS and required independent safety evidence.",
+        "Concrete remaining removable-cost evidence from existing MONODROMY or other already-researched construction before another implementation."
+      ],
+      "current_head": "93781bd9578eae95c599583e387180d673659180",
+      "current_ci": "Only Miri131875524408 and benchmark131875412092 in_progress; all other observed checks successful/skipped, legacy success. No final green or actual Codex completion claim.",
+      "master_sha": "3e7e294cc10f29495e9828181345d74233c549d4",
+      "audit": "exit0; only six resolved historical findings",
+      "dispatches": 0,
+      "source_messages": 0,
+      "log_omission": "Current batch explicitly prohibits additional source-app message; substantive disposition recorded in dedicated durable cursor.",
+      "ready_job_queued": false,
+      "ready_job_reason": "No qualified target or selected concrete recipe; finish existing exact-head CI first. Completed runs and unadmitted programmes not duplicated."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3072,11 +3089,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Same Codex6851728088 finishes existing validation/archives exact failures; no new dispatcher or timing assignment until actual final receipt.",
-    "Researcher targeted6852337017 complete via6852460604; no further broad review. Preserve exact reviewed scope and final-head CI obligations.",
-    "Optimizer160/6852341904 has completed report903c844a9c39a49c5af22c7e3e800e22b2e076fa, awaiting actual REVIEW before final disposition.",
-    "MONODROMY existing6850491677 remains pending; no duplicate mathematics task.",
-    "No ready workstation job queued: candidate did not qualify, safety closure and current exact-head CI pending; no new C5 recipe admitted. Preserve first negative result and original i9 evidence."
+    "Existing same Codex6851728088 completes final93781bd evidence/CI receipt; current Miri and benchmark still running. No new dispatcher or timing assignment.",
+    "Accept Researcher6852460604 exact scoped B5 evidence closure; do not repeat broad review or call current-head CI complete.",
+    "Optimizer6852341904 complete via6852468714; integration/new dispatcher PARK with explicit target/whole-reader/7-family/memory reopening evidence. Preserve Segmented production routing and Cells research line.",
+    "Existing MONODROMY6850491677 assessment remains pending; do not duplicate mathematics or Pathfinder architecture work.",
+    "No ready workstation job queued: no selected qualified-target recipe and current CI unfinished. Preserve original i9 evidence and first candidate negative result; no speculative run."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -4287,10 +4304,17 @@
       "B5_evidence_closed": true,
       "evidence_commit": "90395635d82c3e039122e97003c544fe61c98984",
       "harness_repair": "fresh temporary generator directory; exact GitHub delta inspected",
-      "optimizer_state": "6852341904 cursor complete awaiting REVIEW; not yet final recipient receipt",
+      "optimizer_state": "6852341904 finished via6852468714, report and cursor verified",
       "B5_evidence_scope": "Original independent reviewer closes writer835984e; carries to fixture-only4f6e6ff. Later93781bd not covered by reviewer. No blanket CI or adoption qualification.",
       "independent_closure_review": 6852460604,
-      "independent_closure_report": "356fd3a71252e5987b5bfa669d9e6360294778fc"
+      "independent_closure_report": "356fd3a71252e5987b5bfa669d9e6360294778fc",
+      "deployment_disposition": "PARK integration/new dispatcher; retain Cells research line and existing final validation",
+      "deployment_decision_comment": 6852468714,
+      "reopening_conditions": [
+        "Exact proposed implementation/target with matched whole-reader gain after complete routing costs; old i9 binary result cannot qualify changed writer.",
+        "All seven frozen families, byte/CRC/error/fallback and unsupported-target contracts, credible native RSS and required independent safety evidence.",
+        "Concrete remaining removable-cost evidence from existing MONODROMY or other already-researched construction before another implementation."
+      ]
     }
   },
   "submission_repair_376": {
