@@ -1969,7 +1969,14 @@
     "6850621370": {
       "status": "in_progress",
       "delivery_id": "5491fca0-df4f-11f1-9540-3b198352ed7d",
-      "planned_action": "Dispatch queued amendment6850583026 to now-free Optimizer as one bounded delta with seven-corpus coverage, preserving completed parent6850318070 and report247ef9a2. Reconcile guarded-writer math into existing queued proposal without duplicate implementation. No timing/ready admission."
+      "planned_action": "Dispatch queued amendment6850583026 to now-free Optimizer as one bounded delta with seven-corpus coverage, preserving completed parent6850318070 and report247ef9a2. Reconcile guarded-writer math into existing queued proposal without duplicate implementation. No timing/ready admission.",
+      "optimizer_dispatch": {
+        "comment_id": 6850660172,
+        "parent": 6850318070,
+        "queue": 6850583026,
+        "status": "posted_pending_verify",
+        "recipient_execution_observed": false
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2097,7 +2104,8 @@
     6850347828,
     6850491677,
     6850515770,
-    6850583026
+    6850583026,
+    6850660172
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
