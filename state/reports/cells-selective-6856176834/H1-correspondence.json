@@ -1,0 +1,49 @@
+{
+  "reviewed_head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+  "rerun_tree_head": "a8a23c11607864cb431f87fff38169e10c41685f",
+  "changed_paths": [
+    "bench/cells-selective/codegen.py",
+    "examples/ab_cells/mod.rs"
+  ],
+  "identities": [
+    {
+      "path": "src/cells.rs",
+      "sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+      "reviewed_equals_rerun_and_checkout": true
+    },
+    {
+      "path": "src/cells_original_test.rs",
+      "sha256": "ae3846d6d9cc90b43027fb8d14b10988b394062f417dd3126eb0c471559c11a8",
+      "reviewed_equals_rerun_and_checkout": true
+    },
+    {
+      "path": "src/cells_selective_test.rs",
+      "sha256": "75ca00313357b5c11d677acbbf2cfbceb6d17c38c8f0c2494450d5c33743dd9f",
+      "reviewed_equals_rerun_and_checkout": true
+    },
+    {
+      "path": "bench/cells-selective/mutations.py",
+      "sha256": "e62d04c7a3fb04fd815b2609601a003ec78b27e7b98e42c5fb3c6e5aada8121a",
+      "reviewed_equals_rerun_and_checkout": true
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "f5a0cc481d75a0cff0ed1cda91ffeada9c32335667618d6aea935f1b94fb6027",
+      "reviewed_equals_rerun_and_checkout": true
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "b4ad5647e3d33f309cbde5d366e22cb2bfb7a99ddafdcf6cf0cd48c407635acf",
+      "reviewed_equals_rerun_and_checkout": true
+    }
+  ],
+  "corrected_result": "cells-selective-mutations-100/results.json",
+  "baseline_and_mutant_exits": [
+    0,
+    101,
+    101,
+    101
+  ],
+  "initial_source_difference": "one induction comment only; supplied initial-mutation-source.rs has recorded ca1b hash",
+  "compiler": "rustc 1.100.0 (0ef1bc386 2026-11-09)"
+}
