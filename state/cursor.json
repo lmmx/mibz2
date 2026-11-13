@@ -2663,7 +2663,14 @@
       "delivery_id": "f042bfb0-df75-11f1-8eea-947055e85e4c",
       "comment_updated_at": "2026-11-13T15:21:44Z",
       "started_at": "2026-11-13 15:24:02 UTC",
-      "action": "Reconcile PR380 correspondence and completed Researcher H1 HOLD; route one targeted evidence-only B5 follow-up to original reviewer using existing corrected bundle51cf6b7. No new implementation or rerun."
+      "action": "Reconcile PR380 correspondence and completed Researcher H1 HOLD; route one targeted evidence-only B5 follow-up to original reviewer using existing corrected bundle51cf6b7. No new implementation or rerun.",
+      "planned_observer_batch": true
+    },
+    "6857315083": {
+      "status": "in_progress",
+      "delivery_id": "44bb0c00-df76-11f1-98f2-e661b45a695a",
+      "comment_updated_at": "2026-11-13T15:24:07Z",
+      "action": "Group existing H1 targeted evidence correction with720/726; one original Researcher follow-up, then one Observer batch and grouped LOG."
     }
   },
   "automatic_github_wakeup_assumed": false,
