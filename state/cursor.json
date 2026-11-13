@@ -1880,8 +1880,9 @@
       },
       "disposition": "Bundle integrity and frozen-programme analysis verified; instrument-sensitive quantitative attribution stopped for Wikidata/onebyte, pattern costs retained only instrumented; consumed queue removed. Bounded successors posted/verified, awaiting actual recipient receipts. Signal-clear capability pending.",
       "grouped_log": {
-        "status": "in_progress",
-        "purpose": "Verified admission and submitted diagnostic result, queue closeout, bounded successor routes and remaining signal cleanup."
+        "status": "posted_pending_verify",
+        "comment_id": 6850347828,
+        "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6850347828"
       }
     },
     "6850226968": {
@@ -2012,7 +2013,8 @@
     6849815173,
     6849935340,
     6850318070,
-    6850324757
+    6850324757,
+    6850347828
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
