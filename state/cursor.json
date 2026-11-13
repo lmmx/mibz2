@@ -2040,6 +2040,12 @@
       "comment_updated_at": "2026-11-13T11:04:16Z",
       "disposition": "Own substantive LOG verified; self wake reconciled against fresh channel with no newer external message. No dispatch or ready job; preparation still pending.",
       "delivery_id": "f8255fe0-df51-11f1-8f21-84dd41d61bdf"
+    },
+    "6851053265": {
+      "status": "in_progress",
+      "delivery_id": "67a2f080-df52-11f1-9f32-33f1527bd7fa",
+      "comment_updated_at": "2026-11-13T11:07:23Z",
+      "planned_action": "Reconcile shipping priority; preserve single queued execution owner6850979995; correct F01 resolved versus remaining frozen gate; publish release-readiness disposition without duplicate reviewer or automatic release."
     }
   },
   "automatic_github_wakeup_assumed": false,
