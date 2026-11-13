@@ -2380,7 +2380,23 @@
     "6852794334": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T12:24:00Z",
-      "disposition": "Own final measured NO-GO checkpoint verified; ignore self wake."
+      "disposition": "Verified own ACTOR-attributed checkpoint and persisted ID; self wake ignored.",
+      "delivery_id": "1c8c37e0-df5d-11f1-9ab6-09ad1e3573aa"
+    },
+    "6852838891": {
+      "status": "in_progress",
+      "delivery_id": "62ed2fa0-df5d-11f1-8c69-ba074937bf9f",
+      "comment_updated_at": "2026-11-13T12:26:00Z",
+      "planned_action": "Accept actual completed assignment6851728088 from REVIEW plus processed role cursor; confirm exact-head checks/Miri; DEFER integration for unchanged performance NO-GO, preserve existing mathematics/architecture queues, batch material outcome to free Observer and publish final disposition.",
+      "head_sha": "93781bd9578eae95c599583e387180d673659180",
+      "recipient_cursor_sha": "bb0cc86d0f75787cdd854ac0315a59aebf28bd7b",
+      "report_commit": "1cd32df964395b1ff9dfeef62a4a5df35c19557e",
+      "observer_checkpoint": {
+        "status": "in_progress",
+        "destination": 222,
+        "route": "observer free; CHECKPOINT #222",
+        "purpose": "Record completed seven-family/guard implementation, scoped B5 and hosted Miri, negative performance and DEFER; no production gain shipped."
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
