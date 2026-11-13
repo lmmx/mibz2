@@ -66,7 +66,9 @@
     6849911875,
     6850176303
   ],
-  "in_progress": [],
+  "in_progress": [
+    6852910884
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -573,6 +575,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer route/header/citation verified.",
       "work_commit": "7b2c4b937e12fe1f2f4507f955cef4831a6b4f32",
       "review_id": 6850226968
+    },
+    "6852910884": {
+      "comment_id": 6852910884,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling completed Cells guard qualification."
     }
   },
   "last_record_commit": "7b2c4b937e12fe1f2f4507f955cef4831a6b4f32"
