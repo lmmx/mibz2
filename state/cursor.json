@@ -1759,8 +1759,13 @@
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849678574",
       "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
-      "planned_action": "Coordinator frozen diagnostic recipe review; reconcile automatic input/CPU binding and active recipient. No duplicate implementation, merge, ready signal or queue before gates.",
-      "log_dedup_key": "cells-auto-binding-377-6849678574"
+      "planned_action": "Accept exact377 frozen diagnostic recipe under PROTOCOL9; batch material state to free Observer; grouped LOG. No merge or signal: existing executor handles deliberate integration; no authenticated Run-signal browser/connector dispatch available.",
+      "log_dedup_key": "cells-auto-binding-377-6849678574",
+      "observer_dispatch": {
+        "status": "in_progress",
+        "dedup_key": "cells-auto-binding-377-6849678574-observer",
+        "destination": 222
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
