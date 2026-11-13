@@ -1,0 +1,18 @@
+{
+  "common": "a8a23c11607864cb431f87fff38169e10c41685f",
+  "original": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "generator": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+  "window_pin": "a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a",
+  "wikidata_origin": "verified reconstruction from pinned windows",
+  "compiler": "rustc 1.100.0 (0ef1bc386 2026-11-09)\nbinary: rustc\ncommit-hash: 0ef1bc386059596dada8fb65b50425aab2ea637a\ncommit-date: 2026-11-09\nhost: x86_64-unknown-linux-gnu\nrelease: 1.100.0\nLLVM version: 23.1.5\n",
+  "rustflags": "--cfg mibz2_cells_bench",
+  "source_differences": [
+    "src/cells.rs"
+  ],
+  "rounds": 12,
+  "binary_sha256": {
+    "original": "87fd014ea4017952ed4e200402897004e3de30d4c7c9f36ef2b5c32e17c81752",
+    "selective": "9c8fd143c71dd3227dc77a9dfc0f2a2d20f57bd182cda7ab8801768278fe2814"
+  },
+  "untimed_only": true
+}

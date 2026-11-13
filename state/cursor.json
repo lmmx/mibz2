@@ -742,7 +742,7 @@
     "receipt_readback_verified": true
   },
   "cells_i9": {
-    "status": "IN_PROGRESS: owner-activated three-arm queue preparation; reconcile queued6857735998 without competing implementation",
+    "status": "PREPARATION IMPLEMENTED AND VALIDATED; awaiting remaining exact-head CI and Coordinator final approval/Run Signal/queue",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
@@ -754,7 +754,10 @@
     "pickup_review": 6862129816,
     "plan_review": 6862371184,
     "coordinator_reconciliation": 6862221345,
-    "native_preparation": "PASS: both builds, seven input hashes, complete byte oracles, routes, RSS controls",
-    "untimed_tests": 22
+    "native_preparation": "PASS on frozen exact head: builds, all7hashes/byteparity/routes, RSS, expected cloud refusal, actual73MB bundle scratch submission+idempotent retry",
+    "untimed_tests": 22,
+    "native_exact_head": "cf1a36ed429f361839fab6748383187104d8ab27",
+    "attribution": "bounded source finding complete, causality unresolved; see ATTRIBUTION.md",
+    "design_review": 6862425749
   }
 }

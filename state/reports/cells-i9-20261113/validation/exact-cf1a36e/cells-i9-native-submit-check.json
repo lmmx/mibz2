@@ -1,0 +1,8 @@
+{
+  "scope": "scratch local remote and gh stand-in; no real GitHub submission",
+  "bundle_bytes": 73886771,
+  "submission_exit": 0,
+  "idempotent_resubmit_exit": 0,
+  "comments": 1,
+  "archived_commit": "befe0b4a82ed9330a0c53314387890f7dc226822"
+}

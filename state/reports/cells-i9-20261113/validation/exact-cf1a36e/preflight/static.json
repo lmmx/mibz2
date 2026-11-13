@@ -1,0 +1,19 @@
+{
+ "schema": "share_nothing/static/1",
+ "model": "AMD EPYC 9V74 80-Core Processor",
+ "online": "0-4",
+ "cpus_allowed": "0-4",
+ "no_turbo": {
+  "error": "No such file or directory"
+ },
+ "intel_pstate_status": {
+  "error": "No such file or directory"
+ },
+ "policies": {},
+ "quota": {
+  "state": "unknown",
+  "why": "the cgroup path / is outside the mount's root /..",
+  "path": "/"
+ },
+ "uname": "Linux 016bf6ce2ed0 6.18.57 #1 SMP Tue Oct 20 21:56:04 UTC 2026 x86_64"
+}

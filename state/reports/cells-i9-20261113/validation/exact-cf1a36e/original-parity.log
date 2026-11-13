@@ -1,0 +1,17 @@
+["cargo", "test", "--release", "--locked", "--example", "ab", "cells_pinned_readers_byte_parity", "--", "--ignored", "--nocapture"]
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-selective-i9/target/cells-selective-i9-local/exact-cf1a36e-build/original)
+    Finished `release` profile [optimized + debuginfo] target(s) in 17.99s
+     Running unittests examples/ab.rs (/workspace/mibz2-selective-i9/target/cells-selective-i9-local/exact-cf1a36e-build/original-target/release/build/mibz2/9477bfa23e50a202/out/ab-9477bfa23e50a202)
+
+running 1 test
+CELLS_ROUTE wikidata blocks=431 column_fallback=48 Counts { admitted: 196, density: 185, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }
+CELLS_ROUTE onebyte blocks=1 column_fallback=0 Counts { admitted: 0, density: 0, floor: 0, budget: 1, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE pattern blocks=22 column_fallback=0 Counts { admitted: 22, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 1, cells: 2700141 }
+CELLS_ROUTE random blocks=9 column_fallback=9 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE records blocks=11 column_fallback=11 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE runs blocks=1 column_fallback=0 Counts { admitted: 0, density: 1, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE text blocks=14 column_fallback=0 Counts { admitted: 0, density: 14, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+test ab_cells::tests::cells_pinned_readers_byte_parity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 7.10s
+
