@@ -1228,6 +1228,14 @@
         "helper_verify": "FROM is 'optimizer', not coordinator",
         "note": "Pinned helper requires coordinator sender even for role REVIEW. Policy unchanged; exact publication readback verified."
       }
+    },
+    {
+      "comment_id": 6852341904,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "progress": "Receipt: bounded next-decision delta after guarded-writer379 first negative CI; static/saved evidence only."
     }
   ],
   "migrated_from": {
