@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6857567712,
+  "last_examined_comment_id": 6857735998,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2758,20 +2758,34 @@
       "response_comments": 0
     },
     "6857619789": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "228d9650-df78-11f1-9776-eab8126c4f0a",
       "comment_updated_at": "2026-11-13T15:37:28Z",
       "action": "Reconcile finished Observer/Codex receipts, exact-head all-green checks; retain selective candidate and defer integration; stage one bounded default-path attribution per router, update Observer once and grouped LOG.",
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857749401"
+      ],
+      "disposition": "Observer and Codex finished receipts verified. Selective candidate retained; integration DEFER despite all-green exact-head CI because frozen default performance gate fails. One bounded default-path attribution queued; no execution claimed.",
+      "log_pending": true
     },
     "6857643047": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "483d6a10-df78-11f1-875a-8162716e6970",
       "comment_updated_at": "2026-11-13T15:38:31Z",
       "action": "Reconcile finished Observer/Codex receipts, exact-head all-green checks; retain selective candidate and defer integration; stage one bounded default-path attribution per router, update Observer once and grouped LOG.",
       "action_links": [
-        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998"
-      ]
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857749401"
+      ],
+      "disposition": "Observer and Codex finished receipts verified. Selective candidate retained; integration DEFER despite all-green exact-head CI because frozen default performance gate fails. One bounded default-path attribution queued; no execution claimed.",
+      "log_pending": true
+    },
+    "6857735998": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T15:42:41Z",
+      "delivery_id": "dd3b32f0-df78-11f1-9199-81bbbcaa4fb0",
+      "disposition": "Own queued assignment observed; self wake ignored; no duplicate action."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2933,16 +2947,15 @@
     6857364235,
     6857529647,
     6857567712,
-    6857735998
+    6857749401
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6857567712,
-    "delivery_id": "d1f71810-df77-11f1-85a1-712ccfa0124c",
-    "master_sha": "3e7e294cc10f29495e9828181345d74233c549d4"
+    "comment_id": 6857735998,
+    "delivery_id": "dd3b32f0-df78-11f1-9199-81bbbcaa4fb0"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -5450,7 +5463,7 @@
   "selective_materialisation": {
     "source_request": 6856026045,
     "assignment": 6856176834,
-    "status": "native_B5_accepted_experimental_gain_integration_deferred",
+    "status": "completed_positive_candidate_retained_integration_deferred",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "recipient_execution_observed": true,
@@ -5475,7 +5488,7 @@
     },
     "ready_job_queued": false,
     "ready_job_reason": "No eligible frozen/dry-run-checked workstation recipe; failed default gate first needs bounded source/build attribution. No workstation run is needed for this step.",
-    "next_actor": "Codex existing6856176834 exact-head evidence/completion; Observer6857529647 records closure and measured gain. Separate deliberate integration decision required.",
+    "next_actor": "Codex queued6857735998 after explicit pickup/lane reconciliation; Observer6857749401 records completion and disposition. No automated merge.",
     "onecore6848164049": "deferred, not completed",
     "math_owner": "MONODROMY",
     "architecture_owner": "Pathfinder",
@@ -5537,14 +5550,18 @@
       "head": "a8a23c11607864cb431f87fff38169e10c41685f"
     },
     "default_path_attribution": {
-      "status": "queued_not_launched",
+      "status": "intent_to_queue",
       "route": "145 QUEUED",
       "blocking_inbox": 6848164049,
       "scope": "one source/build attribution report, no production edits or timings",
-      "execution_observed": false,
-      "comment_id": 6857735998,
-      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
-      "route_verified": true
-    }
+      "execution_observed": false
+    },
+    "observer_completion": {
+      "assignment": 6857529647,
+      "review": 6857619789,
+      "cursor": "8472d0b15f5da395fba60e9dce8eb59d67632bd6",
+      "record": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f"
+    },
+    "observer_followup": 6857749401
   }
 }
