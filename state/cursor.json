@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6852495550,
+  "last_examined_comment_id": 6852738556,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2351,10 +2351,30 @@
       "ready_job_reason": "No qualified target or selected concrete recipe; finish existing exact-head CI first. Completed runs and unadmitted programmes not duplicated."
     },
     "6852738556": {
-      "status": "in_progress",
+      "status": "completed_measured_disposition_accepted_final_recipient_pending",
       "delivery_id": "c75e5730-df5c-11f1-9e96-40319f1a91dd",
       "comment_updated_at": "2026-11-13T12:21:38Z",
-      "planned_action": "Record final-head negative performance evidence separately; maintain parked integration/new dispatcher and current same-executor final Miri receipt pending. Publish one substantive combined disposition, no new assignment."
+      "planned_action": "Record final-head negative performance evidence separately; maintain parked integration/new dispatcher and current same-executor final Miri receipt pending. Publish one substantive combined disposition, no new assignment.",
+      "head_sha": "93781bd9578eae95c599583e387180d673659180",
+      "report_commit": "cd31560227df297f54a92f78f3fe09fc3054a5da",
+      "codex_cursor": "684b4ed2cabef01bf34b8e3a9095a6e6c6f8b8ff",
+      "disposition": "Verified final benchmark job131875412092 and immutable report: no primary gain; pattern1.7171[1.7117,1.7226], onebyte1.0948[1.0810,1.1087], Wikidata1.0046[.9949,1.0144]. Keep NO-GO/PARK integration/new dispatcher under unchanged gates. Do not pool different hosts or overwrite first negative result. Original i9 result remains distinct; no matched old-Cells causal claim. Same Codex finishes hosted Miri/final receipt, not completed based on implementation metadata.",
+      "validation": "Exact PR head unchanged; all observed Actions successful/skipped except Miri131875524408 in_progress; legacy success. Report describes completed174 native passes with explicit ignored/filtered limits; archive hashes/recomputed raw ratios producer-attributed, monitor independently read report plus completed CI log, did not download archive.",
+      "performance": {
+        "run": 43422422187,
+        "job": 131875412092,
+        "artifact": 14035605553,
+        "reported_sha256": "f18c835dd9830e577b4caeaef7ccb36cc8257522ef8dd0a7fa2fb140eb2d8fbf",
+        "wikidata_rss_growth_percent": 31.2,
+        "pattern_rss_growth_percent": 11.6
+      },
+      "dispatches": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "No qualified changed-build target or selected recipe; deployment parked with reopening evidence. No repeat of submitted runs.",
+      "grouped_log": {
+        "status": "in_progress",
+        "key": "final-measured-379-6852738556"
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -4286,7 +4306,7 @@
     },
     "guarded_writer": {
       "queue": 6851728088,
-      "status": "negative_default_strategy_verdict; targeted_evidence_closure_and_final_validation_pending",
+      "status": "measured_final_head_NO_GO; integration_parked; hosted_Miri_final_receipt_pending",
       "implementation_owner": "same Codex executor",
       "independent_B5_required": true,
       "mathematical_queue": 6850491677,
@@ -4294,7 +4314,7 @@
       "progress_comment": 6851948529,
       "remote_branch_observed": true,
       "cursor_blob": "622f239ddacf713c1832ed349ea9f0c02eb21792",
-      "implementation_complete": false,
+      "implementation_complete": true,
       "pr": 379,
       "head": "93781bd9578eae95c599583e387180d673659180",
       "independent_review_assignment": 6852069758,
@@ -4320,7 +4340,11 @@
         "Exact proposed implementation/target with matched whole-reader gain after complete routing costs; old i9 binary result cannot qualify changed writer.",
         "All seven frozen families, byte/CRC/error/fallback and unsupported-target contracts, credible native RSS and required independent safety evidence.",
         "Concrete remaining removable-cost evidence from existing MONODROMY or other already-researched construction before another implementation."
-      ]
+      ],
+      "final_performance_comment": 6852738556,
+      "final_evidence_commit": "cd31560227df297f54a92f78f3fe09fc3054a5da",
+      "assignment_complete": false,
+      "final_hosted_miri": "131875524408 in_progress"
     }
   },
   "submission_repair_376": {
