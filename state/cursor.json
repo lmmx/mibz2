@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849815173,
+  "last_examined_comment_id": 6849875014,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1775,7 +1775,8 @@
       ],
       "log_publication": "published",
       "log_comment_id": 6849815173,
-      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173",
+      "duplicate_delivery_observed": "5117f540-df48-11f1-9c90-f651d4a09ef4; no repeated action"
     },
     "6849815173": {
       "status": "observed_self_generated_noop",
@@ -1787,27 +1788,33 @@
       "disposition": "Own checkpoint read back exactly; no additional external messages. Same exact master/policy snapshot remains applicable."
     },
     "6849826280": {
-      "status": "in_progress",
+      "status": "completed_false_dependency_corrected",
       "delivery_id": "7e1be500-df49-11f1-8a25-f488b229045f",
       "comment_updated_at": null,
       "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
       "planned_action": "Correct false merge-before-admission prerequisite in prior LOG; frozen recipe PROCEED stands. Correct Observer account after actual completed receipt. No duplicate Codex or signal attempt.",
       "log_dedup_key": "branch-admission-correction-6849826280",
       "observer_correction": {
-        "status": "posted_pending_verify",
+        "status": "posted_verified_not_delivered",
         "comment_id": 6849911875,
         "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849911875",
         "recipient_execution_observed": false
-      }
+      },
+      "disposition": "Accepted branch admission path under PROTOCOL9. Recipe PROCEED already complete; no377 merge prerequisite. Run-signal capability limitation already recorded6849815173 remains; no dispatch/tag/queue/workstation action. Existing live Codex retains queue completion.",
+      "log_publication": "in_progress"
     },
     "6849875014": {
-      "status": "in_progress",
+      "status": "completed_with_material_correction_routed",
       "delivery_id": "d0e6cf70-df49-11f1-8e1b-58002864f561",
       "comment_updated_at": null,
       "completed_assignment": 6849790558,
       "recipient_cursor_sha": "d4b0ac082563a6ecc7d1ac40d270b13075ab7e7f",
       "report_commit": "aa2ba687a638821ffef96e397d21b8f6d439837f",
-      "planned_action": "Accept actual completed Observer delivery; one material correction of inherited merge prerequisite."
+      "planned_action": "Accept actual completed Observer delivery; one material correction of inherited merge prerequisite.",
+      "disposition": "Actual REVIEW plus finished cursor confirm6849790558 delivered/completed. Correction6849911875 fixes inherited false merge-before-queue dependency; no other substantive discrepancy.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849911875"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1935,8 +1942,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849815173,
-    "delivery_id": "6898d850-df49-11f1-958e-5a47f3f00713"
+    "comment_id": 6849875014,
+    "delivery_id": "d0e6cf70-df49-11f1-8e1b-58002864f561"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2133,11 +2140,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "cells-auto-binding-377-6849678574",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6849815173,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849815173"
+    "key": "branch-admission-correction-6849826280",
+    "status": "publication_in_progress",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2498,6 +2503,17 @@
       "role": "observer",
       "comment_id": 6849790558,
       "source_comment_id": 6849678574,
+      "status": "delivered_completed",
+      "recipient_execution_observed": true,
+      "review_id": 6849875014,
+      "cursor_sha": "d4b0ac082563a6ecc7d1ac40d270b13075ab7e7f",
+      "work_commit": "aa2ba687a638821ffef96e397d21b8f6d439837f"
+    },
+    {
+      "role": "observer",
+      "comment_id": 6849911875,
+      "type": "CORRECTION",
+      "source_comment_id": 6849875014,
       "status": "posted_verified",
       "recipient_execution_observed": false
     }
@@ -2513,11 +2529,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Existing live Codex executor handles separate377 integration; monitor never auto-merges.",
-    "No manual desktop input required. Exact377 recipe accepted; refresh final pin/checks after integration and duplicate evidence/tag/queue screen before admission.",
-    "Run signal needs authenticated capable connection; connector lacks dispatch, current browser signed out. Existing authority persists; no direct-tag bypass.",
-    "Verify actual ready tag and queue before claiming queued; await Louis-submitted bundle to evaluate.",
-    "One-core dossier remains deferred/not executed; no duplicate research or implementation."
+    "Use reviewed green branch bench/cells-live-workstation at cb73bf909397e2fff8c90f0a00437061ad06478e directly for PROTOCOL9; do not require377 merge.",
+    "Authenticated existing Run signal dispatch remains capability blocker previously recorded6849815173. No new permission, manual desktop facts, infrastructure or direct-tag bypass.",
+    "Refresh duplicate/evidence/tag/hold screen before signal; verify exact ready tag; existing live Codex executor adds master queue line.",
+    "Await Louis-submitted bundle; no agent workstation execution. Preserve120+9 and warm20+20 unadmitted.",
+    "Observer correction6849911875 posted/verified; await real recipient receipt. No duplicate Codex or successor research."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3541,7 +3557,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6849678574
+    "last_event_comment_id": 6849875014
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -3977,10 +3993,10 @@
     "performance_adoption": false
   },
   "cells_admission_active": {
-    "source_comment_id": 6849678574,
+    "source_comment_id": 6849826280,
     "actor": "codex in separate live owner-authorised session (reported)",
     "completion_observed": false,
-    "cursor_at_read": "e2cfad6d1a8025f2e9dec5325aceb30fa376c0d3",
+    "cursor_at_read": "c74ddbf9b001850645bdf429ae28936c6b56c636",
     "cursor_completion_available": false,
     "scope_reported": "376 master incorporation, guarded integration after gates, actual verified argument-free binding and standard PROTOCOL9 admission",
     "monitor_authority": "Existing queue-preparation/admission authorisation remains; no automatic merge or workstation execution",
@@ -3988,11 +4004,11 @@
     "hardware_facts_received": false,
     "final_recipe_pin": "cb73bf909397e2fff8c90f0a00437061ad06478e",
     "queue_observed_empty_at": "e674070e1351460d27d745390b1db80ef5112b60",
-    "historical_evidence_check": "Author reports evidence d85b2074099f027d048aa7a057da10d25f2b70bb has old cells-vs-prod only; must refresh before admission",
-    "status": "active exact377 frozen recipe PROCEED; green; separate integration and authenticated Run-signal pending",
+    "historical_evidence_check": "Author fresh screen at34775cdbf605b5135566b7089c2753feda3a4e10: evidence d85b207 onlyoldcells-vs-prod, no live-path tags/history. Refresh immediately before signal.",
+    "status": "reviewed green branch eligible; authenticated Run-signal and subsequent queue admission pending",
     "integration_complete": true,
     "authority_persists": "Existing owner authorised binding and standard ready-tag/queue; no renewed permission needed for those. No agent workstation execution or automatic merge.",
-    "next_actor": "Existing live Codex executor: deliberate integration with exact expected head and postmerge check; capable authenticated Run-signal connection after fresh duplicate screening, then verify ready tag and master queue. Louis runs queue locally.",
+    "next_actor": "Capable authenticated Run-signal connection signals ready at exact approved cb73bf909397e2fff8c90f0a00437061ad06478e after duplicate screen; existing Codex executor verifies tag and adds master queue line. No377 merge prerequisite.",
     "history": [
       {
         "source_comment_id": 6849382358,
@@ -4005,10 +4021,10 @@
     "cpu_rule": "minimum os.sched_getaffinity(0), topology and full affinity recorded before build",
     "corpus_binding": "attempt/inputs, frozen synthetic generator plus verified canonical Wikidata or exact pinned-window reconstruction",
     "recipe": "bench-cells-live-path-i9",
-    "recipe_review": "PROCEED diagnostic recipe only at exacthead; unchanged120+9 and no warm20+20",
+    "recipe_review": "PROCEED completed6849815173 at exact cb73bf909397e2fff8c90f0a00437061ad06478e, not preliminary",
     "pr": 377,
     "pr_merged": false,
-    "evidence_commit": "adc08916a4fc29526135f5aedf8f7a283561525c",
+    "evidence_commit": "34775cdbf605b5135566b7089c2753feda3a4e10",
     "ci": [
       {
         "id": 43404843666,
@@ -4075,7 +4091,11 @@
       "browser": "Existing Run signal page observed signed out; no authenticated dispatch control; no login or dispatch attempted",
       "workflow": ".github/workflows/run-signal.yml",
       "permission_needed": false
-    }
+    },
+    "source_branch": "bench/cells-live-workstation",
+    "source_tree": "7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae",
+    "merge_required_for_admission": false,
+    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9"
   },
   "recipe_review_377": {
     "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
