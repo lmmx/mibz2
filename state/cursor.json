@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849382358,
+  "last_examined_comment_id": 6849425640,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1738,10 +1738,16 @@
       "scope": "Reconcile376 guarded integration; preserve active authorised queue binding pending actual facts",
       "ready_job_queued": false,
       "action_links": [
-        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6849372228"
+        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6849372228",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849425640"
       ],
       "reason": "376 merge/head/master verified; all headActions+legacy pass, postmergeTest/docs pass Benchmarkrunning. No readyjob: actual desktop facts and final bound recipe/admission absent; preserve authority and existing executor.",
       "recipient_cursor_sha": "eaf80e130c72424ccbe3bc5719823b5fda61862e"
+    },
+    "6849425640": {
+      "status": "completed_own_monitor_log",
+      "comment_updated_at": null,
+      "source_comment_id": 6849382358
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1860,7 +1866,8 @@
     6848184897,
     6848610020,
     6848920917,
-    6849255206
+    6849255206,
+    6849425640
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2068,8 +2075,10 @@
   },
   "checkpoint": {
     "key": "376-merged-6849382358",
-    "status": "in_progress_before_post",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6849425640,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849425640"
   },
   "dispatch_history": [
     {
