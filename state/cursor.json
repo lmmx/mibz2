@@ -2710,6 +2710,18 @@
       "wake_disposition": "observed_self_generated_noop",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6857443323": {
+      "status": "in_progress",
+      "delivery_id": "105f9d80-df77-11f1-8e4c-6e51107e85ba",
+      "comment_updated_at": "2026-11-13T15:29:48Z",
+      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG."
+    },
+    "6857451993": {
+      "status": "in_progress",
+      "delivery_id": "1e23f010-df77-11f1-9234-dee404d6f823",
+      "comment_updated_at": "2026-11-13T15:30:11Z",
+      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG."
     }
   },
   "automatic_github_wakeup_assumed": false,
