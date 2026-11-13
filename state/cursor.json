@@ -72,7 +72,9 @@
     6862205856,
     6862410701
   ],
-  "in_progress": [],
+  "in_progress": [
+    6862622329
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -627,6 +629,11 @@
       "progress": "Record committed; REVIEW 6862464014 published and read back.",
       "work_commit": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4",
       "review_id": 6862464014
+    },
+    "6862622329": {
+      "comment_id": 6862622329,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling PR381 executable evidence and conditional handoff."
     }
   },
   "last_record_commit": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4"
