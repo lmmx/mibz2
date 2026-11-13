@@ -1207,6 +1207,17 @@
       },
       "reply_id": 6850572409,
       "routing_verification": "route/check passed. Pinned verify rejects FROM optimizer because it hardcodes coordinator; exact GitHub body/author/destination readback verified, no verify-pass claimed."
+    },
+    {
+      "comment_id": 6850660172,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "parent_comment_id": 6850318070,
+      "queue_comment_id": 6850583026,
+      "progress": "Receipt after migration verification. Bounded seven-family coverage and early-dispatch planning delta; no replay of completed parent or decoder execution.",
+      "report_path": "state/records/reviews/inbox-6850660172/report.md"
     }
   ],
   "migrated_from": {
