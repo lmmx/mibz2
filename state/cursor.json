@@ -657,6 +657,10 @@
     "merged": false,
     "released": false,
     "automatic_github_wakeup_assumed": false,
-    "measured_disposition_review": 6852738556
+    "measured_disposition_review": 6852738556,
+    "completion_review_comment_id": 6852838891,
+    "pr_evidence_comment_id": 6852841999,
+    "evidence_commit": "1cd32df964395b1ff9dfeef62a4a5df35c19557e",
+    "receipt_readback_verified": true
   }
 }
