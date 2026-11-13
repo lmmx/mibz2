@@ -2645,7 +2645,11 @@
     "6857069694": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T15:13:29Z",
-      "disposition": "Own independent B5 routing LOG; ignore self wake."
+      "disposition": "Own independent B5 routing LOG; ignore self wake.",
+      "delivery_id": "c8f054f0-df74-11f1-8f52-77e2f3fa8190",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2808,9 +2812,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6857000172,
-    "delivery_id": "67403ea0-df74-11f1-9800-ef5776510609",
-    "disposition": "Independent B5 routed on exact head; implementation still active"
+    "comment_id": 6857069694,
+    "delivery_id": "c8f054f0-df74-11f1-8f52-77e2f3fa8190",
+    "disposition": "Own routing LOG deduplicated; no new external message. B5 and existing Codex work pending; no ready workstation recipe. Master/policies unchanged and audit passes."
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
