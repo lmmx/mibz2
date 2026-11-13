@@ -561,6 +561,10 @@
     "measurements": 0,
     "queue_run_signal": false,
     "workstation_ready": false,
-    "postmerge_checks": "Documentation and Benchmark links pass; Test and automatic Benchmark running; packaging skipped by non-release condition"
+    "postmerge_checks": "Documentation and Benchmark links pass; Test and automatic Benchmark running; packaging skipped by non-release condition",
+    "completion_review_comment_id": 6848858947,
+    "pr376_checkpoint_comment_id": 6848842241,
+    "receipt_readback_verified": true,
+    "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a"
   }
 }
