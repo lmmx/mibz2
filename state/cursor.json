@@ -2038,7 +2038,8 @@
     "6850995824": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T11:04:16Z",
-      "disposition": "Own substantive LOG verified; ignore self wake."
+      "disposition": "Own substantive LOG verified; self wake reconciled against fresh channel with no newer external message. No dispatch or ready job; preparation still pending.",
+      "delivery_id": "f8255fe0-df51-11f1-8f21-84dd41d61bdf"
     }
   },
   "automatic_github_wakeup_assumed": false,
