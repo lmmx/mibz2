@@ -1972,13 +1972,15 @@
     },
     {
       "trigger_comment_id": 6852337017,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "source_commit": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
       "successor_commit": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
       "report_path": "state/reports/small-spine-closure-6852337017/report.md",
       "report_commit": "356fd3a71252e5987b5bfa669d9e6360294778fc",
-      "disposition": "Targeted B5 missing-evidence objection closed for835984e, carried to fixture-only4f6e6ff; CI Miri incomplete and benchmark preparation failure remain separate."
+      "disposition": "Targeted B5 missing-evidence objection closed for835984e, carried to fixture-only4f6e6ff; CI Miri incomplete and benchmark preparation failure remain separate.",
+      "review_comment_id": 6852460604,
+      "publication_verification": "Exact body, author lmmx, issue145, role-aware routing passed; pinned verify has only known coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
