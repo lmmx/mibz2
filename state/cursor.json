@@ -1555,6 +1555,17 @@
       "status": "finished",
       "disposition": "D100/D102 accounting defect resolved at corrected PR368 head; scoped ordinary-worker/team accounting restriction lifted. Old failures preserved; no #366 readiness or all-green certification.",
       "comment": 6790889882
+    },
+    {
+      "id": "D104",
+      "decision": "G1",
+      "incoming_comment": 6867883717,
+      "pr": 161,
+      "sha": "cf1a36ed429f361839fab6748383187104d8ab27",
+      "evidence_digest": "sha256:330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
+      "commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
+      "status": "complete",
+      "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected."
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1903,7 +1914,9 @@
     "f7c4438a789d436db0a6985bd6d4647c5d1e0038",
     "b534f2b88b93358c792d2dfb8fa135a11f692cab",
     "b7af95428922d3c81d8007d548ce22002db57eaf",
-    "ca976259ba93460964bf066a53a9c2d3f443ee40"
+    "ca976259ba93460964bf066a53a9c2d3f443ee40",
+    "170110ef5a2a479a94eb41925f422914d1a7abcd",
+    "d5ee317ad73962e35d6dbdd1804a372a6b92abbb"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2007,7 +2020,8 @@
     6782334222,
     6782662288,
     6790511955,
-    6790746386
+    6790746386,
+    6867883717
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -2087,7 +2101,7 @@
   },
   "current_execution": {
     "active_comment": 6867883717,
-    "status": "in progress",
+    "status": "complete",
     "decision": "D104"
   },
   "duplicate_events": [
@@ -2888,6 +2902,17 @@
       "incoming_comment": 6790746386,
       "decision": "D103",
       "commit": "b7af95428922d3c81d8007d548ce22002db57eaf"
+    },
+    {
+      "id": "D104",
+      "decision": "G1",
+      "incoming_comment": 6867883717,
+      "pr": 161,
+      "sha": "cf1a36ed429f361839fab6748383187104d8ab27",
+      "evidence_digest": "sha256:330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
+      "commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
+      "status": "complete",
+      "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected."
     }
   ],
   "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -3722,9 +3747,11 @@
     {
       "comment_id": 6867883717,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D104",
-      "progress": "Migration verified. Bounded frozen PLAN machine/activity qualification check."
+      "progress": "D104 committed; bounded machine/activity restriction resolved, all rows retained; awaiting REVIEW.",
+      "receipt_commit": "170110ef5a2a479a94eb41925f422914d1a7abcd",
+      "work_commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb"
     }
   ],
   "migrated_from": {
