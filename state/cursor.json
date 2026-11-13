@@ -2930,6 +2930,25 @@
       "response_comments": 0,
       "disposition": "Observer REVIEW and finished cursor for6862622329 verified at record e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f. Record accurately preserves conditional executable acceptance, noREADY, default gate and integrationDEFER. No correction or further Observer assignment required.",
       "recipient_cursor": "60f944687e41d569438184d4871d40dc83b2bec7"
+    },
+    "admission-6862613562-run43497427596": {
+      "status": "in_progress",
+      "owner_authorisation": "Louis directly requested queue admission and admission LOG after successful Run Signal43497427596; do not dispatch again.",
+      "handoff": 6862613562,
+      "workflow_run": 43497427596,
+      "recipe_head": "cf1a36ed429f361839fab6748383187104d8ab27",
+      "master_before": "3e7e294cc10f29495e9828181345d74233c549d4",
+      "queue_expected_blob": "40f113ccf20f8f14caa985a9683279f27f5f0164",
+      "planned_action": "CAS append one bench-cells-selective-i9 entry on master, verify queue/ready/noHOLD, persist final admission then one LOG.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/actions/runs/43497427596"
+      ],
+      "duplicate_submission_check": {
+        "evidence_head": "01f5bc23ea2242969b084ebff7bf3b178814f3a2",
+        "tree_complete": true,
+        "matching_recipe_paths": 0
+      },
+      "audit": "coord.py audit exit0; route LOG =>145"
     }
   },
   "automatic_github_wakeup_assumed": false,
