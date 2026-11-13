@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/workspace/mibz2-selective/bench/cells-selective/codegen.py", line 54, in <module>
+    main()
+  File "/workspace/mibz2-selective/bench/cells-selective/codegen.py", line 18, in main
+    assert len(matches) == 1, matches
+           ^^^^^^^^^^^^^^^^^
+AssertionError: []

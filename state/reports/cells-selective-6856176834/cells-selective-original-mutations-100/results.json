@@ -1,0 +1,47 @@
+{
+  "source_sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+  "mutants": [
+    {
+      "name": "baseline",
+      "test": "cells::tests",
+      "exit": 0,
+      "killed": false
+    },
+    {
+      "name": "uncounted-cell",
+      "test": "miri_cells_admission_and_invalid_records",
+      "exit": 101,
+      "killed": true
+    },
+    {
+      "name": "lost-mark",
+      "test": "miri_cells_slots_mark_and_links",
+      "exit": 101,
+      "killed": true
+    },
+    {
+      "name": "wrong-backlink",
+      "test": "cells_exhaustive_arbitrary_columns",
+      "exit": 101,
+      "killed": true
+    },
+    {
+      "name": "wrong-rotation",
+      "test": "cells_exhaustive_arbitrary_columns",
+      "exit": 101,
+      "killed": true
+    },
+    {
+      "name": "region-overrun",
+      "test": "miri_cells_exact_fit_and_reuse",
+      "exit": 101,
+      "killed": true
+    },
+    {
+      "name": "missing-spine-recopy",
+      "test": "miri_cells_long_writer",
+      "exit": 101,
+      "killed": true
+    }
+  ]
+}

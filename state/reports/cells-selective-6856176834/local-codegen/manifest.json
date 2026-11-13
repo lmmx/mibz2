@@ -1,0 +1,27 @@
+{
+  "binaries": [
+    {
+      "arm": "original",
+      "binary_sha256": "10e3f0b4fdb6ec2ae959b323add6faa6ebc3559b3d3daa55440fbe06cdf0a971",
+      "symbol": "000000000014ff80 0000000000000388 t <mibz2::cells::Kernel>::induce_cells",
+      "symbol_bytes": 904,
+      "compiler": "rustc version 1.100.0 (0ef1bc386 2026-11-09)"
+    },
+    {
+      "arm": "selective",
+      "binary_sha256": "58a018a2981a6a39fddc15a5cab96cc04d08a25fb932c849d850cbd4577a79b7",
+      "symbol": "000000000014ff80 000000000000033b t <mibz2::cells::Kernel>::induce_cells",
+      "symbol_bytes": 827,
+      "compiler": "rustc version 1.100.0 (0ef1bc386 2026-11-09)"
+    }
+  ],
+  "routes": [
+    "CELLS_ROUTE onebyte blocks=1 column_fallback=0 Counts { admitted: 0, density: 0, floor: 0, budget: 1, invalid: 0, short_cycles: 0, cells: 0 }",
+    "CELLS_ROUTE pattern blocks=22 column_fallback=0 Counts { admitted: 22, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 1, cells: 2700141 }",
+    "CELLS_ROUTE random blocks=9 column_fallback=9 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }",
+    "CELLS_ROUTE records blocks=11 column_fallback=11 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }",
+    "CELLS_ROUTE runs blocks=1 column_fallback=0 Counts { admitted: 0, density: 1, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }",
+    "CELLS_ROUTE text blocks=14 column_fallback=0 Counts { admitted: 0, density: 14, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }",
+    "CELLS_ROUTE wikidata blocks=431 column_fallback=48 Counts { admitted: 196, density: 185, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }"
+  ]
+}

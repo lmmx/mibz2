@@ -1,0 +1,9 @@
+{
+  "tree": "/tmp/mibz2-selective-original-2qirwds6/source",
+  "common_head": "a8a23c11607864cb431f87fff38169e10c41685f",
+  "restored_ref": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "sole_restored_path": "src/cells.rs",
+  "original_cells_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+  "candidate_cells_sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+  "original_binary_sha256": "10e3f0b4fdb6ec2ae959b323add6faa6ebc3559b3d3daa55440fbe06cdf0a971"
+}

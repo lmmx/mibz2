@@ -1,0 +1,34 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling libm v0.2.16
+   Compiling pkg-config v0.3.34
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling syn v3.0.9
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling fearless_simd v1.2.0
+   Compiling mibz2 v0.2.9 (/tmp/mibz2-selective-original-2qirwds6/source)
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 30.76s
+     Running unittests examples/ab.rs (/workspace/mibz2-selective/target/selective-original/release/build/mibz2/9477bfa23e50a202/out/ab-9477bfa23e50a202)
+
+running 1 test
+CELLS_ROUTE wikidata blocks=431 column_fallback=48 Counts { admitted: 196, density: 185, floor: 0, budget: 2, invalid: 0, short_cycles: 0, cells: 20456299 }
+CELLS_ROUTE onebyte blocks=1 column_fallback=0 Counts { admitted: 0, density: 0, floor: 0, budget: 1, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE pattern blocks=22 column_fallback=0 Counts { admitted: 22, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 1, cells: 2700141 }
+CELLS_ROUTE random blocks=9 column_fallback=9 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE records blocks=11 column_fallback=11 Counts { admitted: 0, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE runs blocks=1 column_fallback=0 Counts { admitted: 0, density: 1, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+CELLS_ROUTE text blocks=14 column_fallback=0 Counts { admitted: 0, density: 14, floor: 0, budget: 0, invalid: 0, short_cycles: 0, cells: 0 }
+test ab_cells::tests::cells_pinned_readers_byte_parity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 28 filtered out; finished in 7.29s
+

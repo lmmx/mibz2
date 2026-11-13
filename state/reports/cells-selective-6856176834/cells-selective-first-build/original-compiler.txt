@@ -1,0 +1,6 @@
+
+String dump of section '.comment':
+  [     0]  rustc version 1.90.0 (1159e78c4 2025-09-14)
+  [    2c]  GCC: (Debian 14.2.0-19) 14.2.0
+  [    4c]  Linker: LLD 20.1.8 (/checkout/src/llvm-project/llvm e8a2ffcf322f45b8dce82c65ab27a3e2430a6b51)
+
