@@ -1705,6 +1705,15 @@
       "reason": "Own attributed LOG and saved checkpoint; exact readback shows no new external message. Current master/policies,373/376 CI unchanged; postmerge benchmark still running. No duplicate dispatch or LOG.",
       "ready_job_queued": false,
       "ready_job_reason": "376 changed-base validation/integration and actual i9 bindings/final admission remain."
+    },
+    "6849208142": {
+      "status": "in_progress",
+      "delivery_id": "a7bae690-df44-11f1-8262-350235e783ee",
+      "comment_updated_at": null,
+      "master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+      "scope": "Reconcile active376 synchronization and reported owner-authorised admission work without duplicate operator actions",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
