@@ -1,0 +1,1 @@
+27380 cells cases, seed 42, production Counts { admitted: 2700, density: 3980, floor: 668, budget: 1990, invalid: 0, short_cycles: 2190, cells: 1813223 }, forced Counts { admitted: 14451, density: 0, floor: 0, budget: 0, invalid: 0, short_cycles: 10176, cells: 234826562 }

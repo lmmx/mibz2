@@ -1,0 +1,23 @@
+   Compiling pyo3-ffi v0.29.3
+   Compiling once_cell v1.21.4
+   Compiling pyo3 v0.29.3
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-small-spine)
+error: linking with `cc` failed: exit status: 1
+  |
+  = note:  "cc" "-Wl,--version-script=/workspace/mibz2-small-spine/target/debug/build/mibz2/fae79df99b8d6d89/out/rustcwNvY6Z/list" "-Wl,--no-undefined-version" "-m64" "/workspace/mibz2-small-spine/target/debug/build/mibz2/fae79df99b8d6d89/out/rustcwNvY6Z/symbols.o" "<107 object files omitted>" "-Wl,--as-needed" "-Wl,-Bstatic" "/workspace/mibz2-small-spine/target/debug/build/pyo3/c49865264627ee8c/out/libpyo3-c49865264627ee8c.rlib" "/workspace/mibz2-small-spine/target/debug/build/once_cell/bc7644282bfc0fc5/out/libonce_cell-bc7644282bfc0fc5.rlib" "/workspace/mibz2-small-spine/target/debug/build/pyo3-ffi/72a78496a88fdaa6/out/libpyo3_ffi-72a78496a88fdaa6.rlib" "/workspace/mibz2-small-spine/target/debug/build/libc/e8db6fd093d18dff/out/liblibc-e8db6fd093d18dff.rlib" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-Wl,-Bdynamic" "-lpython3.12" "-lgcc_s" "-lutil" "-lrt" "-lpthread" "-lm" "-ldl" "-lc" "-L" "/workspace/mibz2-small-spine/target/debug/build/mibz2/fae79df99b8d6d89/out/rustcwNvY6Z/raw-dylibs" "-B<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld" "-fuse-ld=lld" "-Wl,--eh-frame-hdr" "-Wl,-z,noexecstack" "-L" "/install/lib" "-L" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib" "-o" "/workspace/mibz2-small-spine/target/debug/build/mibz2/fae79df99b8d6d89/out/libmibz2.so" "-Wl,--gc-sections" "-shared" "-Wl,-z,relro,-z,now" "-Wl,-O1" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: rust-lld: error: unable to find library -lpython3.12
+          collect2: error: ld returned 1 exit status
+          
+
+error: could not compile `mibz2` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: linking with `cc` failed: exit status: 1
+  |
+  = note:  "cc" "-m64" "/workspace/mibz2-small-spine/target/debug/build/mibz2/98a02cf26bc287b0/out/rustco8SOT5/symbols.o" "<155 object files omitted>" "-Wl,--as-needed" "-Wl,-Bstatic" "/workspace/mibz2-small-spine/target/debug/build/bzip2/12bfd8b3972fa9b4/out/libbzip2-12bfd8b3972fa9b4.rlib" "/workspace/mibz2-small-spine/target/debug/build/bzip2-sys/03d74abc03727488/out/libbzip2_sys-03d74abc03727488.rlib" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libtest-*,libgetopts-*,librustc_std_workspace_std-*}.rlib" "/workspace/mibz2-small-spine/target/debug/build/pyo3/c49865264627ee8c/out/libpyo3-c49865264627ee8c.rlib" "/workspace/mibz2-small-spine/target/debug/build/once_cell/bc7644282bfc0fc5/out/libonce_cell-bc7644282bfc0fc5.rlib" "/workspace/mibz2-small-spine/target/debug/build/pyo3-ffi/72a78496a88fdaa6/out/libpyo3_ffi-72a78496a88fdaa6.rlib" "/workspace/mibz2-small-spine/target/debug/build/libc/e8db6fd093d18dff/out/liblibc-e8db6fd093d18dff.rlib" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib/{libstd-*,libpanic_unwind-*,libobject-*,libmemchr-*,libaddr2line-*,libgimli-*,libcfg_if-*,librustc_demangle-*,libstd_detect-*,libhashbrown-*,librustc_std_workspace_alloc-*,libminiz_oxide-*,libadler2-*,libunwind-*,liblibc-*,librustc_std_workspace_core-*,liballoc-*,libcore-*,libcompiler_builtins-*}.rlib" "-Wl,-Bdynamic" "-lpython3.12" "-lgcc_s" "-lutil" "-lrt" "-lpthread" "-lm" "-ldl" "-lc" "-L" "/workspace/mibz2-small-spine/target/debug/build/mibz2/98a02cf26bc287b0/out/rustco8SOT5/raw-dylibs" "-B<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld" "-fuse-ld=lld" "-Wl,--eh-frame-hdr" "-Wl,-z,noexecstack" "-L" "/workspace/mibz2-small-spine/target/debug/build/bzip2-sys/894505c91e24fcd9/out/lib" "-L" "/install/lib" "-L" "<sysroot>/lib/rustlib/x86_64-unknown-linux-gnu/lib" "-o" "/workspace/mibz2-small-spine/target/debug/build/mibz2/98a02cf26bc287b0/out/mibz2-98a02cf26bc287b0" "-Wl,--gc-sections" "-pie" "-Wl,-z,relro,-z,now" "-Wl,-O1" "-nodefaultlibs"
+  = note: some arguments are omitted. use `--verbose` to show all linker arguments
+  = note: rust-lld: error: unable to find library -lpython3.12
+          collect2: error: ld returned 1 exit status
+          
+
+error: could not compile `mibz2` (lib test) due to 1 previous error

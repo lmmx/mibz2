@@ -1,0 +1,30 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-small-spine)
+    Finished `test` profile [optimized + debuginfo] target(s) in 6.44s
+     Running unittests src/lib.rs (target/debug/build/mibz2/9d949f79bd6450fe/out/mibz2-9d949f79bd6450fe)
+
+running 8 tests
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_long_writer_production_admission ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test cells::tests::miri_cells_small_spine_boundary_and_reuse ... FAILED
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+
+failures:
+
+---- cells::tests::miri_cells_small_spine_boundary_and_reuse stdout ----
+
+thread 'cells::tests::miri_cells_small_spine_boundary_and_reuse' (19196) panicked at src/cells.rs:991:9:
+assertion `left == right` failed
+  left: 27
+ right: 16
+
+
+failures:
+    cells::tests::miri_cells_small_spine_boundary_and_reuse
+
+test result: FAILED. 7 passed; 1 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--lib`

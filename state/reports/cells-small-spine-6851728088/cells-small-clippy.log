@@ -1,0 +1,20 @@
+   Compiling target-lexicon v0.13.5
+   Compiling libc v0.2.191
+   Compiling syn v2.0.119
+   Compiling libm v0.2.16
+   Compiling heck v0.5.0
+   Compiling thiserror v2.0.21
+   Compiling pyo3-build-config v0.29.3
+   Compiling bzip2-sys v0.1.13+1.0.8
+    Checking fearless_simd v1.2.0
+   Compiling pyo3-ffi v0.29.3
+   Compiling pyo3 v0.29.3
+    Checking once_cell v1.21.4
+    Checking bytemuck v1.25.2
+    Checking bzip2 v0.4.4
+   Compiling pyo3-macros-backend v0.29.3
+   Compiling pyo3-macros v0.29.3
+    Checking mibz2 v0.2.9 (/workspace/mibz2-small-spine)
+    Checking pbz2-core v0.2.0
+    Checking pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.42s

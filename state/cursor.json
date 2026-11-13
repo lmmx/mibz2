@@ -628,14 +628,21 @@
     "implementation_complete": true,
     "publication_head": "de1e5a8b4850cf0d33028682986ae4a641e67d6c",
     "coordinator_acceptance": 6851749759,
-    "completion_review_comment_id": 6851667694
+    "completion_review_comment_id": 6851667694,
+    "all_actions": "success at de1e5a8; Benchmark43417618120, Test43417618187, CI43417618208, screen43417618214"
   },
   "cells_small_spine": {
     "queue_comment_id": 6851728088,
-    "status": "IN_PROGRESS: same executor; scalar guard implemented, native/Miri/differential validation underway",
+    "status": "IN_PROGRESS: candidate implemented; all focused, pinned byte, fuzz, Miri and mutation checks pass; service fixture repair committed locally; CI qualification pending",
     "branch": "perf/cells-small-spine",
     "base_master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "cells_source": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
-    "next_action": "Finish candidate validation and one ordinary paired CI; obtain independent review, preserve performance failures. No dispatcher or default change."
+    "next_action": "Finish candidate validation and one ordinary paired CI; obtain independent review, preserve performance failures. No dispatcher or default change.",
+    "pr": 379,
+    "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+    "review_source_head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+    "independent_review_assignment": 6852069758,
+    "evidence": "state/reports/cells-small-spine-6851728088",
+    "performance_measurements_local": 0
   }
 }

@@ -1,0 +1,26 @@
+   Compiling mibz2 v0.2.9 (/tmp/cells-small-original-mutations/tree)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.98s
+  Executable unittests src/lib.rs (/tmp/cells-small-original-mutations/target/debug/build/mibz2/9d949f79bd6450fe/out/mibz2-9d949f79bd6450fe)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (/tmp/cells-small-original-mutations/target/debug/build/mibz2/9d949f79bd6450fe/out/mibz2-9d949f79bd6450fe)
+
+running 1 test
+test cells::tests::cells_exhaustive_arbitrary_columns ... FAILED
+
+failures:
+
+---- cells::tests::cells_exhaustive_arbitrary_columns stdout ----
+
+thread 'cells::tests::cells_exhaustive_arbitrary_columns' (32139) panicked at src/cells.rs:869:9:
+assertion `left == right` failed: column [1, 0], row 0
+  left: [1, 0]
+ right: [0, 1]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    cells::tests::cells_exhaustive_arbitrary_columns
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 107 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

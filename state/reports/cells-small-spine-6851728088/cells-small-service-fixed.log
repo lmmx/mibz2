@@ -1,0 +1,18 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-small-spine)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.24s
+     Running tests/service.rs (target/debug/build/mibz2/198268bd41eca021/out/service-198268bd41eca021)
+
+running 10 tests
+test a_bad_orig_ptr ... ok
+test an_mtf_error ... ok
+test dropped_and_cancelled ... ok
+test one_block_and_none ... ok
+test injected_panics ... ok
+test a_block_crc_in_the_middle ... ok
+test small_blocks_among_large_and_streams ... ok
+test truncated ... ok
+test the_corpora ... ok
+test every_level_and_shape ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.37s
+

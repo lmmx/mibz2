@@ -1,0 +1,16 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-small-spine)
+    Finished `test` profile [optimized + debuginfo] target(s) in 4.88s
+     Running unittests src/lib.rs (target/debug/build/mibz2/9d949f79bd6450fe/out/mibz2-9d949f79bd6450fe)
+
+running 8 tests
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_long_writer_production_admission ... ok
+test cells::tests::miri_cells_slots_mark_and_links ... ok
+test cells::tests::miri_cells_small_spine_boundary_and_reuse ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.02s
+
