@@ -742,7 +742,7 @@
     "receipt_readback_verified": true
   },
   "cells_i9": {
-    "status": "PREPARATION IMPLEMENTED AND VALIDATED; awaiting remaining exact-head CI and Coordinator final approval/Run Signal/queue",
+    "status": "PREPARATION COMPLETE; NOT READY \u2014 existing Run Signal executor capability required before Coordinator queue admission",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
@@ -758,6 +758,14 @@
     "untimed_tests": 22,
     "native_exact_head": "cf1a36ed429f361839fab6748383187104d8ab27",
     "attribution": "bounded source finding complete, causality unresolved; see ATTRIBUTION.md",
-    "design_review": 6862425749
+    "design_review": 6862425749,
+    "preparation_complete": true,
+    "completed": false,
+    "exact_head_checks": "Test43489092176, CI43489092042, Benchmark43489732975, hosted legacy all SUCCESS; superseded43489092104 retained CANCELLED",
+    "coordinator_conditional_approval": 6862613562,
+    "readiness_review": 6862561316,
+    "remaining_blocker": "Workflow dispatch tool unavailable; direct API CONNECT403; desktop control tool unavailable. Existing authorised executor must send Run Signal, then Coordinator queue admission and readback.",
+    "next_action": "Coordinator reconcile final green evidence and activate existing authorised Run Signal executor for cf1a36ed; no new Codex implementation needed",
+    "checked_utc": "2026-11-13T19:20:41.159644+00:00"
   }
 }
