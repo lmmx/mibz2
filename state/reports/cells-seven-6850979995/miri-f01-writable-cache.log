@@ -1,0 +1,65 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-seven/bench/cells-seven/target/reader/.source/Cargo.toml
+workspace: /workspace/mibz2-seven/bench/cells-seven/target/reader/Cargo.toml
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.11.1
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling syn v3.0.10
+   Compiling fearless_simd v1.2.0
+   Compiling bytemuck v1.25.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-seven/bench/cells-seven/target/reader/.source)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.91s
+     Running unittests src/lib.rs (bench/cells-seven/target/reader/target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/2acbaaae9fb9e704/out/mibz2-2acbaaae9fb9e704)
+warning: constant `ALL` is never used
+  --> .source/src/parallel/service_unwind_tests.rs:44:7
+   |
+44 | const ALL: [OuterAt; 9] = [
+   |       ^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `wrote` and `pooled` are never read
+   --> .source/src/parallel/service_unwind_tests.rs:106:5
+    |
+103 | struct Ran {
+    |        --- fields in this struct
+...
+106 |     wrote: Result<(), Stopped>,
+    |     ^^^^^
+...
+114 |     pooled: u64,
+    |     ^^^^^^
+
+warning: function `every_point` is never used
+   --> .source/src/parallel/service_unwind_tests.rs:259:4
+    |
+259 | fn every_point(input: (Vec<u8>, Vec<u8>)) -> u64 {
+    |    ^^^^^^^^^^^
+
+warning: function `parked` is never used
+   --> .source/src/parallel/service_unwind_tests.rs:296:4
+    |
+296 | fn parked(z: &[u8], want: &[u8], last: u64) {
+    |    ^^^^^^
+
+
+running 2 tests
+test cells::tests::miri_cells_long_writer ... ok
+test cells::tests::miri_cells_long_writer_production_admission ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 25.37s
+
+warning: 4 warnings emitted
+

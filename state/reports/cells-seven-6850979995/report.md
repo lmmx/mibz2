@@ -6,8 +6,8 @@ Queue6850979995; owner shipping mission. Frozen decoder d4f0e8fb3ac68fa649e1810d
 
 All **23 executions completed once locally**: two touched-memory controls, seven
 families × Segmented/Cells/bundled libbzip2. All bytes, lengths and SHA-256s match;
-all reported block CRCs match. No measurement samples were collected. Exact-head
-CI is separate and pending when this checkpoint was written.
+all reported block CRCs match. No measurement samples were collected. Exact-head screen CI43417618214 and packaging CI43417618208 passed; hosted
+legacy pre-commit passed. General Test/Benchmark still run at this checkpoint.
 
 | Family | Cells admitted / total blocks | Other routes | All-small admitted blocks | Native peak KiB Segmented / Cells / oracle |
 |---|---:|---|---:|---:|
@@ -65,7 +65,8 @@ attribution remains STOP, and the current candidate has not been timed.
 - All compressed pins verified, text source exact57f51bbc; ordered path/hash
   manifest retained. Four previously missing decoded hashes are in screen/summary.json.
 - Partial/error evidence is retained. The initial Miri invocation could not create
-  its default read-only sysroot cache; a writable-cache invocation is in progress.
+  its default read-only sysroot cache; a writable-cache invocation passed both F01 tests under Miri (25.37 seconds).
+  This is regression validation, not independent B5 self-certification.
 - F01 independent review6790022921 is not reopened; #365 integration DEFER6790163736
   and original gate6775049636 remain. No default/team/threshold change, i9 run,
   ready tag, queue entry, merge or release.
