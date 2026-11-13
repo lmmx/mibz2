@@ -2085,6 +2085,21 @@
       "completion_observed": false,
       "codex_cursor_blob": "c74ddbf9b001850645bdf429ae28936c6b56c636",
       "own_post_required": false
+    },
+    "6851667694": {
+      "status": "in_progress",
+      "delivery_id": "558e0bb0-df56-11f1-9879-664c4a64b845",
+      "comment_updated_at": "2026-11-13T11:35:30Z",
+      "completion": {
+        "queue": 6850979995,
+        "pr": 378,
+        "head": "de1e5a8b4850cf0d33028682986ae4a641e67d6c",
+        "evidence": "2629a0e6a3da74b0f90f4c9e2b09b80dfe8fd86a",
+        "cursor_blob": "69673d4eb9f2bb192b9eed842336594242a270e6",
+        "implementation_complete": true,
+        "routing_processed_id_missing": true
+      },
+      "planned_action": "Select and stage one guarded all-small writer candidate for same executor per busy router. Preserve mathematical ownership and independent B5; no timing programme or merge admission."
     }
   },
   "automatic_github_wakeup_assumed": false,
