@@ -1851,8 +1851,9 @@
       "comment_updated_at": null,
       "planned_action": "Reconcile externally admitted exact ready job; no duplicate signal/queue action. Batch material admission to free Observer and publish verified checkpoint.",
       "observer_dispatch": {
-        "status": "in_progress",
-        "destination": 222
+        "status": "posted_pending_verify",
+        "comment_id": 6850176303,
+        "recipient_execution_observed": false
       }
     }
   },
