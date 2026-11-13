@@ -1,0 +1,104 @@
+{
+  "assets/social/blog-2026-10-29-compact-navigation-tables.png": {
+    "description": "Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.",
+    "foot": "lmmx.github.io/mibz2 · 29 October 2026",
+    "section": " · Research blog",
+    "title": "Compact navigation tables for the inverse BWT: early findings"
+  },
+  "assets/social/blog-2026-10-31-room-walk-overlap.png": {
+    "description": "The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte.",
+    "foot": "lmmx.github.io/mibz2 · 31 October 2026",
+    "section": " · Research blog",
+    "title": "32 lanes, 8.6 chains: where the inverse BWT walk spends its cycles"
+  },
+  "assets/social/blog-2026-11-01-block-dispatch.png": {
+    "description": "How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.",
+    "foot": "lmmx.github.io/mibz2 · 1 November 2026",
+    "section": " · Research blog",
+    "title": "Block dispatch in mibz2: mutexes, futexes and the scheduler"
+  },
+  "assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png": {
+    "description": "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.",
+    "foot": "lmmx.github.io/mibz2 · 1 November 2026",
+    "section": " · Research blog",
+    "title": "Investigating inverse-BWT memory interference in mibz2"
+  },
+  "assets/social/blog-2026-11-02-memory-level-parallelism.png": {
+    "description": "Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.",
+    "foot": "lmmx.github.io/mibz2 · 2 November 2026",
+    "section": " · Research blog",
+    "title": "Memory-level parallelism in mibz2: instructions, overlap and evidence"
+  },
+  "assets/social/blog-2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.png": {
+    "description": "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.",
+    "foot": "lmmx.github.io/mibz2 · 2 November 2026",
+    "section": " · Research blog",
+    "title": "Revisiting the space–⁠time tradeoff in BWT inversion"
+  },
+  "assets/social/blog-2026-11-04-autonomous-agent-team.png": {
+    "description": "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.",
+    "foot": "lmmx.github.io/mibz2 · 4 November 2026",
+    "section": " · Research blog",
+    "title": "Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm"
+  },
+  "assets/social/blog-2026-11-04-compact30-constructor.png": {
+    "description": "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.",
+    "foot": "lmmx.github.io/mibz2 · 4 November 2026",
+    "section": " · Research blog",
+    "title": "Building a smaller bzip2 decoding table: from 49 instructions to 12"
+  },
+  "assets/social/blog-2026-11-05-huffman-bit-buffer.png": {
+    "description": "The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.",
+    "foot": "lmmx.github.io/mibz2 · 5 November 2026",
+    "section": " · Research blog",
+    "title": "Huffman decoding in mibz2: keeping the bit buffer in a register"
+  },
+  "assets/social/blog-2026-11-07-pipelined-teams.png": {
+    "description": "While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.",
+    "foot": "lmmx.github.io/mibz2 · 7 November 2026",
+    "section": " · Research blog",
+    "title": "Pipelined teams: how mibz2 0.2.6 decodes 7% faster on ten cores"
+  },
+  "assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png": {
+    "description": "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.",
+    "foot": "lmmx.github.io/mibz2 · 7 November 2026",
+    "section": " · Research blog",
+    "title": "Why mibz2 stops scaling at eight threads, and why three teams help"
+  },
+  "assets/social/blog-2026-11-08-bwt-runs-from-mtf-codes.png": {
+    "description": "bzip2's move-to-front codes mark where each run of the BWT's last column starts, so the runs could be listed without writing the column. It is not built.",
+    "foot": "lmmx.github.io/mibz2 · 8 November 2026",
+    "section": " · Research blog",
+    "title": "Reading the BWT's runs off bzip2's move-to-front codes"
+  },
+  "assets/social/blog-2026-11-08-inverse-bwt-navigation.png": {
+    "description": "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.",
+    "foot": "lmmx.github.io/mibz2 · 8 November 2026",
+    "section": " · Research blog",
+    "title": "The mathematical structure of inverse-BWT navigation"
+  },
+  "assets/social/blog-2026-11-09-pit-crew-service-threads.png": {
+    "description": "Handing each block's serial steps to two dedicated threads gives mibz2 a rare double win, decoding 4.5% faster on ten cores with 13% less CPU.",
+    "foot": "lmmx.github.io/mibz2 · 9 November 2026",
+    "section": " · Research blog",
+    "title": "mibz2 gets a pit crew"
+  },
+  "assets/social/blog-2026-11-10-rauzy-veech-reconstruction.png": {
+    "description": "An experimental mibz2 kernel rebuilds bzip2 text without a row-by-row walk, from reusable word rules that form the block's Lyndon tree.",
+    "foot": "lmmx.github.io/mibz2 · 10 November 2026",
+    "section": " · Research blog",
+    "title": "A new way back from the BWT"
+  },
+  "assets/social/blog-2026-11-12-rauzy-technical-companion.png": {
+    "description": "This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.",
+    "foot": "lmmx.github.io/mibz2 · 12 November 2026",
+    "section": " · Research blog",
+    "title": "Reconstructing text from compact programs"
+  },
+  "assets/social/default.png": {
+    "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
+    "foot": "lmmx.github.io/mibz2",
+    "section": "",
+    "title": "A bzip2 decoder built for memory-level parallelism."
+  }
+}
