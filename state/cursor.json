@@ -1186,11 +1186,25 @@
     {
       "comment_id": 6850318070,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed frozen replay and three ranked writer constructions, including newly queued output-order emitter; selected one conditional narrow preparation within existing MONODROMY ownership. No implementation/decoder execution/timing.",
-      "report_path": "state/records/reviews/inbox-6850318070/report.md"
+      "progress": "Completed report/replay/ledger committed; awaiting the single REVIEW on #145.",
+      "report_path": "state/records/reviews/inbox-6850318070/report.md",
+      "report_commit": "247ef9a2f4d53795364c7fc697a7859c06864e82",
+      "disposition": "conditional_writer_preparation_recommended_no_execution",
+      "audit_scope": {
+        "artifact_sha256_verified": true,
+        "saved_measured_records": 120,
+        "saved_checks": 9,
+        "analysis_byte_identical": true,
+        "implementation": false,
+        "compilation": false,
+        "decoder_execution": false,
+        "new_timing": false,
+        "oracle_decompression": false,
+        "safety_certification": false
+      }
     }
   ],
   "migrated_from": {
