@@ -51,7 +51,10 @@ def main():
     for name in ["original", "selective"]:
         log = Path(f"{name}-parity.log").read_text()
         found = sorted(re.findall(r"CELLS_ROUTE [^\n]+", log))
-        assert len(found) == 7 and "1 passed" in log, (name, found)
+        assert len(found) == 7 and re.search(r"test result: ok\. [1-9]\d* passed;", log), (
+            name,
+            found,
+        )
         routes.append(found)
     assert routes[0] == routes[1], "admission/refusal/cell counts changed"
     (out / "manifest.json").write_text(
