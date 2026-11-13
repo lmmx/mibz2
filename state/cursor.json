@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6857735998,
+  "last_examined_comment_id": 6857768408,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2767,7 +2767,9 @@
         "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857749401"
       ],
       "disposition": "Observer and Codex finished receipts verified. Selective candidate retained; integration DEFER despite all-green exact-head CI because frozen default performance gate fails. One bounded default-path attribution queued; no execution claimed.",
-      "log_pending": true
+      "log_pending": false,
+      "log_comment_id": 6857768408,
+      "log_readback_verified": true
     },
     "6857643047": {
       "status": "completed",
@@ -2779,13 +2781,20 @@
         "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857749401"
       ],
       "disposition": "Observer and Codex finished receipts verified. Selective candidate retained; integration DEFER despite all-green exact-head CI because frozen default performance gate fails. One bounded default-path attribution queued; no execution claimed.",
-      "log_pending": true
+      "log_pending": false,
+      "log_comment_id": 6857768408,
+      "log_readback_verified": true
     },
     "6857735998": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T15:42:41Z",
       "delivery_id": "dd3b32f0-df78-11f1-9199-81bbbcaa4fb0",
       "disposition": "Own queued assignment observed; self wake ignored; no duplicate action."
+    },
+    "6857768408": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T15:44:06Z",
+      "disposition": "Own grouped completion/disposition LOG; ignore future self-trigger."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2947,7 +2956,9 @@
     6857364235,
     6857529647,
     6857567712,
-    6857749401
+    6857749401,
+    6857735998,
+    6857768408
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -5550,11 +5561,15 @@
       "head": "a8a23c11607864cb431f87fff38169e10c41685f"
     },
     "default_path_attribution": {
-      "status": "intent_to_queue",
+      "status": "queued_not_launched",
       "route": "145 QUEUED",
       "blocking_inbox": 6848164049,
       "scope": "one source/build attribution report, no production edits or timings",
-      "execution_observed": false
+      "execution_observed": false,
+      "comment_id": 6857735998,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
+      "route_verified": true,
+      "readback_verified": true
     },
     "observer_completion": {
       "assignment": 6857529647,
