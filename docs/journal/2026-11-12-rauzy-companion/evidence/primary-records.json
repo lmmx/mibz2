@@ -1,0 +1,68 @@
+[
+  {
+    "commit": "0596240ef7b61a23c3c4135c910d569f9fbeb8a4",
+    "path": "docs/journal/2026-11-12-performance-pricing/REPORT.md",
+    "bytes": 26003,
+    "sha256": "896d3519763e38b0a23164bf44a3e70381c786f2dd857620373eece6e4c1ee25"
+  },
+  {
+    "commit": "1ab6cae1a1281c7ba1ba31c0eb25d29bd8779293",
+    "path": "docs/journal/2026-11-11-labelled-contraction/README.md",
+    "bytes": 16167,
+    "sha256": "af96b1767005813308213a8857ade932bd2176e1e0b9f61922661391fc920be1"
+  },
+  {
+    "commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "path": "docs/journal/monodromy/2026-11-10-rauzy-veech.md",
+    "bytes": 100229,
+    "sha256": "b4c33b4c06c7ba54d49dc9ea8b349eaa0ac8a1b531510f1a8a0ac1d7a59c5632"
+  },
+  {
+    "commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "path": "docs/team/MONODROMY-ORIENTATION.md",
+    "bytes": 36609,
+    "sha256": "889448366912fb202ab097f7c34ae55b50b4bd06e7548e0563a3cc59b9413cc3"
+  },
+  {
+    "commit": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+    "path": "src/bwt.rs",
+    "bytes": 99935,
+    "sha256": "480397e3ada9326292bc78be6d5bf941126387c61ab484bc28a8f33bc0933b32"
+  },
+  {
+    "commit": "3b43af956d553905ea744f6cb6e1c785a0f8297a",
+    "path": "docs/journal/2026-11-12-cells-live/PLAN.md",
+    "bytes": 6182,
+    "sha256": "2c285d842413602379a2c3ceb3de4d8e5e50954f06a60a5d23270e3ad9f0b2a0"
+  },
+  {
+    "commit": "85735b38ebfa804acd31a6291bb7c08b6bf57760",
+    "path": "docs/journal/2026-11-11-reduced-lf/README.md",
+    "bytes": 11894,
+    "sha256": "63ddcf88468a217b08a389957c518e659f9972fffe4ac91b6653c0e1b738a799"
+  },
+  {
+    "commit": "a08277e1c36e276cfea7b3116d99ea5fd93f0e84",
+    "path": "docs/journal/monodromy/2026-11-10-cells-gap/HANDOFF.md",
+    "bytes": 8763,
+    "sha256": "cf502101aa0c13390dd258dc885d703b21cbbfc92a5c23b4f8bc7e9a60862627"
+  },
+  {
+    "commit": "b5131679f51c2a0245bc03f62b7afd833b8bff23",
+    "path": "docs/journal/2026-11-12-cells-live/HANDOFF.md",
+    "bytes": 12860,
+    "sha256": "f90228779de5c1c90b2179a08aab73f68c3f82ce759f9d5a35b77dc7f8f8d71b"
+  },
+  {
+    "commit": "bf88365ba80388e17488a31c80d2f3f250b19fb2",
+    "path": "docs/journal/2026-11-11-first-return-block/README.md",
+    "bytes": 7915,
+    "sha256": "6be56ea33ad4edad8832472eb3db505704f5dccbb296fc0e1efa5e39b84fc528"
+  },
+  {
+    "commit": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "path": "docs/journal/monodromy/2026-11-10-cells-slice-one/SAFETY.md",
+    "bytes": 12770,
+    "sha256": "012293a02bc479d298ccaf0ecca41e4d1e58c4691e6607fb0900b390690358d6"
+  }
+]

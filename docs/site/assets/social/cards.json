@@ -89,6 +89,12 @@
     "section": " · Research blog",
     "title": "A new way back from the BWT"
   },
+  "assets/social/blog-2026-11-12-rauzy-technical-companion.png": {
+    "description": "This technical companion traces how compact word programs reconstruct text from the BWT, including the costs and limits of building and expanding them.",
+    "foot": "lmmx.github.io/mibz2 · 12 November 2026",
+    "section": " · Research blog",
+    "title": "Reconstructing text from compact programs"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",

@@ -1,0 +1,18 @@
+python3 docs/scripts/bench_history.py
+docs/site/assets/bench-history.json: 0 commits, 0 series, 0 classes; docs/generated/alternatives.md
+python3 docs/scripts/bench_release_scaling.py
+docs/generated/release-scaling.md, docs/site/assets/release-scaling.json: 6 release-scaling runs
+uv run --no-project -p 3.13 --with zensical==0.0.71 --with mkdocstrings-python==2.0.9 --with ruff==0.17.1 zensical build --clean --strict
+Downloading mkdocs (3.7MiB)
+Downloading zensical (17.8MiB)
+Downloading pygments (1.2MiB)
+Downloading ruff (9.9MiB)
+ Downloaded mkdocs
+ Downloaded pygments
+ Downloaded ruff
+ Downloaded zensical
+Installed 26 packages in 82ms
+Build started
+mkdocstrings: Couldn't load inventory https://docs.python.org/3/objects.inv through handler 'python': <urlopen error Tunnel connection failed: 403 Forbidden>
+No issues found
+Build finished in 2.47s

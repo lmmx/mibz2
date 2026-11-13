@@ -1,0 +1,122 @@
+{
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.2.7/files/ibm-plex-mono-latin-400-normal.woff2": {
+    "bytes": 14708,
+    "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.2.7/latin-400-italic.css": {
+    "bytes": 286,
+    "sha256": "d9420f96cf9fba69c869631e42ddb380db256843e9325a95d4e48f83c84d848c"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.2.7/latin-400.css": {
+    "bytes": 286,
+    "sha256": "57893c593213e96ff6ba7b3b60d3731c1ec5754ae055607c848ef611d8879614"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.2.7/latin-700-italic.css": {
+    "bytes": 286,
+    "sha256": "4e71a21e672f556e7991d8092cdd62e10e7217b11c9781eb1bd3b531847f6d46"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.2.7/latin-700.css": {
+    "bytes": 286,
+    "sha256": "3a2442013b9455c55d95e8414ff1c7ba4dc294781dbca65116bc1171966e27ad"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/files/ibm-plex-sans-latin-400-italic.woff2": {
+    "bytes": 24356,
+    "sha256": "6de912e531b6c98084f1b2d5e5a91bad77be4e68bc4e396e43c46fc435e5f3d9"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/files/ibm-plex-sans-latin-400-normal.woff2": {
+    "bytes": 22588,
+    "sha256": "3b646991d30055a93a4ecc499713d4347953a74a947ecab435ab72070cbdab0e"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/files/ibm-plex-sans-latin-500-normal.woff2": {
+    "bytes": 24184,
+    "sha256": "0717336fb31fcdcde4b8deb3675bb4a0f7f6d484864afcd6751ac29975962203"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/files/ibm-plex-sans-latin-600-normal.woff2": {
+    "bytes": 24252,
+    "sha256": "8960851d691c054ed38e259bdcf1a6190d157b4203ed5bb32c632a863fb8ec2f"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/files/ibm-plex-sans-latin-700-normal.woff2": {
+    "bytes": 22832,
+    "sha256": "42e7b0c143c19df9d99fd896e76b48f846edf0902d200bc29796b34d12c33aa7"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-300-italic.css": {
+    "bytes": 286,
+    "sha256": "cdbc57274b96a6cc15e30820d9ea5fa389ef6eb9382372634c78592422e1f6a0"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-300.css": {
+    "bytes": 286,
+    "sha256": "974966774de61c811ce09041583dd28c8a9aaad874ebf8507b9f199a77fc17eb"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-400-italic.css": {
+    "bytes": 286,
+    "sha256": "7b543be8ad6c11b6da349c5124bff98feb21b9d5cfa7e2c9e58f73a202b71c94"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-400.css": {
+    "bytes": 286,
+    "sha256": "c6430b98fb67db1e888b67ad0598e41ea8d895645174b5719211eff8d9386b23"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-500-italic.css": {
+    "bytes": 286,
+    "sha256": "e450a59c89bc4b3d94171846cd8541fd673cd6beb77e59cf782a6357f50bf0ab"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-500.css": {
+    "bytes": 286,
+    "sha256": "24f135ae1f3f9cc08c781af368fde12e3f28b395c90c2bc02ebac3de45f44b8a"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-600-italic.css": {
+    "bytes": 286,
+    "sha256": "0bd1e5da5fe42712c5540f7e4d31b993fc6bae62371be0a63512099727846c14"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-600.css": {
+    "bytes": 286,
+    "sha256": "b1774465473ed266d6d202ee27436c7a667b3bdd57e20aa0352e02edb103d5fe"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-700-italic.css": {
+    "bytes": 286,
+    "sha256": "79b4bce82ad0ae91629b2a328cb7efebb1a85ff09a8681d202ac12132b4aaef1"
+  },
+  "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans@5.2.7/latin-700.css": {
+    "bytes": 286,
+    "sha256": "8dff520ff1a1d7c88bd90cbb4e53f2382aecbbe533cac3e10ff1d382fd9f5108"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_AMS-Regular.woff2": {
+    "bytes": 28076,
+    "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Main-Regular.woff2": {
+    "bytes": 26272,
+    "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Math-Italic.woff2": {
+    "bytes": 16440,
+    "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size1-Regular.woff2": {
+    "bytes": 5468,
+    "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size2-Regular.woff2": {
+    "bytes": 5208,
+    "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size3-Regular.woff2": {
+    "bytes": 3624,
+    "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Size4-Regular.woff2": {
+    "bytes": 4928,
+    "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/fonts/KaTeX_Typewriter-Regular.woff2": {
+    "bytes": 13568,
+    "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css": {
+    "bytes": 23335,
+    "sha256": "717bc9ae7853b61f0f76455dddf0ecd4f527a783f42de2ac24684899c1c46258"
+  },
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js": {
+    "bytes": 275414,
+    "sha256": "e6bfe5deebd4c7ccd272055bab63bd3ab2c73b907b6e6a22d352740a81381fd4"
+  }
+}
