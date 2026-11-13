@@ -2205,7 +2205,14 @@
       "status": "in_progress",
       "delivery_id": "fc3b8ac0-df59-11f1-8726-317bdc7c1d40",
       "comment_updated_at": "2026-11-13T12:01:38Z",
-      "planned_action": "Accept completed independent source-review delivery but not B5 closure; route only requested evidence closure using newly archived records and test-only successor. No repeated broad safety review."
+      "planned_action": "Accept completed independent source-review delivery but not B5 closure; route only requested evidence closure using newly archived records and test-only successor. No repeated broad safety review.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6852337017"
+      ],
+      "closure_assignment": {
+        "id": 6852337017,
+        "status": "posted_pending_verification"
+      }
     }
   },
   "automatic_github_wakeup_assumed": false,
