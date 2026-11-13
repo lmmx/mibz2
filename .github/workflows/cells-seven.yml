@@ -1,0 +1,50 @@
+name: Cells seven-family untimed screen
+
+on:
+  pull_request:
+    paths:
+      - "bench/cells-seven/**"
+      - ".github/workflows/cells-seven.yml"
+  workflow_dispatch:
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.99.1
+      - name: Fetch immutable source and windows
+        run: |
+          git fetch origin d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2
+          git fetch origin 57f51bbc0ca62ac3ee1cc148a1010842eea6222a
+          git fetch origin a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a
+      - name: Prepare and build the untimed readers
+        run: |
+          python3 bench/cells-seven/prepare.py prepare
+          python3 bench/cells-seven/prepare.py build
+      - name: Fixture, failure, CRC and F01 checks
+        run: |
+          python3 bench/cells-seven/test_screen.py 2>&1 | tee bench/cells-seven/target/harness-tests.log
+          cargo test --locked --manifest-path bench/cells-seven/target/reader/Cargo.toml --features live-trace,cells-reader 2>&1 | tee bench/cells-seven/target/reader-tests.log
+          cargo test --locked --manifest-path bench/cells-seven/target/reader/Cargo.toml -p mibz2 --lib --features live-diagnostic miri_cells_long_writer 2>&1 | tee bench/cells-seven/target/f01-tests.log
+          cargo test --locked --manifest-path bench/cells-seven/target/reader/Cargo.toml -p mibz2 --test cells --features live-diagnostic cells_arbitrary_columns_and_corruption 2>&1 | tee bench/cells-seven/target/corruption-tests.log
+      - name: Reconstruct canonical input and generate pinned synthetic inputs
+        run: |
+          git archive a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a windows | tar -x
+          mkdir -p corpora
+          python3 bench/cells-gap/corpus.py bench/wikidata.json windows/wikidata-20261019 corpora/wikidata.bz2
+          python3 bench/cells-seven/stage.py corpora/wikidata.bz2
+      - name: Exactly two controls and 21 untimed corpus checks
+        run: python3 bench/cells-seven/screen.py
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: cells-seven-untimed-${{ github.sha }}
+          path: |
+            bench/cells-seven/PLAN.md
+            bench/cells-seven/inputs.json
+            bench/cells-seven/target/*.json
+            bench/cells-seven/target/*.log
+            bench/cells-seven/target/reader/.generated/*
+            bench/cells-seven/target/screen/**
