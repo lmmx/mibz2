@@ -1211,15 +1211,23 @@
     {
       "comment_id": 6850660172,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "parent_comment_id": 6850318070,
       "queue_comment_id": 6850583026,
-      "progress": "Bounded delta complete: seven-family exact input/evidence matrix; no robust early dispatcher selected; one CI-first untimed preparation and unadmitted 163-execution two-arm diagnostic specified. Awaiting one REVIEW publication.",
+      "progress": "Published REVIEW6850915978 linking completed report98b553c382e91bb763d4336e42ad6e9c2651b91c; exact ID/author/body/PR readback verified. No decoder or timing run. Scope complete.",
       "report_path": "state/records/reviews/inbox-6850660172/report.md",
       "report_commit": "98b553c382e91bb763d4336e42ad6e9c2651b91c",
-      "coverage_path": "state/records/reviews/inbox-6850660172/coverage.json"
+      "coverage_path": "state/records/reviews/inbox-6850660172/coverage.json",
+      "reply_id": 6850915978,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6850915978",
+      "publication_verification": {
+        "exact_readback": true,
+        "routing_check": "PASS: publication on #145",
+        "helper_verify": "FROM is 'optimizer', not coordinator",
+        "note": "Pinned helper requires coordinator sender even for role REVIEW. Policy unchanged; exact publication readback verified."
+      }
     }
   ],
   "migrated_from": {
