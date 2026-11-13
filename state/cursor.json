@@ -2115,7 +2115,16 @@
     "6851749759": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T11:39:05Z",
-      "disposition": "Own screen-completion/candidate LOG verified; ignore self wake."
+      "disposition": "Own grouped LOG verified in fresh channel; self-trigger ignored.",
+      "delivery_id": "d526d730-df56-11f1-92b4-9b2925eb2666"
+    },
+    "6851744657": {
+      "status": "completed",
+      "delivery_id": "cd326710-df56-11f1-9878-8219a3169942",
+      "comment_updated_at": "2026-11-13T11:38:52Z",
+      "disposition": "Same Codex session reports direct-owner continuation of the identical guarded candidate staged6851728088. Reconciled as one in-progress candidate, not duplicate launch/completed recipient work. Remote candidate branch404 and no open PR yet; cursor still screen completion. Source-app messages prohibited for this combined run, none sent. Independent changed-code review awaits exact candidate/proof/evidence.",
+      "candidate_queue": 6851728088,
+      "completed_candidate": false
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2850,9 +2859,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Existing Codex executor reconcile deferred6848164049 and completed6850979995 routing metadata accurately; consume single candidate queue6851728088, no duplicate launch or screen replay.",
-    "Guarded writer candidate needs exact proof/old-long-path preservation, parity/error/CRC/forced-fuzz/Miri/mutations and independent B5; MONODROMY6850491677 and Pathfinder ownership retained.",
-    "Ordinary frozen CI qualification only; custom140+21+2 and i9 not admitted.365DEFER and performance gates remain; no ready workstation job without qualified recipe."
+    "Await same Codex executor's exact guarded-writer PR/head, proof and validation; candidate6851728088 continuation reported6851744657, no duplicate launch.",
+    "Route one independent changed-code B5 review once exact candidate/evidence exists, preserving original F01 resolution. MONODROMY6850491677 pending; no duplicate mathematical task.",
+    "378 exact-head Actions/legacy now green, no automatic merge. Seven-family speed and hooks-off memory qualification remain absent; no ready workstation job.",
+    "Respect existing365DEFER/integration gate; no default/release/i9/custom140+21+2 admission."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -4034,15 +4044,18 @@
       "evidence_commit": "2629a0e6a3da74b0f90f4c9e2b09b80dfe8fd86a",
       "routing_processed_id_missing": true,
       "summary_and_raw_counter_checks": true,
-      "full_byte_archive_replayed": false
+      "full_byte_archive_replayed": false,
+      "exact_head_checks": "All returned Actions completed success or intentional skip; legacy success at de1e5a8b4850cf0d33028682986ae4a641e67d6c"
     },
     "guarded_writer": {
       "queue": 6851728088,
-      "status": "staged_verified_pending_actual_uptake",
+      "status": "same_executor_in_progress_reported_no_published_candidate",
       "implementation_owner": "same Codex executor",
       "independent_B5_required": true,
       "mathematical_queue": 6850491677,
-      "production_qualification": false
+      "production_qualification": false,
+      "progress_comment": 6851744657,
+      "remote_branch_observed": false
     }
   },
   "submission_repair_376": {
