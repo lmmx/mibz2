@@ -766,6 +766,8 @@
     "readiness_review": 6862561316,
     "remaining_blocker": "Workflow dispatch tool unavailable; direct API CONNECT403; desktop control tool unavailable. Existing authorised executor must send Run Signal, then Coordinator queue admission and readback.",
     "next_action": "Coordinator reconcile final green evidence and activate existing authorised Run Signal executor for cf1a36ed; no new Codex implementation needed",
-    "checked_utc": "2026-11-13T19:20:41.159644+00:00"
+    "checked_utc": "2026-11-13T19:20:41.159644+00:00",
+    "completion_review": 6862654606,
+    "preparation_evidence_commit": "4b5063748fc3090d46c832fa81957648a787eecb"
   }
 }
