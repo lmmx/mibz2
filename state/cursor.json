@@ -137,7 +137,7 @@
     "6852910884": 6853011364,
     "6857344645": 6857451993
   },
-  "last_rebuilt_from": 6857315083,
+  "last_rebuilt_from": 6857539994,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -596,9 +596,10 @@
     },
     "6857529647": {
       "comment_id": 6857529647,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling H1 closure and matched benchmark."
+      "status": "complete",
+      "progress": "Record committed through channel 6857539994; REVIEW pending.",
+      "work_commit": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f"
     }
   },
-  "last_record_commit": "aeef25f7069e15ea625a91b894fb1ec62654596c"
+  "last_record_commit": "6a6d579b498b8615a03d59eeaca381c4f3b89f1f"
 }
