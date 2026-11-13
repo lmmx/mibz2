@@ -247,10 +247,16 @@ jobs:
 
       # Slice one: a third arm, measured separately to preserve the existing paired
       # schedule and gate. Its one-thread wall/RSS figures are reported, never judged.
+      - name: Pin the experimental Cells corpus identities
+        if: env.MODE == 'pr'
+        run: |
+          python3 bench/cells-small-spine/pin_inputs.py
+          CELLS_PINNED_INPUTS="$PWD/cells-corpora" RUSTFLAGS="--cfg mibz2_cells_bench" timeout 300 cargo test --example ab cells_pinned_readers_byte_parity -- --ignored
+
       - name: Experimental cells arm
         if: env.MODE == 'pr'
         run: |
-          bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+          bin/cells-ab run cells.jsonl --arms mibz2@bin/ab,mibz2-cells --threads 1 --spread --rounds "$ROUNDS" --settle "$SETTLE" cells-corpora/*.bz2
           bin/cells-ab summary cells.jsonl --ref mibz2@bin/ab > cells-summary.md
           tee -a "$GITHUB_STEP_SUMMARY" < cells-summary.md
 
@@ -317,6 +323,7 @@ jobs:
             ab-summary.md
             cells.jsonl
             cells-summary.md
+            cells-inputs.json
             codegen.txt
           if-no-files-found: ignore
 

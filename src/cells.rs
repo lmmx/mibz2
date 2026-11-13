@@ -48,6 +48,8 @@ struct Kernel {
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, Default)]
 struct WriterReach {
+    all_small: bool,
+    largest_plain: u32,
     period: usize,
     seeds: usize,
     descending: usize,
@@ -657,25 +659,43 @@ impl Kernel {
         unsafe {
             let rule = |w: usize| (rd64(base, w), rd64(base, w + 8));
             let nr = (self.rule_end - ro) / 16;
-            if self.pos.capacity() < nr {
-                self.pos = Vec::new();
-                self.pos = vec![NIL; nr];
-            } else {
-                self.pos.resize(nr, NIL);
-                self.pos.fill(NIL);
-            }
-            let pos = self.pos.as_mut_ptr();
+            // The origin walk already sees every unmarked spine factor. If all
+            // are stored bytes, the following writes never use a position entry.
+            // Fold the guard into this required walk, without another traversal.
+            let mut all_small = true;
             // the row's place in the word
             let (mut w, mut j) = (word as usize, 0usize);
             while w >= ro {
                 let (a, b) = rule(w);
+                #[cfg(test)]
+                {
+                    let plain = if a as u32 & MARK != 0 { b } else { a };
+                    self.writer_reach.largest_plain =
+                        self.writer_reach.largest_plain.max(plain as u32);
+                }
                 if a as u32 & MARK != 0 {
+                    all_small &= b as u32 <= SMALL;
                     w = (a >> 32) as usize;
                 } else {
+                    all_small &= a as u32 <= SMALL;
                     j += a as u32 as usize;
                     w = (b >> 32) as usize;
                 }
             }
+            #[cfg(test)]
+            {
+                self.writer_reach.all_small = all_small;
+            }
+            if !all_small {
+                if self.pos.capacity() < nr {
+                    self.pos = Vec::new();
+                    self.pos = vec![NIL; nr];
+                } else {
+                    self.pos.resize(nr, NIL);
+                    self.pos.fill(NIL);
+                }
+            }
+            let pos = self.pos.as_mut_ptr();
             let start = (j + SHIFT) % p;
             // the marked rules, from the word down to the row
             let (mut w, mut q) = (word as usize, 0usize);
@@ -705,103 +725,108 @@ impl Kernel {
                 w = (next >> 32) as usize;
             }
             *dst.add((q + p - start) % p) = *base.add(w);
-            // where each rule first lies: a rule's factors lie no later than inside it
-            for j in (0..nr).rev() {
-                let q = *pos.add(j);
-                if q == NIL {
-                    continue;
-                }
-                let (a, b) = rule(ro + 16 * j);
-                #[cfg(test)]
-                {
-                    self.writer_reach.descending += 1;
-                }
-                if a as u32 > SMALL {
-                    let x = pos.add(((a >> 32) as usize - ro) / 16);
-                    *x = (*x).min(q);
+            // With no long spine seed, every entry would remain NIL: both rule
+            // passes and the final long-factor walk have no work. Long-factor
+            // blocks keep all original propagation, expansion and recopy steps.
+            if !all_small {
+                // where each rule first lies: a rule's factors lie no later than inside it
+                for j in (0..nr).rev() {
+                    let q = *pos.add(j);
+                    if q == NIL {
+                        continue;
+                    }
+                    let (a, b) = rule(ro + 16 * j);
                     #[cfg(test)]
                     {
-                        self.writer_reach.propagated += 1;
+                        self.writer_reach.descending += 1;
+                    }
+                    if a as u32 > SMALL {
+                        let x = pos.add(((a >> 32) as usize - ro) / 16);
+                        *x = (*x).min(q);
+                        #[cfg(test)]
+                        {
+                            self.writer_reach.propagated += 1;
+                        }
+                    }
+                    if b as u32 > SMALL {
+                        let x = pos.add(((b >> 32) as usize - ro) / 16);
+                        *x = (*x).min(q + a as u32);
+                        #[cfg(test)]
+                        {
+                            self.writer_reach.propagated += 1;
+                        }
                     }
                 }
-                if b as u32 > SMALL {
-                    let x = pos.add(((b >> 32) as usize - ro) / 16);
-                    *x = (*x).min(q + a as u32);
+                // its bytes: each factor's from the arena, or from where the factor first lies
+                for j in 0..nr {
+                    let q = *pos.add(j);
+                    if q == NIL {
+                        continue;
+                    }
+                    let (a, b) = rule(ro + 16 * j);
+                    let (ll, rr) = (a as u32 as usize, b as u32 as usize);
                     #[cfg(test)]
                     {
-                        self.writer_reach.propagated += 1;
+                        self.writer_reach.expanded += 1;
                     }
-                }
-            }
-            // its bytes: each factor's from the arena, or from where the factor first lies
-            for j in 0..nr {
-                let q = *pos.add(j);
-                if q == NIL {
-                    continue;
-                }
-                let (a, b) = rule(ro + 16 * j);
-                let (ll, rr) = (a as u32 as usize, b as u32 as usize);
-                #[cfg(test)]
-                {
-                    self.writer_reach.expanded += 1;
-                }
-                let d = dst.add(q as usize);
-                if ll <= SMALL as usize {
-                    copy_small(d, base.add((a >> 32) as usize), ll);
-                } else {
-                    let f = *pos.add(((a >> 32) as usize - ro) / 16);
-                    if f != q {
-                        copy_long(d, dst.add(f as usize), ll);
-                        #[cfg(test)]
-                        {
-                            self.writer_reach.long_copies += 1;
+                    let d = dst.add(q as usize);
+                    if ll <= SMALL as usize {
+                        copy_small(d, base.add((a >> 32) as usize), ll);
+                    } else {
+                        let f = *pos.add(((a >> 32) as usize - ro) / 16);
+                        if f != q {
+                            copy_long(d, dst.add(f as usize), ll);
+                            #[cfg(test)]
+                            {
+                                self.writer_reach.long_copies += 1;
+                            }
+                        }
+                    }
+                    let d = d.add(ll);
+                    if rr <= SMALL as usize {
+                        copy_small(d, base.add((b >> 32) as usize), rr);
+                    } else {
+                        let f = *pos.add(((b >> 32) as usize - ro) / 16);
+                        if f != q + ll as u32 {
+                            copy_long(d, dst.add(f as usize), rr);
+                            #[cfg(test)]
+                            {
+                                self.writer_reach.long_copies += 1;
+                            }
                         }
                     }
                 }
-                let d = d.add(ll);
-                if rr <= SMALL as usize {
-                    copy_small(d, base.add((b >> 32) as usize), rr);
-                } else {
-                    let f = *pos.add(((b >> 32) as usize - ro) / 16);
-                    if f != q + ll as u32 {
-                        copy_long(d, dst.add(f as usize), rr);
-                        #[cfg(test)]
-                        {
-                            self.writer_reach.long_copies += 1;
+                // the marked rules again: a long factor that lies at a later place than its
+                // first is copied from there (the first walk only noted where each lies; a
+                // marked rule has no place of its own, so the passes above never copy for it).
+                // The first place is the least and occurrences of one word are apart, so the
+                // source is whole and does not reach the place written.
+                let (mut w, mut q) = (word as usize, 0usize);
+                while w >= ro {
+                    let (a, b) = rule(w);
+                    let la = (a as u32 & !MARK) as usize;
+                    let (plain, at, next) = if a as u32 & MARK != 0 {
+                        (b, q + la, a)
+                    } else {
+                        (a, q, b)
+                    };
+                    let d = (at + p - start) % p;
+                    let lx = plain as u32 as usize;
+                    if lx > SMALL as usize {
+                        let f = *pos.add(((plain >> 32) as usize - ro) / 16) as usize;
+                        if f != d {
+                            copy_long(dst.add(d), dst.add(f), lx);
+                            #[cfg(test)]
+                            {
+                                self.writer_reach.spine_recopies += 1;
+                            }
                         }
                     }
-                }
-            }
-            // the marked rules again: a long factor that lies at a later place than its
-            // first is copied from there (the first walk only noted where each lies; a
-            // marked rule has no place of its own, so the passes above never copy for it).
-            // The first place is the least and occurrences of one word are apart, so the
-            // source is whole and does not reach the place written.
-            let (mut w, mut q) = (word as usize, 0usize);
-            while w >= ro {
-                let (a, b) = rule(w);
-                let la = (a as u32 & !MARK) as usize;
-                let (plain, at, next) = if a as u32 & MARK != 0 {
-                    (b, q + la, a)
-                } else {
-                    (a, q, b)
-                };
-                let d = (at + p - start) % p;
-                let lx = plain as u32 as usize;
-                if lx > SMALL as usize {
-                    let f = *pos.add(((plain >> 32) as usize - ro) / 16) as usize;
-                    if f != d {
-                        copy_long(dst.add(d), dst.add(f), lx);
-                        #[cfg(test)]
-                        {
-                            self.writer_reach.spine_recopies += 1;
-                        }
+                    if a as u32 & MARK == 0 {
+                        q += la;
                     }
+                    w = (next >> 32) as usize;
                 }
-                if a as u32 & MARK == 0 {
-                    q += la;
-                }
-                w = (next >> 32) as usize;
             }
         }
         // a cycle shorter than the block: the block is its copies
@@ -950,10 +975,47 @@ mod tests {
     }
 
     fn assert_long_passes(reach: WriterReach) {
+        assert!(!reach.all_small, "long witness must reject small-only path");
         assert!(reach.seeds > 0, "{reach:?}");
         assert!(reach.descending > 0, "{reach:?}");
         assert!(reach.propagated > 0, "{reach:?}");
         assert!(reach.expanded > 0, "{reach:?}");
+    }
+
+    #[test]
+    fn miri_cells_small_spine_boundary_and_reuse() {
+        let small = [vec![1], vec![0; 16]].concat();
+        let long = [vec![1], vec![0; 17]].concat();
+        let mut kernel = Kernel::default();
+        check(&mut kernel, &small, 1);
+        assert_eq!(kernel.writer_reach.largest_plain, 16);
+        assert!(kernel.writer_reach.all_small);
+        assert_eq!(
+            kernel.pos.capacity(),
+            0,
+            "small-only path allocates no positions"
+        );
+        check(&mut kernel, &long, 1);
+        assert_eq!(kernel.writer_reach.largest_plain, 17);
+        assert!(!kernel.writer_reach.all_small);
+        assert!(kernel.writer_reach.expanded > 0);
+        // Stale positions from a long block must neither be read nor cleared.
+        let positions = kernel.pos.clone();
+        let cap = kernel.pos.capacity();
+        for (ll, origin) in [(&small[..], 1), (&b"bbaaa"[..], 2), (&b"xxxxxxxxx"[..], 5)] {
+            check(&mut kernel, ll, origin);
+            assert!(kernel.writer_reach.all_small);
+            assert_eq!(kernel.writer_reach.seeds, 0);
+            assert_eq!(kernel.writer_reach.descending, 0);
+            assert_eq!(kernel.writer_reach.expanded, 0);
+            assert_eq!(kernel.writer_reach.spine_recopies, 0);
+            assert_eq!(kernel.pos, positions);
+            assert_eq!(kernel.pos.capacity(), cap);
+        }
+        // The original long-factor route still follows small/short-cycle blocks.
+        check(&mut kernel, &long_writer_column(), 0);
+        assert_long_passes(kernel.writer_reach);
+        assert!(kernel.writer_reach.spine_recopies > 0);
     }
 
     #[test]
