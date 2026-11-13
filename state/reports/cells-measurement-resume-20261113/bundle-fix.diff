@@ -1,0 +1,98 @@
+diff --git a/bench/cells-gap/live/run.sh b/bench/cells-gap/live/run.sh
+index 7b98a69..22fb8d9 100644
+--- a/bench/cells-gap/live/run.sh
++++ b/bench/cells-gap/live/run.sh
+@@ -8,7 +8,8 @@ if [ "$#" -ne 2 ]; then
+ fi
+ CPU=$1
+ CORPUS=$(realpath "$2")
+-DIR="cells-live-$(date -u +%Y%m%dT%H%M%SZ)"
++mkdir -p target/cells-live-path
++DIR="target/cells-live-path/$(date -u +%Y%m%dT%H%M%SZ)"
+ mkdir "$DIR"
+ exec > >(tee -a "$DIR/console.log") 2>&1
+ finish() {
+diff --git a/bench/cells-gap/live/test_driver.py b/bench/cells-gap/live/test_driver.py
+index 1e4f8c1..0107bbb 100644
+--- a/bench/cells-gap/live/test_driver.py
++++ b/bench/cells-gap/live/test_driver.py
+@@ -7,6 +7,7 @@ from types import SimpleNamespace
+ import subprocess
+ import sys
+ import tempfile
++import tarfile
+ import unittest
+ from pathlib import Path
+ from unittest import mock
+@@ -16,6 +17,71 @@ import build as builder
+ 
+ 
+ class DriverTests(unittest.TestCase):
++    def test_submit_discovers_success_and_failure_bundles(self):
++        just = shutil.which("just")
++        if just is None:
++            if os.environ.get("CELLS_LIVE_REQUIRE_JUST") == "1":
++                self.fail("real Just required")
++            self.skipTest("real Just unavailable")
++        source = driver.HERE.parents[2]
++        for child_exit in (0, 19):
++            with self.subTest(child_exit=child_exit), tempfile.TemporaryDirectory() as d:
++                root = Path(d)
++                subprocess.run(["git", "init", "-q", str(root)], check=True)
++                shutil.copy2(source / "Justfile", root / "Justfile")
++                shutil.copytree(source / ".just", root / ".just")
++                live = root / "bench/cells-gap/live"
++                (live / ".source").mkdir(parents=True)
++                shutil.copy2(driver.HERE / "run.sh", live / "run.sh")
++                shutil.copy2(source / "bench/bundle.sh", root / "bench/bundle.sh")
++                # Submission is intercepted; no network, decoder, build or clocks.
++                (root / "bench/submit.sh").write_text(
++                    '#!/bin/sh\nprintf "%s\\n" "$1" > submitted\n'
++                )
++                tools = root / "tools"
++                tools.mkdir()
++                (tools / "gh").write_text("#!/bin/sh\nexit 0\n")
++                (tools / "python3").write_text(
++                    f"#!{sys.executable}\n"
++                    "import os, pathlib, sys\n"
++                    "if sys.argv[1].endswith('build.py'):\n"
++                    "    pathlib.Path(sys.argv[2]).mkdir()\n"
++                    "elif sys.argv[1].endswith('driver.py'):\n"
++                    "    path = pathlib.Path(sys.argv[5])\n"
++                    "    path.mkdir()\n"
++                    "    (path / 'stand-in.txt').write_text('no decoder executed')\n"
++                    "    sys.exit(int(os.environ['CHILD_EXIT']))\n"
++                    "else:\n"
++                    "    raise AssertionError(sys.argv)\n"
++                )
++                for tool in tools.iterdir():
++                    tool.chmod(0o755)
++                corpus = root / "corpus"
++                corpus.mkdir()
++                result = subprocess.run(
++                    [just, "submit", "bench-cells-live-path", "7", str(corpus)],
++                    cwd=root,
++                    env=dict(
++                        os.environ,
++                        PATH=str(tools) + os.pathsep + os.environ["PATH"],
++                        CHILD_EXIT=str(child_exit),
++                    ),
++                    capture_output=True,
++                    text=True,
++                )
++                self.assertEqual(result.returncode == 0, child_exit == 0, result.stderr)
++                bundles = list(root.glob("target/*/*.tar.gz"))
++                self.assertEqual(len(bundles), 1, result.stdout + result.stderr)
++                self.assertEqual(
++                    (root / "submitted").read_text().strip(), str(bundles[0].relative_to(root))
++                )
++                with tarfile.open(bundles[0]) as bundle:
++                    stamp = bundles[0].name.removesuffix(".tar.gz")
++                    self.assertEqual(
++                        bundle.extractfile(stamp + "/exit").read().strip(), str(child_exit).encode()
++                    )
++                    self.assertIn(stamp + "/attempt/stand-in.txt", bundle.getnames())
++
+     def test_missing_build_parent_and_no_overwrite(self):
+         with (
+             tempfile.TemporaryDirectory() as d,

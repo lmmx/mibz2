@@ -1,0 +1,89 @@
+{
+  "actions": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "workflow_runs": [
+          {
+            "id": 43393348524,
+            "name": "Benchmark",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 689,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 43393348575,
+            "name": "Cells live-path preparation",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 6,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/logs",
+            "workflow_id": 413971946
+          },
+          {
+            "id": 43393348433,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1739,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/logs",
+            "workflow_id": 398116820
+          },
+          {
+            "id": 43393348451,
+            "name": "Test",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 1722,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 43393349525,
+            "name": "Occupancy",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 292,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/logs",
+            "workflow_id": 398776390
+          }
+        ]
+      },
+      "isError": false
+    }
+  },
+  "legacy": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794558438.dZzzsTpVR12DA6C9_jbU1g"
+          }
+        ]
+      },
+      "isError": false
+    }
+  }
+}

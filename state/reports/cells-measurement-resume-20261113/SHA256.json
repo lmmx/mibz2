@@ -1,0 +1,12 @@
+{
+  "bundle-after.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+  "bundle-after.log": "d6dcdd3bd145bea109c2e452c76daeafb2cdf99049678b0dd92d762fda7090cb",
+  "bundle-before.exit": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+  "bundle-before.log": "5a041873a4e68d9befac2ac05bc5ae1909bf52e2abced96e705b9ab8fddcbc45",
+  "bundle-fix.diff": "5ed11579425168fa4a1ce872f5dd221b4abc16cdbbd7fcf2b14ccc7a5d827912",
+  "checkpoint.md": "89a849c0bbd679e530bfedd4d4723067e07a1cdb17defaf6cff06f5ec23a04fb",
+  "checks373.json": "bea9973b20ee50fe09eba2ef4ca3511e05a9dd1287e63cda697b2eb6e50fb7bd",
+  "checks376.json": "f18b9430d3129d5c0043d02fa59810464ec7b082d9edcfe1f03f7b9a7f78a12a",
+  "i9-preflight.py": "c5f7400ec5d8895cb127f21bf42927b1b06a914095acb884776e41d34239e48a",
+  "protection.json": "60ce9330da90eff58ab1ecaa5246edfd9da30c835d0e3300249c29ec012ed1c2"
+}

@@ -1,0 +1,29 @@
+FF
+======================================================================
+FAIL: test_submit_discovers_success_and_failure_bundles (__main__.DriverTests.test_submit_discovers_success_and_failure_bundles) (child_exit=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/mibz2-live-submit/bench/cells-gap/live/test_driver.py", line 69, in test_submit_discovers_success_and_failure_bundles
+    self.assertEqual(result.returncode == 0, child_exit == 0, result.stderr)
+AssertionError: False != True : bash bench/cells-gap/live/run.sh "$1" "$2"
+error: Recipe `submit` failed with exit code 1
+
+
+======================================================================
+FAIL: test_submit_discovers_success_and_failure_bundles (__main__.DriverTests.test_submit_discovers_success_and_failure_bundles) (child_exit=19)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/mibz2-live-submit/bench/cells-gap/live/test_driver.py", line 71, in test_submit_discovers_success_and_failure_bundles
+    self.assertEqual(len(bundles), 1, result.stdout + result.stderr)
+AssertionError: 0 != 1 : 
+Upload this one file: /tmp/tmpknfxg3g3/cells-live-20261113T084832Z.tar.gz (4.0K)
+submit: bench-cells-live-path made 0 bundles, not one; submit one with: just submit-bundle <tarball>
+bash bench/cells-gap/live/run.sh "$1" "$2"
+error: Recipe `bench-cells-live-path` failed on line 1367 with exit code 19
+error: Recipe `submit` failed with exit code 1
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.333s
+
+FAILED (failures=2)

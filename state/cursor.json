@@ -507,5 +507,22 @@
     "evidence_commit": "feec83892087019889a906954f3c6342cd55377f",
     "receipt_readback_verified": true,
     "integration_record": "integration375"
+  },
+  "owner_cells_measurement_priority": {
+    "status": "ACTIVE: awaiting explicit integration authority and actual-i9 preflight access/facts; performance objective not complete",
+    "supersedes_priority_of_inbox": 6848164049,
+    "inbox_marked_complete": false,
+    "pr373_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "pr373_all_checks_success": true,
+    "submission_repair_pr": 376,
+    "submission_repair_head": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
+    "repair_local_tests": 14,
+    "preflight_cpu": null,
+    "preflight_corpus_directory": null,
+    "workstation_access": "none connected; asked owner for route",
+    "performance_measurements": 0,
+    "optimisation_implemented": false,
+    "report": "state/reports/cells-measurement-resume-20261113/checkpoint.md",
+    "manual_codex_launch_required": true
   }
 }

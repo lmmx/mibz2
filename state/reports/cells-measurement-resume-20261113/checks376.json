@@ -1,0 +1,79 @@
+{
+  "actions": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "workflow_runs": [
+          {
+            "id": 43396306235,
+            "name": "Benchmark",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 690,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306235/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306235/logs",
+            "workflow_id": 398182844
+          },
+          {
+            "id": 43396306200,
+            "name": "Cells live-path preparation",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 7,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306200/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306200/logs",
+            "workflow_id": 413971946
+          },
+          {
+            "id": 43396306206,
+            "name": "Test",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1723,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306206/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306206/logs",
+            "workflow_id": 398116819
+          },
+          {
+            "id": 43396306222,
+            "name": "CI",
+            "status": "in_progress",
+            "conclusion": null,
+            "run_number": 1740,
+            "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306222/jobs",
+            "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43396306222/logs",
+            "workflow_id": 398116820
+          }
+        ]
+      },
+      "isError": false
+    }
+  },
+  "legacy": {
+    "status": "fulfilled",
+    "value": {
+      "content": [
+        {
+          "type": "text",
+          "text": "Action completed."
+        }
+      ],
+      "structuredContent": {
+        "statuses": [
+          {
+            "context": "pre-commit.ci - pr",
+            "state": "success",
+            "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794559794.A2hwDSzTQjKiD7cCuM3i4A"
+          }
+        ]
+      },
+      "isError": false
+    }
+  }
+}
