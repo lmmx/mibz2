@@ -1628,7 +1628,9 @@
     "6839541837": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6839448187
+      "source_comment_id": 6839448187,
+      "delivery_id": "1acca8d0-def5-11f1-9262-659d8f396f16",
+      "reason": "Own attributed monitor LOG, exact readback and cursor matched; deduplicated. Fresh master, nine policy blobs and373 head/Actions/legacy unchanged; no external actionable message."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1749,8 +1751,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6839448187,
-    "delivery_id": "56104790-def4-11f1-8fe3-ce383878080f",
+    "comment_id": 6839541837,
+    "delivery_id": "1acca8d0-def5-11f1-9262-659d8f396f16",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -3244,13 +3246,24 @@
     "postmerge_packaging": "skipped43323058112 existing condition; source-head packaging pass"
   },
   "monitor_policy_verification": {
-    "observed_master_sha": "1f2738c5448fc123a71fd201921e4101e664b0c6",
+    "observed_master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
     "audit": "exit0; six resolved historical misroutes",
     "activation_reused": 6782075529,
-    "return_of_control_observed": false
+    "return_of_control_observed": false,
+    "policy_blob_shas": {
+      "docs/team/OWNERSHIP.md": "7474083ad96af98669beca5ef61e25b70513f6db",
+      "docs/team/RULES.md": "725d5eb740d672861ba67a82c40b968c23bab545",
+      "docs/team/PROTOCOL.md": "59c2f382a459647dfdc32f208d95f2b1bcb80616",
+      "docs/team/ROLES.md": "921e085692cdf6eb602164193d99acb77abbb810",
+      "docs/team/MODE.md": "1665378cab8c9fe9fa316d9e4f54a600037661ad",
+      "docs/team/PERFORMANCE-POLICY.md": "640b280287f87456eb5f237f4688936cf030f604",
+      "docs/team/SPEC.COORDINATOR-ACTING-MONITOR.md": "e0bf3f551eba686724f75a39a74cf0c917e07e7b",
+      "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
+      "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
+    }
   },
   "operator_evidence_373": {
     "status": "operator_evidence_received_format_correction_routed",
