@@ -2000,14 +2000,17 @@
     },
     {
       "trigger_comment_id": 6857053711,
-      "status": "complete",
+      "status": "finished",
       "pr": 162,
       "report_path": "state/reports/selective-b5-6857053711/report.md",
       "repository": "lmmx/mibz2",
       "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
       "source_commit": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
       "report_commit": "84b5f2e17f48f6d63413bfeaed0b4e9dc5e2d193",
-      "disposition": "HOLD / REVISE exact-source evidence for three new mutants: recorded ca1b9116 differs from reviewed 3bbc6374. No changed-path defect found; independent comparator/function and 88,860 copy-placement checks passed."
+      "disposition": "HOLD / REVISE exact-source evidence for three new mutants: recorded ca1b9116 differs from reviewed 3bbc6374. No changed-path defect found; independent comparator/function and 88,860 copy-placement checks passed.",
+      "review_comment_id": 6857261340,
+      "review_comment_pr": 145,
+      "publication_verification": "Exact body, author lmmx, issue145 and role-aware routing verified. Pinned verify retains only its hardcoded coordinator-only FROM rejection."
     }
   ],
   "active_delegations": [],
