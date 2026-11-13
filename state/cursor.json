@@ -2902,7 +2902,21 @@
     "6862638701": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T19:20:28Z",
-      "disposition": "Own executable review and conditional admission handoff LOG; ignore self wake."
+      "disposition": "Own executable review and conditional admission handoff LOG; ignore self wake.",
+      "delivery_id": "4a2301e0-df97-11f1-9b96-f647f6cb0604",
+      "planned_action": "Own LOG ignored; no replay."
+    },
+    "6862654606": {
+      "status": "in_progress",
+      "delivery_id": "64277800-df97-11f1-8fd7-70fbb2054d97",
+      "comment_updated_at": "2026-11-13T19:21:13Z",
+      "planned_action": "Reconcile exact-head all-green preparation and Observer completion; dedicated cursor only, no source-app message or duplicate dispatch."
+    },
+    "6862685593": {
+      "status": "in_progress",
+      "delivery_id": "972312f0-df97-11f1-9936-ad60c2a52566",
+      "comment_updated_at": "2026-11-13T19:22:38Z",
+      "planned_action": "Reconcile exact-head all-green preparation and Observer completion; dedicated cursor only, no source-app message or duplicate dispatch."
     }
   },
   "automatic_github_wakeup_assumed": false,
