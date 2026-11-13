@@ -706,11 +706,14 @@
   },
   "cells_selective": {
     "queue_comment_id": 6856176834,
-    "status": "IN_PROGRESS: actual isolated native implementation pickup",
+    "status": "IN_PROGRESS: implemented; local safety evidence passed; independent B5 and matched CI pending",
     "branch": "perf/cells-selective",
     "base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "pickup_review": 6856423064,
-    "next_action": "Implement exact retained representation and validate before independent B5/ordinary matched CI. No379 guard or equal-unit deferral."
+    "next_action": "Implement exact retained representation and validate before independent B5/ordinary matched CI. No379 guard or equal-unit deferral.",
+    "head_sha": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+    "plan_sha": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
+    "report": "state/reports/cells-selective-6856176834/report.md"
   }
 }

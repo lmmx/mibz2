@@ -1,0 +1,12 @@
+   Compiling mibz2 v0.2.9 (/workspace/cells-selective-original-mutations/tree)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1.40s
+  Executable unittests src/lib.rs (/workspace/cells-selective-original-mutations/target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (/workspace/cells-selective-original-mutations/target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 1 test
+free(): invalid next size (normal)
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/workspace/cells-selective-original-mutations/target/debug/deps/mibz2-af1a8f02cbfe6ddd miri_cells_admission_and_invalid_records` (signal: 6, SIGABRT: process abort signal)

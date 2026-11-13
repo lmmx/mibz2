@@ -1,0 +1,40 @@
+Diff in /workspace/mibz2-selective/examples/ab_cells/mod.rs:144:
+             let mut buffer = vec![0; 4 << 20];
+             loop {
+                 let count = reader.read(&mut buffer).unwrap();
+-                if count == 0 { break; }
+-                assert_eq!(&buffer[..count], &expected[offset..offset + count], "{name} at {offset}");
++                if count == 0 {
++                    break;
++                }
++                assert_eq!(
++                    &buffer[..count],
++                    &expected[offset..offset + count],
++                    "{name} at {offset}"
++                );
+                 offset += count;
+             }
+             assert_eq!(offset, expected.len(), "{name}");
+Diff in /workspace/mibz2-selective/examples/ab_cells/mod.rs:152:
+         }
+         let root = std::path::PathBuf::from(std::env::var_os("CELLS_PINNED_INPUTS").unwrap());
+-        for name in ["wikidata", "onebyte", "pattern", "random", "records", "runs", "text"] {
++        for name in [
++            "wikidata", "onebyte", "pattern", "random", "records", "runs", "text",
++        ] {
+             let path = root.join(format!("{name}.bz2"));
+             let mut expected = Vec::new();
+             bzip2::read::MultiBzDecoder::new(std::fs::File::open(&path).unwrap())
+Diff in /workspace/mibz2-selective/examples/ab_cells/mod.rs:158:
+-                .read_to_end(&mut expected).unwrap();
+-            verify(&mut mibz2::BzReader::new(std::fs::File::open(&path).unwrap()), &expected, name);
++                .read_to_end(&mut expected)
++                .unwrap();
++            verify(
++                &mut mibz2::BzReader::new(std::fs::File::open(&path).unwrap()),
++                &expected,
++                name,
++            );
+             let mut cells = CellsReader::new(std::fs::File::open(&path).unwrap());
+             verify(&mut cells, &expected, name);
+             eprintln!("CELLS_ROUTE {name} {:?}", cells.scratch.cells_counts());
