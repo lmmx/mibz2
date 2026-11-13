@@ -67,7 +67,9 @@
     6850176303,
     6852910884
   ],
-  "in_progress": [],
+  "in_progress": [
+    6857344645
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -582,6 +584,11 @@
       "progress": "Account and levels published; REVIEW read back with Observer route/header/citation verified.",
       "work_commit": "5d14aa217a0644fe092264725c26b4a38d5749c3",
       "review_id": 6853011364
+    },
+    "6857344645": {
+      "comment_id": 6857344645,
+      "status": "in_progress",
+      "progress": "Receipt committed; reconciling selective Cells checkpoint."
     }
   },
   "last_record_commit": "5d14aa217a0644fe092264725c26b4a38d5749c3"
