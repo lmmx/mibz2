@@ -1232,10 +1232,12 @@
     {
       "comment_id": 6852341904,
       "pr": 160,
-      "status": "in_progress",
-      "completed": false,
+      "status": "complete",
+      "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt: bounded next-decision delta after guarded-writer379 first negative CI; static/saved evidence only."
+      "progress": "Saved/source assessment complete; park integration with explicit target/whole-reader reopening evidence, no new implementation or recipe. Await REVIEW.",
+      "report_path": "state/records/reviews/inbox-6852341904/report.md",
+      "report_commit": "903c844a9c39a49c5af22c7e3e800e22b2e076fa"
     }
   ],
   "migrated_from": {
