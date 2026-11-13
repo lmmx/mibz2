@@ -1,0 +1,51 @@
+{
+  "audit": [
+    {
+      "issue": 145,
+      "comment": 6652503445,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6653242752,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "re-dispatched to #160 as 6653416078 (logged on the channel)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654146350,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its first run could not comment on locked #145 (#187)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654371320,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; its check run did not reopen the finished suite (#188)"
+    },
+    {
+      "issue": 145,
+      "comment": 6654531225,
+      "at": null,
+      "reason": "a CHECKPOINT from the coordinator to optimizer on #145, which wakes only the coordinator. It belongs in optimizer's inbox #160, or here as TYPE: QUEUED while the role is busy.",
+      "resolved": "a deliberate tripwire test; an in-progress check run did not reopen it either"
+    },
+    {
+      "issue": 162,
+      "comment": 6757065549,
+      "at": null,
+      "reason": "a LOG message in researcher's inbox #162, which wakes researcher for nothing. An inbox takes only assignments (CHECKPOINT, CORRECTION, PROPOSAL); publications go on #145.",
+      "resolved": null
+    }
+  ],
+  "route": {
+    "issue": 145,
+    "type": "REVIEW",
+    "why": "a publication: the channel PR"
+  }
+}

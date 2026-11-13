@@ -637,3 +637,14 @@ Publication-time context: QUEUED6758831274 reports D4F2FAIL14.45>7.35; bundle no
 - #366onecore remainsdeferredwithoutnewworkstationevidence; broaderproductiontarget(~0.9%releaseharm) butno numericrankagainstpattern. Reachpreparationfirstoninformationcost; generalwriterbelowpreparedonecore untilsparsityshown.365DEFER/B5/MONODROMY/Pathfinder preserved.
 
 - Prepublication reconciliation: Researcher6850440971/report9c920c64 and Coordinator6850491677/6850515770 read. Output-order emitter priced asrank2; lazysparse rank3. Pattern observedlong-copyremovalceiling0; logicaloutputalreadyN. Coarse two-tree traversalceiling75,598,388nodes +2,700,009initialdescentsteps, notprediction. ExistingMONODROMYqueue owns proof; fold narrowguardquestions there, no parallelproject/fullcorpuspreparationdecode. Actualeligibilityonlyinlateradmittedninechecks. No additionalrecommendation.
+
+
+## Seven-family and early-dispatch delta: inbox6850660172
+
+[Report](records/reviews/inbox-6850660172/report.md), [coverage](records/reviews/inbox-6850660172/coverage.json). Parent6850318070/REVIEW6850572409 retained; queue6850583026 handled as a bounded delta.
+- Seven exact compressed identities inventoried from historical CI57f51bbc artifact13802703606. text pinned to that source tree and compressedSHA256f0031809…4710d75; scale4 explicit. RNG runs-before-random and text immediate-file ordering preserved.
+- Actual old matched seven-family Cells slice exists; not Alternatives. Historical wall/CPU/RSS included, but four current live-reader families remain NOT MEASURED with no route or decodedSHA256 evidence. Three current saved correctness hashes retained, absent Wikidata byte files not reconstructed.
+- Saved64r<n screen bypasses22pattern/1onebyte/0admittedWikidata, but admission is not a per-block speed label. No four-family validation or robust cheap speed discriminator; no dispatcher selected.
+- One next preparation: CI-first seven-input identity/byte-correctness/routes plus conditional all-small-spine writer eligibility. MONODROMY6850491677 retains proof, Pathfinder architecture; no parallel implementation.
+- Prospective two-arm Segmented/currentCells programme:140 measured+21untimed+2memorycontrols=163 executions, ten balanced pairs per family, fixed settle/schedule/deadlines, simultaneous14wall/CPU intervals, <=1.02 per-corpus upper bounds. RSS nativeVmHWM/exactPIDwait4 controls; uniform41168KiB not parity. All proposed/unadmitted, exact future recipe commit still needed.
+- Supersedes unadmitted60+9 as next coverage preparation; unchanged120+9, Wikidata0.881643 gain, quantitativeWikidata/onebyteSTOP,365DEFER, warm20+20unadmitted, independentB5. No compiler/decoder/generator/timing/census/workstation/queue/default/gate execution or change.
