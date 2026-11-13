@@ -133,7 +133,7 @@
     "6849911875": 6849982678,
     "6850176303": 6850226968
   },
-  "last_rebuilt_from": 6850176549,
+  "last_rebuilt_from": 6852838891,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -578,9 +578,10 @@
     },
     "6852910884": {
       "comment_id": 6852910884,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling completed Cells guard qualification."
+      "status": "complete",
+      "progress": "Record rebuilt through channel 6852838891; awaiting one REVIEW on #145.",
+      "work_commit": "5d14aa217a0644fe092264725c26b4a38d5749c3"
     }
   },
-  "last_record_commit": "7b2c4b937e12fe1f2f4507f955cef4831a6b4f32"
+  "last_record_commit": "5d14aa217a0644fe092264725c26b4a38d5749c3"
 }
