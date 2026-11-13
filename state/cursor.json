@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6848858947,
+  "last_examined_comment_id": 6848920917,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1692,9 +1692,15 @@
       "ready_job_queued": false,
       "action_links": [
         "https://github.com/lmmx/mibz2/pull/373",
-        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6848842241"
+        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6848842241",
+        "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848920917"
       ],
       "reason": "373 merge verified, Test/docs jobs pass, automatic benchmark pending.376 retargeted only: old status set not new-base validation. Branch merge and376 integration referred to separate deliberate authorised run; no automatic merge/duplicate dispatch. No readyjob:376 integration and actual machine bindings/final admission outstanding."
+    },
+    "6848920917": {
+      "status": "completed_own_monitor_log",
+      "comment_updated_at": null,
+      "source_comment_id": 6848858947
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1811,7 +1817,8 @@
     6839541837,
     6848164049,
     6848184897,
-    6848610020
+    6848610020,
+    6848920917
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2019,8 +2026,10 @@
   },
   "checkpoint": {
     "key": "373-merged-6848858947",
-    "status": "in_progress_before_post",
-    "event_dispositions_persisted": true
+    "status": "published_readback_verified",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6848920917,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848920917"
   },
   "dispatch_history": [
     {
