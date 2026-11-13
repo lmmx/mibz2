@@ -2932,7 +2932,7 @@
       "recipient_cursor": "60f944687e41d569438184d4871d40dc83b2bec7"
     },
     "admission-6862613562-run43497427596": {
-      "status": "in_progress",
+      "status": "completed",
       "owner_authorisation": "Louis directly requested queue admission and admission LOG after successful Run Signal43497427596; do not dispatch again.",
       "handoff": 6862613562,
       "workflow_run": 43497427596,
@@ -2948,7 +2948,13 @@
         "tree_complete": true,
         "matching_recipe_paths": 0
       },
-      "audit": "coord.py audit exit0; route LOG =>145"
+      "audit": "coord.py audit exit0; route LOG =>145",
+      "disposition": "Owner-authorised admission complete: successful existing Run Signal independently verified; exact ready tag and absent HOLD read back; CAS queue appended once and verified on master. No new signal dispatch or workstation execution.",
+      "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
+      "queue_blob": "d565ab78600f50e230c35284ac6409d4e197eab3",
+      "log_status": "in_progress",
+      "log_dedup_key": "admission-6862613562-run43497427596",
+      "source_comments_before_log": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -4690,7 +4696,7 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "3e7e294cc10f29495e9828181345d74233c549d4",
+  "last_observed_master_sha": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
   "pending_compatibility_375": {
     "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
@@ -5754,17 +5760,17 @@
     }
   },
   "cells_i9_preparation": {
-    "status": "preparation_complete_not_ready_transport_blocked",
+    "status": "ready_queued_awaiting_owner_execution",
     "pickup_review": 6862129816,
     "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d",
     "intake_commit": "6100e6600a757839b992c119a504f90a8f901b38",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
-    "execution_observed": "Codex preparation implementation and validation completed with REVIEW plus own cursor; no Run Signal or workstation execution observed.",
-    "ready_job_queued": false,
-    "ready_job_reason": "Existing Run Signal/admission handoff6862613562 has no observed execution. ready and hold tag refs both404; master queue empty. No new source-app message or duplicate handoff in this confirmation run.",
-    "workflow_dispatch_capability": "No available GitHub workflow-dispatch tool; existing executor needed after recipe approval. Prior limitation remains; no bypass.",
+    "execution_observed": "Run Signal43497427596 success and master queue admission observed; workstation run not observed.",
+    "ready_job_queued": true,
+    "ready_job_reason": "Frozen reviewed diagnostic, native dry run and exact-head CI/legacy pass; successful Run Signal43497427596; exact ready tag/noHOLD; master queue verified.",
+    "workflow_dispatch_capability": "Prior tool limitation retained historically; external successful Run Signal43497427596 now verified. No redispatch in this session.",
     "attribution": 6857735998,
     "observer_checkpoint": 6862205856,
     "observer_completion": {
@@ -5777,7 +5783,7 @@
     "pr": 381,
     "recipe_head": "cf1a36ed429f361839fab6748383187104d8ab27",
     "plan_pin": "cf1a36ed429f361839fab6748383187104d8ab27",
-    "plan_review": "bounded diagnostic design acceptable for continued preparation; not final executable approval or READY",
+    "plan_review": "Frozen diagnostic accepted at exact recipe head; PROTOCOL9 admission complete.",
     "rounds": 12,
     "measured_decodes": 252,
     "ci_legacy": "success",
@@ -5804,10 +5810,14 @@
     },
     "signal_handoff": {
       "comment_id": 6862613562,
-      "status": "posted_not_executed",
+      "status": "completed_signal_and_queue_verified",
       "recipient": "existing deliberate Coordinator/ChatGPT executor with dispatch capability",
       "prerequisites": "all-green exact head, no prior submission/HOLD, then existing Run Signal and CAS queue/readback",
-      "ci_prerequisite_satisfied": true
+      "ci_prerequisite_satisfied": true,
+      "workflow_run": 43497427596,
+      "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
+      "ready_sha": "cf1a36ed429f361839fab6748383187104d8ab27",
+      "hold_absent": true
     },
     "preparation_complete": true,
     "completed": false,
@@ -5817,6 +5827,10 @@
       "review": 6862685593,
       "cursor": "60f944687e41d569438184d4871d40dc83b2bec7",
       "record": "e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f"
-    }
+    },
+    "ready": true,
+    "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
+    "queue_blob": "d565ab78600f50e230c35284ac6409d4e197eab3",
+    "workstation_executed": false
   }
 }
