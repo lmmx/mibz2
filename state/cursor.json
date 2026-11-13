@@ -1232,12 +1232,15 @@
     {
       "comment_id": 6852341904,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "completed": true,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Saved/source assessment complete; park integration with explicit target/whole-reader reopening evidence, no new implementation or recipe. Await REVIEW.",
+      "progress": "Completed bounded decision; REVIEW exact body/author/#145 readback verified. Integration parked with reopening facts, line retained; no execution.",
       "report_path": "state/records/reviews/inbox-6852341904/report.md",
-      "report_commit": "903c844a9c39a49c5af22c7e3e800e22b2e076fa"
+      "report_commit": "903c844a9c39a49c5af22c7e3e800e22b2e076fa",
+      "reply_id": 6852468714,
+      "reply_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852468714",
+      "routing_verification": "route/check passed; pinned helper verify rejects FROM optimizer with coordinator-only check; exact publication readback verified."
     }
   ],
   "migrated_from": {
