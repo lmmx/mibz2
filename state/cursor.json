@@ -1801,7 +1801,9 @@
         "recipient_execution_observed": false
       },
       "disposition": "Accepted branch admission path under PROTOCOL9. Recipe PROCEED already complete; no377 merge prerequisite. Run-signal capability limitation already recorded6849815173 remains; no dispatch/tag/queue/workstation action. Existing live Codex retains queue completion.",
-      "log_publication": "in_progress"
+      "log_publication": "published",
+      "log_comment_id": 6849935340,
+      "log_url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849935340"
     },
     "6849875014": {
       "status": "completed_with_material_correction_routed",
@@ -1935,7 +1937,8 @@
     6848920917,
     6849255206,
     6849425640,
-    6849815173
+    6849815173,
+    6849935340
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
@@ -2141,8 +2144,10 @@
   },
   "checkpoint": {
     "key": "branch-admission-correction-6849826280",
-    "status": "publication_in_progress",
-    "event_dispositions_persisted": true
+    "status": "published_pending_readback",
+    "event_dispositions_persisted": true,
+    "log_comment_id": 6849935340,
+    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849935340"
   },
   "dispatch_history": [
     {
