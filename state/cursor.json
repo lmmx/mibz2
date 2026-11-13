@@ -135,7 +135,7 @@
     "6850176303": 6850226968,
     "6852910884": 6853011364
   },
-  "last_rebuilt_from": 6852838891,
+  "last_rebuilt_from": 6857315083,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -587,9 +587,10 @@
     },
     "6857344645": {
       "comment_id": 6857344645,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling selective Cells checkpoint."
+      "status": "complete",
+      "progress": "Record committed through channel 6857315083; REVIEW pending.",
+      "work_commit": "aeef25f7069e15ea625a91b894fb1ec62654596c"
     }
   },
-  "last_record_commit": "5d14aa217a0644fe092264725c26b4a38d5749c3"
+  "last_record_commit": "aeef25f7069e15ea625a91b894fb1ec62654596c"
 }
