@@ -2573,7 +2573,11 @@
     "6855542914": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T14:17:13Z",
-      "disposition": "Own equal-unit NO-BUILD LOG; ignore self wake."
+      "disposition": "Own equal-unit NO-BUILD LOG; ignore self wake.",
+      "delivery_id": "ed116c00-df6c-11f1-8204-c4f69e31aa01",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2732,9 +2736,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6855353031,
-    "delivery_id": "e7cfdc50-df6b-11f1-90b5-930f9fcbf0b6",
-    "disposition": "NO-BUILD accepted; existing mathematical queue amended"
+    "comment_id": 6855542914,
+    "delivery_id": "ed116c00-df6c-11f1-8204-c4f69e31aa01",
+    "disposition": "Own recorded LOG; no new external message. Policies/master unchanged, audit passes; no new ready job because NO-BUILD and missing qualifying layout/recipe remain."
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
