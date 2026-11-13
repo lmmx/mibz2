@@ -1,0 +1,1020 @@
+{
+  "measured_decodes": 120,
+  "untimed_checks": 9,
+  "jobs": [
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "oracle",
+      "trace": false,
+      "mode": "check"
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "pattern",
+      "arm": "oracle",
+      "trace": false,
+      "mode": "check"
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "mode": "check"
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "oracle",
+      "trace": false,
+      "mode": "check"
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "cells",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "wikidata",
+      "arm": "baseline",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "cells",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "pattern",
+      "arm": "baseline",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 0,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 1,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 2,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 3,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 4,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 5,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 6,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 7,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 8,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": true,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "cells",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    },
+    {
+      "corpus": "onebyte",
+      "arm": "baseline",
+      "trace": false,
+      "round": 9,
+      "mode": "measure",
+      "settle_s": 0.25
+    }
+  ]
+}

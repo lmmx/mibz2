@@ -509,7 +509,7 @@
     "integration_record": "integration375"
   },
   "owner_cells_measurement_priority": {
-    "status": "ACTIVE:373 integrated;376 retargeted but needs genuine branch synchronization and changed-head CI; actual i9 facts pending",
+    "status": "ACTIVE:373 and376 integrated; waiting for owner desktop facts to complete already-authorised queue binding/admission",
     "supersedes_priority_of_inbox": 6848164049,
     "inbox_marked_complete": false,
     "pr373_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
@@ -566,5 +566,27 @@
     "pr376_checkpoint_comment_id": 6848842241,
     "receipt_readback_verified": true,
     "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a"
+  },
+  "cells_queue_admission": {
+    "status": "ACTIVE:376 integrated; awaiting actual desktop preflight JSON before binding/admission",
+    "owner_authorised": [
+      "master_into376",
+      "guarded376_merge",
+      "verified_recipe_binding",
+      "standard_ready_tag_queue_operations"
+    ],
+    "agent_workstation_execution_authorised": false,
+    "pr376_head": "660a1b750daf880c69e440ed6ec5d4cb942e8970",
+    "merge_commit": "e674070e1351460d27d745390b1db80ef5112b60",
+    "tree": "afd43a466f4d9ee7f5dbc7acb41c310285b00bfe",
+    "all_head_checks_success": true,
+    "cpu": null,
+    "corpus_directory": null,
+    "ready_tag_set": false,
+    "queue_admitted": false,
+    "measurements": 0,
+    "in_progress_review_comment_id": 6849208142,
+    "report": "state/reports/queue-cells-20261113/checkpoint.md",
+    "next_action": "Receive desktop preflight JSON; bind, validate, freeze/review and use already-authorised standard queue admission. Do not ask merge/queue permission again."
   }
 }

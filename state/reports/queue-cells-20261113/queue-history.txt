@@ -1,0 +1,35 @@
+57975de5d16143a951e8cb5610d6442e0ac06430 bench: bench-cells-vs-prod done (PASS: cells 0.82 of production on the i9); queue entry removed; hand-off updated
+13ac211194c34dcf72d856b72a3e114c1c30a744 bench: bench-team-threshold done (keep 6); its queue entry removed; hand-off updated
+c79ff7d384072e5e95eda7e513227f2aa06ff3d5 bench: bench-cells-vs-prod (MONODROMY's cells kernel against production's records path on the i9) and its queue entry
+dfe04059c938c5aa3ed9458f766d49f4cb5c4e61 bench: bench-team-threshold (the plan against forced teams at 4-8 threads on 0.2.9) and its queue entry
+4035b83b016cac048025001ca32c77fea50a51cd Workstation queue: bench-team-runs ran (release-scaling/run-20261110T160612Z, sha256 b02c0dcf: wikidata 12-14% faster at 6-20 threads, text faster at 10, records and random level; #359 merged under note §8); entry removed
+ceb0b30b631d6253d48c40ab4bcb9e6d5dddab8c bench: bench-team-runs (#359, the team-runs port, against its base on the i9 at 6-20 threads) and its queue entry
+39ed2ca27eb7de46303d4e9b776b56174c78d5a5 Workstation queue: bench-cold-start ran (cold-start/20261110T102700Z: B alone, held spinner 30/30; nothing for the library); entry removed
+2cc0829613dccf0684022b85e97c2e61e4733413 Workstation queue: bench-324-i9 ran (release-scaling/run-20261110T101103Z: 8-10% faster at 1-4 threads, no gain on the team path); entry removed
+6aa0791a1dc58d2c68dd479f1c745b2fc61b2e40 Workstation queue: bench-cold-start (W1)
+73d4a3c20d2d1d8e00794e8659da86d36bc9b4b8 Workstation queue: bench-team-ports ran (release-scaling/run-20261110T095909Z; no team-path cell beyond noise; ports dropped under LOG 6764355047); entry removed
+755f9612278c0ae455570ab613f946362f3ad8b0 bench: bench-324-i9 (#324 against its base on the i9's team path) and its queue entry
+ba9acc834183bc7e93c2c7cae4fa28b86983bd5e bench: bench-team-ports (the cooperative ports on the i9's team path) and its queue entry
+e8e7831ab189d8ecc274f5073ca12acd8c970d2f Release scaling: 0.2.7 against 0.2.6 on the i9 (release-scaling/run-20261110T091259Z, sha256 71d029b3); queue entry removed
+829ff7d38b93849945044b7663529f50b35b2985 Workstation queue: bench-two-modes ran (two-modes/20261110T090731Z, VALID; slow after a 0.25 s gap 26/30, without 0/30; probe table insufficient: no slow probed runs); entry removed
+8f755d070a14696cf84ea65449ca66e9921a645e bench: queue bench-two-modes (#318) at 092854b9
+9cab9bb33fd5c24a11f2f74fe28035282d9bfffc Workstation queue: bench-share-nothing ran (share-nothing/20261110T052925Z, VALID; -2 x1.18, -9 x3.26, ratio of ratios x0.36); entry removed
+0a6cc3def3b29d42ff63ccba3f0f0f187e727721 Workstation queue: bench-share-nothing (#326, ready at 2ed6aa7e)
+5e7b995471591eacdd5ae32cebfb8bbb578cbff5 Workstation queue: bench-par-scan ran (par-scan/20261110T030608Z, VALID; wikidata NOT FASTER, wikidata-l1 FASTER, records FASTER); entry removed
+c4465d91aa451fad0b3d4c0cdbb1ee4d1fcee05b Workstation queue: bench-par-scan (#317, ready at efc1bd88)
+97eb8edf51c558a7f74da595c152ab75288f531e Workstation queue: bench-run-fed-leader ran (run-fed-leader/20261109T201013Z, VALID, INCONCLUSIVE, fidelity FAILED); entry removed
+9e8a70cefd7697b6a54cea732b9906ad54035af2 Workstation queue: bench-service-guarded ran (service-guarded/20261109T195345Z, VALID, P1 met); entry removed
+d54632f6954b5b5f654967eb0d7c43929108cecd Workstation queue: bench-service-guarded (#302, ready at 2bab9aa5) and bench-run-fed-leader (#305, ready at 1af3888a)
+066deb2d69cbc87fbe08ba31c6fe0c68580cf81d Workstation queue: bench-svc-target ran (svc-target/20261109T162114Z, TARGET); entry removed
+39877bfd3a977fac7ed530f196f57768e5a22b7c Workstation queue: bench-svc-target (ready at 2f084638) and bench-release-scaling, 0.2.7 against 0.2.6 (ready at 539523b1)
+5133bdd2cd259539e525ae584a03498f90d56b69 Workstation queue: bench-telemetry-check ran (telemetry-check/20261109T125938Z, CHECKED, perf_event_paranoid=4); entry removed
+64cf304a9a5265711569d19ff5126aca6b2d31fc Workstation queue: bench-telemetry-check (#298) at master, frozen at 37bd85af (Guardian D068)
+c0a3b0d34210873b6389f8991dea2a4e94e99389 Journal: #271's and #270's workstation results; both queue entries removed (#286)
+cf107b86568ec4b35717a3017be107ffbe4bb06a Workstation queue: #271 and #270; Louis's standing authorisation for run-signal (#285)
+d245a2d853209ccac9501d2724192e106d29c096 Workstation queue: bench-service-2x3 ran (service-2x3/20261109T010708Z, VALID); entry removed
+cbe46e4423b4c38dba1596fe828849609e682f49 Workstation queue: bench-service-2x3 (#258) at 3e201246
+dcc22ba1b0b5e7c3758c25e5f7c1bb4c23e87edb Workstation queue: remove the five entries whose bundles have been read (release-scaling, service-core, plan-boundaries, plan-bytes, plan-levels)
+84bc92ec9c7cce9b40de6246cba8f87ff6136734 Workstation queue: the three plan-policy diagnostics (#254, ready at a5dcaebd)
+838890abc53a2e88b65934b731450b28f5415c16 Workstation queue: bench-service-core (#251, ready at 223d93bb)
+33a71ff95172b97b024495bd4c3247cfe5dfb932 Workstation queue: bench-release-scaling, 0.2.6 against 0.2.5 (ready at a49038b0)
+dd93951845f2543e035f9a44a77d330adc1d7a8c The workstation queue: prepared runs listed in bench/workstation-queue.txt, run with just workstation-queue (PROTOCOL 9); await-submit checks out the tagged commit

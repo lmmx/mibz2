@@ -1,0 +1,32 @@
+[
+  {
+    "id": 43402546163,
+    "name": "CI",
+    "status": "completed",
+    "conclusion": "skipped"
+  },
+  {
+    "id": 43402546299,
+    "name": "Test",
+    "status": "in_progress",
+    "conclusion": null
+  },
+  {
+    "id": 43402546255,
+    "name": "Benchmark links",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  {
+    "id": 43402546198,
+    "name": "Documentation site",
+    "status": "pending",
+    "conclusion": null
+  },
+  {
+    "id": 43402546418,
+    "name": "Benchmark",
+    "status": "in_progress",
+    "conclusion": null
+  }
+]
