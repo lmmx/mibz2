@@ -1189,7 +1189,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Receipt after migration verification; saved-evidence sharpening only.",
+      "progress": "Bundle digest verified; frozen analysis reproduced byte-for-byte. Pattern copy census and instrumentation audited. All-small-spine eligibility remains unmeasured: zero long copies alone does not prove zero long seeds. Pricing bounded preparations.",
       "report_path": "state/records/reviews/inbox-6850318070/report.md"
     }
   ],
