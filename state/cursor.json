@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849982678,
+  "last_examined_comment_id": 6850226968,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1846,7 +1846,7 @@
       ]
     },
     "6850144130": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "9127ec50-df4b-11f1-8818-ce3e3ac9b4f9",
       "comment_updated_at": null,
       "planned_action": "Reconcile externally admitted exact ready job; no duplicate signal/queue action. Batch material admission to free Observer and publish verified checkpoint.",
@@ -1856,10 +1856,11 @@
         "review_comment_id": 6850226968,
         "recipient_execution_observed": true,
         "account_commit": "7b2c4b937e12fe1f2f4507f955cef4831a6b4f32"
-      }
+      },
+      "disposition": "External admission independently reconciled at fc44897; no duplicate ready/queue actions; Observer REVIEW+cursor completed."
     },
     "6850176549": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "e4146880-df4b-11f1-9f54-9e93a40b8304",
       "planned_action": "Retrieve and SHA256-verify submitted cells-live-path/20261113T101816Z bundle at 01f5bc23ea2242969b084ebff7bf3b178814f3a2; inspect outcome and reconcile existing live Codex task before any routing. No rerun.",
       "planned_actions": [
@@ -1871,6 +1872,16 @@
         "comment_id": 6850318070,
         "status": "posted_verified_pending_recipient",
         "recipient_execution_observed": false
+      },
+      "researcher_dispatch": {
+        "comment_id": 6850324757,
+        "status": "posted_verified_pending_recipient",
+        "recipient_execution_observed": false
+      },
+      "disposition": "Bundle integrity and frozen-programme analysis verified; instrument-sensitive quantitative attribution stopped for Wikidata/onebyte, pattern costs retained only instrumented; consumed queue removed. Bounded successors posted/verified, awaiting actual recipient receipts. Signal-clear capability pending.",
+      "grouped_log": {
+        "status": "in_progress",
+        "purpose": "Verified admission and submitted diagnostic result, queue closeout, bounded successor routes and remaining signal cleanup."
       }
     },
     "6850226968": {
@@ -2000,15 +2011,16 @@
     6849425640,
     6849815173,
     6849935340,
-    6850318070
+    6850318070,
+    6850324757
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849982678,
-    "delivery_id": "7a482b40-df4a-11f1-8185-3fde37a09f1a"
+    "comment_id": 6850226968,
+    "delivery_id": "60d70990-df4c-11f1-978f-f20a81e89695"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2599,10 +2611,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Use reviewed green branch bench/cells-live-workstation at cb73bf909397e2fff8c90f0a00437061ad06478e directly for PROTOCOL9; do not require377 merge.",
-    "Authenticated existing Run signal dispatch remains capability blocker previously recorded6849815173. No new permission, manual desktop facts, infrastructure or direct-tag bypass.",
-    "Refresh duplicate/evidence/tag/hold screen before signal; verify exact ready tag; existing live Codex executor adds master queue line.",
-    "Await Louis-submitted bundle; no agent workstation execution. Preserve120+9 and warm20+20 unadmitted."
+    "Await actual Optimizer REVIEW+cursor for6850318070 and Researcher REVIEW+cursor for6850324757, then choose bounded successor from saved evidence.",
+    "Clear consumed bench-cells-live-path-i9 tags via existing Run signal capable executor; queue already empty at3e7e294cc10f29495e9828181345d74233c549d4.",
+    "No next workstation job ready: warm20+20 unadmitted, onecore deferred, no repeat of completed120+9.",
+    "No duplicate Codex launch; preserve365 DEFER and B5 independence; no automatic integration."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3525,7 +3537,7 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "e674070e1351460d27d745390b1db80ef5112b60",
+  "last_observed_master_sha": "3e7e294cc10f29495e9828181345d74233c549d4",
   "pending_compatibility_375": {
     "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
@@ -4064,20 +4076,20 @@
   "cells_admission_active": {
     "source_comment_id": 6849826280,
     "actor": "codex in separate live owner-authorised session (reported)",
-    "completion_observed": false,
+    "completion_observed": true,
     "cursor_at_read": "c74ddbf9b001850645bdf429ae28936c6b56c636",
     "cursor_completion_available": false,
     "scope_reported": "376 master incorporation, guarded integration after gates, actual verified argument-free binding and standard PROTOCOL9 admission",
     "monitor_authority": "Existing queue-preparation/admission authorisation remains; no automatic merge or workstation execution",
     "duplicate_actions_prohibited": true,
-    "hardware_facts_received": false,
+    "hardware_facts_received": true,
     "final_recipe_pin": "cb73bf909397e2fff8c90f0a00437061ad06478e",
     "queue_observed_empty_at": "e674070e1351460d27d745390b1db80ef5112b60",
     "historical_evidence_check": "Author fresh screen at34775cdbf605b5135566b7089c2753feda3a4e10: evidence d85b207 onlyoldcells-vs-prod, no live-path tags/history. Refresh immediately before signal.",
-    "status": "reviewed green branch eligible; authenticated Run-signal and subsequent queue admission pending",
+    "status": "queued at fc44897; owner run submitted and verified; consumed entry removed; signal cleanup pending",
     "integration_complete": true,
     "authority_persists": "Existing owner authorised binding and standard ready-tag/queue; no renewed permission needed for those. No agent workstation execution or automatic merge.",
-    "next_actor": "Capable authenticated Run-signal connection signals ready at exact approved cb73bf909397e2fff8c90f0a00437061ad06478e after duplicate screen; existing Codex executor verifies tag and adds master queue line. No377 merge prerequisite.",
+    "next_actor": "Existing capable Run signal executor: clear consumed recipe tags; Optimizer and Researcher: bounded saved-evidence followups. No duplicate Codex task.",
     "history": [
       {
         "source_comment_id": 6849382358,
@@ -4153,8 +4165,8 @@
         "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794563574.kX-Lk3IcSDyFVysVyzHrbg"
       }
     ],
-    "ready_signal_observed": false,
-    "queue_admitted": false,
+    "ready_signal_observed": true,
+    "queue_admitted": true,
     "transport": {
       "connector": "No workflow_dispatch tool exposed",
       "browser": "Existing Run signal page observed signed out; no authenticated dispatch control; no login or dispatch attempted",
@@ -4164,7 +4176,8 @@
     "source_branch": "bench/cells-live-workstation",
     "source_tree": "7521261b755e5ac1fda6d7bd3ef06e88b7fec9ae",
     "merge_required_for_admission": false,
-    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9"
+    "queue_line": "bench-cells-live-path-i9 bench/cells-live-workstation Cells live readers: ten pairs, three corpora, four arms;120+9",
+    "completion_basis": "Observed exact tag/branch/queue and actual owner-submitted bundle; Codex role cursor remains stale, not treated as recipient completion."
   },
   "recipe_review_377": {
     "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
@@ -4209,6 +4222,18 @@
     "recomputed_analysis_identical": true,
     "validation": "Frozen schedule;120 per-child raw/resources rows match;all exit0/accepted, output length/hash, phase/CRC/clock/budget checks;3 compressed digests and independently decompressed oracle length/SHA;4 binaries;driver digest;clean head/source/compiler manifest;CPU0 topology recorded.",
     "limitation": "Three full Wikidata output byte files are absent from archive; matching precheck SHA/length and independently reconstructed oracle verified. Six pattern/onebyte byte files retained and byte-compared. No independent reconstruction of missing Wikidata decoder output bytes.",
-    "disposition": "Diagnostic complete. Stop quantitative phase attribution for Wikidata/onebyte; retain descriptive counts. Pattern remains slower with and without hooks; price largest positive exclusive writer cost only within instrumented scope. No production qualification, B5, warm20+20 or rerun."
+    "disposition": "Diagnostic complete. Stop quantitative phase attribution for Wikidata/onebyte; retain descriptive counts. Pattern remains slower with and without hooks; price largest positive exclusive writer cost only within instrumented scope. No production qualification, B5, warm20+20 or rerun.",
+    "queue_removed": {
+      "commit": "3e7e294cc10f29495e9828181345d74233c549d4",
+      "blob": "40f113ccf20f8f14caa985a9683279f27f5f0164",
+      "readback_empty": true
+    },
+    "tag_cleanup": {
+      "status": "blocked_capability",
+      "recipe": "bench-cells-live-path-i9",
+      "ready_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+      "required_action": "Existing Run signal workflow signal=clear",
+      "reason": "No workflow-dispatch connector; prior browser check signed out and shell authenticated API unavailable. No direct tag bypass. Queue entry removed; do not rerun."
+    }
   }
 }
