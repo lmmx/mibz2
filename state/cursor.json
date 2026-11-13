@@ -1189,7 +1189,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a2da49638ac54d7763de1c167bd054f67ffdc763",
-      "progress": "Completed saved-evidence replay and two ranked writer constructions; one conditional all-small-spine preparation selected. No execution or implementation. Report/ledger ready for publication.",
+      "progress": "Completed frozen replay and three ranked writer constructions, including newly queued output-order emitter; selected one conditional narrow preparation within existing MONODROMY ownership. No implementation/decoder execution/timing.",
       "report_path": "state/records/reviews/inbox-6850318070/report.md"
     }
   ],
