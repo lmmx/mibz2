@@ -2862,7 +2862,11 @@
     "6862425749": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T19:10:15Z",
-      "disposition": "Own prospective design review LOG; ignore self wake."
+      "disposition": "Own prospective design review LOG; ignore self wake.",
+      "delivery_id": "dc2d1820-df95-11f1-91a6-8c4016df353c",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3037,8 +3041,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6862371184,
-    "delivery_id": "7fcf01b0-df95-11f1-878a-dd3bf275c1aa"
+    "comment_id": 6862425749,
+    "delivery_id": "dc2d1820-df95-11f1-91a6-8c4016df353c"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
