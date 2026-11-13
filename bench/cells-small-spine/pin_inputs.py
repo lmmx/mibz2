@@ -5,6 +5,7 @@ import json
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,8 +18,9 @@ def digest(path):
 
 
 def main():
-    work = ROOT / "target/cells-pinned-generator"
-    work.mkdir()
+    # rust-cache restores target/ from earlier heads. Never reuse that source
+    # tree or overwrite its evidence; extract a fresh pinned tree outside it.
+    work = Path(tempfile.mkdtemp(prefix="mibz2-cells-generator-"))
     archive = work / "source.tar"
     with archive.open("xb") as out:
         subprocess.run(["git", "archive", PIN], cwd=ROOT, stdout=out, check=True)
