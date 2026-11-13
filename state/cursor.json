@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849935340,
+  "last_examined_comment_id": 6849982678,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1795,10 +1795,12 @@
       "planned_action": "Correct false merge-before-admission prerequisite in prior LOG; frozen recipe PROCEED stands. Correct Observer account after actual completed receipt. No duplicate Codex or signal attempt.",
       "log_dedup_key": "branch-admission-correction-6849826280",
       "observer_correction": {
-        "status": "posted_verified_not_delivered",
+        "status": "delivered_completed",
         "comment_id": 6849911875,
         "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849911875",
-        "recipient_execution_observed": false
+        "recipient_execution_observed": true,
+        "review_id": 6849982678,
+        "cursor_sha": "5dbf7a37e9dce9719d33468e45862266ce600b19"
       },
       "disposition": "Accepted branch admission path under PROTOCOL9. Recipe PROCEED already complete; no377 merge prerequisite. Run-signal capability limitation already recorded6849815173 remains; no dispatch/tag/queue/workstation action. Existing live Codex retains queue completion.",
       "log_publication": "published",
@@ -1824,13 +1826,24 @@
       "comment_updated_at": null,
       "response_comments": 0,
       "dispatches": 0,
-      "disposition": "Own LOG exactly read back; no new external message; same master and current policy."
+      "disposition": "Own LOG exactly read back; no new external message; same master and current policy.",
+      "duplicate_delivery_observed": "2f713bc0-df4a-11f1-9d9d-d8514c9e7d4b; no replay"
     },
     "6849982678": {
-      "status": "in_progress",
+      "status": "completed_no_additional_action",
       "delivery_id": "7a482b40-df4a-11f1-8185-3fde37a09f1a",
       "comment_updated_at": null,
-      "planned_action": "Reconcile completed Observer correction; no new dispatch or LOG."
+      "planned_action": "Reconcile completed Observer correction; no new dispatch or LOG.",
+      "disposition": "Observer correction6849911875 genuinely completed: REVIEW plus finished cursor and corrected account verified. False merge prerequisite removed, complete recipe PROCEED preserved. No further correction or actionable work. Existing admission capability blocker already recorded; no duplicate task or repeated LOG.",
+      "recipient_cursor_sha": "5dbf7a37e9dce9719d33468e45862266ce600b19",
+      "work_commit": "59470d1b2f35a02ac44dc023815c12b441c9fdd4",
+      "response_comments": 0,
+      "dispatches": 0,
+      "ready_job_queued": false,
+      "queue_reason": "Existing authenticated Run-signal access limitation; master queue remains empty. Reviewed branch requires no merge prerequisite.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/blob/59470d1b2f35a02ac44dc023815c12b441c9fdd4/current/account.md"
+      ]
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1959,8 +1972,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849935340,
-    "delivery_id": "2f713bc0-df4a-11f1-9d9d-d8514c9e7d4b"
+    "comment_id": 6849982678,
+    "delivery_id": "7a482b40-df4a-11f1-8185-3fde37a09f1a"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2533,8 +2546,11 @@
       "comment_id": 6849911875,
       "type": "CORRECTION",
       "source_comment_id": 6849875014,
-      "status": "posted_verified",
-      "recipient_execution_observed": false
+      "status": "delivered_completed",
+      "recipient_execution_observed": true,
+      "review_id": 6849982678,
+      "cursor_sha": "5dbf7a37e9dce9719d33468e45862266ce600b19",
+      "work_commit": "59470d1b2f35a02ac44dc023815c12b441c9fdd4"
     }
   ],
   "codex_correction": {
@@ -2551,8 +2567,7 @@
     "Use reviewed green branch bench/cells-live-workstation at cb73bf909397e2fff8c90f0a00437061ad06478e directly for PROTOCOL9; do not require377 merge.",
     "Authenticated existing Run signal dispatch remains capability blocker previously recorded6849815173. No new permission, manual desktop facts, infrastructure or direct-tag bypass.",
     "Refresh duplicate/evidence/tag/hold screen before signal; verify exact ready tag; existing live Codex executor adds master queue line.",
-    "Await Louis-submitted bundle; no agent workstation execution. Preserve120+9 and warm20+20 unadmitted.",
-    "Observer correction6849911875 posted/verified; await real recipient receipt. No duplicate Codex or successor research."
+    "Await Louis-submitted bundle; no agent workstation execution. Preserve120+9 and warm20+20 unadmitted."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3562,7 +3577,7 @@
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "Fresh connector-backed exact current coord.py audit exit0; six resolved historic misroutes; local script diff matches fetched source",
+    "audit": "Fresh role/inbox/channel snapshot audit exit0; six resolved historical misroutes",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -3576,7 +3591,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6849875014
+    "last_event_comment_id": 6849982678
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
