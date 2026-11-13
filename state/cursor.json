@@ -2157,7 +2157,14 @@
     "6852082878": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T11:53:59Z",
-      "disposition": "Own independent-review checkpoint verified; ignore self wake."
+      "disposition": "Own independent-review checkpoint verified; ignore self wake.",
+      "delivery_id": "ea7a0f60-df58-11f1-9d4a-466aee22b647"
+    },
+    "6852143543": {
+      "status": "in_progress",
+      "delivery_id": "48e9a0b0-df59-11f1-9bbc-6e5b63301a5a",
+      "comment_updated_at": "2026-11-13T11:56:38Z",
+      "planned_action": "Record exact-head project-test incident and reconcile ongoing same-executor repair; no new assignment, retry, merge or readiness signal."
     }
   },
   "automatic_github_wakeup_assumed": false,
