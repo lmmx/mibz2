@@ -1747,7 +1747,11 @@
     "6849425640": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6849382358
+      "source_comment_id": 6849382358,
+      "delivery_id": "3b622ab0-df46-11f1-86bb-b7b1ca611900",
+      "reason": "Own attributed LOG and durable own-ID checkpoint; exact readback has no new external message. Master/policies and merged376 head/checks unchanged; no duplicate dispatch/LOG.",
+      "ready_job_queued": false,
+      "ready_job_reason": "Actual desktop preflight facts and final bound recipe/admission still absent; preserve existing active executor."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1874,8 +1878,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849382358,
-    "delivery_id": "ea660cd0-df45-11f1-8a5d-0ea822aea271",
+    "comment_id": 6849425640,
+    "delivery_id": "3b622ab0-df46-11f1-86bb-b7b1ca611900",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
