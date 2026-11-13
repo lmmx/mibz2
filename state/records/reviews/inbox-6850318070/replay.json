@@ -1,0 +1,569 @@
+{
+  "verified": {
+    "measured": 120,
+    "checks": 9,
+    "binaries": 4,
+    "inputs": 3,
+    "analysis_byte_identical": true,
+    "missing_byte_files": [
+      "000-wikidata-baseline.bytes",
+      "001-wikidata-cells.bytes",
+      "002-wikidata-oracle.bytes"
+    ],
+    "oracle_decompression_executed": false
+  },
+  "analysis": {
+    "wikidata": {
+      "cost_reconciliation": null,
+      "cells_over_baseline": {
+        "False": {
+          "ratio": 0.8816430115438753,
+          "low": 0.8569818721114875,
+          "high": 0.9070138180274518,
+          "conclusion": "faster"
+        },
+        "True": {
+          "ratio": 1.3380077805231159,
+          "low": 1.2988132469879925,
+          "high": 1.3783850949257723,
+          "conclusion": "slower"
+        }
+      },
+      "inflation": {
+        "baseline": {
+          "ratio": 1.0216043906323415,
+          "low": 1.0001182711984524,
+          "high": 1.0435521088007222,
+          "conclusion": "slower"
+        },
+        "cells": {
+          "ratio": 1.5504173519041438,
+          "low": 1.4986828411874265,
+          "high": 1.6039377372072263,
+          "conclusion": "slower"
+        }
+      },
+      "quantitative_attribution_valid": false,
+      "next_action": "Stop quantitative attribution; retain raw descriptive counts and request Coordinator disposition."
+    },
+    "pattern": {
+      "cost_reconciliation": {
+        "exclusive": {
+          "attempt": {
+            "baseline_mean_ns": 0,
+            "cells_mean_ns": 30832.9,
+            "paired_delta_ns": [
+              28864,
+              31304,
+              24918,
+              29666,
+              35449,
+              33471,
+              29400,
+              30838,
+              34547,
+              29872
+            ]
+          },
+          "finish_crc": {
+            "baseline_mean_ns": 6713971.7,
+            "cells_mean_ns": 2707849.4,
+            "paired_delta_ns": [
+              -3759429,
+              -4321594,
+              -4272239,
+              -4012884,
+              -3907341,
+              -4402792,
+              -3673667,
+              -3965335,
+              -3829811,
+              -3916131
+            ]
+          },
+          "front": {
+            "baseline_mean_ns": 271061.7,
+            "cells_mean_ns": 137248.9,
+            "paired_delta_ns": [
+              -144516,
+              -126854,
+              -171254,
+              -142421,
+              -99694,
+              -130268,
+              -128515,
+              -124744,
+              -134500,
+              -135362
+            ]
+          },
+          "induction": {
+            "baseline_mean_ns": 0,
+            "cells_mean_ns": 25013723.7,
+            "paired_delta_ns": [
+              26169718,
+              25990394,
+              15100898,
+              26163774,
+              25893955,
+              25961055,
+              26152751,
+              26137260,
+              26256733,
+              26310699
+            ]
+          },
+          "inversion": {
+            "baseline_mean_ns": 51813988.3,
+            "cells_mean_ns": 1596,
+            "paired_delta_ns": [
+              -51942444,
+              -50758633,
+              -52011669,
+              -53870512,
+              -49314265,
+              -51601466,
+              -50983081,
+              -53739865,
+              -51299478,
+              -52602510
+            ]
+          },
+          "order": {
+            "baseline_mean_ns": 0,
+            "cells_mean_ns": 351239.4,
+            "paired_delta_ns": [
+              354286,
+              358163,
+              245529,
+              360392,
+              353967,
+              355807,
+              360212,
+              371493,
+              398061,
+              354484
+            ]
+          },
+          "scanner": {
+            "baseline_mean_ns": 6176274.4,
+            "cells_mean_ns": 5819458.4,
+            "paired_delta_ns": [
+              -205578,
+              -330840,
+              -2008820,
+              -132547,
+              51145,
+              -238890,
+              -185570,
+              -212269,
+              -78306,
+              -226485
+            ]
+          },
+          "whole_reader_drain": {
+            "baseline_mean_ns": 4749345.4,
+            "cells_mean_ns": 2354144.6,
+            "paired_delta_ns": [
+              -2459118,
+              -2392401,
+              -2565712,
+              -2508089,
+              -2114310,
+              -2400264,
+              -2366644,
+              -2355171,
+              -2339835,
+              -2450464
+            ]
+          },
+          "writer": {
+            "baseline_mean_ns": 0,
+            "cells_mean_ns": 177427976.6,
+            "paired_delta_ns": [
+              184343215,
+              178847642,
+              150698270,
+              179772969,
+              176069518,
+              178854252,
+              179723711,
+              179757785,
+              180403107,
+              185809297
+            ]
+          },
+          "process_outside_reader": {
+            "baseline_mean_ns": 5333859.3,
+            "cells_mean_ns": 5264817.2,
+            "paired_delta_ns": [
+              -166650,
+              -161422,
+              -164145,
+              -29207,
+              137821,
+              -136519,
+              -185740,
+              -54178,
+              20546,
+              49073
+            ]
+          }
+        },
+        "boundary": "instrumented live path; process remainder includes startup, serialization and logging, not an isolated log estimate",
+        "inclusive_inversion_ratio": {
+          "ratio": 3.907364532343014,
+          "low": 3.704060550870171,
+          "high": 4.1218272160873415,
+          "conclusion": "slower"
+        }
+      },
+      "cells_over_baseline": {
+        "False": {
+          "ratio": 1.5303376629912668,
+          "low": 1.154569883241954,
+          "high": 2.0284033013173546,
+          "conclusion": "slower"
+        },
+        "True": {
+          "ratio": 2.9138511023614453,
+          "low": 2.7675916944103447,
+          "high": 3.0678399071225635,
+          "conclusion": "slower"
+        }
+      },
+      "inflation": {
+        "baseline": {
+          "ratio": 1.1920223852681957,
+          "low": 0.9228970170286583,
+          "high": 1.539627218164858,
+          "conclusion": "unresolved"
+        },
+        "cells": {
+          "ratio": 2.2696793167620504,
+          "low": 2.0525839397732053,
+          "high": 2.509736192083157,
+          "conclusion": "slower"
+        }
+      },
+      "quantitative_attribution_valid": true,
+      "next_action": "Price the largest positive exclusive cost against eligible inversion saving; warm research/port cause remains unmeasured and requires separate admission."
+    },
+    "onebyte": {
+      "cost_reconciliation": null,
+      "cells_over_baseline": {
+        "False": {
+          "ratio": 0.5355079705278043,
+          "low": 0.3318562732272236,
+          "high": 0.8641354997151304,
+          "conclusion": "faster"
+        },
+        "True": {
+          "ratio": 0.9946695251872196,
+          "low": 0.488370767608392,
+          "high": 2.0258531631227963,
+          "conclusion": "unresolved"
+        }
+      },
+      "inflation": {
+        "baseline": {
+          "ratio": 0.7802257428854916,
+          "low": 0.49302381192447514,
+          "high": 1.234731863122405,
+          "conclusion": "unresolved"
+        },
+        "cells": {
+          "ratio": 1.4492160937396603,
+          "low": 0.9588857014696338,
+          "high": 2.190279074070175,
+          "conclusion": "unresolved"
+        }
+      },
+      "quantitative_attribution_valid": false,
+      "next_action": "Stop quantitative attribution; retain raw descriptive counts and request Coordinator disposition."
+    }
+  },
+  "census": {
+    "wikidata": {
+      "blocks": 431,
+      "outcomes": {
+        "Err": 187,
+        "Ok": 196,
+        "": 48
+      },
+      "counter_sums": {
+        "budget": 33552877,
+        "cells_buf_capacity": 5869616656,
+        "cells_pos_capacity": 59192100,
+        "computed_crc": 965987563037,
+        "decoded_bytes": 209700196,
+        "decoded_capacity": 773995777,
+        "fallback_calls": 235,
+        "inverted_capacity": 686671769,
+        "outer_runs": 383,
+        "records": 16326954,
+        "rows": 209706557,
+        "attempted_cells": 20744295,
+        "cells_buf_growths": 10,
+        "cells_buf_requested_zero_bytes": 148399232,
+        "cells_pos_growths": 10,
+        "cells_pos_requested_bytes": 1363232,
+        "induction_copy_bytes": 663817440,
+        "inverted_growths": 2,
+        "inverted_requested_bytes": 1799987,
+        "letters": 11258081,
+        "period": 176398965,
+        "pos_initialized_bytes": 25356556,
+        "writer_long_copy_bytes": 140633504,
+        "writer_small_copy_bytes": 35765265
+      },
+      "global": {
+        "attempted_cells": 20744295,
+        "cells_buf_growths": 10,
+        "cells_buf_requested_zero_bytes": 148399232,
+        "cells_pos_growths": 10,
+        "cells_pos_requested_bytes": 1363232,
+        "fallback_calls": 235,
+        "induction_copy_bytes": 663817440,
+        "inverted_growths": 2,
+        "inverted_requested_bytes": 1799987,
+        "pos_initialized_bytes": 25356556,
+        "writer_long_copy_bytes": 140633504,
+        "writer_small_copy_bytes": 35765265
+      }
+    },
+    "pattern": {
+      "blocks": 22,
+      "outcomes": {
+        "Ok": 22
+      },
+      "counter_sums": {
+        "attempted_cells": 2700141,
+        "budget": 3135979,
+        "cells_buf_capacity": 261021728,
+        "cells_buf_growths": 1,
+        "cells_buf_requested_zero_bytes": 11864624,
+        "cells_pos_capacity": 11314476,
+        "cells_pos_growths": 3,
+        "cells_pos_requested_bytes": 1542876,
+        "computed_crc": 59279183370,
+        "decoded_bytes": 19600000,
+        "decoded_capacity": 19800990,
+        "induction_copy_bytes": 86404512,
+        "inverted_capacity": 19800286,
+        "inverted_growths": 1,
+        "inverted_requested_bytes": 900013,
+        "letters": 176,
+        "outer_runs": 22,
+        "period": 18899608,
+        "pos_initialized_bytes": 10800036,
+        "records": 154448,
+        "rows": 19600000,
+        "writer_small_copy_bytes": 18899586,
+        "writer_repeat_copy_bytes": 700392
+      },
+      "global": {
+        "attempted_cells": 2700141,
+        "cells_buf_growths": 1,
+        "cells_buf_requested_zero_bytes": 11864624,
+        "cells_pos_growths": 3,
+        "cells_pos_requested_bytes": 1542876,
+        "induction_copy_bytes": 86404512,
+        "inverted_growths": 1,
+        "inverted_requested_bytes": 900013,
+        "pos_initialized_bytes": 10800036,
+        "writer_repeat_copy_bytes": 700392,
+        "writer_small_copy_bytes": 18899586
+      }
+    },
+    "onebyte": {
+      "blocks": 1,
+      "outcomes": {
+        "Err": 1
+      },
+      "counter_sums": {
+        "attempted_cells": 62745,
+        "budget": 62745,
+        "cells_buf_capacity": 5172496,
+        "cells_buf_growths": 1,
+        "cells_buf_requested_zero_bytes": 5172496,
+        "cells_pos_capacity": 0,
+        "computed_crc": 2440747551,
+        "decoded_bytes": 20000000,
+        "decoded_capacity": 25102336,
+        "fallback_calls": 1,
+        "induction_copy_bytes": 2007840,
+        "inverted_capacity": 0,
+        "letters": 4,
+        "outer_runs": 1,
+        "records": 3091,
+        "rows": 392160
+      },
+      "global": {
+        "attempted_cells": 62745,
+        "cells_buf_growths": 1,
+        "cells_buf_requested_zero_bytes": 5172496,
+        "fallback_calls": 1,
+        "induction_copy_bytes": 2007840
+      }
+    }
+  },
+  "wall_ms": {
+    "wikidata": {
+      "baseline-False": [
+        482.610379,
+        526.570358,
+        525.34204,
+        525.950677,
+        529.854363,
+        527.313152,
+        524.055729,
+        526.465056,
+        528.613612,
+        538.050841
+      ],
+      "baseline-True": [
+        530.998657,
+        526.976969,
+        527.928933,
+        543.772329,
+        527.8643,
+        529.49774,
+        541.956695,
+        542.828413,
+        529.921575,
+        544.626488
+      ],
+      "cells-False": [
+        462.033773,
+        482.318572,
+        462.991194,
+        463.414918,
+        461.254469,
+        432.745488,
+        461.750752,
+        461.801948,
+        463.160616,
+        463.428943
+      ],
+      "cells-True": [
+        721.947529,
+        717.868923,
+        679.698258,
+        717.831412,
+        718.308924,
+        731.646719,
+        719.031686,
+        668.995378,
+        761.13685,
+        720.529797
+      ]
+    },
+    "pattern": {
+      "baseline-False": [
+        75.076609,
+        73.917784,
+        31.074289,
+        74.022275,
+        31.672866,
+        74.997887,
+        74.951443,
+        73.899553,
+        77.507332,
+        75.112026
+      ],
+      "baseline-True": [
+        75.301677,
+        74.141855,
+        75.389097,
+        77.386313,
+        71.759738,
+        74.898281,
+        74.104666,
+        77.197172,
+        74.479788,
+        75.926421
+      ],
+      "cells-False": [
+        101.117303,
+        100.860966,
+        97.991473,
+        68.626817,
+        97.967151,
+        101.045927,
+        101.449481,
+        101.151359,
+        97.648134,
+        101.247618
+      ],
+      "cells-True": [
+        227.520025,
+        221.277614,
+        180.264873,
+        223.017454,
+        218.865983,
+        221.192667,
+        222.847523,
+        223.042986,
+        223.910852,
+        229.148894
+      ]
+    },
+    "onebyte": {
+      "baseline-False": [
+        55.35431,
+        52.157624,
+        53.181369,
+        32.832226,
+        52.916749,
+        53.879432,
+        20.173071,
+        54.575669,
+        54.835018,
+        55.040519
+      ],
+      "baseline-True": [
+        55.23547,
+        55.012277,
+        54.234694,
+        19.459414,
+        54.63864,
+        52.321154,
+        54.536434,
+        19.6133,
+        20.010296,
+        20.347303
+      ],
+      "cells-False": [
+        20.92017,
+        20.797635,
+        20.583225,
+        21.134983,
+        20.718165,
+        21.045796,
+        55.344139,
+        20.967009,
+        17.207838,
+        56.204447
+      ],
+      "cells-True": [
+        14.075771,
+        20.678187,
+        21.070535,
+        54.592448,
+        20.778132,
+        57.070865,
+        54.589773,
+        54.596433,
+        56.347176,
+        56.765735
+      ]
+    }
+  },
+  "pattern_static_ceiling": {
+    "rules": 2700009,
+    "whole_baseline_on_ms": 75.05850079999999,
+    "whole_cells_on_ms": 219.1088871,
+    "inversion_new_writer_break_even_ms": 26.4165963
+  }
+}
