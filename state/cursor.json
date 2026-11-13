@@ -587,6 +587,10 @@
     "measurements": 0,
     "in_progress_review_comment_id": 6849208142,
     "report": "state/reports/queue-cells-20261113/checkpoint.md",
-    "next_action": "Receive desktop preflight JSON; bind, validate, freeze/review and use already-authorised standard queue admission. Do not ask merge/queue permission again."
+    "next_action": "Receive desktop preflight JSON; bind, validate, freeze/review and use already-authorised standard queue admission. Do not ask merge/queue permission again.",
+    "review_comment_id": 6849382358,
+    "pr_receipt_comment_id": 6849372228,
+    "receipt_readback_verified": true,
+    "evidence_commit": "cd3214c852055aed969da1bc7ef37d37ad5cdefe"
   }
 }
