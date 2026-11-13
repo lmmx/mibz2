@@ -1794,8 +1794,10 @@
       "planned_action": "Correct false merge-before-admission prerequisite in prior LOG; frozen recipe PROCEED stands. Correct Observer account after actual completed receipt. No duplicate Codex or signal attempt.",
       "log_dedup_key": "branch-admission-correction-6849826280",
       "observer_correction": {
-        "status": "in_progress",
-        "destination": 222
+        "status": "posted_pending_verify",
+        "comment_id": 6849911875,
+        "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849911875",
+        "recipient_execution_observed": false
       }
     },
     "6849875014": {
