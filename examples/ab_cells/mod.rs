@@ -14,6 +14,8 @@ pub struct CellsReader<R> {
     at: usize,
     done: bool,
     failed: Option<Error>,
+    #[cfg(test)]
+    blocks: usize,
 }
 
 impl<R: Read> CellsReader<R> {
@@ -33,6 +35,8 @@ impl<R: Read> CellsReader<R> {
             at: 0,
             done: false,
             failed: None,
+            #[cfg(test)]
+            blocks: 0,
         }
     }
 }
@@ -60,6 +64,10 @@ impl<R: Read> Read for CellsReader<R> {
                     symbols,
                     ..
                 }) => {
+                    #[cfg(test)]
+                    {
+                        self.blocks += 1;
+                    }
                     if let Err(kind) =
                         decode_block(&symbols, self.kernels, &mut self.scratch, &mut self.out)
                     {
@@ -172,7 +180,14 @@ mod tests {
             );
             let mut cells = CellsReader::new(std::fs::File::open(&path).unwrap());
             verify(&mut cells, &expected, name);
-            eprintln!("CELLS_ROUTE {name} {:?}", cells.scratch.cells_counts());
+            let counts = cells.scratch.cells_counts();
+            let attempted =
+                counts.admitted + counts.density + counts.floor + counts.budget + counts.invalid;
+            let column_fallback = cells.blocks - attempted;
+            eprintln!(
+                "CELLS_ROUTE {name} blocks={} column_fallback={column_fallback} {counts:?}",
+                cells.blocks
+            );
         }
     }
 
