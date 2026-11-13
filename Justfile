@@ -57,3 +57,5 @@ e target="":
 
 lint-action:
     actionlint .github/workflows/*.yml
+
+import ".just/cells-selective-i9.just"
