@@ -1,0 +1,39 @@
+{
+  "reviewed_head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+  "source_sha256": "3bbc63745068713b75bd6cbaac4217d374fbca6d1318a55c27bf9e788858aeee",
+  "original_source_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+  "comparator_equal_after_exactly_four_hooks": true,
+  "unchanged_functions": [
+    "slots",
+    "write_cells",
+    "try_invert"
+  ],
+  "short_copy_placement_cases": 88860,
+  "exhaustive_column_origin_cases": 9601,
+  "verified_evidence_files": [
+    "cells-selective-fmt.log",
+    "cells-selective-fuzz.log",
+    "cells-selective-miri.log",
+    "cells-selective-mutations/baseline.log",
+    "cells-selective-mutations/masked-mark.log",
+    "cells-selective-mutations/missing-rule.log",
+    "cells-selective-mutations/missing-short.log",
+    "cells-selective-mutations/results.json",
+    "cells-selective-native.log",
+    "cells-selective-original-mutations/baseline.log",
+    "cells-selective-original-mutations/lost-mark.log",
+    "cells-selective-original-mutations/missing-spine-recopy.log",
+    "cells-selective-original-mutations/region-overrun.log",
+    "cells-selective-original-mutations/results.json",
+    "cells-selective-original-mutations/uncounted-cell.log",
+    "cells-selective-original-mutations/wrong-backlink.log",
+    "cells-selective-original-mutations/wrong-rotation.log",
+    "cells-selective-source.json",
+    "cells-selective-suite-affinity.log",
+    "cells-selective-suite-final.log",
+    "cells-selective-suite.log"
+  ],
+  "new_mutations_source_sha256": "ca1b9116309fcb140d3aa27917cbfe68ff8581bae7eb1d4553a7c954bb6406aa",
+  "new_mutations_match_reviewed_head": false,
+  "limitation": "Python byte model and source inspection only; Rust and Miri were not rerun."
+}
