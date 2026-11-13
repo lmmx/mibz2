@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6856485171,
+  "last_examined_comment_id": 6857000172,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2630,11 +2630,16 @@
       "wake_disposition": "already_examined_predata_plan_noop"
     },
     "6857000172": {
-      "status": "in_progress",
+      "status": "completed_independent_B5_routed",
       "delivery_id": "67403ea0-df74-11f1-9800-ef5776510609",
       "comment_updated_at": "2026-11-13T15:10:45Z",
       "planned_action": "Route one independent changed-path B5 review to original free Researcher on f2dc198ee22ad13b69a72d42744fb1a0d135b95f. Codex remains active; no completion/adoption claim.",
-      "report_commit": "5df5a2eeeaea99c1b07f94c8a5f3ca46666b9c05"
+      "report_commit": "5df5a2eeeaea99c1b07f94c8a5f3ca46666b9c05",
+      "disposition": "Implementation checkpoint accepted as review-ready, not safety/performance completion. Original Researcher free; assignment162/6857053711 posted/readback/verify. Codex active; exact-head Actions/statuses absent.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/162#issuecomment-6857053711"
+      ],
+      "log_publication": "pending"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2788,16 +2793,17 @@
     6855158914,
     6855542914,
     6856176834,
-    6856205921
+    6856205921,
+    6857053711
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6856485171,
-    "delivery_id": "d9546000-df71-11f1-824a-71b9c4d24922",
-    "disposition": "Previously examined unchanged plan; no new external update or completion. Existing implementation remains in flight. No ready workstation job: implementation/safety/recipe readiness pending."
+    "comment_id": 6857000172,
+    "delivery_id": "67403ea0-df74-11f1-9800-ef5776510609",
+    "disposition": "Independent B5 routed on exact head; implementation still active"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -5305,23 +5311,33 @@
   "selective_materialisation": {
     "source_request": 6856026045,
     "assignment": 6856176834,
-    "status": "recipient_active_not_completed",
+    "status": "implementation_active_independent_B5_pending",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "recipient_execution_observed": true,
-    "independent_B5": "Required on actual changed head; not yet assigned",
+    "independent_B5": {
+      "assignment": 6857053711,
+      "head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+      "status": "posted_verified_not_delivered",
+      "reviewer": "researcher",
+      "reviewer_prior_cursor": "3b0725987856ac4b9ca974c3bd9b5b202967467e",
+      "task_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+    },
     "ready_job_queued": false,
-    "ready_job_reason": "Active candidate and tests not completed; no workstation-ready recipe/checks",
-    "next_actor": "Codex implementation/validation; then Coordinator routes independent B5 on actual head",
+    "ready_job_reason": "Independent B5, seven-family oracles, matched CI and exact-head checks pending; no workstation-ready recipe.",
+    "next_actor": "Researcher independent B5; Codex finishes existing oracles/codegen/CI, no second implementation",
     "onecore6848164049": "deferred, not completed",
     "math_owner": "MONODROMY",
     "architecture_owner": "Pathfinder",
     "pickup_review": 6856423064,
-    "recipient_cursor": "5639346f86019ac01ad15b713998143c2fd49656",
+    "recipient_cursor": "983e4fe1b8e8974c224b300a9d9764ae611332b4",
     "common_base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
     "baseline_cells_blob": "6e08c72b83e8940bf3cae98b9639397ab7482943",
     "plan_pin": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
     "plan_comment": 6856485171,
-    "completion_observed": false
+    "completion_observed": false,
+    "implementation_head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+    "implementation_checkpoint": 6857000172,
+    "evidence_commit": "5df5a2eeeaea99c1b07f94c8a5f3ca46666b9c05"
   }
 }
