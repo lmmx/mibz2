@@ -1,0 +1,10 @@
+{
+  "directory": "/workspace/mibz2-live-workstation/target/cells-workstation-validation/inputs",
+  "sha256": {
+    "wikidata": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+    "pattern": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407",
+    "onebyte": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e"
+  },
+  "wikidata_origin": "reconstructed from pinned benchmark windows",
+  "window_pin": "a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a"
+}

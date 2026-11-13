@@ -509,7 +509,7 @@
     "integration_record": "integration375"
   },
   "owner_cells_measurement_priority": {
-    "status": "ACTIVE:373 and376 integrated; waiting for owner desktop facts to complete already-authorised queue binding/admission",
+    "status": "ACTIVE:automatic staging/affinity binding377; finish existing queue admission, no manual facts requested",
     "supersedes_priority_of_inbox": 6848164049,
     "inbox_marked_complete": false,
     "pr373_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
@@ -568,7 +568,7 @@
     "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a"
   },
   "cells_queue_admission": {
-    "status": "ACTIVE:376 integrated; awaiting actual desktop preflight JSON before binding/admission",
+    "status": "ACTIVE:noninteractive binding377 implemented; exact-head CI/review and existing Run-signal dispatch pending",
     "owner_authorised": [
       "master_into376",
       "guarded376_merge",
@@ -581,16 +581,22 @@
     "tree": "afd43a466f4d9ee7f5dbc7acb41c310285b00bfe",
     "all_head_checks_success": true,
     "cpu": null,
-    "corpus_directory": null,
+    "corpus_directory": "new attempt/inputs; deterministic pinned staging",
     "ready_tag_set": false,
     "queue_admitted": false,
     "measurements": 0,
     "in_progress_review_comment_id": 6849208142,
-    "report": "state/reports/queue-cells-20261113/checkpoint.md",
-    "next_action": "Receive desktop preflight JSON; bind, validate, freeze/review and use already-authorised standard queue admission. Do not ask merge/queue permission again.",
+    "report": "state/reports/cells-auto-binding-20261113/checkpoint.md",
+    "next_action": "Finish377 gates and Coordinator recipe check; integrate, dispatch existing ready workflow through capable connection, verify tag, add queue. No manual desktop facts or renewed authority needed.",
     "review_comment_id": 6849382358,
     "pr_receipt_comment_id": 6849372228,
     "receipt_readback_verified": true,
-    "evidence_commit": "cd3214c852055aed969da1bc7ef37d37ad5cdefe"
+    "evidence_commit": "cd3214c852055aed969da1bc7ef37d37ad5cdefe",
+    "pr377_head": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+    "pr377": 377,
+    "desktop_preflight_reply_required": false,
+    "cpu_rule": "lowest currently allowed logical CPU; record before build",
+    "local_tests": 18,
+    "real_staged_hashes_verified": true
   }
 }
