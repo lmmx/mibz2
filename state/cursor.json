@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6839541837,
+  "last_examined_comment_id": 6848026007,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1633,13 +1633,21 @@
       "reason": "Own attributed monitor LOG, exact readback and cursor matched; deduplicated. Fresh master, nine policy blobs and373 head/Actions/legacy unchanged; no external actionable message."
     },
     "6848026007": {
-      "status": "in_progress",
+      "status": "completed_correction_reconciled_next_preparation_routed",
       "delivery_id": "8e4081a0-df3c-11f1-859d-e1a9794352f5",
       "comment_updated_at": null,
       "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
       "scope": "Reconcile actual373 correction and all-green CI; route bounded existing-recipe readiness dossier",
       "ready_job_queued": false,
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/issues/363#issuecomment-6848164049"
+      ],
+      "assignment_comment_id": 6839520708,
+      "recipient_cursor_sha": "9faca2e56e43c2e1054d7e690e254bb1e0ee18a2",
+      "evidence_commit": "b3bcaa42e934db1344ab0164f80f456487e8ffe7",
+      "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "next_assignment_comment_id": 6848164049,
+      "reason": "Two-key reorder correction complete; Actions and legacy all pass, no performance adoption claim. Separate deliberate integration required. No ready queue: actual bindings and final PROTOCOL9 readiness outstanding; bounded onecore admission dossier routed."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1753,15 +1761,16 @@
     6838191142,
     6838210087,
     6839520708,
-    6839541837
+    6839541837,
+    6848164049
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6839541837,
-    "delivery_id": "1acca8d0-def5-11f1-9262-659d8f396f16",
+    "comment_id": 6848026007,
+    "delivery_id": "8e4081a0-df3c-11f1-859d-e1a9794352f5",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1864,11 +1873,14 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "in_progress_before_post",
+      "status": "posted_verified_awaiting_recipient",
       "source_comment_id": 6848026007,
       "scope": "Bounded existing onecore/live recipe PROTOCOL9 readiness dossier, untimed local stand-ins only",
       "recipient_execution_observed": false,
-      "completion_observed": false
+      "completion_observed": false,
+      "comment_id": 6848164049,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6848164049",
+      "verification": "fresh coord.py audit exit0 six resolved historical issues; route/exact readback/verify exit0"
     },
     "guardian": {
       "status": "completed",
@@ -1952,12 +1964,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "373-operator-evidence-6839448187",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "scope": "ClassA two-TOML format correction routed; mixed macOS evidence preserved; no readyjob",
-    "log_comment_id": 6839541837,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6839541837"
+    "key": "373-correction-complete-6848026007",
+    "status": "in_progress_before_post",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2326,9 +2335,9 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Codex6839520708: bounded373 format-only correction with frozen evidence/semantic checks, then REVIEW plus own cursor; launch/completion not observed",
-    "Read corrected373 full-head Actions plus legacy statuses on event; preserve all CI gates and separate deliberate integration requirement",
-    "After separately authorised actual CPU/corpus preflight, complete PROTOCOL9 recipe/argument-free wiring/readiness checks before any queue signal; no workstation execution by monitor"
+    "Codex6848164049: bounded onecore PROTOCOL9 admission dossier plus373 dependency checklist; actual launch/REVIEW and cursor pending",
+    "Separate deliberate authorised Coordinator run: assess373 integration at8329f0c702a1c5598e39e7f2413db55a12ce8884 with final performance/full-head safety checks and postmerge verification; monitor does not merge",
+    "Actual authorised i9 preflight still needed for373 CPU/corpus; no speculative bindings or queue signal"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -2966,16 +2975,84 @@
       "benchmark_workflow_success_is_performance_acceptance": false
     },
     "latest_assessment": {
-      "head_sha": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
-      "source_event": 6839448187,
+      "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "source_event": 6848026007,
       "legacy": "Operator displayed run-just-rust/just pc-ci: taplo format --check exits1 for bench/cells-gap/Cargo.toml and bench/cells-gap/live/Cargo.toml; no independent reproduction yet",
-      "legacy_class": "A",
+      "legacy_class": "A_corrected",
       "packaging_job": 131361540210,
       "packaging_class": "D",
       "packaging_evidence": "Operator reports hosted runner acquisition failure and internal server error; no project steps; four annotations vs five lines, x86 job vs arm64 capacity notices unresolved. All Class B requirements not independently established.",
       "operator_evidence_provenance": "User-transcribed/displayed provider output; not connector retrieval or independent reproduction",
       "manual_rerun": false,
-      "correction_assignment": 6839520708
+      "correction_assignment": 6839520708,
+      "historical_head": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
+      "status": "corrected-head checks all pass; old cancellation retained without reclassification",
+      "legacy_status": "success",
+      "packaging_status": "success",
+      "packaging_jobs": [
+        131778321286,
+        131778321437
+      ],
+      "actions": [
+        {
+          "id": 43393348575,
+          "name": "Cells live-path preparation",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 6,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348575/logs",
+          "workflow_id": 413971946
+        },
+        {
+          "id": 43393348433,
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1739,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348433/logs",
+          "workflow_id": 398116820
+        },
+        {
+          "id": 43393348451,
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 1722,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348451/logs",
+          "workflow_id": 398116819
+        },
+        {
+          "id": 43393349525,
+          "name": "Occupancy",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 292,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393349525/logs",
+          "workflow_id": 398776390
+        },
+        {
+          "id": 43393348524,
+          "name": "Benchmark",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 689,
+          "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/jobs",
+          "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43393348524/logs",
+          "workflow_id": 398182844
+        }
+      ],
+      "benchmark": {
+        "run": 43393348524,
+        "all_output_hashes_equal": true,
+        "all_wall_intervals_include_zero": true,
+        "pattern_2t": "+6.0% [-10.9%,26.0%]",
+        "max_rss_point": "+0.8%",
+        "performance_adoption": false
+      }
     }
   },
   "pending_site_article": {
@@ -3286,7 +3363,7 @@
     }
   },
   "operator_evidence_373": {
-    "status": "operator_evidence_received_format_correction_routed",
+    "status": "correction_complete_current_head_green_historical_discrepancies_retained",
     "source_event": 6839448187,
     "head_sha": "ed6f424f238851ff8296e7a48c2b96dfb8332e7e",
     "recovery_comment_id": 6838120361,
@@ -3314,7 +3391,8 @@
       "macos_x86": "Operator reports hosted runner acquisition failure and internal server error; no project steps; four annotations vs five lines, x86 job vs arm64 capacity notices unresolved. All Class B requirements not independently established."
     },
     "recovery": "Genuine format-only correction and normal corrected-head CI; no manual old-head rerun",
-    "assignment_comment_id": 6839520708
+    "assignment_comment_id": 6839520708,
+    "corrected_head": "8329f0c702a1c5598e39e7f2413db55a12ce8884"
   },
   "next_actions_history": [
     {
