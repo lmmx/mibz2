@@ -1,0 +1,553 @@
+{
+  "assignment": 6852337017,
+  "parent_assignment": 6852069758,
+  "evidence_commit": "90395635d82c3e039122e97003c544fe61c98984",
+  "writer": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+  "successor": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+  "source": {
+    "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+    "writer_commit": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
+    "source_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
+    "base_merge": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
+    "cells_parent": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "master_parent": "3e7e294cc10f29495e9828181345d74233c549d4",
+    "service_fixture_only_since_writer": [
+      "tests/service.rs"
+    ],
+    "team_paths_unchanged_from_master": true
+  },
+  "verified_raw_cells_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
+  "raw_source_bytes": 48251,
+  "prior_snapshot_added_trailing_newline": true,
+  "fixture_diff": [
+    {
+      "sha": "d8de554811fc12b3e47cc87e5637fecef4913b76",
+      "filename": "tests/service.rs",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 2,
+      "changes": 7,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359/tests%2Fservice.rs",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359/tests%2Fservice.rs",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/tests%2Fservice.rs?ref=4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+      "patch": "@@ -175,7 +175,9 @@ fn one_block_and_none() {\n /// delivered\n #[test]\n fn a_block_crc_in_the_middle() {\n-    let corp = corpora(1);\n+    // Source text can cross the generator's repeat threshold as code grows.\n+    // Leave enough room after RLE1 for the four blocks this fixture requires.\n+    let corp = corpora(2);\n     let text = &corp[0].1[..];\n     let z = compress(text, 9);\n     let starts = block_starts(&z);\n@@ -258,7 +260,8 @@ fn an_mtf_error() {\n \n /// A stream of several full blocks, and the default's bytes of its first `at` blocks\n fn full_blocks() -> (Vec<u8>, Vec<u64>) {\n-    let corp = corpora(1);\n+    // Keep the four-block reach assertion independent of the source-copy count.\n+    let corp = corpora(2);\n     let z = compress(&corp[0].1, 9);\n     let starts = block_starts(&z);\n     assert!(starts.len() >= 4);"
+    }
+  ],
+  "new_mutation_results": {
+    "source_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
+    "mutants": [
+      {
+        "name": "baseline",
+        "exit": 0,
+        "byte_equality_kill": false
+      },
+      {
+        "name": "missing-small-copy",
+        "exit": 101,
+        "byte_equality_kill": true
+      },
+      {
+        "name": "missing-long-recopy",
+        "exit": 101,
+        "byte_equality_kill": true
+      }
+    ]
+  },
+  "original_mutation_results": {
+    "source_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
+    "mutants": [
+      {
+        "name": "baseline",
+        "test": "cells::tests",
+        "exit": 0,
+        "killed": false
+      },
+      {
+        "name": "uncounted-cell",
+        "test": "miri_cells_admission_and_invalid_records",
+        "exit": 101,
+        "killed": true
+      },
+      {
+        "name": "lost-mark",
+        "test": "miri_cells_slots_mark_and_links",
+        "exit": 101,
+        "killed": true
+      },
+      {
+        "name": "wrong-backlink",
+        "test": "cells_exhaustive_arbitrary_columns",
+        "exit": 101,
+        "killed": true
+      },
+      {
+        "name": "wrong-rotation",
+        "test": "cells_exhaustive_arbitrary_columns",
+        "exit": 101,
+        "killed": true
+      },
+      {
+        "name": "region-overrun",
+        "test": "miri_cells_exact_fit_and_reuse",
+        "exit": 101,
+        "killed": true
+      },
+      {
+        "name": "missing-spine-recopy",
+        "test": "miri_cells_long_writer",
+        "exit": 101,
+        "killed": true
+      }
+    ]
+  },
+  "miri_log": "   Compiling proc-macro2 v1.0.107\n   Compiling quote v1.0.47\n   Compiling unicode-ident v1.0.27\n   Compiling find-msvc-tools v0.1.15\n   Compiling shlex v2.0.1\n   Compiling libm v0.2.16\n   Compiling cc v1.10.0\n   Compiling thiserror v2.0.21\n   Compiling pkg-config v0.3.34\n   Compiling libc v0.2.191\n   Compiling syn v3.0.9\n   Compiling bytemuck v1.25.2\n   Compiling fearless_simd v1.2.0\n   Compiling bzip2-sys v0.1.13+1.0.8\n   Compiling thiserror-impl v2.0.21\n   Compiling bzip2 v0.4.4\n   Compiling pbz2-core v0.2.0\n   Compiling pbz2 v0.2.0\n   Compiling mibz2 v0.2.9 (/workspace/mibz2-small-spine)\n    Finished `test` profile [optimized + debuginfo] target(s) in 8.27s\n     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/c365e741c3e008ce/out/mibz2-c365e741c3e008ce)\nwarning: constant `ALL` is never used\n  --> src/parallel/service_unwind_tests.rs:44:7\n   |\n44 | const ALL: [OuterAt; 9] = [\n   |       ^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: fields `wrote` and `pooled` are never read\n   --> src/parallel/service_unwind_tests.rs:106:5\n    |\n103 | struct Ran {\n    |        --- fields in this struct\n...\n106 |     wrote: Result<(), Stopped>,\n    |     ^^^^^\n...\n114 |     pooled: u64,\n    |     ^^^^^^\n\nwarning: function `every_point` is never used\n   --> src/parallel/service_unwind_tests.rs:259:4\n    |\n259 | fn every_point(input: (Vec<u8>, Vec<u8>)) -> u64 {\n    |    ^^^^^^^^^^^\n\nwarning: function `parked` is never used\n   --> src/parallel/service_unwind_tests.rs:296:4\n    |\n296 | fn parked(z: &[u8], want: &[u8], last: u64) {\n    |    ^^^^^^\n\nwarning: Miri does not support optimizations: the opt-level is ignored. The only effect of selecting a Cargo profile that enables optimizations (such as --release) is to apply its remaining settings, such as whether debug assertions and overflow checks are enabled.\n\n\nrunning 6 tests\ntest cells::tests::miri_cells_admission_and_invalid_records ... ok\ntest cells::tests::miri_cells_exact_fit_and_reuse ... ok\ntest cells::tests::miri_cells_long_writer ... ok\ntest cells::tests::miri_cells_long_writer_production_admission ... ok\ntest cells::tests::miri_cells_slots_mark_and_links ... ok\ntest cells::tests::miri_cells_small_spine_boundary_and_reuse ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 47.94s\n\nwarning: 5 warnings emitted\n\n",
+  "rust_steps": {
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1
+      },
+      {
+        "name": "Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2
+      },
+      {
+        "name": "Run dtolnay/rust-toolchain@stable",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 3
+      },
+      {
+        "name": "Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 4
+      },
+      {
+        "name": "Format",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 5
+      },
+      {
+        "name": "Clippy",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 6
+      },
+      {
+        "name": "Tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 7
+      },
+      {
+        "name": "Harness tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 8
+      },
+      {
+        "name": "Experimental cells harness tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 9
+      },
+      {
+        "name": "The guarded service A/B's producer and judge (stand-in children, untimed)",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 10
+      },
+      {
+        "name": "The scan harness's fault and finder tests",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 11
+      },
+      {
+        "name": "The benchmark alternatives' lock",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 12
+      },
+      {
+        "name": "Post Run Swatinem/rust-cache@v2",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23
+      },
+      {
+        "name": "Post Run actions/checkout@v6",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 24
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 25
+      }
+    ]
+  },
+  "checks": {
+    "835984e849bd4200c0e74b76fb67a336cd82ae2c": [
+      {
+        "name": "Release",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131869071718"
+      },
+      {
+        "name": "deploy-branch",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282488/job/131868878902"
+      },
+      {
+        "name": "preview",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282488/job/131868876779"
+      },
+      {
+        "name": "look",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282488/job/131868876384"
+      },
+      {
+        "name": "python (3.10)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345791"
+      },
+      {
+        "name": "python (3.11)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345723"
+      },
+      {
+        "name": "python (3.14)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345630"
+      },
+      {
+        "name": "python (3.13)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345620"
+      },
+      {
+        "name": "python (3.15)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345563"
+      },
+      {
+        "name": "python (3.12)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868345513"
+      },
+      {
+        "name": "Publish crate",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868297171"
+      },
+      {
+        "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295598"
+      },
+      {
+        "name": "macos (macos-15, aarch64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295503"
+      },
+      {
+        "name": "macos (macos-15, x86_64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295453"
+      },
+      {
+        "name": "sdist",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295450"
+      },
+      {
+        "name": "windows (windows-latest, x64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295447"
+      },
+      {
+        "name": "linux (ubuntu-22.04, x86_64, auto)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868295440"
+      },
+      {
+        "name": "miri",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282473/job/131868261279"
+      },
+      {
+        "name": "build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282488/job/131868261014"
+      },
+      {
+        "name": "bench",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282511/job/131868260723"
+      },
+      {
+        "name": "pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282488/job/131868260608"
+      },
+      {
+        "name": "submit",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868260523"
+      },
+      {
+        "name": "fuzz-smoke",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868260522"
+      },
+      {
+        "name": "typing",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868260518"
+      },
+      {
+        "name": "rust",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868260462"
+      },
+      {
+        "name": "occupancy",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282561/job/131868260381"
+      },
+      {
+        "name": "get-python-versions",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282451/job/131868260238"
+      },
+      {
+        "name": "walk-stats",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282400/job/131868260056"
+      },
+      {
+        "name": "check-commit",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43420282444/job/131868260011"
+      }
+    ],
+    "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359": [
+      {
+        "name": "deploy-branch",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337242/job/131872686813"
+      },
+      {
+        "name": "preview",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337242/job/131872684382"
+      },
+      {
+        "name": "look",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337242/job/131872683868"
+      },
+      {
+        "name": "Release",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131872535568"
+      },
+      {
+        "name": "miri",
+        "status": "in_progress",
+        "conclusion": null,
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337321/job/131871926397"
+      },
+      {
+        "name": "python (3.12)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871893155"
+      },
+      {
+        "name": "python (3.15)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871893037"
+      },
+      {
+        "name": "python (3.10)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871892995"
+      },
+      {
+        "name": "python (3.11)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871892993"
+      },
+      {
+        "name": "python (3.14)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871892986"
+      },
+      {
+        "name": "python (3.13)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871892978"
+      },
+      {
+        "name": "Publish crate",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871842219"
+      },
+      {
+        "name": "windows (windows-latest, x64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840267"
+      },
+      {
+        "name": "macos (macos-15, aarch64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840241"
+      },
+      {
+        "name": "macos (macos-15, x86_64)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840206"
+      },
+      {
+        "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840199"
+      },
+      {
+        "name": "linux (ubuntu-22.04, x86_64, auto)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840167"
+      },
+      {
+        "name": "sdist",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871840100"
+      },
+      {
+        "name": "submit",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871813500"
+      },
+      {
+        "name": "get-python-versions",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871813456"
+      },
+      {
+        "name": "rust",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871813421"
+      },
+      {
+        "name": "typing",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871813333"
+      },
+      {
+        "name": "build",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337242/job/131871813180"
+      },
+      {
+        "name": "fuzz-smoke",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337143/job/131871813129"
+      },
+      {
+        "name": "walk-stats",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337210/job/131871812943"
+      },
+      {
+        "name": "bench",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337109/job/131871812772"
+      },
+      {
+        "name": "pages",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337242/job/131871812766"
+      },
+      {
+        "name": "occupancy",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337221/job/131871812375"
+      },
+      {
+        "name": "check-commit",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/lmmx/mibz2/actions/runs/43421337108/job/131871812352"
+      }
+    ]
+  },
+  "benchmark_error_excerpt": "Traceback (most recent call last):\n2026-11-13T12:03:53.5111269Z   File \"/home/runner/work/mibz2/mibz2/bench/cells-small-spine/pin_inputs.py\", line 70, in <module>\n2026-11-13T12:03:53.5112048Z     main()\n2026-11-13T12:03:53.5112461Z     ~~~~^^\n2026-11-13T12:03:53.5113310Z   File \"/home/runner/work/mibz2/mibz2/bench/cells-small-spine/pin_inputs.py\", line 21, in main\n2026-11-13T12:03:53.5114326Z     work.mkdir()\n2026-11-13T12:03:53.5114657Z     ~~~~~~~~~~^^\n2026-11-13T12:03:53.5115109Z   File \"/usr/lib/python3.14/pathlib/__init__.py\", line 1012, in mkdir\n2026-11-13T12:03:53.5115588Z     os.mkdir(self, mode)\n2026-11-13T12:03:53.5115882Z     ~~~~~~~~^^^^^^^^^^^^\n2026-11-13T12:03:53.5116438Z FileExistsError: [Errno 17] File exists: '/home/runner/work/mibz2/mibz2/target/cells-pinned-generator'\n2026-11-13T12:03:53.5265270Z ##[error]Process completed with exit code 1.\n2026-11-13T12:03:53.5335456Z ##[group]Run if [ -f comment.md ]; then\n2026-11-13T12:03:53.5335826Z \u001b[36;1mif [ -f comment.md ]; then\u001b[0m\n2026-11-13T12:03:53.5336181Z \u001b[36;1m  pyth"
+}
