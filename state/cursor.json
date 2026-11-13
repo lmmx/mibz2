@@ -2965,6 +2965,15 @@
       "response_comments": 0,
       "dispatches": 0,
       "delivery_id": "be376ad0-dfba-11f1-84e1-247832674a25"
+    },
+    "6867819559": {
+      "status": "in_progress",
+      "delivery_id": "5e14e770-dfbc-11f1-992b-a0006da71596",
+      "comment_updated_at": "2026-11-13T23:45:53Z",
+      "planned_action": "Reconcile verified252-row bundle, remove consumed queue entry by CAS, route one bounded Guardian qualification question, persist outcome then substantive LOG. No rerun or merge.",
+      "bundle_commit": "e04fe229e9d939840d50fea110c7b7c6f74811ef",
+      "sha256": "330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
+      "digest_verified": true
     }
   },
   "automatic_github_wakeup_assumed": false,
