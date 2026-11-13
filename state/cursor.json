@@ -1564,8 +1564,9 @@
       "sha": "cf1a36ed429f361839fab6748383187104d8ab27",
       "evidence_digest": "sha256:330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
       "commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
-      "status": "complete",
-      "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected."
+      "status": "finished",
+      "disposition": "Machine/activity question PROCEED; no post-run exclusion threshold. All rows retained, #380 DEFER unaffected.",
+      "comment": 6867956361
     }
   ],
   "own_outgoing_comment_ids": [
@@ -1667,7 +1668,8 @@
     6782473662,
     6782751494,
     6790710467,
-    6790889882
+    6790889882,
+    6867956361
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -1916,7 +1918,8 @@
     "b7af95428922d3c81d8007d548ce22002db57eaf",
     "ca976259ba93460964bf066a53a9c2d3f443ee40",
     "170110ef5a2a479a94eb41925f422914d1a7abcd",
-    "d5ee317ad73962e35d6dbdd1804a372a6b92abbb"
+    "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
+    "c835d2e00115b2340219eebeb742b3ac8b57ea2c"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -2100,9 +2103,11 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "active_comment": 6867883717,
-    "status": "complete",
-    "decision": "D104"
+    "active_comment": null,
+    "status": "finished",
+    "decision": "D104",
+    "incoming_comment": 6867883717,
+    "review_comment_id": 6867956361
   },
   "duplicate_events": [
     {
@@ -3747,11 +3752,13 @@
     {
       "comment_id": 6867883717,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D104",
-      "progress": "D104 committed; bounded machine/activity restriction resolved, all rows retained; awaiting REVIEW.",
+      "progress": "Exact REVIEW body/destination verified; pinned verifier sole hardcoded coordinator FROM limitation; independent Guardian headers/routing pass.",
       "receipt_commit": "170110ef5a2a479a94eb41925f422914d1a7abcd",
-      "work_commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb"
+      "work_commit": "d5ee317ad73962e35d6dbdd1804a372a6b92abbb",
+      "review_comment_id": 6867956361,
+      "complete_cursor_commit": "c835d2e00115b2340219eebeb742b3ac8b57ea2c"
     }
   ],
   "migrated_from": {
