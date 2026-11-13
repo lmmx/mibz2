@@ -1965,6 +1965,11 @@
       "delivery_id": "06d2e150-df4f-11f1-807b-7caa9b17247a",
       "comment_updated_at": null,
       "disposition": "Own queued owner amendment exact readback and coord.py verify passed; no duplicate."
+    },
+    "6850621370": {
+      "status": "in_progress",
+      "delivery_id": "5491fca0-df4f-11f1-9540-3b198352ed7d",
+      "planned_action": "Dispatch queued amendment6850583026 to now-free Optimizer as one bounded delta with seven-corpus coverage, preserving completed parent6850318070 and report247ef9a2. Reconcile guarded-writer math into existing queued proposal without duplicate implementation. No timing/ready admission."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3793,6 +3798,27 @@
       "future_experiment": "Prospective finite matched Segmented/current Cells/cheap-dispatch three-arm test, only after selection, registration and gates.",
       "no_new_admission": true,
       "amendment_comment_id": 6850583026
+    },
+    "coverage": {
+      "source_comment": 6850621370,
+      "required_corpora": [
+        "wikidata",
+        "onebyte",
+        "pattern",
+        "random",
+        "records",
+        "runs",
+        "text"
+      ],
+      "existing_diagnostic": "120+9 immutable; only first3 measured in matched live-reader i9 programme",
+      "missing_matched_live_measurements": [
+        "random",
+        "records",
+        "runs",
+        "text"
+      ],
+      "text_identity": "Exact generating commit and compressed/decoded hashes required",
+      "future_design": "Finite prospective Segmented/current Cells matched seven-corpus matrix; cheap pre-induction dispatch third arm if concretely proposed; charge all overhead and preserve B5/gates"
     }
   },
   "submission_repair_376": {
