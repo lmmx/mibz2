@@ -171,9 +171,10 @@
     6850324757,
     6852069758,
     6852337017,
-    6853304419
+    6853304419,
+    6857053711
   ],
-  "last_processed_comment_id": 6850324757,
+  "last_processed_comment_id": 6857053711,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1999,9 +2000,14 @@
     },
     {
       "trigger_comment_id": 6857053711,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
-      "report_path": "state/reports/selective-b5-6857053711/report.md"
+      "report_path": "state/reports/selective-b5-6857053711/report.md",
+      "repository": "lmmx/mibz2",
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "source_commit": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
+      "report_commit": "84b5f2e17f48f6d63413bfeaed0b4e9dc5e2d193",
+      "disposition": "HOLD / REVISE exact-source evidence for three new mutants: recorded ca1b9116 differs from reviewed 3bbc6374. No changed-path defect found; independent comparator/function and 88,860 copy-placement checks passed."
     }
   ],
   "active_delegations": [],
