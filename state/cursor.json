@@ -2879,6 +2879,12 @@
       "response_comments": 0,
       "ready_job_queued": false,
       "ready_job_reason": "Full native dry-run evidence and all-green exact-head checks remain pending."
+    },
+    "6862561316": {
+      "status": "in_progress",
+      "delivery_id": "c4aa7570-df96-11f1-8d32-564049aaf93d",
+      "comment_updated_at": "2026-11-13T19:16:45Z",
+      "action": "Review exact-head native evidence; accept executable diagnostic subject to final all-green admission; reconcile bounded attribution finding; publish conditional manual existing-executor handoff, Observer checkpoint and grouped LOG."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -5649,17 +5655,22 @@
       "head": "a8a23c11607864cb431f87fff38169e10c41685f"
     },
     "default_path_attribution": {
-      "status": "reconciled_into_existing_codex_preparation_lane_pending_finding",
+      "status": "bounded_source_finding_complete_causality_unresolved",
       "route": "145 QUEUED",
       "blocking_inbox": 6848164049,
       "scope": "one source/build attribution report, no production edits or timings",
-      "execution_observed": false,
+      "execution_observed": true,
       "comment_id": 6857735998,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6857735998",
       "route_verified": true,
       "readback_verified": true,
       "pickup_review": 6862129816,
-      "meaning": "No duplicate dispatch; bounded untimed finding remains required separately for integration, not prerequisite to recipe preparation."
+      "meaning": "No duplicate dispatch; bounded untimed finding remains required separately for integration, not prerequisite to recipe preparation.",
+      "review": 6862561316,
+      "report": "3c61b203730049a93b405ec8e35de53b2408dc08/state/reports/cells-i9-20261113/ATTRIBUTION.md",
+      "recipient_cursor": "068e1f9a07ebcbe7cebdc4aa9b9082e11e2bdd38",
+      "production_patch_authorised": false,
+      "next_measurement_authorised": false
     },
     "observer_completion": {
       "assignment": 6857529647,
@@ -5678,14 +5689,14 @@
   "cells_i9_preparation": {
     "status": "in_progress_not_ready",
     "pickup_review": 6862129816,
-    "recipient_cursor": "f017a897c788fbf18ad39025e00348016bf5fe7d",
+    "recipient_cursor": "068e1f9a07ebcbe7cebdc4aa9b9082e11e2bdd38",
     "intake_commit": "6100e6600a757839b992c119a504f90a8f901b38",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
     "execution_observed": "preparation pickup only; no completed recipe or workstation run",
     "ready_job_queued": false,
-    "ready_job_reason": "Full native build/input/oracle dry-run evidence pending; exact-head CI running; Run Signal execution not available here.",
+    "ready_job_reason": "Remaining Benchmark43489732975 running; all-green approval/signal/tag/queue agreement not yet established.",
     "workflow_dispatch_capability": "No available GitHub workflow-dispatch tool; existing executor needed after recipe approval. Prior limitation remains; no bypass.",
     "attribution": 6857735998,
     "observer_checkpoint": 6862205856,
@@ -5711,6 +5722,18 @@
       "cursor": "6a361469d96cc51de9bbb43158025ff9e2c88606",
       "record": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4"
     },
-    "ci_observation": "Exact cf1a36ed remains open. Legacy success; bench in progress and macOS x86_64 queued; another bench check cancelled. No rerun dispatched and no green/readiness claim."
+    "ci_observation": "Exact cf1a36ed remains open. Legacy success; bench in progress and macOS x86_64 queued; another bench check cancelled. No rerun dispatched and no green/readiness claim.",
+    "native_evidence": "3c61b203730049a93b405ec8e35de53b2408dc08",
+    "executable_review": "Source and archived dry-run evidence accepted at cf1a36ed; final queue admission withheld pending all-green head and existing signal transport.",
+    "dry_run_verified": {
+      "source_manifests_difference": [
+        "src/cells.rs"
+      ],
+      "parity_tests": "both 1 passed; seven equal routes",
+      "rss_control_rise_kib": 64512,
+      "tests": "22 producer tests logged; not rerun by monitor",
+      "scratch_submission": "exit0,resubmit0,onecomment; not real submission",
+      "archive_digest": "producer-reported 80c0e728a05f23292463d4fcd462ade198484aa27d4ced3e15fedca9472f731d; archive not downloaded"
+    }
   }
 }
