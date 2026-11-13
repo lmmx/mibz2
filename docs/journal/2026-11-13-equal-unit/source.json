@@ -1,0 +1,16 @@
+{
+  "master": "3e7e294cc10f29495e9828181345d74233c549d4",
+  "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "guarded": "93781bd9578eae95c599583e387180d673659180",
+  "baseline_cells_sha256": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+  "guarded_cells_sha256": "7543fdd68d3c99ed88799da7726340c0cd8a34d8f6ffe465ae0c1231ead2e23d",
+  "induce_cells_identical": true,
+  "induce_cells_sha256": "cd99d9830628cce21123b7e8019f2a87cb0c86a0941163fd62af8b258266d2c9",
+  "freeze_commit": "d3eeb4b",
+  "owner_notice": 6854993878,
+  "coordinator_checkpoint": 6855132749,
+  "native_candidate": null,
+  "real_corpus_runs": 0,
+  "timing_runs": 0,
+  "model_sha256": "a054857fa174505823e87d977911ef75dd5faff68e13e7c1be2ba303b3a976e6"
+}
