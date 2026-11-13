@@ -44,6 +44,16 @@ def ensure_object(root, pin):
         subprocess.run(command + ["fetch", "origin", pin], check=True)
 
 
+def ensure_toolchain():
+    probe = ["rustup", "run", "1.99.1", "rustc", "-Vv"]
+    if subprocess.run(probe, capture_output=True).returncode:
+        subprocess.run(
+            ["rustup", "toolchain", "install", "1.99.1", "--profile", "minimal"], check=True
+        )
+    # No default-toolchain change; build.py checks the full compiler/host identity.
+    subprocess.run(probe, check=True)
+
+
 def stage_inputs(destination, root=ROOT):
     generate(destination)  # Existing generator checks both frozen synthetic hashes.
     canonical = root / "corpora/wikidata.bz2"
@@ -100,6 +110,7 @@ def prepare(attempt):
     path.write_text(json.dumps(record, indent=2) + "\n")
     record["inputs"] = stage_inputs(attempt / "inputs")
     ensure_object(ROOT, PIN)
+    ensure_toolchain()
     record["source_pin"] = PIN
     record["rustup_toolchain"] = os.environ.get("RUSTUP_TOOLCHAIN")
     path.write_text(json.dumps(record, indent=2) + "\n")

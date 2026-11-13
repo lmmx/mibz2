@@ -18,6 +18,20 @@ import build as builder
 
 
 class DriverTests(unittest.TestCase):
+    def test_workstation_installs_only_missing_frozen_toolchain(self):
+        for missing in (False, True):
+            with mock.patch.object(workstation.subprocess, "run") as run:
+                run.return_value.returncode = int(missing)
+                workstation.ensure_toolchain()
+                self.assertEqual(run.call_count, 3 if missing else 2)
+                if missing:
+                    self.assertEqual(
+                        run.call_args_list[1].args[0],
+                        ["rustup", "toolchain", "install", "1.99.1", "--profile", "minimal"],
+                    )
+                self.assertEqual(run.call_args.args[0], ["rustup", "run", "1.99.1", "rustc", "-Vv"])
+                self.assertTrue(run.call_args.kwargs["check"])
+
     def test_workstation_cpu_selection_is_noninteractive_and_allowed(self):
         with (
             mock.patch.object(workstation.os, "sched_getaffinity", return_value={9, 7}),

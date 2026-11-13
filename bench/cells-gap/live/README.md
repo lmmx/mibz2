@@ -20,7 +20,8 @@ affinity set. Selection is noninteractive and read-only: `preflight.json` record
 the allowed set, selected CPU, core/socket/sibling topology, lscpu output, input
 identities and preparation-source hashes. The driver rechecks affinity and pins
 every child to that CPU. No archived CPU ID or corpus path is used. Missing pinned
-Git objects are fetched by exact SHA before building; compiler/source checks stay
+Git objects are fetched by exact SHA before building; a missing Rust1.99.1 toolchain
+is installed without changing the user's default. Compiler/source checks stay
 unchanged. Preparation failures retain the usual single submission bundle.
 
 This binding requires exact-head green CI, Coordinator recipe review and the normal
