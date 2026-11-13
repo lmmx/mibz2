@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6852351744,
+  "last_examined_comment_id": 6852388781,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2217,8 +2217,9 @@
         "author_reported_sha256": "94cde4d012bf878857c8edd696401e562bb025213804ba7cb51868b2664fae65"
       },
       "grouped_log": {
-        "status": "in_progress",
-        "dedup_key": "379-first-result-evidence-6852248226"
+        "status": "completed_verified",
+        "comment_id": 6852388781,
+        "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852388781"
       }
     },
     "6852258044": {
@@ -2237,8 +2238,9 @@
       "reviewer_cursor": "caffb6279d6e99f0e638dbd16c333469ceac5cce",
       "disposition": "Actual finished source review accepted at conditional omission-proof scope; no B5 closure. Evidence newly available at90395635d82c3e039122e97003c544fe61c98984; one targeted same-reviewer evidence correction6852337017 posted/readback/verify passed. No new broad review or self-certification.",
       "grouped_log": {
-        "status": "in_progress",
-        "dedup_key": "379-first-result-evidence-6852248226"
+        "status": "completed_verified",
+        "comment_id": 6852388781,
+        "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6852388781"
       }
     },
     "6852351744": {
@@ -2262,6 +2264,11 @@
         "https://github.com/lmmx/mibz2/pull/162#issuecomment-6852337017",
         "https://github.com/lmmx/mibz2/actions/runs/43421337109/job/131871812772"
       ]
+    },
+    "6852388781": {
+      "status": "completed",
+      "comment_updated_at": "2026-11-13T12:07:07Z",
+      "disposition": "Own first-result/evidence-closure checkpoint verified; ignore self wake."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2401,7 +2408,8 @@
     6852069758,
     6852082878,
     6852337017,
-    6852341904
+    6852341904,
+    6852388781
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
