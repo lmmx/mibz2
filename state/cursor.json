@@ -2272,10 +2272,32 @@
       "delivery_id": "bf819fb0-df5a-11f1-9371-6a211a6b458a"
     },
     "6852379143": {
-      "status": "in_progress",
+      "status": "completed_no_additional_dispatch",
       "delivery_id": "b1c7d470-df5a-11f1-9fe9-36eb47bdf8f2",
       "comment_updated_at": "2026-11-13T12:06:43Z",
-      "planned_action": "Record observed generator-only successor and current CI; preserve active existing assignments. This batch prohibits source-app messages, and no duplicate routing is needed."
+      "planned_action": "Record observed generator-only successor and current CI; preserve active existing assignments. This batch prohibits source-app messages, and no duplicate routing is needed.",
+      "disposition": "Verified PR379 head93781bd9578eae95c599583e387180d673659180 differs from4f6e6ff only in pin_inputs.py: tempfile import and fresh mkdtemp outside cached target replace fixed work.mkdir. Input source pin/hashes, decoder/writer and schedules unchanged by this delta. Legacy success; many current Actions including Rust/Miri/bench remain in progress. Original835984e negative result and4f6e6ff classA generator failure retained. Same Codex executor continues; no completed recipient receipt. Researcher6852337017 and Optimiser6852341904 now have in-progress recipient cursor entries, not completion. Own6852388781 ignored.",
+      "head_sha": "93781bd9578eae95c599583e387180d673659180",
+      "previous_head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+      "master_sha": "3e7e294cc10f29495e9828181345d74233c549d4",
+      "audit": "exit0, six resolved historical findings",
+      "recipient_cursors": {
+        "researcher": {
+          "blob": "659f1598d6f879d7fa2f6a2d7742b362505cef27",
+          "assignment": 6852337017,
+          "status": "in progress"
+        },
+        "optimizer": {
+          "blob": "665ec3506fd78345375be1cd699e54d441865359",
+          "assignment": 6852341904,
+          "status": "in_progress"
+        }
+      },
+      "source_messages": 0,
+      "dispatches": 0,
+      "ready_job_queued": false,
+      "ready_job_reason": "No newly admitted workstation recipe; existing candidate negative performance result and pending exact-head validation/B5 closure.",
+      "log_omission": "This batch explicitly prohibits source-app messages; state-only reconciliation."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -4216,11 +4238,11 @@
       "cursor_blob": "622f239ddacf713c1832ed349ea9f0c02eb21792",
       "implementation_complete": false,
       "pr": 379,
-      "head": "4f6e6ff10cacb1a9ac9e1a9c70cdd496d1b75359",
+      "head": "93781bd9578eae95c599583e387180d673659180",
       "independent_review_assignment": 6852069758,
-      "latest_validation_comment": 6852143543,
+      "latest_validation_comment": 6852379143,
       "ci_incident_job": 131868260462,
-      "independent_review_state": "in progress per recipient cursor; no completed REVIEW",
+      "independent_review_state": "targeted correction6852337017 in progress per recipient cursor; not complete",
       "writer_head": "835984e849bd4200c0e74b76fb67a336cd82ae2c",
       "performance_verdict_comment": 6852248226,
       "independent_source_review": 6852258044,
@@ -4228,7 +4250,9 @@
       "optimizer_next_choice": 6852341904,
       "source_review_complete": true,
       "B5_evidence_closed": false,
-      "evidence_commit": "90395635d82c3e039122e97003c544fe61c98984"
+      "evidence_commit": "90395635d82c3e039122e97003c544fe61c98984",
+      "harness_repair": "fresh temporary generator directory; exact GitHub delta inspected",
+      "optimizer_state": "6852341904 in progress per recipient cursor; not complete"
     }
   },
   "submission_repair_376": {
