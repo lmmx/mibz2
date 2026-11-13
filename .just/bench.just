@@ -1365,3 +1365,7 @@ bench-onecore-inline-i9:
 [positional-arguments]
 bench-cells-live-path cpu corpora:
     bash bench/cells-gap/live/run.sh "$1" "$2"
+
+# Queue entry: stage the frozen corpora and record one allowed CPU without prompting.
+bench-cells-live-path-i9:
+    RUSTUP_TOOLCHAIN=1.99.1 bash bench/cells-gap/live/run.sh
