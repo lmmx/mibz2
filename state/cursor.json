@@ -2845,6 +2845,12 @@
       "ready_job_reason": "Preparation ongoing; concrete recipe/readiness evidence not supplied; named remote branch ref currently 404.",
       "dispatches": 0,
       "response_comments": 0
+    },
+    "6862371184": {
+      "status": "in_progress",
+      "delivery_id": "7fcf01b0-df95-11f1-878a-dd3bf275c1aa",
+      "comment_updated_at": "2026-11-13T19:07:40Z",
+      "action": "Review concrete prospective diagnostic design and source; accept bounded design for continued preparation only, defer exact-head readiness pending full dry run and CI; one Observer checkpoint and LOG."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -5649,7 +5655,7 @@
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
     "execution_observed": "preparation pickup only; no completed recipe or workstation run",
     "ready_job_queued": false,
-    "ready_job_reason": "Concrete frozen PLAN, executable recipe, dry run, exact-head CI and approval not yet supplied.",
+    "ready_job_reason": "Full native build/input/oracle dry-run evidence pending; exact-head CI running; Run Signal execution not available here.",
     "workflow_dispatch_capability": "No available GitHub workflow-dispatch tool; existing executor needed after recipe approval. Prior limitation remains; no bypass.",
     "attribution": 6857735998,
     "observer_checkpoint": 6862205856,
@@ -5659,6 +5665,14 @@
       "cursor": "beb62b98cd09a8651096f3fdf2f8ff19b29a7496",
       "record": "2306a6f0d196d19e903997f8e533cfa7c738dbc3"
     },
-    "remote_branch_observation": "GitHub ref bench/cells-selective-i9 returned404 on this wake; intake commit exists; no remote-head/readiness claim."
+    "remote_branch_observation": "Concrete PR381 now published at cf1a36ed429f361839fab6748383187104d8ab27; supersedes earlier ref404 observation.",
+    "pr": 381,
+    "recipe_head": "cf1a36ed429f361839fab6748383187104d8ab27",
+    "plan_pin": "cf1a36ed429f361839fab6748383187104d8ab27",
+    "plan_review": "bounded diagnostic design acceptable for continued preparation; not final executable approval or READY",
+    "rounds": 12,
+    "measured_decodes": 252,
+    "ci_legacy": "success",
+    "ci_actions": "in_progress"
   }
 }
