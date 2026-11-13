@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6848610020,
+  "last_examined_comment_id": 6848858947,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1684,13 +1684,17 @@
       "ready_job_reason": "Cells integration/base correction, actual preflight/bindings and final admission still required; onecore deferred."
     },
     "6848858947": {
-      "status": "in_progress",
+      "status": "completed_integration_and_retarget_reconciled",
       "delivery_id": "4c7222a0-df42-11f1-93ed-d2c17cf60565",
       "comment_updated_at": null,
       "master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
       "scope": "Reconcile373 deliberate integration and376 retarget without changed-base CI",
       "ready_job_queued": false,
-      "action_links": []
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/373",
+        "https://github.com/lmmx/mibz2/pull/376#issuecomment-6848842241"
+      ],
+      "reason": "373 merge verified, Test/docs jobs pass, automatic benchmark pending.376 retargeted only: old status set not new-base validation. Branch merge and376 integration referred to separate deliberate authorised run; no automatic merge/duplicate dispatch. No readyjob:376 integration and actual machine bindings/final admission outstanding."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1814,8 +1818,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6848610020,
-    "delivery_id": "e700db10-df40-11f1-910a-964f81fdb766",
+    "comment_id": 6848858947,
+    "delivery_id": "4c7222a0-df42-11f1-93ed-d2c17cf60565",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
@@ -1928,7 +1932,9 @@
       "verification": "fresh coord.py audit exit0 six resolved historical issues; route/exact readback/verify exit0",
       "deferred_from_event": 6848513930,
       "reason": "Prioritise existing Cells measurement prerequisites; onecore dossier not executed or certified complete",
-      "recipient_cursor_reconciliation_pending": true
+      "recipient_cursor_reconciliation_pending": false,
+      "deferral_observed_cursor": "12dda800f73e5e4500b159d1d9c1fcf44b498353",
+      "router_processed_id_not_complete": true
     },
     "guardian": {
       "status": "completed",
@@ -2012,11 +2018,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "cells-priority-6848513930",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6848610020,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6848610020"
+    "key": "373-merged-6848858947",
+    "status": "in_progress_before_post",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2385,10 +2389,10 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Separate deliberate authorised integration373 at8329f0c702a1c5598e39e7f2413db55a12ce8884 with current gates/expected-head/postmerge check; then retarget376 and assess normal changed-base checks/targeted disposition",
-    "Actual authorised i9 read-only preflight/access needed before CPU/corpus bindings, argument-free recipe and PROTOCOL9 admission; no execution or machine facts inferred",
-    "Codex next actual session reconcile6848164049 as deferred/notexecuted in its owncursor, not completed dossier; no successor dispatch while it remains incomplete",
-    "After admitted owner-run frozen120+9 bundle: evaluate paired off-build wall/CPU/RSS and instrumentation overhead before selecting any improvement; warm20+20 unadmitted"
+    "Separate deliberate authorised run decide ordinary master4df9651 integration into376, preserve patch/history, inspect normal synchronize CI/legacy then decide376 merge at exacthead; no emptycommit or duplicated375 fix",
+    "Read373 postmerge automatic Benchmark43398652640 on next event; no polling/retry",
+    "Obtain actual authorised i9 preflight facts before CPU/corpus argument-free binding and finalPROTOCOL9 admission; no workstation execution by monitor",
+    "Onecore6848164049 remains deferred/notexecuted; no false completed-dossier receipt"
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3311,7 +3315,7 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+  "last_observed_master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
   "pending_compatibility_375": {
     "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
@@ -3394,7 +3398,7 @@
     "postmerge_packaging": "skipped43323058112 existing condition; source-head packaging pass"
   },
   "monitor_policy_verification": {
-    "observed_master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+    "observed_master_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
@@ -3462,12 +3466,13 @@
     "onecore_assignment": 6848164049,
     "onecore_status": "deferred_not_executed",
     "codex_cursor_sha": "d4f0aae8fc4265917cecf5e51b9cdd0c1ba65766",
-    "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0"
+    "evidence_commit": "e653ba727be197f11cde1430c0b8e6cde72c9bc0",
+    "onecore_deferral_confirmed": true
   },
   "submission_repair_376": {
     "head_sha": "5f9b4fade9e2bfaa061b625a0a55f7b3f8d9d34a",
-    "base_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
-    "status": "targeted prerequisite received; integration deferred",
+    "base_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "status": "retargeted only; no new-base hosted checks observed; separate branch dependency integration decision required",
     "changed_files": [
       "bench/cells-gap/live/run.sh",
       "bench/cells-gap/live/test_driver.py"
@@ -3533,6 +3538,186 @@
       "error": "mtf_two_level.rs:273 needless_range_loop; exit101",
       "resolution": "Separate deliberate373 integration, retarget376 to integratedmaster, normal checks and targeted integration decision; no duplicate375 lint implementation or unchanged rerun"
     },
-    "merged": false
+    "merged": false,
+    "base": "master",
+    "retarget_observed": true,
+    "changed_base_ci": false,
+    "local_combined_tree_tests": "Author evidence14 pass/no skips at treeafd43a466f4d9ee7f5dbc7acb41c310285b00bfe",
+    "next_proposal": "Separate deliberate authorisation to append master4df9651 into376, preserving patch/history; normal synchronized checks; then separate376 merge decision"
+  },
+  "integration373": {
+    "source_review": 6848858947,
+    "recipient_cursor_sha": "12dda800f73e5e4500b159d1d9c1fcf44b498353",
+    "evidence_commit": "27a459ca0d2bf6b89ef3d9283b7d5963de1abe5a",
+    "merge_observed": true,
+    "merged_at": "2026-11-13T09:07:11Z",
+    "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+    "merge_sha": "4df9651b84d0a01143b601a05dd7748720008fdd",
+    "guard_and_tree_provenance": "Separate authorised actor report: expected-head guard, exact parents, tree05e2a56 matches tested synthetic and local merge-tree; monitor independently checked PR merged/head and current master",
+    "postmerge_jobs": {
+      "43398652622": [
+        {
+          "id": 131795697026,
+          "name": "typing",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795697287,
+          "name": "fuzz-smoke",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795697492,
+          "name": "get-python-versions",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795697505,
+          "name": "rust",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795697534,
+          "name": "submit",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790289,
+          "name": "python (3.12)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790313,
+          "name": "python (3.15)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790326,
+          "name": "python (3.13)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790367,
+          "name": "python (3.10)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790373,
+          "name": "python (3.14)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795790376,
+          "name": "python (3.11)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "43398652731": [
+        {
+          "id": 131795697126,
+          "name": "pages",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131795697415,
+          "name": "build",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131796527426,
+          "name": "deploy-branch",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 131796528748,
+          "name": "preview",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131796529098,
+          "name": "look",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ],
+      "43398652640": [
+        {
+          "id": 131795696510,
+          "name": "bench",
+          "status": "in_progress",
+          "conclusion": null
+        }
+      ],
+      "43398652710": [
+        {
+          "id": 131795696666,
+          "name": "links",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "43398652808": [
+        {
+          "id": 131795698552,
+          "name": "check-commit",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795698771,
+          "name": "linux",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795699570,
+          "name": "macos",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795699585,
+          "name": "windows",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795699890,
+          "name": "Release",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795700032,
+          "name": "sdist",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "id": 131795700125,
+          "name": "Publish crate",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    "benchmark_pending": true,
+    "monitor_performed_merge": false,
+    "performance_adoption": false
   }
 }
