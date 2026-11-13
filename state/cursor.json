@@ -143,7 +143,7 @@
     "6857749401": 6857807617,
     "6862205856": 6862262401
   },
-  "last_rebuilt_from": 6862129816,
+  "last_rebuilt_from": 6862371184,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -623,9 +623,10 @@
     },
     "6862410701": {
       "comment_id": 6862410701,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling prospective PR381 design."
+      "status": "complete",
+      "progress": "Record committed through channel 6862371184; REVIEW pending.",
+      "work_commit": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4"
     }
   },
-  "last_record_commit": "2306a6f0d196d19e903997f8e533cfa7c738dbc3"
+  "last_record_commit": "e84bc61c10b42deddc6f5bb1e82382fdf77e6db4"
 }
