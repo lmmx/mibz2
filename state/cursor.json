@@ -2596,7 +2596,11 @@
     "6856176834": {
       "status": "completed",
       "comment_updated_at": "2026-11-13T14:41:15Z",
-      "disposition": "Own queued selective materialisation assignment; ignore self wake, not recipient receipt."
+      "disposition": "Own queued selective materialisation assignment; ignore self wake, not recipient receipt.",
+      "delivery_id": "48391df0-df70-11f1-8d2d-eda6313ff232",
+      "wake_disposition": "observed_self_generated_noop",
+      "dispatches": 0,
+      "response_comments": 0
     },
     "6856205921": {
       "status": "completed",
@@ -2762,9 +2766,9 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6856026045,
-    "delivery_id": "7c6f2a20-df6f-11f1-9e0d-dc24a68ad736",
-    "disposition": "New isolated experiment selected and queued"
+    "comment_id": 6856176834,
+    "delivery_id": "48391df0-df70-11f1-8d2d-eda6313ff232",
+    "disposition": "Own recorded queue; no new external message. Master/policies unchanged; audit passes. No ready job: candidate/safety/recipe evidence remains pending."
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
