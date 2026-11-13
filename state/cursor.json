@@ -147,7 +147,7 @@
     "6862410701": 6862464014,
     "6862622329": 6862685593
   },
-  "last_rebuilt_from": 6862613562,
+  "last_rebuilt_from": 6867956361,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -641,9 +641,10 @@
     },
     "6867986946": {
       "comment_id": 6867986946,
-      "status": "in_progress",
-      "progress": "Receipt committed; reconciling matched i9 evidence and D104 scope."
+      "status": "complete",
+      "progress": "Record committed through channel 6867956361; REVIEW pending.",
+      "work_commit": "f115ded521ba80f3aa1393bab0b8c13f3b02740a"
     }
   },
-  "last_record_commit": "e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f"
+  "last_record_commit": "f115ded521ba80f3aa1393bab0b8c13f3b02740a"
 }
