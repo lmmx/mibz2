@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6849425640,
+  "last_examined_comment_id": 6849678574,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1754,7 +1754,7 @@
       "ready_job_reason": "Actual desktop preflight facts and final bound recipe/admission still absent; preserve existing active executor."
     },
     "6849678574": {
-      "status": "in_progress",
+      "status": "completed_recipe_review_admission_pending",
       "delivery_id": "5117f540-df48-11f1-9c90-f651d4a09ef4",
       "comment_updated_at": null,
       "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849678574",
@@ -1762,13 +1762,18 @@
       "planned_action": "Accept exact377 frozen diagnostic recipe under PROTOCOL9; batch material state to free Observer; grouped LOG. No merge or signal: existing executor handles deliberate integration; no authenticated Run-signal browser/connector dispatch available.",
       "log_dedup_key": "cells-auto-binding-377-6849678574",
       "observer_dispatch": {
-        "status": "posted_pending_verification",
+        "status": "posted_verified_not_delivered",
         "dedup_key": "cells-auto-binding-377-6849678574-observer",
         "destination": 222,
         "comment_id": 6849790558,
         "url": "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849790558",
         "recipient_execution_observed": false
-      }
+      },
+      "disposition": "PROCEED frozen diagnostic binding at exact377 head; all five Actions and legacy success. Manual desktop facts request superseded by deterministic recipe. Separate existing executor retains integration/admission. Run-signal connector dispatch absent and browser signed out; no signal/queue/run. Observer batch posted and verified, actual receipt pending.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6849790558"
+      ],
+      "log_publication": "in_progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1895,10 +1900,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849425640,
-    "delivery_id": "3b622ab0-df46-11f1-86bb-b7b1ca611900",
-    "repository": "lmmx/mibz2",
-    "pull_request_number": 145
+    "comment_id": 6849678574,
+    "delivery_id": "5117f540-df48-11f1-9c90-f651d4a09ef4"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2095,11 +2098,9 @@
     "evidence": "Separately read both logs (404) and annotations. Both job annotations say runner not acquired after multiple attempts, with macOS capacity notices; no project steps ran. #365 changes workflows, so CI-INCIDENTS strict class-B exclusion retained; no rerun or pass asserted."
   },
   "checkpoint": {
-    "key": "376-merged-6849382358",
-    "status": "published_readback_verified",
-    "event_dispositions_persisted": true,
-    "log_comment_id": 6849425640,
-    "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6849425640"
+    "key": "cells-auto-binding-377-6849678574",
+    "status": "publication_in_progress",
+    "event_dispositions_persisted": true
   },
   "dispatch_history": [
     {
@@ -2455,6 +2456,13 @@
       "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
       "evidence_commit": "b3bcaa42e934db1344ab0164f80f456487e8ffe7",
       "recipient_cursor_sha": "9faca2e56e43c2e1054d7e690e254bb1e0ee18a2"
+    },
+    {
+      "role": "observer",
+      "comment_id": 6849790558,
+      "source_comment_id": 6849678574,
+      "status": "posted_verified",
+      "recipient_execution_observed": false
     }
   ],
   "codex_correction": {
@@ -2468,10 +2476,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "Receive actual desktop preflight JSON via existing live actor; verify allowed CPU/topology, absolute corpus path and frozen hashes, no invented bindings",
-    "Existing executor binds argument-free recipe with source d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2 and Rust1.99.1; Coordinator validates exact frozen recipe/dryrun/CI and duplicate state before single standard admission, already authorised",
-    "Read postmerge Benchmark43402546418 on next event; tests/docs now pass; no polling",
-    "Onecore deferred; no duplicate cleanup/research/implementation dispatch; measure120+9 only after owner starts queue"
+    "Existing live Codex executor handles separate377 integration; monitor never auto-merges.",
+    "No manual desktop input required. Exact377 recipe accepted; refresh final pin/checks after integration and duplicate evidence/tag/queue screen before admission.",
+    "Run signal needs authenticated capable connection; connector lacks dispatch, current browser signed out. Existing authority persists; no direct-tag bypass.",
+    "Verify actual ready tag and queue before claiming queued; await Louis-submitted bundle to evaluate.",
+    "One-core dossier remains deferred/not executed; no duplicate research or implementation."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
@@ -3481,7 +3490,7 @@
     "adopted_pin": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
     "all_nine_policy_blobs_match_adopted_pin": true,
     "current_router_matches": true,
-    "audit": "exit0; six resolved historical misroutes",
+    "audit": "Fresh connector-backed exact current coord.py audit exit0; six resolved historic misroutes; local script diff matches fetched source",
     "activation_reused": 6782075529,
     "return_of_control_observed": false,
     "policy_blob_shas": {
@@ -3494,7 +3503,8 @@
       "docs/team/SPEC.COORDINATOR-ACTING-MONITOR.md": "e0bf3f551eba686724f75a39a74cf0c917e07e7b",
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
-    }
+    },
+    "last_event_comment_id": 6849678574
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -3535,6 +3545,15 @@
         "Codex complete sole6819644553 preparation by stated bound; REVIEW plus own cursor required",
         "Separate deliberate authorised Coordinator run:366 integration decision at full head d61e0976b6faa8e8b1dfdcb0e10bffdc28235108 with final gate/source checks; then PROTOCOL9 readiness",
         "After cells harness delivery arrange independent review and decide finite warm addition; no measurements yet"
+      ]
+    },
+    {
+      "source_comment_id": 6849382358,
+      "actions": [
+        "Receive actual desktop preflight JSON via existing live actor; verify allowed CPU/topology, absolute corpus path and frozen hashes, no invented bindings",
+        "Existing executor binds argument-free recipe with source d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2 and Rust1.99.1; Coordinator validates exact frozen recipe/dryrun/CI and duplicate state before single standard admission, already authorised",
+        "Read postmerge Benchmark43402546418 on next event; tests/docs now pass; no polling",
+        "Onecore deferred; no duplicate cleanup/research/implementation dispatch; measure120+9 only after owner starts queue"
       ]
     }
   ],
@@ -3705,8 +3724,8 @@
         {
           "id": 131808724426,
           "name": "bench",
-          "status": "in_progress",
-          "conclusion": null
+          "status": "completed",
+          "conclusion": "success"
         }
       ],
       "43402546198": [
@@ -3921,21 +3940,133 @@
     "performance_adoption": false
   },
   "cells_admission_active": {
-    "source_comment_id": 6849382358,
+    "source_comment_id": 6849678574,
     "actor": "codex in separate live owner-authorised session (reported)",
     "completion_observed": false,
-    "cursor_at_read": "eaf80e130c72424ccbe3bc5719823b5fda61862e",
+    "cursor_at_read": "e2cfad6d1a8025f2e9dec5325aceb30fa376c0d3",
     "cursor_completion_available": false,
     "scope_reported": "376 master incorporation, guarded integration after gates, actual verified argument-free binding and standard PROTOCOL9 admission",
     "monitor_authority": "Existing queue-preparation/admission authorisation remains; no automatic merge or workstation execution",
     "duplicate_actions_prohibited": true,
     "hardware_facts_received": false,
-    "final_recipe_pin": null,
+    "final_recipe_pin": "cb73bf909397e2fff8c90f0a00437061ad06478e",
     "queue_observed_empty_at": "e674070e1351460d27d745390b1db80ef5112b60",
     "historical_evidence_check": "Author reports evidence d85b2074099f027d048aa7a057da10d25f2b70bb has old cells-vs-prod only; must refresh before admission",
-    "status": "active awaiting actual desktop preflight JSON",
+    "status": "active exact377 frozen recipe PROCEED; green; separate integration and authenticated Run-signal pending",
     "integration_complete": true,
     "authority_persists": "Existing owner authorised binding and standard ready-tag/queue; no renewed permission needed for those. No agent workstation execution or automatic merge.",
-    "next_actor": "Owner provides already-requested preflight output to existing live Codex executor; Coordinator checks final frozen recipe before coordinated admission"
+    "next_actor": "Existing live Codex executor: deliberate integration with exact expected head and postmerge check; capable authenticated Run-signal connection after fresh duplicate screening, then verify ready tag and master queue. Louis runs queue locally.",
+    "history": [
+      {
+        "source_comment_id": 6849382358,
+        "status": "active awaiting actual desktop preflight JSON",
+        "next_actor": "Owner provides already-requested preflight output to existing live Codex executor; Coordinator checks final frozen recipe before coordinated admission"
+      }
+    ],
+    "desktop_preflight_reply_required": false,
+    "manual_preflight_request_superseded": true,
+    "cpu_rule": "minimum os.sched_getaffinity(0), topology and full affinity recorded before build",
+    "corpus_binding": "attempt/inputs, frozen synthetic generator plus verified canonical Wikidata or exact pinned-window reconstruction",
+    "recipe": "bench-cells-live-path-i9",
+    "recipe_review": "PROCEED diagnostic recipe only at exacthead; unchanged120+9 and no warm20+20",
+    "pr": 377,
+    "pr_merged": false,
+    "evidence_commit": "adc08916a4fc29526135f5aedf8f7a283561525c",
+    "ci": [
+      {
+        "id": 43404843666,
+        "name": "Test",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1728,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843666/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843666/logs",
+        "workflow_id": 398116819
+      },
+      {
+        "id": 43404843455,
+        "name": "Occupancy",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 294,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843455/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843455/logs",
+        "workflow_id": 398776390
+      },
+      {
+        "id": 43404843493,
+        "name": "Cells live-path preparation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 10,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843493/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843493/logs",
+        "workflow_id": 413971946
+      },
+      {
+        "id": 43404843443,
+        "name": "Benchmark",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 695,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843443/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843443/logs",
+        "workflow_id": 398182844
+      },
+      {
+        "id": 43404843484,
+        "name": "CI",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 1745,
+        "jobs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843484/jobs",
+        "logs_url": "https://api.github.com/repos/lmmx/mibz2/actions/runs/43404843484/logs",
+        "workflow_id": 398116820
+      }
+    ],
+    "legacy": [
+      {
+        "context": "pre-commit.ci - pr",
+        "state": "success",
+        "target_url": "https://results.pre-commit.ci/run/github/1435546475/1794563574.kX-Lk3IcSDyFVysVyzHrbg"
+      }
+    ],
+    "ready_signal_observed": false,
+    "queue_admitted": false,
+    "transport": {
+      "connector": "No workflow_dispatch tool exposed",
+      "browser": "Existing Run signal page observed signed out; no authenticated dispatch control; no login or dispatch attempted",
+      "workflow": ".github/workflows/run-signal.yml",
+      "permission_needed": false
+    }
+  },
+  "recipe_review_377": {
+    "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+    "decision": "PROCEED",
+    "scope": "Coordinator PROTOCOL9 frozen diagnostic recipe check, not production adoption or independent B5 recertification",
+    "source_files": [
+      ".just/bench.just",
+      "bench/cells-gap/live/README.md",
+      "bench/cells-gap/live/run.sh",
+      "bench/cells-gap/live/test_driver.py",
+      "bench/cells-gap/live/workstation.py"
+    ],
+    "hosted_preparation": {
+      "run": 43404843493,
+      "job": 131816558554,
+      "tests": 18,
+      "native_tests": 5,
+      "long_writer_tests": 2,
+      "valid_fixture_checks": 16,
+      "failure_fixture_checks": 12,
+      "clocks_read": 0,
+      "performance_measurements": 0,
+      "logs_read": true
+    },
+    "input_reconstruction_and_reuse": "Author committed manifests at adc08916a4fc29526135f5aedf8f7a283561525c match all3 frozen driver digests; not independently rerun by monitor",
+    "frozen_plan": "docs/journal/2026-11-12-cells-live/PLAN.md",
+    "driver_blob": "465b68b2a38e61a25cbe149c2df020dffe0fe917",
+    "benchmark": "All wall intervals include zero; all output hashes equal; maxRSS point increase3.3%; memory assessment retained, no primary improvement claimed. Diagnostic binding only.",
+    "limitations": "Actual target machine preflight and runtime facts will be archived only when Louis runs; no agent workstation execution."
   }
 }
