@@ -15,6 +15,7 @@ on:
   pull_request:
     paths:
       - "src/bwt.rs"
+      - "src/cells.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
@@ -26,6 +27,7 @@ on:
     branches: [main, master]
     paths:
       - "src/bwt.rs"
+      - "src/cells.rs"
       - "src/coop.rs"
       - "src/parallel.rs"
       - "src/parallel/**"
@@ -56,6 +58,11 @@ jobs:
       - name: The worker recovery tests are selected
         run: |
           cargo miri test --lib -- miri_ --list 2>/dev/null | tee miri-list.txt
+          grep -q '^cells::tests::miri_cells_exact_fit_and_reuse' miri-list.txt
+          grep -q '^cells::tests::miri_cells_admission_and_invalid_records' miri-list.txt
+          grep -q '^cells::tests::miri_cells_slots_mark_and_links' miri-list.txt
+          grep -q '^cells::tests::miri_cells_long_writer:' miri-list.txt
+          grep -q '^cells::tests::miri_cells_long_writer_production_admission:' miri-list.txt
           grep -q '^parallel::unwind_tests::miri_run_panic' miri-list.txt
           grep -q '^parallel::service_tests::miri_every_retirement_returns_its_buffers' miri-list.txt
           grep -q '^parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop' miri-list.txt

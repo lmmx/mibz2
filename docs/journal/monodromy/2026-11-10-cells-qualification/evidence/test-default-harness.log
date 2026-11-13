@@ -1,0 +1,35 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 5.70s
+     Running unittests examples/ab.rs (target/debug/examples/ab-b216c51d610e8729)
+
+running 27 tests
+test census_tests::a_thread_renamed_after_its_first_reading_counts_by_its_own_name ... ok
+test child_record_tests::the_error_identity ... ok
+test child_record_tests::the_read_buffer ... ok
+test json_field_tests::a_nested_field_of_the_same_name_is_not_read ... ok
+test machine::tests::env_line_gains_a_machine_field ... ok
+test machine::tests::absent_is_null_with_a_reason ... ok
+test machine::tests::exit_codes_keep_fail_and_incomplete_apart ... ok
+test machine::tests::inheritance_witness_negative_controls ... ok
+test machine::tests::multiplex_status_negative_controls ... ok
+test machine::tests::reads_an_intel_tree ... ok
+test machine::tests::settles_within_the_tolerance ... ok
+test machine::tests::strings_are_escaped ... ok
+test machine::tests::the_record_fields_exist_when_unavailable ... ok
+test machine::tests::reads_hwmon_and_boost ... ok
+test tests::cpu_lists ... ok
+test tests::every_arm_runs_in_every_position_equally ... ok
+test child_record_tests::sha256_known_answers_and_any_cut ... ok
+test tests::hold_auto_avoids_the_decoders_cores ... ok
+test tests::spread_takes_one_cpu_a_core ... ok
+test tests::the_allowed_cpus_are_the_affinity_and_the_status_agreeing ... ok
+test tests::the_facts_line_is_null_with_why_where_a_fact_is_not_read ... ok
+test tests::held_spinner_starts_holds_and_stops ... ok
+test tests::the_quota_is_established_unlimited_only_through_every_level ... ok
+test tests::the_facts_path_opens_no_counter_and_spawns_no_spin_thread ... ok
+test machine::tests::counts_threads_started_in_the_region_and_nothing_outside_it ... ok
+test machine::tests::the_recorder_check_passes_where_it_can ... ok
+test tests::the_run_records_each_childs_termination ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 21.37s
+

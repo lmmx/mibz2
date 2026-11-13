@@ -1,0 +1,2 @@
+bb5f540c839a0fe9bd0000371862c9e48ac6629f9d642ae7860f7eb69b35865f  work/qualification/base-text.bin
+bb5f540c839a0fe9bd0000371862c9e48ac6629f9d642ae7860f7eb69b35865f  work/qualification/isolated-default-text.bin

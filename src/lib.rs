@@ -80,6 +80,7 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+mod cells;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
@@ -585,4 +586,12 @@ pub fn decode_blocks(
 /// A stream's combined CRC from its blocks' CRCs, in order
 pub fn combine(crcs: impl IntoIterator<Item = u32>) -> u32 {
     crcs.into_iter().fold(0, |c, b| c.rotate_left(1) ^ b)
+}
+
+impl<const F: bool> Scratch<bwt::CellsKernel<F>> {
+    /// Experimental route coverage, used by the forced-route fuzzer.
+    #[doc(hidden)]
+    pub fn cells_counts(&self) -> bwt::CellsCounts {
+        self.inverse.counts()
+    }
 }

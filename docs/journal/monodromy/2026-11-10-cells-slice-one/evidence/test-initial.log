@@ -1,0 +1,124 @@
+   Compiling mibz2 v0.2.9 (/workspace/mibz2)
+    Finished `test` profile [optimized + debuginfo] target(s) in 1m 28s
+     Running unittests src/lib.rs (target/debug/deps/mibz2-af1a8f02cbfe6ddd)
+
+running 103 tests
+test bits::tests::reads_bits_at_any_offset ... ok
+test bits::tests::state_in_a_local_reads_the_bits ... ok
+test bwt::tests::few_runs_counts_the_runs ... ok
+test bwt::tests::miri_build_one_pass ... ok
+test bwt::tests::miri_inputs_reach_every_window_path ... ok
+test bwt::tests::miri_room_walk_handoffs ... ok
+test bwt::tests::one_pass_build_is_the_two_pass_build ... ok
+test bwt::tests::flagged_walk_equals_plain ... ok
+test block::tests::table_decodes_as_libbzip2 ... ok
+test bwt::tests::room_walk_refuses_more_than_2_23_rows - should panic ... ok
+test bwt::tests::room_walk_short_cycles ... ok
+test bwt::tests::room_walk_staged_chunk_edges ... ok
+test bwt::tests::run_stores_equal_one_pass ... ok
+test bwt::tests::segmented_walks_on_any_length ... ok
+test bwt::tests::wrong_counts_take_the_two_pass_build ... ok
+test cells::tests::cells_exhaustive_arbitrary_columns ... ok
+test cells::tests::cells_fallback_and_bound ... ok
+test cells::tests::miri_cells_admission_and_invalid_records ... ok
+test cells::tests::miri_cells_exact_fit_and_reuse ... ok
+test coop::tests::build_fused_is_build ... ok
+test coop::tests::build_fused_refuses_wrong_checkpoints ... ok
+test block::tests::symbols_read_as_in_memory ... ok
+test coop::tests::build_runs_and_walk_back_are_fill_and_walk ... ok
+test coop::tests::cooperative_kernel_engages ... ok
+test coop::tests::helper_names ... ok
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_build_runs_and_walk_back ... ok
+test coop::tests::cooperative_kernel_engages_on_records ... ok
+test coop::tests::miri_build_runs_refuses_wrong_cuts ... ok
+test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+test coop::tests::miri_pool_caller_panic_wins ... ok
+test coop::tests::miri_pool_dropped_while_parked ... ok
+test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+test coop::tests::miri_pool_runs_every_index_once ... ok
+test coop::tests::miri_pool_writes_visible_after_run ... ok
+test coop::tests::miri_split_build_and_walk ... ok
+test coop::tests::miri_team_run_and_its_panic ... ok
+test coop::tests::miri_walk_room_handoffs ... ok
+test bwt::tests::room_walk_deferred_handovers ... ok
+test coop::tests::pipelined_leader_panic ... ok
+test coop::tests::pipelined_leader_late_or_early ... ok
+test coop::tests::pool_per_worker ... ok
+test coop::tests::miri_parked_wait_loses_no_wakeup ... ok
+test coop::tests::runs_through_the_pipelined_and_team_runs ... ok
+test coop::tests::walk_room_is_walk ... ok
+test crc::tests::kernels_agree ... ok
+test parallel::front_tests::front_stage_checks_the_primary_index_on_both_paths ... ok
+test parallel::front_tests::front_stage_takes_the_records_where_selected ... ok
+test parallel::plan_tests::discovery_fails_closed_quota ... ok
+test parallel::plan_tests::discovery_fails_closed_topology ... ok
+test parallel::plan_tests::off_target_here_builds_masters_plan ... ok
+test parallel::plan_tests::the_default_is_the_plan ... ok
+test parallel::plan_tests::the_policy ... ok
+test parallel::plan_tests::the_policy_here ... FAILED
+test parallel::plan_tests::the_service_default ... ok
+test parallel::plan_tests::the_service_target ... ok
+test parallel::plan_tests::the_ten_core_exception ... ok
+test parallel::plan_tests::the_window ... ok
+test parallel::service_tests::miri_a_parked_service_worker_wakes_on_the_pop ... ok
+test parallel::service_tests::miri_a_team_taking_a_prepared_block_wakes_the_service ... ok
+test parallel::service_tests::miri_every_retirement_returns_its_buffers ... ok
+test coop::tests::split_build_and_walk_are_build_and_walk ... ok
+test parallel::service_tests::miri_service_core_hub ... ok
+test parallel::service_unwind_tests::a_blocked_writer_a_racing_cancel_and_a_drop ... ok
+test parallel::service_unwind_tests::a_parked_hub_wakes_on_the_failure ... ok
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_tiny_blocks ... ok
+test parallel::service_unwind_tests::miri_outer_after_job ... ok
+test parallel::service_unwind_tests::miri_outer_after_publish ... ok
+test parallel::service_unwind_tests::miri_outer_parked ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_held_prior_blocks ... ok
+test parallel::service_unwind_tests::every_outer_point_fails_the_decode_full_blocks ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_and_next_blocks ... ok
+test parallel::unwind_tests::a_run_panic_retires_the_current_block ... ok
+test parallel::unwind_tests::miri_run_panic_current ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_held_prior ... ok
+test parallel::unwind_tests::miri_run_panic_current_and_next ... ok
+test parallel::unwind_tests::the_tiny_blocks ... ok
+test run_fed::tests::census_real_blocks ... ignored
+test parallel::unwind_tests::the_default_decoder_recovers_from_a_run_panic ... ok
+test run_fed::tests::line_a_exhaustive_small ... ok
+test run_fed::tests::line_b_exhaustive_permutations ... ok
+test run_fed::tests::line_a_random ... ok
+test runs::tests::miri_runs_broken_tilings_refused ... ok
+test runs::tests::miri_runs_cuts_of_short_blocks ... ok
+test runs::tests::miri_runs_cuts_that_dont_tile_refused ... ok
+test coop::tests::pool_many_short_runs ... ok
+test runs::tests::miri_runs_fill_share_stores_end_inside_its_rows ... ok
+test runs::tests::miri_runs_front_edges ... ok
+test runs::tests::miri_runs_decode_block_equals_the_column ... ok
+test runs::tests::miri_runs_of_column_is_the_scan ... ok
+test runs::tests::runs_buffers_listed ... ok
+test runs::tests::runs_cuts_balance_the_work ... ok
+test runs::tests::runs_cuts_bounds ... ok
+test runs::tests::runs_front_kernel_selected ... ok
+test runs::tests::runs_path_taken_exactly_where_selected ... ok
+test runs::tests::runs_takes_runs_bounds ... ok
+test runs::tests::runs_walk_back_room_segments_from_its_bound ... ok
+test trace::tests::ledger_at_level_9 ... ok
+test trace::tests::ledger_matches_a_separate_buffer_workers_buffers ... ok
+test trace::tests::ledger_matches_a_workers_buffers ... ok
+test run_fed::tests::line_b_real_bwts_and_columns ... ok
+test bwt::tests::room_walk_crafted_permutations has been running for over 60 seconds
+test runs::tests::miri_runs_synthetic_blocks ... ok
+test bwt::tests::room_walk_crafted_permutations ... ok
+
+failures:
+
+---- parallel::plan_tests::the_policy_here stdout ----
+
+thread 'parallel::plan_tests::the_policy_here' panicked at src/parallel.rs:4379:13:
+5 cores of 4 CPUs
+
+
+failures:
+    parallel::plan_tests::the_policy_here
+
+test result: FAILED. 101 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 291.56s
+
+error: test failed, to rerun pass `--lib`
