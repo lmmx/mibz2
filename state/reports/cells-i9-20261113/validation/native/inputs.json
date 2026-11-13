@@ -1,0 +1,37 @@
+{
+  "wikidata": {
+    "bytes": 11854933,
+    "decoded_bytes": 209700196,
+    "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+  },
+  "onebyte": {
+    "bytes": 51,
+    "decoded_bytes": 20000000,
+    "sha256": "22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e"
+  },
+  "pattern": {
+    "bytes": 1116,
+    "decoded_bytes": 19600000,
+    "sha256": "0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407"
+  },
+  "random": {
+    "bytes": 7097921,
+    "decoded_bytes": 8000000,
+    "sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18"
+  },
+  "records": {
+    "bytes": 9587840,
+    "decoded_bytes": 9600000,
+    "sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c"
+  },
+  "runs": {
+    "bytes": 37995,
+    "decoded_bytes": 10000235,
+    "sha256": "af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8"
+  },
+  "text": {
+    "bytes": 2625903,
+    "decoded_bytes": 13238014,
+    "sha256": "f0031809969382478252695d4b219eee69da60f8ef45e845c247362bb4710d75"
+  }
+}

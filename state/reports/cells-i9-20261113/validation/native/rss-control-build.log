@@ -1,0 +1,1 @@
+["cc", "-O2", "-Wall", "-Wextra", "-Werror", "/workspace/mibz2-selective-i9/target/cells-selective-i9-local/dryrun-01-build/selective/bench/cells-selective/rss_control.c", "-o", "/workspace/mibz2-selective-i9/target/cells-selective-i9-local/dryrun-01/bin/rss-control"]

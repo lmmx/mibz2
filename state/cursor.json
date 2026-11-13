@@ -748,6 +748,13 @@
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
     "report": "state/reports/cells-i9-20261113",
     "workstation_executed": false,
-    "ready": false
+    "ready": false,
+    "pr": 381,
+    "head": "cf1a36ed429f361839fab6748383187104d8ab27",
+    "pickup_review": 6862129816,
+    "plan_review": 6862371184,
+    "coordinator_reconciliation": 6862221345,
+    "native_preparation": "PASS: both builds, seven input hashes, complete byte oracles, routes, RSS controls",
+    "untimed_tests": 22
   }
 }

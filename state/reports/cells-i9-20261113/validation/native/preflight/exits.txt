@@ -1,0 +1,3 @@
+lscpu: exit 0
+ab sample: exit 0
+static facts: exit 0
