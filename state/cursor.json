@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6867627975,
+  "last_examined_comment_id": 6867819559,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2967,13 +2967,17 @@
       "delivery_id": "be376ad0-dfba-11f1-84e1-247832674a25"
     },
     "6867819559": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "5e14e770-dfbc-11f1-992b-a0006da71596",
       "comment_updated_at": "2026-11-13T23:45:53Z",
       "planned_action": "Reconcile verified252-row bundle, remove consumed queue entry by CAS, route one bounded Guardian qualification question, persist outcome then substantive LOG. No rerun or merge.",
       "bundle_commit": "e04fe229e9d939840d50fea110c7b7c6f74811ef",
       "sha256": "330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
-      "digest_verified": true
+      "digest_verified": true,
+      "disposition": "Bundle hash/252rows/identities/parity verified and all63 intervals independently reproduced. Descriptive Wiki gains, qualification pending bounded Guardian6867883717 activity check. Consumed queue entry removed and read back. Clear tag pending existing workflow executor capability; no rerun.",
+      "guardian_assignment": 6867883717,
+      "queue_removal_commit": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
+      "log_status": "in_progress"
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -3152,8 +3156,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6867627975,
-    "delivery_id": "be376ad0-dfba-11f1-84e1-247832674a25"
+    "comment_id": 6867819559,
+    "delivery_id": "5e14e770-dfbc-11f1-992b-a0006da71596"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -4716,7 +4720,7 @@
       "recipient_cursor_sha": "66ae16df3d2377840f2c866937f01fcdd3234039"
     }
   },
-  "last_observed_master_sha": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
+  "last_observed_master_sha": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
   "pending_compatibility_375": {
     "status": "merged_separate_owner_authorised_integration",
     "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
@@ -5780,16 +5784,16 @@
     }
   },
   "cells_i9_preparation": {
-    "status": "ready_queued_awaiting_owner_execution",
+    "status": "workstation_complete_qualification_pending",
     "pickup_review": 6862129816,
     "recipient_cursor": "0f053f617f05f869312afbaaf0b49def0930050d",
     "intake_commit": "6100e6600a757839b992c119a504f90a8f901b38",
     "branch": "bench/cells-selective-i9",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "candidate": "a8a23c11607864cb431f87fff38169e10c41685f",
-    "execution_observed": "Run Signal43497427596 success and master queue admission observed; workstation run not observed.",
-    "ready_job_queued": true,
-    "ready_job_reason": "Frozen reviewed diagnostic, native dry run and exact-head CI/legacy pass; successful Run Signal43497427596; exact ready tag/noHOLD; master queue verified.",
+    "execution_observed": "Actual workstation submission with verified archive252decodes",
+    "ready_job_queued": false,
+    "ready_job_reason": "Consumed job removed after bundle reconciliation; no new job queued.",
     "workflow_dispatch_capability": "Prior tool limitation retained historically; external successful Run Signal43497427596 now verified. No redispatch in this session.",
     "attribution": 6857735998,
     "observer_checkpoint": 6862205856,
@@ -5841,7 +5845,7 @@
       "admission_log": 6867627975
     },
     "preparation_complete": true,
-    "completed": false,
+    "completed": true,
     "completion_review": 6862654606,
     "executable_observer_completion": {
       "assignment": 6862622329,
@@ -5849,10 +5853,27 @@
       "cursor": "60f944687e41d569438184d4871d40dc83b2bec7",
       "record": "e4cff824c9838a37e1e62ff4bb3c6d9b530fb20f"
     },
-    "ready": true,
+    "ready": false,
     "queue_commit": "4ca8523522b87af654ef55a7c84d80c4b9b196bb",
     "queue_blob": "d565ab78600f50e230c35284ac6409d4e197eab3",
-    "workstation_executed": false,
-    "admission_log": 6867627975
+    "workstation_executed": true,
+    "admission_log": 6867627975,
+    "bundle_submission": 6867819559,
+    "bundle_commit": "e04fe229e9d939840d50fea110c7b7c6f74811ef",
+    "bundle_sha256": "330ff61ce5e2659c8f0a86837d26eab274d0eb1fbe4e5563d3f3824f92912fa7",
+    "bundle_digest_verified": true,
+    "queue_removal_commit": "6dec95ba6aaf59d5134e5ab119fd52433e2032ee",
+    "qualification": {
+      "status": "pending_bounded_guardian_check",
+      "assignment": 6867883717,
+      "reason": "runs round9 original Cells others_busy1.65 during decode; pre_busy.01, all pre_busy<=.06. Frozen pre-gate vs unexpected-machine condition interpretation."
+    },
+    "tag_cleanup": {
+      "status": "pending_existing_run_signal_executor",
+      "recipe": "bench-cells-selective-i9",
+      "signal": "clear",
+      "ready_tag_still_present": true,
+      "reason": "No exposed workflow-dispatch tool; not directly deleting tags or misusing rerun."
+    }
   }
 }
