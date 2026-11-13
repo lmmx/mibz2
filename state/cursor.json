@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6857364235,
+  "last_examined_comment_id": 6857451993,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -2712,16 +2712,26 @@
       "response_comments": 0
     },
     "6857443323": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "105f9d80-df77-11f1-8e4c-6e51107e85ba",
       "comment_updated_at": "2026-11-13T15:29:48Z",
-      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG."
+      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG.",
+      "disposition": "Original reviewer H1 resolved with REVIEW and finished cursor; selective experiment passes frozen original-Cells comparison; integration deferred for default primary regressions and hosted Miri pending. Existing Codex assignment continues.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857529647"
+      ],
+      "log_pending": true
     },
     "6857451993": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "1e23f010-df77-11f1-9234-dee404d6f823",
       "comment_updated_at": "2026-11-13T15:30:11Z",
-      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG."
+      "action": "Accept original-reviewer H1 closure plus completed cursor; reconcile Observer completion; record independently recomputed first matched benchmark, defer integration on default primary regressions/pending Miri; one Observer batch and grouped LOG.",
+      "disposition": "Original reviewer H1 resolved with REVIEW and finished cursor; selective experiment passes frozen original-Cells comparison; integration deferred for default primary regressions and hosted Miri pending. Existing Codex assignment continues.",
+      "action_links": [
+        "https://github.com/lmmx/mibz2/pull/222#issuecomment-6857529647"
+      ],
+      "log_pending": true
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -2880,16 +2890,16 @@
     6857069694,
     6857336623,
     6857344645,
-    6857364235
+    6857364235,
+    6857529647
   ],
   "pending_reconciliation": "Historical queues retained; sole operator activated at6782075529. Researcher supplemental items included in6782111848; all other unresolved queues remain preserved.",
   "event_execution_verified": true,
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6857364235,
-    "delivery_id": "9265b4f0-df76-11f1-948a-d560be91278e",
-    "master_sha": "3e7e294cc10f29495e9828181345d74233c549d4"
+    "comment_id": 6857451993,
+    "delivery_id": "1e23f010-df77-11f1-9234-dee404d6f823"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -4553,7 +4563,7 @@
       "docs/team/COORDINATOR-FAILOVER.md": "b9aa2d1349cc942caa64551cafd842eb1d9c7a9d",
       "CLAUDE.md": "ea12fe507c7a451bc14d2e9aeab3d25ce6227965"
     },
-    "last_event_comment_id": 6857261340
+    "last_event_comment_id": 6857451993
   },
   "operator_evidence_373": {
     "status": "correction_complete_current_head_green_historical_discrepancies_retained",
@@ -5397,14 +5407,14 @@
   "selective_materialisation": {
     "source_request": 6856026045,
     "assignment": 6856176834,
-    "status": "B5_H1_HOLD_targeted_evidence_followup_pending",
+    "status": "native_B5_accepted_experimental_gain_integration_deferred",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "master": "3e7e294cc10f29495e9828181345d74233c549d4",
     "recipient_execution_observed": true,
     "independent_B5": {
       "assignment": 6857053711,
       "head": "f2dc198ee22ad13b69a72d42744fb1a0d135b95f",
-      "status": "completed_review_HOLD_followup_posted_verified_not_delivered",
+      "status": "completed_scoped_native_PROCEED",
       "reviewer": "researcher",
       "reviewer_prior_cursor": "3b0725987856ac4b9ca974c3bd9b5b202967467e",
       "task_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
@@ -5412,12 +5422,17 @@
       "review_report": "84b5f2e17f48f6d63413bfeaed0b4e9dc5e2d193",
       "reviewer_cursor": "f3d900836513c3684ae62292f9a57364d15a79d4",
       "completion_observed": true,
-      "H1_hold": true,
-      "targeted_followup": 6857336623
+      "H1_hold": false,
+      "targeted_followup": 6857336623,
+      "closure_review": 6857443323,
+      "closure_report": "e1500ba4539924e0e8407f11a90f3d93c4217318",
+      "closure_cursor": "561e463d751ac5ac3580c34f95a6c05d19b6fe75",
+      "corresponding_head": "a8a23c11607864cb431f87fff38169e10c41685f",
+      "whole_successor_certified": false
     },
     "ready_job_queued": false,
-    "ready_job_reason": "B5 H1 remains open; ordinary matched CI incomplete and no ready workstation recipe. Existing CI continues; no duplicate run.",
-    "next_actor": "Original Researcher targeted H1 closure6857336623; Codex existing exact-head CI/evidence; Observer records batch6857344645",
+    "ready_job_reason": "Default-primary neutrality not met and hosted Miri incomplete; no eligible workstation-ready recipe.",
+    "next_actor": "Codex existing6856176834 exact-head evidence/completion; Observer6857529647 records closure and measured gain. Separate deliberate integration decision required.",
     "onecore6848164049": "deferred, not completed",
     "math_owner": "MONODROMY",
     "architecture_owner": "Pathfinder",
@@ -5434,6 +5449,40 @@
     "pr": 380,
     "pr_head": "a8a23c11607864cb431f87fff38169e10c41685f",
     "H1_correspondence_commit": "6da00de4af4ea10565658a1e4dcd6858a939cd58",
-    "benchmark_run": 43451114427
+    "benchmark_run": 43451114427,
+    "benchmark": {
+      "run": 43451114427,
+      "artifact": 14053580305,
+      "zip_sha256": "964ca8ef02cb429da09c6cb00b90428e08237c4f446a47c9351afc871ea6be22",
+      "digest_verified": true,
+      "rows": 210,
+      "recomputed": true,
+      "comparison": "selective vs original Cells",
+      "wikidata_wall": [
+        0.976315,
+        0.973393,
+        0.979246
+      ],
+      "text_wall": [
+        1.000355,
+        0.996819,
+        1.003904
+      ],
+      "pattern_wall": [
+        0.7746,
+        0.772696,
+        0.776508
+      ],
+      "max_rss_ratio": 1.002377,
+      "verdict": "PASS bounded selective-v-original decision only",
+      "default_primary_losses": {
+        "wikidata_4t": "+2.3% [0.4,4.3]",
+        "text_4t": "+3.9% [0.7,7.2]"
+      },
+      "integration": "DEFER",
+      "hosted_miri": "in_progress",
+      "legacy": "success",
+      "performance_rerun_dispatched": false
+    }
   }
 }
