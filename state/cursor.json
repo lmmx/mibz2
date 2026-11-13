@@ -167,9 +167,10 @@
     6782111848,
     6789867476,
     6793526035,
-    6821395963
+    6821395963,
+    6850324757
   ],
-  "last_processed_comment_id": 6821395963,
+  "last_processed_comment_id": 6850324757,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -1947,10 +1948,12 @@
     },
     {
       "trigger_comment_id": 6850324757,
-      "status": "in progress",
+      "status": "complete",
       "pr": 162,
       "report_path": "state/reports/cells-adjacent-6850324757/report.md",
-      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763"
+      "spec_pin": "a2da49638ac54d7763de1c167bd054f67ffdc763",
+      "report_commit": "9c920c64a5cc369b4b2934606ea7236f07fda6bf",
+      "disposition": "Recommend bounded untimed output-order grammar-emitter falsifier; representation-selective induction secondary. Static derivation only; bundle binary inaccessible via connector."
     }
   ],
   "active_delegations": [],
