@@ -1631,6 +1631,15 @@
       "source_comment_id": 6839448187,
       "delivery_id": "1acca8d0-def5-11f1-9262-659d8f396f16",
       "reason": "Own attributed monitor LOG, exact readback and cursor matched; deduplicated. Fresh master, nine policy blobs and373 head/Actions/legacy unchanged; no external actionable message."
+    },
+    "6848026007": {
+      "status": "in_progress",
+      "delivery_id": "8e4081a0-df3c-11f1-859d-e1a9794352f5",
+      "comment_updated_at": null,
+      "master_sha": "8138e014c53f8c61cf028cbea78d8d9ae134c865",
+      "scope": "Reconcile actual373 correction and all-green CI; route bounded existing-recipe readiness dossier",
+      "ready_job_queued": false,
+      "action_links": []
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1855,14 +1864,11 @@
       "report_commit": "ceda2ae2ab60f289d9e3240381112205f6eebae4"
     },
     "codex": {
-      "status": "posted_verified_awaiting_recipient",
-      "source_comment_id": 6839448187,
-      "scope": "373 two-TOML formatting correction with semantic/frozen-evidence checks; no retries or merge",
+      "status": "in_progress_before_post",
+      "source_comment_id": 6848026007,
+      "scope": "Bounded existing onecore/live recipe PROTOCOL9 readiness dossier, untimed local stand-ins only",
       "recipient_execution_observed": false,
-      "completion_observed": false,
-      "comment_id": 6839520708,
-      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6839520708",
-      "verification": "coord.py audit exit0 (six resolved history); route363; exact readback; verify exit0"
+      "completion_observed": false
     },
     "guardian": {
       "status": "completed",
@@ -2293,6 +2299,20 @@
       "head_sha": "853b4ac9eea20195a2dbc5b5374ab5fd2a2e8117",
       "recipient_cursor_sha": "92e7210285929a896ad8d164983def39fa23cea8",
       "evidence_commit": "feec83892087019889a906954f3c6342cd55377f"
+    },
+    {
+      "status": "completed",
+      "source_comment_id": 6839448187,
+      "scope": "373 two-TOML formatting correction with semantic/frozen-evidence checks; no retries or merge",
+      "recipient_execution_observed": true,
+      "completion_observed": true,
+      "comment_id": 6839520708,
+      "url": "https://github.com/lmmx/mibz2/issues/363#issuecomment-6839520708",
+      "verification": "coord.py audit exit0 (six resolved history); route363; exact readback; verify exit0",
+      "review_comment_id": 6848026007,
+      "head_sha": "8329f0c702a1c5598e39e7f2413db55a12ce8884",
+      "evidence_commit": "b3bcaa42e934db1344ab0164f80f456487e8ffe7",
+      "recipient_cursor_sha": "9faca2e56e43c2e1054d7e690e254bb1e0ee18a2"
     }
   ],
   "codex_correction": {
