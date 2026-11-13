@@ -17,7 +17,8 @@
     6839520708,
     6850979995,
     6851728088,
-    6855132749
+    6855132749,
+    6856176834
   ],
   "last_checkpoint": {
     "assignment_comment_id": 6839520708,
@@ -706,12 +707,12 @@
   },
   "cells_selective": {
     "queue_comment_id": 6856176834,
-    "status": "IN_PROGRESS: beneficial matched CI result; default gate fails; independent B5 H1 recheck and full Miri pending",
+    "status": "COMPLETE: beneficial selective materialisation; independent native B5 and exact-head CI passed; integration/default NOT qualified",
     "branch": "perf/cells-selective",
     "base": "be25366f46458e2f1dbb0bdac1f5fbc3366d0648",
     "baseline": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
     "pickup_review": 6856423064,
-    "next_action": "Implement exact retained representation and validate before independent B5/ordinary matched CI. No379 guard or equal-unit deferral.",
+    "next_action": "Coordinator reconcile positive original-Cells-relative result and failed default-arm gate; route one bounded default-path attribution only if warranted. No writer successor automatically activated.",
     "head_sha": "a8a23c11607864cb431f87fff38169e10c41685f",
     "plan_sha": "2a27255d7069f430acb4f995a6f368d7fd0ebef8",
     "report": "state/reports/cells-selective-6856176834/report.md",
@@ -723,6 +724,18 @@
     "benchmark_artifact": 14053580305,
     "b5_h1_review": 6857261340,
     "b5_h1_response": 6857315083,
-    "b5_h1_recheck": 6857336623
+    "b5_h1_recheck": 6857336623,
+    "completed": true,
+    "finished": true,
+    "completion_utc": "2026-11-13T15:37:42.107063+00:00",
+    "b5_closed_review": 6857443323,
+    "b5_closed_commit": "e1500ba4539924e0e8407f11a90f3d93c4217318",
+    "miri": "40 passed in CI; 6 targeted locally",
+    "checks": "all7Actions workflows and hosted legacy success",
+    "integration_qualified": false,
+    "default_changed": false,
+    "workstation_executed": false,
+    "merged": false,
+    "automatic_github_wakeup_assumed": false
   }
 }
