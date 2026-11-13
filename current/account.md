@@ -1,4 +1,4 @@
-Version 0.2.9 is released with a measured gain for Wikidata at higher thread counts and a small loss on one thread. The team has integrated the preparation for a new live-decoder comparison, but no workstation comparison has run. A proposed automatic way to choose an allowed processor and verify the test inputs now passes untimed checks; its integration and the final ready signal remain open.
+Version 0.2.9 is released with a measured gain for Wikidata at higher thread counts and a small loss on one thread. The team has integrated the preparation for a new live-decoder comparison, but no workstation comparison has run. A frozen, reviewed branch now automatically selects an allowed processor and verifies test inputs; the ready signal and queue entry remain open.
 
 ## Why prepare this comparison?
 
@@ -14,7 +14,7 @@ Louis [replaced a request for manual workstation facts](https://github.com/lmmx/
 
 ## What happens next?
 
-The Coordinator has given the frozen recipe a preliminary PROCEED check, but the proposal is still open. The existing owner-authorised executor retains integration and admission; no duplicate assignment is needed. Before any workstation job becomes ready, the team must deliberately integrate the exact reviewed head, verify final-source checks and the argument-free recipe, then use the standard ready signal and queue procedure once. The present [queue](https://github.com/lmmx/mibz2/blob/e674070e1351460d27d745390b1db80ef5112b60/bench/workstation-queue.txt) has no entry. The owner's authorisation for preparation and queue admission already stands; the owner alone will execute the workstation queue. The missing ready signal is a transport step, not a request to supply processor or input paths again.
+The Coordinator's frozen-recipe PROCEED check is complete at the exact green head. The existing owner-authorised executor retains admission; no duplicate assignment is needed. The frozen, reviewed source branch can be queued at that head without first merging the open proposal. After refreshed duplicate, ready-tag and hold screening, an authenticated operator must dispatch the existing Run signal for that exact commit, verify its tag, and then append the queue entry once. The present [queue](https://github.com/lmmx/mibz2/blob/e674070e1351460d27d745390b1db80ef5112b60/bench/workstation-queue.txt) has no entry. The owner's authorisation for preparation and queue admission already stands; the owner alone will execute the workstation queue. The required authenticated Run-signal dispatch is unavailable through the acting session's connector and signed-out browser view. This is a transport blocker, not a request to supply processor or input paths again; integration of the open proposal is a separate decision.
 
 ## What else remains uncertain?
 
