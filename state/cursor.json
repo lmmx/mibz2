@@ -1,6 +1,6 @@
 {
   "role": "coordinator-acting-monitor",
-  "last_examined_comment_id": 6850583026,
+  "last_examined_comment_id": 6850621370,
   "receipts": {
     "6777379237": {
       "status": "observed_self_generated_noop",
@@ -1927,7 +1927,17 @@
       "status": "completed",
       "delivery_id": "53aac660-df4e-11f1-8ffd-2d597c51d435",
       "comment_updated_at": null,
-      "disposition": "Own queued proposal read back/verified; self wake no duplicate action."
+      "disposition": "Own queued proposal read back/verified; self wake no duplicate action.",
+      "examined_versions": [
+        {
+          "updated_at": "2026-11-13T10:38:11Z",
+          "disposition": "Original queued output-order proposal"
+        },
+        {
+          "updated_at": "2026-11-13T10:48:14Z",
+          "disposition": "Same queued proposal amended with guarded-writer priority and seven-corpus prerequisite; still not dispatched."
+        }
+      ]
     },
     "6850515770": {
       "status": "completed",
@@ -1940,8 +1950,9 @@
       "comment_updated_at": null,
       "planned_action": "Reconcile owner interpretation against archived data; queue a narrow amendment to existing busy Optimizer assignment6850318070, no duplicate broad assignment. Preserve mathematical proposal6850491677 and frozen programme. Persist bounded disposition before LOG.",
       "optimizer_amendment": {
-        "status": "queued_verified_pending_delivery",
-        "comment_id": 6850583026,
+        "status": "posted_verified_pending_recipient",
+        "queue_comment": 6850583026,
+        "inbox_comment": 6850660172,
         "parent_assignment": 6850318070,
         "recipient_execution_observed": false
       },
@@ -1967,7 +1978,7 @@
       "disposition": "Own queued owner amendment exact readback and coord.py verify passed; no duplicate."
     },
     "6850621370": {
-      "status": "in_progress",
+      "status": "completed",
       "delivery_id": "5491fca0-df4f-11f1-9540-3b198352ed7d",
       "planned_action": "Dispatch queued amendment6850583026 to now-free Optimizer as one bounded delta with seven-corpus coverage, preserving completed parent6850318070 and report247ef9a2. Reconcile guarded-writer math into existing queued proposal without duplicate implementation. No timing/ready admission.",
       "optimizer_dispatch": {
@@ -1978,10 +1989,15 @@
         "recipient_execution_observed": false
       },
       "mathematical_queue_update": {
-        "status": "in_progress",
+        "status": "completed_verified",
         "comment_id": 6850491677,
         "previous_updated_at": "2026-11-13T10:38:11Z",
-        "scope": "Append completed Optimizer guarded-writer proof priority and seven-corpus coverage requirement to existing queued proposal; no new inbox assignment."
+        "updated_at": "2026-11-13T10:48:14Z",
+        "recipient_execution_observed": false
+      },
+      "disposition": "Seven-corpus coverage is a concrete prerequisite; exact120+9 historical evidence unchanged. Delivered only queued narrow pricing delta to free Optimizer160/6850660172, verified; amended existing busy mathematical queue6850491677, verified. No duplicate broad review, production implementation or measured job admitted.",
+      "grouped_log": {
+        "status": "in_progress"
       }
     }
   },
@@ -2118,14 +2134,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_ids": [
-      6850572409,
-      6850583026
-    ],
-    "delivery_ids": [
-      "f22a7d30-df4e-11f1-8500-52e15755b5c2",
-      "06d2e150-df4f-11f1-807b-7caa9b17247a"
-    ]
+    "comment_id": 6850621370,
+    "delivery_id": "5491fca0-df4f-11f1-9540-3b198352ed7d"
   },
   "loop_protection_observation": "Setup LOG webhook received; original GitHub comment and cursor matched. No response LOG, dispatch or activation.",
   "external_event_test": {
@@ -2716,10 +2726,11 @@
     "corrected_head": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2"
   },
   "next_actions": [
-    "On a later source-message-authorised wake, reconcile existing Optimizer6850572409 completion and route only narrow queued amendment6850583026 if not already answered; preserve reviewer pin.",
-    "Fold conditional all-small-spine proof/eligibility into existing MONODROMY mathematical queue6850491677, respecting busy route; do not start parallel writer implementation. Compare cheap early dispatch economics before final production candidate choice.",
-    "No new ready job:60+9 is an unadmitted proposal, owner three-arm Segmented/current Cells/cheap dispatch design is prospective, warm20+20 unadmitted, onecore deferred.",
-    "Clear consumed bench-cells-live-path-i9 tags through existing capable Run signal executor; queue empty. No duplicate run or automatic integration."
+    "Await actual Optimizer REVIEW+cursor6850660172 for selective-dispatch economics and exact seven-corpus identity/evidence/prospective matrix; no duplicate broad review.",
+    "Reconcile MONODROMY busy state/older queue before delivering existing amended proposal6850491677; guarded all-small-spine proof first, general emitter alternative, no concurrent writer implementation.",
+    "Select one credible falsifier/candidate after bounded pricing/math; preserve Pathfinder architecture and independent B5. No manual corpus-path/preflight requests.",
+    "No new ready job: seven-corpus recipe not yet frozen/reviewed/dry-run/green;60+9 and warm20+20 unadmitted; completed120+9 never replayed.",
+    "Clear consumed recipe tags through existing capable Run signal executor; queue empty; no automatic merge or agent workstation execution."
   ],
   "pending_ledger_repair": {
     "status": "accounting_resolved_integration_recommended",
