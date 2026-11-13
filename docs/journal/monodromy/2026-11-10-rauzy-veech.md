@@ -1168,6 +1168,26 @@ the column's path (the records' arm did not exist for them), on this shared mach
   tree above the run starts, that a step is a digram at O(1), and steps = r₂ − 1 + U. The step, its morphism, the linked-interval machine and the SLP from accelerated
   induction are others'.
 
+- **Added 10 Nov, from the second entry (`2026-11-10-lyndon-literature.md`, §3 and §5), which
+  read the generalized-Lyndon literature against this one.** Three things claimed above are
+  narrower than written.
+  - The making of the Lyndon tree of the least rotation from the bottom, by merging on the
+    circular word a largest word into its left neighbour, is the **Schützenberger–Melançon
+    rewriting** (Melançon, JCTA 59, 1992; Reutenauer, Sém. Lothar. Combin. B54h, 2006, §3.4;
+    Lyndon words as the Lazard set that removes the greatest element). Every right-end step
+    is one of its legal rises. What is new is its run on the run-length column: LF's row
+    order choosing the rise, a rise taken at all its occurrences at once in O(1), S steps,
+    and the count.
+  - §2's "column that is no BWT" is the inversion of the **extended and bijective BWT** by
+    its cycles, largest first (Gil–Scott 2012; Kufleitner 2009, Theorem 8), in print with n
+    steps. New: in S steps, each factor with its Lyndon tree.
+  - That every letter's word is a Lyndon word follows from two lemmas on next and previous
+    smaller suffixes (as Ellert, ESA 2022, §2 states them).
+  And two things are sharper: Theorem 3 is a case of the second entry's Theorem 5 (for
+  every order of right-handed steps, steps = the tree's inner nodes above a hinge), so no
+  order that leaves the Lyndon tree is cheaper than the right end; and the left end of
+  §5.6 is the right end for the inverse order of the alphabet.
+
 ## 11. Independent check (C; of the sub-agents' programs, `lyndon_cartesian.py.txt`, `schedules_geo.rs.txt` and `rle1_crc_on_grammar.py.txt` are beside this entry, the rest in the session's record)
 
 A second implementation, written from the specification of §2 by a sub-agent that did not

@@ -1,0 +1,306 @@
+{
+ "summary": "Read-only map of the safety rules and test machinery a production PR for the cells kernel must satisfy, at HEAD 1a871bb (= origin/master; the local branch `master` is stale at 2cc0829). Nothing was built or run; all Miri statements about examples/rauzy.rs are from reading.\n\nMain findings:\n- **B5** (docs/team/RULES.md:58) needs a written safety argument, Miri + differential + fuzz + mutation testing, and an adversarial review by an agent other than the implementer. \"The test names alone don't satisfy it.\" An open B5 objection blocks merge (PROTOCOL.md:57-58).\n- **Miri exists in CI** (.github/workflows/miri.yml): `cargo miri test --lib -- miri_` on nightly, default target, no MIRIFLAGS, triggered only by listed paths. A new src file is not covered until its path is added, as #324 did for src/runs.rs.\n- **Fuzzing is examples/fuzz.rs**, not cargo-fuzz (no fuzz/ directory). CI's fuzz-smoke runs four modes for 30 s each at seed 1. Routes are forced by a kernel type parameter or an explicit plan, never by an env var or cfg. Reach is printed, not gated.\n- **The oracle is libbzip2 1.0.8** through the `bzip2` dev-dependency (tests/common/mod.rs:11-38). The PR bench is itself a head-against-base byte comparison and exits 1 on a mismatch.\n- **Mutation testing has no configuration, recipe or CI job.** #324 used cargo-mutants 27.1.0 by hand, plus a hand pass over `unsafe fn`s, which cargo-mutants skips.\n- **No unsafe lints are enabled.** There are no crate-level `#![deny]` attributes, and neither `unsafe_op_in_unsafe_fn` nor `undocumented_unsafe_blocks` is on; SAFETY comments are convention only.\n- **The cells kernel in examples/rauzy.rs has no `#[test]`**, panics on three asserts, and keeps four regions in one zero-filled Vec<u8>. Miri can see neither an overrun between regions nor a stale-slot read.\n- **This machine has only stable rustc 1.97.0**: no nightly or Miri component, no cargo-mutants.\n- **An off-by-default cargo feature is tested by none of** `cargo test`, the Miri job, fuzz-smoke or the bench; only clippy builds it.",
+ "facts": [
+  {
+   "topic": "1. B5 verbatim",
+   "fact": "B5: \"`unsafe` code needs: a written safety argument; Miri, differential, fuzz and mutation testing; an adversarial review by an agent other than the implementer. The Guardian may HOLD it. Nobody's approval is a precondition (§6.4)\". Retained \"with the argument's proof scope and the reviewer's own involvement both stated. The test names alone don't satisfy it\".",
+   "where": "/home/user/mibz2/docs/team/RULES.md:58"
+  },
+  {
+   "topic": "1. Rules beside B5",
+   "fact": "B1: output byte-exact in every case, with the malformed-input, safety and API obligations. B6: immediate stops include unresolved UB, an unsafe access that can't be justified, a violated invariant, and \"a mutation check that misses its target\"; the Guardian is told. B7: \"A Miri timeout or partial run is partial coverage, never a PASS\".",
+   "where": "/home/user/mibz2/docs/team/RULES.md:54, :59, :60"
+  },
+  {
+   "topic": "1. Policy restatement",
+   "fact": "A change merges only with: byte-identical output on every bench corpus; its equivalence and differential tests passing; \"corrupt input gives the same error as before\"; new unsafe meeting B5; figures from CI's paired bench; green CI on the exact head merged. OWNERSHIP.md §2 repeats B5 as \"one independent adversarial review\".",
+   "where": "/home/user/mibz2/docs/team/PERFORMANCE-POLICY.md:13-19; /home/user/mibz2/docs/team/OWNERSHIP.md:24-27"
+  },
+  {
+   "topic": "1. Who owns B5 on a PR",
+   "fact": "O1: the PR's author owns it to merge, \"tests, bench, and B5 where it applies\"; nobody reviews their own PR. O3: a HOLD or STOP binds only under B1, B5, B6 and B7.",
+   "where": "/home/user/mibz2/docs/team/RULES.md:106-112"
+  },
+  {
+   "topic": "1. Unresolved B5 objection",
+   "fact": "A material objection from an independent safety review holds the work. It is resolved only when the reviewer accepts a fix, a test or a corrected argument, or withdraws; the implementer cannot declare its own rebuttal resolved. After one targeted correction the work is deferred or abandoned by the Coordinator: \"it never merges with the objection open, and it is not escalated\".",
+   "where": "/home/user/mibz2/docs/team/RULES.md:85-93; /home/user/mibz2/docs/team/PROTOCOL.md:51-58"
+  },
+  {
+   "topic": "1. Past safety evidence: #324's journal §3",
+   "fact": "#324's B5 record has four parts. (a) A safety-argument table with a stated proof scope (`src/runs.rs` and the touched parts of `src/bwt.rs`), one row per unsafe item: what it relies on, where that is established. (b) Named tests with case counts. (c) §3.1: Miri on the default target (7/7 in 322 s) and with AVX2 RUSTFLAGS (5/5 in 293 s), fuzz runs with seeds and case counts, clippy and fmt. (d) §3.2: mutation testing. The header adds \"an independent adversarial review with no material objection: a 50,000-block differential fuzz and every unchecked access bound-asserted\".",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:192-207, :209-246, :248-280, :282-374, :20-21"
+  },
+  {
+   "topic": "1. Past safety evidence: reached-path requirement",
+   "fact": "Guardian D042 held production qualification pending \"reached-path fuzz and mutation evidence\": fuzzing that reaches the new stages \"with coverage showing they are reached, and mutation testing of its checks. Matching hashes and green CI don't substitute for it.\" #359's commit message cites \"D097-F1\" for its forced fuzz mode; the D097 text itself is not found locally (team-state/guardian is not fetched; no D097 in docs/).",
+   "where": "/home/user/mibz2/docs/journal/2026-11-09-service-2x3-result.md:172-177; git show a5197f1 (commit message)"
+  },
+  {
+   "topic": "2. Crate-level lints",
+   "fact": "No `#![deny(...)]`, `#![forbid(...)]` or `#![warn(...)]` anywhere in src/ (a grep for `#![` in src/ returns nothing). Cargo.toml's only lint table is `[lints.rust] unexpected_cfgs`. No clippy.toml, no `[lints.clippy]`, no rust-toolchain file. Edition is 2021, so `unsafe_op_in_unsafe_fn` is at its allow default; `clippy::undocumented_unsafe_blocks` (restriction group) is not enabled anywhere.",
+   "where": "/home/user/mibz2/Cargo.toml:6, :85-86; /home/user/mibz2/src/lib.rs:1-112"
+  },
+  {
+   "topic": "2. Clippy in CI",
+   "fact": "CI runs `cargo fmt --all --check`, then `cargo clippy --all-targets --all-features -- -D warnings`: clippy's default groups, as errors, over lib, tests, examples and benches with every feature on. examples/rauzy.rs is already under it. `just clippy` is the same command with `--target-dir target/clippy-all-features`.",
+   "where": "/home/user/mibz2/.github/workflows/test.yml:22-25; /home/user/mibz2/.just/rust.just:12-13"
+  },
+  {
+   "topic": "2. SAFETY comment convention",
+   "fact": "Convention only, not lint-enforced. Each `unsafe fn` has a `/// # Safety` section (e.g. `second`, `front_avx2`, `fill_share`). Each `unsafe { }` call site has a `// SAFETY:` comment above it (runs.rs:184-186). Inside `unsafe fn` bodies each unchecked operation has its own `// SAFETY:` line. Both body styles exist: `front_avx2` uses bare operations (runs.rs:413-415, :432-434), `fill_share_scalar` uses inner `unsafe { }` (runs.rs:955). `front_avx2`'s doc also lists what it writes and reads and why each is in bounds (runs.rs:369-377).",
+   "where": "/home/user/mibz2/src/runs.rs:184-186, :321-326, :363-384, :413-460, :905-928, :955"
+  },
+  {
+   "topic": "2. Unsafe per file today",
+   "fact": "Lines mentioning `unsafe` / `SAFETY`: bwt.rs 46/23, coop.rs 46/30, runs.rs 13/22, mtf.rs 5/4, crc.rs 2/2, rle.rs 2/2, block.rs 1/1, trace.rs 1/1; none in lib.rs, parallel.rs, read.rs, stream.rs, bits.rs, run_fed.rs.",
+   "where": "/home/user/mibz2/src/*.rs (grep counts)"
+  },
+  {
+   "topic": "3. Miri CI job",
+   "fact": "Job `miri` on ubuntu-latest: `dtolnay/rust-toolchain@nightly` with components `miri, rust-src`; `cargo miri setup`; a step that lists `cargo miri test --lib -- miri_ --list` and greps for five named tests \"so that a rename can't drop them silently\"; then `cargo miri test --lib -- miri_`. No MIRIFLAGS or RUSTFLAGS anywhere in workflows or recipes. Only library unit tests whose names contain `miri_` run; integration tests and examples do not.",
+   "where": "/home/user/mibz2/.github/workflows/miri.yml:42-65"
+  },
+  {
+   "topic": "3. Miri triggers",
+   "fact": "Runs only on PRs or master pushes touching src/bwt.rs, src/coop.rs, src/parallel.rs, src/parallel/**, src/read.rs, src/runs.rs, src/runs/**, or the workflow itself (plus workflow_dispatch). A new file such as src/cells.rs would not trigger it unless added. #324 added exactly the two runs paths (4 lines).",
+   "where": "/home/user/mibz2/.github/workflows/miri.yml:14-36; git show 47149bf -- .github/workflows/miri.yml"
+  },
+  {
+   "topic": "3. Miri recipe",
+   "fact": "No just recipe runs Miri (no `miri` in Justfile or .just/*.just). The documented local command is `cargo +nightly miri test --lib -- miri_`.",
+   "where": "/home/user/mibz2/src/bwt.rs:2338; /home/user/mibz2/Justfile; /home/user/mibz2/.just/"
+  },
+  {
+   "topic": "3. Miri test conventions",
+   "fact": "Tests are named `miri_*` and shrink under `cfg!(miri)` (e.g. `let cases = if cfg!(miri) { 6 } else { 12_000 }`). They assert that they reached the paths they claim, via `#[cfg(test)] thread_local!` counters and `assert_reached()`, so \"a pass means they were checked\". Under default-target Miri `Kernels::detect()` is scalar; AVX2 kernels were checked in a second local pass with `RUSTFLAGS=\"-C target-feature=+avx2,+bmi1,+bmi2,+lzcnt,+popcnt,+sse4.1,+ssse3,+pclmulqdq\"` and a cfg-gated test `miri_runs_avx2_kernels_selected`.",
+   "where": "/home/user/mibz2/src/runs/tests.rs:313-318, :541-554; /home/user/mibz2/src/bwt.rs:1148-1151, :2075-2085, :2347-2379; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:253-265"
+  },
+  {
+   "topic": "3. Example kernel is outside Miri today",
+   "fact": "examples/rauzy.rs has no `#[test]` at all; it checks itself in `main` and in `arbitrary()`. The Miri job's `--lib` filter never runs example code.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1812-1886; /home/user/mibz2/.github/workflows/miri.yml:64-65"
+  },
+  {
+   "topic": "3. Kernel constructs, read against Miri (not run)",
+   "fact": "All access is through one `Vec<u8>` (`self.buf`): `base = self.buf.as_mut_ptr()`, then `base.add(offset)` with offsets stored as u32/u64 integers. Reads and writes are explicit `read_unaligned` / `write_unaligned` on `*const u64` / `*const u32` (`rd64`, `rd32`, `wr64`, `wr32`); `copy16` is a 16-byte read then write of `[u8; 16]`. There are no integer-to-pointer casts (grep for `as usize as *` is empty). Prefetch addresses use `base.wrapping_add(...)`. By reading, none of these is a construct Miri rejects.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:552-570, :591-594, :953, :1040, :1063-1069"
+  },
+  {
+   "topic": "3. Prefetch and core::arch under Miri",
+   "fact": "`prefetch` calls `core::arch::x86_64::_mm_prefetch` with `_MM_HINT_T0` under `cfg(target_arch = \"x86_64\")`. Production's `bwt::prefetch` calls the same intrinsic with no `cfg(miri)` exclusion, on a path the CI Miri job runs (`miri_room_walk_handoffs` calls `walk_segments_room_with_prefetch::<32, PF_L1>`). `copy_small` on x86_64 uses SSE2 `_mm_loadu_si128`, `_mm_storeu_si128`, `_mm_and_si128`, `_mm_andnot_si128`, `_mm_or_si128`: baseline, not runtime-detected, so default-target Miri would interpret that path. Expected to be supported; not run here.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:579-587, :598-619; /home/user/mibz2/src/bwt.rs:1625-1636, :2347-2373"
+  },
+  {
+   "topic": "3. What Miri cannot see in this kernel",
+   "fact": "The buffer is four regions (tops, bots, arena, rules) in one allocation, `vec![0u8; total]`, reused from block to block when large enough. Miri, like valgrind, checks allocation bounds and initialisation only. It cannot see a write from one region into the next, nor a read of a stale slot. The only check is a `debug_assert!` on the four region ends, evaluated when `induce_cells` returns, after the writes. The journal says the same of valgrind.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:894-906, :1088-1095; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:723-727"
+  },
+  {
+   "topic": "3. Initialisation dependence",
+   "fact": "`ahead!` deliberately reads slots that may not have been written (\"what is read there may be a slot not yet written: the address is only hinted\"). `copy_small` reads 16 bytes at both `dst` and `src` whatever `len` is. These are defined only because `buf` is zero-filled and `out` is `resize(n + 32, 0)`. A port that used `reserve` + `set_len` (as runs.rs:394-397, :461-462 does for its bitmaps) would make them uninitialised reads, which Miri reports.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1060-1068, :596-613, :905, :1191"
+  },
+  {
+   "topic": "3. Non-x86 path differs",
+   "fact": "Off x86_64, `copy_small` is `core::ptr::copy_nonoverlapping(src, dst, len)` (exactly `len` bytes; overlap is UB) and `prefetch` is a no-op. CI's Miri and tests run on x86_64 only; wheels are built for aarch64 (Linux and macOS). The journal records that `copy16` once used `copy_nonoverlapping` on overlapping ranges and aborted under debug assertions on `bba`, row 0.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:585-586, :615-618; /home/user/mibz2/.github/workflows/CI.yml:50-56, :111-115; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:731-733"
+  },
+  {
+   "topic": "3. Panics in the kernel",
+   "fact": "`slots` asserts `total < u32::MAX as usize && n < MARK as usize && (p as usize) < n` and `row as usize == n && !empty` (\"the records do not tile the block\"); `induce_cells` asserts \"`slots` has not run\". The shipped records route refuses instead: `invert_runs` returns false, then `debug_assert!(false, \"the run records don't tile the block\")`, then the column path. The fuzz loop counts any panic as a failure.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:902, :931-934, :1036-1039; /home/user/mibz2/src/lib.rs:353-361; /home/user/mibz2/examples/fuzz.rs:172-178"
+  },
+  {
+   "topic": "3. Kernel's own safety record",
+   "fact": "valgrind on 3,000 arbitrary columns and three real blocks, no error. A sub-agent review checked every access against its region on 19 million small columns, the 233 blocks, prose and the synthetic files. Stated bounds: at most n − 1 cells; at most 2n − 1 slots a side of 2n + 8; the arena's last store ends at most 16n + 304 bytes in, of 16n + 368; at most n rules of n + 4. Buffer is 128n + 4,912 bytes (115 MB at n = 9·10⁵). Section 8 item 3 says the kernel \"would want an `unsafe fn` boundary, a bound on its buffer, and 4\" (admission).",
+   "where": "/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:723-736, :961-966"
+  },
+  {
+   "topic": "3. Local tooling",
+   "fact": "Only `stable-x86_64-unknown-linux-gnu` (rustc 1.97.0) is installed: no nightly and no miri component (the `cargo-miri` in ~/.cargo/bin is the rustup proxy). `cargo-mutants` and `cargo-nextest` are not installed. valgrind is at /usr/bin/valgrind.",
+   "where": "~/.rustup/toolchains; ~/.cargo/bin"
+  },
+  {
+   "topic": "4. Fuzz harness",
+   "fact": "There is no fuzz/ directory and no cargo-fuzz. The harness is examples/fuzz.rs: a mutation loop against libbzip2. Usage `fuzz SECONDS [SEED] [OUT_DIR|-] [MODE]`, MODE = mixed (default, every 8th case a pipeline case), classic, pipeline, service or teams. It exits 1 if any failure was counted and writes failing inputs to `OUT_DIR/case-N.bz2`.",
+   "where": "/home/user/mibz2/examples/fuzz.rs:1-39, :53-59, :274, :705-711"
+  },
+  {
+   "topic": "4. Fuzz profile",
+   "fact": "`[profile.fuzz]` inherits release with `debug-assertions = true` and `overflow-checks = true`, \"so an overflow or a broken invariant is a panic (counted as a failure) rather than wrong bytes\". `[profile.test]` is `opt-level = 3` only, so debug assertions stay on in `cargo test`.",
+   "where": "/home/user/mibz2/Cargo.toml:73-82"
+  },
+  {
+   "topic": "4. Classic mode",
+   "fact": "Corpus: `samples()` cut to 150,000 bytes at levels 1 and 9, a three-stream concatenation, and three crafted \"abc\" blocks. Each case applies 1-4 edits (bit flip, byte set, truncate, insert, delete, splice), then decodes with libbzip2 (`oracle`) and one of `candidates()`: sequential scalar, sequential SIMD, and every 16th case parallel at 3 threads. Failures: a panic, different bytes, or decoding where libbzip2 fails. \"libbzip2 decodes, this refuses\" is counted by error, not failed.",
+   "where": "/home/user/mibz2/examples/fuzz.rs:64-87, :157-205, :660-703; /home/user/mibz2/tests/common/mod.rs:497-512"
+  },
+  {
+   "topic": "4. Pipeline, service and teams modes",
+   "fact": "Each uses `pipeline_corpus` multi-block inputs, leaves one case in eight valid, and otherwise aims 1-2 edits at a later block's first 120 bytes, the stream's last 16 bytes, or anywhere. Each is held to the plain parallel decoder exactly (bytes before any error, and the error) and to libbzip2. `plain_parallel` is `StreamDecoder::with_inverse::<Segmented>(2, 4, Kernels::detect())`.",
+   "where": "/home/user/mibz2/examples/fuzz.rs:374-450, :454-521, :527-551, :556-647; /home/user/mibz2/tests/common/mod.rs:106-109"
+  },
+  {
+   "topic": "4. CI fuzz-smoke",
+   "fact": "`cargo build --profile fuzz --example fuzz`, then four steps of `target/fuzz/examples/fuzz 30 1 fuzz-failures/<mode> <mode>` for classic, pipeline, service and teams: 30 s each, seed 1. Failing inputs are uploaded as artifact `fuzz-failures`. The job gates on the exit code only; the reach counts are printed and never grepped or asserted. It is built with default features.",
+   "where": "/home/user/mibz2/.github/workflows/test.yml:46-74"
+  },
+  {
+   "topic": "4. How routes are forced",
+   "fact": "No environment variable, cfg or cargo feature. Three mechanisms: (1) a kernel type parameter, `decode_with::<bwt::Segmented>` / `StreamDecoder::with_inverse::<I>`; (2) an explicit plan, `StreamDecoder::planned(Plan::Teams { teams, k }, slots, kernels)`; (3) `#[doc(hidden)] pub fn with_plan`, which sets the thread-local `FORCED` so the default constructors build a given plan.",
+   "where": "/home/user/mibz2/tests/common/mod.rs:48-53; /home/user/mibz2/examples/fuzz.rs:390-397; /home/user/mibz2/src/parallel.rs:215, :2241-2259"
+  },
+  {
+   "topic": "4. How reach is counted",
+   "fact": "Pipeline: `#[doc(hidden)] StreamDecoder::pipeline_counts()` (atomics in the decoder), printed as \"N of M reached\". Service: `service_counts()`, read after a completion fence. Teams (#359): counted outside the decoder by `team_routes`, which re-scans the input and classifies each block with the decoder's own selector `mibz2::runs::takes_runs` and `mibz2::bwt::MIN_COOP`, into records pooled / records alone / column pooled / column alone, plus front errors on admitted and non-admitted blocks (`TeamStats`).",
+   "where": "/home/user/mibz2/src/parallel.rs:186-191, :295-304; /home/user/mibz2/examples/fuzz.rs:211-273, :328-370, :406-412"
+  },
+  {
+   "topic": "4. #324's own fuzz evidence",
+   "fact": "#324 added no fuzz mode and counted no reach. It ran classic for 300 s (503,208 cases, 0 failures, 2,188 decoding as libbzip2) and mixed for 120 s, and argued that \"every mutated block of few symbols took the records' path\" because the candidates decode with `decode_with::<Segmented>`. The forced mode with counted reach arrived only with #359.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:266-274; git show --stat 47149bf; git show --stat a5197f1"
+  },
+  {
+   "topic": "4. Kernel's existing fuzz-like check",
+   "fact": "`rauzy --arbitrary CASES` generates random columns that are no BWT (n up to 48, or 3000 every 16th case; alphabets 1 to 256) and asserts the reference, the list kernel and the cells kernel each equal `bwt::walk`. For the cells kernel `out` is first filled with the complement of the right bytes, so an unwritten byte fails. The journal runs it under the fuzz profile: `cargo build --profile fuzz --example rauzy && target/fuzz/examples/rauzy --arbitrary 20000`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1812-1886; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:1249-1251, :1296-1298"
+  },
+  {
+   "topic": "5. The oracle",
+   "fact": "`oracle()` is libbzip2 1.0.8 through the `bzip2` crate (dev-dependency `bzip2 = { features = [\"static\"], version = \"0.4\" }`, built from bundled source), over a whole multi-stream input. `compress()` is the same crate's encoder. No test compares against a previous mibz2 release. The system `lbzip2` CLI is used only by examples/windows.rs.",
+   "where": "/home/user/mibz2/tests/common/mod.rs:8-45; /home/user/mibz2/Cargo.toml:53-55"
+  },
+  {
+   "topic": "5. Tests against the oracle",
+   "fact": "tests/decode.rs: 14 tests, e.g. `every_level_and_shape` (`samples()` at levels 1, 2, 5, 9, on scalar and detected kernels and parallel) and `crafted_blocks_match_libbzip2` (blocks from `craft` checked against `reference` and `oracle`), plus malformed streams that must fail as libbzip2's do. tests/corpus.rs `every_entry_point` runs `corpora(1)` at levels 1, 6, 9 through `decode`, `decode_with::<bwt::Plain>(.., Kernels::scalar())`, `decode_parallel`, both `BzReader`s and `scan` + `decode_blocks`. tests/in_place.rs, pipelined.rs, service.rs and service_default.rs also call `oracle`.",
+   "where": "/home/user/mibz2/tests/decode.rs:1-37, :99-160; /home/user/mibz2/tests/corpus.rs:33-75"
+  },
+  {
+   "topic": "5. Where test data comes from",
+   "fact": "All generated in-process, nothing downloaded. `samples(rng)`: empty, one, short, text, runs, random, few, zeros, abab, period3, all bytes. `corpora(scale)`: text (the crate's own src/, tests/, examples/ and README), random, one byte, pattern, runs, records; the bench's `ab gen` uses the same recipe. `craft(level, &[Spec], crc)` writes blocks no encoder writes. `reference(ll, orig_ptr)` is a plain inverse BWT plus RLE1. Because `corpora` reads examples/, the `text` corpus changes whenever a file under src/, tests/ or examples/ changes.",
+   "where": "/home/user/mibz2/tests/common/mod.rs:129-175, :270-300, :321, :409-448"
+  },
+  {
+   "topic": "5. Route-against-route differential (the #324 shape)",
+   "fact": "`miri_runs_decode_block_equals_the_column`: 3,000 synthetic blocks (12 under Miri) through `decode_block` with `Scratch::<Segmented>` (records where `takes_runs`) and `Scratch::<Plain>` (always the column), on each kernel set. It asserts equal `Result`s (errors with their values) and equal bytes, sets `max_len` on both sides of the selector's edge, and asserts `by_runs > cases / 4`.",
+   "where": "/home/user/mibz2/src/runs/tests.rs:494-537"
+  },
+  {
+   "topic": "5. Where a new route joins",
+   "fact": "(1) `candidates()` (\"another decoder joins here\") feeds the fuzz classic mode and examples/windows.rs. (2) `decode_block` is the seam: it takes the records path when `s.inverse.reads_runs() && runs::takes_runs(b)`, calls `invert_runs`, and falls through to the column path on `false`. (3) `InverseBwt::reads_runs` / `invert_runs` are trait methods overridden by `Segmented`. (4) `Cooperative::invert_runs` runs the same fill and walk as `Segmented` for `K < 2 || n < MIN_COOP`. (5) parallel.rs `front_stage` calls `takes_runs` separately for staged paths.",
+   "where": "/home/user/mibz2/tests/common/mod.rs:495-512; /home/user/mibz2/src/lib.rs:332-361; /home/user/mibz2/src/bwt.rs:75-99, :146-165, :297-319; /home/user/mibz2/src/parallel.rs:855-866"
+  },
+  {
+   "topic": "5. The bench as a differential",
+   "fact": "On a PR the bench builds head and merge-base and runs them as arms `mibz2` and `mibz2@base/ab`. Every arm's output is hashed and the summary's \"same bytes\" column compares each arm with the reference arm. bench/report.py exits 1 when parity fails. The same job runs `bench/wikidata.py build ... target/release/examples/windows`, which decodes the Wikidata blocks with libbzip2, `lbzip2 -dc -n4`, every `candidates()` entry and `decode_blocks`, and exits 1 on any difference.",
+   "where": "/home/user/mibz2/.github/workflows/bench.yml:111-119, :169-180, :209, :246-252; /home/user/mibz2/examples/ab.rs:2563-2586; /home/user/mibz2/bench/report.py:1662-1666; /home/user/mibz2/examples/windows.rs:107-164"
+  },
+  {
+   "topic": "6. Mutation tooling",
+   "fact": "No mutation configuration exists: no .cargo/mutants.toml (.cargo/ holds only aarch64-qemu.toml), no just recipe, no CI job. #324 used \"cargo-mutants 27.1.0 (`--in-place`, 240 s timeout)\" by hand over all of src/runs.rs and named functions of src/bwt.rs and src/lib.rs, running the library's tests except `room_walk_crafted_permutations`. The full command line is not recorded.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:288-296; /home/user/mibz2/.cargo/aarch64-qemu.toml"
+  },
+  {
+   "topic": "6. cargo-mutants skips unsafe fn",
+   "fact": "\"What cargo-mutants skips: `unsafe fn`s.\" So `front_avx2`, `second` and `fill_avx2` had a hand pass of 34 mutants (bounds, the cap of 127, span limits, the slack, each of `fill_avx2`'s checks), each run against `runs::` tests.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:297-301"
+  },
+  {
+   "topic": "6. #324's mutation results",
+   "fact": "cargo-mutants: 192 mutants, 151 caught, 22 missed, 3 timeouts, 16 unviable; 12 of the 22 were then killed by new tests. Hand pass: 24 on `front_avx2`/`second` (16 caught), 10 on `fill_avx2` (8 caught). Every remaining miss (19) is argued equivalent one by one; 1 is out of scope. A hang counts as a detection.",
+   "where": "/home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:303-362"
+  },
+  {
+   "topic": "6. What \"mutation-killed admission tests\" meant",
+   "fact": "Mutants that change which path runs but not the bytes survive every equivalence test, so tests were added that observe the choice. `runs_takes_runs_bounds` kills `takes_runs`: `max_len < 1 << 24` → `<=`; it checks both bounds exactly (max_len (1<<24)−1 against 1<<24; 20 against 19 for 10 symbols). `runs_path_taken_exactly_where_selected` kills `decode_block`: `!cooperative` → `cooperative` and `Segmented::reads_runs` → false; it plants a sentinel record `UNTOUCHED = 0xffff` and asserts over 400 blocks that `front` ran exactly where `takes_runs` holds for `Segmented` and `Cooperative<2>`, never for `Plain`, with more than 50 blocks on each side. `runs_front_kernel_selected`, `runs_buffers_listed` and `runs_walk_back_room_segments_from_its_bound` are the other three.",
+   "where": "/home/user/mibz2/src/runs/tests.rs:556-629, :645-707; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:318-340"
+  },
+  {
+   "topic": "6. #353's admission tests",
+   "fact": "#353 changed `takes_runs` to also need one run symbol in `RUN_SHARE` = 32 over a sample of `WINDOWS` × `WINDOW` = 64 × 64 symbols, and added tests/admission.rs with three behavioural tests: `a_short_high_entropy_block_takes_the_column`, `text_and_entity_records_take_the_records`, `full_blocks_decide_as_the_bound_decides`. No mutation record for #353's sampling code is found in docs/journal on master (no hits for `RUN_SHARE` or `tests/admission`). Its source patch, `admission-only.diff.txt @ a5460685`, is not in the local object store.",
+   "where": "/home/user/mibz2/src/runs.rs:35-41, :65-84; /home/user/mibz2/tests/admission.rs:55-128; git show --stat c9329f0"
+  },
+  {
+   "topic": "6. Hand-made mutant precedent",
+   "fact": "Two journal directories hold scripted mutants: `mutants.py` with one .patch per mutant, results.json and logs. Each mutant was applied in a throwaway detached worktree and run against named test suites, the CI Miri tests and the fuzz, each with a timeout. Three of twelve pipeline mutants were killed only by Miri (data races).",
+   "where": "/home/user/mibz2/docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md:153-183; /home/user/mibz2/docs/journal/2026-11-09-pipeline-fuzz-and-mutation/mutants/mutants.py; /home/user/mibz2/docs/journal/2026-11-09-service-guarded-scope/mutants.py"
+  },
+  {
+   "topic": "7. Guardian: inbox and input",
+   "fact": "Inbox is PR #161 (coord.py agrees: `\"inbox\": 161`). Each inbox comment is a checkpoint, decided \"from evidence you reproduce\"; \"missing evidence can't establish that a rule is met\". G2: \"HOLD or STOP any line of work with reasons, including `unsafe` work whose evidence falls short of RULES B5\". Output: one entry in `state/decisions.md` on team-state/guardian, then one REVIEW on #145.",
+   "where": "/home/user/mibz2/docs/team/SPEC.GUARDIAN.md:6, :13, :18, :34-36, :41; /home/user/mibz2/.github/coordination/coord.py:47-51"
+  },
+  {
+   "topic": "7. Guardian: message mechanics",
+   "fact": "Only the Coordinator writes in an inbox. Format: `FROM: coordinator`, `TO: guardian`, `RE: <subject> @ <commit sha>`, `TYPE: CHECKPOINT`; \"Long material goes in a committed file, which the comment links at a commit\". One assignment in flight per role; a busy role's work is staged on #145 as `TYPE: QUEUED`. Before posting, `coord.py route --to guardian --type CHECKPOINT`; after, `coord.py verify --comment-id <id> --to guardian --type CHECKPOINT`.",
+   "where": "/home/user/mibz2/docs/team/PROTOCOL.md:19-24, :34-49, :60-71; /home/user/mibz2/CLAUDE.md:16-20"
+  },
+  {
+   "topic": "7. Guardian: what a HOLD means",
+   "fact": "A HOLD under B5 binds (O3; SPEC.GUARDIAN \"What binds\"); it \"takes effect through the Coordinator's own authority, without an inbox\". \"an open B5 safety objection blocks merge; it can only defer or abandon\". The bounded lapse of a performance HOLD does not apply: \"HOLDs under B1, B5, B6 and B7 are unaffected\". The Guardian's decisions are not \"an approval prerequisite. Routine work never waits for you\", and CLAUDE.md says the Coordinator \"proceeds if no HOLD comes within one assignment cycle\".",
+   "where": "/home/user/mibz2/docs/team/SPEC.GUARDIAN.md:28-32; /home/user/mibz2/docs/team/PROTOCOL.md:47, :57-58; /home/user/mibz2/docs/team/RULES.md:44, :111-112"
+  },
+  {
+   "topic": "7. Who does the B5 adversarial review",
+   "fact": "ROLES.md gives it to the Researcher: \"It reviews every `unsafe` safety argument adversarially (RULES B5): a hard gate\"; SPEC.RESEARCHER: \"Your B5 adversarial review stays a hard gate\" (inbox #162). #324's journal says the review \"is the Coordinator's to commission\" and then \"remains the Guardian's\". A stand-in under PROTOCOL §8 \"can meet the substance of an adversarial-review duty\".",
+   "where": "/home/user/mibz2/docs/team/ROLES.md:73, :192-195; /home/user/mibz2/docs/team/SPEC.RESEARCHER.md:6, :21-22; /home/user/mibz2/docs/journal/2026-11-10-run-front-production.md:279-280, :285-286"
+  },
+  {
+   "topic": "8. Green head in STEWARDSHIP",
+   "fact": "Changes touching measured code (`src/**`, `Cargo.toml`, `Cargo.lock`, the bench's inputs) merge when \"the tests and parity checks pass, CI is green on the head that will merge, and the CI paired A/B bench ... is judged by that policy\". For every merge: merge only the head CI measured; set `expectedHeadSha`; \"a later commit that changes measured code needs a fresh bench\". The steward never \"weakens the exact checks\", \"treats silence as approval\" or \"merges an unbenched head\". A default-kernel PR \"states its mechanism, its predicted end-to-end effect, and what falsifies it\".",
+   "where": "/home/user/mibz2/docs/STEWARDSHIP.md:36-39, :51-54, :68-71, :140-148"
+  },
+  {
+   "topic": "8. Green head in CLAUDE.md and CI-INCIDENTS",
+   "fact": "CLAUDE.md on disk (the pasted project instructions omit this bullet): \"Green means both kinds of check: the Actions check runs *and* the legacy commit statuses (`gh api repos/lmmx/mibz2/commits/<sha>/status`: pre-commit.ci posts one). A status in `error` or `pending` on the head is not green\". Before merge `coord.py head-sha --pr <n> --sha <sha>` with the exact 40-character head; pass it as `expectedHeadSha`; after, `coord.py head-sha ... --merged`. CI-INCIDENTS: \"In force: the green-head gate\"; its infrastructure exception is \"Proposed ... not in force\".",
+   "where": "/home/user/mibz2/CLAUDE.md:21-31; /home/user/mibz2/docs/team/CI-INCIDENTS.md:104-108"
+  },
+  {
+   "topic": "8. What pre-commit.ci runs",
+   "fact": "The hook `just precommit` resolves to `pc-ci` when `PRE_COMMIT_HOME` is set, i.e. `code-quality`: `taplo lint`, `taplo format --check`, `just fix-eof-ws check`, `cargo machete`, `cargo fmt --check --all`. `ty` is skipped on pre-commit.ci. A `conventional-pre-commit` hook runs at the commit-msg stage.",
+   "where": "/home/user/mibz2/.pre-commit-config.yaml:1-43; /home/user/mibz2/Justfile:16-23; /home/user/mibz2/.just/quality.just:22-28"
+  },
+  {
+   "topic": "8. Workflows a src/ PR triggers",
+   "fact": "Test (every PR): `rust` (fmt, clippy, `cargo test` with default features, `cargo test --example ab`, par_scan tests, alternatives lock), `fuzz-smoke`, `submit`, `python`, `typing`. CI (wheels for linux x86_64/aarch64, windows x64, macos x86_64/aarch64, sdist; for PRs by `lmmx`). Benchmark (paths `src/**`, `Cargo.toml`, `Cargo.lock`, `tests/common/**`, `bench/**` and three examples; 1, 2 and nproc threads, 10 rounds). Miri (listed paths only). walk-stats (on src/bwt.rs, src/coop.rs, src/parallel.rs, Cargo.toml). Documentation site (on `src/**`).",
+   "where": "/home/user/mibz2/.github/workflows/test.yml:14-44; /home/user/mibz2/.github/workflows/CI.yml:23-147; /home/user/mibz2/.github/workflows/bench.yml:39-51, :216-219; /home/user/mibz2/.github/workflows/walk-stats.yml:16-26; /home/user/mibz2/.github/workflows/site.yml:27-36"
+  },
+  {
+   "topic": "Feature-off-by-default precedent",
+   "fact": "Existing features `trace`, `wait-stats`, `walk-stats` are off by default. For such code only clippy (`--all-features`) builds it in the standing jobs: `cargo test` (test.yml:27), Miri, fuzz-smoke and the bench all use default features. #338 (walk-stats) therefore added its own workflow: the tests with the feature on, and the harness built with and without the feature, compared by SHA-256 on the generated corpora. It changed .github/workflows/walk-stats.yml, Cargo.toml, bench/*.py, examples/ab.rs, src/coop.rs, src/lib.rs, src/parallel.rs.",
+   "where": "/home/user/mibz2/Cargo.toml:39-51; /home/user/mibz2/.github/workflows/walk-stats.yml:1-63; git show --stat 8f540ef"
+  }
+ ],
+ "precedent": "How the run-records route went into production, by commit (git show --stat):\n\n**#324, master 47149bf — \"perf: run-record front and LF table on blocks of few symbols, walked backward\".** Six files, +1628/−9, squashed from three commits (perf, test, docs):\n- `src/runs.rs` (new, 688 lines): `takes_runs`, `Runs`, `front` / `front_scalar` / `front_avx2`, `fill`.\n- `src/runs/tests.rs` (new, 638 lines): five `miri_*` tests (the fifth, `miri_runs_avx2_kernels_selected`, is cfg-gated on AVX2 target features), plus five tests added from mutation testing.\n- `src/bwt.rs` (+170): `InverseBwt::reads_runs` / `invert_runs`, `Segmented`'s overrides, `walk_back_room`, `assemble_reversed`, `repeat_cycle`.\n- `src/lib.rs` (+43): `Scratch.runs` and the branch in `decode_block`, with fallback to the column path behind a `debug_assert!`.\n- `.github/workflows/miri.yml` (+4): the two new paths, for PR and push.\n- `docs/journal/2026-11-10-run-front-production.md` (+94 in the merge; it was begun earlier): what changes, the price, §3 B5, §4 instruction counts, §5 the frozen rule, §6 the result.\n\nNo Cargo feature, no fuzz-mode change, no new integration test, no bench change. The route was on by default for `Segmented`.\n\n**#352, c92cf3b — docs only.** The journal's \"Adopted\" header (merged head, bench run, B5 summary) and one line in `docs/team/DELIVERED.md`.\n\n**#353, c9329f0 — \"fix(runs): admission by the bound and the share of run symbols\".** `src/runs.rs` (+54/−7) and new `tests/admission.rs` (128 lines, three tests).\n\n**#359, a5197f1 — team paths read the records.** Nine files: `examples/fuzz.rs` (+218: MODE `teams`, `TeamCand`, `TeamStats`, `team_routes`, `team_case`), `.github/workflows/test.yml` (+3: the \"Plain-team candidates\" fuzz step), `src/bwt.rs`, `src/coop.rs`, `src/lib.rs`, `src/mtf.rs`, `src/parallel.rs`, `src/runs.rs`, `src/runs/tests.rs`. This is the precedent for a fuzz mode that forces the route with its reach counted, cited as D097-F1.\n\n**Earlier fuzz-mode and mutant precedent.** f747fe7 (service fuzz mode, D067) changed `examples/fuzz.rs`, `tests/common/mod.rs` (`service_candidates`), test.yml, miri.yml and added `mutants.py`. #273 added the `fuzz-smoke` job and twelve scripted mutants (`docs/journal/2026-11-09-pipeline-fuzz-and-mutation.md`).\n\n**Order of evidence in #324.** Registration and safety argument were written before the PR. Miri, fuzz and differential tests were in the first commit. Mutation testing and its five tests came as a second commit after the adoption decision. The adversarial review came last and is recorded only as one line in the journal header.\n\n**Bench.** #324 failed its own frozen no-harm rule (`random` 1t +5.3%, `records` 1t +2.1%) and was then adopted under PERFORMANCE-POLICY.md on a fresh bench of the merged head (run 42808607358).",
+ "risks": [
+  "Miri cannot see the kernel's main hazard: the four regions share one zero-filled, reused Vec<u8>, so an overrun between regions or a stale-slot read passes Miri and valgrind. A Miri pass alone would not meet B5 (\"the test names alone don't satisfy it\") or B7. The only region check is a debug_assert at examples/rauzy.rs:1090-1095, evaluated after the writes.",
+  "A write past the end of the buffer is real UB, and the bounds that prevent it (docs/journal/monodromy/2026-11-10-rauzy-veech.md:728-731) were checked by one sub-agent review, not by tests in the repository. The safety-argument table would have to carry them with a proof scope.",
+  "The kernel panics where production must refuse: asserts at examples/rauzy.rs:902, :931-934, :1036-1039. The fuzz counts a panic as a failure, and a B6 stop covers a violated invariant.",
+  "A step budget that stops mid-induction and falls back is a new control path: the fallback has to produce the column route's bytes and error after the cells buffer and `out` were partly written. #324's precedent returns false before writing the output and the caller clears it (src/bwt.rs:86-87).",
+  "Corrupt-block equivalence: the same error, including the `computed` CRC, is required (PERFORMANCE-POLICY.md:16). #324 needed `repeat_cycle` for cycles shorter than n. The cells writer has its own short-cycle copy (examples/rauzy.rs:1311-1317), checked only by `rauzy --arbitrary` against `bwt::walk`, not through `decode_block` and `finish`.",
+  "The Miri workflow will not run for a new file unless its path is added to .github/workflows/miri.yml:16-35, and it only runs lib unit tests named `miri_*`. Tests left in examples/ or tests/ are never interpreted.",
+  "If the kernel lands behind an off-by-default feature, `cargo test`, Miri, fuzz-smoke and the bench do not build it; only clippy does. All B5 evidence for it would need its own workflow steps, as #338 did, and the default flip would need a fresh bench.",
+  "Changing `Segmented::invert_runs` is not strictly one-thread: every `Workers(n)` bench row runs `decode_block` with `Segmented` (journal run-front-production:62-63), and `Cooperative::invert_runs` duplicates the fill and walk for small blocks (src/bwt.rs:313-319). The scope boundary has to be chosen and tested explicitly.",
+  "Fuzz reach is printed, not gated, in CI (test.yml:59-67). A forced mode that silently stops reaching the route would still pass. D042's standard is coverage showing the path is reached.",
+  "cargo-mutants skips `unsafe fn`s (journal run-front-production:297). If the kernel is wrapped in an `unsafe fn` boundary, as the monodromy journal suggests at :966, its body gets no automatic mutants and needs a hand pass.",
+  "No mutation record exists for #353's sampled admission (RUN_SHARE, WINDOW, WINDOWS). A new admission layered on `takes_runs` inherits that gap, and B6 lists \"a mutation check that misses its target\" as an immediate stop.",
+  "This machine has no nightly, no Miri component and no cargo-mutants, and is shared with no local heavy runs. Miri evidence would come from the CI job; mutation evidence needs a tool install or a hand-scripted pass.",
+  "Memory: the buffer is 128n + 4,912 bytes (115 MB at n = 9·10⁵) per Scratch, relying on untouched zero pages (examples/rauzy.rs:904-905). PERFORMANCE-POLICY.md:38 caps peak RSS growth at 10% per corpus, and the journal says the footprint is \"more than production's table\" (:716-717).",
+  "Non-x86_64 builds take a different `copy_small` (`copy_nonoverlapping`, exactly `len` bytes) and no prefetch (examples/rauzy.rs:585-586, :615-618). CI builds aarch64 wheels but tests and Miri run on x86_64 only.",
+  "Adding or editing any file under src/, tests/ or examples/ changes the bench's `text` corpus (tests/common/mod.rs:409-430). Head and base generate their corpora from the head checkout in the bench, so the arms still match, but figures are not comparable across PRs.",
+  "The legacy commit status from pre-commit.ci counts toward green (CLAUDE.md:23-27); #351 was merged with it in error. `cargo machete`, `taplo` and whitespace checks run there, not in Actions."
+ ],
+ "open_questions": [
+  "Who performs the B5 adversarial review for this PR: the Guardian (the assignment text; #161) or the Researcher (ROLES.md:73 and SPEC.RESEARCHER.md:22 call the Researcher's B5 review \"a hard gate\"; #162)? The documents and #324's journal (:279-280, :285-286) disagree.",
+  "Is the Guardian's review a precondition here? RULES.md:58 and SPEC.GUARDIAN.md:28 say nobody's approval is a precondition, and CLAUDE.md says the Coordinator proceeds if no HOLD comes within one assignment cycle; the assignment says \"the Guardian's review before merge\".",
+  "What exactly did Guardian D097-F1 require of #359's forced fuzz mode (a minimum reach, counts per route, a CI step)? The decision text is not in the local repository; team-state/guardian is not fetched.",
+  "Should the new fuzz mode's reach be asserted (a minimum number of blocks by the cells route, and of budget fallbacks) so that CI gates on it? Existing modes only print it.",
+  "How is the route to be forced regardless of admission: a new `InverseBwt` kernel type, a `#[doc(hidden)]` hook, or thread-local state like `FORCED`? There is no precedent for forcing a one-thread route past `takes_runs`, and no env var or cfg precedent at all.",
+  "Does Miri evidence need a second pass on another target (aarch64) or with target features, as #324 did locally for AVX2, given the kernel's cfg(target_arch) split? CI's Miri job runs the default x86_64 target only.",
+  "Where does mutation testing run, given cargo-mutants is not installed here and has no CI job: installed locally, or a hand-scripted mutants.py pass as in the 2026-11-09 journals?",
+  "Does this PR need its own journal entry with a safety-argument table before it opens, as #324 had (§3, proof scope stated)? No registration is needed for a merge under PERFORMANCE-POLICY.md (RULES.md:66), but STEWARDSHIP.md:51-52 still asks a default-kernel PR for its mechanism, predicted effect and falsifier.",
+  "Is the admission to be a new function beside `runs::takes_runs`, called after `runs::front` (r is known only after the front), and must tests/admission.rs-style tests pin `records` and `random` to the old route?",
+  "#353's source patch (admission-only.diff.txt @ a5460685), #324's merged head b380afe8, and the #359 note's section 8 are not in the local object store, so their contents could not be read."
+ ]
+}

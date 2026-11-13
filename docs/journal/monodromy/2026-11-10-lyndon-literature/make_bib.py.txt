@@ -1,0 +1,186 @@
+# Scratch helper kept beside the entry: it wrote sections 1 and 2 from the readers reports
+# (readers/lit2_*.json). Its path S pointed at the session scratch (a folder holding reports/).
+# Run as: python3 make_bib.py BDZZ18=BDZZ18 BDZZ20=BDZZ20 BDZZ26=BDZZ26 BDRZZ24=BDRZZ24 LZJ22=LZJ22 BIKKP22=BIKKP24 Wols26=Wols26 DNSZZ26=DNSZZ26
+#!/usr/bin/env python3
+"""Sections 1 and 2 of the entry from the readers' reports (scratch; not for the repository)."""
+import json
+import sys
+
+S = "/tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad"
+
+# the 32 result lines as pasted: (list, number, title as pasted, key)
+LINES = [
+    (1, 1, "Algorithms for Galois words: Detection, factorization, and rotation", "HKYS24"),
+    (1, 2, "Some variations on Lyndon words", "DRR-var"),
+    (1, 3, "Block sorting-based transformations on words: beyond the magic BWT", "GMRRS18"),
+    (1, 4, "[HTML] Linear construction of a left Lyndon tree", "BC"),
+    (1, 5, "Reprint of: ω-Lyndon words", "PZ20"),
+    (1, 6, "[HTML] Generalized Lyndon factorizations of infinite words", "BW19"),
+    (1, 7, "[PDF] Constructing the bijective BWT", "BKKP"),
+    (1, 8, "V-Words, Lyndon Words and Galois Words", "DMS"),
+    (1, 9, "[HTML] Generalised Nyldon words", "FHN25"),
+    (1, 10, "Some variations on Lyndon words (invited talk)", "DRR-var"),
+    (1, 11, "Lyndon words formalized in Isabelle/HOL", "HS21"),
+    (1, 12, "From the Lyndon factorization to the canonical inverse Lyndon factorization: Back and forth", "BDZZ26"),
+    (1, 13, "Generalized Lyndon factorizations of infinite words", "BW19"),
+    (1, 14, "Synchronous Combinatorial Games", "Wols26"),
+    (1, 15, "V-Words, Lyndon Words and Substring circ-UMFFs", "DMS"),
+    (1, 16, "Left Lyndon tree construction", "BC"),
+    (1, 17, "String Rearrangement Inequalities", "LZJ22"),
+    (1, 18, "String Rearrangement Inequalities and a Total Order Between Primitive Words", "LZJ22"),
+    (1, 19, "[HTML] Reprint of: Generalized Lyndon factorizations of infinite words", "BW19"),
+    (1, 20, "Generalized Lyndon Factorizations", "BW19"),
+    (1, 21, "Block Sorting-Based Transformations on Words: Beyond the Magic BWT", "GMRRS18"),
+    (1, 22, "[PDF] Local and Global Regularities in Infinite Words", "Postic20"),
+    (2, 1, "[BOOK] Hopf algebras in combinatorics", "GR-Hopf"),
+    (2, 2, "Constructing and indexing the bijective and extended Burrows–Wheeler transform", "BKKP"),
+    (2, 3, "A survey of the Bijective Burrows-Wheeler transform", "BKL"),
+    (2, 4, "[HTML] Inverse Lyndon words and inverse Lyndon factorizations of words", "BDZZ18"),
+    (2, 5, "Constructing the bijective and the extended Burrows-Wheeler transform in linear time", "BKKP"),
+    (2, 6, "[HTML] The alternating BWT: an algorithmic perspective", "GMRRS20"),
+    (2, 7, "Computing longest Lyndon subsequences and longest common Lyndon subsequences", "BIKKP24"),
+    (2, 8, "[HTML] On the longest common prefix of suffixes in an inverse Lyndon factorization and other properties", "BDZZ20"),
+    (2, 9, "Simple linear time algorithm for sorting strings in omega-order with applications", "LZJ22"),
+    (2, 10, "Lyndon words versus inverse Lyndon words: Queries on suffixes and bordered words", "BDZZ20"),
+]
+
+# (cluster, reader's key) -> the entry's key. The first cluster named is the record used.
+KEYS = {
+    ("lyndon-trees", "DRR-gen"): "DRR-gen",
+    ("lyndon-trees", "CR"): "CR",
+    ("lyndon-trees", "DRR-var"): "DRR-var",
+    ("lyndon-trees", "BC"): "BC",
+    ("lyndon-trees", "HR"): "HR",
+    ("lyndon-trees", "Reut06"): "Reut06",
+    ("lyndon-trees", "Ellert22"): "Ellert22",
+    ("lyndon-trees", "BE23"): "BE23",
+    ("bijective-bwt", "BKKP-bbwt"): "BKKP",
+    ("bijective-bwt", "BKL-survey"): "BKL",
+    ("bijective-bwt", "GilScott"): "GilScott",
+    ("bijective-bwt", "MRRS07"): "MRRS07",
+    ("bijective-bwt", "GR93"): "GR93",
+    ("bijective-bwt", "CDP05"): "CDP05",
+    ("bijective-bwt", "Kufleitner09"): "Kuf09",
+    ("bijective-bwt", "Koeppl20"): "Koeppl20",
+    ("bijective-bwt", "BBIK-schemes"): "BBIK",
+    ("bijective-bwt", "BIN25"): "BIN25",
+    ("bijective-bwt", "CLPRS25"): "CLPRS25",
+    ("bijective-bwt", "Kempa19"): "Kempa19",
+    ("bijective-bwt", "LouzaLefebvre25"): "LL25",
+    ("alternating-galois", "GMRRS-DLT18"): "GMRRS18",
+    ("alternating-galois", "GMRRS-TCS20"): "GMRRS20",
+    ("alternating-galois", "HKYS-CPM24"): "HKYS24",
+    ("alternating-galois", "DMS-VWORDS"): "DMS",
+    ("alternating-galois", "GMRRS-IC23"): "GMRRS23",
+    ("alternating-galois", "GRR-EJC12"): "GRR12",
+    ("alternating-galois", "Elizalde-25"): "Eliz25",
+    ("generalized-hall", "postic-zamboni-2020"): "PZ20",
+    ("generalized-hall", "postic-thesis-2020"): "Postic20",
+    ("generalized-hall", "burcroff-winsor-2019"): "BW19",
+    ("generalized-hall", "fleischmann-huch-nowotka-2025"): "FHN25",
+    ("generalized-hall", "charlier-philibert-stipulanti-2019"): "CPS19",
+    ("generalized-hall", "grinberg-reiner-2020"): "GR-Hopf",
+    ("generalized-hall", "holub-starosta-2021"): "HS21",
+    ("generalized-hall", "perrin-reutenauer-2018"): "PR18",
+    ("generalized-hall", "melancon-1992"): "Mel92",
+    ("generalized-hall", "reutenauer-1993"): "Reut93",
+    ("generalized-hall", "viennot-1978"): "Viennot78",
+    ("generalized-hall", "garg-2021"): "Garg21",
+}
+EXTRA = {}  # filled from argv for the fifth cluster: reader's key -> entry key
+SKIP = {  # duplicates of a record another cluster holds
+    ("lyndon-trees", "Mel92"), ("alternating-galois", "Reut-SLC54"), ("alternating-galois", "DRR-TCS19"),
+    ("alternating-galois", "Melancon-92"), ("generalized-hall", "reutenauer-2006"),
+    ("generalized-hall", "dolce-restivo-reutenauer-2019-tcs"),
+    ("generalized-hall", "dolce-restivo-reutenauer-2019-variations"),
+}
+CLUSTERS = ["lyndon-trees", "bijective-bwt", "alternating-galois", "generalized-hall", "inverse-omega-misc"]
+
+
+def load():
+    recs, unknown = {}, []
+    for c in CLUSTERS:
+        try:
+            r = json.load(open(f"{S}/reports/lit2_{c}.json"))
+        except FileNotFoundError:
+            continue
+        for b in r["bibliography"]:
+            k = (c, b["key"])
+            if k in SKIP:
+                continue
+            key = KEYS.get(k) or EXTRA.get(b["key"])
+            if key is None:
+                unknown.append(k)
+                continue
+            recs[key] = b
+    return recs, unknown
+
+
+def clean(s):
+    return " ".join((s or "").split())
+
+
+def item(key, b, lines):
+    out = [f"- **[{key}]** {clean(b['authors']).replace(';', ',')}. *{clean(b['title'])}.*"]
+    loc = clean(b.get("locator", ""))
+    ven = clean(b["venue"])
+    yr = clean(b["year"])
+    out.append(f"  {ven}, {yr}." if ven else f"  {yr}.")
+    if loc:
+        out.append(f"  Versions and what was read: {loc}")
+    ids = []
+    if clean(b.get("doi", "")):
+        ids.append(f"DOI `{clean(b['doi'])}`")
+    if clean(b.get("arxiv", "")):
+        ids.append(f"arXiv `{clean(b['arxiv'])}`")
+    if ids:
+        out.append("  " + "; ".join(ids) + ".")
+    if lines:
+        out.append("  Scholar lines: " + ", ".join(lines) + ".")
+    out.append(f"  *What it is:* {clean(b['one_line'])}")
+    out.append(f"  *Record from:* {clean(b['source_of_record'])}")
+    if clean(b.get("unverified", "")):
+        out.append(f"  *Not verified:* {clean(b['unverified'])}")
+    return "\n".join(out)
+
+
+def main():
+    for a in sys.argv[1:]:
+        k, v = a.split("=")
+        EXTRA[k] = v
+    recs, unknown = load()
+    by_key = {}
+    for lst, num, title, key in LINES:
+        by_key.setdefault(key, []).append(f"{'A' if lst == 1 else 'B'}{num}")
+    print("## 1. The lists\n")
+    print("`2026-11-10-lyndon-literature/scholar-results.txt` holds the two lists as pasted, the first")
+    print("above the dash line (A1 to A22 here), the second under the heading \"On generalized Lyndon")
+    print("words\" (B1 to B10). Between them the message carried its three requests, which are §0's")
+    print("first item and are not in the file. A line's number is its place in its list.\n")
+    print("| line | title as pasted | work |")
+    print("|---|---|---|")
+    for lst, num, title, key in LINES:
+        print(f"| {'A' if lst == 1 else 'B'}{num} | {title} | [{key}] |")
+    print("| (heading) | On generalized Lyndon words | [DRR-gen] |")
+    print()
+    sch = ["DRR-gen"] + [k for k in dict.fromkeys(k for _, _, _, k in LINES)]
+    missing = [k for k in sch if k not in recs]
+    print("## 2. Bibliography\n")
+    print("Every field is from a page fetched on 10 November 2026 by the reader named in §3 (the")
+    print("\"record from\" of each item); nothing is filled from memory. \"Not verified\" is the")
+    print("reader's own list of what it could not reach.\n")
+    print(f"### 2.1 The works behind the 32 lines ({len(sch)})\n")
+    for k in sch:
+        if k in recs:
+            print(item(k, recs[k], by_key.get(k, ["the heading of list B"])))
+        else:
+            print(f"- **[{k}]** (record pending)")
+    bg = [k for k in recs if k not in sch]
+    print(f"\n### 2.2 Fetched to state things exactly ({len(bg)})\n")
+    for k in bg:
+        print(item(k, recs[k], []))
+    print()
+    sys.stderr.write(f"scholar works {len(sch)}, with record {len(sch) - len(missing)}, missing {missing}; background {len(bg)}; unknown keys {unknown}\n")
+
+
+main()

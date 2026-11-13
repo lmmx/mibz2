@@ -1,0 +1,622 @@
+"""Beside docs/journal/monodromy/2026-11-10-lyndon-literature.md. Brute force, no clock.
+
+    python3 FILE          every test below, at the sizes the entry quotes (about 3 minutes)
+
+Rauzy induction on LF's interval exchange, on Python lists, exactly as the first entry's
+section 2 states it (2026-11-10-rauzy-veech.md), with steps at either end, at any
+coincidence, and the drop rule. Words are kept as trees (nested pairs) in text order.
+
+T1  The right-end induction on ANY column returns the multiset of Lyndon words whose
+    extended BWT the column is, largest first, each with its Lyndon tree; on the bijective
+    BWT of T it returns T's Lyndon factorization.
+T2  The left-end induction on the BWT of a primitive T is the right-end induction of the BWT
+    for the inverse alphabet order: its tree is the Lyndon tree, inverse order, of the
+    greatest rotation.
+T3  The LEFT Lyndon tree is not always the tree of an order of steps (counted).
+T4  Eliminating the largest letter again and again (Lazard) leaves the right Lyndon tree.
+T5  For every sequence of right-handed steps, the steps taken equal the inner nodes of the
+    tree above a hinge (a text position whose byte a run-start row emits); and no order
+    that leaves the Lyndon tree takes fewer steps than the right end.
+T6  Every right-end step is a legal rise of the Schutzenberger-Melancon rewriting: the left
+    word is smaller than the right, and the right word is a largest of the words present.
+T7  On a two-run column b^k a^l the right end is Euclid's subtraction on (k, l).
+"""
+from math import gcd
+import sys
+from itertools import product
+
+
+def lf_runs(L):
+    """letters of the exchange: (byte, length) per maximal run; top = as they lie; bottom =
+    stable sort by byte."""
+    runs = []
+    for c in L:
+        if runs and runs[-1][0] == c:
+            runs[-1][1] += 1
+        else:
+            runs.append([c, 1])
+    top = list(range(len(runs)))
+    bot = sorted(top, key=lambda i: runs[i][0])  # stable
+    lam = [r[1] for r in runs]
+    word = [r[0] for r in runs]  # a leaf is a byte (int or str)
+    return top, bot, lam, word
+
+
+def flat(t, out=None):
+    if out is None:
+        out = []
+    stack = [t]
+    while stack:
+        x = stack.pop()
+        if isinstance(x, tuple):
+            stack.append(x[1])
+            stack.append(x[0])
+        else:
+            out.append(x)
+    return out
+
+
+def right_end(L):
+    """The right-end induction with the drop rule. Returns the closed letters in the order
+    they close: [(tree, number of points)], and the number of steps."""
+    top, bot, lam, word = lf_runs(L)
+    closed, steps = [], 0
+    while top:
+        a, b = top[-1], bot[-1]
+        if a == b:
+            closed.append((word[a], lam[a]))
+            top.pop()
+            bot.pop()
+            continue
+        steps += 1
+        n = (word[a], word[b])
+        if lam[a] > lam[b]:  # top wins: B takes the word, moves on the bottom to just after A
+            lam[a] -= lam[b]
+            word[b] = n
+            bot.pop()
+            bot.insert(bot.index(a) + 1, b)
+        elif lam[a] < lam[b]:  # bottom wins: A takes the word, moves on top to just after B
+            lam[b] -= lam[a]
+            word[a] = n
+            top.pop()
+            top.insert(top.index(b) + 1, a)
+        else:  # equal: B takes the word and A's bottom place; A is deleted
+            word[b] = n
+            top.pop()
+            bot.pop()
+            bot[bot.index(a)] = b
+    return closed, steps
+
+
+# ---- Lyndon tools ------------------------------------------------------------------------
+def duval(s):
+    """Lyndon factorization (Chen-Fox-Lyndon), by Duval's algorithm: list of factors."""
+    out, i, n = [], 0, len(s)
+    while i < n:
+        j, k = i + 1, i
+        while j < n and s[k] <= s[j]:
+            k = i if s[k] < s[j] else k + 1
+            j += 1
+        while i <= k:
+            out.append(tuple(s[i : i + j - k]))
+            i += j - k
+    return out
+
+
+def is_lyndon(w):
+    w = tuple(w)
+    return all(w < w[i:] + w[:i] for i in range(1, len(w)))
+
+
+def least_rotation(w):
+    w = tuple(w)
+    return min(w[i:] + w[:i] for i in range(len(w)))
+
+
+def is_primitive(w):
+    w = tuple(w)
+    n = len(w)
+    return not any(n % d == 0 and w == w[:d] * (n // d) for d in range(1, n))
+
+
+def right_tree(w):
+    """The (right) Lyndon tree of a Lyndon word: w = uv, v its least proper suffix."""
+    w = tuple(w)
+    if len(w) == 1:
+        return w[0]
+    k = min(range(1, len(w)), key=lambda i: w[i:])
+    return (right_tree(w[:k]), right_tree(w[k:]))
+
+
+def left_tree(w):
+    """The left Lyndon tree of a Lyndon word: w = uv, u its longest proper prefix that is a
+    Lyndon word (then v is a Lyndon word too)."""
+    w = tuple(w)
+    if len(w) == 1:
+        return w[0]
+    k = max(i for i in range(1, len(w)) if is_lyndon(w[:i]))
+    assert is_lyndon(w[k:]), w
+    return (left_tree(w[:k]), left_tree(w[k:]))
+
+
+def bwt(T):
+    """bzip2's transform: the rotations of T sorted, last column (ties in any order)."""
+    T = tuple(T)
+    n = len(T)
+    rows = sorted(range(n), key=lambda i: T[i:] + T[:i])
+    return [T[(i - 1) % n] for i in rows]
+
+
+def ebwt(words):
+    """Extended BWT of a multiset of words (Mantaci et al.): every rotation of every word,
+    sorted by the infinite order (u^omega), last letters."""
+    rots = []
+    tot = sum(len(w) for w in words)
+    for wi, w in enumerate(words):
+        w = tuple(w)
+        for i in range(len(w)):
+            r = w[i:] + w[:i]
+            key = tuple(r[k % len(r)] for k in range(2 * tot))
+            rots.append((key, wi, r[-1]))
+    rots.sort(key=lambda x: x[0])
+    return [x[2] for x in rots]
+
+
+def words_over(alphabet, maxlen, minlen=1):
+    for n in range(minlen, maxlen + 1):
+        for w in product(alphabet, repeat=n):
+            yield w
+
+
+
+def omega_key(w, k):
+    return tuple(w[i % len(w)] for i in range(k))
+
+
+def h1(maxlen2, maxlen3):
+    cols = closed_total = multi = powers = 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        for L in words_over(alphabet, maxlen):
+            closed, _ = right_end(list(L))
+            cols += 1
+            words = []
+            assert sum(lam * len(flat(t)) for t, lam in closed) == len(L)
+            for t, lam in closed:
+                w = tuple(flat(t))
+                assert is_lyndon(w), (L, w)  # primitive and least among its rotations
+                assert t == right_tree(w), (L, w)  # its tree is the Lyndon tree
+                words.extend([w] * lam)
+                closed_total += 1
+                powers += lam > 1
+            multi += len(words) > 1
+            # a Lyndon word closes once, with its multiplicity as the letter's length
+            assert len({tuple(flat(t)) for t, _ in closed}) == len(closed), L
+            k = 2 * len(L)
+            # largest first, in the infinite order and in the lexicographic order alike
+            assert all(omega_key(a, k) >= omega_key(b, k) for a, b in zip(words, words[1:])), L
+            assert all(a >= b for a, b in zip(words, words[1:])), L
+            # the column is the extended BWT of that multiset (the bijection, both ways)
+            assert ebwt(words) == list(L), (L, words)
+    print(f"T1a: {cols} columns ({multi} with more than one word; {closed_total} closed "
+          f"letters, {powers} of them of several points): every closed word a Lyndon word "
+          f"with its Lyndon tree, largest first, and the column their extended BWT")
+    texts = 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        for T in words_over(alphabet, maxlen):
+            f = duval(T)
+            closed, _ = right_end(ebwt(f))
+            got = []
+            for t, lam in closed:
+                got.extend([tuple(flat(t))] * lam)
+            assert got == f, (T, f, got)
+            texts += 1
+    print(f"T1b: {texts} texts: the induction on the bijective BWT returns the Lyndon "
+          f"factorization, in its order")
+
+
+def h2(maxlen2, maxlen3):
+    n = 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        top_sym = alphabet[-1]
+        comp = lambda w: tuple(top_sym - c for c in w)
+        for T in words_over(alphabet, maxlen, 2):
+            if not is_primitive(T):
+                continue
+            L = bwt(T)
+            mirror = [top_sym - c for c in reversed(L)]
+            assert mirror == bwt(comp(T)), T  # the mirrored column is the BWT for the inverse order
+            closed, steps_mirror = right_end(mirror)
+            assert len(closed) == 1
+            t = closed[0][0]
+            assert t == right_tree(least_rotation(comp(T))), T
+            # and the left-end induction written directly agrees with the mirror
+            direct, steps_direct = left_end(L)
+            assert comp_tree(direct, top_sym) == t and steps_direct == steps_mirror, T
+            n += 1
+    print(f"T2: {n} primitive words: the left-end induction is the right-end induction of "
+          f"the BWT for the inverse alphabet order; its tree is the Lyndon tree (inverse "
+          f"order) of the greatest rotation")
+
+
+def comp_tree(t, top_sym):
+    if isinstance(t, tuple):
+        return (comp_tree(t[0], top_sym), comp_tree(t[1], top_sym))
+    return top_sym - t
+
+
+def left_end(L):
+    """The induction at the left endpoint, for one cycle: the mirror of the entry's table."""
+    top, bot, lam, word = lf_runs(L)
+    steps = 0
+    while len(top) > 1:
+        a, b = top[0], bot[0]
+        assert a != b
+        steps += 1
+        n = (word[a], word[b])
+        if lam[a] > lam[b]:  # B takes the word, moves on the bottom to just before A
+            lam[a] -= lam[b]
+            word[b] = n
+            bot.pop(0)
+            bot.insert(bot.index(a), b)
+        elif lam[a] < lam[b]:  # A takes the word, moves on top to just before B
+            lam[b] -= lam[a]
+            word[a] = n
+            top.pop(0)
+            top.insert(top.index(b), a)
+        else:
+            word[b] = n
+            top.pop(0)
+            bot.pop(0)
+            bot[bot.index(a)] = b
+    return word[top[0]], steps
+
+
+def all_schedule_trees(L, two_sided=True):
+    """Every tree that some order of steps leaves, steps taken at any coincidence, at the
+    end of two intervals (right-handed) and, if two_sided, at their start (left-handed).
+    Returns {tree: fewest steps}."""
+    top, bot, lam, word = lf_runs(L)
+    start = (tuple(top), tuple(bot), tuple(lam), tuple(word))
+    best = {}
+    seen = {}
+    stack = [(start, 0)]
+    while stack:
+        state, steps = stack.pop()
+        if seen.get(state, 1 << 30) <= steps:
+            continue
+        seen[state] = steps
+        top, bot, lam, word = state
+        if len(top) == 1:
+            t = word[top[0]]
+            best[t] = min(best.get(t, 1 << 30), steps)
+            continue
+        ends_t, starts_t, pos = {}, {}, 0
+        for x in top:
+            starts_t[pos] = x
+            pos += lam[x]
+            ends_t[pos] = x
+        pos = 0
+        moves = []
+        for x in bot:
+            if two_sided and pos in starts_t and starts_t[pos] != x:
+                moves.append((starts_t[pos], x, False))
+            pos += lam[x]
+            if pos in ends_t and ends_t[pos] != x:
+                moves.append((ends_t[pos], x, True))
+        for a, b, right in moves:
+            t2, b2, l2, w2 = list(top), list(bot), list(lam), list(word)
+            n = (word[a], word[b])
+            if lam[a] > lam[b]:
+                l2[a] -= lam[b]
+                w2[b] = n
+                b2.remove(b)
+                b2.insert(b2.index(a) + (1 if right else 0), b)
+            elif lam[a] < lam[b]:
+                l2[b] -= lam[a]
+                w2[a] = n
+                t2.remove(a)
+                t2.insert(t2.index(b) + (1 if right else 0), a)
+            else:
+                w2[b] = n
+                t2.remove(a)
+                i = b2.index(a)
+                b2.remove(b)
+                b2[b2.index(a)] = b
+            stack.append(((tuple(t2), tuple(b2), tuple(l2), tuple(w2)), steps + 1))
+    return best
+
+
+def h3(maxlen2, maxlen3):
+    for two_sided in (False, True):
+        tot = differ = left_in = right_in = anti_in = 0
+        fewer = []
+        counts = []
+        for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+            top_sym = alphabet[-1]
+            for V in words_over(alphabet, maxlen, 3):
+                if not is_lyndon(V):
+                    continue
+                L = bwt(V)
+                trees = all_schedule_trees(L, two_sided)
+                # every tree spells a rotation of V
+                assert all(tuple(flat(t)) in {V[i:] + V[:i] for i in range(len(V))} for t in trees)
+                rt, lt = right_tree(V), left_tree(V)
+                anti = comp_tree(right_tree(least_rotation(tuple(top_sym - c for c in V))), top_sym)
+                tot += 1
+                right_in += rt in trees
+                anti_in += anti in trees
+                counts.append(len(trees))
+                if lt != rt:
+                    differ += 1
+                    if lt in trees:
+                        left_in += 1
+                        _, s_right = right_end(L)
+                        if trees[lt] < s_right:
+                            fewer.append((V, trees[lt], s_right))
+        side = "either end of an interval" if two_sided else "right-handed steps only"
+        print(f"T3 ({side}): {tot} Lyndon words; the right tree is some order's tree on "
+              f"{right_in}, the anti-Lyndon tree on {anti_in}; the left tree differs from "
+              f"the right on {differ} and is some order's tree on {left_in} of those; "
+              f"trees a word: max {max(counts)}, mean {sum(counts) / len(counts):.1f}")
+        if fewer:
+            print(f"   left tree reached in fewer steps than the right end on {len(fewer)}: "
+                  f"first {fewer[:3]}")
+
+
+def lazard_largest(V):
+    """V a Lyndon word. Letters are (expansion, tree). Repeatedly take the largest letter z
+    (expansions compared as words) and merge every maximal block x z^i, x != z, into one
+    letter ((x z) z)... Returns (tree, eliminations, merges)."""
+    seq = [((c,), c) for c in V]
+    rounds = merges = 0
+    while len(seq) > 1:
+        z = max(e for e, _ in seq)
+        assert seq[0][0] != z, V  # a Lyndon word does not begin with its largest letter
+        out = []
+        for e, t in seq:
+            if e == z:
+                pe, pt = out[-1]
+                out[-1] = (pe + e, (pt, t))
+                merges += 1
+            else:
+                out.append((e, t))
+        seq = out
+        rounds += 1
+    return seq[0][1], rounds, merges
+
+
+def h5(maxlen2, maxlen3):
+    n = 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3), ((0, 1, 2, 3), 7)):
+        for V in words_over(alphabet, maxlen, 2):
+            if is_lyndon(V):
+                t, rounds, merges = lazard_largest(V)
+                assert t == right_tree(V), V
+                n += 1
+    print(f"T4: {n} Lyndon words: eliminating the largest letter again and again (every block x z^i "
+          f"merged as ((x z) z)...) leaves the right Lyndon tree")
+
+
+def h6(maxlen2, maxlen3):
+    for two_sided in (False, True):
+        tot = s_right = s_same = s_any = less = 0
+        ex = []
+        for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+            for V in words_over(alphabet, maxlen, 3):
+                if not is_lyndon(V):
+                    continue
+                L = bwt(V)
+                trees = all_schedule_trees(L, two_sided)
+                _, sr = right_end(L)
+                rt = right_tree(V)
+                tot += 1
+                s_right += sr
+                s_same += trees[rt]
+                s_any += min(trees.values())
+                if trees[rt] < sr:
+                    less += 1
+                    ex.append((len(V), V, sr, trees[rt], min(trees.values())))
+        side = "either end" if two_sided else "right-handed"
+        print(f"T5 (fewest steps, {side}): {tot} Lyndon words; steps summed: right end {s_right}, fewest that leave "
+              f"the Lyndon tree {s_same}, fewest of any order {s_any}; the Lyndon tree is reached in "
+              f"fewer steps than the right end's on {less} words")
+        ex.sort()
+        for n, V, sr, st, sm in ex[:3]:
+            print("   e.g.", "".join("abc"[c] for c in V), "right end", sr, "Lyndon tree in", st, "any tree in", sm)
+
+
+def hinges_and_ends(V):
+    """text positions (in V) emitted by the run-start rows, and by the run-end rows."""
+    n = len(V)
+    rows = sorted(range(n), key=lambda i: V[i:] + V[:i])
+    L = [V[(i - 1) % n] for i in rows]
+    starts = {(rows[x] - 1) % n for x in range(n) if x == 0 or L[x] != L[x - 1]}
+    ends = {(rows[x] - 1) % n for x in range(n) if x == n - 1 or L[x] != L[x + 1]}
+    return starts, ends
+
+
+def marked_nodes(tree, marks, offset, n):
+    """inner nodes with a marked leaf below; leaves are numbered offset, offset+1, ... mod n"""
+    count = 0
+    def rec(t, i):
+        nonlocal count
+        if not isinstance(t, tuple):
+            return 1, ((offset + i) % n) in marks
+        l1, m1 = rec(t[0], i)
+        l2, m2 = rec(t[1], i + l1)
+        if m1 or m2:
+            count += 1
+        return l1 + l2, m1 or m2
+    rec(tree, 0)
+    return count
+
+
+def run(two_sided, maxlen2, maxlen3):
+    tot = trees_n = ok_s = ok_e = ok_min = ok_max = 0
+    bad = []
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        for V in words_over(alphabet, maxlen, 3):
+            if not is_lyndon(V):
+                continue
+            n = len(V)
+            starts, ends = hinges_and_ends(V)
+            trees = all_schedule_trees(bwt(V), two_sided)
+            tot += 1
+            for t, steps in trees.items():
+                w = tuple(flat(t))
+                offs = [s for s in range(n) if V[s:] + V[:s] == w]
+                assert len(offs) == 1
+                a = marked_nodes(t, starts, offs[0], n)
+                b = marked_nodes(t, ends, offs[0], n)
+                trees_n += 1
+                ok_s += a == steps
+                ok_e += b == steps
+                ok_min += min(a, b) == steps
+                ok_max += max(a, b) == steps
+                if a != steps and len(bad) < 3:
+                    bad.append((V, t, steps, a, b))
+    side = "either end" if two_sided else "right-handed"
+    print(f"T5 ({side}): {tot} Lyndon words, {trees_n} (word, tree) pairs; fewest steps == inner nodes above a "
+          f"run-start hinge on {ok_s}; above a run-end hinge on {ok_e}; == min of the two on {ok_min}; max on {ok_max}")
+    for V, t, s, a, b in bad:
+        print("   e.g.", "".join("abc"[c] for c in V), t, "steps", s, "start-hinge nodes", a, "end-hinge nodes", b)
+
+
+def check_paths(V):
+    n = len(V)
+    starts, _ = hinges_and_ends(V)
+    rows = sorted(range(n), key=lambda i: V[i:] + V[:i])   # row -> text position of its rotation
+    L = [V[(i - 1) % n] for i in rows]
+    top, bot, lam, word = lf_runs(L)
+    seen = {}
+    finals = 0
+    stack = [((tuple(top), tuple(bot), tuple(lam), tuple(word)), 0)]
+    while stack:
+        state, steps = stack.pop()
+        if state in seen:
+            assert seen[state] == steps, (V, state, seen[state], steps)   # steps is a function of the state
+            continue
+        seen[state] = steps
+        top, bot, lam, word = state
+        if len(top) == 1:
+            t = word[top[0]]
+            w = tuple(flat(t))
+            off = [s for s in range(n) if V[s:] + V[:s] == w][0]
+            assert marked_nodes(t, starts, off, n) == steps, (V, t, steps)
+            finals += 1
+            continue
+        ends_t, pos = {}, 0
+        for x in top:
+            pos += lam[x]
+            ends_t[pos] = x
+        pos = 0
+        for b in bot:
+            pos += lam[b]
+            a = ends_t.get(pos)
+            if a is None or a == b:
+                continue
+            t2, b2, l2, w2 = list(top), list(bot), list(lam), list(word)
+            nw = (word[a], word[b])
+            if lam[a] > lam[b]:
+                l2[a] -= lam[b]; w2[b] = nw; b2.remove(b); b2.insert(b2.index(a) + 1, b)
+            elif lam[a] < lam[b]:
+                l2[b] -= lam[a]; w2[a] = nw; t2.remove(a); t2.insert(t2.index(b) + 1, a)
+            else:
+                w2[b] = nw; t2.remove(a); b2.remove(b); b2[b2.index(a)] = b
+            stack.append(((tuple(t2), tuple(b2), tuple(l2), tuple(w2)), steps + 1))
+    return len(seen), finals
+
+
+def every_path(maxlens):
+    tot = states = finals = 0
+    for alphabet, maxlen in maxlens:
+        for V in words_over(alphabet, maxlen, 3):
+            if is_lyndon(V):
+                s, f = check_paths(V)
+                tot += 1
+                states += s
+                finals += f
+    print(f"T5 (every path of right-handed steps): {tot} Lyndon words, {states} states, {finals} final "
+          f"states: the steps taken are a function of the state, and equal the final tree's inner nodes "
+          f"above a run-start hinge")
+
+
+def left_tree_misses(maxlen2, maxlen3):
+    miss, tot, differ = [], 0, 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        for V in words_over(alphabet, maxlen, 3):
+            if not is_lyndon(V):
+                continue
+            lt, rt = left_tree(V), right_tree(V)
+            tot += 1
+            if lt == rt:
+                continue
+            differ += 1
+            if lt not in all_schedule_trees(bwt(V), True):
+                miss.append(V)
+    miss.sort(key=lambda v: (len(v), v))
+    print(f"T3: {tot} Lyndon words; the left tree differs from the right on {differ}; no order of steps, at "
+          f"either end of an interval, leaves it on {len(miss)}; smallest: "
+          + ", ".join("".join("abc"[c] for c in V) for V in miss[:3]))
+
+
+def legal_rises(maxlen2, maxlen3):
+    words = steps = 0
+    for alphabet, maxlen in (((0, 1), maxlen2), ((0, 1, 2), maxlen3)):
+        for T in words_over(alphabet, maxlen, 2):
+            if not is_primitive(T):
+                continue
+            top, bot, lam, word = lf_runs(bwt(T))
+            words += 1
+            while len(top) > 1:
+                a, b = top[-1], bot[-1]
+                wa, wb = tuple(flat(word[a])), tuple(flat(word[b]))
+                cur = [tuple(flat(word[x])) for x in top]
+                assert wa < wb, T                       # a rise
+                assert all(w <= wb for w in cur), T      # the right word is a largest word present
+                assert all(is_lyndon(w) for w in cur), T
+                steps += 1
+                n = (word[a], word[b])
+                if lam[a] > lam[b]:
+                    lam[a] -= lam[b]; word[b] = n; bot.pop(); bot.insert(bot.index(a) + 1, b)
+                elif lam[a] < lam[b]:
+                    lam[b] -= lam[a]; word[a] = n; top.pop(); top.insert(top.index(b) + 1, a)
+                else:
+                    word[b] = n; top.pop(); bot.pop(); bot[bot.index(a)] = b
+    print(f"T6: {words} primitive words, {steps} right-end steps: at every step every letter's word is a "
+          f"Lyndon word, w_A < w_B, and w_B is a largest of the words present")
+
+
+def two_runs(maxk):
+    cols = 0
+    for k in range(1, maxk + 1):
+        for l in range(1, maxk + 1):
+            closed, steps = right_end([1] * k + [0] * l)
+            # Euclid by subtraction on (k, l): the number of subtractions is the sum of the
+            # partial quotients of k/l
+            a, b, subs, quotients = k, l, 0, 0
+            while b:
+                subs += a // b; quotients += 1
+                a, b = b, a % b
+            g = gcd(k, l)
+            assert len(closed) == 1 and closed[0][1] == g, (k, l, closed)
+            assert steps == subs, (k, l, steps, subs)
+            assert len(flat(closed[0][0])) == (k + l) // g
+            cols += 1
+    print(f"T7: {cols} columns b^k a^l (1 <= k, l <= {maxk}): one closed letter of gcd(k, l) points, its word of "
+          f"length (k + l)/gcd; steps = the sum of the partial quotients of k/l (Euclid by subtraction)")
+
+
+
+if __name__ == "__main__":
+    h1(12, 8)
+    h2(12, 8)
+    left_tree_misses(10, 7)
+    h3(9, 6)
+    h5(14, 9)
+    h6(10, 7)
+    run(False, 10, 7)
+    run(True, 9, 6)
+    every_path((((0, 1), 11), ((0, 1, 2), 7), ((0, 1, 2, 3), 6)))
+    legal_rises(12, 8)
+    two_runs(40)

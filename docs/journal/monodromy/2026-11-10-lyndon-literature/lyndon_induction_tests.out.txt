@@ -1,0 +1,19 @@
+T1a: 18030 columns (15965 with more than one word; 44674 closed letters, 8767 of them of several points): every closed word a Lyndon word with its Lyndon tree, largest first, and the column their extended BWT
+T1b: 18030 texts: the induction on the bijective BWT returns the Lyndon factorization, in its order
+T2: 17732 primitive words: the left-end induction is the right-end induction of the BWT for the inverse alphabet order; its tree is the Lyndon tree (inverse order) of the greatest rotation
+T3: 725 Lyndon words; the left tree differs from the right on 613; no order of steps, at either end of an interval, leaves it on 77; smallest: aabbc, acbcc, aaabbc
+T3 (right-handed steps only): 314 Lyndon words; the right tree is some order's tree on 314, the anti-Lyndon tree on 62; the left tree differs from the right on 239 and is some order's tree on 166 of those; trees a word: max 9846, mean 306.4
+   left tree reached in fewer steps than the right end on 1: first [((0, 0, 1, 1, 0, 0, 1, 1, 1), 6, 7)]
+T3 (either end of an interval): 314 Lyndon words; the right tree is some order's tree on 314, the anti-Lyndon tree on 314; the left tree differs from the right on 239 and is some order's tree on 216 of those; trees a word: max 12870, mean 793.5
+   left tree reached in fewer steps than the right end on 1: first [((0, 0, 1, 1, 0, 0, 1, 1, 1), 6, 7)]
+T4: 9335 Lyndon words: eliminating the largest letter again and again (every block x z^i merged as ((x z) z)...) leaves the right Lyndon tree
+T5 (fewest steps, right-handed): 725 Lyndon words; steps summed: right end 4201, fewest that leave the Lyndon tree 4201, fewest of any order 4087; the Lyndon tree is reached in fewer steps than the right end's on 0 words
+T5 (fewest steps, either end): 725 Lyndon words; steps summed: right end 4201, fewest that leave the Lyndon tree 4201, fewest of any order 4071; the Lyndon tree is reached in fewer steps than the right end's on 0 words
+T5 (right-handed): 725 Lyndon words, 534822 (word, tree) pairs; fewest steps == inner nodes above a run-start hinge on 534822; above a run-end hinge on 479290; == min of the two on 479290; max on 534822
+T5 (either end): 314 Lyndon words, 249156 (word, tree) pairs; fewest steps == inner nodes above a run-start hinge on 227286; above a run-end hinge on 227286; == min of the two on 208188; max on 246384
+   e.g. aabab ((0, (1, 0)), (1, 0)) steps 3 start-hinge nodes 2 end-hinge nodes 3
+   e.g. aabab ((1, 0), (0, (1, 0))) steps 3 start-hinge nodes 2 end-hinge nodes 3
+   e.g. ababb ((1, 0), ((1, 0), 1)) steps 3 start-hinge nodes 2 end-hinge nodes 3
+T5 (every path of right-handed steps): 1865 Lyndon words, 5255519 states, 2792616 final states: the steps taken are a function of the state, and equal the final tree's inner nodes above a run-start hinge
+T6: 17732 primitive words, 133817 right-end steps: at every step every letter's word is a Lyndon word, w_A < w_B, and w_B is a largest of the words present
+T7: 1600 columns b^k a^l (1 <= k, l <= 40): one closed letter of gcd(k, l) points, its word of length (k + l)/gcd; steps = the sum of the partial quotients of k/l (Euclid by subtraction)

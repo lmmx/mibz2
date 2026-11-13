@@ -1,0 +1,263 @@
+{
+ "summary": "The cells kernel is three safe-signature methods on `Kernel` in /home/user/mibz2/examples/rauzy.rs: `slots` (893), `induce_cells` (1032) and `write_cells` (1188). It reads records in `runs::front`'s own format and joins the 127-cuts itself. Nothing touches the output before `write_cells`, so a refusal at the r/n test or at a cells budget can fall back to `runs::fill` + `walk_back_room` on the same `&Runs`, byte for byte.\n\nThe seam is `Segmented::invert_runs` (/home/user/mibz2/src/bwt.rs:152-165), called from `decode_block` (/home/user/mibz2/src/lib.rs:353) after `takes_runs` and `front`. Blocks `takes_runs` refuses never reach it.\n\nWhat is not production-fit as written:\n- **Buffer:** one zero-filled buffer of 128 n + 4,912 bytes, sized by n alone and allocated before r is known; the zero-fill is what keeps several unchecked reads initialised.\n- **Panics:** three `assert!`s where production returns a refusal, and no refusal return anywhere.\n- **Tiling check:** weaker than `fill`'s (row sum and no empty record only; `Runs.counts` is never read).\n- **No cell counter:** equal cells are counted only under `COUNT = true`, and the inner loop can make unboundedly many cells without passing `'fresh`.\n- **Little-endian only:** mixed 32/64-bit reads of one slot layout.\n- **Non-x86 branches unrecorded:** the prefetch is a no-op off x86_64, and no build or run of the fallback branches is recorded.\n- **Private records:** `Runs.runs` has no non-test accessor.\n\nCoincidences (r2) do not fall out of the order stage's two passes. The free r is the front's record count, an upper bound on the joined r.\n\nRef state: every code file mapped is the same blob at 1a871bb, origin/master (c79ff7d) and the working tree. The working tree's HEAD moved during the mapping (see the first fact) and the local `master` ref is stale.",
+ "facts": [
+  {
+   "topic": "0. Ref state",
+   "fact": "The code files mapped are identical blobs at 1a871bb, origin/master (c79ff7d) and the working tree HEAD (862fd14, branch claude/sharp-meitner-cx0v78): examples/rauzy.rs cc53be87, src/runs.rs 5a2b872f, src/bwt.rs 1c48e30e, src/lib.rs 275bc399, src/runs/tests.rs 7f0fc92e, examples/fuzz.rs b7924e11. The local ref `master` is stale (2cc0829, before #324: no src/runs.rs). The working tree HEAD moved during this mapping from 1a871bb to 862fd14 (four research(monodromy) commits). Journal line numbers below are origin/master's blob cc8af459 (1,298 lines); the working tree's copy has 20 lines inserted after line 1168 (section 10), so section 11 and Reproduce are +20 there; sections 0 to 8 are unchanged.",
+   "where": "git rev-parse / git diff origin/master HEAD -- docs/journal/monodromy/2026-11-10-rauzy-veech.md (hunk @@ -1168,6 +1168,26 @@)"
+  },
+  {
+   "topic": "1. Interface: signatures",
+   "fact": "`fn slots(&mut self, n: usize, recs: &[u16], p: u32)`; `fn induce_cells<const COUNT: bool>(&mut self) -> (u32, u32, u64)`; `fn write_cells(&mut self, word: u32, len: u32, n: usize, out: &mut Vec<u8>)`. All three are `#[inline(never)]` and are safe `fn`s (not `unsafe fn`) with unsafe blocks inside. None takes `Kernels`; none returns a Result or bool.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:892-893, 1031-1032, 1187-1188"
+  },
+  {
+   "topic": "1. Interface: inputs",
+   "fact": "`recs` is `runs::front`'s format: each u16 is `byte << 8 | length`, read as `(rec >> 8, rec & 0xFF)`, so a length up to 255 is accepted. `slots` joins any neighbouring records of equal byte into one letter, whatever their lengths; it does not assume the 127-then-remainder pattern. `p` is the walk's row (orig_ptr); its run is cut into up to three letters (before, the row itself with length 1, after). `n` is the block's rows, given by the caller.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:877-888, 916-928, 936-946, 977-1003"
+  },
+  {
+   "topic": "1. Interface: state used",
+   "fact": "Of struct `Kernel` (491-516) the cells kernel uses only `buf: Vec<u8>` (511), `lay: Layout` (512), `rule_end: usize` (513), `letters: usize` (515) and `pos: Vec<u32>` (498, shared with the list kernel's `write`). The other fields (nodes, order, arena, top, rules, tmp, lam, byte, link, heir, flag, chain, hword, hlen, id) are the list kernel's. Structs `Node` and `Rule` and const `AHEAD` are not used by the cells kernel; `NIL` is (write_cells' `pos`).",
+   "where": "/home/user/mibz2/examples/rauzy.rs:491-516, 1200-1203"
+  },
+  {
+   "topic": "1. Interface: constants",
+   "fact": "SMALL: u32 = 16 (457); BYTES: u32 = 16 (462); SLOT: usize = 24 (529); FAR: usize = 12 (531); PAD: usize = 4096 (533); MARK: u32 = 1 << 31 (535); SHIFT: usize = 1 (537). `struct Layout { tops, bots, arena, rules }`, all usize offsets (541-550). Slot format (518-528): bytes 0..4 the slot before in its order, 4..8 the letter's length, 8..12 its word's length, 12..16 its word's offset, 16..24 the letter's slot in the other order.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:457-462, 518-550"
+  },
+  {
+   "topic": "1. Interface: outputs",
+   "fact": "`slots` sets `self.lay`, `self.letters` (= cnt[256]: joined runs plus 0 to 2 for the row's cut), may replace `self.buf`, and writes the 256 single bytes and both orders' slots. `induce_cells` returns `((aw >> 32) as u32, aw as u32, cells)`: the cycle's word as a buffer offset (a rule offset >= lay.rules, or the row's own arena byte when the cycle is that one row), its length with MARK set, and a cell count; it also sets `self.rule_end = rp`. `write_cells` resizes `out` to n + 32 (zero-filling only growth), writes through a raw pointer, repeats a cycle shorter than n, and truncates to n; it also fills `self.pos`, one u32 a kept rule.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:907, 952, 1096-1100, 1189-1203, 1311-1318"
+  },
+  {
+   "topic": "1. Interface: preconditions asserted",
+   "fact": "`slots`: `assert!(total < u32::MAX as usize && n < MARK as usize && (p as usize) < n)` (902), then after pass 1 `assert!(row as usize == n && !empty, \"the records do not tile the block\")` (931-934). `induce_cells`: `assert!(rr >= 1 && self.buf.len() >= lay.rules + 80, \"`slots` has not run\")` (1036-1039), and a `debug_assert!` of the four regions' ends only where it returns (1090-1095). `write_cells`: none.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:902, 931-934, 1036-1039, 1090-1095"
+  },
+  {
+   "topic": "1. Interface: assumed without checking",
+   "fact": "(a) `slots`: the u32 row sum `row += len` does not wrap; `recs.len()` is not bounded (compare `runs::cuts`' `runs.len() >= 1 << 24` refusal at src/runs.rs:799). (b) `induce_cells`: \"`slots` has run on this kernel for the block, and nothing has changed since\" (doc only); no region bound is checked inside the loop. (c) `write_cells`: `word` and `len` are what `induce_cells` returned, `n` is `slots`' n, `self.rule_end` is this block's, and p = len & !MARK is nonzero and at most n. p == 0 panics on `% p`; a wrong word, len or n gives out-of-bounds reads and writes from a safe fn.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:927, 1029-1030, 1186, 1189, 1200, 1215"
+  },
+  {
+   "topic": "2. Unsafe: raw reads and writes",
+   "fact": "`rd64`, `rd32`, `wr64`, `wr32` are `base.add(at)` cast to u64/u32 with `read_unaligned`/`write_unaligned`; all access is unaligned by construction. `base` is `self.buf.as_mut_ptr()` (slots 953, induce 1040) or `as_ptr()` (write 1193). Uses: slots' `letter!` (six wr64 a letter, 966-971), the mark (rd64 985, wr32 986-987), the two order-first links (1007-1008); every read and write in induce_cells 1072-1170; write_cells' `rule` closure (1199).",
+   "where": "/home/user/mibz2/examples/rauzy.rs:552-570, 953-1009, 1040-1174, 1193-1199"
+  },
+  {
+   "topic": "2. Unsafe: invariant for the raw accesses",
+   "fact": "The SAFETY comment in induce: \"`slots` sized every region for n cells; a slot's offset is a letter's slot or a fresh one below the region's end; a word's offset is in the arena or the rules, with 16 bytes after it inside the buffer\". It is established by: the size assert (902); the tiling assert (931-934: every letter is a row at least, so at most n letters and n - 1 cells); `letter!` writing paired slots with the same length; exactly one marked letter of length 1 that is never dropped (comment 1004-1006); and each order's first slot's link set to itself (1007-1008) so the value stays inside the buffer. No bound is checked in the hot loop.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:929-930, 956-957, 1004-1008, 1041-1043"
+  },
+  {
+   "topic": "2. Unsafe: prefetch",
+   "fact": "`fn prefetch<T>(p: *const T)` calls `core::arch::x86_64::_mm_prefetch(p as *const i8, core::arch::x86_64::_MM_HINT_T0)` under `#[cfg(target_arch = \"x86_64\")]`; under `#[cfg(not(target_arch = \"x86_64\"))]` it is `let _ = p;` (no aarch64 prefetch). Macro `ahead!` (1063-1069) reads two u32 from the slot `FAR * SLOT` = 288 bytes before `s` and prefetches `base.wrapping_add(..)` of each. It is sound because PAD (4096) > 288 keeps the read inside the buffer, the buffer is always initialised (zero-filled), and the pointer is only a hint (`wrapping_add`, never dereferenced). Called at 1083-1084, 1147, 1166.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:579-587, 1060-1069"
+  },
+  {
+   "topic": "2. Unsafe: the crate's own prefetch",
+   "fact": "src already has `pub(crate) fn prefetch<const H: u8>(t: *const u32, row: u32)`, with x86_64 `_mm_prefetch::<_MM_HINT_T0|T1|NTA>` and aarch64 `core::arch::asm!(\"prfm pldl1keep, [{p}]\" ...)` branches and a no-op elsewhere. Its signature is typed to a T-vector (`*const u32` plus a row).",
+   "where": "/home/user/mibz2/src/bwt.rs:1621-1654"
+  },
+  {
+   "topic": "2. Unsafe: copies that may overlap",
+   "fact": "`copy16` reads a `[u8; 16]` by value and then writes it, both unaligned, so source and destination may overlap. induce_cells calls it twice a cell (1110-1114): to `top` from A's word, and to `top + la.min(16)` from B's word; the source may be the word just made below `top`, or a rule offset (garbage, discarded since such a word is not small). The journal records that it first used `copy_nonoverlapping` on overlapping ranges, aborting a debug build on `bba`, row 0.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:589-594, 1110-1114; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:731-733"
+  },
+  {
+   "topic": "2. Unsafe: copy_small and copy_long",
+   "fact": "`copy_small(dst, src, len <= 16)`: on x86_64, SSE2 (`_mm_loadu_si128`, `_mm_and_si128`, `_mm_andnot_si128`, `_mm_or_si128`, `_mm_storeu_si128`) with a static 32-byte MASK; it reads 16 bytes at both `dst` and `src` and writes 16 at `dst`. Elsewhere it is `core::ptr::copy_nonoverlapping(src, dst, len)`. In write_cells its source is the buffer and its destination `out` (separate allocations; `out` has 32 bytes of zeroed slack). `copy_long(dst, src, len >= 16)`: `copy16` in 16-byte strides with the last 16 anchored at the end; within `out` only (1270, 1279, 1302). Its correctness rests on the claim that occurrences of one word are apart (comment 1283-1287; journal 187-188); it stays in bounds either way.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:596-633, 1229, 1266-1280, 1283-1303"
+  },
+  {
+   "topic": "2. Unsafe: get_unchecked and pos",
+   "fact": "`cnt.get_unchecked(c)` and `get_unchecked_mut(c)` on `[u32; 257]` with c = `rec >> 8` <= 255 (962-963); `recs.get_unchecked(i)` with i < nrec by the loop conditions (994, 998, 999). In write_cells `pos` is a raw `self.pos.as_mut_ptr()` indexed by `((word offset) - ro) / 16` with no check (1231, 1242, 1248, 1252, 1258, 1268, 1277, 1300); this relies on every long unmarked factor being a rule in [lay.rules, rule_end).",
+   "where": "/home/user/mibz2/examples/rauzy.rs:962-963, 994-999, 1200-1203, 1231-1300"
+  },
+  {
+   "topic": "2. Regions as computed",
+   "fact": "cap = (2 * n + 8) * SLOT = 48n + 192. tops = PAD = 4096. bots = PAD + cap = 48n + 4288. arena = PAD + 2 * cap = 96n + 4480. rules = arena + ((BYTES + 256 + 16 * (n + 2) + 64 + 15) & !15) = arena + 16n + 368 = 112n + 4848. total = rules + 16 * (n + 4) = 128n + 4912 (115,204,912 bytes at n = 900,000). The induction's cursors start at top = lay.arena + BYTES + 256 + 16, rp = lay.rules, ft0 = lay.tops + rr * SLOT, fb0 = lay.bots + rr * SLOT.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:894-901, 1045-1049"
+  },
+  {
+   "topic": "2. Journal's claimed worst cases",
+   "fact": "\"at most n − 1 cells; at most 2n − 1 slots a side of 2n + 8; the arena's last store ends at most 16n + 304 bytes in, of 16n + 368; at most n rules of n + 4\", from a sub-agent's review with every access region-checked on 19 million small columns, the 233 blocks, prose and the synthetic files. valgrind (3,000 arbitrary columns, three real blocks) is stated to be blind inside the one allocation. The entry contains no mention of Miri.",
+   "where": "/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:723-736"
+  },
+  {
+   "topic": "3. Not fit: the buffer",
+   "fact": "`if self.buf.len() < total { self.buf = vec![0u8; total]; }`: a fresh zero-filled allocation replaces the old one whenever a block needs more than the current length. It is never shrunk and never re-zeroed, so stale bytes of earlier blocks remain. It is sized by n alone, and allocated before pass 1, so before r or the tiling is known. The journal: 128 n + 4,912 bytes (115 MB at n = 9·10⁵), at most a tenth written on Wikidata, only written pages touched; live set about 5.5 MB plus the output at n = 9·10⁵, r = 6.5·10⁴, \"more than production's table\". \"a bound on the buffer other than n cells\" is listed as not done.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:890-891, 903-906; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:253-255, 715-718, 734-736"
+  },
+  {
+   "topic": "3. Not fit: the zero-fill is load-bearing",
+   "fact": "Three kinds of read rely on the buffer and the output being initialised: `ahead!` reads slots \"not yet written\" (comment 1062); `copy16` reads 16 bytes at a word's offset, past the word's own bytes; x86 `copy_small` reads 16 bytes at `dst` in `out`. They are defined only because `buf` comes from `vec![0u8; total]` and `out.resize(n + 32, 0)` zero-fills.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:905, 1062, 1110-1114, 1191, 608"
+  },
+  {
+   "topic": "3. Not fit: panics on the path",
+   "fact": "`assert!` at 902, 931-934 and 1036-1039; `% p` in write_cells (1215, 1226, 1239, 1297) if p were 0; `(self.rule_end - ro) / 16` (1200) if rule_end were stale; allocation failure of `vec![0u8; total]` aborts. Production's records route instead returns false from `runs::fill` on a broken tiling, and `decode_block` then takes the column's path after `debug_assert!(false, \"the run records don't tile the block\")`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:902, 931-934, 1036-1039, 1200, 1215; /home/user/mibz2/src/lib.rs:353-362; /home/user/mibz2/src/runs.rs:659-683"
+  },
+  {
+   "topic": "3. Not fit: tiling check weaker than fill's",
+   "fact": "`slots` checks only that the lengths sum to n and none is 0. It never reads `Runs.counts` or `Runs.per`. `runs::fill` also requires the counts to sum to n and refuses a record that would pass its byte's bucket end. Of the breaks in `miri_runs_broken_tilings_refused`, those that change only a record's byte (`r.runs[2] += 1 << 8`) or only the counts would pass `slots`' check.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:931-934; /home/user/mibz2/src/runs.rs:652-683; /home/user/mibz2/src/runs/tests.rs:448-488"
+  },
+  {
+   "topic": "3. Not fit: architectures",
+   "fact": "CI builds wheels for linux x86_64 and aarch64 (ubuntu-22.04, manylinux), windows x64, and macos x86_64 and aarch64 (macos-15), by maturin, build only. `cargo test`, clippy and the fuzz smoke run on ubuntu-latest only; Miri runs on ubuntu-latest's default target. The example's intrinsics are cfg-gated with fallbacks (prefetch: no-op; copy_small: copy_nonoverlapping), so it compiles elsewhere; no build or run of those fallback branches is recorded (the journal's machine is a Xeon). lib.rs's doc claims \"any x86-64 or aarch64 CPU\".",
+   "where": "/home/user/mibz2/.github/workflows/CI.yml:45-134; /home/user/mibz2/.github/workflows/test.yml:13-27, 54-69; /home/user/mibz2/.github/workflows/miri.yml:43-66; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:532; /home/user/mibz2/src/lib.rs:4"
+  },
+  {
+   "topic": "3. Not fit: endianness",
+   "fact": "The slot layout is written with native-endian u64 stores and read back as u32 halves. Examples: `wr64(base, t, prev | lam << 32)` is read as `rd32(base, sa)` and `rd32(base, sa + 4)`; `wr64(base, t + 8, 1 | (first + c) << 32)` is patched by `wr32(base, tz + 8, 1 | MARK)` and read as `rd32(base, far + 12)`; the u64 at +16 is read by `rd32(base, far + 16)`. This is correct only on little-endian. No `target_endian` cfg exists in the example or in src (grep: not found). All CI targets are little-endian.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:964-971, 986-987, 1066-1067, 1072-1079"
+  },
+  {
+   "topic": "3. Not fit: 32-bit offsets and MARK",
+   "fact": "Every slot link and word offset is a u32 byte offset in the one buffer. The assert `total < u32::MAX` gives n <= 33,554,393 (128n + 4912 < 4,294,967,295). The mark is bit 31 of a word's length field: `len = la + lb` carries it, `small = len <= SMALL` is then false, so a marked word is always a rule; a word's real length must be below 2^31 (`n < MARK`). A stream's block has max_len = 100_000 * level <= 900,000, and `takes_runs` refuses max_len >= 1 << 24. At n = 2^24 − 1 the buffer would be 2,147,488,432 bytes.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:902, 1108-1121; /home/user/mibz2/src/block.rs:235; /home/user/mibz2/src/runs.rs:67"
+  },
+  {
+   "topic": "3. Not fit: non-BWT columns and orig_ptr",
+   "fact": "The drop rule: at `'fresh`, if `bs == sb` (one letter last in both orders) and its word is unmarked, `dropped += 1; (sa, sb) = (na, nb); continue 'fresh`, with nothing written. The marked letter is never dropped, so the induction returns before an order is left. `write_cells` repeats a cycle shorter than n by `copy_within`. Checked against `bwt::walk` on 200,000 arbitrary columns (178,276 with several cycles, a letter dropped in 103,731). orig_ptr out of range is an `assert!` in `slots`; `decode_block` returns `ErrorKind::BadOrigPtr` before `invert_runs`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1085-1105, 1004-1006, 1311-1317, 902; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:134-139; /home/user/mibz2/src/lib.rs:343-345"
+  },
+  {
+   "topic": "3. Not fit: COUNT and census",
+   "fact": "`COUNT` gates only `whole += 1` (1080-1082). The returned `cells` is `(whole.max(1 + dropped) - 1 - dropped) + (ft - ft0) / SLOT + (fb - fb0) / SLOT`: with COUNT = false, `whole` is 0 and the first term is 0, so the third tuple element is only the unequal cells. `dropped` is counted unconditionally (1102) and is not returned. main() and arbitrary() call `induce_cells::<false>()` and discard the count; main() calls `::<true>()` once more for `c_cells`. The cells kernel reads nothing from `Counts`, `Grammar` or `Induction`; main() prints `kern.letters` as `c_letters` and `recs.len()` as `records`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1052, 1080-1082, 1097-1102, 1875, 2021, 2031-2032, 2078"
+  },
+  {
+   "topic": "4. Budget: loop structure",
+   "fact": "`'fresh: loop` (1070): read both last letters whole (eight loads, 1072-1079), optional `whole += 1`, two `ahead!`, the closing test `bs == sb` (return if marked, else drop). Then an inner `loop` (1106-1172): make the cell's word (two copy16, two wr64 at `rp`), keep it as bytes (`top += len`) or as a rule (`rp += 16`), then branch three ways on ra against rb. Equal: write two slots, `(sa, sb) = (na, nb); continue 'fresh` (1122-1131). ra > rb: `fb += SLOT`, `ra -= rb`, read the next B (1132-1151). ra < rb: `ft += SLOT`, `rb -= ra`, read the next A (1152-1171). The inner loop returns to `'fresh` only on an equal cell.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1070-1173"
+  },
+  {
+   "topic": "4. Budget: how cells are counted",
+   "fact": "No counter of cells exists in the loop. Unequal cells are free as pointer differences: `(ft - ft0) / SLOT + (fb - fb0) / SLOT`. Equal cells need `whole` (entries of `'fresh` = 1 + equal cells + drops), kept only under COUNT. Rules kept are `(rp - lay.rules) / 16`; small words are not countable from `top` (it advances by a variable length). A streak of unequal cells never passes `'fresh`: the journal's `(ab)^k a` has S = n/2 with \"the same two letters stay last\", so a check placed only at `'fresh` does not bound the inner loop.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1048-1052, 1097-1099, 1143, 1163; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:145-146"
+  },
+  {
+   "topic": "4. Budget: leaving early",
+   "fact": "Confirmed: nothing is written to the output before `write_cells`. `slots` and `induce_cells` take no `out`; the first touch of `out` is `out.resize(n + 32, 0)` at 1191. An early leave has written only `self.buf`, which the next `slots` re-lays (it rewrites the 256 single bytes and every slot it will read; stale bytes are tolerated). `self.rule_end` is set only at the normal return (1096), so it is stale after an early leave. The records (`&Runs`) are only read. The fallback's state (`Segmented.tt`, `Segmented.seg`) is not touched by the kernel.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:893, 1032, 1096, 1191; /home/user/mibz2/src/bwt.rs:123-126, 152-165"
+  },
+  {
+   "topic": "4. Budget: the journal's design facts",
+   "fact": "Section 8 item 4: \"the guard is a budget on the cells, in rows … past 0.16 n, stop and walk. A budget in r is wrong\" (4 r would refuse Fibonacci at 10.9 r, Thue–Morse at 8.6 r, period 37 at 650 r). \"The guard is dear, and it leaks\": a refused block has cost about nine tenths of production's time on Wikidata (JSON of 20k records 1.0, prose 1.35). On `(ab)^k a` break-even is 0.045 n, so a block of period 7 to about 20 would pass and may lose up to 3.6× (Conj, not run). Section 6.4: off the corpus r/n alone admits a 5.2× loss (random letters with geometric runs, r/n 0.083).",
+   "where": "/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:967-1002, 891-893"
+  },
+  {
+   "topic": "5. Order stage: r and n",
+   "fact": "Pass 1 (916-928) counts one letter per maximal same-byte record group (`if c != prev { cnt[c + 1] += 1 }`), so r (runs after joining 127-cuts) is the sum of those counts once pass 1 ends, before any slot is written. It is not stored on its own: `self.letters = cnt[256]` (952) includes the 0 to 2 extra letters of the row's cut (946). n is a parameter, checked against the row sum (931-934). Pass 1 runs after the allocation (903-906) and after the 256 single-byte writes (908-910).",
+   "where": "/home/user/mibz2/examples/rauzy.rs:903-952"
+  },
+  {
+   "topic": "5. Order stage: what the front gives with no pass",
+   "fact": "`Runs.runs.len()` (records, cut at 127, unjoined) and `Runs.per` (each byte's records) exist after `runs::front` with no further pass: an upper bound on the joined r. On Wikidata the records are 0.0778 a row and r 0.0722. The journal: \"So r/n is tested first: the front has r, and the test is free\", and the order stage on uniform bytes is \"13.4 ns a row alone, four times production\". `takes_runs` runs before `front` (lib.rs:341-342), so r is first known at `invert_runs`.",
+   "where": "/home/user/mibz2/src/runs.rs:87-96; /home/user/mibz2/src/lib.rs:341-353; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:961-962, 970-972"
+  },
+  {
+   "topic": "5. Order stage: coincidences",
+   "fact": "Not computed by `slots`, and they do not fall out of its two passes. Pass 1 counts letters per byte (not rows per byte, not image starts); pass 2 tracks slot offsets and lengths with no row counter. The example's `coincidences(l)` (1767-1806) works from the column with an n + 1 bool array and a pass over rows. `contract`'s first loop (754-771) is a two-pointer merge of the two tilings over the list kernel's `lam` and `order` arrays. Getting r2 = 2r − |T ∩ B| from the cells layout would need a further pass (a merge over the tops and bots regions). The journal: a predictor of S/n from the records is \"not in hand … Not built\".",
+   "where": "/home/user/mibz2/examples/rauzy.rs:754-771, 916-928, 977-1003, 1767-1806; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:296-302, 999-1002"
+  },
+  {
+   "topic": "6. Records: format",
+   "fact": "Same format on both sides: u16 `byte << 8 | length`, a run cut into records of at most 127 rows (`CAP: u32 = 127`). The example's `records(l, recs)` scans the column's maximal runs and cuts at 127; it is the same algorithm as the test-only `Runs::of_column`. `front`'s records are \"the column's runs cut at 127 rows\" provided `seq_to_unseq`'s bytes in use are distinct; otherwise two adjacent records could share a byte without a cut (which `slots` joins anyway). The tests assert `r.runs == runs_of_column(&ll)` for both front kernels.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1541-1561; /home/user/mibz2/src/runs.rs:30, 125-147, 176-181; /home/user/mibz2/src/runs/tests.rs:220"
+  },
+  {
+   "topic": "6. Records: what Runs carries besides",
+   "fact": "`pub struct Runs { runs: Vec<u16>, counts: [u32; 256], per: [u32; 256], lit: Vec<u64>, one: Vec<u64> }`, all fields private to module `runs`. `counts` is each byte's rows and `per` each byte's records (unjoined, so not the letters per byte). The example's `records` makes neither, and the cells kernel uses neither.",
+   "where": "/home/user/mibz2/src/runs.rs:86-96"
+  },
+  {
+   "topic": "6. Records: availability at the seam",
+   "fact": "Available without recomputation: `decode_block` runs `runs::front(b, &mut s.runs, k)?` and then `s.inverse.invert_runs(&s.runs, n, b.orig_ptr, &mut s.ll, k)`. But `Runs.runs` has no non-test accessor: `records_mut` and `of_column` are `#[cfg(test)] pub(crate)`. The example says: \"The decoder's own records are private to `runs::Runs`, so the cells kernel is fed these\". Code in `src/runs.rs` or a child module can read the field; code in `src/bwt.rs` cannot.",
+   "where": "/home/user/mibz2/src/lib.rs:341-353; /home/user/mibz2/src/runs.rs:123-153; /home/user/mibz2/examples/rauzy.rs:1541-1543"
+  },
+  {
+   "topic": "6. The seam's contract",
+   "fact": "`InverseBwt::invert_runs(&mut self, r: &crate::runs::Runs, n: usize, orig_ptr: u32, out: &mut Vec<u8>, k: crate::Kernels) -> bool` puts the block's bytes \"into `out` (cleared)\"; false means the records don't tile, and the caller then hits `debug_assert!(false, ...)` and takes the column's path. `Segmented::invert_runs` is `fill` then `walk_back_room(&mut self.tt, orig_ptr, out, &mut self.seg)`. `Cooperative::invert_runs` holds its own copy of that one-core route for K < 2 or n < MIN_COOP (313-319). `out` is `s.ll`.",
+   "where": "/home/user/mibz2/src/bwt.rs:83-99, 152-165, 297-319; /home/user/mibz2/src/lib.rs:353-362"
+  },
+  {
+   "topic": "6. Which blocks reach the seam",
+   "fact": "Only blocks `takes_runs` admits reach `invert_runs`: max_len < 2^24, 2 * syms <= max_len, and at least one run symbol in 32 in a sample. Its doc: under 1% of `random`'s and `records`' symbols are run symbols, 37% of text's, 25% or more of all but one of Wikidata's full blocks. Journal 6.3: on uniform bytes \"no block takes the records\"; prose, one block of 4 takes them.",
+   "where": "/home/user/mibz2/src/runs.rs:43-84; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:831-837"
+  },
+  {
+   "topic": "7. Tests: --arbitrary",
+   "fact": "`fn arbitrary(cases)` (default 100,000). Xorshift seed 0x9E37_79B9_7F4A_7C15. Each case: n = 1 + rnd(3000 if case % 16 == 0 else 48); sigma from [1, 2, 2, 3, 4, 26, 256]; each letter repeated 1 + rnd(9) times one time in three, else once; p = rnd(n). Oracle: `build` then `walk(&tt, p, &mut walked)`. The cells part: `records(&l, &mut recs); kern.slots(n, &recs, p); let (word, len, _) = kern.induce_cells::<false>(); out.clear(); out.extend(walked.iter().map(|&b| !b)); kern.write_cells(word, len, n, &mut out); assert!(out == walked, ...)`. One `Kernel` is reused across all cases. Its printed reach counts (several_cycles, dropped_a_letter, cycle_shorter_than_n) come from the reference induction and `admissible`, not from the cells kernel.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1808-1886, 1890-1891"
+  },
+  {
+   "topic": "7. Tests: what --arbitrary does not reach",
+   "fact": "n is at most 3,000 (at most 48 in 15 cases of 16), so a 127-cut arises only in the long cases with few letters; no block of 2^16 rows or more; records only as `records()` makes them from a column (never `front`'s from symbols, never a record of 128 to 255 rows, never same-byte neighbours that are not a cut); never records that do not tile (the assert path).",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1827-1840, 1873"
+  },
+  {
+   "topic": "7. Tests: the complement-before-write check",
+   "fact": "The first build's assertion could not see a byte left unwritten because `out` already held the list kernel's correct bytes; the writer left 126,658 bytes unwritten over 178 of 233 Wikidata blocks. Now `out` is filled with the complement of the expected bytes before `write_cells` in arbitrary() (1876-1880). In main() this is done once before the timed rounds (2012-2014), so only the first round's write starts from wrong bytes; the assert is at 2033. `write_cells` does not clear `out` (\"kept at its length from block to block: only the slack is written here\").",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1190-1191, 1876-1881, 2011-2033; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:899"
+  },
+  {
+   "topic": "7. Tests: the region-ends debug_assert",
+   "fact": "`debug_assert!(ft <= lay.bots && fb <= lay.arena && top + 32 <= lay.rules && rp + 16 <= self.buf.len())`, evaluated only where the induction returns (after any overrun would have happened). It is live under the `fuzz` profile (`debug-assertions = true`, `overflow-checks = true`, inherits release). Reproduce runs it as `cargo build --profile fuzz --example rauzy && target/fuzz/examples/rauzy --arbitrary 20000`. `[profile.test]` sets only `opt-level = 3`.",
+   "where": "/home/user/mibz2/examples/rauzy.rs:1088-1095; /home/user/mibz2/Cargo.toml:72-80; /home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:1251"
+  },
+  {
+   "topic": "7. Tests: the footprint ledger",
+   "fact": "`ledger_matches_a_workers_buffers` decodes two blocks through `Scratch::<Segmented>` and ends with \"every buffer a worker has is in the ledger\": `for x in &b { entry(&l, x.name); }`. A buffer added to `Segmented::buffers` (bwt.rs:167-186) therefore needs a ledger entry in src/trace.rs. `runs_buffers_listed` is the precedent test that a route's buffers are listed.",
+   "where": "/home/user/mibz2/src/trace.rs:756-842; /home/user/mibz2/src/bwt.rs:167-186; /home/user/mibz2/src/runs/tests.rs:677-685"
+  },
+  {
+   "topic": "Journal: what section 8 item 3 asks of a production kernel",
+   "fact": "\"Left: the decoder's own records (`runs::Runs` keeps them private) behind `InverseBwt::invert_runs`, the seam the decoder calls after the front, as an experimental arm for a whole-decoder A/B … the kernel would want an `unsafe fn` boundary, a bound on its buffer, and 4.\" Section 3.5's not-done list: the division rule; a bound on the buffer other than n cells; the decoder's own records.",
+   "where": "/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:253-255, 961-966"
+  },
+  {
+   "topic": "Journal: the measured basis for admission",
+   "fact": "Cells ÷ production (records' path), Wikidata, 233 blocks of 65,536 rows or more, one thread, one container, indicative: 0.82 to 0.86 pooled. By r/n band: < 0.06 0.667, 0.06–0.07 0.729, 0.07–0.09 0.841, 0.09–0.12 1.201, >= 0.12 1.471. \"Chosen by r/n < 0.10, the records' count against n\": 0.761 to 0.792. The threshold was fitted and scored on the same blocks. Other inputs: JSON 20k records (r/n 0.151) 1.69×, prose (r/n 0.367, not the bench's `text`) 4.03×, uniform bytes 8.94×, `(ab)^k a` 11.22×. The census reads only blocks of at least MIN_ROWS = 65536 by default.",
+   "where": "/home/user/mibz2/docs/journal/monodromy/2026-11-10-rauzy-veech.md:264, 756-769, 818-839; /home/user/mibz2/examples/rauzy.rs:1895, 1912"
+  }
+ ],
+ "precedent": "The run-records route reached production in four merges, with no feature flag at any point.\n\n**#324 (47149bf, a squash of three commits; 6 files, +1628 −9), on by default for `Segmented`:**\n- `.github/workflows/miri.yml` +4: `src/runs.rs` and `src/runs/**` added to both path triggers. The job runs `cargo miri test --lib -- miri_`, so Miri-run tests are named `miri_*`.\n- `src/runs.rs`, new, 688 lines: `takes_runs`, `Runs`, `front`, `front_scalar`, `front_avx2`, `fill`, `fill_scalar`, `fill_avx2`.\n- `src/bwt.rs` +170: `InverseBwt::reads_runs` and `invert_runs` as default trait methods, `Segmented`'s implementations, `walk_back`, `walk_back_room`, `repeat_cycle`, `SegScratch::assemble_reversed`.\n- `src/lib.rs` +43 −9: `pub mod runs`, `Scratch.runs`, the records branch at the top of `decode_block` (`reads_runs() && takes_runs(b)`, then `front`, the `BadOrigPtr` check, `invert_runs`; on false a `debug_assert!` and the column's path), and `finish` factored out.\n- `src/runs/tests.rs`, new, 638 lines:\n  - differential: `miri_runs_synthetic_blocks`, `miri_runs_front_edges`, `miri_runs_broken_tilings_refused`, `miri_runs_decode_block_equals_the_column` (`Segmented` by records against `Plain` by the column, bytes and errors, asserting `by_runs > cases / 4`), `miri_runs_avx2_kernels_selected`;\n  - added by the mutation pass: `runs_path_taken_exactly_where_selected` (a sentinel record `UNTOUCHED = 0xffff` planted in `Scratch.runs.runs` shows whether the route ran; both sides must exceed 50 cases), `runs_takes_runs_bounds`, `runs_front_kernel_selected`, `runs_buffers_listed`, `runs_walk_back_room_segments_from_its_bound`.\n- `docs/journal/2026-11-10-run-front-production.md` +94: the registration, written before data. Section 3 holds the safety argument as a table (unsafe / what it relies on / where established, lines 192-207), the tests, Miri on the default target and with AVX2 RUSTFLAGS, and the fuzz runs. Section 3.2 is the mutation testing: cargo-mutants 27.1.0 over `src/runs.rs` and the touched parts of `bwt.rs` and `lib.rs` (192 mutants), plus a hand pass of 34 over the unsafe AVX2 code; 14 path-or-kernel mutants killed by the five new tests.\n- No fuzz mode was added: the existing classic and mixed modes were relied on (\"every mutated block of few symbols took the records' path\", lines 273-274), with the `fuzz` profile turning the refused-tiling `debug_assert` into a failure.\n- No bench file was added: CI's paired bench judged it. Its registered no-harm rule failed (`random` 1t +5.3%, `records` 1t +2.1%), and it was adopted under PERFORMANCE-POLICY.md, whose section 5 records this.\n- Workstation run: 755f961 added recipe `bench-324-i9` (`.just/bench.just` +6, `bench/workstation-queue.txt` +1).\n\n**#352 (c92cf3b), docs only:** the journal +14 −1 and `docs/team/DELIVERED.md` +1.\n\n**#353 (c9329f0), the admission fix:**\n- `src/runs.rs` +54 −7: `RUN_SHARE`, `WINDOW`, `WINDOWS`; the sampled share of run symbols, so short high-entropy blocks keep the column.\n- `tests/admission.rs`, new, 128 lines: `a_short_high_entropy_block_takes_the_column`, `text_and_entity_records_take_the_records`, `full_blocks_decide_as_the_bound_decides`, on real compressed streams.\n\n**#359 (a5197f1; 9 files, +1911 −106), the team port, and the forced-route fuzz precedent:**\n- `.github/workflows/test.yml` +3: fuzz-smoke step \"Plain-team candidates\", `target/fuzz/examples/fuzz 30 1 fuzz-failures/teams teams`.\n- `examples/fuzz.rs` +218: MODE `teams`, `TeamCand`, `team_candidates`, `TeamStats { cases, with: [u64; 4], errors, blocks: [u64; 4], front_errors: [u64; 2] }`. `team_routes` counts reach by re-reading each case's blocks with the decoder's own selector (`mibz2::runs::takes_runs`, `bwt::MIN_COOP`), \"not reported by the decoder\". Each case is held to the plain parallel decoder and to libbzip2.\n- Also `src/bwt.rs`, `src/coop.rs`, `src/lib.rs` (the `!cooperative &&` removed), `src/mtf.rs`, `src/parallel.rs`, `src/runs.rs` +291 (`cuts`, `cuts_tile`, `fill_share` and kernels), `src/runs/tests.rs` +348.\n- Decided by a workstation A/B, not CI (\"CI's runners plan workers, never teams\"): ceb0b30 added recipe `bench-team-runs` (`.just/bench.just` +15, queue +1).\n\n**The example itself** entered in #351 (d022139): `examples/rauzy.rs` (2,085 lines), the journal, and six files beside it. It has not been touched since.\n\n**On origin/master only** (c79ff7d, not in the working tree's branch): recipe `bench-cells-vs-prod` and `bench/cells_vs_prod.py`, queued in `bench/workstation-queue.txt`. The recipe builds `--example rauzy` and reads its JSON fields `c_whole`, `ns_rec`, `n` and `takes`.",
+ "risks": [
+  "A refusal by r/n or by the budget cannot be signalled by returning false from `invert_runs`: false means a broken tiling, trips `debug_assert!(false, ...)` (a failure under the fuzz profile) and sends the block down the column's path, which is not today's route for an admitted block. The fallback to `fill` + `walk_back_room` has to happen inside `Segmented::invert_runs` (src/lib.rs:353-362, src/bwt.rs:152-165).",
+  "A budget check placed only at `'fresh` does not bound the work: the inner loop (rauzy.rs:1106-1172) makes unequal cells without returning to `'fresh` (`(ab)^k a`: n/2 cells). No cell counter exists today; equal cells are counted only under COUNT, and the returned count is partial when COUNT is false.",
+  "The three asserts (rauzy.rs:902, 931-934, 1036-1039) are what make the unchecked accesses sound. They must become refusals made before any unsafe write, not be removed; in particular the tiling check bounds letters and cells by n.",
+  "`slots`' tiling check is weaker than `fill`'s: it ignores `Runs.counts`. Records that tile but disagree with the counts would be decoded by cells where today's route refuses and takes the column. This differs only under a front bug, but the existing broken-tilings test includes breaks of exactly that kind.",
+  "`row += len` is a u32 sum with no bound on `recs.len()` (rauzy.rs:927). It is unreachable from `front`'s records (fewer than 2^24) but unchecked in the kernel; `runs::cuts` guards the same thing explicitly.",
+  "The zero-filled allocation is load-bearing. `ahead!`, `copy16`'s slack and x86 `copy_small`'s read of `dst` all read bytes the block has not written; replacing `vec![0u8; total]` or `out.resize(.., 0)` with uninitialised capacity would make them undefined behaviour and fail Miri.",
+  "Memory: 128 n + 4,912 bytes (115 MB at 900,000 rows) of virtual memory per kernel, so per worker, allocated before admission is known. My inference, not recorded in the repo: on Windows a zeroed heap allocation is charged against commit in full even if untouched. The journal's live set (about 5.5 MB plus the output on Wikidata, \"more than production's table\") comes on top of the T-vector the fallback keeps; PERFORMANCE-POLICY.md section 2 rule 4 caps peak RSS growth at 10% on any corpus unless justified.",
+  "Little-endian only: the slot layout mixes native u64 stores with u32 reads of their halves. All CI targets are little-endian, but nothing in the code says or checks it.",
+  "The non-x86 branches (`copy_small`'s `copy_nonoverlapping`, the no-op prefetch) have no recorded build or run. In CI the aarch64 wheels are build-only, and tests, fuzz and Miri all run on x86_64. On aarch64 the kernel would also run without its fetch-ahead, which the journal credits with about a quarter of a cell's time (lines 241-244).",
+  "`write_cells` does not clear `out` and once left bytes unwritten that an ordinary equality check could not see (journal section 7 row 1). A differential test that does not first poison the output cannot detect that class of bug.",
+  "`copy_long`'s correctness (not its bounds) rests on occurrences of one word never overlapping. The journal labels this P in section 3.2 and ties words to Lyndon words for BWT images; for columns that are no BWT I found only the counted checks (`--arbitrary`, the review's runs).",
+  "By the journal's own figures the Coordinator's gate line \"wikidata and text faster beyond noise\" cannot be met for text through this kernel: prose at r/n 0.367 is 4.0× slower by cells, so the r/n test must refuse such blocks and text can at best be level, less the test's cost. The bench's `text` corpus itself was not measured (journal line 264).",
+  "The admission numbers are weakly founded: r/n < 0.10 was fitted and scored on the same 233 blocks of one corpus in one container; r/n alone admits a 5.2× loss off-corpus; the 0.16 n budget is the break-even of Wikidata and one JSON input only; a refused block has already cost about 0.9 of production's time.",
+  "No timing exists for the cells kernel on blocks below 65,536 rows (the census skips them; today they take the plain backward walk), on the i9, on aarch64, or inside a decoder.",
+  "origin/master's queued workstation recipe `bench-cells-vs-prod` builds `--example rauzy` and reads its `c_whole`, `ns_rec`, `n` and `takes` fields. Moving the kernel out of the example, or changing those fields, breaks a queued recipe.",
+  "A new buffer listed in `Segmented::buffers` without a ledger entry fails `ledger_matches_a_workers_buffers` (src/trace.rs:838-841); one left unlisted escapes the footprint ledger.",
+  "The shared working tree's HEAD changed under this mapping (1a871bb to 862fd14 on branch claude/sharp-meitner-cx0v78), and the local `master` ref is stale (2cc0829). A branch cut from local `master` would lack src/runs.rs entirely; origin/master (c79ff7d) is the base that has it."
+ ],
+ "open_questions": [
+  "Which r does \"the free r/n test\" mean? The front's record count (`Runs.runs.len()`, unjoined, no pass, 0.0778 n on Wikidata) or the joined r (0.0722 n), which needs `slots`' first pass? The journal's 6.3 says \"the records' count against n\" while its bands are by `runs`/n.",
+  "What are the threshold and the budget? The journal offers r/n < 0.10 (any value from 0.08 to 0.12 within 0.007 on the fitting blocks) and 0.16 n cells, both from one corpus in one container, and no measured value for the i9 or for CI's runners.",
+  "Should the buffer be sized by the budget instead of by n? The journal lists this as not done, and it changes every region bound and the safety argument.",
+  "Where does the kernel live, given `Runs.runs` is private to module `runs`: in `src/runs.rs` or a child module, or elsewhere with a new `pub(crate)` accessor?",
+  "Is `Cooperative::invert_runs`' own copy of the one-core route (src/bwt.rs:313-319, used for K < 2 or n < MIN_COOP) inside \"the one-thread Segmented kernel first\", or does it keep `fill` + `walk_back_room` unchanged?",
+  "Are blocks below `MIN_SEGMENTED` (2^16 rows) admitted? Nothing in the journal measures them.",
+  "Does the aarch64 build get a real prefetch? The crate's `bwt::prefetch` has the `prfm` branches but its signature is `(*const u32, row)`.",
+  "How does the fuzz mode count reach for the new route? #359's precedent recomputes the route outside the decoder from the selector, but a cells budget is known only by running the induction, so \"admitted by r/n\" and \"finished within budget\" are two different counts.",
+  "Must the route's check match `fill`'s refusals exactly (per-byte counts), so that `miri_runs_broken_tilings_refused`-style tests hold for it?",
+  "What happens to `examples/rauzy.rs` and the queued `bench-cells-vs-prod` recipe once the kernel is in src/: does the example keep its own copy, or call the library's?",
+  "Is the division rule (journal section 8 item 5) out of scope for this PR? Without it the budget is the only guard against periodic blocks, and by the journal's conjecture blocks of period 7 to about 20 pass a 0.16 n budget and may lose up to 3.6×."
+ ]
+}

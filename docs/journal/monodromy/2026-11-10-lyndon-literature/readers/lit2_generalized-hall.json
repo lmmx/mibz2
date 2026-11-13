@@ -1,0 +1,502 @@
+{
+ "bibliography": [
+  {
+   "key": "postic-zamboni-2020",
+   "authors": "Mickaël Postic; Luca Q. Zamboni",
+   "title": "ω-Lyndon words",
+   "venue": "Theoretical Computer Science 809 (original); reprinted in Theoretical Computer Science 834",
+   "year": "2020 (arXiv 2019)",
+   "arxiv": "1907.01072",
+   "doi": "10.1016/j.tcs.2019.11.004",
+   "url": "https://arxiv.org/abs/1907.01072",
+   "locator": "Versions: (1) arXiv:1907.01072, v1 1 Jul 2019, v2 9 Jul 2019, math.CO, 9 pp. (2) Original: Theoret. Comput. Sci. 809 (February 2020) 39-44, DOI 10.1016/j.tcs.2019.11.004. (3) 'Reprint of: ω-Lyndon words', Theoret. Comput. Sci. 834 (September 2020) 60-65, DOI 10.1016/j.tcs.2020.05.037 (Crossref 'associatedlink' points to the original). Read in full: arXiv v2.",
+   "scholar_entries": "\"Reprint of: ω-Lyndon words\" (M Postic, LQ Zamboni - Theoretical Computer Science, 2020 - Elsevier)",
+   "source_of_record": "Crossref API records of both DOIs; arXiv API record; arXiv v2 PDF",
+   "one_line": "Every infinite word factors uniquely as a non-increasing product of ω-Lyndon words, for any total order on infinite words satisfying a lexicographic-like condition; nothing on trees, BWT or algorithms."
+  },
+  {
+   "key": "postic-thesis-2020",
+   "authors": "Mickaël Postic",
+   "title": "Local and Global Regularities in Infinite Words",
+   "venue": "Ph.D. dissertation",
+   "year": "2020",
+   "locator": "Not read. The Mathematics Genealogy Project page (id 299538, fetched) gives: Ph.D. 2020, dissertation title, advisors Luca Zamboni and Gabriele Fici. No PDF found: math.univ-lyon1.fr/~postic/ is 404, HAL API has no record, theses.fr reset the connection.",
+   "scholar_entries": "\"[PDF] Local and Global Regularities in Infinite Words\" (M POSTIC - math.univ-lyon1.fr)",
+   "source_of_record": "mathgenealogy.org/id.php?id=299538",
+   "one_line": "Thesis whose section 1.3.1 is 'Generalized Lyndon words' (per the Scholar snippet only); its Lyndon part is presumably the Postic-Zamboni paper, which I read instead.",
+   "unverified": "University (the Scholar line and the task say Lyon; the genealogy page I parsed does not name it), URL, page count, and all content: thesis not fetched."
+  },
+  {
+   "key": "burcroff-winsor-2019",
+   "authors": "Amanda Burcroff; Eric Winsor",
+   "title": "Generalized Lyndon factorizations of infinite words",
+   "venue": "WORDS 2019 (LNCS, Springer); Theoretical Computer Science 809; reprinted in Theoretical Computer Science 834",
+   "year": "2019 (conference), 2020 (journal and reprint)",
+   "arxiv": "1905.04746",
+   "doi": "10.1016/j.tcs.2019.11.003",
+   "url": "https://arxiv.org/abs/1905.04746",
+   "locator": "ONE work, four versions: (1) arXiv:1905.04746, v1 12 May 2019, v2 20 Jun 2019, 14 pages, 1 figure. (2) Conference: in 'Combinatorics on Words, 12th International Conference, WORDS 2019, Loughborough, UK, September 9-13, 2019, Proceedings' (eds. R. Mercaş, D. Reidenbach), Lecture Notes in Computer Science, Springer, pp. 106-118, DOI 10.1007/978-3-030-28796-2_8 (first online 9 Aug 2019); the books.google line is this chapter. (3) Journal: Theoret. Comput. Sci. 809 (February 2020) 30-38, DOI 10.1016/j.tcs.2019.11.003. (4) 'Reprint of: ...', Theoret. Comput. Sci. 834 (September 2020) 66-74, DOI 10.1016/j.tcs.2020.05.040. Read in full: arXiv v2.",
+   "scholar_entries": "\"[HTML] Generalized Lyndon factorizations of infinite words\" (TCS 2020); \"Generalized Lyndon factorizations of infinite words\" (International Conference on Combinatorics on …, 2019 - Springer); \"[HTML] Reprint of: Generalized Lyndon factorizations of infinite words\" (TCS 2020); \"Generalized Lyndon Factorizations\" (… 2019, Loughborough, UK, September 9–13 …, 2019 - books.google.com)",
+   "source_of_record": "Crossref API records of the four DOIs (chapter, book, article, reprint); arXiv API record; arXiv v2 PDF",
+   "one_line": "Proves the Dolce-Restivo-Reutenauer conjecture: every infinite word has a unique non-increasing factorization into finite and infinite generalized Lyndon words; no trees, no BWT, no algorithm.",
+   "unverified": "LNCS volume number of the WORDS 2019 proceedings (Crossref gives none; DBLP and Springer pages were not reachable)."
+  },
+  {
+   "key": "fleischmann-huch-nowotka-2025",
+   "authors": "Pamela Fleischmann; Annika Huch; Dirk Nowotka",
+   "title": "Generalised Nyldon words",
+   "venue": "Theoretical Computer Science 1046, article 115320",
+   "year": "2025",
+   "doi": "10.1016/j.tcs.2025.115320",
+   "url": "https://doi.org/10.1016/j.tcs.2025.115320",
+   "locator": "Theoret. Comput. Sci. 1046 (August 2025), article 115320 (OpenAlex: hybrid open access, CC BY-NC-ND, published 2025-05-14). Preprint: SSRN, DOI 10.2139/ssrn.5182616 (2025). No arXiv record: arXiv API queries 'au:Fleischmann AND au:Huch AND au:Nowotka' and 'all:Nyldon AND au:Fleischmann' return no such paper. ABSTRACT ONLY (from OpenAlex): ScienceDirect and SSRN answered 403. A different, earlier text by the same authors was read: 'Infinite Nyldon words', Theorietag 2023 technical report pp. 25-28.",
+   "scholar_entries": "\"[HTML] Generalised Nyldon words\" (P Fleischmann, A Huch, D Nowotka - Theoretical Computer Science, 2025 - Elsevier)",
+   "source_of_record": "Crossref API and OpenAlex API records of the DOI (abstract from OpenAlex)",
+   "one_line": "Abstract only: Nyldon words for a position-dependent alphabet order have a unique non-decreasing factorization, form a right Hall set and 'coincide with the anti-Lyndon words'.",
+   "unverified": "Everything beyond the abstract; arXiv identifier (none found)."
+  },
+  {
+   "key": "charlier-philibert-stipulanti-2019",
+   "authors": "Émilie Charlier; Manon Philibert; Manon Stipulanti",
+   "title": "Nyldon words",
+   "venue": "Journal of Combinatorial Theory, Series A 167",
+   "year": "2019",
+   "arxiv": "1804.09735",
+   "doi": "10.1016/j.jcta.2019.04.002",
+   "url": "https://arxiv.org/abs/1804.09735",
+   "locator": "J. Combin. Theory Ser. A 167 (October 2019) 60-90; arXiv:1804.09735, v1 25 Apr 2018, v2 30 Jan 2019, 28 pages. Read: arXiv v2 (page numbers below are v2's).",
+   "scholar_entries": "none (named by the task as background for Fleischmann-Huch-Nowotka)",
+   "source_of_record": "Crossref API record; arXiv API record; arXiv v2 PDF",
+   "one_line": "Nyldon words (Grinberg's reversal of the Chen-Fox-Lyndon recursion) factor the free monoid uniquely and are a right Lazard = right Hall set; the paper's sections 10-12 are an accessible statement of left/right Lazard sets, Viennot sets, both standard factorizations of Lyndon words and Melançon's algorithm."
+  },
+  {
+   "key": "grinberg-reiner-2020",
+   "authors": "Darij Grinberg; Victor Reiner",
+   "title": "Hopf Algebras in Combinatorics",
+   "venue": "arXiv preprint (lecture notes)",
+   "year": "2020 (v7; v1 2014)",
+   "arxiv": "1409.8356",
+   "url": "https://arxiv.org/abs/1409.8356",
+   "locator": "arXiv:1409.8356v7, 28 Jul 2020, 282 pages (v1 30 Sep 2014). Read: Chapter 6 only, sections 6.1 (pp. 166-177) and 6.6.1 (pp. 205-210) in full; section 6.2 headings only.",
+   "scholar_entries": "\"[BOOK] Hopf algebras in combinatorics\" (D Grinberg, V Reiner - 2020 - sites.math.washington.edu)",
+   "source_of_record": "arXiv API record; arXiv v7 PDF",
+   "one_line": "Chapter 6 proves the Chen-Fox-Lyndon theorem and the (right) standard factorization from scratch and states the Gessel-Reutenauer bijection with its link to the BWT and to the bijective BWT; it deliberately avoids Hall sets."
+  },
+  {
+   "key": "holub-starosta-2021",
+   "authors": "Štěpán Holub; Štěpán Starosta",
+   "title": "Lyndon Words Formalized in Isabelle/HOL",
+   "venue": "Developments in Language Theory, 25th International Conference, DLT 2021 (LNCS, Springer); Archive of Formal Proofs entry 'Lyndon words'",
+   "year": "2021",
+   "doi": "10.1007/978-3-030-81508-0_18",
+   "url": "https://www.isa-afp.org/entries/Combinatorics_Words_Lyndon.html",
+   "locator": "Paper: in 'Developments in Language Theory, 25th International Conference, DLT 2021, Porto, Portugal, August 16-20, 2021, Proceedings' (eds. N. Moreira, R. Reis), Lecture Notes in Computer Science, Springer, pp. 217-228 (first online 6 Aug 2021). Formal development: AFP entry 'Lyndon words' (session Combinatorics_Words_Lyndon, theories Lyndon and Lyndon_Addition), 24 May 2021, BSD licence, updated to v1.12 on 19 Nov 2025. No arXiv record found (arXiv API 'au:Holub AND ti:Lyndon', 'au:Starosta AND all:Isabelle'). Read: the AFP proof outline (11 pp.), not the paper (Springer page behind a cookie wall; OpenAlex says closed access).",
+   "scholar_entries": "\"Lyndon words formalized in Isabelle/HOL\" (Š Holub, Š Starosta - … Conference on Developments in Language Theory, 2021 - Springer)",
+   "source_of_record": "Crossref API records of the chapter and the book; isa-afp.org entry page and outline.pdf",
+   "one_line": "Machine-checked basics of Lyndon words: unborderedness, suffix characterisation, concatenation, longest Lyndon suffix, existence and uniqueness of the Lyndon factorization, existence of a factorization into two Lyndon words; no tree, no Hall set, no BWT.",
+   "unverified": "LNCS volume number; the paper's own text (only the AFP outline was read)."
+  },
+  {
+   "key": "reutenauer-2006",
+   "authors": "Christophe Reutenauer",
+   "title": "Mots de Lyndon généralisés",
+   "venue": "Séminaire Lotharingien de Combinatoire 54, Article B54h",
+   "year": "2006",
+   "url": "https://www.mat.univie.ac.at/~slc/s/s54reut.html",
+   "locator": "Sém. Lothar. Combin. 54 (2006), Art. B54h, 16 pp.; received 6 May 2005, final version 20 April 2006. Read in full (French).",
+   "scholar_entries": "none (cited by Postic-Zamboni and Burcroff-Winsor; fetched for H4 and H5)",
+   "source_of_record": "SLC abstract page s54reut.html and the PDF s54reut.pdf",
+   "one_line": "Generalized Lyndon words (position-dependent alphabet order; Galois words for the alternating order) form a Hall set, with an explicit standard factorization and the Schützenberger-Melançon contraction algorithm on circular words; Galois words are not a Viennot factorization."
+  },
+  {
+   "key": "perrin-reutenauer-2018",
+   "authors": "Dominique Perrin; Christophe Reutenauer",
+   "title": "Hall sets, Lazard sets and comma-free codes",
+   "venue": "Discrete Mathematics 341(1)",
+   "year": "2018",
+   "arxiv": "1609.05438",
+   "doi": "10.1016/j.disc.2017.08.034",
+   "url": "https://arxiv.org/abs/1609.05438",
+   "locator": "Discrete Math. 341(1) (January 2018) 232-243; arXiv:1609.05438v1, 18 Sep 2016. Read: arXiv v1 sections 1, 2, 7, 8 (page numbers below are v1's).",
+   "scholar_entries": "none (fetched for H3 and H5)",
+   "source_of_record": "Crossref API record; arXiv API record; arXiv v1 PDF",
+   "one_line": "States Hall sets and Lazard sets in Viennot's (left) convention, shows the Lyndon words as a left Lazard set whose trees are the LEFT standard factorizations, and gives the left version of Melançon's algorithm on a cyclic word."
+  },
+  {
+   "key": "melancon-1992",
+   "authors": "Guy Melançon",
+   "title": "Combinatorics of Hall trees and Hall words",
+   "venue": "Journal of Combinatorial Theory, Series A 59(2)",
+   "year": "1992",
+   "doi": "10.1016/0097-3165(92)90070-B",
+   "locator": "J. Combin. Theory Ser. A 59(2) (March 1992) 285-308; Zbl 0761.05033. NOT READ: ScienceDirect and core.ac.uk answered 403. Known here only through the zbMATH review and through what Reutenauer 2006 s.3.4, Perrin-Reutenauer s.8, Charlier et al. s.12 and Remark 60, and Garg Theorem 3.18 attribute to it.",
+   "scholar_entries": "none (primary source of the rewriting system; could not be fetched)",
+   "source_of_record": "Crossref API record; zbMATH Open API record Zbl 0761.05033",
+   "one_line": "Per the zbMATH review: new combinatorial proofs of the unique factorization into Hall words by a rewriting system, and an order on the free monoid under which Hall words behave like Lyndon words.",
+   "unverified": "All statements inside the paper (definitions of rise / legal rise, confluence theorem, the circular-word algorithm, any step count)."
+  },
+  {
+   "key": "reutenauer-1993",
+   "authors": "Christophe Reutenauer",
+   "title": "Free Lie Algebras",
+   "venue": "London Mathematical Society Monographs, New Series 7, Clarendon Press, Oxford",
+   "year": "1993",
+   "doi": "10.1093/oso/9780198536796.001.0001",
+   "locator": "xvii + 269 pp. (zbMATH Zbl 0798.17001). Chapter page ranges from Crossref: 0 Introduction 1-13; 4 Hall bases 84-104; 5 Applications of Hall sets 105-126; 7 Circular words 154-175. NOT READ: only the publisher's chapter abstracts (Crossref) and the zbMATH review by D. Krob. Theorem numbers used below are as cited in papers I read: Cor. 4.5, Cor. 4.7, Th. 4.9 (Reutenauer 2006), Prop. 4.1, Theorem 4.18 (Perrin-Reutenauer), Theorem 7.20 (Grinberg-Reiner).",
+   "scholar_entries": "none (named by the task for H5)",
+   "source_of_record": "Crossref API records of the book and of chapters 003.0001-003.0009; zbMATH Open API record",
+   "one_line": "Chapter 0: Lazard elimination and Lazard sets; chapter 4: Hall trees, a confluent rewriting system on standard sequences, and Lazard sets = Hall sets (Viennot); chapter 5: Lyndon words as a Hall set; chapter 7: circular words and the bijection words <-> multisets of primitive necklaces.",
+   "unverified": "Every in-book statement and its numbering beyond the abstracts, the review and the citations named."
+  },
+  {
+   "key": "viennot-1978",
+   "authors": "Gérard Viennot",
+   "title": "Algèbres de Lie libres et monoïdes libres. Bases des algèbres de Lie libres et factorisations des monoïdes libres",
+   "venue": "Lecture Notes in Mathematics 691, Springer",
+   "year": "1978",
+   "doi": "10.1007/BFb0067950",
+   "locator": "Lecture Notes in Mathematics 691, Springer, Berlin-Heidelberg-New York, 124 p. (zbMATH Zbl 0395.17003). Chapters per Crossref include 'Bases des algèbres de Lie libres' pp. 9-61 and 'Factorisations des monoïdes libres et familles basiques des algèbres de Lie libres' pp. 94-112. NOT READ; used only as cited (p. 14-15 for the left standard factorization, by Perrin-Reutenauer and Dolce-Restivo-Reutenauer; Theorems 51-52 of Charlier et al.).",
+   "scholar_entries": "none (named by the task for H5)",
+   "source_of_record": "Crossref API record of the book and two chapters; zbMATH Open API record",
+   "one_line": "Origin of Lazard sets, Hall sets in the general sense, regular (Viennot) factorizations and the left standard factorization.",
+   "unverified": "All content (not fetched)."
+  },
+  {
+   "key": "dolce-restivo-reutenauer-2019-tcs",
+   "authors": "Francesco Dolce; Antonio Restivo; Christophe Reutenauer",
+   "title": "On generalized Lyndon words",
+   "venue": "Theoretical Computer Science 777",
+   "year": "2019",
+   "arxiv": "1812.04515",
+   "doi": "10.1016/j.tcs.2018.12.015",
+   "locator": "Theoret. Comput. Sci. 777 (July 2019) 232-242; arXiv:1812.04515v1, 11 Dec 2018. Scanned (statements of theorems, Galois section), not read line by line.",
+   "scholar_entries": "the query heading \"On generalized Lyndon words\" in the second block of the pasted file (not a result line of my cluster)",
+   "source_of_record": "Crossref API record; arXiv PDF",
+   "one_line": "Combinatorial proof that generalized Lyndon words factor the free monoid; characterizations of Galois words; Galois words may have (odd-length) borders."
+  },
+  {
+   "key": "dolce-restivo-reutenauer-2019-variations",
+   "authors": "Francesco Dolce; Antonio Restivo; Christophe Reutenauer",
+   "title": "Some variations on Lyndon words",
+   "venue": "arXiv preprint; CPM 2019 invited talk (per the Scholar line)",
+   "year": "2019",
+   "arxiv": "1904.00954",
+   "locator": "arXiv:1904.00954v1, 1 Apr 2019, 16 pp. Read: introduction and section 5 (pp. 9-12).",
+   "scholar_entries": "\"Some variations on Lyndon words\" (arXiv preprint arXiv:1904.00954) and \"Some variations on Lyndon words (invited talk)\" (30th Annual Symposium on …, 2019 - drops.dagstuhl.de): another cluster's work, used here only for H3",
+   "source_of_record": "arXiv v1 PDF",
+   "one_line": "The left Lyndon tree (left standard factorization) of a Lyndon word is the decreasing Cartesian tree of its prefixes ranked by the order of u^ω.",
+   "unverified": "The CPM/LIPIcs record (volume, article number, DOI): not fetched."
+  },
+  {
+   "key": "garg-2021",
+   "authors": "Swapnil Garg",
+   "title": "New results on Nyldon words and Nyldon-like sets",
+   "venue": "Advances in Applied Mathematics 131, article 102249",
+   "year": "2021",
+   "arxiv": "1908.04056",
+   "doi": "10.1016/j.aam.2021.102249",
+   "locator": "Adv. in Appl. Math. 131 (October 2021) 102249; arXiv:1908.04056v3 (29 Oct 2022). Scanned: abstract, section 3 (Melançon's algorithm), headings of sections 5-6.",
+   "scholar_entries": "none (fetched for the step-count question of H5)",
+   "source_of_record": "Crossref API record; arXiv API record; arXiv v3 PDF",
+   "one_line": "Restates Melançon's contraction algorithm for any right Hall set (conjugate and factorization versions) and studies how long the right Lazard procedure takes to produce the Nyldon words."
+  }
+ ],
+ "findings": [
+  {
+   "statement": "The contraction that the entry's right end performs is in print as an algorithm on circular words. A sequence (h1..hn) of Hall words is 'circulairement standard' if each hi is a letter or has standard factorization hi = hi' hi'' with hi'' >= every hj; a rise (hi, hi+1), indices mod n, hi < hi+1, is legal if hi+1 >= every hj; replace the pair by hi hi+1; from the letters of w this ends on the unique power of a Hall word conjugate to w. Stated for Galois words, said to be a special case of Melançon's algorithm valid 'pour tout ensemble de Hall', itself generalizing Schützenberger (1978 seminar).",
+   "source_key": "reutenauer-2006",
+   "locator": "section 3.4, p. 10",
+   "label": "K",
+   "bears_on": "H5; section 5.6 Theorems 1-2; section 10 'RLBWT -> tree ... was not found'"
+  },
+  {
+   "statement": "Every step of the right-end induction of section 2 is a legal rise of that algorithm for the Lyndon Hall set: w_A < w_B, w_B is the largest word among all current letters, and the sequence of letters stays circularly standard. 38,030 arbitrary columns (all over {a,b} to length 12, over {a,b,c} to length 8, 20,000 random), 418,419 steps: 0 exceptions of each kind; merged word always Lyndon.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h1_h2_h5.py (output code/h1_h2_h5.out)",
+   "label": "tested",
+   "bears_on": "H5; section 5.6 Theorems 1-2"
+  },
+  {
+   "statement": "So Theorems 1-2 (the right-end grammar is the Lyndon tree of the least rotation) are the Schützenberger-Melançon contraction for the Lyndon Hall set, with LF's row order choosing which legal rise, plus one lemma: the cut of largest row is a legal rise. The entry cites Hohlweg-Reutenauer for the tree identity but nothing for the bottom-up algorithm. Not in the sources read: rows, LF, runs as letters, all occurrences of a refined digram being one interval taken in O(1), any count.",
+   "source_key": "reutenauer-2006",
+   "locator": "section 3.4 with the Hall-set definition on p. 4 (uv is a Hall word with standard factorization (u,v) iff u < v and u is a letter or u = u1u2 with u2 >= v)",
+   "label": "Conj",
+   "bears_on": "section 10 'what is claimed as new': narrows 'that this SLP is the Lyndon tree above the run starts'"
+  },
+  {
+   "statement": "Lazard sets, both sides: with F ∩ A^{<=n} = {u1..uk} ordered, Y1 = A and Y_{i+1} = u_i*(Y_i \\ u_i) (left, u1 < u2 < ...) or Y_{i+1} = (Y_i \\ u_i) u_i* (right, u1 > u2 > ...), with u_i in Y_i and Y_k ∩ A^{<=n} = {u_k}. A set that is both is a Viennot set ('regular factorization' in Viennot 1978).",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Definition 47, section 11.1, p. 19 (same construction, left convention: Perrin-Reutenauer section 2.2, p. 4, eqs (1)-(3), which notes that Reutenauer 1993 uses the symmetric Z_{i+1} = (Z_i \\ z_i) z_i*)",
+   "label": "K",
+   "bears_on": "H5 (the exact form of Lazard's elimination on the free monoid)"
+  },
+  {
+   "statement": "The Lyndon words are a Viennot set for the lexicographic order: the left Lazard procedure removing the lexicographically LEAST element yields them in increasing order, the right procedure removing the GREATEST yields them in decreasing order. Viennot's criterion: a complete factorization is left (right) Lazard iff fg in F implies f < fg (g > fg); Lyndon words satisfy f < fg < g.",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Examples 48-49 with Table 5 (pp. 19-21); Theorems 51-52 and Corollary 53 (cited from Viennot 1978), Example 54 (pp. 21-22)",
+   "label": "K",
+   "bears_on": "H5 (which elimination order gives Lyndon words: largest first on the right, least first on the left)"
+  },
+  {
+   "statement": "Hall sets of words and Lazard sets coincide (Viennot; Reutenauer 1993 Theorem 4.18 as cited); each Hall word is the foliage of one Hall tree (Reutenauer 1993 Cor. 4.5 as cited). The publisher's abstract of chapter 4 says the rewriting system on standard sequences of Hall trees is 'confluent, invertible, and always terminating', giving the unique decreasing factorization, and that the Hall bases are those 'obtained by elimination in Chapter 0'; the zbMATH review says chapter 0 presents Lazard's elimination theorem and defines Lazard sets by successive eliminations.",
+   "source_key": "reutenauer-1993",
+   "locator": "abstract only: Crossref abstracts of chapters 4 (pp. 84-104), 5 (pp. 105-126), 7 (pp. 154-175); zbMATH review Zbl 0798.17001; theorem numbers as cited in Perrin-Reutenauer section 2 (pp. 3-4)",
+   "label": "K",
+   "bears_on": "H5"
+  },
+  {
+   "statement": "The order in which a one-sided Lazard procedure removes elements IS the total order of the resulting Hall set ('the choice of the words u_i ... is what determines the total order on F'). The four lexicographically extremal choices give: right+greatest = Lyndon; left+least = Lyndon; right+least = Nyldon; left+greatest = the Lyndon words for the inverse alphabet order (also a Viennot set).",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Remark 50 (p. 21); section 11.3 with Proposition 64, Example 65, Table 8 (pp. 24-25)",
+   "label": "K",
+   "bears_on": "H5 ('is any order of steps the freedom of choosing a Hall order?'); section 8 item 9"
+  },
+  {
+   "statement": "A step at a coincidence (section 5.3) is a one-sided elimination of the LOSER as a refined letter: top wins = every occurrence of B is preceded by A, so B is eliminated to the right of A ((Z\\B)B*); bottom wins = every A is followed by B, so A is eliminated to the left of B (A*(Z\\A)). A schedule that mixes the two sides is a composition of bisections, not a Hall order; a cell step away from a coincidence (largest cell) eliminates no letter and is a RePair step. So 'any order of steps' is wider than 'any Hall order'.",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Definition 47 compared with the entry's section 2 table and section 5.3",
+   "label": "Conj",
+   "bears_on": "H5; section 5.6 Theorem 4"
+  },
+  {
+   "statement": "In the right-end induction the word w_B never increases; a maximal stretch of steps with one w_B = z is one right Lazard elimination of z on the cyclic word, cut into one step per refined digram. Counts (n, r, S, eliminations, distinct word pairs (y,z), steps of the form (y z^k) z with k>=1 already made): JSON-like 6000, 804, 1944, 606, 1260, 40; prose 6000, 3527, 5267, 1739, 3064, 81; letters in random runs 3083, 1117, 3025, 1102, 1564, 1205; (ab)^500 a: 1001, 2, 501, 2, 501, 499.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_phases.py <prose file> (output code/phases.out)",
+   "label": "tested",
+   "bears_on": "H5; section 8 item 5 (division rule)"
+  },
+  {
+   "statement": "Steps of such rewritings are counted in print only in these forms: (i) both Lazard procedures need k-1 steps to produce the k Lyndon words of length <= n, and how many the right procedure needs for Nyldon words is posed as Open Problem 59; (ii) Melançon's algorithm as Algorithm 3 (each pass contracts every occurrence of the extremal block into its left neighbour) has worst case O(n(n-1)/2). No source read counts a step that takes all occurrences of a digram at once, relates the count to runs of a BWT, or gives a fewest-steps normal form.",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Remark 58 and Open Problem 59 (p. 23); section 12 and Algorithm 3 (pp. 26-27). Garg 2021 section 6 (Propositions 6.4-6.8, Theorem 6.12; scanned) treats (i) for Nyldon words; Garg Theorem 3.18 attributes the conjugate and factorization versions of the algorithm, for any right Hall set, to Melançon 1992.",
+   "label": "K",
+   "bears_on": "H5 (step counts); section 5.6 Theorem 4"
+  },
+  {
+   "statement": "The standard bracketing: iterating the standard factorization gives each (generalized) Lyndon word a complete bracketing, and the Lie polynomials so obtained are a basis of the free Lie algebra. For ordinary Lyndon words: b_w = [b_u, b_v] with (u,v) = stf w, (b_w) is a basis, and b_w = x_w + combination of x_v with v > w of the same length.",
+   "source_key": "grinberg-reiner-2020",
+   "locator": "Definition 6.1.38 (p. 176), Exercise 6.1.41(c),(d) (p. 177); for generalized Lyndon words Reutenauer 2006 Corollaire 2.3 (p. 8, via Reutenauer 1993 Th. 4.9)",
+   "label": "K",
+   "bears_on": "H5 (the grammar as the standard bracketing: true by definition once Theorem 2 holds)"
+  },
+  {
+   "statement": "Standard factorization of a Lyndon word w, |w| > 1: v = the lexicographically smallest nonempty proper suffix; then u and v are Lyndon and u < w < v; the same v is the longest proper suffix that is Lyndon. For Lyndon t: t is the longest Lyndon proper suffix of wt iff not (h < t), h the right factor of w. Chen-Fox-Lyndon existence is proved by taking a factorization into Lyndon words with fewest factors: a_i < a_{i+1} would merge.",
+   "source_key": "grinberg-reiner-2020",
+   "locator": "Theorem 6.1.30 (p. 172), Exercise 6.1.31 (p. 173), Exercises 6.1.36 and 6.1.39(f) (p. 176), Theorem 6.1.27 and its proof (p. 171), Proposition 6.1.16(a)",
+   "label": "K",
+   "bears_on": "section 5.6 Theorem 2. Nothing new for the mission: no tree as an object, no left factorization, no Lazard or Hall set (p. 176: 'avoiding the generality of Hall sets'); section 6.2 on shuffles has nothing for it (headings only)."
+  },
+  {
+   "statement": "Gessel-Reutenauer bijection: GR(w) = the multiset of aperiodic necklaces spelled by the cycles of (std w)^{-1}; its inverse RG sorts all conjugates of all necklaces by u^∞ and takes last letters; GR and RG are mutually inverse bijections between all words and all finite multisets of aperiodic necklaces. RG({[w]}) is the BWT; Kufleitner's bijective BWT is RG of the necklaces of the Lyndon factors. The rows are in ≤ω order (Prop. 6.6.22) and equal words keep their relative order under the permutation (Lemma 6.6.6(f),(g)).",
+   "source_key": "grinberg-reiner-2020",
+   "locator": "Definitions 6.6.12 (p. 206) and 6.6.26 (p. 208), Lemma 6.6.6, Proposition 6.6.22, Theorem 6.6.29 (p. 209; credited to Gessel-Reutenauer, Lemma 3.4 and Example 3.5, and to Reutenauer 1993 Theorem 7.20), Remark 6.6.31 (pp. 209-210)",
+   "label": "K",
+   "bears_on": "H1; section 2 'a column that is no BWT' (any column is the extended BWT of exactly one multiset of primitive necklaces; the k tied rows of a power)"
+  },
+  {
+   "statement": "The right-end induction with the drop rule, on 38,030 arbitrary columns (33,527 with several closed letters): the closed letters with their multiplicities are exactly the Gessel-Reutenauer multiset; every closed word is Lyndon; each closed tree is its right standard tree; letters close in strictly decreasing ω-order. On the bijective BWT of 22,046 texts (all binary to length 10, 20,000 random): the closed words in closing order, with multiplicity, are the Lyndon factorization, each with its Lyndon tree. 0 failures.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h1_h2_h5.py",
+   "label": "tested",
+   "bears_on": "H1"
+  },
+  {
+   "statement": "Left-end induction on the BWT of 22,730 primitive words: the one closed letter spells the greatest rotation and its tree is the right standard tree of that word for the inverse alphabet order. 0 failures. (Complementing the alphabet reverses the rows, so summed over a complement-closed set of words the two ends make equal numbers of steps: the left/right gap of section 5.6 is a property of the data.)",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h1_h2_h5.py (last line of output)",
+   "label": "tested",
+   "bears_on": "H2; section 8 item 9"
+  },
+  {
+   "statement": "Left standard (Širšov) factorization of a Lyndon word: u = longest proper Lyndon prefix; then v is Lyndon and u < v; 'Lyndon words are left and right privileged', Nyldon words are not. With Viennot's (left) Hall axioms the Lyndon words are a Hall set whose trees are the LEFT standard factorizations, and they are the left Lazard set for increasing lexicographic order, with π(z) = (π(z_i), π(y)) for z = z_i y.",
+   "source_key": "perrin-reutenauer-2018",
+   "locator": "Example 1 (p. 3, citing Viennot p. 15), section 2.2 and Example 2 (pp. 4-5); Charlier et al. section 10.2 (p. 16, citing Širšov 1962 and Viennot 1978)",
+   "label": "K",
+   "bears_on": "H3"
+  },
+  {
+   "statement": "Left version of Melançon's algorithm on the cyclic sequence of letters of a primitive word: take i with s_i minimal among all and s_i < s_{i+1} (cyclically), replace by s_i s_{i+1}; it ends on the conjugate in the Lazard set Z; the proof shows ν(s_i s_{i+1}) = δ(s_i), i.e. each contraction is a standard factorization. Attributed to Reutenauer 1993.",
+   "source_key": "perrin-reutenauer-2018",
+   "locator": "section 8, pp. 15-16, Example 26",
+   "label": "K",
+   "bears_on": "H3 (the left Lyndon tree is built by absorbing the least piece into... its right neighbour, on the cyclic word)"
+  },
+  {
+   "statement": "The left Lyndon tree of a Lyndon word equals its left Cartesian tree: the decreasing tree of the proper prefixes ranked by the order of u^ω (the 'prefix standard permutation'); dual to Hohlweg-Reutenauer.",
+   "source_key": "dolce-restivo-reutenauer-2019-variations",
+   "locator": "Proposition 26 (p. 9), definition of the prefix standard permutation (p. 10), Theorem 36 (p. 12)",
+   "label": "K",
+   "bears_on": "H3 (the left tree's order of cuts is by prefix rank, not by row)"
+  },
+  {
+   "statement": "The left Lyndon tree IS the tree of a schedule of cell steps: 'least piece z first, every cell (α,β) with w_α = z ≠ w_β' (left Lazard order), each step removing all occurrences of one refined digram; on 8,730 primitive words the result is the left standard tree every time and the number of cell steps equals, word by word, the left tree's nodes on the hinges' paths (the analogue of Theorem 3; for the right tree the same simulator returns S and the right-end tree on every word). In the order taken about 5% of those steps were not at a coincidence (77,970 of 82,223), against 4% for the right order taken the same way.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h3.py <prose file>; python3 code/test_h3_perword.py (model: code/cells.py)",
+   "label": "tested",
+   "bears_on": "H3"
+  },
+  {
+   "statement": "The left tree's count over the hinges is not smaller in aggregate: 8,730 small words 82,223 against 81,301 (+1.1%; smaller on 176 words, smallest abcabcc with 5 against 6; larger on 877, smallest abcbc with 4 against 3; equal on 7,677). Larger inputs (right, left): JSON-like n=6000 r=804: 1944, 2518; prose n=6000 r=3527: 5267, 5973; letters in random runs n=3142 r=1107: 3081, 3129; period 37: 101, 126; Fibonacci 16, 16.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h3.py (output code/h3.out), code/h3_perword.out",
+   "label": "tested",
+   "bears_on": "H3; section 8 item 9"
+  },
+  {
+   "statement": "Cell steps of the six one-sided Hall orders the literature names, on the same cyclic word (Lyndon-right = right end; Lyndon-left; inverse-order right = left end; inverse-order left; Nyldon; Nyldon for the inverse alphabet): 3,600 small words, sum of r2-1 = 27,325: 31,733; 32,042; 31,755; 32,053; 31,715; 31,686. JSON-like (n=3000, r=372, r2-1=534): 958; 1210; 1535; 2318; 1538; 958. Prose (n=3000, r=1850, r2-1=2405): 2671; 2971; 2788; 2999; 2786; 2643. Random runs (r=762, r2-1=1266): 2072; 2074; 2093; 2096; 2086; 2063. None is more than 1% under the right end; none approaches r2-1.",
+   "source_key": "own-test",
+   "locator": "python3 code/test_hall_orders.py <prose file> (output code/hall_orders.out); python3 code/test_nyldon.py checks that the Nyldon schedule ends on the Nyldon conjugate (1,964 binary words, 0 failures)",
+   "label": "tested",
+   "bears_on": "section 8 items 2 and 9; H5"
+  },
+  {
+   "statement": "Generalized Lyndon words for any sequence of alphabet orders (Galois words for the alternating order) are a set of Hall words: for w not a letter the standard factorization is w = uv with v the proper suffix of least v^∞, shortest among ties, equivalently the longest proper suffix that is a generalized Lyndon word; u < v, and if u = u1u2 then u2 >= v. Hence unique non-increasing factorization.",
+   "source_key": "reutenauer-2006",
+   "locator": "Théorème 2.1 (p. 4), Théorème 2.2 (p. 5) and its proof (pp. 6-7), Remarque 2.2 (pp. 7-8)",
+   "label": "K",
+   "bears_on": "H4 (the 'Galois tree' exists in print as a Hall tree)"
+  },
+  {
+   "statement": "For the alternating order the product rule fails: 121 and 3 are Galois words with (121)^∞ < 3^∞ but 1213 is not Galois (1312 is), so Galois words are not a Viennot factorization; 1^∞ < 2^∞ but 1^∞ > (12)^∞; a Galois word can have a border, of odd length only. Same phenomenon in Postic-Zamboni: abba and b are ω-Lyndon with abba^ω < b^ω, abbab is not; the non-increasing factorization need not be the shortest one (ababab).",
+   "source_key": "reutenauer-2006",
+   "locator": "section 3.8 (p. 14), Remarque 2.1 (p. 5), Proposition 3.1 (p. 9); Postic-Zamboni Remarks 3 and 4 (pp. 3-4). Both examples re-checked by code/test_h4.py.",
+   "label": "K",
+   "bears_on": "H4; section 5.6 ('every letter's word is a Lyndon word' is special to the lexicographic order)"
+  },
+  {
+   "statement": "Alternating BWT of 21,727 primitive words: its LF is the bucket-reversed LF and is a flip on every run (0 exceptions); a right-end induction with flips (rules derived here: the loser lands before the winner when the winner is flipped, loser's flip ^= winner's flip) ends on one point whose word is the Galois conjugate (0 exceptions). But the grammar is NOT Reutenauer's standard-factorization tree: it differs on 19,707 words, 45,643 of 216,099 steps join a piece that is not a Galois word, 39,609 are not rises. Smallest: abb, column bab: induction (a,(b,b)), Hall tree ((a,b),b). The induction's tree is the min-Cartesian tree of the alternating rotation ranks (9,229 words, 0 exceptions).",
+   "source_key": "own-test",
+   "locator": "python3 code/test_h4.py (output code/h4.out); python3 code/test_h4_cartesian.py; python3 code/h4_examples.py",
+   "label": "tested",
+   "bears_on": "H4"
+  },
+  {
+   "statement": "Why H4's last clause fails: the Hall order compares pieces by their own periodic extension u^∞, the induction compares the rotations that begin at the pieces. For the lexicographic order the two agree on the largest cut (tested above); for the alternating order they do not (in abb the largest rotation begins at the second b, whose piece equals its left neighbour).",
+   "source_key": "reutenauer-2006",
+   "locator": "section 3.4 (legal rise defined on the pieces themselves) against the entry's section 5.5 (cuts ranked by suffix/rotation)",
+   "label": "Conj",
+   "bears_on": "H4"
+  },
+  {
+   "statement": "Postic-Zamboni: for a total order on infinite words with the condition (*) 'u^ω < v^ω for |u| = |v| implies ux < vy', a finite word is ω-Lyndon if w^ω < v^ω for every proper suffix v; every finite word and every infinite word has exactly one non-increasing factorization into ω-Lyndon words. Every primitive word is ω-Lyndon for some such order. Nothing on standard factorization, trees or algorithms: nothing for the mission's speed.",
+   "source_key": "postic-zamboni-2020",
+   "locator": "Definition 2.2, Remark 3 (p. 3), Proposition 2.3 (p. 4), Corollary 2.17 (p. 9), arXiv v2",
+   "label": "K",
+   "bears_on": "section 5.5 last bullet (a turned row order is 'no lexicographic order': this is the nearest framework in print, and it lists which Lyndon properties are lost)"
+  },
+  {
+   "statement": "Burcroff-Winsor: every infinite word has a unique non-increasing factorization into finite and infinite generalized Lyndon words; the factorization is finite iff the word has a generalized Lyndon suffix; an infinite word is generalized Lyndon iff it has infinitely many generalized Lyndon prefixes. Anti-Lyndon words are named as the generalized Lyndon words of the opposite order. Nothing on finite standard factorization, trees, BWT or cost: nothing for the mission.",
+   "source_key": "burcroff-winsor-2019",
+   "locator": "Theorem 7, Theorem 3, Theorem 8 (arXiv v2 numbering); introduction p. 2 for Galois and anti-Lyndon words",
+   "label": "K",
+   "bears_on": "H2 and H4 (definitions only)"
+  },
+  {
+   "statement": "Nyldon words: letters, and words with no factorization into a non-decreasing sequence of shorter Nyldon words; every word has a unique Nyldon factorization; standard factorization w = ps with s the longest Nyldon proper suffix (then p is Nyldon and p > s); every primitive conjugacy class holds exactly one Nyldon word; they are a right Lazard set for the decreasing lexicographic order and not a left one.",
+   "source_key": "charlier-philibert-stipulanti-2019",
+   "locator": "Definition 4, Theorem 16, Theorem 20 and Definition 21, Theorem 26, Proposition 55, Theorem 56",
+   "label": "K",
+   "bears_on": "H5 (a second Hall order on the same cyclic word; counted above)"
+  },
+  {
+   "statement": "Generalised Nyldon words (non-decreasing factorization for a position-dependent alphabet order) have a unique factorization, form a right Hall set and, in the abstract's words, 'coincide with the anti-Lyndon words'. Not checked against the text.",
+   "source_key": "fleischmann-huch-nowotka-2025",
+   "locator": "abstract only (OpenAlex record of DOI 10.1016/j.tcs.2025.115320)",
+   "label": "K",
+   "bears_on": "H2/H5 by name only; nothing usable for the mission without the text"
+  },
+  {
+   "statement": "Formalized in Isabelle/HOL: Lyndon w as strictly least among its rotations; Lyndon words are unbordered; suffix characterisation; u, v Lyndon and u < v imply uv Lyndon; the longest Lyndon suffix; the Lyndon factorization as the suffix-greedy one, monotone and unique; under 'Standard factorization' only the existence of l, m Lyndon with w = lm and l < m (and the iff). Not formalized: the standard factorization as a function or its uniqueness, any tree, Cartesian trees, Hall sets, BWT.",
+   "source_key": "holub-starosta-2021",
+   "locator": "AFP outline: theory Lyndon, sections 1.1-1.6.1 (lemmas Lyndon-unbordered, Lyndon-concat, longest-Lyndon-suffix, fac-Lyndon-mono, Lyndon-mono-unique, Lyndon-std, Lyndon-std-iff); theory Lyndon_Addition section 1.6.2",
+   "label": "K",
+   "bears_on": "section 5.6 Theorem 2 (a base for a machine proof, far from the theorem); nothing for speed"
+  }
+ ],
+ "hypotheses": [
+  {
+   "h": "H1. The right-end induction applied to ANY column inverts the extended BWT: each closed letter's word is the Lyndon conjugate of one necklace, the cycles close in non-increasing order, and on the bijective BWT of T the closed words in order are the Lyndon factorization of T, each with its Lyndon tree.",
+   "verdict": "partly: the bijection is in print, the induction's part is not addressed; tested true",
+   "evidence": "In print (K): any word is the image, under the inverse Gessel-Reutenauer map, of exactly one multiset of aperiodic necklaces; the cycles of (std w)^{-1} spell them; rows are sorted by u^∞; the BWT is the one-necklace case and the bijective BWT (credited there to Kufleitner) is the case of the Lyndon factors: Grinberg-Reiner Def. 6.6.12, Prop. 6.6.22, Def. 6.6.26, Thm 6.6.29, Rem. 6.6.31 (pp. 206-210), crediting Gessel-Reutenauer Lemma 3.4 and Reutenauer 1993 Thm 7.20. Not addressed by any paper of the cluster: an endpoint induction, a closing order, the tree. Conj: the three claims follow in a few lines from Prop. 6.6.22 (a cycle's last surviving row is its least row, i.e. its Lyndon conjugate; least rows are in ω-order) and the entry's Theorems 1-2 applied inside one cycle. Tested: python3 code/test_h1_h2_h5.py: 38,030 columns (33,527 with several closed letters), closed multiset = Gessel-Reutenauer multiset, closed words Lyndon, trees = right standard trees, closing strictly ω-decreasing: 0 failures; 22,046 texts through the bijective BWT: closed words in order = Lyndon factorization with trees: 0 failures."
+  },
+  {
+   "h": "H2. The induction at the LEFT endpoint yields the Lyndon tree, for the inverse alphabet order, of the greatest rotation.",
+   "verdict": "not addressed; tested true",
+   "evidence": "The papers give only the objects: anti-Lyndon words = generalized Lyndon words for the opposite order (Burcroff-Winsor p. 2, citing Gewurz-Merola); the Lyndon words of the inverse alphabet are again a Viennot set (Charlier et al. Prop. 64, Example 65, Table 8). None mentions an induction. Conj: it is the right-end statement read after complementing the alphabet, which reverses the rows. Tested: python3 code/test_h1_h2_h5.py: 22,730 primitive words, left-end tree = right standard tree of the greatest rotation for the inverse order, 0 failures."
+  },
+  {
+   "h": "H3. The LEFT Lyndon tree is, or is not, the tree of some order of Rauzy steps on LF's exchange; and whether its node count over the hinges is smaller than the right tree's.",
+   "verdict": "partly: the tree and its bottom-up construction are in print, its reading as steps on LF is not; tested: it is such a tree, and its count is not smaller in aggregate",
+   "evidence": "In print (K): left standard = Širšov factorization (Charlier et al. s.10.2, p. 16); Lyndon words as a left Lazard set in increasing order whose Hall trees are the left standard factorizations (Perrin-Reutenauer Examples 1-2, pp. 3-5); the left Melançon contraction 'least piece with its right neighbour' on the cyclic word (Perrin-Reutenauer s.8, pp. 15-16); left Lyndon tree = Cartesian tree of prefix ranks (Dolce-Restivo-Reutenauer arXiv:1904.00954 Thm 36, p. 12). Not addressed: LF, runs, steps. Tested (python3 code/test_h3.py, code/test_h3_perword.py, model in code/cells.py): the left Lazard schedule is a valid sequence of cell steps, each all occurrences of one refined digram, and returns the left standard tree on 8,730 words; its step count equals the left tree's nodes over the hinges word by word; about 5% of its steps, in the order taken, are not at a coincidence. Count: 82,223 against 81,301 for the right tree (+1.1%; smaller on 176 words, larger on 877); JSON-like 2518 against 1944, prose 5973 against 5267, random runs 3129 against 3081, period 37: 126 against 101. Small and synthetic inputs only; not run on Wikidata."
+  },
+  {
+   "h": "H4. For the alternating BWT, LF is an interval exchange WITH FLIPS on the runs, Rauzy induction with flips inverts it, and its grammar is the standard-factorization tree for the alternating order (a Galois tree).",
+   "verdict": "first two clauses not addressed by these papers and tested true; third clause contradicted by test (the Galois Hall tree itself is in print)",
+   "evidence": "In print (K): Galois words are a Hall set with standard factorization 'v = shortest proper suffix of least v^∞' (Reutenauer 2006 Th. 2.2, Rem. 2.2), built on the cyclic word by the Schützenberger-Melançon contraction (s.3.4); they are not a Viennot factorization (s.3.8: 121, 3, 1213) and can be bordered (Prop. 3.1); same failure of the product rule in Postic-Zamboni Remark 3 (abba, b). No paper of the cluster mentions LF, flips or Rauzy. Tested (python3 code/test_h4.py, 21,727 primitive words): LF of the alternating BWT is a flip on every run, 0 exceptions; an induction with flips ends on the Galois conjugate, 0 exceptions; but its tree differs from the Galois standard tree on 19,707 words (smallest abb: (a,(b,b)) against ((a,b),b)), 45,643 of 216,099 steps join a non-Galois piece. Its tree is the min-Cartesian tree of alternating rotation ranks (code/test_h4_cartesian.py, 9,229 words, 0 exceptions). The flip rules were derived in this session and are checked only by these runs."
+  },
+  {
+   "h": "H5. A right-end step is a context-refined Lazard elimination of the largest letter, and the grammar is the standard bracketing of the Lyndon word in the free Lie algebra.",
+   "verdict": "partly: every ingredient is in print, the identification with the induction on LF is not; tested consistent",
+   "evidence": "In print (K): Lazard sets both sides (Charlier et al. Def. 47; Perrin-Reutenauer s.2.2); Lyndon words = right Lazard set removing the lexicographically greatest element, in decreasing order, and left Lazard set removing the least (Charlier et al. Examples 48-49, Example 54); Lazard = Hall (Viennot; Reutenauer 1993 Thm 4.18 as cited); the contraction of a legal rise on a circularly standard sequence and its end on the Hall conjugate (Reutenauer 2006 s.3.4; Perrin-Reutenauer s.8; Charlier et al. Algorithm 3; all attributing it to Melançon 1992, which I could not fetch); standard bracketing = Lie basis (Reutenauer 2006 Cor. 2.3; Grinberg-Reiner Ex. 6.1.41). Step counts in print: k-1 Lazard steps for the k Lyndon words up to length n, Open Problem 59, O(n(n-1)/2) for the naive circular algorithm (Charlier et al. Remark 58, s.12); the rewriting is confluent and terminating (publisher's abstract of Reutenauer 1993 ch. 4). Nothing in print on runs, rows, refined letters, digram classes or a fewest-steps form. Tested (code/test_h1_h2_h5.py): all 418,419 right-end steps on 38,030 columns are legal rises with w_B the largest current word, the sequence stays circularly standard; (code/test_phases.py) the induction is a decreasing sequence of eliminations, each cut into one step per refined digram. 'Any order of steps' is wider than the choice of a Hall order (Conj): a coincidence step eliminates the loser on one side, mixed sides give bisections, off-coincidence cells are RePair steps; six one-sided Hall orders counted (code/test_hall_orders.py) are within 1% of the right end or worse."
+  }
+ ],
+ "ideas": [
+  {
+   "idea": "Record in section 10 that the bottom-up construction of Theorems 1-2 is the Schützenberger-Melançon contraction on circular words for the Lyndon Hall set (Melançon 1992; Reutenauer 1993 ch. 4 and 7; restated in Reutenauer 2006 s.3.4, Perrin-Reutenauer 2018 s.8, Charlier-Philibert-Stipulanti 2019 s.12 Algorithm 3), and restate the new part as: LF's largest row is always a legal rise, and all occurrences of the refined digram are one interval. Then read Melançon 1992 and Reutenauer 1993 sections 4.1 and 7 themselves.",
+   "kind": "prior art that narrows a claim",
+   "why": "The entry lists 'that this SLP is the Lyndon tree above the run starts' as new and says the direction RLBWT -> tree 'was not found'. The tree-by-contraction half is thirty years old; what survives is the transfer to rows and runs and the O(1) digram step. Charlier et al.'s Algorithm 3 already contracts every occurrence of the extremal block in one pass.",
+   "falsifier": "If Melançon 1992 or Reutenauer 1993 ch. 7 already contracts all equal rises at once with a cost statement, or orders the circular word's positions by conjugate rank, the remaining claim narrows again. I could not fetch either (403 at ScienceDirect and CORE; the book is not open).",
+   "cost": "1-2 hours with library access; a paragraph in section 10"
+  },
+  {
+   "idea": "Take the division rule of section 8 item 5 in Lazard's own form: one elimination of z produces the letters y z^k for all k at once, and y z^k is the left comb (((y,z),z)...,z), already a Hall tree. So a run-length rule N -> w_A (w_B)^q made when the same refined pair repeats leaves Theorems 1-2 intact: it is a run-length coding of nodes the Lyndon tree already has.",
+   "kind": "new idea to try",
+   "why": "Answers 'does the division rule change what the grammar is': no. (ab)^500 a: S = 501 in 2 eliminations, 499 of the steps are (y z^k) z (tested, code/test_phases.py). It also bounds what the rule can buy elsewhere: such steps are 40 of 1944 on the JSON-like sample and 81 of 5267 on prose here, 1205 of 3025 on letters in random runs (long byte runs, which bzip2's RLE1 caps).",
+   "falsifier": "In the reference simulator, replace a streak of steps with one refined A and one word w_B by a single rule with exponent: the expansion must stay equal to the block on the entry's 200,000 arbitrary columns, and S on (ab)^k a must fall from n/2 to O(1). Dead for Wikidata if the count of (y z^k) z steps there is under 1% (the entry's 84 Euclid segments suggest so).",
+   "cost": "half a day in the Python reference; the kernel change is section 8 item 5's"
+  },
+  {
+   "idea": "Record as a closed direction: the one-sided Hall orders named in the literature (Lyndon left tree, the inverse-order trees, Nyldon, Nyldon for the inverse alphabet), run as schedules of cell steps on the cyclic word of run letters.",
+   "kind": "related approach to record",
+   "why": "Section 8 item 2 asks for an order a sweep can follow in which free steps come first, and item 9 asks why the right end. These are the orders with a structure theorem behind them, and none helps: on prose 2671 (right end) against 2643 to 2999, floor 2405; JSON-like 958 against 958 to 2318, floor 534; small words within 0.2% of each other for the three 'right' orders and +1% for the 'left' ones. The left Lyndon tree is a legitimate schedule (count = its nodes over the hinges) but costs more. The 1.279 r of 'free steps first, then the largest cell' is therefore not a Hall order of this kind.",
+   "falsifier": "Run the same six orders in the entry's geo simulator on the 8 Wikidata blocks; the direction reopens only if one of them is under 1.7 r there. The inverse-alphabet Nyldon order differs from the right end only by preferring the shorter of two prefix-related largest pieces (about -1% here).",
+   "cost": "a day in geo; nothing if taken on these counts"
+  },
+  {
+   "idea": "State section 2's 'column that is no BWT' as the inverse extended BWT: cite Gessel-Reutenauer (Lemma 3.4), Reutenauer 1993 Thm 7.20 and Grinberg-Reiner Thm 6.6.29 with Remark 6.6.31, and add the three facts tested here (closed letters = the multiset's Lyndon words with multiplicities, closing in decreasing ω-order, Lyndon factorization on a bijective BWT).",
+   "kind": "prior art that narrows a claim",
+   "why": "The drop rule, 'λ_A cycles spelling w_A' and the order of the k tied rows of a power are consequences of the bijection (Grinberg-Reiner Lemma 6.6.6(f),(g), Prop. 6.6.22), not new facts; the induction then inverts the bijective BWT with no orig_ptr, emitting the Lyndon factors in text order. No effect on bzip2 speed.",
+   "falsifier": "Already run: 38,030 columns and 22,046 texts, 0 failures (code/test_h1_h2_h5.py). A counterexample would have to be longer than 12 over two letters or 8 over three.",
+   "cost": "an hour of writing"
+  },
+  {
+   "idea": "Section 8 item 9, 'why the right end': record that complementing the alphabet turns the right end into the left end, so over any complement-closed set of texts the two make the same total number of steps; the 1.08 to 1.27 gap on Wikidata is a property of the corpus (on the JSON-like sample here: 958 against 1535), and bzip2's byte order leaves a decoder no choice of order.",
+   "kind": "related approach to record",
+   "why": "Removes one of the two unproved items of section 8.9 from the list of things a proof could settle: there is nothing structural to prove about left against right.",
+   "falsifier": "Count both ends on the byte-complemented Wikidata blocks: the ratios must swap exactly.",
+   "cost": "minutes with the existing example"
+  },
+  {
+   "idea": "For the alternating BWT, record the negative: LF is a flip on every run and an induction with flips inverts it, but the grammar is the Cartesian tree of alternating rotation ranks, not the Galois Hall tree; pieces need not be Galois words, nor even primitive (bb).",
+   "kind": "related approach to record",
+   "why": "Marks the limit of Theorems 1-2: they rest on 'the largest rotation among the cuts begins at the largest piece', true for the lexicographic order and false for a position-dependent one (Reutenauer 2006 s.3.8; Postic-Zamboni Remark 3 give the printed counterexamples to the product rule). No use for bzip2.",
+   "falsifier": "Already run (code/test_h4.py): 19,707 of 21,727 words differ. To get the Galois tree from LF one would need another order of steps; whether one exists as cell steps was not tried.",
+   "cost": "none further"
+  },
+  {
+   "idea": "For the turned row order of section 5.5 ('from another row the grammar is the Cartesian tree of a rank order that is no lexicographic order', +11% cells), test the Postic-Zamboni frame: is the turned order one that satisfies their condition (*) except on prefixes of the turning rotation, and do the turned grammar's pieces lose exactly the properties their Remark 3 lists (unbordered, closed under product)?",
+   "kind": "new idea to try",
+   "why": "It is the only printed framework for 'Lyndon words of a non-lexicographic order on infinite words', and it predicts which merges stop being Hall merges; that could turn the +11% from a count into a statement. Low value for speed.",
+   "falsifier": "In the turned induction of 10 blocks, count steps whose merged word is bordered or whose right piece is not the largest piece; if there are none, the frame explains nothing.",
+   "cost": "half a day; needs the turned-order kernel that is in no commit"
+  },
+  {
+   "idea": "Holub-Starosta's AFP session as the base for a machine-checked Theorem 2.",
+   "kind": "related approach to record",
+   "why": "It has the longest Lyndon suffix and the factorization but not the standard factorization as a function, no tree and no Cartesian tree, so Hohlweg-Reutenauer would have to be formalized first. The paper has nothing for the mission's speed or open items.",
+   "falsifier": "None needed: the gap is visible in the outline (section 1.6.1 has only lemma Lyndon-std and Lyndon-std-iff).",
+   "cost": "weeks; not recommended"
+  }
+ ],
+ "notes": "WHAT IS ALREADY IN PRINT THAT THE ENTRY CLAIMS AS NEW (the main return).\n(1) Section 5.6, 'that this SLP is the Lyndon tree above the run starts', and section 10, 'the direction RLBWT -> tree ... was not found': the bottom-up construction of the Hall (here Lyndon) tree of the Lyndon conjugate by contracting, on the circular word, a largest block into its left neighbour is Melançon's algorithm (attributed to Melançon 1992 and Schützenberger 1978 by every source I read: Reutenauer 2006 s.3.4, Perrin-Reutenauer 2018 s.8, Charlier-Philibert-Stipulanti 2019 s.12, Garg 2021 Thm 3.18). My test shows every right-end step is such a contraction. What I did not find in print: runs of L as the letters, LF's row order as the chooser, a refined digram's occurrences as one interval taken in O(1), any count.\n(2) Section 2's arbitrary column: it is the inverse extended BWT via the Gessel-Reutenauer bijection, in print (Grinberg-Reiner Thm 6.6.29, Rem. 6.6.31). The induction's behaviour on it is not in print in this cluster.\n(3) Nothing in this cluster anticipates steps = r2 - 1 + U, the hinge count, or the cells kernel.\n\nSOURCES I COULD NOT FETCH, so nothing is asserted from inside them: Melançon 1992 (ScienceDirect 403, core.ac.uk 403; zbMATH review only); Reutenauer, Free Lie Algebras (publisher's chapter abstracts and zbMATH review only; theorem numbers are as cited by papers I read); Viennot 1978; Lothaire ch. 5 (seen only through citations: Reutenauer 2006 cites [L, Prop. 5.1.2, Th. 5.4.1, p. 64-66]); Fleischmann-Huch-Nowotka 2025 beyond its abstract (ScienceDirect and SSRN 403); the Holub-Starosta paper (only the AFP outline); Postic's thesis (no copy found). DBLP was unreachable (Anubis challenge) and the Encyclopedia of Mathematics returned 502, so bibliographic data come from Crossref, the arXiv API, OpenAlex, zbMATH Open, the SLC site, isa-afp.org and the PDFs. LNCS volume numbers for WORDS 2019 and DLT 2021 are left out for that reason. Wikipedia's 'Hall word' page was read as a pointer only and is not used as a source.\n\nTESTS. All in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/generalized-hall/code/ (Python, no timing): iet.py (endpoint induction with the drop rule, written from section 2), cells.py (cell steps in the text picture of sections 5.5-5.6; a letter = same run-identity tree and adjacent in both tilings), test_h1_h2_h5.py, test_h3.py, test_h3_perword.py, test_h4.py, test_h4_cartesian.py, h4_examples.py, test_hall_orders.py, test_phases.py, test_nyldon.py, with outputs in the matching .out files. Fetched PDFs and extracted texts are in /tmp/claude-0/-home-user-mibz2/f67e7b69-8e16-524d-b326-5adddc28d3be/scratchpad/lit2/generalized-hall/dl/.\nLimits of the tests: exhaustive only for short words (binary to length 10-12, ternary to 6-8), then random words to length 60 and five inputs of 1,000 to 6,000 bytes (Fibonacci, a JSON-like string, letters in random runs, a period-37 word, and the first bytes of the entry's own text read as prose). Nothing was run on Wikidata or on a bzip2 block. The cell model merges letters only by identity plus adjacency, so it allows no 'fusion'; its right-order count equals the faithful induction's S on every word tested. The flip rules for the alternating BWT were derived in this session. The Scholar header 'On generalized Lyndon words' in the pasted file is a query title, not a result line.\n\nNothing for the mission: Postic-Zamboni, Burcroff-Winsor, Fleischmann-Huch-Nowotka (abstract), Holub-Starosta, and Grinberg-Reiner's sections 6.1-6.2 beyond standard statements; their use is as locators for H1, H2, H4 and for the printed counterexamples."
+}
