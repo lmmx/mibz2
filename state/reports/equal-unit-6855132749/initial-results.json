@@ -1,0 +1,276 @@
+{
+  "inventory": [
+    {
+      "alphabet": 2,
+      "max_n": 8,
+      "cases": 3586
+    },
+    {
+      "alphabet": 3,
+      "max_n": 6,
+      "cases": 6015
+    }
+  ],
+  "special_cases": 20,
+  "counts": {
+    "oracle_return_visits": 293740,
+    "reference_expansion_visits": 56099,
+    "deferred_traversals": 16593,
+    "decoded_bytes": 61355,
+    "short_cycle": 8100,
+    "period_not_divisor": 3707,
+    "naive_drop_left_mismatch": 8019,
+    "dropped_orbits_groups": 7138,
+    "steps": 29077,
+    "eligibility_checks": 29077,
+    "unit_width": 28556,
+    "eligible": 20630,
+    "retained_full": 8447,
+    "original_rules": 15878,
+    "original_arena_bytes": 35009,
+    "eligible_marked": 12160,
+    "eligible_long": 10,
+    "eligible_short_plain": 8468,
+    "deferred_records": 20630,
+    "deferred_child_refs": 41260,
+    "materialized_compositions": 29077,
+    "materialized_copy16_bytes": 930464,
+    "materialized_rule_write_bytes": 465232,
+    "materialized_deferred": 20630,
+    "deferred_consumed_equal": 9832,
+    "deferred_consumed_full": 1677
+  },
+  "witnesses": {
+    "eligible": {
+      "column": [
+        1,
+        0
+      ],
+      "origin": 0,
+      "ra": 1,
+      "rb": 1,
+      "left": [
+        [
+          0,
+          false
+        ]
+      ],
+      "right": [
+        [
+          1,
+          true
+        ]
+      ]
+    },
+    "marked": {
+      "column": [
+        1,
+        0
+      ],
+      "origin": 0,
+      "ra": 1,
+      "rb": 1,
+      "left": [
+        [
+          0,
+          false
+        ]
+      ],
+      "right": [
+        [
+          1,
+          true
+        ]
+      ]
+    },
+    "unit_not_equal": {
+      "column": [
+        1,
+        0,
+        0
+      ],
+      "origin": 0,
+      "ra": 2,
+      "rb": 1
+    },
+    "word_not_unit": {
+      "column": [
+        1,
+        0,
+        0
+      ],
+      "origin": 0,
+      "ra": 1,
+      "rb": 1,
+      "left": [
+        [
+          0,
+          false
+        ]
+      ],
+      "right": [
+        [
+          0,
+          false
+        ],
+        [
+          1,
+          true
+        ]
+      ]
+    },
+    "long": {
+      "column": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "origin": 0,
+      "ra": 1,
+      "rb": 1,
+      "left": [
+        [
+          0,
+          false
+        ]
+      ],
+      "right": [
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          0,
+          false
+        ],
+        [
+          1,
+          true
+        ]
+      ]
+    }
+  },
+  "budget_checks": [
+    {
+      "budget": 0,
+      "counts": {
+        "oracle_return_visits": 3,
+        "refused": 1
+      }
+    },
+    {
+      "budget": 1,
+      "counts": {
+        "oracle_return_visits": 6,
+        "steps": 1,
+        "eligibility_checks": 1,
+        "unit_width": 1,
+        "eligible": 0,
+        "retained_full": 1,
+        "original_rules": 1,
+        "original_arena_bytes": 0,
+        "refused": 1
+      }
+    },
+    {
+      "budget": 2,
+      "counts": {
+        "oracle_return_visits": 9,
+        "steps": 2,
+        "eligibility_checks": 2,
+        "unit_width": 2,
+        "eligible": 1,
+        "retained_full": 1,
+        "original_rules": 2,
+        "original_arena_bytes": 0,
+        "eligible_marked": 1,
+        "eligible_long": 0,
+        "eligible_short_plain": 0,
+        "deferred_records": 1,
+        "deferred_child_refs": 2,
+        "materialized_compositions": 2,
+        "materialized_copy16_bytes": 64,
+        "materialized_rule_write_bytes": 32,
+        "materialized_deferred": 1,
+        "reference_expansion_visits": 5,
+        "deferred_traversals": 1,
+        "decoded_bytes": 3,
+        "short_cycle": 0,
+        "period_not_divisor": 0,
+        "naive_drop_left_mismatch": 1
+      }
+    }
+  ],
+  "verdict": "semantic reference only; no native feasibility PASS"
+}
