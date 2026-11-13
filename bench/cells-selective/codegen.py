@@ -14,7 +14,11 @@ def main():
     rows = []
     for name, binary in [("original", "bin/original-cells-ab"), ("selective", "bin/cells-ab")]:
         symbols = subprocess.check_output(["nm", "-S", "-C", binary], text=True)
-        matches = [s for s in symbols.splitlines() if "mibz2::cells::Kernel::induce_cells" in s]
+        matches = [
+            s
+            for s in symbols.splitlines()
+            if "mibz2::cells::Kernel" in s and s.endswith("::induce_cells")
+        ]
         assert len(matches) == 1, matches
         fields = matches[0].split()
         address, size = int(fields[0], 16), int(fields[1], 16)
@@ -30,14 +34,19 @@ def main():
             text=True,
         )
         (out / f"{name}.asm").write_text(assembly)
+        comments = subprocess.check_output(["readelf", "--string-dump=.comment", binary], text=True)
+        compiler = re.findall(r"rustc version [^\n]+", comments)
+        assert len(compiler) == 1, comments
         rows.append(
             {
                 "arm": name,
                 "binary_sha256": hashlib.sha256(Path(binary).read_bytes()).hexdigest(),
                 "symbol": matches[0],
                 "symbol_bytes": size,
+                "compiler": compiler[0],
             }
         )
+    assert rows[0]["compiler"] == rows[1]["compiler"], "compiler mismatch"
     routes = []
     for name in ["original", "selective"]:
         log = Path(f"{name}-parity.log").read_text()
