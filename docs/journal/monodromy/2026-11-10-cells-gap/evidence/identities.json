@@ -1,0 +1,12 @@
+{
+  "diagnostic_base": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
+  "frozen_cells": "57f51bbc0ca62ac3ee1cc148a1010842eea6222a",
+  "historical_research": "c79ff7d384072e5e95eda7e513227f2aa06ff3d5",
+  "bench_data_commit": "a0692452b67ec3a8833e1fc4adf58a4f09cd9e6a",
+  "i9_evidence_commit": "d85b2074099f027d048aa7a057da10d25f2b70bb",
+  "i9_bundle": "cells-vs-prod/20261110T175613Z.tar.gz",
+  "i9_bundle_sha256_verified": "552e26aaf3b41636afdbd5a195ad5f0ce1c66aed945ec2911a508057baed705c",
+  "corpus_sha256_verified": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "assigned_inbox_comment": 6782141557,
+  "timing_performance_run_here": false
+}

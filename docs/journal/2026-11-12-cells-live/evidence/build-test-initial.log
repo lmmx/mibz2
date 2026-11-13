@@ -1,0 +1,29 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+    Updating crates.io index
+     Locking 35 packages to highest compatible versions
+      Adding bzip2 v0.4.4 (available: v0.6.1)
+      Adding pyo3 v0.29.3 (available: v0.30.1)
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling cc v1.11.1
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.154
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.19
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling bzip2 v0.4.4
+   Compiling cells-live v0.0.0 (/workspace/mibz2-live/bench/cells-gap/live)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.62s
+     Running unittests src/main.rs (bench/cells-gap/live/target/debug/deps/cells_live-4cc14078853c2c96)
+
+running 1 test
+test ab_cells::tests::cells_arm_matches_reader_bytes_and_errors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+

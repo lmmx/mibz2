@@ -1,0 +1,23 @@
+{
+  "reviewed_base": "7b53ded9eb139fdd69b4c29565e7373ac95e90d4",
+  "source_pin": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "plan_freeze": "3b43af956d553905ea744f6cb6e1c785a0f8297a",
+  "protected_files": 1509,
+  "historical_files": 27,
+  "original_hashes": 53,
+  "archived_digests": 97,
+  "unchanged_functions": [
+    "schedule",
+    "interval",
+    "analyse"
+  ],
+  "changed_file_sha256": {
+    "bench/cells-gap/live/README.md": "19a2976b17cf9a53497b43704503f46f9d31cc8587db1eb30e492a81d3f0a7b7",
+    "bench/cells-gap/live/driver.py": "3972761a4a02eadb1ff0de00891358b8ecd89a996bf23b8239897708fd3df14c",
+    "bench/cells-gap/live/test_driver.py": "09d14fdcbf0dd0b27fd7320046ca9f268323c3983bb4036107e26fee3885e166",
+    "docs/journal/2026-11-12-cells-live/HANDOFF.md": "f90228779de5c1c90b2179a08aab73f68c3f82ce759f9d5a35b77dc7f8f8d71b"
+  },
+  "plan_sha256": "2c285d842413602379a2c3ceb3de4d8e5e50954f06a60a5d23270e3ad9f0b2a0",
+  "source_manifest_sha256": "9cfaf73721c945a429d5b884ceefb798c9f0900890c1489ea1eb17add6210b22",
+  "measurements": 0
+}

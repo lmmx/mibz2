@@ -1,0 +1,1 @@
+bash bench/cells-gap/live/run.sh "$1" "$2"

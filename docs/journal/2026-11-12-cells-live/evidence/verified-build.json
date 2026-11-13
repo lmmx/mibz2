@@ -1,0 +1,109 @@
+{
+  "diagnostic_head": "16167d2ec2b6822957d05c4cb72209ea682cf349",
+  "tracked_dirty": false,
+  "pin": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "python_executable_sha256": "fa67443527ed9647f760d807e2a38f26340757123e643c4639cf273ed15d5ea7",
+  "bz2_module_origin": "built-in",
+  "bz2_extension_sha256": null,
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n",
+  "binaries": {
+    "baseline-off": "2b78a22671dde40fce8c51fc4fde4860b0e24016673edc49c43ef55541098a1f",
+    "baseline-on": "02d702f7beb81a91c75aac9f88657f3190a44fba3037f953922c0502dccecc64",
+    "cells-off": "9c823db5f998951d89d2d2a02f248a8c5ddeb057367199a92bdfa85420bc8d61",
+    "cells-on": "274e9580d1c06970d101bb9e92ebd60bf56a11a55e16531579b35d9d6c16d916"
+  },
+  "source": {
+    "generator_sha256": "eb67eb88eb097ed7f9156ca060792e8d2c085104f9374f477de8bd53ffe0c793",
+    "patch_sha256": "55c3e0eb7744b952ce12249cdf55546967700edf5950a14569805d97d06731bc",
+    "pin": "d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2",
+    "original": {
+      "Cargo.lock": "b4ad5647e3d33f309cbde5d366e22cb2bfb7a99ddafdcf6cf0cd48c407635acf",
+      "Cargo.toml": "f5a0cc481d75a0cff0ed1cda91ffeada9c32335667618d6aea935f1b94fb6027",
+      "README.md": "5df4d75e7426e3e45c7af5a309e47e3ee3d3db0002773db2e9f10ac243a6f894",
+      "bench/wikidata.json": "42cec876c3a424b8e81a1de062f38b8eb8488908b4c71c3e6fed2c43231445f5",
+      "benches/decode.rs": "2b7c36f131b26d0863e6f3bbbc99f7c04189bd5071f24bcdaa41618bdd3287c3",
+      "examples/ab.rs": "31b5efb7e6e71e30e5b8cffe27760e1e720bb2e97165d0781c00adbcd16d93b2",
+      "examples/ab_cells/mod.rs": "30f7d4af0576e78fd6fc8a786b05ac4dbc902b2aff268c065b70ea97a4475330",
+      "examples/bzcat.rs": "a50234b187e9b23a9f1fbb2b63c9218da3bd576d30c5b8b2a0bbea99bf0aeada",
+      "examples/fuzz.rs": "3efac55c053d4cc6aa58e63ec8e6704bc239cda2f120642a6a4e4118345f2928",
+      "examples/mtf_two_level.rs": "ecef85e6653cad308239c847f3cbc656d88a021a368a0d11c9caa8f567e3c2f9",
+      "examples/occupancy.rs": "882e3a86d16bda375d228689dcec00cea4e28e92b1ba896685e8e2ab1703cf95",
+      "examples/packet_census.rs": "a2cded2b707e647f39970613270c7d332941da5d18773122e98b651b9d2f286e",
+      "examples/par_scan.rs": "5cac55d1c509360afa6ab22ff1a2010cdc1621f40c5e76367798a867c8f285b2",
+      "examples/phases.rs": "281fac98070e865ab10132adffead193f38f6ec36088ffd4166b7f533b024671",
+      "examples/rauzy.rs": "eff14da07eef398780c7d95fe1b0cb0612715b0136b77dc98c8ed3f12fdf8545",
+      "examples/stress.rs": "1967fe1dbb7ccfde55a745af8c1410fd86eec237e218b2f694971b39193073bd",
+      "examples/svc_target.rs": "bcffc67a36f22a763f7545d27f808f889c629ab55fdd7d74ad6d07746e8fca2f",
+      "examples/sweep.rs": "aa4aa7f40a2c32a508dda84d03dcfde0741632b82dfadff0d3358823ec131e28",
+      "examples/wait_audit.rs": "eefc62648b29bb726ed2525c868e8938f2c6d12ee3d5ea6925a739b5fc2fbfca",
+      "examples/windows.rs": "3d56dab9d96d565dc162a08b5d58db4c6168a4a076672726d9c7901d16ab6dc8",
+      "src/bits.rs": "fbd2a622c3eb34415610f278d57ae6b7ede7ba769140245b49a06f3ef4ab971f",
+      "src/block.rs": "c0e0257373c71a8526612e77561f286a73dd912ec637b09618e610dd90b61407",
+      "src/bwt.rs": "10e791a93a8800707b6d11ab299454ed1068f2517537cf4324671c7b00092607",
+      "src/cells.rs": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+      "src/coop.rs": "f7844ca9dda64b571a41c5b6b63b86632963dd882c3b052367268e02f06664f5",
+      "src/crc.rs": "c99ce53c160f63bce5ab52089dd25c83297c9167cdefb7b3f1438e3720eea0ba",
+      "src/lib.rs": "12632248604a41aba157c16b11f0695ff68cc4c16689a4a85e6700e5d91fa68c",
+      "src/mtf.rs": "253ab5f9d9978c419214b44b3976b8e977d114760457163066dcba1653ab6105",
+      "src/parallel.rs": "34c42b31c86319dfdb83e25ee61d2e0bc28a88000d6fb691370b36a1c0a003f5",
+      "src/parallel/service_unwind_tests.rs": "6a3d7af15f24de331219b0eaa900c107e4a19c7a4eae4a378428b93b317e29a7",
+      "src/parallel/unwind_tests.rs": "8609be4b95bb41b202758a8cc839ba7a17be33d28c6dd10a35ef6c30d0a87c57",
+      "src/python.rs": "d349557946295eefaadbef8a1f4ac0dad355abaa7c7bc88c228953eacbba4b85",
+      "src/read.rs": "9eeecf96850277aede70d5df3933dab00d5e5713731f95a90a42dbdfa782c6a4",
+      "src/rle.rs": "3c326bf34a2b3518e1cf3c73a0fa47e747938ba29c67a39de987417cca35bfb8",
+      "src/run_fed.rs": "3ce14f38b6b860a11099a8e1b2df896f50a744c493f8020dc2032fa2d9a0fe74",
+      "src/runs.rs": "6a257b8996026fae0ab49c9b26b20f417b7f270a7d9502dfc922645885d48cc9",
+      "src/runs/tests.rs": "bba75d43aee9be3504ec56da956f6bfe11819ebf2a5b84b11dfc498516970219",
+      "src/stream.rs": "ee9c5d3115e451ae929a53fb64a0c116f98095efefe7a1feed8eb601b4218aea",
+      "src/trace.rs": "d015bd83ee1d7de76b047f31a721694eae07b284ec97526268274c6d096567ab",
+      "tests/admission.rs": "d74de11adfe1d013822e184187c3134c1a98c9a157aafc0def978fd218deab97",
+      "tests/cells.rs": "c35cc2047056a8fbd3872cf7b4e5f7b48150af4140d28e96593ddb7e6176526b",
+      "tests/common/cells.rs": "f750d12fe1f27f71a299ee1bb29065697b4f3005071fa7a1cf00858b7756e4c8",
+      "tests/common/mod.rs": "967cb256acdee0688205eded51b469e6545af4a3f6979befc012b106ea5f1e54",
+      "tests/cooperative.rs": "4f780461ee1f8f7ca38b6453a35e4433b86e915e4bd8342e5065e8ceb27a2a5c",
+      "tests/corpus.rs": "9ab3239ebb42382d52d5435f35970fd9c2254804b51b9433415b9863fa8f34f2",
+      "tests/decode.rs": "cbc8bcd52cb71d58c5a21763b1aeb6ccc5499b5197ebd5751a6a16cd5b6c7a27",
+      "tests/in_place.rs": "4825beeb547c1a827d61f8b73b93d3eae06487db14a7e3d1b7d234c8186b4e9a",
+      "tests/mtf_checkpoints.rs": "6ad12effccab7cba5149c65f39daf4747d6e81ceb08ff06f1a28042ee7329c8a",
+      "tests/mtf_kernels.rs": "4c3dd84045cf1129f7404975971d5706fc2de0d92b3def711883b6d04cf59cfc",
+      "tests/pipelined.rs": "52aaa77b2cdb49ec5474bd5551a64ad9c356c96f886fc03b047417662e12a899",
+      "tests/reader_panic.rs": "6c760c523fa7ddc5cd09ba92fa914cedacf8a84fccb9ca341dacd36e5e635df1",
+      "tests/service.rs": "f8f56d44457855712836378c66d4b5c77bcaa9b115757f82c7f1556fb451dd83",
+      "tests/service_default.rs": "943a83dc12b5382c0bb51a875a8bfa5a0d768645307887b8d275eb03cd78437d"
+    },
+    "edits": {
+      "Cargo.toml": {
+        "original": "f5a0cc481d75a0cff0ed1cda91ffeada9c32335667618d6aea935f1b94fb6027",
+        "diagnostic": "70d573d73f50783cf8515a67e1ba0f89af55ba3027528524de65535f8db4179d"
+      },
+      "src/lib.rs": {
+        "original": "12632248604a41aba157c16b11f0695ff68cc4c16689a4a85e6700e5d91fa68c",
+        "diagnostic": "21a794619ec4a50e24146894a8d422d1aaac4d6ee9e2a7830b0f5b381ae1110f"
+      },
+      "src/stream.rs": {
+        "original": "ee9c5d3115e451ae929a53fb64a0c116f98095efefe7a1feed8eb601b4218aea",
+        "diagnostic": "2d78493a3dd5a0adb32f25fd169e43d88b8f0ed6bfa427ed414fdf208217c06f"
+      },
+      "src/cells.rs": {
+        "original": "42e377d8a980c94d95a4b162b0f7ba6466ff6b3844cbc8b10fce933fd25692b2",
+        "diagnostic": "45019309441aac879929e23fb2072940e178b66e13764351b47e76dafa8843e5"
+      }
+    },
+    "trace_sha256": "414b0595b838c916c673eeddc42a3c248a8fd21d2d262ac27865290301b24b0b",
+    "hash_sha256": "2cf4ce7e76365f34963b0bedfb0d896ee52ae2c46b79019a732399d29a41207f"
+  },
+  "harness": {
+    "Cargo.toml": "9538427f5e1b642c6b5c5d1ad90320ea0df8437aa5c46f759a4cbc27f42d6417",
+    "Cargo.lock": "4c03e1147f828c11ec12df704cac552c8157efea73e57673536596d845ac8ab6",
+    "prepare.py": "eb67eb88eb097ed7f9156ca060792e8d2c085104f9374f477de8bd53ffe0c793",
+    "build.py": "4a686a3fb628dce2ab7a4865a47dcb92ce6675325ff2d744468ba65cb30f70b0",
+    "driver.py": "2aca19d5b17b972335fdd6444b7108c3a37e915a32b42661263783af2eb2c613",
+    "src/main.rs": "5905a5eebe8737e8f6e9e85cf9de9f851447431f53f497f770d31c6ce05dff68",
+    "src/trace.rs": "414b0595b838c916c673eeddc42a3c248a8fd21d2d262ac27865290301b24b0b",
+    "inputs.py": "2d25921ebef91b9113bc6dbc70b16bb3addb37800b1576aa3dabd5e53d8c9090",
+    "run.sh": "4c0adf016dbda68d3233cb18ac0ac8a69d6e2a31ec4c4d043f0d29c0732c66dc",
+    "check.py": "3fa648a95ebc48f999614b93dc71d4280dff02898d69f8b9090e3b604531ea61",
+    "test_driver.py": "56437bde43f16499a4cbdba3dd063880b035ccabf9358ec576d2b6f996f59949"
+  }
+}

@@ -1,0 +1,6 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+   Compiling mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+   Compiling cells-live v0.0.0 (/workspace/mibz2-live/bench/cells-gap/live)
+    Finished `release` profile [optimized + debuginfo] target(s) in 15.22s

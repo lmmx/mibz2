@@ -1,0 +1,43 @@
+name: Cells live-path preparation
+
+on:
+  pull_request:
+    paths:
+      - "bench/cells-gap/**"
+      - ".github/workflows/cells-gap.yml"
+  workflow_dispatch:
+
+jobs:
+  untimed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.99.1
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just@1.38.0
+      - name: Prepare exact corrected source (no corpus replay)
+        run: |
+          git fetch origin d4f0e8fb3ac68fa649e1810dff58dc06e9c545c2
+          python3 bench/cells-gap/live/prepare.py
+      - name: Untimed tests and fixed schedule
+        run: |
+          CELLS_LIVE_REQUIRE_JUST=1 python3 bench/cells-gap/live/test_driver.py
+          python3 bench/cells-gap/live/driver.py plan > plan.json
+          cargo test --locked --manifest-path bench/cells-gap/live/Cargo.toml --features live-trace,cells-reader
+          cargo test --locked --manifest-path bench/cells-gap/live/Cargo.toml -p mibz2 --lib --features live-diagnostic miri_cells_long_writer
+      - name: Four builds and real untimed fixture dry run
+        run: |
+          python3 bench/cells-gap/live/build.py target/live-binaries
+          python3 bench/cells-gap/live/check.py target/live-binaries target/live-fixtures
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: cells-live-preparation-${{ github.sha }}
+          path: |
+            plan.json
+            target/live-binaries/*.json
+            target/live-binaries/*.log
+            target/live-fixtures/*.json
+            target/live-fixtures/*.stderr
+            bench/cells-gap/live/.generated/source.json

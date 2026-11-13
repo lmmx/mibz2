@@ -1,0 +1,5 @@
+/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-1.jsonl: all 233 blocks ratio 0.815 (1.258 vs 1.544 ns/row); records-path blocks 233 ratio 0.815
+/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-2.jsonl: all 233 blocks ratio 0.827 (1.266 vs 1.531 ns/row); records-path blocks 233 ratio 0.827
+/home/louis/dev/mibz2/target/cells-vs-prod/20261110T175613Z/census-3.jsonl: all 233 blocks ratio 0.818 (1.260 vs 1.541 ns/row); records-path blocks 233 ratio 0.818
+cells below production in every repeat (all blocks): True
+cells below production in every repeat (records-path blocks): True

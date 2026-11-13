@@ -1,0 +1,71 @@
+{
+  "blocks": 431,
+  "rows": 209706557,
+  "output_bytes": 209700196,
+  "routes": {
+    "density": {
+      "blocks": 185,
+      "rows": 31507152,
+      "output_bytes": 31508149
+    },
+    "admitted": {
+      "blocks": 196,
+      "rows": 176398965,
+      "output_bytes": 176391605
+    },
+    "column": {
+      "blocks": 48,
+      "rows": 465,
+      "output_bytes": 465
+    },
+    "budget": {
+      "blocks": 2,
+      "rows": 1799975,
+      "output_bytes": 1799977
+    }
+  },
+  "admitted_row_share": 0.8411704789946077,
+  "below_historical_minimum": {
+    "blocks": 198,
+    "rows": 8895
+  },
+  "historical_repeats": [
+    {
+      "historical_all_cells_over_records": 0.814954128155861,
+      "hypothetical_mixed_over_records_excluding_refusal_cost": 0.7725086275382959,
+      "hypothetical_saved_ns": 73649241.363,
+      "admitted_research_ns_per_row": {
+        "c_order": 0.24693371118702426,
+        "c_induce": 0.653704158610001,
+        "c_write": 0.21229082697282264,
+        "c_whole": 1.1151531887842991,
+        "ns_rec": 1.5326683446300267
+      }
+    },
+    {
+      "historical_all_cells_over_records": 0.8265968999722636,
+      "hypothetical_mixed_over_records_excluding_refusal_cost": 0.7820435489643978,
+      "hypothetical_saved_ns": 69984473.493,
+      "admitted_research_ns_per_row": {
+        "c_order": 0.2500714445234982,
+        "c_induce": 0.6584490388138049,
+        "c_write": 0.21256633583989565,
+        "c_whole": 1.1233164049857094,
+        "ns_rec": 1.5200561108734396
+      }
+    },
+    {
+      "historical_all_cells_over_records": 0.8175784378298213,
+      "hypothetical_mixed_over_records_excluding_refusal_cost": 0.7752200183903601,
+      "hypothetical_saved_ns": 72658356.65099996,
+      "admitted_research_ns_per_row": {
+        "c_order": 0.24925511829958866,
+        "c_induce": 0.6546939375296221,
+        "c_write": 0.2125510286525774,
+        "c_whole": 1.1183470269624314,
+        "ns_rec": 1.5302448895774416
+      }
+    }
+  ],
+  "warning": "Historical counterfactual only. Different hardware/cache/port; refusal work omitted. No whole-decoder prediction."
+}

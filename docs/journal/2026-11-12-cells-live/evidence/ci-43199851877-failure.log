@@ -1,0 +1,21 @@
+2026-11-12T10:23:18.3910283Z ##[group]Run python3 bench/cells-gap/live/build.py target/live-binaries
+2026-11-12T10:23:18.3910591Z [36;1mpython3 bench/cells-gap/live/build.py target/live-binaries[0m
+2026-11-12T10:23:18.3910860Z [36;1mpython3 bench/cells-gap/live/check.py target/live-binaries target/live-fixtures[0m
+2026-11-12T10:23:18.3949630Z shell: /usr/bin/bash -e {0}
+2026-11-12T10:23:18.3949763Z env:
+2026-11-12T10:23:18.3949882Z   CARGO_HOME: /home/runner/.cargo
+2026-11-12T10:23:18.3950027Z   CARGO_INCREMENTAL: 0
+2026-11-12T10:23:18.3950151Z   CARGO_TERM_COLOR: always
+2026-11-12T10:23:18.3950279Z ##[endgroup]
+2026-11-12T10:23:18.4724162Z Traceback (most recent call last):
+2026-11-12T10:23:18.4725894Z   File "/home/runner/work/mibz2/mibz2/bench/cells-gap/live/build.py", line 107, in <module>
+2026-11-12T10:23:18.4726297Z     build(Path(sys.argv[1]))
+2026-11-12T10:23:18.4726480Z     ~~~~~^^^^^^^^^^^^^^^^^^^
+2026-11-12T10:23:18.4726738Z   File "/home/runner/work/mibz2/mibz2/bench/cells-gap/live/build.py", line 17, in build
+2026-11-12T10:23:18.4726973Z     destination.mkdir()
+2026-11-12T10:23:18.4727094Z     ~~~~~~~~~~~~~~~~~^^
+2026-11-12T10:23:18.4727258Z   File "/usr/lib/python3.14/pathlib/__init__.py", line 1012, in mkdir
+2026-11-12T10:23:18.4727449Z     os.mkdir(self, mode)
+2026-11-12T10:23:18.4727569Z     ~~~~~~~~^^^^^^^^^^^^
+2026-11-12T10:23:18.4727762Z FileNotFoundError: [Errno 2] No such file or directory: 'target/live-binaries'
+2026-11-12T10:23:18.4833618Z ##[error]Process completed with exit code 1.

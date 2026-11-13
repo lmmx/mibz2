@@ -1,0 +1,32 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /workspace/mibz2-live/bench/cells-gap/live/.source/Cargo.toml
+workspace: /workspace/mibz2-live/bench/cells-gap/live/Cargo.toml
+    Checking mibz2 v0.2.9 (/workspace/mibz2-live/bench/cells-gap/live/.source)
+    Checking cells-live v0.0.0 (/workspace/mibz2-live/bench/cells-gap/live)
+error: this `repeat().take()` can be written more concisely
+   --> src/../.source/tests/common/mod.rs:156:21
+    |
+156 |         runs.extend(std::iter::repeat(c).take(n));
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `repeat_n()` instead: `std::iter::repeat_n(c, n)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_repeat_n
+    = note: `-D clippy::manual-repeat-n` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_repeat_n)]`
+
+error: this `repeat().take()` can be written more concisely
+   --> src/../.source/tests/common/mod.rs:308:24
+    |
+308 |             out.extend(std::iter::repeat(c).take(4 + extra));
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `repeat_n()` instead: `std::iter::repeat_n(c, 4 + extra)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_repeat_n
+
+error: this `repeat().take()` can be written more concisely
+   --> src/../.source/tests/common/mod.rs:440:21
+    |
+440 |         runs.extend(std::iter::repeat(b"xyz"[rng.below(3) as usize]).take(n));
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `repeat_n()` instead: `std::iter::repeat_n(b"xyz"[rng.below(3) as usize], n)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_repeat_n
+
+error: could not compile `cells-live` (bin "cells-live" test) due to 3 previous errors

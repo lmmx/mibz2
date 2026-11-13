@@ -1,0 +1,21 @@
+[package]
+edition = "2021"
+name = "mibz2-cells-gap"
+publish = false
+version = "0.0.0"
+
+[workspace]
+
+[dependencies]
+mibz2 = { git = "https://github.com/lmmx/mibz2", rev = "57f51bbc0ca62ac3ee1cc148a1010842eea6222a" }
+serde = { features = ["derive"], version = "1" }
+serde_json = "1"
+sha2 = "0.10"
+
+[dev-dependencies]
+bzip2 = "0.4"
+
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"

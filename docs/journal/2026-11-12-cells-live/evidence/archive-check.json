@@ -1,0 +1,7 @@
+{
+  "status": "pass",
+  "validated_implementation_commit": "16167d2ec2b6822957d05c4cb72209ea682cf349",
+  "all_final_harness_files_unchanged": true,
+  "fixture_bytes_identical": true,
+  "earlier_assembly_failure": "JSON parser was applied to intentionally empty I/O-error stdout; corrected to compare bytes and parse only nonempty JSON. Decoder checks had passed."
+}

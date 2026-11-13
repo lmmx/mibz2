@@ -1,0 +1,17 @@
+D103 Missing docstring in public function
+  --> docs/journal/2026-11-12-cells-live/r1/check_protection.py:16:5
+   |
+16 | def git(*args):
+   |     ^^^
+17 |     return subprocess.check_output(["git", "-C", str(ROOT), *args])
+   |
+
+D103 Missing docstring in public function
+  --> docs/journal/2026-11-12-cells-live/r1/check_protection.py:20:5
+   |
+20 | def sha(data):
+   |     ^^^
+21 |     return hashlib.sha256(data).hexdigest()
+   |
+
+Found 2 errors.

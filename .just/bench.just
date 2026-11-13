@@ -1359,3 +1359,9 @@ bench-onecore-inline-i9:
     git fetch -q origin perf/onecore-walk-inline
     just bench-release-scaling d33787e138426cb441db6975f54b2eccca02e89a b65b2aa54488f072cf005b8fe62461c32e6ef083 10 "1"
 
+
+# Prepared cells live-path diagnostic; separate Coordinator admission still required.
+# Ten balanced paired rounds, three corpora, original readers × trace off/on.
+[positional-arguments]
+bench-cells-live-path cpu corpora:
+    bash bench/cells-gap/live/run.sh "$1" "$2"

@@ -1,0 +1,68 @@
+    Updating git repository `https://github.com/lmmx/mibz2`
+    Updating crates.io index
+     Locking 28 packages to highest compatible versions
+      Adding bzip2 v0.4.4 (available: v0.6.1)
+      Adding generic-array v0.14.7 (available: v0.14.9)
+      Adding sha2 v0.10.9 (available: v0.11.1)
+ Downloading crates ...
+  Downloaded cpufeatures v0.2.17
+  Downloaded block-buffer v0.10.4
+  Downloaded typenum v1.20.1
+  Downloaded crypto-common v0.1.7
+  Downloaded version_check v0.9.5
+  Downloaded generic-array v0.14.7
+  Downloaded digest v0.10.7
+  Downloaded itoa v1.0.19
+  Downloaded cc v1.11.1
+  Downloaded sha2 v0.10.9
+  Downloaded syn v3.0.10
+   Compiling version_check v0.9.5
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling typenum v1.20.1
+   Compiling generic-array v0.14.7
+   Compiling unicode-ident v1.0.27
+   Compiling cc v1.11.1
+   Compiling pkg-config v0.3.34
+   Compiling serde_core v1.0.229
+   Compiling libc v0.2.191
+   Compiling zmij v1.0.23
+   Compiling syn v3.0.10
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling serde_json v1.0.154
+   Compiling serde v1.0.229
+   Compiling digest v0.10.7
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling itoa v1.0.19
+   Compiling cpufeatures v0.2.17
+   Compiling cfg-if v1.0.5
+   Compiling memchr v2.8.3
+   Compiling sha2 v0.10.9
+   Compiling bzip2 v0.4.4
+   Compiling serde_derive v1.0.229
+   Compiling mibz2 v0.2.9 (https://github.com/lmmx/mibz2?rev=57f51bbc0ca62ac3ee1cc148a1010842eea6222a#57f51bbc)
+   Compiling mibz2-cells-gap v0.0.0 (/workspace/mibz2-cells-gap/bench/cells-gap)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.83s
+     Running unittests src/main.rs (bench/cells-gap/target/debug/deps/mibz2_cells_gap-d06a856a7b0c86d4)
+
+running 1 test
+test tests::real_decoder_parity_and_route_coverage ... FAILED
+
+failures:
+
+---- tests::real_decoder_parity_and_route_coverage stdout ----
+
+thread 'tests::real_decoder_parity_and_route_coverage' (98149) panicked at src/main.rs:200:13:
+assertion failed: cells.iter().any(|b| b.route == "admitted")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::real_decoder_parity_and_route_coverage
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+error: test failed, to rerun pass `--bin mibz2-cells-gap`

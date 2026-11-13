@@ -1,0 +1,9 @@
+{
+  "live_diagnostic_symbol_counts": {
+    "baseline-off": 0,
+    "baseline-on": 24,
+    "cells-off": 0,
+    "cells-on": 27
+  },
+  "pass_": true
+}
