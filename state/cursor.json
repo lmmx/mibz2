@@ -1724,7 +1724,11 @@
     "6849255206": {
       "status": "completed_own_monitor_log",
       "comment_updated_at": null,
-      "source_comment_id": 6849208142
+      "source_comment_id": 6849208142,
+      "delivery_id": "fefc16e0-df44-11f1-9248-d5e5d7ee6395",
+      "reason": "Own attributed LOG, exact readback and own-ID receipt match; no new actionable external message. Policy/master unchanged; no duplicate dispatch/LOG.",
+      "ready_job_queued": false,
+      "ready_job_reason": "Active live integration/admission work; actual i9 facts and final bound recipe/admission remain absent."
     }
   },
   "automatic_github_wakeup_assumed": false,
@@ -1850,8 +1854,8 @@
   "setup_log_comment_id": 6777379237,
   "policy_master_sha": "2635f04e9155dd31388b24fd3f7248f87b3ddcda",
   "last_event": {
-    "comment_id": 6849208142,
-    "delivery_id": "a7bae690-df44-11f1-8262-350235e783ee",
+    "comment_id": 6849255206,
+    "delivery_id": "fefc16e0-df44-11f1-9248-d5e5d7ee6395",
     "repository": "lmmx/mibz2",
     "pull_request_number": 145
   },
