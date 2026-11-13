@@ -1785,6 +1785,27 @@
       "response_comments": 0,
       "dispatches": 0,
       "disposition": "Own checkpoint read back exactly; no additional external messages. Same exact master/policy snapshot remains applicable."
+    },
+    "6849826280": {
+      "status": "in_progress",
+      "delivery_id": "7e1be500-df49-11f1-8a25-f488b229045f",
+      "comment_updated_at": null,
+      "head_sha": "cb73bf909397e2fff8c90f0a00437061ad06478e",
+      "planned_action": "Correct false merge-before-admission prerequisite in prior LOG; frozen recipe PROCEED stands. Correct Observer account after actual completed receipt. No duplicate Codex or signal attempt.",
+      "log_dedup_key": "branch-admission-correction-6849826280",
+      "observer_correction": {
+        "status": "in_progress",
+        "destination": 222
+      }
+    },
+    "6849875014": {
+      "status": "in_progress",
+      "delivery_id": "d0e6cf70-df49-11f1-8e1b-58002864f561",
+      "comment_updated_at": null,
+      "completed_assignment": 6849790558,
+      "recipient_cursor_sha": "d4b0ac082563a6ecc7d1ac40d270b13075ab7e7f",
+      "report_commit": "aa2ba687a638821ffef96e397d21b8f6d439837f",
+      "planned_action": "Accept actual completed Observer delivery; one material correction of inherited merge prerequisite."
     }
   },
   "automatic_github_wakeup_assumed": false,
